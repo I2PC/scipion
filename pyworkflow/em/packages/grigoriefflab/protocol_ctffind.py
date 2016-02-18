@@ -50,37 +50,40 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     
     
     def _defineProcessParams(self, form):
-        form.addParam('useCftfind4', params.BooleanParam, default=True,
+        form.addParam('useCtffind4', params.BooleanParam, default=True,
               label="Use ctffind4 to estimate the CTF?",
               help='If is true, the protocol will use ctffind4 instead of ctffind3')
         form.addParam('astigmatism', params.FloatParam, default=100.0,
-              label='Expected (tolerated) astigmatism (A)', expertLevel=params.LEVEL_ADVANCED,
+              label='Expected (tolerated) astigmatism (A)',
+              expertLevel=params.LEVEL_ADVANCED,
               help='Astigmatism values much larger than this will be penalised '
                    '(Angstroms; set negative to remove this restraint)',
-              condition='useCftfind4')
+              condition='useCtffind4')
         form.addParam('findPhaseShift', params.BooleanParam, default=False,
-              label="Find additional phase shift?", condition='useCftfind4',
-              help='If the data was collected with phase plate, this will find additional phase shift due to phase plate',
+              label="Find additional phase shift?", condition='useCtffind4',
+              help='If the data was collected with phase plate, this will find '
+                   'additional phase shift due to phase plate',
               expertLevel=params.LEVEL_ADVANCED)
 
-	group = form.addGroup('Phase shift parameters')	
+        group = form.addGroup('Phase shift parameters')
         group.addParam('minPhaseShift', params.FloatParam, default=0.0,
               label="Minimum phase shift (rad)", condition='findPhaseShift',
               help='Lower bound of the search for additional phase shift. '
-		   'Phase shift is of scattered electrons relative to unscattered electrons. In radians.',
+                   'Phase shift is of scattered electrons relative to '
+                   'unscattered electrons. In radians.',
               expertLevel=params.LEVEL_ADVANCED)
         group.addParam('maxPhaseShift', params.FloatParam, default=3.15,
               label="Maximum phase shift (rad)", condition='findPhaseShift',
               help='Upper bound of the search for additional phase shift. '
-		   'Phase shift is of scattered electrons relative to unscattered electrons. In radians. '
-		   'Please use value between 0.10 and 3.15',
+                   'Phase shift is of scattered electrons relative to '
+                   'unscattered electrons. In radians. '
+                   'Please use value between 0.10 and 3.15',
               expertLevel=params.LEVEL_ADVANCED)
         group.addParam('stepPhaseShift', params.FloatParam, default=0.2,
               label="Phase shift search step (rad)", condition='findPhaseShift',
               help='Step size for phase shift search (radians)',
               expertLevel=params.LEVEL_ADVANCED)
->>>>>>> bd5d7be9eae221ce1449ba751f6c726a06b3142a
-    
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run ctffind, 3 or 4, with required parameters """
@@ -92,7 +95,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         if downFactor != 1:
             #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
             import pyworkflow.em.packages.xmipp3 as xmipp3
-            self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor), env=xmipp3.getEnviron())
+            self.runJob("xmipp_transform_downsample",
+                        "-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor),
+                        env=xmipp3.getEnviron())
             self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
         else:
             micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
@@ -143,12 +148,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
         ctfModel2 = em.CTFModel()
-        
-        if not self.useCftfind4:
-            readCtfModel(ctfModel2, out)
-        else:
-            readCtfModel(ctfModel2, out, True)
-        
+        readCtfModel(ctfModel2, out, ctf4=self.useCtffind4.get())
         ctfModel2.setPsdFile(psdFile)
         ctfModel2.setMicrograph(mic)
         return ctfModel2
@@ -165,12 +165,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             out = self._getCtfOutPath(micDir)
             
             ctfModel = em.CTFModel()
-        
-            if not self.useCftfind4:
-                readCtfModel(ctfModel, out)
-            else:
-                readCtfModel(ctfModel, out, True)
-            
+            readCtfModel(ctfModel, out, ctf4=self.useCtffind4.get())
             ctfModel.setPsdFile(psdFile)
             ctfModel.setMicrograph(mic)
             
@@ -185,31 +180,23 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
-        if self.useCftfind4:
-            ctffind = CTFFIND4_PATH
-        else:
-            ctffind = CTFFIND_PATH
+        ctffind = CTFFIND4_PATH if self.useCtffind4 else CTFFIND_PATH
         if not os.path.exists(ctffind):
             errors.append('Missing %s' % ctffind)
 
-	valueStep = round(self.stepPhaseShift,2)
-	valueMin = round(self.minPhaseShift,2)
-	valueMax = round(self.maxPhaseShift,2)
+        valueStep = round(self.stepPhaseShift.get(), 2)
+        valueMin = round(self.minPhaseShift.get(), 2)
+        valueMax = round(self.maxPhaseShift.get(), 2)
 
-	if (self.minPhaseShift < self.maxPhaseShift and
-	    valueStep <= (valueMax-valueMin) and
-	    0.10 <= valueMax <= 3.15):
-	    pass
-	else:
-	    errors.append('Wrong values for phase shift search.')
+        if not (self.minPhaseShift < self.maxPhaseShift and
+                valueStep <= (valueMax-valueMin) and
+                0.10 <= valueMax <= 3.15):
+            errors.append('Wrong values for phase shift search.')
+
         return errors
     
     def _citations(self):
-        if not self.useCftfind4:
-            return ['Mindell2003']
-        else:
-            return ['Rohou2015']
-
+        return ['Rohou2015'] if self.useCtffind4 else ['Mindell2003']
 
     def _methods(self):
         if self.inputMicrographs.get() is None:
@@ -230,7 +217,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             self._params['lowRes'] = 50
         self._params['highRes'] = sampling / self._params['highRes']
         self._params['step_focus'] = 500.0
-        if not self.useCftfind4:
+        if not self.useCtffind4:
             self._argsCtffind3()
         else:
             self._params['astigmatism'] = self.astigmatism.get()
@@ -265,7 +252,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         self._params['maxDefocus'] = max([float(line[0]), float(line[1])])
         self._params['windowSize'] = size
         
-        if not self.useCftfind4:
+        if not self.useCtffind4:
             self._argsCtffind3()
         else:
             self._params['astigmatism'] = self.astigmatism.get()
@@ -290,7 +277,7 @@ eof
     
     def _argsCtffind4(self):
         self._program = 'export OMP_NUM_THREADS=1; ' + CTFFIND4_PATH
-	if self.findPhaseShift:
+        if self.findPhaseShift:
             self._args = """ << eof
 %(micFn)s
 %(ctffindPSD)s
@@ -311,7 +298,7 @@ eof
 %(stepPhaseShift)f
 eof
 """
-	else:       
+        else:
             self._args = """ << eof
 %(micFn)s
 %(ctffindPSD)s
@@ -340,7 +327,7 @@ eof
         """ Try to find the output estimation parameters
         from filename. It search for a line containing: Final Values.
         """
-        if not self.useCftfind4:
+        if not self.useCtffind4:
             return parseCtffindOutput(filename)
         else:
             return parseCtffind4Output(filename)
