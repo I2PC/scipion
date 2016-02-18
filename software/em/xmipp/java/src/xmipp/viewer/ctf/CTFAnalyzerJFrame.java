@@ -32,6 +32,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -86,12 +87,18 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
         try
         {
+            // JMRT: I don't know if imp is needed since the psdfile is read
             this.imp = imp;
             this.psdfile = psdfile;
-            this.profileimp = XmippImageConverter.loadImage(psdfile);
+            ImageGeneric psd = new ImageGeneric(psdfile);
+            // JMRT: Always read the PSD with 256 pixels, greater values break the GUI
+            psd.read(256, 256, ImageGeneric.FIRST_IMAGE);
+            this.profileimp = XmippImageConverter.readToImagePlus(psd);
+            this.imp = this.profileimp;
+            psd.destroy();
             ctfmodel = new CTFDescription(ctffile);
             double samplingRate = getSamplingRate(ctffile);
-            samples = imp.getWidth() / 2;
+            samples = this.imp.getWidth() / 2;
             xvalues = getXValues(samples, samplingRate);
         initComponents();
         } catch (Exception e) {
@@ -103,11 +110,17 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 	{
         try
         {
+            // JMRT: I don't know if imp is needed since the psdfile is read
             this.imp = imp;
             this.psdfile = psdfile;
-            this.profileimp = XmippImageConverter.loadImage(psdfile);
+            ImageGeneric psd = new ImageGeneric(psdfile);
+            // JMRT: Always read the PSD with 256 pixels, greater values break the GUI
+            psd.read(256, 256, ImageGeneric.FIRST_IMAGE);
+            this.profileimp = XmippImageConverter.readToImagePlus(psd);
+            psd.destroy();
+            this.imp = this.profileimp;
             ctfmodel = ctfdescription;
-            samples = imp.getWidth() / 2;
+            samples = this.imp.getWidth() / 2;
             xvalues = getXValues(samples, samplingRate);
             initComponents();
         } catch (Exception e) {
