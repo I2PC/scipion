@@ -32,7 +32,7 @@
         "alignFrame0": 0,
         "alignFrameN": 0,
         "doGPU": false,
-        "GPUCore": 1,
+        "GPUCore": 0,
         "winSize": 150,
         "sumFrame0": 0,
         "sumFrameN": 0,
