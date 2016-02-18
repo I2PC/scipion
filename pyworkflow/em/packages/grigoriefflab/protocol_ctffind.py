@@ -55,11 +55,31 @@ class ProtCTFFind(em.ProtCTFMicrographs):
               help='If is true, the protocol will use ctffind4 instead of ctffind3')
         form.addParam('astigmatism', params.FloatParam, default=100.0,
               label='Expected (tolerated) astigmatism (A)', expertLevel=params.LEVEL_ADVANCED,
-              condition='useCftfind4', help="positive values activate astigmatism restrain",)
-
+              help='Astigmatism values much larger than this will be penalised '
+                   '(Angstroms; set negative to remove this restraint)',
+              condition='useCftfind4')
         form.addParam('findPhaseShift', params.BooleanParam, default=False,
               label="Find additional phase shift?", condition='useCftfind4',
-              expertLevel=params.LEVEL_ADVANCED,help="search for additional phase shift introduced by a phase plate")
+              help='If the data was collected with phase plate, this will find additional phase shift due to phase plate',
+              expertLevel=params.LEVEL_ADVANCED)
+
+	group = form.addGroup('Phase shift parameters')	
+        group.addParam('minPhaseShift', params.FloatParam, default=0.0,
+              label="Minimum phase shift (rad)", condition='findPhaseShift',
+              help='Lower bound of the search for additional phase shift. '
+		   'Phase shift is of scattered electrons relative to unscattered electrons. In radians.',
+              expertLevel=params.LEVEL_ADVANCED)
+        group.addParam('maxPhaseShift', params.FloatParam, default=3.15,
+              label="Maximum phase shift (rad)", condition='findPhaseShift',
+              help='Upper bound of the search for additional phase shift. '
+		   'Phase shift is of scattered electrons relative to unscattered electrons. In radians. '
+		   'Please use value between 0.10 and 3.15',
+              expertLevel=params.LEVEL_ADVANCED)
+        group.addParam('stepPhaseShift', params.FloatParam, default=0.2,
+              label="Phase shift search step (rad)", condition='findPhaseShift',
+              help='Step size for phase shift search (radians)',
+              expertLevel=params.LEVEL_ADVANCED)
+>>>>>>> bd5d7be9eae221ce1449ba751f6c726a06b3142a
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
@@ -171,6 +191,17 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             ctffind = CTFFIND_PATH
         if not os.path.exists(ctffind):
             errors.append('Missing %s' % ctffind)
+
+	valueStep = round(self.stepPhaseShift,2)
+	valueMin = round(self.minPhaseShift,2)
+	valueMax = round(self.maxPhaseShift,2)
+
+	if (self.minPhaseShift < self.maxPhaseShift and
+	    valueStep <= (valueMax-valueMin) and
+	    0.10 <= valueMax <= 3.15):
+	    pass
+	else:
+	    errors.append('Wrong values for phase shift search.')
         return errors
     
     def _citations(self):
@@ -205,6 +236,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             self._params['astigmatism'] = self.astigmatism.get()
             if self.findPhaseShift:
                 self._params['phaseShift'] = "yes"
+                self._params['minPhaseShift'] = self.minPhaseShift.get()
+                self._params['maxPhaseShift'] = self.maxPhaseShift.get()
+                self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
             self._argsCtffind4()
@@ -237,6 +271,9 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             self._params['astigmatism'] = self.astigmatism.get()
             if self.findPhaseShift:
                 self._params['phaseShift'] = "yes"
+                self._params['minPhaseShift'] = self.minPhaseShift.get()
+                self._params['maxPhaseShift'] = self.maxPhaseShift.get()
+                self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
             self._argsCtffind4()
@@ -253,7 +290,29 @@ eof
     
     def _argsCtffind4(self):
         self._program = 'export OMP_NUM_THREADS=1; ' + CTFFIND4_PATH
-        self._args = """ << eof
+	if self.findPhaseShift:
+            self._args = """ << eof
+%(micFn)s
+%(ctffindPSD)s
+%(sampling)f
+%(voltage)f
+%(sphericalAberration)f
+%(ampContrast)f
+%(windowSize)d
+%(lowRes)f
+%(highRes)f
+%(minDefocus)f
+%(maxDefocus)f
+%(step_focus)f
+%(astigmatism)f
+%(phaseShift)s
+%(minPhaseShift)f
+%(maxPhaseShift)f
+%(stepPhaseShift)f
+eof
+"""
+	else:       
+            self._args = """ << eof
 %(micFn)s
 %(ctffindPSD)s
 %(sampling)f
@@ -292,3 +351,4 @@ eof
         ctf.setPsdFile(psdFile)
          
         return ctf
+

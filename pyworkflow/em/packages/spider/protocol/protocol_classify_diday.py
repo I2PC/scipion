@@ -29,7 +29,9 @@ from protocol_classify_base import SpiderProtClassifyCluster
       
 
 class SpiderProtClassifyDiday(SpiderProtClassifyCluster):
-    """ Diday's method, using 'CL CLA' 
+    """ Performs automatic clustering using Diday's method and
+    Hierarchical Ascendant Classification (HAC) using Ward's criterion
+    on factors produced by CA or PCA. Uses the Spider CL CLA program
     """
     _label = 'classify diday'
     

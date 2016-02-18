@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package will contains projection matching related utilities.
-"""
 
 from matplotlib_point_selector import PointSelector
 from matplotlib_point_path import PointPath
