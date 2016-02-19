@@ -997,19 +997,29 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def reconstruct(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",xmipp.MDL_SAMPLINGRATE)
-        minCTF = getFloatListFromValues(self.minCTF.get(),self.numberOfIterations.get())
+        # minCTF = getFloatListFromValues(self.minCTF.get(),self.numberOfIterations.get())
         for i in range(1,3):
             fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
             if not exists(fnVol):
-                # Reconstruct Fourier
-                args="-i %s -o %s --sym %s --weight --thr %d"%(fnAngles,fnVol,self.symmetryGroup,self.numberOfThreads.get())
+                # Correct for the CTF
+                fnAnglesToUse = fnAngles
                 row=getFirstRow(fnAngles)
-                if row.containsLabel(xmipp.MDL_CTF_DEFOCUSU) or row.containsLabel(xmipp.MDL_CTF_MODEL):
-                    args+=" --useCTF --sampling %f --minCTF %f"%(TsCurrent,minCTF[iteration-self.firstIteration])
+                hasCTF = row.containsLabel(xmipp.MDL_CTF_DEFOCUSU) or row.containsLabel(xmipp.MDL_CTF_MODEL)
+                fnCorrectedImagesRoot=join(fnDirCurrent,"images_corrected%02d"%i)
+                if hasCTF:
+                    args="-i %s -o %s.stk --save_metadata_stack %s.xmd --keep_input_columns"%(fnAngles,fnCorrectedImagesRoot,fnCorrectedImagesRoot)
+                    args+=" --sampling_rate %f --correct_envelope"%TsCurrent
                     if self.inputParticles.get().isPhaseFlipped():
-                        args+=" --phaseFlipped"
+                        args+=" --phase_flipped"
+                    self.runJob("xmipp_ctf_correct_wiener2d",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+                    fnAnglesToUse = fnCorrectedImagesRoot+".xmd"
+                    deleteStack = True
+                
+                # Reconstruct Fourier
+                args="-i %s -o %s --sym %s --weight --thr %d"%(fnAnglesToUse,fnVol,self.symmetryGroup,self.numberOfThreads.get())
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()+1)
+                
             # Reconstruct ADMM
 #            args="-i %s -o %s --sym %s"%(fnAngles,fnVol,self.symmetryGroup)
 #            row=getFirstRow(fnAngles)
@@ -1017,6 +1027,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 #                if not self.inputParticles.get().isPhaseFlipped():
 #                    args+=" --dontUseCTF"
 #            self.runJob("xmipp_reconstruct_admm",args)
+
+                if hasCTF:
+                    cleanPath(fnCorrectedImagesRoot+".*")
     
     def postProcessing(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
