@@ -284,12 +284,12 @@ class ProtGctf(em.ProtCTFMicrographs):
         return errors
     
     def _citations(self):
-        return ['Zhang2015']
+        return ['Zhang2016']
 
     def _methods(self):
         if self.inputMicrographs.get() is None:
             return ['Input micrographs not available yet.']
-        methods = "We calculated the CTF of %s using Gctf [Zhang2015]. " % self.getObjectTag('inputMicrographs')
+        methods = "We calculated the CTF of %s using Gctf [Zhang2016]. " % self.getObjectTag('inputMicrographs')
         methods += self.methodsVar.get('')
         methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
         
@@ -336,6 +336,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--kV %f " % self._params['voltage']
         self._args += "--cs %f " % self._params['sphericalAberration']
         self._args += "--ac %f " % self._params['ampContrast']
+        self._args += "--dstep %f " % self._params['scannedPixelSize']
         self._args += "--defL %f " % self._params['minDefocus']
         self._args += "--defH %f " % self._params['maxDefocus']
         self._args += "--defS %f " % self._params['step_focus']
