@@ -28,8 +28,9 @@ Visualization of the results of the Frealign protocol.
 """
 import os
 from os.path import exists, relpath
-from pyworkflow.utils.path import cleanPath
+from pyworkflow.utils.path import cleanPath, removeBaseExt
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
+from pyworkflow.em.viewer import CtfView
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 from pyworkflow.em.plotter import EmPlotter
@@ -164,9 +165,8 @@ Examples:
 #===============================================================================
 
     def _showImagesAngularAssignment(self, paramName=None):
-        
         views = []
-        
+
         for it in self._iterations:
             fn = self._getIterData(it)
             v = self.createScipionPartView(fn)
@@ -180,6 +180,7 @@ Examples:
     
     def _viewMatchProj(self, paramName=None):
         views = []
+
         for it in self._iterations:
             files = self.protocol._getFileName('match', iter=it)
             v = self.createDataView(files)
@@ -560,100 +561,53 @@ class ProtCTFFindViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'viewer CtfFind'
     _targets = [ProtCTFFind]
-     
-     
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
-        self._views = []
-         
-    def visualize(self, obj, **args):
-        self._visualize(obj, **args)
-         
-        for v in self._views:
-            v.show()
-             
+
     def _visualize(self, obj, **args):
-        cls = type(obj)
-         
-        def _getMicrographDir(mic):
-            """ Return an unique dir name for results of the micrograph. """
-            from pyworkflow.utils.path import removeBaseExt
-            return obj._getExtraPath(removeBaseExt(mic.getFileName()))
-         
-        def iterMicrographs(mics):
-            """ Iterate over micrographs and yield
-            micrograph name and a directory to process.
-            """
-            for mic in mics:
-                micFn = mic.getFileName()
-                micDir = _getMicrographDir(mic) 
-                yield (micFn, micDir, mic)
-         
-        def visualizeObjs(obj, setOfMics):
-            if exists(obj._getPath("ctfs_temporary.sqlite")):
-                os.remove(obj._getPath("ctfs_temporary.sqlite"))
-             
-            ctfSet = self.protocol._createSetOfCTF("_temporary")
-            for fn, micDir, mic in iterMicrographs(setOfMics):
-                samplingRate = mic.getSamplingRate() * self.protocol.ctfDownFactor.get()
-                mic.setSamplingRate(samplingRate)
-                out = self.protocol._getCtfOutPath(micDir)
-                psdFile = self.protocol._getPsdPath(micDir)
-                
-                if exists(out) and exists(psdFile):
-                    ctfModel = em.CTFModel()
-                
-                    if not self.protocol.useCftfind4:
-                        readCtfModel(ctfModel, out)
-                    else:
-                        readCtfModel(ctfModel, out, True)
-                    
-                    ctfModel.setPsdFile(psdFile)
-                    ctfModel.setMicrograph(mic)
-                    
-                    ctfSet.append(ctfModel)
-            
-            if ctfSet.getSize() < 1:
-                raise Exception("Has not been completed the CTF estimation of any micrograph")
-            else:
-                ctfSet.write()
-                ctfSet.close()
-                self._visualize(ctfSet)
-        
-        
-        if issubclass(cls, ProtCTFFind) and not obj.hasAttribute("outputCTF"):
-            mics = obj.inputMicrographs.get()
-            visualizeObjs(obj, mics)
-        elif obj.hasAttribute("outputCTF"):
-            self._visualize(obj.outputCTF)
+        views = []
+
+        if obj.hasAttribute("outputCTF"): # Finished protocol
+            ctfSet = obj.outputCTF
+            other = ''
         else:
-            fn = obj.getFileName()
-            if obj.strId() == "None":
-                objName = fn
-            else:
-                objName = obj.strId()
-            psdLabels = '_psdFile'
-            labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio' % psdLabels
-            if self.protocol.useCftfind4:
-                labels = labels + ' _ctffind4_ctfResolution _micObj._filename'
-                print "objName, ", objName
-                self._views.append(em.ObjectView(self._project, objName, fn,
-                                                 viewParams={showj.MODE: showj.MODE_MD,
-                                                             showj.ORDER: labels,
-                                                             showj.VISIBLE: labels,
-                                                             showj.ZOOM: 50,
-                                                             showj.RENDER: psdLabels,
-                                                             showj.OBJCMDS: "'%s'" % showj.OBJCMD_CTFFIND4}))
-            else:
-                labels += ' _micObj._filename'
-                self._views.append(em.ObjectView(self._project, obj.strId(), fn,
-                                                 viewParams={showj.MODE: showj.MODE_MD,
-                                                             showj.ORDER: labels,
-                                                             showj.VISIBLE: labels,
-                                                             showj.ZOOM: 50,
-                                                             showj.RENDER: psdLabels}))
-        
-        return self._views
+            mics = obj.inputMicrographs.get()
+            ctfSet = self.__createTemporaryCtfs(obj, mics)
+            other = obj.getObjId()
+
+        if ctfSet.isEmpty():
+            views.append(self.infoMessage("No CTF estimation has finished yet"))
+        else:
+            views.append(CtfView(self._project, ctfSet, other))
+
+        return views
+
+    def __createTemporaryCtfs(self, obj, setOfMics):
+        """ Create a temporary .sqlite file to visualize CTF while the
+             protocol has not finished yet.
+            """
+        cleanPath(obj._getPath("ctfs_temporary.sqlite"))
+        ctfSet = self.protocol._createSetOfCTF("_temporary")
+
+        for mic in setOfMics:
+            micFn = mic.getFileName()
+            micDir = obj._getExtraPath(removeBaseExt(mic.getFileName()))
+            samplingRate = mic.getSamplingRate() * self.protocol.ctfDownFactor.get()
+            mic.setSamplingRate(samplingRate)
+            out = self.protocol._getCtfOutPath(micDir)
+            psdFile = self.protocol._getPsdPath(micDir)
+
+            if exists(out) and exists(psdFile):
+                ctfModel = em.CTFModel()
+                readCtfModel(ctfModel, out,
+                             ctf4=self.protocol.useCtffind4.get())
+                ctfModel.setPsdFile(psdFile)
+                ctfModel.setMicrograph(mic)
+                ctfSet.append(ctfModel)
+
+        if not ctfSet.isEmpty():
+            ctfSet.write()
+            ctfSet.close()
+
+        return ctfSet
     
 def createCtfPlot(ctfSet, ctfId):
     from pyworkflow.utils.path import removeExt
