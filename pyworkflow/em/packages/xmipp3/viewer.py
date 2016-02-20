@@ -107,51 +107,37 @@ class XmippViewer(Viewer):
         
         for v in self._views:
             v.show()
-            
+
+    def __createTemporaryCtfs(self, obj, setOfMics):
+        pwutils.cleanPath(obj._getPath("ctfs_temporary.sqlite"))
+        self.protocol._createFilenameTemplates()
+        ctfSet = self.protocol._createSetOfCTF("_temporary")
+
+        for mic in setOfMics:
+            micDir = obj._getExtraPath(removeBaseExt(mic.getFileName()))
+            ctfparam = self.protocol._getFileName('ctfparam', micDir=micDir)
+
+            if exists(ctfparam) or exists('xmipp_default_ctf.ctfparam'):
+                if not os.path.exists(ctfparam):
+                    ctfparam = 'xmipp_default_ctf.ctfparam'
+                ctfModel = readCTFModel(ctfparam, mic)
+                self.protocol._setPsdFiles(ctfModel, micDir)
+                ctfSet.append(ctfModel)
+
+        if not ctfSet.isEmpty():
+            ctfSet.write()
+            ctfSet.close()
+
+        return ctfSet
+
     def _visualize(self, obj, **args):
         cls = type(obj)
-        def _getMicrographDir(mic):
-            """ Return an unique dir name for results of the micrograph. """
-            return obj._getExtraPath(removeBaseExt(mic.getFileName()))        
-    
-        def iterMicrographs(mics):
-            """ Iterate over micrographs and yield
-            micrograph name and a directory to process.
-            """
-            for mic in mics:
-                micFn = mic.getFileName()
-                micDir = _getMicrographDir(mic) 
-                yield (micFn, micDir, mic)
-    
-        def visualizeCTFObjs(obj, setOfMics):
-            
-            if exists(obj._getPath("ctfs_temporary.sqlite")):
-                os.remove(obj._getPath("ctfs_temporary.sqlite"))
-            self.protocol._createFilenameTemplates()
-            
-            ctfSet = self.protocol._createSetOfCTF("_temporary")
-            
-            for fn, micDir, mic in iterMicrographs(setOfMics):
-                ctfparam = self.protocol._getFileName('ctfparam', micDir=micDir)
-                
-                if exists(ctfparam) or exists('xmipp_default_ctf.ctfparam'):
-                    if not os.path.exists(ctfparam):
-                        ctfparam = 'xmipp_default_ctf.ctfparam'
-                    
-                    ctfModel = readCTFModel(ctfparam, mic)
-                    self.protocol._setPsdFiles(ctfModel, micDir)
-                    ctfSet.append(ctfModel)
-            
-            if ctfSet.getSize() < 1:
-                raise Exception("Has not been completed the CTT estimation of any micrograph")
-            else:
-                ctfSet.write()
-                ctfSet.close()
-                self._visualize(ctfSet)
 
         if issubclass(cls, Volume):
             fn = getImageLocation(obj)
-            self._views.append(ObjectView(self._project, obj.strId(), fn, viewParams={RENDER: 'image', SAMPLINGRATE: obj.getSamplingRate()}))
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
+                                          viewParams={RENDER: 'image',
+                                                      SAMPLINGRATE: obj.getSamplingRate()}))
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
@@ -161,7 +147,9 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
             objCommands = "'%s' '%s'" % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
-            self._views.append(ObjectView(self._project,  self.protocol.strId(), fn, obj.strId(), viewParams={OBJCMDS: objCommands}, **args))
+            self._views.append(ObjectView(self._project,  self.protocol.strId(),
+                                          fn, obj.strId(),
+                                          viewParams={OBJCMDS: objCommands}, **args))
 
         elif issubclass(cls, SetOfMovies):
             fn = obj.getFileName()
@@ -178,10 +166,6 @@ class XmippViewer(Viewer):
             
 
         elif issubclass(cls, MicrographsTiltPair):          
-#             fnU = obj.getUntilted().getFileName()
-#             fnT = obj.getTilted().getFileName()
-#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnU, **args))            
-#             self._views.append(ObjectView(self._project.getName(), obj.strId(), fnT, **args))
             labels = 'id enabled _untilted._filename _tilted._filename'
             self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
                                           viewParams={ORDER: labels, 
@@ -193,10 +177,10 @@ class XmippViewer(Viewer):
             labels = 'id enabled _untilted._filename _tilted._filename'
             self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
                                           viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, RENDER:'_untilted._filename _tilted._filename',
+                                                      VISIBLE: labels,
+                                                      RENDER:'_untilted._filename _tilted._filename',
                                                       MODE: MODE_MD}))
 
-                            
         elif issubclass(cls, SetOfCoordinates):
             micSet = obj.getMicrographs()  # accessing mics to provide metadata file
             if micSet is None:
@@ -236,13 +220,17 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={ORDER: labels, 
                                                       VISIBLE: labels, 
-                                                      'sortby': '_xmipp_zScore asc', RENDER:'_filename'}))
+                                                      'sortby': '_xmipp_zScore asc',
+                                                      RENDER:'_filename'}))
                
         elif issubclass(cls, SetOfVolumes):
             fn = obj.getFileName()
             labels = 'id enabled comment _filename '
             self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, RENDER: '_filename'}))
+                                          viewParams={MODE: MODE_MD,
+                                                      ORDER: labels,
+                                                      VISIBLE: labels,
+                                                      RENDER: '_filename'}))
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
@@ -252,22 +240,20 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             self._views.append(Classes3DView(self._project, obj.strId(), fn))
         
-        if issubclass(cls, XmippProtCTFMicrographs) and not obj.hasAttribute("outputCTF"):
-            mics = obj.inputMicrographs.get()
-            visualizeCTFObjs(obj, mics)
+        if issubclass(cls, XmippProtCTFMicrographs):
+            if obj.hasAttribute('outputCTF'):
+                ctfSet = obj.outputCTF
+            else:
+                mics = obj.inputMicrographs.get()
+                ctfSet = self.__createTemporaryCtfs(obj, mics)
 
-        elif obj.hasAttribute("outputCTF"):
-            self._visualize(obj.outputCTF)
-        
+            if ctfSet.isEmpty():
+                self._views.append(self.infoMessage("No CTF estimation has finished yet"))
+            else:
+                self._views.append(CtfView(self._project, ctfSet))
+
         elif issubclass(cls, SetOfCTF):
-            fn = obj.getFileName()
-#            self._views.append(DataView(fn, viewParams={MODE: 'metadata'}))
-            psdLabels = '_psdFile _xmipp_enhanced_psd _xmipp_ctfmodel_quadrant _xmipp_ctfmodel_halfplane'
-            labels = 'id enabled label %s _defocusU _defocusV _defocusAngle _defocusRatio ' \
-                     '_xmipp_ctfCritFirstZero _xmipp_ctfCritCorr13 _xmipp_ctfCritFitting _xmipp_ctfCritNonAstigmaticValidity ' \
-                     '_xmipp_ctfCritCtfMargin _xmipp_ctfCritMaxFreq _micObj._filename' % psdLabels #TODO:CHECK IF _xmipp_ctfCritNonAstigmaticValidity AND _xmipp_ctfCritCtfMargin exist sometimes. 
-            self._views.append(ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels, ZOOM: 50, RENDER: psdLabels}))    
+            self._views.append(CtfView(self._project, obj))
 
         elif issubclass(cls, CoordinatesTiltPair):
             tmpDir = self._getTmpPath(obj.getName()) 
