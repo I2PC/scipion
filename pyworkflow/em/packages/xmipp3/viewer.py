@@ -186,7 +186,6 @@ class XmippViewer(Viewer):
             if micSet is None:
                 raise Exception('visualize: SetOfCoordinates has no micrographs set.')
             
-
             mdFn = getattr(micSet, '_xmippMd', None)
             if mdFn:
                 fn = mdFn.get()
@@ -194,23 +193,16 @@ class XmippViewer(Viewer):
                 fn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, fn)
             tmpDir = self._getTmpPath(obj.getName())
-            if os.path.exists(tmpDir):
-                r = dialog.askYesNoCancel("Question", 
-                                   "It seems that you have edited this SetOfCoordinates before.\n"
-                                   "Do you wish to load the changes?\n\n"
-                                   "_Note_: If you choose *No*, the original coordinates will be loaded\n"
-                                   " and previous changes will be lost.", self._tkRoot)
-                
-                if r == dialog.RESULT_CANCEL:
-                    return
-                elif r == dialog.RESULT_NO:
-                    cleanPath(tmpDir)
-                    makePath(tmpDir)
-                    writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
-            else:
-                makePath(tmpDir)
-                writeSetOfCoordinates(tmpDir, obj)# always write set of coordinates instead of reading pos dir, that could have changed
-            
+            cleanPath(tmpDir)
+            makePath(tmpDir)
+            # FIXME: (JMRT) We are always writing the SetOfCoordinates and removing
+            # the tmpDir, we need to take into account if the user have pick
+            # some particles in the tmpDir and have not save them, that now
+            # will loose all picked partices.
+            # A possible solution could be to alert that changes have not been
+            # written during modification of tmpDir or create a new Xmipp picking
+            # protocol to continue picking later without loosing the coordinates.
+            writeSetOfCoordinates(tmpDir, obj)
             self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol))
 
         elif issubclass(cls, SetOfParticles):
