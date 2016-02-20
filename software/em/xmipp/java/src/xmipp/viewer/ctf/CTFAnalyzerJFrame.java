@@ -82,20 +82,14 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     private ImagePlus profileimp;
 
 
-	public CTFAnalyzerJFrame(ImagePlus imp, String ctffile, String psdfile)
-    {
 
+	public CTFAnalyzerJFrame(String psdEnhancedFile, String ctffile, String psdfile)
+    {
         try
         {
-            // JMRT: I don't know if imp is needed since the psdfile is read
-            this.imp = imp;
+            this.imp = this.getThumbnail(psdEnhancedFile);
             this.psdfile = psdfile;
-            ImageGeneric psd = new ImageGeneric(psdfile);
-            // JMRT: Always read the PSD with 256 pixels, greater values break the GUI
-            psd.read(256, 256, ImageGeneric.FIRST_IMAGE);
-            this.profileimp = XmippImageConverter.readToImagePlus(psd);
-            this.imp = this.profileimp;
-            psd.destroy();
+            this.profileimp = this.getThumbnail(psdfile);
             ctfmodel = new CTFDescription(ctffile);
             double samplingRate = getSamplingRate(ctffile);
             samples = this.imp.getWidth() / 2;
@@ -106,19 +100,13 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
         }
     }
 
-	public CTFAnalyzerJFrame(ImagePlus imp, CTFDescription ctfdescription, String psdfile, double samplingRate)
+	public CTFAnalyzerJFrame(String psdEnhancedFile, CTFDescription ctfdescription, String psdfile, double samplingRate)
 	{
         try
         {
-            // JMRT: I don't know if imp is needed since the psdfile is read
-            this.imp = imp;
+            this.imp = this.getThumbnail(psdEnhancedFile);
             this.psdfile = psdfile;
-            ImageGeneric psd = new ImageGeneric(psdfile);
-            // JMRT: Always read the PSD with 256 pixels, greater values break the GUI
-            psd.read(256, 256, ImageGeneric.FIRST_IMAGE);
-            this.profileimp = XmippImageConverter.readToImagePlus(psd);
-            psd.destroy();
-            this.imp = this.profileimp;
+            this.profileimp = this.getThumbnail(psdfile);
             ctfmodel = ctfdescription;
             samples = this.imp.getWidth() / 2;
             xvalues = getXValues(samples, samplingRate);
@@ -127,7 +115,24 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
             e.printStackTrace();
         }
 	}
-        
+
+    /* Load the image with a size of 256 pixels. */
+    private ImagePlus getThumbnail(String imagefile)
+    {
+        ImagePlus imp = null;
+        try
+        {
+        ImageGeneric img = new ImageGeneric(imagefile);
+        img.read(256, 256, ImageGeneric.FIRST_IMAGE);
+        imp = XmippImageConverter.readToImagePlus(img);
+        // Free the C-image memory
+        img.destroy();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return imp;
+    }
+
     private void initComponents()
     {
         setTitle("CTF Analyzer");
