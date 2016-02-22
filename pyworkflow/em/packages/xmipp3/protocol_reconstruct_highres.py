@@ -448,6 +448,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%(fnVolAvg,resolution,TsCurrent),numberOfMpi=1)
         self.runJob('xmipp_image_header','-i %s --sampling_rate %f'%(fnVolAvg,TsCurrent),numberOfMpi=1)
         
+        if self.postAdHocMask.hasValue():
+            fnMask=join(fnDirCurrent,"mask.vol")
+            if not exists(fnMask):
+                volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
+                self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
+            self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolAvg,fnMask),numberOfMpi=1)
+            cleanPath(fnMask)
+
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
             from xmipp import AGGR_MAX
@@ -714,11 +722,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnAnglesA=join(fnGlobal,"anglesDisc%02da.xmd"%i)
                 fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
-                fnAngles=fnOut+".xmd"
+                
                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesA,fnOut+"_weights.xmd"),numberOfMpi=1)
+                
+                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesA,fnAnglesB,fnOut,self.symmetryGroup),numberOfMpi=1)
+                self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesB,fnOut+"_weights.xmd"),numberOfMpi=1)
+                
                 self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s -o %s'%(fnAnglesA,fnAnglesB,fnOut+".xmd"),numberOfMpi=1)
                 cleanPath(fnOut+"_weights.xmd")
                 
@@ -1022,7 +1034,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnMask=join(fnDirCurrent,"mask.vol")
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
                 self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVol,fnMask),numberOfMpi=1)
-                cleanPath(fnMask)
 
             if self.postSymmetryWithinMask:
                 if self.postMaskSymmetry!="c1":

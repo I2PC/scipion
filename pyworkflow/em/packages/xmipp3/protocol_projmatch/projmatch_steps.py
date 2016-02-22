@@ -708,6 +708,8 @@ def runCreateOutputStep(self):
         self._defineOutputs(outputClasses=classes)
         self._defineSourceRelation(self.inputParticles, volumes)
         self._defineSourceRelation(self.inputParticles, classes)
+        self._defineSourceRelation(self.input3DReferences, volumes)
+        self._defineSourceRelation(self.input3DReferences, classes)
     else:
         volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=1)
         vol = Volume()
@@ -715,6 +717,7 @@ def runCreateOutputStep(self):
         vol.setSamplingRate(imgSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputParticles, vol)
+        self._defineSourceRelation(self.input3DReferences, vol)
         
         #create set of images
         imgSetOut = self._createSetOfParticles("_iter_%03d" %lastIter)
@@ -722,4 +725,4 @@ def runCreateOutputStep(self):
         
         self._defineOutputs(outputParticles=imgSetOut)
         self._defineSourceRelation(self.inputParticles, imgSetOut)
-    
+        self._defineSourceRelation(self.input3DReferences, imgSetOut)

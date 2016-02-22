@@ -14,27 +14,78 @@ from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
 import pyworkflow.em.packages.eman2.convert as e2convert
 from pyworkflow.em.protocol import EMProtocol
-
 import pyworkflow.em.metadata as md
+from pyworkflow.em.convert import ImageHandler
 
 
+
+class TestFSC(unittest.TestCase):
+        
+    def testIO(self):
+        """Test basic FSC object"""
+        xList=[0.00,0.05,0.10,0.15,0.2]
+        yList=[1.00,0.95,0.90,0.85,0.2]
+        fsc = FSC()
+        fsc.setData(xList,yList)
+        #fsc.printAll()
+        x,y = fsc.getData()
+        self.assertEqual(xList,x)
+        self.assertEqual(yList,y)
+
+    def testMd(self):
+        """test create FSC from metdata"""
+        import xmipp
+        xList=[0.00,0.05,0.10,0.15,0.2]
+        yList=[1.00,0.95,0.90,0.85,0.2]
+        md1 =xmipp.MetaData()
+        for freq,fscValue in izip(xList, yList):
+            id = md1.addObject()
+            md1.setValue(xmipp.MDL_RESOLUTION_FREQ, freq, id)
+            md1.setValue(xmipp.MDL_RESOLUTION_FRC, fscValue, id)
+        fsc = FSC()
+        fsc.loadFromMd(md1,xmipp.MDL_RESOLUTION_FREQ,
+                       xmipp.MDL_RESOLUTION_FRC)
+        x,y = fsc.getData()
+        self.assertEqual(xList,x)
+        self.assertEqual(yList,y)
 
 class TestImage(unittest.TestCase):
-        
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         cls.mic1 = cls.dataset.getFile( 'mic1')
-    
+
     def testLocation(self):
         fn = self.mic1
         mic = Micrograph()
         mic.setFileName(fn)
 
-        # Check that setFileName-getFileName is working properly        
+        # Check that setFileName-getFileName is working properly
         self.assertEqual(fn, mic.getFileName())
-        
+
+
+class TestImageHandler(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestOutput(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+
+    def testExistLocation(self):
+        volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
+
+        ih = ImageHandler()
+        # Test the volume filename exists
+        self.assertTrue(ih.existsLocation(volFn))
+        # Test missing filename
+        self.assertFalse(ih.existsLocation(volFn.replace('.mrc', '_fake.mrc')))
+        # Test the :mrc is append when used as volume
+        newFn = ih.getVolFileName(volFn)
+        self.assertEqual(newFn, volFn + ":mrc")
+        # Test that the new filename still exists even with the :mrc suffix
+        self.assertTrue(ih.existsLocation(newFn))
+
         
 class TestSetOfMicrographs(BaseTest):
     
@@ -351,7 +402,7 @@ class TestTransform(BaseTest):
         self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 1)
 
-    def test_scaleShifts2D(self):
+    def test_scaleShifts(self):
         """ Check Scale 2D shifts in transformation class
         """
         t = Transform()
@@ -360,11 +411,11 @@ class TestTransform(BaseTest):
         m[1, 3] = 4
         m[2, 3] = 6
         m[3, 3] = 5
-        t.scaleShifts2D(0.5)
+        t.scaleShifts(0.5)
 
         self.assertAlmostEqual(m[0, 3], 1)
         self.assertAlmostEqual(m[1, 3], 2)
-        self.assertAlmostEqual(m[2, 3], 6)
+        self.assertAlmostEqual(m[2, 3], 3)
         self.assertAlmostEqual(m[3, 3], 5)
 
     def test_clone(self):

@@ -242,17 +242,10 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         XmippProcessParticles._updateItem(self, item, row)
         if self.doResize:
             if item.hasCoordinate():
-                factor = self.samplingRate / item.getSamplingRate()
-                coord = item.getCoordinate()
-                coord.setX(coord.getX() / factor)
-                coord.setY(coord.getY() / factor)
-                item.setCoordinate(coord)
-                
+                item.scaleCoordinate(self.factor)
             item.setSamplingRate(self.samplingRate)
-                
-            
             if self.inputHasAlign:
-                item.getTransform().scaleShifts2D(1./self.factor)
+                item.getTransform().scaleShifts(self.factor)
     
     #--------------------------- INFO functions ----------------------------------------------------
     def _summary(self):

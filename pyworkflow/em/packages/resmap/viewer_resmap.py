@@ -23,20 +23,18 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.viewer import ImageView
-"""
-Visualization of the ResMap outputs.
-"""
 
 import os
 import sys
 
-from pyworkflow.protocol.params import LabelParam
+from pyworkflow.protocol.params import LabelParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import ChimeraView
-from pyworkflow.gui.plotter import Plotter
+from pyworkflow.em.viewer import ImageView, ChimeraView
 from protocol_resmap import ProtResMap
 
+AX_X = 0
+AX_Y = 1
+AX_Z = 2
 
 
 class ResMapViewer(ProtocolViewer):
@@ -60,16 +58,21 @@ class ResMapViewer(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        group = form.addGroup('2D Plots')
-        group.addParam('doShowVolumeSlices', LabelParam, default=True,
-                      label="Show volume slices?")
-        group.addParam('doShowResMapSlices', LabelParam, default=True,
-                      label="Show ResMap slices?")               
-        group.addParam('doShowResHistogram', LabelParam,
-                      label="Show resolution histogram?", default=True)
-        
+        group = form.addGroup('Slices')
+
+        group.addParam('sliceAxis', EnumParam, default=AX_Z,
+                       choices=['x', 'y', 'z'],
+                       display=EnumParam.DISPLAY_HLIST,
+                       label='Slice axis')
+        group.addParam('doShowVolumeSlices', LabelParam,
+                      label="Show volume slices")
+        group.addParam('doShowResMapSlices', LabelParam,
+                      label="Show ResMap slices")
+
+        form.addParam('doShowResHistogram', LabelParam,
+                      label="Show resolution histogram")
         form.addParam('doShowChimera', LabelParam,
-                      label="Show Chimera animation?", default=True)
+                      label="Show Chimera animation", default=True)
         
         
     def _getVisualizeDict(self):
@@ -78,12 +81,15 @@ class ResMapViewer(ProtocolViewer):
                 'doShowResHistogram': self._plotHistogram,
                 'doShowChimera': self._showChimera,
                 }
+
+    def _getAxis(self):
+        return self.getEnumText('sliceAxis')
         
     def _showVolumeSlices(self, param=None):
-        return [self.protocol._plotVolumeSlices()]
+        return [self.protocol._plotVolumeSlices(dataAxis=self._getAxis())]
         
     def _showResMapSlices(self, param=None):
-        return [self.protocol._plotResMapSlices()]
+        return [self.protocol._plotResMapSlices(dataAxis=self._getAxis())]
              
     def _plotHistogram(self, param=None):
         return [self.protocol._plotHistogram()]

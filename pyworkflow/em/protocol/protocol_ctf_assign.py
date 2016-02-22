@@ -95,7 +95,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
             if hasMicName:
                 ctfName = ctf.getMicrograph().getMicName()
             else:
-                ctfName = ctf.getMicrograph().getMicId()
+                ctfName = ctf.getMicrograph().getObjId()
 #             print "ctf: ", ctf.printAll(), ctfName
             ctfDict[ctfName] = ctf.clone()
         
