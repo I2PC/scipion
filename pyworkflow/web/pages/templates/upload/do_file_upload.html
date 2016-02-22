@@ -5,7 +5,7 @@
 		<!--{{ form.as_p }}-->
 		<label for="id_file-path"></label>
 		<input id="id_file-path" type="hidden" name="file-path" value="None" />
-		<input type="file" name="file"  data-upload-url="/webtools/uploadr/" id="id_file" value="Choose a file"/>
+		<input type="file" name="file"  data-upload-url="{{abs_url}}uploadr/" id="id_file" value="Choose a file"/>
 		<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
 		<input type="hidden" name="p" value="{{projectName}}"/>
 		<input type="hidden" name="s" value="{{s}}"/>
