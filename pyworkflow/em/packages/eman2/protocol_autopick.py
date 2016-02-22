@@ -35,7 +35,9 @@ from convert import readSetOfCoordinates
 
 
 class SparxGaussianProtPicking(ProtParticlePicking):
-    """Protocol to pick particles automatically in a set of micrographs using sparx gaussian picker"""
+    """Protocol to pick particles automatically in a set of micrographs using sparx gaussian picker.
+    For more information see http://sparx-em.org/sparxwiki/e2boxer
+    """
     _label = 'sparx gaussian picker'
         
     def __init__(self, **args):     
@@ -48,16 +50,15 @@ class SparxGaussianProtPicking(ProtParticlePicking):
 
         ProtParticlePicking._defineParams(self, form)
         form.addParam('boxSize', IntParam, default=100,
-                   label='Box Size')
-        line = form.addLine('Picker range',
-                            help='')
+                      label='Box Size', help='Box size in pixels')
+        line = form.addLine('Picker range', help='CCF threshold range for automatic picking')
         line.addParam('lowerThreshold', FloatParam, default='1',
                       label='Lower')
         line.addParam('higherThreshold', FloatParam, default='30',
                       label='Higher')
 
         form.addParam('gaussWidth', FloatParam, default='1',
-              label='Gauss Width')
+              label='Gauss Width', help='Width of the Gaussian kernel used')
         
     
 
