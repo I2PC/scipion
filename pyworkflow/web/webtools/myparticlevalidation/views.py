@@ -171,7 +171,7 @@ def create_particlevalidation_project(request):
         loadProtocolConf(protValidation)
         project.saveProtocol(protValidation)
 
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(content_type='application/javascript')
 
 
 def getAttrTestFile(key):
@@ -194,7 +194,7 @@ def getAttrTestFile(key):
 def particlevalidation_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode': 'upload',
+    context.update({'path_mode': 'select',
                     'formUrl': MYPVAL_FORM_URL,
                     'showHost': False,
                     'showParallel': True})

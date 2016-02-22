@@ -20,7 +20,7 @@
 <script type="text/javascript">
 
 	$(document).ready(function() {
-		var URL = getSubDomainURL() + '/getPath/'
+		var URL = getSubDomainURL() + '/getPath/?' + projectToGETParams();
 	    
 		$('#FButton_{{paramName}}').serverBrowser({
 	        //Accessing path
@@ -31,15 +31,15 @@
 	        
 	        //Config
 	        knownExt: getKnownExt(),
-               knownPaths: [{text:'ProjectFolder', image:'fa-home.png', path: '{{project_folder}}'},
-                            {text:'Uploads', image:'fa-upload.png', path: '{{project_folder}}/Uploads'}],
-               //views_utils gives the entire url (mod into the serverBrowse lib)
-               imageUrl: getSubDomainURL() + '/resources',
+		    knownPaths: [{text:'ProjectFolder', image:'fa-home.png', path: '{{project_folder}}'},
+                         {text:'Uploads', image:'fa-upload.png', path: '{{project_folder}}/Uploads'}],
+			//views_utils gives the entire url (mod into the serverBrowse lib)
+            imageUrl: getSubDomainURL() + '/resources',
 	        
-               //Size
+            //Size
 	        resizable:true,
 	        width: 450,
-               height: 450,
+            height: 450,
 	        
 	        //Functionality
 	        onSelect: function(path) {
@@ -58,5 +58,10 @@
 <td class="ico">
 	<a id="FButton_{{paramName}}" href="#">
 		<i class="fa fa-search" style="font-size:1.1em;"></i>
+	</a>
+</td>
+<td class="ico">
+	<a href='#' onclick="javascript:popup('{{abs_url}}upload/?p={{projectName}}&s={{s}}')">
+		<i class="fa fa-upload" style="font-size:1.1em;"></i>
 	</a>
 </td>

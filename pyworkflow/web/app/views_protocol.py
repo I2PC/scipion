@@ -290,7 +290,7 @@ def protocol(request):
             
     jsonStr = json.dumps({'errors' : parseText(errors)}, ensure_ascii=False)
     
-    return HttpResponse(jsonStr, mimetype='application/javascript')   
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 def updateProtocolParams(request, protocol, project):
     """ Update the protocol values from the Web-form.
@@ -380,7 +380,7 @@ def save_protocol(request):
         res = {'errors' : errors}
     
     jsonStr = json.dumps(res, ensure_ascii=False)
-    return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 # Method to delete a protocol #
 def delete_protocol(request):
@@ -401,7 +401,7 @@ def delete_protocol(request):
             res = {'errors' : errors}
             
     jsonStr = json.dumps(res, ensure_ascii=False)
-    return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 # Method to copy a protocol #
 def copy_protocol(request):
@@ -423,7 +423,7 @@ def copy_protocol(request):
             res = {'errors' : errors}
             
     jsonStr = json.dumps(res, ensure_ascii=False)
-    return HttpResponse(jsonStr, mimetype='application/javascript')   
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 # Method to stop a protocol #
 def stop_protocol(request):
@@ -434,4 +434,4 @@ def stop_protocol(request):
      
         project.stopProtocol(protocol)
         
-    return HttpResponse(mimetype='application/javascript') 
+    return HttpResponse(content_type='application/javascript')

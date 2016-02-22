@@ -34,7 +34,12 @@ from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadReque
 from django.core.context_processors import csrf
 from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
-from django.core.servers.basehttp import FileWrapper
+# Depending on DJANGO version (first is for DJANGO 1.9) second for 1.5.5
+try:
+    from wsgiref.util import FileWrapper
+except ImportError:
+    from django.core.servers.basehttp import FileWrapper
+
 from pyworkflow.web.app.email import validateEmail, subscribeToUsersList
 import mimetypes
 

@@ -214,7 +214,7 @@ def get_image_filter_spider(request):
     # from PIL import Image
     img = getPILImage(img, dim)
     
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response
 
@@ -232,6 +232,6 @@ def run_custom_mask_spider(request):
 #    print "imagePath:",imagePath
 #    print "os.getcwd: ", os.getcwd()
         
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(content_type='application/javascript')
     
     

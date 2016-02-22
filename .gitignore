@@ -79,3 +79,4 @@ gmon.out
 downloads.sqlite
 /static
 /pyworkflow/web/pages/resources/install
+*.log

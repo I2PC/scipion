@@ -46,6 +46,7 @@ from pyworkflow.em.protocol import ProtImportAverages
 from pyworkflow.em.packages.xmipp3 import XmippProtAlignVolumeForWeb
 
 MYFIRSTMAP_SERVICE = 'myfirstmap'
+MYFIRSTMAP_SERVICE_URL = MYFIRSTMAP_SERVICE
 
 
 def service_projects(request):
@@ -186,20 +187,20 @@ def create_service_project(request):
 #         project.saveProtocol(protValidate)
         
         
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(content_type='application/javascript')
 
 def get_testdata(request):
     # Filename to use as test data 
     testDataKey = request.GET.get('testData')
     dsMDA = DataSet.getDataSet('initial_volume')
     fn = dsMDA.getFile(testDataKey)
-    return HttpResponse(fn, mimetype='application/javascript')
+    return HttpResponse(fn, content_type='application/javascript')
 
  
 def myfirstmap_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode':'upload',
+    context.update({'path_mode':'select',
                     'formUrl': 'my_form',
                     'showHost': False,
                     'showParallel': True})

@@ -71,7 +71,7 @@ def object_info(request):
 
         jsonStr = json.dumps(ioDict, ensure_ascii=False)
 
-    return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 def object_tree(request):
@@ -91,4 +91,4 @@ def object_tree(request):
     # Convert tree object to html
     html = convertObjTree(root)
 
-    return HttpResponse(html, mimetype='application/javascript')
+    return HttpResponse(html, content_type='application/javascript')

@@ -29,15 +29,18 @@
  * Methods used in the upload template
  *
  ******************************************************************************/
+const UPLOAD_PATH = "Uploads/";
 
  /** METHODS ******************************************************************/
 
 // To fill the list of files tab
 function doInitFunction(){
-	var project_folder = $("#project_folder").val()
-	updateListFiles(project_folder)
-	var URL = getSubDomainURL() + '/doUpload/?' + projectToGETParams()
+	updateListFiles();
+	var URL = getSubDomainURL() + '/doUpload?'
 	$("#uploadForm").submit(function(e) {
+
+		e.preventDefault();
+
 		$.ajax({
 			url: URL,
 			type: 'POST',
@@ -45,7 +48,6 @@ function doInitFunction(){
 			processData: false,
 			contentType: false,
 			dataType: "text",
-			async: false,
 			success: function(data){
 				if(data == "error"){
 					errorPopup('Error', "Problem found with the file selected", 0);
@@ -55,9 +57,7 @@ function doInitFunction(){
 				}
 			}
 		});
-		e.preventDefault();
-//		$("#progressbar").hide()
-		updateListFiles(project_folder)
+		updateListFiles();
 	});
 }
 
@@ -125,27 +125,45 @@ function uploadService(){
 	
 	$("input.upload2").val(fn)
 
-	file = $("#project_folder").val()+ "/Uploads/" + fn
+	file = $("#project_folder").val()+ UPLOAD_PATH + fn
 	$("input.upload1").val(file)
 }
 
-function updateListFiles(project_folder){
-	var project_folder = project_folder + "/Uploads"
+function updateListFiles(){
+
 	$("tr#listFiles").empty();
-	var URL = getSubDomainURL() + "/getPath/?path="+ project_folder
+	var subdomain = getSubDomainURL();
+	var URL = subdomain + "/getPath/?partialPath=" + UPLOAD_PATH + projectToGETParams();
 	$.ajax({
 		type : "GET",
 		url : URL,
 		dataType : "json",
-		async: false,
 		success : function(json) {
 			$.each(json, function(key, value) {
-				var icon = "<td><img src='"+ value.icon +"' /></td>"
-				var url_file = "/get_file/?path="+ project_folder + "/" + value.name +""
-				console.log(url_file)
-				var name = "<td><a href='" + url_file + "'>"+ value.name +"</a></td>"
-				$("tr#listFiles").append("<tr>"+ icon + name + "</tr>")
+				var icon = "<td><img src='"+ value.icon +"' /></td>";
+				var partialPath = UPLOAD_PATH + value.name;
+				var url_file = subdomain + "/get_file/?path="+ partialPath + projectToGETParams();
+				var name = "<td><a href='" + url_file + "'>"+ value.name +"</a></td>";
+				var deleteFile = '<td><img src="' + subdomain + '/resources/fa-trash-o.png" onclick="javascript:deleteFile(\'' + partialPath + '\')"></td>';
+				$("tr#listFiles").append("<tr>"+ icon + name + deleteFile + "</tr>");
 			});
 		}
 	});
+}
+
+function deleteFile(partialPath){
+
+	var subdomain = getSubDomainURL();
+	var URL = subdomain + "/deletefile?partialPath="+ partialPath + projectToGETParams();
+	$.ajax({
+		type : "GET",
+		url : URL,
+		success : function(data) {
+
+			console.log ('Deletefile response from server: ' + data);
+			updateListFiles()
+
+		}
+	});
+
 }

@@ -33,7 +33,12 @@ import json
 import mimetypes
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound
-from django.core.servers.basehttp import FileWrapper
+
+# Depending on DJANGO version (first is for DJANGO 1.9) second for 1.5.5
+try:
+    from wsgiref.util import FileWrapper
+except ImportError:
+    from django.core.servers.basehttp import FileWrapper
 
 import pyworkflow.em as em
 from pyworkflow.web.pages import settings as django_settings
@@ -293,7 +298,7 @@ def loadProjectFromPath(projectPath):
 #     except Exception:
 #         pass
 #
-#     return HttpResponse(result, mimetype='application/javascript')
+#     return HttpResponse(result, content_type='application/javascript')
 
 
 def loadProtocolProject(request, requestType=POST):
@@ -380,7 +385,7 @@ def browse_relations(request):
             objs[obj.getObjId()] = {"nameId": obj.getNameId(), "info": str(obj)}
 
         jsonStr = json.dumps(objs, ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 # ===============================================================================
@@ -434,7 +439,7 @@ def browse_objects(request):
             objs[obj.getObjId()] = context
 
         jsonStr = json.dumps(objs, ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 class FilterObject:
@@ -470,7 +475,7 @@ def browse_protocol_class(request):
         objs = findSubClasses(getProtocols(), protClassName).keys()
 
         jsonStr = json.dumps({'objects': objs}, ensure_ascii=False)
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 def get_attributes(request):
@@ -483,7 +488,7 @@ def get_attributes(request):
             obj = project.getObject(int(objId)).get()
 
         res = obj.getObjLabel() + "_-_" + obj.getObjComment()
-        return HttpResponse(res, mimetype='application/javascript')
+        return HttpResponse(res, content_type='application/javascript')
 
 
 def set_attributes(request):
@@ -506,13 +511,13 @@ def set_attributes(request):
         # Save the protocol 
         project._storeProtocol(obj)
 
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(content_type='application/javascript')
 
 
 def file_viewer(request):
     fileToOpen = request.GET.get("path")
     html = textFileViewer('title', fileToOpen)
-    return HttpResponse(html, mimetype='application/javascript')
+    return HttpResponse(html, content_type='application/javascript')
 
 
 def textFileViewer(title, fileToOpen):
@@ -572,8 +577,10 @@ def get_file(request):
     pathToFile = request.GET.get("path")
     filename = request.GET.get("filename", pathToFile)
 
-    #     print "path: ",path
-    #     print "filename: ",filename
+    # If pathToFile is not absolute
+    if not os.path.isabs(pathToFile):
+        projectPath = getProjectPathFromRequest(request)
+        pathToFile = os.path.join(projectPath, pathToFile)
 
     if not os.path.exists(pathToFile):
         return HttpResponseNotFound('Path not found: %s' % pathToFile)
@@ -581,8 +588,27 @@ def get_file(request):
     response = HttpResponse(FileWrapper(open(pathToFile)),
                             content_type=mimetypes.guess_type(pathToFile)[0])
     response['Content-Length'] = os.path.getsize(pathToFile)
-    response['Content-Disposition'] = 'attachment; filename=%s' % filename
+    response['Content-Disposition'] = 'attachment; filename=%s' % os.path.basename(filename)
     return response
+
+
+def delete_file(request):
+    """Return a response with the results of the deletion of a file
+
+    Parameters
+    ----------
+    request: http request
+    """
+    partialPath = request.GET.get("partialPath")
+    projectPath = getProjectPathFromRequest(request)
+    fileToDelete = os.path.join(projectPath, partialPath)
+
+    if not os.path.exists(fileToDelete):
+        return HttpResponseNotFound('File to delete not found: %s' % partialPath)
+
+    os.remove(fileToDelete)
+
+    return HttpResponse('File deleted %s' % partialPath)
 
 
 def download_output(request):
@@ -623,7 +649,7 @@ def download_output(request):
 
         z.close()
 
-        return HttpResponse(outputFile, mimetype='application/javascript')
+        return HttpResponse(outputFile, content_type='application/javascript')
 
 
 def render_column(request):
@@ -649,7 +675,7 @@ def get_image_plot(request):
     from PIL import Image
     imagePath = getImageFullPathFromRequest(request, request.GET.get('image'))
     img = Image.open(imagePath)
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     # Create and save the image
     img.save(response, "PNG")
     # after the image is removed from the file system
@@ -661,7 +687,7 @@ def get_image_path(request):
     from PIL import Image
     imagePath = getImageFullPathFromRequest(request, request.GET.get('image'))
     img = Image.open(imagePath)
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response
 
@@ -729,7 +755,7 @@ def get_image(request):
     except Exception:
         img = getImage(findResource(getResourceIcon("no_image")), tkImage=False)
 
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response
 
@@ -772,7 +798,7 @@ def get_slice(request):
         # from PIL import Image
     #   img = getPILImage(imgXmipp, None, False)
     img = getPILImage(imgXmipp, normalize=False)
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
 
     if img.mode != 'RGB':
         img = img.convert('RGB')
@@ -799,7 +825,7 @@ def get_image_dim(request):
     #     print "xdim, ydim = %s:%s" % (xdim,ydim)
 
     jsonStr = json.dumps(objs, ensure_ascii=False)
-    return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 def getImageDim(request, imagePath):
