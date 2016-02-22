@@ -24,9 +24,9 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers around xmipp_showj
-visualization program.
+This module implements visualization program for Spider CA-PCA protocol.
 """
+
 import Tkinter as tk
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
