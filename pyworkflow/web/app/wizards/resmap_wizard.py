@@ -144,7 +144,7 @@ def get_resmap_plot(request):
 
     plotUrl, _ = getPlotResMap(request, newProtocol)
     
-    return HttpResponse(plotUrl, mimetype='application/javascript')   
+    return HttpResponse(plotUrl, content_type='application/javascript')
 
 #===============================================================================
 # RESMAP UTILS 

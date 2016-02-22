@@ -500,3 +500,40 @@ div#lineOpt {
     width:60%;
     font-size: large;
 }
+
+
+/* Progress bar*/
+progress[value] {
+  /* Reset the default appearance */
+  -webkit-appearance: none;
+  appearance: none;
+  -moz-appearance: none;
+
+  border: none;
+
+  width: 250px;
+  height: 20px;
+  color: firebrick;
+}
+
+progress[value]::-webkit-progress-bar {
+  background-color: lightgray;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25) inset;
+}
+
+progress[value]::-moz-progress-bar {
+  background-image:
+    -moz-linear-gradient(left, firebrick, firebrick);
+
+  border-radius: 2px;
+  background-size: 35px 20px, 100% 100%, 100% 100%;
+}
+
+progress[value]::-webkit-progress-value {
+ background-image:
+	   -webkit-linear-gradient(left, firebrick, firebrick);
+ border-radius: 2px;
+ background-size: 35px 20px, 100% 100%, 100% 100%;
+ border-radius: 4px;
+}

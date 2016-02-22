@@ -555,7 +555,12 @@ def create_context_jsmol(request, volPath):
     
 def jsmol(request):
     import mimetypes
-    from django.core.servers.basehttp import FileWrapper
+    # Depending on DJANGO version (first is for DJANGO 1.9) second for 1.5.5
+    try:
+        from wsgiref.util import FileWrapper
+    except ImportError:
+        from django.core.servers.basehttp import FileWrapper
+
 #     call = request.GET.get('call', None)
 #     database = request.GET.get('database', None)
 #     encoding = request.GET.get('encoding', None)
@@ -605,9 +610,9 @@ def get_chimera_html(request):
         volPath = request.GET.get('volPath')
         threshold = request.GET.get('threshold')
         chimeraHtml = chimera_headless(volPath, threshold)
-        return HttpResponse(chimeraHtml, mimetype='application/javascript')
+        return HttpResponse(chimeraHtml, content_type='application/javascript')
     else:
-        return HttpResponse("FAIL", mimetype='application/javascript')
+        return HttpResponse("FAIL", content_type='application/javascript')
 
 def chimera_headless(volPath, threshold):
     """ Function that generate the visualization HTML with a 
@@ -684,5 +689,5 @@ def updateSessionTable(request):
 #    elif type == 'visible':
 #        cols_config.configColumn(label, visible=option)
         
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(content_type='application/javascript')
 

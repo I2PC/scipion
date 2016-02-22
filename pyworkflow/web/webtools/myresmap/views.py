@@ -129,7 +129,7 @@ def create_resmap_project(request):
         loadProtocolConf(protResMap)
         project.saveProtocol(protResMap)
 
-    return HttpResponse(mimetype='application/javascript')
+    return HttpResponse(content_type='application/javascript')
 
 
 def getAttrTestFile(key):
@@ -156,7 +156,7 @@ def getAttrTestFile(key):
 def resmap_form(request):
     from django.shortcuts import render_to_response
     context = contextForm(request)
-    context.update({'path_mode': 'upload',
+    context.update({'path_mode': 'select',
                     'formUrl': 'my_form',
                     'showHost': False,
                     'showParallel': True})

@@ -11,7 +11,7 @@ urls = [
         {'document_root': MEDIA_MOVIES}
     ),
     
-    url(r'^' + MOVIES_SERVICE_URL + '/', 'app.views_webtools.service_movies'),
+    url(r'^' + MOVIES_SERVICE_URL + '$', 'app.views_webtools.service_movies'),
     url(r'^create_movies_project/$', 'app.views_webtools.create_movies_project'),
     url(r'^mov_form/$', 'app.views_webtools.movies_form'),
     url(r'^m_content/$', 'app.views_webtools.movies_content'),

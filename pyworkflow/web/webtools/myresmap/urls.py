@@ -10,7 +10,7 @@ urls = [
         {'document_root': MEDIA_MYRESMAP}
     ),
     
-    url(r'^myresmap/', 'app.views_webtools.resmap_projects'),
+    url(r'^myresmap$', 'app.views_webtools.resmap_projects'),
     url(r'^create_resmap_project/$', 'app.views_webtools.create_resmap_project'),
 #     url(r'^get_testdata/$', 'app.views_webtools.get_testdata'),
     url(r'^r_form/$', 'app.views_webtools.resmap_form'),

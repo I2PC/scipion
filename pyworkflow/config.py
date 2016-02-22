@@ -187,6 +187,9 @@ def loadWebConf():
     setw('SITE_URL', 'scipion.cnb.csic.es')
     setw('ABSOLUTE_URL', '')
     setw('ANALYTICS_SCRIPT', '')
+    setw('ADMIN_EMAIL', '')
+    setw('DEBUG', False)
+    setw('WEB_LOG_FILE', 'scipion_web_tools.log')
     
     # Load some parameters per protocol
     protocols = OrderedDict()

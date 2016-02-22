@@ -1,3 +1,4 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html lang='es'>
 	<head>
@@ -47,28 +48,34 @@
 		<link href={{messi_css}} rel="stylesheet" type="text/css">
 		<!-- JS -->
 		<script src={{jquery}} type="text/javascript"></script>
-		<script src={{messi_js}} type="text/javascript"></script>
+		<!--<script src={{messi_js}} type="text/javascript"></script>-->
 		<script src={{utils}} type="text/javascript"></script>
 		<script src={{config}} type="text/javascript"></script>
 		<script src="{{jquery_ui}} "type="text/javascript"></script>
-		<script src="{{jquery_browser}} "type="text/javascript"></script>
+		<!--<script src="{{jquery_browser}} "type="text/javascript"></script>-->
 		<script src="{{upload_utils}} "type="text/javascript"></script>
 		<script>
 			$(function() {
 				//tabs				
-				$("#tabs").tabs();
-				
-				//progressbar
-// 				$("#progressbar").progressbar({
-// 					value: false
-// 				});
+				$("#tabs").tabs(
+						{"activate":function(event,ui){
+    							if (ui.newTab.index() == 1) {
+									updateListFiles()
+    							}
+  							}
+						}
+				);
 			});
 		</script>
 		{% endif %}
 		<script>
+
+			{% include '_scipion_context.html' %}
+			{% include '_project_context.html' %}
+
 			// To fill the list of files tab
 			$(document).ready(function() {
-				doInitFunction();
+				//				doInitFunction();
 			});
 		</script>
 		

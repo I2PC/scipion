@@ -9,7 +9,7 @@ urlpatterns = [
     url(r'^favicon\.ico$', RedirectView.as_view(url=django_settings.STATIC_URL + 'favicon.ico')),
 
     # Anything not starting with the absolute url goes to home:
-    url('^(?!' + django_settings.ABSOLUTE_URL + ')', RedirectView.as_view(url='/' + django_settings.ABSOLUTE_URL + 'home/'))
+    # url('^(?!' + django_settings.ABSOLUTE_URL + ')', RedirectView.as_view(url='/' + django_settings.ABSOLUTE_URL + 'home/'), name='outside')
 ]
 
 patterns(urlpatterns)

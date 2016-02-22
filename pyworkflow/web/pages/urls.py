@@ -4,6 +4,10 @@ import pyworkflow as pw
 from django.conf.urls import patterns, include, url
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+
+from pyworkflow.web.app import views_util
+from pyworkflow.web.app.views_management import ScipionResumableUploadView
+
 admin.autodiscover()
 from django.conf import settings
 from pyworkflow.web.pages.settings import WS_ROOT, serviceFolders
@@ -14,10 +18,6 @@ from django.views.generic import TemplateView
 #===============================================================================
 
 mainUrls = ['',
-    # To serve different static files
-    (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-
     url(r'^admin/', include(admin.site.urls)),
     # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
 
@@ -97,12 +97,15 @@ mainUrls = ['',
     url(r'^get_chimera_html/$', 'app.views_showj.get_chimera_html'),
 
     #BROWSER & UPLOAD FILES
-    url(r'^upload/', 'app.views_management.upload', name='upload'),
-    url(r'^doUpload/', 'app.views_management.doUpload'),
+    url(r'^upload/', 'app.views_management.upload'),
+    url(r'^doUpload', 'app.views_management.doUpload'),
     url(r'^getPath/', 'app.views_management.getPath'),
     url(r'^getExtIcon/$', 'app.views_management.getExtIcon'),
     url(r'^get_file/$', 'app.views_util.get_file'),
     url(r'^get_image_dim/$', 'app.views_util.get_image_dim'),
+    url(r'^uploadr/$', ScipionResumableUploadView.as_view(), name='uploadr'),
+    url(r'^deletefile$', views_util.delete_file),
+
 
     #TESTING
 #    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
@@ -112,6 +115,11 @@ mainUrls = ['',
     url(r'^download_form/', 'app.views_home.download_form'),
     url(r'^startdownload/', 'app.views_home.startDownload'),
     url(r'^download/', 'app.views_home.doDownload'),
+
+    # To serve different static files
+    (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
+
 
 ]
 

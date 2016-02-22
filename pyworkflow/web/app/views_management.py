@@ -27,24 +27,35 @@
 import os
 import json
 import shutil
+
+from django.forms import Form
 from django.shortcuts import render_to_response, HttpResponse
 from django.template import RequestContext
+from django.views.generic import FormView
+from resumable.views import ResumableUploadView
+
+from pyworkflow.project import Project, PROJECT_UPLOAD
 from pyworkflow.web.pages import settings as django_settings
 from models import Document
 from forms import DocumentForm
 from views_base import base_form
 from views_util import getResourceIcon, getResourceJs, getProjectPathFromRequest, CTX_PROJECT_PATH
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from resumable.fields import ResumableFileField
+
 
 
 def upload(request):
     # Load documents for the list page
     mode = request.GET.get('mode', None)
-    path = os.path.join(getProjectPathFromRequest(request), 'Uploads')
+    path = os.path.join(getProjectPathFromRequest(request), PROJECT_UPLOAD)
     split_path = path.split("/ScipionUserData/")
     relative_path = "ScipionUserData/" + split_path[1]
 
-    context = {'relative_path': relative_path,
-               'form': DocumentForm(),
+    context = {'relative_path': PROJECT_UPLOAD,
+               # 'form': DocumentForm(),
+               'form': ResumableForm(),
                'logo_scipion_small': getResourceIcon('logo_scipion_small'),
                "upload_utils": getResourceJs('upload_utils'),
                "mode": mode,
@@ -55,6 +66,23 @@ def upload(request):
     # Render list page with the documents and the form
     return render_to_response('upload/upload.html', context,
                               context_instance=RequestContext(request))
+
+class ResumableForm(Form):
+    file = ResumableFileField(
+        # allowed_mimes=("audio/ogg",),
+        upload_url=lambda: reverse('uploadr'),
+        chunks_dir=os.path.join(getattr(settings, 'FILE_UPLOAD_TEMP_DIR'), 'uploads')
+    )
+
+class ScipionResumableUploadView(ResumableUploadView):
+    @property
+    def chunks_dir(self):
+        projectPath = getProjectPathFromRequest(self.request)
+
+        projectUploadPath = os.path.join(projectPath, PROJECT_UPLOAD)
+
+        return projectUploadPath
+
 
 
 def executeUpload(request):
@@ -84,13 +112,12 @@ def executeUpload(request):
 
 
 def doUpload(request):
-    form = DocumentForm(request.POST, request.FILES)
 
     try:
         executeUpload(request)
     except Exception, ex:
         print "Error: %s" % ex
-        return HttpResponse("error", mimetype='application/javascript')
+        return HttpResponse("error", content_type='application/javascript')
 
     return upload(request)
 
@@ -99,7 +126,19 @@ def doUpload(request):
 def getPath(request):
     # action = request.GET.get('action')
     # time = request.GET.get('time')
-    path = request.GET.get('path')
+
+    projectPath = getProjectPathFromRequest(request)
+
+    # Case for the JQuery file browser, it sends path.
+    if 'path' in request.GET:
+        path = request.GET.get('path')
+    else:
+        path = request.GET.get('partialPath')
+
+    if not os.path.isabs(path):
+        path = os.path.join(projectPath, path)
+
+
     ioDict = []
 
     for f in os.listdir(path):
@@ -115,13 +154,13 @@ def getPath(request):
         ioDict.append(ob)
 
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
-    return HttpResponse(jsonStr, mimetype='application/javascript')
+    return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 def getExtIcon(request):
     ext = request.GET.get('ext')
     res = getExtIconPath(ext)
-    return HttpResponse(res, mimetype='application/javascript')
+    return HttpResponse(res, content_type='application/javascript')
 
 
 def getExtIconPath(ext):

@@ -141,7 +141,7 @@ def get_image_psd(request):
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
        
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response
 
@@ -172,7 +172,7 @@ def get_image_bandpass(request):
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     
     return response
@@ -194,7 +194,7 @@ def get_image_gaussian(request):
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response
 
@@ -211,6 +211,6 @@ def get_image_mask(request):
     # from PIL import Image
     img = getPILImage(imgXmipp, dim)
         
-    response = HttpResponse(mimetype="image/png")
+    response = HttpResponse(content_type="image/png")
     img.save(response, "PNG")
     return response

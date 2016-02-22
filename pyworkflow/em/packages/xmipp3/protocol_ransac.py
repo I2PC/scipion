@@ -390,7 +390,7 @@ class XmippProtRansac(ProtInitialVolume):
                     avg=sum/N
                 else:
                     avg=0.0
-                id=mdOut.addObject()
+                id = mdOut.addObject()
                 mdOut.setValue(xmipp.MDL_IMAGE,fnRoot+".vol",id)
                 mdOut.setValue(xmipp.MDL_VOLUME_SCORE_SUM,float(sum),id)
                 mdOut.setValue(xmipp.MDL_VOLUME_SCORE_SUM_TH,float(thresholdedSum),id)

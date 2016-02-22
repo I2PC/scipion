@@ -13,12 +13,12 @@ DB_PATH = join(pw.HOME, 'web', 'scipion_web.db')
 WEB_CONF = pwconfig.loadWebConf()
 
 # DEBUG = True
-DEBUG = False
+DEBUG = WEB_CONF['DEBUG']
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
-    ('scipion', 'pconesa@cnb.csic.es'),
+    ('scipion', WEB_CONF['ADMIN_EMAIL']),
 )
 
 MANAGERS = ADMINS
@@ -45,6 +45,8 @@ SITE_URL = WEB_CONF['SITE_URL']
 ABSOLUTE_URL = WEB_CONF['ABSOLUTE_URL']
 # Populate analytics script into DJANGO settings from .conf file.
 ANALYTICS_SCRIPT = WEB_CONF['ANALYTICS_SCRIPT']
+
+WEB_LOG_FILE = WEB_CONF['WEB_LOG_FILE']
 
 # ABSOLUTE_URL = '/examples'
 
@@ -166,7 +168,7 @@ ROOT_URLCONF = 'pages.prefix_urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'pages.wsgi.application'
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -177,12 +179,13 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
     # 'gunicorn',
     'app',
-)   
+    'resumable'
+]
 
 try:
     import imp
     imp.find_module('gunicorn')
-    INSTALLED_APPS = INSTALLED_APPS + ('gunicorn', 'gunicorn')
+    INSTALLED_APPS.append('gunicorn')
 except ImportError:
     pass
     #print "gunicorn not found"
@@ -205,7 +208,12 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': WEB_LOG_FILE
+        },
     },
     'loggers': {
         'django.request': {
@@ -216,7 +224,7 @@ LOGGING = {
     }
 }
 
-APPEND_SLASH = True
+APPEND_SLASH = False
 
 
 # EMAIL configuration

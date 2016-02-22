@@ -117,7 +117,7 @@ def project_graph(request):
         
 #        print nodeList
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(jsonStr, content_type='application/javascript')
 
 
 #===============================================================================
@@ -134,7 +134,7 @@ def elements_graph(request):
             elmList.append({'id': node.getName(),'label': node.getLabel()})
     
         jsonStr = json.dumps(elmList, ensure_ascii=False)   
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(jsonStr, content_type='application/javascript')
     
     
 def object_graph(request):
@@ -181,6 +181,6 @@ def object_graph(request):
                     raise
         
         jsonStr = json.dumps(nodeList, ensure_ascii=False)   
-        return HttpResponse(jsonStr, mimetype='application/javascript')
+        return HttpResponse(jsonStr, content_type='application/javascript')
         
     
