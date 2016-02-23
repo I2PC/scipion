@@ -228,6 +228,12 @@ scons = env.addModule(
     targets=[env.getBin('scons')],
     tar='scons-2.3.4.tgz')
 
+pip = env.addModule(
+    'pip',
+    tar='pip-8.0.2.tar.gz',
+    targets=['pip-8.0.2*'],
+    default=False)
+
 numpy = env.addModule(
     'numpy',
     tar='numpy-1.8.1.tgz',
