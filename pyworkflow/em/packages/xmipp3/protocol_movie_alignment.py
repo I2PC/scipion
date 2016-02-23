@@ -82,7 +82,7 @@ class ProtMovieAlignment(ProtProcessMovies):
         
         line = group.addLine('Used in alignment',
                             help='First and last frames used in alignment.\n'
-                                  'The first frame in the stack is *0* . 
+                                  'The first frame in the stack is *0* ' 
                                   'If the last frame is *0*, use maximum value' )
         line.addParam('alignFrame0', IntParam, default=0, label='First')
         line.addParam('alignFrameN', IntParam, default=0, label='Last')

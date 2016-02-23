@@ -63,8 +63,8 @@ class SpiderViewerCAPCA(ProtocolViewer):
                       label="Show eigenvalue histogram?", default=True,
                       help='One of the methods to determine what eigenvalues are useful, '
                       'and which are from noise is to view a histogram showing the percentage '
-                      'of eigenvalue variance accounted for by each factor.'
-        form.addParam('doShowPcaFile', LabelParam, expertLevel=LEVEL_ADVANCED,
+                      'of eigenvalue variance accounted for by each factor.')
+        form.addParam('doShowPcaFile', LabelParam, #expertLevel=LEVEL_ADVANCED,
                       label="Show IMC file?", default=True,
                       help='This file contains coordinates of each image in the new vector space.')
         form.addParam('doShowFactorMaps', LabelParam, #expertLevel=LEVEL_ADVANCED,

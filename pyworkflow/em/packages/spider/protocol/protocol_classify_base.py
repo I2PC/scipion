@@ -81,7 +81,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
         
-        form.addParallelSection(threads=4, mpi=0)
+#        form.addParallelSection(threads=4, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     
