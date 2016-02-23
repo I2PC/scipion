@@ -35,6 +35,7 @@ from pyworkflow.em import Viewer
 import pyworkflow.em.metadata as md
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.utils.path import moveFile, makePath
+from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    writeSetOfVolumes,
                                                    getImageLocation)
@@ -276,6 +277,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             m_pruned = md.MetaData()
             m_pruned.read(volDir+'/pruned_particles_alignability.xmd')
             prunedMd = self._getExtraPath(volPrefix + 'pruned_particles_alignability.xmd')
+            
             moveFile(join(volDir, 'pruned_particles_alignability.xmd'), prunedMd)
             m_volScore = md.MetaData()
             m_volScore.read(volDir+'/validationAlignability.xmd')
@@ -306,6 +308,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             volume.cleanObjId() # clean objects id to assign new ones inside the set            
             outputVols.append(volume)
             self._defineOutputs(outputParticles=outImgSet)
+            
+            self.movieCreatePlot(volPrefix,m_pruned)
 
             '''            
             m1_pruned = md.MetaData()
@@ -461,3 +465,32 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         item._xmipp_scoreAlignabilityAccuracy = Float(row.getValue(md.MDL_SCORE_BY_ALIGNABILITY_ACCURACY))
         item._xmipp_scoreMirror = Float(row.getValue(md.MDL_SCORE_BY_MIRROR))
         item._xmipp_weight = Float( float(item._xmipp_scoreMirror)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
+        
+    def movieCreatePlot(self,volPrefix,md):
+        
+        import xmipp
+        
+        figurePath = self._getExtraPath(volPrefix + 'softAlignmentValidation.png')
+        figureSize = (8, 6)
+    
+        #alignedMovie = mic.alignMetaData
+        plotter = Plotter(*figureSize)
+        figure = plotter.getFigure()
+    
+        ax = figure.add_subplot(111)
+        ax.grid()
+        ax.set_title('Soft alignment validation map')
+        ax.set_xlabel('Angular Precision')
+        ax.set_ylabel('Angular Accuracy')
+
+        for objId in md:
+            x = md.getValue(xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION, objId)
+            y = md.getValue(xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY, objId)
+            ax.plot(x, y, 'r.',markersize=1)
+
+        ax.grid(True, which='both')
+        ax.autoscale_view(True,True,True)
+                
+        plotter.savefig(figurePath)
+        plotter.show()
+        return plotter
