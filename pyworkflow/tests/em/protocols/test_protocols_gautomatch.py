@@ -79,13 +79,11 @@ class TestGautomatchBase(BaseTest):
         """ Run a particle picking. """
         protGM = ProtGautomatch(objLabel='Gautomatch auto-picking (klh)',
                                invertTemplatesContrast=True,
-                               threshold=0.24,
+                               threshold=0.18,
                                particleSize=250,
-                               boxSize=100,
-                               maxDist=300,
-                               localSigmaDiam=300,
-                               localAvgDiam=300,
-                               lowPass=20)
+                               advanced='False',
+                               boxSize=150,
+                               localSigmaCutoff=2.0)
         protGM.inputMicrographs.set(cls.protImportMics.outputMicrographs)
         protGM.inputReferences.set(cls.protImportAvgs.outputAverages)
         cls.launchProtocol(protGM)

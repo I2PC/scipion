@@ -73,16 +73,16 @@ class ProtGautomatch(em.ProtParticlePicking):
 	
 	form.addSection(label='Advanced')
 
-        form.addParam('advanced', params.BooleanParam, default=False,
+        form.addParam('advanced', params.BooleanParam, default=True,
                       label='Guess advanced parameters?',
                       help="By default, the program will optimize advanced parameters by itself, "
-			   "however if you want to modify them, select Yes")
+			   "however if you want to modify them, select No")
         form.addParam('boxSize', params.IntParam, default=128,
-                      label='Box size (pix)', condition='advanced',
+                      label='Box size (pix)', condition='not advanced',
                       help="Box size, in pixels; a suggested value will be "
 			   "automatically calculated using pixel size and particle size")
         form.addParam('maxDist', params.IntParam, default=300,
-                      label='Max search distance (A)', condition='advanced',
+                      label='Max search distance (A)', condition='not advanced',
                       help='Maximum search distance in Angstrom\n Use value of 0.9~1.1X diameter; '
 			   'can be 0.3~0.5X for filament-like particle\n'
 			   'For each particle Pi we try to search a local area using this distance option: '
@@ -90,7 +90,7 @@ class ProtGautomatch(em.ProtParticlePicking):
 			   'If all peaks <= max_dist have been checked and no better candidates were found, '
 			   'then Pi is considered as a successfully picked particle.')
         form.addParam('speed', params.IntParam, default=2,
-                      label='Speed', condition='advanced',
+                      label='Speed', condition='not advanced',
                       help='Speed level {0,1,2,3,4}. The bigger the faster, but less accurate.\n'
 			   'Suggested values: 2 for >1 MDa complex, 1 for <500 kD complex, 1 or 2 for 500~1000 kD.\n' 
 			   '0 is not suggested, because the accuracy is simply fitting noise, unless for special noise-free micrographs. '
@@ -98,15 +98,15 @@ class ProtGautomatch(em.ProtParticlePicking):
 	
 	group = form.addGroup('Local sigma parameters')
         group.addParam('localSigmaCutoff', params.FloatParam, default=1.2,
-                      label='Local sigma cut-off', condition='advanced', 
+                      label='Local sigma cut-off', condition='not advanced', 
                       help='Local sigma cut-off (relative value), 1.2~1.5 should be a good range\n'
 			   'Normally a value >1.2 will be ice, protein aggregation or contamination')
         group.addParam('localSigmaDiam', params.IntParam, default=100,
-                      label='Local sigma diameter (A)', condition='advanced',
+                      label='Local sigma diameter (A)', condition='not advanced',
                       help='Diameter for estimation of local sigma, in Angstrom')
 
 	group = form.addGroup('Local average parameters')
-        line = group.addLine('Local average range', condition='advanced',
+        line = group.addLine('Local average range', condition='not advanced',
                             help="Local average cut-off (relative value), "
 				 "any pixel values outside the range will be considered as ice/aggregation/carbon etc.")
         line.addParam('localAvgMin', params.FloatParam, default=-1.0,
@@ -114,13 +114,13 @@ class ProtGautomatch(em.ProtParticlePicking):
         line.addParam('localAvgMax', params.FloatParam, default=1.0,
                       label='Max') 
 	group.addParam('localAvgDiam', params.IntParam, default=100,
-                      label='Local average diameter (A)', condition='advanced', 
+                      label='Local average diameter (A)', condition='not advanced', 
                       help='Diameter for estimation of local average, in Angstrom. '
 			   '1.5~2.0X particle diameter suggested\n'
 			   'However, if you have sharp/small ice or any dark/bright dots, '
 			   'using a smaller value will be much better to get rid of these areas')
 
-	line = form.addLine('Micrograph band-pass filter range (A)', condition='advanced',
+	line = form.addLine('Micrograph band-pass filter range (A)', condition='not advanced',
                             help="Apply band-pass filter on the micrographs:\n"
 				 "low-pass filter to increase the contrast of raw micrographs, suggested range 20~50 A\n"
 				 "high-pass filter to get rid of the global background of raw micrographs, suggested range 200~2000 A")
@@ -130,7 +130,7 @@ class ProtGautomatch(em.ProtParticlePicking):
                       label='Max')
 
         form.addParam('GPUId', params.IntParam, default=0,
-                      label='GPU ID', condition='advanced',
+                      label='GPU ID', condition='not advanced',
                       help='GPU ID, normally it is 0')               
 
  
@@ -153,7 +153,7 @@ class ProtGautomatch(em.ProtParticlePicking):
         args += ' --diameter %d' % (2*self.particleSize.get())
         args += ' --cc_cutoff %0.2f' % self.threshold
 
-	if self.advanced:
+	if not self.advanced:
             args += ' --speed %d' % self.speed
             args += ' --boxsize %d' % self.boxSize
             args += ' --max_dist %d' % self.maxDist
