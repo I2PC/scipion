@@ -26,6 +26,7 @@
 
 import os
 import json
+import re
 import shutil
 
 from django.forms import Form
@@ -138,20 +139,29 @@ def getPath(request):
     if not os.path.isabs(path):
         path = os.path.join(projectPath, path)
 
+    # By default filter file parts comming from the resumable upload
+    exclude = request.GET.get('exclude', r'_part_\d+$')
+
+    regexp = re.compile(exclude)
 
     ioDict = []
 
     for f in os.listdir(path):
-        file_path = os.path.join(path, f)
-        folder = os.path.isdir(file_path)
-        ext = f.split('.').pop()
 
-        ob = {'name': f,
-              'isFolder': folder,
-              'isError': False,
-              'icon': getExtIconPath(ext)}
+        match = regexp.search(f)
 
-        ioDict.append(ob)
+        if match is None:
+
+            file_path = os.path.join(path, f)
+            folder = os.path.isdir(file_path)
+            ext = f.split('.').pop()
+
+            ob = {'name': f,
+                  'isFolder': folder,
+                  'isError': False,
+                  'icon': getExtIconPath(ext)}
+
+            ioDict.append(ob)
 
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, content_type='application/javascript')
