@@ -279,6 +279,12 @@ django = env.addModule(
     'django',
     tar='Django-1.5.5.tgz')
 
+djangoresumable = env.addModule(
+    'django-resumable',
+    tar='django-resumable-0.1.tar.gz',
+    targets=['django_resumable-0.1*'],
+    deps=[django])
+
 paramiko = env.addModule(
     'paramiko',
     tar='paramiko-1.14.0.tgz',
