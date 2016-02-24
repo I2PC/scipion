@@ -309,7 +309,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             outputVols.append(volume)
             self._defineOutputs(outputParticles=outImgSet)
             
-            self.movieCreatePlot(volPrefix,m_pruned)
+            self.createPlot2D(volPrefix,m_pruned)
 
             '''            
             m1_pruned = md.MetaData()
@@ -466,7 +466,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         item._xmipp_scoreMirror = Float(row.getValue(md.MDL_SCORE_BY_MIRROR))
         item._xmipp_weight = Float( float(item._xmipp_scoreMirror)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
         
-    def movieCreatePlot(self,volPrefix,md):
+    def createPlot2D(self,volPrefix,md):
         
         import xmipp
         
