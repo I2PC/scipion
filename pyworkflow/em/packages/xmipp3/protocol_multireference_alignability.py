@@ -98,7 +98,9 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             
             volName = getImageLocation(vol)
             volDir = self._getVolDir(i+1)
-            
+                   
+            print volName
+            print volDir                                    
             pmStepId = self._insertFunctionStep('projectionLibraryStep',                                                    
                                                 volName, volDir,self.angularSampling.get(),
                                                 prerequisites=[convertId])
@@ -214,14 +216,14 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         params += ' --iter %d' % 1
         self.runJob('xmipp_reconstruct_significant', 
                     params, numberOfMpi=nproc,numberOfThreads=nT)
-        copyfile(volDir+'/angles_iter001_00.xmd', self._getExtraPath(anglesPath))
+        copyfile(volDir+'/angles_iter001_00.xmd', self._getTmpPath(anglesPath))
         
     def alignabilityStep(self, volName,volDir,sym):
         makePath(volDir)  
         inputFile = self._getPath('input_particles.xmd') 
         inputFileRef = self._getPath('reference_particles.xmd')
-        aFile = self._getExtraPath('exp_particles.xmd')
-        aFileRef =self._getExtraPath('ref_particles.xmd')
+        aFile = self._getTmpPath('exp_particles.xmd')
+        aFileRef =self._getTmpPath('ref_particles.xmd')
         aFileGallery =(volDir+'/gallery.doc')
 
         params = '  -i %s'  % inputFile
@@ -425,7 +427,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getVolDir(self, volIndex):
-        return self._getExtraPath('vol%03d' % volIndex)
+        return self._getTmpPath('vol%03d' % volIndex)
     
     def _iterInputVols(self):
         """ In this function we will encapsulate the logic
