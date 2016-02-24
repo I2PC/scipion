@@ -8,7 +8,7 @@
         "runMode": 0,
         "importFrom": 0,
         "filesPath": "",
-        "filesPattern": "*.mrc",
+        "filesPattern": "",
         "copyFiles": false,
         "emxFile": null,
         "mdFile": null,
