@@ -228,6 +228,12 @@ scons = env.addModule(
     targets=[env.getBin('scons')],
     tar='scons-2.3.4.tgz')
 
+pip = env.addModule(
+    'pip',
+    tar='pip-8.0.2.tar.gz',
+    targets=['pip-8.0.2*'],
+    default=False)
+
 numpy = env.addModule(
     'numpy',
     tar='numpy-1.8.1.tgz',
@@ -278,6 +284,12 @@ bibtexparser = env.addModule(
 django = env.addModule(
     'django',
     tar='Django-1.5.5.tgz')
+
+djangoresumable = env.addModule(
+    'django-resumable',
+    tar='django-resumable-0.1.tar.gz',
+    targets=['django_resumable-0.1*'],
+    deps=[django])
 
 paramiko = env.addModule(
     'paramiko',
