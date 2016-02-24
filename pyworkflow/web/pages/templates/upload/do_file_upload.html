@@ -1,37 +1,17 @@
 {% load staticfiles %}
 <div class="box">
-	<form id="uploadForm" action="uploadr" method="post">
-		{% csrf_token %}
-		<!--{{ form.as_p }}-->
-		<label for="id_file-path"></label>
-		<input id="id_file-path" type="hidden" name="file-path" value="None" />
-		<input type="file" name="file"  data-upload-url="{{abs_url}}uploadr/" id="id_file" value="Choose a file"/>
-		<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
-		<input type="hidden" name="p" value="{{projectName}}"/>
-		<input type="hidden" name="s" value="{{s}}"/>
-	</form>
+
+	{% csrf_token %}
+	<!--{{ form.as_p }}-->
+	<br/>
+	<input type="file" name="file"  data-upload-url="{{abs_url}}uploadr/" id="id_file" value="Choose a file"/>
+	<input type="hidden" id="project_folder" name="project_folder" value="{{project_folder}}"/>
+
 	<script type="text/javascript" src="http://cdn.rawgit.com/23/resumable.js/master/resumable.js"></script>
-	<script type="text/javascript" src="/{% static 'resumable/js/django-resumable.js' %}"></script>
+	<script type="text/javascript" src="/{% static 'js/django-resumable.js' %}"></script>
 	<script>
 		document.addEventListener("DOMContentLoaded", function () {
 			"use strict";
-
-			// Customize extend function to avoid query params to be overwritten
-			DjangoResumable.prototype.extend = function (target, source) {
-				"use strict";
-				var property;
-				for (property in source) {
-					if (source.hasOwnProperty(property)) {
-						if (target[property] !== undefined && typeof source[property] === 'object') {
-							target[property] = this.extend(target[property], source[property]);
-						} else {
-							target[property] = source[property];
-						}
-
-					}
-				}
-				return target;
-			};
 
 			var dj;
 			if (new Resumable().support) {

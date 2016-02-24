@@ -1,0 +1,18 @@
+{% extends "__base.html" %}
+
+    {% block css %}
+        {{ block.super }}
+        <link href="{{css_root}}/jumbotron.css" rel="stylesheet">
+    {% endblock %}
+
+    {% block header %}
+    <header class="navbar navbar-fixed-top">
+        {% include "_navigation.html" %}
+    </header>
+    {% endblock %}
+
+    {% block footer %}
+    <footer>
+        {% include '_footer.html' %}
+    </footer>
+    {% endblock %}

@@ -26,6 +26,7 @@
 
 import os
 import json
+import re
 import shutil
 
 from django.forms import Form
@@ -74,6 +75,7 @@ class ResumableForm(Form):
         chunks_dir=os.path.join(getattr(settings, 'FILE_UPLOAD_TEMP_DIR'), 'uploads')
     )
 
+
 class ScipionResumableUploadView(ResumableUploadView):
     @property
     def chunks_dir(self):
@@ -82,6 +84,18 @@ class ScipionResumableUploadView(ResumableUploadView):
         projectUploadPath = os.path.join(projectPath, PROJECT_UPLOAD)
 
         return projectUploadPath
+
+    def process_file(self, filename, file):
+
+        """Process the complete file. Overwritten: final filename has the size as a prefix
+        """
+
+        if 'resumableFilename' in file.kwargs:
+            finalFileName = file.kwargs['resumableFilename']
+        else:
+            finalFileName = filename
+
+        self.storage.save(finalFileName, file)
 
 
 
@@ -138,20 +152,29 @@ def getPath(request):
     if not os.path.isabs(path):
         path = os.path.join(projectPath, path)
 
+    # By default filter file parts comming from the resumable upload
+    exclude = request.GET.get('exclude', r'_part_\d+$')
+
+    regexp = re.compile(exclude)
 
     ioDict = []
 
     for f in os.listdir(path):
-        file_path = os.path.join(path, f)
-        folder = os.path.isdir(file_path)
-        ext = f.split('.').pop()
 
-        ob = {'name': f,
-              'isFolder': folder,
-              'isError': False,
-              'icon': getExtIconPath(ext)}
+        match = regexp.search(f)
 
-        ioDict.append(ob)
+        if match is None:
+
+            file_path = os.path.join(path, f)
+            folder = os.path.isdir(file_path)
+            ext = f.split('.').pop()
+
+            ob = {'name': f,
+                  'isFolder': folder,
+                  'isError': False,
+                  'icon': getExtIconPath(ext)}
+
+            ioDict.append(ob)
 
     jsonStr = json.dumps(ioDict, ensure_ascii=False)
     return HttpResponse(jsonStr, content_type='application/javascript')
