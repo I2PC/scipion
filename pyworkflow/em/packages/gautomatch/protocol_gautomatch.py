@@ -31,7 +31,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import LEVEL_ADVANCED 
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 
 class ProtGautomatch(em.ProtParticlePicking):
@@ -47,12 +47,12 @@ class ProtGautomatch(em.ProtParticlePicking):
     and template-bias, known as the so-called Einstein noise.
     """
     _label = 'auto-picking'
-        
-    #--------------------------- DEFINE param functions --------------------------------------------
+
+    # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        
+
         em.ProtParticlePicking._defineParams(self, form)
-        form.addParam('inputReferences', params.PointerParam, 
+        form.addParam('inputReferences', params.PointerParam,
                       pointerClass='SetOfAverages',
                       label='Input References', important=True,
                       help="Template images (2D class averages or reprojections "
@@ -67,81 +67,82 @@ class ProtGautomatch(em.ProtParticlePicking):
         form.addParam('threshold', params.FloatParam, default=0.1,
                       label='Threshold',
                       help='Particles with CCC above the threshold will be picked')
-	form.addParam('particleSize', params.IntParam, default=250,
+        form.addParam('particleSize', params.IntParam, default=250,
                       label='Particle radius (A)',
                       help="Particle radius in Angstrom")
-	
-	form.addSection(label='Advanced')
+
+        form.addSection(label='Advanced')
 
         form.addParam('advanced', params.BooleanParam, default=True,
                       label='Guess advanced parameters?',
                       help="By default, the program will optimize advanced parameters by itself, "
-			   "however if you want to modify them, select No")
+                           "however if you want to modify them, select No")
         form.addParam('boxSize', params.IntParam, default=128,
                       label='Box size (pix)', condition='not advanced',
                       help="Box size, in pixels; a suggested value will be "
-			   "automatically calculated using pixel size and particle size")
+                           "automatically calculated using pixel size and particle size")
         form.addParam('maxDist', params.IntParam, default=300,
                       label='Max search distance (A)', condition='not advanced',
                       help='Maximum search distance in Angstrom\n Use value of 0.9~1.1X diameter; '
-			   'can be 0.3~0.5X for filament-like particle\n'
-			   'For each particle Pi we try to search a local area using this distance option: '
-			   'once program finds a better candidate Pj, the particle Pi is rejected. '
-			   'If all peaks <= max_dist have been checked and no better candidates were found, '
-			   'then Pi is considered as a successfully picked particle.')
+                           'can be 0.3~0.5X for filament-like particle\n'
+                           'For each particle Pi we try to search a local area using this distance option: '
+                           'once program finds a better candidate Pj, the particle Pi is rejected. '
+                           'If all peaks <= max_dist have been checked and no better candidates were found, '
+                           'then Pi is considered as a successfully picked particle.')
         form.addParam('speed', params.IntParam, default=2,
                       label='Speed', condition='not advanced',
                       help='Speed level {0,1,2,3,4}. The bigger the faster, but less accurate.\n'
-			   'Suggested values: 2 for >1 MDa complex, 1 for <500 kD complex, 1 or 2 for 500~1000 kD.\n' 
-			   '0 is not suggested, because the accuracy is simply fitting noise, unless for special noise-free micrographs. '
-			   'Use 3 for huge viruses, but 2 is still preferred. Probably do not use 4 at all, it is not accurate in general.')                           
-	
-	group = form.addGroup('Local sigma parameters')
+                           'Suggested values: 2 for >1 MDa complex, 1 for <500 kD complex, 1 or 2 for 500~1000 kD.\n'
+                           '0 is not suggested, because the accuracy is simply fitting noise, unless for special noise-free micrographs. '
+                           'Use 3 for huge viruses, but 2 is still preferred. Probably do not use 4 at all, it is not accurate in general.')
+
+        group = form.addGroup('Local sigma parameters')
         group.addParam('localSigmaCutoff', params.FloatParam, default=1.2,
-                      label='Local sigma cut-off', condition='not advanced', 
-                      help='Local sigma cut-off (relative value), 1.2~1.5 should be a good range\n'
-			   'Normally a value >1.2 will be ice, protein aggregation or contamination')
+                       label='Local sigma cut-off', condition='not advanced',
+                       help='Local sigma cut-off (relative value), 1.2~1.5 should be a good range\n'
+                            'Normally a value >1.2 will be ice, protein aggregation or contamination')
         group.addParam('localSigmaDiam', params.IntParam, default=100,
-                      label='Local sigma diameter (A)', condition='not advanced',
-                      help='Diameter for estimation of local sigma, in Angstrom')
+                       label='Local sigma diameter (A)', condition='not advanced',
+                       help='Diameter for estimation of local sigma, in Angstrom')
 
-	group = form.addGroup('Local average parameters')
+        group = form.addGroup('Local average parameters')
         line = group.addLine('Local average range', condition='not advanced',
-                            help="Local average cut-off (relative value), "
-				 "any pixel values outside the range will be considered as ice/aggregation/carbon etc.")
+                             help="Local average cut-off (relative value), "
+                                  "any pixel values outside the range will be considered as ice/aggregation/carbon etc.")
         line.addParam('localAvgMin', params.FloatParam, default=-1.0,
-                      label='Min') 
+                      label='Min')
         line.addParam('localAvgMax', params.FloatParam, default=1.0,
-                      label='Max') 
-	group.addParam('localAvgDiam', params.IntParam, default=100,
-                      label='Local average diameter (A)', condition='not advanced', 
-                      help='Diameter for estimation of local average, in Angstrom. '
-			   '1.5~2.0X particle diameter suggested\n'
-			   'However, if you have sharp/small ice or any dark/bright dots, '
-			   'using a smaller value will be much better to get rid of these areas')
+                      label='Max')
+        group.addParam('localAvgDiam', params.IntParam, default=100,
+                       label='Local average diameter (A)', condition='not advanced',
+                       help='Diameter for estimation of local average, in Angstrom. '
+                            '1.5~2.0X particle diameter suggested\n'
+                            'However, if you have sharp/small ice or any dark/bright dots, '
+                            'using a smaller value will be much better to get rid of these areas')
 
-	line = form.addLine('Micrograph band-pass filter range (A)', condition='not advanced',
+        line = form.addLine('Micrograph band-pass filter range (A)', condition='not advanced',
                             help="Apply band-pass filter on the micrographs:\n"
-				 "low-pass filter to increase the contrast of raw micrographs, suggested range 20~50 A\n"
-				 "high-pass filter to get rid of the global background of raw micrographs, suggested range 200~2000 A")
+                                 "low-pass filter to increase the contrast of raw micrographs, suggested range 20~50 A\n"
+                                 "high-pass filter to get rid of the global background of raw micrographs, suggested range 200~2000 A")
         line.addParam('lowPass', params.IntParam, default=30,
-                      label='Min') 
+                      label='Min')
         line.addParam('highPass', params.IntParam, default=1000,
                       label='Max')
 
         form.addParam('GPUId', params.IntParam, default=0,
                       label='GPU ID', condition='not advanced',
-                      help='GPU ID, normally it is 0')               
+                      help='GPU ID, normally it is 0')
 
- 
-    #--------------------------- INSERT steps functions --------------------------------------------
+
+        # --------------------------- INSERT steps functions --------------------------------------------
+
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep', 
+        self._insertFunctionStep('convertInputStep',
                                  self.getInputMicrographs().strId(),
                                  self.inputReferences.get().strId())
         self._insertPickingSteps()
         self._insertFunctionStep('createOutputStep')
-        
+
     def _insertPickingSteps(self):
         """ Insert the steps to launch the picker with different modes. 
         Prepare the command arguments that will be passed. 
@@ -150,10 +151,10 @@ class ProtGautomatch(em.ProtParticlePicking):
         args += ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
         args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
         args += ' --ang_step %d' % self.angStep
-        args += ' --diameter %d' % (2*self.particleSize.get())
+        args += ' --diameter %d' % (2 * self.particleSize.get())
         args += ' --cc_cutoff %0.2f' % self.threshold
 
-	if not self.advanced:
+        if not self.advanced:
             args += ' --speed %d' % self.speed
             args += ' --boxsize %d' % self.boxSize
             args += ' --max_dist %d' % self.maxDist
@@ -165,40 +166,40 @@ class ProtGautomatch(em.ProtParticlePicking):
             args += ' --lave_D %d' % self.localAvgDiam
             args += ' --lp %d' % self.lowPass
             args += ' --hp %d' % self.highPass
-	
-	if not self.invertTemplatesContrast:
-	        args += ' --dont_invertT'
-        
-        args +=  ' %s' % join(self._getExtraPath('micrographs'), '*.mrc')
+
+        if not self.invertTemplatesContrast:
+            args += ' --dont_invertT'
+
+        args += ' %s' % join(self._getExtraPath('micrographs'), '*.mrc')
 
         self._insertFunctionStep('runGautomatchStep', args)
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    # --------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self, micsId, refsId):
         """ This step will take of the convertions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrcs' format
         """
         ih = em.ImageHandler()
-        micDir = self._getExtraPath('micrographs') # put output and mics in extra dir
+        micDir = self._getExtraPath('micrographs')  # put output and mics in extra dir
         pwutils.makePath(micDir)
-        
+
         for mic in self.getInputMicrographs():
             # Create micrograph folder
             micName = mic.getFileName()
             # If micrographs are in .mrc format just link it
             # otherwise convert them
             outMic = join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
-            
+
             if micName.endswith('.mrc'):
                 pwutils.createLink(micName, outMic)
             else:
                 ih.convert(mic, outMic)
-                
+
         # We will always convert the templates to mrcs stack
         inputRefs = self.inputReferences.get()
         inputRefs.writeStack(self._getTmpPath('references.mrcs'))
-            
+
     def runGautomatchStep(self, args):
         self.runJob(self._getProgram(), args)
 
@@ -210,27 +211,27 @@ class ProtGautomatch(em.ProtParticlePicking):
             coordSet.setBoxSize(self.boxSize.get())
         else:
             coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
-        
+
         for mic in micSet:
             fnMic = pwutils.removeExt(mic.getFileName())
             fnCoords = basename(fnMic) + '_automatch.box'
             fn2parse = self._getExtraPath('micrographs', fnCoords)
             print fn2parse
-            with open(fn2parse,"r") as source:
+            with open(fn2parse, "r") as source:
                 for line in source:
                     tokens = line.split()
                     coord = em.Coordinate()
-                    coord.setPosition(int(tokens[0])+int(tokens[2])/2, int(tokens[1])+int(tokens[3])/2)
+                    coord.setPosition(int(tokens[0]) + int(tokens[2]) / 2, int(tokens[1]) + int(tokens[3]) / 2)
                     coord.setMicrograph(mic)
                     coordSet.append(coord)
-		    # FIXME this should be outside the loop
-		    if int(tokens[2]) != coordSet.setBoxSize:
-			coordSet.setBoxSize(int(tokens[2]))
+                    # FIXME this should be outside the loop
+                    if int(tokens[2]) != coordSet.setBoxSize:
+                        coordSet.setBoxSize(int(tokens[2]))
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
 
-    #--------------------------- INFO functions --------------------------------------------
+    # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
@@ -241,14 +242,14 @@ class ProtGautomatch(em.ProtParticlePicking):
             print "os.environ['GAUTOMATCH_HOME']", os.environ['GAUTOMATCH_HOME']
             print "os.environ['GAUTOMATCH']", os.environ['GAUTOMATCH']
 
-        if not self.localAvgMin < self.localAvgMax: 
+        if not self.localAvgMin < self.localAvgMax:
             errors.append('Wrong values of local average cut-off!')
         return errors
-        
+
     def _summary(self):
         summary = []
         summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
-        if(self.getOutputsSize() > 0):
+        if (self.getOutputsSize() > 0):
             summary.append("Number of particles picked: %d" % self.getCoords().getSize())
             summary.append("Particle size: %d px" % self.getCoords().getBoxSize())
             summary.append("Threshold min: %0.2f" % self.threshold)
@@ -266,16 +267,16 @@ class ProtGautomatch(em.ProtParticlePicking):
             output = self.getCoords()
             methodsMsgs.append("%s: User picked %d particles with a particle size of %d px and minimal threshold %0.2f."
                                % (self.getObjectTag(output), output.getSize(), output.getBoxSize(),
-                                 self.threshold.get()))
+                                  self.threshold.get()))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
-    
+
     def _citations(self):
         return ['Zhang2016']
-    
-    #--------------------------- UTILS functions --------------------------------------------------
+
+    # --------------------------- UTILS functions --------------------------------------------------
     def _getProgram(self):
         """ Return the program binary that will be used. """
         binary = os.environ['GAUTOMATCH']
