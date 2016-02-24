@@ -75,6 +75,7 @@ class ResumableForm(Form):
         chunks_dir=os.path.join(getattr(settings, 'FILE_UPLOAD_TEMP_DIR'), 'uploads')
     )
 
+
 class ScipionResumableUploadView(ResumableUploadView):
     @property
     def chunks_dir(self):
@@ -83,6 +84,18 @@ class ScipionResumableUploadView(ResumableUploadView):
         projectUploadPath = os.path.join(projectPath, PROJECT_UPLOAD)
 
         return projectUploadPath
+
+    def process_file(self, filename, file):
+
+        """Process the complete file. Overwritten: final filename has the size as a prefix
+        """
+
+        if 'resumableFilename' in file.kwargs:
+            finalFileName = file.kwargs['resumableFilename']
+        else:
+            finalFileName = filename
+
+        self.storage.save(finalFileName, file)
 
 
 
