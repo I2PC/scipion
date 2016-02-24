@@ -36,6 +36,8 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.utils.path import moveFile, makePath
 from pyworkflow.gui.plotter import Plotter
+
+
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    writeSetOfVolumes,
                                                    getImageLocation)
@@ -410,9 +412,14 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                             
                 VolPrefix = 'vol%03d_' % (i+1)
                 mdVal = md.MetaData(self._getExtraPath(VolPrefix+'validation_alignability.xmd'))                
-                weight = mdVal.getValue(md.MDL_WEIGHT, mdVal.firstObject())
-                summary.append("Output volume(s)_%d : %s" % (i+1,self.outputVolumes.getNameId()))
-                summary.append("Quality parameter_%d : %f" % (i+1,weight))
+                weightAccuracy = mdVal.getValue(md.MDL_WEIGHT_ACCURACY_ALIGNABILITY, mdVal.firstObject())
+                weightPrecision = mdVal.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY, mdVal.firstObject())
+                weightAlignability = mdVal.getValue(md.MDL_WEIGHT_ALIGNABILITY, mdVal.firstObject())
+                 
+                summary.append("ALIGNABILITY ACCURACY parameter_%d : %f" % (i+1,weightAccuracy))
+                summary.append("ALIGNABILITY PRECISION parameter_%d : %f" % (i+1,weightPrecision))
+                summary.append("ALIGNABILITY ACCURACY & PRECISION parameter_%d : %f" % (i+1,weightAlignability))
+                
                 summary.append("-----------------")        
         return summary
     
@@ -472,7 +479,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         
         import xmipp
         
-        figurePath = self._getExtraPath(volPrefix + 'softAlignmentValidation.png')
+        figurePath = self._getExtraPath(volPrefix + 'softAlignmentValidation2D.png')
         figureSize = (8, 6)
     
         #alignedMovie = mic.alignMetaData
@@ -495,4 +502,5 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
                 
         plotter.savefig(figurePath)
         plotter.show()
-        return plotter
+        return plotter    
+

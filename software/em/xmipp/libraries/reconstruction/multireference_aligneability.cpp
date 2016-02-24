@@ -102,9 +102,10 @@ void MultireferenceAligneability::run()
 	String expression;
 	MDRow row,rowInput,rowInputRef;
 
-	double validationAlignabilityPrecision, validationAlignabilityAccuracy, validationMirror;
+	double validationAlignabilityPrecision, validationAlignabilityAccuracy, validationAlignability, validationMirror;
 	validationAlignabilityPrecision = 0;
 	validationAlignabilityAccuracy = 0;
+	validationAlignability = 0;
 	validationMirror = 0;
 	init_progress_bar(maxNImg);
 
@@ -189,6 +190,7 @@ void MultireferenceAligneability::run()
 
 		validationAlignabilityPrecision += (rank>0.5);
 		validationAlignabilityAccuracy += (rankAcc > 0.5);
+		validationAlignabilityAccuracy += ( (rankAcc > 0.5) && (rank>0.5));
 		validationMirror += (rankMirror> 0.5);
 
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
@@ -214,12 +216,14 @@ void MultireferenceAligneability::run()
 	mdOutCL.write(fnOutCL);
 	validationAlignabilityPrecision /= (maxNImg+1);
 	validationAlignabilityAccuracy /= (maxNImg+1);
+	validationAlignability /= (maxNImg+1);
 	validationMirror /= (maxNImg+1);
 
 	row.clear();
     row.setValue(MDL_IMAGE,fnInit);
     row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
     row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
+    row.setValue(MDL_WEIGHT_ALIGNABILITY,validationAlignability);
     row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
 
     mdOutQ.addRow(row);

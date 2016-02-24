@@ -408,6 +408,7 @@ enum MDLabel
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
     MDL_WEIGHT_PRECISION_ALIGNABILITY, ///< Weight due to Alignability Precision
+    MDL_WEIGHT_ALIGNABILITY, ///< Weight due to Alignability Precision and Accuracy
     MDL_WEIGHT_ACCURACY_ALIGNABILITY, ///< Weight due to Alignability Accuracy
     MDL_WEIGHT_PRECISION_MIRROR, ///< Weight due to Mirror Precision
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
@@ -1777,6 +1778,7 @@ private:
 
         MDL::addLabel(MDL_WEIGHT_PRECISION_ALIGNABILITY, LABEL_DOUBLE, "weightPrecisionAlignability");
         MDL::addLabel(MDL_WEIGHT_ACCURACY_ALIGNABILITY, LABEL_DOUBLE, "weightAccuracyAlignability");
+        MDL::addLabel(MDL_WEIGHT_ALIGNABILITY, LABEL_DOUBLE, "weightAlignability");
         MDL::addLabel(MDL_WEIGHT_PRECISION_MIRROR, LABEL_DOUBLE, "weightPrecisionMirror");
 
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
