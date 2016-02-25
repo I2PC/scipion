@@ -23,13 +23,23 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+//#include <vector>
+//#include <sstream>
+//#include <fstream>
+//#include <time.h>
 
 #include <data/xmipp_program.h>
 #include <data/projection.h>
+#include <data/multidim_array.h>
+#include <data/xmipp_image.h>
+//#include <data/normalize.h>
+//#include <data/xmipp_fftw.h>
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/video/video.hpp"
-#include "opencv2/gpu/gpu.hpp"
+//#include "opencv2/gpu/gpu.hpp"
+
 
 
 /**@defgroup Volume Homogeneitator
@@ -39,6 +49,8 @@ class ProgVolumeHomogeneitator: public XmippProgram
 {
 public:
     FileName fnVol, fnRef, fnSetOfImgIn, fnSetOfImgOut;
+    FileName fnTestOut1, fnTestOut2;
+    int winSize;
 
 public:
     void readParams();
@@ -47,6 +59,9 @@ public:
 
     // Converts a XMIPP MultidimArray to OpenCV matrix
     void xmipp2Opencv(const MultidimArray<double> &xmippArray, cv::Mat &opencvMat);
+
+    // Converts an OpenCV float matrix to an OpenCV Uint8 matrix
+    void convert2Uint8(cv::Mat opencvDoubleMat, cv::Mat &opencvUintMat);
 
     // Converts an OpenCV matrix to XMIPP MultidimArray
     void opencv2Xmipp(const cv::Mat &opencvMat, MultidimArray<double> &xmippArray);
@@ -58,5 +73,3 @@ public:
     void run();
 };
 //@}
-
-
