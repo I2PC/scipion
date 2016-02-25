@@ -61,7 +61,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
-from protocol_movie_alignment import ProtMovieAlignment
+from pyworkflow.em.protocol.protocol_align_movies import ProtAlignMovies
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 
@@ -93,7 +93,7 @@ class XmippViewer(Viewer):
                 XmippProtScreenClasses, 
                 XmippProtScreenParticles, 
                 XmippProtCTFMicrographs, 
-                ProtMovieAlignment,
+                ProtAlignMovies,
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair
                 ]
@@ -369,7 +369,7 @@ class XmippViewer(Viewer):
                 coordsSet = obj.getCoords()
                 self._visualize(coordsSet)
             
-        elif issubclass(cls, ProtMovieAlignment):
+        elif issubclass(cls, ProtAlignMovies):
             outputMics = obj.outputMicrographs
             plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '

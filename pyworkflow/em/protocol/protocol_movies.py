@@ -255,12 +255,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         else:
             return pwutils.removeBaseExt(movieName) + postFix + '.' + ext
     
-    def _getPlotName(self, movieName, plotType):
-        if plotType == PLOT_CART:
-            return pwutils.removeBaseExt(movieName) + '_plot_cart.png'
-        else:
-            return pwutils.removeBaseExt(movieName) + '_plot_polar.png'
-
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
 

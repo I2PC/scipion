@@ -31,17 +31,17 @@ visualization program.
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.protocol.params import BooleanParam, IntParam, EnumParam
 
-from protocol_movie_alignment import ProtMovieAlignment
+from protocol_movie_opticalflow import XmippProtOFAlignment
 
 from pyworkflow.em.viewer import ObjectView
 from pyworkflow.em.showj import OBJCMDS
-from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots
+from pyworkflow.em.packages.xmipp3.protocol_movie_opticalflow import createPlots
 
 class XmippMovieAlignViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects
     with the Xmipp program xmipp_showj
     """
-    #_targets = [ProtMovieAlignment]
+    #_targets = [XmippProtOFAlignment]
     _targets = []
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 

@@ -79,8 +79,8 @@ from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 # FIXME: Add XmippProt as prefix to MovieAlignment
-from protocol_movie_alignment import ProtMovieAlignment
 from protocol_movie_correlation import XmippProtMovieCorr
+from protocol_movie_opticalflow import XmippProtOFAlignment
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick_consensus import XmippProtConsensusPicking

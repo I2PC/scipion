@@ -334,6 +334,7 @@ public:
         int h, w, levelNum, levelCounter=1;
 
         motionInfFile=foname.replaceExtension("xmd");
+        std::cout<<motionInfFile<<std::endl;
         std::string extension=fname.getExtension();
         if (extension=="mrc")
             fname+=":mrcs";
@@ -400,8 +401,8 @@ public:
         }
         tStart2=clock();
         // put the right values for first and last frame in cut variables
-        cutFrameFront++;
-        cutFrameEnd=imagenum-cutFrameEnd; // Just to adapt to Li algorithm
+        cutFrameFront=1;
+        cutFrameEnd=16; // Just to adapt to Li algorithm
         imagenum=cutFrameEnd-cutFrameFront+1;
         levelNum=sqrt(double(imagenum));
         computeAvg(fname, cutFrameFront, cutFrameEnd, avgCurr);

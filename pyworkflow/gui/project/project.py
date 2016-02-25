@@ -187,7 +187,7 @@ class ProjectWindow(ProjectBaseWindow):
         try:
             
             from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
-            from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots 
+            from pyworkflow.em.packages.xmipp3.protocol_movie_opticalflow import createPlots
             from pyworkflow.em.protocol.protocol_movies import PLOT_CART
             from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
             objId = int(objStrId)

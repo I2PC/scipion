@@ -122,7 +122,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 # micrograph file in the extra path with the required name
                 extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
-                self._preprocessOutputMicrograph(mic)
+                self._preprocessOutputMicrograph(mic,movie)
                 micSet.append(mic)
 
             self._defineOutputs(outputMicrographs=micSet)
