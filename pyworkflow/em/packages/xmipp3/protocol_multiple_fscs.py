@@ -28,6 +28,7 @@ from pyworkflow.protocol.constants import STEPS_PARALLEL
 import pyworkflow.protocol.params as params
 
 import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 
 
 
@@ -70,10 +71,14 @@ class XmippProtMultipleFSCs(em.ProtAnalysis3D):
     def _insertAllSteps(self):
         stepId = self._insertFunctionStep('prepareReferenceStep',
                                           self.referenceVolume.get().getObjId())
+        allVols = []
         for i, vol in enumerate(self.inputVolumes):
-            self._insertFunctionStep('compareVolumeStep',
-                                     vol.get().getLocation(), i+1,
-                                     prerequisites=[stepId])
+            volId = self._insertFunctionStep('compareVolumeStep',
+                                             vol.get().getLocation(), i+1,
+                                             prerequisites=[stepId])
+            allVols.append(volId)
+
+        self._insertFunctionStep('createOutputStep', prerequisites=allVols)
 
     def _resizeVolume(self, volFn):
         """ Resize input volume if not of the same size of referenceVol """
@@ -120,7 +125,25 @@ class XmippProtMultipleFSCs(em.ProtAnalysis3D):
             self._maskVolume(fnVol)
 
         # Finally compute the FSC
-        args = "--ref %s -i %s -o %s.fsc --sampling_rate %f" % (fnRef, fnVol,
+        args = "--ref %s -i %s -o %s_fsc.xmd --sampling_rate %f" % (fnRef, fnVol,
                                                                 fnRoot, sampling)
         self.runJob("xmipp_resolution_fsc", args)
+
+    def createOutputStep(self):
+        fscSet = self._createSetOfFSCs()
+
+        for i, vol in enumerate(self.inputVolumes):
+            index = i + 1
+            fnFsc = self._getExtraPath("volume_%02d_fsc.xmd" % index)
+            mdFsc = md.MetaData(fnFsc)
+            fscLabel = vol.get().getObjLabel() or 'FSC %d' % index
+            fsc = em.FSC(objLabel=fscLabel)
+            fsc.loadFromMd(mdFsc, md.MDL_RESOLUTION_FREQ, md.MDL_RESOLUTION_FRC)
+            fscSet.append(fsc)
+
+        self._defineOutputs(outputFSCs=fscSet)
+
+        self._defineSourceRelation(self.referenceVolume, fscSet)
+        for i, vol in enumerate(self.inputVolumes):
+            self._defineSourceRelation(vol, fscSet)
 
