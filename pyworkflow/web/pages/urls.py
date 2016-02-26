@@ -5,6 +5,7 @@ from django.conf.urls import patterns, include, url
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 
+from pyworkflow.web import app
 from pyworkflow.web.app import views_util
 from pyworkflow.web.app.views_management import ScipionResumableUploadView
 
@@ -100,6 +101,8 @@ mainUrls = ['',
     url(r'^uploadr/$', ScipionResumableUploadView.as_view(), name='uploadr'),
     url(r'^deletefile$', views_util.delete_file),
 
+    # MANAGEMENT
+    url(r'^health$', app.views_management.health),
 
     url(r'^home/', 'app.views_home.home'),
     url(r'^download_form/', 'app.views_home.download_form'),
