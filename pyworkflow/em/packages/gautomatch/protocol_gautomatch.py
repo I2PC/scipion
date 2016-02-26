@@ -216,7 +216,6 @@ class ProtGautomatch(em.ProtParticlePicking):
             fnMic = pwutils.removeExt(mic.getFileName())
             fnCoords = basename(fnMic) + '_automatch.box'
             fn2parse = self._getExtraPath('micrographs', fnCoords)
-            print fn2parse
             with open(fn2parse, "r") as source:
                 for line in source:
                     tokens = line.split()
