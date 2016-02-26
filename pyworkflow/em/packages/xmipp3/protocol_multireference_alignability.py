@@ -70,12 +70,16 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Symmetry group", 
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
-        
+
+        form.addParam('isCTFCorrected', BooleanParam, default=False,
+                      label="Has been the CTF corrected previously using Wiener filter?",  
+                      help='Select true if the CTF has been previously corrected through Wiener filtering')
+                
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
 
-        form.addParam('numOrientations', FloatParam, default=10, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numOrientations', FloatParam, default=6, expertLevel=LEVEL_ADVANCED,
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
@@ -149,7 +153,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --dontReconstruct'
-        params += ' --useForValidation %0.3f' % (self.numOrientations.get())        
+        params += ' --useForValidation %0.3f' % (self.numOrientations.get()+1)        
         return params
         
     
@@ -169,14 +173,16 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         R = -int(Nx/2)
 
         f = open(self._getExtraPath('params'),'w')          
+        print self.isCTFCorrected.get()
         f.write("""# XMIPP_STAR_1 *
 #
 data_block1
 _dimensions2D '%d %d'
 _projAngleFile %s
 _ctfPhaseFlipped %d
+_ctfCorrected %d
 _applyShift 0
-_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().isPhaseFlipped()))
+_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.isCTFCorrected.get()))
         f.close()
         param =     ' -i %s' % volName
         param +=    ' --params %s' % self._getExtraPath('params')
