@@ -24,19 +24,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
 from plotter import EmPlotter
-from data import FSC
+from data import FSC, SetOfFSCs
 from matplotlib.ticker import FuncFormatter
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
-from matplotlib.text import Text
 from pyworkflow.em.protocol import ProtCreateFSC
 from pyworkflow.utils.properties import Icon, Color
 
+
 class FscViewer(Viewer):
     """ Viewer for plot a FSC object. """
-    _targets = [FSC]
+    _targets = [FSC, SetOfFSCs]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
     def __init__(self, **kwargs):
@@ -58,13 +59,17 @@ class FscViewer(Viewer):
         self.plotter.show()
 
     def _visualize(self, obj, **kwargs):
-        self.plotFsc(obj, **kwargs)
+        if isinstance(obj, SetOfFSCs):
+            for i, fsc in enumerate(obj):
+                fscLabel = fsc.getObjLabel() or 'FSC %d' % (i+1)
+                self.plotFsc(fsc, label=fscLabel, **kwargs)
+        else: # single FSC
+            self.plotFsc(obj, **kwargs)
 
         return [self.plotter]
 
     def plotFsc(self, obj, **kwargs):
         def createFSCObject(event):
-
             prot = self.getProject().newProtocol(ProtCreateFSC)
             prot.setObjLabel('FSC-%s' % self.label)#label)
             prot.setInputObj(self.protocol)#protocol may be not finished
