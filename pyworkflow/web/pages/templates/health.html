@@ -1,0 +1,10 @@
+{% extends "__base_full_page.html" %}
+
+    {% block content %}
+
+        <h1>System health page</h1>
+
+        {% for healthLine in healthLines %}
+            <li>{{ healthLine.description }} - {{ healthLine.isOK }}</li>
+        {% endfor %}
+    {% endblock %}

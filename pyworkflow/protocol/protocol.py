@@ -596,6 +596,8 @@ class Protocol(Step):
         resultPath = join(self.workingDir.get(), *paths)
         if kwargs.get('abs', False):
             resultPath = self.getProject().getAbsPath(resultPath)
+        if kwargs.get('create', False) and not os.path.exists(resultPath):
+            os.makedirs(resultPath)
         return resultPath
 
     def _getExtraPath(self, *paths, **kwargs):

@@ -42,7 +42,7 @@ def main():
     xtitle = args.xtitle
     ytitle = args.ytitle
     
-    Plotter.setBackend('TkAgg')
+    # Rely on config file: Plotter.setBackend('TkAgg')
     plotFile(plotfile, block, type,
                columns, colors, styles, markers,
                xcolumn, ytitle, xtitle, title, bins, orderColumn, orderDir).show(block=True)

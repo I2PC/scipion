@@ -52,7 +52,7 @@ class Plotter(View):
         """ This Plotter class has some utilities to create a Matplotlib figure
         and add some plots to it.
         Params:
-            x, y: number of rows and colums of the grid for plots.
+            x, y: number of rows and columns of the grid for plots.
             mainTitle: figure main title.
             figsize: the size of the figure, if None, it will be guessed from x and y
             dpi: resolution, 100 by default.
@@ -61,7 +61,8 @@ class Plotter(View):
         figure = kwargs.get('figure', None)
         
         if self.backend is None:
-            Plotter.setBackend('Agg')
+            # Plotter.setBackend(os.getenv('PLOTTING_BACKEND', 'TkAgg'))
+            print 'setBackend cancelled'
         
         if figure is None:
             self.tightLayoutOn = True
