@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around ML2D Xmipp program
-"""
 
 from os.path import join, exists
 

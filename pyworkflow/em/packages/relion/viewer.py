@@ -82,19 +82,19 @@ class RelionPlotter(EmPlotter):
         
         self.plotAngularDistribution(title, rot, tilt, weight)
 
-    def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
+    def plotMd(self, mdObj, mdLabelX, mdLabelY, color='g',**args):
         """ plot metadata columns mdLabelX and mdLabelY
             if nbins is in args then and histogram over y data is made
         """
         if mdLabelX:
             xx = []
         else:
-            xx = range(1, md.size() + 1)
+            xx = range(1, mdObj.size() + 1)
         yy = []
-        for objId in md:
+        for objId in mdObj:
             if mdLabelX:
-                xx.append(md.getValue(mdLabelX, objId))
-            yy.append(md.getValue(mdLabelY, objId))
+                xx.append(mdObj.getValue(mdLabelX, objId))
+            yy.append(mdObj.getValue(mdLabelY, objId))
         
         nbins = args.pop('nbins', None)
         if nbins is None:
@@ -106,8 +106,8 @@ class RelionPlotter(EmPlotter):
         """ plot metadataFile columns mdLabelX and mdLabelY
             if nbins is in args then and histogram over y data is made
         """
-        md = md.MetaData(mdFilename)
-        self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
+        mdObj = md.MetaData(mdFilename)
+        self.plotMd(mdObj, mdLabelX, mdLabelY, color='g',**args)
         
     
 class RelionViewer(ProtocolViewer):
@@ -221,10 +221,10 @@ Examples:
                       label=changesLabel,
                       help='Visualize changes in orientation, offset and\n number images assigned to each class')
                                               
-        
     def _getVisualizeDict(self):
         self._load()
-        return {'showImagesInClasses': self._showImagesInClasses,
+        visualizeDict = {
+                'showImagesInClasses': self._showImagesInClasses,
                 'showClassesOnly': self._showClassesOnly,
                 'showImagesAngularAssignment' : self._showImagesAngularAssignment,
                 'showOptimiserFile': self._showOptimiserFile,
@@ -236,6 +236,19 @@ Examples:
                 'resolutionPlotsSSNR': self._showSSNR,
                 'resolutionPlotsFSC': self._showFSC
                 }
+
+        # If the is some error during the load, just show that instead
+        # of any viewer
+        if self._errors:
+            for k in visualizeDict.keys():
+                visualizeDict[k] = self._showErrors
+
+        return visualizeDict
+
+    def _showErrors(self, param=None):
+        views = []
+        self.errorList(self._errors, views)
+        return views
         
     def _viewAll(self, *args):
         pass
@@ -421,7 +434,7 @@ Examples:
 #===============================================================================
     def _showAngularDistribution(self, paramName=None):
         views = []
-        
+
         if self.displayAngDist == ANGDIST_CHIMERA:
             for it in self._iterations:
                 views.append(self._createAngDistChimera(it))
@@ -619,14 +632,31 @@ Examples:
                           env=self._env,
                           viewParams=viewParams)
 
+    def _getRange(self, var, label):
+        """ Check if the range is not empty.
+        :param var: The variable to retrieve the value
+        :param label: the labe used for the message string
+        :return: the list with the range of values, empty
+        """
+        value = var.get()
+        if value is None or not value.strip():
+            self._errors.append('Provide %s selection.' % label)
+            result = []
+        else:
+            result = self._getListFromRangeString(value)
+
+        return result
+
     def _load(self):
         """ Load selected iterations and classes 3D for visualization mode. """
         self._refsList = [1]
+        self._errors = []
+
         if self.protocol.IS_3D and self.protocol.IS_CLASSIFY:
             if self.showClasses3D == CLASSES_ALL:
                 self._refsList = range(1, self.protocol.numberOfClasses.get()+1)
             else:
-                self._refsList = self._getListFromRangeString(self.class3DSelection.get())
+                self._refsList = self._getRange(self.class3DSelection, 'classes 3d')
         self.protocol._initialize() # Load filename templates
         self.firstIter = self.protocol._firstIter()
         self.lastIter = self.protocol._lastIter()
@@ -635,8 +665,7 @@ Examples:
         if self.viewIter.get() == ITER_LAST or halves == 3:
             self._iterations = [self.lastIter]
         else:
-            self._iterations = self._getListFromRangeString(self.iterSelection.get())
-        print("load_self._iterations",self._iterations)
+            self._iterations = self._getRange(self.iterSelection, 'iterations')
         from matplotlib.ticker import FuncFormatter
         self._plotFormatter = FuncFormatter(self._formatFreq) 
         
@@ -1041,14 +1070,28 @@ Examples:
     
     def _getVisualizeDict(self):
         self._load()
-        return {'displayShinyParticles': self._showShinyParticles,
+        visualizeDict = {
+                'displayShinyParticles': self._showShinyParticles,
                 'displayVol': self._showVolumes,
                 'displayAngDist': self._showAngularDistribution,
                 'resolutionPlotsFSC': self._showFSC,
                 'guinierPlots': self._showGuinier,
                 'bfactorsPlot': self._showBfactors
                 }
-        
+
+        # If the is some error during the load, just show that instead
+        # of any viewer
+        if self._errors:
+            for k in visualizeDict.keys():
+                visualizeDict[k] = self._showErrors
+
+        return visualizeDict
+
+    def _showErrors(self, e=None):
+        views = []
+        self.errorList(self._errors, views)
+        return views
+
     def _viewAll(self, *args):
         pass
     
@@ -1249,6 +1292,7 @@ Examples:
 #===============================================================================
     def _load(self):
         self.protocol._initialize() # Load filename templates
+        self._errors = []
         self.lastIter = self.protocol._lastIter()
         halves = getattr(self, 'showHalves', None)
         if self.viewFrame.get() == 0 and halves < 3:
@@ -1256,7 +1300,11 @@ Examples:
             # know how many frames has a SetOfMovieParticles.
             self._frames = range(1, self.protocol._lastFrame())
         elif halves < 3:
-            self._frames = self._getListFromRangeString(self.frameSelection.get())
+            frameSelection = self.frameSelection.get()
+            if frameSelection and frameSelection.strip():
+                self._frames = self._getListFromRangeString(frameSelection)
+            else:
+                self._errors.append('Please provide FRAMES selection')
         else:
             self._frames = [1]
             

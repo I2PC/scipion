@@ -23,11 +23,8 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # *
 # **************************************************************************
-import pyworkflow
-"""
-This sub-package contains protocols for performing subtomogram averaging.
-"""
 
+import pyworkflow
 import pyworkflow.object as pwobj
 from pyworkflow.em import *  
 from xmipp import MetaData, MDL_ANGLE_ROT, MDL_SHIFT_Z
@@ -39,7 +36,8 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 class XmippProtHelicalParameters(ProtPreprocessVolumes, HelicalFinder):
     """ Estimate helical parameters and symmetrize.
     
-         Helical symmetry is defined as V(r,rot,z)=V(r,rot+k*DeltaRot,z+k*Deltaz)."""
+    Helical symmetry is defined as V(r,rot,z)=V(r,rot+k*DeltaRot,z+k*Deltaz).
+    """
     _label = 'helical symmetry'
     
     #--------------------------- DEFINE param functions --------------------------------------------

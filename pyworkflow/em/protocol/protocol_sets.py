@@ -48,7 +48,7 @@ class ProtUnionSet(ProtSets):
     selected sets. It will validate that all sets are of the
     same type of elements (Micrographs, Particles or Volumes) 
     """
-    _label = 'union sets'
+    _label = 'join sets'
     _unionTypes = ['Particles', 
                    'Micrographs', 
                    'CTFs', 

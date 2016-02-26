@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp specific protocols
+This sub-package contains Xmipp specific protocols
 """
 
 from bibtex import _bibtex # Load bibtex dict with references

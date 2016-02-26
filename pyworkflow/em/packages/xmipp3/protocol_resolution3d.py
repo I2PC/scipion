@@ -23,10 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around resolution3D Xmipp protocol
-"""
-
 
 from pyworkflow.em import *  
 from pyworkflow.utils import *  

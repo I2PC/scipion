@@ -642,17 +642,20 @@ class ProtRelionBase(EMProtocol):
     
     def _summary(self):
         self._initialize()
-        iterMsg = 'Iteration %d' % self._lastIter()
-        if self.hasAttribute('numberOfIterations'):
-            iterMsg += '/%d' % self._getnumberOfIters()
-        summary = [iterMsg]
-        
-        if self._getInputParticles().isPhaseFlipped():
-            msg = "Your images have been ctf-phase corrected"
+
+        lastIter = self._lastIter()
+
+        if lastIter is not None:
+            iterMsg = 'Iteration %d' % lastIter
+            if self.hasAttribute('numberOfIterations'):
+                iterMsg += '/%d' % self._getnumberOfIters()
         else:
-            msg = "Your images have not been ctf-phase corrected"
-        
-        summary += [msg]
+            iterMsg = 'No iteration finished yet.'
+        summary = [iterMsg]
+
+        flip = '' if self._getInputParticles().isPhaseFlipped() else 'not '
+        flipMsg = "Your images have %sbeen ctf-phase corrected" % flip
+        summary.append(flipMsg)
         
         if self.doContinue:
             summary += self._summaryContinue()

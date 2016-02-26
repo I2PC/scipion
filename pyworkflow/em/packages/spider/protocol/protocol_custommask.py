@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for particles filters operations
-"""
 
 from pyworkflow.em import ProtCreateMask2D, Mask
 from pyworkflow.protocol.params import PointerParam, FloatParam

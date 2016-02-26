@@ -163,9 +163,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 				String psd = getMicrograph().getPSD();
 				String ctf = getMicrograph().getCTF();
 				if (psd != null && ctf != null)
-					new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
-                                
-
+					new CTFAnalyzerJFrame(psd, ctf, psd);
 			}
 		});
 		micrographsmd = new ExtractMicrographsTableModel();
