@@ -40,7 +40,7 @@ except ImportError:
 
 __version__ = 'v1.0.0'
 __nickname__ = 'Augusto'
-__releasedate__ = '2016-02-09'
+__releasedate__ = '2016-02-20'
 
 
 # This script tries to run ok with any python version. So we cannot
