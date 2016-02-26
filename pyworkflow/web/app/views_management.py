@@ -29,6 +29,7 @@ import json
 import re
 import shutil
 
+import matplotlib
 from django.forms import Form
 from django.shortcuts import render_to_response, HttpResponse
 from django.template import RequestContext
@@ -39,7 +40,7 @@ from pyworkflow.project import Project, PROJECT_UPLOAD
 from pyworkflow.web.pages import settings as django_settings
 from models import Document
 from forms import DocumentForm
-from views_base import base_form
+from views_base import base_form, base
 from views_util import getResourceIcon, getResourceJs, getProjectPathFromRequest, CTX_PROJECT_PATH
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -224,3 +225,69 @@ def getExtIconPath(ext):
             res = getResourceIcon('file_normal')
 
     return res
+
+
+def getFigureDescription(figure):
+
+    title = figure.canvas.figure._suptitle._text
+
+    return title
+
+
+def addFigures(healthLines):
+    from matplotlib._pylab_helpers import Gcf
+
+    figures = Gcf.figs
+
+    for figureKey in figures:
+
+        figure = figures[figureKey]
+
+        description = " - Figure " + str(figureKey) + ": " + getFigureDescription(figure)
+
+        healthLine = HealthLine(description, True)
+
+        healthLines.append(healthLine)
+
+
+class HealthLine():
+
+    def __init__(self, description, isOK):
+        self.description = description
+        self.isOK = isOK
+
+
+
+def health(request):
+    from pyworkflow.gui.plotter import figureCounter
+
+    healthLines = []
+
+    # Show number of figures
+    description = 'Plotter figure counter is ' + str(figureCounter)
+    isOK = (figureCounter < 10)
+    healthLine = HealthLine(description, isOK)
+
+    healthLines.append(healthLine)
+
+    addFigures(healthLines)
+
+
+
+    # matplotlib backend
+    description = 'Matplot lib backend should be Agg: ' + matplotlib.get_backend()
+    isOK = (matplotlib.get_backend().lower() == 'agg')
+    healthLine = HealthLine(description, isOK)
+
+    healthLines.append(healthLine)
+
+
+
+
+    context = {'healthLines': healthLines}
+
+    context = base(request, context)
+
+    # Render list page with the documents and the form
+    return render_to_response('health.html', context,
+                              context_instance=RequestContext(request))

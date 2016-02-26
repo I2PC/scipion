@@ -1002,12 +1002,14 @@ def getImageUrl(filename):
     return url_plot
 
 
-def savePlot(request, plot):
+def savePlot(request, plot, close=False):
     projectPath = getProjectPathFromRequest(request)
 
     name_img = 'image%s.png' % id(plot)
     fn = os.path.join(projectPath, 'Tmp', name_img)
     plot.savefig(fn)
+
+    if close: plot.close()
 
     return getImageUrl(fn)
 

@@ -152,14 +152,14 @@ def get_resmap_plot(request):
 
 def getPlotResMap(request, protocol):
      #1st step: Convert input volumes
-    results = _beforePreWhitening(protocol, os.getcwd())
+    results = _beforePreWhitening(protocol, protocol._getTmpPath(abs=True, create=True))
     min_ang = 2.1* results['vxSize']
     #2nd step: Generate plot
     plotter = _runPreWhiteningWeb(protocol, results)
     #3rd step: Save to png image
     
 #     plotUrl = "/" + savePlot(request, plotter)
-    plotUrl = savePlot(request, plotter) 
+    plotUrl = savePlot(request, plotter, close=True)
     return plotUrl, min_ang
 
 def _beforePreWhitening(protocol, dir):

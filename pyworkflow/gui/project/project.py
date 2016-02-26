@@ -89,7 +89,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
-        Plotter.setBackend('TkAgg')
+        # Rely on config file: Plotter.setBackend('TkAgg')
         ProjectBaseWindow.__init__(self, projTitle, master, icon=self.icon, minsize=(900,500))
         self.switchView(VIEW_PROTOCOLS)
 

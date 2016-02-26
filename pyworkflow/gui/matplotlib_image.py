@@ -29,7 +29,7 @@ Several Image tools using Matplotlib.
 
 import Tkinter as tk
 import matplotlib
-matplotlib.use('TkAgg')
+# Rely on config file: matplotlib.use('TkAgg')
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg

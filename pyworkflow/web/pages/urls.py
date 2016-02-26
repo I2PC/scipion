@@ -13,16 +13,12 @@ from django.conf import settings
 from pyworkflow.web.pages.settings import WS_ROOT, serviceFolders
 from django.views.generic import TemplateView
 
-#===============================================================================
+# ===============================================================================
 # URL ASSOCIATION
-#===============================================================================
+# ===============================================================================
 
 mainUrls = ['',
     url(r'^admin/', include(admin.site.urls)),
-    # url(r'^pages/doc/', include('django.contrib.admindocs.urls')),
-
-    # If no path given, load the projects view
-#     url(r'^$', 'app.views_project.projects'),
     url(r'^$', 'app.views_home.home'),
     url(r'^services/', 'app.views_project.webservice_projects'),
     url(r'^intro/', 'app.views_project.webservice_projects'),
@@ -30,8 +26,6 @@ mainUrls = ['',
     #PROJECT (CONTENT, RUNTABLE AND GRAPH)
     url(r'^projects/', 'app.views_project.projects'),
     url(r'^create_project/$', 'app.views_project.create_project'),
-
-    # url(r'^check_project_id/$', 'app.views_project.check_project_id'),
     url(r'^delete_project/$', 'app.views_project.delete_project'),
     url(r'^project_content/$', 'app.views_project.project_content'),
     url(r'^get_protocols/$', 'app.views_project.get_protocols'),
@@ -107,10 +101,6 @@ mainUrls = ['',
     url(r'^deletefile$', views_util.delete_file),
 
 
-    #TESTING
-#    url(r'^testingSSH/', 'app.views_showj.testingSSH'), #Load web
-
-
     url(r'^home/', 'app.views_home.home'),
     url(r'^download_form/', 'app.views_home.download_form'),
     url(r'^startdownload/', 'app.views_home.startDownload'),
@@ -125,6 +115,7 @@ mainUrls = ['',
 
 # Load URLS for webtools
 from pyworkflow.utils.reflection import getModules
+
 toolModules = getModules(WS_ROOT)
 
 for tm in toolModules.values():
@@ -134,4 +125,3 @@ handler404 = "app.views_util.handle404error"
 handler500 = "app.views_util.handle500error"
 
 urlpatterns = patterns(*mainUrls)
-

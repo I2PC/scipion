@@ -50,7 +50,7 @@ def VARS_base(request, context):
         'msg': messages,
         'color': colors,
         'icon': icons,
-        'cwd': os.getcwd()
+        'cwd': os.getcwd()  # Not used?
     }
 
     context.update(context_base)
