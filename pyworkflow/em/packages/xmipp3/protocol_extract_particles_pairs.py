@@ -26,10 +26,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtExtractParticlesPairs protocol
-"""
-
 
 from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 

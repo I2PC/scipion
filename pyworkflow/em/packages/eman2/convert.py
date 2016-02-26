@@ -229,6 +229,7 @@ def writeSetOfParticles(partSet, path, **kwargs):
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
         proc.stdout.readline()
+        proc.kill()
 #     return listHdf
 
 

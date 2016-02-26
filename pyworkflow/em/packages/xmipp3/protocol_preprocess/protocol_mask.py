@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for masks operations
-"""
 
 from pyworkflow.em import *
 from pyworkflow.utils import *  

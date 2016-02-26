@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippPreprocessMicrographs protocol
-"""
 
 from os.path import basename
 from pyworkflow.utils import getExt, replaceExt

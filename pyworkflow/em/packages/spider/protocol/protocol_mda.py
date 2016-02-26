@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains Spider protocol for MDA workflow.
-"""
 
 from pyworkflow.em import *  
 

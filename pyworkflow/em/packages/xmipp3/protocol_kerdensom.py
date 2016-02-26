@@ -23,17 +23,13 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.convert import xmippToLocation
-"""
-This sub-package contains wrapper around kendersom Xmipp program
-"""
 
 from os.path import join, dirname, exists
 from pyworkflow.em import *  
 import xmipp
 
 import xmipp3
-from convert import writeSetOfParticles, readSetOfClasses2D
+from convert import writeSetOfParticles, readSetOfClasses2D, xmippToLocation
 from glob import glob
 
 
