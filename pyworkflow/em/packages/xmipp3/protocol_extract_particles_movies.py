@@ -26,9 +26,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtExtractParticles protocol
-"""
+
 import os
 
 import pyworkflow.em.metadata as md
@@ -43,12 +41,14 @@ from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.packages.xmipp3 import coordinateToRow, XmippMdRow
 
 
+
 class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
-    _label = 'movie extract particles' 
-    def __init__(self, **args):
-        ProtExtractMovieParticles.__init__(self, **args)
+    _label = 'movie extract particles'
+
+    def __init__(self, **kwargs):
+        ProtExtractMovieParticles.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -62,10 +62,16 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                       help='In pixels. The box size is the size of the boxed particles, '
                       'actual particles may be smaller than this.')
         form.addParam('applyAlignment', BooleanParam, default=False,
-                      label='Apply alignments to extract?')
-
+                      label='Apply alignments to extract?',
+                      help='If the input movies contains frames alignment, '
+                           'you decide whether to use that information '
+                           'for extracting the particles taking into account '
+                           'the shifts between frames.')
         line = form.addLine('Frames range',
-                      help='')
+                      help='Specify the frames range to extract particles from.\n'
+                           '  _First_: 1 will be the first frame in the movie.\n'
+                           '  _Last_: For any value <= 0, the range will go until '
+                           'the last frame. ')
         line.addParam('firstFrame', IntParam, default=1,
                       label='First')
         line.addParam('lastFrame',  IntParam, default=0,

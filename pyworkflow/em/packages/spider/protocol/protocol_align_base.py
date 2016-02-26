@@ -25,9 +25,6 @@
 # *
 # **************************************************************************
 
-"""
-This sub-package contains protocol for particles filters operations
-"""
 from os.path import join, exists
 
 from pyworkflow.protocol.params import IntParam, EnumParam

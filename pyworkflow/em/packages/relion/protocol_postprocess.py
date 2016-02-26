@@ -34,10 +34,9 @@ from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
-    """    
-    Reconstruct a volume using Relion from a given set of particles.
-    The alignment parameters will be converted to a Relion star file
-    and used as direction projections to reconstruct.
+    """
+    Relion post-processing protocol for automated masking,
+    overfitting estimation, MTF-correction and B-factor sharpening
     """
     _label = 'post-processing'
     

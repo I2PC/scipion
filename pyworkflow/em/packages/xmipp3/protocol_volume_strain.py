@@ -23,9 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper to calculate the local strain of a volume
-"""
+
 import os
 
 from pyworkflow.object import Float, String
