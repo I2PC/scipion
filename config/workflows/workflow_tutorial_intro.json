@@ -8,7 +8,7 @@
         "runMode": 0,
         "importFrom": 0,
         "filesPath": "",
-        "filesPattern": "*.mrc",
+        "filesPattern": "",
         "copyFiles": false,
         "emxFile": null,
         "mdFile": null,
@@ -118,7 +118,7 @@
         "runMode": 0,
         "importFrom": 0,
         "filesPath": "",
-        "filesPattern": "BPV_scale_filtered_windowed_110.vol",
+        "filesPattern": "",
         "copyFiles": false,
         "samplingRate": 6.185
     },
