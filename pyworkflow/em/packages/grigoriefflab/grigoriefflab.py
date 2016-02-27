@@ -23,10 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
-"""
+
 import os
 from os.path import join, exists
 

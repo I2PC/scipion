@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around Projection Outliers Xmipp program
-"""
 
 from math import floor
 
@@ -43,7 +40,9 @@ from xmipp3 import ProjMatcher
 
         
 class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
-    """Compares a set of classes or averages with the corresponding projections of a reference volume """
+    """Compares a set of classes or averages with the corresponding projections
+     of a reference volume.
+    """
     _label = 'compare reprojections'
     
     def __init__(self, **args):

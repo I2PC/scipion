@@ -33,7 +33,8 @@ from protocol_classify_base import SpiderProtClassify
       
 
 class SpiderProtClassifyKmeans(SpiderProtClassify):
-    """ Diday's method, using 'CL CLA' 
+    """ Performs automatic K-Means clustering and classification
+    on factors produced by CA or PCA. Uses the Spider CL KM program
     """
     _label = 'classify kmeans'
     
