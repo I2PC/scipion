@@ -80,3 +80,4 @@ downloads.sqlite
 /static
 /pyworkflow/web/pages/resources/install
 *.log
+foo.txt
