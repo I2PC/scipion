@@ -42,6 +42,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "BsoftProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "DogPickerProtPicking",   "text": "default"},
             {"tag": "protocol", "value": "ProtGemPicker",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGautomatch",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtConsensusPicking",   "text": "default"},
             {"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"}
          ]},

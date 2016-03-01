@@ -388,7 +388,7 @@ class ProtGctf(em.ProtCTFMicrographs):
     def _getProgram(self):
         """ Return the program binary that will be used. """
         binary = os.environ['GCTF']
-        program = join(os.environ['GCTF_HOME'], basename(binary))
+        program = join(os.environ['GCTF_HOME'], 'bin', basename(binary))
 
         return program
 
