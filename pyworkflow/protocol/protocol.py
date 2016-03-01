@@ -391,7 +391,7 @@ class Protocol(Step):
         outputSet.setStreamState(state)
         self._defineOutputs(**{outputName: outputSet})
         self._store(outputSet)
-        outputSet.write()
+        outputSet.close()
         
     def getProject(self):
         return self.__project
@@ -1550,7 +1550,6 @@ class Protocol(Step):
         """
         pass
 
-                
 #---------- Helper functions related to Protocols --------------------
 
 def runProtocolMain(projectPath, protDbPath, protId):
