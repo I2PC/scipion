@@ -133,14 +133,17 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _validate(self):
         errors = []
-        if self.cropDimX>0 and self.cropDimY<=0 or self.cropDimY>0 and self.cropDimX<=0:
-            errors.append("If you give cropDimX, you should also give cropDimY and viceversa")
-        if self.alignFrame0>self.sumFrame0:
-            errors.append("You cannot discard from the beginning more frames while aligning than when summing")
-        if self.alignFrameN>self.sumFrameN:
-            errors.append("You cannot discard from the end more frames while aligning than when summing")
+        if (self.cropDimX > 0 and self.cropDimY <= 0 or
+            self.cropDimY > 0 and self.cropDimX <= 0):
+            errors.append("If you give cropDimX, you should also give cropDimY "
+                          "and viceversa")
+        if self.alignFrame0 > self.sumFrame0:
+            errors.append("You cannot discard from the beginning more frames "
+                          "while aligning than when summing")
+        if self.alignFrameN > self.sumFrameN:
+            errors.append("You cannot discard from the end more frames while "
+                          "aligning than when summing")
         return errors
-    
 
     #--------------------------- UTILS functions ----------------------------
 
