@@ -43,7 +43,7 @@ from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.gui.text import _open_cmd
+from pyworkflow.gui.text import _open_cmd, openTextFileEditor
 import SocketServer
 
 # Import possible Object commands to be handled
@@ -78,6 +78,8 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
@@ -134,6 +136,23 @@ class ProjectWindow(ProjectBaseWindow):
                           self, self.project.getPath(''), 
                           selectButton=None  # we will select nothing
                           ).show()
+
+    def onNotes(self):
+        import subprocess as sp
+        args = []
+        # Program name
+        program = os.environ['SCIPION_NOTES_PROGRAM']
+        notesFile = self.project.getPath('Logs', os.environ['SCIPION_NOTES_FILE'])
+
+        if program:
+            args.append(program)
+            # Custom arguments
+            if os.environ['SCIPION_NOTES_ARGS']:
+                args.append(os.environ['SCIPION_NOTES_ARGS'])
+            args.append(notesFile)
+            sp.Popen(args) #nonblocking
+        else:
+            openTextFileEditor(notesFile)
 
     def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
