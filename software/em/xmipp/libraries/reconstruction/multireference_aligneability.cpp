@@ -201,12 +201,14 @@ void MultireferenceAligneability::run()
 		row.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,sum_w_exp);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,sum_w_proj);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
+		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,accuracyRef);
 		row.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
 
-		mdOutCL.addRow(row);
+		mdOutCL.addRow(rowInput);
 
+		rowInput.clear();
+		rowInputRef.clear();
 		row.clear();
 		tempMdExp.clear();
 		tempMdProj.clear();
@@ -290,7 +292,7 @@ void MultireferenceAligneability::calc_sumu(const MetaData & tempMd, double & su
 #undef DEBUG
 
 			a = SL.computeDistance(rotRef, tiltRef, psiRef,
-								   rot, tilt, psi, check_mirror,true, false);
+								   rot, tilt, psi, true,check_mirror, false);
 
         	if (donNotUseWeights)
         	{
@@ -440,7 +442,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         for (size_t nS1=0; nS1<num; nS1++)
         {
             for (size_t nS2=0; nS2<num; nS2++)
-    			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], check_mirror,true, false);
+    			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], true, check_mirror, false);
 
         }
 
