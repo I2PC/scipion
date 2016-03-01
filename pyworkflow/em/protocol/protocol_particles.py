@@ -100,8 +100,8 @@ class ProtParticlePicking(ProtParticles):
     #--------------------------- INFO functions ----------------------------------------------------
     def getSummary(self, coordSet):
         summary = []
-        summary.append("Number of particles picked: %d" % coordSet.getSize())
-        summary.append("Particle size: %d" % coordSet.getBoxSize())
+        summary.append("Number of particles picked: %s" % coordSet.getSize())
+        summary.append("Particle size: %s" % coordSet.getBoxSize())
         return "\n".join(summary)
 
     def getMethods(self, output):
@@ -112,16 +112,21 @@ class ProtParticlePicking(ProtParticles):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
-        methodsMsgs.append("Input micrographs %s of size %d." % (self.getObjectTag(self.getInputMicrographs()), self.getInputMicrographs().getSize()))
         
-        if self.getOutputsSize() > 1:
+        methodsMsgs.append("Input micrographs %s of size %d." 
+                           % (self.getObjectTag(self.getInputMicrographs()), 
+                              self.getInputMicrographs().getSize()))
+        
+        if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes(EMObject):
                 msg = self.getMethods(output)
-                methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
-        elif(self.getOutputsSize() == 1):
-            output = self.getCoords()
-            msg = self.getMethods(output)
-            methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
+                methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
+#         
+#         elif(self.getOutputsSize() == 1):
+#             output = self.getCoords()
+#             msg = self.getMethods(output)
+#             methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
+        
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
@@ -172,7 +177,7 @@ class ProtParticlePicking(ProtParticles):
         if(self.getOutputsSize() > 1):
             for key, output in self.iterOutputAttributes(EMObject):
                 label = output.getObjLabel() if output.getObjLabel() != "" else key
-                summary.append("*%s:*\n%s"%(key, output.getObjComment()))
+                summary.append("%s: %s" % (key, output.getObjComment()))
         elif(self.getOutputsSize() == 1):
             summary.append(self.getCoords().getObjComment())
         else:
