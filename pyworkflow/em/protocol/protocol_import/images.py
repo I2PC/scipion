@@ -33,7 +33,7 @@ from os.path import basename, exists, isdir
 import time
 from datetime import timedelta, datetime
 
-from pyworkflow.utils.path import commonPath
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam, BooleanParam
 from pyworkflow.em.convert import ImageHandler
@@ -164,17 +164,13 @@ class ProtImportImages(ProtImportFiles):
         Register other parameters.
         """
         self.info("Using pattern: '%s'" % pattern)
-        
         createSetFunc = getattr(self, '_create' + self._outputClassName)
         imgSet = createSetFunc()
         imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
         acquisition = imgSet.getAcquisition()
-        
         self.fillAcquisition(acquisition)
-        
         # Call a function that should be implemented by each subclass
         self.setSamplingRate(imgSet)
-        
         outFiles = [imgSet.getFileName()]
         imgh = ImageHandler()
         img = imgSet.ITEM_TYPE()
@@ -193,6 +189,7 @@ class ProtImportImages(ProtImportFiles):
         while not finished:
             time.sleep(3) # wait 3 seconds before check for new files
             someNew = False
+            someAdded = False
 
             for fileName, fileId in self.iterFiles():
 
@@ -200,11 +197,14 @@ class ProtImportImages(ProtImportFiles):
                     continue
 
                 someNew = True
-
+                self.debug('Checking file: %s' % fileName)
                 mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
                 delta = datetime.now() - mTime
+                self.debug('   Modification time: %s' % pwutils.prettyTime(mTime))
+                self.debug('   Delta: %s' % pwutils.prettyDelta(delta))
 
                 if delta < fileTimeout: # Skip if the file is still changing
+                    self.debug('   delta < fileTimeout, skipping...')
                     continue
 
                 self.info('Importing file: %s' % fileName)
@@ -215,7 +215,9 @@ class ProtImportImages(ProtImportFiles):
                 if self._checkStacks:
                     _, _, _, n = imgh.getDimensions(dst)
 
-                if i > 0:
+                someAdded = True
+                self.debug('Appending file to DB...')
+                if importedFiles: # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
@@ -232,18 +234,21 @@ class ProtImportImages(ProtImportFiles):
                     imgSet.append(img)
 
                 outFiles.append(dst)
+                self.debug('After append. Files: %d' % len(outFiles))
 
-
-            if someNew:
+            if someAdded:
+                self.debug('Updating output...')
                 self._updateOutputSet(outputName, imgSet,
                                       state=imgSet.STREAM_OPEN)
-            else:
-                finished = datetime.now() - startTime > timeout
+                self.debug('Update Done.')
 
+            self.debug('Checking if finished...someNew: %s' % someNew)
+            if not someNew:
+                finished = datetime.now() - startTime > timeout
+                self.debug("Finished: %s" % finished)
 
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
-        
         return outFiles
     
     #--------------------------- INFO functions ----------------------------------------------------
@@ -268,7 +273,11 @@ class ProtImportImages(ProtImportFiles):
         
     def _validate(self):
         errors = ProtImportFiles._validate(self)
-        if self.importFrom == self.IMPORT_FROM_FILES:
+        # Check that files are proper EM images, only when importing from
+        # files and not using streamming. In the later case we could
+        # have partial files not completed.
+        if (self.importFrom == self.IMPORT_FROM_FILES and
+            not self.dataStreaming):
             errors += self._validateImages()
         
         return errors
@@ -283,7 +292,9 @@ class ProtImportImages(ProtImportFiles):
                                "This will make another copy of your data and may take \n"
                                "more time to import. ")
         else:
-            summary.append("*%d* %s imported from %s" % (outputSet.getSize(), self._getOutputItemName(), self.getPattern()))
+            summary.append("*%d* %s imported from %s" % (outputSet.getSize(),
+                                                         self._getOutputItemName(),
+                                                         self.getPattern()))
             summary.append("Is the data phase flipped : %s" % outputSet.isPhaseFlipped())
             summary.append("Sampling rate : *%0.2f* A/px" % outputSet.getSamplingRate())
         
@@ -293,9 +304,14 @@ class ProtImportImages(ProtImportFiles):
         methods = []
         outputSet = self._getOutputSet()
         if outputSet is not None:
-            methods.append("*%d* %s were imported" % (outputSet.getSize(), self._getOutputItemName())+\
-                           " with a sampling rate of *%0.2f* A/px (microscope voltage %d kV, magnification %dx). Output set is %s."%
-                            (outputSet.getSamplingRate(),round(self.voltage.get()),round(self.magnification.get()), self.getObjectTag(self._getOutputName())))
+            methods.append("*%d* %s were imported with a sampling rate of "
+                           "*%0.2f* A/px (microscope voltage %d kV, "
+                           "magnification %dx). Output set is %s."
+                           % (outputSet.getSize(), self._getOutputItemName(),
+                              outputSet.getSamplingRate(),
+                              round(self.voltage.get()),
+                              round(self.magnification.get()),
+                              self.getObjectTag(self._getOutputName())))
             
         return methods
     
@@ -339,7 +355,7 @@ class ProtImportImages(ProtImportFiles):
         from pyworkflow.em import Micrograph
         if isinstance(img, Micrograph):
             filePaths = self.getMatchFiles()
-            commPath = commonPath(filePaths)
+            commPath = pwutils.commonPath(filePaths)
             micName = filename.replace(commPath + "/", "").replace("/", "_")
             img.setMicName(micName)
             
