@@ -26,14 +26,17 @@ def usage(error):
     sys.exit(1)    
 
 
-if len(sys.argv) < 3:
+if len(sys.argv) != 3:
     usage("Incorrect number of input parameters")
 
 inputPattern = sys.argv[1]
 outputDir = sys.argv[2]
 
-inputFiles = glob(inputPattern)
-inputFiles.sort() 
+inputFiles = glob(pwutils.expandPattern(inputPattern))
+inputFiles.sort()
+
+print "Input pattern: ", inputPattern
+print "Input files: ", inputFiles
 
 print "Cleaning output directory: ", outputDir
 pwutils.cleanPath(outputDir)
@@ -49,5 +52,7 @@ for f in inputFiles:
     print "Linking %s -> %s" % (outputPath, f)
 
     for i in range(n):
+        open(outputPath, 'w').close()
         time.sleep(t)
-        pwutils.copyFile(f, outputPath)
+    pwutils.cleanPath(outputPath)
+    pwutils.createAbsLink(f, outputPath)
