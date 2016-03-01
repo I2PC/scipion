@@ -97,8 +97,10 @@ class StepExecutor():
             elif not self._arePending(steps):  # nothing running
                 break  # yeah, we are done, either failed or finished :)
 
-            time.sleep(0.1)  # be gentle on the main thread
+            time.sleep(3)  # be gentle on the main thread
             stepsCheckCallback()
+
+        stepsCheckCallback() # one last check to finalize stuff
 
 
 class StepThread(threading.Thread):
@@ -179,8 +181,10 @@ class ThreadStepExecutor(StepExecutor):
                     elif not self._arePending(steps):  # nothing running
                         break  # yeah, we are done, either failed or finished :)
 
-            time.sleep(0.1)  # be gentle on the main thread
+            time.sleep(3)  # be gentle on the main thread
             stepsCheckCallback()
+
+        stepsCheckCallback()
 
         # Wait for all threads now.
         for t in threading.enumerate():
