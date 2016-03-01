@@ -25,8 +25,8 @@
 # **************************************************************************
 from pyworkflow.em.packages.eman2.viewer import ANGDIST_CHIMERA
 """
-This module implement the wrappers around xmipp_showj
-visualization program.
+This module implements visualization program
+for Spider refinement protocols.
 """
 
 import os
@@ -63,9 +63,6 @@ VOLNAMES = {
             VOL_FILTERED: 'vol%02d_filtered'
             }
 
-
-
-    
 class SpiderViewerRefinement(ProtocolViewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj. """
