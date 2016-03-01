@@ -1118,7 +1118,11 @@ class Protocol(Step):
         
     def error(self, message, redirectStandard=True):
         self._log.error(message, redirectStandard)
-        
+
+    def debug(self, message):
+        if envVarOn('SCIPION_DEBUG'):
+            self.info(message)
+
     def getWorkingDir(self):
         return self.workingDir.get()
     
