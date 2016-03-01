@@ -140,13 +140,10 @@ class ThreadStepExecutor(StepExecutor):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
-
         sharedLock = threading.Lock()
 
         runningSteps = {}  # currently running step in each node ({node: step})
         freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
-
-
 
         while True:
             # See which of the runningSteps are not really running anymore.
