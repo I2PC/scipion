@@ -40,6 +40,7 @@ import pyworkflow.em as em
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.protocol import ProtAlignMovies
 
+
 class XmippProtOFAlignment(ProtAlignMovies):
     """
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
@@ -154,7 +155,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
         moveFile(join(movieFolder, metadataName), self._getExtraPath())
         if doSaveMovie:
-            moveFile(join(movieFolder, self._getOutputMovieName(movie)), self._getExtraPath())
+            moveFile(join(movieFolder, self._getOutputMovieName(movie)),
+                     self._getExtraPath())
 
         # Compute half-half PSD
         ih = em.ImageHandler()
@@ -263,3 +265,6 @@ def movieCreatePlot(mic, saveFig):
     if saveFig:
         plotter.savefig(mic.plotCart)
     return plotter
+
+# Just for backwards compatibility
+ProtMovieAlignment = XmippProtOFAlignment
