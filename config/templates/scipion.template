@@ -51,6 +51,12 @@ CHIMERA_HOME = %(EM_ROOT)s/chimera
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
 VMD_HOME = %(EM_ROOT)s/vmd
 
+[VARIABLES]
+#editor
+SCIPION_NOTES_PROGRAM = 
+SCIPION_NOTES_ARGS =
+SCIPION_NOTES_FILE =  notes.txt
+
 
 # This section of the configuration file is used to setup variables to
 # compile from sources. Most of them you won't want to change.
