@@ -41,19 +41,30 @@ class TestXmippBase(BaseTest):
         cls.movie2 = cls.dataset.getFile('cct/cct_1.em')
     
     @classmethod
-    def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
+    def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize,
+                       magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        # We have two options: passe the SamplingRate or
+        # the ScannedPixelSize + microscope magnification
         if not samplingRate is None:
-            cls.protImport = ProtImportMovies(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
-                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+            cls.protImport = ProtImportMovies(samplingRateMode=0,
+                                              filesPath=pattern,
+                                              samplingRate=samplingRate,
+                                              magnification=magnification,
+                                              voltage=voltage,
+                                              sphericalAberration=sphericalAberration)
         else:
-            cls.protImport = ProtImportMovies(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
-                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
+            cls.protImport = ProtImportMovies(samplingRateMode=1,
+                                              filesPath=pattern,
+                                              scannedPixelSize=scannedPixelSize,
+                                              voltage=voltage,
+                                              magnification=magnification,
+                                              sphericalAberration=sphericalAberration)
         
         cls.proj.launchProtocol(cls.protImport, wait=True)
         if cls.protImport.isFailed():
-            raise Exception("Protocol has failed. Error: ", cls.protImport.getErrorMessage())
+            raise Exception("Protocol has failed. Error: ",
+                            cls.protImport.getErrorMessage())
         # check that input movies have been imported (a better way to do this?)
         if cls.protImport.outputMovies is None:
             raise Exception('Import of movies: %s, failed. outputMovies is None.' % pattern)
@@ -62,16 +73,21 @@ class TestXmippBase(BaseTest):
     @classmethod
     def runImportMovie1(cls, pattern):
         """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.14, voltage=300, sphericalAberration=2.26, scannedPixelSize=None, magnification=50000)
+        return cls.runImportMovie(pattern, samplingRate=1.14, voltage=300,
+                                  sphericalAberration=2.26,
+                                  scannedPixelSize=None, magnification=50000)
     
     @classmethod
     def runImportMovie2(cls, pattern):
         """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300, sphericalAberration=2.7, scannedPixelSize=None, magnification=61000)
+        return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300,
+                                  sphericalAberration=2.7, scannedPixelSize=None,
+                                  magnification=61000)
 
 
-class TestXmippAlingMovies(TestXmippBase):
-    """This class check if the preprocessing micrographs protocol in Xmipp works properly."""
+class TestOFAlignment(TestXmippBase):
+    """This class check if the preprocessing micrographs protocol
+    in Xmipp works properly."""
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -81,17 +97,19 @@ class TestXmippAlingMovies(TestXmippBase):
     
     def testAlignOFMovie1(self):
         # test downsampling a set of micrographs
-        protOF1 = ProtMovieAlignment(alignMethod=0)
+        protOF1 = XmippProtOFAlignment(alignMethod=0)
         protOF1.inputMovies.set(self.protImport1.outputMovies)
         self.proj.launchProtocol(protOF1, wait=True)
-        self.assertIsNotNone(protOF1.outputMicrographs, "SetOfMicrographs has not been created.")
+        self.assertIsNotNone(protOF1.outputMicrographs,
+                             "SetOfMicrographs has not been created.")
     
     def testAlignOFMovie2(self):
         # test downsampling a set of micrographs
-        protOF2 = ProtMovieAlignment(alignMethod=0)
+        protOF2 = XmippProtOFAlignment(alignMethod=0)
         protOF2.inputMovies.set(self.protImport2.outputMovies)
         self.proj.launchProtocol(protOF2, wait=True)
-        self.assertIsNotNone(protOF2.outputMicrographs, "SetOfMicrographs has not been created.")
+        self.assertIsNotNone(protOF2.outputMicrographs,
+                             "SetOfMicrographs has not been created.")
 
 
 class TestCorrelationAlignment(BaseTest):
@@ -102,7 +120,8 @@ class TestCorrelationAlignment(BaseTest):
     @classmethod
     def runImportMovies(cls, pattern, **kwargs):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        # We have two options: passe the SamplingRate or
+        # the ScannedPixelSize + microscope magnification
         params = {'samplingRate': 1.14,
                   'voltage': 300,
                   'sphericalAberration': 2.7,
@@ -139,10 +158,12 @@ class TestCorrelationAlignment(BaseTest):
         alignment = movie.getAlignment()
         range = alignment.getRange()
         msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
-        self.assertEqual(goldRange, range, msgRange % (goldRange, range, type(goldRange), type(range)))
+        self.assertEqual(goldRange, range,
+                         msgRange % (goldRange, range, type(goldRange), type(range)))
         roi = alignment.getRoi()
         msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
-        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
+        self.assertEqual(goldRoi, roi,
+                         msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
 
     def test_qbeta(self):
         prot = self.newProtocol(XmippProtMovieCorr)
