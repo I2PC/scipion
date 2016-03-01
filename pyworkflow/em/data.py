@@ -1654,16 +1654,19 @@ class SetOfMovies(SetOfMicrographsBase):
             print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
             sampling = -999.0
         ####self._firstFrameNum.set(self.getDimensions()[3])
-        if self._firstDim.isEmpty() or self._firstFrameNum==0:
+        if self._firstDim.isEmpty():
             try:
                 self._firstDim.set(self.getFirstItem().getDim())
-                self._firstFrameNum.set(self.getDimensions()[3])
+                dimStr = str(self._firstDim)
+                #self._firstFrameNum.set(self.getDimensions()[3])
             except Exception, ex:
+                dimStr = 'No-Dim'
                 if pwutils.envVarOn('SCIPION_DEBUG'):
                     print "Error reading dimension: ", ex
                     import traceback
                     traceback.print_exc()
-        dimStr = str(self._firstDim)
+        else:
+            dimStr = str(self._firstDim)
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
         return s
     
