@@ -29,13 +29,8 @@ import sys, unittest
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
-from pyworkflow.em.packages.xmipp3 import (ProtMovieAlignment, XmippProtPreprocessMicrographs,
-                                           XmippProtExtractParticles)
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 
 
-# Some utility functions to import micrographs that are used
-# in several tests.
 class TestRelionBase(BaseTest):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
