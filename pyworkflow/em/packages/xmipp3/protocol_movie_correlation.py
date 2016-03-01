@@ -71,11 +71,13 @@ class XmippProtMovieCorr(ProtAlignMovies):
                       help='Maximum allowed distance (in pixels) that each frame '
                            'can be shifted with respect to the next.')
         
-        form.addParam('outsideMode', params.EnumParam, choices=['Wrapping','Average','Value'],
+        form.addParam('outsideMode', params.EnumParam,
+                      choices=['Wrapping','Average','Value'],
                       default=self.OUTSIDE_WRAP,
                       expertLevel=cons.LEVEL_ADVANCED,
                       label="How to fill borders",
                       help='How to fill the borders when shifting the frames')
+
         form.addParam('outsideValue', params.FloatParam, default=0.0,
                        expertLevel=cons.LEVEL_ADVANCED,
                        condition="outsideMode==2",
@@ -103,7 +105,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
         if self.cropDimX.get():
             args += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
             args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
-                                                  self.cropOffsetY.get() + self.cropDimY.get() -1)
+                                               self.cropOffsetY.get() + self.cropDimY.get() -1)
         if self.outsideMode == self.OUTSIDE_WRAP:
             args += "--outside wrap"
         elif self.outsideMode == self.OUTSIDE_AVG:
