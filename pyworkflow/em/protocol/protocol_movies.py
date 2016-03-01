@@ -31,6 +31,7 @@ In this module are protocol base classes related to EM Micrographs
 """
 import os
 from os.path import join, basename, exists
+from datetime import datetime
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
@@ -109,24 +110,38 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _stepsCheck(self):
         # Check if there are new micrographs to process
-        movieSet = SetOfMovies(filename=self.inputMovies.get().getFileName())
+        localFile = self.inputMovies.get().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
+        self.debug('Last check: %s, modification: %s'
+                  % (pwutils.prettyTime(self.lastCheck),
+                     pwutils.prettyTime(mTime)))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime:
+            return
+        self.lastCheck = now
+        # Open input movies.sqlite and close it as soon as possible
+        self.debug("Loading input db: %s" % localFile)
+        movieSet = SetOfMovies(filename=localFile)
         movieSet.loadAllProperties()
         streamClosed = movieSet.isStreamClosed()
-
-        newMovies = [m.getObjId() for m in movieSet if m.getObjId() not in self.insertedDict]
+        newMovies = [m.clone() for m in movieSet
+                     if m.getObjId() not in self.insertedDict]
+        movieSet.close()
+        self.debug("Closed db.")
 
         outputStep = self._getFirstJoinStep()
 
         if newMovies:
-            fDeps = self._insertNewMoviesSteps(self.insertedDict, movieSet)
+            fDeps = self._insertNewMoviesSteps(self.insertedDict, newMovies)
             self.updateSteps()
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
         else:
             if outputStep is not None and streamClosed and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
-
-        movieSet.close()
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
         """ Insert steps to process new movies (from streaming)
