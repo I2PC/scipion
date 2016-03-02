@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocols for creating 3D masks.
-"""
 
 from pyworkflow.em import *  
 

@@ -38,7 +38,7 @@ from pyworkflow.utils import replaceBaseExt, removeExt
 
 
 class XmippProtConvertPdb(em.ProtInitialVolume):
-    """ Covert a PDB file to a volume.  """
+    """ Convert a PDB file into a volume.  """
     _label = 'convert a PDB'
     IMPORT_FROM_ID = 0
     IMPORT_OBJ = 1

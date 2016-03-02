@@ -41,6 +41,8 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtRelionAutopick",   "text": "default"},
             {"tag": "protocol", "value": "BsoftProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "DogPickerProtPicking",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGemPicker",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGautomatch",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtConsensusPicking",   "text": "default"},
             {"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"}
          ]},
@@ -140,6 +142,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
+	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
                 {"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "default"},

@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Spider protocols
+This sub-package contains Spider protocols
 """
 
 

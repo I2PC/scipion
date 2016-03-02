@@ -36,8 +36,7 @@ from pyworkflow.em.packages.relion.convert import rowToAlignment, relionToLocati
 
 
 class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
-    """ Wrapper to Relion 2D - class averages program.
-    """
+    """ Wrapper around the Relion 2D classification program."""
     _label = '2D classification'
     IS_2D = True
     OUTPUT_TYPE = SetOfClasses2D
