@@ -190,7 +190,7 @@ void MultireferenceAligneability::run()
 
 		validationAlignabilityPrecision += (rank>0.5);
 		validationAlignabilityAccuracy += (rankAcc > 0.5);
-		validationAlignabilityAccuracy += ( (rankAcc > 0.5) && (rank>0.5));
+		validationAlignability += ( (rankAcc > 0.5) && (rank>0.5));
 		validationMirror += (rankMirror> 0.5);
 
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
