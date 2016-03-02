@@ -27,6 +27,7 @@
 from os.path import split, splitext
 
 from pyworkflow.object import Float, String
+from pyworkflow.em.data import EMObject
 from pyworkflow.protocol.params import (PointerParam, FloatParam, EnumParam, STEPS_PARALLEL, LEVEL_ADVANCED)
 from pyworkflow.utils.path import makePath
 from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair, Coordinate
@@ -298,23 +299,36 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
    
     def _summary(self):
         summary = []
-
         if  (not hasattr(self,'outputCoordinatesTiltPair')):
             summary.append("Output tilpairs not ready yet.")
         else:
-            #summary.append("Particles matched: " )
-            if self.typeOfSet.get() == TYPE_PARTICLES:
-                aux = self.untiltPar.get()
-                aux2 = aux[1]
-                boxsize_t, y_, z_ = aux2.getDim()
-                summary.append("Particle box size: %d" %boxsize_t)
-                summary.append("Tilt pairs matched: %d" %self.outputCoordinatesTiltPair.__len__())
+            if self.getOutputsSize() > 0:
+                return self._summary_aux()
             else:
-                summary.append("Particle box size: %d" %self.untiltCoor.get().getBoxSize())
-                summary.append("Tilt pairs size: %d" %self.outputCoordinatesTiltPair.__len__())
-                #
+                return [self.getSummary(self.outputCoordinatesTiltPair.getUntilted())]   
+        return summary
+   
+   
+    def _summary_aux(self):
+        summary = []
+        if self.getInputMicrographs() is  not None:
+            summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+
+        if(self.getOutputsSize() > 1):
+            for key, output in self.iterOutputAttributes(EMObject):
+                label = output.getObjLabel() if output.getObjLabel() != "" else key
+                summary.append("*%s:*%s"%(key, output.getObjComment()))
+                summary.append("      Particles picked: %d" %output.getSize())
+                summary.append("      Particle size: %d \n" %output.getBoxSize())
+        elif(self.getOutputsSize() == 1):
+            summary.append(self.getCoords().getObjComment())
         return summary
     
+    def getSummary(self, coordsSet):
+        summary = []
+        summary.append("Particles picked: %d" %coordsSet.getSize())
+        summary.append("Particle size: %d" %self.outputCoordinatesTiltPair.getUntilted().getBoxSize())
+        return "\n".join(summary)
     
     def _methods(self):
         messages = []
@@ -325,11 +339,55 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
     def _citations(self):
         return ['Not yet']
     
-    def getSummary(self, coordsSet):
-        summary = []
-        summary.append("Particles picked:")
-        #summary.append("Particles picked: %d" %coordsSet.getSize())
-        return "\n"#.join(summary)
+   
+    def getCoords(self):
+        count = self.getOutputsSize()
+        suffix = str(count) if count > 1 else ''
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        return getattr(self, outputName)
 #     
-    
+    def registerCoords(self, coordsDir):
+        #from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
+
+        count = self.getOutputsSize()
+        suffix = str(count + 1) if count > 0 else ''
+        inputset = self.tiltpair.get()
+        uSet = inputset.getUntilted()
+        tSet = inputset.getTilted()
+        outputName = 'outputCoordinatesTiltPair' + suffix
+        uSuffix = 'Untilted' + suffix
+        tSuffix = 'Tilted' + suffix
+        # Create Untilted and Tilted SetOfCoordinates
+        uCoordSet = self._createSetOfCoordinates(uSet, suffix=uSuffix)
+        readSetOfCoordinates(coordsDir, uSet, uCoordSet)
+        uCoordSet.write()
+        tCoordSet = self._createSetOfCoordinates(tSet, suffix=tSuffix)
+        readSetOfCoordinates(coordsDir, tSet, tCoordSet)
+        tCoordSet.write()
+
+        # Read Angles from input micrographs
+        micsFn = self._getPath('input_micrographs.xmd')
+        setAngles = self._createSetOfAngles(suffix=suffix)
+        readAnglesFromMicrographs(micsFn, setAngles)
+        setAngles.write()
+        # Create CoordinatesTiltPair object
+        outputset = CoordinatesTiltPair(filename=self._getPath('coordinates_pairs%s.sqlite' % suffix))
+        outputset.setTilted(tCoordSet)
+        outputset.setUntilted(uCoordSet)
+        outputset.setAngles(setAngles)
+        outputset.setMicsPair(inputset)
+        for coordU, coordT in izip(uCoordSet, tCoordSet):
+            outputset.append(TiltPair(coordU, coordT))
+
+        summary = self.getSummary(outputset)
+        outputset.setObjComment(summary)
+        outputs = {outputName: outputset}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(self.tiltpair, outputset)
+        self._store()
+        
+    def getInputMicrographs(self):
+        return self.tiltpair.get().getTilted()
+
+
     

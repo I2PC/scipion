@@ -71,12 +71,12 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
 
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
                           label='Input micrographs',
-                          help='Select the particles that you want to import coordinates.')
+                          help='Select the micrographs for which you want to import coordinates.')
 
         form.addParam('boxSize', IntParam, label='Box size')
         form.addParam('scale', FloatParam,
                       label='Scale', default=1,
-                      help='factor to scale coordinates')
+                      help='Factor to scale coordinates')
         form.addParam('invertX', BooleanParam, default=False,
                       label='Invert X')
         form.addParam('invertY', BooleanParam, default=False,

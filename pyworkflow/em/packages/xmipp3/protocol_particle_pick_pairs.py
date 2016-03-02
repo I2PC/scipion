@@ -27,6 +27,7 @@
 
 from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
+from pyworkflow.em.data import EMObject
 from xmipp3 import XmippProtocol
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs, XmippProtocol
 from convert import writeSetOfMicrographsPairs
@@ -139,30 +140,30 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
             msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographsTiltedPair.get().getTilted().getSize())
         return msg
 
-    def getMethods(self, output):#output is not used but to overwrite getMethods it is used
-        msg = ""
-        configfile = join(self._getExtraPath(), 'config.xmd')
-        existsConfig = exists(configfile)
-        if existsConfig:
-            md = xmipp.MetaData('properties@' + configfile)
-            configobj = md.firstObject()
-            particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
-            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
-            msg = 'User picked %d particles with a particle size of %d.' % (manualParticlesSize, particleSize)
+#     def getMethods(self, output):#output is not used but to overwrite getMethods it is used
+#         msg = ""
+#         configfile = join(self._getExtraPath(), 'config.xmd')
+#         existsConfig = exists(configfile)
+#         if existsConfig:
+#             md = xmipp.MetaData('properties@' + configfile)
+#             configobj = md.firstObject()
+#             particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+#             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+#             msg = 'User picked %d particles with a particle size of %d.' % (manualParticlesSize, particleSize)
+# 
+#         return msg
 
-        return msg
-
-    def _summary(self):
-        if self.getOutputsSize() > 0:
-            return ProtParticlePicking._summary(self)
-        else:
-            return [self.getSummary(None)]
-
-    def _methods(self):
-        if self.getOutputsSize() > 0:
-            return ProtParticlePicking._methods(self)
-        else:
-            return [self.getMethods(None)]
+#     def _summary(self):
+#         if self.getOutputsSize() > 0:
+#             return ProtParticlePicking._summary(self)
+#         else:
+#             return [self.getSummary(None)]
+# 
+#     def _methods(self):
+#         if self.getOutputsSize() > 0:
+#             return ProtParticlePicking._methods(self)
+#         else:
+#             return [self.getMethods(None)]
 
     def getInputMicrographs(self):
         return self.inputMicrographsTiltedPair.get().getTilted()
@@ -173,19 +174,47 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputName = 'outputCoordinatesTiltPair' + suffix
         return getattr(self, outputName)
     
-    def getSummary(self, coordsSet):
+#     def getSummary(self, coordsSet):
+#         summary = []
+#         configfile = join(self._getExtraPath(), 'config.xmd')
+#         if exists(configfile):
+#             md = xmipp.MetaData('properties@' + configfile)
+#             configobj = md.firstObject()
+#             activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
+#             manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+#             particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
+#             #summary.append("Particles picked: %d"%manualParticlesSize)
+#             summary.append("Particles picked: %d"% self.outputCoordinatesTiltPair.getTilted().getSize())
+#             summary.append("Particle size: %d"%particleSize)
+#             summary.append("Last micrograph: " + activemic)
+#         return "\n".join(summary)
+
+    def _summary(self):
         summary = []
-        configfile = join(self._getExtraPath(), 'config.xmd')
-        if exists(configfile):
-            md = xmipp.MetaData('properties@' + configfile)
-            configobj = md.firstObject()
-            activemic = md.getValue(xmipp.MDL_MICROGRAPH, configobj)
-            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
-            particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
-            summary.append("Particles picked: %d"%manualParticlesSize)
-            summary.append("Particle size: %d"%particleSize)
-            summary.append("Last micrograph: " + activemic)
-        return "\n".join(summary)
+        if  (not hasattr(self,'outputCoordinatesTiltPair')):
+            summary.append("Output tilpairs not ready yet.")
+        else:
+            if self.getOutputsSize() > 0:
+                return self._summary_aux()
+            else:
+                return [self.getSummary(self.outputCoordinatesTiltPair.getUntilted())]   
+        return summary
+   
+   
+    def _summary_aux(self):
+        summary = []
+        if self.getInputMicrographs() is  not None:
+            summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+
+        if(self.getOutputsSize() > 1):
+            for key, output in self.iterOutputAttributes(EMObject):
+                label = output.getObjLabel() if output.getObjLabel() != "" else key
+                summary.append("*%s:*"%key)
+                summary.append("      Particles picked: %d" %output.getSize())
+                summary.append("      Particle size: %d \n" %output.getBoxSize())
+        elif(self.getOutputsSize() == 1):
+            summary.append(self.getCoords().getObjComment())
+        return summary
     
     def registerCoords(self, coordsDir):
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
@@ -201,6 +230,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         # Create Untilted and Tilted SetOfCoordinates
         uCoordSet = self._createSetOfCoordinates(uSet, suffix=uSuffix)
         readSetOfCoordinates(coordsDir, uSet, uCoordSet)
+        print "uCoordSet.getBoxSize()", uCoordSet.getBoxSize()
         uCoordSet.write()
         tCoordSet = self._createSetOfCoordinates(tSet, suffix=tSuffix)
         readSetOfCoordinates(coordsDir, tSet, tCoordSet)
@@ -215,6 +245,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         outputset = CoordinatesTiltPair(filename=self._getPath('coordinates_pairs%s.sqlite' % suffix))
         outputset.setTilted(tCoordSet)
         outputset.setUntilted(uCoordSet)
+        print "outputset.getBoxSize()", outputset.getBoxSize()
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
         for coordU, coordT in izip(uCoordSet, tCoordSet):
