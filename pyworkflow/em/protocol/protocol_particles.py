@@ -177,7 +177,7 @@ class ProtParticlePicking(ProtParticles):
         if(self.getOutputsSize() > 1):
             for key, output in self.iterOutputAttributes(EMObject):
                 label = output.getObjLabel() if output.getObjLabel() != "" else key
-                summary.append("%s: %s" % (key, output.getObjComment()))
+                summary.append("*%s:* \n %s " % (key, output.getObjComment()))
         elif(self.getOutputsSize() == 1):
             summary.append(self.getCoords().getObjComment())
         else:

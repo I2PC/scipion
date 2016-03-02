@@ -27,6 +27,7 @@
 
 from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
+from pyworkflow.em.data import EMObject
 from xmipp3 import XmippProtocol
 from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs, XmippProtocol
 from convert import writeSetOfMicrographsPairs
@@ -187,6 +188,33 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 #             summary.append("Particle size: %d"%particleSize)
 #             summary.append("Last micrograph: " + activemic)
 #         return "\n".join(summary)
+
+    def _summary(self):
+        summary = []
+        if  (not hasattr(self,'outputCoordinatesTiltPair')):
+            summary.append("Output tilpairs not ready yet.")
+        else:
+            if self.getOutputsSize() > 0:
+                return self._summary_aux()
+            else:
+                return [self.getSummary(self.outputCoordinatesTiltPair.getUntilted())]   
+        return summary
+   
+   
+    def _summary_aux(self):
+        summary = []
+        if self.getInputMicrographs() is  not None:
+            summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+
+        if(self.getOutputsSize() > 1):
+            for key, output in self.iterOutputAttributes(EMObject):
+                label = output.getObjLabel() if output.getObjLabel() != "" else key
+                summary.append("*%s:*"%key)
+                summary.append("      Particles picked: %d" %output.getSize())
+                summary.append("      Particle size: %d \n" %output.getBoxSize())
+        elif(self.getOutputsSize() == 1):
+            summary.append(self.getCoords().getObjComment())
+        return summary
     
     def registerCoords(self, coordsDir):
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
