@@ -194,16 +194,16 @@ void MultireferenceAligneability::run()
 		validationMirror += (rankMirror> 0.5);
 
 		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
-		row.setValue(MDL_IMAGE,imagePath);
-		row.setValue(MDL_IMAGE_IDX,i);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rank);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
-		row.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,accuracyRef);
-		row.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
+		rowInput.setValue(MDL_IMAGE,imagePath);
+		rowInput.setValue(MDL_IMAGE_IDX,i);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rank);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
+		rowInput.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,accuracyRef);
+		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
 
 		mdOutCL.addRow(rowInput);
 
