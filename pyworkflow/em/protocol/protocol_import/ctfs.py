@@ -54,7 +54,7 @@ class ProtImportCTF(ProtImportFiles):
         """
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
                           label='Input micrographs',
-                          help='Select the particles that you want to update the CTF parameters.')
+                          help='Select the micrographs for which you want to update the CTF parameters.')
 
     def _getImportChoices(self):
         """ Return a list of possible choices

@@ -73,11 +73,12 @@ class DataView(View):
             self._tableName, self._path = None, path
             
     def show(self):        
-        showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer', self.getShowJParams(), env=self._env)
+        showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
+                           self.getShowJParams(), env=self._env)
     
     def getShowJParams(self):
-        inputPath = self._path if not self._tableName else self._tableName + '@' + self._path
-        params = '-i ' + inputPath
+        tableName = '%s@' % self._tableName if self._tableName else ''
+        params = '-i "%s%s"' % (tableName, self._path)
         for key, value in self._viewParams.items():
             params = "%s --%s %s"%(params, key, value)
         
