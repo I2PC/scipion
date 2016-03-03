@@ -334,7 +334,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
             # Store a dict with input parents (input, PointerList)
             self.inputParentDict = OrderedDict()
             inputs = []
-            
             inputObj = pwobj.String(Message.LABEL_INPUT)
             inputObj._icon = Icon.ACTION_IN
             self.inputParentDict['_input'] = inputObj
@@ -356,7 +355,6 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                     self.inputParentDict[key] = inputObj
                 inputs.append(attr) 
                     
-            
             outputs = [attr for _, attr in self.protocol.iterOutputAttributes(em.EMObject)]
             self.outputStr = pwobj.String(Message.LABEL_OUTPUT)
             objs = inputParents + inputs + [self.outputStr] + outputs                
@@ -370,15 +368,21 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
         
     def _editObject(self, obj):
         """Open the Edit GUI Form given an instance"""
-        pwgui.dialog.EditObjectDialog(self.parent, Message.TITLE_EDIT_OBJECT, obj, self.mapper)
+        pwgui.dialog.EditObjectDialog(self.parent, Message.TITLE_EDIT_OBJECT,
+                                      obj, self.mapper)
         
     def _deleteObject(self, obj):
         """ Remove unnecesary output, specially for Coordinates. """
         prot = self.protocol
         try:
-            prot.getProject().deleteProtocolOutput(prot, obj)
-            self.parent._fillSummary()
-            self.parent.windows.showInfo("Object %s successfuly deleted.")
+            objLabel = self.getObjectLabel(obj, prot)
+            if self.parent.windows.askYesNo("Delete object",
+                                            "Are you sure to delete *%s* object?"
+                                            % objLabel):
+                prot.getProject().deleteProtocolOutput(prot, obj)
+                self.parent._fillSummary()
+                self.parent.windows.showInfo("Object *%s* successfuly deleted."
+                                             % objLabel)
         except Exception, ex:
             self.parent.windows.showError(str(ex))
         
