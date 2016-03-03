@@ -628,7 +628,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                     String ctf = getMicrograph().getCTF();
                     if (psd != null && ctf != null) {
                         try {
-                            new CTFAnalyzerJFrame(getMicrograph().getPSDImage(), getMicrograph().getCTF(), getMicrograph().getPSD());
+                            new CTFAnalyzerJFrame(psd, ctf, psd);
                         } catch (Exception ex) {
                             Logger.getLogger(SupervisedPickerJFrame.class.getName()).log(Level.SEVERE, null, ex);
                         }

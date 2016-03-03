@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,10 +23,13 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This EM module contains Gautomatch auto-picking protocol 
+"""
 
-import os
+from bibtex import _bibtex # Load bibtex dict with references
 
-from pyworkflow.utils import Environ
+_logo = "gautomatch_logo.png"
 
-CRYOEM_HOME = os.path.join(os.environ.get('SCIPION_HOME'),'software/lib/python2.7/site-packages/cryoem')
-CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')
+from protocol_gautomatch import ProtGautomatch
+from wizard import GautomatchParticleWizard

@@ -25,9 +25,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package implement projection matching using xmipp 3.1
-"""
 
 import xmipp
 from pyworkflow.object import Integer

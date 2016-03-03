@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp specific protocols
+This sub-package contains Xmipp specific protocols
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
@@ -49,7 +49,6 @@ from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
-from viewer_multiple_fscs import XmippMultipleFSCsViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer

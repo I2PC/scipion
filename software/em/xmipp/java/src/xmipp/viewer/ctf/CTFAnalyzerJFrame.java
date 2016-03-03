@@ -32,6 +32,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import xmipp.jni.ImageGeneric;
 import xmipp.jni.CTFDescription;
 import xmipp.jni.MDLabel;
 import xmipp.jni.MetaData;
@@ -39,6 +40,9 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippFileChooser;
 import xmipp.utils.XmippLabel;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.ij.commons.XmippImageConverter;
+
+
 
 public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 {
@@ -77,81 +81,91 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
     private final static Color COLOR_DIFFERENCE = Color.orange;
     private ImagePlus profileimp;
 
-        
 
-	public CTFAnalyzerJFrame(ImagePlus imp, String ctffile, String psdfile)
+
+	public CTFAnalyzerJFrame(String psdEnhancedFile, String ctffile, String psdfile)
     {
-            try
-		{
-			
-			this.imp = imp;
-			this.psdfile = psdfile;
-            this.profileimp = new ImagePlus(psdfile);
-			ctfmodel = new CTFDescription(ctffile);
+        try
+        {
+            this.imp = this.getThumbnail(psdEnhancedFile);
+            this.psdfile = psdfile;
+            this.profileimp = this.getThumbnail(psdfile);
+            ctfmodel = new CTFDescription(ctffile);
             double samplingRate = getSamplingRate(ctffile);
-			samples = imp.getWidth() / 2;
-			xvalues = getXValues(samples, samplingRate);
-			initComponents();
-                        
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
+            samples = this.imp.getWidth() / 2;
+            xvalues = getXValues(samples, samplingRate);
+        initComponents();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-	public CTFAnalyzerJFrame(ImagePlus imp, CTFDescription ctfdescription, String psdfile, double samplingRate)
+	public CTFAnalyzerJFrame(String psdEnhancedFile, CTFDescription ctfdescription, String psdfile, double samplingRate)
 	{
-		try
-		{
-			
-			this.imp = imp;
-			this.psdfile = psdfile;
-                        this.profileimp = new ImagePlus(psdfile);
-			ctfmodel = ctfdescription;
-			samples = imp.getWidth() / 2;
-			xvalues = getXValues(samples, samplingRate);
-			initComponents();
-		}
-		catch (Exception e)
-		{
-			throw new IllegalArgumentException(e);
-		}
-	}
-        
-        private void initComponents()
+        try
         {
-            setTitle("CTF Analyzer");
-            fc = new XmippFileChooser();
+            this.imp = this.getThumbnail(psdEnhancedFile);
+            this.psdfile = psdfile;
+            this.profileimp = this.getThumbnail(psdfile);
+            ctfmodel = ctfdescription;
+            samples = this.imp.getWidth() / 2;
+            xvalues = getXValues(samples, samplingRate);
+            initComponents();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
 
-			constraints = new GridBagConstraints();
-			constraints.insets = new Insets(0, 5, 0, 5);
-			constraints.anchor = GridBagConstraints.NORTHWEST;
-			// constraints.fill = GridBagConstraints.HORIZONTAL;
-			setLayout(new GridBagLayout());
-			JPanel contentpn = new JPanel(new GridBagLayout());
-			contentpn.setBorder(BorderFactory.createEtchedBorder());
-			add(contentpn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-			imagepn = new JPanel(new GridBagLayout());
-			imagepn.setBorder(BorderFactory.createTitledBorder("PSD Image"));
-			imageprofilepn = new CTFAnalyzerImagePane(imp, this);
-			imagepn.add(imageprofilepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
-			contentpn.add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+    /* Load the image with a size of 256 pixels. */
+    private ImagePlus getThumbnail(String imagefile)
+    {
+        ImagePlus imp = null;
+        try
+        {
+        ImageGeneric img = new ImageGeneric(imagefile);
+        img.read(256, 256, ImageGeneric.FIRST_IMAGE);
+        imp = XmippImageConverter.readToImagePlus(img);
+        // Free the C-image memory
+        img.destroy();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return imp;
+    }
 
-			initGraphicPanes();
-			contentpn.add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1, 1));
-			contentpn.add(graphicpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1, 3));
+    private void initComponents()
+    {
+        setTitle("CTF Analyzer");
+        fc = new XmippFileChooser();
 
-			JPanel actionspn = new JPanel();
-			exportbt = XmippWindowUtil.getTextButton("Export Graphics", this);
-			actionspn.add(exportbt, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        constraints = new GridBagConstraints();
+        constraints.insets = new Insets(0, 5, 0, 5);
+        constraints.anchor = GridBagConstraints.NORTHWEST;
+        // constraints.fill = GridBagConstraints.HORIZONTAL;
+        setLayout(new GridBagLayout());
+        JPanel contentpn = new JPanel(new GridBagLayout());
+        contentpn.setBorder(BorderFactory.createEtchedBorder());
+        add(contentpn, XmippWindowUtil.getConstraints(constraints, 0, 0));
+        imagepn = new JPanel(new GridBagLayout());
+        imagepn.setBorder(BorderFactory.createTitledBorder("PSD Image"));
+        imageprofilepn = new CTFAnalyzerImagePane(imp, this);
+        imagepn.add(imageprofilepn, XmippWindowUtil.getConstraints(constraints, 0, 0));
+        contentpn.add(imagepn, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+
+        initGraphicPanes();
+        contentpn.add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1, 1));
+        contentpn.add(graphicpn, XmippWindowUtil.getConstraints(constraints, 1, 0, 1, 3));
+
+        JPanel actionspn = new JPanel();
+        exportbt = XmippWindowUtil.getTextButton("Export Graphics", this);
+        actionspn.add(exportbt, XmippWindowUtil.getConstraints(constraints, 0, 1));
 //			exportavgbt = XmippWindowUtil.getTextButton("Export Average Graphics", this);
 //			actionspn.add(exportavgbt, XmippWindowUtil.getConstraints(constraints, 1, 1));
-			add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1));
-			enableDisplay();
-			pack();
-			setVisible(true);
-        }
+        add(actionspn, XmippWindowUtil.getConstraints(constraints, 0, 1));
+        enableDisplay();
+        pack();
+        setVisible(true);
+    }
 
 	private void initGraphicPanes()
 	{
@@ -257,9 +271,8 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
 				line = new Line(x0, y0, x1, y1);
 				imp.setRoi(line);
-                                profileimp.setRoi(line);
+                profileimp.setRoi(line);
 				// Get profile.
-                               
 				ProfilePlot profilePlot = new ProfilePlot(profileimp);
 				psdprofile_avgplot = profilePlot.getProfile();
 
@@ -312,7 +325,7 @@ public class CTFAnalyzerJFrame extends JFrame implements ActionListener
 
 		line = new Line(x0, y0, imageprofilepn.getX1(), imageprofilepn.getY1());
 		imp.setRoi(line);
-                profileimp.setRoi(line);
+        profileimp.setRoi(line);
 		psdprofileplot = new ProfilePlot(profileimp).getProfile();
 
 

@@ -34,7 +34,7 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.utils.path import moveFile
 
 from spider import SpiderDocFile, runTemplate
-from os.path import splitext
+from os.path import splitext, split
    
     
 
@@ -95,12 +95,13 @@ def convertEndian(stackFn, stackSize):
         stackSize: the number of particles in the stack
     """
     fn, ext = splitext(stackFn)
+    fnDir, fnBase = split(fn)
     # Change to BigEndian
     runTemplate('cp_endian.spi', ext[1:], 
-              {'[particles]': fn + '@******', 
-               '[particles_big]': fn + '_big@******',
+              {'[particles]': fnBase + '@******',
+               '[particles_big]': fnBase + '_big@******',
                '[numberOfParticles]': stackSize
-               })
+               }, cwd=fnDir)
     moveFile(fn + '_big' + ext, stackFn)
     
     

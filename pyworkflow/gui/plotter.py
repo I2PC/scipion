@@ -59,6 +59,9 @@ class Plotter(View):
             windowTitle: title for the whole windows.
         """
         figure = kwargs.get('figure', None)
+
+        if figure == 'active':
+            figure = plt.gcf()
         
         if self.backend is None:
             Plotter.setBackend('Agg')
@@ -118,6 +121,10 @@ class Plotter(View):
         leg = self.last_subplot.legend(tuple(labels), loc=loc)
         for t in leg.get_texts():
             t.set_fontsize(self.plot_axis_fontsize)    # the legend text fontsize
+
+    def legend(self, loc='best', **kwargs):
+        self.last_subplot.legend(loc=loc, **kwargs)
+
         
     def createSubPlot(self, title, xlabel, ylabel, xpos=None, ypos=None, 
                       yformat=False, projection='rectilinear'

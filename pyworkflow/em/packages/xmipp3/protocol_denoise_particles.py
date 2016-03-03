@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around Screen Particles Xmipp program
-"""
 
 import pyworkflow.em.metadata as md
 
@@ -44,7 +41,8 @@ class XmippProtDenoiseParticles(ProtProcessParticles):
     intended for processing particles. The huge filtering they will be 
     passed through is known to remove part of the signal with the noise. 
     However this is a good method for clearly see which particle are we 
-    going to process before it's done. """
+    going to process before it's done.
+    """
     _label = 'denoise particles'
 
     #--------------------------- DEFINE param functions --------------------------------------------
