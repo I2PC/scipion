@@ -89,12 +89,12 @@ class ProtExtractParticles(ProtParticles):
 
 class ProtParticlePicking(ProtParticles):
     OUTPUT_PREFIX = 'outputCoordinates'
-    
+
     def _defineParams(self, form):
 
         form.addSection(label='Input')
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
-                      label=Message.LABEL_INPUT_MIC, important=True,                      
+                      label=Message.LABEL_INPUT_MIC, important=True,
                       help='Select the SetOfMicrographs to be used during picking.')
 
     #--------------------------- INFO functions ----------------------------------------------------
@@ -108,16 +108,16 @@ class ProtParticlePicking(ProtParticles):
         msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(),
                                                                         output.getBoxSize())
         return msg
-    
+
     def _methods(self):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
-        
-        methodsMsgs.append("Input micrographs %s of size %d." 
-                           % (self.getObjectTag(self.getInputMicrographs()), 
+
+        methodsMsgs.append("Input micrographs %s of size %d."
+                           % (self.getObjectTag(self.getInputMicrographs()),
                               self.getInputMicrographs().getSize()))
-        
+
         if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes(EMObject):
                 msg = self.getMethods(output)
@@ -126,22 +126,25 @@ class ProtParticlePicking(ProtParticles):
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
-    
+
     def getInputMicrographsPointer(self):
         return self.inputMicrographs
-    
+
     def getInputMicrographs(self):
         return self.getInputMicrographsPointer().get()
-    
-    def getCoords(self, CoordClass=SetOfCoordinates):
+
+    def _getCoords(self, CoordClass):
         result = None
         for _, attr in self.iterOutputAttributes(CoordClass):
             result = attr # Get the last output that is SetOfCoordinates or so
         return result
 
+    def getCoords(self):
+        return self._getCoords(SetOfCoordinates)
+
     def getCoordsTiltPair(self):
         from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair
-        return self.getCoords(CoordinatesTiltPair)
+        return self._getCoords(CoordinatesTiltPair)
 
     def _createOutput(self, outputDir):
         micSet = self.getInputMicrographs()
@@ -179,16 +182,16 @@ class ProtParticlePicking(ProtParticles):
         and number with a higher value.
         """
         maxCounter = -1
-        for attrName, _ in self.iterOutputEM():
+        for attrName, _ in self.iterOutputAttributes(SetOfCoordinates):
             suffix = attrName.replace(self.OUTPUT_PREFIX, '')
             try:
                 counter = int(suffix)
             except:
                 counter = 1 # when there is not number assume 1
             maxCounter = max(counter, maxCounter)
-            
+
         return str(maxCounter+1) if maxCounter > 0 else '' # empty if not outputs
-        
+
     def registerCoords(self, coordsDir):
         """ This methods is usually inherited from all Pickers
         and it is used from the Java picking GUI to register
@@ -196,7 +199,7 @@ class ProtParticlePicking(ProtParticles):
         """
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
-        
+
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
         inputset = self.getInputMicrographs()
         # micrographs are the input set if protocol is not finished
