@@ -29,7 +29,7 @@ In this module are protocol base classes related to EM Particles
 
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import EMObject
+from pyworkflow.em.data import EMObject, SetOfCoordinates
 from pyworkflow.utils.properties import Message
 
 
@@ -105,7 +105,8 @@ class ProtParticlePicking(ProtParticles):
         return "\n".join(summary)
 
     def getMethods(self, output):
-        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(), output.getBoxSize())
+        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(),
+                                                                        output.getBoxSize())
         return msg
     
     def _methods(self):
@@ -121,12 +122,6 @@ class ProtParticlePicking(ProtParticles):
             for key, output in self.iterOutputAttributes(EMObject):
                 msg = self.getMethods(output)
                 methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
-#         
-#         elif(self.getOutputsSize() == 1):
-#             output = self.getCoords()
-#             msg = self.getMethods(output)
-#             methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
-        
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
@@ -138,27 +133,20 @@ class ProtParticlePicking(ProtParticles):
     def getInputMicrographs(self):
         return self.getInputMicrographsPointer().get()
     
-    def getCoords(self):
-        count = self.getOutputsSize()
-        if count == 0:
-            return None
-        suffix = str(count) if count > 1 else ''
-        outputName = 'outputCoordinates' + suffix
-        return getattr(self, outputName)
-    
+    def getCoords(self, CoordClass=SetOfCoordinates):
+        result = None
+        for _, attr in self.iterOutputAttributes(CoordClass):
+            result = attr # Get the last output that is SetOfCoordinates or so
+        return result
+
     def getCoordsTiltPair(self):
-        count = self.getOutputsSize()
-        if count == 0:
-            return None
-        suffix = str(count) if count > 1 else ''
-        outputName = 'outputCoordinatesTiltPair' + suffix
-        return getattr(self, outputName)
+        from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair
+        return self.getCoords(CoordinatesTiltPair)
 
     def _createOutput(self, outputDir):
         micSet = self.getInputMicrographs()
-        count = self.getOutputsSize()
-        suffix = str(count + 1) if count > 0 else ''
-        outputName = 'outputCoordinates' + suffix
+        suffix = self.__getOutputSuffix()
+        outputName = self.OUTPUT_PREFIX + suffix
         coordSet = self._createSetOfCoordinates(micSet, suffix)
         self.readSetOfCoordinates(outputDir, coordSet)
         coordSet.setObjComment(self.getSummary(coordSet))
@@ -174,12 +162,9 @@ class ProtParticlePicking(ProtParticles):
         if self.getInputMicrographs() is  not None:
             summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
 
-        if(self.getOutputsSize() > 1):
+        if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes(EMObject):
-                label = output.getObjLabel() if output.getObjLabel() != "" else key
                 summary.append("*%s:* \n %s " % (key, output.getObjComment()))
-        elif(self.getOutputsSize() == 1):
-            summary.append(self.getCoords().getObjComment())
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
@@ -214,7 +199,8 @@ class ProtParticlePicking(ProtParticles):
         
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
         inputset = self.getInputMicrographs()
-        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        # micrographs are the input set if protocol is not finished
+        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)
         readSetOfCoordinates(coordsDir, outputset.getMicrographs(), outputset)
         summary = self.getSummary(outputset)
         outputset.setObjComment(summary)
