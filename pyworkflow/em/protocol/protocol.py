@@ -37,7 +37,7 @@ from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticl
                                 SetOfVolumes, SetOfCTF, SetOfMovies,
                                 SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
 from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
-from pyworkflow.em.data_tiltpairs import SetOfAngles
+from pyworkflow.em.data_tiltpairs import SetOfAngles, CoordinatesTiltPair
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.mapper.sqlite_db import SqliteDb
 
@@ -157,7 +157,8 @@ class EMProtocol(Protocol):
         return self.getObjLabel()
     
     def allowsDelete(self, obj):
-        if isinstance(obj, SetOfCoordinates):
+        if (isinstance(obj, SetOfCoordinates) or
+            isinstance(obj, CoordinatesTiltPair)):
             return True
         return False
         
