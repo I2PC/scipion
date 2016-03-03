@@ -68,11 +68,13 @@ class ProtMovieAlignment(ProtProcessMovies):
                                                         ],
                       label="Alignment method", default=AL_OPTICAL,
                       display=EnumParam.DISPLAY_COMBO,
-                      help='Method to use for movie alignment. '
-                           'dosefgpu requires a GPU. Croscorrelation '
-                           'and dosefgpu with default parameters are equivalent. '
-                           'Croscorrelation is a CPU implementation of dosefgpu  '
-                           'with limited functionality (only aligns whole frames)'
+                      help='Method to use for movie alignment:\n'
+                           '1. dosefgpu performs in-plane drift correction and requires a GPU.\n'
+                           '2. Croscorrelation is a CPU implementation of dosefgpu '
+                           'with limited functionality (only aligns whole frames). With default parameters '
+                           'it is equivalent to dosefgpu.\n'
+                           '3. Optical flow works best for correction of local beam-induced motion.\n'
+                           '4. Average will simply sum the frames together.'
                       )
 
         # GROUP COMMON PARAMETERS
@@ -80,10 +82,10 @@ class ProtMovieAlignment(ProtProcessMovies):
         
         line = group.addLine('Used in alignment',
                             help='First and last frames used in alignment.\n'
-                                  'The first frame in the stack is *0*.' )
+                                  'The first frame in the stack is *0* ' 
+                                  'If the last frame is *0*, use maximum value' )
         line.addParam('alignFrame0', IntParam, default=0, label='First')
-        line.addParam('alignFrameN', IntParam, default=0, label='Last',
-                      help='If *0*, use maximum value')
+        line.addParam('alignFrameN', IntParam, default=0, label='Last')
         
         # GROUP GPU PARAMETERS
         group = form.addGroup('GPU',condition="alignMethod==%d or (alignMethod==%d and expertLevel==%d)"
