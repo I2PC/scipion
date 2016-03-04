@@ -38,7 +38,7 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'v1.0.0'
+__version__ = 'v1.0.1'
 __nickname__ = 'Augusto'
 __releasedate__ = '2016-02-20'
 
@@ -124,9 +124,21 @@ try:
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
                      for key, path in config.items(section)])  # works in 2.4
+
+    def getValues(section):
+        return dict([(key, value)
+                     for key, value in config.items(section)])  # works in 2.4
+
     DIRS_GLOBAL = getPaths('DIRS_GLOBAL')
     DIRS_LOCAL = getPaths('DIRS_LOCAL')
     PACKAGES = getPaths('PACKAGES')
+    if config.has_section('VARIABLES'):
+        VARIABLES = getValues('VARIABLES')
+    else: # For now, allow old scipion.conf without the VARIABLES section
+        sys.stdout.write("Warning: Missing section 'VARIABLES' in the "
+                         "configuration file ~/.config/scipion.conf.\n")
+        VARIABLES = {}
+
     REMOTE = dict(config.items('REMOTE'))
     BUILD = dict(config.items('BUILD'))
 
@@ -167,6 +179,7 @@ try:
     VARS.update(PACKAGES)
     VARS.update(REMOTE)
     VARS.update(BUILD)
+    VARS.update(VARIABLES)
 except Exception:
     if len(sys.argv) == 1 or sys.argv[1] != 'config':
         # This way of catching exceptions works with Python 2 & 3

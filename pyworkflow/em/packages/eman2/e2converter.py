@@ -41,7 +41,7 @@ MODE_WRITE = 'write'
 MODE_READ = 'read'
 
 
-def writeParticles(outputFile):
+def writeParticles():
     i = 0
     line = sys.stdin.readline()
     while line:
@@ -92,6 +92,7 @@ def writeParticles(outputFile):
         if transformation is not None:
             imageData.set_attr('xform.projection', transformation)
         
+        outputFile = str(objDict['hdfFn'])
         imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
         i += 1
         print "OK"
@@ -171,12 +172,12 @@ def readParticles(inputParts, inputCls, inputClasses, outputTxt):
     
     
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 0:
         mode = sys.argv[1]
         
         if mode == MODE_WRITE:
-            outputFile = sys.argv[2]
-            writeParticles(outputFile)
+            #outputFile = sys.argv[2]
+            writeParticles()
         elif mode == MODE_READ:
             inputParts = sys.argv[2]
             inputCls = sys.argv[3]

@@ -211,8 +211,8 @@ class ProtEmxExport(EMProtocol):
         
         form.addParam('outputPrefix', params.StringParam, default='data',
                       label='EMX files prefix', 
-                      help='Select how do you want to name the EMX files.'
-                           'For example, if you use "data" as prefix, two'
+                      help='Select how do you want to name the EMX files. '
+                           'For example, if you use "data" as prefix, two '
                            'files will be generated:\n'
                            '_data.emx_ and _data.mrc_')
                  

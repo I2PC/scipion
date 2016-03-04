@@ -35,6 +35,8 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
+import subprocess
+
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
@@ -43,7 +45,7 @@ from pyworkflow.gui import Message
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.gui.text import _open_cmd
+from pyworkflow.gui.text import _open_cmd, openTextFileEditor
 import SocketServer
 
 # Import possible Object commands to be handled
@@ -79,6 +81,8 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
+        projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
@@ -96,7 +100,6 @@ class ProjectWindow(ProjectBaseWindow):
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
-
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
@@ -134,6 +137,28 @@ class ProjectWindow(ProjectBaseWindow):
                           self, self.project.getPath(''), 
                           selectButton=None  # we will select nothing
                           ).show()
+
+    def onNotes(self):
+        if not all(var in os.environ for var in ['SCIPION_NOTES_PROGRAM',
+                                                 'SCIPION_NOTES_FILE',
+                                                 'SCIPION_NOTES_ARGS']):
+            return self.showError("Missing variables SCIPION_NOTES_* under\n"
+                                  "[VARIABLES] section in the configuration file\n"
+                                  "~/.config/scipion/scipion.conf")
+        args = []
+        # Program name
+        program = os.environ.get('SCIPION_NOTES_PROGRAM', None)
+        notesFile = self.project.getPath('Logs', os.environ['SCIPION_NOTES_FILE'])
+
+        if program:
+            args.append(program)
+            # Custom arguments
+            if os.environ.get('SCIPION_NOTES_ARGS', None):
+                args.append(os.environ['SCIPION_NOTES_ARGS'])
+            args.append(notesFile)
+            subprocess.Popen(args) #nonblocking
+        else:
+            openTextFileEditor(notesFile)
 
     def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
@@ -174,7 +199,8 @@ class ProjectWindow(ProjectBaseWindow):
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
     def initProjectTCPServer(self):
-        server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
+        server = ProjectTCPServer((self.project.address, self.project.port),
+                                  ProjectTCPRequestHandler)
         server.project = self.project
         server.window = self
         server_thread = threading.Thread(target=server.serve_forever)
@@ -187,7 +213,6 @@ class ProjectWindow(ProjectBaseWindow):
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         try:
-            
             from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
             from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots 
             from pyworkflow.em.protocol.protocol_movies import PLOT_CART
@@ -207,20 +232,14 @@ class ProjectWindow(ProjectBaseWindow):
             elif cmd == OBJCMD_NMA_VMD:
                 vmd = createVmdView(inputObj, modeNumber=objId)
                 vmd.show()
-    
-    #         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-    #             self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
-    
+
             elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
                 self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
-    
-            #elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            #    self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
-            
+
             elif cmd == OBJCMD_CTFFIND4:
                 from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
                 self.enqueue(lambda: createCtfPlot(inputObj, objId))
-                
+
             elif cmd == OBJCMD_GCTF:
                 from pyworkflow.em.packages.gctf.viewer import createCtfPlot
 

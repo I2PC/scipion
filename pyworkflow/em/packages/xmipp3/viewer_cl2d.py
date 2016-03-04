@@ -47,9 +47,8 @@ LEVEL_CHOICES = ['last', 'selection']
         
         
 class XmippCL2DViewer(ProtocolViewer):
-    """ Wrapper to visualize different type of data objects
-    with the Xmipp program xmipp_showj
-    """
+    """ Visualization of Xmipp CL2D protocol results. """
+
     _label = 'viewer cl2d'
     _targets = [XmippProtCL2D]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
