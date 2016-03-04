@@ -24,32 +24,31 @@
 # *
 # **************************************************************************
 
+from itertools import izip
 from os.path import split, splitext
 
-from pyworkflow.object import Float, String
-from pyworkflow.em.data import EMObject
-from pyworkflow.protocol.params import (PointerParam, FloatParam, EnumParam, STEPS_PARALLEL, LEVEL_ADVANCED)
+from pyworkflow.protocol.params import (PointerParam, FloatParam, EnumParam,
+                                        STEPS_PARALLEL, LEVEL_ADVANCED)
 from pyworkflow.utils.path import makePath
-from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair, Coordinate
-from pyworkflow.em import ProtParticlePicking
-from pyworkflow.em.packages.xmipp3 import XmippProtocol, readAnglesFromMicrographs
+from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair
+from pyworkflow.em.packages.xmipp3 import readAnglesFromMicrographs
+from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 
-import xmipp
-from convert import readSetOfCoordinates, writeSetOfCoordinates, writeSetOfMicrographsPairs, izip
+from convert import readSetOfCoordinates, writeSetOfCoordinates
 
 TYPE_COORDINATES = 0
 TYPE_PARTICLES = 1
 
 
-class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
+class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
     """    
-    From two sets of points (tilted and untilted) the protocol determines the affine transformation between
-    these sets.
+    From two sets of points (tilted and untilted) the protocol determines
+    the affine transformation between these sets.
     """
     _label = 'assignment tiltpair'
     
     def __init__(self, *args, **kwargs):
-        ProtParticlePicking.__init__(self, *args, **kwargs)
+        XmippProtParticlePickingPairs.__init__(self, *args, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -125,25 +124,20 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
             fnmicsize = tiltPair.getTilted().getFileName()
             fnposUntilt = 'particles@'+self._getExtraPath("")+Unname+'.pos'
             fnposTilt = 'particles@'+self._getExtraPath("")+Tname+'.pos'
-            stepId = self._insertFunctionStep('assignmentStep',fnUntilt, fnTilt, fnmicsize, self._getExtraPath(),
-                                              fnposUntilt, fnposTilt, self._getExtraPath(Unname), prerequisites=[convertId])
-             
-#            self._insertFunctionStep('estimateTiltAxisStep', fnposUntilt, fnposTilt, self._getExtraPath(Unname), prerequisites=[convertId])
-             
+            stepId = self._insertFunctionStep('assignmentStep',
+                                              fnUntilt, fnTilt, fnmicsize,
+                                              fnposUntilt, fnposTilt,
+                                              prerequisites=[convertId])
             deps.append(stepId)
-            
+
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
-        
 
     def convertInputStep(self):
-        """ Read the input metadatata.
-        """
+        """ Read the input metadatata. """
         # Get the converted input micrographs in Xmipp format
         makePath(self._getExtraPath("untilted"))
         makePath(self._getExtraPath("tilted"))
         
-
-            
         if self.typeOfSet.get() == TYPE_PARTICLES:
             U_set = self.untiltPar.get().getCoordinates()
             T_set = self.tiltPar.get().getCoordinates()
@@ -177,16 +171,15 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
             
         writeSetOfCoordinates(self._getExtraPath("untilted"), U_set)
         writeSetOfCoordinates(self._getExtraPath("tilted"), T_set)
-#         writeSetOfMicrographsPairs(self.tiltpair.get().getUntilted(), 
-#                                    self.tiltpair.get().getTilted(), 
-#                                    self.micsFn)
-    
-    def assignmentStep(self,fnuntilt, fntilt, fnmicsize, Unpath, fnposUntilt, fnposTilt, opath):
 
+    def assignmentStep(self, fnuntilt, fntilt, fnmicsize,
+                       fnposUntilt, fnposTilt):
+        Unpath = self._getExtraPath()
         params =  ' --untiltcoor %s' % fnuntilt        
         params += ' --tiltcoor %s' % fntilt
         params += ' --tiltmicsize %s' % fnmicsize
         params += ' --maxshift %f' % self.maxShift.get()
+
         if self.typeOfSet.get() == TYPE_PARTICLES:
                 aux = self.untiltPar.get()
                 aux2 = aux[1]
@@ -197,28 +190,18 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         params += ' --threshold %f' % self.threshold.get()
         params += ' --odir %s' % Unpath
 
+        self.runJob('xmipp_image_assignment_tilt_pair', params)
 
-        nproc = self.numberOfMpi.get()
-        nT=self.numberOfThreads.get() 
-        self.runJob('xmipp_image_assignment_tilt_pair', params, numberOfMpi=nproc,numberOfThreads=nT)
-        
+        self.estimateTiltAxis(fnposUntilt, fnposTilt)
 
-        
-        self.estimateTiltAxis(fnposUntilt, fnposTilt)#, self.micsFn)
-
-        
-        
     def estimateTiltAxis(self, fnposUntilt, fnposTilt):#, opath):
-
-        params =  ' --untilted %s' % fnposUntilt        
+        params =  ' --untilted %s' % fnposUntilt
         params += ' --tilted %s' % fnposTilt
         params += ' -o %s' % self._getPath()+'/input_micrographs.xmd'
 
         self.runJob('xmipp_angular_estimate_tilt_axis', params)
         
-          
     def createOutputStep(self):
-        
         extradir = self._getExtraPath()
         inputset = self.tiltpair.get()
         uSet = inputset.getUntilted()
@@ -227,11 +210,9 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         # Create Untilted and Tilted SetOfCoordinates
         uCoordSet = self._createSetOfCoordinates(uSet, suffix='Untilted')
         if self.typeOfSet.get() == TYPE_PARTICLES:
-#             boxsize_u = self.untiltPar.get().getCoordinates().getBoxSize()
-#             if boxsize_u is None:
-                aux = self.untiltPar.get()
-                aux2 = aux[1]
-                boxsize_u, y_, z_ = aux2.getDim()
+            aux = self.untiltPar.get()
+            aux2 = aux[1]
+            boxsize_u, y_, z_ = aux2.getDim()
         else:
             boxsize_u = self.untiltCoor.get().getBoxSize()
         
@@ -241,11 +222,9 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         uCoordSet.write()
         
         if self.typeOfSet.get() == TYPE_PARTICLES:
-#             boxsize_t = self.tiltPar.get().getCoordinates().getBoxSize()
-#             if boxsize_t is None:
-                aux = self.tiltPar.get()
-                aux2 = aux[1]
-                boxsize_t, y_, z_ = aux2.getDim()
+            aux = self.tiltPar.get()
+            aux2 = aux[1]
+            boxsize_t, y_, z_ = aux2.getDim()
         else:
             boxsize_t = self.tiltCoor.get().getBoxSize()
         
@@ -253,7 +232,6 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         readSetOfCoordinates(extradir, tSet, tCoordSet)
         tCoordSet.write()
         
-
         setAngles = self._createSetOfAngles()
         pathangles = self.micsFn + '/input_micrographs.xmd'
         readAnglesFromMicrographs(pathangles, setAngles)
@@ -266,20 +244,15 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
         outputset.setAngles(setAngles)
         outputset.setMicsPair(inputset)
         outputset.setObjComment(self.getSummary(outputset))
-#         print '-----------------------------'
-#         print setAngles
-#         print '-----------------------------'
+
         for coordU, coordT in izip(uCoordSet, tCoordSet):
             outputset.append(TiltPair(coordU, coordT))
 
         self._defineOutputs(outputCoordinatesTiltPair=outputset)
         self._defineSourceRelation(self.tiltpair, outputset)
-        
 
-        
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
-        
         if self.typeOfSet.get() == TYPE_PARTICLES:
             validateMsgs = []
             if self.untiltPar.get() and not self.untiltPar.hasValue():
@@ -295,99 +268,13 @@ class XmippProtAssignmentTiltPair(ProtParticlePicking, XmippProtocol):
                 validateMsgs.append('Please provide input coordinates.')         
             return validateMsgs
          
-        
-   
-    def _summary(self):
-        summary = []
-        if  (not hasattr(self,'outputCoordinatesTiltPair')):
-            summary.append("Output tilpairs not ready yet.")
-        else:
-            if self.getOutputsSize() > 0:
-                return self._summary_aux()
-            else:
-                return [self.getSummary(self.outputCoordinatesTiltPair.getUntilted())]   
-        return summary
-   
-   
-    def _summary_aux(self):
-        summary = []
-        if self.getInputMicrographs() is  not None:
-            summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
-
-        if(self.getOutputsSize() > 1):
-            for key, output in self.iterOutputAttributes(EMObject):
-                label = output.getObjLabel() if output.getObjLabel() != "" else key
-                summary.append("*%s:*%s"%(key, output.getObjComment()))
-                summary.append("      Particles picked: %d" %output.getSize())
-                summary.append("      Particle size: %d \n" %output.getBoxSize())
-        elif(self.getOutputsSize() == 1):
-            summary.append(self.getCoords().getObjComment())
-        return summary
-    
-    def getSummary(self, coordsSet):
-        summary = []
-        summary.append("Particles picked: %d" %coordsSet.getSize())
-        summary.append("Particle size: %d" %self.outputCoordinatesTiltPair.getUntilted().getBoxSize())
-        return "\n".join(summary)
-    
     def _methods(self):
         messages = []
         if (hasattr(self,'outputCoordinatesTiltPair')):
-            messages.append('The assignment has been performed using and affinity transformation [Publication: Not yet]')
+            messages.append('The assignment has been performed using and '
+                            'affinity transformation [Publication: Not yet]')
         return messages
     
     def _citations(self):
         return ['Not yet']
-    
-   
-    def getCoords(self):
-        count = self.getOutputsSize()
-        suffix = str(count) if count > 1 else ''
-        outputName = 'outputCoordinatesTiltPair' + suffix
-        return getattr(self, outputName)
-#     
-    def registerCoords(self, coordsDir):
-        #from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates, readAnglesFromMicrographs
 
-        count = self.getOutputsSize()
-        suffix = str(count + 1) if count > 0 else ''
-        inputset = self.tiltpair.get()
-        uSet = inputset.getUntilted()
-        tSet = inputset.getTilted()
-        outputName = 'outputCoordinatesTiltPair' + suffix
-        uSuffix = 'Untilted' + suffix
-        tSuffix = 'Tilted' + suffix
-        # Create Untilted and Tilted SetOfCoordinates
-        uCoordSet = self._createSetOfCoordinates(uSet, suffix=uSuffix)
-        readSetOfCoordinates(coordsDir, uSet, uCoordSet)
-        uCoordSet.write()
-        tCoordSet = self._createSetOfCoordinates(tSet, suffix=tSuffix)
-        readSetOfCoordinates(coordsDir, tSet, tCoordSet)
-        tCoordSet.write()
-
-        # Read Angles from input micrographs
-        micsFn = self._getPath('input_micrographs.xmd')
-        setAngles = self._createSetOfAngles(suffix=suffix)
-        readAnglesFromMicrographs(micsFn, setAngles)
-        setAngles.write()
-        # Create CoordinatesTiltPair object
-        outputset = CoordinatesTiltPair(filename=self._getPath('coordinates_pairs%s.sqlite' % suffix))
-        outputset.setTilted(tCoordSet)
-        outputset.setUntilted(uCoordSet)
-        outputset.setAngles(setAngles)
-        outputset.setMicsPair(inputset)
-        for coordU, coordT in izip(uCoordSet, tCoordSet):
-            outputset.append(TiltPair(coordU, coordT))
-
-        summary = self.getSummary(outputset)
-        outputset.setObjComment(summary)
-        outputs = {outputName: outputset}
-        self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.tiltpair, outputset)
-        self._store()
-        
-    def getInputMicrographs(self):
-        return self.tiltpair.get().getTilted()
-
-
-    
