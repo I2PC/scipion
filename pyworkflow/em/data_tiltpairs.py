@@ -111,6 +111,9 @@ class CoordinatesTiltPair(TiltPairSet):
     def getAngles(self):
         return self._angles
     
+    def getBoxSize(self):
+        return self.getUntilted().getBoxSize()
+    
     def getMicsPair(self):
         return self._micsPair.get()
     
