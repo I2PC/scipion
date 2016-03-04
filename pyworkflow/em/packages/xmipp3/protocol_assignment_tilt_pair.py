@@ -29,7 +29,7 @@ from os.path import split, splitext
 
 from pyworkflow.protocol.params import (PointerParam, FloatParam, EnumParam,
                                         STEPS_PARALLEL, LEVEL_ADVANCED)
-from pyworkflow.utils.path import makePath
+from pyworkflow.utils.path import makePath, removeBaseExt
 from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair
 from pyworkflow.em.packages.xmipp3 import readAnglesFromMicrographs
 from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
@@ -78,12 +78,6 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
                       label="Tilted particles", condition='typeOfSet==%d' % TYPE_PARTICLES,   
                       help='Select the metadata with tilt particles.')
         
-#         form.addParam('boxsiz', FloatParam, default=100, 
-#                       label="Box Size", condition='typeOfSet==%d' % TYPE_PARTICLES, 
-#                       help='Sometimes, particles do not have information about the particle size\n,'
-#                       'i.e. filtered by ZScore. In those cases, the particle size or box size is requiered \n'
-#                       'By default: boxSize = 100') 
-        
         form.addParam('tiltAngle', FloatParam, default=-1, expertLevel=LEVEL_ADVANCED,
                       label="Tilt angle",  
                       help='Tilt angle estimation, the method will look for the assignment in the\n'
@@ -106,27 +100,26 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
+    def _particlesPos(self, *parts):
+        return 'particles@%s.pos' % self._getExtraPath(*parts)
+
+    def _micBaseName(self, mic):
+        return removeBaseExt(mic.getFileName())
+
     def _insertAllSteps(self):        
         self.micsFn = self._getPath()
-        #self.micsFn = self._getPath('input_micrographs.xmd')
         # Convert input into xmipp Metadata format
-        convertId=self._insertFunctionStep('convertInputStep')
+        convertId = self._insertFunctionStep('convertInputStep')
         deps = []
         for tiltPair in self.tiltpair.get():
-            micUntilted = tiltPair.getUntilted()
-            micTilted = tiltPair.getTilted()
-            Unpath, Unname = split(micUntilted.getFileName())
-            Unname, ext = splitext(Unname)
-            Tpath, Tname = split(micTilted.getFileName())
-            Tname, ext = splitext(Tname)
-            fnUntilt = 'particles@'+self._getExtraPath("untilted/")+Unname+'.pos'
-            fnTilt = 'particles@'+self._getExtraPath("tilted/")+Tname+'.pos'
-            fnmicsize = tiltPair.getTilted().getFileName()
-            fnposUntilt = 'particles@'+self._getExtraPath("")+Unname+'.pos'
-            fnposTilt = 'particles@'+self._getExtraPath("")+Tname+'.pos'
+            uName = self._micBaseName(tiltPair.getUntilted())
+            tName = self._micBaseName(tiltPair.getTilted())
             stepId = self._insertFunctionStep('assignmentStep',
-                                              fnUntilt, fnTilt, fnmicsize,
-                                              fnposUntilt, fnposTilt,
+                                              self._particlesPos("untilted", uName),
+                                              self._particlesPos("tilted", tName),
+                                              tiltPair.getTilted().getFileName(),
+                                              self._particlesPos(uName),
+                                              self._particlesPos(tName),
                                               prerequisites=[convertId])
             deps.append(stepId)
 
@@ -197,7 +190,7 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
     def estimateTiltAxis(self, fnposUntilt, fnposTilt):#, opath):
         params =  ' --untilted %s' % fnposUntilt
         params += ' --tilted %s' % fnposTilt
-        params += ' -o %s' % self._getPath()+'/input_micrographs.xmd'
+        params += ' -o %s' % self._getPath('input_micrographs.xmd')
 
         self.runJob('xmipp_angular_estimate_tilt_axis', params)
         
@@ -270,7 +263,7 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
          
     def _methods(self):
         messages = []
-        if (hasattr(self,'outputCoordinatesTiltPair')):
+        if hasattr(self,'outputCoordinatesTiltPair'):
             messages.append('The assignment has been performed using and '
                             'affinity transformation [Publication: Not yet]')
         return messages
