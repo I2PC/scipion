@@ -14,59 +14,44 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         cls.micsUFn = cls.dataset.getFile('untilted')
         cls.micsTFn = cls.dataset.getFile('tilted')
         
-    def testXmippAssignmnetTiltPairsWorkflowBasic(self):
+    def test1(self):
         #First, import a set of micrographs
         protImport = self.newProtocol(ProtImportMicrographsTiltPairs, 
-                                      patternUntilted=self.micsUFn, patternTilted=self.micsTFn, 
-                                      samplingRate=2.28, voltage=100, sphericalAberration=2.9)
+                                      patternUntilted=self.micsUFn,
+                                      patternTilted=self.micsTFn,
+                                      samplingRate=2.28, voltage=100,
+                                      sphericalAberration=2.9)
         self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographsTiltPair, "There was a problem with the import")
-        
-        protImportUntilted = self.newProtocol(ProtImportMicrographs, filesPath=self.micsUFn, samplingRate=2.28, voltage=100)
-        self.launchProtocol(protImportUntilted)
-        protImportTilted = self.newProtocol(ProtImportMicrographs, filesPath=self.micsTFn, samplingRate=2.28, voltage=100)
-        self.launchProtocol(protImportTilted)
+        self.assertIsNotNone(protImport.outputMicrographsTiltPair,
+                             "There was a problem with the import")
         
         protImportCoorU = self.newProtocol(ProtImportCoordinates,
                          importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
                          filesPath=self.allCrdsDir,
-                         filesPattern='F_rct_u_*.pos', boxSize=100
-                         )
-        protImportCoorU.inputMicrographs.set(protImportUntilted.outputMicrographs)
+                         filesPattern='F_rct_u_*.pos', boxSize=100)
+        uMics = protImport.outputMicrographsTiltPair.getUntilted()
+        protImportCoorU.inputMicrographs.set(uMics)
         self.launchProtocol(protImportCoorU)
+
+        tMics = protImport.outputMicrographsTiltPair.getTilted()
         protImportCoorT = self.newProtocol(ProtImportCoordinates,
                          importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
                          filesPath=self.allCrdsDir,
-                         filesPattern='F_rct_t_*.pos', boxSize=100
-                         )
-        protImportCoorT.inputMicrographs.set(protImportTilted.outputMicrographs)
+                         filesPattern='F_rct_t_*.pos', boxSize=100)
+        protImportCoorT.inputMicrographs.set(tMics)
         self.launchProtocol(protImportCoorT)
-    
                 
-        #Then simulate a particle picking               
+        # Then simulate a particle picking
         print "Running tilt pairs assignment..."   
         protAssigning = self.newProtocol(XmippProtAssignmentTiltPair)
-                
-        protAssigning.tiltpair.set(protImport.outputMicrographsTiltPair)
+        micsTiltPair = protImport.outputMicrographsTiltPair
+        protAssigning.inputMicrographsTiltedPair.set(micsTiltPair)
         print self.micsUFn
         print self.micsTFn
-        protAssigning.untiltCoor.set(protImportCoorU.outputCoordinates)
-        protAssigning.tiltCoor.set(protImportCoorT.outputCoordinates)
-
-        print 'AQUI'
+        protAssigning.untiltedSet.set(protImportCoorU.outputCoordinates)
+        protAssigning.tiltedSet.set(protImportCoorT.outputCoordinates)
         self.launchProtocol(protAssigning)
-        print 'AQUI'    
-        self.assertIsNotNone(protAssigning.outputCoordinatesTiltPair, "There was a problem with the protocol assignment tilt pairs")
+        self.assertIsNotNone(protAssigning.outputCoordinatesTiltPair,
+                             "There was a problem with the protocol assignment tilt pairs")
         #self.validateFiles('protPicking', protPicking)  
 
-    def launchImportCoord(self, pathName, boxSize):
-        protImportCoorT = self.newProtocol(ProtImportCoordinates,
-                         importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-                         filesPath=spathName,
-                         filesPattern='*.pos', boxSize=boxSize,
-                         scale=3.,
-                         invertX=False,
-                         invertY=False
-                         )
-        protImportCoorT.inputMicrographs.set(protImportTilted.outputMicrographs)
-        self.launchProtocol(protImportCoorT)
