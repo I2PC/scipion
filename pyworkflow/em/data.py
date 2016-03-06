@@ -838,9 +838,10 @@ class SetOfImages(EMSet):
             sampling = -999.0
         if self._firstDim.isEmpty():
             try:
-                firstItem = self.getFirstItem()
-                if firstItem is not None:
-                    self._firstDim.set(firstItem.getDim())
+                pass
+                #firstItem = self.getFirstItem()
+                #if firstItem is not None:
+                #    self._firstDim.set(firstItem.getDim())
             except Exception, ex:
                 if pwutils.envVarOn('SCIPION_DEBUG'):
                     print "Error reading dimension: ", ex
