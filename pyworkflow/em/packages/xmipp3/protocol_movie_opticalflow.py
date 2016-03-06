@@ -117,7 +117,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         else:
             movieSuffix = ''
         command = '-i %(movieName)s%(movieSuffix)s -o %(outputMicFn)s ' % locals()
-        command += '--cutf %d --cute %d ' % (a0-1, aN-1)
+        command += '--frameRange %d %d ' % (a0-1, aN-1)
         if self.inputMovies.get().getDark():
             command += '--dark '+self.inputMovies.get().getDark()
         if self.inputMovies.get().getGain():
@@ -145,10 +145,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
             program = 'xmipp_movie_optical_alignment_cpu'
         if doSaveMovie:
             command += '--ssc '
-        command += '--crx %d --cry %d --cdx %d --cdy %d' % (self.cropOffsetX,
-                                                            self.cropOffsetY,
-                                                            self.cropDimX,
-                                                            self.cropDimY)
+        command += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
+        command += '--cropDRCorner %d %d'  % (self.cropOffsetX.get() + self.cropDimX.get() -1,
+                                                  self.cropOffsetY.get() + self.cropDimY.get() -1)
         try:
             self.runJob(program, command, cwd=movieFolder)
         except:

@@ -53,30 +53,38 @@ public:
     MultidimArray<double> gainImage, darkImage;
     std::vector< Matrix1D<double> > shiftVector;
     MetaData shiftMD;
-    int winSize, gpuDevice, cutFrameFront, cutFrameEnd;
-    int groupSize, cropOffsetX, cropOffsetY;
-    int cropDimX, cropDimY;
+    int winSize, gpuDevice, nfirst, nlast;
+    int groupSize;
     bool saveCorrMovie, globalShiftCorr;
     bool gainImageCorr, darkImageCorr;
+
+    /*****************************/
+    /** crop corner **/
+    /*****************************/
+    /** x left top corner **/
+    int xLTcorner;
+    /** y left top corner **/
+    int yLTcorner;
+    /** x right down corner **/
+    int xDRcorner;
+    /** y right down corner **/
+    int yDRcorner;
 
     void defineParams()
     {
         addUsageLine ("Align movies using optical flow");
         addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
         addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
-        addParamsLine("     [--cutf <int=0>]     : number of the frames to cut from the front (0 = no cut)");
-        addParamsLine("     [--cute <int=0>]     : number of the frames to cut from the end (0 = no cut)");
-        addParamsLine("     [--crx <int=0>]     : crop offset X (pixel(s))");
-        addParamsLine("     [--cry <int=0>]     : crop offset Y (pixel(s))");
-        addParamsLine("     [--cdx <int=0>]     : number of pixels to cut along X from offset");
-        addParamsLine("     [--cdy <int=0>]     : number of pixels to cut along Y from offset");
-        addParamsLine("     [--bin <int=1>]     : bin stack before processing");
+        addParamsLine("   	[--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
+        addParamsLine("   	[--cropDRCorner <x=-1> <y=-1>]    : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
+        addParamsLine("  	[--frameRange <n0=-1> <nF=-1>]  : First and last frame to align, frame numbers start at 0");
+        addParamsLine("  	[--bin <s=-1>]               : Binning factor, it may be any floating number");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
-        addParamsLine("     [--globalShifts <shiftreference>]        : global shifts from cross-correlation based methods");
+        addParamsLine("     [--useInputShifts <shiftreference>]        : global shifts from cross-correlation based methods");
         addParamsLine("     [--ssc]             : save corrected stack");
-        addParamsLine("     [--gain <gainReference>]             : gain reference");
-        addParamsLine("     [--dark <darkReference>]             : dark reference");
+        addParamsLine("  	[--dark <fn=\"\">]           : Dark correction image");
+        addParamsLine("  	[--gain <fn=\"\">]           : Gain correction image");
 #ifdef GPU
 
         addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
@@ -95,19 +103,19 @@ public:
         {
             darkRefFilename = getParam("--dark");
         }
-        if ((globalShiftCorr = checkParam("--globalShifts")))
+        if ((globalShiftCorr = checkParam("--useInputShifts")))
         {
-            globalShiftFilename = getParam("--globalShifts");
+            globalShiftFilename = getParam("--useInputShifts");
         }
         groupSize = getIntParam("--groupSize");
-        cutFrameFront  = getIntParam("--cutf");
-        cutFrameEnd  = getIntParam("--cute");
-        cropOffsetX = getIntParam("--crx");
-        cropOffsetY = getIntParam("--cry");
-        cropDimX = getIntParam("--cdx");
-        cropDimY = getIntParam("--cdy");
+        nfirst = getIntParam("--frameRange",0);
+        nlast = getIntParam("--frameRange",1);
         winSize   = getIntParam("--winSize");
         saveCorrMovie = checkParam("--ssc");
+        xLTcorner= getIntParam("--cropULCorner",0);
+        yLTcorner= getIntParam("--cropULCorner",1);
+        xDRcorner = getIntParam("--cropDRCorner",0);
+        yDRcorner = getIntParam("--cropDRCorner",1);
 
 #ifdef GPU
 
@@ -256,8 +264,8 @@ public:
             movieStack.readMapped(movieFile,i);
             movieStack().getImage(frameImage);
             correctDarkGainImage(frameImage);
-            if (cropDimX!=0 && cropDimY!=0)
-                frameImage.selfWindow(cropOffsetY, cropOffsetX, cropOffsetY+cropDimY-1, cropOffsetX+cropDimX-1);
+            if (yDRcorner!=-1)
+                frameImage.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
             if (i==begin)
                 avgImg.initZeros(YSIZE(frameImage), XSIZE(frameImage));
             if (globalShiftCorr)
@@ -341,17 +349,14 @@ public:
         movieStack.read(fname,HEADER);
         movieStack.getDimensions(aDim);
         imagenum = aDim.ndim;
+        h = aDim.ydim;
+        w = aDim.xdim;
         // if crop, then change the variables for width and height
-        if (cropDimX==0 || cropDimY==0)
-        {
-            h = aDim.ydim;
-            w = aDim.xdim;
-        }
-        else
-        {
-            h = cropDimY;
-            w = cropDimX;
-        }
+		if (yDRcorner!=-1)
+		{
+			w = xDRcorner - xLTcorner +1 ;
+			h = yDRcorner - yLTcorner +1 ;
+		}
         if (darkImageCorr)
         {
             II.read(darkRefFilename);
@@ -401,13 +406,19 @@ public:
         }
         tStart2=clock();
         // put the right values for first and last frame in cut variables
-        cutFrameFront=1;
-        cutFrameEnd=16; // Just to adapt to Li algorithm
-        imagenum=cutFrameEnd-cutFrameFront+1;
+        if (nfirst<0)
+            nfirst=1;
+        else
+        	nfirst++;
+        if (nlast<0)
+            nlast=imagenum;
+        else
+        	nlast++;
+        imagenum=nlast-nfirst+1;
         levelNum=sqrt(double(imagenum));
-        computeAvg(fname, cutFrameFront, cutFrameEnd, avgCurr);
+        computeAvg(fname, nfirst, nlast, avgCurr);
         xmipp2Opencv(avgCurr, avgcurr);
-        cout<<"Frames "<<cutFrameFront<<" to "<<cutFrameEnd<<" under processing ..."<<std::endl;
+        cout<<"Frames "<<nfirst<<" to "<<nlast<<" under processing ..."<<std::endl;
         while (div!=groupSize)
         {
             div=int(imagenum/cnt);
@@ -434,28 +445,28 @@ public:
                         movieStack.readMapped(fname,i+1);
                         movieStack().getImage(frameImage);
                         correctDarkGainImage(frameImage);
-                        if (cropDimX!=0 && cropDimY!=0)
-                            frameImage.selfWindow(cropOffsetY, cropOffsetX, cropOffsetY+cropDimY-1, cropOffsetX+cropDimX-1);
+                        if (yDRcorner!=-1)
+                            frameImage.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
                         XX(shiftMatrix)=XX(shiftVector[i]);
                         YY(shiftMatrix)=YY(shiftVector[i]);
                         translate(BSPLINE3, preImg, frameImage, shiftMatrix, WRAP);
                     }
                     else
                     {
-                        movieStack.readMapped(fname,cutFrameFront+i);
+                        movieStack.readMapped(fname,nfirst+i);
                         movieStack().getImage(preImg);
                         correctDarkGainImage(preImg);
-                        if (cropDimX!=0 && cropDimY!=0)
-                            preImg.selfWindow(cropOffsetY, cropOffsetX, cropOffsetY+cropDimY-1, cropOffsetX+cropDimX-1);
+                        if (yDRcorner!=-1)
+                            preImg.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
                     }
                     xmipp2Opencv(preImg, preimg);
                 }
                 else
                 {
                     if (i==cnt-1)
-                        computeAvg(fname, i*div+cutFrameFront, cutFrameEnd, preImg);
+                        computeAvg(fname, i*div+nfirst, nlast, preImg);
                     else
-                        computeAvg(fname, i*div+cutFrameFront, (i+1)*div+cutFrameFront-1, preImg);
+                        computeAvg(fname, i*div+nfirst, (i+1)*div+nfirst-1, preImg);
                 }
                 xmipp2Opencv(preImg, preimg);
                 // Note: we should use the OpenCV conversion to use it in optical flow
