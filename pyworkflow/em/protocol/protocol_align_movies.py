@@ -25,16 +25,14 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Protocol wrapper around the MotionCorr for movie alignment
-"""
 
 import os
 
+from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
-from pyworkflow.em.data import MovieAlignment
+from pyworkflow.em.data import MovieAlignment, SetOfMovies, SetOfMicrographs
 from pyworkflow.em.protocol import ProtProcessMovies
 
 
@@ -92,42 +90,84 @@ class ProtAlignMovies(ProtProcessMovies):
 
     #FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
+        # Do nothing now, the output should be ready.
+        pass
+
+    def _loadOutputSet(self, SetClass, baseName):
+        """
+        Load the output set if it exists or create a new one.
+        """
+        setFile = self._getPath(baseName)
+
+        if os.path.exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+
         inputMovies = self.inputMovies.get()
-        micSet = None
-        movieSet = None
         newSampling = inputMovies.getSamplingRate() * self.binFactor.get()
+        outputSet.copyInfo(inputMovies)
+        outputSet.setSamplingRate(newSampling)
+
+        return outputSet
+
+    def _checkNewOutput(self):
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+        # Check for newly done items
+        newDone = [m for m in self.listOfMovies
+                   if m.getObjId() not in doneList and self._isMovieDone(m)]
+
+        if not newDone:
+            return
+
+        # Update the file with the newly done movies
+        self._writeDoneList(newDone)
+        firstTime = len(doneList) == 0
+        allDone = len(doneList) + len(newDone)
+        # We have finished when there is not more input movies (stream closed)
+        # and the number of processed movies is equal to the number of inputs
+        finished = self.streamClosed and allDone == len(self.listOfMovies)
+        streamMode = Set.STREAM_CLOSED if finished else Set.STREAM_OPEN
 
         if self._doGenerateOutputMovies():
+            # FIXME: Even if we save the move or not, both are aligned
             suffix = '_aligned' if self.doSaveMovie else '_original'
-            movieSet = self._createSetOfMovies(suffix)
-            movieSet.copyInfo(inputMovies)
-            movieSet.setSamplingRate(newSampling)
+            movieSet = self._loadOutputSet(SetOfMovies, 'movies%s.sqlite' % suffix)
 
-            for movie in inputMovies:
+            for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
                 movieSet.append(newMovie)
 
-            self._defineOutputs(outputMovies=movieSet)
-            self._defineTransformRelation(self.inputMovies, movieSet)
+            self._updateOutputSet('outputMovies', movieSet, streamMode)
+            if firstTime:
+                self._defineTransformRelation(self.inputMovies, movieSet)
 
         if self.doSaveAveMic:
-            micSet = self._createSetOfMicrographs()
-            micSet.copyInfo(inputMovies)
-            micSet.setSamplingRate(newSampling)
+            micSet = self._loadOutputSet(SetOfMicrographs,'micrographs.sqlite')
 
-            for movie in inputMovies:
+            for movie in newDone:
                 mic = micSet.ITEM_TYPE()
                 mic.copyObjId(movie)
+                mic.setMicName(movie.getMicName())
                 # The subclass protocol is responsible of generating the output
                 # micrograph file in the extra path with the required name
                 extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
-                self._preprocessOutputMicrograph(mic,movie)
+                self._preprocessOutputMicrograph(mic, movie)
+                # FIXME The micSet is not setting properly dimensions (No-Dim)
                 micSet.append(mic)
 
-            self._defineOutputs(outputMicrographs=micSet)
-            self._defineSourceRelation(self.inputMovies, micSet)
-    
+            self._updateOutputSet('outputMicrographs', micSet, streamMode)
+            if firstTime:
+                self._defineSourceRelation(self.inputMovies, micSet)
+
+        if finished: # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(cons.STATUS_NEW)
 
     #--------------------------- INFO functions --------------------------------------------
 
