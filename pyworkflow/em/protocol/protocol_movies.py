@@ -108,8 +108,19 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 return s
         return None
 
-    def _stepsCheck(self):
-        # Check if there are new micrographs to process
+    def _loadInputList(self):
+        """ Load the input set of movies and create a list. """
+        moviesFile = self.inputMovies.get().getFileName()
+        self.debug("Loading input db: %s" % moviesFile)
+        movieSet = SetOfMovies(filename=moviesFile)
+        movieSet.loadAllProperties()
+        self.listOfMovies = [m.clone() for m in movieSet]
+        self.streamClosed = movieSet.isStreamClosed()
+        movieSet.close()
+        self.debug("Closed db.")
+
+    def _checkNewInput(self):
+        # Check if there are new movies to process from the input set
         localFile = self.inputMovies.get().getFileName()
         now = datetime.now()
         self.lastCheck = getattr(self, 'lastCheck', now)
@@ -119,29 +130,36 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                      pwutils.prettyTime(mTime)))
         # If the input movies.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
-        if self.lastCheck > mTime:
-            return
+        if self.lastCheck > mTime and hasattr(self, 'listOfMovies'):
+            return None
+
         self.lastCheck = now
         # Open input movies.sqlite and close it as soon as possible
-        self.debug("Loading input db: %s" % localFile)
-        movieSet = SetOfMovies(filename=localFile)
-        movieSet.loadAllProperties()
-        streamClosed = movieSet.isStreamClosed()
-        newMovies = [m.clone() for m in movieSet
-                     if m.getObjId() not in self.insertedDict]
-        movieSet.close()
-        self.debug("Closed db.")
-
+        self._loadInputList()
+        newMovies = any(m.getObjId() not in self.insertedDict
+                        for m in self.listOfMovies)
         outputStep = self._getFirstJoinStep()
 
         if newMovies:
-            fDeps = self._insertNewMoviesSteps(self.insertedDict, newMovies)
-            self.updateSteps()
+            fDeps = self._insertNewMoviesSteps(self.insertedDict,
+                                               self.listOfMovies)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
         else:
-            if outputStep is not None and streamClosed and outputStep.isWaiting():
+            if (outputStep is not None and self.streamClosed
+                and outputStep.isWaiting()):
                 outputStep.setStatus(STATUS_NEW)
+                self.updateSteps()
+
+    def _checkNewOutput(self):
+        pass # To be implemented in sub-classes
+
+    def _stepsCheck(self):
+        # Input movie set can be loaded or None when checked for new inputs
+        # If None, we load it
+        self._checkNewInput()
+        self._checkNewOutput()
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
         """ Insert steps to process new movies (from streaming)
@@ -241,7 +259,32 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return self._getExtraPath('movie_%06d%s' % (movie.getObjId(), ext))
 
     def _getMovieDone(self, movie):
-        return self._getTmpPath('DONE_movie_%06d.TXT' % movie.getObjId())
+        return self._getExtraPath('DONE_movie_%06d.TXT' % movie.getObjId())
+
+    def _isMovieDone(self, movie):
+        """ A movie is done if the marker file exists. """
+        return os.path.exists(self._getMovieDone(movie))
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE_all.TXT')
+
+    def _readDoneList(self):
+        """ Read from a text file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if os.path.exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+
+        return doneList
+
+    def _writeDoneList(self, movieList):
+        """ Write to a text file the items that have been done. """
+        doneFile = self._getAllDone()
+        with open(self._getAllDone(), 'a') as f:
+            for movie in movieList:
+                f.write('%d\n' % movie.getObjId())
 
     #--------------------------- OVERRIDE functions --------------------------
     def _filterMovie(self, movie):
