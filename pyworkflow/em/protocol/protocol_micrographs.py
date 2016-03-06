@@ -44,8 +44,8 @@ class ProtMicrographs(EMProtocol):
 class ProtCTFMicrographs(ProtMicrographs):
     """ Base class for all protocols that estimates the CTF"""
 
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMProtocol.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
         self.isFirstTime = Boolean(False)
 
@@ -154,7 +154,6 @@ class ProtCTFMicrographs(ProtMicrographs):
         and add the necessary steps.
         """
         newMics = []
-
         for micFn, _, mic in self._iterMicrographs(micSet):
             if mic.getMicName() not in self.insertedDict:
                 newMics.append(micFn)
@@ -194,14 +193,14 @@ class ProtCTFMicrographs(ProtMicrographs):
 
     def _stepsCheck(self):
         # Check if there are new micrographs to process
-
-        micSet = SetOfMicrographs(filename=self.inputMicrographs.get().getFileName())
+        micFn = self.inputMicrographs.get().getFileName()
+        micSet = SetOfMicrographs(filename=micFn)
         micSet.loadAllProperties()
         streamClosed = micSet.isStreamClosed()
         endCTFs = False
 
         outputStep = self._getFirstJoinStep()
-        newMics = self._checkNewMicrographs(micSet, outputStep)
+        self._checkNewMicrographs(micSet, outputStep)
         ctfSet, newCTFs = self._checkNewCTFs(micSet)
 
         if newCTFs:
@@ -226,7 +225,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 # Make estimation steps independent between them
                 stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
                                                   mic.getMicName(),
-                                                  prerequisites=[]) # Make estimation steps independent between them
+                                                  prerequisites=[])
                 estimDeps.append(stepId)
                 insertedDict[mic.getMicName()] = stepId
         return estimDeps
@@ -234,14 +233,18 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _insertRecalculateSteps(self):
         recalDeps = []
         # For each psd insert the steps to process it
-        self.recalculateSet = SetOfCTF(filename=self.sqliteFile.get(), objDoStore=False)
+        self.recalculateSet = SetOfCTF(filename=self.sqliteFile.get(),
+                                       objDoStore=False)
         for ctf in self.recalculateSet:
             line = ctf.getObjComment()
             if ctf.isEnabled() and line:
                 # CTF Re-estimation
-                copyId = self._insertFunctionStep('copyMicDirectoryStep', ctf.getObjId())
+                copyId = self._insertFunctionStep('copyMicDirectoryStep',
+                                                  ctf.getObjId())
                 # Make estimation steps independent between them
-                stepId = self._insertFunctionStep('_restimateCTF', ctf.getObjId(), prerequisites=[copyId])
+                stepId = self._insertFunctionStep('_restimateCTF',
+                                                  ctf.getObjId(),
+                                                  prerequisites=[copyId])
                 recalDeps.append(stepId)
         return recalDeps
 
@@ -334,7 +337,8 @@ class ProtCTFMicrographs(ProtMicrographs):
             if not hasattr(self, 'outputCTF'):
                 summary.append(Message.TEXT_NO_CTF_READY)
             else:
-                summary.append("CTF estimation of %d micrographs." % self.inputMicrographs.get().getSize())
+                summary.append("CTF estimation of %d micrographs."
+                               % self.inputMicrographs.get().getSize())
 
         return summary
 
