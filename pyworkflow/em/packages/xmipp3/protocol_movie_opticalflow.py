@@ -134,7 +134,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
                 globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
             globalShiftsMD.write(join(movieFolder, fnGlobalShifts))
-            command += '--globalShifts %(fnGlobalShifts)s ' % locals()
+            command += '--useInputShifts %(fnGlobalShifts)s ' % locals()
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'
             command += '--gpu %d ' % gpuId
