@@ -94,7 +94,7 @@ class ProtMotionCorr(ProtAlignMovies):
         a0, aN = self._getFrameRange(numberOfFrames, 'align')
         s0, sN = self._getFrameRange(numberOfFrames, 'sum')
 
-        logFile = self._getLogFile(movie)
+        logFile = self._getMovieLogFile(movie)
         args = {'-crx': self.cropOffsetX.get(),
                 '-cry': self.cropOffsetY.get(),
                 '-cdx': self.cropDimX.get(),
