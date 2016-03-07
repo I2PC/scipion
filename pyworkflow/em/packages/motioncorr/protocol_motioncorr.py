@@ -157,7 +157,9 @@ class ProtMotionCorr(ProtAlignMovies):
          The shifts should refer to the original micrograph without any binning.
          In case of a bining greater than 1, the shifts should be scaled.
         """
-        return parseMovieAlignment(self._getMovieLogFile(movie))
+        logPath = os.path.join(self._getOutputMovieFolder(movie),
+                               self._getMovieLogFile(movie))
+        return parseMovieAlignment(logPath)
 
 
 
