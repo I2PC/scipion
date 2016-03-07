@@ -204,7 +204,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
-        n = 10000
+        n = movie.getNumberOfFrames()
         first, last = self._getFrameRange(n, 'align')
 
         if self.doSaveMovie:
