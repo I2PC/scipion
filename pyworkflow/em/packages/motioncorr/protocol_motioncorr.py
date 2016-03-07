@@ -95,22 +95,22 @@ class ProtMotionCorr(ProtAlignMovies):
         s0, sN = self._getFrameRange(numberOfFrames, 'sum')
 
         logFile = self._getMovieLogFile(movie)
-        args = {'-crx': self.cropOffsetX.get(),
-                '-cry': self.cropOffsetY.get(),
-                '-cdx': self.cropDimX.get(),
-                '-cdy': self.cropDimY.get(),
-                '-bin': self.binFactor.get(),
-                '-nst': a0,
-                '-ned': aN,
-                '-nss': s0,
-                '-nes': sN,
-                '-gpu': self.GPUCore.get(),
-                '-flg': logFile,
-                }
+        argsDict = {'-crx': self.cropOffsetX.get(),
+                    '-cry': self.cropOffsetY.get(),
+                    '-cdx': self.cropDimX.get(),
+                    '-cdy': self.cropDimY.get(),
+                    '-bin': self.binFactor.get(),
+                    '-nst': a0,
+                    '-ned': aN,
+                    '-nss': s0,
+                    '-nes': sN,
+                    '-gpu': self.GPUCore.get(),
+                    '-flg': logFile,
+                    }
 
         # FIXME: Always produce the average micrograph?
         args = '%s -fcs %s ' % (movie.getBaseName(), outputMicFn)
-        args += ' '.join(['%s %s' % (k, v) for k, v in args.iteritems()])
+        args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
         if inputMovies.getGain():
             args += " -fgr " + inputMovies.getGain()
