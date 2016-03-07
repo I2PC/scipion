@@ -84,17 +84,21 @@ class ProtMotionCorr(ProtAlignMovies):
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
+
+        def absPath(baseName):
+            return os.path.abspath(self._getExtraPath(baseName))
+
         inputMovies = self.inputMovies.get()
         movieFolder = self._getOutputMovieFolder(movie)
-        outputMicFn = self._getOutputMicName(movie)
-        outputMovieFn = self._getOutputMovieName(movie)
+        outputMicFn = absPath(self._getOutputMicName(movie))
+        outputMovieFn = absPath(self._getOutputMovieName(movie))
+        logFile = absPath(self._getMovieLogFile(movie))
 
         # Get the number of frames and the range to be used for alignment and sum
         numberOfFrames = movie.getNumberOfFrames()
         a0, aN = self._getFrameRange(numberOfFrames, 'align')
         s0, sN = self._getFrameRange(numberOfFrames, 'sum')
 
-        logFile = self._getMovieLogFile(movie)
         argsDict = {'-crx': self.cropOffsetX.get(),
                     '-cry': self.cropOffsetY.get(),
                     '-cdx': self.cropDimX.get(),
@@ -108,8 +112,7 @@ class ProtMotionCorr(ProtAlignMovies):
                     '-flg': logFile,
                     }
 
-        # FIXME: Always produce the average micrograph?
-        args = '%s -fcs %s ' % (movie.getBaseName(), outputMicFn)
+        args = '%s ' % movie.getBaseName()
         args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
         if inputMovies.getGain():
@@ -117,6 +120,9 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if inputMovies.getDark():
             args += " -fdr " + inputMovies.getDark()
+
+        if self.doSaveAveMic:
+            args += " -fcs %s " % outputMicFn
 
         if self.doSaveMovie:
             args += " -fct %s -ssc 1" % outputMovieFn
@@ -129,10 +135,6 @@ class ProtMotionCorr(ProtAlignMovies):
             self.runJob(program, args, cwd=movieFolder)
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-
-        # FIXME: Why the following lines?
-        #putils.cleanPattern(os.path.join(movieFolder, movieName))
-        #putils.moveTree(self._getTmpPath(), self._getExtraPath())
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
@@ -157,8 +159,7 @@ class ProtMotionCorr(ProtAlignMovies):
          The shifts should refer to the original micrograph without any binning.
          In case of a bining greater than 1, the shifts should be scaled.
         """
-        logPath = os.path.join(self._getOutputMovieFolder(movie),
-                               self._getMovieLogFile(movie))
+        logPath = self._getExtraPath(self._getMovieLogFile(movie))
         return parseMovieAlignment(logPath)
 
 
