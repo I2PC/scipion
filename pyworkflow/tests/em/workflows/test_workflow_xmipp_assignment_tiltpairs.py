@@ -53,5 +53,13 @@ class TestXmippAssignmentTiltPairsWorkflow(TestWorkflow):
         self.launchProtocol(protAssigning)
         self.assertIsNotNone(protAssigning.outputCoordinatesTiltPair,
                              "There was a problem with the protocol assignment tilt pairs")
+        print '-----------------------------------------------------------'
+        num_particles = protAssigning.outputCoordinatesTiltPair.getUntilted().getSize()
+        print num_particles
+        if (num_particles>1000):
+            out_ = True
+        else:
+            out_ = None
+        self.assertIsNotNone(out_, "There was a problem with the protocol assignment tilt pairs") 
+            
         #self.validateFiles('protPicking', protPicking)  
-
