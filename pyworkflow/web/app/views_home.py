@@ -122,16 +122,13 @@ def startDownload(request):
         errors += "Please fill in the Scipion Version field.\n"
 
     if len(errors) == 0:
-        dbName = os.path.join(os.environ['SCIPION_HOME'], 'downloads.sqlite')
-        # dbName = '/tmp/downloads.sqlite'
 
         fileSplit = bundle.split("~")
         version = fileSplit[0]
         platform = fileSplit[1]
         fileName = fileSplit[2]
 
-
-        mapper = SqliteFlatMapper(dbName, globals())
+        mapper = getDownloadsMapper()
         mapper.enableAppend()
         download = DownloadRecord(fullName=fullName,
                                   organization=organization,
@@ -169,6 +166,12 @@ def startDownload(request):
         redirect(download_form)
 
 
+def getDownloadsMapper():
+    dbName = os.path.join(os.environ['SCIPION_HOME'], 'downloads.sqlite')
+    mapper = SqliteFlatMapper(dbName, globals())
+    return mapper
+
+
 def doDownload(request):
 
     # Return a response with the scipion download file
@@ -190,3 +193,23 @@ def doDownload(request):
     else:
 
         return redirect('app.views_home.download_form')
+
+
+def getDownloadsStats(request):
+
+    mapper = getDownloadsMapper()
+
+    downloaddata = mapper.selectAll(iterate=False)
+
+    result = []
+
+    for download in downloaddata:
+
+        dict = download.getObjDict()
+        del dict['email']
+        del dict['fullName']
+        result.append(dict)
+
+
+    jsonStr = json.dumps(result, ensure_ascii=False)
+    return HttpResponse(jsonStr, content_type='application/json')
