@@ -683,6 +683,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                 fnGalleryGroupMd=fnGalleryMd
                             else:
                                 fnGroup=fnImgs
+                                fnGalleryGroup=fnGallery
                                 fnGalleryGroupMd=fnGalleryMd
                             if getSize(fnGroup)==0: # If the group is empty
                                 continue
