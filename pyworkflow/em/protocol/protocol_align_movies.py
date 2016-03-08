@@ -114,22 +114,24 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _checkNewOutput(self):
         # Load previously done items (from text file)
+        if getattr(self, 'finished', False):
+            return
+
         doneList = self._readDoneList()
         # Check for newly done items
         newDone = [m for m in self.listOfMovies
                    if m.getObjId() not in doneList and self._isMovieDone(m)]
 
-        if not newDone:
-            return
-
         # Update the file with the newly done movies
-        self._writeDoneList(newDone)
+        if newDone:
+            self._writeDoneList(newDone)
+
         firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movies is equal to the number of inputs
-        finished = self.streamClosed and allDone == len(self.listOfMovies)
-        streamMode = Set.STREAM_CLOSED if finished else Set.STREAM_OPEN
+        self.finished = self.streamClosed and allDone == len(self.listOfMovies)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if self._doGenerateOutputMovies():
             # FIXME: Even if we save the move or not, both are aligned
@@ -163,7 +165,7 @@ class ProtAlignMovies(ProtProcessMovies):
             if firstTime:
                 self._defineSourceRelation(self.inputMovies, micSet)
 
-        if finished: # Unlock createOutputStep if finished all jobs
+        if self.finished: # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)

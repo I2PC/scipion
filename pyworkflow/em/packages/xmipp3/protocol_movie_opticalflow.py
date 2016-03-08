@@ -74,9 +74,6 @@ class XmippProtOFAlignment(ProtAlignMovies):
         group.addParam('groupSize', params.IntParam, default=1,
                        label="Group Size",
                        help="The number of frames in each group at the last step")
-        group.addParam('doSaveMovie', params.BooleanParam, default=False,
-                       label="Save movies",
-                       help="Save aligned movies")
 
     #--------------------------- STEPS functions ---------------------------------------------------
     def _preprocessOutputMicrograph(self, mic, movie):
