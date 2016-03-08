@@ -218,7 +218,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
             elif movieName.endswith('tbz'):
                 newMovieName = movieName.replace('.tbz', '.mrc')
-                 # we assume that if compressed the name ends with .tbz
+                # we assume that if compressed the name ends with .tbz
                 if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
             else:
@@ -301,7 +301,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         """
         pass
 
-
     # FIXME: check if the following functions could be removed
 
     def _getNameExt(self, movieName, postFix, ext):
@@ -318,7 +317,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
-
 
 
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):

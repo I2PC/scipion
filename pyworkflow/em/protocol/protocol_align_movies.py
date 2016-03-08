@@ -47,7 +47,6 @@ class ProtAlignMovies(ProtProcessMovies):
     """
     
     #--------------------------- DEFINE param functions --------------------------------------------
-
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
         self._defineAlignmentParams(form)
