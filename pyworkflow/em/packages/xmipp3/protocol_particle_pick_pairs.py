@@ -81,7 +81,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
 
     def launchParticlePickGUIStep(self):
         process = launchTiltPairPickerGUI(self.micsFn, self._getExtraPath(),
-                                          self, memory='%dg' % float(self.memory))
+                                          self, memory='%dg' % self.memory.get())
         process.wait()
 
     def _importFromFolderStep(self):
