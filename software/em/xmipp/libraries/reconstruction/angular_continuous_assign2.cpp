@@ -148,6 +148,7 @@ void ProgAngularContinuousAssign2::startProcessing()
 void ProgAngularContinuousAssign2::preProcess()
 {
     // Read the reference volume
+    Image<double> V;
     V.read(fnVol);
     V().setXmippOrigin();
     Xdim=XSIZE(V());
