@@ -24,8 +24,7 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers around xmipp_showj
-visualization program.
+This module implements viewers for Spider protocols.
 """
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
