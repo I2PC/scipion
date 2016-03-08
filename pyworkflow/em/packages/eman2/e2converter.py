@@ -42,8 +42,8 @@ MODE_READ = 'read'
 
 
 def writeParticles():
-    i = 0
     line = sys.stdin.readline()
+    fnHdf = ""
     while line:
     #for line in sys.stdin:
         objDict=json.loads(line)
@@ -93,6 +93,10 @@ def writeParticles():
             imageData.set_attr('xform.projection', transformation)
         
         outputFile = str(objDict['hdfFn'])
+        if outputFile != fnHdf:
+            i = 0
+            fnHdf = outputFile
+
         imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
         i += 1
         print "OK"
