@@ -100,6 +100,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if os.path.exists(setFile):
             outputSet = SetClass(filename=setFile)
+            outputSet.loadAllProperties()
             outputSet.enableAppend()
         else:
             outputSet = SetClass(filename=setFile)

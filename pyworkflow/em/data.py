@@ -1657,8 +1657,9 @@ class SetOfMovies(SetOfMicrographsBase):
         ####self._firstFrameNum.set(self.getDimensions()[3])
         if self._firstDim.isEmpty():
             try:
-                self._firstDim.set(self.getFirstItem().getDim())
-                dimStr = str(self._firstDim)
+                dimStr = 'No-Dim'
+                #self._firstDim.set(self.getFirstItem().getDim())
+                #dimStr = str(self._firstDim)
                 #self._firstFrameNum.set(self.getDimensions()[3])
             except Exception, ex:
                 dimStr = 'No-Dim'
