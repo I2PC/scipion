@@ -499,6 +499,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fh.write("Average number of directions per used image: %f\n"%(float(Nrepeated)/Nunique))
             fh.close()
     
+    def checkInfoField(self,fnDir,block):
+        fnInfo = join(fnDir,"iterInfo.xmd")
+        if not exists(fnInfo):
+            return False
+        blocks = xmipp.getBlocksInMetaDataFile(fnInfo)
+        return block in blocks
+
     def readInfoField(self,fnDir,block,label):
         mdInfo = xmipp.MetaData("%s@%s"%(block,join(fnDir,"iterInfo.xmd")))
         return mdInfo.getValue(label,mdInfo.firstObject())
@@ -510,6 +517,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         mdInfo.write("%s@%s"%(block,join(fnDir,"iterInfo.xmd")),xmipp.MD_APPEND)
     
     def prepareImages(self,fnDirPrevious,fnDir,TsCurrent,getShiftsFrom=''):
+        if self.checkInfoField(fnDir,"count"):
+            state = self.readInfoField(fnDir, "count", xmipp.MDL_COUNT)
+            if state>=1:
+                return
+        
         print "Preparing images to sampling rate=",TsCurrent
         Xdim=self.inputParticles.get().getDimensions()[0]
         newXdim=long(round(Xdim*self.TsOrig/TsCurrent))
@@ -557,8 +569,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                             (fnImagesi,fnPreviousAngles,fnAux),numberOfMpi=1)
                 self.adaptShifts(fnAux, TsPrevious, fnImagesi, TsCurrent)
             cleanPath(fnAux)
+        self.writeInfoField(fnDir,"count",xmipp.MDL_COUNT,long(1))
         
     def prepareReferences(self,fnDirPrevious,fnDir,TsCurrent,targetResolution):
+        if self.checkInfoField(fnDir,"count"):
+            state = self.readInfoField(fnDir, "count", xmipp.MDL_COUNT)
+            if state>=2:
+                return
+
         print "Preparing references to sampling rate=",TsCurrent
         fnMask=''
         newXdim=self.readInfoField(fnDir,"size",xmipp.MDL_XSIZE)
@@ -597,6 +615,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             
         if fnMask!='':
             cleanPath(fnMask)
+        self.writeInfoField(fnDir,"count",xmipp.MDL_COUNT,long(2))
 
     def prepareMask(self,maskObject,fnMask,TsMaskOut,XdimOut):
         img=ImageHandler()
@@ -1101,6 +1120,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     cleanPath(join(fnLocal,"anglesCont%02d.stk"%i))
                     cleanPath(join(fnLocal,"anglesDisc%02d.xmd"%i))
                     cleanPath(join(fnLocal,"volumeRef%02d.vol"%i))
+                fnCorrectedImages=join(fnDirCurrent,"images_corrected%02d.stk"%i)
+                if exists(fnCorrectedImages) and iteration!=self.firstIteration+self.numberOfIterations.get()-1:
+                    cleanPath(fnCorrectedImages) # Delete corrected images except for the last iteration
                     #if self.weightResiduals:
                     #    cleanPath(join(fnLocal,"covariance%02d.stk"%i))
                     #    cleanPath(join(fnLocal,"residuals%02i.stk"%i))
