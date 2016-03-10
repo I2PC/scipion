@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippParticlePicking protocol
-"""
 
 from pyworkflow.em import ProtParticlePicking, PointerParam, FloatParam, String, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import pw, getFiles, copyFile, join, exists
@@ -41,17 +38,14 @@ import os
 
 
 class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
-
-    """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using supervised picking support  """
+    """ Picks particles in a set of untilted-tilted pairs of micrographs. """
     _label = 'tilt pairs particle picking'
     
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
-               
-    
+
     #--------------------------- DEFINE param functions --------------------------------------------    
     def _defineParams(self, form):
     
@@ -91,7 +85,6 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         process.wait()
         print 'launch ended'
 
-        
     def _importFromFolderStep(self):
         """ This function will copy Xmipp .pos files for
         simulating a particle picking run...this is only

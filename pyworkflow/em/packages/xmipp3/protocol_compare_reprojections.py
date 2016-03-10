@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around Projection Outliers Xmipp program
-"""
 
 from math import floor
 from os.path import exists

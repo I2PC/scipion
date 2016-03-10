@@ -23,84 +23,127 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtMultipleFSCs protocol
-"""
-from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
-from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.protocol.params import MultiPointerParam, PointerParam, BooleanParam
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-import os
 
-class XmippProtMultipleFSCs(ProtAnalysis3D):
+from pyworkflow.protocol.constants import STEPS_PARALLEL
+import pyworkflow.protocol.params as params
+
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
+
+
+
+class XmippProtMultipleFSCs(em.ProtAnalysis3D):
     """
-    Normalize the local strain and rotations amongst several runs
+    Compute the FSCs between a reference volume and a set of input volumes.
+    A mask can be provided and the volumes are aligned by default.
     """
     _label = 'multiple fscs'
-    
+
     def __init__(self, **args):
-        ProtAnalysis3D.__init__(self, **args)
+        em.ProtAnalysis3D.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
 
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('referenceVolume', PointerParam, label="Reference volume",
+        form.addParam('referenceVolume', params.PointerParam,
                       pointerClass='Volume',
+                      label="Reference volume",
                       help='The rest of volumes will be compared to this one')
-        form.addParam('inputVolumes', MultiPointerParam, label="Volumes to compare",
+
+        form.addParam('inputVolumes', params.MultiPointerParam,
                       pointerClass='Volume',
-                      help='Collection of volumes to compare to the reference volume')
-        form.addParam('mask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
-                      help='A mask may be provided and it is applied before comparing the different volumes')
-        form.addParam('doAlign', BooleanParam, label="Align volumes", default=True,
-                      help="Align volumes to reference before comparing. A local alignment is performed so the initial "
-                      "orientation of the volumes should be relatively similar")
+                      label="Volumes to compare",
+                      help='Set of volumes to compare to the reference volume')
+        form.addParam('mask', params.PointerParam,
+                      pointerClass='VolumeMask', allowsNull=True,
+                      label="Mask",
+                      help='A mask may be provided and it is applied before '
+                           'comparing the different volumes')
+        form.addParam('doAlign', params.BooleanParam, default=True,
+                      label="Align volumes?",
+                      help="Align volumes to reference before comparing. A local "
+                           "alignment is performed so the initial orientation "
+                           "of the volumes should be relatively similar")
         form.addParallelSection(threads=8, mpi=1)
 
-#--------------------------- INSERT steps functions --------------------------------------------  
-                                
+#--------------------------- INSERT steps functions --------------------------------------------
+
     def _insertAllSteps(self):
-        stepId = self._insertFunctionStep('prepareReference',self.referenceVolume.get().getObjId())
-        i = 0
-        for vol in self.inputVolumes:
-            fnVol = getImageLocation(vol.get())
-            self._insertFunctionStep('compareVolume',fnVol, i, prerequisites=[stepId])
-            i+=1
+        stepId = self._insertFunctionStep('prepareReferenceStep',
+                                          self.referenceVolume.get().getObjId())
+        allVols = []
+        for i, vol in enumerate(self.inputVolumes):
+            volId = self._insertFunctionStep('compareVolumeStep',
+                                             vol.get().getLocation(), i+1,
+                                             prerequisites=[stepId])
+            allVols.append(volId)
 
-    def prepareReference(self,volId):
-        if self.mask.hasValue():
-            img=ImageHandler()
-            fnMask = self._getExtraPath("mask.vol")
-            img.convert(self.mask.get(), fnMask)
+        self._insertFunctionStep('createOutputStep', prerequisites=allVols)
 
-            referenceXdim = self.referenceVolume.get().getDim()[0]
-            maskXdim= self.mask.get().getDim()[0]
-            if referenceXdim!=maskXdim:
-                self.runJob('xmipp_image_resize',"-i %s --dim %d"%(fnMask,referenceXdim))
-            fnRef = self._getExtraPath("reference.vol")
-            img.convert(self.referenceVolume.get(), fnRef)
-            self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnRef, fnMask))
-    
-    def compareVolume(self,fnVol,i):
-        img=ImageHandler()
-        referenceXdim = self.referenceVolume.get().getDim()[0]
+    def _resizeVolume(self, volFn):
+        """ Resize input volume if not of the same size of referenceVol """
+        refDim = self.referenceVolume.get().getXDim()
+        volDim = em.ImageHandler().getDimensions(volFn)
+        if refDim != volDim:
+            self.runJob('xmipp_image_resize',
+                        "-i %s --dim %d" % (volFn, refDim))
+
+    def _maskVolume(self, volFn):
+        """ Mask input volume multiplying by mask.vol. """
+        self.runJob("xmipp_image_operate",
+                    "-i %s --mult %s" % (volFn, self._getExtraPath("mask.vol")))
+
+    def prepareReferenceStep(self,volId):
+        inputMask = self.mask.get()
+
+        ih = em.ImageHandler()
         fnRef = self._getExtraPath("reference.vol")
-        if not os.path.exists(fnRef):
-            fnRef = getImageLocation(self.referenceVolume.get())
-        
-        volumeXdim, _, _, _ =img.getDimensions((1,fnVol))
-        fnRoot = self._getExtraPath("volume_%02d"%i)
-        if referenceXdim!=volumeXdim or self.doAlign.get() or self.mask.hasValue():
-            fnExtraVol = fnRoot + ".vol"
-            self.runJob("xmipp_image_convert","-i %s -o %s"%(fnVol,fnExtraVol))
-            if referenceXdim!=volumeXdim:
-                self.runJob('xmipp_image_resize',"-i %s --dim %d"%(fnExtraVol,referenceXdim))
-            if self.doAlign:
-                self.runJob('xmipp_volume_align',"--i1 %s --i2 %s --apply --local"%(fnRef,fnExtraVol))
-            if self.mask.hasValue():
-                self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnExtraVol, self._getExtraPath("mask.vol")))
-            fnVol = fnExtraVol
-        
-        self.runJob("xmipp_resolution_fsc","--ref %s -i %s -o %s --sampling_rate %f"%\
-                    (fnRef, fnVol, fnRoot+".fsc", self.referenceVolume.get().getSamplingRate()))
+        ih.convert(self.referenceVolume.get(), fnRef)
+
+        if inputMask is not None:
+            fnMask = self._getExtraPath("mask.vol")
+            ih.convert(self.mask.get(), fnMask)
+            self._resizeVolume(fnMask)
+            self._maskVolume(fnRef)
+
+    def compareVolumeStep(self, volLoc, i):
+        ih = em.ImageHandler()
+        fnRef = self._getExtraPath("reference.vol")
+        sampling = self.referenceVolume.get().getSamplingRate()
+        fnRoot = self._getExtraPath("volume_%02d" % i)
+        fnVol = fnRoot + ".vol"
+        ih.convert(volLoc, fnVol)
+
+        # Resize if the volume has different size than the reference
+        self._resizeVolume(fnVol)
+
+        if self.doAlign: # Align against the reference if selected
+            self.runJob('xmipp_volume_align',
+                        "--i1 %s --i2 %s --apply --local" % (fnRef, fnVol))
+
+        if self.mask.hasValue(): # Mask volume if input mask
+            self._maskVolume(fnVol)
+
+        # Finally compute the FSC
+        args = "--ref %s -i %s -o %s_fsc.xmd --sampling_rate %f" % (fnRef, fnVol,
+                                                                fnRoot, sampling)
+        self.runJob("xmipp_resolution_fsc", args)
+
+    def createOutputStep(self):
+        fscSet = self._createSetOfFSCs()
+
+        for i, vol in enumerate(self.inputVolumes):
+            index = i + 1
+            fnFsc = self._getExtraPath("volume_%02d_fsc.xmd" % index)
+            mdFsc = md.MetaData(fnFsc)
+            fscLabel = vol.get().getObjLabel() or 'FSC %d' % index
+            fsc = em.FSC(objLabel=fscLabel)
+            fsc.loadFromMd(mdFsc, md.MDL_RESOLUTION_FREQ, md.MDL_RESOLUTION_FRC)
+            fscSet.append(fsc)
+
+        self._defineOutputs(outputFSCs=fscSet)
+
+        self._defineSourceRelation(self.referenceVolume, fscSet)
+        for i, vol in enumerate(self.inputVolumes):
+            self._defineSourceRelation(vol, fscSet)
+

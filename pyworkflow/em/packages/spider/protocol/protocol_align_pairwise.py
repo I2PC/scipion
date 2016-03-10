@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for particles filters operations
-"""
 
 import pyworkflow.utils as pwutils
 from pyworkflow.em import IntParam
@@ -37,13 +34,13 @@ from protocol_align_base import SpiderProtAlign
 
       
 class SpiderProtAlignPairwise(SpiderProtAlign):
-    """ Reference-free alignment shift and rotational alignment of an image series. 
-    
-    This alignment scheme aligns a pair of images at a time and then averages 
-    them. Then, the averages of each of those pairs is aligned and averages, 
-    and then pairs of those pairs, etc. Compared to [[http://spider.wadsworth.org/spider_doc/spider/docs/man/apsr.html][AP SR]], this alignment 
-    scheme appears to be less random, which chooses seed images as alignment 
-    references.
+    """ Reference-free alignment (both translational and rotational) of an image series.
+
+    This alignment scheme aligns a pair of images at a time and then averages them.
+    Then, the averages of each of those pairs are aligned and averaged,
+    and then pairs of those pairs, etc.
+    Compared to [[http://spider.wadsworth.org/spider_doc/spider/docs/man/apsr.html][AP SR]], this alignment 
+    scheme appears to be less random, which chooses seed images as alignment references.
     
     For more information, see Step 2b at [[http://spider.wadsworth.org/spider_doc/spider/docs/techs/MSA/index.html#pairwise][SPIDER's MDA online manual]]
     """

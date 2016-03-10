@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippParticlePicking protocol
-"""
 
 from pyworkflow.em import *  
 from pyworkflow.utils.path import *  

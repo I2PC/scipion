@@ -24,10 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from numpy.core.defchararray import endswith
-"""
-This sub-package will contains Xmipp3.1 specific protocols
-"""
 
 import os
 import sys
