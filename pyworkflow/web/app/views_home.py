@@ -28,11 +28,10 @@
 import os
 import json
 from django.shortcuts import render_to_response, redirect
-from pyworkflow.web.app.views_util import parseText, getResource
+from pyworkflow.web.app.views_util import  getResource
 from pyworkflow.web.app.views_base import base_grid
-from django.http import HttpResponse, HttpResponseNotFound, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotFound
 from django.core.context_processors import csrf
-from pyworkflow.web.pages import settings as django_settings
 from pyworkflow.mapper.sqlite import SqliteFlatMapper
 # Depending on DJANGO version (first is for DJANGO 1.9) second for 1.5.5
 try:
@@ -50,6 +49,7 @@ FILE_TO_DOWNLOAD = 'fileToDownload'
 
 DB_PATH_DOWNLOAD = os.path.join(pw.HOME, 'web', 'home', "download_statistics.db")
 DOWNLOADABLES_FILE = 'file'
+
 
 def home(request):
     context = {}
@@ -84,6 +84,10 @@ def loadDownloadables():
 
 def checkDowloadablesExistence(downloadables):
     """ Structure should be like this:
+
+    Parameters
+    ----------
+    downloadables: list of downloadable files
 
     """
 
@@ -159,7 +163,6 @@ def startDownload(request):
         context = base_grid(request, context)
         context.update(csrf(request))
 
-
         return render_to_response('home/startdownload.html', context)
 
     else:
@@ -197,19 +200,29 @@ def doDownload(request):
 
 def getDownloadsStats(request):
 
-    mapper = getDownloadsMapper()
+    jsonStr = getDownloadsStatsToJSON()
 
-    downloaddata = mapper.selectAll(iterate=False)
-
-    result = []
-
-    for download in downloaddata:
-
-        dict = download.getObjDict()
-        del dict['email']
-        del dict['fullName']
-        result.append(dict)
-
-
-    jsonStr = json.dumps(result, ensure_ascii=False)
     return HttpResponse(jsonStr, content_type='application/json')
+
+
+def getDownloadsStatsToJSON():
+    mapper = getDownloadsMapper()
+    downloadData = mapper.selectAll()
+    result = []
+    for download in downloadData:
+        ddict = download.getObjDict()
+        del ddict['email']
+        del ddict['fullName']
+        ddict['timeStamp'] = download.getObjCreation()
+        result.append(ddict)
+    jsonStr = json.dumps(result, ensure_ascii=False)
+    return jsonStr
+
+
+def showDownloadStats(request):
+
+    context = {"downloadsJSON": getDownloadsStatsToJSON()}
+
+    context = base_grid(request, context)
+
+    return render_to_response('home/download_stats.html', context)

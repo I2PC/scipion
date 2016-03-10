@@ -1,0 +1,312 @@
+{% extends "layouts/100.html" %}
+
+{% block title %}Scipion download statistics{% endblock %}
+
+
+{% block js %}
+    {{ block.super }}
+
+	<script type="text/javascript" src="{{utils}}"></script>
+	<script type="text/javascript" src="{{config}}"></script>
+	<script src="http://code.highcharts.com/highcharts.js"></script>
+{% endblock %}
+
+{% block main_col %}
+	<h1 class="primary">Scipion download statistics page</h1>
+	<div id="piebyplatform"></div>
+	<div id="piebycountry"></div>
+	<div id="downloadsovertime"></div>
+
+
+	<script>
+	var downloadData = {{downloadsJSON|safe}};
+	var downloadsAggregation = {};
+
+	$(function () {
+
+		$(document).ready(function () {
+			loadCharts();
+		});
+	});
+
+	function loadCharts() {
+
+		prepareData();
+
+		loadPlatformChart();
+		loadCountryChart();
+		loadDownloadsTimeSeries();
+	}
+
+	function loadPlatformChart(){
+		var data = propertyAggregationToPieChartData(downloadsAggregation['platform'], 'Platform');
+
+		loadPieChart('#piebyplatform', 'Download by platform', data);
+	};
+
+	function loadCountryChart(){
+		var data = propertyAggregationToPieChartData(downloadsAggregation['country'], 'Country', 3);
+		loadPieChart('#piebycountry', 'Downloads by country', data);
+	};
+
+	function loadDownloadsTimeSeries(){
+		loadZoomableTimeSeries('#downloadsovertime', 'Downloads over time', propertyAggregationToTimeSeries(downloadsAggregation['timeStamp'], 'Downloads'))
+	};
+
+	function prepareData(){
+
+		// Aggregate data
+		aggregateAll(downloadData, downloadsAggregation);
+
+
+	}
+
+	// Aggregate all data in a matrix
+	function aggregateAll(matrix, aggregatedSet){
+
+		for (var line in matrix){
+
+			aggregateLine(matrix[line], aggregatedSet)
+
+		}
+	}
+
+	// Aggregate a line
+	function aggregateLine(line, aggregatedSet){
+
+		for (var prop in line) {
+
+			aggregateProperty(prop, line, aggregatedSet)
+
+		}
+	}
+
+	function aggregateProperty(prop, line, aggregatedSet){
+
+		var propertyAggregation = getPropertyAggregation(prop,aggregatedSet) ;
+
+		var value = line[prop];
+
+		value = normalizeValue(value, prop);
+
+		aggregateValue(value, propertyAggregation)
+
+	}
+
+	function normalizeValue(value, property){
+
+		if (isDate(value, property)){
+			return normalizeDate(value);
+		} else {
+			return value;
+		}
+
+
+	}
+
+	function isDate(value, property){
+
+		return property == "timeStamp"
+	}
+	function normalizeDate(date){
+
+		if (typeof(date) == "string") {
+			date = new Date(date);
+		}
+
+		return removeTimeFromDate(date)
+
+	}
+
+	function removeTimeFromDate(date){
+
+		return new Date(date.toISOString().slice(0,10));
+	}
+
+	function aggregateValue(value, aggregation){
+
+		aggregation[value] = getObjectAttribute(aggregation, value,0)+1;
+
+	}
+
+	function getObjectAttribute(object, attribute, defaultValue){
+
+		if (object[attribute] === undefined){
+			object[attribute]= defaultValue;
+		}
+
+		return object[attribute];
+
+	}
+	function getPropertyAggregation(prop, aggregatedSet){
+
+		return getObjectAttribute(aggregatedSet, prop, {})
+	}
+
+	/* Converts a standard property aggregation
+	  {
+	  "Linux 64 bits": 76,
+	  "Source code": 20
+	  }
+
+	  to a Highcharts series structure: http://www.highcharts.com/docs/chart-concepts/series
+
+	  series: [{
+  		  name: 'Linux 64 bits'
+    	  y: 76
+	  	},
+	  	{
+  		  name: 'Source'
+    	  y: 24
+	  	}
+	  ]
+
+	*/
+	function propertyAggregationToPieChartData(propertyAggregation, name, min) {
+
+		var series = [{
+			name:name,
+			data:[]
+		}];
+
+		var minPie = {name:"Others", y:0}
+		for (prop in propertyAggregation){
+
+			var value = propertyAggregation[prop];
+
+			if( min !== undefined && value < min ) {
+				minPie.y = minPie.y + value;
+
+			} else {
+
+				var pie = {
+				name: prop,
+				y:value
+
+			};
+
+			series[0].data.push(pie);
+			}
+		}
+
+		// If there is a min
+		if (minPie){
+			series[0].data.push(minPie);
+		}
+
+		return series;
+
+	};
+
+	function propertyAggregationToTimeSeries(propertyAggregation, name) {
+	// Sample chart: http://www.highcharts.com/demo/line-time-series/sand-signika
+	// Sample data: https://www.highcharts.com/samples/data/jsonp.php?filename=usdeur.json
+		var series = [{
+			type: 'area',
+			name: name,
+			data: []
+		}];
+
+		var serie = [];
+
+		for (prop in propertyAggregation){
+
+			var point = [
+			prop, propertyAggregation[prop]
+			];
+
+			serie.push(point);
+		}
+
+		series[0].data = serie;
+
+		return series;
+
+	};
+
+	function loadPieChart(container, title, data){
+
+		// Build the chart
+		$(container).highcharts({
+			chart: {
+				plotBackgroundColor: null,
+				plotBorderWidth: null,
+				plotShadow: false,
+				type: 'pie'
+			},
+			title: {
+				text: title
+			},
+			tooltip: {
+				pointFormat: '{series.name}: <b>{point.y}</b> ({point.percentage:.1f}%)'
+			},
+			plotOptions: {
+				pie: {
+					allowPointSelect: true,
+					cursor: 'pointer',
+					dataLabels: {
+						enabled: false
+					},
+					showInLegend: true
+				}
+			},
+			series: data
+		});
+	};
+
+	function loadZoomableTimeSeries(container, title, data){
+
+		$(container).highcharts({
+            chart: {
+                zoomType: 'x'
+            },
+            title: {
+                text: title
+            },
+            subtitle: {
+                text: document.ontouchstart === undefined ?
+                        'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                title: {
+                    text: 'Downloads'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, Highcharts.getOptions().colors[0]],
+                            [1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                        ]
+                    },
+                    marker: {
+                        radius: 2
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1
+                        }
+                    },
+                    threshold: null
+                }
+            },
+            series: data
+        });
+	};
+
+	</script>
+{% endblock %}

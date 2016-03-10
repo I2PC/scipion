@@ -108,7 +108,8 @@ mainUrls = ['',
     url(r'^download_form/', 'app.views_home.download_form'),
     url(r'^startdownload/', 'app.views_home.startDownload'),
     url(r'^download/', 'app.views_home.doDownload'),
-    url(r'^getdownloadsdata/', views_home.getDownloadsStats),
+    url(r'^getdownloadsdata', views_home.getDownloadsStats),
+    url(r'^downloadstats', views_home.showDownloadStats),
 
     # To serve different static files
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT}),
