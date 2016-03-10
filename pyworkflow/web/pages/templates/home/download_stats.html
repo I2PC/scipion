@@ -1,6 +1,6 @@
 {% extends "layouts/100.html" %}
 
-{% block title %}Scipion download statistics{% endblock %}
+{% block title %}Scipion downloads statistics{% endblock %}
 
 
 {% block js %}
@@ -9,13 +9,16 @@
 	<script type="text/javascript" src="{{utils}}"></script>
 	<script type="text/javascript" src="{{config}}"></script>
 	<script src="http://code.highcharts.com/highcharts.js"></script>
+	<script src="http://code.highcharts.com/themes/sand-signika.js"></script>
+	<script src="https://code.highcharts.com/modules/exporting.js"></script>
 {% endblock %}
 
 {% block main_col %}
-	<h1 class="primary">Scipion download statistics page</h1>
-	<div id="piebyplatform"></div>
-	<div id="piebycountry"></div>
-	<div id="downloadsovertime"></div>
+	<h1 class="primary">Scipion download statistics</h1>
+	<div id="piebyplatform"></div><br/>
+	<div id="piebycountry"></div><br/>
+	<div id="downloadsovertime"></div><br/>
+	<div id="piebysubscription"></div><br/>
 
 
 	<script>
@@ -36,21 +39,27 @@
 		loadPlatformChart();
 		loadCountryChart();
 		loadDownloadsTimeSeries();
+		loadSubscriptionChart();
 	}
 
 	function loadPlatformChart(){
-		var data = propertyAggregationToPieChartData(downloadsAggregation['platform'], 'Platform');
+		var data = propertyAggregationToPieChartData(downloadsAggregation['platform'], 'downloads');
 
 		loadPieChart('#piebyplatform', 'Download by platform', data);
 	};
 
 	function loadCountryChart(){
-		var data = propertyAggregationToPieChartData(downloadsAggregation['country'], 'Country', 3);
+		var data = propertyAggregationToPieChartData(downloadsAggregation['country'], 'downloads', 3);
 		loadPieChart('#piebycountry', 'Downloads by country', data);
 	};
 
 	function loadDownloadsTimeSeries(){
 		loadZoomableTimeSeries('#downloadsovertime', 'Downloads over time', propertyAggregationToTimeSeries(downloadsAggregation['timeStamp'], 'Downloads'))
+	};
+
+	function loadSubscriptionChart(){
+		var data = propertyAggregationToPieChartData(downloadsAggregation['subscription'], 'users');
+		loadPieChart('#piebysubscription', 'Subscription', data);
 	};
 
 	function prepareData(){
@@ -169,7 +178,7 @@
 			data:[]
 		}];
 
-		var minPie = {name:"Others", y:0}
+		var minPie = {name:"Others (&lt;" + min + ')', y:0}
 		for (prop in propertyAggregation){
 
 			var value = propertyAggregation[prop];
@@ -190,7 +199,7 @@
 		}
 
 		// If there is a min
-		if (minPie){
+		if (min){
 			series[0].data.push(minPie);
 		}
 
@@ -202,7 +211,7 @@
 	// Sample chart: http://www.highcharts.com/demo/line-time-series/sand-signika
 	// Sample data: https://www.highcharts.com/samples/data/jsonp.php?filename=usdeur.json
 		var series = [{
-			type: 'area',
+			type: 'column',
 			name: name,
 			data: []
 		}];
@@ -211,8 +220,10 @@
 
 		for (prop in propertyAggregation){
 
+			var date = new Date(prop);
+			var dateMilis = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 			var point = [
-			prop, propertyAggregation[prop]
+			dateMilis, propertyAggregation[prop]
 			];
 
 			serie.push(point);
@@ -280,6 +291,7 @@
             },
             plotOptions: {
                 area: {
+					stacking: 'normal',
                     fillColor: {
                         linearGradient: {
                             x1: 0,

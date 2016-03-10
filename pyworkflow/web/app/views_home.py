@@ -214,6 +214,9 @@ def getDownloadsStatsToJSON():
         del ddict['email']
         del ddict['fullName']
         ddict['timeStamp'] = download.getObjCreation()
+
+        # Convert subscription: 0 = Yes 1 = No
+        ddict['subscription']= 'Yes' if ddict['subscription'] == '0' else 'No'
         result.append(ddict)
     jsonStr = json.dumps(result, ensure_ascii=False)
     return jsonStr
