@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the  protocol
-"""
 
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em

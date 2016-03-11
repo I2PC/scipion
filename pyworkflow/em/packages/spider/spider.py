@@ -23,9 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package will contains Spider protocols
-"""
+
 import os
 from os.path import join, dirname, abspath
 import subprocess

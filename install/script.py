@@ -461,6 +461,7 @@ cryoem = env.addPackage(
                 tar='cryoem-1.0.tgz',
                 default=False,
                 pythonMod=True,
+                numpyIncludes=True,
                 deps=[numpy, scipy, matplotlib, cythongsl])
 
 env.addPackage('gEMpicker_v1.1',
@@ -469,6 +470,10 @@ env.addPackage('gEMpicker_v1.1',
 
 env.addPackage('Gctf_v0.50',
                tar='Gctf_v0.50.tgz',
+               default=False)
+
+env.addPackage('Gautomatch_v0.50',
+               tar='Gautomatch_v0.50.tgz',
                default=False)
 
 env.execute()

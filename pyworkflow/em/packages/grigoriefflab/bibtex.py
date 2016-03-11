@@ -134,7 +134,18 @@ author = "Lyumkis, Dmitry  and Brilot, Axel F.  and Theobald, Douglas L.  and Gr
 keywords = "Electron microscopy, Maximum likelihood, Classification, Single particle, Protein structure "
 }
 
-
+@Article{Rohou2015,
+   Author="Rohou, A.  and Grigorieff, N. ",
+   Title="{{C}{T}{F}{F}{I}{N}{D}4: {F}ast and accurate defocus estimation from electron micrographs}",
+   Journal="J. Struct. Biol.",
+   Year="2015",
+   Volume="192",
+   Number="2",
+   Pages="216--221",
+   Month="Nov",
+   doi = "http://dx.doi.org/10.1016/j.jsb.2015.08.008",
+   url = "http://www.sciencedirect.com/science/article/pii/S1047847715300460"
+}
 """
 
 

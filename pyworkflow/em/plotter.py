@@ -31,7 +31,9 @@ from itertools import izip
 import matplotlib.pyplot as plt
 
 from pyworkflow.gui.plotter import Plotter
-import pyworkflow.em.metadata as md
+import metadata as md
+
+
 
 class EmPlotter(Plotter):
     ''' Class to create several plots'''
