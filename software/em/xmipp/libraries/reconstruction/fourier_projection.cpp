@@ -201,6 +201,7 @@ void FourierProjector::produceSideInfo()
     volume->clear();
     // Make Fourier transform, shift the volume origin to the volume center and center it
     MultidimArray< std::complex<double> > Vfourier;
+    FourierTransformer transformer3D;
     transformer3D.completeFourierTransform(Vpadded,Vfourier);
     ShiftFFT(Vfourier, FIRST_XMIPP_INDEX(XSIZE(Vpadded)), FIRST_XMIPP_INDEX(YSIZE(Vpadded)), FIRST_XMIPP_INDEX(ZSIZE(Vpadded)));
     CenterFFT(Vfourier,true);

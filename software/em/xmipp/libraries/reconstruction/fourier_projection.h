@@ -48,7 +48,7 @@ public:
 
 public:
     // Auxiliary FFT transformer
-    FourierTransformer transformer3D, transformer2D;
+    FourierTransformer transformer2D;
 
     // Volume to project
     MultidimArray<double> *volume;
