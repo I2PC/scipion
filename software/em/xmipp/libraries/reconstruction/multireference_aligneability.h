@@ -44,9 +44,15 @@ class MultireferenceAligneability: public XmippProgram
 public:
     /** Filenames */
     FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles, fnParticlesRef;
+
     bool donNotUseWeights;
+
     bool check_mirror;
     SymList SL;
+
+    size_t rank, Nprocessors;
+
+    MetaData mdPartialParticles;
 
 private:
     size_t Xdim,Ydim,Zdim,Ndim;
@@ -55,6 +61,8 @@ private:
 
 
 public:
+
+    MultireferenceAligneability();
 
     void readParams();
 
@@ -74,7 +82,11 @@ private:
 
     void obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy,double & accuracyMirror);
 
+    /// Gather alignment
+    virtual void gatherResults() {}
 
+    /// Synchronize with other processors
+    virtual void synchronize() {}
 };
 
 

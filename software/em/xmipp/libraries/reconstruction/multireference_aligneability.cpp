@@ -36,6 +36,12 @@
 #include <data/metadata.h>
 
 
+MultireferenceAligneability::MultireferenceAligneability()
+{
+	rank=0;
+	Nprocessors=1;
+}
+
 void MultireferenceAligneability::readParams()
 {
 	fnParticles = getParam("-i");
@@ -53,7 +59,6 @@ void MultireferenceAligneability::readParams()
 
 void MultireferenceAligneability::defineParams()
 {
-    //usage
     addUsageLine("This function takes a volume and a set of projections with orientations. The volume is projected into the set of projection directions defining the "
     		"the reference projections. Thus, using the projections and references, calculation of the particle alignment precision and accuracy is carried out");
     addParamsLine("  [ -i <md_file> ]  : Input metadata with images and their angles to be validated against the volume");
@@ -74,7 +79,7 @@ void MultireferenceAligneability::run()
 	//xmipp_multireference_aligneability --volume 1BRD.vol --sym c3 --odir testMultiReference/ --angles_file testMultiReference/angles_iter001_00.xmd --angles_file_ref testMultiReference/gallery_alignment/angles_iter001_00.xmd &
     randomize_random_generator();
 
-    MetaData mdOutCL, mdOutQ;
+    MetaData mdOutQ;
 	MetaData mdExp, mdExpSort, mdProj, mdGallery, mdInputParticles, mdInputParticlesRef;
 	size_t maxNImg;
 	FileName fnOutCL, fnOutQ;
@@ -83,11 +88,6 @@ void MultireferenceAligneability::run()
 
     int symmetry, sym_order;
     SL.readSymmetryFile(fnSym.c_str());
-
-    //SL.isSymmetryGroup(fnSym.c_str(), symmetry, sym_order);
-    //double non_reduntant_area_of_sphere = SL.nonRedundantProjectionSphere(symmetry,sym_order);
-    //double area_of_sphere_no_symmetry = 4.*PI;
-    //double correction = std::sqrt(non_reduntant_area_of_sphere/area_of_sphere_no_symmetry);
 
 	mdInputParticles.read(fnParticles);
 	mdInputParticlesRef.read(fnParticles);
@@ -107,7 +107,9 @@ void MultireferenceAligneability::run()
 	validationAlignabilityAccuracy = 0;
 	validationAlignability = 0;
 	validationMirror = 0;
-	init_progress_bar(maxNImg);
+
+	if (rank==0)
+		init_progress_bar(maxNImg);
 
 	MetaData tempMdExp, tempMdProj;
 	double sum_w_exp;
@@ -130,7 +132,7 @@ void MultireferenceAligneability::run()
 	//Noise
 	calc_sumw2(numProjs, sum_noise, mdGallery);
 
-	double rank = 0.;
+	double rankPrec = 0.;
 	double rankAcc = 0.;
 	double rankMirror = 0.;
 
@@ -141,95 +143,105 @@ void MultireferenceAligneability::run()
 
 	char hold;
 	FileName imagePath;
+
 	for (size_t i=0; i<=maxNImg;i++)
 	{
-		expression = formatString("imageIndex == %lu",i);
-		tempMdExp.importObjects(mdExp, MDExpression(expression));
-		tempMdProj.importObjects(mdProj, MDExpression(expression));
-		mdInputParticles.getRow(rowInput,i+1);
-		mdInputParticles.getRow(rowInputRef,i+1);
+		if ((i+1)%Nprocessors==rank)
+		{
+			expression = formatString("imageIndex == %lu",i);
+			tempMdExp.importObjects(mdExp, MDExpression(expression));
+			tempMdProj.importObjects(mdProj, MDExpression(expression));
+			mdInputParticles.getRow(rowInput,i+1);
+			mdInputParticles.getRow(rowInputRef,i+1);
 
 
-		if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
-			continue;
+			if ( (tempMdExp.size()==0) || (tempMdProj.size()==0))
+				continue;
 
-		tempMdExp.getRow(row,1);
-		calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
-		calc_sumu(tempMdProj, sum_w_proj, error_mirror_proj);
+			calc_sumu(tempMdExp, sum_w_exp, error_mirror_exp);
+			calc_sumu(tempMdProj, sum_w_proj, error_mirror_proj);
 
-		obtainAngularAccuracy(tempMdExp, rowInput, accuracy, accuracyMirror);
-		obtainAngularAccuracy(tempMdProj, rowInputRef, accuracyRef, accuracyMirrorRef);
+			obtainAngularAccuracy(tempMdExp, rowInput, accuracy, accuracyMirror);
+			obtainAngularAccuracy(tempMdProj, rowInputRef, accuracyRef, accuracyMirrorRef);
 
 #ifdef DEBUG
 
-		std::cout << " " << std::endl;
-		std::cout << "accuracy "    << accuracy << std::endl;
-		std::cout << "accuracyRef " << accuracyRef << std::endl;
-		std::cout << "accuracy2f " << accuracyRef/accuracy << std::endl;
+			std::cout << " " << std::endl;
+			std::cout << "accuracy "    << accuracy << std::endl;
+			std::cout << "accuracyRef " << accuracyRef << std::endl;
+			std::cout << "accuracy2f " << accuracyRef/accuracy << std::endl;
 
 
 
 #endif
 #undef DEBUG
 
-		rank = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
-		rankAcc = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
-		rankMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
-/*
-		if (sum_w_proj > sum_w_exp)
-			rank = 0;
+			rankPrec = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
+			rankAcc = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
+			rankMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
 
-		if (sum_w_exp > sum_noise)
-			rank = 0;
+			tempMdExp.getValue(MDL_IMAGE,imagePath,1);
+			rowInput.setValue(MDL_IMAGE,imagePath);
+			rowInput.setValue(MDL_IMAGE_IDX,i);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rankPrec);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
+			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,accuracyRef);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
 
-		if (rank>1)
-			rank=1;
-		else if (rank < 0)
-			rank = 0;
-*/
+			mdPartialParticles.addRow(rowInput);
 
-		validationAlignabilityPrecision += (rank>0.5);
-		validationAlignabilityAccuracy += (rankAcc > 0.5);
-		validationAlignability += ( (rankAcc > 0.5) && (rank>0.5));
-		validationMirror += (rankMirror> 0.5);
+			rowInput.clear();
+			rowInputRef.clear();
+			tempMdExp.clear();
+			tempMdProj.clear();
 
-		tempMdExp.getValue(MDL_IMAGE,imagePath,1);
-		rowInput.setValue(MDL_IMAGE,imagePath);
-		rowInput.setValue(MDL_IMAGE_IDX,i);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rank);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
-		rowInput.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF,accuracyRef);
-		rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_NOISE,sum_noise);
-
-		mdOutCL.addRow(rowInput);
-
-		rowInput.clear();
-		rowInputRef.clear();
-		row.clear();
-		tempMdExp.clear();
-		tempMdProj.clear();
-		progress_bar(i+1);
+			if (rank==0)
+				progress_bar(i+1);
+		}
 	}
 
-	mdOutCL.write(fnOutCL);
-	validationAlignabilityPrecision /= (maxNImg+1);
-	validationAlignabilityAccuracy /= (maxNImg+1);
-	validationAlignability /= (maxNImg+1);
-	validationMirror /= (maxNImg+1);
+	synchronize();
+	gatherResults();
 
-	row.clear();
-    row.setValue(MDL_IMAGE,fnInit);
-    row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
-    row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
-    row.setValue(MDL_WEIGHT_ALIGNABILITY,validationAlignability);
-    row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
 
-    mdOutQ.addRow(row);
-    mdOutQ.write(fnOutQ);
+	if (rank == 0)
+	{
+		mdPartialParticles.write(fnOutCL);
+		row.clear();
+
+		FOR_ALL_OBJECTS_IN_METADATA(mdPartialParticles)
+		{
+			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION,rankPrec,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAcc,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankMirror,__iter.objId);
+
+			validationAlignabilityPrecision += (rankPrec>0.5);
+			validationAlignabilityAccuracy += (rankAcc > 0.5);
+			validationAlignability += ( (rankAcc > 0.5) && (rankPrec>0.5));
+			validationMirror += (rankMirror> 0.5);
+
+		}
+
+		validationAlignabilityPrecision /= (maxNImg+1);
+		validationAlignabilityAccuracy /= (maxNImg+1);
+		validationAlignability /= (maxNImg+1);
+		validationMirror /= (maxNImg+1);
+
+		row.setValue(MDL_IMAGE,fnInit);
+		row.setValue(MDL_WEIGHT_PRECISION_ALIGNABILITY,validationAlignabilityPrecision);
+		row.setValue(MDL_WEIGHT_ACCURACY_ALIGNABILITY,validationAlignabilityAccuracy);
+		row.setValue(MDL_WEIGHT_ALIGNABILITY,validationAlignability);
+		row.setValue(MDL_WEIGHT_PRECISION_MIRROR,validationMirror);
+
+		mdOutQ.addRow(row);
+	    mdOutQ.write(fnOutQ);
+
+	}
+
 }
 
 
