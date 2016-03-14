@@ -41,8 +41,8 @@ class XmippProtMovieAverage(ProtAlignMovies):
     """
     
     _label = 'movie average'
-
-
+    
+    doSaveAveMic = True
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Average')
@@ -89,13 +89,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
-        inputMd = self._getMovieOrMd()
+        inputMd = self._getMovieOrMd(movie)
         s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
 
         args  = '-i %s ' % inputMd
         args += '-o %s ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
-        args += '--max_freq %f ' % self.maxFreq
         args += ' --useInputShifts'
         
         if self.binFactor > 1:
@@ -125,10 +124,17 @@ class XmippProtMovieAverage(ProtAlignMovies):
         self.runJob('xmipp_movie_alignment_correlation', args)
     
     #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        if (self.cropDimX > 0 and self.cropDimY <= 0 or
+            self.cropDimY > 0 and self.cropDimX <= 0):
+            errors.append("If you give cropDimX, you should also give cropDimY "
+                          "and viceversa")
+        return errors
+    
     def _summary(self):
         summary = []
         movie = self.inputMovies.get().getFirstItem()
-        fstFrame, lstFrame = movie.getAlignment().getRange()
         s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
         
         if self.cropRegion.get() == 1 and not movie.hasAlignment():
@@ -137,11 +143,13 @@ class XmippProtMovieAverage(ProtAlignMovies):
                            " Your resulting micrographs were not cropped."
                            " If you want to crop, please use *New* option.")
         
-        if fstFrame > s0-1 and lstFrame < sN-1:
-            summary.append("Warning!!! You have selected a frame range wider than"
-                           " the range selected to align. All the frames selected"
-                           " without alignment information, will be aligned by"
-                           " setting alignment to 0")
+        if movie.hasAlignment():
+            fstFrame, lstFrame = movie.getAlignment().getRange()
+            if fstFrame > s0-1 and lstFrame < sN-1:
+                summary.append("Warning!!! You have selected a frame range wider than"
+                               " the range selected to align. All the frames selected"
+                               " without alignment information, will be aligned by"
+                               " setting alignment to 0")
         
         return summary
     
@@ -162,12 +170,11 @@ class XmippProtMovieAverage(ProtAlignMovies):
         
         else:
             return getMovieFileName(movie)
-        
     
-    
-    
-    
-    
-    
-    
-        
+    def _doGenerateOutputMovies(self):
+        """ Returns True if an output set of movies will be generated.
+        The most common case is to always generate output movies,
+        either with alignment only or the binary aligned movie files.
+        Subclasses can override this function to change this behavior.
+        """
+        return False
