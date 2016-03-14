@@ -32,7 +32,7 @@ Protocol wrapper around the xmipp correlation alignment only for movie average.
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.em.metadata as md
-from convert import getMovieFileName
+from convert import getMovieFileName, writeShiftsMovieAlignment
 
 
 class XmippProtMovieAverage(ProtAlignMovies):
@@ -72,7 +72,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
                                      The region of interest, if the input movies have alignment,
                                      is ignored.
                             """)
-
+        
         line = group.addLine('Crop offsets (px)', condition='cropRegion==2')
         line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
         line.addParam('cropOffsetY', params.IntParam, default=0, label='Y')
@@ -89,29 +89,32 @@ class XmippProtMovieAverage(ProtAlignMovies):
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
-        inputMd = getMovieFileName(movie)
-        _, _, n = movie.getDim()
-        s0, sN = self._getFrameRange(n, 'sum')
+        inputMd = self._getMovieOrMd()
+        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
 
         args  = '-i %s ' % inputMd
         args += '-o %s ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--max_freq %f ' % self.maxFreq
-
+        args += ' --useInputShifts'
+        
         if self.binFactor > 1:
             args += '--bin %f ' % self.binFactor
-        # Assume that if you provide one cropDim, you provide all
-        if self.cropDimX.get():
+        
+        cropRegion = self.cropRegion.get()
+        if cropRegion == 1 and movie.hasAlignment():
+            roi = movie.getAlignment().getRoi()
+            args += '--cropULCorner %d %d ' % (roi[0], roi[1])
+            args += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1, roi[1] + roi[3] -1)
+            
+        elif cropRegion == 2:
             args += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
             args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
         
         args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
-        args += ' --max_shift %d ' % self.maxShift
-        args += ' --oavg %s' % self._getExtraPath(self._getOutputMicName(movie))
         
-        if self.inputMovies.hasAlignment() and self.useAlignment:
-            args += ' --useInputShifts'
+        args += ' --oavg %s' % self._getExtraPath(self._getOutputMicName(movie))
         
         if self.inputMovies.get().getDark():
             args += ' --dark ' + self.inputMovies.get().getDark()
@@ -120,19 +123,51 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += ' --gain ' + self.inputMovies.get().getGain()
 
         self.runJob('xmipp_movie_alignment_correlation', args)
+    
+    #--------------------------- INFO functions --------------------------------------------
+    def _summary(self):
+        summary = []
+        movie = self.inputMovies.get().getFirstItem()
+        fstFrame, lstFrame = movie.getAlignment().getRange()
+        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
         
+        if self.cropRegion.get() == 1 and not movie.hasAlignment():
+            summary.append("Warning!!! You select *from Alignment* crop"
+                           " region, but your movies have not alignment."
+                           " Your resulting micrographs were not cropped."
+                           " If you want to crop, please use *New* option.")
+        
+        if fstFrame > s0-1 and lstFrame < sN-1:
+            summary.append("Warning!!! You have selected a frame range wider than"
+                           " the range selected to align. All the frames selected"
+                           " without alignment information, will be aligned by"
+                           " setting alignment to 0")
+        
+        return summary
+    
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _getNumberOfFrames(self, movie):
+        _, _, n = movie.getDim()
+        return n
+        
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
 
-    def _getMovieShifts(self, movie):
-        """ Returns the x and y shifts for the alignment of this movie.
-         The shifts should refer to the original micrograph without any binning.
-         In case of a bining greater than 1, the shifts should be scaled.
-        """
-        shiftsMd = md.MetaData(self._getShiftsFile(movie))
-        shiftsMd.removeDisabled()
-
-        return (shiftsMd.getColumnValues(md.MDL_SHIFT_X),
-                shiftsMd.getColumnValues(md.MDL_SHIFT_Y))
-
+    def _getMovieOrMd(self, movie):
+        if movie.hasAlignment() and self.useAlignment:
+            shiftsMd = md.MetaData(self._getShiftsFile(movie))
+            s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
+            writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
+            return shiftsMd
+        
+        else:
+            return getMovieFileName(movie)
+        
+    
+    
+    
+    
+    
+    
+    
+        
