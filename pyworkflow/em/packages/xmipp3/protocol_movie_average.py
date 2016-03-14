@@ -90,8 +90,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
         inputMd = self._getMovieOrMd(movie)
-        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-
+        
         args  = '-i %s ' % inputMd
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--useInputShifts '
@@ -110,7 +109,6 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
         
-        args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
         args += ' --oavg %s ' % self._getExtraPath(self._getOutputMicName(movie))
         
         if self.inputMovies.get().getDark() is not None:
@@ -143,7 +141,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
         
         if movie.hasAlignment():
             fstFrame, lstFrame = movie.getAlignment().getRange()
-            if fstFrame > s0-1 and lstFrame < sN-1:
+            if self.useAlignment and (fstFrame > s0-1 or lstFrame < sN-1):
                 summary.append("Warning!!! You have selected a frame range wider than"
                                " the range selected to align. All the frames selected"
                                " without alignment information, will be aligned by"
