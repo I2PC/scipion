@@ -1458,7 +1458,7 @@ def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
     alFrame = a0
     
     if s0 < a0:
-        for i in range(s0, a0-1):
+        for i in range(s0, a0):
             objId = globalShiftsMD.addObject()
             imgFn = locationToXmipp(i, fixVolumeFileName(movie))
             globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
@@ -1474,9 +1474,9 @@ def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
         alFrame += 1
 
     if sN > aN:
-        for j in range(aN+1, sN):
+        for j in range(aN, sN):
             objId = globalShiftsMD.addObject()
-            imgFn = locationToXmipp(j, fixVolumeFileName(movie))
+            imgFn = locationToXmipp(j+1, fixVolumeFileName(movie))
             globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
             globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0.0, objId)
             globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)

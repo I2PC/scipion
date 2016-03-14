@@ -93,7 +93,6 @@ class XmippProtMovieAverage(ProtAlignMovies):
         s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
 
         args  = '-i %s ' % inputMd
-        args += '-o %s ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--useInputShifts '
         
