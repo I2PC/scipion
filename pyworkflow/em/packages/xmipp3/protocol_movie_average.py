@@ -113,10 +113,10 @@ class XmippProtMovieAverage(ProtAlignMovies):
         args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
         args += ' --oavg %s ' % self._getExtraPath(self._getOutputMicName(movie))
         
-        if self.inputMovies.get().getDark():
+        if self.inputMovies.get().getDark() is not None:
             args += ' --dark ' + self.inputMovies.get().getDark()
 
-        if self.inputMovies.get().getGain():
+        if self.inputMovies.get().getGain() is not None:
             args += ' --gain ' + self.inputMovies.get().getGain()
 
         self.runJob('xmipp_movie_alignment_correlation', args)
