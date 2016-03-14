@@ -118,11 +118,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
         if self.inputMovies.get().getDark():
             command += '--dark '+self.inputMovies.get().getDark()
         if self.inputMovies.get().getGain():
-            command += '--gain '+self.inputMovies.get().getGain()
+            command += ' --gain '+self.inputMovies.get().getGain()
         winSize = self.winSize.get()
         doSaveMovie = self.doSaveMovie.get()
         groupSize = self.groupSize.get()
-        command += '--winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+        command += ' --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
         # Check if we have global shifts
         if movie.getAlignment() is not None:
             movieAlignment=movie.getAlignment()
