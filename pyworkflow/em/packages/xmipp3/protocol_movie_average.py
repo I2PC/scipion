@@ -112,7 +112,6 @@ class XmippProtMovieAverage(ProtAlignMovies):
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
         
         args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
-        
         args += ' --oavg %s' % self._getExtraPath(self._getOutputMicName(movie))
         
         if self.inputMovies.get().getDark():
@@ -163,7 +162,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
 
     def _getMovieOrMd(self, movie):
         if movie.hasAlignment() and self.useAlignment:
-            shiftsMd = md.MetaData(self._getShiftsFile(movie))
+            shiftsMd = self._getShiftsFile(movie)
             s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
             writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
             return shiftsMd

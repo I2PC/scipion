@@ -1623,7 +1623,7 @@ class MovieAlignment(EMObject):
         """ Return the size used to align the movie
         """
         return self._roi
-    
+
 
 class SetOfMovies(SetOfMicrographsBase):
     """ Represents a set of Movies. """
