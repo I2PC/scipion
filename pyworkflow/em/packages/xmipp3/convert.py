@@ -1453,7 +1453,7 @@ def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
     movieAlignment=movie.getAlignment()
     shiftListX, shiftListY = movieAlignment.getShifts()
     # Generating metadata for global shifts
-    a0, aN = movie.getRange()
+    a0, aN = movieAlignment.getRange()
     globalShiftsMD = xmipp.MetaData()
     alFrame = a0
     
