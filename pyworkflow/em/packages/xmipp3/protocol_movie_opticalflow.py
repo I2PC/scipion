@@ -93,7 +93,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
 
     def _processMovie(self, movie):
-
+        from convert import writeShiftsMovieAlignment
         movieFolder = self._getOutputMovieFolder(movie)
         outputMicFn = self._getOutputMicName(movie)
         movieName = movie.getBaseName()
@@ -125,15 +125,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
         command += '--winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
         # Check if we have global shifts
         if movie.getAlignment() is not None:
-            movieAlignment=movie.getAlignment()
-            shiftListX, shiftListY = movieAlignment.getShifts()
-            # Generating metadata for global shifts
-            globalShiftsMD = xmipp.MetaData()
-            for shiftX, shiftY in zip(shiftListX, shiftListY):
-                objId = globalShiftsMD.addObject()
-                globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
-                globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
-            globalShiftsMD.write(join(movieFolder, fnGlobalShifts))
+            mdFn = join(movieFolder, fnGlobalShifts)
+            writeShiftsMovieAlignment(movie, mdFn, s0, sN)
+            
             command += '--useInputShifts %(fnGlobalShifts)s ' % locals()
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'

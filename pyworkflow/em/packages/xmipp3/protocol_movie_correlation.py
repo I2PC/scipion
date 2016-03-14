@@ -136,13 +136,16 @@ class XmippProtMovieCorr(ProtAlignMovies):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
 
     def _getMovieShifts(self, movie):
+        from convert import readShiftsMovieAlignment
         """ Returns the x and y shifts for the alignment of this movie.
          The shifts should refer to the original micrograph without any binning.
          In case of a bining greater than 1, the shifts should be scaled.
         """
+        
         shiftsMd = md.MetaData(self._getShiftsFile(movie))
-        shiftsMd.removeDisabled()
-
-        return (shiftsMd.getColumnValues(md.MDL_SHIFT_X),
-                shiftsMd.getColumnValues(md.MDL_SHIFT_Y))
-
+        return readShiftsMovieAlignment(shiftsMd)
+        
+        
+        
+        
+        
