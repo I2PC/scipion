@@ -95,7 +95,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
         args  = '-i %s ' % inputMd
         args += '-o %s ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
-        args += ' --useInputShifts'
+        args += '--useInputShifts '
         
         if self.binFactor > 1:
             args += '--bin %f ' % self.binFactor
@@ -112,7 +112,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
         
         args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
-        args += ' --oavg %s' % self._getExtraPath(self._getOutputMicName(movie))
+        args += ' --oavg %s ' % self._getExtraPath(self._getOutputMicName(movie))
         
         if self.inputMovies.get().getDark():
             args += ' --dark ' + self.inputMovies.get().getDark()
