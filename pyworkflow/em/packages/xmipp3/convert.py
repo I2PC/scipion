@@ -1438,3 +1438,47 @@ def createClassesFromImages(inputImages, inputMd,
 
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
+
+
+def readShiftsMovieAlignment(xmdFn):
+    shiftsMd = md.MetaData(xmdFn)
+    shiftsMd.removeDisabled()
+
+    return (shiftsMd.getColumnValues(md.MDL_SHIFT_X),
+            shiftsMd.getColumnValues(md.MDL_SHIFT_Y))
+
+
+def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
+    
+    movieAlignment=movie.getAlignment()
+    shiftListX, shiftListY = movieAlignment.getShifts()
+    # Generating metadata for global shifts
+    a0, aN = movie.getRange()
+    globalShiftsMD = xmipp.MetaData()
+    alFrame = a0
+    
+    if s0 < a0:
+        for i in range(s0, a0):
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(i, fixVolumeFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0, objId)
+            
+    for shiftX, shiftY in zip(shiftListX, shiftListY):
+        objId = globalShiftsMD.addObject()
+        imgFn = locationToXmipp(alFrame, fixVolumeFileName(movie))
+        globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+        globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
+        globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
+        alFrame += 1
+
+    if sN > aN:
+        for j in range(aN, sN):
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(j, fixVolumeFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0, objId)
+    
+    globalShiftsMD.write(xmdFn)

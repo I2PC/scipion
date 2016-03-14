@@ -41,7 +41,7 @@ def getEnviron():
             'PATH': join(MOTIONCORR_HOME, 'bin'),
             'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))                                    
             }, position=Environ.BEGIN)
-    return environ  
+    return environ
 
 
 def parseMovieAlignment(logFile):
