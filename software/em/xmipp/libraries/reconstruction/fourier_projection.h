@@ -68,6 +68,9 @@ public:
     // Original volume size
     int volumeSize;
 
+    // Volume padded size
+    int volumePaddedSize;
+
     // Euler matrix
     Matrix2D<double> E;
 public:
