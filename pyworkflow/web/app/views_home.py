@@ -28,7 +28,8 @@
 import os
 import json
 from django.shortcuts import render_to_response, redirect
-from pyworkflow.web.app.views_util import  getResource
+from pyworkflow.utils import strDate
+from pyworkflow.web.app.views_util import  getResource, dateNaiveToAware
 from pyworkflow.web.app.views_base import base_grid
 from django.http import HttpResponse, HttpResponseNotFound
 from django.core.context_processors import csrf
@@ -213,7 +214,13 @@ def getDownloadsStatsToJSON():
         ddict = download.getObjDict()
         del ddict['email']
         del ddict['fullName']
-        ddict['timeStamp'] = download.getObjCreation()
+
+        # Date has to be formatted right: 2012-04-23T18:25:43.511Z
+        creation = download.getObjCreation()
+
+        creation = dateNaiveToAware(strDate(creation, '%Y-%m-%d %H:%M:%S'))
+
+        ddict['timeStamp'] = creation.isoformat()
 
         # Convert subscription: 0 = Yes 1 = No
         ddict['subscription']= 'Yes' if ddict['subscription'] == '0' else 'No'

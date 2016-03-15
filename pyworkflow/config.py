@@ -39,6 +39,7 @@ import pyworkflow as pw
 import pyworkflow.object as pwobj
 import pyworkflow.hosts as pwhosts
 from pyworkflow.mapper import SqliteMapper
+from pyworkflow.utils import strDate
 
 PATH = os.path.dirname(__file__)
 
@@ -273,10 +274,9 @@ class ProjectSettings(pwobj.OrderedObject):
         self.readOnly.set(value)
         
     def getCreationTime(self):
-        f = "%Y-%m-%d %H:%M:%S.%f"
         creationTime = self.creationTime.get()
 
-        return dt.datetime.strptime(creationTime, f)
+        return strDate(creationTime)
     
     def setCreationTime(self, value):
         self.creationTime.set(value)

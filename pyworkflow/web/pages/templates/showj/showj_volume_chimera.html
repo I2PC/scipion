@@ -12,13 +12,19 @@
 		  -moz-box-orient: horizontal;
 		  -moz-box-pack: center;
 		  -moz-box-align: center;
-		  
+
 		  display: box;
 		  box-orient: horizontal;
 		  box-pack: center;
 		  box-align: center;
+			padding: 0px;
+			width:100%;
 		}
-		
+
+		#thresholdParams {
+			padding: 20px;
+
+		}
 		#slider {  
 	 		position:absolute; 
 			width: 9em;
@@ -61,15 +67,31 @@
 			success : function(data) {
 				$("div#chimeraContent").empty();
 				$("div#chimeraContent").html(data);
-				webGLStart();
+				showChimera();
 				removeWait();
 			}
 		});	
+	};
+
+
+	function showChimera(){
+
+		// Set the canvas size
+		canvasWidth = $('section').width();
+		canvasHeight = $('section').height();
+
+		canvasHeight = canvasHeight * 0.8;
+
+		json[9][1] = canvasWidth;
+		json[9][2] = canvasHeight;
+
+		webGLStart();
 	}
 
   	$(document).ready(function(){
+
   		// Loading WebGL
-  		webGLStart();
+  		showChimera();
   		
   		// Event changing the volume
   		$("select#id_volumesToRenderComboBox").change(function(){
@@ -114,13 +136,12 @@
 			Threshold
 			<input id="thresholdValue" type="text" value="{{threshold}}" style="width:11.2em;text-align:center;"/>
 			<input id="thresholdButton" class="btn button2 primary_inv" type="button" value="Refresh" onclick="updateThreshold();"/>
-		</div>
-		
-		<div>
+			<br />
 			Min [{{minStats}}], Max [{{maxStats}}]
 			<br />
 			<span id="slider"></span>
 		</div>
+		
 	</div>
 	
 {% endblock %}

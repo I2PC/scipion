@@ -660,7 +660,7 @@ def chimera_headless(volPath, threshold):
 #     print "HTML SPLIT =", chimeraHtml
     chimeraHtml = chimeraHtml[1]
 #     print "HTML SPLIT[1] =", chimeraHtml
-    chimeraHtml = '<canvas id="molview" width="320" height="240"></canvas>' + chimeraHtml
+    chimeraHtml = '<canvas id="molview"></canvas>' + chimeraHtml
 #     print "HTML CANVAS =", chimeraHtml
     
     # Close file

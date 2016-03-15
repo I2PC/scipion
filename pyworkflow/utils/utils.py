@@ -97,6 +97,28 @@ def dateStr(dt=None, time=True, secs=False):
 prettyTime = dateStr
 
 
+def strDate(stringDate, format="%Y-%m-%d %H:%M:%S.%f"):
+    """
+    Usually date are created in python using datetime.now
+    and then persisted in sqlite and retrieved as text (2016-03-14 17:30:34.645956)
+    or in SQLite (creation date is populated by SQLite using datetime() -->
+    'The datetime() function returns "YYYY-MM-DD HH:MM:SS".'
+
+    The default format should deal with both cases.
+
+    Parameters
+    ----------
+    stringDate : String with a date ->  "2016-12-10"
+    format : Format of the date -> "%Y-%m-%d"
+
+    Returns
+    -------
+
+    """
+
+    return datetime.strptime(stringDate, format)
+
+
 def prettySize(size):
     """Human friendly file size"""
     from math import log
