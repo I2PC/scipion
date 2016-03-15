@@ -99,24 +99,28 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += '--bin %f ' % self.binFactor
         
         cropRegion = self.cropRegion.get()
+        
         if cropRegion == 1 and movie.hasAlignment():
             roi = movie.getAlignment().getRoi()
             args += '--cropULCorner %d %d ' % (roi[0], roi[1])
             args += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1, roi[1] + roi[3] -1)
-            
         elif cropRegion == 2:
             args += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
             args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
         
+        if not (movie.hasAlignment() and self.useAlignment):
+            s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
+            args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
+        
         args += ' --oavg %s ' % self._getExtraPath(self._getOutputMicName(movie))
         
         if self.inputMovies.get().getDark() is not None:
             args += ' --dark ' + self.inputMovies.get().getDark()
-
+        
         if self.inputMovies.get().getGain() is not None:
             args += ' --gain ' + self.inputMovies.get().getGain()
-
+        
         self.runJob('xmipp_movie_alignment_correlation', args)
     
     #--------------------------- INFO functions --------------------------------------------
@@ -153,17 +157,16 @@ class XmippProtMovieAverage(ProtAlignMovies):
     def _getNumberOfFrames(self, movie):
         _, _, n = movie.getDim()
         return n
-        
+    
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
-
+    
     def _getMovieOrMd(self, movie):
         if movie.hasAlignment() and self.useAlignment:
             shiftsMd = self._getShiftsFile(movie)
             s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
             writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
             return shiftsMd
-        
         else:
             return getMovieFileName(movie)
     
