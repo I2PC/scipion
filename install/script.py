@@ -291,6 +291,12 @@ djangoresumable = env.addModule(
     targets=['django_resumable-0.1*'],
     deps=[django])
 
+pytz = env.addModule(
+    'pytz',
+    tar='pytz-2016.1.tar.gz',
+    targets=['pytz-2016.1*'],
+    default=False)
+
 paramiko = env.addModule(
     'paramiko',
     tar='paramiko-1.14.0.tgz',
