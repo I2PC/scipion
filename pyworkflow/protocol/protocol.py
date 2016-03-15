@@ -37,7 +37,7 @@ from collections import OrderedDict
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, strDate
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -119,11 +119,10 @@ class Step(OrderedObject):
         """
         elapsed = None
         if self.initTime.hasValue():
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            t1 = dt.datetime.strptime(self.initTime.get(), f)
+            t1 = strDate(self.initTime.get())
             endTimeStr = self.endTime.get()
             if endTimeStr:
-                t2 = dt.datetime.strptime(endTimeStr, f)
+                t2 = strDate(endTimeStr)
             else:
                 t2 = dt.datetime.now()
             elapsed = t2 - t1
@@ -807,8 +806,7 @@ class Protocol(Step):
         """
         self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-        self.info("  %s" % dt.datetime.strptime(step.initTime.get(),
-                                                "%Y-%m-%d %H:%M:%S.%f"))
+        self.info("  %s" % strDate(step.initTime.get()))
         self.__updateStep(step)
 
     def _stepFinished(self, step):
@@ -831,8 +829,7 @@ class Protocol(Step):
 
         self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-        self.info("  %s" % dt.datetime.strptime(step.endTime.get(),
-                                                "%Y-%m-%d %H:%M:%S.%f"))
+        self.info("  %s" % strDate(step.endTime.get()))
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close

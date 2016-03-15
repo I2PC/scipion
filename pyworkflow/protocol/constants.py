@@ -63,5 +63,5 @@ LEVEL_NORMAL = 0
 LEVEL_ADVANCED = 1
 LEVEL_CHOICES = ('Normal', 'Advanced')
 
-                
-                
+
+

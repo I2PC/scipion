@@ -31,6 +31,8 @@ import zipfile
 import xmipp
 import json
 import mimetypes
+import pytz
+import datetime
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 
@@ -1130,3 +1132,30 @@ def zipdir(dirPath=None, zipFilePath=None, includeDirInZip=True):
             # Here to allow for inserting an empty directory.  Still TBD/TODO.
             outFile.writestr(zipInfo, "")
     outFile.close()
+
+
+def dateNaiveToAware(naiveDate):
+    """
+    Converts a naive date (https://docs.python.org/2/library/datetime.html#module-datetime) to a
+    timezone aware date using DJANGO TIME ZONE settings: https://docs.djangoproject.com/es/1.9/topics/i18n/timezones/
+    Parameters
+    ----------
+    naiveDate : the naive date
+
+    Returns
+    -------
+    timezone aware date.
+    """
+
+    serverTZ = pytz.timezone(str(django_settings.TIME_ZONE))
+
+    newDate = naiveDate
+
+    print repr(datetime.date)
+
+    if not isinstance(newDate, datetime):
+        newDate = strDate(newDate)
+
+    loacalizeDate = serverTZ.localize(newDate)
+
+    return loacalizeDate

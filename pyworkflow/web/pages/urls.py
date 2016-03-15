@@ -105,7 +105,7 @@ mainUrls = ['',
     url(r'^health$', app.views_management.health),
 
     url(r'^home/', 'app.views_home.home'),
-    url(r'^download_form/', 'app.views_home.download_form'),
+    url(r'^download_form', 'app.views_home.download_form'),
     url(r'^startdownload/', 'app.views_home.startDownload'),
     url(r'^download/', 'app.views_home.doDownload'),
     url(r'^getdownloadsdata', views_home.getDownloadsStats),
