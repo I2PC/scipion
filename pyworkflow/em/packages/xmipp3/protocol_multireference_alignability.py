@@ -228,6 +228,10 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         copyfile(volDir+'/angles_iter001_00.xmd', self._getTmpPath(anglesPath))
         
     def alignabilityStep(self, volName,volDir,sym):
+        
+        nproc = self.numberOfMpi.get()
+        nT=self.numberOfThreads.get()
+         
         makePath(volDir)  
         inputFile = self._getPath('input_particles.xmd') 
         inputFileRef = self._getPath('reference_particles.xmd')
@@ -247,7 +251,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         if self.doNotUseWeights:
             params += ' --dontUseWeights'
             
-        self.runJob('xmipp_multireference_aligneability', params,numberOfMpi=1,numberOfThreads=1)
+        self.runJob('xmipp_multireference_aligneability', params,numberOfMpi=nproc,numberOfThreads=nT)
 
     def neighbourhoodDirectionStep(self, volName,volDir,sym):
           
