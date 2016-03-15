@@ -286,7 +286,10 @@ at each refinement step. The resolution you specify is a target, not the filter 
         newPartSet = self._createSetOfParticles()
         newPartSet.copyInfo(partSet)
         newPartSet.setAlignment(em.ALIGN_PROJ)
-        newPartSet.copyItems(partSet,
+        
+        partIter = iter(partSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
+        
+        newPartSet.copyItems(partIter,
                              updateItemCallback=self._createItemMatrix,
                              itemDataIterator=self._iterTextFile(iterN))
         
@@ -314,8 +317,13 @@ at each refinement step. The resolution you specify is a target, not the filter 
     
     def _summary(self):
         summary = []
-        if not hasattr(self, 'outputVolumes'):
+        if not hasattr(self, 'outputVolume'):
             summary.append("Output volumes not ready yet.")
+        else:
+            inputSize = self._getInputParticles().getSize()
+            outputSize = self.outputParticles.get().getSize()
+            diff = inputSize - outputSize
+            summary.append("Warning!!! There are %d particles belonging to empty classes." % diff)
         return summary
     
     #--------------------------- UTILS functions --------------------------------------------
@@ -399,7 +407,10 @@ at each refinement step. The resolution you specify is a target, not the filter 
         f.close()
     
     def _createItemMatrix(self, item, rowList):
-        item.setTransform(rowToAlignment(rowList[1:], alignType=em.ALIGN_PROJ))
+        if rowList[1] == 1:
+            item.setTransform(rowToAlignment(rowList[2:], alignType=em.ALIGN_PROJ))
+        else:
+            setattr(item, "_appendItem", False)
     
     def _getIterNumber(self, index):
         """ Return the list of iteration files, give the iterTemplate. """
@@ -452,6 +463,6 @@ at each refinement step. The resolution you specify is a target, not the filter 
             proc = createEmanProcess(args='read %s %s %s %s'
                                      % (self._getParticlesStack(), clsFn, classesFn,
                                         self._getBaseName('angles', iter=iterN)),
-                                     direc=self._getExtraPath())
+                                        direc=self._getExtraPath())
             proc.wait()
 

@@ -24,9 +24,9 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers around xmipp_showj
-visualization program.
+This module implements visualization program for Spider CA-PCA protocol.
 """
+
 import Tkinter as tk
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO,\
@@ -52,16 +52,25 @@ class SpiderViewerCAPCA(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('doShowEigenImages', LabelParam, label="Show eigenimages?", default=True)
+        form.addParam('doShowEigenImages', LabelParam, label="Show eigenimages?", default=True,
+                      help='Display eigenimages produced by CA/PCA')
         form.addParam('doShowReconsImages', LabelParam,
-                      label="Show reconstitued images?", default=True)
+                      label="Show reconstitued images?", default=True,
+                      help='Re-creation of images from eigenvectors can eliminate the noise in the '
+                      'reconstituted image, this also results in large data compression. Here we '
+                      'reconstitute positive and negative images')
         form.addParam('doShowHistogram', LabelParam,
-                      label="Show eigenvalue histogram?", default=True)
-        form.addParam('doShowPcaFile', LabelParam, expertLevel=LEVEL_ADVANCED,
-                      label="Show IMC file?", default=True)        
-                  
+                      label="Show eigenvalue histogram?", default=True,
+                      help='One of the methods to determine what eigenvalues are useful, '
+                      'and which are from noise is to view a histogram showing the percentage '
+                      'of eigenvalue variance accounted for by each factor.')
+        form.addParam('doShowPcaFile', LabelParam, #expertLevel=LEVEL_ADVANCED,
+                      label="Show IMC file?", default=True,
+                      help='This file contains coordinates of each image in the new vector space.')
         form.addParam('doShowFactorMaps', LabelParam, #expertLevel=LEVEL_ADVANCED,
-                      label="Show factor maps?", default=True)        
+                      label="Show factor maps?", default=True,
+                      help='Once you know which eigenvectors have some meaning and which are from noise, '
+                      'you can display 2D factor maps of selected pairs of factors to visualize clustering (if any).')        
         line = form.addLine('Factors')
         line.addParam('firstFactor', IntParam, #expertLevel=LEVEL_ADVANCED,
                       label="First", default=1) 

@@ -35,7 +35,11 @@ from convert import readSetOfCoordinates
 
 
 class SparxGaussianProtPicking(ProtParticlePicking):
-    """Protocol to pick particles automatically in a set of micrographs using sparx gaussian picker"""
+    """
+    Protocol to pick particles automatically in a set of micrographs
+    using sparx gaussian picker.
+    For more information see http://sparx-em.org/sparxwiki/e2boxer
+    """
     _label = 'sparx gaussian picker'
         
     def __init__(self, **args):     
@@ -48,18 +52,16 @@ class SparxGaussianProtPicking(ProtParticlePicking):
 
         ProtParticlePicking._defineParams(self, form)
         form.addParam('boxSize', IntParam, default=100,
-                   label='Box Size')
+                      label='Box Size', help='Box size in pixels')
         line = form.addLine('Picker range',
-                            help='')
+                            help='CCF threshold range for automatic picking')
         line.addParam('lowerThreshold', FloatParam, default='1',
                       label='Lower')
         line.addParam('higherThreshold', FloatParam, default='30',
                       label='Higher')
 
         form.addParam('gaussWidth', FloatParam, default='1',
-              label='Gauss Width')
-        
-    
+              label='Gauss Width', help='Width of the Gaussian kernel used')
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -68,26 +70,26 @@ class SparxGaussianProtPicking(ProtParticlePicking):
                 "boxSize": self.boxSize,
                 "gaussWidth": self.gaussWidth,
                 'extraParams': self.extraParams}
-        params = 'demoparms --makedb=thr_low=%(lowerThreshold)s:thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:gauss_width=%(gaussWidth)s:%(extraParams)s'%args
-        self.runJob('sxprocess.py', params, cwd=self.getWorkingDir()) 
+        params =  'demoparms --makedb=thr_low=%(lowerThreshold)s:'
+        params += 'thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:'
+        params += 'gauss_width=%(gaussWidth)s:%(extraParams)s'
+
+        self.runJob('sxprocess.py', params % args, cwd=self.getWorkingDir())
+
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         for mic in self.inputMicrographs.get():
             micFile = os.path.relpath(mic.getFileName(), self.workingDir.get())
             stepId = self._insertFunctionStep('executeSparxGaussianPickerStep', micFile)
             deps.append(stepId)
 
-
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
-    
     #--------------------------- STEPS functions ---------------------------------------------------
     def executeSparxGaussianPickerStep(self, micFile):
         print micFile
         params = '--gauss_autoboxer=demoparms --write_dbbox %s'%micFile
         self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
         
-
-
     def createOutputStep(self):
         coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
         self.readSetOfCoordinates(self.workingDir.get(), coordSet)
@@ -103,13 +105,8 @@ class SparxGaussianProtPicking(ProtParticlePicking):
 
     #--------------------------- UTILS functions --------------------------------------------------
     def getFiles(self):
-        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
-        return filePaths
-
+        return self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.inputMicrographs.get(), coordSet)
 
-  
-
-   

@@ -195,7 +195,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
                            'so only use images with proper normalization.')
         form.addParam('particleDiameter', IntParam, default=200,
                       label='Particle diameter (A)',
-                      help='') 
+                      help='Provide particle diameter in Angstroms') 
         form.addParam('lowpassFilterRefs', IntParam, default=20,
                       label='Lowpass filter references (A)',
                       help='Lowpass filter that will be applied to the references \n'

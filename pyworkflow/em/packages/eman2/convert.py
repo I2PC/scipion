@@ -188,19 +188,18 @@ def writeSetOfParticles(partSet, path, **kwargs):
     partSet.getFirstItem().getFileName()
     fileName = ""
     a = 0
-    tmpMicId = 0
 #     listHdf = []
+    proc = createEmanProcess(args='write')
     for i, part in iterParticlesByMic(partSet):
         micId = part.getMicId()
-        if micId != tmpMicId:
-            tmpMicId = micId
-            if not micId:
-                micId = 0
-            hdfFn = os.path.join(path, "mic_%0.6d.hdf" % micId)
-#             listHdf.append(basename(hdfFn))
-            proc = createEmanProcess(args='write %s' % hdfFn)
-        
         objDict = part.getObjDict()
+        
+        if not micId:
+            micId = 0
+        
+        objDict['hdfFn'] = os.path.join(path, "mic_%0.6d.hdf" % micId)
+#             listHdf.append(basename(hdfFn))
+        
         alignType = kwargs.get('alignType')
 #         print "objDict, ", objDict
     
@@ -229,7 +228,7 @@ def writeSetOfParticles(partSet, path, **kwargs):
         print >> proc.stdin, json.dumps(objDict)
         proc.stdin.flush()
         proc.stdout.readline()
-#     return listHdf
+    proc.kill()
 
 
 def readSetOfParticles(filename, partSet, **kwargs):
