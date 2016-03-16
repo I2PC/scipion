@@ -264,6 +264,8 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
         finalShifts = "0 " * diff
     else:
         finalShifts = ""
+    shiftsX = ""
+    shiftsY = ""
     
     for shiftX, shiftY in izip(shiftListX, shiftListY):
         if alFrame >= s0 and alFrame <= sN:
