@@ -251,6 +251,7 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     
     # Generating metadata for global shifts
     a0, aN = movieAlignment.getRange()
+    alFrame = a0
     
     if s0 < a0:
         diff = a0 - s0
@@ -263,9 +264,11 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
         finalShifts = "0 " * diff
     else:
         finalShifts = ""
-        
-    shiftsX = " ".join(str(x) for x in shiftListX)
-    shiftsY = " ".join(str(x) for x in shiftListY)
+    
+    for shiftX, shiftY in izip(shiftListX, shiftListY):
+        if alFrame >= s0 and alFrame <= sN:
+            shiftsX = " ".join(str(shiftX))
+            shiftsY = " ".join(str(shiftY))
     
     f=open(shiftsFn,'w')
     shifts = (finalShifts + shiftsX + " " + finalShifts + "\n" 
