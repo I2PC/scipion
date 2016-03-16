@@ -264,8 +264,8 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     else:
         finalShifts = ""
         
-    shiftsX = " ".join(str(x * movie.getSamplingRate()) for x in shiftListX)
-    shiftsY = " ".join(str(x * movie.getSamplingRate()) for x in shiftListY)
+    shiftsX = " ".join(str(x) for x in shiftListX)
+    shiftsY = " ".join(str(x) for x in shiftListY)
     
     f=open(shiftsFn,'w')
     shifts = (finalShifts + shiftsX + " " + finalShifts + "\n" 
