@@ -41,8 +41,10 @@ class XmippProtMovieAverage(ProtAlignMovies):
     """
     
     _label = 'movie average'
-    
+    CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
+    
+    
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Average')
