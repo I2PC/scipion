@@ -31,8 +31,8 @@ Protocol wrapper around the MotionCorr for movie alignment
 
 import os, sys
 
-import pyworkflow.em as em
-import pyworkflow.utils.path as pwutils
+#import pyworkflow.em as em
+#import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
@@ -85,14 +85,11 @@ class ProtMotionCorr(ProtAlignMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
 
-        def absPath(baseName):
-            return os.path.abspath(self._getExtraPath(baseName))
-
         inputMovies = self.inputMovies.get()
         movieFolder = self._getOutputMovieFolder(movie)
-        outputMicFn = absPath(self._getOutputMicName(movie))
-        outputMovieFn = absPath(self._getOutputMovieName(movie))
-        logFile = absPath(self._getMovieLogFile(movie))
+        outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
+        outputMovieFn = self._getAbsPath(self._getOutputMovieName(movie))
+        logFile = self._getAbsPath(self._getMovieLogFile(movie))
 
         # Get the number of frames and the range to be used for alignment and sum
         numberOfFrames = movie.getNumberOfFrames()
@@ -147,9 +144,9 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if not (bin == 1 or bin == 2):
             errors.append("Binning factor can only be 1 or 2")
-
+        
         return errors
-
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getMovieLogFile(self, movie):
         return 'micrograph_%06d_Log.txt' % movie.getObjId()
@@ -162,5 +159,5 @@ class ProtMotionCorr(ProtAlignMovies):
         logPath = self._getExtraPath(self._getMovieLogFile(movie))
         return parseMovieAlignment(logPath)
 
-
-
+    def _getAbsPath(self, baseName):
+        return os.path.abspath(self._getExtraPath(baseName))
