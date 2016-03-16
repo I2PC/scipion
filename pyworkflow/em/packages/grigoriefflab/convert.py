@@ -239,8 +239,36 @@ def _createErrorCtf4Fn(self, filename):
 
 
 def _createErrorCtf3Fn(self, filename):
-            f = open(filename, 'w+')
-            lines = """-999    -999       -999     -999  Final Values"""
-            f.write(lines)
-            f.close()
+    f = open(filename, 'w+')
+    lines = """-999    -999       -999     -999  Final Values"""
+    f.write(lines)
+    f.close()
 
+
+def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
+    movieAlignment=movie.getAlignment()
+    shiftListX, shiftListY = movieAlignment.getShifts()
+    
+    # Generating metadata for global shifts
+    a0, aN = movieAlignment.getRange()
+    
+    if s0 < a0:
+        diff = a0 - s0
+        initShifts = "0 " * diff
+    else:
+        initShifts = ""
+    
+    if sN > aN:
+        diff = sN - aN
+        finalShifts = "0 " * diff
+    else:
+        finalShifts = ""
+        
+    shiftsX = " ".join(str(x * movie.getSamplingRate()) for x in shiftListX)
+    shiftsY = " ".join(str(x * movie.getSamplingRate()) for x in shiftListY)
+    
+    f=open(shiftsFn,'w')
+    shifts = (finalShifts + shiftsX + " " + finalShifts + "\n" 
+              + finalShifts + shiftsY + " " + finalShifts)
+    f.write(shifts)
+    f.close()

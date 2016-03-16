@@ -324,5 +324,5 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """
     pass
 
-         
+    
 

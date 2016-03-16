@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -23,23 +24,19 @@
 # *
 # **************************************************************************
 """
-This module contains the protocol for CTF estimation with Summovie3
+This module contains the protocol for Summovie
 """
 
-import os
-import sys
-import pyworkflow.utils as pwutils
 from os.path import exists
-from pyworkflow.em.protocol import ProtProcessMovies
-from pyworkflow.em import ImageHandler, DT_FLOAT, Micrograph
-from pyworkflow.protocol.params import  (IntParam,
-                                         BooleanParam, FloatParam,
-                                         LEVEL_ADVANCED)
+import pyworkflow.protocol.params as params
+import pyworkflow.protocol.constants as cons
+import pyworkflow.utils.path as pwutils
 from grigoriefflab import SUMMOVIE_PATH
-from pyworkflow.utils.path import createLink, relpath, removeBaseExt
+from pyworkflow.em.protocol import ProtAlignMovies
+from convert import writeShiftsMovieAlignment
 
 
-class ProtSummovie(ProtProcessMovies):
+class ProtSummovie(ProtAlignMovies):
     """Summovie is used to align the frames of movies recorded
     on an electron microscope to reduce image blurring due
     to beam-induced motion. It reads stacks of movies that
@@ -48,201 +45,91 @@ class ProtSummovie(ProtProcessMovies):
     steps and optionally applies an exposure-dependent
     filter to maximize the signal at all resolutions
     in the frame averages."""
+    
     _label = 'Summovie'
+    CONVERT_TO_MRC = 'mrc'
+    doSaveAveMic = True
+    
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineAlignmentParams(self, form):
+        form.addHidden('binFactor', params.FloatParam, default=1.)
 
-    def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
-        form.addParam('alignFrameRange', IntParam,
-                      default=-1,
-                      label='Number frames per movie ',
-                      help='How many frames per monie. -1 -> all frames ')
-        form.addParam('doApplyDoseFilter', BooleanParam, default=True,
+        group = form.addGroup('Average')
+        line = group.addLine('Remove frames to SUM from',
+                             help='How many frames you want remove to sum\n'
+                                  'from beginning and/or from the end of each movie.')
+        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
+        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
+        
+        group.addParam('useAlignment', params.BooleanParam, default=True,
+              label="Use movie alignment to Sum frames?")
+        group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                       label='Apply Dose filter',
                       help='Apply a dose-dependent filter to frames before summing them')
-        form.addParam('exposurePerFrame', FloatParam,
+        group.addParam('exposurePerFrame', params.FloatParam,
                       label='Exposure per frame (e/A^2)',
                       help='Exposure per frame, in electrons per square Angstrom')
 
-        #group = form.addGroup('Expert Options')
-        form.addParam('Bfactor', FloatParam,
-                      default=1500.,
-                      label='B-factor (A^2)',
-                      help='B-factor to apply to images (A^2)',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('doRestoreNoisePower', BooleanParam,
+        group.addParam('doRestoreNoisePower', params.BooleanParam,
                       default=True,
                       label='Restore Noise Power? ',
                       help='Restore Noise Power? ',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('doVerboseOutput', BooleanParam,
-                      default=False,
-                      label='Verbose Output?',
-                      help='Verbose Output?',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParallelSection(threads=1, mpi=1)
-    #INPUT_FILENAME kk.mrc
-    #number_of_frames_per_movie 34
-    #output_filename my_aligned.mrc
-    #shifts_filename 0_shifts.txt
-    #frc_filename my_frc.txt
-    #first_frame 1
-    #LAST_FRAME 34
-    #PIXEL_SIZE 1.0
-    #apply_dose_filter yes
-    #dose_per_frame 1.0
-    #acceleration_voltage 300.0
-    #pre_exposure_amount 0.0
-    #restore_power yes
-
+                      expertLevel=cons.LEVEL_ADVANCED)
+        
+        form.addParallelSection(threads=1, mpi=0)
+    
     #--------------------------- STEPS functions ----------------------------------------------
-
-    def _getMicFnName(self, movieId,movieFolder):
-        return relpath(self._getExtraPath('aligned_sum_%06d.mrc'%movieId), movieFolder)
-
-    def _getMicFnNameFromRun(self, movieId):
-        return self._getExtraPath('aligned_sum_%06d.mrc'%movieId)
-
-    def _getNameExt(self, movieName, postFix, ext):
-        if movieName.endswith("bz2"):
-            # removeBaseExt function only eliminate the last extension,
-            # but if files are compressed, we need to eliminate two extensions:
-            # bz2 and its own image extension (e.g: mrcs, em, etc)
-            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+    def _processMovie(self, movie):
+        self._createLink(movie)
+        self._writeMovieAlignment(movie)
+        self._argsSummovie()
+        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
+        
+        params = {'movieFn' : self._getMovieFn(movie),
+                  'numberOfFrames' : self._getNumberOfFrames(movie),
+                  'micFn' : self._getMicFn(movie),
+                  'initFrame' : s0,
+                  'finalFrame' : sN,
+                  'shiftsFn' : self._getShiftsFn(movie),
+                  'samplingRate' : movie.getSamplingRate(),
+                  'voltage' : movie.getAcquisition().getVoltage(),
+                  'frcFn' : self._getFrcFn(movie),
+                  'exposurePerFrame' : self.exposurePerFrame.get()
+                  }
+        
+        if self.doApplyDoseFilter:
+            params['doApplyDoseFilter'] = 'YES'
         else:
-            return removeBaseExt(movieName) + postFix + '.' + ext
-
-    def _getShiftFnName(self, movieId):
-        return 'shifts_%06d.txt'%movieId
-
-    def _getFSCFnName(self, movieId):
-        return 'fsc_%06d.txt'%movieId
-
-    def _filterMovie(self, movieId, movieFn):
-        """I really do not understand how I end writing this function ROB"""
-        return True
-
-    def _processMovie(self, movieId, movieName, movieFolder):
-        """call program here"""
-        # if not mrc convert format to mrc
-        # special case is mrc but ends in mrcs
-
-
-        inMovieName= os.path.join(movieFolder,movieName)
-        if movieName.endswith('.mrc'):
-            movieNameAux = inMovieName
-        elif movieName.endswith('.mrcs'):
-            movieNameAux= pwutils.replaceExt(inMovieName, "mrc")
-            createLink(inMovieName,movieNameAux)
-            movieNameAux = pwutils.replaceExt(movieName, "mrc")
+            params['doApplyDoseFilter'] = 'NO'
+        
+        if self.doRestoreNoisePower:
+            params['doRestoreNoisePower'] = 'YES'
         else:
-            micFnMrc = pwutils.replaceExt(inMovieName, "mrc")
-            ImageHandler().convert(inMovieName, micFnMrc, DT_FLOAT)
-            movieNameAux = pwutils.replaceExt(movieName, "mrc")
-
-        #get number of frames
-        if self.alignFrameRange == -1:
-            numberOfFramesPerMovie = self.inputMovies.get().getDimensions()[3]
-        else:
-            numberOfFramesPerMovie = self.alignFrameRange.get()
-        #write dummy auxiliary shift file.
-        #TODO: this should be done properly when we define how to transfer shift
-        #between movies
-        shiftFnName= os.path.join(movieFolder,self._getShiftFnName(movieId))
-        f=open(shiftFnName,'w')
-        shift= ("0 " * numberOfFramesPerMovie + "\n" ) *2
-        f.write(shift)
-        f.close()
-
-        doApplyDoseFilter = self.doApplyDoseFilter.get()
-        exposurePerFrame = self.exposurePerFrame.get()
-        self._argsSummovie(movieNameAux
-                        , movieFolder
-                        , movieId
-                        , numberOfFramesPerMovie
-                        , doApplyDoseFilter
-                        , exposurePerFrame
-                        )
+            params['doRestoreNoisePower'] = 'NO'
+        
         try:
-
-            self.runJob(self._program, self._args, cwd=movieFolder)
+            self.runJob(self._program, self._args % params)
         except:
-            print("ERROR: Movie %s failed\n"%movieName)
-
-        logFile = self._getLogFile(movieId)
-
-    def _argsSummovie(self
-                    , movieName
-                    , movieFolder
-                    , movieId
-                    , numberOfFramesPerMovie
-                    , doApplyDoseFilter
-                    , exposurePerFrame):
-        """format input as Summovie likes it"""
-        args = {}
-
-        args['movieName'] = movieName
-        args['numberOfFramesPerMovie'] = numberOfFramesPerMovie
-        ##args['micFnName'] = self._getMicFnName(movieId,movieFolder)
-        args['micFnName'] = relpath(self._getExtraPath(self._getNameExt(movieName,'', 'mrc')),movieFolder)
-        args['shiftFnName'] = self._getShiftFnName(movieId)
-        args['samplingRate'] = self.samplingRate
-        args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
-        args['fscFn'] = self._getFSCFnName(movieId)
-        args['Bfactor'] = self.Bfactor.get()
-        doRestoreNoisePower = self.doRestoreNoisePower.get()
-
-        if doApplyDoseFilter:
-            args['doApplyDoseFilter'] = 'YES'
-        else:
-            args['doApplyDoseFilter'] = 'NO'
-        if doRestoreNoisePower:
-            args['doRestoreNoisePower'] = 'YES'
-        else:
-            args['doRestoreNoisePower'] = 'NO'
-
-        args['exposurePerFrame'] = exposurePerFrame
-
-        self._program = 'export OMP_NUM_THREADS=1; ' + SUMMOVIE_PATH
-        self._args = """ << eof
-%(movieName)s
-%(numberOfFramesPerMovie)s
-%(micFnName)s
-%(shiftFnName)s
-%(fscFn)s
-1
-%(numberOfFramesPerMovie)s
-%(samplingRate)f
-%(doApplyDoseFilter)s
-%(exposurePerFrame)f
-%(voltage)f
-0
-%(doRestoreNoisePower)s
-eof
-"""%args
-
-    def createOutputStep(self):
-        inputMovies = self.inputMovies.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMovies)
-        for movie in self.inputMovies.get():
-            mic = Micrograph()
-            # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'', 'mrc')))
-            micSet.append(mic)
-        self._defineOutputs(outputMicrographs=micSet)
-
-        # Also create a Set of Movies with the alignment parameters
-        #movieSet = self._createSetOfMovies()
-        #movieSet.copyInfo(inputMovies)
-        #movieSet.cropOffsetX = Integer(self.cropOffsetX)
-        #movieSet.cropOffsetY = Integer(self.cropOffsetY)
-
+            print("ERROR: Movie %s failed\n" % movie.getFileName())
+    
+    #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
         return []
-
+    
     def _summary(self):
-        return []
-
+        summary = []
+        movie = self.inputMovies.get().getFirstItem()
+        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
+        if movie.hasAlignment():
+            fstFrame, lstFrame = movie.getAlignment().getRange()
+            if self.useAlignment and (fstFrame > s0-1 or lstFrame < sN-1):
+                summary.append("Warning!!! You have selected a frame range wider than"
+                               " the range selected to align. All the frames selected"
+                               " without alignment information, will be aligned by"
+                               " setting alignment to 0")
+        return summary
+    
     def _methods(self):
         return []
 
@@ -251,4 +138,69 @@ eof
         if not exists(SUMMOVIE_PATH):
             errors.append("Cannot find the Summovie program at: "+SUMMOVIE_PATH)
         return errors
-
+    
+    #--------------------------- UTILS functions ---------------------------------------------------
+    def _argsSummovie(self):
+        self._program = 'export OMP_NUM_THREADS=1; ' + SUMMOVIE_PATH
+        self._args = """ << eof
+%(movieFn)s
+%(numberOfFrames)s
+%(micFn)s
+%(shiftsFn)s
+%(frcFn)s
+%(initFrame)d
+%(finalFrame)d
+%(samplingRate)f
+%(doApplyDoseFilter)s
+%(exposurePerFrame)f
+%(voltage)f
+0
+%(doRestoreNoisePower)s
+eof
+"""
+    
+    def _getMovieFn(self, movie):
+        movieFn = movie.getFileName()
+        if movieFn.endswith("mrcs"):
+            return pwutils.replaceExt(movieFn, self.CONVERT_TO_MRC)
+        else: 
+            return movieFn
+    
+    def _createLink(self, movie):
+        movieFn = movie.getFileName()
+        if movieFn.endswith("mrcs"):
+            pwutils.createLink(movieFn, self._getMovieFn(movie))
+        
+    def _getMicFn(self, movie):
+        return self._getExtraPath(self._getOutputMicName(movie))
+    
+    def _getShiftsFn(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.txt')
+    
+    def _getFrcFn(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_frc.txt')
+    
+    def _getNumberOfFrames(self, movie):
+        _, _, n = movie.getDim()
+        return n
+    
+    def _writeMovieAlignment(self, movie):
+        shiftsFn = self._getShiftsFn(movie)
+        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
+        
+        if movie.hasAlignment() and self.useAlignment:
+            writeShiftsMovieAlignment(movie, shiftsFn, s0, sN)
+        else:
+            f=open(shiftsFn,'w')
+            frames = sN - s0 + 1
+            shift= ("0 " * frames + "\n" ) *2
+            f.write(shift)
+            f.close()
+    
+    def _doGenerateOutputMovies(self):
+        """ Returns True if an output set of movies will be generated.
+        The most common case is to always generate output movies,
+        either with alignment only or the binary aligned movie files.
+        Subclasses can override this function to change this behavior.
+        """
+        return False
