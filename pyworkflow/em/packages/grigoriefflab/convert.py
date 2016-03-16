@@ -271,7 +271,7 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
             shiftsY = " ".join(str(shiftY))
     
     f=open(shiftsFn,'w')
-    shifts = (finalShifts + shiftsX + " " + finalShifts + "\n" 
-              + finalShifts + shiftsY + " " + finalShifts)
+    shifts = (initShifts + shiftsX + " " + finalShifts + "\n" 
+              + initShifts + shiftsY + " " + finalShifts)
     f.write(shifts)
     f.close()
