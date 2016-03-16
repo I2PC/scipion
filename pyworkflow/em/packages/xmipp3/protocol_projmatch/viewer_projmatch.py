@@ -700,7 +700,7 @@ Examples:
             legends = []
             show = False
             plot_title = 'Ref3D_%s' % ref3d
-            a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
+            a = xplotter.createSubPlot(plot_title, 'frequency(1/A)', 'FSC', yformat=False)
             legends = []
             for it in self._iterations:
                 file_name = self.protocol._getFileName('resolutionXmdFile', iter=it, ref=ref3d)

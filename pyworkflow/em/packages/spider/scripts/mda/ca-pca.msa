@@ -197,23 +197,23 @@ if([cas-option].eq.3) then
     [cas_prefix]  ; OUTPUT: file prefix
 endif
 
-vm m
-echo "Preparing eigenvalue plot" ;
-rm -f [temp_gnuplot] [temp_eigenvalues_text] ;
-python eigendoc.py [cas_prefix]_EIG.$DATEXT > [temp_eigenvalues_text]
-.
-vm m
-echo ' 'set terminal postscript eps enhanced monochrome \"Times-Roman\" 24 > [temp_gnuplot] ;
-echo ' 'set encoding iso_8859_1 >> [temp_gnuplot] ;
-echo ' 'set xlabel \"Eigenvalue number\"   >> [temp_gnuplot] ; 
-echo ' 'set ylabel \"%\" >> [temp_gnuplot] ; 
-echo ' 'set boxwidth 0.5 >> [temp_gnuplot] ;
-echo ' 'set xrange \[0.2:{**[num-factors]}.5\] >> [temp_gnuplot] ;
-echo ' 'set output \'[ps_eigenvalue_hist].ps\' >> [temp_gnuplot] ;
-echo ' 'plot \'[temp_eigenvalues_text]\' using 1:3 title \'eigenvalues\' with boxes >> [temp_gnuplot] ;
-gnuplot [temp_gnuplot] ;
-rm -f [temp_gnuplot] [temp_eigenvalues_text]
-.
+;vm m
+;echo "Preparing eigenvalue plot" ;
+;rm -f [temp_gnuplot] [temp_eigenvalues_text] ;
+;python eigendoc.py [cas_prefix]_EIG.$DATEXT > [temp_eigenvalues_text]
+;.
+;vm m
+;echo ' 'set terminal postscript eps enhanced monochrome \"Times-Roman\" 24 > [temp_gnuplot] ;
+;echo ' 'set encoding iso_8859_1 >> [temp_gnuplot] ;
+;echo ' 'set xlabel \"Eigenvalue number\"   >> [temp_gnuplot] ; 
+;echo ' 'set ylabel \"%\" >> [temp_gnuplot] ; 
+;echo ' 'set boxwidth 0.5 >> [temp_gnuplot] ;
+;echo ' 'set xrange \[0.2:{**[num-factors]}.5\] >> [temp_gnuplot] ;
+;echo ' 'set output \'[ps_eigenvalue_hist].ps\' >> [temp_gnuplot] ;
+;echo ' 'plot \'[temp_eigenvalues_text]\' using 1:3 title \'eigenvalues\' with boxes >> [temp_gnuplot] ;
+;gnuplot [temp_gnuplot] ;
+;rm -f [temp_gnuplot] [temp_eigenvalues_text]
+;.
 
 ; delete pre-existing stacks
 de
