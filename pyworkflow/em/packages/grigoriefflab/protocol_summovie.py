@@ -123,7 +123,7 @@ class ProtSummovie(ProtAlignMovies):
         s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
         if movie.hasAlignment():
             fstFrame, lstFrame = movie.getAlignment().getRange()
-            if self.useAlignment and (fstFrame > s0-1 or lstFrame < sN-1):
+            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
                 summary.append("Warning!!! You have selected a frame range wider than"
                                " the range selected to align. All the frames selected"
                                " without alignment information, will be aligned by"
