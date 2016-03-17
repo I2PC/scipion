@@ -255,22 +255,22 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     
     if s0 < a0:
         diff = a0 - s0
-        initShifts = "0 " * diff
+        initShifts = "0.0000 " * diff
     else:
         initShifts = ""
     
     if sN > aN:
         diff = sN - aN
-        finalShifts = "0 " * diff
+        finalShifts = "0.0000 " * diff
     else:
         finalShifts = ""
-        
-    shiftsX = " "
-    shiftsY = " "
-    for shiftX, shiftY in zip(shiftListX, shiftListY):
+    
+    shiftsX = ""
+    shiftsY = ""
+    for shiftX, shiftY in izip(shiftListX, shiftListY):
         if alFrame >= s0 and alFrame <= sN:
-            shiftsX = " ".join(str(shiftX))
-            shiftsY = " ".join(str(shiftY))
+            shiftsX = shiftsX + "%0.4f " % shiftX
+            shiftsY = shiftsY + "%0.4f " % shiftY
         alFrame += 1
     
     f=open(shiftsFn,'w')
