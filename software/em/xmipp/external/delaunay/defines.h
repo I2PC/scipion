@@ -5,6 +5,9 @@
 //#define DEBUG_CLOSEST
 //#define DEBUG_TWO_CLOSEST
 //#define WINDOWS
+//#define DELAUNAY_STATISTICS
+//#define LOCATION_STATISTICS
+
 
 // Trigonometric defines.
 #ifndef PI

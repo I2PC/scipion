@@ -5,6 +5,7 @@
 #ifdef LOGGING
 #include "log.h"
 #endif
+#include "/home/jnavas/workspace/Delaunay_Scipion/statistics.h"
 #include "sorting.h"
 #include <stdio.h>
 #include <time.h>
@@ -15,23 +16,26 @@
 #include <GL/glut.h>
 #endif
 
-/**************************************************************************
+/*****************************************************************************
 * Defines
-**************************************************************************/
+*****************************************************************************/
 #define MAX_NEIGHBORS		50
 #define EXTERNAL_FACE       0
-
 
 /*****************************************************************************
 * Variables declaration
 *****************************************************************************/
-struct Node_T 	root_Node;
-struct Graph_T  graph;
+struct Node_T 					root_Node;
+struct Graph_T  				graph;
 
 /*****************************************************************************
 * Private functions declaration
 *****************************************************************************/
 void 		insert_First_Node( struct Delaunay_T *delaunay);
+void		get_Vertex_Of_Node( struct Graph_T *graph, int node_Index, int *index1, int *index2, int *index3);
+int			is_Interior_To_Node( struct DCEL_T *dcel, struct Graph_T *graph,
+														struct Point_T *p,
+														int node_Index);
 int         is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, struct Point_T *p, int node_Index);
 void		analyze_Face( struct Delaunay_T *delaunay, int point_Index);
 void    	split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index, int node_Index, int nTriangles);
@@ -70,7 +74,7 @@ int		init_Delaunay( struct Delaunay_T *delaunay, int nPoints)
 	else
 	{
 		// Create DCEL data to store nPoints.
-		if (initialize_DCEL( delaunay->dcel, nPoints, nPoints*8, (nPoints+2)*2) == FAILURE)
+		if (initialize_DCEL( delaunay->dcel, nPoints, INVALID, INVALID) == FAILURE)
 		{
 #ifdef LOGGING
 			sprintf( log_Text, "Error calling initialize_DCEL in init_Delaunay\n");
@@ -91,7 +95,7 @@ int		init_Delaunay( struct Delaunay_T *delaunay, int nPoints)
 				printf("Error allocating graph in init_Delaunay\n");
 				ret = FAILURE;
 
-				delaunay->voronoiComputed = TRUE;
+				delaunay->voronoiComputed = true;
 			}
 		}
 	}
@@ -184,7 +188,7 @@ int create_Delaunay_Triangulation( struct Delaunay_T *delaunay, int createVorono
 	// Set as imaginary faces with vertex points P_MINUS_2 or P_MINUS_1.
 	purge_Delaunay( delaunay);
 
-	delaunay->voronoiComputed = FALSE;
+	delaunay->voronoiComputed = false;
 
 	// Check if Voronoi areas must be computed.
 	if (createVoronoi)
@@ -205,7 +209,7 @@ int create_Delaunay_Triangulation( struct Delaunay_T *delaunay, int createVorono
 			build_Voronoi( &delaunay->voronoi, delaunay->dcel);
 
 			// Set Voronoi flag as computed.
-			delaunay->voronoiComputed = TRUE;
+			delaunay->voronoiComputed = true;
 		}
 	}
 
@@ -228,7 +232,7 @@ int 	initialize_Delaunay(struct Delaunay_T *delaunay, struct DCEL_T *dcel)
 
 	// Get reference to DCEL.
 	delaunay->dcel = dcel;
-	delaunay->voronoiComputed = FALSE;
+	delaunay->voronoiComputed = false;
 
 	// Initialize graph.
 	if (initialize_Graph( &delaunay->graph, delaunay->dcel->nVertex*10) == FAILURE)
@@ -281,8 +285,13 @@ void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 void	incremental_Delaunay(struct Delaunay_T *delaunay)
 {
     int     point_Index=0;                  // Points loop counter.
-#ifdef DEBUG
-//    char    filename[20];                   // Debug filename.
+
+#ifdef DELAUNAY_STATISTICS
+    // Initialize graph statistics (first 2 points are located in first triangle).
+    delaunay_Stat.trianglesFound[0] = 2;
+    delaunay_Stat.trianglesFound[1] = 0;
+    delaunay_Stat.trianglesFound[2] = 0;
+    delaunay_Stat.nFlipped = 0;
 #endif
 
     // Set highest point at first position of the DCEL vertex array.
@@ -344,6 +353,9 @@ void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 	char	filename[20];
 	int		step=0;
 #endif
+#ifdef DELAUNAY_STATISTICS
+	delaunay_Stat.nFlipped = 0;
+#endif
 
 	// Initialize variables.
 	i=0;
@@ -382,6 +394,9 @@ void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 				// Check if neighbor point is in circle.
 				if (in_Circle( &triangle[0], &triangle[1], &triangle[2], &vertex->vertex))
 				{
+#ifdef DELAUNAY_STATISTICS
+					delaunay_Stat.nFlipped++;
+#endif
 #ifdef DEBUG_DCEL
 					printf("Edge %d wrong. Pending %d. \n", i+1, nPending);
 					scanf( "%c", &prueba);
@@ -730,6 +745,7 @@ void    select_Two_Closest( struct Delaunay_T *delaunay, int *first, int *second
     }
 }
 
+
 //#define DEBUG_SELECT_CLOSEST_POINT
 /***************************************************************************
 * Name: select_Closest_Point
@@ -741,14 +757,14 @@ void    select_Two_Closest( struct Delaunay_T *delaunay, int *first, int *second
 * RETURN:	True				TRUE if closest point found. False i.o.c.
 * Description: finds the closest point in the DCEl to an input "p" point.
 ***************************************************************************/
-int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
+bool select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 														struct Point_T *q,
 														double *lowest_Distance)
 {
     int     i=0, j=0;			// Loop counters.
     int     node_Index=0;  		// Index of current node analyzed.
-    int		found=FALSE;		// Loop control flag.
-    int		finished=FALSE;		// Loop control flag.
+    bool	found=false;		// Loop control flag.
+    bool	finished=false;		// Loop control flag.
 	int		child_Index=0;		// Children node ID.
     int     nChildren=0;        // Number of children of current node.
     int		edge_Id=0;			// Edge identifier.
@@ -765,7 +781,13 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     int		*inserted=NULL;
     int		nElems=0;					// # elements to copy.
     int		nDiscarded=0;
-    int		allocationError=FALSE;		// Error allocating memory.
+    bool	allocationError=false;		// Error allocating memory.
+
+#ifdef LOCATION_STATISTICS
+    // # triangles searched before a new point is located.
+    location_Stat.current++;
+    location_Stat.nTrianglesSearched[location_Stat.current] = 0;
+#endif
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 	printf("Point to search: ");
@@ -773,7 +795,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #endif
 
     // Loop while not leaf node found and not end of set of points and not.
-    finished = FALSE;
+    finished = false;
     while (!finished)
     {
     	// If node is a leaf then triangle that surrounds point has been found.
@@ -801,8 +823,8 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 				}
 			}
 
-			found = FALSE;
-			allocationError = FALSE;
+			found = false;
+			allocationError = false;
 			while ((!found) && (!allocationError))
 			{
 #ifdef DEBUG_SELECT_CLOSEST_POINT
@@ -810,11 +832,15 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #endif
 				if (candidates[out] >= 0)
 				{
+#ifdef LOCATION_STATISTICS
+					// Update # triangles searched.
+					location_Stat.nTrianglesSearched[location_Stat.current]++;
+#endif
 					if (inner_To_Voronoi_Area( &delaunay->voronoi, candidates[out]-1, p))
 					{
 						// End inner and outer loops.
-						found = TRUE;
-						finished = TRUE;
+						found = true;
+						finished = true;
 
 						// Update point and distance.
 						q->x = delaunay->dcel->vertex[candidates[out]-1].vertex.x;
@@ -868,7 +894,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 									write_Log( log_Text);
 #endif
 									printf("Error allocating neighbors array in select_Closest_Point.\n");
-									allocationError = TRUE;
+									allocationError = true;
 									break;
 								}
 
@@ -911,9 +937,9 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 						nDiscarded++;
 						if (nDiscarded == delaunay->dcel->nVertex)
 						{
-							allocationError = TRUE;
-							finished = TRUE;
-							found = FALSE;
+							allocationError = true;
+							finished = true;
+							found = false;
 						}
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
@@ -947,7 +973,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     	{
 			// Search triangle in children nodes.
 			i=0;
-			found = FALSE;
+			found = false;
 			nChildren = get_nChildren_Node( &delaunay->graph, node_Index);
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
@@ -957,6 +983,11 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 			{
 				// Get i-children.
 				child_Index = get_iChildren_Node( &delaunay->graph, node_Index, i);
+
+#ifdef LOCATION_STATISTICS
+				// Update # triangles searched.
+				location_Stat.nTrianglesSearched[location_Stat.current]++;
+#endif
 
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 				printf("Checking %d-child in node %d. Node %d\n", i, child_Index, node_Index);
@@ -968,7 +999,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 					node_Index = child_Index;
 
 					// End loop.
-					found = TRUE;
+					found = true;
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 					printf("Point inside node %d\n", node_Index);
 #endif
@@ -980,7 +1011,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 					if (i == nChildren)
 					{
 						// Point must be equal to an existing point. Retry all points in current node.
-						found = FALSE;
+						found = false;
 						i=0;
 						while ((!found) && (i < nChildren))
 						{
@@ -998,8 +1029,8 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 									(*lowest_Distance) = 0.0;
 									q->x = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.x;
 									q->y = delaunay->dcel->vertex[delaunay->graph.nodes[child_Index].points_Index[j]-1].vertex.y;
-									found = TRUE;
-								//	printf("Found point (%lf,%lf) equal to (%lf,%lf)\n", q->x, q->y, p->x, p->y);
+									found = true;
+									//printf("Found point (%lf,%lf) equal to (%lf,%lf)\n", q->x, q->y, p->x, p->y);
 #ifdef DEBUG_SELECT_CLOSEST_POINT
 									printf("Index point %d. Distance %lf\n", delaunay->graph.nodes[child_Index].points_Index[i], (*lowest_Distance));
 #endif
@@ -1010,7 +1041,7 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 						}
 
 						// End main loop and force inner loop to finish.
-						finished = TRUE;
+						finished = true;
 						i = nChildren;
 
 						if (!found)
@@ -1033,6 +1064,99 @@ int select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 }
 
 
+/***************************************************************************
+* Name: select_Closest_Point_DCEL
+* IN:	dcel			triangulation DCEL
+* 		nAnchors		# anchors to be used as initial points
+* 		p				input point
+* OUT:	q				closest point to input "p" point
+* 		lowest_Distance	distance from input "p" to output "q"
+* RETURN:	True		TRUE if closest point found. False i.o.c.
+* Description: finds the closest point in the DCEl to an input "p" point.
+***************************************************************************/
+bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point_T *p,
+												   	   	   	   	   	   struct Point_T *q,
+																	   double *lowest_Distance)
+{
+	bool	error=false;			// Convex hull error flag.
+	bool 	found=false;			// Return value.
+	struct Point_T	*anchors;		// Anchors vector.
+	int		i=0;					// Loop index.
+	int		index=0;				// Array index.
+	int		selectedVertex=0;		// Vertex selected as initial point.
+	int		faceID=0;				// Face identifier.
+	double	newDistance=0.0;		// Distance to between points.
+
+	// Initialize output value.
+	(*lowest_Distance) = DBL_MAX;
+
+#ifdef LOCATION_STATISTICS
+    // # triangles searched before a new point is located.
+    location_Stat.current++;
+    location_Stat.nTrianglesSearched[location_Stat.current] = 0;
+#endif
+
+    if (is_Interior_To_Convex_Hull( dcel, p, &error))
+    {
+    	//CHECK ONLY CONVEX HULL POINTS.
+    }
+
+    if ((anchors = (struct Point_T *) malloc(sizeof(struct Point_T)*nAnchors)) == NULL)
+    {
+#ifdef LOGGING
+		sprintf("Function select_Closest_Point_DCEL: Error allocating anchors array\n");
+		write_Log( log_Text);
+#endif
+		printf("Function select_Closest_Point_DCEL: Error allocating anchors array\n");
+    	found = false;
+    }
+    else
+    {
+    	srand((int) time(NULL));
+
+    	// Create anchor points.
+		for (i=0; i<nAnchors ;i++)
+		{
+	        // Select a new random point.
+			index = rand() % dcel->nVertex;
+
+			// Check if current anchor is closest point.
+			newDistance = distance( p, &anchors[i]);
+			if (newDistance < (*lowest_Distance))
+			{
+				// Update output data.
+				(*lowest_Distance) = newDistance;
+				selectedVertex = index;
+			}
+		}
+
+		// Select face where anchor point lays on.
+		faceID = dcel->edges[dcel->vertex[selectedVertex].origin_Edge-1].face;
+
+		//COMPROBAR SI ES EXTERIOR AL CONVEX HULL ANTES DE USAR LOS ANCHORS
+
+		// Main loop to start location from selected anchor.
+		found = false;
+		while (!found)
+		{
+
+			// Check if current face surrounds point.
+			if (is_Interior_To_Face( dcel, p, faceID))
+			{
+				// SELECT CLOSEST POINT AMONT THREE VERTICES IN FACE.
+			}
+			else
+			{
+				// SELECT NEW FACE.
+			}
+		}
+
+		// Deallocate vector.
+		free(anchors);
+    }
+
+	return(found);
+}
 
 //*****************************************************************************
 //                      PRIVATE FUNCTION BODIES
@@ -1049,8 +1173,20 @@ void       insert_First_Node( struct Delaunay_T *delaunay)
     insert_Node( &delaunay->graph, &node);
 }
 
-//#define DEBUG_IS_INTERIOR_TO_NODE
 
+
+
+//#define DEBUG_IS_INTERIOR_TO_NODE
+/***************************************************************************
+* Name: is_Interior_To_Node
+* IN:	dcel			triangulation DCEL
+* 		graph			incremental Delaunay graph
+* 		p				input point
+* 		node_Index		graph node index
+* OUT:	N/A
+* RETURN:	True		TRUE if point is interior to node
+* Description: check if input point p is interior to "node_Index" node.
+***************************************************************************/
 int     is_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, struct Point_T *p, int node_Index)
 {
     int     is_Interior=FALSE;				// Return value.
@@ -1095,112 +1231,7 @@ int is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, str
     return(is_Interior);
 }
 
-//#define DEBUG_RETURN_TURN
-enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p, int source_ID, int dest_ID)
-{
-    enum Turn_T turn=LEFT_TURN;         // Return value.
 
-    // Normal source point.
-    if (source_ID > 0)
-    {
-        // Normal destination point.
-        if (dest_ID > 0)
-        {
-            // If turn right then point is not in triangle.
-			turn = check_Turn( &dcel->vertex[source_ID-1].vertex, &dcel->vertex[dest_ID-1].vertex, p);
-        }
-        // Destination point is P-2.
-        else if (dest_ID == P_MINUS_2)
-        {
-        	if (source_ID == 1)
-        	{
-        		turn = LEFT_TURN;
-        	}
-            // Check if point is over line from source_Index point to P-2.
-        	else if (higher_Point( p, &dcel->vertex[source_ID-1].vertex, &lexicographic_Higher))
-            {
-                turn = RIGHT_TURN;
-            }
-			else
-			{
-				turn = LEFT_TURN;
-			}
-        }
-        // Destination point is P-1.
-        else
-        {
-            // Check if point is over line from source_Index point to P-1.
-            if (higher_Point( p, &dcel->vertex[source_ID-1].vertex, &lexicographic_Higher))
-            {
-				turn = LEFT_TURN;
-            }
-			else
-			{
-				turn = RIGHT_TURN;
-			}
-        }
-    }
-    else
-    {
-        // Source point is P-1 and destination cannot be p-2.
-        if (source_ID == P_MINUS_1)
-        {
-        	if (dest_ID == 1)
-        	{
-        		turn = LEFT_TURN;
-        	}
-            // Check if point is over line from P-1 point to dest_Index point.
-        	else if (higher_Point( p, &dcel->vertex[dest_ID-1].vertex, &lexicographic_Higher))
-            {
-				turn = RIGHT_TURN;
-            }
-			else
-			{
-				turn = LEFT_TURN;
-			}
-        }
-        // Source point is P-2.
-        else
-        {
-            // Check destination point.
-            if (dest_ID != P_MINUS_1)
-            {
-				if (higher_Point( p, &dcel->vertex[dest_ID-1].vertex, &lexicographic_Higher))
-				{
-					turn = LEFT_TURN;
-				}
-				else
-				{
-					turn = RIGHT_TURN;
-				}
-            }
-			else
-			{
-				// Points can only do a left turn.
-				turn = LEFT_TURN;
-			}
-        }
-    }
-
-#ifdef DEBUG_RETURN_TURN
-    printf("Turn between segment %d %d and point \n", source_ID, dest_ID);
-    print_Point( p);
-    if (turn == LEFT_TURN)
-    {
-    	printf(" is LEFT_TURN\n");
-    }
-    else if (turn == RIGHT)
-    {
-    	printf(" is RIGHT\n");
-    }
-    else
-    {
-    	printf(" is COLLINEAR\n");
-    }
-#endif
-
-    return(turn);
-}
 
 //#define DEBUG_ANALYZE_FACE
 void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
@@ -1215,9 +1246,9 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
     point = get_Vertex( delaunay->dcel, point_Index);
 
 #ifdef DEBUG_ANALYZE_FACE
-    printf("Searching point %d coordinates (%lf,%lf)\n", point_Index+1,
-    												point->vertex.x,
-													point->vertex.y);
+    printf("*******************\nSearching point %d coordinates (%lf,%lf)\n", point_Index+1,
+																				point->vertex.x,
+																				point->vertex.y);
 #endif
 
     // Initialize loop control flag.
@@ -1227,11 +1258,15 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
         // If node is a leaf then triangle found.
     	if (delaunay->graph.nodes[node_Index].nChildren == 0)
         {
+#ifdef DEBUG_ANALYZE_FACE
+           	printf("Found leaf node %d.\n", node_Index);
+#endif
+
             // Check if point is strictly interior (not over an edge).
             if (is_Strictly_Interior_To_Node(delaunay->dcel, &delaunay->graph, &point->vertex, node_Index))
             {
 #ifdef DEBUG_ANALYZE_FACE
-            	printf("Found node %d. It is strictly interior\n", node_Index);
+            	printf("It is strictly interior\n");
 #endif
                 // Split current triangle creating 3 triangles.
                 split_Triangle( delaunay->dcel, &delaunay->graph, point_Index, node_Index, 3);
@@ -1240,7 +1275,7 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
             else
             {
 #ifdef DEBUG_ANALYZE_FACE
-            	printf("Found node %d. It is over an edge\n", node_Index);
+            	printf("It is over an edge\n");
 #endif
 
                 // Split current triangle creating 2 triangles.
@@ -1258,13 +1293,18 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
             while ((!found) && (i < delaunay->graph.nodes[node_Index].nChildren))
             {
 #ifdef DEBUG_ANALYZE_FACE
-            	printf("Trying %d-child node %d in node %d.\n", i, child_Index, node_Index);
+            	printf("Trying %d-child from node %d: node id %d.\n", i, node_Index, delaunay->graph.nodes[node_Index].children_Index[i]);
 #endif
 
                 // Check if point is interior to i-child node.
                 if (is_Interior_To_Node( delaunay->dcel, &delaunay->graph, &point->vertex,
                 						delaunay->graph.nodes[node_Index].children_Index[i]))
                 {
+#ifdef DELAUNAY_STATISTICS
+                	// Update triangle where point is located.
+                	delaunay_Stat.trianglesFound[i]++;
+#endif
+
                     // Search in next children node.
                     node_Index = delaunay->graph.nodes[node_Index].children_Index[i];
 
@@ -1272,7 +1312,10 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
                     found = TRUE;
 
 #ifdef DEBUG_ANALYZE_FACE
-                    printf("Interior to node %d. Fetch node data.\n", child_Index);
+                    printf("Interior to node %d. Fetch node data.\n", node_Index);
+                    printf("Node vertices are %d %d %d.\n", delaunay->graph.nodes[node_Index].points_Index[0],
+															delaunay->graph.nodes[node_Index].points_Index[1],
+															delaunay->graph.nodes[node_Index].points_Index[2]);
 #endif
                 }
                 // Next child.
@@ -1281,10 +1324,15 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
                     i++;
                     if (i == delaunay->graph.nodes[node_Index].nChildren)
                     {
-#ifdef DEBUG_ANALYZE_FACE
-                        printf("Point is not interior to any node.\n");
+                    	// Force exit function.
+                    	finished = TRUE;
+                    	i = delaunay->graph.nodes[node_Index].nChildren;
+                        printf("CRITICAL ERROR: point (%lf,%lf) is not interior to any node.\n", point->vertex.x, point->vertex.y);
+                        printf("Current node %d has %d children.\n", node_Index, delaunay->graph.nodes[node_Index].nChildren);
+                        printf("Node vertices are %d %d %d.\n", delaunay->graph.nodes[node_Index].points_Index[0],
+																delaunay->graph.nodes[node_Index].points_Index[1],
+																delaunay->graph.nodes[node_Index].points_Index[2]);
                         exit(0);
-#endif
                     }
                 }
             }
@@ -1448,6 +1496,17 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			prev_Edge_ID = dcel->edges[collinear_Index].previous_Edge;
 			next_Edge_ID = dcel->edges[collinear_Index].next_Edge;
 
+#ifdef DEBUG_SPLIT_TRIANGLE
+			printf("Collinear edges are %d and %d. Origins are %d and %d\n",
+					collinear_Edge_ID,
+					dcel->edges[collinear_Index].twin_Edge,
+					dcel->edges[collinear_Index].origin_Vertex,
+					dcel->edges[dcel->edges[collinear_Index].twin_Edge-1].origin_Vertex);
+			printf("Faces that share edge are:\n");
+			printFace( dcel, dcel->edges[collinear_Index].face);
+			printFace( dcel, dcel->edges[dcel->edges[collinear_Index].twin_Edge-1].face);
+#endif
+
 			// Store edges that must be checked after split of first triangle operation.
 			flip_Candidates[0] = next_Edge_ID;
 			flip_Candidates[1] = prev_Edge_ID;
@@ -1484,18 +1543,23 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, collinear_Index);
 			new_Node[0].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].next_Edge - 1);
 			new_Node[0].face_ID = dcel->edges[collinear_Index].face;
+			insert_Node( graph, &new_Node[0]);
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting first triangle\n");
+			printFace( dcel, new_Node[0].face_ID);
 #endif
-			insert_Node( graph, &new_Node[0]);
 			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].previous_Edge - 1);
 			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[dcel->edges[collinear_Index].previous_Edge-1].twin_Edge-1].previous_Edge-1);
 			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[dcel->edges[collinear_Index].previous_Edge - 1].twin_Edge-1);
 			new_Node[1].face_ID = new_Face_ID;
+			insert_Node( graph, &new_Node[1]);
+
+			// Insert new face.
+			insertFace( dcel, new_Edge_ID + 2);
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting second triangle\n");
+			printFace( dcel, new_Node[1].face_ID);
 #endif
-			insert_Node( graph, &new_Node[1]);
 
 			// Update twin face.
 			collinear_Edge_ID = dcel->edges[collinear_Index].twin_Edge;
@@ -1516,10 +1580,6 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			update_Edge( dcel, NO_UPDATE, NO_UPDATE, NO_UPDATE, new_Edge_ID+5, NO_UPDATE, collinear_Index);
 			update_Edge( dcel, NO_UPDATE, NO_UPDATE, new_Edge_ID+5, NO_UPDATE, NO_UPDATE, prev_Edge_ID-1);
 
-			// Insert two new faces.
-			insertFace( dcel, new_Edge_ID + 2);
-			insertFace( dcel, new_Edge_ID + 4);
-
 			// Get node of twin edge and update it.
 			node = get_Node( graph, old_Node_ID2);
 			node->children_Index[0] = get_Graph_Length( graph);
@@ -1532,18 +1592,25 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			new_Node[0].points_Index[1] = get_Edge_Origin_Vertex( dcel, collinear_Index);
 			new_Node[0].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[collinear_Index].next_Edge - 1);
 			new_Node[0].face_ID = dcel->edges[collinear_Index].face;
+			insert_Node( graph, &new_Node[0]);
+			update_Face( dcel, collinear_Edge_ID, new_Node[0].face_ID);
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting third triangle\n");
+			printFace( dcel, new_Node[0].face_ID);
 #endif
-			insert_Node( graph, &new_Node[0]);
 			new_Node[1].points_Index[0] = get_Edge_Origin_Vertex( dcel, dcel->edges[next_Edge_ID - 1].previous_Edge - 1);
 			new_Node[1].points_Index[1] = get_Edge_Origin_Vertex( dcel, next_Edge_ID - 1);
 			new_Node[1].points_Index[2] = get_Edge_Origin_Vertex( dcel, dcel->edges[next_Edge_ID - 1].next_Edge - 1);
 			new_Node[1].face_ID = dcel->edges[next_Edge_ID - 1].face;
+			insert_Node( graph, &new_Node[1]);
+
+			// Insert new face.
+			insertFace( dcel, new_Edge_ID + 4);
+
 #ifdef DEBUG_SPLIT_TRIANGLE
 			printf("Splitting forth triangle\n");
+			printFace( dcel, new_Node[1].face_ID);
 #endif
-			insert_Node( graph, &new_Node[1]);
 
 			// Check candidates from first triangle.
 			check_Edge( dcel, graph, flip_Candidates[0]);
@@ -1553,6 +1620,12 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 			check_Edge( dcel, graph, prev_Edge_ID);
 			check_Edge( dcel, graph, next_Edge_ID);
 		}
+#ifdef DEBUG_SPLIT_TRIANGLE
+		else
+		{
+			printf("Collinear edge is negative. Point index %d and face edge %d\n", point_Index, face->edge);
+		}
+#endif
     }
 }
 
@@ -1752,6 +1825,7 @@ void	flip_Edges_Dcel( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 	check_Edge( dcel, graph, twin->next_Edge);
 }
 
+//#define DEBUG_CHECK_EDGES
 void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 {
 	int		flip_Edges=FALSE;							// Flip needed flag.
@@ -1861,6 +1935,13 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 	// Check if edges must be flipped.
 	if (flip_Edges)
 	{
+#ifdef DELAUNAY_STATISTICS
+		// Update triangle where point is located.
+		delaunay_Stat.nFlipped++;
+#endif
+#ifdef DEBUG_CHECK_EDGES
+		printf("Flipping edge %d\n", edge_ID);
+#endif
 		// Flip edges.
 		flip_Edges_Dcel( dcel, graph, edge_ID);
 	}
