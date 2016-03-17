@@ -116,7 +116,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         command = '-i %(movieName)s%(movieSuffix)s -o %(outputMicFn)s ' % locals()
         command += '--frameRange %d %d ' % (a0-1, aN-1)
         if self.inputMovies.get().getDark():
-            command += '--dark '+self.inputMovies.get().getDark()
+            command += '--dark %s ' % self.inputMovies.get().getDark()
         if self.inputMovies.get().getGain():
             command += ' --gain '+self.inputMovies.get().getGain()
         winSize = self.winSize.get()
