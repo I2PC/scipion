@@ -50,7 +50,7 @@ class ResmapPrewhitenWizard(EmWizard):
         
         emptyInput = ((not self.prot.inputVolume.get().hasValue()) or
                       (self.prot.useSplitVolume == True and 
-                       not self.prot.splitVolume.get().hasValue()))
+                       not self.prot.volumeHalf1.get().hasValue()))
         
         if emptyInput:
             dialog.showWarning("Empty input", "Select input volume(s) first", self.form.root)
@@ -159,7 +159,8 @@ class PreWhiteningDialog(dialog.Dialog):
         ih = ImageHandler()
         ih.convert(prot.inputVolume.get(), join(self.workingDir, 'volume1.map'))
         if prot.useSplitVolume:
-            ih.convert(prot.splitVolume.get(), join(self.workingDir, 'volume2.map'))
+            ih.convert(prot.volumeHalf1.get(), join(self.workingDir, 'volume1.map'))
+            ih.convert(prot.volumeHalf2.get(), join(self.workingDir, 'volume2.map'))
     
         self.results = prot.runResmap(self.workingDir, wizardMode=True)
          

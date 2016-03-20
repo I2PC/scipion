@@ -403,7 +403,7 @@ class ProtMovieAlignment(ProtProcessMovies):
             firstFrame = 0
             lastFrame = 0
             if doSaveMovie:
-                command += '--ssc '
+                command += ' --ssc '
             command += '-o %(micName)s --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
             command += '--nst %d --ned %d ' % (firstFrame, lastFrame)
             if self.inputMovies.get().getDark() and not grayCorrected:
@@ -412,8 +412,6 @@ class ProtMovieAlignment(ProtProcessMovies):
             if self.inputMovies.get().getGain() and not grayCorrected:
                 command += " --gain "+self.inputMovies.get().getGain()
                 grayCorrected=True
-            if doSaveMovie:
-                command += '--ssc '
             try:
                 self.runJob(program, command, cwd=movieFolder)
             except:
