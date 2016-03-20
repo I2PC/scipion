@@ -29,6 +29,7 @@ Them should be sub-classes in the different sub-packages from
 each EM-software packages.
 """
 
+from itertools import izip
 
 from pyworkflow.protocol import Protocol
 from pyworkflow.object import Set
@@ -37,7 +38,7 @@ from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticl
                                 SetOfVolumes, SetOfCTF, SetOfMovies, SetOfFSCs,
                                 SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
 from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
-from pyworkflow.em.data_tiltpairs import SetOfAngles, CoordinatesTiltPair
+from pyworkflow.em.data_tiltpairs import SetOfAngles, CoordinatesTiltPair, TiltPair
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.mapper.sqlite_db import SqliteDb
 
@@ -71,6 +72,20 @@ class EMProtocol(Protocol):
         coordSet = self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
         coordSet.setMicrographs(micSet)       
         return coordSet
+
+    def _createCoordinatesTiltPair(self, micTiltPairs, uCoords, tCoords,
+                                   angles, suffix):
+        coordTiltPairs = self.__createSet(CoordinatesTiltPair,
+                                          'coordinates_pairs%s.sqlite', suffix)
+        coordTiltPairs.setUntilted(uCoords)
+        coordTiltPairs.setTilted(tCoords)
+        coordTiltPairs.setAngles(angles)
+        coordTiltPairs.setMicsPair(micTiltPairs)
+
+        for coordU, coordT in izip(uCoords, tCoords):
+            coordTiltPairs.append(TiltPair(coordU, coordT))
+
+        return coordTiltPairs
     
     def _createSetFromName(self, className, suffix=''):
         """ Create a new set from the given className. """
