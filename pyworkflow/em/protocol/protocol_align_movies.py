@@ -92,9 +92,12 @@ class ProtAlignMovies(ProtProcessMovies):
         # Do nothing now, the output should be ready.
         pass
 
-    def _loadOutputSet(self, SetClass, baseName):
+    def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
         Load the output set if it exists or create a new one.
+        fixSampling: correct the output sampling rate if binning was used,
+        except for the case when the original movies are kepts and shifts
+        refers to that one.
         """
         setFile = self._getPath(baseName)
 
@@ -107,9 +110,10 @@ class ProtAlignMovies(ProtProcessMovies):
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
         inputMovies = self.inputMovies.get()
-        newSampling = inputMovies.getSamplingRate() * self.binFactor.get()
         outputSet.copyInfo(inputMovies)
-        outputSet.setSamplingRate(newSampling)
+        if fixSampling:
+            newSampling = inputMovies.getSamplingRate() * self.binFactor.get()
+            outputSet.setSamplingRate(newSampling)
 
         return outputSet
 
@@ -135,9 +139,12 @@ class ProtAlignMovies(ProtProcessMovies):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if self._doGenerateOutputMovies():
-            # FIXME: Even if we save the move or not, both are aligned
-            suffix = '_aligned' if self.doSaveMovie else '_original'
-            movieSet = self._loadOutputSet(SetOfMovies, 'movies%s.sqlite' % suffix)
+            # FIXME: Even if we save the movie or not, both are aligned
+            saveMovie = self.doSaveMovie.get()
+            suffix = '_aligned' if saveMovie else '_original'
+            movieSet = self._loadOutputSet(SetOfMovies,
+                                           'movies%s.sqlite' % suffix,
+                                           fixSampling=saveMovie)
 
             for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
