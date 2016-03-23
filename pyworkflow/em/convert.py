@@ -107,13 +107,22 @@ class ImageHandler(object):
         inputObj and outputObj can be: tuple, string, or Image subclass 
         (see self._convertToLocation)
         """
-        # Read from input
-        self._img.read(self._convertToLocation(inputObj))
-        
-        if dataType is not None:
-            self._img.convert2DataType(dataType)
-        # Write to output
-        self._img.write(self._convertToLocation(outputObj))
+        inputLoc = self._convertToLocation(inputObj)
+        outputLoc = self._convertToLocation(outputObj)
+
+        if inputLoc[1].lower().endswith('dm4'):
+            # FIXME Since now we can not read dm4 format in Scipion natively
+            # we are opening an Eman2 process to read the dm4 file
+            from pyworkflow.em.packages.eman2.convert import convertImage
+            convertImage(inputLoc, outputLoc)
+        else:
+            # Read from input
+            self._img.read(inputLoc)
+
+            if dataType is not None:
+                self._img.convert2DataType(dataType)
+            # Write to output
+            self._img.write(outputLoc)
         
     def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
         """ convert format of stack file. Output/input format is
