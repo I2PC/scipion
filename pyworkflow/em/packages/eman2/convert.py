@@ -232,6 +232,14 @@ def writeSetOfParticles(partSet, path, **kwargs):
 #     return listHdf
 
 
+def getImageDimensions(imageFile):
+    proc = createEmanProcess('e2ih.py', args=imageFile)
+    return map(int, proc.stdout.readline().split())
+
+def convertImage(inputImage, outputImage):
+    proc = createEmanProcess('e2ih.py',
+                             args='%s %s' % (inputImage, outputImage))
+
 def readSetOfParticles(filename, partSet, **kwargs):
     pass
 
