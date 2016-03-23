@@ -221,6 +221,18 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 # we assume that if compressed the name ends with .tbz
                 if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
+            elif movieName.endswith('.txt'):
+                # Support a list of frame as a simple .txt file containing
+                # all the frames in a raw list, we could use a xmd as well,
+                # but a plain text was choose to simply its generation
+                with open(movieName) as f:
+                    movieOrigin = os.path.basename(os.readlink(movieFn))
+                    newMovieName = movieName.replace('.txt', '.mrcs')
+                    ih = ImageHandler()
+                    for i, line in enumerate(f):
+                        inputFrame = os.path.join(movieOrigin, line)
+                        ih.convert(inputFrame,
+                                   (1+1, os.path.join(movieFolder, newMovieName)))
             else:
                 newMovieName = movieName
             

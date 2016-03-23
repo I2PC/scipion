@@ -817,6 +817,9 @@ class SetOfImages(EMSet):
             return None
         x, y, z = self._firstDim
         return x, y, z
+
+    def setDim(self, newDim):
+        self._firstDim.set(newDim)
     
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0

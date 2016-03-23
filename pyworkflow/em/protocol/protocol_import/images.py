@@ -29,7 +29,7 @@ In this module are protocol base classes related to EM imports of Micrographs, P
 
 import sys
 import os
-from os.path import basename, exists, isdir
+from os.path import basename, exists, isdir, join, dirname, abspath
 import time
 from datetime import timedelta, datetime
 
@@ -157,7 +157,27 @@ class ProtImportImages(ProtImportFiles):
         self._defineOutputs(**args)
         
         return outFiles
-    
+
+    def __addImageToSet(self, img, imgSet, fileName):
+        """ Add an image to a set, check if the first image to handle
+         some special condition to read dimensions such as .txt or compressed
+         movie files.
+        """
+        if imgSet.getSize() == 0:
+            ih = ImageHandler()
+            fn = img.getFileName()
+            if fn.lower().endswith('.txt'):
+                origin = dirname(fileName)
+                with open(fn) as f:
+                    lines = f.readlines()
+                    fn = join(origin, lines[0].strip())
+                    x, y, _, _ = ih.getDimensions(fn)
+                    dim = (x, y, len(lines))
+            else:
+                dim = img.getDim()
+        imgSet.setDim(dim)
+        imgSet.append(img)
+
     def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
                          amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
@@ -226,12 +246,12 @@ class ProtImportImages(ProtImportFiles):
                         img.setMicId(fileId)
                         img.setFileName(dst)
                         img.setIndex(index)
-                        imgSet.append(img)
+                        self.__addImageToSet(img, imgSet, fileName)
                 else:
                     img.setObjId(fileId)
                     img.setFileName(dst)
                     self._fillMicName(img, fileName) # fill the micName if img is a Micrograph.
-                    imgSet.append(img)
+                    self.__addImageToSet(img, imgSet, fileName)
 
                 outFiles.append(dst)
                 self.debug('After append. Files: %d' % len(outFiles))
