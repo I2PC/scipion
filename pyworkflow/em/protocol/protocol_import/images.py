@@ -175,7 +175,7 @@ class ProtImportImages(ProtImportFiles):
                     dim = (x, y, len(lines))
             else:
                 dim = img.getDim()
-        imgSet.setDim(dim)
+            imgSet.setDim(dim)
         imgSet.append(img)
 
     def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
