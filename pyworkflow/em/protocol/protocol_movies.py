@@ -85,6 +85,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # inserting each of the steps for each movie
         self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
+        self.convertStepId = self._insertFunctionStep('convertInputStep')
+
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
                                                 self.inputMovies.get())
         finalSteps = self._insertFinalSteps(movieSteps)
@@ -187,10 +189,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movieDict,
                                                movie.hasAlignment(),
-                                               prerequisites=[])
+                                               prerequisites=[self.convertStepId])
         return movieStepId
 
     #--------------------------- STEPS functions -----------------------------
+    def convertInputStep(self):
+        """ Should be implemented in sub-classes if needed. """
+        pass
+
     def processMovieStep(self, movieDict, hasAlignment):
         movie = Movie()
         movie.setAcquisition(Acquisition())
@@ -221,6 +227,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 # we assume that if compressed the name ends with .tbz
                 if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
+            elif movieName.endswith('.tif'):
+                #FIXME: It seems that we have some flip problem with compressed
+                # tif files, we need to check that
+                newMovieName = movieName.replace('.tif', '.mrc')
+                # we assume that if compressed the name ends with .tbz
+                if not exists(newMovieName):
+                    self.runJob('tif2mrc', '%s %s' % (movieName, newMovieName),
+                                                      cwd=movieFolder)
             elif movieName.endswith('.txt'):
                 # Support a list of frame as a simple .txt file containing
                 # all the frames in a raw list, we could use a xmd as well,
