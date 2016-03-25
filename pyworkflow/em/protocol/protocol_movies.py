@@ -85,7 +85,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # inserting each of the steps for each movie
         self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
-        self.convertStepId = self._insertFunctionStep('convertInputStep')
+        # FIXME: Not working in scipion-box
+        #self.convertStepId = self._insertFunctionStep('convertInputStep')
 
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
                                                 self.inputMovies.get())
@@ -189,7 +190,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movieDict,
                                                movie.hasAlignment(),
-                                               prerequisites=[self.convertStepId])
+                                               prerequisites=[])
         return movieStepId
 
     #--------------------------- STEPS functions -----------------------------
@@ -239,14 +240,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 # Support a list of frame as a simple .txt file containing
                 # all the frames in a raw list, we could use a xmd as well,
                 # but a plain text was choose to simply its generation
-                with open(movieName) as f:
+                movieTxt = os.path.join(movieFolder, movieName)
+                with open(movieTxt) as f:
                     movieOrigin = os.path.basename(os.readlink(movieFn))
                     newMovieName = movieName.replace('.txt', '.mrcs')
                     ih = ImageHandler()
                     for i, line in enumerate(f):
-                        inputFrame = os.path.join(movieOrigin, line)
-                        ih.convert(inputFrame,
-                                   (1+1, os.path.join(movieFolder, newMovieName)))
+                        if line.strip():
+                            inputFrame = os.path.join(movieOrigin, line.strip())
+                            ih.convert(inputFrame,
+                                       (i+1, os.path.join(movieFolder, newMovieName)))
             else:
                 newMovieName = movieName
             

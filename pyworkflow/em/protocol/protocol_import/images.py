@@ -169,7 +169,7 @@ class ProtImportImages(ProtImportFiles):
             if fn.lower().endswith('.txt'):
                 origin = dirname(fileName)
                 with open(fn) as f:
-                    lines = f.readlines()
+                    lines = [l.strip() for l in f.readlines() if l.strip()]
                     fn = join(origin, lines[0].strip())
                     x, y, _, _ = ih.getDimensions(fn)
                     dim = (x, y, len(lines))
