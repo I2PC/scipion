@@ -23,22 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-//#include <vector>
-//#include <sstream>
-//#include <fstream>
-//#include <time.h>
-
 #include <data/xmipp_program.h>
 #include <data/projection.h>
 #include <data/multidim_array.h>
-#include <data/xmipp_image.h>
-//#include <data/normalize.h>
-//#include <data/xmipp_fftw.h>
-
+#include <reconstruction/fourier_filter.h>
 #include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
 #include "opencv2/video/video.hpp"
-//#include "opencv2/gpu/gpu.hpp"
 
 
 
@@ -49,8 +39,9 @@ class ProgVolumeHomogeneitator: public XmippProgram
 {
 public:
     FileName fnVol, fnRef, fnSetOfImgIn, fnSetOfImgOut;
-    FileName fnTestOut1, fnTestOut2;
+    FileName fnTestOut1, fnTestOut2, fnTestOut3;
     int winSize;
+    double cutFreq;
 
 public:
     void readParams();
@@ -66,10 +57,9 @@ public:
     // Converts an OpenCV matrix to XMIPP MultidimArray
     void opencv2Xmipp(const cv::Mat &opencvMat, MultidimArray<double> &xmippArray);
 
-    //Method to get two same volume but from different class and correcting all images of one of the volume with respect
+    //Method to get two same volume but from different class with different conformation and correcting all images of one of the volume with respect
     //to the another one as a reference, using optical flow algorithm. This is to later merging the corrected images
     //to the images of the reference map to reconstruct a volume with better resolution
-    //JavierVargas : February 2016 BCU
     void run();
 };
 //@}
