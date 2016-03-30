@@ -157,7 +157,8 @@ class ProtMotionCorr(ProtAlignMovies):
          In case of a bining greater than 1, the shifts should be scaled.
         """
         logPath = self._getExtraPath(self._getMovieLogFile(movie))
-        return parseMovieAlignment(logPath)
+        binning = self.binFactor.get()
+        return parseMovieAlignment(logPath, binning)
 
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
