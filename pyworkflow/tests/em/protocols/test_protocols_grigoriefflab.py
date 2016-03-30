@@ -380,13 +380,21 @@ class TestSummovie(BaseTest):
 #                              (1,7), [0, 0, 0, 0])
 
     def test_qbeta_SkipCrop(self):
-        prot = self.newProtocol(ProtSummovie,
-                                sumFrame0=2, sumFrameN=2,
-                                exposurePerFrame=1.4)
+        from pyworkflow.em.packages.motioncorr import ProtMotionCorr
+        
+        prot = self.newProtocol(ProtMotionCorr,
+                                alignFrame0=2, alignFrameN=2,
+                                cropOffsetX=10, cropOffsetY=10)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
+        
+        protSum = self.newProtocol(ProtSummovie,
+                                sumFrame0=2, sumFrameN=2,
+                                exposurePerFrame=1.4)
+        prot.inputMovies.set(prot.outputMovies)
+        self.launchProtocol(protSum)
 
-        self._checkMicrographs(prot)
+        self._checkMicrographs(protSum)
 #         self._checkAlignment(prot.outputMovies[1],
 #                              (3,5), [10, 10, 0, 0])
 
