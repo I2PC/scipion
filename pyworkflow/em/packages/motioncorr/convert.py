@@ -44,7 +44,7 @@ def getEnviron():
     return environ
 
 
-def parseMovieAlignment(logFile, binFactor):
+def parseMovieAlignment(logFile):
     """ Get the first and last frames together with the shifts
     between frames aligned.
     """
@@ -60,7 +60,7 @@ def parseMovieAlignment(logFile, binFactor):
             if first is None: # read the first frame number
                 first = int(parts[2][1:]) # take the id from #000 format
             # take the id from the last two colums of the line
-            xshifts.append(float(parts[-2]) * binFactor)
-            yshifts.append(float(parts[-1])* binFactor)
+            xshifts.append(float(parts[-2]))
+            yshifts.append(float(parts[-1]))
     f.close()
     return xshifts, yshifts

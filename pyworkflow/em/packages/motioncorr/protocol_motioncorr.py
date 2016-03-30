@@ -158,7 +158,10 @@ class ProtMotionCorr(ProtAlignMovies):
         """
         logPath = self._getExtraPath(self._getMovieLogFile(movie))
         binning = self.binFactor.get()
-        return parseMovieAlignment(logPath, binning)
-
+        xShifts, yShifts = parseMovieAlignment(logPath)
+        xSfhtsCorr = [x * binning for x in xShifts]
+        ySfhtsCorr = [y * binning for y in yShifts]
+        return xSfhtsCorr, ySfhtsCorr
+    
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
