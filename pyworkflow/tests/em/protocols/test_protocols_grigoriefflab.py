@@ -388,12 +388,13 @@ class TestSummovie(BaseTest):
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
         
+        
         protSum = self.newProtocol(ProtSummovie,
                                 sumFrame0=2, sumFrameN=2,
                                 exposurePerFrame=1.4)
-        prot.inputMovies.set(prot.outputMovies)
+        protSum.inputMovies.set(prot.outputMovies)
         self.launchProtocol(protSum)
-
+        
         self._checkMicrographs(protSum)
 #         self._checkAlignment(prot.outputMovies[1],
 #                              (3,5), [10, 10, 0, 0])
