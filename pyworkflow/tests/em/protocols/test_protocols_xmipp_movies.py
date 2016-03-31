@@ -234,7 +234,7 @@ class TestAverageMovie(BaseTest):
                                               magnification=50000)
         cls.protImport2 = cls.runImportMovies(cls.ds.getFile('cct/cct_1.em'),
                                               magnification=61000)
-
+    
     def _checkMicrographs(self, protocol):
         self.assertIsNotNone(getattr(protocol, 'outputMicrographs', None),
                              "Output SetOfMicrographs were not created.")
@@ -249,19 +249,16 @@ class TestAverageMovie(BaseTest):
         msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
         self.assertEqual(goldRoi, roi,
                          msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
-
+    
     def test_qbeta(self):
         prot = self.newProtocol(XmippProtMovieCorr,
                                 doSaveAveMic=False)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
-        self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
                              (1,7), [0, 0, 0, 0])
-        
-        
-
+    
     def test_cct(self):
         prot = self.newProtocol(XmippProtMovieCorr,
                                 doSaveAveMic=False,
@@ -269,10 +266,9 @@ class TestAverageMovie(BaseTest):
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
         
-        self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
                              (1,7), [0, 0, 0, 0])
-
+    
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(XmippProtMovieCorr,
                                 doSaveAveMic=False,
@@ -282,6 +278,5 @@ class TestAverageMovie(BaseTest):
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
-        self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
                              (3,5), [10, 10, 0, 0])
