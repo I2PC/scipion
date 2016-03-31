@@ -164,6 +164,10 @@ class XmippProtMovieCorr(ProtAlignMovies):
         return summary
     
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _getNumberOfFrames(self, movie):
+        _, _, n = movie.getDim()
+        return n
+    
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
 
