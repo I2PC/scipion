@@ -108,7 +108,17 @@ class XmippProtMovieAverage(ProtAlignMovies):
         if cropRegion == 1 and movie.hasAlignment():
             roi = movie.getAlignment().getRoi()
             args += '--cropULCorner %d %d ' % (roi[0], roi[1])
-            args += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1, roi[1] + roi[3] -1)
+            
+            if roi[2] <= 0:
+                dimX = -1
+            else:
+                dimX = roi[0] + roi[2] -1
+            
+            if roi[3] <= 0:
+                dimY = -1
+            else:
+                dimY = roi[1] + roi[3] -1
+
         elif cropRegion == 2:
             
             offsetX = self.cropOffsetX.get()
@@ -128,7 +138,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
             else:
                 dimY = offsetY + cropDimY - 1
         
-            args += '--cropDRCorner %d %d ' % (dimX, dimY)
+        args += '--cropDRCorner %d %d ' % (dimX, dimY)
         
         if not (movie.hasAlignment() and self.useAlignment):
             s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
