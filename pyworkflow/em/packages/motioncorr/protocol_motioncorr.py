@@ -139,7 +139,7 @@ class ProtMotionCorr(ProtAlignMovies):
         return summary
 
     def _validate(self):
-        errors = ProtAlignMovies._validate()
+        errors = ProtAlignMovies._validate(self)
         bin = int(self.binFactor.get())
 
         if not (bin == 1 or bin == 2):
