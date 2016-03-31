@@ -263,6 +263,7 @@ class TestAverageMovie(BaseTest):
                                        cropRegion=1)
         protAverage.inputMovies.set(prot.outputMovies)
         protAverage.setObjLabel('average w alignment info')
+        self.launchProtocol(protAverage)
         
     def test_cct(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
@@ -272,6 +273,7 @@ class TestAverageMovie(BaseTest):
                                        cropDimX=1500, cropDimY=1500)
         protAverage.inputMovies.set(self.protImport2.outputMovies)
         protAverage.setObjLabel('average imported movies')
+        self.launchProtocol(protAverage)
     
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(XmippProtMovieCorr,
