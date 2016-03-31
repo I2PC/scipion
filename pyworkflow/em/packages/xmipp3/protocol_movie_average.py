@@ -95,7 +95,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
         inputMd = self._getMovieOrMd(movie)
-        
+        x, y, n = movie.getDim()
         args  = '-i %s ' % inputMd
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--useInputShifts '
@@ -110,12 +110,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += '--cropULCorner %d %d ' % (roi[0], roi[1])
             
             if roi[2] <= 0:
-                dimX = -1
+                dimX = x
             else:
                 dimX = roi[0] + roi[2] -1
             
             if roi[3] <= 0:
-                dimY = -1
+                dimY = y
             else:
                 dimY = roi[1] + roi[3] -1
 
@@ -129,12 +129,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += '--cropULCorner %d %d ' % (offsetX, offsetY)
             
             if cropDimX <= 0:
-                dimX = -1
+                dimX = x
             else:
                 dimX = offsetX + cropDimX - 1
             
             if cropDimY <= 0:
-                dimY = -1
+                dimY = y
             else:
                 dimY = offsetY + cropDimY - 1
         
