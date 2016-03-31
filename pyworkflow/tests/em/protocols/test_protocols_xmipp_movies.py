@@ -235,9 +235,14 @@ class TestAverageMovie(BaseTest):
         cls.protImport2 = cls.runImportMovies(cls.ds.getFile('cct/cct_1.em'),
                                               magnification=61000)
     
-    def _checkMicrographs(self, protocol):
+    def _checkMicrographs(self, protocol, goldDimensions):
         self.assertIsNotNone(getattr(protocol, 'outputMicrographs', None),
                              "Output SetOfMicrographs were not created.")
+        mic = protocol.outputMicrographs[1]
+        x, y, _ = mic.getDim()
+        dims = (x, y)
+        msgError = "The dimensions must be %s (%s) and it is %s (%s)"
+        self.assertEqual(goldDimensions, dims, msgError % (goldDimensions, dims, type(goldDimensions), type(range)))
 
     def _checkAlignment(self, movie, goldRange, goldRoi):
         alignment = movie.getAlignment()
@@ -252,12 +257,14 @@ class TestAverageMovie(BaseTest):
     
     def test_qbeta(self):
         prot = self.newProtocol(XmippProtMovieCorr,
+                                alignFrame0=2, alignFrameN=2,
+                                cropOffsetX=10, cropOffsetY=10,
                                 doSaveAveMic=False)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
         
         self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [0, 0, 0, 0])
+                             (1,7), [10, 10, 0, 0])
         
         protAverage = self.newProtocol(XmippProtMovieAverage,
                                        cropRegion=1)
@@ -265,24 +272,25 @@ class TestAverageMovie(BaseTest):
         protAverage.setObjLabel('average w alignment info')
         self.launchProtocol(protAverage)
         
+        self._checkMicrographs(protAverage, (4086,4086))
+        protAverage2 = self.newProtocol(XmippProtMovieAverage,
+                                        sumFrame0=1, sumFrameN=1,
+                                       cropRegion=2)
+        protAverage2.inputMovies.set(prot.outputMovies)
+        protAverage2.setObjLabel('average w alignment')
+        self.launchProtocol(protAverage2)
+        self._checkMicrographs(protAverage2)
+
+        self._checkMicrographs(protAverage, (4096,4096))
+
+        
     def test_cct(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
                                        cropRegion=2,
-                                       alignFrame0=2, alignFrameN=2,
                                        cropOffsetX=10, cropOffsetY=10,
                                        cropDimX=1500, cropDimY=1500)
         protAverage.inputMovies.set(self.protImport2.outputMovies)
         protAverage.setObjLabel('average imported movies')
         self.launchProtocol(protAverage)
-    
-    def test_qbeta_SkipCrop(self):
-        prot = self.newProtocol(XmippProtMovieCorr,
-                                doSaveAveMic=False,
-                                alignFrame0=2, alignFrameN=2,
-                                sumFrame0=2, sumFrameN=2,
-                                cropOffsetX=10, cropOffsetY=10)
-        prot.inputMovies.set(self.protImport1.outputMovies)
-        self.launchProtocol(prot)
 
-        self._checkAlignment(prot.outputMovies[1],
-                             (3,5), [10, 10, 0, 0])
+        self._checkMicrographs(protAverage, (1500,1500))
