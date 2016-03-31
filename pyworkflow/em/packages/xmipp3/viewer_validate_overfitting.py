@@ -53,17 +53,8 @@ class XmippValidateOverfittingViewer(Viewer):
                                       'Execute again the protocol\n',
                                       title='Missing result file')]
         plotter = self._createPlot("Validation 3D Reconstruction (Overfitting)",
-                                    "Number of Particles\n"
-                                    "\n"
-                                    "NOTE:\n"
-                                    'With the reconstruction of aligned gaussian noise, you\n'
-                                    'can assess the validity of the reconstruction from\n'
-                                    'your micrograph images. Practically, if the resolution \n'
-                                    'of reconstruction based on your images are not \n'
-                                    'considerably different from aligned gaussian\n'
-                                    'noise one (for less number of particles),\n'
-                                    'your images may not produce a valid\n' 
-                                    'reconstruction.', "Resolution for FSC=0.5 (A)", fnOutput, xmipp.MDL_COUNT, xmipp.MDL_AVG)
+                                    "Number of Particles", "Resolution for FSC=0.5 (A)", 
+                                    fnOutput, xmipp.MDL_COUNT, xmipp.MDL_AVG)
         
         #for noise
         fnOutputN = self.protocol._defineResultsNoiseName()

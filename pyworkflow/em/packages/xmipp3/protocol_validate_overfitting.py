@@ -42,8 +42,16 @@ from plotter import XmippPlotter
 
 class XmippProtValidateOverfitting(ProtReconstruct3D):
     """    
-    Check how the FSC changes with the number of projections used for 3D reconstruction. This method
-    has been proposed by B. Heymann "Validation of 3D EM Reconstructions", 2015
+    Check how the resolution changes with the number of projections used for 3D reconstruction. 
+    
+    NOTE:
+    Using the output plot, with the reconstruction of aligned gaussian noise, you can assess the
+    validity of the reconstruction from your micrograph images. Practically, if the resolution of 
+    reconstruction based on your images is not considerably different from aligned gaussian
+    noise one (for less number of particles),your images may not produce a valid reconstruction.
+    
+    This method has been proposed by:
+    B. Heymann "Validation of 3D EM Reconstructions", 2015. (see References)
     """
     _label = 'validate overfitting'
     
@@ -54,6 +62,13 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help='Select the input images from the project.')     
+        form.addParam('doResize', BooleanParam, default=False,
+                      label='Resize input particles and volume?',
+                      help="If obtaining the best possible reconstruction is not your goal, you can"
+                           "resize your input particales and volume to reduce running time of the protocl")
+        form.addParam('newSize', FloatParam, default=64, condition="doResize",
+                      label='New size (px)',
+                      help="Resizing input particles and volume using fourier method")        
         form.addParam('input3DReference', PointerParam,
                  pointerClass='Volume,SetOfVolumes',
                  label='Initial 3D reference volume', 
@@ -63,7 +78,9 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp')
         form.addParam('numberOfParticles', NumericListParam, default="100 200 500 1000 2000 5000", expertLevel=LEVEL_ADVANCED,
-                      label="Number of particles") 
+                      label="Number of particles",
+                      help="Number of particles in each subset and consequently number of subsets"
+                           "(for instance, in defalt values, a number of 6 subsets with given values are chosen)") 
         form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
                       label="Number of times the randomization is performed") 
         form.addParam('maxRes', FloatParam, default = 0.5, expertLevel=LEVEL_ADVANCED,
@@ -73,7 +90,6 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       label="Angular sampling rate")  
                       
         form.addParallelSection(threads=4, mpi=1)
-
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _createFilenameTemplates(self):
@@ -92,16 +108,39 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         writeSetOfParticles(imgSet, particlesMd)
                 
         #for debugging purpose
-        debugging = False      
-                 
-        #projections from reference volume
+        debugging = True        
         
-        args="-i %s -o %s --sampling_rate %f --sym %s --min_tilt_angle %f --max_tilt_angle %f --compute_neighbors --angular_distance -1 --experimental_images %s"%\
-            (self.input3DReference.get().getFileName(),self._getExtraPath("Ref_Projections.stk"),
-             self.angSampRate.get(),self.symmetryGroup.get(),0,90, self._getFileName('input_xmd'))
+        #do resizing
+        if self.doResize.get():
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d "%\
+                        (self.input3DReference.get().getFileName(),self._getExtraPath('newVolume.vol'),self.newSize.get()))            
+            self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s --keep_input_columns"%\
+                        (self._getFileName('input_xmd'),self._getExtraPath('newImages.stk'),self.newSize.get(), self._getExtraPath('newImages.xmd')))            
+            oldSize = self.inputParticles.get().getDim()[0]
+            scaleFactor = oldSize/self.newSize.get()
+            self.runJob('xmipp_metadata_utilities',"-i %s --operate modify_values 'shiftX=shiftX*%f'"%\
+                        (self._getExtraPath('newImages.xmd'),scaleFactor))
+            self.runJob('xmipp_metadata_utilities',"-i %s --operate modify_values 'shiftY=shiftY*%f'"%\
+                        (self._getExtraPath('newImages.xmd'),scaleFactor))
+                        
+        #projections from reference volume        
+        if self.doResize.get():
+            args = "-i %s -o %s"%\
+                (self._getExtraPath('newVolume.vol'),self._getExtraPath('Ref_Projections.stk'))
+            args += " --experimental_images %s"%self._getExtraPath('newImages.xmd')
+        else:
+            args = "-i %s -o %s"%\
+                (self.input3DReference.get().getFileName(),self._getExtraPath('Ref_Projections.stk'))
+            args += " --experimental_images %s"%self._getFileName('input_xmd')    
+        args += " --sampling_rate %f --sym %s"%\
+                (self.angSampRate.get(),self.symmetryGroup.get())
+        args += " --min_tilt_angle 0 --max_tilt_angle 90 --compute_neighbors --angular_distance -1"
         
-        self.runJob("xmipp_angular_project_library",args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+            
         
+            
+        self.runJob("xmipp_angular_project_library",
+                    args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
         
         numberOfParticles=getFloatListFromValues(self.numberOfParticles.get())
         fractionCounter=0
@@ -110,21 +149,25 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                 for iteration in range(0,self.numberOfIterations.get()):
                     self._insertFunctionStep('reconstructionStep',number,fractionCounter,iteration, debugging)
                 fractionCounter+=1     
-        self._insertFunctionStep('gatherResultsStep', debugging)
-        
+        self._insertFunctionStep('gatherResultsStep', debugging)        
     #--------------------------- STEPS functions --------------------------------------------
+    
     def reconstructionStep(self, numberOfImages, fractionCounter, iteration, debugging):
         fnRoot = self._getExtraPath("fraction%02d"%fractionCounter)
         Ts = self.inputParticles.get().getSamplingRate()
         
         #for noise
-        fnRootN = self._getExtraPath("Nfraction%02d"%fractionCounter)
-             
+        fnRootN = self._getExtraPath("Nfraction%02d"%fractionCounter)            
         
         for i in range(0,2):
             fnImgs = fnRoot+"_images_%02d_%02d.xmd"%(i, iteration)
-            self.runJob("xmipp_metadata_utilities","-i %s -o %s --operate random_subset %d"%\
-                        (self._getFileName('input_xmd'),fnImgs,numberOfImages),numberOfMpi=1)
+            
+            if self.doResize.get():
+                self.runJob("xmipp_metadata_utilities","-i %s -o %s --operate random_subset %d"%\
+                           (self._getExtraPath('newImages.xmd'),fnImgs,numberOfImages),numberOfMpi=1)
+            else:
+                self.runJob("xmipp_metadata_utilities","-i %s -o %s --operate random_subset %d"%\
+                           (self._getFileName('input_xmd'),fnImgs,numberOfImages),numberOfMpi=1)
         
             params =  '  -i %s' % fnImgs
             params += '  -o %s' % fnRoot+"_%02d_%02d.vol"% (i, iteration)
@@ -142,13 +185,14 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             self.runJob("xmipp_transform_add_noise", "-i %s --type gaussian 3"% noiseStk)
             fnImgsNL = fnRoot+"_noisesL_%02d.xmd"%i
             noiseStk2 = fnRoot+"_noises2_%02d.stk"%i
-            self.runJob ("xmipp_image_convert", "-i %s -o %s --save_metadata_stack %s"% (noiseStk, noiseStk2, fnImgsNL))
+            self.runJob ("xmipp_image_convert", 
+                         "-i %s -o %s --save_metadata_stack %s"% (noiseStk, noiseStk2, fnImgsNL))
             fnImgsNoiseOld = fnRoot+"_noisesOld_%02d.xmd"%i
             fnImgsN = fnRoot+"_noises_%02d_%02d.xmd"%(i, iteration)
-            self.runJob("xmipp_metadata_utilities",'-i %s -o %s --operate drop_column "image"'% (fnImgs,fnImgsNoiseOld))
-            self.runJob("xmipp_metadata_utilities","-i %s  --set merge %s -o %s"% (fnImgsNL,fnImgsNoiseOld, fnImgsN))
-           
-            
+            self.runJob("xmipp_metadata_utilities",
+                        '-i %s -o %s --operate drop_column "image"'% (fnImgs,fnImgsNoiseOld))
+            self.runJob("xmipp_metadata_utilities",
+                        "-i %s  --set merge %s -o %s"% (fnImgsNL,fnImgsNoiseOld, fnImgsN))               
             
             #alignment gaussian noise
             fnImgsAlign = self._getExtraPath("Nfraction_alignment%02d"%fractionCounter)
@@ -157,9 +201,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             args="-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append "%\
                 (fnImgsN,fnImgsAlignN,self._getExtraPath("Ref_Projections.stk"))
             
-            self.runJob('xmipp_angular_projection_matching',args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-           
-           
+            self.runJob('xmipp_angular_projection_matching',
+                        args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get()) 
            
             params =  '  -i %s' % fnImgsAlignN
             params += '  -o %s' % fnRootN+"_%02d_%02d.vol"%(i, iteration)
@@ -168,14 +211,12 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += ' --padding 2'
             params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
-            self.runJob('xmipp_reconstruct_fourier', params)
+            self.runJob('xmipp_reconstruct_fourier', params)     
             
-            
-
-        self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
+        self.runJob('xmipp_resolution_fsc', 
+                    "--ref %s -i %s -o %s --sampling_rate %f"%\
                     (fnRoot+"_00_%02d.vol"%iteration,fnRoot+"_01_%02d.vol"%iteration,fnRoot+"_fsc_%02d.xmd"%iteration,Ts), numberOfMpi=1)
-        
-        
+                
         mdFSC = xmipp.MetaData(fnRoot+"_fsc_%02d.xmd"%iteration)
         for id in mdFSC:
             fscValue = mdFSC.getValue(xmipp.MDL_RESOLUTION_FRC,id)
@@ -185,17 +226,16 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         fh = open(fnRoot+"_freq.txt","a")
         fh.write("%f\n"%maxFreq)
         fh.close()
-        
-        
+                
         #for noise
-        self.runJob('xmipp_resolution_fsc', "--ref %s -i %s -o %s --sampling_rate %f"%\
+        self.runJob('xmipp_resolution_fsc',
+                    "--ref %s -i %s -o %s --sampling_rate %f"%\
                     (fnRootN+"_00_%02d.vol"%iteration,fnRootN+"_01_%02d.vol"%iteration,fnRootN+"_fsc_%02d.xmd"%iteration,Ts), numberOfMpi=1)
         
         cleanPattern(fnRoot+"_noises_0?_0?.xmd")
         cleanPattern(fnRoot+"_noisesOld_0?.xmd")
         cleanPattern(fnRoot+"_noisesL_0?.xmd")
-        cleanPattern(fnRoot+"_noises2_0?.stk")
-        
+        cleanPattern(fnRoot+"_noises2_0?.stk")        
         
         mdFSCN = xmipp.MetaData(fnRootN+"_fsc_%02d.xmd"%iteration)
         for id in mdFSCN:
@@ -240,7 +280,6 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             validationMd.setValue(xmipp.MDL_COUNT,long(numberOfParticles[subset]),objId)
             validationMd.setValue(xmipp.MDL_AVG,meanRes, objId)  
             validationMd.setValue(xmipp.MDL_STDDEV,stdRes,objId)
-
             subset += 1
 
         validationMd.write(self._defineResultsName())
@@ -268,7 +307,6 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             validationMdN.setValue(xmipp.MDL_COUNT,long(numberOfParticles[subset]),objId)
             validationMdN.setValue(xmipp.MDL_AVG,meanRes, objId)  
             validationMdN.setValue(xmipp.MDL_STDDEV,stdRes,objId)
-
             subset += 1
 
         validationMdN.write(self._defineResultsNoiseName())
@@ -277,8 +315,11 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             cleanPattern(self._getExtraPath("fraction*_freq.txt"))
             cleanPattern(self._getExtraPath("Nfraction*_freq.txt"))
             cleanPattern(self._getExtraPath('Ref_Projections*'))
-        
+            #cleanPattern(self._getExtraPath('newImages.stk'))
+            #cleanPattern(self._getExtraPath('newImages.xmd'))
+            #cleanPattern(self._getExtraPath('newVolume.vol'))        
     #--------------------------- INFO functions -------------------------------------------- 
+    
     def _summary(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
@@ -301,10 +342,11 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         maxNumberOfParticles=max(getFloatListFromValues(self.numberOfParticles.get()))
         if maxNumberOfParticles>0.5*self.inputParticles.get().getSize():
             errors.append("The number of tested particles should not be larger than 1/2 of the input set of particles")
-         
-        return errors
-          
+        if self.newSize.get() > self.inputParticles.get().getDim()[0]:
+            errors.append('Fourier resize method cannot be used to increase the dimensions') 
+        return errors          
     #--------------------------- UTILS functions --------------------------------------------
+   
     def _defineResultsName(self):
         return self._getExtraPath('results.xmd')
     
