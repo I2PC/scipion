@@ -255,8 +255,8 @@ class TestAverageMovie(BaseTest):
                                 doSaveAveMic=False)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
-
-        self._checkAlignment(prot.outputMovies,
+        
+        self._checkAlignment(prot.outputMovies[1],
                              (1,7), [0, 0, 0, 0])
         
         protAverage = self.newProtocol(XmippProtMovieAverage,
