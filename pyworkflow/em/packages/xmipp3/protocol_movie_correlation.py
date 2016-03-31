@@ -102,10 +102,26 @@ class XmippProtMovieCorr(ProtAlignMovies):
         if self.binFactor > 1:
             args += '--bin %f ' % self.binFactor
         # Assume that if you provide one cropDim, you provide all
-        if self.cropDimX.get():
-            args += '--cropULCorner %d %d ' % (self.cropOffsetX, self.cropOffsetY)
-            args += '--cropDRCorner %d %d ' % (self.cropOffsetX.get() + self.cropDimX.get() -1,
-                                               self.cropOffsetY.get() + self.cropDimY.get() -1)
+        
+        offsetX = self.cropOffsetX.get()
+        offsetY = self.cropOffsetY.get()
+        cropDimX = self.cropDimX.get()
+        cropDimY = self.cropDimY.get()
+        
+        args += '--cropULCorner %d %d ' % (offsetX, offsetY)
+        
+        if cropDimX <= 0:
+            dimX = -1
+        else:
+            dimX = offsetX + cropDimX - 1
+        
+        if cropDimY <= 0:
+            dimY = -1
+        else:
+            dimY = offsetY + cropDimY - 1
+        
+        args += '--cropDRCorner %d %d ' % (dimX, dimY)
+        
         if self.outsideMode == self.OUTSIDE_WRAP:
             args += "--outside wrap"
         elif self.outsideMode == self.OUTSIDE_AVG:
@@ -132,14 +148,6 @@ class XmippProtMovieCorr(ProtAlignMovies):
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
     
     #--------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-        errors = []
-        if (self.cropDimX > 0 and self.cropDimY <= 0 or
-            self.cropDimY > 0 and self.cropDimX <= 0):
-            errors.append("If you give cropDimX, you should also give cropDimY "
-                          "and viceversa")
-        return errors
-    
     def _summary(self):
         summary = []
         movie = self.inputMovies.get().getFirstItem()
