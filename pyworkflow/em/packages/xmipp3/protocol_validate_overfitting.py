@@ -53,9 +53,9 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     This method has been proposed by:
     B. Heymann "Validation of 3D EM Reconstructions", 2015. (see References)
     """
-    _label = 'validate overfitting'
-    
+    _label = 'validate overfitting'    
     #--------------------------- DEFINE param functions --------------------------------------------   
+   
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -108,14 +108,15 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         writeSetOfParticles(imgSet, particlesMd)
                 
         #for debugging purpose
-        debugging = True        
+        debugging = False        
         
         #do resizing
         if self.doResize.get():
             self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d "%\
                         (self.input3DReference.get().getFileName(),self._getExtraPath('newVolume.vol'),self.newSize.get()))            
             self.runJob("xmipp_image_resize","-i %s -o %s --fourier %d --save_metadata_stack %s --keep_input_columns"%\
-                        (self._getFileName('input_xmd'),self._getExtraPath('newImages.stk'),self.newSize.get(), self._getExtraPath('newImages.xmd')))            
+                        (self._getFileName('input_xmd'),self._getExtraPath('newImages.stk'),self.newSize.get(),
+                        self._getExtraPath('newImages.xmd')))            
             oldSize = self.inputParticles.get().getDim()[0]
             scaleFactor = oldSize/self.newSize.get()
             self.runJob('xmipp_metadata_utilities',"-i %s --operate modify_values 'shiftX=shiftX*%f'"%\
@@ -134,11 +135,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             args += " --experimental_images %s"%self._getFileName('input_xmd')    
         args += " --sampling_rate %f --sym %s"%\
                 (self.angSampRate.get(),self.symmetryGroup.get())
-        args += " --min_tilt_angle 0 --max_tilt_angle 90 --compute_neighbors --angular_distance -1"
-        
-            
-        
-            
+        args += " --min_tilt_angle 0 --max_tilt_angle 90 --compute_neighbors --angular_distance -1"            
         self.runJob("xmipp_angular_project_library",
                     args, numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
         
@@ -215,7 +212,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             
         self.runJob('xmipp_resolution_fsc', 
                     "--ref %s -i %s -o %s --sampling_rate %f"%\
-                    (fnRoot+"_00_%02d.vol"%iteration,fnRoot+"_01_%02d.vol"%iteration,fnRoot+"_fsc_%02d.xmd"%iteration,Ts), numberOfMpi=1)
+                    (fnRoot+"_00_%02d.vol"%iteration,fnRoot+"_01_%02d.vol"%iteration,
+                     fnRoot+"_fsc_%02d.xmd"%iteration,Ts), numberOfMpi=1)
                 
         mdFSC = xmipp.MetaData(fnRoot+"_fsc_%02d.xmd"%iteration)
         for id in mdFSC:
@@ -230,7 +228,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         #for noise
         self.runJob('xmipp_resolution_fsc',
                     "--ref %s -i %s -o %s --sampling_rate %f"%\
-                    (fnRootN+"_00_%02d.vol"%iteration,fnRootN+"_01_%02d.vol"%iteration,fnRootN+"_fsc_%02d.xmd"%iteration,Ts), numberOfMpi=1)
+                    (fnRootN+"_00_%02d.vol"%iteration,fnRootN+"_01_%02d.vol"%iteration,
+                     fnRootN+"_fsc_%02d.xmd"%iteration,Ts), numberOfMpi=1)
         
         cleanPattern(fnRoot+"_noises_0?_0?.xmd")
         cleanPattern(fnRoot+"_noisesOld_0?.xmd")
@@ -315,9 +314,9 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             cleanPattern(self._getExtraPath("fraction*_freq.txt"))
             cleanPattern(self._getExtraPath("Nfraction*_freq.txt"))
             cleanPattern(self._getExtraPath('Ref_Projections*'))
-            #cleanPattern(self._getExtraPath('newImages.stk'))
-            #cleanPattern(self._getExtraPath('newImages.xmd'))
-            #cleanPattern(self._getExtraPath('newVolume.vol'))        
+            cleanPattern(self._getExtraPath('newImages.stk'))
+            cleanPattern(self._getExtraPath('newImages.xmd'))
+            cleanPattern(self._getExtraPath('newVolume.vol'))        
     #--------------------------- INFO functions -------------------------------------------- 
     
     def _summary(self):
