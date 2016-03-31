@@ -241,13 +241,13 @@ class TestAverageMovie(BaseTest):
         mic = protocol.outputMicrographs[1]
         x, y, _ = mic.getDim()
         dims = (x, y)
-        msgError = "The dimensions must be %s (%s) and it is %s (%s)"
-        self.assertEqual(goldDimensions, dims, msgError % (goldDimensions, dims, type(goldDimensions), type(range)))
+        msgError = "The dimensions must be %s and it is %s"
+        self.assertEqual(goldDimensions, dims, msgError % (goldDimensions, dims))
 
     def _checkAlignment(self, movie, goldRange, goldRoi):
         alignment = movie.getAlignment()
         range = alignment.getRange()
-        msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
+        msgRange = "Alignment range must be %s %s and it is %s (%s)"
         self.assertEqual(goldRange, range,
                          msgRange % (goldRange, range, type(goldRange), type(range)))
         roi = alignment.getRoi()
@@ -264,7 +264,7 @@ class TestAverageMovie(BaseTest):
         self.launchProtocol(prot)
         
         self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [10, 10, 0, 0])
+                             (3,5), [10, 10, 0, 0])
         
         protAverage = self.newProtocol(XmippProtMovieAverage,
                                        cropRegion=1)
