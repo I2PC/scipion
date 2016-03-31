@@ -130,7 +130,31 @@ class XmippProtMovieCorr(ProtAlignMovies):
             args += ' --gain ' + self.inputMovies.get().getGain()
 
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
+    
+    #--------------------------- INFO functions --------------------------------------------
+    def _validate(self):
+        errors = []
+        if (self.cropDimX > 0 and self.cropDimY <= 0 or
+            self.cropDimY > 0 and self.cropDimX <= 0):
+            errors.append("If you give cropDimX, you should also give cropDimY "
+                          "and viceversa")
+        return errors
+    
+    def _summary(self):
+        summary = []
+        movie = self.inputMovies.get().getFirstItem()
+        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
         
+        if movie.hasAlignment() and self.doSaveAveMic:
+            fstFrame, lstFrame = movie.getAlignment().getRange()
+            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
+                summary.append("Warning!!! You have selected a frame range wider than"
+                               " the range selected to align. All the frames selected"
+                               " without alignment information, will be aligned by"
+                               " setting alignment to 0")
+        
+        return summary
+    
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
