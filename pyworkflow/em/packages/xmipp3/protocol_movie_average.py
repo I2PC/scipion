@@ -86,7 +86,10 @@ class XmippProtMovieAverage(ProtAlignMovies):
         line.addParam('cropDimY', params.IntParam, default=0, label='Y')
         
         form.addParam('useAlignment', params.BooleanParam, default=True,
-              label="Use movie alignment to Sum frames?")
+                      label="Use movie alignment to Sum frames?",
+                      help="If set Yes, the alignment information (if"
+                           " it exists) will take into account to align"
+                           " your movies.")
         form.addParallelSection(threads=1, mpi=0)
     
     #--------------------------- STEPS functions ---------------------------------------------------
