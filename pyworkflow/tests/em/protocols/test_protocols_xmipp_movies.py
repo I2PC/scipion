@@ -256,18 +256,22 @@ class TestAverageMovie(BaseTest):
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
-        self._checkAlignment(prot.outputMovies[1],
+        self._checkAlignment(prot.outputMovies,
                              (1,7), [0, 0, 0, 0])
-    
-    def test_cct(self):
-        prot = self.newProtocol(XmippProtMovieCorr,
-                                doSaveAveMic=False,
-                                doSaveMovie=True)
-        prot.inputMovies.set(self.protImport2.outputMovies)
-        self.launchProtocol(prot)
         
-        self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [0, 0, 0, 0])
+        protAverage = self.newProtocol(XmippProtMovieAverage,
+                                       cropRegion=1)
+        protAverage.inputMovies.set(prot.outputMovies)
+        protAverage.setObjLabel('average w alignment info')
+        
+    def test_cct(self):
+        protAverage = self.newProtocol(XmippProtMovieAverage,
+                                       cropRegion=2,
+                                       alignFrame0=2, alignFrameN=2,
+                                       cropOffsetX=10, cropOffsetY=10,
+                                       cropDimX=1500, cropDimY=1500)
+        protAverage.inputMovies.set(self.protImport2.outputMovies)
+        protAverage.setObjLabel('average imported movies')
     
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(XmippProtMovieCorr,
