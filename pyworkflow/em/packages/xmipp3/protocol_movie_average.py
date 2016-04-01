@@ -95,7 +95,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
         inputMd = self._getMovieOrMd(movie)
-        x, y, n = movie.getDim()
+        x, y, _ = movie.getDim()
         args  = '-i %s ' % inputMd
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--useInputShifts '
@@ -139,10 +139,6 @@ class XmippProtMovieAverage(ProtAlignMovies):
                 dimY = offsetY + cropDimY - 1
         
         args += '--cropDRCorner %d %d ' % (dimX, dimY)
-        
-        if not (movie.hasAlignment() and self.useAlignment):
-            s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-            args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
         
         args += ' --oavg %s ' % self._getExtraPath(self._getOutputMicName(movie))
         
