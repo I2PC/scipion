@@ -111,12 +111,12 @@ class XmippProtMovieCorr(ProtAlignMovies):
         args += '--cropULCorner %d %d ' % (offsetX, offsetY)
         
         if cropDimX <= 0:
-            dimX = x
+            dimX = x - 1
         else:
             dimX = offsetX + cropDimX - 1
         
         if cropDimY <= 0:
-            dimY = y
+            dimY = y - 1
         else:
             dimY = offsetY + cropDimY - 1
         

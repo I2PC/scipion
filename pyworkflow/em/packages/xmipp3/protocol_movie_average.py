@@ -110,12 +110,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += '--cropULCorner %d %d ' % (roi[0], roi[1])
             
             if roi[2] <= 0:
-                dimX = x
+                dimX = x - 1
             else:
                 dimX = roi[0] + roi[2] -1
             
             if roi[3] <= 0:
-                dimY = y
+                dimY = y - 1
             else:
                 dimY = roi[1] + roi[3] -1
 
@@ -129,12 +129,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
             args += '--cropULCorner %d %d ' % (offsetX, offsetY)
             
             if cropDimX <= 0:
-                dimX = x
+                dimX = x - 1
             else:
                 dimX = offsetX + cropDimX - 1
             
             if cropDimY <= 0:
-                dimY = y
+                dimY = y - 1
             else:
                 dimY = offsetY + cropDimY - 1
         
