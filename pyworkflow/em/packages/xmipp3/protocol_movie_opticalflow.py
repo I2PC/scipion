@@ -29,16 +29,16 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-import sys
 from os.path import join
+import sys
 import numpy as np
-import xmipp
-from pyworkflow.object import String
-import pyworkflow.protocol.params as params
-from pyworkflow.utils.path import moveFile
+
 import pyworkflow.em as em
-from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.protocol import ProtAlignMovies
+import pyworkflow.protocol.params as params
+from pyworkflow.gui.plotter import Plotter
+from pyworkflow.utils.path import moveFile
+from convert import writeShiftsMovieAlignment, getMovieFileName
 
 
 class XmippProtOFAlignment(ProtAlignMovies):
@@ -46,11 +46,13 @@ class XmippProtOFAlignment(ProtAlignMovies):
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
     """
     _label = 'optical alignment'
+    CONVERT_TO_MRC = 'mrcs'
+
+    
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
-
         # GROUP GPU PARAMETERS
         group = form.addGroup('GPU')
         group.addParam('doGPU', params.BooleanParam, default=False,
@@ -74,57 +76,45 @@ class XmippProtOFAlignment(ProtAlignMovies):
         group.addParam('groupSize', params.IntParam, default=1,
                        label="Group Size",
                        help="The number of frames in each group at the last step")
-
+        
+        form.addParam('useAlignment', params.BooleanParam, default=True,
+              label="Use movie alignment to Sum frames?",
+              help="If set Yes, the alignment information (if"
+                   " it exists) will take into account to align"
+                   " your movies.")
+    
     #--------------------------- STEPS functions ---------------------------------------------------
-    def _preprocessOutputMicrograph(self, mic, movie):
-
-        inputMovies = self.inputMovies.get()
-        plotCartName = self._getNameExt(movie, '_plot_cart', 'png')
-        psdCorrName = self._getNameExt(movie,'_aligned_corrected', 'psd')
-        metadataName = self._getNameExt(movie, '_aligned', 'xmd')
-
-        mic.alignMetaData = self._getExtraPath(metadataName)
-        mic.plotCart = self._getExtraPath(plotCartName)
-        # Create plot
-        movieCreatePlot(mic, True)
-        mic.plotCart = em.Image()
-        mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-        mic.psdCorr = em.Image()
-        mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
-
     def _processMovie(self, movie):
-        from convert import writeShiftsMovieAlignment
+        movieName = getMovieFileName(movie)
         movieFolder = self._getOutputMovieFolder(movie)
         outputMicFn = self._getOutputMicName(movie)
-        movieName = movie.getBaseName()
 
         # Get the number of frames and the range to be used for alignment and sum
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
         s0, sN = self._getFrameRange(n, 'sum')
-
+        
         metadataName = self._getNameExt(movie, '_aligned', 'xmd')
         fnGlobalShifts = self._getNameExt(movie, '_shifts', 'xmd')
         psdCorrName = self._getNameExt(movie,'_aligned_corrected', 'psd')
         gpuId = self.GPUCore.get()
 
-        # Some movie have .mrc or .mrcs format but it is recognized as a volume
-        if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
-            movieSuffix = ':mrcs'
-        else:
-            movieSuffix = ''
-        command = '-i %(movieName)s%(movieSuffix)s -o %(outputMicFn)s ' % locals()
+        command = ' -i %s -o %s ' % (movieName, outputMicFn)
         command += '--frameRange %d %d ' % (a0-1, aN-1)
+        
         if self.inputMovies.get().getDark():
             command += '--dark %s ' % self.inputMovies.get().getDark()
+        
         if self.inputMovies.get().getGain():
-            command += ' --gain '+self.inputMovies.get().getGain()
+            command += '--gain %s ' % self.inputMovies.get().getGain()
+        
         winSize = self.winSize.get()
         doSaveMovie = self.doSaveMovie.get()
         groupSize = self.groupSize.get()
         command += ' --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+        
         # Check if we have global shifts
-        if movie.getAlignment() is not None:
+        if movie.hasAlignment() and self.useAlignment:
             mdFn = join(movieFolder, fnGlobalShifts)
             writeShiftsMovieAlignment(movie, mdFn, s0, sN)
             
@@ -173,8 +163,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
         # Move output micrograph and related information to 'extra' folder
         moveFile(join(movieFolder, outputMicFn), self._getExtraPath())
         moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
-
-     #--------------------------- INFO functions --------------------------------------------
+    
+    #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         numThreads = self.numberOfThreads;
@@ -197,7 +187,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             methods.append('- Used GPU *%d* for processing' % gpuId)
 
         return methods
-
+    
     def _summary(self):
         firstFrame = self.alignFrame0.get()
         lastFrame = self.alignFrameN.get()
@@ -208,13 +198,26 @@ class XmippProtOFAlignment(ProtAlignMovies):
                        '*%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
 
         return summary
+    
     #--------------------------- UTILS functions ---------------------------------------------------
+    def _preprocessOutputMicrograph(self, mic, movie):
+        plotCartName = self._getNameExt(movie, '_plot_cart', 'png')
+        psdCorrName = self._getNameExt(movie,'_aligned_corrected', 'psd')
+        metadataName = self._getNameExt(movie, '_aligned', 'xmd')
+        
+        mic.alignMetaData = self._getExtraPath(metadataName)
+        mic.plotCart = self._getExtraPath(plotCartName)
+        # Create plot
+        movieCreatePlot(mic, True)
+        mic.plotCart = em.Image()
+        mic.plotCart.setFileName(self._getExtraPath(plotCartName))
+        mic.psdCorr = em.Image()
+        mic.psdCorr.setFileName(self._getExtraPath(psdCorrName))
+    
     def _getNameExt(self, movie, postFix, ext):
-
         return self._getMovieRoot(movie) + '_aligned_mic' + '.' + ext
-
+    
     def _doGenerateOutputMovies(self):
-
         return True
 
 
@@ -225,12 +228,13 @@ def createPlots(plotType, protocol, micId):
 
 
 def movieCreatePlot(mic, saveFig):
-    import xmipp
+    import pyworkflow.em.metadata as md
+
     meanX = []
     meanY = []
     figureSize = (8, 6)
 
-    md = xmipp.MetaData(mic.alignMetaData)
+    mdAlign = md.MetaData(mic.alignMetaData)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
@@ -244,9 +248,9 @@ def movieCreatePlot(mic, saveFig):
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
     ax.plot(0, 0, 'yo-')
-    for objId in md:
-        preX += md.getValue(xmipp.MDL_OPTICALFLOW_MEANX, objId)
-        preY += md.getValue(xmipp.MDL_OPTICALFLOW_MEANY, objId)
+    for objId in mdAlign:
+        preX += mdAlign.getValue(md.MDL_OPTICALFLOW_MEANX, objId)
+        preY += mdAlign.getValue(md.MDL_OPTICALFLOW_MEANY, objId)
         meanX.append(preX)
         meanY.append(preY)
         ax.plot(preX, preY, 'yo-')
