@@ -279,9 +279,8 @@ class TestAverageMovie(BaseTest):
         protAverage2.inputMovies.set(prot.outputMovies)
         protAverage2.setObjLabel('average w alignment')
         self.launchProtocol(protAverage2)
-        self._checkMicrographs(protAverage2)
 
-        self._checkMicrographs(protAverage, (4096,4096))
+        self._checkMicrographs(protAverage2, (4096,4096))
 
         
     def test_cct(self):
