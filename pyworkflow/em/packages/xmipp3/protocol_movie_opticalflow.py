@@ -87,7 +87,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         movieName = getMovieFileName(movie)
         movieFolder = self._getOutputMovieFolder(movie)
         outputMicFn = self._getOutputMicName(movie)
-
+        
         # Get the number of frames and the range to be used for alignment and sum
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
@@ -129,39 +129,38 @@ class XmippProtOFAlignment(ProtAlignMovies):
         command += '--cropDRCorner %d %d'  % (self.cropOffsetX.get() + self.cropDimX.get() -1,
                                                   self.cropOffsetY.get() + self.cropDimY.get() -1)
         try:
-            self.runJob(program, command, cwd=movieFolder)
+            self.runJob(program, command)
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-        moveFile(join(movieFolder, metadataName), self._getExtraPath())
+	moveFile(metadataName, self._getExtraPath())
         if doSaveMovie:
-            moveFile(join(movieFolder, self._getOutputMovieName(movie)),
-                     self._getExtraPath())
+            moveFile(self._getOutputMovieName(movie), self._getExtraPath())
 
         # Compute half-half PSD
         ih = em.ImageHandler()
-        avg = ih.computeAverage(join(movieFolder, movieName))
-        avg.write(join(movieFolder, 'uncorrectedmic.mrc'))
+        avg = ih.computeAverage(movieName)
+        avg.write('uncorrectedmic.mrc')
         command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd ' \
                   '--dont_estimate_ctf --pieceDim 400 --overlap 0.7'
         program = 'xmipp_ctf_estimate_from_micrograph'
-        self.runJob(program, command, cwd=movieFolder)
+        self.runJob(program, command)
 
         command = '--micrograph %(outputMicFn)s --oroot correctedpsd ' \
                   '--dont_estimate_ctf --pieceDim 400 --overlap 0.7' % locals()
-        self.runJob(program, command, cwd=movieFolder)
+        self.runJob(program, command)
         correctedPSD = em.ImageHandler().createImage()
         unCorrectedPSD = em.ImageHandler().createImage()
-        correctedPSD.read(join(movieFolder, 'correctedpsd.psd'))
-        unCorrectedPSD.read(join(movieFolder, 'uncorrectedpsd.psd'))
+        correctedPSD.read('correctedpsd.psd')
+        unCorrectedPSD.read('uncorrectedpsd.psd')
         x, y, z, n = correctedPSD.getDimensions()
         for i in range(1,y):
             for j in range(1,x//2):
                 unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
-        unCorrectedPSD.write(join(movieFolder, psdCorrName))
+        unCorrectedPSD.write(psdCorrName)
 
         # Move output micrograph and related information to 'extra' folder
-        moveFile(join(movieFolder, outputMicFn), self._getExtraPath())
-        moveFile(join(movieFolder, psdCorrName), self._getExtraPath())
+        moveFile(outputMicFn, self._getExtraPath())
+        moveFile(psdCorrName, self._getExtraPath())
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -261,3 +260,4 @@ def movieCreatePlot(mic, saveFig):
 
 # Just for backwards compatibility
 ProtMovieAlignment = XmippProtOFAlignment
+
