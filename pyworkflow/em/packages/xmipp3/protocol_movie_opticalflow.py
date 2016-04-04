@@ -47,7 +47,6 @@ class XmippProtOFAlignment(ProtAlignMovies):
     """
     _label = 'optical alignment'
     CONVERT_TO_MRC = 'mrcs'
-
     
 
     #--------------------------- DEFINE param functions --------------------------------------------
