@@ -248,8 +248,9 @@ def convertImage(inputLoc, outputLoc):
         else:
             return loc
 
-    createEmanProcess('e2ih.py', args='%s %s' % (_getFn(inputLoc),
+    proc = createEmanProcess('e2ih.py', args='%s %s' % (_getFn(inputLoc),
                                                  _getFn(outputLoc)))
+    proc.wait()
 
 def readSetOfParticles(filename, partSet, **kwargs):
     pass
