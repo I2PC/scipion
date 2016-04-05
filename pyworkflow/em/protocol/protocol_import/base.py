@@ -32,7 +32,7 @@ from glob import glob
 import re
 
 import pyworkflow.protocol.params as params
-from pyworkflow.utils.path import expandPattern, createLink, copyFile
+from pyworkflow.utils.path import expandPattern, createLink, copyFile, createAbsLink
 from pyworkflow.em.protocol import EMProtocol
 
 
@@ -211,7 +211,7 @@ class ProtImportFiles(ProtImport):
         if self.copyFiles:
             return copyFile
         else:
-            return createLink
+            return createAbsLink
         
     def iterFiles(self):
         """ Iterate through the files matched with the pattern.
