@@ -99,7 +99,7 @@ class TestOFAlignment(TestXmippBase):
         # test downsampling a set of micrographs
         protOF1 = XmippProtOFAlignment(alignMethod=0)
         protOF1.inputMovies.set(self.protImport1.outputMovies)
-        self.proj.launchProtocol(protOF1, wait=True)
+        self.launchProtocol(protOF1)
         self.assertIsNotNone(protOF1.outputMicrographs,
                              "SetOfMicrographs has not been created.")
     
@@ -107,7 +107,7 @@ class TestOFAlignment(TestXmippBase):
         # test downsampling a set of micrographs
         protOF2 = XmippProtOFAlignment(alignMethod=0)
         protOF2.inputMovies.set(self.protImport2.outputMovies)
-        self.proj.launchProtocol(protOF2, wait=True)
+        self.launchProtocol(protOF2)
         self.assertIsNotNone(protOF2.outputMicrographs,
                              "SetOfMicrographs has not been created.")
 
@@ -279,9 +279,8 @@ class TestAverageMovie(BaseTest):
         protAverage2.inputMovies.set(prot.outputMovies)
         protAverage2.setObjLabel('average w alignment')
         self.launchProtocol(protAverage2)
-        self._checkMicrographs(protAverage2)
 
-        self._checkMicrographs(protAverage, (4096,4096))
+        self._checkMicrographs(protAverage2, (4096,4096))
 
         
     def test_cct(self):
