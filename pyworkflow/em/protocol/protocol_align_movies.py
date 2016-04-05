@@ -151,7 +151,11 @@ class ProtAlignMovies(ProtProcessMovies):
                 movieSet.append(newMovie)
 
             self._updateOutputSet('outputMovies', movieSet, streamMode)
+
             if firstTime:
+                # Probably is a good idea to store a cached summary for the
+                # first resulting movie of the processing.
+                self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
         if self.doSaveAveMic:
@@ -178,7 +182,7 @@ class ProtAlignMovies(ProtProcessMovies):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
 
     def _validate(self):
         errors = []
@@ -187,6 +191,11 @@ class ProtAlignMovies(ProtProcessMovies):
             errors.append("If you give cropDimX, you should also give cropDimY "
                           "and viceversa")
         return errors
+
+    #--------------------------- INFO functions -------------------------------
+
+    def _summary(self):
+        return [self.summaryVar.get('')]
 
     #--------------------------- UTILS functions ----------------------------
 
@@ -268,6 +277,10 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Hook function that will be call before adding the micrograph
         to the output set of micrographs.
         """
+        pass
+
+    def _storeSummary(self, movie):
+        """ Implement this method if you want to store the summary. """
         pass
 
 

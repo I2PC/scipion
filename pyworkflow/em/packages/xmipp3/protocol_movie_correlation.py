@@ -146,24 +146,9 @@ class XmippProtMovieCorr(ProtAlignMovies):
             args += ' --gain ' + self.inputMovies.get().getGain()
 
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
-    
-    #--------------------------- INFO functions --------------------------------------------
-    def _summary(self):
-        summary = []
-        movie = self.inputMovies.get().getFirstItem()
-        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-        
-        if movie.hasAlignment() and self.doSaveAveMic:
-            fstFrame, lstFrame = movie.getAlignment().getRange()
-            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
-                summary.append("Warning!!! You have selected a frame range wider than"
-                               " the range selected to align. All the frames selected"
-                               " without alignment information, will be aligned by"
-                               " setting alignment to 0")
-        
-        return summary
-    
-    #--------------------------- UTILS functions ---------------------------------------------------
+
+
+    #--------------------------- UTILS functions ------------------------------
     def _getNumberOfFrames(self, movie):
         _, _, n = movie.getDim()
         return n
@@ -180,8 +165,15 @@ class XmippProtMovieCorr(ProtAlignMovies):
         
         shiftsMd = md.MetaData(self._getShiftsFile(movie))
         return readShiftsMovieAlignment(shiftsMd)
-        
-        
-        
-        
-        
+
+    def _storeSummary(self, movie):
+        if self.doSaveAveMic and movie.hasAlignment():
+            s0, sN = self._getFrameRange(movie.getNumberOfFrames(), 'sum')
+            fstFrame, lstFrame = movie.getAlignment().getRange()
+            if fstFrame > s0 or lstFrame < sN:
+                self.summaryVar.set("Warning!!! You have selected a frame range "
+                                    "wider than the range selected to align. All "
+                                    "the frames selected without alignment "
+                                    "information, will be aligned by setting "
+                                    "alignment to 0")
+
