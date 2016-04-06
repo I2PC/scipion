@@ -132,7 +132,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             self.runJob(program, command)
         except:
             print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
-	moveFile(metadataName, self._getExtraPath())
+        moveFile(metadataName, self._getExtraPath())
         if doSaveMovie:
             moveFile(self._getOutputMovieName(movie), self._getExtraPath())
 
