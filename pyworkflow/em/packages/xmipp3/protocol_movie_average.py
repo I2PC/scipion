@@ -31,19 +31,20 @@ Protocol wrapper around the xmipp correlation alignment only for movie average.
 
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAlignMovies
-import pyworkflow.em.metadata as md
 from convert import getMovieFileName, writeShiftsMovieAlignment
+
+CROP_NONE = 0
+CROP_ALIGNMENT = 1
+CROP_NEW = 2
 
 
 class XmippProtMovieAverage(ProtAlignMovies):
     """
     Protocol to average movies
     """
-    
     _label = 'movie average'
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
-    
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineAlignmentParams(self, form):
@@ -60,8 +61,8 @@ class XmippProtMovieAverage(ProtAlignMovies):
                             'crop parameters are referred to the binned images. ')
         
         group.addParam('cropRegion', params.EnumParam, 
-                       choices=['None', 'from Alignment', 'New'],
-                       label="Define crop region", default=0,
+                       choices=['None', 'From Alignment', 'New'],
+                       label="Define crop region", default=CROP_NONE,
                        help="""Select if you want to crop the final micrograph.
                                If select:
                                      *None*, the final micrographs will have the same dimensions as
@@ -75,11 +76,13 @@ class XmippProtMovieAverage(ProtAlignMovies):
                                      is ignored.
                             """)
         
-        line = group.addLine('Crop offsets (px)', condition='cropRegion==2')
+        line = group.addLine('Crop offsets (px)',
+                             condition='cropRegion==%d' % CROP_NEW)
         line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
         line.addParam('cropOffsetY', params.IntParam, default=0, label='Y')
         
-        line = group.addLine('Crop dimensions (px)', condition='cropRegion==2',
+        line = group.addLine('Crop dimensions (px)',
+                             condition='cropRegion==%d' % CROP_NEW,
                              help='How many pixels to crop from offset\n'
                                   'If equal to 0, use maximum size.')
         line.addParam('cropDimX', params.IntParam, default=0, label='X')
@@ -95,61 +98,20 @@ class XmippProtMovieAverage(ProtAlignMovies):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
         inputMd = self._getMovieOrMd(movie)
-        x, y, _ = movie.getDim()
-        args  = '-i %s ' % inputMd
-        args += '--sampling %f ' % movie.getSamplingRate()
-        args += '--useInputShifts '
-        
-        if self.binFactor > 1:
-            args += '--bin %f ' % self.binFactor
-        
-        cropRegion = self.cropRegion.get()
-        
-        if cropRegion == 1 and movie.hasAlignment():
+        outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
+
+        if self.cropRegion == CROP_ALIGNMENT and movie.hasAlignment():
             roi = movie.getAlignment().getRoi()
-            args += '--cropULCorner %d %d ' % (roi[0], roi[1])
-            
-            if roi[2] <= 0:
-                dimX = x - 1
-            else:
-                dimX = roi[0] + roi[2] -1
-            
-            if roi[3] <= 0:
-                dimY = y - 1
-            else:
-                dimY = roi[1] + roi[3] -1
+        elif self.cropRegion == CROP_NEW:
+            roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
+                   self.cropDimX.get(), self.cropDimY.get()]
+        else:
+            roi = None
 
-        elif cropRegion == 2:
-            
-            offsetX = self.cropOffsetX.get()
-            offsetY = self.cropOffsetY.get()
-            cropDimX = self.cropDimX.get()
-            cropDimY = self.cropDimY.get()
+        self.averageMovie(movie, inputMd, outputMicFn, self.binFactor.get(), roi,
+                     self.inputMovies.get().getDark(),
+                     self.inputMovies.get().getGain())
 
-            args += '--cropULCorner %d %d ' % (offsetX, offsetY)
-            
-            if cropDimX <= 0:
-                dimX = x - 1
-            else:
-                dimX = offsetX + cropDimX - 1
-            
-            if cropDimY <= 0:
-                dimY = y - 1
-            else:
-                dimY = offsetY + cropDimY - 1
-        
-        args += '--cropDRCorner %d %d ' % (dimX, dimY)
-        
-        args += ' --oavg %s ' % self._getExtraPath(self._getOutputMicName(movie))
-        
-        if self.inputMovies.get().getDark() is not None:
-            args += ' --dark ' + self.inputMovies.get().getDark()
-        
-        if self.inputMovies.get().getGain() is not None:
-            args += ' --gain ' + self.inputMovies.get().getGain()
-        
-        self.runJob('xmipp_movie_alignment_correlation', args)
-    
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
@@ -204,3 +166,6 @@ class XmippProtMovieAverage(ProtAlignMovies):
         Subclasses can override this function to change this behavior.
         """
         return False
+
+
+

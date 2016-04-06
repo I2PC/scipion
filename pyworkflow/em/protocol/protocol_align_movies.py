@@ -32,6 +32,7 @@ from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
+from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import MovieAlignment, SetOfMovies, SetOfMicrographs
 from pyworkflow.em.protocol import ProtProcessMovies
 
@@ -283,4 +284,73 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Implement this method if you want to store the summary. """
         pass
 
+    def __runXmippProgram(self, program, args):
+        """ Internal shortcut function to launch a Xmipp program. """
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        from pyworkflow.utils import runJob
+        runJob(None, program, args, env=xmipp3.getEnviron())
 
+    def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
+                     dark=None, gain=None):
+        """ Average a movie (using xmipp) taking into account the
+         possible shifts and other alignment parameters.
+         Params:
+            inputFn: input filename, either the movie file or a metadata
+                with the shifts and other info.
+            dark: dark file
+            gain: gain correction file.
+
+         The output will be the averaged micrograph.
+        """
+        x, y, _ = movie.getDim()
+        args  = '-i %s ' % inputFn
+        args += '--sampling %f ' % movie.getSamplingRate()
+        args += '--useInputShifts '
+
+        if binFactor > 1:
+            args += '--bin %f ' % binFactor
+
+        if roi is not None:
+            offsetX, offsetY, cropDimX, cropDimY = roi
+            # cropDim value is <= 0 we should take the whole size
+            if cropDimX <= 0:
+                dimX = x - 1
+            else:
+                dimX = offsetX + cropDimX - 1
+
+            if cropDimY <= 0:
+                dimY = y - 1
+            else:
+                dimY = offsetY + cropDimY - 1
+
+            args += '--cropULCorner %d %d ' % (offsetX, offsetY)
+            args += '--cropDRCorner %d %d ' % (dimX, dimY)
+
+        args += ' --oavg %s ' % outputMicFn
+
+        if dark is not None:
+            args += ' --dark ' + dark
+
+        if gain is not None:
+            args += ' --gain ' + gain
+
+        self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
+
+    def computePSD(self, inputMic, oroot, dim=400, overlap=0.7):
+        args = '--micrograph %s --oroot %s ' % (inputMic, oroot)
+        args += '--dont_estimate_ctf --pieceDim %d --overlap %f' % (dim, overlap)
+
+        self.__runXmippProgram('xmipp_ctf_estimate_from_micrograph', args)
+
+    def composePSD(self, psd1, psd2, outputFn):
+        """ Compose a single image with left part from psd1,
+         right-part from psd2 and produce a new file.
+        """
+        ih = ImageHandler()
+        correctedPSD = ih.read(psd1)
+        unCorrectedPSD = ih.read(psd2)
+        x, y, z, n = correctedPSD.getDimensions()
+        for i in range(1,y):
+            for j in range(1,x//2):
+                unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
+        unCorrectedPSD.write(outputFn)
