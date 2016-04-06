@@ -137,17 +137,23 @@ class XmippProtOFAlignment(ProtAlignMovies):
             moveFile(self._getOutputMovieName(movie), self._getExtraPath())
 
         # Compute half-half PSD
+        #TODO: change to: self.averageMovie(....)
         ih = em.ImageHandler()
         avg = ih.computeAverage(movieName)
         avg.write('uncorrectedmic.mrc')
+
+        #TODO: change to: self.computePSD(....)
         command = '--micrograph uncorrectedmic.mrc --oroot uncorrectedpsd ' \
                   '--dont_estimate_ctf --pieceDim 400 --overlap 0.7'
         program = 'xmipp_ctf_estimate_from_micrograph'
         self.runJob(program, command)
 
+        #TODO: change to: self.computePSD(....)
         command = '--micrograph %(outputMicFn)s --oroot correctedpsd ' \
                   '--dont_estimate_ctf --pieceDim 400 --overlap 0.7' % locals()
         self.runJob(program, command)
+
+        #TODO: change to self.composePSD(...)
         correctedPSD = em.ImageHandler().createImage()
         unCorrectedPSD = em.ImageHandler().createImage()
         correctedPSD.read('correctedpsd.psd')
