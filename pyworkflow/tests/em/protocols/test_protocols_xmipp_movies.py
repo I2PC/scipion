@@ -293,3 +293,13 @@ class TestAverageMovie(BaseTest):
         self.launchProtocol(protAverage)
 
         self._checkMicrographs(protAverage, (1500,1500))
+
+
+    def test_cct2(self):
+        protAverage = self.newProtocol(XmippProtMovieAverage,
+                                       cropRegion=0)
+        protAverage.inputMovies.set(self.protImport2.outputMovies)
+        protAverage.setObjLabel('average imported movies')
+        self.launchProtocol(protAverage)
+
+        self._checkMicrographs(protAverage, (4096,4096))
