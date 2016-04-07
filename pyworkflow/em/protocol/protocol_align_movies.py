@@ -199,7 +199,6 @@ class ProtAlignMovies(ProtProcessMovies):
         return [self.summaryVar.get('')]
 
     #--------------------------- UTILS functions ----------------------------
-
     def _getFrameRange(self, n, prefix):
         """
         Params:
@@ -211,7 +210,7 @@ class ProtAlignMovies(ProtProcessMovies):
         last = n - self.getAttributeValue('%sFrameN' % prefix)
 
         return (first, last)
-
+    
     def _createOutputMovie(self, movie):
         movieId = movie.getObjId()
 
@@ -302,30 +301,30 @@ class ProtAlignMovies(ProtProcessMovies):
 
          The output will be the averaged micrograph.
         """
-        x, y, _ = movie.getDim()
         args  = '-i %s ' % inputFn
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--useInputShifts '
 
         if binFactor > 1:
             args += '--bin %f ' % binFactor
-
+        
         if roi is not None:
+            x, y, _ = movie.getDim()
             offsetX, offsetY, cropDimX, cropDimY = roi
             # cropDim value is <= 0 we should take the whole size
             if cropDimX <= 0:
                 dimX = x - 1
             else:
                 dimX = offsetX + cropDimX - 1
-
+    
             if cropDimY <= 0:
                 dimY = y - 1
             else:
                 dimY = offsetY + cropDimY - 1
-
+    
             args += '--cropULCorner %d %d ' % (offsetX, offsetY)
             args += '--cropDRCorner %d %d ' % (dimX, dimY)
-
+        
         args += ' --oavg %s ' % outputMicFn
 
         if dark is not None:

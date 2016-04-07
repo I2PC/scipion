@@ -99,7 +99,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     def _processMovie(self, movie):
         inputMd = self._getMovieOrMd(movie)
         outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
-
+        
         if self.cropRegion == CROP_ALIGNMENT and movie.hasAlignment():
             roi = movie.getAlignment().getRoi()
         elif self.cropRegion == CROP_NEW:
@@ -107,7 +107,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
                    self.cropDimX.get(), self.cropDimY.get()]
         else:
             roi = None
-
+        
         self.averageMovie(movie, inputMd, outputMicFn, self.binFactor.get(), roi,
                      self.inputMovies.get().getDark(),
                      self.inputMovies.get().getGain())
