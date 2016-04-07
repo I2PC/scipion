@@ -111,7 +111,8 @@ class XmippProtMovieAverage(ProtAlignMovies):
         self.averageMovie(movie, inputMd, outputMicFn, self.binFactor.get(), roi,
                      self.inputMovies.get().getDark(),
                      self.inputMovies.get().getGain())
-
+        self._storeSummary(movie)
+    
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
@@ -120,27 +121,6 @@ class XmippProtMovieAverage(ProtAlignMovies):
             errors.append("If you give cropDimX, you should also give cropDimY "
                           "and viceversa")
         return errors
-    
-    def _summary(self):
-        summary = []
-        movie = self.inputMovies.get().getFirstItem()
-        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-        
-        if self.cropRegion.get() == 1 and not movie.hasAlignment():
-            summary.append("Warning!!! You select *from Alignment* crop"
-                           " region, but your movies have not alignment."
-                           " Your resulting micrographs were not cropped."
-                           " If you want to crop, please use *New* option.")
-        
-        if movie.hasAlignment():
-            fstFrame, lstFrame = movie.getAlignment().getRange()
-            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
-                summary.append("Warning!!! You have selected a frame range wider than"
-                               " the range selected to align. All the frames selected"
-                               " without alignment information, will be aligned by"
-                               " setting alignment to 0")
-        
-        return summary
     
     #--------------------------- UTILS functions ---------------------------------------------------
     def _getNumberOfFrames(self, movie):
@@ -166,6 +146,23 @@ class XmippProtMovieAverage(ProtAlignMovies):
         Subclasses can override this function to change this behavior.
         """
         return False
-
+    
+    def _storeSummary(self, movie):
+        if movie.hasAlignment():
+            s0, sN = self._getFrameRange(movie.getNumberOfFrames(), 'sum')
+            fstFrame, lstFrame = movie.getAlignment().getRange()
+            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
+                self.summaryVar.set("Warning!!! You have selected a frame range "
+                                    "wider than the range selected to align. All "
+                                    "the frames selected without alignment "
+                                    "information, will be aligned by setting "
+                                    "alignment to 0")
+        else:
+            if self.cropRegion == CROP_ALIGNMENT:
+                self.summaryVar.set("Warning!!! You select *from Alignment* crop "
+                                    "region, but your movies have not alignment."
+                                    "Your resulting micrographs were not cropped."
+                                    "If you want to crop, please use *New* option.")
+                                    
 
 
