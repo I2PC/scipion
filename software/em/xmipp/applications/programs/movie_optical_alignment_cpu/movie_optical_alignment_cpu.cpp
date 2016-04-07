@@ -48,11 +48,11 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    FileName fname, foname, gianRefFilename, darkRefFilename;
-    FileName globalShiftFilename;
-    MultidimArray<double> gainImage, darkImage;
+    FileName fnMovie, foname, fnGain, fnDark;
+    Image<double> gain, dark;
+    ImageGeneric movieStack;
     std::vector< Matrix1D<double> > shiftVector;
-    MetaData shiftMD;
+    MetaData shiftMD, movie;
     int winSize, gpuDevice, nfirst, nlast;
     int groupSize;
     bool saveCorrMovie, globalShiftCorr;
@@ -81,7 +81,6 @@ public:
         addParamsLine("   [--bin <s=-1>]               : Binning factor, it may be any floating number");
         addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
         addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
-        addParamsLine("     [--useInputShifts <shiftreference>]        : global shifts from cross-correlation based methods");
         addParamsLine("     [--ssc]             : save corrected stack");
         addParamsLine("   [--dark <fn=\"\">]           : Dark correction image");
         addParamsLine("   [--gain <fn=\"\">]           : Gain correction image");
@@ -93,19 +92,15 @@ public:
     }
     void readParams()
     {
-        fname     = getParam("-i");
-        foname    = getParam("-o");
+        fnMovie = getParam("-i");
+        foname = getParam("-o");
         if ((gainImageCorr = checkParam("--gain")))
         {
-            gianRefFilename = getParam("--gain");
+            fnGain = getParam("--gain");
         }
         if ((darkImageCorr = checkParam("--dark")))
         {
-            darkRefFilename = getParam("--dark");
-        }
-        if ((globalShiftCorr = checkParam("--useInputShifts")))
-        {
-            globalShiftFilename = getParam("--useInputShifts");
+            fnDark = getParam("--dark");
         }
         groupSize = getIntParam("--groupSize");
         nfirst = getIntParam("--frameRange",0);
@@ -243,39 +238,42 @@ public:
     }
 
     // correct for dark and gain reference if available
-    void correctDarkGainImage(MultidimArray<double> & uncorrectedImage)
+    void correctDarkGainImage(Image<double> & croppedFrame)
     {
-        if (darkImageCorr)
-            uncorrectedImage-=darkImage;
-        if (gainImageCorr)
-            uncorrectedImage/=gainImage;
+        if (XSIZE(dark())>0)
+            croppedFrame()-=dark();
+        if (XSIZE(gain())>0)
+            croppedFrame()*=gain();
     }
 
     // Computes the average of a number of frames in movies
     void computeAvg(int begin, int end, MultidimArray<double> &avgImg)
     {
-        ImageGeneric movieStack;
-        MultidimArray<double> frameImage;
+        //ImageGeneric movieStack;
+        Image<double> frame;
+        FileName fnFrame;
         int N=end-begin+1;
 
         for (size_t i=begin;i<=end;i++)
         {
-            movieStack.readMapped(fname,i);
-            movieStack().getImage(frameImage);
+            //movieStack.readMapped(fnMovie,i);
+            //movieStack().getImage(frameImage);
+            movie.getValue(MDL_IMAGE, fnFrame, i);
+            frame.read(fnFrame);
             if (!globalShiftCorr)
             {
-                correctDarkGainImage(frameImage);
                 if (yDRcorner!=-1)
-                    frameImage.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                    frame().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                correctDarkGainImage(frame);
             }
             if (i==begin)
-                avgImg.initZeros(YSIZE(frameImage), XSIZE(frameImage));
-            avgImg+=frameImage;
+                avgImg.initZeros(YSIZE(frame()), XSIZE(frame()));
+            avgImg+=frame();
         }
         avgImg/=double(N);
-        frameImage.clear();
-        movieStack.clear();
+        frame.clear();
     }
+
     void std_dev2(const cv::Mat planes[], const cv::Mat &flowx, const cv::Mat &flowy, Matrix1D<double> &meanStdDev)
     {
         double sumX=0, sumY=0;
@@ -308,15 +306,16 @@ public:
     int main2()
     {
 
-        MultidimArray<double> preImg, avgCurr, mappedImg;
+        MultidimArray<double> mappedImg;
         MultidimArray<double> outputMovie;
         Matrix1D<double> meanStdev;
-        ImageGeneric movieStack;
-        Image<double> II;
+        Image<double> II, preImg, avgCurr;
         MetaData MD; // To save plot information
         FileName motionInfFile, flowFileName;
         FileName flowXFileName, flowYFileName;
-        FileName tmpFileName = "tmpMovie.stk"; // Filename when we have shifts
+        FileName tmpFileName, fnBaseOut;
+        FileName fnFrame, fnmovieRoot;
+        size_t Xdim, Ydim, Zdim, Ndim;
         ArrayDim aDim;
 
         // For measuring times (both for whole process and for each level of the pyramid)
@@ -335,39 +334,61 @@ public:
         cv::Mat planes[]={flowxPre, flowyPre};
 
         int imagenum, cnt=2, div=0, flowCounter;
-        int h, w, levelNum, levelCounter=1;
+        int levelNum, levelCounter=1;
 
+        fnmovieRoot=fnMovie.getDir();
+        tmpFileName=fnmovieRoot+"tmpMovie.stk";
+        fnBaseOut=foname.removeDirectories();
         motionInfFile=foname.replaceExtension("xmd");
-        std::cout<<motionInfFile<<std::endl;
-        std::string extension=fname.getExtension();
-        if (extension=="mrc")
-            fname+=":mrcs";
-        movieStack.read(fname,HEADER);
-        movieStack.getDimensions(aDim);
-        imagenum = aDim.ndim;
-        h = aDim.ydim;
-        w = aDim.xdim;
-        // if crop, then change the variables for width and height
+        std::string extension=fnMovie.getExtension();
+        //if input is an stack create a metadata.
+        if (fnMovie.isMetaData())
+            movie.read(fnMovie);
+        else
+        {
+            ImageGeneric movieStack;
+            movieStack.read(fnMovie,HEADER);
+            movieStack.getDimensions(Xdim,Ydim,Zdim,Ndim);
+            if (fnMovie.getExtension()=="mrc" and Ndim ==1)
+                Ndim = Zdim;
+            size_t id;
+            FileName fn;
+            for (size_t i=0;i<Ndim;i++)
+            {
+                id = movie.addObject();
+                fn.compose(i+FIRST_IMAGE,fnMovie);
+                movie.setValue(MDL_IMAGE, fn, id);
+            }
+        }
+        getImageSize(movie, Xdim, Ydim, Zdim, Ndim);
         if (yDRcorner!=-1)
         {
-            w = xDRcorner - xLTcorner +1 ;
-            h = yDRcorner - yLTcorner +1 ;
+            Xdim = xDRcorner - xLTcorner +1 ;
+            Ydim = yDRcorner - yLTcorner +1 ;
         }
-        if (darkImageCorr)
+        if (Zdim!=1)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"This program is meant to align 2D frames, not 3D");
+        imagenum=Ndim;
+        if (fnDark!="")
         {
-            II.read(darkRefFilename);
-            darkImage=II();
+            dark.read(fnDark);
+            if (yDRcorner!=-1)
+                dark().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
         }
-        if (gainImageCorr)
+        if (fnGain!="")
         {
-            II.read(gianRefFilename);
-            gainImage=II();
+            gain.read(fnGain);
+            if (yDRcorner!=-1)
+                gain().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+            gain()=1.0/gain();
+            double avg=gain().computeAvg();
+            if (isinf(avg) || isnan(avg))
+                REPORT_ERROR(ERR_ARG_INCORRECT,"The input gain image is incorrect, its inverse produces infinite or nan");
         }
         meanStdev.initZeros(4);
-        //avgcurr=cv::Mat::zeros(h, w,CV_32FC1);
-        avgCurr.initZeros(h, w);
-        flowxPre=cv::Mat::zeros(h, w,CV_32FC1);
-        flowyPre=cv::Mat::zeros(h, w,CV_32FC1);
+        //avgCurr.initZeros(Ydim, Xdim);
+        flowxPre=cv::Mat::zeros(Ydim, Xdim,CV_32FC1);
+        flowyPre=cv::Mat::zeros(Ydim, Xdim,CV_32FC1);
 #ifdef GPU
 
         // Object for optical flow
@@ -386,31 +407,32 @@ public:
 #endif
         // Initialize the stack for the output movie
         if (saveCorrMovie)
-            outputMovie.initZeros(imagenum, 1, h, w);
-        // Read global shifts and generate a temporary movie
-        if (globalShiftCorr)
+            outputMovie.initZeros(imagenum, 1, Ydim, Xdim);
+        // Read shifts if we have shift in the metadata
+        if (movie.containsLabel(MDL_SHIFT_X))
         {
+            globalShiftCorr=true;
             Matrix1D<double> shiftMatrix(2);
             shiftVector.reserve(imagenum);
-            shiftMD.read(globalShiftFilename);
-            MultidimArray<double> frameImage;
-            FOR_ALL_OBJECTS_IN_METADATA(shiftMD)
+            Image<double> frameImage;
+            FOR_ALL_OBJECTS_IN_METADATA(movie)
             {
-                movieStack.readMapped(fname,__iter.objId);
-                movieStack().getImage(frameImage);
+            	movie.getValue(MDL_IMAGE, fnFrame, __iter.objId);
                 shiftMD.getValue(MDL_SHIFT_X, XX(shiftMatrix), __iter.objId);
                 shiftMD.getValue(MDL_SHIFT_Y, YY(shiftMatrix), __iter.objId);
                 shiftVector.push_back(shiftMatrix);
-                correctDarkGainImage(frameImage);
+                frameImage.read(fnFrame);
                 if (yDRcorner!=-1)
-                    frameImage.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
-                translate(LINEAR, preImg, frameImage, shiftMatrix, WRAP);
-                II()=preImg;
-                II.write(tmpFileName, ALL_IMAGES, true, WRITE_APPEND);
+                    frameImage().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                correctDarkGainImage(frameImage);
+                translate(LINEAR, preImg(), frameImage(), shiftMatrix, WRAP);
+                preImg.write(tmpFileName, ALL_IMAGES, true, WRITE_APPEND);
             }
-            tmpFileName=fname;
-            fname="tmpMovie.stk";
+            tmpFileName=fnMovie;
+            fnMovie=fnmovieRoot+"tmpMovie.stk";
         }
+        else
+        	globalShiftCorr=false;
         tStart2=clock();
         // the frame index begin from 1 in this program
         if (nfirst<0)
@@ -423,14 +445,14 @@ public:
             nlast++;
         imagenum=nlast-nfirst+1;
         levelNum=sqrt(double(imagenum));
-        computeAvg(nfirst, nlast, avgCurr);
-        xmipp2Opencv(avgCurr, avgcurr);
+        computeAvg(nfirst, nlast, avgCurr());
+        xmipp2Opencv(avgCurr(), avgcurr);
         cout<<"Frames "<<nfirst<<" to "<<nlast<<" under processing ..."<<std::endl;
         while (div!=groupSize)
         {
             div=int(imagenum/cnt);
             // avgStep to hold the sum of aligned frames of each group at each step
-            avgstep=cv::Mat::zeros(h, w,CV_32FC1);
+            avgstep=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
 
             cout<<"Level "<<levelCounter<<"/"<<levelNum<<" of the pyramid is under processing"<<std::endl;
             // Compute time for each level
@@ -445,23 +467,23 @@ public:
                 //Just compute the average in the last step
                 if (div==1)
                 {
-                    movieStack.readMapped(fname,nfirst+i);
-                    movieStack().getImage(preImg);
+                    movie.getValue(MDL_IMAGE, fnFrame, nfirst+i);
+                    preImg.read(fnFrame);
                     if (!globalShiftCorr)
                     {
-                        correctDarkGainImage(preImg);
                         if (yDRcorner!=-1)
-                            preImg.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                            preImg().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                        correctDarkGainImage(preImg);
                     }
                 }
                 else
                 {
                     if (i==cnt-1)
-                        computeAvg(i*div+nfirst, nlast, preImg);
+                        computeAvg(i*div+nfirst, nlast, preImg());
                     else
-                        computeAvg(i*div+nfirst, (i+1)*div+nfirst-1, preImg);
+                        computeAvg(i*div+nfirst, (i+1)*div+nfirst-1, preImg());
                 }
-                xmipp2Opencv(preImg, preimg);
+                xmipp2Opencv(preImg(), preimg);
                 // Note: We should convert Xmipp image to OpenCV 8 bits image
                 convert2Uint8(avgcurr,avgcurr8);
                 convert2Uint8(preimg,preimg8);
@@ -473,8 +495,10 @@ public:
                     d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
                 else
                 {
-                    flowXFileName=foname.removeLastExtension()+formatString("flowx%d%d.txt",div*2,flowCounter);
-                    flowYFileName=foname.removeLastExtension()+formatString("flowy%d%d.txt",div*2,flowCounter);
+                	flowXFileName=fnmovieRoot;
+                	flowYFileName=fnmovieRoot;
+                	flowXFileName+=fnBaseOut.removeLastExtension()+formatString("flowx%d%d.txt",div*2,flowCounter);
+                    flowYFileName+=fnBaseOut.removeLastExtension()+formatString("flowy%d%d.txt",div*2,flowCounter);
                     readMat(flowXFileName.c_str(), flowx);
                     readMat(flowYFileName.c_str(), flowy);
                     d_flowx.upload(flowx);
@@ -494,7 +518,8 @@ public:
                     calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
                 else
                 {
-                    flowFileName=foname.removeLastExtension()+formatString("flow%d%d.txt",div*2,flowCounter);
+                	flowFileName=fnmovieRoot;
+                    flowFileName+=fnBaseOut.removeLastExtension()+formatString("flow%d%d.txt",div*2,flowCounter);
                     readMat(flowFileName.c_str(), flow);
                     calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, cv::OPTFLOW_USE_INITIAL_FLOW);
                 }
@@ -520,13 +545,16 @@ public:
                 else
                 {
 #ifdef GPU
-                    flowXFileName=foname.removeLastExtension()+formatString("flowx%d%d.txt",div,i+1);
-                    flowYFileName=foname.removeLastExtension()+formatString("flowy%d%d.txt",div,i+1);
+                	flowXFileName=fnmovieRoot;
+					flowYFileName=fnmovieRoot;
+                	flowXFileName+=fnBaseOut.removeLastExtension()+formatString("flowx%d%d.txt",div,i+1);
+                    flowYFileName+=fnBaseOut.removeLastExtension()+formatString("flowy%d%d.txt",div,i+1);
                     saveMat(flowXFileName.c_str(), planes[0]);
                     saveMat(flowYFileName.c_str(), planes[1]);
 #else
 
-                    flowFileName=foname.removeLastExtension()+formatString("flow%d%d.txt",div,i+1);
+                    flowFileName=fnmovieRoot;
+                    flowFileName+=fnBaseOut.removeLastExtension()+formatString("flow%d%d.txt",div,i+1);
                     saveMat(flowFileName.c_str(), flow);
 #endif
 
@@ -549,10 +577,11 @@ public:
                     }
                 if (div==1 && globalShiftCorr)
                 {
-                    cout<<tmpFileName<<std::endl;
-                    movieStack.readMapped(tmpFileName,nfirst+i);
-                    movieStack().getImage(preImg);
-                    xmipp2Opencv(preImg, preimg);
+                    //movieStack.readMapped(tmpFileName,nfirst+i);
+                    //movieStack().getImage(preImg);
+                    movie.getValue(MDL_IMAGE, fnFrame, nfirst+i);
+                    preImg.read(fnFrame);
+                    xmipp2Opencv(preImg(), preimg);
                 }
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
                 if (div==1 && saveCorrMovie)
@@ -568,9 +597,8 @@ public:
             cnt*=2;
             levelCounter++;
         }
-        opencv2Xmipp(avgcurr, avgCurr);
-        II() = avgCurr;
-        II.write(foname);
+        opencv2Xmipp(avgcurr, avgCurr());
+        avgCurr.write(foname);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
         if (saveCorrMovie)
         {
