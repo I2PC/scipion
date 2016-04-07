@@ -297,7 +297,7 @@ class TestAverageMovie(BaseTest):
 
     def test_cct2(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
-                                       cropRegion=0)
+                                       cropRegion=1)
         protAverage.inputMovies.set(self.protImport2.outputMovies)
         protAverage.setObjLabel('average imported movies')
         self.launchProtocol(protAverage)
