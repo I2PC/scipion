@@ -128,7 +128,6 @@ class XmippProtOFAlignment(ProtAlignMovies):
         self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(), roi, dark, gain)
         uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
         correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-        outputFn = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
 
         self.computePSD(aveMic, uncorrectedPSD)
         self.computePSD(outputMicFn, correctedPSD)
@@ -209,10 +208,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
         movieFolder = self._getOutputMovieFolder(movie)
         return join(movieFolder, self._getMovieRoot(movie) + '_shifts.xmd')
 
-    def createPlots(plotType, protocol, micId):
-        print "output Micrographs to create Plot %s" % protocol.outputMicrographs
-        mic = protocol.outputMicrographs[micId]
-        return movieCreatePlot(mic, False).show()
+def createPlots(plotType, protocol, micId):
+    print "output Micrographs to create Plot %s" % protocol.outputMicrographs
+    mic = protocol.outputMicrographs[micId]
+    return movieCreatePlot(mic, False).show()
 
 
 def movieCreatePlot(mic, saveFig):
