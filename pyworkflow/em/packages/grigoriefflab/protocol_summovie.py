@@ -112,24 +112,13 @@ class ProtSummovie(ProtAlignMovies):
             self.runJob(self._program, self._args % params)
         except:
             print("ERROR: Movie %s failed\n" % movie.getFileName())
+        
+        self._storeSummary(movie)
     
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
         return []
-    
-    def _summary(self):
-        summary = []
-        movie = self.inputMovies.get().getFirstItem()
-        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-        if movie.hasAlignment():
-            fstFrame, lstFrame = movie.getAlignment().getRange()
-            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
-                summary.append("Warning!!! You have selected a frame range wider than"
-                               " the range selected to align. All the frames selected"
-                               " without alignment information, will be aligned by"
-                               " setting alignment to 0")
-        return summary
-    
+        
     def _methods(self):
         return []
 
@@ -204,3 +193,14 @@ eof
         Subclasses can override this function to change this behavior.
         """
         return False
+    
+    def _storeSummary(self, movie):
+        if movie.hasAlignment():
+            s0, sN = self._getFrameRange(movie.getNumberOfFrames(), 'sum')
+            fstFrame, lstFrame = movie.getAlignment().getRange()
+            if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
+                self.summaryVar.set("Warning!!! You have selected a frame range "
+                                    "wider than the range selected to align. All "
+                                    "the frames selected without alignment "
+                                    "information, will be aligned by setting "
+                                    "alignment to 0")
