@@ -35,7 +35,7 @@ from protocol_movie_opticalflow import XmippProtOFAlignment
 
 from pyworkflow.em.viewer import ObjectView
 from pyworkflow.em.showj import OBJCMDS
-from pyworkflow.em.packages.xmipp3.protocol_movie_opticalflow import createPlots
+from pyworkflow.em.packages.xmipp3.protocol_movie_opticalflow import movieCreatePlot
 
 class XmippMovieAlignViewer(ProtocolViewer):
     """ Wrapper to visualize different type of data objects

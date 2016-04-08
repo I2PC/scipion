@@ -340,6 +340,7 @@ public:
         tmpFileName=fnmovieRoot+"tmpMovie.stk";
         fnBaseOut=foname.removeDirectories();
         motionInfFile=foname.replaceExtension("xmd");
+        std::cerr<<motionInfFile<<std::endl;
         std::string extension=fnMovie.getExtension();
         //if input is an stack create a metadata.
         if (fnMovie.isMetaData())

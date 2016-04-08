@@ -92,7 +92,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         # Get the number of frames and the range to be used for alignment and sum
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
-        psdCorrName = self._getFnInMovieFolder(movie, self._getNameExt(movie,'_aligned_corrected', 'psd'))
+        psdCorrName = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
         gpuId = self.GPUCore.get()
 
         command = ' -i %s -o %s ' % (inputFn, outputMicFn)
@@ -128,11 +128,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
         self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(), roi, dark, gain)
         uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
         correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-        outputFn = self._getFnInMovieFolder(movie, self._getNameExt(movie,'_aligned_corrected', 'psd'))
+        outputFn = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
 
         self.computePSD(aveMic, uncorrectedPSD)
         self.computePSD(outputMicFn, correctedPSD)
-        self.composePSD(uncorrectedPSD + ".psd", correctedPSD + ".psd", outputFn)
+        self.composePSD(uncorrectedPSD + ".psd", correctedPSD + ".psd", psdCorrName)
     
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -174,7 +174,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
 
         plotCartName = self._getNameExt(movie, '_plot_cart', 'png')
         psdCorrName = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
-        metadataName = self._getNameExt(movie, '_aligned', 'xmd')
+        metadataName = self._getNameExt(movie, '_aligned_mic', 'xmd')
 
         mic.alignMetaData = self._getExtraPath(metadataName)
         mic.plotCart = self._getExtraPath(plotCartName)
@@ -198,7 +198,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
     def _getMovieOrMd(self, movie):
         if movie.hasAlignment() and self.useAlignment:
             shiftsMd = self._getShiftsFile(movie)
-            s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
+            numberOfFrames = movie.getNumberOfFrames()
+            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
             writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
             return shiftsMd
         else:
