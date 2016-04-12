@@ -135,13 +135,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         if self.applyAlignment and movie.hasAlignment():
             shifts = movie.getAlignment().getShifts()
         else:
-            #TODO: I do not think this option is ever used
-            # Read movie dimensions to iterate through each frame
-            movieName =  movie.getFileName()
-            imgh = ImageHandler()
-            _, _, _, n = imgh.getDimensions(movieName)
-            shifts = [0] * (2*n)
-                 
+            shifts = None
+        
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movie.getObjId(), movie.getFileName(),
                                                shifts, prerequisites=[])  
@@ -165,6 +160,10 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         if last <= 0 or last >= n:
             last = n
         numberOfFrames = last - first + 1
+        
+        if shifts is None:
+            frames = max(z,n)
+            shifts = [0] * (2*frames)
         
         stkIndex = 0
         movieStk = self._getMovieName(movieId, '.stk')
