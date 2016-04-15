@@ -23,10 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.constants import ALIGN_PROJ
-"""
-This sub-package contains wrapper around Screen Classes Xmipp program
-"""
 
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -35,12 +31,16 @@ from pyworkflow.em.protocol import ProtAnalysis2D
 from pyworkflow.em.data import Class2D, SetOfClasses2D
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 import pyworkflow.em.metadata as md
+from pyworkflow.em.constants import ALIGN_PROJ
 # import xmipp
 from xmipp3 import ProjMatcher
 from math import floor
-        
+
+
+
 class XmippProtScreenClasses(ProtAnalysis2D, ProjMatcher):
-    """Compares a set of classes or averages with the corresponding projections of a reference volume """
+    """Compares a set of classes or averages with the corresponding projections
+    of a reference volume. """
     _label = 'screen classes'
     
     def __init__(self, **args):

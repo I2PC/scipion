@@ -38,10 +38,10 @@ from protocol_base import ProtRelionBase
 from convert import getEnviron
 
 class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
-    """    
-    Reconstruct a volume using Relion from a given set of particles.
-    The alignment parameters will be converted to a Relion star file
-    and used as direction projections to reconstruct.
+    """
+    This Relion protocol tracks particle movement in movie frames,
+    applies a resolution and dose-dependent weighting scheme
+    for each frame and finally sums them together.
     """
     _label = 'particle polishing'
     
@@ -163,7 +163,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """
         from pyworkflow.utils.path import copyTree
         copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
-        self.runJob(self._getProgram('relion_particle_polish'), params, env=getEnviron(self.refineRun.get().useRelion14))
+        self.runJob(self._getProgram('relion_particle_polish'), params)
     
     def organizeDataStep(self):
         from pyworkflow.utils import moveFile

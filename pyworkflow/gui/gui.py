@@ -406,7 +406,7 @@ class Window():
         from dialog import showWarning
         showWarning(header, msg, self.root)
         
-    def askYesNo(self, title, msg,):
+    def askYesNo(self, title, msg):
         from dialog import askYesNo
         return askYesNo(title, msg, self.root)
         

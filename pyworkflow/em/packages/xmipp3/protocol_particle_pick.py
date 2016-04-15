@@ -24,9 +24,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippParticlePicking protocol
-"""
 
 from pyworkflow.em import *
 from pyworkflow.protocol.launch import launch
@@ -38,22 +35,18 @@ from convert import writeSetOfMicrographs, readSetOfCoordinates
 
 
 class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
-
-    """Xmipp protocol to pick particles in a set of micrographs 
-    either manually or using automatic picking support. Particles will be used in order to reconstruct a 3D molecule from it's 2D projections. """
+    """ Picks particles in a set of micrographs
+    either manually or in a supervised mode.
+    """
     _label = 'manual-picking (step 1)'
 
-    
     def __init__(self, **args):        
         ProtParticlePicking.__init__(self, **args)
         # The following attribute is only for testing
         self.importFolder = String(args.get('importFolder', None))
 
-
-    
     #--------------------------- DEFINE param functions --------------------------------------------    
     def _defineParams(self, form):
-    
         ProtParticlePicking._defineParams(self, form)
         form.addParam('memory', FloatParam, default=2,
                    label='Memory to use (In Gb)', expertLevel=2)  
@@ -61,16 +54,10 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------    
     def _insertAllSteps(self):
         """The Particle Picking process is realized for a set of micrographs"""
-        
-        # Get pointer to input micrographs 
+        # Get pointer to input micrographs
         self.inputMics = self.inputMicrographs.get()
-        
         micFn = self.inputMics.getFileName()
-        # Parameters needed 
-        
-        # Convert input SetOfMicrographs to Xmipp if needed
-#        self._insertConvertStep('inputMics', XmippSetOfMicrographs, 
-#                                 self._getPath('micrographs.xmd'))
+
         # Launch Particle Picking GUI
         if not self.importFolder.hasValue():
             self._insertFunctionStep('launchParticlePickGUIStep', micFn, interactive=True)
@@ -79,9 +66,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             # Insert step to create output objects
             self._insertFunctionStep('createOutputStep')
 
-    
-  
-    
     def launchParticlePickGUIStep(self, micFn):
         # Launch the particle picking GUI
         extraDir = self._getExtraPath()
@@ -123,9 +107,12 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._methods(self)
         else:
-            return [self.getMethods(None)]
+            return [self._getTmpMethods()]
     
-    def getMethods(self, output):#output is not used but to overwrite getMethods it is used
+    def _getTmpMethods(self):
+        """ Return the message when there is not output generated yet.
+         We will read the Xmipp .pos files and other configuration files.
+        """
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
         msg = ''
@@ -136,18 +123,32 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             pickingState = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
             particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
             isAutopick = pickingState != "Manual"
-            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
-            autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
-            if manualParticlesSize is None:
-                manualParticlesSize = 0
-            if autoParticlesSize is None:
-                autoParticlesSize = 0
-            msg = 'User picked %d particles with a particle size of %d.' % (autoParticlesSize + manualParticlesSize, particleSize)
+            manualParts = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            autoParts = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
+
+            if manualParts is None:
+                manualParts = 0
+
+            if autoParts is None:
+                autoParts = 0
+
+            msg = 'User picked %d particles ' % (autoParts + manualParts)
+            msg += 'with a particle size of %d.' % particleSize
+
             if isAutopick:
-                msg += "Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize)
+                msg += "Automatic picking was used ([Abrishami2013]). "
+                msg += "%d particles were picked automatically " %  autoParts
+                msg += "and %d  manually." % manualParts
+
         return msg
 
-    def getSummary(self, coordSet):
+    def _summary(self):
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._summary(self)
+        else:
+            return [self._getTmpSummary()]
+
+    def _getTmpSummary(self):
         summary = []
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
@@ -170,7 +171,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
 
-    
     def getCoordsDir(self):
         return self._getExtraPath()
     

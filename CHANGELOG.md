@@ -1,5 +1,5 @@
 
-## v1.0.0 (2016-02-01) Augusto
+## v1.0.0 (2016-02-20) Augusto
 
 - Allows to combine several EM software packages (~ 100 protocols):
   - All protocols from Xmipp 

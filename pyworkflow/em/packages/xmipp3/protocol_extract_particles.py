@@ -27,9 +27,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippProtExtractParticles protocol
-"""
 
 from glob import glob
 from os.path import exists, basename
@@ -430,18 +427,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
-        validateMsgs = []
+        errors = []
         
         # doFlip can only be True if CTF information is available on picked micrographs
         if self.doFlip and not self.ctfRelations.hasValue():
-            validateMsgs.append('Phase flipping cannot be performed unless CTF information is provided.')
-            
+            errors.append('Phase flipping cannot be performed unless CTF information is provided.')
+
+        if self.doNormalize:
+            if self.backRadius > int(self.boxSize.get()/2):
+                errors.append("Background radius for normalization should be "
+                              "equal or less than half of the box size.")
+
         self._setupCtfProperties() # setup self.micKey among others
         if self.ctfRelations.hasValue() and self.micKey is None:
-            validateMsgs.append('Some problem occurs matching micrographs and CTF.\n'
+            errors.append('Some problem occurs matching micrographs and CTF.\n'
                                 'There were micrographs for which CTF was not found\n'
                                 'either using micName or micId.\n')
-        return validateMsgs
+        return errors
     
     def _citations(self):
         return ['Vargas2013b']

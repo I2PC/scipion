@@ -1374,7 +1374,7 @@ class Protocol(Step):
             if useKeyLabel:
                 label = cite['id']
             else:
-                label = cite['author'].split('and')[0].split(',')[0].strip()
+                label = cite['author'].split(' and ')[0].split(',')[0].strip()
                 label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
             
             return '[[%s][%s]] ' % (cite['doi'].strip(), label)
