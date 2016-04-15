@@ -50,7 +50,7 @@ void ProgVolumeHomogeneitator::defineParams()
     addParamsLine("                           : rootname contains the list of corrected images and their angles with respect to the reference map");
     addParamsLine("                           : NOTE: you do not need to define any extension for the output root name. Program will automatically create one .stk and one .xmd");
     addParamsLine(" [--winSize <winSize=20>]  : window size for optical flow algorithm");
-    addParamsLine(" [--cutFreq <cutFreq=10>]  : cut-off frequency to use for low-pass filtering of input and reference volumes");
+    addParamsLine(" [--cutFreq <cutFreq=0.5>] : cut-off frequency to use for low-pass filtering of input and reference volumes. This is digital frequency");
     //for test
     addParamsLine(" [-o1<rootname=\"\">]      : Output rootname for test and save applied OF on reprojections of input");
     addParamsLine(" [-o2 <rootname=\"\">]     : Output test .stk input reprojection rootname");
@@ -90,7 +90,7 @@ void ProgVolumeHomogeneitator::opencv2Xmipp(const cv::Mat &opencvMat, MultidimAr
 
 void ProgVolumeHomogeneitator::run()
 {
-	FileName fn_proj;
+	FileName fn_proj, fnIn;
 	Image<double> inV, refV;
 	Image<double> imgIn;
 	MetaData setOfImgIn, setOfImgOut;
@@ -137,6 +137,10 @@ void ProgVolumeHomogeneitator::run()
 	filter.applyMaskSpace(inV());
 	filter.applyMaskSpace(refV());
 
+	//for test
+	inV.write("FinV.vol");
+	refV.write("FrefV.vol");
+
 	//calculating progress time
 	std::cerr<<"calculating OF and remapping for each new reprojection......\n";
 	init_progress_bar(setOfImgIn.size());
@@ -144,7 +148,13 @@ void ProgVolumeHomogeneitator::run()
 	FOR_ALL_OBJECTS_IN_METADATA (setOfImgIn)
 	{
 		//get the coordinate of each image for reprojection purpose
-		imgIn.readApplyGeo(setOfImgIn, __iter.objId);
+		//********WARNING: be careful about applying shift, for experimental data it needs to be checked
+		ApplyGeoParams p;
+		p.only_apply_shifts = true;
+		imgIn.readApplyGeo(setOfImgIn, __iter.objId, p);
+		//setOfImgIn.getValue(MDL_IMAGE, fnIn, __iter.objId);
+		//imgIn.read(fnIn);
+
 		setOfImgIn.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
 		setOfImgIn.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
 		setOfImgIn.getValue(MDL_ANGLE_PSI, psi, __iter.objId);
