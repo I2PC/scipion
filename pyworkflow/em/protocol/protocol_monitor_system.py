@@ -54,13 +54,13 @@ class ProtMonitorSystem(ProtMonitor):
 #              label='Disk IO',
 #              help='By default only CPU and Mem usage are stored. '
 #                   'Set to yes to store disk related info.' )
-        form.addParam('cpuAlert', params.FloatParam,default=90,
+        form.addParam('cpuAlert', params.FloatParam,default=101,
               label="Raise Alarm if CPU > XX%",
               help="Raise alarm if memory allocated is greater than given percentage")
-        form.addParam('memAlert', params.FloatParam,default=90,
+        form.addParam('memAlert', params.FloatParam,default=101,
               label="Raise Alarm if Memory > XX%",
               help="Raise alarm if cpu allocated is greater than given percentage")
-        form.addParam('swapAlert', params.FloatParam,default=100,
+        form.addParam('swapAlert', params.FloatParam,default=101,
               label="Raise Alarm if Swap > XX%",
               help="Raise alarm if swap allocated is greater than given percentage")
         form.addParam('interval', params.FloatParam,default=300,
