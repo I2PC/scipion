@@ -44,6 +44,7 @@ from protocol_batch import *
 from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
 from protocol_extract_coordinates import ProtExtractCoords
 from protocol_monitor import ProtMonitor
-
+from protocol_monitor_system import ProtMonitorSystem, ProtMonitorSystemViewer
+from protocol_stress import ProtStress
 from parallel import ProtTestParallel
 
