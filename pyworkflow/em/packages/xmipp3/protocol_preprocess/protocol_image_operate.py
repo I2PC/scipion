@@ -51,12 +51,18 @@ OP_SLICE = 12
 OP_COLUMN = 13
 OP_ROW = 14
 OP_RADIAL = 15
-OP_AVERAGE = 16
-OP_RESET = 17
+###OP_AVERAGE = 16 No radial operation exists ROB
+OP_RESET = 16
 
-OP_CHOICES = ['plus', 'minus', 'multiply', 'divide', 'minimum', 'maximum',
-              'dot product', 'log', 'log10', 'sqrt', 'abs', 'pow', 'slice',
-              'column', 'row', 'radial', 'average', 'reset']
+OP_CHOICES = ['plus', 'minus', 
+              'multiply', 'divide', 
+              'minimum', 'maximum',
+              'dot product', 'log', 
+              'log10', 'sqrt', 
+              'abs', 'pow', 
+              'slice', 'column',
+              'row', 'radial_avg',
+               'reset']
 
 conditionStr = '(operation == 0 or operation == 1 or operation == 2 or ' \
                 'operation == 3 or operation == 4 or operation == 5 or ' \
@@ -109,6 +115,10 @@ class XmippProtImageOperate():
     def _insertProcessStep(self):
 
         inputFn = self.inputFn
+        if not self._isParticle:
+            if inputFn.endswith('.mrc') or inputFn.endswith('.map'):
+                 inputFn += ':mrc'
+
         # determine the command line for
         operationStr = operationDict[self.operation.get()]
         if not self.isValue.get():
@@ -120,6 +130,9 @@ class XmippProtImageOperate():
                 #if we do not create this case them getAlignment must be defined
                 if isinstance(self.inputVolumes2.get(), Volume):
                     inputFn2 = self.inputVolumes2.get().getFileName()
+                    if inputFn2.endswith('.mrc') or inputF2.endswith('.map'):
+                       inputFn2 += ':mrc'
+
                 else:#set of volumes
                     #TODO ROB: how to deal with binary conversions?
                     writeSetOfVolumes(self.inputVolumes2.get(), inputFn2)
