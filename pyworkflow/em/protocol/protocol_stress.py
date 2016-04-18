@@ -102,8 +102,6 @@ allocated memory. It will use 100% per worker ")
                 args += " %s "%self.extraParams
             self.runJob(self._program, args)
 
-    def createOutput(self,interval):
-            time.sleep(interval)
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         message = []
