@@ -50,7 +50,12 @@ class ProtMonitor(EMProtocol):
         form.addParam('inputProtocols', params.MultiPointerParam,
                       label="Input protocols", important=True,
                       pointerClass='EMProtocol',
-                      help="")
+                      help="this protocol/s will be monitorized")
+
+        form.addParam('samplingInterval', params.IntParam,default=60,
+                      label="Sampling Interval (sec)",
+                      pointerClass='EMProtocol',
+                      help="Take one sample each SAmplinInteval seconds")
 
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
