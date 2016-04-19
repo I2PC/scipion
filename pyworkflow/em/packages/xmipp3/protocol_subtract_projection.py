@@ -25,22 +25,16 @@
 # *
 # **************************************************************************
 
-from os.path import join, isfile
-from shutil import copyfile
-from pyworkflow.object import Float, String
-from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL,
-                                        StringParam, BooleanParam, LEVEL_ADVANCED)
-from pyworkflow.em.data import Volume
-from pyworkflow.em import Viewer
+from pyworkflow.protocol.params import PointerParam, Float
 import pyworkflow.em.metadata as md
+import pyworkflow.em.data as data
+
 from pyworkflow.em.protocol import ProtAnalysis3D
-from pyworkflow.utils.path import moveFile, makePath
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
-                                                   writeSetOfVolumes,
                                                    getImageLocation)
 
 
-class XmippProtExtractFromVolume(ProtAnalysis3D):
+class XmippProtSubtractProjection(ProtAnalysis3D):
     """    
     Extract the information contained in a volume to the experimental
     particles. The particles must be projection alignment in order to
@@ -48,7 +42,7 @@ class XmippProtExtractFromVolume(ProtAnalysis3D):
     A typical case of use, is in the deletion of the capsid to the
     experimental image to only refine the genetic material.
     """
-    _label = 'extract from volume'
+    _label = 'subtract projection'
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
@@ -57,23 +51,30 @@ class XmippProtExtractFromVolume(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam,
-                      pointerClass='SetOfParticles', pointerCondition='hasAlignment',
+                      pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj',
                       label="Input particles", important=True,
                       help='Select the experimental particles.')
         form.addParam('inputVolume', PointerParam, pointerClass='Volume',
                       label="Input volume",
                       help='Select the input volume. Is desirable that the '
                            'volume was generated with the input particles.')
+        form.addParam('refMask', PointerParam, pointerClass='VolumeMask',
+              label='Reference mask (optional)', allowsNull=True,
+              help="The volume will be masked once the volume has been "
+                   "applied the CTF of the particles.")
+        
         form.addParallelSection(threads=0, mpi=0)
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        partSetId = self.inputParticles.get().getObjId()
-        volume = self.inputVolume.get()
-        volFn = getImageLocation(volume)
-        
+        imgSet = self.inputParticles.get()
+        partSetId = imgSet.getObjId()
+        volName = getImageLocation(self.inputVolume.get())
         self._insertFunctionStep('convertInputStep', partSetId)
-        self._insertFunctionStep('phantomProject', volFn)
+        if self.refMask.get() is not None:
+            self._insertFunctionStep('applyMaskStep', volName)
+        self._insertFunctionStep('volumeProjectStep', volName)
+        self._insertFunctionStep('removeStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions --------------------------------------------
@@ -82,60 +83,59 @@ class XmippProtExtractFromVolume(ProtAnalysis3D):
         particlesId: is only need to detect changes in
         input particles and cause restart from here.
         """
-        writeSetOfParticles(self.inputParticles.get(), self._getInputParticlesFn())
+        imgSet = self.inputParticles.get()
+        writeSetOfParticles(imgSet, self._getInputParticlesFn())
     
-    def phantomProject(self,volName):
+    def applyMaskStep(self, volName):
+        params = ' -i %s --mult %s -o %s' % (volName,
+                                             self.refMask.get().getFileName(),
+                                             self._getOutputMap())
+        self.runJob('xmipp_image_operate', params)
+    
+    def volumeProjectStep(self, volName):
         from convert import createParamPhantomFile
         
         imgSet = self.inputParticles.get()
         phantomFn = self._getExtraPath('params')
         pathParticles = self._getInputParticlesFn()
-        dimX, _, _ = self.inputParticles.get().getDim()
+        dimX, _, _ = imgSet.getDim()
         
-        createParamPhantomFile(imgSet, phantomFn, dimX, pathParticles)
+        createParamPhantomFile(phantomFn, dimX, pathParticles, imgSet.isPhaseFlipped(), False)
         
-        params =  ' -i %s' % volName
+        if self.refMask.get() is not None:
+            volumeFn = self._getOutputMap()
+        else:
+            volumeFn = volName
+        
+        params =  ' -i %s' % volumeFn
         params += ' --params %s' % phantomFn
         params += ' -o %s' % self._getOutputRefsFn()
         params += ' --sampling_rate % 0.3f' % imgSet.getSamplingRate()
-        
+        params += ' --method fourier 2 0.5'
         self.runJob('xmipp_phantom_project', params)
-
-    def createOutputStep(self):
-        pass
-#         outputVols = self._createSetOfVolumes()
-#         imgSet = self.inputParticles.get()
-#         for i, vol in enumerate(self._iterInputVols()):
-#             volume = vol.clone()               
-#             volDir = self._getVolDir(i+1)
-#             volPrefix = 'vol%03d_' % (i+1)
-#             validationMd = self._getExtraPath(volPrefix + 'validation.xmd')
-#             moveFile(join(volDir, 'validation.xmd'), 
-#                      validationMd)
-#             clusterMd = self._getExtraPath(volPrefix + 'clusteringTendency.xmd')
-#             moveFile(join(volDir, 'clusteringTendency.xmd'), clusterMd)
-#             
-#             outImgSet = self._createSetOfParticles(volPrefix)
-#             
-#             outImgSet.copyInfo(imgSet)
-# 
-#             outImgSet.copyItems(imgSet,
-#                                 updateItemCallback=self._setWeight,
-#                                 itemDataIterator=md.iterRows(clusterMd,
-#                                                              sortByLabel=md.MDL_ITEM_ID))
-#                         
-#             mdValidatoin = md.MetaData(validationMd)
-#             weight = mdValidatoin.getValue(md.MDL_WEIGHT, mdValidatoin.firstObject())
-#             volume.weight = Float(weight)
-#             volume.clusterMd = String(clusterMd)
-#             volume.cleanObjId() # clean objects id to assign new ones inside the set            
-#             outputVols.append(volume)
-#             self._defineOutputs(outputParticles=outImgSet)
-#         
-#         outputVols.setSamplingRate(volume.getSamplingRate())
-#         self._defineOutputs(outputVolumes=outputVols)
-#         #self._defineTransformRelation(self.inputVolumes.get(), volume)
+    
+    def removeStep(self):
+        self._removeAlignLabels(self._getInputParticlesFn())
+        self._removeAlignLabels(self._getOutputRefsFn())
         
+        params = ' -i %s --minus %s -o %s' % (self._getInputParticlesFn(),
+                                              self._getOutputRefsFn(),
+                                              self._getFinalParts())
+        self.runJob('xmipp_image_operate', params)
+    
+    def createOutputStep(self):
+        imgSet = self.inputParticles.get()
+        outImgSet = self._createSetOfParticles()
+        outImgsFn = self._getFinalMDParts()
+         
+        outImgSet.copyInfo(imgSet)
+        outImgSet.setAlignmentProj()
+        outImgSet.copyItems(imgSet,
+                            updateItemCallback=self._updateItem,
+                            itemDataIterator=md.iterRows(outImgsFn))
+        self._defineOutputs(outputParticles=outImgSet)
+        self._defineTransformRelation(self.inputParticles, outImgSet)
+    
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         validateMsgs = []
@@ -152,31 +152,32 @@ class XmippProtExtractFromVolume(ProtAnalysis3D):
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getInputParticlesFn(self):
-        return self._getPath('input_particles.xmd')
+        return self._getExtraPath('input_particles.xmd')
     
     def _getOutputRefsFn(self):
-        return self._getPath('reference_particles.xmd')
+        return self._getExtraPath('reference_particles.xmd')
     
-    def _getVolDir(self, volIndex):
-        return self._getExtraPath('vol%03d' % volIndex)
+    def _getFinalParts(self):
+        return self._getExtraPath('particles.stk')
     
-    def _defineMetadataRootName(self, mdrootname,volId):
-        
-        if mdrootname=='P':
-            VolPrefix = 'vol%03d_' % (volId)
-            return self._getExtraPath(VolPrefix+'clusteringTendency.xmd')
-        if mdrootname=='Volume':
-
-            VolPrefix = 'vol%03d_' % (volId)
-            return self._getExtraPath(VolPrefix+'validation.xmd')
-            
-    def _definePName(self):
-        fscFn = self._defineMetadataRootName('P')
-        return fscFn
+    def _getFinalMDParts(self):
+        return self._getExtraPath('particles.xmd')
     
-    def _defineVolumeName(self,volId):
-        fscFn = self._defineMetadataRootName('Volume',volId)
-        return fscFn
+    def _getOutputMap(self):
+        return self._getExtraPath('masked_map.vol')
     
-    def _setWeight(self, item, row):  
-        item._xmipp_weightClusterability = Float(row.getValue(md.MDL_VOLUME_SCORE1))
+    def _removeAlignLabels(self, filename):
+        mData = md.MetaData(filename)
+        mData.removeLabel(md.MDL_ANGLE_ROT)
+        mData.removeLabel(md.MDL_ANGLE_TILT)
+        mData.removeLabel(md.MDL_ANGLE_PSI)
+        mData.removeLabel(md.MDL_SHIFT_X)
+        mData.removeLabel(md.MDL_SHIFT_Y)
+        mData.removeLabel(md.MDL_SHIFT_Z)
+        mData.write(filename)
+    
+    def _updateItem(self, item, row):
+        from convert import xmippToLocation
+        newFn = row.getValue(md.MDL_IMAGE)
+        newLoc = xmippToLocation(newFn)
+        item.setLocation(newLoc)
