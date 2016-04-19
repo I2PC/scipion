@@ -118,7 +118,7 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
         self._removeAlignLabels(self._getInputParticlesFn())
         self._removeAlignLabels(self._getOutputRefsFn())
         
-        params = ' -i %s --minus %s -o %s' % (self._getInputParticlesFn(),
+        params = ' -i %s --minusAdjusted %s -o %s' % (self._getInputParticlesFn(),
                                               self._getOutputRefsFn(),
                                               self._getFinalParts())
         self.runJob('xmipp_image_operate', params)
