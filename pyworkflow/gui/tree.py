@@ -156,7 +156,7 @@ class BoundTree(Tree):
     def __init__(self, master, provider, frame=True, **opts):
         """Create a new Tree, if frame=True, a container
         frame will be created and an scrollbar will be added"""
-        # Get colums to display and width
+        # Get columns to display and width
         cols = provider.getColumns()
         colsTuple = tuple([c[0] for c in cols[1:]])
         Tree.__init__(self, master, frame, columns=colsTuple, **opts)
@@ -393,3 +393,44 @@ class ProjectRunsTreeProvider(TreeProvider):
     
     def getObjectFromId(self, objId):
         return self._objDict[objId]
+
+
+class GenericTreeProvider(TreeProvider):
+    """ Populate Tree from Objects. """
+    def __init__(self, objList=None, columns=[], getOnjectInfo = None):
+        self.objList = objList
+        self.getColumns = lambda: columns
+        self._parentDict = {}
+        self.getObjectInfo = getOnjectInfo or self._getObjectInfo
+
+    def _getObjectInfo(self, obj):
+
+        t = ''
+
+        value = obj.get()
+        if value is None:
+            if obj.isPointer():
+                t += " = %s" % str(obj.getObjValue())
+            else:
+                t += " = None"
+        else:
+            t += " = %s" % str(obj)
+
+        info = {'key': obj.getObjId(), 'parent': None,
+                'text': t, 'values': (obj.strId())}
+
+        return info
+
+    def getObjectPreview(self, obj):
+        return (None, None)
+
+    def getObjectActions(self, obj):
+        return []
+
+    def _getObjectList(self):
+        """Retrieve the object list"""
+        return self.objList
+
+    def getObjects(self):
+        objList = self._getObjectList()
+        return objList

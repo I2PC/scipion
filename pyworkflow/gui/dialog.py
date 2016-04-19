@@ -35,7 +35,7 @@ import gui
 from tree import BoundTree
 from text import Text, TaggedText
 from pyworkflow.utils.properties import Message, Icon
-
+from tkColorChooser import askcolor as _askColor
 
 # Possible result values for a Dialog
 RESULT_YES = 0
@@ -423,10 +423,16 @@ def showWarning(title, msg, parent):
     
 def showError(title, msg, parent):
     MessageDialog(parent, title, msg, 'fa-times-circle_alert.png')
-    
+
+
 def askString(title, label, parent, entryWidth=20, defaultValue='', headerLabel=None):
     d = EntryDialog(parent, title, label, entryWidth, defaultValue, headerLabel)
     return d.value
+
+
+def askColor(defaultColor):
+    (rgbcolor, hexcolor) = _askColor(defaultColor)
+    return hexcolor
 
                 
 class ListDialog(Dialog):
@@ -481,8 +487,8 @@ class ListDialog(Dialog):
             return False
         
         return True
-        
-        
+
+
 class FlashMessage():
     def __init__(self, master, msg, delay=5, relief='solid', func=None):
         self.root = tk.Toplevel(master=master)

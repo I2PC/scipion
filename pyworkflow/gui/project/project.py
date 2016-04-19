@@ -35,11 +35,14 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
+
+from pyworkflow.gui.dialog import ListDialog
+from pyworkflow.gui.tree import GenericTreeProvider
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
-from pyworkflow.gui import Message
+from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
@@ -73,6 +76,7 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu = menu.addSubMenu('Project')
         projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('Manage project labels', 'labels', icon=Icon.TAGS)
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
@@ -170,6 +174,24 @@ class ProjectWindow(ProjectBaseWindow):
             print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
+
+    def onManageProjectLabels(self):
+        self.manageLabels()
+
+    def manageLabels(self):
+        self.showLabels('browse', 'Manage labels', 'Double click to edit a label.')
+
+    def showLabels(self, selectmode='browse', title='Labels', message='List of labels'):
+        labels = self.project.settings.getLabels()
+
+        labelsTable = GenericTreeProvider(labels, [('name', 300), ('color', 150)], _getLabelInfo)
+
+        dlg = ListDialog(self.root, title,
+                         labelsTable, message,
+                         validateSelectionCallback=None,
+                         selectmode=selectmode)
+
+        return dlg.values
 
     def initProjectTCPServer(self):
         server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
@@ -360,3 +382,7 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             import traceback
             traceback.print_stack()
 
+
+def _getLabelInfo(label):
+    return {'key': label.getId(), 'parent': None,
+            'text': label.getName(), 'values': (label.getColor())}

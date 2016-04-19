@@ -349,7 +349,12 @@ def findStrictClosestConnectors(item1, item2):
     c1Coords,c2Coords = findClosestPoints(srcConnectors,dstConnectors)
     return c1Coords, c2Coords
 
+def getConnectors(itemSource, itemDest):
 
+    srcConnector = itemSource.getOutputConnectorCoordinates()
+    dstConnector = itemDest.getInputConnectorCoordinates()
+
+    return srcConnector, dstConnector
 class Item(object):      
     socketSeparation=12
 
@@ -370,6 +375,22 @@ class Item(object):
         x1,y1,x2,y2=self.getCorners()
         xc,yc=self.getCenter(x1,y1,x2,y2)
         return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
+
+    def getTopConnectorCoordinates(self):
+
+        fourConnectors = self.getConnectorsCoordinates()
+        return fourConnectors[0]
+
+    def getBottomConnectorCoordinates(self):
+
+        fourConnectors = self.getConnectorsCoordinates()
+        return fourConnectors[2]
+
+    def getInputConnectorCoordinates(self):
+        return self.getTopConnectorCoordinates()
+
+    def getOutputConnectorCoordinates(self):
+        return self.getBottomConnectorCoordinates()
 
     def getUpDownConnectorsCoordinates(self):
         corners = self.getCorners()
@@ -455,16 +476,16 @@ class Item(object):
         self.listeners.append(listenerFunc)
         
     def setSelected(self, value):
-        bw = 1
+        bw = 0
         bc = 'black'
         if value:
-            bw = 3
-            bc = 'Firebrick'
+            bw = 2
+            # bc = 'Firebrick'
         self.canvas.itemconfig(self.id, width=bw, outline=bc)
 
         
 class TextItem(Item):
-    """This class will serve to paint and store rectange boxes with some text.
+    """This class will serve to paint and store rectangle boxes with some text.
        x and y are the coordinates of the center of this item"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         super(TextItem,self).__init__(canvas,x,y)
@@ -489,8 +510,10 @@ class TextItem(Item):
         
     def paint(self):
         """Paint the object in a specific position."""
+
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
                                                justify=tk.CENTER, fill=self.textColor)
+
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
 
@@ -508,7 +531,7 @@ class TextBox(TextItem):
         super(TextBox,self).__init__(canvas, text, x, y, bgColor, textColor)
 
     def _paintBounds(self, x, y, w, h, fillColor):
-        return self.canvas.create_rectangle(x, y, w, h, fill=fillColor) 
+        return self.canvas.create_rectangle(x, y, w, h, fill=fillColor, outline=fillColor)
 
 class RoundedTextBox(TextItem):
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
@@ -626,6 +649,62 @@ class SquareConnector(ColoredConnector):
 
 # !!!! other figures: half circle, diamond...
 
+class Oval():
+
+    """Oval or circle"""
+    def __init__(self, canvas, x, y, radio, color='green', anchor=None):
+
+        self.anchor = anchor
+        self.X, self.Y = x, y
+        self.radio = radio
+        self.color = color
+        self.canvas = canvas
+        anchor.addPositionListener(self.updateSrc)
+        self.id = None
+        self.paint()
+
+    def paint(self):
+
+        if self.id:
+            self.canvas.delete(self.id)
+
+        self.id = self.canvas.create_oval(self.X, self.Y, self.X + self.radio, self.Y + self.radio, fill=self.color, outline=self.color)
+        self.canvas.tag_raise(self.id)
+
+    def updateSrc(self, dx, dy):
+        self.X += dx
+        self.Y += dy
+        self.paint()
+
+class Rectangle():
+
+    def __init__(self, canvas, x, y, width, height=None, color='green', anchor=None):
+
+        self.anchor = anchor
+        self.X, self.Y = x, y
+        self.width = width
+        self.height = height or width
+        self.color = color
+        self.canvas = canvas
+        anchor.addPositionListener(self.updateSrc)
+        self.id = None
+        self.paint()
+
+    def paint(self):
+
+        if self.id:
+            self.canvas.delete(self.id)
+
+        self.id = self.canvas.create_rectangle(self.X, self.Y, self.X + self.width, self.Y + self.height, fill=self.color, outline=self.color)
+        # self.canvas.tag_raise(self.id)
+
+    def updateSrc(self, dx, dy):
+        self.X += dx
+        self.Y += dy
+        self.paint()
+
+
+
 class Edge():
     """Edge between two objects"""
     def __init__(self, canvas, source, dest):
@@ -640,7 +719,9 @@ class Edge():
         self.paint()
         
     def paint(self):
-        coords = findClosestConnectors(self.source,self.dest)
+        # coords = findClosestConnectors(self.source,self.dest)
+        coords = getConnectors(self.source, self.dest)
+
         if coords:
             c1Coords, c2Coords = coords
     
@@ -649,7 +730,7 @@ class Edge():
     
             self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
                                               c2Coords[0], c2Coords[1],
-                                              width=2)
+                                              width=1., fill='#ccc')
             self.canvas.tag_lower(self.id)
         
     def updateSrc(self, dx, dy):

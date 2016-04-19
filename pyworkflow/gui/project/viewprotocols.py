@@ -39,6 +39,9 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
+from pyworkflow.em.wizard import ListTreeProvider
+from pyworkflow.gui.dialog import askColor, ListDialog
+from pyworkflow.gui.tree import ObjectTreeProvider, GenericTreeProvider
 
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
@@ -63,6 +66,8 @@ ACTION_EXPORT = Message.LABEL_EXPORT
 ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
+ACTION_SETLABEL = 'Set label'
+ACTION_LABELS = 'Labels'
 
 RUNS_TREE = Icon.RUNS_TREE
 RUNS_LIST = Icon.RUNS_LIST
@@ -86,7 +91,9 @@ ActionIcons = {
     ACTION_RESULTS: Icon.ACTION_RESULTS,
     ACTION_EXPORT: Icon.ACTION_EXPORT,
     ACTION_COLLAPSE: 'fa-minus-square.png',
-    ACTION_EXPAND: 'fa-plus-square.png'
+    ACTION_EXPAND: 'fa-plus-square.png',
+    ACTION_SETLABEL: Icon.TAGS,
+    ACTION_LABELS: Icon.TAGS
                }
 
 
@@ -168,7 +175,8 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                    (ACTION_STOP, status == pwprot.STATUS_RUNNING and single),
                    (ACTION_EXPORT, not single),
                    (ACTION_COLLAPSE, single and status and expanded),
-                   (ACTION_EXPAND, single and status and not expanded)
+                   (ACTION_EXPAND, single and status and not expanded),
+                   (ACTION_SETLABEL, True)
                    #(ACTION_CONTINUE, status == pwprot.STATUS_INTERACTIVE and single)
                    ]
         
@@ -507,7 +515,7 @@ class ProtocolsView(tk.Frame):
         self.icon = windows.icon
         self.settings = windows.getSettings()
         self.runsView = self.settings.getRunsView()
-        
+        self.showStatusInBox = False
         self._loadSelection()        
         self._items = {}
         self._lastSelectedProtId = None
@@ -517,6 +525,7 @@ class ProtocolsView(tk.Frame):
         self.root.bind("<F5>", self.refreshRuns)
         self.root.bind("<Control-f>", self._findProtocol)
         self.root.bind("<Control-a>", self._selectAllProtocols)
+        self.root.bind("<Control-t>", self._toogleColourScheme)
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
@@ -716,7 +725,7 @@ class ProtocolsView(tk.Frame):
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, 
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
                            ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS, 
-                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND]
+                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND, ACTION_SETLABEL]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
@@ -766,11 +775,17 @@ class ProtocolsView(tk.Frame):
         
         def displayAction(action, i, cond=True):
             """ Show/hide the action button if the condition is met. """
-            if cond:
-                self.actionButtons[action].grid(row=0, column=i, sticky='sw', padx=(0, 5), ipadx=0)
+
+            # If action present (set color is not in the toolbar but in the context menu)
+            if self.actionButtons.has_key(action):
+                if cond:
+                    self.actionButtons[action].grid(row=0, column=i, sticky='sw', padx=(0, 5), ipadx=0)
+                else:
+                    self.actionButtons[action].grid_remove()
             else:
-                self.actionButtons[action].grid_remove()  
-                
+                # print action + " not in toolbar."
+                pass
+
         for i, actionTuple in enumerate(self.provider.getActionsFromSelection()):
             action, cond = actionTuple
             displayAction(action, i, cond)          
@@ -864,6 +879,7 @@ class ProtocolsView(tk.Frame):
         parent.grid_rowconfigure(0, weight=1)
         
         self.settings.getNodes().updateDict()
+        self.settings.getLabels().updateDict()
         
         self.updateRunsGraph()        
 
@@ -888,15 +904,14 @@ class ProtocolsView(tk.Frame):
         
     def createRunItem(self, canvas, node):
         nodeText = node.getLabel()
-        textColor = 'black'
-        color = '#ADD8E6' #Lightblue
+        statusColor = '#ADD8E6' #Lightblue
         
         nodeId = node.run.getObjId() if node.run else 0
 
         nodeInfo = self.settings.getNodeById(nodeId)
         node.x, node.y = nodeInfo.getPosition()
         node.expanded = nodeInfo.isExpanded()
-            
+
         if node.run:
             status = node.run.status.get(pwprot.STATUS_FAILED)
             if node.expanded:
@@ -907,15 +922,81 @@ class ProtocolsView(tk.Frame):
                 nodeText = node.getName() + expandedStr
             else:                
                 nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
-            color = STATUS_COLORS[status]
-        
+            statusColor = STATUS_COLORS[status]
+
+        paintLabels = True
+
+        # If the color has to go to the box
+        if self.showStatusInBox:
+            boxColor = statusColor
+
+        # ... box is for the labels.
+        else:
+            # If there is only one label use the box for the color.
+            if nodeInfo.getLabels() is not None and len(nodeInfo.getLabels()) == 1:
+
+                labelId = nodeInfo.getLabels()[0]
+                label = self.settings.getLabels().getLabel(labelId)
+                boxColor = label.getColor()
+                paintLabels = False
+            else:
+                boxColor = '#f5f5f5'
+
         item = RunBox(nodeInfo, self.runsGraphCanvas,
-                      nodeText, node.x, node.y, bgColor=color, textColor=textColor)
-        
+                      nodeText, node.x, node.y, bgColor=boxColor, textColor='black')
+        # No border
+        item.margin = 0
+
+        # Show the status as a circle in the top right corner
+        if not self.showStatusInBox:
+            # Option: Status item.
+            (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
+            statusSize = 10
+            statusX = bottomRightX - (statusSize + 3)
+            statusY = topLeftY + 3
+
+            pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize, color=statusColor, anchor=item)
+
+        if paintLabels: self._addLabels(item, nodeInfo)
+
         if nodeId in self._selection:
             item.setSelected(True)
         return item
-        
+
+    def _addLabels(self, item, nodeInfo):
+
+        ### Paint labels
+        if nodeInfo.getLabels() is not None and len(nodeInfo.getLabels()) > 0:
+
+            # Get the positions of the box
+            (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
+
+            # Get the width of the box
+            boxWidth = bottomRightX - topLeftX
+
+            # Set the size
+            margin = 2
+            labelWidth = (boxWidth - 2*margin) / len(nodeInfo.getLabels())
+            labelHeight = 8
+
+            # Leave some margin on the right and bottom
+            labelX = bottomRightX - margin
+            labelY = bottomRightY - (labelHeight + margin)
+
+            for index, labelId in enumerate(nodeInfo.getLabels()):
+
+                # Move X one label to the left
+                if index == len(nodeInfo.getLabels()) - 1:
+                    labelX=topLeftX + margin
+                else:
+                    labelX -= labelWidth
+
+                label = self.settings.getLabels().getLabel(labelId)
+
+                if label is not None:
+                    pwgui.Rectangle(self.runsGraphCanvas, labelX, labelY, labelWidth, labelHeight, color=label.getColor(),
+                                    anchor=item)
+
     def switchRunsView(self):
         previousView = self.runsView
         viewValue = self.switchCombo.getValue()
@@ -932,8 +1013,7 @@ class ProtocolsView(tk.Frame):
             self.updateRunsGraph(reorganize=(previousView!=VIEW_LIST))
             self.runsGraphCanvas.frame.grid(row=0, column=0, sticky='news')
             self.viewButtons[ACTION_TREE].grid(row=0, column=1)
-        
-    
+
     def _protocolItemClick(self, e=None):
         # Get the tree widget that originated the event
         # it could be the left panel protocols tree or just
@@ -944,11 +1024,16 @@ class ProtocolsView(tk.Frame):
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
+    def _toogleColourScheme(self, e=None):
+        self.showStatusInBox = not self.showStatusInBox
+        self.updateRunsGraph()
+
     def _selectAllProtocols(self, e=None):
         self._selection.clear()
         for prot in self.project.getRuns():
             self._selection.append(prot.getObjId())
         self._updateSelection()
+        self.updateRunsGraph()
         
     def _updateSelection(self):
         self._fillSummary()
@@ -1052,7 +1137,6 @@ class ProtocolsView(tk.Frame):
                 tw.tooltipText.config(bd=1, relief=tk.RAISED)
             else:
                 pwgui.dialog.fillMessageText(tw.tooltipText, tm)
-            
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -1062,7 +1146,7 @@ class ProtocolsView(tk.Frame):
                        hostList=self.project.getHostNames(), updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
-        
+
     def _browseSteps(self):
         """ Open a new window with the steps list. """
         window = StepsWindow(Message.TITLE_BROWSE_DATA, self.windows, 
@@ -1096,6 +1180,19 @@ class ProtocolsView(tk.Frame):
             
     def _getSelectedProtocols(self):
         return [prot for prot in self._iterSelectedProtocols()]
+
+
+    def _iterSelectedNodes(self):
+
+        for protId in sorted(self._selection):
+
+            node = self.settings.getNodeById(protId)
+
+            yield node
+
+    def _getSelectedNodes(self):
+        return [node for node in self._iterSelectedNodes()]
+
             
     def getSelectedProtocol(self):
         if self._selection:
@@ -1241,7 +1338,32 @@ class ProtocolsView(tk.Frame):
         else:
             self.project.copyProtocol(protocols)
             self.refreshRuns()
-            
+
+
+    def _selectLabels(self):
+
+        selectedNodes = self._getSelectedNodes()
+
+        if len(selectedNodes) > 0:
+
+            labels = self.windows.showLabels('browse', 'Label a protocol', 'Select all the labels to be associated.')
+
+            # If cancelled
+            if labels is None:
+                return
+
+            # Create an array of labels ids
+            labelsIds = [label.getId() for label in labels]
+
+            for node in selectedNodes:
+                node.setLabels(labelsIds)
+
+            self.refreshRuns()
+
+    def _manageLabels(self):
+
+        self.parent.manageLabels()
+
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
         
@@ -1333,7 +1455,9 @@ class ProtocolsView(tk.Frame):
                     nodeInfo.setExpanded(True)
                     self.updateRunsGraph(True, reorganize=True)
                     self._updateActionToolbar()
-                        
+                elif action == ACTION_SETLABEL:
+                    self._selectLabels()
+
             except Exception, ex:
                 self.windows.showError(str(ex))
                 if pwutils.envVarOn('SCIPION_DEBUG'):
@@ -1364,5 +1488,4 @@ class RunBox(pwgui.TextBox):
 
     def moveTo(self, x, y):
         pwgui.TextBox.moveTo(self, x, y)
-        self.nodeInfo.setPosition(self.x, self.y)    
-        
+        self.nodeInfo.setPosition(self.x, self.y)
