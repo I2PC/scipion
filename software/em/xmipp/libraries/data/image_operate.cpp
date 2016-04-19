@@ -37,6 +37,7 @@ class MinusAdjustedPrm
 {
 public:
 	const MultidimArray<double> *I1, *I2;
+	MultidimArray<int> mask;
 };
 
 double minusAdjusted_L1(double *x, void *_prm)
@@ -49,6 +50,7 @@ double minusAdjusted_L1(double *x, void *_prm)
 	const MultidimArray<double> &pI1=*(prm->I1);
 	const MultidimArray<double> &pI2=*(prm->I2);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pI1)
+	if (DIRECT_MULTIDIM_ELEM(prm->mask,n))
 		retval+=fabs(DIRECT_MULTIDIM_ELEM(pI1,n)-(a*DIRECT_MULTIDIM_ELEM(pI2,n)+b));
 	return retval;
 }
@@ -56,9 +58,17 @@ double minusAdjusted_L1(double *x, void *_prm)
 
 void minusAdjusted(Image<double> &op1, const Image<double> &op2)
 {
+	MultidimArray<double> &pI1=op1();
+	const MultidimArray<double> &pI2=op2();
+
 	MinusAdjustedPrm prm;
 	prm.I1=&op1();
 	prm.I2=&op2();
+	prm.mask.initZeros(pI1);
+	double std=op2().computeStddev();
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pI1)
+	DIRECT_MULTIDIM_ELEM(prm.mask,n)=DIRECT_MULTIDIM_ELEM(pI2,n)>std;
+
 
     Matrix1D<double> p(2), steps(2);
     p(0)=1; // a in I'=a*I+b
@@ -70,8 +80,6 @@ void minusAdjusted(Image<double> &op1, const Image<double> &op2)
 
 	double a=p(0);
 	double b=p(1);
-	MultidimArray<double> &pI1=op1();
-	const MultidimArray<double> &pI2=op2();
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pI1)
 		DIRECT_MULTIDIM_ELEM(pI1,n)-=(a*DIRECT_MULTIDIM_ELEM(pI2,n)+b);
 }
