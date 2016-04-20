@@ -41,7 +41,6 @@ class ProtStress(EMProtocol):
     """
     _label = 'stress'
     _program = 'stress-ng'
-    _singleImageFn = "singleImage.xmp"
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
