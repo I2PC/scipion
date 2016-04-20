@@ -46,5 +46,6 @@ from protocol_extract_coordinates import ProtExtractCoords
 from protocol_monitor import ProtMonitor
 from protocol_monitor_system import ProtMonitorSystem, ProtMonitorSystemViewer
 from protocol_stress import ProtStress
+from protocol_create_stream_data import ProtCreateStreamData
 from parallel import ProtTestParallel
 
