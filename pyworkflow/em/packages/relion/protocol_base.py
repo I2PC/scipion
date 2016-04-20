@@ -732,8 +732,11 @@ class ProtRelionBase(EMProtocol):
         data_sqlite = self._getFileName('data_scipion', iter=it)
         
         if not exists(data_sqlite):
+            iterImgSet = self.SetOfParticles(filename=data_sqlite)
             data = self._getFileName('data', iter=it)
-            writeSqliteIterData(data, data_sqlite, **kwargs)
+            self._fillDataFromIter(iterImgSet, data)
+            iterImgSet.write()
+            iterImgSet.close()
         
         return data_sqlite
     
