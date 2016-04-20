@@ -25,9 +25,8 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import PointerParam, Float
+from pyworkflow.protocol.params import PointerParam
 import pyworkflow.em.metadata as md
-import pyworkflow.em.data as data
 
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
@@ -37,7 +36,7 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
 class XmippProtSubtractProjection(ProtAnalysis3D):
     """    
     Extract the information contained in a volume to the experimental
-    particles. The particles must be projection alignment in order to
+    particles. The particles must have projection alignment in order to
     properly generate volume projections to extract the information.
     A typical case of use, is in the deletion of the capsid to the
     experimental image to only refine the genetic material.
@@ -47,11 +46,12 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
         
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam,
-                      pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj',
+                      pointerClass='SetOfParticles',
+                      pointerCondition='hasAlignmentProj',
                       label="Input particles", important=True,
                       help='Select the experimental particles.')
         form.addParam('inputVolume', PointerParam, pointerClass='Volume',
@@ -65,7 +65,7 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
         
         form.addParallelSection(threads=0, mpi=0)
     
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         imgSet = self.inputParticles.get()
         partSetId = imgSet.getObjId()
@@ -77,7 +77,7 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
         self._insertFunctionStep('removeStep')
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def convertInputStep(self, particlesId):
         """ Write the input images as a Xmipp metadata file. 
         particlesId: is only need to detect changes in
@@ -100,7 +100,8 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
         pathParticles = self._getInputParticlesFn()
         dimX, _, _ = imgSet.getDim()
         
-        createParamPhantomFile(phantomFn, dimX, pathParticles, imgSet.isPhaseFlipped(), False)
+        createParamPhantomFile(phantomFn, dimX, pathParticles,
+                               imgSet.isPhaseFlipped(), False)
         
         if self.refMask.get() is not None:
             volumeFn = self._getOutputMap()
@@ -136,7 +137,7 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
         self._defineOutputs(outputParticles=outImgSet)
         self._defineTransformRelation(self.inputParticles, outImgSet)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         validateMsgs = []
         return validateMsgs
@@ -150,7 +151,7 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
         messages = []
         return messages
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getInputParticlesFn(self):
         return self._getExtraPath('input_particles.xmd')
     
