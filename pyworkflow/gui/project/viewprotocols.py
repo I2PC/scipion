@@ -526,13 +526,35 @@ class ProtocolsView(tk.Frame):
         self.root.bind("<Control-f>", self._findProtocol)
         self.root.bind("<Control-a>", self._selectAllProtocols)
         self.root.bind("<Control-t>", self._toogleColourScheme)
+
+        # To bind key press to mehtods
+        # Listen to any key: send event to keyPressed method
+        self.root.bind("<Key>", self.keyPressed)
+        self.keybinds = dict()
+
+        # Register key binds
+        self._bindKeyPress('Delete', self._deleteProtocol)
+
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
 
         c = self.createContent()
         pwgui.configureWeigths(self)
         c.grid(row=0, column=0, sticky='news')
-        
+
+    def _bindKeyPress(self, key, method):
+
+        self.keybinds[key] = method
+
+    def keyPressed(self, event):
+
+        if self.keybinds.has_key(event.keysym):
+
+            method = self.keybinds[event.keysym]
+
+            method()
+
+
     def createContent(self):
         """ Create the Protocols View for the Project.
         It has two panes:
@@ -1034,6 +1056,16 @@ class ProtocolsView(tk.Frame):
             self._selection.append(prot.getObjId())
         self._updateSelection()
         self.updateRunsGraph()
+
+    def _deleteSelectedProtocols(self, e=None):
+
+        for selection in self._selection:
+            self.project.getProtocol(self._selection[0])
+
+
+        self._updateSelection()
+        self.updateRunsGraph()
+
         
     def _updateSelection(self):
         self._fillSummary()
@@ -1319,7 +1351,11 @@ class ProtocolsView(tk.Frame):
         
     def _deleteProtocol(self):
         protocols = self._getSelectedProtocols()
-        if pwgui.dialog.askYesNo(Message.TITLE_DELETE_FORM, 
+
+        if len(protocols) == 0:
+            return
+
+        if pwgui.dialog.askYesNo(Message.TITLE_DELETE_FORM,
                     Message.LABEL_DELETE_FORM % ('\n  - '.join(['*%s*' % p.getRunName() for p in protocols])), 
                     self.root):
             self.project.deleteProtocol(*protocols)
