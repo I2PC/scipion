@@ -140,8 +140,18 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         validateMsgs = []
+        imgSet = self.inputParticles.get()
+        vol = self.inputVolume.get()
+        xImg = imgSet.getXDim()
+        xVol = vol.getXDim()
+        if not imgSet.getSamplingRate() == vol.getSamplingRate():
+            validateMsgs.append("The sampling rate of your SetOfParticles"
+                                " and your volume *MUST be equal* ")
+        if not xImg == xVol:
+            validateMsgs.append(" The dimensions of your particles and "
+                                " your volume *MUST BE EQUAL*")
         return validateMsgs
-
+    
     def _summary(self):
         summary = ["Input particles:  %s" % self.inputParticles.get().getNameId()]
         summary.append("-----------------")
