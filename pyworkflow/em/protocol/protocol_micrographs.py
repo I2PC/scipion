@@ -172,7 +172,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ Check for already computed CTF and update the output set. """
         newCTFs = []
         ctfDict = {}
-        ctfSet = SetOfCTF(filename=self._getExtraPath('ctfs.sqlite'))
+        ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
         for ctf in ctfSet:
             ctfDict[ctf.getObjId()] = True
 
