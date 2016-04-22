@@ -250,7 +250,7 @@ class ProtMonitorSystemViewer(ProtocolViewer):
         self.ax.relim()
         self.ax.autoscale()
         self.ax.grid(True)
-        self.ax.legend()
+        self.ax.legend(loc=2).get_frame().set_alpha(0.5)
         self.doDisk = False
 
 
