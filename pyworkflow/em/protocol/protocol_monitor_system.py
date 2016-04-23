@@ -31,11 +31,9 @@ import sqlite3 as lite
 import psutil
 import time, sys
 from matplotlib import pyplot
-import tkMessageBox
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
-
-
+import sys
 
 class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
@@ -114,15 +112,30 @@ class ProtMonitorSystem(ProtMonitor):
              cpu = psutil.cpu_percent(interval=0)
              mem = psutil.virtual_memory()
              swap = psutil.swap_memory()
+
+
              if self.cpuAlert < 100 and cpu > self.cpuAlert :
-                 tkMessageBox.showerror("Error Message", "CPU allocation =%f."%cpu)
+                 print("Error Message\n CPU allocation =%f."%cpu)
+                 sys.stdout.flush()
+
                  self.cpuAlert = cpu
+                 self.sendEMail("scipion system monitor warning", "CPU allocation =%f."%cpu.percent)
+
+
              if self.memAlert < 100 and mem.percent > self.memAlert :
-                 tkMessageBox.showerror("Error Message", "Memory allocation =%f."%mem.percent)
+                 print("Error Message", "Memory allocation =%f."%mem.percent)
+                 sys.stdout.flush()
+
                  self.memAlert = mem.percent
+                 self.sendEMail("scipion system monitor warning", "Memory allocation =%f."%mem.percent)
+
              if self.swapAlert < 100 and swap.percent > self.swapAlert :
-                 tkMessageBox.showerror("Error Message", "SWAP allocation =%f."%swap.percent)
+                 print("Error Message", "SWAP allocation =%f."%swap.percent)
+                 sys.stdout.flush()
+
                  self.swapAlert = swap.percent
+                 self.sendEMail("scipion system monitor warning", "SWAP allocation =%f."%swap.percent)
+
              if doDisk:
                 disks_after = psutil.disk_io_counters(perdisk=False)
                 disks_read_per_sec   = (disks_after.read_bytes  - disks_before.read_bytes)/(sleepSec * 1024.*1024.)
@@ -167,8 +180,7 @@ class ProtMonitorSystem(ProtMonitor):
 
 
 from pyworkflow.viewer import ( DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer)
-from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
-                                        EnumParam, FloatParam, IntParam)
+
 from matplotlib import animation
 
 
