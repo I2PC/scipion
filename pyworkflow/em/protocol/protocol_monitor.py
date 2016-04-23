@@ -29,7 +29,7 @@ import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from protocol import EMProtocol
-
+#import tkMessageBox
 
 
 class ProtMonitor(EMProtocol):
@@ -54,8 +54,23 @@ class ProtMonitor(EMProtocol):
 
         form.addParam('samplingInterval', params.IntParam,default=60,
                       label="Sampling Interval (sec)",
-                      pointerClass='EMProtocol',
                       help="Take one sample each SAmplinInteval seconds")
+
+        self._sendMailParams(form)
+
+    def _sendMailParams(self, form):
+        form.addParam('doMail', params.BooleanParam,
+                      label="send e-mail", default=False,
+                      help="this protocol/s will be monitorized")
+        form.addParam('emailFrom',params.StringParam, condition='doMail',
+                      label='From',default = "from@from.fakeadress.com",
+                      help='Select a previous run to continue from.')
+        form.addParam('emailTo', params.StringParam, condition='doMail',
+                      label='To',default = "to@to.fakeadress.com",
+                      help='Select a previous run to continue from.')
+        form.addParam('smtp', params.StringParam, condition='doMail',
+                      label='mail server',default = "smtp.fakeadress.com",
+                      help='Select a previous run to continue from.')
 
     #--------------------------- INSERT steps functions --------------------------------------------   
     def _insertAllSteps(self):
@@ -87,4 +102,27 @@ class ProtMonitor(EMProtocol):
     def _methods(self):
         return []
 
+    def sendEMail(self,emailSubject,emailMessage):
+        # Import smtplib for the actual sending function
+        import smtplib
+        print(self.emailFrom.get(), self.emailTo.get(), self.smtp.get())
+        # Import the email modules we'll need
+        from email.mime.text import MIMEText
+
+        msg = MIMEText(emailMessage)
+
+        # me == the sender's email address
+        # you == the recipient's email address
+        msg['Subject'] = emailSubject
+        msg['From'] = self.emailFrom.get()
+        msg['To'] = self.emailTo.get()
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP(self.smtp.get())
+        s.sendmail(self.emailFrom.get(), self.emailTo.get(), msg.as_string())
+        s.quit()
+
+#    def noBlockingWindow(self, title, message, fontSize=30, color= 'red'):
+#        target = tkMessageBox.showerror(title, message)
 
