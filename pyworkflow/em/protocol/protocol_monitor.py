@@ -105,7 +105,6 @@ class ProtMonitor(EMProtocol):
     def sendEMail(self,emailSubject,emailMessage):
         # Import smtplib for the actual sending function
         import smtplib
-        print(self.emailFrom.get(), self.emailTo.get(), self.smtp.get())
         # Import the email modules we'll need
         from email.mime.text import MIMEText
 
