@@ -59,7 +59,7 @@ class ProtMonitorCTF(ProtMonitor):
                       label="Sampling Interval (sec)",
                       pointerClass='EMProtocol',
                       help="Take one sample each SamplinInteval seconds")
-        form.addParam('maxDefofus', params.FloatParam,default=40000,
+        form.addParam('maxDefocus', params.FloatParam,default=40000,
               label="Raise Alarm if maximum defocus (A) >",
               help="Raise alarm if defocus is greater than given value")
         form.addParam('minDefocus', params.FloatParam,default=1000,
@@ -138,8 +138,25 @@ class ProtMonitorCTF(ProtMonitor):
                     print("ERROR: saving one data point (CTF monitor). I continue")
 
                 if  (defocusU/defocusV) > (1. + astigmatism):
-                    tkMessageBox.showerror("Error Message", "Defocus ratio =%f."%(defocusU/defocusV))
-                    self.astigmatism = (defocusU/defocusV) -1.
+                     print("Error Message", "defocusU/defocusV =%f."%defocusU/defocusV)
+                     sys.stdout.flush()
+
+                     self.swapAlert = swap.percent
+                     self.sendEMail("scipion system monitor warning", "defocus ratio  =%f."%defocusU/defocusV)
+
+                if  defocusU > self.maxDefocus:
+                     print("Error Message", "defocusU =%f."%defocusU)
+                     sys.stdout.flush()
+
+                     self.maxDefocus = defocusU
+                     self.sendEMail("scipion system monitor warning", "defocusU  =%f."%defocusU)
+
+                if  defocusV < self.minDefocus:
+                     print("Error Message", "defocusV =%f."%defocusV)
+                     sys.stdout.flush()
+
+                     self.maxDefocus = defocusU
+                     self.sendEMail("scipion system monitor warning", "defocusV  =%f."%defocusV)
 
             self.readCTFs.update(diffSet)
             if (time.time() > timeout) or finished:
@@ -320,29 +337,3 @@ class ProtMonitorCTFViewer(ProtocolViewer):
                 }
         #conn.close()
         return data
-
-    def sendEMail(self):
-            # Import smtplib for the actual sending function
-        import smtplib
-
-        # Import the email modules we'll need
-        from email.mime.text import MIMEText
-
-        # Open a plain text file for reading.  For this example, assume that
-        # the text file contains only ASCII characters.
-        fp = open(textfile, 'rb')
-        # Create a text/plain message
-        msg = MIMEText(fp.read())
-        fp.close()
-
-        # me == the sender's email address
-        # you == the recipient's email address
-        msg['Subject'] = 'The contents of %s' % textfile
-        msg['From'] = me
-        msg['To'] = you
-
-        # Send the message via our own SMTP server, but don't include the
-        # envelope header.
-        s = smtplib.SMTP('localhost')
-        s.sendmail(me, [you], msg.as_string())
-        s.quit()
