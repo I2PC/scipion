@@ -84,7 +84,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                  pointerClass='Volume,SetOfVolumes',
                  label='Initial 3D reference volume', 
                  help="Input 3D reference reconstruction to "
-                      "alignment gaussian nise.") 
+                      "align gaussian noise.") 
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 
                       help="See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page"
