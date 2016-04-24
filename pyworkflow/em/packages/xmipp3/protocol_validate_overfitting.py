@@ -72,9 +72,9 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       help='Select the input images from the project.')     
         form.addParam('doResize', BooleanParam, default=False,
                       label='Resize input particles and volume?',
-                      help="If obtaining the best possible reconstruction"
-                           "is not your goal, you can resize your input"
-                           "particales and volume to reduce running time"
+                      help="If obtaining the best possible reconstruction "
+                           "is not your goal, you can resize your input "
+                           "particales and volume to reduce running time "
                            "of the protocl")
         form.addParam('newSize', FloatParam, default=64, condition="doResize",
                       label='New size (px)',
@@ -83,7 +83,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         form.addParam('input3DReference', PointerParam,
                  pointerClass='Volume,SetOfVolumes',
                  label='Initial 3D reference volume', 
-                 help="Input 3D reference reconstruction to"
+                 help="Input 3D reference reconstruction to "
                       "alignment gaussian nise.") 
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 
@@ -91,12 +91,18 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                            "for a description of the symmetry format"
                            "accepted by Xmipp")
         form.addParam('numberOfParticles', NumericListParam,
-                      default="100 200 500 1000 2000 5000",
+                      default="10 20 50 100 200 500 1000 1500 2000 3000 5000",
                       expertLevel=LEVEL_ADVANCED,
                       label="Number of particles",
-                      help="Number of particles in each subset and consequently"
-                           "number of subsets (for instance, in defalt values,"
-                           "a number of 6 subsets with given values are chosen)") 
+                      help="Number of particles in each subset and consequently "
+                           "number of subsets (for instance, in default values,"
+                           "a number of 6 subsets with given values are chosen)\n"
+                           "Note:\n"
+                           "The number of particles in each subset should not "
+                           "be larger than 1/2 of the input set of particles. "
+                           "The protocol consider this issue automatically. It "
+                           "means that if the input set of particles are lower "
+                           "than 10,000, you could leave default values unchanged.") 
         form.addParam('numberOfIterations', IntParam, default=10,
                       expertLevel=LEVEL_ADVANCED,
                       label="Number of times the randomization is performed") 
@@ -177,9 +183,10 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                     numberOfMpi = self.numberOfMpi.get() * self.numberOfThreads.get())
         
         numberOfParticles = getFloatListFromValues(self.numberOfParticles.get())
-        fractionCounter=0
+        fractionCounter = 0
+        maxNumberOfParticles = 0.5 * self.inputParticles.get().getSize()        
         for number in numberOfParticles:
-            if number<self.inputParticles.get().getSize():
+            if number <= maxNumberOfParticles:                
                 for iteration in range(0,self.numberOfIterations.get()):
                     self._insertFunctionStep('reconstructionStep', number, 
                                              fractionCounter, iteration, 
@@ -334,10 +341,17 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
+        numberOfParticles = getFloatListFromValues(self.numberOfParticles.get())
+        maxNumberOfParticles = 0.5 * self.inputParticles.get().getSize() 
+        intNumberOfParticles = [int(float(x)) for x in numberOfParticles]        
+        particlesNumber = ''
+        for number in intNumberOfParticles:
+            if number <= maxNumberOfParticles: 
+                particlesNumber += str(number)+'  '         
         msg = []
-        msg.append("Number of particles: " + self.numberOfParticles)
+        msg.append("Number of particles: " + particlesNumber)        
         msg.append("Number of times that reconstruction is performed per each "
-                   "particles subset: %2d" % self.numberOfIterations)
+                   "particles subset: %d" % self.numberOfIterations)
         return msg
     
     def _methods(self):
@@ -350,10 +364,6 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     
     def _validate(self):
         errors=[]
-        maxNumberOfParticles = max(getFloatListFromValues(self.numberOfParticles.get()))
-        if maxNumberOfParticles > 0.5 * self.inputParticles.get().getSize():
-            errors.append("The number of tested particles should not "
-                          "be larger than 1/2 of the input set of particles")
         if (self.doResize.get() and 
             self.newSize.get() > self.inputParticles.get().getDim()[0]):
             errors.append("Fourier resize method cannot be used "
