@@ -23,6 +23,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from scipy.io.arff.arffread import MetaData
 """
 Protocol to perform high-resolution reconstructions
 """
@@ -157,6 +158,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0 and globalMethod==1', 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
+        form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=2, condition='alignmentMethod==0',
+                  expertLevel=LEVEL_ADVANCED, help="The gallery of reprojections is randomly perturbed this number of times")
         form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=3, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant alignment is allowed to replicate each image up to this number of times")
 
@@ -665,6 +668,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.writeInfoField(fnGlobal,"angleStep",xmipp.MDL_ANGLE_DIFF,float(angleStep))
             
             # Global alignment
+            perturbationList = [chr(x) for x in range(ord('a'),ord('a')+self.numberOfPerturbations.get()+1)]
             for i in range(1,3):
                 fnDirSignificant=join(fnGlobal,"significant%02d"%i)
                 fnImgs=join(fnGlobal,"images%02d.xmd"%i)
@@ -688,7 +692,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
                 # Generate projections
                 fnReferenceVol=join(fnGlobal,"volumeRef%02d.vol"%i)
-                for subset in ['a','b']:
+                for subset in perturbationList:
                     fnGallery=join(fnDirSignificant,"gallery%02d%s.stk"%(i,subset))
                     fnGalleryMd=join(fnDirSignificant,"gallery%02d%s.xmd"%(i,subset))
                     args="-i %s -o %s --sampling_rate %f --perturb %f --sym %s --min_tilt_angle %f --max_tilt_angle %f"%\
@@ -747,20 +751,44 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
                 # Evaluate the stability of the alignment
-                fnAnglesA=join(fnGlobal,"anglesDisc%02da.xmd"%i)
-                fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
+                counter1 = 0
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
-                
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesA,fnOut+"_weights.xmd"),numberOfMpi=1)
-                
-                self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesA,fnAnglesB,fnOut,self.symmetryGroup),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
-                self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesB,fnOut+"_weights.xmd"),numberOfMpi=1)
-                
-                self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s -o %s'%(fnAnglesA,fnAnglesB,fnOut+".xmd"),numberOfMpi=1)
-                cleanPath(fnOut+"_weights.xmd")
+                for subset1 in perturbationList:
+                    fnAngles1=join(fnGlobal,"anglesDisc%02d%s.xmd"%(i,subset1))
+                    counter2 = 0
+                    fnOut1=join(fnGlobal,"anglesDisc%02d%s"%(i,subset1))
+                    copyFile(fnAngles1,fnOut1+".xmd")
+                    for subset2 in perturbationList:
+                        if subset1==subset2:
+                            continue
+                        fnAngles2=join(fnGlobal,"anglesDisc%02d%s.xmd"%(i,subset2))
+                        fnOut12=join(fnGlobal,"anglesDisc%02d%s%s"%(i,subset1,subset2))
+                        self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAngles2,fnAngles1,fnOut12,self.symmetryGroup),numberOfMpi=1)
+                        self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut12+"_weights.xmd"),numberOfMpi=1)
+                        if counter2 == 0:
+                            mdWeightsAll = xmipp.MetaData(fnOut12+"_weights.xmd")
+                        else:
+                            mdWeights = xmipp.MetaData(fnOut12+"_weights.xmd")
+                        # *** Falta iterar por los dos md a la vez cogiendo el maximo
+                    if counter1==0:
+                        copyFile(fnOut1+".xmd",fnOut+".xmd")
+                    else:
+                        self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s'%(fnOut+".xmd",fnOut1+".xmd"),numberOfMpi=1)
+                        
+#                 fnAnglesA=join(fnGlobal,"anglesDisc%02da.xmd"%i)
+#                 fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
+#                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
+#                 
+#                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
+#                 self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
+#                 self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesA,fnOut+"_weights.xmd"),numberOfMpi=1)
+#                 
+#                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesA,fnAnglesB,fnOut,self.symmetryGroup),numberOfMpi=1)
+#                 self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
+#                 self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesB,fnOut+"_weights.xmd"),numberOfMpi=1)
+#                 
+#                 self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s -o %s'%(fnAnglesA,fnAnglesB,fnOut+".xmd"),numberOfMpi=1)
+#                 cleanPath(fnOut+"_weights.xmd")
                 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
@@ -899,7 +927,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     self.runJob("xmipp_metadata_utilities","-i %s --operate drop_column weightSSNR"%fnAngles,numberOfMpi=1)
                 self.runJob("xmipp_metadata_utilities","-i %s --set join %s particleId"%\
                             (fnAngles,self._getExtraPath("ssnrWeights.xmd")),numberOfMpi=1)
-            if self.weightJumper and iteration>1:
+            if iteration>1:
                 fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
                 if self.splitMethod == self.SPLIT_FIXED:
                     fnPreviousAngles=join(fnDirPrevious,"angles%02d.xmd"%i)
@@ -936,7 +964,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             weightCCmin=float(self.weightCCmin.get())
             for objId in mdAngles:
                 weight=1.0
-                if self.weightJumper and self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+                if self.weightJumper and self.alignmentMethod==self.GLOBAL_ALIGNMENT and self.numberOfPerturbations.get()>1:
                     aux=mdAngles.getValue(xmipp.MDL_WEIGHT_JUMPER0,objId)
                     weight*=aux
                 if self.weightSSNR:
