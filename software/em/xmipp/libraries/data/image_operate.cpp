@@ -26,11 +26,57 @@
 
 #include "image_operate.h"
 #include "metadata_extension.h"
+#include "numerical_tools.h"
 
 void minus(Image<double> &op1, const Image<double> &op2)
 {
     op1() -= op2();
 }
+
+class MinusAdjustedPrm
+{
+public:
+	const MultidimArray<double> *I1, *I2;
+};
+
+double minusAdjusted_L1(double *x, void *_prm)
+{
+	double a=x[1];
+	double b=x[2];
+
+	double retval=0;
+	MinusAdjustedPrm *prm = (MinusAdjustedPrm *) _prm;
+	const MultidimArray<double> &pI1=*(prm->I1);
+	const MultidimArray<double> &pI2=*(prm->I2);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pI1)
+		retval+=fabs(DIRECT_MULTIDIM_ELEM(pI1,n)-(a*DIRECT_MULTIDIM_ELEM(pI2,n)+b));
+	return retval;
+}
+
+
+void minusAdjusted(Image<double> &op1, const Image<double> &op2)
+{
+	MultidimArray<double> &pI1=op1();
+	const MultidimArray<double> &pI2=op2();
+
+	MinusAdjustedPrm prm;
+	prm.I1=&op1();
+	prm.I2=&op2();
+
+    Matrix1D<double> p(2), steps(2);
+    p(0)=1; // a in I'=a*I+b
+    p(1)=0; // b in I'=a*I+b
+    steps.initConstant(1);
+    double cost;
+    int iter;
+	powellOptimizer(p, 1, 2, &minusAdjusted_L1, &prm, 0.01, cost, iter, steps, false);
+
+	double a=p(0);
+	double b=p(1);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pI1)
+		DIRECT_MULTIDIM_ELEM(pI1,n)-=(a*DIRECT_MULTIDIM_ELEM(pI2,n)+b);
+}
+
 
 void imageDotProduct(Image<double> &op1, const Image<double> &op2)
 {
@@ -238,6 +284,8 @@ void ProgOperate::defineParams()
     addParamsLine("== Binary operations: ==");
     addParamsLine("   --plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
     addParamsLine("or --minus <file_or_value>   :Subtracts two images, volumes or subtracts a numerical value to an image");
+    addParamsLine("or --minusAdjusted <file> :Subtracts two sets of images adjusting the gray values so that error is minimized");
+    addParamsLine("                             : If you are comparing a set of noisy and clean images, put the noisy images in -i");
     addParamsLine("or --mult <file_or_value>    :Multiplies two images, volumes, or multiplies per a given number");
     addParamsLine("or --divide <file_or_value>  :Divides two images, volumes, or divides per a given number");
     addParamsLine("or --min <file_or_value>     :Minimum of two images, volumes, or number (pixel-wise)");
@@ -246,11 +294,11 @@ void ProgOperate::defineParams()
     addParamsLine("or --dot_product <file>      :Dot product between two images or volumes");
     addParamsLine("==+ Relational operations: ==");
     addParamsLine("or --eq <file_or_value>      :Returns 1 if the pixels values are equal, 0 otherwise (pixel-wise)");
-    addParamsLine("or --le <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-    addParamsLine("or --lt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-    addParamsLine("or --ge <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-    addParamsLine("or --gt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-    addParamsLine("or --ne <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+    addParamsLine("or --le <file_or_value>      :Returns 1 if the pixels values are less or equal, 0 otherwise (pixel-wise)");
+    addParamsLine("or --lt <file_or_value>      :Returns 1 if the pixels values are less than, 0 otherwise (pixel-wise)");
+    addParamsLine("or --ge <file_or_value>      :Returns 1 if the pixels values are greater or equal, 0 otherwise (pixel-wise)");
+    addParamsLine("or --gt <file_or_value>      :Returns 1 if the pixels values are greater, 0 otherwise (pixel-wise)");
+    addParamsLine("or --ne <file_or_value>      :Returns 1 if the pixels values are not equal, 0 otherwise (pixel-wise)");
 
     addParamsLine("== Unary operations: ==");
     addParamsLine("or --log                     :Computes the natural logarithm of an image");
@@ -302,6 +350,11 @@ void ProgOperate::readParams()
     {
         file_or_value = getParam("--minus");
         binaryOperator = minus;
+    }
+    else if (checkParam("--minusAdjusted"))
+    {
+        file_or_value = getParam("--minusAdjusted");
+        binaryOperator = minusAdjusted;
     }
     else if (checkParam("--mult"))
     {
@@ -425,7 +478,7 @@ void ProgOperate::readParams()
             isValue = false;
             fn2 = file_or_value;
             md2.read(fn2);
-            if (md2.size() > 1)
+            if (md2.isMetadataFile)
             {
                 if (mdInSize != md2.size())
                     REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
