@@ -43,7 +43,7 @@ EOF
 
 else
     echo "IMAGIC program: msa-run (v. 16-Feb-2016) is starting"
-    mpirun -np ${mpi_procs} -x IMAGIC_BATCH ${IMAGIC_ROOT}/msa/msa.e_mpi <<EOF
+    ${IMAGIC_ROOT}/openmpi/bin/mpirun -np ${mpi_procs} -x IMAGIC_BATCH ${IMAGIC_ROOT}/msa/msa.e_mpi <<EOF
 FRESH_MSA
 ${msa_distance}
 ${particles}
@@ -63,6 +63,5 @@ EOF
 fi
 
 # Modified 2016-04-25
-# TODO: run mpi job using Scipion
-#    2016-04-25 (gs) -- updated for new IMAGIC release
+#    2016-04-25 (gs) -- updated for new IMAGIC release, add mpi support
 #    2016-02-26 (gs) -- first version

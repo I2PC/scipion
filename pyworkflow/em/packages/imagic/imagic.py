@@ -25,9 +25,8 @@
 # **************************************************************************
 
 import os
-from os.path import join, dirname, abspath
+from os.path import join, dirname, abspath, isdir
 import re
-import subprocess
 
 from pyworkflow.object import String
 from pyworkflow.utils import runJob, Environ
@@ -50,23 +49,34 @@ def getEnviron():
     IMAGIC_BATCH is needed for batch files to work.
     """
     env = Environ(os.environ)
-    imagic_dir = env.get('IMAGIC_DIR', None)  # Scipion definition
+    imagicdir = env.get('IMAGIC_DIR', None)  # Scipion definition
 
-    if imagic_dir is None:
+    if imagicdir is None:
         print "ERROR: Missing IMAGIC_DIR variable in scipion.conf file"
 
-    mpi_bindir = env.get('MPI_BINDIR', None)
+    mpi_dir = join(imagicdir, '/openmpi')
 
-    if mpi_bindir is not None:
-        mpi_dir = mpi_bindir[:-4]  # remove '/bin'
+    if isdir(mpi_dir):
         env.update({'MPIHOME': mpi_dir,
-                    'MPIBIN': mpi_bindir,
+                    'MPIBIN': mpi_dir + '/bin',
                     'OPAL_PREFIX': mpi_dir
                     })
+        env.set('PATH', mpi_dir + '/bin', env.BEGIN)
 
-    env.set('IMAGIC_ROOT', imagic_dir, env.REPLACE)
-    env.set('IMAGIC_BATCH', "1", env.REPLACE)
+    else:
+        print "ERROR: IMAGIC_ROOT directory (", imagicdir, ") does not contain openmpi folder"
 
+    env.update({'IMAGIC_ROOT': imagicdir,
+                'IMAGIC_BATCH': "1",
+                'FFTW_IPATH': imagicdir + '/fftw/include',
+                'FFTW_LPATH': imagicdir + '/fftw/lib',
+                'FFTW_LIB': 'fftw3f'
+                })
+
+    env.set('LD_LIBRARY_PATH', imagicdir + '/fftw/lib', env.BEGIN)
+    env.set('LD_LIBRARY_PATH', imagicdir + '/lib', env.BEGIN)
+
+    #print env.get('LD_LIBRARY_PATH')
     return env
 
 
@@ -185,9 +195,3 @@ class EigFile(EMObject):
 
     def getFileName(self):
         return self.filename.get()
-
-
-def convertToImagic(inputFile, outputFile):
-    p = subprocess.Popen(['e2proc2d.py %s %s' % (inputFile, outputFile)], shell=True)
-    print "Converting input particles set to IMAGIC format..."
-    p.communicate()

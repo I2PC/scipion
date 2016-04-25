@@ -58,7 +58,8 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
-                      pointerClass='SetOfParticles', pointerCondition='hasMSA',
+                      pointerClass='SetOfParticles',
+                      pointerCondition='hasMSA',
                       help='Input images after MSA')
         form.addParam('numberOfFactors', IntParam, default=15,
                       label='Number of eigenimages to use',
@@ -154,6 +155,7 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
             avgImg.setLocation(classId, avgFile)
 
             class2D.setRepresentative(avgImg)
+            class2D.copyInfo(particles)
             classes2D.append(class2D)
 
             pltClassFile = join(classDir, 'class_assignment.plt')
