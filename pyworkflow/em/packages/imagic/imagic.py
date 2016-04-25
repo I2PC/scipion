@@ -54,7 +54,7 @@ def getEnviron():
     if imagicdir is None:
         print "ERROR: Missing IMAGIC_DIR variable in scipion.conf file"
 
-    mpi_dir = join(imagicdir, '/openmpi')
+    mpi_dir = imagicdir + '/openmpi'
 
     if isdir(mpi_dir):
         env.update({'MPIHOME': mpi_dir,
@@ -76,7 +76,6 @@ def getEnviron():
     env.set('LD_LIBRARY_PATH', imagicdir + '/fftw/lib', env.BEGIN)
     env.set('LD_LIBRARY_PATH', imagicdir + '/lib', env.BEGIN)
 
-    #print env.get('LD_LIBRARY_PATH')
     return env
 
 
