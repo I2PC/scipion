@@ -49,6 +49,7 @@ class TestFSC(unittest.TestCase):
         self.assertEqual(xList,x)
         self.assertEqual(yList,y)
 
+
 class TestImage(unittest.TestCase):
 
     @classmethod
@@ -85,6 +86,15 @@ class TestImageHandler(unittest.TestCase):
         self.assertEqual(newFn, volFn + ":mrc")
         # Test that the new filename still exists even with the :mrc suffix
         self.assertTrue(ih.existsLocation(newFn))
+
+    def test_convertMicrographs(self):
+        """ Convert micrograhs to different formats.
+         EMAN2 required for .img
+        """
+        micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
+        outFn = pwutils.replaceBaseExt(micFn, 'img')
+        ih = ImageHandler()
+        ih.convert(micFn, os.path.join('/home/josem', outFn))
 
         
 class TestSetOfMicrographs(BaseTest):
