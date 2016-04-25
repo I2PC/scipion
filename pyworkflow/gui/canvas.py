@@ -349,22 +349,32 @@ def findStrictClosestConnectors(item1, item2):
     c1Coords,c2Coords = findClosestPoints(srcConnectors,dstConnectors)
     return c1Coords, c2Coords
 
+
 def getConnectors(itemSource, itemDest):
 
     srcConnector = itemSource.getOutputConnectorCoordinates()
     dstConnector = itemDest.getInputConnectorCoordinates()
 
     return srcConnector, dstConnector
-class Item(object):      
-    socketSeparation=12
 
-    def __init__(self,canvas,x,y):
-        self.activeConnector=None
-        self.canvas=canvas
-        self.x=x
-        self.y=y
-        self.sockets={}
+
+class Item(object):
+    socketSeparation = 12
+    verticalFlow = True
+
+    TOP = 0
+    RIGHT = 1
+    BOTTOM = 2
+    LEFT = 3
+
+    def __init__(self, canvas, x, y):
+        self.activeConnector = None
+        self.canvas = canvas
+        self.x = x
+        self.y = y
+        self.sockets = {}
         self.listeners = []
+        self.selectionListeners = []
 
     def getCenter(self,x1,y1,x2,y2):
         xc=(x2+x1)/2.0
@@ -378,19 +388,37 @@ class Item(object):
 
     def getTopConnectorCoordinates(self):
 
-        fourConnectors = self.getConnectorsCoordinates()
-        return fourConnectors[0]
+        return self._getConnectorCoordinates(self.TOP)
 
     def getBottomConnectorCoordinates(self):
 
+        return self._getConnectorCoordinates(self.BOTTOM)
+
+    def getLeftConnectorCoordinates(self):
+
+        return self._getConnectorCoordinates(self.LEFT)
+
+    def getRightConnectorCoordinates(self):
+
+        return self._getConnectorCoordinates(self.RIGHT)
+
+    def _getConnectorCoordinates(self, side):
         fourConnectors = self.getConnectorsCoordinates()
-        return fourConnectors[2]
+        return fourConnectors[side]
 
     def getInputConnectorCoordinates(self):
-        return self.getTopConnectorCoordinates()
+
+        if self.verticalFlow:
+            return self.getTopConnectorCoordinates()
+        else:
+            return self.getLeftConnectorCoordinates()
 
     def getOutputConnectorCoordinates(self):
-        return self.getBottomConnectorCoordinates()
+
+        if self.verticalFlow:
+            return self.getBottomConnectorCoordinates()
+        else:
+            return self.getRightConnectorCoordinates()
 
     def getUpDownConnectorsCoordinates(self):
         corners = self.getCorners()
@@ -474,15 +502,28 @@ class Item(object):
         
     def addPositionListener(self, listenerFunc):
         self.listeners.append(listenerFunc)
-        
+
+    def addSelectionListener(self, listenerFunc):
+        self.selectionListeners.append(listenerFunc)
+
+    def _notifySelectionListeners(self, value):
+
+        for listenerFunc in self.selectionListeners:
+            listenerFunc(value)
+
     def setSelected(self, value):
         bw = 0
         bc = 'black'
         if value:
             bw = 2
+            self.lift()
             # bc = 'Firebrick'
         self.canvas.itemconfig(self.id, width=bw, outline=bc)
+        self._notifySelectionListeners(value)
 
+
+    def lift(self):
+        self.canvas.lift(self.id)
         
 class TextItem(Item):
     """This class will serve to paint and store rectangle boxes with some text.
@@ -518,12 +559,15 @@ class TextItem(Item):
         m = self.margin
 
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
-        self.canvas.tag_raise(self.id_text)
+        self.canvas.lift(self.id_text)
 
     def move(self, dx, dy):
         super(TextItem, self).move(dx,dy)
         self.canvas.move(self.id_text, dx, dy)
-    
+
+    def lift(self):
+        super(TextItem, self).lift()
+        self.canvas.lift(self.id_text)
    
         
 class TextBox(TextItem):
@@ -648,7 +692,6 @@ class SquareConnector(ColoredConnector):
 
 
 # !!!! other figures: half circle, diamond...
-
 class Oval():
 
     """Oval or circle"""
@@ -660,6 +703,7 @@ class Oval():
         self.color = color
         self.canvas = canvas
         anchor.addPositionListener(self.updateSrc)
+        anchor.addSelectionListener(self.selectionListener)
         self.id = None
         self.paint()
 
@@ -669,12 +713,17 @@ class Oval():
             self.canvas.delete(self.id)
 
         self.id = self.canvas.create_oval(self.X, self.Y, self.X + self.radio, self.Y + self.radio, fill=self.color, outline=self.color)
-        self.canvas.tag_raise(self.id)
+        # self.canvas.tag_raise(self.id)
 
     def updateSrc(self, dx, dy):
         self.X += dx
         self.Y += dy
         self.paint()
+
+    def selectionListener(self, value):
+        if value:
+            self.canvas.lift(self.id)
+
 
 class Rectangle():
 
@@ -687,6 +736,7 @@ class Rectangle():
         self.color = color
         self.canvas = canvas
         anchor.addPositionListener(self.updateSrc)
+        anchor.addSelectionListener(self.selectionListener)
         self.id = None
         self.paint()
 
@@ -703,6 +753,9 @@ class Rectangle():
         self.Y += dy
         self.paint()
 
+    def selectionListener(self, value):
+        if value:
+            self.canvas.lift(self.id)
 
 
 class Edge():

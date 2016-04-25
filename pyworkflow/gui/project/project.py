@@ -35,12 +35,14 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
+import uuid
 
-from pyworkflow.gui.dialog import ListDialog
+from pyworkflow.gui.dialog import ListDialog, TableDialog, emptyOkHandler, createDefaultTableDialogConfiguration, \
+    TableDialogConfiguration, TableDialogButtonDefinition, RESULT_CANCEL, RESULT_YES, askString, askColor, askYesNo
 from pyworkflow.gui.tree import GenericTreeProvider
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
-from pyworkflow.config import MenuConfig, ProjectSettings
+from pyworkflow.config import MenuConfig, ProjectSettings, Label
 from pyworkflow.project import Project
 from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
@@ -179,19 +181,139 @@ class ProjectWindow(ProjectBaseWindow):
         self.manageLabels()
 
     def manageLabels(self):
-        self.showLabels('browse', 'Manage labels', 'Double click to edit a label.')
 
-    def showLabels(self, selectmode='browse', title='Labels', message='List of labels'):
+        conf = self._createManageLabelsTableConf()
+
+        self._showLabels(tableDialogConfig=conf)
+
+    def _createManageLabelsTableConf(self):
+
+        conf = TableDialogConfiguration(selectmode='browse',
+                                        title='Manage labels',
+                                        message='Double click to edit a label.')
+
+        # Have only one button: Close
+        btnDefClose = TableDialogButtonDefinition('Close', RESULT_YES)
+        conf.addUnloadButton(btnDefClose)
+
+        # Add toolbar buttons
+
+        # Add button
+        addButton = TableDialogButtonDefinition('Add', 'add_label', Icon.ACTION_NEW)
+
+        def addLabelHandler(dialog, label=None):
+
+            # Call the label editor method with None (to create a new one)
+            (refresh, updatedlabel) = editOrAddLabel(dialog, label)
+
+            if refresh:
+
+                # When label is none we are editing, no need to add the label.
+                if label is None:
+                    self.settings.labelsList.addLabel(updatedlabel)
+
+                    # Add the label ad tag
+                    addTagToTree(updatedlabel, dialog.tree)
+
+                dialog.tree.update()
+
+        addButton.handler = addLabelHandler
+        conf.addToolBarButton(addButton)
+
+        # Edit button
+        editButton = TableDialogButtonDefinition('Edit', 'edit_label', Icon.ACTION_EDIT)
+
+        def editOrAddLabel(dialog, label):
+
+            defaultName = '' if label is None else label.getName()
+
+            labelName = askString('Enter the label name', 'Label name', dialog, defaultValue=defaultName)
+
+            if labelName is not None:
+
+                defaultColor = None if label is None else label.getColor()
+
+                color = askColor(defaultColor=defaultColor)
+
+                if color is not None:
+
+                    if label is None:
+
+                        label = Label(uuid.uuid1().int, labelName, color)
+                    else:
+
+                        label.setColor(color)
+                        label.setName(labelName)
+                    return True, label
+                else:
+                    return False, None
+            else:
+                return False, None
+
+        def editLabelHandler(dialog):
+
+            # Get the selected label.
+            selection = dialog.tree.getSelectedObjects()
+
+            # If there is something selected
+            if len(selection) > 0:
+
+                # Get the first element
+                selection = selection[0]
+
+                addLabelHandler(dialog, selection)
+
+        editButton.handler = editLabelHandler
+        conf.addToolBarButton(editButton)
+
+        # Delete button
+        deleteButton = TableDialogButtonDefinition('Delete', 'delete_label', Icon.ACTION_DELETE)
+
+        def deleteLabelHandler(dialog):
+
+            # Get the selected label.
+            selection = dialog.tree.getSelectedObjects()
+
+            # If there is something selected
+            if len(selection) > 0:
+
+                # Get the first element
+                selection = selection[0]
+
+                yes = askYesNo("Delete a label", 'Are you sure you want to delete "' + selection.getName() + '" label?', dialog)
+
+                if yes:
+                    self.settings.labelsList.deleteLabel(selection)
+                    dialog.tree.update()
+
+        deleteButton.handler = deleteLabelHandler
+        conf.addToolBarButton(deleteButton)
+
+        # Ok handler should not validate anything
+        conf.onOkHandler = emptyOkHandler
+
+        return conf
+
+    def showLabels(self):
+
+        conf = createDefaultTableDialogConfiguration(emptyOkHandler)
+        conf.selectmode = 'extended'
+        conf.title = 'Label a protocol'
+        conf.message = 'Select the labels to be assigned. To remove labels click "Select" without any selection.'
+
+        return self._showLabels(conf)
+
+    def _showLabels(self, tableDialogConfig):
+
         labels = self.project.settings.getLabels()
 
-        labelsTable = GenericTreeProvider(labels, [('name', 300), ('color', 150)], _getLabelInfo)
+        labelsTable = GenericTreeProvider(labels, [('name', 300), ('color', 150)], _getLabelInfo, addTags=_addLabelsTags)
 
-        dlg = ListDialog(self.root, title,
-                         labelsTable, message,
-                         validateSelectionCallback=None,
-                         selectmode=selectmode)
+        dlg = TableDialog(self.root,
+                          labelsTable,
+                          tableDialogConfig)
 
-        return dlg.values
+        return dlg.values, dlg.resultCancel()
 
     def initProjectTCPServer(self):
         server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
@@ -385,4 +507,18 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
 
 def _getLabelInfo(label):
     return {'key': label.getId(), 'parent': None,
-            'text': label.getName(), 'values': (label.getColor())}
+            'text': label.getName(), 'values': (label.getColor()),
+            'tags': label.getName()}
+
+
+def _addLabelsTags(tree, provider):
+
+    values = provider.getObjects()
+
+    for label in values:
+        addTagToTree(label, tree)
+
+
+def addTagToTree(label, tree):
+    tree.tag_configure(label.getName(), background=label.getColor())
+

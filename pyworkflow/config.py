@@ -492,6 +492,9 @@ class Label(pwobj.Scalar):
     def getName(self):
         return self._values['name']
 
+    def setName(self, newName):
+        self._values['name'] = newName
+
     def setColor(self, color):
         self._values['color'] = color
 
@@ -511,8 +514,8 @@ class LabelsList(pwobj.List):
     def getLabel(self, id):
         return self._labelsDict.get(id, None)
 
-    def addLabel(self, id, **kwargs):
-        label = Label(id, **kwargs)
+    def addLabel(self, label):
+
         self._labelsDict[label.getId()] = label
         self.append(label)
         return label
@@ -521,6 +524,9 @@ class LabelsList(pwobj.List):
         self._labelsDict.clear()
         for label in self:
             self._labelsDict[label.getId()] = label
+    def deleteLabel(self, label):
+        self._labelsDict.pop(label.getId())
+        self.pop(label.getId())
 
     def clear(self):
         pwobj.List.clear(self)

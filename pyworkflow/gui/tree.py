@@ -127,6 +127,7 @@ class TreeProvider():
         'text': text of the object to be displayed (if not passed the 'key' will be used)
         'image': image path to be displayed as icon (optional)
         'parent': the object's parent in which insert this object (optional)
+        'tags': list of tags names (optional)
         """
         pass
     
@@ -147,7 +148,16 @@ class TreeProvider():
         as the default one when the element is double-clicked.
         """
         return []
-        
+
+    def addTags(self, tree, provider):
+        """
+        Returns
+        -------
+        Nothing
+
+        Adds tags to the tree for customizing
+        """
+        pass
         
 class BoundTree(Tree):
     """ This class is base on Tree but fetch the
@@ -170,8 +180,12 @@ class BoundTree(Tree):
         self.grid(row=0, column=0, sticky='news')
         
         self.menu = tk.Menu(self, tearoff=0)
+
+        # Add tags
+        provider.addTags(self, provider)
+
         self.setProvider(provider)
-        
+
         self.bind("<Button-3>", self._onRightClick)
         # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
@@ -257,9 +271,12 @@ class BoundTree(Tree):
                     if image is None:
                         image = ''
                 values = objDict.get('values', ())
+
+                tags = objDict.get('tags', ())
+
                 try:
                     obj._treeId = self.insert(parentId, 'end', key,
-                                text=text, image=image, values=values)
+                                text=text, image=image, values=values, tags=tags)
                     self._objDict[obj._treeId] = obj
                     
                     if objDict.get('open', False):
@@ -397,11 +414,12 @@ class ProjectRunsTreeProvider(TreeProvider):
 
 class GenericTreeProvider(TreeProvider):
     """ Populate Tree from Objects. """
-    def __init__(self, objList=None, columns=[], getOnjectInfo = None):
+    def __init__(self, objList=None, columns=[], getObjectInfo=None, addTags=None):
         self.objList = objList
         self.getColumns = lambda: columns
         self._parentDict = {}
-        self.getObjectInfo = getOnjectInfo or self._getObjectInfo
+        self.getObjectInfo = getObjectInfo or self._getObjectInfo
+        if addTags is not None: self.addTags = addTags
 
     def _getObjectInfo(self, obj):
 

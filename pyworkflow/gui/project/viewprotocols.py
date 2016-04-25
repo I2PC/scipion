@@ -49,6 +49,8 @@ from pyworkflow.utils.properties import Message, Icon, Color
 
 from constants import STATUS_COLORS
 
+DEFAULT_BOX_COLOR = '#f5f5f5'
+
 ACTION_EDIT = Message.LABEL_EDIT
 ACTION_COPY = Message.LABEL_COPY
 ACTION_DELETE = Message.LABEL_DELETE
@@ -66,7 +68,7 @@ ACTION_EXPORT = Message.LABEL_EXPORT
 ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
-ACTION_SETLABEL = 'Set label'
+ACTION_SETLABEL = 'Assign labels'
 ACTION_LABELS = 'Labels'
 
 RUNS_TREE = Icon.RUNS_TREE
@@ -959,10 +961,16 @@ class ProtocolsView(tk.Frame):
 
                 labelId = nodeInfo.getLabels()[0]
                 label = self.settings.getLabels().getLabel(labelId)
-                boxColor = label.getColor()
-                paintLabels = False
+
+                # If there is no label (it has been deleted)
+                if label is None:
+                    nodeInfo.getLabels().remove(labelId)
+                    boxColor = DEFAULT_BOX_COLOR
+                else:
+                    boxColor = label.getColor()
+                    paintLabels = False
             else:
-                boxColor = '#f5f5f5'
+                boxColor = DEFAULT_BOX_COLOR
 
         item = RunBox(nodeInfo, self.runsGraphCanvas,
                       nodeText, node.x, node.y, bgColor=boxColor, textColor='black')
@@ -997,27 +1005,35 @@ class ProtocolsView(tk.Frame):
             boxWidth = bottomRightX - topLeftX
 
             # Set the size
-            margin = 2
-            labelWidth = (boxWidth - 2*margin) / len(nodeInfo.getLabels())
-            labelHeight = 8
+            marginV = 3
+            marginH=2
+            labelWidth = (boxWidth - 2*marginH) / len(nodeInfo.getLabels())
+            labelHeight = 6
 
             # Leave some margin on the right and bottom
-            labelX = bottomRightX - margin
-            labelY = bottomRightY - (labelHeight + margin)
+            labelX = bottomRightX - marginH
+            labelY = bottomRightY - (labelHeight + marginV)
 
             for index, labelId in enumerate(nodeInfo.getLabels()):
 
-                # Move X one label to the left
-                if index == len(nodeInfo.getLabels()) - 1:
-                    labelX=topLeftX + margin
-                else:
-                    labelX -= labelWidth
-
+                # Get the label
                 label = self.settings.getLabels().getLabel(labelId)
 
+                # If not none
                 if label is not None:
+                    # Move X one label to the left
+                    if index == len(nodeInfo.getLabels()) - 1:
+                        labelX=topLeftX + marginH
+                    else:
+                        labelX -= labelWidth
+
+
                     pwgui.Rectangle(self.runsGraphCanvas, labelX, labelY, labelWidth, labelHeight, color=label.getColor(),
                                     anchor=item)
+                else:
+
+                    nodeInfo.getLabels().remove(labelId)
+
 
     def switchRunsView(self):
         previousView = self.runsView
@@ -1382,10 +1398,10 @@ class ProtocolsView(tk.Frame):
 
         if len(selectedNodes) > 0:
 
-            labels = self.windows.showLabels('browse', 'Label a protocol', 'Select all the labels to be associated.')
+            labels, cancelled = self.windows.showLabels()
 
             # If cancelled
-            if labels is None:
+            if cancelled:
                 return
 
             # Create an array of labels ids
