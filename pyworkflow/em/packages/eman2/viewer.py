@@ -109,16 +109,16 @@ Examples:
         
         group = form.addGroup('Volumes')
         
-        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-              default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
-              label='Display volume with',
-              help='*slices*: display volumes as 2D slices along z axis.\n'
-                   '*chimera*: display volumes as surface with Chimera.')
         group.addParam('showHalves', EnumParam, choices=['half even', 'half odd', 'full map', 'all maps'], default=HALF_EVEN,
               label='Map to visualize',
               help='Select which map do you want to visualize.')
+        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+              default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST,
+              label='Display volume with',
+              help='*slices*: display volumes as 2D slices along z axis.\n'
+                   '*chimera*: display volumes as surface with Chimera.')
         group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
+              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                    '*chimera*: display angular distribution using Chimera with red spheres.') 
@@ -126,7 +126,7 @@ Examples:
               expertLevel=LEVEL_ADVANCED,
               label='Spheres size',
               help='')
-
+        
         group = form.addGroup('Resolution')
         
         group.addParam('resolutionPlotsFSC', EnumParam, choices=['unmasked', 'masked', 'masked tight', 'all'], 
@@ -144,7 +144,7 @@ Examples:
     def _getVisualizeDict(self):
         self._load()
         return {'showImagesAngularAssignment' : self._showImagesAngularAssignment,
-                'showHalves': self._showVolumes,
+                'displayVol': self._showVolumes,
                 'displayAngDist': self._showAngularDistribution,
                 'resolutionPlotsFSC': self._showFSC
                 }
