@@ -786,12 +786,16 @@ class SetOfImages(EMSet):
     def getSamplingRate(self):
         return self._samplingRate.get()
     
-    def writeStack(self, fnStack, orderBy='id', direction='ASC'):
+    def writeStack(self, fnStack, orderBy='id', direction='ASC',
+                   applyTransform=False):
         # TODO create empty file to improve efficiency
         ih = ImageHandler()
+        applyTransform = applyTransform and self.hasAlignment2D()
+
         for i, img in enumerate(self.iterItems(orderBy=orderBy,
                                                direction=direction)):
-            ih.convert(img, (i+1, fnStack))
+            transform = img.getTransform() if applyTransform else None
+            ih.convert(img, (i+1, fnStack), transform=transform)
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
@@ -1237,6 +1241,10 @@ class Transform(EMObject):
 
     def getMatrix(self):
         return self._matrix.getMatrix()
+
+    def getMatrixAsList(self):
+        """ Return the values of the Matrix as a list. """
+        return self._matrix.getMatrix().flatten().tolist()
     
     def setMatrix(self, matrix):
         self._matrix.setMatrix(matrix)
