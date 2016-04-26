@@ -30,6 +30,7 @@ Protocol to perform high-resolution reconstructions
 
 from glob import glob
 import math
+from itertools import izip
 
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam, NumericListParam
@@ -668,7 +669,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.writeInfoField(fnGlobal,"angleStep",xmipp.MDL_ANGLE_DIFF,float(angleStep))
             
             # Global alignment
-            perturbationList = [chr(x) for x in range(ord('a'),ord('a')+self.numberOfPerturbations.get()+1)]
+            perturbationList = [chr(x) for x in range(ord('a'),ord('a')+self.numberOfPerturbations.get())]
             for i in range(1,3):
                 fnDirSignificant=join(fnGlobal,"significant%02d"%i)
                 fnImgs=join(fnGlobal,"images%02d.xmd"%i)
@@ -754,10 +755,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 counter1 = 0
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
                 for subset1 in perturbationList:
-                    fnAngles1=join(fnGlobal,"anglesDisc%02d%s.xmd"%(i,subset1))
-                    counter2 = 0
                     fnOut1=join(fnGlobal,"anglesDisc%02d%s"%(i,subset1))
-                    copyFile(fnAngles1,fnOut1+".xmd")
+                    fnAngles1=fnOut1+".xmd"
+                    counter2 = 0
                     for subset2 in perturbationList:
                         if subset1==subset2:
                             continue
@@ -767,28 +767,42 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut12+"_weights.xmd"),numberOfMpi=1)
                         if counter2 == 0:
                             mdWeightsAll = xmipp.MetaData(fnOut12+"_weights.xmd")
+                            counter2=1
                         else:
                             mdWeights = xmipp.MetaData(fnOut12+"_weights.xmd")
-                        # *** Falta iterar por los dos md a la vez cogiendo el maximo
+                            if mdWeights.size()==mdWeightsAll.size():
+                                counter2 += 1
+                                for id1, id2 in izip(mdWeights,mdWeightsAll):
+                                    angleDiff0 = mdWeights.getValue(xmipp.MDL_ANGLE_DIFF0, id1)
+                                    shiftDiff0 = mdWeights.getValue(xmipp.MDL_SHIFT_DIFF0, id1)
+                                    weightJumper0 = mdWeights.getValue(xmipp.MDL_WEIGHT_JUMPER0, id1)
+
+                                    angleDiff0All = mdWeightsAll.getValue(xmipp.MDL_ANGLE_DIFF0, id2)
+                                    shiftDiff0All = mdWeightsAll.getValue(xmipp.MDL_SHIFT_DIFF0, id2)
+                                    weightJumper0All = mdWeightsAll.getValue(xmipp.MDL_WEIGHT_JUMPER0, id2)
+
+                                    mdWeightsAll.setValue(xmipp.MDL_ANGLE_DIFF0, angleDiff0+angleDiff0All, id2)
+                                    mdWeightsAll.setValue(xmipp.MDL_SHIFT_DIFF0, shiftDiff0+shiftDiff0All, id2)
+                                    mdWeightsAll.setValue(xmipp.MDL_WEIGHT_JUMPER0, weightJumper0+weightJumper0All, id2)
+                    if counter2>1:
+                        iCounter2 = 1.0/counter2
+                        for id in mdWeightsAll:
+                            angleDiff0All = mdWeightsAll.getValue(xmipp.MDL_ANGLE_DIFF0, id)
+                            shiftDiff0All = mdWeightsAll.getValue(xmipp.MDL_SHIFT_DIFF0, id)
+                            weightJumper0All = mdWeightsAll.getValue(xmipp.MDL_WEIGHT_JUMPER0, id)
+
+                            mdWeightsAll.setValue(xmipp.MDL_ANGLE_DIFF0, angleDiff0All*iCounter2, id)
+                            mdWeightsAll.setValue(xmipp.MDL_SHIFT_DIFF0, shiftDiff0All*iCounter2, id)
+                            mdWeightsAll.setValue(xmipp.MDL_WEIGHT_JUMPER0, weightJumper0All*iCounter2, id)
+                    if counter2>0:
+                        mdWeightsAll.write(fnOut1+"_weights.xmd")
+                        self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAngles1,fnOut1+"_weights.xmd"),numberOfMpi=1)
                     if counter1==0:
-                        copyFile(fnOut1+".xmd",fnOut+".xmd")
+                        copyFile(fnAngles1,fnOut+".xmd")
                     else:
-                        self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s'%(fnOut+".xmd",fnOut1+".xmd"),numberOfMpi=1)
-                        
-#                 fnAnglesA=join(fnGlobal,"anglesDisc%02da.xmd"%i)
-#                 fnAnglesB=join(fnGlobal,"anglesDisc%02db.xmd"%i)
-#                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
-#                 
-#                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesB,fnAnglesA,fnOut,self.symmetryGroup),numberOfMpi=1)
-#                 self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
-#                 self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesA,fnOut+"_weights.xmd"),numberOfMpi=1)
-#                 
-#                 self.runJob("xmipp_angular_distance","--ang1 %s --ang2 %s --oroot %s --sym %s --compute_weights 1 particleId 0.5 --check_mirrors --set 0"%(fnAnglesA,fnAnglesB,fnOut,self.symmetryGroup),numberOfMpi=1)
-#                 self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "angleDiff0 shiftDiff0 weightJumper0"'%(fnOut+"_weights.xmd"),numberOfMpi=1)
-#                 self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAnglesB,fnOut+"_weights.xmd"),numberOfMpi=1)
-#                 
-#                 self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s -o %s'%(fnAnglesA,fnAnglesB,fnOut+".xmd"),numberOfMpi=1)
-#                 cleanPath(fnOut+"_weights.xmd")
+                        self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s'%(fnOut+".xmd",fnAngles1),numberOfMpi=1)
+                    counter1+=1
+        cleanPath(join(fnGlobal,"anglesDisc*_weights.xmd"))
                 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
         K=TsSource/TsDest
