@@ -24,14 +24,14 @@
 # *
 # **************************************************************************
 
-from os.path import exists, join
 
-from pyworkflow.em import ProtClassify2D, Particle, Class2D, ImageHandler
+
+from pyworkflow.em import ProtClassify2D
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.utils as pwutils
 
-from ..imagic import ImagicPltFile, MsaFile
+from ..imagic import ImagicPltFile
 from protocol_base import ImagicProtocol
 
 
@@ -42,24 +42,21 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         (an enhanced Ward-type algorithm).
     """
     _label = 'msa-classify'
+    CLASS_DIR = 'MSA-cls'
 
     def __init__(self, **kwargs):
         ImagicProtocol.__init__(self, **kwargs)
-        self._classDir = 'MSA-cls'
 
-        self._params = {'cls_dir': self._classDir,
+        self._params = {'cls_dir': self.CLASS_DIR,
                         'msa_cls_img': 'classes'}
 
-    def getClassDir(self):
-        return self._classDir
 
 # --------------------------- DEFINE param functions --------------------------------------------
 
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
-                      pointerClass='SetOfParticles',
-                      pointerCondition='hasMSA',
+        form.addParam('inputMSA', PointerParam, label="Input particles", important=True,
+                      pointerClass='ImagicProtMSA',
                       help='Input images after MSA')
         form.addParam('numberOfFactors', IntParam, default=15,
                       label='Number of eigenimages to use',
@@ -90,21 +87,16 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
 
     def _insertAllSteps(self):
 
-        # self._insertFunctionStep('checkInputStep', self.inputParticles.get().strId())
-
         self._insertFunctionStep('classifyStep')
 
         self._insertFunctionStep('createOutputStep')
 
     # --------------------------- STEPS functions --------------------------------------------
 
-    # def checkInputStep(self, strId):
-    #    pass
-
     def classifyStep(self):
         """ Run MSA-CL and MSA-SUM from IMAGIC. """
 
-        inputFile = self.inputParticles.get().getFirstItem().getFileName()
+        inputFile = self.inputMSA.get().getParticlesStack()
         inputFileBase = pwutils.removeExt(inputFile)
         inputFileImg = inputFileBase + '.img'
         inputFileHed = inputFileBase + '.hed'
@@ -126,9 +118,8 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
                              'perc_ign_bad': self.percentIgnoreBad.get()
                              })
 
-        classDir = self._getPath(self._classDir)
-        if exists(classDir):
-            pwutils.cleanPath(classDir)
+        classDir = self._getPath(self.CLASS_DIR)
+        pwutils.cleanPath(classDir)
         pwutils.makePath(classDir)
 
         self.runTemplate('msa/msa-cls.b', self._params)
@@ -137,67 +128,56 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         """ Create the SetOfClass from the cls file with the images-class
         assignment and the averages for each class.
         """
-        particles = self.inputParticles.get()
+        particles = self.inputMSA.get().inputParticles.get()
         sampling = particles.getSamplingRate()
         classes2D = self._createSetOfClasses2D(particles)
+        # Load the class assignment file from results
+        plt = ImagicPltFile(self._getPath(self.CLASS_DIR, 'class_assignment.plt'))
 
-        for classId in range(1, self.numberOfClasses.get() + 1):
-            class2D = Class2D()
-            class2D.setObjId(classId)
+        # Here we are assuming that the order of the class assignment rows
+        # is the same for the input particles and the generated img stack
+        classes2D.classifyItems(updateItemCallback=self._updateParticle,
+                                updateClassCallback=self._updateClass,
+                                itemDataIterator=plt.iterRows())
 
-            classDir = self._getPath(self._classDir)
-            outputRootname = join(classDir, self._params.get('msa_cls_img'))
+        # for classId in range(1, self.numberOfClasses.get() + 1):
+        #     class2D = Class2D()
+        #     class2D.setObjId(classId)
+        #
+        #     classDir = self._getPath(self._classDir)
+        #     outputRootname = join(classDir, self._params.get('msa_cls_img'))
+        #
+        #     avgImg = Particle()
+        #     avgImg.setSamplingRate(sampling)
+        #
+        #     avgFile = outputRootname + '_avg.img'
+        #     avgImg.setLocation(classId, avgFile)
+        #
+        #     class2D.setRepresentative(avgImg)
+        #     class2D.copyInfo(particles)
+        #     classes2D.append(class2D)
+        #
+        #
+        #
+        #     for imgId in plt.Values(classId):
+        #         img = particles[imgId]
+        #         if img is None:
+        #             print ">>> WARNING: Particle with id '%d' found in plt file, but not in input particles." % imgId
+        #         else:
+        #             class2D.append(img)
+        #
+        #     # Update information about number of particles in the class
+        #     classes2D.update(class2D)
 
-            avgImg = Particle()
-            avgImg.setSamplingRate(sampling)
+        lis = self.getOutputLis()
 
-            avgFile = outputRootname + '_avg.img'
-            avgImg.setLocation(classId, avgFile)
-
-            class2D.setRepresentative(avgImg)
-            class2D.copyInfo(particles)
-            classes2D.append(class2D)
-
-            pltClassFile = join(classDir, 'class_assignment.plt')
-            plt = ImagicPltFile(pltClassFile)
-
-            for imgId in plt.Values(classId):
-                img = particles[imgId]
-                if img is None:
-                    print ">>> WARNING: Particle with id '%d' found in plt file, but not in input particles." % imgId
-                else:
-                    class2D.append(img)
-
-            # Update information about number of particles in the class
-            classes2D.update(class2D)
-
-        classDir = self._getPath(self._classDir)
-        lis = MsaFile()
-        lis.filename.set(classDir + '/' + self._params.get('msa_cls_img') + '.lis')
-
-        self._defineOutputs(outputClasses=classes2D, lisFile=lis)
-        self._defineSourceRelation(self.inputParticles, classes2D)
-        self._defineSourceRelation(self.inputParticles, lis)
+        self._defineOutputs(outputClasses=classes2D)
+        self._defineSourceRelation(particles, classes2D)
 
     # --------------------------- INFO functions --------------------------------------------
 
     def _validate(self):
         errors = []
-
-        particlesFn = self.inputParticles.get().getFirstItem().getFileName()
-        eigName = 'MSA/eigen_img.img'
-        eigPath = pwutils.findRootFrom(particlesFn, eigName)
-
-        if eigPath is None:
-            errors.append('Eigenimages file not found! Did you run MSA protocol on input particles?')
-        else:
-            eigNum = self.numberOfFactors.get()
-            eigFn = join(eigPath, eigName)
-            ih = ImageHandler()
-            if ih.isImageFile(eigFn):
-                _, _, _, n = ih.getDimensions(eigFn)
-                if not eigNum <= n:
-                    errors.append('Maximum number of eigenimages in MSA run was %d' % n)
         return errors
 
     def _citations(self):
@@ -210,7 +190,29 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         return summary
 
     def _methods(self):
-        msg = "\nInput particles %s " % self.getObjectTag('inputParticles')
-        msg += "were divided into %s classes by MSA-based classification " % self.numberOfClasses.get()
+        msg = "\nInput particles after MSA run were divided into "
+        msg += "%s classes by hierarchical ascendant classification (HAC) " % self.numberOfClasses.get()
         msg += "using first %s eigenimages." % self.numberOfFactors.get()
         return [msg]
+
+    # --------------------------- UTILS functions --------------------------------------------
+
+    def _getOutputPath(self, fn):
+        """ Return the output file from the run directory and the CLASS dir. """
+        return self._getPath(self.CLASS_DIR, fn)
+
+    def getOutputLis(self):
+        return self._getOutputPath('msa_cls_img.lis')
+
+
+    def _updateParticle(self, item, row):
+        _, classNum = row
+        item.setClassId(classNum)
+
+    def _updateClass(self, item):
+        classId = item.getObjId()
+        avgFile = self._getPath(self.CLASS_DIR,
+                                self._params['msa_cls_img'] + '_avg.img')
+        rep = item.getRepresentative()
+        rep.setSamplingRate(item.getSamplingRate())
+        rep.setLocation(classId, avgFile)

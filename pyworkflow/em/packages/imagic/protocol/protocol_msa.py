@@ -26,13 +26,12 @@
 
 from os.path import join, exists
 
-from pyworkflow.object import Boolean
 from pyworkflow.protocol.params import IntParam, PointerParam, EnumParam, FloatParam
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.utils as pwutils
 
 from ..constants import MODULATION
-from ..imagic import MsaFile, EigFile
 from protocol_base import ImagicProtocol
 
 
@@ -45,14 +44,14 @@ class ImagicProtMSA(ImagicProtocol):
 
     """
     _label = 'msa'
+    MSA_DIR = 'MSA'
 
     def __init__(self, **kwargs):
         ImagicProtocol.__init__(self, **kwargs)
-        self._msaDir = 'MSA'
 
-        self._params = {'eigen_img': join(self._msaDir, 'eigen_img'),
-                        'msa_pixvec_coord': join(self._msaDir, 'msa_pixvec_coord'),
-                        'msa_eigen_pixel': join(self._msaDir, 'msa_eigen_pixel')
+        self._params = {'eigen_img': join(self.MSA_DIR, 'eigen_img'),
+                        'msa_pixvec_coord': join(self.MSA_DIR, 'msa_pixvec_coord'),
+                        'msa_eigen_pixel': join(self.MSA_DIR, 'msa_eigen_pixel')
                         }
 
 # --------------------------- DEFINE param functions --------------------------------------------
@@ -64,7 +63,7 @@ class ImagicProtMSA(ImagicProtocol):
                       pointerClass='SetOfParticles',
                       help='Select the input particles to perform MSA.')
         form.addParam('distanceType', EnumParam, default=MODULATION, choices=['EUCLIDIAN', 'CHISQUARE', 'MODULATION'],
-                      label='MSA distance type',
+                      label='MSA distance type',  expertLevel=LEVEL_ADVANCED,
                       help='Select general metric for square distance between images:\n\n'
                            'a. Euclidian metric (Principal Components Analysis: PCA)\n'
                            'b. Chi-square metric (Correspondence Analysis: CA)\n'
@@ -83,7 +82,7 @@ class ImagicProtMSA(ImagicProtocol):
                            'Please give the number of iterations wanted.\n\n'
                            'NOTE: The iterations will stop automatically if the eigenimage'
                            '(eigenvector eigenvalue) calculations are converging')
-        form.addParam('overcorrectionFactor', FloatParam, default=0.8,
+        form.addParam('overcorrectionFactor', FloatParam, default=0.8, expertLevel=LEVEL_ADVANCED,
                       label='Overcorrection factor [0 - 0.9]',
                       help='The overcorrection factor is a very important parameter '
                            'in the MSA program. It determines the convergence speed '
@@ -110,7 +109,7 @@ class ImagicProtMSA(ImagicProtocol):
                       pointerClass='Mask',
                       help="Select a mask file")
 
-        form.addParallelSection(threads=0, mpi=1)  # this is not supported yet
+        form.addParallelSection(threads=0, mpi=1)
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -124,22 +123,16 @@ class ImagicProtMSA(ImagicProtocol):
             self._insertFunctionStep('createMaskStep')
 
         self._insertFunctionStep('msaStep')
-        self._insertFunctionStep('createOutputStep')
 
     # --------------------------- STEPS functions --------------------------------------------
 
     def convertInputStep(self):
         # we need to put all images into a single stack to ease the call of imagic programs
         # TODO: skip writeStack, convert directly via e2proc2d.py
-        # for particle in inputSet:
-        #    convertToImagic(particle, self._getPath('input_particles.img'))
-
         inputParticles = self.inputParticles.get()
         tmpStack = self._getTmpPath('input_particles.stk')
         inputParticles.writeStack(tmpStack, applyTransform=True)
-        ImageHandler().convert(tmpStack, self._getPath('input_particles.img'))
-        #convertToImagic(self._getTmpPath('input_particles_tmp.img'), self._getPath('input_particles.img'))
-
+        ImageHandler().convert(tmpStack, self.getParticlesStack())
 
     def convertMaskStep(self, maskType):
         """ Convert the input mask to Imagic. """
@@ -167,7 +160,7 @@ class ImagicProtMSA(ImagicProtocol):
         distances = ['EUCLIDIAN', 'CHISQUARE', 'MODULATION']
         distance_name = distances[self.distanceType.get()]
 
-        self._params.update({'msa_dir': self._msaDir,
+        self._params.update({'msa_dir': self.MSA_DIR,
                              'msa_distance': distance_name,
                              'num_factors': self.numberOfFactors.get(),
                              'num_iter': self.numberOfIterations.get(),
@@ -175,37 +168,12 @@ class ImagicProtMSA(ImagicProtocol):
                              'mpi_procs': self.numberOfMpi.get()
                              })
 
-        msaDir = self._getPath(self._msaDir)
+        msaDir = self._getPath(self.MSA_DIR)
         if exists(msaDir):
             pwutils.cleanPath(msaDir)
         pwutils.makePath(msaDir)
 
         self.runTemplate('msa/msa-run.b', self._params)
-
-    def createOutputStep(self):
-
-        # output stack is the same as input, with updated header
-        outputStack = self._getPath('input_particles.img')
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
-        imgSet.setHasMSA(True)
-        #imgSet._imagic_MSA = Boolean(True)
-        imgSet.setObjComment('Same as input file, but the header was updated with MSA values')
-        imgSet.readStack(outputStack)
-
-        msaDir = self._getPath(self._msaDir)
-        eig = EigFile()
-        eig.filename.set(msaDir + '/eigen_img.img')
-        lis = MsaFile()
-        lis.filename.set(msaDir + '/msa.lis')
-        plt = MsaFile()
-        plt.filename.set(msaDir + '/msa.plt')
-
-        self._defineOutputs(eigFile=eig, outputParticles=imgSet, lisFile=lis, pltFile=plt)
-        self._defineSourceRelation(self.inputParticles, imgSet)
-        self._defineSourceRelation(self.inputParticles, eig)
-        self._defineSourceRelation(self.inputParticles, lis)
-        self._defineSourceRelation(self.inputParticles, plt)
 
     # --------------------------- INFO functions --------------------------------------------
 
@@ -244,6 +212,8 @@ class ImagicProtMSA(ImagicProtocol):
 
     def _summary(self):
         summary = []
+        summary.append('This protocol generates only eigenimages (factors), that will be used later for'
+                       ' MSA-based classification.')
 
         if self.distanceType == 0:
             summary.append('Distance type: *Euclidian*')
@@ -286,3 +256,21 @@ class ImagicProtMSA(ImagicProtocol):
             msg += "custom mask %s." % self.getObjectTag('maskImage')
 
         return [msg]
+
+    # --------------------------- UTILS functions --------------------------------------------
+
+    def getParticlesStack(self):
+        return self._getPath('input_particles.img')
+
+    def _getOutputPath(self, fn):
+        """ Return the output file from the run directory and the MSA dir. """
+        return self._getPath(self.MSA_DIR, fn)
+
+    def getOutputEigenImages(self):
+        return self._getOutputPath('eigen_img.img')
+
+    def getOutputLis(self):
+        return self._getOutputPath('msa.lis')
+
+    def getOutputPlt(self):
+        return self._getOutputPath('msa.plt')

@@ -151,46 +151,17 @@ class ImagicPltFile(object):
     """ Handler class to read/write imagic plt file. """
     pass
 
-    def __init__(self, filename, mode='r'):
-        self._file = open(filename, mode)
-        self._count = 0
+    def __init__(self, filename):
+        self._filename = filename
 
-    def Values(self, classNum):
-        values = []
-        for line in self._file:
+    def iterRows(self):
+        f = open(self._filename)
+
+        for line in f:
             line = line.strip()
-            fields = line.split()
-            if int(float(fields[1])) == classNum:
-                values.append(int(float(fields[0])))
-        return values
+            fields = map(float, line.split())
+            # rows contains tuples (float) of
+            # image_number, class_number
+            yield int(fields[0]), fields[1]
 
-    def close(self):
-        self._file.close()
-
-
-class MsaFile(EMObject):
-    """ This is a container of files produced by MSA Imagic protocol.
-    It is possible to use *.lis and *.plt files.
-    """
-
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-
-        self.filename = String()
-
-    def getFileName(self):
-        return self.filename.get()
-
-
-class EigFile(EMObject):
-    """ This is a container of files produced by MSA Imagic protocol.
-    It is possible to use eigen_img.img files.
-    """
-
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-
-        self.filename = String()
-
-    def getFileName(self):
-        return self.filename.get()
+        f.close()

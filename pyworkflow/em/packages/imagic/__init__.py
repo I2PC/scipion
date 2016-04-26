@@ -28,13 +28,9 @@ This sub-package contains Imagic protocols
 """
 
 from bibtex import _bibtex  # Load bibtex dict with references
-
 from imagic import *
 from protocol import *
-
 from wizard import ImagicProtMaskWizard
-
-from viewer import ImagicViewer
 from viewer_msa import ImagicViewerMSA
 
 _logo = "imagic_logo.png"

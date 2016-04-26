@@ -932,8 +932,7 @@ class SetOfParticles(SetOfImages):
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._coordsPointer = Pointer()
-        self._msa = Boolean(False)
-        
+
     def hasCoordinates(self):
         return self._coordsPointer.hasValue()
     
@@ -954,12 +953,6 @@ class SetOfParticles(SetOfImages):
         """
         SetOfImages.copyInfo(self, other)
         self.setHasCTF(other.hasCTF())
-
-    def hasMSA(self):
-        return self._msa.get()
-
-    def setHasMSA(self, value):
-        self._msa.set(value)
 
 
 class SetOfAverages(SetOfParticles):

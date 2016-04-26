@@ -65,15 +65,15 @@ class ImagicViewerMSA(ProtocolViewer):
 
     def _viewParam(self, param=None):
         if param == 'doShowEigenImages':
-            view = DataView(self.protocol._getFileName('eigen_img'))
+            view = DataView(self.protocol.getOutputEigenImages())
         elif param == 'doShowEigPixImages':
             view = DataView(self.protocol._getFileName('msa_eigen_pixel'))
         elif param == 'doShowPixelVecCoordImages':
             view = DataView(self.protocol._getFileName('msa_pixvec_coord'))
         elif param == 'doShowMsaLisFile':
-            view = self.textView([self.protocol.lisFile.filename.get()], "MSA lis file")
+            view = self.textView([self.protocol.getOutputLis()], "MSA lis file")
         elif param == 'doShowMsaPltFile':
-            view = self.textView([self.protocol.pltFile.filename.get()], "MSA plt file")
+            view = self.textView([self.protocol.getOutputPlt()], "MSA plt file")
 
         return [view]
 
@@ -85,7 +85,7 @@ class ImagicViewerMSA(ProtocolViewer):
 
         iters = []
         cumPercents = []
-        fn = self.protocol.pltFile.filename.get()
+        fn = self.protocol.getOutputPlt()
         with open(fn) as f:
             lines_after_2 = f.readlines()[2:]
             for line in lines_after_2:
