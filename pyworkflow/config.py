@@ -369,7 +369,7 @@ class NodeConfig(pwobj.Scalar):
                         'labels': []}
         
     def _convertValue(self, value):
-        """Value should be a str with common separated values
+        """Value should be a str with comma separated values
         or a list.
         """
         self._values = json.loads(value)
@@ -477,7 +477,7 @@ class Label(pwobj.Scalar):
                         'color': color}
 
     def _convertValue(self, value):
-        """Value should be a str with common separated values
+        """Value should be a str with comma separated values
         or a list.
         """
         self._values = json.loads(value)
