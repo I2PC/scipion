@@ -45,39 +45,53 @@ class XmippProtCombinePdb(em.ProtImportFiles):
         This definition is also used to generate automatically the GUI.
         """
         form.addSection(label='Input')
-        form.addParam('inputPdbData1', params.EnumParam, choices=['id', 'object', 'file'],
-                      label="Retrieve the 1st PDB from", default=self.IMPORT_FROM_ID,
+        form.addParam('inputPdbData1', params.EnumParam,
+                      choices=['id', 'object', 'file'],
+                      label="Retrieve the 1st PDB from",
+                      default=self.IMPORT_FROM_ID,
                       display=params.EnumParam.DISPLAY_HLIST,
-                      help='Retrieve PDB data from server, use a pdb Object, or a local file')
-        form.addParam('pdbId1', params.StringParam, condition='inputPdbData1 == IMPORT_FROM_ID',
+                      help='Retrieve PDB data from server, '
+                           'use a pdb Object, or a local file')
+        form.addParam('pdbId1', params.StringParam, 
+                      condition='inputPdbData1 == IMPORT_FROM_ID',
                       label="The 1st Pdb Id ", allowsNull=True,
                       help='Type a pdb Id (four alphanumeric characters).')
         form.addParam('pdbObj1', params.PointerParam, pointerClass='PdbFile',
-                      label="Input the 1st pdb ", condition='inputPdbData1 == IMPORT_OBJ', allowsNull=True,
+                      label="Input the 1st pdb ", 
+                      condition='inputPdbData1 == IMPORT_OBJ', allowsNull=True,
                       help='Specify a pdb object.')
         form.addParam('pdbFile1', params.FileParam,
-                      label="File path of the 1st pdb", condition='inputPdbData1 == IMPORT_FROM_FILES', allowsNull=True,
-                      help='Specify a path to desired PDB structure.')
-        
-        form.addParam('inputPdbData2', params.EnumParam, choices=['id', 'object', 'file'],
-                      label="Retrieve the 2nd PDB from", default=self.IMPORT_FROM_ID,
+                      label="File path of the 1st pdb", 
+                      condition='inputPdbData1 == IMPORT_FROM_FILES', 
+                      allowsNull=True,
+                      help='Specify a path to desired PDB structure.')        
+        form.addParam('inputPdbData2', params.EnumParam, 
+                      choices=['id', 'object', 'file'],
+                      label="Retrieve the 2nd PDB from", 
+                      default=self.IMPORT_FROM_ID,
                       display=params.EnumParam.DISPLAY_HLIST,
-                      help='Retrieve PDB data from server, use a pdb Object, or a local file')
-        form.addParam('pdbId2', params.StringParam, condition='inputPdbData2 == IMPORT_FROM_ID',
+                      help='Retrieve PDB data from server, '
+                           'use a pdb Object, or a local file')
+        form.addParam('pdbId2', params.StringParam, 
+                      condition='inputPdbData2 == IMPORT_FROM_ID',
                       label="The 2nd Pdb Id ", allowsNull=True,
                       help='Type a pdb Id (four alphanumeric characters).')
         form.addParam('pdbObj2', params.PointerParam, pointerClass='PdbFile',
-                      label="Input the 2nd pdb ", condition='inputPdbData2 == IMPORT_OBJ', allowsNull=True,
+                      label="Input the 2nd pdb ", 
+                      condition='inputPdbData2 == IMPORT_OBJ', allowsNull=True,
                       help='Specify a pdb object.')
         form.addParam('pdbFile2', params.FileParam,
-                      label="File path of the 2nd pdb", condition='inputPdbData2 == IMPORT_FROM_FILES', allowsNull=True,
+                      label="File path of the 2nd pdb", 
+                      condition='inputPdbData2 == IMPORT_FROM_FILES', 
+                      allowsNull=True,
                       help='Specify a path to desired PDB structure.')
         
     
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         """ In this function the steps that are going to be executed should
-        be defined. Two of the most used functions are: _insertFunctionStep or _insertRunJobStep
+        be defined. Two of the most used functions are:
+        _insertFunctionStep or _insertRunJobStep
         """
         if self.inputPdbData1 == self.IMPORT_FROM_ID:
             self._insertFunctionStep('pdbDownloadStep')
@@ -89,9 +103,11 @@ class XmippProtCombinePdb(em.ProtImportFiles):
     def pdbDownloadStep(self):
         """Download all pdb files in file_list and unzip them."""
         if self.inputPdbData1 == self.IMPORT_FROM_ID:
-            em.downloadPdb(self.pdbId1.get(), self._getPdbFileName1(), self._log)
+            em.downloadPdb(self.pdbId1.get(), self._getPdbFileName1(), 
+                           self._log)
         if self.inputPdbData2 == self.IMPORT_FROM_ID:
-            em.downloadPdb(self.pdbId2.get(), self._getPdbFileName2(), self._log)
+            em.downloadPdb(self.pdbId2.get(), self._getPdbFileName2(), 
+                           self._log)
         
     def combinePdbStep(self):
         """ Although is not mandatory, usually is used by the protocol to
@@ -121,8 +137,8 @@ class XmippProtCombinePdb(em.ProtImportFiles):
             
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
-        """ Even if the full set of parameters is available, this function provides
-        summary information about an specific run.
+        """ Even if the full set of parameters is available, 
+        this function provides summary information about an specific run.
         """ 
         summary = [ ] 
         # Add some lines of summary information
@@ -142,9 +158,9 @@ class XmippProtCombinePdb(em.ProtImportFiles):
         return summary
       
     def _validate(self):
-        """ The function of this hook is to add some validation before the protocol
-        is launched to be executed. It should return a list of errors. If the list is
-        empty the protocol can be executed.
+        """ The function of this hook is to add some validation before 
+        the protocol is launched to be executed. It should return a 
+        list of errors. If the list is empty the protocol can be executed.
         """
         errors = []
         if self.inputPdbData1 == self.IMPORT_FROM_ID:
