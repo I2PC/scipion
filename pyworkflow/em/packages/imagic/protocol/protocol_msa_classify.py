@@ -141,35 +141,6 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
                                 updateClassCallback=self._updateClass,
                                 itemDataIterator=plt.iterRows())
 
-        # for classId in range(1, self.numberOfClasses.get() + 1):
-        #     class2D = Class2D()
-        #     class2D.setObjId(classId)
-        #
-        #     classDir = self._getPath(self._classDir)
-        #     outputRootname = join(classDir, self._params.get('msa_cls_img'))
-        #
-        #     avgImg = Particle()
-        #     avgImg.setSamplingRate(sampling)
-        #
-        #     avgFile = outputRootname + '_avg.img'
-        #     avgImg.setLocation(classId, avgFile)
-        #
-        #     class2D.setRepresentative(avgImg)
-        #     class2D.copyInfo(particles)
-        #     classes2D.append(class2D)
-        #
-        #
-        #
-        #     for imgId in plt.Values(classId):
-        #         img = particles[imgId]
-        #         if img is None:
-        #             print ">>> WARNING: Particle with id '%d' found in plt file, but not in input particles." % imgId
-        #         else:
-        #             class2D.append(img)
-        #
-        #     # Update information about number of particles in the class
-        #     classes2D.update(class2D)
-
         lis = self.getOutputLis()
 
         self._defineOutputs(outputClasses=classes2D)

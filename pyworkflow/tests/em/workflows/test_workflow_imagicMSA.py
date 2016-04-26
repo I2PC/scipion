@@ -68,14 +68,14 @@ class TestImagicWorkflow(TestWorkflow):
                                       numberOfMpi=1)
         protMsa.inputParticles.set(protImport.outputParticles)
         self.launchProtocol(protMsa)
-        self.assertIsNotNone(protMsa.outputParticles,
-                             "There was a problem with the SpiderProtFilter "
-                             "outputParticles")
+
 
         protMsaClassify = self.newProtocol(imagic.ImagicProtMSAClassify,
                                           objLabel='imagic - msa classify',
                                           numberOfFactors=3,
                                           numberOfClasses=3)
-        protMsaClassify.inputMsa.set(protMsa)
+        protMsaClassify.inputMSA.set(protMsa)
         self.launchProtocol(protMsaClassify)
-
+        self.assertIsNotNone(protMsaClassify.outputClasses,
+                             "There was a problem with the MSA-classify protocol's "
+                             "outputClasses")
