@@ -1430,16 +1430,13 @@ def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
 
-def createParamPhantomFile(imgSet, filename, dimX, partSetMd):
-    f = open(filename,'w')          
-    f.write("# XMIPP_STAR_1 *\n",
-            "#\n",
-            "data_block1\n",
-            "_dimensions2D %d %d\n" % (dimX, dimX),
-            "_projAngleFile %s" % partSetMd,
-            "_ctfPhaseFlipped %d" % imgSet.isPhaseFlipped(),
-            "_applyShift 1",
-            "_noisePixelLevel   0 0")
+def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):
+    f = open(filename,'w')
+    str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % (dimX, dimX)
+    str += "_projAngleFile %s\n" % partSetMd
+    str += "_ctfPhaseFlipped %d\n_ctfCorrected %d\n" % (phFlip, ctfCorr)
+    str += "_applyShift 1\n_noisePixelLevel    '0 0'\n"
+    f.write(str)
     f.close()
     
     

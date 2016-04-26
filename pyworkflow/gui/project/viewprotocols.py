@@ -531,15 +531,15 @@ class ProtocolsView(tk.Frame):
             Right: containing the Runs list
         """
         p = tk.PanedWindow(self, orient=tk.HORIZONTAL, bg='white')
-        
+
         bgColor = Color.LIGHT_GREY_COLOR
         # Left pane, contains Protocols Pane
         leftFrame = tk.Frame(p, bg=bgColor)
         leftFrame.columnconfigure(0, weight=1)
         leftFrame.rowconfigure(1, weight=1)
 
-        
-        # Protocols Tree Pane        
+
+        # Protocols Tree Pane
         protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
@@ -555,14 +555,14 @@ class ProtocolsView(tk.Frame):
         rightFrame.columnconfigure(0, weight=1)
         rightFrame.rowconfigure(1, weight=1)
         #rightFrame.rowconfigure(0, minsize=label.winfo_reqheight())
-        
+
         # Create the Action Buttons TOOLBAR
         toolbar = tk.Frame(rightFrame, bg='white')
         toolbar.grid(row=0, column=0, sticky='news')
         pwgui.configureWeigths(toolbar)
         #toolbar.columnconfigure(0, weight=1)
         toolbar.columnconfigure(1, weight=1)
-        
+
         self.runsToolbar = tk.Frame(toolbar, bg='white')
         self.runsToolbar.grid(row=0, column=0, sticky='sw')
         # On the left of the toolbar will be other
@@ -576,25 +576,25 @@ class ProtocolsView(tk.Frame):
         #runsFrame = ttk.Labelframe(v, text=' History ', width=500, height=500)
         runsFrame = tk.Frame(v, bg='white')
         #runsFrame.grid(row=1, column=0, sticky='news', pady=5)
-        self.runsTree = self.createRunsTree(runsFrame)        
+        self.runsTree = self.createRunsTree(runsFrame)
         pwgui.configureWeigths(runsFrame)
-        
+
         self.createRunsGraph(runsFrame)
-        
+
         if self.runsView == VIEW_LIST:
             treeWidget = self.runsTree
         else:
             treeWidget = self.runsGraphCanvas
-            
+
         treeWidget.grid(row=0, column=0, sticky='news')
-        
+
         # Create the Selected Run Info
         infoFrame = tk.Frame(v)
         infoFrame.columnconfigure(0, weight=1)
         infoFrame.rowconfigure(1, weight=1)
         # Create the Analyze results button
-        btnAnalyze = pwgui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg=Color.RED_COLOR, # font=self.font, 
-                          image=self.getImage(Icon.ACTION_VISUALIZE), compound=tk.LEFT, 
+        btnAnalyze = pwgui.Button(infoFrame, text=Message.LABEL_ANALYZE, fg='white', bg=Color.RED_COLOR, # font=self.font,
+                          image=self.getImage(Icon.ACTION_VISUALIZE), compound=tk.LEFT,
                         activeforeground='white', activebackground='#A60C0C', command=self._analyzeResultsClicked)
         btnAnalyze.grid(row=0, column=0, sticky='ne', padx=15)
         #self.style.configure("W.TNotebook")#, background='white')
@@ -606,49 +606,49 @@ class ProtocolsView(tk.Frame):
         pwgui.configureWeigths(dframe, row=2)
         provider = RunIOTreeProvider(self, self.getSelectedProtocol(), self.project.mapper)
         self.style.configure("NoBorder.Treeview", background='white', borderwidth=0, font=self.windows.font)
-        self.infoTree = pwgui.browser.BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview") 
+        self.infoTree = pwgui.browser.BoundTree(dframe, provider, height=6, show='tree', style="NoBorder.Treeview")
         self.infoTree.grid(row=0, column=0, sticky='news')
         label = tk.Label(dframe, text='SUMMARY', bg='white', font=self.windows.fontBold)
         label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
 
         self.summaryText = pwgui.text.TaggedText(dframe, width=40, height=5, bg='white', bd=0, font=self.windows.font,
                                       handlers={'sci-open': self._viewObject})
-        self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))        
-        
+        self.summaryText.grid(row=2, column=0, sticky='news', padx=(30, 0))
+
         # Method tab
         mframe = tk.Frame(tab)
         pwgui.configureWeigths(mframe)
         self.methodText = pwgui.text.TaggedText(mframe, width=40, height=15, bg='white',
                                      handlers={'sci-open': self._viewObject})
-        self.methodText.grid(row=0, column=0, sticky='news')   
-        
-        #Logs 
+        self.methodText.grid(row=0, column=0, sticky='news')
+
+        #Logs
         ologframe = tk.Frame(tab)
         pwgui.configureWeigths(ologframe)
         self.outputViewer = pwgui.text.TextFileViewer(ologframe, allowOpen=True, font=self.windows.font)
         self.outputViewer.grid(row=0, column=0, sticky='news')
         self.outputViewer.windows = self.windows
-        
+
         self._updateSelection()
-        
+
         # Add all tabs
-        tab.add(dframe, text=Message.LABEL_SUMMARY)   
+        tab.add(dframe, text=Message.LABEL_SUMMARY)
         tab.add(mframe, text=Message.LABEL_METHODS)
         tab.add(ologframe, text=Message.LABEL_LOGS_OUTPUT)
 #         tab.add(elogframe, text=Message.LABEL_LOGS_ERROR)
 #         tab.add(slogframe, text=Message.LABEL_LOGS_SCIPION)
         tab.grid(row=1, column=0, sticky='news')
-        
+
         v.add(runsFrame, weight=3)
         v.add(infoFrame, weight=1)
         v.grid(row=1, column=0, sticky='news')
-        
+
         # Add sub-windows to PanedWindows
         p.add(leftFrame, padx=5, pady=5, sticky='news')
         p.add(rightFrame, padx=5, pady=5)
         p.paneconfig(leftFrame, minsize=300)
-        p.paneconfig(rightFrame, minsize=400)        
-        
+        p.paneconfig(rightFrame, minsize=400)
+
         return p
 
     def _viewObject(self, objId):
@@ -687,8 +687,10 @@ class ProtocolsView(tk.Frame):
             for f in files:
                 print "    - %s, %s" % (f.path, f.fd)
             print "  memory percent: ", proc.get_memory_percent()
-        self.updateRunsTree(True)
+
         self.updateRunsGraph(True)
+        self.updateRunsTree(False)
+
 
         if initRefreshCounter:
             self.__autoRefreshCounter = 3 # start by 3 secs
