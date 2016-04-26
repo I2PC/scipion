@@ -39,7 +39,7 @@ import uuid
 
 from pyworkflow.gui.dialog import ListDialog, TableDialog, emptyOkHandler, createDefaultTableDialogConfiguration, \
     TableDialogConfiguration, TableDialogButtonDefinition, RESULT_CANCEL, RESULT_YES, askString, askColor, askYesNo
-from pyworkflow.gui.tree import GenericTreeProvider
+from pyworkflow.gui.tree import LabelTreeProvider
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings, Label
@@ -79,6 +79,9 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
         projMenu.addSubMenu('Manage project labels', 'labels', icon=Icon.TAGS)
+        projMenu.addSubMenu('Toogle color mode', 'color_mode', shortCut="Control-t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all', shortCut="Control-a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol', shortCut="Control-f")
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
@@ -180,6 +183,15 @@ class ProjectWindow(ProjectBaseWindow):
     def onManageProjectLabels(self):
         self.manageLabels()
 
+    def onToogleColorMode(self):
+        self.getViewWidget()._toogleColourScheme(None)
+
+    def onSelectAllProtocols(self):
+        self.getViewWidget()._selectAllProtocols(None)
+
+    def onFindProtocolToAdd(self):
+        self.getViewWidget()._findProtocol(None)
+
     def manageLabels(self):
 
         conf = self._createManageLabelsTableConf()
@@ -213,7 +225,7 @@ class ProjectWindow(ProjectBaseWindow):
                     self.settings.labelsList.addLabel(updatedlabel)
 
                     # Add the label ad tag
-                    addTagToTree(updatedlabel, dialog.tree)
+                    LabelTreeProvider.addTagToTree(updatedlabel, dialog.tree)
 
                 dialog.tree.update()
 
@@ -307,7 +319,7 @@ class ProjectWindow(ProjectBaseWindow):
 
         labels = self.project.settings.getLabels()
 
-        labelsTable = GenericTreeProvider(labels, [('name', 300), ('color', 150)], _getLabelInfo, addTags=_addLabelsTags)
+        labelsTable = LabelTreeProvider(labels)
 
         dlg = TableDialog(self.root,
                           labelsTable,
@@ -503,22 +515,4 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
         except:
             import traceback
             traceback.print_stack()
-
-
-def _getLabelInfo(label):
-    return {'key': label.getId(), 'parent': None,
-            'text': label.getName(), 'values': (label.getColor()),
-            'tags': label.getName()}
-
-
-def _addLabelsTags(tree, provider):
-
-    values = provider.getObjects()
-
-    for label in values:
-        addTagToTree(label, tree)
-
-
-def addTagToTree(label, tree):
-    tree.tag_configure(label.getName(), background=label.getColor())
 

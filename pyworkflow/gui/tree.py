@@ -149,8 +149,10 @@ class TreeProvider():
         """
         return []
 
-    def addTags(self, tree, provider):
+    def configureTags(self, tree):
         """
+        Configure the available tags in the tree that
+        will be setup later for each item in the tree.
         Returns
         -------
         Nothing
@@ -180,9 +182,6 @@ class BoundTree(Tree):
         self.grid(row=0, column=0, sticky='news')
         
         self.menu = tk.Menu(self, tearoff=0)
-
-        # Add tags
-        provider.addTags(self, provider)
 
         self.setProvider(provider)
 
@@ -245,6 +244,7 @@ class BoundTree(Tree):
                     
     def update(self):
         self.clear()
+        self.provider.configureTags(self)
         self._objDict = {} # Store the mapping between Tree ids and objects
         self._objects = self.provider.getObjects()
         
@@ -412,32 +412,20 @@ class ProjectRunsTreeProvider(TreeProvider):
         return self._objDict[objId]
 
 
-class GenericTreeProvider(TreeProvider):
-    """ Populate Tree from Objects. """
-    def __init__(self, objList=None, columns=[], getObjectInfo=None, addTags=None):
+class LabelTreeProvider(TreeProvider):
+    """ Populate Tree from Labels. """
+    def __init__(self, objList=None):
         self.objList = objList
-        self.getColumns = lambda: columns
         self._parentDict = {}
-        self.getObjectInfo = getObjectInfo or self._getObjectInfo
-        if addTags is not None: self.addTags = addTags
 
-    def _getObjectInfo(self, obj):
+    def getColumns(self):
+        return [('name', 300), ('color', 150)]
 
-        t = ''
+    def getObjectInfo(self, label):
 
-        value = obj.get()
-        if value is None:
-            if obj.isPointer():
-                t += " = %s" % str(obj.getObjValue())
-            else:
-                t += " = None"
-        else:
-            t += " = %s" % str(obj)
-
-        info = {'key': obj.getObjId(), 'parent': None,
-                'text': t, 'values': (obj.strId())}
-
-        return info
+        return {'key': label.getId(), 'parent': None,
+                'text': label.getName(), 'values': (label.getColor()),
+                'tags': label.getColor()}
 
     def getObjectPreview(self, obj):
         return (None, None)
@@ -452,3 +440,15 @@ class GenericTreeProvider(TreeProvider):
     def getObjects(self):
         objList = self._getObjectList()
         return objList
+
+    def configureTags(self, tree):
+
+        values = self.getObjects()
+
+        for label in values:
+            self.addTagToTree(label, tree)
+
+    @staticmethod
+    def addTagToTree(label, tree):
+        tree.tag_configure(label.getColor(), background=label.getColor())
+

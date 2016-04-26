@@ -52,6 +52,7 @@ class Canvas(tk.Canvas, Scrollable):
         
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position
+        self.firstPos = None  # Track first clicked position (for a drag action)
         self.items = {} # Keep a dictionary with high-level items
         self.cleanSelected = True
         
@@ -59,9 +60,11 @@ class Canvas(tk.Canvas, Scrollable):
         self.onDoubleClickCallback = None
         self.onRightClickCallback = None
         self.onControlClickCallback = None
+        self.onAreaSelected = None
         
         # Add bindings
         self.bind("<Button-1>", self.onClick)
+        self.bind("<ButtonRelease-1>", self.onButton1Release)
         self.bind("<Button-3>", self.onRightClick)
         self.bind("<Double-Button-1>", self.onDoubleClick)
         self.bind("<B1-Motion>", self.onDrag)
@@ -130,7 +133,7 @@ class Canvas(tk.Canvas, Scrollable):
             self.lastItem.setSelected(False)
         self.lastItem = item
         item.setSelected(True)
-               
+
     def _findItem(self, xc, yc):
         """ Find if there is any item in the canvas
         in the mouse event coordinates.
@@ -151,7 +154,7 @@ class Canvas(tk.Canvas, Scrollable):
             if callback:
                 self.callbackResults = callback(self.lastItem)
             self.lastPos = (xc, yc)
-            
+
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
@@ -191,11 +194,24 @@ class Canvas(tk.Canvas, Scrollable):
         self._handleMouseEvent(event, self.onDoubleClickCallback)
 
     def onDrag(self, event):
+
         if self.lastItem:
             xc, yc = self.getCoordinates(event)
             self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
-            self.lastPos = (xc, yc)  
-            
+            self.lastPos = (xc, yc)
+
+        elif self.firstPos is None:
+            self.firstPos = (event.x, event.y)
+            print "onDrag position captured."
+
+    def onButton1Release(self, event):
+
+        if self.firstPos is not None:
+
+            self.onAreaSelected(self.firstPos[0], self.firstPos[1], event.x, event.y)
+
+            self.firstPos = None
+
     def onMotion(self, event):
         self.onLeave(event) # Hide tooltip and cancel schedule
             

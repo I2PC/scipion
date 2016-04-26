@@ -41,7 +41,7 @@ import pyworkflow.gui as pwgui
 import pyworkflow.em as em
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
-from pyworkflow.gui.tree import ObjectTreeProvider, GenericTreeProvider
+from pyworkflow.gui.tree import ObjectTreeProvider, LabelTreeProvider
 
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
@@ -517,11 +517,12 @@ class ProtocolsView(tk.Frame):
         self.icon = windows.icon
         self.settings = windows.getSettings()
         self.runsView = self.settings.getRunsView()
-        self.showStatusInBox = False
+        self.showStatusInBox = True
         self._loadSelection()        
         self._items = {}
         self._lastSelectedProtId = None
         self._lastStatus = None
+        self.selectingArea = False
         
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
@@ -897,10 +898,13 @@ class ProtocolsView(tk.Frame):
         self.runsGraphCanvas = pwgui.Canvas(parent, width=400, height=400, 
                                 tooltipCallback=self._runItemTooltip,
                                 tooltipDelay=1000)
+
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
         self.runsGraphCanvas.onRightClickCallback = self._runItemRightClick
         self.runsGraphCanvas.onControlClickCallback = self._runItemControlClick
+        self.runsGraphCanvas.onAreaSelected = self._selectItemsWithinArea
+
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
         
@@ -1124,6 +1128,7 @@ class ProtocolsView(tk.Frame):
         item.setSelected(True)
         
     def _runItemClick(self, item=None):
+
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
@@ -1164,7 +1169,7 @@ class ProtocolsView(tk.Frame):
                 self._selection.append(prot.getObjId())
         
         self._updateSelection()
-        
+
     def _runItemTooltip(self, tw, item):
         """ Create the contents of the tooltip to be displayed
         for the given item.
@@ -1187,6 +1192,43 @@ class ProtocolsView(tk.Frame):
                 tw.tooltipText.config(bd=1, relief=tk.RAISED)
             else:
                 pwgui.dialog.fillMessageText(tw.tooltipText, tm)
+
+    def _selectItemsWithinArea(self, x1, y1, x2, y2, enclosed=False):
+        """
+        Parameters
+        ----------
+        x1: x coordinate of first corner of the area
+        y1: y coordinate of first corner of the area
+        x2: x coordinate of second corner of the area
+        y2: y coordinate of second corner of the area
+        enclosed: Default True. Returns enclosed items, overlapping items otherwise.
+
+        Returns
+        -------
+        Nothing
+
+        """
+
+        # NOT working properly: Commented for the moment.
+        return
+
+        if enclosed:
+            items = self.runsGraphCanvas.find_enclosed(x1, y1, x2, y2)
+        else:
+            items = self.runsGraphCanvas.find_overlapping(x1, y1, x2, y2)
+
+        update = False
+
+        for itemId in items:
+            if itemId in self.runsGraphCanvas.items:
+
+                item = self.runsGraphCanvas.items[itemId]
+                if not item.node.isRoot():
+                    item.setSelected(True)
+                    self._selection.append(itemId)
+                    update = True
+
+        if update is not None: self._updateSelection()
         
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""

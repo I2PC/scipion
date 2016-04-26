@@ -316,6 +316,7 @@ class MenuConfig(object):
         self.value = pwobj.String(value)
         self.icon = pwobj.String(icon)
         self.tag = pwobj.String(tag)
+        self.shortCut = pwobj.String(kwargs.get('shortCut', None))
         self.childs = pwobj.List()
         self.openItem = pwobj.Boolean(kwargs.get('openItem', False))
 
@@ -342,13 +343,15 @@ class ProtocolConfig(MenuConfig):
         if 'openItem' not in args:
             self.openItem.set(self.tag.get() != 'protocol_base')
 
-    def addSubMenu(self, text, value=None, **args):
+    def addSubMenu(self, text, value=None, shortCut=None, **args):
         if 'icon' not in args:
             tag = args.get('tag', None)
             if tag == 'protocol':
                 args['icon'] = 'python_file.gif'
             elif tag == 'protocol_base':
                 args['icon'] = 'class_obj.gif'
+
+        args['shortCut'] = shortCut
         return MenuConfig.addSubMenu(self, text, value, **args)
 
 
