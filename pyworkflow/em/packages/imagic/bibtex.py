@@ -44,6 +44,17 @@ _bibtexStr = """
   doi = {http://dx.doi.org/10.1364/JOSAA.7.000601}
 }
 
+@article{vanHeel1981,
+  author = {Marin van Heel and Wilko Keegstra},
+  title = {IMAGIC: A fast, flexible and friendly image analysis software system},
+  journal = {Ultramicroscopy},
+  year = {1981},
+  volume = {7},
+  issue = {2},
+  pages = {113--129},
+  doi = {http://dx.doi.org/10.1016/0304-3991(81)90001-2}
+}
+
 @article{vanHeel1984,
   author = {Marin van Heel},
   title = {Multivariate statistical classification of noisy images (randomly oriented biological macromolecules)},
@@ -63,6 +74,28 @@ _bibtexStr = """
   volume = {82},
   pages = {114--126},
   doi = {}
+}
+
+@article{vanHeel1996,
+  author = {Marin van Heel, George Harauz, Elena V. Orlova},
+  title = {A New Generation of the IMAGIC Image Processing System},
+  journal = {J.Str.Biol},
+  year = {1996},
+  volume = {116},
+  issue = {1}
+  pages = {17-24},
+  doi = {http://dx.doi.org/10.1006/jsbi.1996.0004}
+}
+
+@article{vanHeel2012,
+  author = {M. van Heel, R. Portugal, A. Rohou, C. Linnemayr, C. Bebeacua, R. Schmidt, T. Grant and M. Schatz},
+  title = {Four-dimensional cryo-electron microscopy at quasi-atomic resolution: IMAGIC 4D},
+  journal = {International Tables for Crystallography},
+  year = {2012},
+  volume = {F},
+  chapter = {19.9}
+  pages = {624-628},
+  doi = {http://dx.doi.org/10.1107/97809553602060000875}
 }
 
 """

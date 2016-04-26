@@ -41,7 +41,7 @@ class TestImagicWorkflow(TestWorkflow):
         # Create a new project
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('mda')
-        cls.particlesFn = cls.dataset.getFile('particles')
+        cls.particlesFn = cls.dataset.getFile('particles/xmipp_particles.xmd')
         
     def validateFilesExist(self, files):
         exist = []
@@ -53,7 +53,8 @@ class TestImagicWorkflow(TestWorkflow):
     def test_msaWorkflow(self):
         """ Run an Import particles protocol. """
         protImport = self.newProtocol(ProtImportParticles,
-                                      filesPath=self.particlesFn,
+                                      importFrom=2,
+                                      mdFile=self.particlesFn,
                                       samplingRate=3.5)
         self.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
@@ -63,8 +64,8 @@ class TestImagicWorkflow(TestWorkflow):
 
         protMsa = self.newProtocol(imagic.ImagicProtMSA,
                                       objLabel='imagic - msa',
-                                      numberOfFactors=5,
-                                      numberOfIterations=4,
+                                      numberOfFactors=10,
+                                      numberOfIterations=5,
                                       numberOfMpi=1)
         protMsa.inputParticles.set(protImport.outputParticles)
         self.launchProtocol(protMsa)
@@ -72,8 +73,8 @@ class TestImagicWorkflow(TestWorkflow):
 
         protMsaClassify = self.newProtocol(imagic.ImagicProtMSAClassify,
                                           objLabel='imagic - msa classify',
-                                          numberOfFactors=3,
-                                          numberOfClasses=3)
+                                          numberOfFactors=5,
+                                          numberOfClasses=4)
         protMsaClassify.inputMSA.set(protMsa)
         self.launchProtocol(protMsaClassify)
         self.assertIsNotNone(protMsaClassify.outputClasses,

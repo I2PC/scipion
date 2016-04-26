@@ -35,4 +35,4 @@ from wizard import ImagicProtMaskWizard
 from viewer_msa import ImagicViewerMSA
 
 _logo = "imagic_logo.png"
-_references = ['Borland1990']
+_references = ['vanHeel1981', 'vanHeel1996', 'vanHeel2012']
