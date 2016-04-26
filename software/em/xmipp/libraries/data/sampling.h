@@ -213,7 +213,7 @@ public:
 
     /** Read neighbors i
     */
-    void readSamplingFile(const FileName &infilename,bool read_vectors=true, bool write_sampling_sphere = false);
+    void readSamplingFile(const FileName &infilename,bool read_vectors=true, bool read_sampling_sphere = false);
 
     /** remove all those points that are further away from experimental data
         than neighborhood_radius_rad */
