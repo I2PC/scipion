@@ -77,7 +77,7 @@ class ImagicViewerMSA(ProtocolViewer):
 
         return [view]
 
-    def _plotHistogram(self):
+    def _plotHistogram(self, param=None):
         """ First we parse the MSA plt:
         first column: cumulative percent.
         second column: iteration number.

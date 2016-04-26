@@ -26,12 +26,13 @@
 
 from os.path import join, exists
 
+from pyworkflow.object import Boolean
 from pyworkflow.protocol.params import IntParam, PointerParam, EnumParam, FloatParam
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.utils as pwutils
 
 from ..constants import MODULATION
-from ..imagic import MsaFile, EigFile, convertToImagic
+from ..imagic import MsaFile, EigFile
 from protocol_base import ImagicProtocol
 
 
@@ -109,7 +110,7 @@ class ImagicProtMSA(ImagicProtocol):
                       pointerClass='Mask',
                       help="Select a mask file")
 
-        form.addParallelSection(threads=0, mpi=0)  # this is not supported yet
+        form.addParallelSection(threads=0, mpi=1)  # this is not supported yet
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -134,8 +135,11 @@ class ImagicProtMSA(ImagicProtocol):
         #    convertToImagic(particle, self._getPath('input_particles.img'))
 
         inputParticles = self.inputParticles.get()
-        inputParticles.writeStack(self._getTmpPath('input_particles_tmp.img'))
-        convertToImagic(self._getTmpPath('input_particles_tmp.img'), self._getPath('input_particles.img'))
+        tmpStack = self._getTmpPath('input_particles.stk')
+        inputParticles.writeStack(tmpStack, applyTransform=True)
+        ImageHandler().convert(tmpStack, self._getPath('input_particles.img'))
+        #convertToImagic(self._getTmpPath('input_particles_tmp.img'), self._getPath('input_particles.img'))
+
 
     def convertMaskStep(self, maskType):
         """ Convert the input mask to Imagic. """
@@ -185,6 +189,7 @@ class ImagicProtMSA(ImagicProtocol):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputParticles.get())
         imgSet.setHasMSA(True)
+        #imgSet._imagic_MSA = Boolean(True)
         imgSet.setObjComment('Same as input file, but the header was updated with MSA values')
         imgSet.readStack(outputStack)
 

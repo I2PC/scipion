@@ -434,7 +434,7 @@ class Object(object):
         # Split in possible tokens
         import re
         tokens = re.split('\W+', condition)
-        condStr = condition 
+        condStr = condition
         
         for t in tokens:
             if self.hasAttribute(t):
