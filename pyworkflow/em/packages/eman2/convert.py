@@ -134,7 +134,8 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     jsonFninfo = join(workDir, 'info/')
     
     for mic in micSet:
-        micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
+        micBase = removeBaseExt(mic.getFileName())
+        micPosFn = ''.join(glob.glob(jsonFninfo + '*' + micBase + '_info.json'))
         readCoordinates(mic, micPosFn, coordSet)
     coordSet.setBoxSize(size)
 
