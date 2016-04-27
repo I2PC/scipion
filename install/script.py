@@ -472,8 +472,8 @@ env.addPackage('Gctf_v0.50',
                tar='Gctf_v0.50.tgz',
                default=False)
 
-env.addPackage('Gautomatch_v0.50',
-               tar='Gautomatch_v0.50.tgz',
+env.addPackage('Gautomatch_v0.53',
+               tar='Gautomatch_v0.53.tgz',
                default=False)
 
 env.execute()
