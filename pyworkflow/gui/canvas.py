@@ -300,7 +300,7 @@ class Canvas(tk.Canvas, Scrollable):
             node.item = item
             item.node = node
             self.addItem(item)
-            
+
             if getattr(node, 'expanded', True):
                 for child in node.getChilds():
                     self._drawNodes(child, visitedDict)
@@ -728,7 +728,7 @@ class Oval():
         if self.id:
             self.canvas.delete(self.id)
 
-        self.id = self.canvas.create_oval(self.X, self.Y, self.X + self.radio, self.Y + self.radio, fill=self.color, outline=self.color)
+        self.id = self.canvas.create_oval(self.X, self.Y, self.X + self.radio, self.Y + self.radio, fill=self.color, outline='black')
         # self.canvas.tag_raise(self.id)
 
     def updateSrc(self, dx, dy):
