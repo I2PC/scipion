@@ -92,8 +92,8 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         f = open(pickerConfig, "w")
 
         pickScript = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow','em', 'gautomatch',
-                                  'run_gautomatch.py')
+                                  'pyworkflow','em', 'packages',
+                                  'gautomatch', 'run_gautomatch.py')
 
         pickCmd = os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py")
         convertCmd = os.path.join(os.environ['SCIPION_HOME'],
@@ -101,25 +101,29 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         args = prot.getArgs(threshold=False)
 
         args = {
-            "pickScript": pickScript,
-          "pickCmd": pickCmd + args,
-          "convertCmd": convertCmd,
-          'coordsDir': coordsDir,
-          'micsSqlite': micSet.getFileName(),
-          "diameter": prot.diameter,
-          "threshold": prot.threshold,
-          "apix": micSet.getSamplingRate()
+                "pickScript": pickScript,
+                "pickCmd": pickCmd + args,
+                "convertCmd": convertCmd,
+                'coordsDir': coordsDir,
+                'micsSqlite': micSet.getFileName(),
+                #"diameter": prot.diameter,
+                "threshold": prot.threshold,
+                "apix": micSet.getSamplingRate(),
+                "mindist": 100
           }
 
 
+        next = """
+        mindist.value = %(mindist)s
+            mindist.label = Min search distance (A)
+            mindist.help = Use value of 0.9~1.1X diameter; can be 0.3~0.5X for filament-like particle
+        """
+
         f.write("""
-        parameters = threshold, mindist
+        parameters = threshold
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = Particles with CCC above the threshold will be picked
-        mindist.value = %(mindist)s
-        mindist.label = Min search distance (A)
-        mindist.help = Use value of 0.9~1.1X diameter; can be 0.3~0.5X for filament-like particle
         autopickCommand = %(pickScript)s "%(pickCmd)s" --cc_cutoff %%(threshold)
         convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
