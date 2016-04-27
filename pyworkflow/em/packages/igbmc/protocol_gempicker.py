@@ -27,13 +27,14 @@
 # **************************************************************************
 
 import os
-from os.path import join, exists, basename
+from os.path import join, exists
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import LEVEL_ADVANCED 
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from convert import readSetOfCoordinates, runGempicker, getProgram
 
 
 MASK_CIRCULAR = 0
@@ -120,77 +121,47 @@ class ProtGemPicker(em.ProtParticlePicking):
         
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep', 
-                                 self.getInputMicrographs().strId(),
-                                 self.inputReferences.get().strId())
-        self._insertPickingSteps()
-        self._insertFunctionStep('createOutputStep')
+        convId = self._insertFunctionStep('convertInputStep',
+                                          self.getInputMicrographs().strId(),
+                                          self.inputReferences.get().strId())
+        deps = []
+        # Insert one picking step per Micrograph
+        for mic in self.inputMicrographs.get():
+            micName = mic.getFileName()
+            pickId = self._insertFunctionStep('runGempickerStep',
+                                              micName,
+                                              self.getArgs(),
+                                              prerequisites=[convId])
+            deps.append(pickId)
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
         
-    def _insertPickingSteps(self):
-        """ Insert the steps to launch the pikcer with different modes. 
-        Prepare the command arguments that will be passed. 
-        """
-        args =  ' --dirTgt=%s' % self._getTmpPath('micrographs')
-        args += ' --dirSch=%s' % self._getTmpPath('templates')
-        #args += ' --dirMskRef=%s' % self._getTmpPath('maskRef')
-        args += ' --dirMskSch=%s' % self._getTmpPath('maskSch')
-        args += ' --dirRes=%s' % self._getExtraPath('') # put the output in the extra dir
-        args += ' --angle2D=%d' % self.rotAngle
-        args += ' --contrast=%d' % (0 if self.refsHaveInvertedContrast else 1) 
-        args += ' --thresh=%0.3f' % self.thresholdLow
-        args += ' --threshHigh=%0.3f' % self.thresholdHigh
-        args += ' --nPickMax=%d' % self.maxPeaks
-        args += ' --boxSize=%d' % self.boxSize
-        args += ' --boxDist=%d' % self.boxDist
-        args += ' --boxBorder=%d' % self.boxBorder
-        
-        for mode in [0, 1]:
-            self._insertFunctionStep('runGemPickerStep', mode, args)
-
     #--------------------------- STEPS functions ---------------------------------------------------
+
     def convertInputStep(self, micsId, refsId):
         """ This step will take of the convertions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrc' format
-        Mask: either converted ('.tif' format) or generated a circular one
+        Mask: either converted (to '.tif' format) or generated a circular one
         """
-        ih = em.ImageHandler()
-        micDir = self._getTmpPath('micrographs')
+        micDir = self._getExtraPath('micrographs')  # put mics in extra dir
         pwutils.makePath(micDir)
-        
-        for mic in self.getInputMicrographs():
-            # Create micrograph folder
-            micName = mic.getFileName()
-            # If micrographs are in .mrc format just link it
-            # otherwise convert them
-            outMic = join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
-            
-            if micName.endswith('.mrc'):
-                pwutils.createLink(micName, outMic)
-            else:
-                ih.convert(mic, outMic)
-                
-        refDir = self._getTmpPath('templates')
+        refDir = self._getExtraPath('templates')  # put refs in extra dir
         pwutils.makePath(refDir)
-        # We will always convert the templates, since
-        # they can be in an stack and link will not be possible sometimes
         inputRefs = self.inputReferences.get()
-        
-        for i, ref in enumerate(inputRefs):
-            outRef = join(refDir, 'ref%02d.mrc' % (i+1))
-            ih.convert(ref, outRef)
-            
-        self.createInputMasks(inputRefs)  
-            
+
+        self.convertReferences(inputRefs, refDir)
+        self.createInputMasks(inputRefs)
+
+
     def createInputMasks(self, inputRefs):
         """ Create the needed mask for picking.
         We should either generate a circular mask, 
         or convert the inputs (one or just one per reference 2d)
         """
-        maskSchDir = self._getTmpPath('maskSch')
+        maskSchDir = self._getExtraPath('maskSch')
         pwutils.makePath(maskSchDir)
         ih = em.ImageHandler()
-        
+
         if self.maskType == MASK_CIRCULAR:
             if self.maskRadius < 0: # usually -1
                 radius = inputRefs.getDim()[0]/2 # use half of input dim
@@ -202,43 +173,24 @@ class ProtGemPicker(em.ProtParticlePicking):
             for i, mask in enumerate(self.inputMasks):
                 outMask = join(maskSchDir, 'ref%02d.tif' % (i+1))
                 ih.convert(mask.get(), outMask)
-                
-    def runGemPickerStep(self, mode, args):
-        args += ' --mode=%d' % mode
-        
-        nGPUs = self.numberOfGPUs.get() if self.useGPU else 0
-        nThreads = self.numberOfThreads.get()
-        
-        args += ' --nGPU=%d' % nGPUs
-        args += ' --nCPU=%d' % nThreads
-        
-        self.runJob(self._getProgram(), args)
+
+    def runGempickerStep(self, micName, args):
+        # We convert the input micrograph on demand if not in .mrc
+        refDir = self._getExtraPath('templates')
+        maskSchDir = self._getExtraPath('maskSch')
+        useGPU = self.useGPU.get()
+
+        runGempicker(micName, self.getResultsDir(), refDir, maskSchDir, useGPU, args)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
-        ih = em.ImageHandler()
         coordSet = self._createSetOfCoordinates(micSet)
-        if self.boxSize == 0:
-            coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
-        else:
+        if self.boxSize and self.boxSize > 0:
             coordSet.setBoxSize(self.boxSize.get())
-        
-        for mic in micSet:
-            fnCoords = pwutils.replaceBaseExt(mic.getFileName(), 'txt')
-            fn2parse = self._getExtraPath('pik_coord', fnCoords)
-            print fn2parse
-            xdim, _, _, _ = ih.getDimensions(mic)
-            #xdim, ydim, _ = em.getDimensions(micSet)
-            #print xdim, ydim
-            with open(fn2parse,"r") as source:
-                source.readline() # Skip first line
-                for line in source:
-                    tokens = line.split()
-                    coord = em.Coordinate()
-                    coord.setPosition(xdim-int(tokens[3]), int(tokens[2]))
-                    coord.setMicrograph(mic)
-                    coordSet.append(coord)
+        else:
+            coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
 
+        self.readSetOfCoordinates(self.getResultsDir(), coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
 
@@ -246,10 +198,11 @@ class ProtGemPicker(em.ProtParticlePicking):
     def _validate(self):
         errors = []
         # Check that the program exists
-        if not exists(self._getProgram()):
+        useGPU = self.useGPU.get()
+        if not exists(getProgram(useGPU)):
             errors.append("Binary '%s' does not exits. \n"
                           "Check configuration file: ~/.config/scipion/scipion.conf\n"
-                          "and set GEMPICKER variables properly." % self._getProgram())
+                          "and set GEMPICKER variables properly." % getProgram(useGPU))
             print "os.environ['GEMPICKER_HOME']", os.environ['GEMPICKER_HOME']
             print "os.environ['GEMPICKER']", os.environ['GEMPICKER']
         # Check that the number of input masks (in case of non-circular mask)
@@ -278,8 +231,6 @@ class ProtGemPicker(em.ProtParticlePicking):
             summary.append("Number of particles picked: %d" % self.getCoords().getSize())
             summary.append("Particle size: %d px" % self.getCoords().getBoxSize())
             summary.append("Threshold range: %0.3f - " % self.thresholdLow + "%0.3f" % self.thresholdHigh)
-#            if self.extraParams.hasValue():
-#                summary.append("And other parameters: %s" % self.extraParams)
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
@@ -304,12 +255,41 @@ class ProtGemPicker(em.ProtParticlePicking):
         return ['Hoang2013']
     
     #--------------------------- UTILS functions --------------------------------------------------
-    def _getProgram(self):
-        """ Return the program binary that will be used. """
-        if self.useGPU:
-            binary = os.environ['GEMPICKER_CUDA']
-        else:
-            binary = os.environ['GEMPICKER']
-        
-        program = join(os.environ['GEMPICKER_HOME'], basename(binary))
-        return program
+    def getResultsDir(self):
+        return self._getExtraPath('')
+
+    def getArgs(self):
+        """ Return the Gempicker parameters for picking one micrograph.
+         The command line will depends on the protocol selected parameters.
+        """
+        nGPUs = self.numberOfGPUs.get() if self.useGPU else 0
+        nThreads = self.numberOfThreads.get()
+
+        args = ' --nGPU=%d' % nGPUs
+        args += ' --nCPU=%d' % nThreads
+        #args += ' --dirMskRef=%s' % self._getTmpPath('maskRef')
+        args += ' --dirRes=%s' % self._getExtraPath('') # put the output in the extra dir
+        args += ' --angle2D=%d' % self.rotAngle
+        args += ' --contrast=%d' % (0 if self.refsHaveInvertedContrast else 1)
+        args += ' --thresh=%0.3f' % self.thresholdLow
+        args += ' --threshHigh=%0.3f' % self.thresholdHigh
+        args += ' --nPickMax=%d' % self.maxPeaks
+        args += ' --boxSize=%d' % self.boxSize
+        args += ' --boxDist=%d' % self.boxDist
+        args += ' --boxBorder=%d' % self.boxBorder
+
+        return args
+
+    def convertReferences(self, inputRefs, refDir):
+        """ We will always convert the templates, since
+        they can be in a stack and link will not be possible sometimes
+        """
+        inputRefs = self.inputReferences.get()
+        refDir = self._getExtraPath('templates')
+
+        for i, ref in enumerate(inputRefs):
+            outRef = join(refDir, 'ref%02d.mrc' % (i+1))
+            em.ImageHandler().convert(ref, outRef)
+
+    def readSetOfCoordinates(self, ResultsDir, coordSet):
+        readSetOfCoordinates(ResultsDir, self.getInputMicrographs(), coordSet)
