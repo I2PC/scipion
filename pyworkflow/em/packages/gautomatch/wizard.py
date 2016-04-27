@@ -135,7 +135,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
             mindist.value = %(mindist)s
             mindist.label = Min search distance
             mindist.help = Use value of 0.9~1.1X diameter
-            autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold) --max_dist %%(mindist)
+            autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold) --min_dist %%(mindist)
             convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
             """ % args)
 

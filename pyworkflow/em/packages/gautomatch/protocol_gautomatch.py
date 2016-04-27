@@ -285,7 +285,7 @@ class ProtGautomatch(em.ProtParticlePicking):
             args += ' --speed %d' % self.speed
             args += ' --boxsize %d' % self.boxSize
             if mindist:
-                args += ' --max_dist %d' % self.maxDist
+                args += ' --min_dist %d' % self.maxDist
             args += ' --gid %d' % self.GPUId
             args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
             args += ' --lsigma_D %d' % self.localSigmaDiam
