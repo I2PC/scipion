@@ -25,7 +25,6 @@
 # **************************************************************************
 
 import os
-from os.path import join, exists, basename
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -111,19 +110,21 @@ class ProtGautomatch(em.ProtParticlePicking):
                            'Probably do not use 4 at all, it is not accurate '
                            'in general.')
 
-        group = form.addGroup('Local sigma parameters')
+        group = form.addGroup('Local sigma parameters',
+                              condition='not advanced')
         group.addParam('localSigmaCutoff', params.FloatParam, default=1.2,
-                       label='Local sigma cut-off', condition='not advanced',
+                       label='Local sigma cut-off',
                        help='Local sigma cut-off (relative value), 1.2~1.5 '
                             'should be a good range\n'
                             'Normally a value >1.2 will be ice, protein '
                             'aggregation or contamination')
         group.addParam('localSigmaDiam', params.IntParam, default=100,
-                       label='Local sigma diameter (A)', condition='not advanced',
+                       label='Local sigma diameter (A)',
                        help='Diameter for estimation of local sigma, in Angstrom')
 
-        group = form.addGroup('Local average parameters')
-        line = group.addLine('Local average range', condition='not advanced',
+        group = form.addGroup('Local average parameters',
+                              condition='not advanced')
+        line = group.addLine('Local average range',
                              help="Local average cut-off (relative value), "
                                   "any pixel values outside the range will be "
                                   "considered as ice/aggregation/carbon etc.")
@@ -132,7 +133,6 @@ class ProtGautomatch(em.ProtParticlePicking):
         line.addParam('localAvgMax', params.FloatParam, default=1.0,
                       label='Max')
         group.addParam('localAvgDiam', params.IntParam, default=100,
-                       condition='not advanced',
                        label='Local average diameter (A)',
                        help='Diameter for estimation of local average, in Angstrom. '
                             '1.5~2.0X particle diameter suggested\n'
@@ -175,9 +175,6 @@ class ProtGautomatch(em.ProtParticlePicking):
             deps.append(pickId)
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
-        #args += ' %s' % join(self.getMicrographsDir(), '*.mrc')
-        #self._insertFunctionStep('runGautomatchStep', args)
-
     # --------------------------- STEPS functions ---------------------------------------------------
 
     def convertInputStep(self, micsId, refsId):
@@ -201,24 +198,9 @@ class ProtGautomatch(em.ProtParticlePicking):
         if self.boxSize and self.boxSize > 0:
             coordSet.setBoxSize(self.boxSize.get())
         else:
-            coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
+            coordSet.setBoxSize(self.inputReferences.get().getXDim)
 
         self.readSetOfCoordinates(self.getMicrographsDir(), coordSet)
-        # for mic in micSet:
-        #     fnMic = pwutils.removeExt(mic.getFileName())
-        #     fnCoords = basename(fnMic) + '_automatch.box'
-        #     fn2parse = self._getExtraPath('micrographs', fnCoords)
-        #     with open(fn2parse, "r") as source:
-        #         for line in source:
-        #             tokens = line.split()
-        #             coord = em.Coordinate()
-        #             coord.setPosition(int(tokens[0]) + int(tokens[2]) / 2,
-        #                               int(tokens[1]) + int(tokens[3]) / 2)
-        #             coord.setMicrograph(mic)
-        #             coordSet.append(coord)
-        #             # FIXME this should be outside the loop
-        #             if int(tokens[2]) != coordSet.setBoxSize:
-        #                 coordSet.setBoxSize(int(tokens[2]))
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
@@ -230,7 +212,7 @@ class ProtGautomatch(em.ProtParticlePicking):
         program = getProgram()
         if program is None:
             errors.append("Missing variables GAUTOMATCH and/or GAUTOMATCH_HOME")
-        elif not exists(program):
+        elif not os.path.exists(program):
             errors.append("Binary '%s' does not exists.\n" % program)
 
         # If there is any error at this point it is related to config variables
