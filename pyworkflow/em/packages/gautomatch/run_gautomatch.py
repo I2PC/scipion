@@ -34,7 +34,7 @@ if __name__ == '__main__':
     micName = sys.argv[1]
     refStack = sys.argv[2]
     workDir = sys.argv[3]
-    args = sys.argv[4]
+    args = " ".join(sys.argv[4:])
 
     runGautomatch(micName, refStack, workDir, args)
 

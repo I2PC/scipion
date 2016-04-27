@@ -73,9 +73,11 @@ class GautomatchPickerWizard(emwiz.EmWizard):
     def show(self, form):
         prot = form.protocol
         micSet = prot.getInputMicrographs()
+
         if not micSet:
             print 'must specify input micrographs'
             return
+
         project = prot.getProject()
         micfn = micSet.getFileName()
 
@@ -84,6 +86,8 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         coordsDir = project.getTmpPath(micSet.getName())
         pwutils.cleanPath(coordsDir)
         pwutils.makePath(coordsDir)
+        refStack = os.path.join(coordsDir, 'references.mrcs')
+        prot.convertReferences(refStack)
 
         # Get current values of the properties
 #         micfn = os.path.join(coordsDir, 'micrographs.xmd')
@@ -95,21 +99,21 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                                   'pyworkflow','em', 'packages',
                                   'gautomatch', 'run_gautomatch.py')
 
-        pickCmd = os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py")
+        pickCmd = prot.getArgs(threshold=False)
         convertCmd = os.path.join(os.environ['SCIPION_HOME'],
                                   'pyworkflow','apps', 'pw_convert.py')
-        args = prot.getArgs(threshold=False)
 
         args = {
                 "pickScript": pickScript,
-                "pickCmd": pickCmd + args,
+                "pickCmd": pickCmd,
                 "convertCmd": convertCmd,
                 'coordsDir': coordsDir,
                 'micsSqlite': micSet.getFileName(),
                 #"diameter": prot.diameter,
                 "threshold": prot.threshold,
                 "apix": micSet.getSamplingRate(),
-                "mindist": 100
+                "mindist": 100,
+                "refStack": refStack
           }
 
 
@@ -124,7 +128,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = Particles with CCC above the threshold will be picked
-        autopickCommand = %(pickScript)s "%(pickCmd)s" --cc_cutoff %%(threshold)
+        autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold)
         convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         f.close()
