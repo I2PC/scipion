@@ -109,25 +109,35 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                 "convertCmd": convertCmd,
                 'coordsDir': coordsDir,
                 'micsSqlite': micSet.getFileName(),
-                #"diameter": prot.diameter,
-                "threshold": prot.threshold,
-                "apix": micSet.getSamplingRate(),
+                'threshold': prot.threshold.get(),
                 "mindist": prot.maxDist.get(),
                 "refStack": refStack
           }
 
+        # If Gautomatch will guess advaced parameter we don't need to send
+        # the min distance to the wizard.
+        if prot.advanced:
+            f.write("""
+            parameters = threshold
+            threshold.value =  %(threshold)s
+            threshold.label = Threshold
+            threshold.help = Particles with CCC above the threshold will be picked
+            autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold)
+            convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
+            """ % args)
 
-        f.write("""
-        parameters = threshold, mindist
-        threshold.value =  %(threshold)s
-        threshold.label = Threshold
-        threshold.help = Particles with CCC above the threshold will be picked
-        mindist.value = %(mindist)s
-        mindist.label = Min search distance (A)
-        mindist.help = Use value of 0.9~1.1X diameter; can be 0.3~0.5X for filament-like particle
-        autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold) --max_dist %%(mindist)
-        convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
-        """ % args)
+        else:
+            f.write("""
+            parameters = threshold,mindist
+            threshold.value =  %(threshold)s
+            threshold.label = Threshold
+            threshold.help = Particles with CCC above the threshold will be picked
+            mindist.value = %(mindist)s
+            mindist.label = Min search distance
+            mindist.help = Use value of 0.9~1.1X diameter
+            autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold) --max_dist %%(mindist)
+            convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
+            """ % args)
 
         f.close()
 
@@ -137,3 +147,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         myprops = pwutils.readProperties(pickerConfig)
         #form.setVar('diameter', myprops['diameter.value'])
         form.setVar('threshold', myprops['threshold.value'])
+        if not prot.advanced:
+            form.setVar('maxDist', myprops['mindist.value'])
+        else:
+            pass # TODO: We could even in a future to parse the 'guessed' params
