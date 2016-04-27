@@ -158,71 +158,47 @@ class ProtGautomatch(em.ProtParticlePicking):
         # --------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep',
-                                 self.getInputMicrographs().strId(),
-                                 self.inputReferences.get().strId())
-        self._insertPickingSteps()
-        self._insertFunctionStep('createOutputStep')
+        convId = self._insertFunctionStep('convertInputStep',
+                                          self.getInputMicrographs().strId(),
+                                          self.inputReferences.get().strId())
+        deps = []
+        refStack = self._getExtraPath('references.mrcs')
+        # Insert one picking step per Micrograph
+        for mic in self.inputMicrographs.get():
+            micName = mic.getFileName()
+            pickId = self._insertFunctionStep('runGautomatchStep',
+                                              micName, refStack,
+                                              self.getArgs(),
+                                              prerequisites=[convId])
+            deps.append(pickId)
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
-    def _insertPickingSteps(self):
-        """ Insert the steps to launch the picker with different modes. 
-        Prepare the command arguments that will be passed. 
-        """
-        args = ' --T %s' % self._getTmpPath('references.mrcs')
-        args += ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
-        args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
-        args += ' --ang_step %d' % self.angStep
-        args += ' --diameter %d' % (2 * self.particleSize.get())
-        args += ' --cc_cutoff %0.2f' % self.threshold
-
-        if not self.advanced:
-            args += ' --speed %d' % self.speed
-            args += ' --boxsize %d' % self.boxSize
-            args += ' --max_dist %d' % self.maxDist
-            args += ' --gid %d' % self.GPUId
-            args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
-            args += ' --lsigma_D %d' % self.localSigmaDiam
-            args += ' --lave_max %0.2f' % self.localAvgMax
-            args += ' --lave_min %0.2f' % self.localAvgMin
-            args += ' --lave_D %d' % self.localAvgDiam
-            args += ' --lp %d' % self.lowPass
-            args += ' --hp %d' % self.highPass
-
-        if not self.invertTemplatesContrast:
-            args += ' --dont_invertT'
-
-        args += ' %s' % join(self._getExtraPath('micrographs'), '*.mrc')
-
-        self._insertFunctionStep('runGautomatchStep', args)
+        #args += ' %s' % join(self._getExtraPath('micrographs'), '*.mrc')
+        #self._insertFunctionStep('runGautomatchStep', args)
 
     # --------------------------- STEPS functions ---------------------------------------------------
+
     def convertInputStep(self, micsId, refsId):
         """ This step will take of the convertions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrcs' format
         """
-        ih = em.ImageHandler()
         micDir = self._getExtraPath('micrographs')  # put output and mics in extra dir
         pwutils.makePath(micDir)
-
-        for mic in self.getInputMicrographs():
-            # Create micrograph folder
-            micName = mic.getFileName()
-            # If micrographs are in .mrc format just link it
-            # otherwise convert them
-            outMic = join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
-
-            if micName.endswith('.mrc'):
-                pwutils.createLink(micName, outMic)
-            else:
-                ih.convert(mic, outMic)
-
         # We will always convert the templates to mrcs stack
-        inputRefs = self.inputReferences.get()
-        inputRefs.writeStack(self._getTmpPath('references.mrcs'))
+        self.convertReferences(self._getExtraPath('references.mrcs'))
 
-    def runGautomatchStep(self, args):
-        self.runJob(self._getProgram(), args)
+    def runGautomatchStep(self, micName, refStack, args):
+        # We convert the input micrograph on demand if not in .mrc
+        micDir = self._getExtraPath('micrographs')
+        outMic = join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
+        self.convertMicrograph(micName, outMic)
+        gArgs = ' %s --T %s' % (outMic, refStack)
+        gArgs += args or self.getArgs()
+        # Run Gautomatch:
+        self.runJob(self.getProgram(), gArgs)
+        # After picking we can remove the temporary file.
+        pwutils.cleanPath(outMic)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -256,7 +232,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = self._getProgram()
+        program = self.getProgram()
         if program is None:
             errors.append("Missing variables GAUTOMATCH and/or GAUTOMATCH_HOME")
         elif not exists(program):
@@ -309,11 +285,54 @@ class ProtGautomatch(em.ProtParticlePicking):
         return ['Zhang2016']
 
     # --------------------------- UTILS functions --------------------------------------------------
-    def _getProgram(self):
+    def getProgram(self):
         """ Return the program binary that will be used. """
         if (not 'GAUTOMATCH' in os.environ or
-            not 'GAUTOMATCH_HOME' in os.environ):
+                not 'GAUTOMATCH_HOME' in os.environ):
             return None
         binary = os.environ['GAUTOMATCH']
         program = join(os.environ['GAUTOMATCH_HOME'], 'bin', basename(binary))
         return program
+
+    def getArgs(self):
+        """ Return the Gautomatch parameters for picking one micrograph.
+         The command line will depends on the protocol selected parameters.
+         Params:
+            micFn: micrograph filename
+            refStack: filename with the references stack (.mrcs)
+        """
+        #args = ' --T %s' % refStack #self._getTmpPath('references.mrcs')
+        args = ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
+        args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
+        args += ' --ang_step %d' % self.angStep
+        args += ' --diameter %d' % (2 * self.particleSize.get())
+        args += ' --cc_cutoff %0.2f' % self.threshold
+
+        if not self.advanced:
+            args += ' --speed %d' % self.speed
+            args += ' --boxsize %d' % self.boxSize
+            args += ' --max_dist %d' % self.maxDist
+            args += ' --gid %d' % self.GPUId
+            args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
+            args += ' --lsigma_D %d' % self.localSigmaDiam
+            args += ' --lave_max %0.2f' % self.localAvgMax
+            args += ' --lave_min %0.2f' % self.localAvgMin
+            args += ' --lave_D %d' % self.localAvgDiam
+            args += ' --lp %d' % self.lowPass
+            args += ' --hp %d' % self.highPass
+
+        if not self.invertTemplatesContrast:
+            args += ' --dont_invertT'
+
+        return args
+
+    def convertReferences(self, refStack):
+        """ Write input references as an .mrc stack. """
+        self.inputReferences.get().writeStack(refStack)
+
+    def convertMicrograph(self, inputFn, outputFn):
+        """ Convert a micrograph to .mrc (or create a link if already mrc) """
+        if inputFn.endswith('.mrc'):
+            pwutils.createLink(inputFn, outputFn)
+        else:
+            em.ImageHandler().convert(inputFn, outputFn)
