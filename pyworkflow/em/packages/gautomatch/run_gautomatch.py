@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,13 +24,19 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This EM module contains Gautomatch auto-picking protocol 
-"""
 
-from bibtex import _bibtex # Load bibtex dict with references
+import sys
 
-_logo = "gautomatch_logo.png"
+from convert import runGautomatch
 
-from protocol_gautomatch import ProtGautomatch
-from wizard import GautomatchParticleWizard, GautomatchPickerWizard
+
+if __name__ == '__main__':
+    micName = sys.argv[1]
+    refStack = sys.argv[2]
+    workDir = sys.argv[3]
+    args = sys.argv[4]
+
+    runGautomatch(micName, refStack, workDir, args)
+
+
+

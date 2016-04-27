@@ -31,7 +31,9 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
+
+from convert import readSetOfCoordinates, runGautomatch, getProgram
+
 
 
 class ProtGautomatch(em.ProtParticlePicking):
@@ -173,7 +175,7 @@ class ProtGautomatch(em.ProtParticlePicking):
             deps.append(pickId)
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
-        #args += ' %s' % join(self._getExtraPath('micrographs'), '*.mrc')
+        #args += ' %s' % join(self.getMicrographsDir(), '*.mrc')
         #self._insertFunctionStep('runGautomatchStep', args)
 
     # --------------------------- STEPS functions ---------------------------------------------------
@@ -183,22 +185,14 @@ class ProtGautomatch(em.ProtParticlePicking):
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrcs' format
         """
-        micDir = self._getExtraPath('micrographs')  # put output and mics in extra dir
+        micDir = self.getMicrographsDir()  # put output and mics in extra dir
         pwutils.makePath(micDir)
         # We will always convert the templates to mrcs stack
         self.convertReferences(self._getExtraPath('references.mrcs'))
 
     def runGautomatchStep(self, micName, refStack, args):
         # We convert the input micrograph on demand if not in .mrc
-        micDir = self._getExtraPath('micrographs')
-        outMic = join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
-        self.convertMicrograph(micName, outMic)
-        gArgs = ' %s --T %s' % (outMic, refStack)
-        gArgs += args or self.getArgs()
-        # Run Gautomatch:
-        self.runJob(self.getProgram(), gArgs)
-        # After picking we can remove the temporary file.
-        pwutils.cleanPath(outMic)
+        runGautomatch(micName, refStack, self.getMicrographsDir(), args)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -209,21 +203,22 @@ class ProtGautomatch(em.ProtParticlePicking):
         else:
             coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
 
-        for mic in micSet:
-            fnMic = pwutils.removeExt(mic.getFileName())
-            fnCoords = basename(fnMic) + '_automatch.box'
-            fn2parse = self._getExtraPath('micrographs', fnCoords)
-            with open(fn2parse, "r") as source:
-                for line in source:
-                    tokens = line.split()
-                    coord = em.Coordinate()
-                    coord.setPosition(int(tokens[0]) + int(tokens[2]) / 2,
-                                      int(tokens[1]) + int(tokens[3]) / 2)
-                    coord.setMicrograph(mic)
-                    coordSet.append(coord)
-                    # FIXME this should be outside the loop
-                    if int(tokens[2]) != coordSet.setBoxSize:
-                        coordSet.setBoxSize(int(tokens[2]))
+        self.readSetOfCoordinates(self.getMicrographsDir(), coordSet)
+        # for mic in micSet:
+        #     fnMic = pwutils.removeExt(mic.getFileName())
+        #     fnCoords = basename(fnMic) + '_automatch.box'
+        #     fn2parse = self._getExtraPath('micrographs', fnCoords)
+        #     with open(fn2parse, "r") as source:
+        #         for line in source:
+        #             tokens = line.split()
+        #             coord = em.Coordinate()
+        #             coord.setPosition(int(tokens[0]) + int(tokens[2]) / 2,
+        #                               int(tokens[1]) + int(tokens[3]) / 2)
+        #             coord.setMicrograph(mic)
+        #             coordSet.append(coord)
+        #             # FIXME this should be outside the loop
+        #             if int(tokens[2]) != coordSet.setBoxSize:
+        #                 coordSet.setBoxSize(int(tokens[2]))
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
@@ -232,7 +227,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = self.getProgram()
+        program = getProgram()
         if program is None:
             errors.append("Missing variables GAUTOMATCH and/or GAUTOMATCH_HOME")
         elif not exists(program):
@@ -285,16 +280,10 @@ class ProtGautomatch(em.ProtParticlePicking):
         return ['Zhang2016']
 
     # --------------------------- UTILS functions --------------------------------------------------
-    def getProgram(self):
-        """ Return the program binary that will be used. """
-        if (not 'GAUTOMATCH' in os.environ or
-                not 'GAUTOMATCH_HOME' in os.environ):
-            return None
-        binary = os.environ['GAUTOMATCH']
-        program = join(os.environ['GAUTOMATCH_HOME'], 'bin', basename(binary))
-        return program
+    def getMicrographsDir(self):
+        return self._getExtraPath('micrographs')
 
-    def getArgs(self):
+    def getArgs(self, threshold=True):
         """ Return the Gautomatch parameters for picking one micrograph.
          The command line will depends on the protocol selected parameters.
          Params:
@@ -306,7 +295,9 @@ class ProtGautomatch(em.ProtParticlePicking):
         args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
         args += ' --ang_step %d' % self.angStep
         args += ' --diameter %d' % (2 * self.particleSize.get())
-        args += ' --cc_cutoff %0.2f' % self.threshold
+
+        if threshold:
+            args += ' --cc_cutoff %0.2f' % self.threshold
 
         if not self.advanced:
             args += ' --speed %d' % self.speed
@@ -330,9 +321,6 @@ class ProtGautomatch(em.ProtParticlePicking):
         """ Write input references as an .mrc stack. """
         self.inputReferences.get().writeStack(refStack)
 
-    def convertMicrograph(self, inputFn, outputFn):
-        """ Convert a micrograph to .mrc (or create a link if already mrc) """
-        if inputFn.endswith('.mrc'):
-            pwutils.createLink(inputFn, outputFn)
-        else:
-            em.ImageHandler().convert(inputFn, outputFn)
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
+
