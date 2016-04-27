@@ -32,6 +32,7 @@ This module contains converter functions that will serve to:
 import os
 
 import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 
 
@@ -48,15 +49,40 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     """
     for mic in micSet:
         micBase = pwutils.removeBaseExt(mic.getFileName())
-        fnCoords = os.path.join(workDir, micBase + '_automatch.box')
+        fnCoords = os.path.join(workDir, micBase + '_automatch.star')
         readCoordinates(mic, fnCoords, coordSet)
 
 
 def readCoordinates(mic, fileName, coordsSet):
-    with open(fileName, "r") as source:
-        for line in source:
-            tokens = map(int, line.split())
-            coord = em.Coordinate(x=tokens[0] + tokens[2]/2,
-                                  y=tokens[1] + tokens[3]/2)
+    if os.path.exists(fileName):
+        for row in md.iterRows(fileName):
+            coord = em.Coordinate(x=row.getValue("rlnCoordinateX"),
+                                  y=row.getValue("rlnCoordinateY"))
             coord.setMicrograph(mic)
             coordsSet.append(coord)
+
+
+def getProgram(self):
+    """ Return the program binary that will be used. """
+    if (not 'GAUTOMATCH' in os.environ or
+        not 'GAUTOMATCH_HOME' in os.environ):
+        return None
+
+    return  os.path.join(os.environ['GAUTOMATCH_HOME'], 'bin',
+                           os.path.basename(os.environ['GAUTOMATCH']))
+
+
+def runGautomatch(micName, refStack, workDir, args):
+    # We convert the input micrograph on demand if not in .mrc
+    outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
+    if micName.endswith('.mrc'):
+        pwutils.createLink(micName, outMic)
+    else:
+        em.ImageHandler().convert(micName, outMic)
+    args = ' %s --T %s %s' % (outMic, refStack, args)
+    # Run Gautomatch:
+    pwutils.runJob(None, getProgram(), args)
+    # After picking we can remove the temporary file.
+    pwutils.cleanPath(outMic)
+
+
