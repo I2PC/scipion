@@ -32,7 +32,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.utils.properties import Message
 
-from convert import readSetOfCoordinates, runGautomatch
+from convert import readSetOfCoordinates, runGautomatch, getProgram
 
 
 
@@ -228,7 +228,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = self.getProgram()
+        program = getProgram()
         if program is None:
             errors.append("Missing variables GAUTOMATCH and/or GAUTOMATCH_HOME")
         elif not exists(program):

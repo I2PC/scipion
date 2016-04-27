@@ -23,11 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement some wizards
-"""
 
-from pyworkflow.em.wizard import ParticleMaskRadiusWizard, UNIT_ANGSTROM
+import os
+
+import pyworkflow.em.wizard as emwiz
+import pyworkflow.utils as pwutils
+from pyworkflow.em.viewer import CoordinatesObjectView
 
 from protocol_gautomatch import ProtGautomatch
 
@@ -37,7 +38,7 @@ from protocol_gautomatch import ProtGautomatch
 # MASKS
 #===============================================================================
 
-class GautomatchParticleWizard(ParticleMaskRadiusWizard):
+class GautomatchParticleWizard(emwiz.ParticleMaskRadiusWizard):
     _targets = [(ProtGautomatch, ['particleSize'])]
     
     def _getParameters(self, protocol):
@@ -52,12 +53,80 @@ class GautomatchParticleWizard(ParticleMaskRadiusWizard):
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input'] 
-        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
+        return emwiz.ParticleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
         params = self._getParameters(form.protocol)
         _value = params['value']
         _label = params['label']
-        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_ANGSTROM)
+        emwiz.ParticleMaskRadiusWizard.show(self, form, _value, _label,
+                                            emwiz.UNIT_ANGSTROM)
         
     
+#===============================================================================
+# PICKER
+#===============================================================================
+
+class GautomatchPickerWizard(emwiz.EmWizard):
+    _targets = [(ProtGautomatch, ['diameter', 'threshold'])]
+
+    def show(self, form):
+        prot = form.protocol
+        micSet = prot.getInputMicrographs()
+        if not micSet:
+            print 'must specify input micrographs'
+            return
+        project = prot.getProject()
+        micfn = micSet.getFileName()
+
+        # Prepare a temporary folder to convert some input files
+        # and put some of the intermediate result files
+        coordsDir = project.getTmpPath(micSet.getName())
+        pwutils.cleanPath(coordsDir)
+        pwutils.makePath(coordsDir)
+
+        # Get current values of the properties
+#         micfn = os.path.join(coordsDir, 'micrographs.xmd')
+#         writeSetOfMicrographs(micSet, micfn)
+        pickerConfig = os.path.join(coordsDir, 'picker.conf')
+        f = open(pickerConfig, "w")
+
+        pickScript = os.path.join(os.environ['SCIPION_HOME'],
+                                  'pyworkflow','em', 'gautomatch',
+                                  'run_gautomatch.py')
+
+        pickCmd = os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py")
+        convertCmd = os.path.join(os.environ['SCIPION_HOME'],
+                                  'pyworkflow','apps', 'pw_convert.py')
+        args = prot.getArgs(threshold=False)
+
+        args = {
+            "pickScript": pickScript,
+          "pickCmd": pickCmd + args,
+          "convertCmd": convertCmd,
+          'coordsDir': coordsDir,
+          'micsSqlite': micSet.getFileName(),
+          "diameter": prot.diameter,
+          "threshold": prot.threshold,
+          "apix": micSet.getSamplingRate()
+          }
+
+
+        f.write("""
+        parameters = threshold, mindist
+        threshold.value =  %(threshold)s
+        threshold.label = Threshold
+        threshold.help = Particles with CCC above the threshold will be picked
+        mindist.value = %(mindist)s
+        mindist.label = Min search distance (A)
+        mindist.help = Use value of 0.9~1.1X diameter; can be 0.3~0.5X for filament-like particle
+        autopickCommand = %(pickScript)s "%(pickCmd)s" --cc_cutoff %%(threshold)
+        convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
+        """ % args)
+        f.close()
+        process = CoordinatesObjectView(project, micfn, coordsDir, prot,
+                                        pickerProps=pickerConfig).show()
+        process.wait()
+        myprops = pwutils.readProperties(pickerConfig)
+        #form.setVar('diameter', myprops['diameter.value'])
+        form.setVar('threshold', myprops['threshold.value'])

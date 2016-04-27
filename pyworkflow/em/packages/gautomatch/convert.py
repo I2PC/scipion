@@ -62,7 +62,7 @@ def readCoordinates(mic, fileName, coordsSet):
             coordsSet.append(coord)
 
 
-def getProgram(self):
+def getProgram():
     """ Return the program binary that will be used. """
     if (not 'GAUTOMATCH' in os.environ or
         not 'GAUTOMATCH_HOME' in os.environ):
