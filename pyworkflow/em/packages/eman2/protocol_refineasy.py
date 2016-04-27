@@ -83,7 +83,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         myDict = {
                   'partSet': 'sets/inputSet.lst',
                   'partFlipSet': 'sets/inputSet__ctf_flip.lst',
-                  'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
+                  'data_scipion': self._getPath('data_scipion_it%(iter)02d.sqlite'),
                   'projections': self._getExtraPath('projections_it%(iter)02d_%(half)s.sqlite'),
                   'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
                   'classes': 'refine_%(run)02d/classes_%(iter)02d',
@@ -282,16 +282,9 @@ at each refinement step. The resolution you specify is a target, not the filter 
         vol.setFileName(self._getFileName("volume",run=numRun, iter=iterN))
         vol.copyInfo(partSet)
         
-        self._execEmanProcess(numRun, iterN)
         newPartSet = self._createSetOfParticles()
         newPartSet.copyInfo(partSet)
-        newPartSet.setAlignment(em.ALIGN_PROJ)
-        
-        partIter = iter(partSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
-        
-        newPartSet.copyItems(partIter,
-                             updateItemCallback=self._createItemMatrix,
-                             itemDataIterator=self._iterTextFile(iterN))
+        self._fillDataFromIter(newPartSet, iterN)
         
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self._getInputParticlesPointer(), vol)
@@ -422,27 +415,22 @@ at each refinement step. The resolution you specify is a target, not the filter 
             if s:
                 result = int(s.group(1)) # group 1 is 3 digits iteration number
         return result
-        
+    
     def _lastIter(self):
         return self._getIterNumber(-1)
 
     def _firstIter(self):
         return self._getIterNumber(0) or 1
-
+    
     def _getIterData(self, it):
-        from convert import writeSqliteIterData
         data_sqlite = self._getFileName('data_scipion', iter=it)
-        partSet = self._getInputParticles()
         if not exists(data_sqlite):
-            clsFn = self._getFileName("cls", run=self._getRun(), iter=it)
-            classesFn = self._getFileName("classes", run=self._getRun(), iter=it)
-            angles = self._getBaseName('angles', iter=it)
-            
-            proc = createEmanProcess(args='read %s %s %s %s' 
-                         % (self._getParticlesStack(), clsFn, classesFn, angles),
-                         direc=self._getExtraPath())
-            proc.wait()
-            writeSqliteIterData(partSet, data_sqlite, self._createItemMatrix, self._iterTextFile(it))
+            iterImgSet = em.SetOfParticles(filename=data_sqlite)
+            iterImgSet.copyInfo(self._getInputParticles())
+            self._fillDataFromIter(iterImgSet, it)
+            iterImgSet.write()
+            iterImgSet.close()
+        
         return data_sqlite
     
     def _getInputParticlesPointer(self):
@@ -453,8 +441,18 @@ at each refinement step. The resolution you specify is a target, not the filter 
     def _getInputParticles(self):
         return self._getInputParticlesPointer().get()
     
+    def _fillDataFromIter(self, imgSet, iterN):
+        numRun = self._getRun()
+        self._execEmanProcess(numRun, iterN)
+        initPartSet = self._getInputParticles()
+        imgSet.setAlignmentProj()
+        partIter = iter(initPartSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
+        
+        imgSet.copyItems(partIter,
+                         updateItemCallback=self._createItemMatrix,
+                         itemDataIterator=self._iterTextFile(iterN))
+    
     def _execEmanProcess(self, numRun, iterN):
-        from pyworkflow.utils.path import cleanPath
         clsFn = self._getFileName("cls", run=numRun, iter=iterN)
         classesFn = self._getFileName("classes", run=numRun, iter=iterN)
         angles = self._getFileName('angles', iter=iterN)
@@ -465,4 +463,3 @@ at each refinement step. The resolution you specify is a target, not the filter 
                                         self._getBaseName('angles', iter=iterN)),
                                         direc=self._getExtraPath())
             proc.wait()
-
