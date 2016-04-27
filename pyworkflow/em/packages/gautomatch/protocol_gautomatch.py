@@ -283,7 +283,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     def getMicrographsDir(self):
         return self._getExtraPath('micrographs')
 
-    def getArgs(self, threshold=True):
+    def getArgs(self, threshold=True, mindist=True):
         """ Return the Gautomatch parameters for picking one micrograph.
          The command line will depends on the protocol selected parameters.
          Params:
@@ -302,7 +302,8 @@ class ProtGautomatch(em.ProtParticlePicking):
         if not self.advanced:
             args += ' --speed %d' % self.speed
             args += ' --boxsize %d' % self.boxSize
-            args += ' --max_dist %d' % self.maxDist
+            if mindist:
+                args += ' --max_dist %d' % self.maxDist
             args += ' --gid %d' % self.GPUId
             args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
             args += ' --lsigma_D %d' % self.localSigmaDiam

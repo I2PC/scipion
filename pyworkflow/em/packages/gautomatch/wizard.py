@@ -99,7 +99,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                                   'pyworkflow','em', 'packages',
                                   'gautomatch', 'run_gautomatch.py')
 
-        pickCmd = prot.getArgs(threshold=False)
+        pickCmd = prot.getArgs(threshold=False, mindist=False)
         convertCmd = os.path.join(os.environ['SCIPION_HOME'],
                                   'pyworkflow','apps', 'pw_convert.py')
 
@@ -112,26 +112,25 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                 #"diameter": prot.diameter,
                 "threshold": prot.threshold,
                 "apix": micSet.getSamplingRate(),
-                "mindist": 100,
+                "mindist": prot.maxDist.get(),
                 "refStack": refStack
           }
 
 
-        next = """
-        mindist.value = %(mindist)s
-            mindist.label = Min search distance (A)
-            mindist.help = Use value of 0.9~1.1X diameter; can be 0.3~0.5X for filament-like particle
-        """
-
         f.write("""
-        parameters = threshold
+        parameters = threshold, mindist
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = Particles with CCC above the threshold will be picked
-        autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold)
+        mindist.value = %(mindist)s
+        mindist.label = Min search distance (A)
+        mindist.help = Use value of 0.9~1.1X diameter; can be 0.3~0.5X for filament-like particle
+        autopickCommand = %(pickScript)s %%(micrograph) %(refStack)s %(coordsDir)s %(pickCmd)s --cc_cutoff %%(threshold) %%(mindist)
         convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
+
         f.close()
+
         process = CoordinatesObjectView(project, micfn, coordsDir, prot,
                                         pickerProps=pickerConfig).show()
         process.wait()
