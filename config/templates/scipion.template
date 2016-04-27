@@ -25,9 +25,13 @@ CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
 EMAN2DIR = %(EM_ROOT)s/eman2.12
 FREALIGN_HOME = %(EM_ROOT)s/frealign
+GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch_v0.50
+GAUTOMATCH = Gautomatch-v0.50_sm_30_cu5.5_x86_64
 GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker_v1.1
 GEMPICKER = gEMpicker_nocuda_Ubuntu_14.04.x64
 GEMPICKER_CUDA = None # gEMpicker_cuda_55.x64
+GCTF_HOME = %(EM_ROOT)s/Gctf_v0.50
+GCTF = Gctf-v0.50_sm_30_cu5.5_x86_64
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
 MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr
@@ -46,6 +50,12 @@ XMIPP_HOME = %(EM_ROOT)s/xmipp
 CHIMERA_HOME = %(EM_ROOT)s/chimera
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
 VMD_HOME = %(EM_ROOT)s/vmd
+
+[VARIABLES]
+#editor
+SCIPION_NOTES_PROGRAM = 
+SCIPION_NOTES_ARGS =
+SCIPION_NOTES_FILE =  notes.txt
 
 
 # This section of the configuration file is used to setup variables to

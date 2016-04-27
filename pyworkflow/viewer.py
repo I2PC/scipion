@@ -140,14 +140,14 @@ class Viewer(object):
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
     
-    def visualize(self, obj):
+    def visualize(self, obj, **kwargs):
         """ Display each of the views, by default
         the implementation is for desktop.
         """
-        for view in self._visualize(obj):
+        for view in self._visualize(obj, **kwargs):
             view.show()
             
-    def _visualize(self, obj):
+    def _visualize(self, obj, **kwargs):
         """ This method should make the necessary convertions
         and return the list of Views that will be used to 
         visualize the object

@@ -81,6 +81,7 @@ void PolyZernikes::create(const Matrix1D<int> & coef)
         }
 
         fMatV.push_back(*fMatT);
+        delete fMatT;
     }
 }
 

@@ -86,6 +86,9 @@ class Row():
         for label in md.getActiveLabels():
             self._labelDict[label] = md.getValue(label, objId)
             
+    def addToMd(self, md):
+        self.writeToMd(md, md.addObject())
+        
     def writeToMd(self, md, objId):
         """ Set back row values to a metadata row. """
         for label, value in self._labelDict.iteritems():
