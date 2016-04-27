@@ -200,6 +200,12 @@ void CL2DClass::transferUpdate(bool centerReference)
 }
 #undef DEBUG
 
+#define SHIFT_THRESHOLD 	0.95		// Shift threshold in pixels.
+#define ROTATE_THRESHOLD 	1.0			// Rotate threshold in degrees.
+
+#define INITIAL_SHIFT_THRESHOLD 	SHIFT_THRESHOLD + 1.0		// Shift threshold in pixels.
+#define INITIAL_ROTATE_THRESHOLD 	ROTATE_THRESHOLD + 1.0		// Rotate threshold in degrees.
+
 //#define DEBUG
 //#define DEBUG_MORE
 void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
@@ -225,28 +231,39 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
 	// Align the image with the node
     if (prm->alignImages)
     {
-		for (int i = 0; i < 3; i++) {
-			double shiftX, shiftY, bestRot;
+		double shiftXSR=INITIAL_SHIFT_THRESHOLD, shiftYSR=INITIAL_SHIFT_THRESHOLD, bestRotSR=INITIAL_ROTATE_THRESHOLD;
+		double shiftXRS=INITIAL_SHIFT_THRESHOLD, shiftYRS=INITIAL_SHIFT_THRESHOLD, bestRotRS=INITIAL_ROTATE_THRESHOLD;
 
+		for (int i = 0; i < 3; i++)
+		{
 			// Shift then rotate
-			bestShift(P, IauxSR, shiftX, shiftY, corrAux);
-			MAT_ELEM(ASR,0,2) += shiftX;
-			MAT_ELEM(ASR,1,2) += shiftY;
-			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+			if (((shiftXSR > SHIFT_THRESHOLD) || (shiftXSR < (-SHIFT_THRESHOLD))) ||
+				((shiftYSR > SHIFT_THRESHOLD) || (shiftYSR < (-SHIFT_THRESHOLD))))
+			{
+				bestShift(P, IauxSR, shiftXSR, shiftYSR, corrAux);
+				MAT_ELEM(ASR,0,2) += shiftXSR;
+				MAT_ELEM(ASR,1,2) += shiftYSR;
+				applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+			}
+
 	#ifdef DEBUG_MORE
 			save2()=IauxSR;
 			save2.write("PPPIauxSR_afterShift.xmp");
 			std::cout << "ASR\n" << ASR << std::endl;
 	#endif
 
-			normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
-											XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
-
-			bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
-			rotation2DMatrix(bestRot, R);
 			SPEED_UP_tempsDouble;
-			M3x3_BY_M3x3(ASR,R,ASR);
-			applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+			if (bestRotSR > ROTATE_THRESHOLD)
+			{
+				normalizedPolarFourierTransform(IauxSR, polarFourierI, true,
+												XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
+
+				bestRotSR = best_rotation(polarFourierP, polarFourierI, rotAux);
+				rotation2DMatrix(bestRotSR, R);
+				M3x3_BY_M3x3(ASR,R,ASR);
+				applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+			}
+
 	#ifdef DEBUG_MORE
 			save2()=IauxSR;
 			save2.write("PPPIauxSR_afterShiftAndRotation.xmp");
@@ -254,22 +271,32 @@ void CL2DClass::fitBasic(MultidimArray<double> &I, CL2DAssignment &result,
 	#endif
 
 			// Rotate then shift
-			normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
-											XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
-			bestRot = best_rotation(polarFourierP, polarFourierI, rotAux);
-			rotation2DMatrix(bestRot, R);
-			M3x3_BY_M3x3(ARS,R,ARS);
-			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
-	#ifdef DEBUG_MORE
+			if (bestRotRS > ROTATE_THRESHOLD)
+			{
+				normalizedPolarFourierTransform(IauxRS, polarFourierI, true,
+												XSIZE(P) / 5, XSIZE(P) / 2-2, plans, 1);
+
+				bestRotRS = best_rotation(polarFourierP, polarFourierI, rotAux);
+				rotation2DMatrix(bestRotRS, R);
+				M3x3_BY_M3x3(ARS,R,ARS);
+				applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+			}
+
+#ifdef DEBUG_MORE
 			save2()=IauxRS;
 			save2.write("PPPIauxRS_afterRotation.xmp");
 			std::cout << "ARS\n" << ARS << std::endl;
-	#endif
+#endif
 
-			bestShift(P, IauxRS, shiftX, shiftY, corrAux);
-			MAT_ELEM(ARS,0,2) += shiftX;
-			MAT_ELEM(ARS,1,2) += shiftY;
-			applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+			if (((shiftXRS > SHIFT_THRESHOLD) || (shiftXRS < (-SHIFT_THRESHOLD))) ||
+				((shiftYRS > SHIFT_THRESHOLD) || (shiftYRS < (-SHIFT_THRESHOLD))))
+			{
+				bestShift(P, IauxRS, shiftXRS, shiftYRS, corrAux);
+				MAT_ELEM(ARS,0,2) += shiftXRS;
+				MAT_ELEM(ARS,1,2) += shiftYRS;
+				applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+			}
+
 	#ifdef DEBUG_MORE
 			save2()=IauxRS;
 			save2.write("PPPIauxRS_afterRotationAndShift.xmp");
@@ -1224,7 +1251,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     CL2DAssignment assignment, assignment1, assignment2;
     CL2DClass *firstSplitNode1 = NULL;
     CL2DClass *firstSplitNode2 = NULL;
-    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
+    size_t minAllowedSize = 0;
 
     bool oldclassicalMultiref = prm->classicalMultiref;
     prm->classicalMultiref = false;
@@ -1232,7 +1259,9 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     bool success = true;
     do
     {
-    	// Sort the currentListImg to make sure that all nodes have the same order
+        minAllowedSize = (size_t)(prm->PminSize/2 * 0.01 * node->currentListImg.size());
+
+        // Sort the currentListImg to make sure that all nodes have the same order
     	std::sort(node->currentListImg.begin(),node->currentListImg.end(),CL2DAssignmentComparator);
 #ifdef DEBUG
     		std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << ") into " << node1 << " and " << node2 << std::endl;
@@ -1681,7 +1710,7 @@ void ProgClassifyCL2D::defineParams()
 	addParamsLine("   [--dontNormalizeImages]   : By default, input images are normalized to have 0 mean and standard deviation 1");
 	addParamsLine("   [--dontMirrorImages]      : By default, input images are studied unmirrored and mirrored");
 	addParamsLine("   [--useThresholdMask <t>]  : Use a mask to compare images. Remove pixels whose value is smaller or equal t");
-	addParamsLine("   [--dontAlign]             : Do not align images");
+	addParamsLine("   [--dontAlign]             : Do not center the class representatives");
     addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --nref 256 --oroot class --odir CL2Dresults --iter 10");
 }
 

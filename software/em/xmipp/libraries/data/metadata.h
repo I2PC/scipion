@@ -81,6 +81,10 @@ typedef enum
 #define FOR_ALL_OBJECTS_IN_METADATA(__md) \
         for(MDIterator __iter(__md); __iter.hasNext(); __iter.moveNext())
 
+
+#define FOR_ALL_ROWS_IN_METADATA(__md) \
+        for(MDRowIterator __iter(__md); __iter.hasNext(); __iter.moveNext(__md))
+
 /** Iterate over all elements of two MetaData at same time.
  *
  * This macro is useful to iterate over two MetaData with the same
@@ -186,6 +190,37 @@ public:
     bool hasNext();
 }
 ;//class MDIterator
+
+
+////////////////////////////// MetaData Row Iterator ////////////////////////////
+/** Iterates over metadata rows */
+class MDRowIterator
+{
+protected:
+
+	// Current row data.
+	MDRow	currentRow;
+
+	// Flag set to true if a new row has been retrieved.
+	bool 	rowReturned;
+
+public:
+
+    /** Empty constructor, creates an iterator from metadata */
+    MDRowIterator(MetaData &md);
+
+    // Get current row data.
+    MDRow *getRow(void);
+
+    /** Function to move to next element.
+     * return false if there aren't more elements to iterate.
+     */
+    bool moveNext(MetaData &md);
+
+    /** Function to check if exist next element */
+    bool hasNext();
+}
+;//class MDRowIterator
 
 /** Class to manage data files.
  *
@@ -606,13 +641,25 @@ public:
     void setColumnValues(const std::vector<MDObject> &valuesIn);
 
     /** Get all values of an MetaData row of an specified objId*/
-    bool getRow(MDRow &row, size_t id) const;
+    bool	bindValue( size_t id) const;
+
+    bool 	initGetRow(bool addWhereClause) const;
+    bool 	execGetRow(MDRow &row);
+    void 	finalizeGetRow(void);
+    bool 	getRow(MDRow &row, size_t id) const;
+    bool 	getRow2(MDRow &row, size_t id);
 
     /** Copy all the values in the input row in the current metadata*/
-    void setRow(const MDRow &row, size_t id);
+    bool 	initSetRow(const MDRow &row);
+    bool 	execSetRow(const MDRow &row, size_t id);
+    void 	setRow(const MDRow &row, size_t id);
+    bool 	setRow2(const MDRow &row, size_t id);
 
     /** Add a new Row and set values, return the objId of newly added object */
-    size_t addRow(const MDRow &row);
+    bool 	initAddRow(const MDRow &row);
+    bool 	execAddRow(const MDRow &row);
+    size_t 	addRow(const MDRow &row);
+    bool  	addRow2(const MDRow &row);
 
     /** Set label values from string representation.
      */
