@@ -80,9 +80,6 @@ def getEnviron():
     return env
 
 
-environment = getEnviron()
-
-
 def _getFile(*paths):
     return join(PATH, *paths)
 
@@ -145,7 +142,7 @@ def runTemplate(inputScript, paramsDict, log=None, cwd=None):
 def runScript(inputScript, log=None, cwd=None):
     args = " %s" % inputScript
     shellPath = '/bin/bash'
-    runJob(log, shellPath, args, env=dict(environment), cwd=cwd)
+    runJob(log, shellPath, args, env=getEnviron(), cwd=cwd)
 
 
 class ImagicPltFile(object):
