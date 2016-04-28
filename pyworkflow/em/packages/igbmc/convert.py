@@ -30,6 +30,7 @@ This module contains converter functions that will serve to:
 """
 
 import os
+from os.path import join
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
@@ -37,27 +38,27 @@ import pyworkflow.utils as pwutils
 
 
 
-def readSetOfCoordinates(resultsDir, micSet, coordSet):
+def readSetOfCoordinates(workingDir, micSet, coordSet):
     """ Read from coordinates from Gempicker .box files.
     For a micrograph: mic1.mrc, the expected coordinate file is: mic1.box
     Params:
-        resultsDir: where the Gempicker .box output files are located.
+        workingDir: where the Gempicker .box output files are located.
         micSet: the input SetOfMicrographs
         coordSet: the SetOfCoordinates that will be populated.
     """
     for mic in micSet:
         micBase = pwutils.removeBaseExt(mic.getFileName())
-        fnCoords = os.path.join(resultsDir + '/pik_box', micBase + '.box')
+        fnCoords = join(workingDir, 'pik_box', micBase + '.box')
         readCoordinates(mic, fnCoords, coordSet)
 
 
 def readCoordinates(mic, fileName, coordsSet):
     if os.path.exists(fileName):
         mdCoords = md.MetaData()
-        mdCoords.readPlain(fileName, "rlnCoordinateX rlnCoordinateY xSize ySize")
+        mdCoords.readPlain(fileName, "xcoor ycoor xSize ySize")
         for row in md.iterRows(mdCoords):
-            coord = em.Coordinate(x = row.getValue("rlnCoordinateX") + row.getValue("xSize")/2,
-                                  y = row.getValue("rlnCoordinateY") + row.getValue("ySize")/2)
+            coord = em.Coordinate(x = row.getValue("xcoor") + row.getValue("xSize")/2,
+                                  y = row.getValue("ycoor") + row.getValue("ySize")/2)
             coord.setMicrograph(mic)
             coordsSet.append(coord)
 
@@ -69,18 +70,22 @@ def getProgram(useGPU):
     else:
         binary = os.environ['GEMPICKER']
 
-    program = os.path.join(os.environ['GEMPICKER_HOME'], os.path.basename(binary))
+    program = join(os.environ['GEMPICKER_HOME'], os.path.basename(binary))
     return program
 
 
-def runGempicker(micName, resultsDir, refDir, maskSchDir, useGPU, args):
+def runGempicker(micName, workingDir, useGPU, args):
     # We convert the input micrograph on demand if not in .mrc
-    outMic = os.path.join(resultsDir, pwutils.replaceBaseExt(micName, 'mrc'))
+    outMic = os.path.join(workingDir, pwutils.replaceBaseExt(micName, 'mrc'))
     if micName.endswith('.mrc'):
         pwutils.createLink(micName, outMic)
     else:
         em.ImageHandler().convert(micName, outMic)
-    args = ' --dirTgt=%s --dirSch=%s --dirMskSch=%s %s' % (resultsDir, refDir, maskSchDir, args)
+
+    refDir = join(workingDir, 'templates')
+    maskSchDir = join(workingDir, 'maskSch')
+    args += ' --dirTgt=%s --dirSch=%s --dirMskSch=%s ' % (workingDir,
+                                                          refDir, maskSchDir)
     # Run Gempicker:
     for mode in [0, 1]:
         pwutils.runJob(None, getProgram(useGPU), args + ' --mode=%d' % mode)

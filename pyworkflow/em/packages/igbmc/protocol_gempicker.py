@@ -80,18 +80,21 @@ class ProtGemPicker(em.ProtParticlePicking):
                       label='High')
 
         form.addParam('maxPeaks', params.IntParam, default=0,
-                      label='Max particles per micrograph', expertLevel=LEVEL_ADVANCED,
+                      label='Max particles per micrograph',
+                      expertLevel=LEVEL_ADVANCED,
                       help="Maximum number of particles picked from each "
                            "micrograph (0 = no limit)")
         form.addParam('boxSize', params.IntParam, default=0,
                       label='Box size (pix)', expertLevel=LEVEL_ADVANCED,
                       help='Size of picked images (if 0, use search image size)')
         form.addParam('boxDist', params.IntParam, default=0,
-                      label='Min distance between particles (pix)', expertLevel=LEVEL_ADVANCED,
+                      label='Min distance between particles (pix)',
+                      expertLevel=LEVEL_ADVANCED,
                       help="Minimal distance between the centers of picked "
                            "particles (if 0, use reference image half-size)")
         form.addParam('boxBorder', params.IntParam, default=0,
-                      label='Min distance from micrograph border (pix)', expertLevel=LEVEL_ADVANCED,
+                      label='Min distance from micrograph border (pix)',
+                      expertLevel=LEVEL_ADVANCED,
                       help="Minimal distance between box edge and "
                            "micrograph border")                           
         form.addParam('maskType', params.EnumParam, 
@@ -102,7 +105,8 @@ class ProtGemPicker(em.ProtParticlePicking):
                            'Only the pixels beneath this mask will be analyzed. '
                            'In the simplest case, a circular mask can be used. '
                            'Alternatively, a custom mask can be used '
-                           'which follows the contour of the particle (but not too tightly).')
+                           'which follows the contour of the particle '
+                           '(but not too tightly).')
         form.addParam('maskRadius', params.IntParam, default=-1,
                       condition='maskType==%d' % MASK_CIRCULAR,
                       label='Mask radius (px)', 
@@ -146,12 +150,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         self.convertInputs(self._getExtraPath())
 
     def runGempickerStep(self, micName, args):
-        # We convert the input micrograph on demand if not in .mrc
-        refDir = self._getExtraPath('templates')
-        maskSchDir = self._getExtraPath('maskSch')
-        useGPU = self.useGPU.get()
-
-        runGempicker(micName, self.getResultsDir(), refDir, maskSchDir, useGPU, args)
+        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -161,7 +160,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         else:
             coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
 
-        self.readSetOfCoordinates(self.getResultsDir(), coordSet)
+        self.readSetOfCoordinates(self._getExtraPath(), coordSet)
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
 
@@ -226,10 +225,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         return ['Hoang2013']
     
     #--------------------------- UTILS functions --------------------------------------------------
-    def getResultsDir(self):
-        return self._getExtraPath('')
-
-    def getArgs(self):
+    def getArgs(self, threshold=True, workingDir=None):
         """ Return the Gempicker parameters for picking one micrograph.
          The command line will depends on the protocol selected parameters.
         """
@@ -238,12 +234,13 @@ class ProtGemPicker(em.ProtParticlePicking):
 
         args = ' --nGPU=%d' % nGPUs
         args += ' --nCPU=%d' % nThreads
-        #args += ' --dirMskRef=%s' % self._getTmpPath('maskRef')
-        args += ' --dirRes=%s' % self._getExtraPath('') # put the output in the extra dir
+        # Put the output in the extra dir by default
+        args += ' --dirRes=%s' % (workingDir or self._getExtraPath(''))
         args += ' --angle2D=%d' % self.rotAngle
         args += ' --contrast=%d' % (0 if self.refsHaveInvertedContrast else 1)
-        args += ' --thresh=%0.3f' % self.thresholdLow
-        args += ' --threshHigh=%0.3f' % self.thresholdHigh
+        if threshold:
+            args += ' --thresh=%0.3f' % self.thresholdLow
+            args += ' --threshHigh=%0.3f' % self.thresholdHigh
         args += ' --nPickMax=%d' % self.maxPeaks
         args += ' --boxSize=%d' % self.boxSize
         args += ' --boxDist=%d' % self.boxDist
@@ -294,5 +291,5 @@ class ProtGemPicker(em.ProtParticlePicking):
                 outMask = join(maskSchDir, 'ref%02d.tif' % (i + 1))
                 ih.convert(mask.get(), outMask)
 
-    def readSetOfCoordinates(self, ResultsDir, coordSet):
-        readSetOfCoordinates(ResultsDir, self.getInputMicrographs(), coordSet)
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
