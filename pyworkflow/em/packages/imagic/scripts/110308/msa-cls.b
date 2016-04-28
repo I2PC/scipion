@@ -1,5 +1,5 @@
 #!/bin/bash
-# THIS BATCH RUNS MSA-CL AND MSA-SUM PROGRAMS FROM IMAGIC version 2016-04-18
+# THIS BATCH RUNS MSA-CL AND MSA-SUM PROGRAMS FROM IMAGIC version 2011-03-08
 
 # ---------------- Parameters ----------------
 
@@ -12,7 +12,7 @@ classno="108"                           # header index CLASSNO (Class number in 
 
 # ------------------ Inputs ------------------
 
-particles="tmp/particles"             # input stack particles after MSA-RUN
+particles="tmp/particles"               # input stack particles after MSA-RUN
 
 # ------------------ Outputs ------------------
 
@@ -22,10 +22,8 @@ msa_cls_img="classes"                   # output rootname
 
 # -------------- END BATCH HEADER --------------
 
-echo "IMAGIC program: msa-cl (v. 11-Feb-2016) is starting"
 ${IMAGIC_ROOT}/msa/classify.e <<EOF
 IMAGES/VOLUMES
-HAC
 ${particles}
 ${perc_ign}
 ${eigs_num}
@@ -34,17 +32,15 @@ ${cls_num}
 ${cls_dir}/${msa_cls_img}
 EOF
 
-echo "IMAGIC program: msa-sum (v. 19-Aug-2015) is starting"
 ${IMAGIC_ROOT}/msa/classum.e <<EOF
 ${particles}
 ${cls_dir}/${msa_cls_img}
 ${cls_dir}/${msa_cls_img}_avg
 ${downweight}
-${perc_ign_bad}
 NONE
+${perc_ign_bad}
 EOF
 
-echo "IMAGIC program: headers (v. 21-Jan-2016) is starting"
 ${IMAGIC_ROOT}/stand/headers.e <<EOF > /dev/null
 PLT_OUT
 INDEX/LABEL
@@ -56,7 +52,5 @@ ${cls_dir}/class_assignment.plt
 EOF
 
 
-# Modified 2016-04-25
-#    2016-04-25 (gs) -- updated for new IMAGIC release
-#    2016-03-04 (gs) -- added printing of MSA class numbers
-#    2016-03-03 (gs) -- first version
+# Modified 2016-04-28
+#    2016-04-28 (gs) -- first version

@@ -25,7 +25,6 @@ msa_eigen_pixel="msa_eigen_pixel"                   # eigenvectors in image spac
 
 # check if we run mpi version
 if [ ${mpi_procs} -eq "1" ]; then
-    echo "IMAGIC program: msa-run (v. 16-Feb-2016) is starting"
     ${IMAGIC_ROOT}/msa/msa.e <<EOF
 FRESH_MSA
 ${msa_distance}
@@ -42,7 +41,6 @@ NO
 EOF
 
 else
-    echo "IMAGIC program: msa-run (v. 16-Feb-2016) is starting"
     ${IMAGIC_ROOT}/openmpi/bin/mpirun -np ${mpi_procs} -x IMAGIC_BATCH ${IMAGIC_ROOT}/msa/msa.e_mpi <<EOF
 FRESH_MSA
 ${msa_distance}

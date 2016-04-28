@@ -26,13 +26,11 @@
 # **************************************************************************
 
 import os
-from os.path import join, dirname, abspath, isdir
+from os.path import join, dirname, abspath, isdir, exists
 import re
 
-from pyworkflow.object import String
 from pyworkflow.utils import runJob, Environ
 from pyworkflow.utils.path import replaceBaseExt
-from pyworkflow.em.data import EMObject
 
 END_HEADER = 'END BATCH HEADER'
 PATH = abspath(dirname(__file__))
@@ -46,38 +44,53 @@ REGEX_KEYVALUE = re.compile('(?P<var>\[?[a-zA-Z0-9_-]+\]?)=(?P<value>"\S+")(?P<s
 def getEnviron():
     """ Load the environment variables needed for Imagic.
     IMAGIC_ROOT is set to IMAGIC_DIR
-    MPI-related vars are set if MPI_BIN is not empty is scipion.config
+    MPI-related vars are set if IMAGIC_DIR/openmpi path exists
     IMAGIC_BATCH is needed for batch files to work.
     """
     env = Environ(os.environ)
     imagicdir = env.get('IMAGIC_DIR', None)  # Scipion definition
 
-    if imagicdir is None:
-        print "ERROR: Missing IMAGIC_DIR variable in scipion.conf file"
-
-    mpi_dir = imagicdir + '/openmpi'
-
-    if isdir(mpi_dir):
-        env.update({'MPIHOME': mpi_dir,
-                    'MPIBIN': mpi_dir + '/bin',
-                    'OPAL_PREFIX': mpi_dir
-                    })
-        env.set('PATH', mpi_dir + '/bin', env.BEGIN)
+    if imagicdir is None or not isdir(imagicdir):
+        print "ERROR: Missing IMAGIC_DIR variable in scipion.conf file or path does not exist."
 
     else:
-        print "ERROR: IMAGIC_ROOT directory (", imagicdir, ") does not contain openmpi folder"
+        env.update({'IMAGIC_ROOT': imagicdir,
+                    'IMAGIC_BATCH': "1",
+                    'FFTW_IPATH': imagicdir + '/fftw/include',
+                    'FFTW_LPATH': imagicdir + '/fftw/lib',
+                    'FFTW_LIB': 'fftw3f'
+                    })
 
-    env.update({'IMAGIC_ROOT': imagicdir,
-                'IMAGIC_BATCH': "1",
-                'FFTW_IPATH': imagicdir + '/fftw/include',
-                'FFTW_LPATH': imagicdir + '/fftw/lib',
-                'FFTW_LIB': 'fftw3f'
-                })
+        env.set('LD_LIBRARY_PATH', imagicdir + '/fftw/lib', env.BEGIN)
+        env.set('LD_LIBRARY_PATH', imagicdir + '/lib', env.BEGIN)
 
-    env.set('LD_LIBRARY_PATH', imagicdir + '/fftw/lib', env.BEGIN)
-    env.set('LD_LIBRARY_PATH', imagicdir + '/lib', env.BEGIN)
+    mpidir = imagicdir + '/openmpi'
+
+    if isdir(mpidir):
+        env.update({'MPIHOME': mpidir,
+                    'MPIBIN': mpidir + '/bin',
+                    'OPAL_PREFIX': mpidir
+                    })
+        env.set('PATH', mpidir + '/bin', env.BEGIN)
+
+    else:
+        print "Warning: IMAGIC_ROOT directory (", imagicdir, ") does not contain openmpi folder.\n", \
+              "No MPI support will be enabled."
 
     return env
+
+
+def getVersion():
+    imagicdir = os.environ['IMAGIC_DIR']
+    for v in getSupportedVersions():
+        versionFile = join(imagicdir, 'version_' + v)
+        if exists(versionFile):
+            return v
+    return ''
+
+
+def getSupportedVersions():
+    return ['110308', '160418']
 
 
 def _getFile(*paths):
@@ -85,7 +98,7 @@ def _getFile(*paths):
 
 
 def getScript(*paths):
-    return _getFile(SCRIPTS_DIR, *paths)
+    return _getFile(SCRIPTS_DIR, getVersion(), *paths)
 
 
 def __substituteVar(match, paramsDict, lineTemplate):
