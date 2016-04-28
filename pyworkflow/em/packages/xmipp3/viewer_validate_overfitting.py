@@ -35,9 +35,6 @@ import matplotlib.pyplot as plt
 import math
 import pylab
 
-
-
-
 class XmippValidateOverfittingViewer(Viewer):
     """ Wrapper to visualize different type of data objects
     with the Xmipp program xmipp_showj
@@ -53,18 +50,9 @@ class XmippValidateOverfittingViewer(Viewer):
                                       'Execute again the protocol\n',
                                       title='Missing result file')]
         plotter = self._createPlot("Validation 3D Reconstruction (Overfitting)",
-                                    "Number of Particles\n"
-                                    "\n"
-                                    "NOTE:\n"
-                                    'With the reconstruction of aligned gaussian noise, you\n'
-                                    'can assess the validity of the reconstruction from\n'
-                                    'your micrograph images. Practically, if the resolution \n'
-                                    'of reconstruction based on your images are not \n'
-                                    'considerably different from aligned gaussian\n'
-                                    'noise one (for less number of particles),\n'
-                                    'your images may not produce a valid\n' 
-                                    'reconstruction.', "Resolution for FSC=0.5 (A)", fnOutput, xmipp.MDL_COUNT, xmipp.MDL_AVG)
-        
+                                    "Number of Particles", 
+                                    "Resolution for FSC=0.5 (A)", 
+                                    fnOutput, xmipp.MDL_COUNT, xmipp.MDL_AVG)        
         #for noise
         fnOutputN = self.protocol._defineResultsNoiseName()
         if not os.path.exists(fnOutputN):
@@ -72,14 +60,13 @@ class XmippValidateOverfittingViewer(Viewer):
                                       'Execute again the protocol\n',
                                       title='Missing noise result file')]
                
-        return [plotter]
-         
+        return [plotter]         
                
-    def _createPlot(self, title, xTitle, yTitle, fnOutput, mdLabelX, mdLabelY, color = 'g', figure=None):        
+    def _createPlot(self, title, xTitle, yTitle, fnOutput, mdLabelX,
+                    mdLabelY, color = 'g', figure=None):        
         xplotter = XmippPlotter(figure=figure)
         xplotter.plot_title_fontsize = 11
         ax=xplotter.createSubPlot(title, xTitle, yTitle, 1, 1)
-        #xplotter.plotMdFile(fnOutput, mdLabelX, mdLabelY, label='Real data-set')
         ax.set_yscale('log')
         ax.set_xscale('log')
                         
@@ -88,7 +75,9 @@ class XmippValidateOverfittingViewer(Viewer):
         md = xmipp.MetaData(fnOutputN)
         xValueN = md.getColumnValues(xmipp.MDL_COUNT)
         yValueN = md.getColumnValues(xmipp.MDL_AVG)
-        plt.plot(xValueN, yValueN, '--', color='r', label='Aligned gaussian noise')
+        plt.plot(xValueN, yValueN, '--', color='r',
+                label='Aligned gaussian noise')
+        
         # putting error bar
         md = xmipp.MetaData(fnOutputN)
         yErrN = md.getColumnValues(xmipp.MDL_STDDEV)
@@ -108,17 +97,8 @@ class XmippValidateOverfittingViewer(Viewer):
         yErr = md.getColumnValues(xmipp.MDL_STDDEV)
         xValue = md.getColumnValues(xmipp.MDL_COUNT)
         yValue = md.getColumnValues(xmipp.MDL_AVG)
-        plt.errorbar(xValue, yValue, yErr, fmt='o')
-        
-        '''plt.text(0.5, 1,'With the reconstruction of aligned gaussian noise\n'
-                        'you can assess the validity of the reconstruction\n'
-                        'from your micrograph images. Practically, if the\n'
-                        'the resolution of reconstruction based on your images\n'
-                        'are not considerable different from aligned gaussian\n'
-                        'noise one, your images will not produce a valid\n'
-                        'reconstruction.\n', fontsize=10, ha='center', va='top', transform=ax.transAxes)'''
-        
-        
+        plt.errorbar(xValue, yValue, yErr, fmt='o')        
+            
         pylab.legend(loc='upper right' , fontsize = 11)
         
         return xplotter

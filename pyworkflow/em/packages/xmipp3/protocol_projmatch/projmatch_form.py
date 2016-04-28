@@ -282,11 +282,11 @@ def _defineProjectionMatchingParams(self, form):
                  label="Restrict tilt angle search?", 
                  help ='Restrict tilt angle search \n ')             
     
-    form.addParam('tilt0', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
+    form.addParam('tilt0', FloatParam, default=0, condition='doRestricSearchbyTiltAngle',
                  label="Lower-value for restricted tilt angle search", 
                  help ='Lower-value for restricted tilt angle search \n ')             
     
-    form.addParam('tiltF', FloatParam, default=-91., condition='doRestricSearchbyTiltAngle',
+    form.addParam('tiltF', FloatParam, default=180, condition='doRestricSearchbyTiltAngle',
                  label="Higher-value for restricted tilt angle search", 
                  help ='Higher-value for restricted tilt angle search \n ')             
     form.addParam('symmetry', TextParam, default='c1',

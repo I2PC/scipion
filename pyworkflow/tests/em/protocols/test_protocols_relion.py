@@ -29,9 +29,6 @@ import sys, unittest
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
-from pyworkflow.em.packages.xmipp3 import (ProtMovieAlignment, XmippProtPreprocessMicrographs,
-                                           XmippProtExtractParticles)
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 
 
 # Some utility functions to import micrographs that are used
@@ -154,10 +151,20 @@ class TestRelionRefine(TestRelionBase):
         relionRefine.inputParticles.set(relionNormalize.outputParticles)
         relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(relionRefine)
-          
+        
         self.assertIsNotNone(getattr(relionRefine, 'outputVolume', None), 
-                             "There was a problem with Relion 3D:\n" + relionRefine.getErrorMessage()) 
-
+                             "There was a problem with Relion 3D:\n" + relionRefine.getErrorMessage())
+        
+        relionRefine._initialize() # Load filename templates
+        dataSqlite =  relionRefine._getIterData(3)
+        outImgSet = em.SetOfParticles(filename=dataSqlite)
+        self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
+                               relionNormalize.outputParticles[1].getSamplingRate(),
+                               "The sampling rate is wrong", delta=0.00001)
+        
+        self.assertAlmostEqual(outImgSet[1].getFileName(),
+                               relionNormalize.outputParticles[1].getFileName(),
+                               "The particles filenames are wrong")
         
 class TestRelionPreprocess(TestRelionBase):
     """ This class helps to test all different preprocessing particles options on RElion. """
