@@ -3,6 +3,7 @@
 data_extra
  _sampling_rate 0.0523599
  _neighborhoodRadius -1.01
+ _pointsAsymmetricUnit 30
 data_neighbors
 loop_
 data_projectionDirections

@@ -163,7 +163,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """
         from pyworkflow.utils.path import copyTree
         copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
-        self.runJob(self._getProgram('relion_particle_polish'), params, env=getEnviron(self.refineRun.get().useRelion14))
+        self.runJob(self._getProgram('relion_particle_polish'), params)
     
     def organizeDataStep(self):
         from pyworkflow.utils import moveFile
