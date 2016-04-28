@@ -134,7 +134,7 @@ class ProtGemPicker(em.ProtParticlePicking):
                                               prerequisites=[convId])
             deps.append(pickId)
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
-        
+
     #--------------------------- STEPS functions ---------------------------------------------------
 
     def convertInputStep(self, micsId, refsId):
@@ -143,36 +143,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         References: will always be converted to '.mrc' format
         Mask: either converted (to '.tif' format) or generated a circular one
         """
-        micDir = self._getExtraPath('micrographs')  # put mics in extra dir
-        pwutils.makePath(micDir)
-        refDir = self._getExtraPath('templates')  # put refs in extra dir
-        pwutils.makePath(refDir)
-        inputRefs = self.inputReferences.get()
-
-        self.convertReferences(inputRefs, refDir)
-        self.createInputMasks(inputRefs)
-
-
-    def createInputMasks(self, inputRefs):
-        """ Create the needed mask for picking.
-        We should either generate a circular mask, 
-        or convert the inputs (one or just one per reference 2d)
-        """
-        maskSchDir = self._getExtraPath('maskSch')
-        pwutils.makePath(maskSchDir)
-        ih = em.ImageHandler()
-
-        if self.maskType == MASK_CIRCULAR:
-            if self.maskRadius < 0: # usually -1
-                radius = inputRefs.getDim()[0]/2 # use half of input dim
-            else:
-                radius = self.maskRadius.get()
-            outMask = join(maskSchDir, 'ref01.tif')
-            ih.createCircularMask(radius, inputRefs.getFirstItem(), outMask)
-        else:
-            for i, mask in enumerate(self.inputMasks):
-                outMask = join(maskSchDir, 'ref%02d.tif' % (i+1))
-                ih.convert(mask.get(), outMask)
+        self.convertInputs(self._getExtraPath())
 
     def runGempickerStep(self, micName, args):
         # We convert the input micrograph on demand if not in .mrc
@@ -280,16 +251,48 @@ class ProtGemPicker(em.ProtParticlePicking):
 
         return args
 
-    def convertReferences(self, inputRefs, refDir):
-        """ We will always convert the templates, since
-        they can be in a stack and link will not be possible sometimes
+    def convertInputs(self, workingDir):
+        """ This step will take of the convertions from the inputs.
+        Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
+        References: will always be converted to '.mrc' format
+        Mask: either converted (to '.tif' format) or generated a circular one
         """
-        inputRefs = self.inputReferences.get()
-        refDir = self._getExtraPath('templates')
+        # Create micrographs dir
+        def makePath(d):
+            p = join(workingDir, d)
+            pwutils.cleanPath(p)
+            pwutils.makePath(p)
+            return p
 
+        makePath('micrographs')
+
+        refDir = makePath('templates')
+        inputRefs = self.inputReferences.get()
         for i, ref in enumerate(inputRefs):
-            outRef = join(refDir, 'ref%02d.mrc' % (i+1))
+            outRef = join(refDir, 'ref%02d.mrc' % (i + 1))
             em.ImageHandler().convert(ref, outRef)
+
+        maskSchDir = makePath('maskSch')
+        self.createInputMasks(inputRefs, maskSchDir)
+
+    def createInputMasks(self, inputRefs, maskSchDir):
+        """ Create the needed mask for picking.
+        We should either generate a circular mask,
+        or convert the inputs (one or just one per reference 2d)
+        """
+        ih = em.ImageHandler()
+
+        if self.maskType == MASK_CIRCULAR:
+            if self.maskRadius < 0:  # usually -1
+                radius = inputRefs.getDim()[0] / 2  # use half of input dim
+            else:
+                radius = self.maskRadius.get()
+            outMask = join(maskSchDir, 'ref01.tif')
+            ih.createCircularMask(radius, inputRefs.getFirstItem(), outMask)
+        else:
+            for i, mask in enumerate(self.inputMasks):
+                outMask = join(maskSchDir, 'ref%02d.tif' % (i + 1))
+                ih.convert(mask.get(), outMask)
 
     def readSetOfCoordinates(self, ResultsDir, coordSet):
         readSetOfCoordinates(ResultsDir, self.getInputMicrographs(), coordSet)
