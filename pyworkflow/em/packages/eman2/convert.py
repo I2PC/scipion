@@ -374,18 +374,3 @@ def iterParticlesByMic(partSet):
     for i, part in enumerate(partSet.iterItems(orderBy=['_micId', 'id'],
                                                                  direction='ASC')):
         yield i, part
-
-def writeSqliteIterData(partSet, imgSqlite, itemMatrix, iterTextFile):
-    """ Given a Relion images star file (from some iteration)
-    create the corresponding SetOfParticles (sqlite file)
-    for this iteration. This file can be visualized sorted
-    by the LogLikelihood.
-    """
-    cleanPath(imgSqlite)
-    imgSet = em.SetOfParticles(filename=imgSqlite)
-    imgSet.copyInfo(partSet)
-    imgSet.setAlignment(em.ALIGN_PROJ)
-    imgSet.copyItems(partSet,
-                         updateItemCallback=itemMatrix,
-                         itemDataIterator=iterTextFile)
-    imgSet.write()
