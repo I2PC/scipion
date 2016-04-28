@@ -37,7 +37,7 @@ def getEnviron():
     
     environ.update({
             'PATH': join(EMAN2DIR, 'bin'),
-            'LD_LIBRARY_PATH': os.pathsep.join(pathList),
+            'LD_LIBRARY_PATH': os.pathsep.join([os.environ['REMOTE_MESA_LIB']] + pathList),
             'PYTHONPATH': os.pathsep.join(pathList),
             'EMAN_PYTHON': os.path.join(EMAN2DIR, 'Python/bin/python')
             }, position=Environ.REPLACE)
