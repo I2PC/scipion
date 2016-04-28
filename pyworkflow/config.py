@@ -200,13 +200,20 @@ def loadWebConf():
 
 class ProjectSettings(pwobj.OrderedObject):
     """ Store settings related to a project. """
+
+    COLOR_MODE_STATUS = 0
+    COLOR_MODE_LABELS = 1
+    COLOR_MODE_AGE = 2
+    COLOR_MODES = (COLOR_MODE_STATUS, COLOR_MODE_LABELS)
+
     def __init__(self, confs={}, **kwargs):
         pwobj.OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
-        self.currentProtocolsView = pwobj.String() # Store the current view selected by the user
-        self.nodeList = NodeConfigList() # Store graph nodes positions and other info
-        self.labelsList = LabelsList() # Label list
-        self.mapper = None # This should be set when load, or write
+        self.currentProtocolsView = pwobj.String()  # Store the current view selected by the user
+        self.colorMode = pwobj.Integer(ProjectSettings.COLOR_MODE_STATUS)  # Store the color mode: 0= Status, 1=Labels, ...
+        self.nodeList = NodeConfigList()  # Store graph nodes positions and other info
+        self.labelsList = LabelsList()  # Label list
+        self.mapper = None  # This should be set when load, or write
         self.runsView = pwobj.Integer(1) # by default the graph view
         self.readOnly = pwobj.Boolean(False)
         self.runSelection = pwobj.CsvList(int) # Store selected runs
@@ -265,6 +272,22 @@ class ProjectSettings(pwobj.OrderedObject):
         """
         self.currentProtocolsView.set(protocolView)
 
+    def getColorMode(self):
+        return self.colorMode.get()
+
+    def setColorMode(self, colorMode):
+        """ Set the color mode to use when drawing the graph.
+        """
+        self.colorMode.set(colorMode)
+
+    def statusColorMode(self):
+        return self.getColorMode() == self.COLOR_MODE_STATUS
+
+    def labelsColorMode(self):
+        return self.getColorMode() == self.COLOR_MODE_LABELS
+
+    def ageColorMode(self):
+        return self.getColorMode() == self.COLOR_MODE_AGE
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
         if dbPath is not None:
@@ -507,6 +530,9 @@ class Label(pwobj.Scalar):
     def __str__(self):
         return 'Label: %s' % self._values
 
+    def __eq__(self, other):
+        return self.getName() == other.getName()
+
 
 class LabelsList(pwobj.List):
     """ Store all labels information"""
@@ -514,22 +540,23 @@ class LabelsList(pwobj.List):
         self._labelsDict = {}
         pwobj.List.__init__(self)
 
-    def getLabel(self, id):
-        return self._labelsDict.get(id, None)
+    def getLabel(self, name):
+        return self._labelsDict.get(name, None)
 
     def addLabel(self, label):
 
-        self._labelsDict[label.getId()] = label
+        self._labelsDict[label.getName()] = label
         self.append(label)
         return label
 
     def updateDict(self):
         self._labelsDict.clear()
         for label in self:
-            self._labelsDict[label.getId()] = label
+            self._labelsDict[label.getName()] = label
+
     def deleteLabel(self, label):
-        self._labelsDict.pop(label.getId())
-        self.pop(label.getId())
+        self._labelsDict.pop(label.getName())
+        self.remove(label)
 
     def clear(self):
         pwobj.List.clear(self)

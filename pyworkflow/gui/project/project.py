@@ -82,9 +82,9 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
         projMenu.addSubMenu('Manage project labels', 'labels', icon=Icon.TAGS)
-        projMenu.addSubMenu('Toogle color mode', 'color_mode', shortCut="Control-t", icon=Icon.ACTION_VISUALIZE)
-        projMenu.addSubMenu('Select all protocols', 'select all', shortCut="Control-a")
-        projMenu.addSubMenu('Find protocol to add', 'find protocol', shortCut="Control-f")
+        projMenu.addSubMenu('Toogle color mode', 'color_mode', shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all', shortCut="Ctrl+a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol', shortCut="Ctrl+f")
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
@@ -210,7 +210,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.manageLabels()
 
     def onToogleColorMode(self):
-        self.getViewWidget()._toogleColourScheme(None)
+        self.getViewWidget()._toggleColorScheme(None)
 
     def onSelectAllProtocols(self):
         self.getViewWidget()._selectAllProtocols(None)
@@ -224,11 +224,15 @@ class ProjectWindow(ProjectBaseWindow):
 
         self._showLabels(tableDialogConfig=conf)
 
+        self.getViewWidget().updateRunsGraph()
+
+
+
     def _createManageLabelsTableConf(self):
 
         conf = TableDialogConfiguration(selectmode='browse',
                                         title='Manage labels',
-                                        message='Double click to edit a label.')
+                                        message='Select the label to edit or delete.')
 
         # Have only one button: Close
         btnDefClose = TableDialogButtonDefinition('Close', RESULT_YES)
@@ -277,7 +281,7 @@ class ProjectWindow(ProjectBaseWindow):
 
                     if label is None:
 
-                        label = Label(uuid.uuid1().int, labelName, color)
+                        label = Label(None, labelName, color)
                     else:
 
                         label.setColor(color)

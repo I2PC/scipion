@@ -33,7 +33,7 @@ import pickle
 from collections import OrderedDict
 import Tkinter as tk
 import ttk
-
+import datetime as dt
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
@@ -49,7 +49,7 @@ from pyworkflow.utils.properties import Message, Icon, Color
 
 from constants import STATUS_COLORS
 
-DEFAULT_BOX_COLOR = '#f5f5f5'
+DEFAULT_BOX_COLOR = '#f8f8f8'
 
 ACTION_EDIT = Message.LABEL_EDIT
 ACTION_COPY = Message.LABEL_COPY
@@ -178,7 +178,7 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                    (ACTION_EXPORT, not single),
                    (ACTION_COLLAPSE, single and status and expanded),
                    (ACTION_EXPAND, single and status and not expanded),
-                   (ACTION_SETLABEL, True)
+                   (ACTION_SETLABEL, not self.project.getSettings().statusColorMode())
                    #(ACTION_CONTINUE, status == pwprot.STATUS_INTERACTIVE and single)
                    ]
         
@@ -517,7 +517,6 @@ class ProtocolsView(tk.Frame):
         self.icon = windows.icon
         self.settings = windows.getSettings()
         self.runsView = self.settings.getRunsView()
-        self.showStatusInBox = True
         self._loadSelection()        
         self._items = {}
         self._lastSelectedProtId = None
@@ -528,7 +527,7 @@ class ProtocolsView(tk.Frame):
         self.root.bind("<F5>", self.refreshRuns)
         self.root.bind("<Control-f>", self._findProtocol)
         self.root.bind("<Control-a>", self._selectAllProtocols)
-        self.root.bind("<Control-t>", self._toogleColourScheme)
+        self.root.bind("<Control-t>", self._toggleColorScheme)
 
         # To bind key press to mehtods
         # Listen to any key: send event to keyPressed method
@@ -817,8 +816,8 @@ class ProtocolsView(tk.Frame):
             action, cond = actionTuple
             displayAction(action, i, cond)          
         
-    def _createProtocolsTree(self, parent):
-        self.style.configure("W.Treeview", background=Color.LIGHT_GREY_COLOR, borderwidth=0)
+    def _createProtocolsTree(self, parent, background=Color.LIGHT_GREY_COLOR):
+        self.style.configure("W.Treeview", background=background, borderwidth=0, fieldbackground=background)
         t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
         t.column('#0', minwidth=300)
         t.tag_configure('protocol', image=self.getImage('python_file.gif'))
@@ -914,12 +913,13 @@ class ProtocolsView(tk.Frame):
         self.updateRunsGraph()        
 
     def updateRunsGraph(self, refresh=False, reorganize=False):  
+
         self.runsGraph = self.project.getRunsGraph(refresh=refresh)
         self.runsGraphCanvas.clear()
         
         # Check if there are positions stored
         if reorganize or len(self.settings.getNodes()) == 0:
-            layout = pwgui.graph.LevelTreeLayout() # create layout to arrange nodes as a level tree
+            layout = pwgui.graph.LevelTreeLayout()  # create layout to arrange nodes as a level tree
         else:
             layout = pwgui.graph.BasicLayout()
             
@@ -933,37 +933,71 @@ class ProtocolsView(tk.Frame):
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
         
     def createRunItem(self, canvas, node):
-        nodeText = node.getLabel()
-        statusColor = '#ADD8E6' #Lightblue
-        
+
         nodeId = node.run.getObjId() if node.run else 0
-
         nodeInfo = self.settings.getNodeById(nodeId)
-        node.x, node.y = nodeInfo.getPosition()
+
+        # Extend attributes: use some from nodeInfo
         node.expanded = nodeInfo.isExpanded()
+        node.x, node.y = nodeInfo.getPosition()
+        nodeText = self._getNodeText(node)
 
-        if node.run:
-            status = node.run.status.get(pwprot.STATUS_FAILED)
-            if node.expanded:
-                expandedStr = ''
-            else:
-                expandedStr = ' (+)'
-            if self.runsView == VIEW_TREE_SMALL:
-                nodeText = node.getName() + expandedStr
-            else:                
-                nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
-            statusColor = STATUS_COLORS[status]
+        # Get status color
+        statusColor = self._getStatusColor(node)
 
-        paintLabels = True
+        # Get the box color (depends on color mode: label or status)
+        boxColor = self._getBoxColor(nodeInfo, statusColor, node)
+
+        # Draw the box
+        item = RunBox(nodeInfo, self.runsGraphCanvas,
+                      nodeText, node.x, node.y, bgColor=boxColor, textColor='black')
+        # No border
+        item.margin = 0
+
+        # Paint the oval..if apply.
+        self._paintOval(item, statusColor)
+
+        # Paint the bottom line (for now only labels are painted there).
+        self._paintBottomLine(item, nodeInfo)
+
+        if nodeId in self._selection:
+            item.setSelected(True)
+        return item
+
+    def _getBoxColor(self, nodeInfo, statusColor, node):
 
         # If the color has to go to the box
-        if self.showStatusInBox:
+        if self.settings.statusColorMode():
             boxColor = statusColor
 
+        elif self.settings.ageColorMode():
+
+            if node.run:
+
+                # Get the latest activity timestamp
+                ts = node.run.getObjCreation()
+
+                # This format comes from the database....tricky
+                ts = dt.datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+
+                if node.run.initTime.hasValue():
+                    f = "%Y-%m-%d %H:%M:%S.%f"
+                    ts = dt.datetime.strptime(node.run.initTime.get(), f)
+
+                if node.run.endTime.hasValue():
+                    f = "%Y-%m-%d %H:%M:%S.%f"
+                    ts = dt.datetime.strptime(node.run.endTime.get(), f)
+
+                age = dt.datetime.now() - ts
+
+                boxColor = self._ageColor('#6666ff', age.days * 24)
+            else:
+                boxColor = DEFAULT_BOX_COLOR
+
         # ... box is for the labels.
-        else:
+        elif self.settings.labelsColorMode():
             # If there is only one label use the box for the color.
-            if nodeInfo.getLabels() is not None and len(nodeInfo.getLabels()) == 1:
+            if self._getLabelsCount(nodeInfo) == 1:
 
                 labelId = nodeInfo.getLabels()[0]
                 label = self.settings.getLabels().getLabel(labelId)
@@ -974,17 +1008,38 @@ class ProtocolsView(tk.Frame):
                     boxColor = DEFAULT_BOX_COLOR
                 else:
                     boxColor = label.getColor()
-                    paintLabels = False
+
             else:
                 boxColor = DEFAULT_BOX_COLOR
+        else:
+            boxColor = DEFAULT_BOX_COLOR
 
-        item = RunBox(nodeInfo, self.runsGraphCanvas,
-                      nodeText, node.x, node.y, bgColor=boxColor, textColor='black')
-        # No border
-        item.margin = 0
+        return boxColor
 
-        # Show the status as a circle in the top right corner
-        if not self.showStatusInBox:
+    def _ageColor(self, rgbColor, ageInDays):
+
+        if ageInDays > 255: ageInDays = 255
+
+        # Mek it a percentage: 1 = 100% white, 0 = same rgbColor
+        ageInDays /= 255.
+
+        return pwutils.rgb_to_hex(pwutils.lighter(pwutils.hex_to_rgb(rgbColor), ageInDays))
+
+
+    @staticmethod
+    def _getLabelsCount(nodeInfo):
+
+        return 0 if nodeInfo.getLabels() is None else len(nodeInfo.getLabels())
+
+    def _paintBottomLine(self, item, nodeInfo):
+
+        if self.settings.labelsColorMode():
+
+            self._addLabels(item, nodeInfo)
+
+    def _paintOval(self, item, statusColor):  # Show the status as a circle in the top right corner
+
+        if not self.settings.statusColorMode():
             # Option: Status item.
             (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
             statusSize = 10
@@ -993,53 +1048,72 @@ class ProtocolsView(tk.Frame):
 
             pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize, color=statusColor, anchor=item)
 
-        if paintLabels: self._addLabels(item, nodeInfo)
+    @staticmethod
+    def _getStatusColor(node):
 
-        if nodeId in self._selection:
-            item.setSelected(True)
-        return item
+        # If it is a run node (not PROJECT)
+        if node.run:
+            status = node.run.status.get(pwprot.STATUS_FAILED)
+            return STATUS_COLORS[status]
+        else:
+            return '#ADD8E6'  # Lightblue
+
+    def _getNodeText(self, node):
+
+        nodeText = node.getLabel()
+
+        if node.run:
+
+            if node.expanded:
+                expandedStr = ''
+            else:
+                expandedStr = ' (+)'
+            if self.runsView == VIEW_TREE_SMALL:
+                nodeText = node.getName() + expandedStr
+            else:
+                nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
+
+        return nodeText
 
     def _addLabels(self, item, nodeInfo):
 
-        ### Paint labels
-        if nodeInfo.getLabels() is not None and len(nodeInfo.getLabels()) > 0:
+        # If there is only one label it should be already used in the box color.
+        if self._getLabelsCount(nodeInfo) < 2: return
 
-            # Get the positions of the box
-            (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
+        # Get the positions of the box
+        (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
 
-            # Get the width of the box
-            boxWidth = bottomRightX - topLeftX
+        # Get the width of the box
+        boxWidth = bottomRightX - topLeftX
 
-            # Set the size
-            marginV = 3
-            marginH=2
-            labelWidth = (boxWidth - 2*marginH) / len(nodeInfo.getLabels())
-            labelHeight = 6
+        # Set the size
+        marginV = 3
+        marginH = 2
+        labelWidth = (boxWidth - (2 * marginH)) / len(nodeInfo.getLabels())
+        labelHeight = 6
 
-            # Leave some margin on the right and bottom
-            labelX = bottomRightX - marginH
-            labelY = bottomRightY - (labelHeight + marginV)
+        # Leave some margin on the right and bottom
+        labelX = bottomRightX - marginH
+        labelY = bottomRightY - (labelHeight + marginV)
 
-            for index, labelId in enumerate(nodeInfo.getLabels()):
+        for index, labelId in enumerate(nodeInfo.getLabels()):
 
-                # Get the label
-                label = self.settings.getLabels().getLabel(labelId)
+            # Get the label
+            label = self.settings.getLabels().getLabel(labelId)
 
-                # If not none
-                if label is not None:
-                    # Move X one label to the left
-                    if index == len(nodeInfo.getLabels()) - 1:
-                        labelX=topLeftX + marginH
-                    else:
-                        labelX -= labelWidth
-
-
-                    pwgui.Rectangle(self.runsGraphCanvas, labelX, labelY, labelWidth, labelHeight, color=label.getColor(),
-                                    anchor=item)
+            # If not none
+            if label is not None:
+                # Move X one label to the left
+                if index == len(nodeInfo.getLabels()) - 1:
+                    labelX = topLeftX + marginH
                 else:
+                    labelX -= labelWidth
 
-                    nodeInfo.getLabels().remove(labelId)
+                pwgui.Rectangle(self.runsGraphCanvas, labelX, labelY, labelWidth, labelHeight, color=label.getColor(),
+                                anchor=item)
+            else:
 
+                nodeInfo.getLabels().remove(labelId)
 
     def switchRunsView(self):
         previousView = self.runsView
@@ -1068,8 +1142,17 @@ class ProtocolsView(tk.Frame):
         prot = self.project.newProtocol(protClass)
         self._openProtocolForm(prot)
 
-    def _toogleColourScheme(self, e=None):
-        self.showStatusInBox = not self.showStatusInBox
+    def _toggleColorScheme(self, e=None):
+
+        currentMode = self.settings.getColorMode()
+
+        if currentMode >= len(self.settings.COLOR_MODES) - 1:
+            currentMode = -1
+
+        nextColorMode = currentMode + 1
+
+        self.settings.setColorMode(nextColorMode)
+        self._updateActionToolbar()
         self.updateRunsGraph()
 
     def _selectAllProtocols(self, e=None):
@@ -1448,17 +1531,13 @@ class ProtocolsView(tk.Frame):
             if cancelled:
                 return
 
-            # Create an array of labels ids
-            labelsIds = [label.getId() for label in labels]
+            # Create an array of labels Names
+            labelsNames = [label.getName() for label in labels]
 
             for node in selectedNodes:
-                node.setLabels(labelsIds)
+                node.setLabels(labelsNames)
 
-            self.refreshRuns()
-
-    def _manageLabels(self):
-
-        self.parent.manageLabels()
+            self.updateRunsGraph()
 
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
