@@ -67,6 +67,12 @@ def main():
                 readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
                 writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
+        elif fromType == 'gempicker':
+            if toType == 'xmipp':
+                from pyworkflow.em.packages.igbmc.convert import readSetOfCoordinates
+                readSetOfCoordinates(outputDir, micSet, coordSet)
+                from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
+                writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
         
     
 if __name__ == '__main__':
