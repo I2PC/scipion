@@ -28,12 +28,12 @@
 from pyworkflow.protocol.params import PointerParam
 import pyworkflow.em.metadata as md
 
-from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.protocol import ProtOperateParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    getImageLocation)
 
 
-class XmippProtSubtractProjection(ProtAnalysis3D):
+class XmippProtSubtractProjection(ProtOperateParticles):
     """    
     Extract the information contained in a volume to the experimental
     particles. The particles must have projection alignment in order to
@@ -44,7 +44,7 @@ class XmippProtSubtractProjection(ProtAnalysis3D):
     _label = 'subtract projection'
     
     def __init__(self, *args, **kwargs):
-        ProtAnalysis3D.__init__(self, *args, **kwargs)
+        ProtOperateParticles.__init__(self, *args, **kwargs)
         
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
