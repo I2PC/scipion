@@ -80,7 +80,7 @@ def readSetOfParticles(inputSet, outputSet, parFileName):
     samplingRate = inputSet.getSamplingRate()
     parFile = FrealignParFile(parFileName)
     partIter = iter(inputSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
-    
+     
     for particle, row in izip(partIter, parFile):        
         particle.setTransform(rowToAlignment(row, samplingRate))
         # We assume that each particle have ctfModel
