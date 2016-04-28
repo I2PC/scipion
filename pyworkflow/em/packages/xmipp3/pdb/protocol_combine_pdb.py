@@ -123,15 +123,13 @@ class XmippProtCombinePdb(em.ProtImportFiles):
         
         fh = open(fnOut, "a")
         for line in open(pdbFn1,"r"): 
-            list = line.split()
-            id = list[0]
-            if id <> 'END':          
+            charac = line.split()            
+            if charac[0] <> 'END':          
                 fh.write(line)
                 fh.write("\n")
         for line in open(pdbFn2,"r"):
-            list = line.split()
-            id = list[0]
-            if id == 'HETATM' or id == 'ATOM' or id == 'END':            
+            charac = line.split()            
+            if charac[0] == 'HETATM' or charac[0] == 'ATOM' or charac[0] == 'END':            
                 fh.write(line)
                 fh.write("\n")          
             
