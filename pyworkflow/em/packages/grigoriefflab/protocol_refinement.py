@@ -26,11 +26,8 @@
 """
 This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
 """
-import os
-from pyworkflow.utils import join
 import pyworkflow.em as em 
 from protocol_frealign_base import ProtFrealignBase
-from convert import readSetOfParticles
 
 
 class ProtFrealign(ProtFrealignBase, em.ProtRefine3D):
@@ -55,12 +52,11 @@ reconstructions.
         vol.setSamplingRate(inputSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputParticles, vol)
-
         # Register output Particles with their 3D alignment
-        file2 = self._getFileName('output_par', iter=lastIter)
         partSet = self._createSetOfParticles()
         partSet.copyInfo(inputSet)
-        readSetOfParticles(inputSet, partSet, file2)
+        self._fillDataFromIter(partSet, lastIter)
+        
         self._defineOutputs(outputParticles=partSet)
         self._defineTransformRelation(self._getInputParticlesPointer(), partSet)
         
@@ -68,7 +64,38 @@ reconstructions.
             self._defineSourceRelation(self.input3DReference, vol)
             self._defineSourceRelation(self.input3DReference, partSet)
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions -------------------------
     def _citations(self):
         return ['Lyumkis2013', 'Sindelar2012', 'Grigorieff2007', 'Wolf2006', 'Stewart2004', 'Grigorieff1998']
     
+    #--------------------------- UTILS functions ------------------------
+    def _getIterData(self, it):
+        from os.path import exists
+        data_sqlite = self._getFileName('data_scipion', iter=it)
+        if not exists(data_sqlite):
+            iterImgSet = em.SetOfParticles(filename=data_sqlite)
+            iterImgSet.copyInfo(self._getInputParticles())
+            self._fillDataFromIter(iterImgSet, it)
+            iterImgSet.write()
+            iterImgSet.close()
+        
+        return data_sqlite
+    
+    def _fillDataFromIter(self, imgSet, iterN):
+        from convert import FrealignParFile
+        
+        parFn = self._getFileName('output_par', iter=iterN)
+        initPartSet = self._getInputParticles()
+        imgSet.setAlignmentProj()
+        partIter = iter(initPartSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
+        iterParFile = iter(FrealignParFile(parFn))
+        
+        imgSet.copyItems(partIter,
+                         updateItemCallback=self._createItemMatrix,
+                         itemDataIterator=iterParFile)
+        
+    def _createItemMatrix(self, item, row):
+        from convert import rowToAlignment
+        item.setTransform(rowToAlignment(row, item.getSamplingRate()))
+
+
