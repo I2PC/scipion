@@ -4,16 +4,9 @@ Created on May 20, 2013
 @author: laura
 '''
 
-from glob import glob, iglob
-import unittest
-import os, traceback
-from itertools import izip
+from glob import iglob
 from pyworkflow.tests import *
-from pyworkflow.em.data import *
-from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
-import pyworkflow.em.packages.eman2.convert as e2convert
-from pyworkflow.em.protocol import EMProtocol
 import pyworkflow.em.metadata as md
 from pyworkflow.em.convert import ImageHandler
 
@@ -72,6 +65,7 @@ class TestImageHandler(unittest.TestCase):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.dsFormat = DataSet.getDataSet('movies')
 
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
@@ -92,11 +86,74 @@ class TestImageHandler(unittest.TestCase):
          EMAN2 required for .img
         """
         micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
-        outFn = pwutils.replaceBaseExt(micFn, 'img')
+        outSuffix = pwutils.replaceBaseExt(micFn, 'img')
         ih = ImageHandler()
-        ih.convert(micFn, os.path.join('/home/josem', outFn))
 
-        
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % (micFn, outFn)
+
+        ih.convert(micFn, outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+
+        pwutils.cleanPath(outFn)
+        pwutils.cleanPath(outFn.replace('.img', '.hed'))
+
+    def test_readDM4(self):
+        """ Check we can read dm4 files (using EMAN)
+        """
+        micFn = self.dsFormat.getFile('SuperRef_c3-adp-se-xyz-0228_001.dm4')
+
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (7676, 7420, 1, 1)
+        self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
+
+        # We could even convert to an mrc file:
+        outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % (micFn, outFn)
+
+        ih.convert(micFn, outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        # Check dimensions are still the same:
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+
+        # Clean up tmp files
+        pwutils.cleanPath(outFn)
+
+
+    def test_readCompressedTIF(self):
+        """ Check we can read tif files
+        """
+        micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
+
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (7676, 7420, 1, 38)
+        self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
+
+        # We could even convert to an mrc file:
+        outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % ((1, micFn), outFn)
+
+        ih.convert((1, micFn), outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), (7676, 7420, 1, 1))
+
+        # Clean up tmp files
+        pwutils.cleanPath(outFn)
+
+
+
 class TestSetOfMicrographs(BaseTest):
     
     @classmethod
