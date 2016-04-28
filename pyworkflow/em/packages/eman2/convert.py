@@ -237,7 +237,7 @@ def getImageDimensions(imageFile):
      Underneath, it will call an script to do the job.
     """
     proc = createEmanProcess('e2ih.py', args=imageFile)
-    return map(int, proc.stdout.readline().split())
+    return tuple(map(int, proc.stdout.readline().split()))
 
 def convertImage(inputLoc, outputLoc):
     """ This function will allow us to use EMAN2 to write some formats
