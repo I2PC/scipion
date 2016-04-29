@@ -43,8 +43,8 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
         
     #--------------------------- DEFINE param functions --------------------------------------------  
      
-    def _defineParams(self, form):
-        SpiderProtClassify._defineParams(self, form)
+    def _defineBasicParams(self, form):
+        SpiderProtClassify._defineBasicParams(self, form)
 
         form.addParam('numberOfClasses', IntParam, default=4, 
                       label='Number of classes',

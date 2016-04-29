@@ -54,8 +54,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                         'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': '%s/docdendro' % self._classDir,
-                        'averages': 'averages',   
-                        'x30': self.numberOfThreads.get()                     
+                        'averages': 'averages'
                         }  
         
     def getClassDir(self):
@@ -65,8 +64,11 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
         return None
     
     #--------------------------- DEFINE param functions --------------------------------------------  
-     
     def _defineParams(self, form):
+        self._defineBasicParams(form)
+        form.addParallelSection(threads=4, mpi=0)
+
+    def _defineBasicParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
                       pointerClass='SetOfParticles',
@@ -81,7 +83,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                       help='After running, examine the eigenimages and decide which ones to use.\n'
                            'Typically all but the first few are noisy.')
         
-        form.addParallelSection(threads=4, mpi=0)
+
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     
@@ -118,6 +120,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
         imcPrefix = imcBase.replace('_IMC', '').replace('_SEQ', '')
         
         self._params.update({'x27': numberOfFactors,
+                             'x30': self.numberOfThreads.get(),
                              '[cas_prefix]': imcPrefix,
                              '[cas_file]': imcBase,
                              })
