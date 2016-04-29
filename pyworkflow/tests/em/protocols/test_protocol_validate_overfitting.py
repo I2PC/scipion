@@ -21,14 +21,10 @@
 # *  e-mail address 'xmipp@cnb.csic.es'
 # ***************************************************************************/
 
-#import os
-#from itertools import izip
-
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes
 from pyworkflow.em.packages.xmipp3.protocol_validate_overfitting import XmippProtValidateOverfitting
-
-        
+       
     
 class TestValidateOverfitting(BaseTest):
     @classmethod
@@ -39,25 +35,11 @@ class TestValidateOverfitting(BaseTest):
         
     def importVolumes(self):
         """ Import several Volumes
-        """
-        '''args = {'filesPath': self.dsRelion.getFile('import/case2/relion_volumes.mrc'),
-                'filesPattern': '',
-                'samplingRate': 7.08
-                }
-        
-        prot = self.newProtocol(ProtImportVolumes, **args)
-        prot.setObjLabel('volumes from mrc stack')
-        self.launchProtocol(prot)
-        # Check the number of output volumes and dimensions
-        self.assertEqual(60, prot.outputVolumes.getDim()[0])
-        self.assertIsNotNone(prot.outputVolumes.getFileName(), "There was a problem with the import")
-        '''
-        
+        """                
         args = {'filesPath': self.dsXmipp.getFile('volumes/'),
                 'filesPattern': '*_64.vol',
                 'samplingRate': 1
-                }
-        
+                }        
         prot = self.newProtocol(ProtImportVolumes, **args)
         prot.setObjLabel('import volume')
         self.launchProtocol(prot)
@@ -75,17 +57,16 @@ class TestValidateOverfitting(BaseTest):
                                  samplingRate=7.08,
                                  haveDataBeenPhaseFlipped=True
                                  )
-        self.launchProtocol(prot)
-        
-        self.assertIsNotNone(prot.outputParticles.getFileName(), "There was a problem with the import")
+        self.launchProtocol(prot)        
+        self.assertIsNotNone(prot.outputParticles.getFileName(), 
+                             "There was a problem with the import")
         return prot
          
     def test_validateOverfitting(self):
         """ Test protocol validate overfitting
         """
         protImportVols = self.importVolumes()
-        protImportPars = self.importFromRelionRefine3D()
-        
+        protImportPars = self.importFromRelionRefine3D()        
         protValidateOverfitting = self.newProtocol(XmippProtValidateOverfitting,
                                 objLabel='validate overfitting',
                                 numberOfMpi=1, numberOfThreads=4)
@@ -93,6 +74,5 @@ class TestValidateOverfitting(BaseTest):
         protValidateOverfitting.input3DReference.set(protImportVols.outputVolume)
         protValidateOverfitting.numberOfParticles.set("10 20 50")
         protValidateOverfitting.numberOfIterations.set(3)
-        protValidateOverfitting.symmetryGroup.set('c1')
-        
+        protValidateOverfitting.symmetryGroup.set('c1')        
         self.launchProtocol(protValidateOverfitting)
