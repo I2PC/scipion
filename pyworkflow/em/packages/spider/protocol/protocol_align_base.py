@@ -102,9 +102,11 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(particles)
         imgSet.setAlignment2D()
-        
-        imgSet.readStack(outputStk, 
-                         postprocessImage=lambda img: img.setTransform(Transform()))
+
+        imgSet.copyItems(particles,
+                         updateItemCallback=self._updateItem,
+                         itemDataIterator=iter(range(1, particles.getSize()+1)))
+
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(self.inputParticles, imgSet)
         
@@ -127,5 +129,9 @@ class SpiderProtAlign(ProtAlign2D, SpiderProtocol):
             errors.append("*innerRadius* should be less than *outerRadius*.")
         
         return errors
+
+    def _updateItem(self, item, index):
+        item.setLocation(index, self._getFileName('particlesAligned'))
+        item.setTransform(Transform())
     
 
