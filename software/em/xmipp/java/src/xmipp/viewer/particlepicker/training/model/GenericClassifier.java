@@ -16,6 +16,7 @@ import xmipp.jni.MetaData;
 import xmipp.jni.Particle;
 import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippWindowUtil;
+import xmipp.utils.DEBUG;
 
 
 public class GenericClassifier extends Classifier
@@ -84,7 +85,10 @@ public class GenericClassifier extends Classifier
 					//System.out.println("preprocess output \n" + output);
 				}
 				output = XmippWindowUtil.executeCommand(autopickCommand, true, runDir);
-				//System.out.println("autopick output \n" + output);
+				if (DEBUG.hasScipionDebug()) {
+				    System.out.println("Autopick command: \n" + autopickCommand + "\n");
+				    System.out.println("Autopick output: \n" + output);
+				}
 			}
 			else
 			{
@@ -94,7 +98,10 @@ public class GenericClassifier extends Classifier
 					//System.out.println("preprocess output \n" + output);
 				}
 				output = XmippWindowUtil.executeCommand(autopickCommand, true);
-				//System.out.println("autopick output \n" + output);
+				if (DEBUG.hasScipionDebug()) {
+				    System.out.println("Autopick command: \n" + autopickCommand + "\n");
+				    System.out.println("Autopick output: \n" + output);
+				}
 			}
 			
 			output = XmippWindowUtil.executeCommand(convertCommand, true);
