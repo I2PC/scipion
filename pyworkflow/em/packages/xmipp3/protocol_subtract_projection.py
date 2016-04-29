@@ -35,11 +35,12 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
 
 class XmippProtSubtractProjection(ProtOperateParticles):
     """    
-    Extract the information contained in a volume to the experimental
-    particles. The particles must have projection alignment in order to
-    properly generate volume projections to extract the information.
-    A typical case of use, is in the deletion of the capsid to the
-    experimental image to only refine the genetic material.
+    Subtract volume projections from the experimental particles.
+    The particles must have projection alignment in order to
+    properly generate volume projections.
+
+    An example of usage is to delete the virus capsid to
+    refine only the genetic material.
     """
     _label = 'subtract projection'
     

@@ -27,26 +27,23 @@
 
 import os
 import sys
+
 import pyworkflow.em.metadata as md
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import ProtOperateParticles
-from pyworkflow.em.packages.relion.convert import (writeSetOfParticles,
-                                                   convertBinaryVol,
-                                                   relionToLocation)
+
+from convert import writeSetOfParticles, convertBinaryVol, relionToLocation
 
 
 class ProtRelionSubtract(ProtOperateParticles):
     """
-    This Relion protocol tracks particle movement in movie frames,
-    applies a resolution and dose-dependent weighting scheme
-    for each frame and finally sums them together.
+    Subtract volume projections from the experimental particles.
+    The particles must have projection alignment in order to
+    properly generate volume projections.
     """
     _label = 'subtract projection'
     
     def _initialize(self):
-        """ This function is mean to be called after the working dir for
-        the protocol have been set. (maybe after recovery from mapper)
-        """
         self._createFilenameTemplates()
     
     def _createFilenameTemplates(self):
@@ -55,7 +52,6 @@ class ProtRelionSubtract(ProtOperateParticles):
                   'input_star': self._getPath('input_particles.star'),
                   'output': self._getExtraPath('output_particles'),
                   'output_star': self._getExtraPath('output_particles.star'),
-#                   'output_stack': self._getExtraPath('output_particles.mrcs'),
                   'volume_masked': self._getTmpPath('volume_masked.mrc'),
                   }
         self._updateFilenamesDict(myDict)
@@ -99,7 +95,8 @@ class ProtRelionSubtract(ProtOperateParticles):
         input particles and cause restart from here.
         """
         imgSet = self.inputParticles.get()
-        writeSetOfParticles(imgSet, self._getFileName('input_star'), self._getExtraPath())
+        writeSetOfParticles(imgSet, self._getFileName('input_star'),
+                            self._getExtraPath())
     
     def applyMaskStep(self):
         import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -145,7 +142,7 @@ class ProtRelionSubtract(ProtOperateParticles):
         self._defineOutputs(outputParticles=outImgSet)
         self._defineTransformRelation(self.inputParticles, outImgSet)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
@@ -161,7 +158,7 @@ class ProtRelionSubtract(ProtOperateParticles):
         """
         return []
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _updateItem(self, item, row):
         newFn = row.getValue(md.RLN_IMAGE_NAME)
         newLoc = relionToLocation(newFn)
