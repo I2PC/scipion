@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,13 +25,8 @@
 # *
 # **************************************************************************
 """
-This EM module contains protocol developed at IGBMC, Strasbourg.
+Import of all protocols included in imagic.
 """
-
-from bibtex import _bibtex # Load bibtex dict with references
-
-_logo = "igbmc_logo.png"
-
-from protocol_gempicker import ProtGemPicker
-from wizard import GemPickerMaskWizard, GemPickerWizard
-
+from protocol_base import ImagicProtocol
+from protocol_msa import ImagicProtMSA
+from protocol_msa_classify import ImagicProtMSAClassify

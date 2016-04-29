@@ -134,7 +134,8 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
     jsonFninfo = join(workDir, 'info/')
     
     for mic in micSet:
-        micPosFn = ''.join(glob.glob(jsonFninfo + '*' + removeBaseExt(mic.getFileName()) + '_info.json'))
+        micBase = removeBaseExt(mic.getFileName())
+        micPosFn = ''.join(glob.glob(jsonFninfo + '*' + micBase + '_info.json'))
         readCoordinates(mic, micPosFn, coordSet)
     coordSet.setBoxSize(size)
 
@@ -230,6 +231,34 @@ def writeSetOfParticles(partSet, path, **kwargs):
         proc.stdout.readline()
     proc.kill()
 
+
+def getImageDimensions(imageFile):
+    """ This function will allow us to use EMAN2 to read some formats
+     not currently supported by the native image library (Xmipp).
+     Underneath, it will call an script to do the job.
+    """
+    proc = createEmanProcess('e2ih.py', args=imageFile)
+    return tuple(map(int, proc.stdout.readline().split()))
+
+def convertImage(inputLoc, outputLoc):
+    """ This function will allow us to use EMAN2 to write some formats
+     not currently supported by the native image library (Xmipp).
+     Underneath, it will call an script to do the job.
+    """
+    def _getFn(loc):
+        """ Use similar naming convetion than in Xmipp.
+        This does not works for EMAN out of here.
+        """
+        if isinstance(loc, tuple):
+            if loc[0] != em.NO_INDEX:
+                return "%06d@%s" % loc
+            return loc[1]
+        else:
+            return loc
+
+    proc = createEmanProcess('e2ih.py', args='%s %s' % (_getFn(inputLoc),
+                                                 _getFn(outputLoc)))
+    proc.wait()
 
 def readSetOfParticles(filename, partSet, **kwargs):
     pass

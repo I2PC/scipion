@@ -32,4 +32,4 @@ from bibtex import _bibtex # Load bibtex dict with references
 _logo = "gautomatch_logo.png"
 
 from protocol_gautomatch import ProtGautomatch
-from wizard import GautomatchParticleWizard
+from wizard import GautomatchParticleWizard, GautomatchPickerWizard
