@@ -152,10 +152,13 @@ class SpiderViewerWard(SpiderViewerClassify):
         
         self.buttonframe = tk.Frame(root)
         self.buttonframe.grid(row=2, column=0, columnspan=2)  
-        self.win.createCloseButton(self.buttonframe).grid(row=0, column=0, sticky='n', padx=5, pady=5) 
-        saveparticlesbtn = HotButton(self.buttonframe, "Particles", Icon.PLUS_CIRCLE, command=lambda: self.askCreateSubset('Particles', self.getSelectedNodesCount(2)))
+        self.win.createCloseButton(self.buttonframe).grid(row=0, column=0,
+                                                          sticky='n', padx=5, pady=5)
+        saveparticlesbtn = HotButton(self.buttonframe, "Particles",
+                                     Icon.PLUS_CIRCLE, command=lambda: self.askCreateSubset('Particles', self.getSelectedNodesCount(2)))
         saveparticlesbtn.grid(row=0, column=1, sticky='n', padx=5, pady=5)  
-        btn = HotButton(self.buttonframe, "Classes", Icon.PLUS_CIRCLE, command=lambda: self.askCreateSubset('Classes', self.getSelectedNodesCount(1)))
+        btn = HotButton(self.buttonframe, "Classes", Icon.PLUS_CIRCLE,
+                        command=lambda: self.askCreateSubset('Classes', self.getSelectedNodesCount(1)))
         btn.grid(row=0, column=2, sticky='n', padx=5, pady=5)
             
         lt = LevelTree(g)
@@ -167,14 +170,12 @@ class SpiderViewerWard(SpiderViewerClassify):
         return [self.win]
     
     def askCreateSubset(self, output, size):
-        
         headerLabel = 'Are you sure you want to create a new set of %s with %s %s?'%(output, size, 'element' if size == 1 else 'elements')
         runname =  askString('Question','Run name:', self.win.getRoot(), 30, defaultValue='ProtUserSubSet', headerLabel=headerLabel)
         if runname:
             createFunc = getattr(self, 'save' + output)
             createFunc(runname)
-        
-        
+
     def _createSubsetProtocol(self, createOutputFunc, label=None):
         """ Create a subset of classes or particles. """
         try:
@@ -207,7 +208,8 @@ class SpiderViewerWard(SpiderViewerClassify):
     def saveClasses(self, runname=None):
         """ Store selected classes. """
         def createClasses(prot):    
-            classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(), suffix='Selection')
+            classes = prot._createSetOfClasses2D(self.protocol.inputParticles.get(),
+                                                 suffix='Selection')
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
             self.protocol._fillClassesFromNodes(classes, selectedNodes)
             prot._defineOutputs(outputClasses=classes)
@@ -220,11 +222,11 @@ class SpiderViewerWard(SpiderViewerClassify):
             particles = prot._createSetOfParticles(suffix='Selection')
             particles.copyInfo(self.protocol.inputParticles.get())
             selectedNodes = [node for node in self.graph.getNodes() if node.selected]
-            self.protocol._fillParticlesFromNodes(particles, selectedNodes)
+            self.protocol._fillParticlesFromNodes(self.protocol.inputParticles.get(),
+                                                  particles, selectedNodes)
             prot._defineOutputs(outputParticles=particles)
         self._createSubsetProtocol(createParticles, runname)
-    
-    
+
         
         
 class SpiderImageBox(ImageBox):
