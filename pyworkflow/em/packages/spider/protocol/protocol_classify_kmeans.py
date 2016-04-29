@@ -108,7 +108,6 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
 
     def _updateClass(self, item):
         classId = item.getObjId()
-        print "classId = ", classId
         avgFile = self._getPath(self.getClassDir(), 'classavg%03d.stk' % classId)
         rep = item.getRepresentative()
         rep.setSamplingRate(item.getSamplingRate())
