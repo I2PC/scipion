@@ -228,11 +228,12 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                 node.image += child.image
             del child.image # Allow to free child image memory
                 
-    def _buildDendrogram(self, leftIndex, rightIndex, index, writeAverages=False, level=0):
-        """ This function is recursively called to create the dendogram graph(binary tree)
-        and also to write the average image files.
+    def _buildDendrogram(self, leftIndex, rightIndex, index,
+                         writeAverages=False, level=0):
+        """ This function is recursively called to create the dendrogram
+        graph (binary tree) and also to write the average image files.
         Params:
-            leftIndex, rightIndex: the indinxes within the list where to search.
+            leftIndex, rightIndex: the indexes within the list where to search.
             index: the index of the class average.
             writeImages: flag to select when to write averages.
         From self:
@@ -271,9 +272,20 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                     maxIndex = i+1
             m = maxIndex + leftIndex
             node = DendroNode(index, maxValue)
-            
-            self.addChildNode(node, leftIndex, m, 2*index, writeAverages, level)
-            self.addChildNode(node, m+1, rightIndex, 2*index+1, writeAverages, level)
+
+            if maxValue > 0:
+                self.addChildNode(node, leftIndex, m, 2*index,
+                                  writeAverages, level)
+                self.addChildNode(node, m+1, rightIndex, 2*index+1,
+                                  writeAverages, level)
+            else:
+                node.imageList = self.dendroIndexes[leftIndex:rightIndex]
+                node.image = self.getImage(node.imageList[0])
+                for img in node.imageList[1:]:
+                    node.image.inplaceAdd(self.getImage(img))
+                node.length = len(node.imageList)
+                node.height = maxValue # it should be 0 here
+
             
         if level < self.dendroMaxLevel:
             node.avgCount = avgCount
