@@ -77,10 +77,11 @@ def writeSetOfImages(imgSet, stackFn, selFn):
     """
     ih = ImageHandler()
     doc = SpiderDocFile(selFn, 'w+')
-    
-    for i, img in enumerate(imgSet):
-        ih.convert(img, (i+1, stackFn))
+
+    for i in range(imgSet.getSize()):
         doc.writeValues(i+1)
+
+    imgSet.writeStack(stackFn, applyTransform=True)
         
     doc.close()
     
