@@ -277,37 +277,37 @@ class SpiderViewerDiday(SpiderViewerClassify):
         particles.load()
         sampling = particles.getSamplingRate()
         
-        setFn = self._getPath('classes2D.sqlite')
+        setFn = prot._getTmpPath('classes2D.sqlite')
         cleanPath(setFn)
         classes2D = SetOfClasses2D(filename=setFn)
         classes2D.setImages(particles)
-            
+
+        # We need to first create a map between the particles index and
+        # the assigned class number
+        classDict = {}
         for classId in range(1, self.numberOfClasses.get()+1):
-            class2D = Class2D()
-            class2D.setObjId(classId)
-            
-            avgImg = Particle()
-            avgImg.setSamplingRate(sampling)
-            avgFn = prot._getPath(classDir, classAvg + '%03d.stk' % classId)
-            avgImg.setLocation(1, avgFn)
-            #avgImg.setLocation(classId, 'classavg.stk')
-            
-            class2D.setRepresentative(avgImg)
-            classes2D.append(class2D)
-            
             docClass = prot._getPath(classDir, classDoc + '%03d.stk' % classId)
             doc = SpiderDocFile(docClass)
-            
             for values in doc.iterValues():
-                imgId = int(values[0])
-                img = particles[imgId]
-                class2D.append(img)
-                
-            classes2D.update(class2D)            
+                imgIndex = int(values[0])
+                classDict[imgIndex] = classId
+            doc.close()
+
+        updateItem = lambda p, i: p.setClassId(classDict[i])
+        def updateClass(cls):
+            rep = cls.getRepresentative()
+            rep.setSamplingRate(particles.getSamplingRate())
+            avgFn = prot._getPath(classDir,
+                                  classAvg + '%03d.stk' % cls.getObjId())
+            rep.setLocation(1, avgFn)
+
+        classes2D.classifyItems(updateItemCallback=updateItem,
+                                updateClassCallback=updateClass,
+                                itemDataIterator=iter(range(1, particles.getSize()+1)))
+
         classes2D.write()
         classes2D.close()
 
-        return [ClassesView(self.getProject(),
-                            prot.strId(), classes2D.getFileName(), 
-                            prot.inputParticles.get().strId())]
+        return [ClassesView(self.getProject(), prot.strId(),
+                            classes2D.getFileName(), particles.strId())]
  
