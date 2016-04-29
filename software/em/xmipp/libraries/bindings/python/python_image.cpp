@@ -1501,7 +1501,7 @@ Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             double scale, shiftX, shiftY, shiftZ, rot,tilt, psi;
             bool flip;
-            transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+            transformationMatrix2Parameters2D(A, flip, scale, shiftX, shiftY, psi);//, shiftZ, rot,tilt, psi);
             double _rot;
             if (tilt==0.)
                 _rot=rot + psi;

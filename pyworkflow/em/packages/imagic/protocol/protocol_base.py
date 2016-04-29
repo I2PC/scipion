@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,13 +25,32 @@
 # *
 # **************************************************************************
 """
-This EM module contains protocol developed at IGBMC, Strasbourg.
+Some Imagic protocol base classes.
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
+from pyworkflow.em import EMProtocol
+from ..imagic import runTemplate
 
-_logo = "igbmc_logo.png"
 
-from protocol_gempicker import ProtGemPicker
-from wizard import GemPickerMaskWizard, GemPickerWizard
+class ImagicProtocol(EMProtocol):
+    """ Sub-class of EMProtocol to group some common Imagic utils. """
 
+    def _getFileName(self, key):
+        """ Give a key, append the img extension
+        and prefix the protocol working dir.
+        """
+        template = '%(' + key + ')s' + '.img'
+
+        return self._getPath(template % self._params)
+
+    def runTemplate(self, inputScript, paramsDict):
+        """ This function will create a valid Imagic script
+        by copying the template and replacing the values in dictionary.
+        After the new file is read, the Imagic interpreter is invoked.
+        """
+        self._enterWorkingDir()
+
+        log = getattr(self, '_log', None)
+        runTemplate(inputScript, paramsDict, log)
+
+        self._leaveWorkingDir()

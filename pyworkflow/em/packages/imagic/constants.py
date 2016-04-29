@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,13 +25,14 @@
 # *
 # **************************************************************************
 """
-This EM module contains protocol developed at IGBMC, Strasbourg.
+This modules contains constants related to Imagic protocols
 """
 
-from bibtex import _bibtex # Load bibtex dict with references
+# ------------------ Constants values --------------------------------------
+# imagic documentation url
+IMAGIC_DOCS = 'http://imagescience.de/imagic.html'
 
-_logo = "igbmc_logo.png"
-
-from protocol_gempicker import ProtGemPicker
-from wizard import GemPickerMaskWizard, GemPickerWizard
-
+# MSA distances
+EUCLIDIAN = 0
+CHISQUARE = 1
+MODULATION = 2

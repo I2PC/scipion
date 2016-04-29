@@ -390,3 +390,8 @@ def createUniqueFileName(fn):
             return uni_fn
 
     return None
+
+
+def getFileSize(fn):
+    """ Shortcut to inspect the size of a file. """
+    return os.stat(fn).st_size
