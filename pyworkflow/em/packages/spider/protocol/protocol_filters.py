@@ -195,7 +195,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
  
         if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
             summary.append('Filter radius: *%s px^-1*' % self.filterRadius)
-            radiusAngstroms = pixelSize/self.filterRadius
+            radiusAngstroms = pixelSize/float(self.filterRadius)
             summary.append('Filter radius: *%s Angstroms*' % radiusAngstroms )
         else:
             summary.append('Frequency range: *%s - %s*' % (self.lowFreq, self.highFreq))
