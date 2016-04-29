@@ -67,8 +67,7 @@ class SpiderProtClassifyKmeans(SpiderProtClassify):
         classes2D = self._createSetOfClasses2D(particles)
         # Load the class assignment file from results
         clsdoc = SpiderDocFile(self._getPath(self.getClassDir(), 'docassign.stk'))
-        print self._getPath(self.getClassDir(), 'docassign.stk')
-            
+
         # Here we are assuming that the order of the class assignment rows
         # is the same for the input particles and the generated Spider stack
         classes2D.classifyItems(updateItemCallback=self._updateParticle,
