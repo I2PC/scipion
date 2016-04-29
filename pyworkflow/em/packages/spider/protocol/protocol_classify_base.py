@@ -126,9 +126,9 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                              })
         self._updateParams()
 
-        self.runTemplate(self.getScript(), self.getExt(), self._params)   
-        
-        
+        self.runTemplate(self.getScript(), self.getExt(), self._params)
+
+
 class SpiderProtClassifyCluster(SpiderProtClassify):
     """ Base for Clustering Spider classification protocols.
     """
@@ -142,50 +142,55 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
          
     #--------------------------- UTILS functions --------------------------------------------
     
-    def _fillClassesFromNodes(self, classes, nodeList):
+    def _fillClassesFromNodes(self, classes2D, nodeList):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
-        img = Particle()
-        sampling = classes.getSamplingRate()
-        
+        particles = classes2D.getImages()
+        sampling = classes2D.getSamplingRate()
+
+        # We need to first create a map between the particles index and
+        # the assigned class number
+        classDict = {}
+        nodeDict = {}
+        classCount = 0
         for node in nodeList:
             if node.path:
-                #print "node.path: ", node.path
-                class2D = Class2D()
-                avg = Particle()
-                #avg.copyObjId(class2D)
-                avg.setLocation(node.avgCount, self.dendroAverages)
-                avg.setSamplingRate(sampling)
-                
-                class2D.setRepresentative(avg)
-                class2D.setSamplingRate(sampling)
-                classes.append(class2D)
-                #print "class2D.id: ", class2D.getObjId()
+                classCount += 1
+                node.classId = classCount
+                nodeDict[classCount] = node
                 for i in node.imageList:
-                    #img.setObjId(i) # FIXME: this is wrong if the id is different from index
-                    img.cleanObjId()
-                    img.setLocation(int(i), self.dendroImages)
-                    class2D.append(img)
+                    classDict[i] = node
+
+        updateItem = lambda p, i: p.setClassId(classDict[i].classId)
+
+        def updateClass(cls):
+            node = nodeDict[cls.getObjId()]
+            rep = cls.getRepresentative()
+            rep.setSamplingRate(sampling)
+            rep.setLocation(node.avgCount, self.dendroAverages)
+
+        classes2D.classifyItems(updateItemCallback=updateItem,
+                                updateClassCallback=updateClass,
+                                itemDataIterator=iter(range(1, particles.getSize()+1)))
                 
-                classes.update(class2D)
-                
-                
-    def _fillParticlesFromNodes(self, particles, nodeList):
+    def _fillParticlesFromNodes(self, inputParts, outputParts, nodeList):
         """ Create the SetOfClasses2D from the images of each node
         in the dendogram. 
         """
-        img = Particle()
-        
+        allImages = set()
         for node in nodeList:
             if node.path:
                 for i in node.imageList:
-                    #img.setObjId(i) # FIXME: this is wrong if the id is different from index
-                    img.cleanObjId()
-                    img.setLocation(int(i), self.dendroImages)
-                    particles.append(img)
-                
-        
+                    allImages.add(i)
+
+        def updateItem(item, index):
+            item._appendItem = index in allImages
+
+        outputParts.copyItems(inputParts,
+                              updateItemCallback=updateItem,
+                              itemDataIterator=iter(range(1, inputParts.getSize()+1)))
+
     def buildDendrogram(self, writeAverages=False):
         """ Parse Spider docfile with the information to build the dendogram.
         Params:
