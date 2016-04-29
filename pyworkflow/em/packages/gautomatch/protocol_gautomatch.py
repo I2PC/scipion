@@ -25,13 +25,14 @@
 # **************************************************************************
 
 import os
-from os.path import join, exists, basename
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
+
+from convert import readSetOfCoordinates, runGautomatch, getProgram
+
 
 
 class ProtGautomatch(em.ProtParticlePicking):
@@ -109,19 +110,21 @@ class ProtGautomatch(em.ProtParticlePicking):
                            'Probably do not use 4 at all, it is not accurate '
                            'in general.')
 
-        group = form.addGroup('Local sigma parameters')
+        group = form.addGroup('Local sigma parameters',
+                              condition='not advanced')
         group.addParam('localSigmaCutoff', params.FloatParam, default=1.2,
-                       label='Local sigma cut-off', condition='not advanced',
+                       label='Local sigma cut-off',
                        help='Local sigma cut-off (relative value), 1.2~1.5 '
                             'should be a good range\n'
                             'Normally a value >1.2 will be ice, protein '
                             'aggregation or contamination')
         group.addParam('localSigmaDiam', params.IntParam, default=100,
-                       label='Local sigma diameter (A)', condition='not advanced',
+                       label='Local sigma diameter (A)',
                        help='Diameter for estimation of local sigma, in Angstrom')
 
-        group = form.addGroup('Local average parameters')
-        line = group.addLine('Local average range', condition='not advanced',
+        group = form.addGroup('Local average parameters',
+                              condition='not advanced')
+        line = group.addLine('Local average range',
                              help="Local average cut-off (relative value), "
                                   "any pixel values outside the range will be "
                                   "considered as ice/aggregation/carbon etc.")
@@ -130,7 +133,6 @@ class ProtGautomatch(em.ProtParticlePicking):
         line.addParam('localAvgMax', params.FloatParam, default=1.0,
                       label='Max')
         group.addParam('localAvgDiam', params.IntParam, default=100,
-                       condition='not advanced',
                        label='Local average diameter (A)',
                        help='Diameter for estimation of local average, in Angstrom. '
                             '1.5~2.0X particle diameter suggested\n'
@@ -158,71 +160,36 @@ class ProtGautomatch(em.ProtParticlePicking):
         # --------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
-        self._insertFunctionStep('convertInputStep',
-                                 self.getInputMicrographs().strId(),
-                                 self.inputReferences.get().strId())
-        self._insertPickingSteps()
-        self._insertFunctionStep('createOutputStep')
-
-    def _insertPickingSteps(self):
-        """ Insert the steps to launch the picker with different modes. 
-        Prepare the command arguments that will be passed. 
-        """
-        args = ' --T %s' % self._getTmpPath('references.mrcs')
-        args += ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
-        args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
-        args += ' --ang_step %d' % self.angStep
-        args += ' --diameter %d' % (2 * self.particleSize.get())
-        args += ' --cc_cutoff %0.2f' % self.threshold
-
-        if not self.advanced:
-            args += ' --speed %d' % self.speed
-            args += ' --boxsize %d' % self.boxSize
-            args += ' --max_dist %d' % self.maxDist
-            args += ' --gid %d' % self.GPUId
-            args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
-            args += ' --lsigma_D %d' % self.localSigmaDiam
-            args += ' --lave_max %0.2f' % self.localAvgMax
-            args += ' --lave_min %0.2f' % self.localAvgMin
-            args += ' --lave_D %d' % self.localAvgDiam
-            args += ' --lp %d' % self.lowPass
-            args += ' --hp %d' % self.highPass
-
-        if not self.invertTemplatesContrast:
-            args += ' --dont_invertT'
-
-        args += ' %s' % join(self._getExtraPath('micrographs'), '*.mrc')
-
-        self._insertFunctionStep('runGautomatchStep', args)
+        convId = self._insertFunctionStep('convertInputStep',
+                                          self.getInputMicrographs().strId(),
+                                          self.inputReferences.get().strId())
+        deps = []
+        refStack = self._getExtraPath('references.mrcs')
+        # Insert one picking step per Micrograph
+        for mic in self.inputMicrographs.get():
+            micName = mic.getFileName()
+            pickId = self._insertFunctionStep('runGautomatchStep',
+                                              micName, refStack,
+                                              self.getArgs(),
+                                              prerequisites=[convId])
+            deps.append(pickId)
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
     # --------------------------- STEPS functions ---------------------------------------------------
+
     def convertInputStep(self, micsId, refsId):
         """ This step will take of the convertions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrcs' format
         """
-        ih = em.ImageHandler()
-        micDir = self._getExtraPath('micrographs')  # put output and mics in extra dir
+        micDir = self.getMicrographsDir()  # put output and mics in extra dir
         pwutils.makePath(micDir)
-
-        for mic in self.getInputMicrographs():
-            # Create micrograph folder
-            micName = mic.getFileName()
-            # If micrographs are in .mrc format just link it
-            # otherwise convert them
-            outMic = join(micDir, pwutils.replaceBaseExt(micName, 'mrc'))
-
-            if micName.endswith('.mrc'):
-                pwutils.createLink(micName, outMic)
-            else:
-                ih.convert(mic, outMic)
-
         # We will always convert the templates to mrcs stack
-        inputRefs = self.inputReferences.get()
-        inputRefs.writeStack(self._getTmpPath('references.mrcs'))
+        self.convertReferences(self._getExtraPath('references.mrcs'))
 
-    def runGautomatchStep(self, args):
-        self.runJob(self._getProgram(), args)
+    def runGautomatchStep(self, micName, refStack, args):
+        # We convert the input micrograph on demand if not in .mrc
+        runGautomatch(micName, refStack, self.getMicrographsDir(), args)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -231,23 +198,9 @@ class ProtGautomatch(em.ProtParticlePicking):
         if self.boxSize and self.boxSize > 0:
             coordSet.setBoxSize(self.boxSize.get())
         else:
-            coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
+            coordSet.setBoxSize(self.inputReferences.get().getXDim)
 
-        for mic in micSet:
-            fnMic = pwutils.removeExt(mic.getFileName())
-            fnCoords = basename(fnMic) + '_automatch.box'
-            fn2parse = self._getExtraPath('micrographs', fnCoords)
-            with open(fn2parse, "r") as source:
-                for line in source:
-                    tokens = line.split()
-                    coord = em.Coordinate()
-                    coord.setPosition(int(tokens[0]) + int(tokens[2]) / 2,
-                                      int(tokens[1]) + int(tokens[3]) / 2)
-                    coord.setMicrograph(mic)
-                    coordSet.append(coord)
-                    # FIXME this should be outside the loop
-                    if int(tokens[2]) != coordSet.setBoxSize:
-                        coordSet.setBoxSize(int(tokens[2]))
+        self.readSetOfCoordinates(self.getMicrographsDir(), coordSet)
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
@@ -256,10 +209,10 @@ class ProtGautomatch(em.ProtParticlePicking):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = self._getProgram()
+        program = getProgram()
         if program is None:
             errors.append("Missing variables GAUTOMATCH and/or GAUTOMATCH_HOME")
-        elif not exists(program):
+        elif not os.path.exists(program):
             errors.append("Binary '%s' does not exists.\n" % program)
 
         # If there is any error at this point it is related to config variables
@@ -309,11 +262,48 @@ class ProtGautomatch(em.ProtParticlePicking):
         return ['Zhang2016']
 
     # --------------------------- UTILS functions --------------------------------------------------
-    def _getProgram(self):
-        """ Return the program binary that will be used. """
-        if (not 'GAUTOMATCH' in os.environ or
-            not 'GAUTOMATCH_HOME' in os.environ):
-            return None
-        binary = os.environ['GAUTOMATCH']
-        program = join(os.environ['GAUTOMATCH_HOME'], 'bin', basename(binary))
-        return program
+    def getMicrographsDir(self):
+        return self._getExtraPath('micrographs')
+
+    def getArgs(self, threshold=True, mindist=True):
+        """ Return the Gautomatch parameters for picking one micrograph.
+         The command line will depends on the protocol selected parameters.
+         Params:
+            micFn: micrograph filename
+            refStack: filename with the references stack (.mrcs)
+        """
+        #args = ' --T %s' % refStack #self._getTmpPath('references.mrcs')
+        args = ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
+        args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
+        args += ' --ang_step %d' % self.angStep
+        args += ' --diameter %d' % (2 * self.particleSize.get())
+
+        if threshold:
+            args += ' --cc_cutoff %0.2f' % self.threshold
+
+        if not self.advanced:
+            args += ' --speed %d' % self.speed
+            args += ' --boxsize %d' % self.boxSize
+            if mindist:
+                args += ' --min_dist %d' % self.maxDist
+            args += ' --gid %d' % self.GPUId
+            args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
+            args += ' --lsigma_D %d' % self.localSigmaDiam
+            args += ' --lave_max %0.2f' % self.localAvgMax
+            args += ' --lave_min %0.2f' % self.localAvgMin
+            args += ' --lave_D %d' % self.localAvgDiam
+            args += ' --lp %d' % self.lowPass
+            args += ' --hp %d' % self.highPass
+
+        if not self.invertTemplatesContrast:
+            args += ' --dont_invertT'
+
+        return args
+
+    def convertReferences(self, refStack):
+        """ Write input references as an .mrc stack. """
+        self.inputReferences.get().writeStack(refStack)
+
+    def readSetOfCoordinates(self, workingDir, coordSet):
+        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
+

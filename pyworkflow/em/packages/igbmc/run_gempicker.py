@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,14 +25,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This EM module contains protocol developed at IGBMC, Strasbourg.
-"""
 
-from bibtex import _bibtex # Load bibtex dict with references
+import sys
 
-_logo = "igbmc_logo.png"
+from pyworkflow.object import Boolean
+from convert import runGempicker
 
-from protocol_gempicker import ProtGemPicker
-from wizard import GemPickerMaskWizard, GemPickerWizard
+
+if __name__ == '__main__':
+    micName = sys.argv[1]
+    workDir = sys.argv[2]
+    useGPU = Boolean(sys.argv[3])
+    args = " ".join(sys.argv[4:])
+
+    runGempicker(micName, workDir, useGPU, args)
+
+
 
