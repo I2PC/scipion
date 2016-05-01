@@ -199,6 +199,39 @@ class TestRelionPreprocess(TestRelionBase):
         self.launchProtocol(protocol)       
 
 
+class TestRelionSubtract(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+    
+    def test_subtract(self):
+        protParts = self.newProtocol(ProtImportParticles,
+                                     objLabel='from relion auto-refine',
+                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                     starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
+                                     magnification=10000,
+                                     samplingRate=7.08,
+                                     haveDataBeenPhaseFlipped=True
+                                     )
+        self.launchProtocol(protParts)
+        self.assertEqual(60, protParts.outputParticles.getXDim())
+        
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   filesPath=self.dsRelion.getFile('volumes/reference.mrc'),
+                                   samplingRate=7.08)
+        self.launchProtocol(protVol)
+        self.assertEqual(60, protVol.outputVolume.getDim()[0])
+        
+        protSubtract = self.newProtocol(ProtRelionSubtract)
+        protSubtract.inputParticles.set(protParts.outputParticles)
+        protSubtract.inputVolume.set(protVol.outputVolume)
+        self.launchProtocol(protSubtract)
+        self.assertIsNotNone(protSubtract.outputParticles, "There was a problem with subtract projection")
+
+
+
+
 # class TestPolishParticles(TestRelionBase):
 #     @classmethod
 #     def setUpClass(cls):

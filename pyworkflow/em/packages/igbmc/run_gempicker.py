@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,9 +26,19 @@
 # *
 # **************************************************************************
 
-from protocol_convert_pdb import XmippProtConvertPdb
-from protocol_combine_pdb import XmippProtCombinePdb
-from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
+import sys
 
-from viewer_pseudoatoms import XmippPseudoAtomsViewer
-from viewer_combine_pdb import XmippProtCombinePdbViewer
+from pyworkflow.object import Boolean
+from convert import runGempicker
+
+
+if __name__ == '__main__':
+    micName = sys.argv[1]
+    workDir = sys.argv[2]
+    useGPU = Boolean(sys.argv[3])
+    args = " ".join(sys.argv[4:])
+
+    runGempicker(micName, workDir, useGPU, args)
+
+
+

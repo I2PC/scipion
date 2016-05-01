@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,10 +24,15 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This modules contains constants related to Imagic protocols
+"""
 
-from protocol_convert_pdb import XmippProtConvertPdb
-from protocol_combine_pdb import XmippProtCombinePdb
-from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
+# ------------------ Constants values --------------------------------------
+# imagic documentation url
+IMAGIC_DOCS = 'http://imagescience.de/imagic.html'
 
-from viewer_pseudoatoms import XmippPseudoAtomsViewer
-from viewer_combine_pdb import XmippProtCombinePdbViewer
+# MSA distances
+EUCLIDIAN = 0
+CHISQUARE = 1
+MODULATION = 2

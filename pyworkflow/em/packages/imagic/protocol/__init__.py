@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,10 +24,9 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-
-from protocol_convert_pdb import XmippProtConvertPdb
-from protocol_combine_pdb import XmippProtCombinePdb
-from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
-
-from viewer_pseudoatoms import XmippPseudoAtomsViewer
-from viewer_combine_pdb import XmippProtCombinePdbViewer
+"""
+Import of all protocols included in imagic.
+"""
+from protocol_base import ImagicProtocol
+from protocol_msa import ImagicProtMSA
+from protocol_msa_classify import ImagicProtMSAClassify
