@@ -730,10 +730,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                 # Falta Wiener y filtrar
                                 self.runJob('xmipp_reconstruct_significant',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                                 # moveFile(join(fnDirSignificant,"images_significant_iter001_00.xmd"),join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)))
-                                moveFile(join(fnDirSignificant,"angles_iter001_00.xmd"),join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)))
-                                cleanPath(join(fnDirSignificant,"images_iter001_00.xmd"))
-                                #cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
-                                cleanPath(join(fnDirSignificant,"images_significant_iter001_00.xmd"))
+                                fnAnglesSignificant = join(fnDirSignificant,"angles_iter001_00.xmd")
+                                if exists(fnAnglesSignificant): 
+                                    moveFile(fnAnglesSignificant,fnAnglesGroup)
+                                    cleanPath(join(fnDirSignificant,"images_iter001_00.xmd"))
+                                    #cleanPath(join(fnDirSignificant,"angles_iter001_00.xmd"))
+                                    cleanPath(join(fnDirSignificant,"images_significant_iter001_00.xmd"))
                             else:
                                 args='-i %s -o %s --ref %s --Ri 0 --Ro %d --max_shift %d --search5d_shift %d --search5d_step %f --mem 2 --append --pad 2.0 --number_orientations %d'%\
                                      (fnGroup,join(fnDirSignificant,"angles_group%03d%s.xmd"%(j,subset)),fnGalleryGroup,R,maxShift,self.shiftSearch5d.get(),self.shiftStep5d.get(),
@@ -743,10 +745,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                 if self.numberOfMpi>1:
                                     args+=" --mpi_job_size 2"
                                 self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-                            if j==1:
-                                copyFile(fnAnglesGroup, fnAngles)
-                            else:
-                                self.runJob("xmipp_metadata_utilities","-i %s --set union_all %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
+                            if exists(fnAnglesGroup):
+                                if j==1:
+                                    copyFile(fnAnglesGroup, fnAngles)
+                                else:
+                                    self.runJob("xmipp_metadata_utilities","-i %s --set union_all %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
                     if self.saveSpace and ctfPresent:
                         self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
