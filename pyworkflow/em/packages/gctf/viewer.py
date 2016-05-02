@@ -135,7 +135,7 @@ def createCtfPlot(ctfSet, ctfId):
         _plotCurve(a, i, fn)
     xplotter.showLegend(['simulated CTF',
                          'equiphase avg.',
-                         'equiphase avg. - bg'
+                         'equiphase avg. - bg',
                          'cross correlation'])
     a.grid(True)
     xplotter.show()
