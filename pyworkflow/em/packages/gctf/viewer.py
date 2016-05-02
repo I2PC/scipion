@@ -131,10 +131,11 @@ def createCtfPlot(ctfSet, ctfId):
     plot_title = "CTF Fitting"
     a = xplotter.createSubPlot(plot_title, 'Resolution (Angstroms)', 'CTF', yformat=False)
     a.invert_xaxis()
-    for i in range(1, 4):
+    for i in range(1, 5):
         _plotCurve(a, i, fn)
     xplotter.showLegend(['simulated CTF',
                          'equiphase avg.',
+                         'equiphase avg. - bg'
                          'cross correlation'])
     a.grid(True)
     xplotter.show()
