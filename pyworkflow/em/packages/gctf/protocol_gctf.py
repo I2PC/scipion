@@ -348,7 +348,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--plot_res_ring %d " % (1 if self.plotResRing else 0)
         self._args += "--gid %d " % self.GPUCore.get()
         self._args += "--bfac %d " % self.bfactor.get()
-        self._args += "--B_resH %f " % (2 * self.inputMicrographs.get().getSamplingRate())
+        self._args += "--B_resH %f " % (2 * self._params['sampling'])
         self._args += "--do_basic_rotave %d " % ( 1 if self.doBasicRotave else 0)
         self._args += "--overlap %f " % self.overlap.get()
         self._args += "--convsize %d " % self.convsize.get()
