@@ -439,7 +439,6 @@ void ProgAngularDistance::computeWeights()
 			}
 			newObjId=DFweights.addObject();
 			DFweights.setValue(label,currentId,newObjId);
-			DFweights.setValue(label,currentId,newObjId);
     	}
     	else
     		N=0;
@@ -458,6 +457,15 @@ void ProgAngularDistance::computeWeights()
 				DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
     		}
         anotherImageIn2=iter2.hasNext();
+    }
+    // If there are more images in MD1 than in MD2, set the last images to 0
+    while (iter1.hasNext())
+    {
+		size_t newObjId=DFweights.addObject();
+		DFweights.setValue(label,currentId,newObjId);
+		DFweights.setValue(angleDiffLabel,-1.0,newObjId);
+		DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+		iter1.moveNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
