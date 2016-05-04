@@ -336,10 +336,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             setXmippAttributes(particle, row, xmipp.MDL_COST, xmipp.MDL_WEIGHT_CONTINUOUS2, 
                                xmipp.MDL_CONTINUOUS_SCALE_X, xmipp.MDL_CONTINUOUS_SCALE_Y, xmipp.MDL_COST_PERCENTILE,
                                xmipp.MDL_CONTINUOUS_GRAY_A, xmipp.MDL_CONTINUOUS_GRAY_B)
+        if row.containsLabel(xmipp.MDL_WEIGHT_JUMPER):
+            setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_JUMPER)
         if row.containsLabel(xmipp.MDL_ANGLE_DIFF):
-            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF, xmipp.MDL_WEIGHT_JUMPER)
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF)
         if row.containsLabel(xmipp.MDL_ANGLE_DIFF2):
-            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2, xmipp.MDL_WEIGHT_JUMPER2)
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_DIFF2)
+        if row.containsLabel(xmipp.MDL_ANGLE_TEMPERATURE):
+            setXmippAttributes(particle, row, xmipp.MDL_ANGLE_TEMPERATURE)
         if row.containsLabel(xmipp.MDL_WEIGHT_SSNR):
             setXmippAttributes(particle, row, xmipp.MDL_WEIGHT_SSNR)
         createItemMatrix(particle, row, align=em.ALIGN_PROJ)
@@ -1055,7 +1059,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if ctfPresent:
             cleanPath("%s/ctf_groups.xmd"%fnDirCurrent)
         moveFile(fnAnglesQualified, fnAngles)
- 
+        
         if self.weightCC:
             mdAngles=xmipp.MetaData(fnAngles)
             weightCCmin=float(self.weightCCmin.get())
@@ -1067,6 +1071,39 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 weight=mdAngles.getValue(xmipp.MDL_WEIGHT,objId)
                 weight*=weightCCmin+w*(1-weightCCmin)
                 mdAngles.setValue(xmipp.MDL_WEIGHT,weight,objId)
+            mdAngles.write(fnAngles)
+
+        # Qualify according to angular temperature
+        if iteration==1:
+            self.runJob("xmipp_metadata_utilities","-i %s --fill angleTemp constant 0"%fnAngles,numberOfMpi=1)
+        else:
+            fnAngles_1=join(fnDirPrevious,"angles.xmd")
+            fnTemp=join(fnDirCurrent,"previousAngleTemp.xmd")
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "particleId angleTemp" -o %s'%(fnAngles_1,fnTemp),numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate remove_duplicates particleId'%fnTemp,numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --set join %s particleId'%(fnAngles,fnTemp),numberOfMpi=1)
+            cleanPath(fnTemp)
+            
+        hasDiff0 = row.containsLabel(xmipp.MDL_ANGLE_DIFF0)
+        hasDiff1 = row.containsLabel(xmipp.MDL_ANGLE_DIFF)
+        hasDiff2 = row.containsLabel(xmipp.MDL_ANGLE_DIFF2)
+        if hasDiff0 or hasDiff1 or hasDiff2:
+            mdAngles=xmipp.MetaData(fnAngles)
+            K=1.0/3.0
+            iNorm = 1.0/(hasDiff0 + hasDiff1 + hasDiff2)
+            for objId in mdAngles:
+                perturbation=0.
+                if hasDiff0:
+                    perturbation+=mdAngles.getValue(xmipp.MDL_ANGLE_DIFF0,objId)
+                if hasDiff1:
+                    perturbation+=mdAngles.getValue(xmipp.MDL_ANGLE_DIFF,objId)
+                if hasDiff2:
+                    perturbation+=mdAngles.getValue(xmipp.MDL_ANGLE_DIFF2,objId)
+                perturbation*=iNorm
+                
+                previousTemp = mdAngles.getValue(xmipp.MDL_ANGLE_TEMPERATURE,objId)
+                currentTemp = (1-K)*previousTemp + K*perturbation
+                mdAngles.setValue(xmipp.MDL_ANGLE_TEMPERATURE,currentTemp,objId)
             mdAngles.write(fnAngles)
 
     def reconstruct(self, iteration):
