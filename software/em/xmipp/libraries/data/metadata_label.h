@@ -65,6 +65,7 @@ enum MDLabel
     MDL_ANGLE_DIFF2, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
+    MDL_ANGLE_TEMPERATURE, ///< Angular temperature (double,degrees)
     MDL_APPLY_SHIFT,///<Apply shift when project the volume ,
     MDL_AVG, ///< average value (double)
     MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
@@ -1304,6 +1305,7 @@ private:
         MDL::addLabel(MDL_ANGLE_DIFF2, LABEL_DOUBLE, "angleDiff2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
+        MDL::addLabel(MDL_ANGLE_TEMPERATURE, LABEL_DOUBLE, "angleTemp");
 
         MDL::addLabel(MDL_APPLY_SHIFT, LABEL_BOOL, "applyShift");
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
