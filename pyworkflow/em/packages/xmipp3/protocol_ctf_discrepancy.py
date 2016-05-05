@@ -24,9 +24,7 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippCtfMicrographs protocol
-"""
+
 import collections
 from itertools import izip
 

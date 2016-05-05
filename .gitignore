@@ -59,11 +59,17 @@ gmon.out
 /pyworkflow/web/scipion_web.db
 .directory
 
-# Static Path
+# Static Path & Web stuff
 /pyworkflow/web/static
 /pyworkflow/resources/uploads
 /pyworkflow/tests/em/data
 /data
+downloads.sqlite
+foo.txt
+/pyworkflow/web/pages/resources/install/
+scipion_web_tools_django.log
+static/
+
 
 # Scipion
 /config/*.conf

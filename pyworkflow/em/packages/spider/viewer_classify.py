@@ -24,8 +24,8 @@
 # *
 # **************************************************************************
 """
-This module implement the wrappers around xmipp_showj
-visualization program.
+This module implements the visualization program
+for Spider classify protocols.
 """
 
 from os.path import join
@@ -52,20 +52,22 @@ from spider import SpiderDocFile
 
 class SpiderViewerClassify(ProtocolViewer):
     """ Visualization of some Classification protocols in Spider. """
-           
+
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         group1 = form.addGroup('Dendogram')
         group1.addParam('doShowDendrogram', LabelParam, label="Show dendrogram", default=True,
-                      help='')
+                      help='In a dendrogram larger vertical bars signify a greater difference '
+                      'between classes. Many small differences at the bottom can be eliminated '
+                      'with an increase of the "Minimum height" setting.')
         group1.addParam('minHeight', FloatParam, default=0.5,
                       label='Minimum height',
-                      help='The dendrogram will be show until that height')
+                      help='The dendrogram will be cut at this level')
         self.groupClass = form.addGroup('Classes')
         self.groupClass.addParam('doShowClasses', LabelParam, label="Visualize class averages", default=True,
-                      help='')
+                      help='Display class averages')
 
     def _getVisualizeDict(self):
         return {'doShowDendrogram': self._plotDendrogram,
@@ -116,6 +118,8 @@ class SpiderViewerClassify(ProtocolViewer):
             
             
 class SpiderViewerWard(SpiderViewerClassify):
+    """ Visualization of Spider - classify Ward protocol results. """
+    
     _targets = [SpiderProtClassifyWard]
     _label = "viewer ward"
     
@@ -240,6 +244,8 @@ class SpiderImageBox(ImageBox):
             
             
 class SpiderViewerDiday(SpiderViewerClassify):
+    """ Visualization of Spider - classify Diday protocol results. """
+    
     _targets = [SpiderProtClassifyDiday]
     _label = "viewer diday"
     
@@ -304,4 +310,4 @@ class SpiderViewerDiday(SpiderViewerClassify):
         return [ClassesView(self.getProject(),
                             prot.strId(), classes2D.getFileName(), 
                             prot.inputParticles.get().strId())]
-                              
+ 

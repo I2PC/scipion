@@ -176,7 +176,7 @@ class TestMixedBPV2(TestWorkflow):
         
         print "Run Initial Model"
         protIniModel = self.newProtocol(EmanProtInitModel, numberOfIterations=1, numberOfModels=2,
-                                 shrink=1, symmetry='icos', numberOfThreads=3)
+                                 shrink=5, symmetry='icos', numberOfThreads=3)
         protIniModel.inputSet.set(protML2D.outputClasses)
         self.launchProtocol(protIniModel)        
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  

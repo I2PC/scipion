@@ -38,7 +38,7 @@ from convert import readSetOfCoordinates
 
 
 class EmanProtBoxing(ProtParticlePicking):
-    """Protocol to pick particles in a set of micrographs using eman"""
+    """ Picks particles in a set of micrographs using eman2 boxer. """
     _label = 'boxer'
         
     def __init__(self, **args):     

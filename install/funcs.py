@@ -476,7 +476,7 @@ class Environment:
 
         environ = {
             'PYTHONHOME': prefix,
-            'LD_LIBRARY_PATH': '%s/lib' % prefix,
+            'LD_LIBRARY_PATH': '%s/lib:%s' % (prefix, os.environ.get('LD_LIBRARY_PATH', '')),
             'PATH': '%s/bin:%s' % (prefix, os.environ['PATH']),
             'CPPFLAGS': '-I%s/include' % prefix,
             'LDFLAGS': '-L%s/lib %s' % (prefix, os.environ.get('LDFLAGS', ''))}

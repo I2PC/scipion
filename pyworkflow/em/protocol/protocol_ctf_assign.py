@@ -31,7 +31,7 @@ from pyworkflow.em.protocol import ProtCTFMicrographs
 
 
 class ProtCTFAssign(ProtCTFMicrographs):
-    """ This protocol assign a CTF estimation to a particular
+    """ This protocol assigns a CTF estimation to a particular
     set of particles producing a new set. """
     _label = 'ctf assign'
     _unionTypes = ['Micrographs',
@@ -95,7 +95,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
             if hasMicName:
                 ctfName = ctf.getMicrograph().getMicName()
             else:
-                ctfName = ctf.getMicrograph().getMicId()
+                ctfName = ctf.getMicrograph().getObjId()
 #             print "ctf: ", ctf.printAll(), ctfName
             ctfDict[ctfName] = ctf.clone()
         

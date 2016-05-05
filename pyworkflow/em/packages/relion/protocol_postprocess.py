@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 
+import os
 from pyworkflow.protocol.params import (PointerParam, FloatParam, PathParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume, VolumeMask
@@ -32,12 +33,12 @@ from pyworkflow.em.protocol import ProtAnalysis3D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
+import pyworkflow.em.metadata as md
 
 class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
-    """    
-    Reconstruct a volume using Relion from a given set of particles.
-    The alignment parameters will be converted to a Relion star file
-    and used as direction projections to reconstruct.
+    """
+    Relion post-processing protocol for automated masking,
+    overfitting estimation, MTF-correction and B-factor sharpening
     """
     _label = 'post-processing'
     
@@ -202,6 +203,13 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        summary = []
+        postStarFn = self._getExtraPath("postprocess.star")
+        if os.path.exists(postStarFn):
+            mdResol = md.RowMetaData(postStarFn)
+            resol = mdResol.getValue(md.RLN_POSTPROCESS_FINAL_RESOLUTION)
+            summary.append("Final resolution: *%0.2f*" % resol)
+        
+        return summary
     
     #--------------------------- UTILS functions --------------------------------------------

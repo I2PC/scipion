@@ -23,24 +23,20 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.utils.process import runJob
-"""
-This sub-package contains wrapper around CL2D Xmipp program
-"""
 
 from os.path import join, dirname, exists
 from glob import glob
 
-import xmipp
-from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam, 
-                                        StringParam, FloatParam, 
+from pyworkflow.utils.process import runJob
+from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam,
+                                        StringParam, FloatParam,
                                         LEVEL_ADVANCED, LEVEL_ADVANCED,
-    BooleanParam)
+                                        BooleanParam)
 from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
 from pyworkflow.utils.path import cleanPath, makePath
 import pyworkflow.em as em
-
 from convert import writeSetOfParticles, readSetOfClasses2D, writeSetOfClasses2D
+import xmipp
 
 # Comparison methods enum
 CMP_CORRELATION = 0

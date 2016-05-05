@@ -36,12 +36,13 @@ from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
+import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles, getVersion
+from convert import convertBinaryVol, writeSetOfParticles, getVersion
 
 
 class ProtRelionBase(EMProtocol):
@@ -642,17 +643,20 @@ class ProtRelionBase(EMProtocol):
     
     def _summary(self):
         self._initialize()
-        iterMsg = 'Iteration %d' % self._lastIter()
-        if self.hasAttribute('numberOfIterations'):
-            iterMsg += '/%d' % self._getnumberOfIters()
-        summary = [iterMsg]
-        
-        if self._getInputParticles().isPhaseFlipped():
-            msg = "Your images have been ctf-phase corrected"
+
+        lastIter = self._lastIter()
+
+        if lastIter is not None:
+            iterMsg = 'Iteration %d' % lastIter
+            if self.hasAttribute('numberOfIterations'):
+                iterMsg += '/%d' % self._getnumberOfIters()
         else:
-            msg = "Your images have not been ctf-phase corrected"
-        
-        summary += [msg]
+            iterMsg = 'No iteration finished yet.'
+        summary = [iterMsg]
+
+        flip = '' if self._getInputParticles().isPhaseFlipped() else 'not '
+        flipMsg = "Your images have %sbeen ctf-phase corrected" % flip
+        summary.append(flipMsg)
         
         if self.doContinue:
             summary += self._summaryContinue()
@@ -729,8 +733,11 @@ class ProtRelionBase(EMProtocol):
         data_sqlite = self._getFileName('data_scipion', iter=it)
         
         if not exists(data_sqlite):
-            data = self._getFileName('data', iter=it)
-            writeSqliteIterData(data, data_sqlite, **kwargs)
+            iterImgSet = em.SetOfParticles(filename=data_sqlite)
+            iterImgSet.copyInfo(self._getInputParticles())
+            self._fillDataFromIter(iterImgSet, it)
+            iterImgSet.write()
+            iterImgSet.close()
         
         return data_sqlite
     
