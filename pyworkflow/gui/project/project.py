@@ -401,6 +401,7 @@ class ProjectWindow(ProjectBaseWindow):
 
             elif cmd == OBJCMD_GCTF:
                 from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
 
         except Exception, ex:
             print "There was an error executing object command !!!:"

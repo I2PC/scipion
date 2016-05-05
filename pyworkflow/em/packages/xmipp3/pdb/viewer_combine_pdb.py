@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:  Mohsen Kazemi (mkazemi@cnb.csic.es)
+# * 
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,9 +25,16 @@
 # *
 # **************************************************************************
 
-from protocol_convert_pdb import XmippProtConvertPdb
-from protocol_combine_pdb import XmippProtCombinePdb
-from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
+from pyworkflow.em.viewer import DataView, ChimeraView
+from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 
-from viewer_pseudoatoms import XmippPseudoAtomsViewer
-from viewer_combine_pdb import XmippProtCombinePdbViewer
+from protocol_combine_pdb import XmippProtCombinePdb
+
+
+class XmippProtCombinePdbViewer(XmippViewer):
+    """ Visualize the output of protocol Convert to PseudoAtoms """
+    _label = 'combine PDBs viewer'
+    _targets = [XmippProtCombinePdb]
+    
+    def _visualize(self, obj, **args):
+        self._views.append(ChimeraView(self.protocol._getPdbOutName()))

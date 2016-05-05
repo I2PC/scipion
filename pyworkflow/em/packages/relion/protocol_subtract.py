@@ -103,7 +103,7 @@ class ProtRelionSubtract(ProtOperateParticles):
         from pyworkflow.em.packages.xmipp3.convert  import getImageLocation
         
         params = ' -i %s --mult %s -o %s' % (getImageLocation(self.inputVolume.get()),
-                                             getImageLocation(self.refMask.get().getFileName()),
+                                             getImageLocation(self.refMask.get()),
                                              self._getFileName('volume_masked'))
         self.runJob('xmipp_image_operate', params, env=xmipp3.getEnviron())
     
