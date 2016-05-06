@@ -41,8 +41,6 @@ import pyworkflow.gui as pwgui
 import pyworkflow.em as em
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
-from pyworkflow.gui.tree import ObjectTreeProvider, LabelTreeProvider
-
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
 
@@ -68,7 +66,6 @@ ACTION_EXPORT = Message.LABEL_EXPORT
 ACTION_SWITCH_VIEW = 'Switch_View'
 ACTION_COLLAPSE = 'Collapse'
 ACTION_EXPAND = 'Expand'
-ACTION_SETLABEL = 'Assign labels'
 ACTION_LABELS = 'Labels'
 
 RUNS_TREE = Icon.RUNS_TREE
@@ -94,9 +91,8 @@ ActionIcons = {
     ACTION_EXPORT: Icon.ACTION_EXPORT,
     ACTION_COLLAPSE: 'fa-minus-square.png',
     ACTION_EXPAND: 'fa-plus-square.png',
-    ACTION_SETLABEL: Icon.TAGS,
     ACTION_LABELS: Icon.TAGS
-               }
+              }
 
 
 
@@ -178,7 +174,7 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                    (ACTION_EXPORT, not single),
                    (ACTION_COLLAPSE, single and status and expanded),
                    (ACTION_EXPAND, single and status and not expanded),
-                   (ACTION_SETLABEL, not self.project.getSettings().statusColorMode())
+                   (ACTION_LABELS, True)#not self.project.getSettings().statusColorMode())
                    #(ACTION_CONTINUE, status == pwprot.STATUS_INTERACTIVE and single)
                    ]
         
@@ -751,17 +747,20 @@ class ProtocolsView(tk.Frame):
         self.actionList = [ACTION_EDIT, ACTION_COPY, ACTION_DELETE, 
                            ACTION_STEPS, ACTION_BROWSE, ACTION_DB,
                            ACTION_STOP, ACTION_CONTINUE, ACTION_RESULTS, 
-                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND, ACTION_SETLABEL]
+                           ACTION_EXPORT, ACTION_COLLAPSE, ACTION_EXPAND,
+                           ACTION_LABELS]
         self.actionButtons = {}
         
         def addButton(action, text, toolbar):
-            btn = tk.Label(toolbar, text=text, image=self.getImage(ActionIcons.get(action, None)), 
-                       compound=tk.LEFT, cursor='hand2', bg='white')
+            btn = tk.Label(toolbar, text=text,
+                           image=self.getImage(ActionIcons.get(action, None)),
+                           compound=tk.LEFT, cursor='hand2', bg='white')
             btn.bind('<Button-1>', lambda e: self._runActionClicked(action))
             return btn
         
         for action in self.actionList:
-            self.actionButtons[action] = addButton(action, action, self.runsToolbar)
+            self.actionButtons[action] = addButton(action, action,
+                                                   self.runsToolbar)
             
         ActionIcons[ACTION_TREE] = RUNS_TREE
             
@@ -805,7 +804,8 @@ class ProtocolsView(tk.Frame):
             # If action present (set color is not in the toolbar but in the context menu)
             if self.actionButtons.has_key(action):
                 if cond:
-                    self.actionButtons[action].grid(row=0, column=i, sticky='sw', padx=(0, 5), ipadx=0)
+                    self.actionButtons[action].grid(row=0, column=i, sticky='sw',
+                                                    padx=(0, 5), ipadx=0)
                 else:
                     self.actionButtons[action].grid_remove()
             else:
@@ -817,7 +817,8 @@ class ProtocolsView(tk.Frame):
             displayAction(action, i, cond)          
         
     def _createProtocolsTree(self, parent, background=Color.LIGHT_GREY_COLOR):
-        self.style.configure("W.Treeview", background=background, borderwidth=0, fieldbackground=background)
+        self.style.configure("W.Treeview", background=background, borderwidth=0,
+                             fieldbackground=background)
         t = pwgui.tree.Tree(parent, show='tree', style='W.Treeview')
         t.column('#0', minwidth=300)
         t.tag_configure('protocol', image=self.getImage('python_file.gif'))
@@ -831,10 +832,12 @@ class ProtocolsView(tk.Frame):
     def _createProtocolsPanel(self, parent, bgColor):
         """Create the protocols Tree displayed in left panel"""
         comboFrame = tk.Frame(parent, bg=bgColor)
-        tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0, padx=(0, 5), pady=5)
+        tk.Label(comboFrame, text='View', bg=bgColor).grid(row=0, column=0,
+                                                           padx=(0, 5), pady=5)
         choices = self.project.getProtocolViews() 
         initialChoice = self.settings.getProtocolView()
-        combo = pwgui.widgets.ComboBox(comboFrame, choices=choices, initial=initialChoice)
+        combo = pwgui.widgets.ComboBox(comboFrame, choices=choices,
+                                       initial=initialChoice)
         combo.setChangeCallback(self._onSelectProtocols)
         combo.grid(row=0, column=1)
         comboFrame.grid(row=0, column=0, padx=5, pady=5, sticky='nw')
@@ -866,9 +869,12 @@ class ProtocolsView(tk.Frame):
             for k2, v2 in emProtocolsDict.iteritems():
                 if v1 is not v2 and issubclass(v1, v2):
                     subclassedDict[k2] = True
-        populateTree(self, self.protTree, self.protTreeItems, '', self.protCfg, subclassedDict)
-        self.protTree.bind('<<TreeviewOpen>>', lambda e: self._treeViewItemChange(True))
-        self.protTree.bind('<<TreeviewClose>>', lambda e: self._treeViewItemChange(False))
+        populateTree(self, self.protTree, self.protTreeItems, '', self.protCfg,
+                     subclassedDict)
+        self.protTree.bind('<<TreeviewOpen>>',
+                           lambda e: self._treeViewItemChange(True))
+        self.protTree.bind('<<TreeviewClose>>',
+                           lambda e: self._treeViewItemChange(False))
         
     def _treeViewItemChange(self, openItem):
         item = self.protTree.focus()
@@ -919,7 +925,8 @@ class ProtocolsView(tk.Frame):
         
         # Check if there are positions stored
         if reorganize or len(self.settings.getNodes()) == 0:
-            layout = pwgui.graph.LevelTreeLayout()  # create layout to arrange nodes as a level tree
+            # Create layout to arrange nodes as a level tree
+            layout = pwgui.graph.LevelTreeLayout()
         else:
             layout = pwgui.graph.BasicLayout()
             
@@ -930,7 +937,8 @@ class ProtocolsView(tk.Frame):
             if nodeInfo is None:
                 self.settings.addNode(nodeId, x=0, y=0, expanded=True) 
             
-        self.runsGraphCanvas.drawGraph(self.runsGraph, layout, drawNode=self.createRunItem)
+        self.runsGraphCanvas.drawGraph(self.runsGraph, layout,
+                                       drawNode=self.createRunItem)
         
     def createRunItem(self, canvas, node):
 
@@ -950,7 +958,8 @@ class ProtocolsView(tk.Frame):
 
         # Draw the box
         item = RunBox(nodeInfo, self.runsGraphCanvas,
-                      nodeText, node.x, node.y, bgColor=boxColor, textColor='black')
+                      nodeText, node.x, node.y,
+                      bgColor=boxColor, textColor='black')
         # No border
         item.margin = 0
 
@@ -1023,7 +1032,8 @@ class ProtocolsView(tk.Frame):
         # Mek it a percentage: 1 = 100% white, 0 = same rgbColor
         ageInDays /= 255.
 
-        return pwutils.rgb_to_hex(pwutils.lighter(pwutils.hex_to_rgb(rgbColor), ageInDays))
+        return pwutils.rgb_to_hex(pwutils.lighter(pwutils.hex_to_rgb(rgbColor),
+                                                  ageInDays))
 
 
     @staticmethod
@@ -1037,8 +1047,8 @@ class ProtocolsView(tk.Frame):
 
             self._addLabels(item, nodeInfo)
 
-    def _paintOval(self, item, statusColor):  # Show the status as a circle in the top right corner
-
+    def _paintOval(self, item, statusColor):
+        # Show the status as a circle in the top right corner
         if not self.settings.statusColorMode():
             # Option: Status item.
             (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
@@ -1046,7 +1056,8 @@ class ProtocolsView(tk.Frame):
             statusX = bottomRightX - (statusSize + 3)
             statusY = topLeftY + 3
 
-            pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize, color=statusColor, anchor=item)
+            pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize,
+                       color=statusColor, anchor=item)
 
     @staticmethod
     def _getStatusColor(node):
@@ -1518,26 +1529,17 @@ class ProtocolsView(tk.Frame):
             self.project.copyProtocol(protocols)
             self.refreshRuns()
 
-
     def _selectLabels(self):
-
         selectedNodes = self._getSelectedNodes()
 
-        if len(selectedNodes) > 0:
+        if selectedNodes:
+            dlg = self.windows.manageLabels()
 
-            labels, cancelled = self.windows.showLabels()
+            if dlg.resultYes():
+                for node in selectedNodes:
+                    node.setLabels([label.getName() for label in dlg.values])
 
-            # If cancelled
-            if cancelled:
-                return
-
-            # Create an array of labels Names
-            labelsNames = [label.getName() for label in labels]
-
-            for node in selectedNodes:
-                node.setLabels(labelsNames)
-
-            self.updateRunsGraph()
+                self.updateRunsGraph()
 
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
@@ -1630,7 +1632,7 @@ class ProtocolsView(tk.Frame):
                     nodeInfo.setExpanded(True)
                     self.updateRunsGraph(True, reorganize=True)
                     self._updateActionToolbar()
-                elif action == ACTION_SETLABEL:
+                elif action == ACTION_LABELS:
                     self._selectLabels()
 
             except Exception, ex:
