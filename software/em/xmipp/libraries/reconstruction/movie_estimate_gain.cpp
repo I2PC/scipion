@@ -248,11 +248,11 @@ void ProgMovieEstimateGain::constructSmoothHistogramsByColumn(const double *list
 				DIRECT_A2D_ELEM(smoothColumnH,i,j)=aux;
 		}
 	}
-//#ifdef NEVER_DEFINED
+#ifdef NEVER_DEFINED
 	Image<double> save;
 	typeCast(smoothColumnH,save());
 	save.write("PPPsmoothColumnH.xmp");
-//#endif
+#endif
 }
 
 void ProgMovieEstimateGain::constructSmoothHistogramsByRow(const double *listOfWeights, int width)
