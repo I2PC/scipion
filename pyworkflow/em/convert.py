@@ -95,16 +95,20 @@ class ImageHandler(object):
 
         return os.path.exists(fn)
         
-    def convert(self, inputObj, outputObj, dataType=None):
+    def convert(self, inputObj, outputObj, dataType=None, transform=None):
         """ Convert from one image to another.
         inputObj and outputObj can be: tuple, string, or Image subclass 
         (see self._convertToLocation)
+        transform: if not None, apply this transformation
         """
         # Read from input
         self._img.read(self._convertToLocation(inputObj))
         
         if dataType is not None:
             self._img.convert2DataType(dataType)
+
+        if transform is not None:
+            self._img.applyTransforMatScipion(transform.getMatrixAsList())
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
         
