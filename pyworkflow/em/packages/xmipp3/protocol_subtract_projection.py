@@ -73,7 +73,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         volName = getImageLocation(self.inputVolume.get())
         self._insertFunctionStep('convertInputStep', partSetId)
         if self.refMask.get() is not None:
-            self._insertFunctionStep('applyMaskStep', volName)
+            maskName = getImageLocation(self.refMask.get())
+            self._insertFunctionStep('applyMaskStep', volName, maskName)
         self._insertFunctionStep('volumeProjectStep', volName)
         self._insertFunctionStep('removeStep')
         self._insertFunctionStep('createOutputStep')
@@ -87,9 +88,9 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         imgSet = self.inputParticles.get()
         writeSetOfParticles(imgSet, self._getInputParticlesFn())
     
-    def applyMaskStep(self, volName):
+    def applyMaskStep(self, volName, maskName):
         params = ' -i %s --mult %s -o %s' % (volName,
-                                             self.refMask.get().getFileName(),
+                                             maskName,
                                              self._getOutputMap())
         self.runJob('xmipp_image_operate', params)
     
