@@ -136,7 +136,7 @@ try:
         VARIABLES = getValues('VARIABLES')
     else: # For now, allow old scipion.conf without the VARIABLES section
         sys.stdout.write("Warning: Missing section 'VARIABLES' in the "
-                         "configuration file ~/.config/scipion.conf.\n")
+                         "configuration file ~/.config/scipion/scipion.conf\n")
         VARIABLES = {}
 
     REMOTE = dict(config.items('REMOTE'))

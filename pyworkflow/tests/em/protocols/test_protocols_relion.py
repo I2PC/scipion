@@ -29,9 +29,6 @@ import sys, unittest
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
-from pyworkflow.em.packages.xmipp3 import (ProtMovieAlignment, XmippProtPreprocessMicrographs,
-                                           XmippProtExtractParticles)
-from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 
 
 # Some utility functions to import micrographs that are used
@@ -154,10 +151,20 @@ class TestRelionRefine(TestRelionBase):
         relionRefine.inputParticles.set(relionNormalize.outputParticles)
         relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(relionRefine)
-          
+        
         self.assertIsNotNone(getattr(relionRefine, 'outputVolume', None), 
-                             "There was a problem with Relion 3D:\n" + relionRefine.getErrorMessage()) 
-
+                             "There was a problem with Relion 3D:\n" + relionRefine.getErrorMessage())
+        
+        relionRefine._initialize() # Load filename templates
+        dataSqlite =  relionRefine._getIterData(3)
+        outImgSet = em.SetOfParticles(filename=dataSqlite)
+        self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
+                               relionNormalize.outputParticles[1].getSamplingRate(),
+                               "The sampling rate is wrong", delta=0.00001)
+        
+        self.assertAlmostEqual(outImgSet[1].getFileName(),
+                               relionNormalize.outputParticles[1].getFileName(),
+                               "The particles filenames are wrong")
         
 class TestRelionPreprocess(TestRelionBase):
     """ This class helps to test all different preprocessing particles options on RElion. """
@@ -190,6 +197,39 @@ class TestRelionPreprocess(TestRelionBase):
         protocol.inputParticles.set(self.protImport.outputParticles)
         
         self.launchProtocol(protocol)       
+
+
+class TestRelionSubtract(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+    
+    def test_subtract(self):
+        protParts = self.newProtocol(ProtImportParticles,
+                                     objLabel='from relion auto-refine',
+                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                     starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
+                                     magnification=10000,
+                                     samplingRate=7.08,
+                                     haveDataBeenPhaseFlipped=True
+                                     )
+        self.launchProtocol(protParts)
+        self.assertEqual(60, protParts.outputParticles.getXDim())
+        
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   filesPath=self.dsRelion.getFile('volumes/reference.mrc'),
+                                   samplingRate=7.08)
+        self.launchProtocol(protVol)
+        self.assertEqual(60, protVol.outputVolume.getDim()[0])
+        
+        protSubtract = self.newProtocol(ProtRelionSubtract)
+        protSubtract.inputParticles.set(protParts.outputParticles)
+        protSubtract.inputVolume.set(protVol.outputVolume)
+        self.launchProtocol(protSubtract)
+        self.assertIsNotNone(protSubtract.outputParticles, "There was a problem with subtract projection")
+
+
 
 
 # class TestPolishParticles(TestRelionBase):
