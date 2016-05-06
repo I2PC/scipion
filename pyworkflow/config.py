@@ -488,7 +488,8 @@ class DownloadRecord(pwobj.OrderedObject):
         self.country = pwobj.String(kwargs.get('country', None))
         self.version = pwobj.String(kwargs.get('version', None))
         self.platform = pwobj.String(kwargs.get('platform', None))
-    
+
+
 class Label(pwobj.Scalar):
     """ Store Label information """
 
@@ -544,7 +545,6 @@ class LabelsList(pwobj.List):
         return self._labelsDict.get(name, None)
 
     def addLabel(self, label):
-
         self._labelsDict[label.getName()] = label
         self.append(label)
         return label
