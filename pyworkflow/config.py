@@ -209,6 +209,7 @@ class ProjectSettings(pwobj.OrderedObject):
         self.runsView = pwobj.Integer(1) # by default the graph view
         self.readOnly = pwobj.Boolean(False)
         self.runSelection = pwobj.CsvList(int) # Store selected runs
+        self.dataSelection = pwobj.CsvList(int)  # Store selected runs
         # Some extra settings stored, now mainly used
         # from the webtools
         self.creationTime = pwobj.String(dt.datetime.now()) # Time when the project was created

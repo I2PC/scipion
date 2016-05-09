@@ -360,7 +360,7 @@ In particular:
 HYPER_BOLD = 'bold'
 HYPER_ITALIC = 'italic'
 HYPER_LINK1 = 'link1'
-HYPER_SCIOPEN = 'sciopen'
+HYPER_SCIPION_OPEN = 'sci-open'
 HYPER_LINK2 = 'link2'
 HYPER_ALL = 'all'
 

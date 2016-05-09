@@ -974,7 +974,12 @@ class ProtocolsView(tk.Frame):
         or itemRightClick
         """
         self._selection.clear()
+        self.settings.dataSelection.clear()
         self._selection.append(prot.getObjId())
+
+        # Select output data too
+        self.toggleDataSelection(prot,True)
+
         self._updateSelection()
         self.runsGraphCanvas.update_idletasks()
         
@@ -1026,12 +1031,28 @@ class ProtocolsView(tk.Frame):
             if protId in self._selection:
                 item.setSelected(False)
                 self._selection.remove(protId)
+
+                # Remove data selected
+                self.toggleDataSelection(prot, False)
             else:
+
                 item.setSelected(True)
                 self._selection.append(prot.getObjId())
+
+                # Select output data too
+                self.toggleDataSelection(prot, True)
         
         self._updateSelection()
-        
+
+    def toggleDataSelection(self, prot, append):
+
+        # Go through the data selection
+        for paramName, output in prot.iterOutputEM():
+            if append:
+                self.settings.dataSelection.append(output.getObjId())
+            else:
+                self.settings.dataSelection.remove(output.getObjId())
+
     def _runItemTooltip(self, tw, item):
         """ Create the contents of the tooltip to be displayed
         for the given item.
