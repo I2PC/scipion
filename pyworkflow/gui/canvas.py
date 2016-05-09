@@ -202,7 +202,7 @@ class Canvas(tk.Canvas, Scrollable):
 
         elif self.firstPos is None:
             self.firstPos = (event.x, event.y)
-            print "onDrag position captured."
+            # print "onDrag position captured."
 
     def onButton1Release(self, event):
 
