@@ -967,7 +967,7 @@ class ProtocolsView(tk.Frame):
         self._paintOval(item, statusColor)
 
         # Paint the bottom line (for now only labels are painted there).
-        self._paintBottomLine(item, nodeInfo)
+        self._paintBottomLine(item)
 
         if nodeId in self._selection:
             item.setSelected(True)
@@ -1041,11 +1041,11 @@ class ProtocolsView(tk.Frame):
 
         return 0 if nodeInfo.getLabels() is None else len(nodeInfo.getLabels())
 
-    def _paintBottomLine(self, item, nodeInfo):
+    def _paintBottomLine(self, item):
 
         if self.settings.labelsColorMode():
 
-            self._addLabels(item, nodeInfo)
+            self._addLabels(item)
 
     def _paintOval(self, item, statusColor):
         # Show the status as a circle in the top right corner
@@ -1058,6 +1058,19 @@ class ProtocolsView(tk.Frame):
 
             pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize,
                        color=statusColor, anchor=item)
+
+        # in statusColorMode
+        else:
+            # Show a black circle if there is any label
+            if self._getLabelsCount(item.nodeInfo) > 0:
+
+                (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
+                statusSize = 10
+                statusX = bottomRightX - (statusSize + 3)
+                statusY = topLeftY + 3
+
+                pwgui.Oval(self.runsGraphCanvas, statusX, statusY, statusSize,
+                           color='black', anchor=item)
 
     @staticmethod
     def _getStatusColor(node):
@@ -1086,10 +1099,10 @@ class ProtocolsView(tk.Frame):
 
         return nodeText
 
-    def _addLabels(self, item, nodeInfo):
+    def _addLabels(self, item):
 
         # If there is only one label it should be already used in the box color.
-        if self._getLabelsCount(nodeInfo) < 2: return
+        if self._getLabelsCount(item.nodeInfo) < 2: return
 
         # Get the positions of the box
         (topLeftX, topLeftY, bottomRightX, bottomRightY) = self.runsGraphCanvas.bbox(item.id)
@@ -1100,14 +1113,14 @@ class ProtocolsView(tk.Frame):
         # Set the size
         marginV = 3
         marginH = 2
-        labelWidth = (boxWidth - (2 * marginH)) / len(nodeInfo.getLabels())
+        labelWidth = (boxWidth - (2 * marginH)) / len(item.nodeInfo.getLabels())
         labelHeight = 6
 
         # Leave some margin on the right and bottom
         labelX = bottomRightX - marginH
         labelY = bottomRightY - (labelHeight + marginV)
 
-        for index, labelId in enumerate(nodeInfo.getLabels()):
+        for index, labelId in enumerate(item.nodeInfo.getLabels()):
 
             # Get the label
             label = self.settings.getLabels().getLabel(labelId)
@@ -1115,7 +1128,7 @@ class ProtocolsView(tk.Frame):
             # If not none
             if label is not None:
                 # Move X one label to the left
-                if index == len(nodeInfo.getLabels()) - 1:
+                if index == len(item.nodeInfo.getLabels()) - 1:
                     labelX = topLeftX + marginH
                 else:
                     labelX -= labelWidth
@@ -1124,7 +1137,7 @@ class ProtocolsView(tk.Frame):
                                 anchor=item)
             else:
 
-                nodeInfo.getLabels().remove(labelId)
+                item.nodeInfo.getLabels().remove(labelId)
 
     def switchRunsView(self):
         previousView = self.runsView
