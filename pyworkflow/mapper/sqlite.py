@@ -1024,7 +1024,7 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd('1').replace('*', 'COUNT(*)'))
         return self.cursor.fetchone()[0]
 
-
+    # FIXME: Seems to be duplicated and a subset of selectAll
     def selectObjectsBy(self, iterate=False, **args):
         """More flexible select where the constrains can be passed
         as a dictionary, the concatenation is done by an AND"""
@@ -1034,6 +1034,9 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd(whereStr), whereTuple)
         return self._results(iterate)
 
+    # FIXME: Seems to be duplicated and a subset of selectAll
+    # Moreover, it does not translate between "user colums" and
+    # "internal" Objects table columns
     def selectObjectsWhere(self, whereStr, iterate=False):
         self.executeCommand(self.selectCmd(whereStr))
         return self._results(iterate)
