@@ -1040,7 +1040,7 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
     classMd.write(classFn) # Empty write to ensure the classes is the first block
-    
+    #FIXME: review implementation of this function since there are syntax errors
     classRow = XmippMdRow()
     for classVol in classesVolSet:        
         classVolToRow(classVol, classRow)
@@ -1483,3 +1483,13 @@ def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
             globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)
     
     globalShiftsMD.write(xmdFn)
+
+
+def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):
+    f = open(filename,'w')
+    str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % (dimX, dimX)
+    str += "_projAngleFile %s\n" % partSetMd
+    str += "_ctfPhaseFlipped %d\n_ctfCorrected %d\n" % (phFlip, ctfCorr)
+    str += "_applyShift 1\n_noisePixelLevel    '0 0'\n"
+    f.write(str)
+    f.close()

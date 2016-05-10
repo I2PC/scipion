@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around align2d Xmipp program
-"""
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md

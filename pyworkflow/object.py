@@ -465,7 +465,7 @@ class Object(object):
         # Split in possible tokens
         import re
         tokens = re.split('\W+', condition)
-        condStr = condition 
+        condStr = condition
         
         for t in tokens:
             if self.hasAttribute(t):
@@ -849,7 +849,7 @@ class List(Object, list):
         return list.__len__(self)
     
     def isEmpty(self):
-        return len(self) > 0
+        return len(self) == 0
     
     def clear(self):
         del self[:]
@@ -1011,6 +1011,9 @@ class Set(OrderedObject):
     def getSize(self):
         """Return the number of images"""
         return self._size.get()
+
+    def isEmpty(self):
+        return self.getSize() == 0
     
     def getFileName(self):
         if len(self._mapperPath):

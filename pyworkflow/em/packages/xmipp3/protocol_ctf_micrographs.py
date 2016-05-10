@@ -25,9 +25,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains the XmippCtfMicrographs protocol
-"""
 
 from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
@@ -36,7 +33,7 @@ from pyworkflow.protocol.params import RelationParam
 
 
 class XmippProtCTFMicrographs(ProtCTFMicrographs):
-    """Protocol to estimate CTF on a set of micrographs using Xmipp 3.1"""
+    """Protocol to estimate CTF on a set of micrographs using Xmipp"""
     _label = 'ctf estimation'
     
     _criterion="ctfCritFirstZero<5 OR ctfCritMaxFreq>20 OR ctfCritfirstZeroRatio<0.9 OR ctfCritfirstZeroRatio>1.1 OR "\
@@ -68,8 +65,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
         form.addParam('ctfRelations', RelationParam, allowsNull=True,condition='doInitialCTF',
                       relationName=RELATION_CTF, attributeName='getInputMicrographs',
                       label='Previous CTF estimation',
-                      help='Choose some CTF estimation related to input micrographs. \n'
-                           'CTF estimation is need if you want to use the defocus found in a previous CTF estimation')
+                      help='Choose some CTF estimation related to input micrographs, '
+                           'in case you want to use the defocus values found previously')
 
         form.addParam('doCTFAutoDownsampling', BooleanParam, default=True, 
               label="Automatic CTF downsampling detection", expertLevel=LEVEL_ADVANCED, 

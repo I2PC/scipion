@@ -23,9 +23,6 @@
 # *  e-mail address 'jgomez@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains wrapper around reconstruct_significant Xmipp program
-"""
 
 from pyworkflow.utils import Timer
 from pyworkflow.em import *  
@@ -235,6 +232,11 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                     errors.append('The input images and the reference volume have different sizes') 
             else:
                 errors.append("Please, enter a reference image")
+        
+        SL = xmipp.SymList()
+        SL.readSymmetryFile(self.symmetryGroup.get())
+        if (100-self.alpha0.get())/100.0*(SL.getTrueSymsNo()+1)>1:
+            errors.append("Increase the initial significance it is too low for this symmetry")
         return errors
         
     def _summary(self):

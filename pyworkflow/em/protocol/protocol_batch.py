@@ -35,7 +35,7 @@ from itertools import izip
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles,\
-    SetOfMicrographs
+    SetOfMicrographs, FSC
 from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
 from pyworkflow.em.data import Mask
 from pyworkflow.utils import moveFile
@@ -147,9 +147,10 @@ class ProtUserSubSet(BatchProtocol):
         className = inputImages.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputImages.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet.loadAllProperties()
         
         output = createFunc()
-        output.copyInfo(inputImages)
+        output.copyInfo(modifiedSet)
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
@@ -458,6 +459,27 @@ class ProtCreateMask(BatchProtocol):
         summary.append('From input %s created mask %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
         return summary
         
+    def _methods(self):
+        return self._summary()
+
+
+
+class ProtCreateFSC(BatchProtocol):
+
+    _label='create fsc'
+
+    def _defineParams(self, form):
+        pass
+        form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
+
+    def setInputObj(self, obj):
+        self.inputObj.set(obj)
+
+    def _summary(self):
+        summary = []
+        summary.append('From input %s created fsc %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        return summary
+
     def _methods(self):
         return self._summary()
 

@@ -4,36 +4,59 @@ Created on May 20, 2013
 @author: laura
 '''
 
-from glob import glob, iglob
-import unittest
-import os, traceback
-from itertools import izip
+from glob import iglob
 from pyworkflow.tests import *
-from pyworkflow.em.data import *
-from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
-import pyworkflow.em.packages.eman2.convert as e2convert
-from pyworkflow.em.protocol import EMProtocol
-
 import pyworkflow.em.metadata as md
 from pyworkflow.em.convert import ImageHandler
 
 
 
-class TestImage(unittest.TestCase):
+class TestFSC(unittest.TestCase):
         
+    def testIO(self):
+        """Test basic FSC object"""
+        xList=[0.00,0.05,0.10,0.15,0.2]
+        yList=[1.00,0.95,0.90,0.85,0.2]
+        fsc = FSC()
+        fsc.setData(xList,yList)
+        #fsc.printAll()
+        x,y = fsc.getData()
+        self.assertEqual(xList,x)
+        self.assertEqual(yList,y)
+
+    def testMd(self):
+        """test create FSC from metdata"""
+        import xmipp
+        xList=[0.00,0.05,0.10,0.15,0.2]
+        yList=[1.00,0.95,0.90,0.85,0.2]
+        md1 =xmipp.MetaData()
+        for freq,fscValue in izip(xList, yList):
+            id = md1.addObject()
+            md1.setValue(xmipp.MDL_RESOLUTION_FREQ, freq, id)
+            md1.setValue(xmipp.MDL_RESOLUTION_FRC, fscValue, id)
+        fsc = FSC()
+        fsc.loadFromMd(md1,xmipp.MDL_RESOLUTION_FREQ,
+                       xmipp.MDL_RESOLUTION_FRC)
+        x,y = fsc.getData()
+        self.assertEqual(xList,x)
+        self.assertEqual(yList,y)
+
+
+class TestImage(unittest.TestCase):
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         cls.mic1 = cls.dataset.getFile( 'mic1')
-    
+
     def testLocation(self):
         fn = self.mic1
         mic = Micrograph()
         mic.setFileName(fn)
 
-        # Check that setFileName-getFileName is working properly        
+        # Check that setFileName-getFileName is working properly
         self.assertEqual(fn, mic.getFileName())
 
         # Check the location is accepted from constructor
@@ -53,6 +76,7 @@ class TestImageHandler(unittest.TestCase):
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.dsFormat = DataSet.getDataSet('movies')
 
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
@@ -68,7 +92,79 @@ class TestImageHandler(unittest.TestCase):
         # Test that the new filename still exists even with the :mrc suffix
         self.assertTrue(ih.existsLocation(newFn))
 
-        
+    def test_convertMicrographs(self):
+        """ Convert micrograhs to different formats.
+         EMAN2 required for .img
+        """
+        micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
+        outSuffix = pwutils.replaceBaseExt(micFn, 'img')
+        ih = ImageHandler()
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % (micFn, outFn)
+
+        ih.convert(micFn, outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+
+        pwutils.cleanPath(outFn)
+        pwutils.cleanPath(outFn.replace('.img', '.hed'))
+
+    def test_readDM4(self):
+        """ Check we can read dm4 files (using EMAN)
+        """
+        micFn = self.dsFormat.getFile('SuperRef_c3-adp-se-xyz-0228_001.dm4')
+
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (7676, 7420, 1, 1)
+        self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
+
+        # We could even convert to an mrc file:
+        outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % (micFn, outFn)
+
+        ih.convert(micFn, outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        # Check dimensions are still the same:
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+
+        # Clean up tmp files
+        pwutils.cleanPath(outFn)
+
+
+    def test_readCompressedTIF(self):
+        """ Check we can read tif files
+        """
+        micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
+
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (7676, 7420, 1, 38)
+        self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
+
+        # We could even convert to an mrc file:
+        outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % ((1, micFn), outFn)
+
+        ih.convert((1, micFn), outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), (7676, 7420, 1, 1))
+
+        # Clean up tmp files
+        pwutils.cleanPath(outFn)
+
+
+
 class TestSetOfMicrographs(BaseTest):
     
     @classmethod

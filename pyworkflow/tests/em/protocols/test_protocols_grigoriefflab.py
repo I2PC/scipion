@@ -167,7 +167,7 @@ class TestBrandeisCtffind(TestBrandeisBase):
         cls.protImport = cls.runImportMicrographBPV(cls.micFn)
     
     def testCtffind(self):
-        protCTF = ProtCTFFind(useCftfind4=False)
+        protCTF = ProtCTFFind(useCtffind4=False)
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
         protCTF.numberOfThreads.set(4)
@@ -182,7 +182,7 @@ class TestBrandeisCtffind(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
 
     def testCtffind2(self):
-        protCTF = ProtCTFFind(useCftfind4=False)
+        protCTF = ProtCTFFind(useCtffind4=False)
         protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)

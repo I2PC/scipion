@@ -166,6 +166,17 @@ void Sampling::computeSamplingPoints(bool only_half_sphere,
 
     max_z=cos(PI * max_tilt / 180.);
     min_z=cos(PI * min_tilt / 180.);
+    if ( (min_tilt > max_tilt) ||
+         (min_tilt <0 ) ||
+         (max_tilt < 0) ||
+         (max_tilt > 180.)
+         )
+    {//OK
+        std::cerr << "tilt angles cannot be negative or min_tilt > max_tilt" << std::endl;
+        std::cerr << "min_tilt=" << min_tilt << "max_tilt=" << max_tilt << std::endl;
+        exit(0);
+    }
+
     if (min_z>max_z)
     {
         double aux=min_z;
@@ -1566,8 +1577,13 @@ void Sampling::saveSamplingFile(const FileName &fn_base, bool write_vectors, boo
 
 }
 
+//angle conventions changed by test not
+//label names changed but no test
+//readSamplingFile cannot work
 
-void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool write_sampling_sphere)
+void Sampling::readSamplingFile(const FileName &fn_base,
+		bool read_vectors,
+		bool read_sampling_sphere)
 {
     //Read extra info
     MetaData md(FN_SAMPLING_EXTRA(fn_base));
@@ -1626,8 +1642,28 @@ void Sampling::readSamplingFile(const FileName &fn_base, bool read_vectors, bool
             md.getValue(MDL_Z, ZZ(vectors), id);
         }
     }
+//#define DEBUG5
+#ifdef  DEBUG5
+//This bild file does not make sense since x,y,z are angles
+    std::ofstream filestr5;
+    filestr5.open ("/tmp/loadsamplingfile_removeRedundantPoints.bild");
+    filestr5 << ".color 0 0 1" << std::endl;
+    for (int i = 0;
+         i < no_redundant_sampling_points_index.size();
+         i++)
+    {
+        filestr5  <<  ".color 1 0 0" << std::endl
+        <<  ".sphere "
+        << no_redundant_sampling_points_vector[i](0) << " "
+        << no_redundant_sampling_points_vector[i](1) << " "
+        << no_redundant_sampling_points_vector[i](2) << " "
+        << " .03" << std::endl;
+    }
+    filestr5.close();
+#endif
+#undef DEBUG5
 
-    if (write_sampling_sphere)
+    if (read_sampling_sphere)
     {
         //Read projection directions
         md.read(FN_SAMPLING_SPHERE(fn_base));

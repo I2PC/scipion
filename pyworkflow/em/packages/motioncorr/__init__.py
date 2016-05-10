@@ -23,15 +23,12 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains protocol for MotionCorr
-"""
+
 from bibtex import _bibtex # Load bibtex dict with references
 #_logo = "resmap_logo.png"
 _references = ['lix2013']
 
 from protocol_motioncorr import ProtMotionCorr
-#from protocol_import import ProtDosefGpuImport
 
 from convert import getEnviron
 

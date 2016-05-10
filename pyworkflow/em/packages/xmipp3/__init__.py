@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 """
-This sub-package will contains Xmipp specific protocols
+This sub-package contains Xmipp specific protocols
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
@@ -49,9 +49,11 @@ from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
+from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
+from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 
 #from viewer_reconstruct_significant import XmippReconstructSignificantViewer
@@ -71,6 +73,7 @@ from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
+from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
@@ -78,11 +81,12 @@ from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
-# FIXME: Add XmippProt as prefix to MovieAlignment
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
+from protocol_multiple_fscs import XmippProtMultipleFSCs
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
+from protocol_normalize_strain import XmippProtNormalizeStrain
 from protocol_particle_pick_automatic import XmippParticlePickingAutomatic
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
 from protocol_particle_pick import XmippProtParticlePicking 
@@ -99,6 +103,7 @@ from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
+from protocol_validate_overfitting import XmippProtValidateOverfitting
 from protocol_validate_tilt import XmippProtValidateTilt
 from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_write_testC import XmippProtWriteTestC

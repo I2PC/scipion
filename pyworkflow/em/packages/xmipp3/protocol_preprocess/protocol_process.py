@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This sub-package contains classes to use in common processing operations of SetOfParticles, Volume or SetOfVolumes
-"""
 
 from pyworkflow.em.constants import ALIGN_NONE
 from pyworkflow.em.protocol import ProtProcessParticles, ProtPreprocessVolumes

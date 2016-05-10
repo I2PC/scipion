@@ -1244,5 +1244,3 @@ eot
         cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
         numberOfMics = len(self._getMicIdList())
         return min(cpus, numberOfMics)
-    
-    

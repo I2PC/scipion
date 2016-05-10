@@ -23,33 +23,27 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol for Summovie
-"""
 
 from os.path import exists
+
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils.path as pwutils
-from grigoriefflab import SUMMOVIE_PATH
 from pyworkflow.em.protocol import ProtAlignMovies
+
+from grigoriefflab import SUMMOVIE_PATH
 from convert import writeShiftsMovieAlignment
 
 
 class ProtSummovie(ProtAlignMovies):
-    """Summovie is used to align the frames of movies recorded
-    on an electron microscope to reduce image blurring due
-    to beam-induced motion. It reads stacks of movies that
-    are stored in MRC/CCP4 format. Summovie generates frame
-    sums that can be used in subsequent image processing
-    steps and optionally applies an exposure-dependent
-    filter to maximize the signal at all resolutions
-    in the frame averages."""
-    
-    _label = 'Summovie'
+    """ Summovie generates frame sums that can be used
+    in subsequent image processing steps and optionally
+    applies an exposure-dependent filter to maximize
+    the signal at all resolutions in the frame averages.
+    """    
+    _label = 'summovie'
     CONVERT_TO_MRC = 'mrc'
-    doSaveAveMic = True
-    
+    doSaveAveMic = True    
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineAlignmentParams(self, form):
@@ -125,7 +119,7 @@ class ProtSummovie(ProtAlignMovies):
     def _validate(self):
         errors=[]
         if not exists(SUMMOVIE_PATH):
-            errors.append("Cannot find the Summovie program at: "+SUMMOVIE_PATH)
+            errors.append("Cannot find the Summovie program at: " + SUMMOVIE_PATH)
         return errors
     
     #--------------------------- UTILS functions ---------------------------------------------------
