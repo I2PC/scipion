@@ -907,7 +907,7 @@ class SqliteFlatDb(SqliteDb):
         self.setupCommands(objDict)
 
     def setupCommands(self, objDict):
-        """ Setup the INSERT and UPDATE commands base on the object dictionray. """
+        """ Setup the INSERT and UPDATE commands base on the object dictionary. """
         self.INSERT_OBJECT = "INSERT INTO %sObjects (id, enabled, label, comment, creation" % self.tablePrefix
         self.UPDATE_OBJECT = "UPDATE %sObjects SET enabled=?, label=?, comment=?" % self.tablePrefix
         c = 0
