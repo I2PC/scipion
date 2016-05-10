@@ -265,7 +265,6 @@ void ProgMovieAlignmentCorrelation::run()
 				REPORT_ERROR(ERR_ARG_INCORRECT,"The input gain image is incorrect, its inverse produces infinite or nan");
 		}
 
-/* <<<<<<< HEAD */
 		MultidimArray<double> filter;
 		bool firstImage=true;
 		FOR_ALL_OBJECTS_IN_METADATA(movie)
@@ -284,43 +283,6 @@ void ProgMovieAlignmentCorrelation::run()
 					croppedFrame()-=dark();
 				if (XSIZE(gain())>0)
 					croppedFrame()*=gain();
-/*=======
-            frameFourier.push_back(reducedFrameFourier);
-        }
-        ++n;
-        if (verbose)
-            progress_bar(n);
-    }
-    if (verbose)
-        progress_bar(movie.size());
-
-    // Free useless memory
-    reducedFrame.clear();
-    cropedFrame.clear();
-    frame.clear();
-
-    // Now compute all shifts
-    size_t N=frameFourier.size();
-    Matrix2D<double> A(N*(N-1)/2,N-1);
-    Matrix1D<double> bX(N*(N-1)/2), bY(N*(N-1)/2);
-    if (verbose)
-        std::cout << "Computing shifts between frames ..." << std::endl;
-    int idx=0;
-    MultidimArray<double> Mcorr;
-    Mcorr.resizeNoCopy(newYdim,newXdim);
-    Mcorr.setXmippOrigin();
-    CorrelationAux aux;
-    for (size_t i=0; i<N-1; ++i)
-    {
-        for (size_t j=i+1; j<N; ++j)
-        {
-            bestShift(*frameFourier[i],*frameFourier[j],Mcorr,bX(idx),bY(idx),aux,NULL,maxShift);
-            if (verbose)
-                std::cerr << "Frame " << i+nfirst << " to Frame " << j+nfirst << " -> (" << bX(idx) << "," << bY(idx) << ")\n";
-            for (int ij=i; ij<j; ij++)
-                A(idx,ij)=1;
->>>>>>> devel
-*/
 				// Reduce the size of the input frame
 				scaleToSizeFourier(1,newYdim,newXdim,croppedFrame(),reducedFrame());
 
