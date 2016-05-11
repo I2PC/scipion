@@ -518,7 +518,7 @@ class ProtocolsView(tk.Frame):
         self._lastSelectedProtId = None
         self._lastStatus = None
         self.selectingArea = False
-        
+
         self.style = ttk.Style()
         self.root.bind("<F5>", self.refreshRuns)
         self.root.bind("<Control-f>", self._findProtocol)
@@ -915,7 +915,7 @@ class ProtocolsView(tk.Frame):
         
         self.settings.getNodes().updateDict()
         self.settings.getLabels().updateDict()
-        
+
         self.updateRunsGraph()        
 
     def updateRunsGraph(self, refresh=False, reorganize=False):  
@@ -1195,7 +1195,7 @@ class ProtocolsView(tk.Frame):
         self._updateSelection()
         self.updateRunsGraph()
 
-        
+
     def _updateSelection(self):
         self._fillSummary()
         self._fillMethod()
@@ -1218,7 +1218,12 @@ class ProtocolsView(tk.Frame):
         or itemRightClick
         """
         self._selection.clear()
+        self.settings.dataSelection.clear()
         self._selection.append(prot.getObjId())
+
+        # Select output data too
+        self.toggleDataSelection(prot,True)
+
         self._updateSelection()
         self.runsGraphCanvas.update_idletasks()
         
@@ -1271,11 +1276,28 @@ class ProtocolsView(tk.Frame):
             if protId in self._selection:
                 item.setSelected(False)
                 self._selection.remove(protId)
+
+                # Remove data selected
+                self.toggleDataSelection(prot, False)
             else:
+
                 item.setSelected(True)
                 self._selection.append(prot.getObjId())
-        
+
+                # Select output data too
+                self.toggleDataSelection(prot, True)
+
         self._updateSelection()
+
+
+    def toggleDataSelection(self, prot, append):
+
+        # Go through the data selection
+        for paramName, output in prot.iterOutputEM():
+            if append:
+                self.settings.dataSelection.append(output.getObjId())
+            else:
+                self.settings.dataSelection.remove(output.getObjId())
 
     def _runItemTooltip(self, tw, item):
         """ Create the contents of the tooltip to be displayed
@@ -1392,7 +1414,7 @@ class ProtocolsView(tk.Frame):
     def _getSelectedNodes(self):
         return [node for node in self._iterSelectedNodes()]
 
-            
+
     def getSelectedProtocol(self):
         if self._selection:
             return self.project.getProtocol(self._selection[0])

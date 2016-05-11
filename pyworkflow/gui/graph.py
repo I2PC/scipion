@@ -134,7 +134,7 @@ class LevelTree(object):
         if nodeText.startswith('Project'):
             textColor='white'
         
-        return canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor)
+        return canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor, margin=0)
         
     def _defaultCreateEdge(self, srcItem, dstItem):
         if self.canvas is None:
