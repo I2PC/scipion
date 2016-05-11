@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:         Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *                  Roberto Marabini   (roberto@cnb.csic.es)
 # *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -21,12 +22,11 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from pyworkflow.em.packages.xmipp3.xmipp3 import xmippExists
+
 from pyworkflow.protocol.params import PointerParam, EnumParam
-import pyworkflow.em.metadata as md
 
 from pyworkflow.em.protocol import ProtOperateParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
@@ -35,21 +35,22 @@ from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
 import xmipp
 from pyworkflow.em import ImageHandler
 
-class XmippProtSubtractProjection(ProtOperateParticles):
-    """    
-    Subtract volume projections from the experimental particles.
-    The particles must have projection alignment in order to
-    properly generate volume projections.
 
-    An example of usage is to delete the virus capsid to
-    refine only the genetic material.
+
+class XmippProtSubtractProjection(ProtOperateParticles):
     """
+        Subtract volume projections from the experimental particles.
+        The particles must have projection alignment in order to
+        properly generate volume projections.
+
+        An example of usage is to delete the virus capsid to
+        refine only the genetic material.
+        """
     _label = 'subtract projection'
-    _CorrectNone = 0
-    _correctFullCTF = 1
-    _correctPhaseFlip =2
-    _projGalleryFn = "projGallery.stk"
-    _metadata      = "inputParticles.xmd"
+
+    CORRECT_NONE = 0
+    CORRECT_FULL_CTF = 1
+    CORRECT_PHASE_FLIP = 2
 
     def __init__(self, *args, **kwargs):
         ProtOperateParticles.__init__(self, *args, **kwargs)
@@ -70,7 +71,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
                       label='Reference mask (optional)', allowsNull=True,
                       help="The volume will be masked once the volume has been "
                            "applied the CTF of the particles.")
-        form.addParam('projType', EnumParam, default=self._CorrectNone,
+        form.addParam('projType', EnumParam, default=self.CORRECT_NONE,
                       choices=['NO','full CTF','abs(CTF) (phase flip)'],
                       label='apply CTF?',
                       help='apply CTF to the reference gallery of projections')
@@ -83,15 +84,17 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         partSet = self.inputParticles.get()
         samplingRate = partSet.getSamplingRate()
         inputVolume = getImageLocation(self.inputVolume.get())
-        mdFn = self._getExtraPath(self._metadata)
-        volumeId = self._insertFunctionStep('initVolumeStep', inputVolume, partSet, mdFn)
+        mdFn = self._getInputParticlesFn()
+        volumeId = self._insertFunctionStep('initVolumeStep',
+                                            inputVolume, partSet, mdFn)
         deps.append(volumeId)
 
-        projGalleryFn = self._getExtraPath(self._projGalleryFn)
-        galleryId = self._insertFunctionStep('createEmptyFileStep', projGalleryFn)
+        projGalleryFn = self._getProjGalleryFn()
+        galleryId = self._insertFunctionStep('createEmptyFileStep',
+                                             projGalleryFn)
         deps.append(galleryId)
 
-        #create xmipp metadata
+        # Create xmipp metadata
         writeSetOfParticles(partSet, mdFn, blockName="images")
         self.md = xmipp.MetaData(mdFn)
 
@@ -106,105 +109,49 @@ class XmippProtSubtractProjection(ProtOperateParticles):
 
     #--------------------------- STEPS functions -------------------------------
     def initVolumeStep(self,volName, partSet, mdFn):
-        #read volume
+        # Read volume and convert to DOUBLE
         self.vol = xmipp.Image(volName)
         self.vol.convert2DataType(xmipp.DT_DOUBLE)
-        #self.xdim, self.ydim, self.zdim, self.n = self.vol.getDimensions()
-
-        #mask volume if needed
+        # Mask volume if needed
         if self.refMask.get() is not None:
             maskName = getImageLocation(self.refMask.get())
             self.mask = xmipp.Image(maskName)
             self.mask.convert2DataType(xmipp.DT_DOUBLE)
-            self.vol.inplaceMultiplyImg(self.mask)
+            self.vol.inplaceMultiply(self.mask)
 
     def createEmptyFileStep(self,projGalleryFn):
         n = len(self.inputParticles.get())
         x, y, z = self.inputParticles.get().getDimensions()
         xmipp.createEmptyFile(projGalleryFn,x,y,1,n)
-        #createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,Ndim,true,WRITE_REPLACE);
 
-    def projectStep(self,i, shifts, angles, samplingRate, expProjFilename, projGalleryFn):
-        #project
-        #shifts, angles = geometryFromMatrix(part.getTransform().getMatrix(), True)
-        self.projection =self.vol.projectVolumeDouble(angles[0], angles[1], angles[2])
+    def projectStep(self,i, shifts, angles, samplingRate,
+                    expProjFilename, projGalleryFn):
+        # Project
+        self.projection =self.vol.projectVolumeDouble(angles[0],
+                                                      angles[1],
+                                                      angles[2])
         self.md.setValue(xmipp.MDL_SHIFT_X,-shifts[0],i)
         self.md.setValue(xmipp.MDL_SHIFT_Y,-shifts[1],i)
         self.md.setValue(xmipp.MDL_SHIFT_Z,0.,i)
-        #apply CTF
-        if self.projType == self._CorrectNone:
+        # Apply CTF
+        if self.projType == self.CORRECT_NONE:
             pass
-        elif self.projType == self._correctFullCTF:
+        elif self.projType == self.CORRECT_FULL_CTF:
             self.projection.applyCTF(self.md, samplingRate, i, False)
-        elif self.projType == self._correctPhaseFlip:
+        elif self.projType == self.CORRECT_PHASE_FLIP:
             self.projection.applyCTF(self.md, samplingRate, i, True)
         else:
-            print ("ERROR: wrong projtype: ", self.projType)
-            exit(1)
-        #shift image
+            raise Exception("ERROR: Unknown projection mode: %d" % self.projType)
+
+        # Shift image
         self.projection.applyGeo(self.md,i,True,False)#onlyapplyshist, wrap
-        #self.projection.write("%d@%s"%(i,projGalleryFn))
         ih = ImageHandler()
-        print("expProjFilename", "%d@%s"%(i,expProjFilename))
-        expProj = ih.read("%d@%s"%(i,expProjFilename))
+        expProj = ih.read((i, expProjFilename))
         expProj.convert2DataType(xmipp.DT_DOUBLE)
-        #substract from experimental
-        #write result
-        print expProj.getDimensions()
-        print self.projection.getDimensions()
+        # Subtract from experimental and write result
         self.projection.resetOrigin()
         expProj.inplaceSubtract(self.projection) #0, -64
-        expProj.write("%d@%s"%(i,projGalleryFn))
-
-        #do not forget to handle shifts
-        #applyTransforMatScipion
-
-    def DELETEconvertInputStep(self, particlesId):
-        """ Write the input images as a Xmipp metadata file. 
-        particlesId: is only need to detect changes in
-        input particles and cause restart from here.
-        """
-        imgSet = self.inputParticles.get()
-        writeSetOfParticles(imgSet, self._getInputParticlesFn())
-
-    def DELETEapplyMaskStep(self, volName, maskName):
-        vol = xmipp.Image()
-        params = ' -i %s --mult %s -o %s' % (volName,
-                                             maskName,
-                                             self._getOutputMap())
-        self.runJob('xmipp_image_operate', params)
-
-    def DELETEvolumeProjectStep(self, volName):
-        from convert import createParamPhantomFile
-
-        imgSet = self.inputParticles.get()
-        phantomFn = self._getExtraPath('params')
-        pathParticles = self._getInputParticlesFn()
-        dimX, _, _ = imgSet.getDim()
-
-        createParamPhantomFile(phantomFn, dimX, pathParticles,
-                               imgSet.isPhaseFlipped(), False)
-
-        if self.refMask.get() is not None:
-            volumeFn = self._getOutputMap()
-        else:
-            volumeFn = volName
-
-        params =  ' -i %s' % volumeFn
-        params += ' --params %s' % phantomFn
-        params += ' -o %s' % self._getOutputRefsFn()
-        params += ' --sampling_rate % 0.3f' % imgSet.getSamplingRate()
-        params += ' --method fourier 2 0.5'
-        self.runJob('xmipp_phantom_project', params)
-
-    def DELETEremoveStep(self):
-        self._removeAlignLabels(self._getInputParticlesFn())
-        self._removeAlignLabels(self._getOutputRefsFn())
-
-        params = ' -i %s --minusAdjusted %s -o %s' % (self._getInputParticlesFn(),
-                                                      self._getOutputRefsFn(),
-                                                      self._getFinalParts())
-        self.runJob('xmipp_image_operate', params)
+        expProj.write((i, projGalleryFn))
 
     def createOutputStep(self, projGalleryFn):
         partSet = self.inputParticles.get()
@@ -212,10 +159,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         outImgSet.copyInfo(partSet)
         outImgSet.setAlignmentProj()
         for index, part in enumerate(partSet):
-            #indexPart, expProjFilename = part.getLocation()
             part2 = part.clone()
-            part2.setFileName(projGalleryFn)
-            part2.setIndex(index+1)
+            part2.setLocation(index+1, projGalleryFn)
             outImgSet.append(part2)
 
         self._defineOutputs(outputParticles=outImgSet)
@@ -234,7 +179,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         if not xImg == xVol:
             validateMsgs.append(" The dimensions of your particles and "
                                 " your volume *MUST BE EQUAL*")
-        #if imgSet.isPhaseFlipped() and self.projType != self._CorrectNone:
+        #if imgSet.isPhaseFlipped() and self.projType != self.CORRECT_NONE:
         #   validateMsgs.append("your images and volume are phase flipped therefore does not make sense to apply abs(CTF)")
 
         return validateMsgs
@@ -252,30 +197,6 @@ class XmippProtSubtractProjection(ProtOperateParticles):
     def _getInputParticlesFn(self):
         return self._getExtraPath('input_particles.xmd')
 
-    def _getOutputRefsFn(self):
-        return self._getExtraPath('reference_particles.xmd')
+    def _getProjGalleryFn(self):
+        return self._getExtraPath('projGallery.stk')
 
-    def _getFinalParts(self):
-        return self._getExtraPath('particles.stk')
-
-    def _getFinalMDParts(self):
-        return self._getExtraPath('particles.xmd')
-
-    def _getOutputMap(self):
-        return self._getExtraPath('masked_map.vol')
-
-    def _removeAlignLabels(self, filename):
-        mData = md.MetaData(filename)
-        mData.removeLabel(md.MDL_ANGLE_ROT)
-        mData.removeLabel(md.MDL_ANGLE_TILT)
-        mData.removeLabel(md.MDL_ANGLE_PSI)
-        mData.removeLabel(md.MDL_SHIFT_X)
-        mData.removeLabel(md.MDL_SHIFT_Y)
-        mData.removeLabel(md.MDL_SHIFT_Z)
-        mData.write(filename)
-
-    def _updateItem(self, item, row):
-        from convert import xmippToLocation
-        newFn = row.getValue(md.MDL_IMAGE)
-        newLoc = xmippToLocation(newFn)
-        item.setLocation(newLoc)

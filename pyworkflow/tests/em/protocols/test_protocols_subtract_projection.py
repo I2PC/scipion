@@ -19,11 +19,10 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *******
+
 from pyworkflow.tests import BaseTest, setupTestProject
 import xmipp
 from pyworkflow.em.packages.xmipp3 import writeSetOfParticles
-#import os
-from pyworkflow.em.protocol import ProtImportMask
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.constants import ALIGN_PROJ
 import numpy as np
@@ -35,7 +34,6 @@ from pyworkflow.em.protocol import ProtImportParticles, ProtImportMask, ProtImpo
 from pyworkflow.em.packages.xmipp3 import XmippProtSubtractProjection
 from pyworkflow.em.data import  VolumeMask
 
-# proj=[(x,y,value), ...]
 proj1 = [(0, 0, 53, 55, 0.5), (0, 0, 53, 56, 1.0), (0, 0, 53, 57, 0.5), (0, 0, 53, 63, 0.5), (0, 0, 53, 64, 1.0),
          (0, 0, 53, 65, 0.5), (0, 0, 54, 54, 1.75), (0, 0, 54, 55, 4.0), (0, 0, 54, 56, 4.5), (0, 0, 54, 57, 4.0),
          (0, 0, 54, 58, 1.75), (0, 0, 54, 62, 1.75), (0, 0, 54, 63, 4.0), (0, 0, 54, 64, 4.5), (0, 0, 54, 65, 4.0),
@@ -481,8 +479,6 @@ class TestSubProj(BaseTest):
         self.launchProtocol(prot)
         return prot
 
-
-
     def test_pattern(self):
         #1) create fake protocol so I have a place to save data
         #prot = self.launchFakeProtocol()
@@ -537,7 +533,7 @@ class TestSubProj(BaseTest):
         protSubtract.inputParticles.set(protPlainProj.outputParticles)
         protSubtract.inputVolume.set(_protImportVol.outputVolume)
         protSubtract.refMask.set(_protImportMask.outputMask)
-        protSubtract.projType.set(XmippProtSubtractProjection._CorrectNone)
+        protSubtract.projType.set(XmippProtSubtractProjection.CORRECT_NONE)
         self.launchProtocol(protSubtract)
 
         self.assertTrue(True)
