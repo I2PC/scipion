@@ -460,7 +460,7 @@ class ListDialog(Dialog):
         self._allowsEmptySelection = kwargs.get('allowsEmptySelection', False)
 
         buttons = []
-        if kwargs.get('allowSelect'):
+        if kwargs.get('allowSelect', True):
             buttons.append(('Select', RESULT_YES))
         buttons.append(('Cancel', RESULT_CANCEL))
 
