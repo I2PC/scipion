@@ -443,6 +443,10 @@ public:
     */
     void multiply(const double value);
 
+    /** Multiplication if the internal image by another image
+    */
+    void multiplyImg(const ImageGeneric &img);
+
     /** Division if the internal image by a constant
     */
     void divide(const double value);
