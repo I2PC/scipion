@@ -169,6 +169,10 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* Return image dimensions as a tuple */
 PyObject *
+Image_resetOrigin(PyObject *obj, PyObject *args, PyObject *kwargs);
+
+/* Return image dimensions as a tuple */
+PyObject *
 Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 /* Return value from MainHeader*/
@@ -216,6 +220,8 @@ PyObject *
 Image_imultiply(PyObject *obj1, PyObject *obj2);
 PyObject *
 Image_inplaceMultiply(PyObject *self, PyObject *args, PyObject *kwargs);
+PyObject *
+Image_inplaceMultiplyImg(PyObject *self, PyObject *args, PyObject *kwargs);
 
 PyObject *
 Image_divide(PyObject *obj1, PyObject *obj2);
