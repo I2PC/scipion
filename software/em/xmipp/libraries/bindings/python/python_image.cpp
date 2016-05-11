@@ -165,9 +165,7 @@ PyMethodDef Image_methods[] =
         { "inplaceSubtract", (PyCFunction) Image_inplaceSubtract, METH_VARARGS,
           "Subtract another image from self (does not create another Image instance)" },
         { "inplaceMultiply", (PyCFunction) Image_inplaceMultiply, METH_VARARGS,
-          "Multiply image by a constant (does not create another Image instance)" },
-        { "inplaceMultiplyImg", (PyCFunction) Image_inplaceMultiplyImg, METH_VARARGS,
-          "Multiply image by a constant (does not create another Image instance)" },
+          "Multiply image by a constant or another image (does not create a new Image instance)" },
         { "inplaceDivide", (PyCFunction) Image_inplaceDivide, METH_VARARGS,
           "Divide image by a constant (does not create another Image instance)" },
 
@@ -1353,33 +1351,6 @@ Image_inplaceSubtract(PyObject *self, PyObject *args, PyObject *kwargs)
   return NULL;
 }
 
-// similar to *=
-/** Image inplace multiplication, equivalent to *= operator
- * but this not return a new instance of image, mainly
- * for efficiency reasons.
- * */
-PyObject *
-Image_inplaceMultiplyImg(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-  try
-  {
-    PyObject *other = NULL;
-    if (PyArg_ParseTuple(args, "O", &other) &&
-        Image_Check(other))
-    {
-      Image_Value(self).multiplyImg(Image_Value(other));
-      Py_RETURN_NONE;
-    }
-    else
-      PyErr_SetString(PyXmippError, "Expecting Image as second argument");
-  }
-  catch (XmippError &xe)
-  {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-  }
-  return NULL;
-}// similar to *=
-
 /* Multiply image and constant, operator * */
 PyObject *
 Image_multiply(PyObject *obj1, PyObject *obj2)
@@ -1434,12 +1405,18 @@ Image_inplaceMultiply(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *other = NULL;
     if (PyArg_ParseTuple(args, "O", &other))
     {
-      double value = PyFloat_AsDouble(other);
-      Image_Value(self).multiply(value);
+      if (Image_Check(other))
+      {
+        Image_Value(self).multiply(Image_Value(other));
+      }
+      else
+      {
+        Image_Value(self).multiply(PyFloat_AsDouble(other));
+      }
       Py_RETURN_NONE;
     }
     else
-      PyErr_SetString(PyXmippError, "Expecting Number as second argument");
+      PyErr_SetString(PyXmippError, "Expecting Number or Image as second argument");
   }
   catch (XmippError &xe)
   {

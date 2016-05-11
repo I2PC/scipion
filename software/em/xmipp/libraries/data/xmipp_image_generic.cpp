@@ -554,7 +554,7 @@ void ImageGeneric::subtract(const ImageGeneric &img)
 
 }
 
-void ImageGeneric::multiplyImg(const ImageGeneric &img)
+void ImageGeneric::multiply(const ImageGeneric &img)
 {
 
 #define MULTIPLYIMG(type) MultidimArray<type> & kk = *((MultidimArray<type>*) data->im);\

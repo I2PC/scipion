@@ -439,13 +439,14 @@ public:
     /** Subtraction of the passed image to the internal's
      */
     void subtract(const ImageGeneric &img);
-    /** Multiplication if the internal image by a constant
+
+    /** Multiplication of the internal image by a constant
     */
     void multiply(const double value);
 
-    /** Multiplication if the internal image by another image
+    /** Multiplication of the internal image by another image
     */
-    void multiplyImg(const ImageGeneric &img);
+    void multiply(const ImageGeneric &img);
 
     /** Division if the internal image by a constant
     */
