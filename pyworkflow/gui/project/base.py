@@ -132,7 +132,7 @@ class ProjectBaseWindow(Window):
             self.switchView(elementText)
 
     def switchView(self, newView):
-        # Destroy the previous view if existing:
+        # Destroy the previous view if exists:
         if self.viewWidget:
             self.viewWidget.grid_forget()
             self.viewWidget.destroy()

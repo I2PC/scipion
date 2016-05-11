@@ -390,6 +390,10 @@ class Window():
                     """Return a callback function named "on<Name>"."""
                     f = "on%s" % "".join(x.capitalize() for x in name.split())
                     return lambda: getattr(self, f)()
+
+                if sub.shortCut.get() is not None:
+                    menuLabel += ' (' + sub.shortCut.get() + ')'
+
                 menu.add_command(label=menuLabel, compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()),
                                  command=callback(name=sub.text.get()))
