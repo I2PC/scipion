@@ -30,7 +30,7 @@ from pyworkflow.protocol.params import PointerParam, EnumParam
 
 from pyworkflow.em.protocol import ProtOperateParticles
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
+from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, setOfParticlesToMd,
                                                    getImageLocation,
                                                    geometryFromMatrix)
 import xmipp
@@ -81,13 +81,20 @@ class XmippProtSubtractProjection(ProtOperateParticles):
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        deps = []
+        #divide work in several threads
+        numberOfThreads = self.numberOfThreads.get()-1
+        if numberOfThreads == 0:
+            numberOfThreads = 1
         partSet = self.inputParticles.get()
+        nPart = len(partSet)
+        numberOfThreads = min(numberOfThreads, nPart)
         samplingRate = partSet.getSamplingRate()
         inputVolume = getImageLocation(self.inputVolume.get())
         mdFn = self._getInputParticlesFn()
         volumeId = self._insertFunctionStep('initVolumeStep',
                                             inputVolume, partSet, mdFn)
+
+        deps = []
         deps.append(volumeId)
 
         projGalleryFn = self._getProjGalleryFn()
@@ -96,15 +103,37 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         deps.append(galleryId)
 
         # Create xmipp metadata
-        writeSetOfParticles(partSet, mdFn, blockName="images")
-        self.md = xmipp.MetaData(mdFn)
+        # partSet
+        #writeSetOfParticles(partSet, mdFn, blockName="images")
 
-        #insert one step per projection direction
+        md = xmipp.MetaData()
+        setOfParticlesToMd(partSet, md)
+        #convert angles and shifts from volume system of coordinates to projection system of coordinates
         for index, part in enumerate(partSet):
-            indexPart, expProjFilename = part.getLocation()
+            objId = index + 1
             shifts, angles = geometryFromMatrix(part.getTransform().getMatrix(), True)
-            self._insertFunctionStep('projectStep', index+1, shifts, angles,
-                                     samplingRate,expProjFilename, projGalleryFn, indexPart,
+            md.setValue(xmipp.MDL_SHIFT_X,-shifts[0],objId)
+            md.setValue(xmipp.MDL_SHIFT_Y,-shifts[1],objId)
+            md.setValue(xmipp.MDL_SHIFT_Z,0.,objId)
+            md.setValue(xmipp.MDL_ANGLE_ROT,angles[0],objId)
+            md.setValue(xmipp.MDL_ANGLE_TILT,angles[1],objId)
+            md.setValue(xmipp.MDL_ANGLE_PSI,angles[2],objId)
+
+        groupSize = nPart/numberOfThreads
+        groupRemainder = nPart%numberOfThreads
+
+        for thread in range(0, numberOfThreads):
+            mdAux = xmipp.MetaData()
+            start = long(thread * groupSize+1)
+            end = long(thread * groupSize+groupSize)
+            if thread == (numberOfThreads-1):
+                end += groupRemainder
+            mdAux.importObjects(md, xmipp.MDValueRange(xmipp.MDL_OBJID,start,end))
+            #save metadata otherwise protocol will not start on continue.
+            mdAux.write(self._getInputParticlesSubsetFn(thread))
+            #indexPart, expProjFilename = part.getLocation()
+            self._insertFunctionStep('projectStep', start, end,
+                                     samplingRate, thread,
                                      prerequisites=deps)
         self._insertFunctionStep('createOutputStep', projGalleryFn)
 
@@ -120,39 +149,42 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             self.mask.convert2DataType(xmipp.DT_DOUBLE)
             self.vol.inplaceMultiply(self.mask)
 
-    def createEmptyFileStep(self,projGalleryFn):
+    def createEmptyFileStep(self, projGalleryFn):
         n = len(self.inputParticles.get())
         x, y, z = self.inputParticles.get().getDimensions()
         xmipp.createEmptyFile(projGalleryFn,x,y,1,n)
 
-    def projectStep(self,i, shifts, angles, samplingRate,
-                    expProjFilename, projGalleryFn, indexPart):
+    def projectStep(self, start, end, samplingRate, threadNumber):
         # Project
-        self.projection =self.vol.projectVolumeDouble(angles[0],
-                                                      angles[1],
-                                                      angles[2])
-        self.md.setValue(xmipp.MDL_SHIFT_X,-shifts[0],i)
-        self.md.setValue(xmipp.MDL_SHIFT_Y,-shifts[1],i)
-        self.md.setValue(xmipp.MDL_SHIFT_Z,0.,i)
-        # Apply CTF
-        if self.projType == self.CORRECT_NONE:
-            pass
-        elif self.projType == self.CORRECT_FULL_CTF:
-            self.projection.applyCTF(self.md, samplingRate, i, False)
-        elif self.projType == self.CORRECT_PHASE_FLIP:
-            self.projection.applyCTF(self.md, samplingRate, i, True)
-        else:
-            raise Exception("ERROR: Unknown projection mode: %d" % self.projType)
+        md = xmipp.MetaData(self._getInputParticlesSubsetFn(threadNumber))
+        for id in md:
+            rot  = md.getValue(xmipp.MDL_ANGLE_ROT,  id)
+            tilt = md.getValue(xmipp.MDL_ANGLE_TILT, id)
+            psi  = md.getValue(xmipp.MDL_ANGLE_PSI,  id)
 
-        # Shift image
-        self.projection.applyGeo(self.md,i,True,False)#onlyapplyshist, wrap
-        ih = ImageHandler()
-        expProj = ih.read((indexPart, expProjFilename))
-        expProj.convert2DataType(xmipp.DT_DOUBLE)
-        # Subtract from experimental and write result
-        self.projection.resetOrigin()
-        expProj.inplaceSubtract(self.projection) #0, -64
-        expProj.write((i, projGalleryFn))
+            projection =self.vol.projectVolumeDouble(rot, tilt, psi)
+
+            # Apply CTF
+            if self.projType == self.CORRECT_NONE:
+                pass
+            elif self.projType == self.CORRECT_FULL_CTF:
+                projection.applyCTF(md, samplingRate, id, False)
+            elif self.projType == self.CORRECT_PHASE_FLIP:
+                projection.applyCTF(md, samplingRate, id, True)
+            else:
+                raise Exception("ERROR: Unknown projection mode: %d" % self.projType)
+
+            # Shift image
+            projection.applyGeo(md,id,True,False)#onlyapplyshist, wrap
+            ih = ImageHandler()
+            expProj = ih.read(md.getValue(xmipp.MDL_IMAGE, id))
+            expProj.convert2DataType(xmipp.DT_DOUBLE)
+            # Subtract from experimental and write result
+            expProj.write( "%d@/tmp/expProj.stk"%id)
+            projection.write( "%d@/tmp/thProj.stk"%id)
+            projection.resetOrigin()
+            expProj.inplaceSubtract(projection) #0, -64
+            expProj.write( self._getProjGalleryIndexFn(id+start-1))
 
     def createOutputStep(self, projGalleryFn):
         partSet = self.inputParticles.get()
@@ -198,6 +230,12 @@ class XmippProtSubtractProjection(ProtOperateParticles):
     def _getInputParticlesFn(self):
         return self._getExtraPath('input_particles.xmd')
 
+    def _getInputParticlesSubsetFn(self, setNumber):
+        return self._getExtraPath('input_particles_thr_%05d.xmd'%setNumber)
+
     def _getProjGalleryFn(self):
         return self._getExtraPath('projGallery.stk')
+
+    def _getProjGalleryIndexFn(self,index):
+        return "%d@%s"%(index, self._getProjGalleryFn())
 
