@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
+ * Authors:     J.Vargas (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -39,8 +39,6 @@ protected:
 #define len 128
 
         //get example down1_42_Periodogramavg.psd
-        if (chdir(((String)(getXmippPath() + (String)"/resources/test/fringe")).c_str())==-1)
-        	REPORT_ERROR(ERR_UNCLASSIFIED,"Could not change directory");
     }
 
     //Image to be processed:
@@ -122,65 +120,6 @@ TEST_F( FringeProcessingTests, SPTH)
 
 }
 
-
-TEST_F( FringeProcessingTests, orMinDer)
-{
-
-#ifdef DEBUG
-    FileName fpName, orName, orMapName;
-    fpName   = "txt";
-    orName   = "or.txt";
-    orMapName= "orMap.txt";
-#endif
-
-    MultidimArray<double> im, orMap, orModMap;
-    MultidimArray<bool> ROI;
-
-    int nx = 311;
-    int ny = 311;
-    double noiseLevel = 0.0;
-    double freq = 1;
-    Matrix1D<int> coefs(10);
-
-    simulPattern(im,SIMPLY_CLOSED_FRINGES,nx,ny, noiseLevel,freq, coefs);
-    orMap.resizeNoCopy(im);
-    ROI.resizeNoCopy(im);
-
-    int rmin = 20;
-    int rmax = 300;
-
-    ROI.setXmippOrigin();
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(ROI)
-    {
-        double temp = std::sqrt(i*i+j*j);
-        if ( (temp > rmin) &&  (temp < rmax) )
-            A2D_ELEM(ROI,i,j)= true;
-        else
-            A2D_ELEM(ROI,i,j)= false;
-    }
-
-    int wSize = 2;
-    orMinDer(im,orMap,orModMap, wSize, ROI);
-
-    ASSERT_TRUE(XSIZE(im) == XSIZE(orMap));
-    ASSERT_TRUE(YSIZE(im) == YSIZE(orMap));
-    ASSERT_TRUE(XSIZE(im) == XSIZE(orModMap));
-    ASSERT_TRUE(YSIZE(im) == YSIZE(orModMap));
-    ASSERT_TRUE( std::abs(A2D_ELEM(orMap,1,1) -  2.3562)<0.01);
-    ASSERT_TRUE( std::abs(A2D_ELEM(orMap,1,5) -  2.3483)<0.01);
-    ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,1) -  0.0690)<0.01);
-    ASSERT_TRUE( std::abs(A2D_ELEM(orModMap,1,5) -  0.3364)<0.01);
-
-
-#ifdef DEBUG
-
-    im.write(fpName);
-    orMap.write(orName);
-    orModMap.write(orMapName);
-
-#endif
-
-}
 
 TEST_F( FringeProcessingTests, normalize)
 {

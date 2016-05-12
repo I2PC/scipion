@@ -390,6 +390,10 @@ class Window():
                     """Return a callback function named "on<Name>"."""
                     f = "on%s" % "".join(x.capitalize() for x in name.split())
                     return lambda: getattr(self, f)()
+
+                if sub.shortCut.get() is not None:
+                    menuLabel += ' (' + sub.shortCut.get() + ')'
+
                 menu.add_command(label=menuLabel, compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()),
                                  command=callback(name=sub.text.get()))
@@ -406,7 +410,7 @@ class Window():
         from dialog import showWarning
         showWarning(header, msg, self.root)
         
-    def askYesNo(self, title, msg,):
+    def askYesNo(self, title, msg):
         from dialog import askYesNo
         return askYesNo(title, msg, self.root)
         

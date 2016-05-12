@@ -1251,7 +1251,7 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     CL2DAssignment assignment, assignment1, assignment2;
     CL2DClass *firstSplitNode1 = NULL;
     CL2DClass *firstSplitNode2 = NULL;
-    size_t minAllowedSize = (size_t)(prm->PminSize * 0.01 * node->currentListImg.size());
+    size_t minAllowedSize = 0;
 
     bool oldclassicalMultiref = prm->classicalMultiref;
     prm->classicalMultiref = false;
@@ -1259,7 +1259,9 @@ void CL2D::splitNode(CL2DClass *node, CL2DClass *&node1, CL2DClass *&node2,
     bool success = true;
     do
     {
-    	// Sort the currentListImg to make sure that all nodes have the same order
+        minAllowedSize = (size_t)(prm->PminSize/2 * 0.01 * node->currentListImg.size());
+
+        // Sort the currentListImg to make sure that all nodes have the same order
     	std::sort(node->currentListImg.begin(),node->currentListImg.end(),CL2DAssignmentComparator);
 #ifdef DEBUG
     		std::cout << "Splitting node " << node << "(" << node->currentListImg.size() << ") into " << node1 << " and " << node2 << std::endl;

@@ -3,7 +3,6 @@
  * and open the template in the editor.
  */
 package xmipp.utils;
-
 /**
  *
  * @author Juanjo Vega
@@ -40,7 +39,12 @@ public class DEBUG {
     		ex.printStackTrace();
     	}
     }
-    
+
+    public static boolean hasScipionDebug() {
+        String debug = System.getenv("SCIPION_DEBUG");
+        return (debug != null && debug.equals("1"));
+    }
+
     //Timing
     public static long millisecs;
     

@@ -51,9 +51,9 @@ class ScipionImport():
 
         # Update both samplingRate and acquisition with parameters
         # selected in the protocol form
+        self.protocol.fillAcquisition(micSet.getAcquisition())
         self.protocol.setSamplingRate(micSet)
         micSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
-        self.protocol.fillAcquisition(micSet.getAcquisition())
         # Read the micrographs from the 'self._sqliteFile' metadata
         # but fixing the filenames with new ones (linked or copy to extraDir)
         micSet.copyItems(inputSet, updateItemCallback=self._updateParticle)
@@ -123,7 +123,8 @@ class ScipionImport():
         acquisitionDict['samplingRate'] = inputSet.getProperty('_samplingRate')
         acquisitionDict['voltage'] = inputSet.getProperty('_acquisition._voltage')
         acquisitionDict['amplitudeContrast'] = inputSet.getProperty('_acquisition._amplitudeContrast')
-        acquisitionDict['magnification'] = int(float(inputSet.getProperty('_acquisition._magnification')))
+        acquisitionDict['sphericalAberration'] = float(inputSet.getProperty('_acquisition._sphericalAberration'))
+
         
         return acquisitionDict
           

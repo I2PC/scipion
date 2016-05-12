@@ -35,19 +35,24 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
+import subprocess
+import uuid
+import SocketServer
+
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
-from pyworkflow.gui import Message
+from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.gui.text import _open_cmd
-import SocketServer
+from pyworkflow.gui.text import _open_cmd, openTextFileEditor
+
+from labels import LabelsDialog
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, 
+from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD,
                                  OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4,
                                  OBJCMD_GCTF)
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
@@ -75,9 +80,15 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu = menu.addSubMenu('Project')
         projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('Manage project labels', 'labels', icon=Icon.TAGS)
+        projMenu.addSubMenu('Toogle color mode', 'color_mode', shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all', shortCut="Ctrl+a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol', shortCut="Ctrl+f")
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
@@ -96,7 +107,6 @@ class ProjectWindow(ProjectBaseWindow):
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
-
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
@@ -134,6 +144,28 @@ class ProjectWindow(ProjectBaseWindow):
                           self, self.project.getPath(''), 
                           selectButton=None  # we will select nothing
                           ).show()
+
+    def onNotes(self):
+        if not all(var in os.environ for var in ['SCIPION_NOTES_PROGRAM',
+                                                 'SCIPION_NOTES_FILE',
+                                                 'SCIPION_NOTES_ARGS']):
+            return self.showError("Missing variables SCIPION_NOTES_* under\n"
+                                  "[VARIABLES] section in the configuration file\n"
+                                  "~/.config/scipion/scipion.conf")
+        args = []
+        # Program name
+        program = os.environ.get('SCIPION_NOTES_PROGRAM', None)
+        notesFile = self.project.getPath('Logs', os.environ['SCIPION_NOTES_FILE'])
+
+        if program:
+            args.append(program)
+            # Custom arguments
+            if os.environ.get('SCIPION_NOTES_ARGS', None):
+                args.append(os.environ['SCIPION_NOTES_ARGS'])
+            args.append(notesFile)
+            subprocess.Popen(args) #nonblocking
+        else:
+            openTextFileEditor(notesFile)
 
     def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
@@ -173,8 +205,26 @@ class ProjectWindow(ProjectBaseWindow):
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
+    def onManageProjectLabels(self):
+        self.manageLabels()
+
+    def onToogleColorMode(self):
+        self.getViewWidget()._toggleColorScheme(None)
+
+    def onSelectAllProtocols(self):
+        self.getViewWidget()._selectAllProtocols(None)
+
+    def onFindProtocolToAdd(self):
+        self.getViewWidget()._findProtocol(None)
+
+    def manageLabels(self):
+        return LabelsDialog(self.root,
+                            self.project.settings.getLabels(),
+                            allowSelect=True)
+
     def initProjectTCPServer(self):
-        server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
+        server = ProjectTCPServer((self.project.address, self.project.port),
+                                  ProjectTCPRequestHandler)
         server.project = self.project
         server.window = self
         server_thread = threading.Thread(target=server.serve_forever)
@@ -187,7 +237,6 @@ class ProjectWindow(ProjectBaseWindow):
 
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         try:
-            
             from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
             from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots 
             from pyworkflow.em.protocol.protocol_movies import PLOT_CART
@@ -207,30 +256,22 @@ class ProjectWindow(ProjectBaseWindow):
             elif cmd == OBJCMD_NMA_VMD:
                 vmd = createVmdView(inputObj, modeNumber=objId)
                 vmd.show()
-    
-    #         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-    #             self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
-    
+
             elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
                 self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
-    
-            #elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            #    self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
-            
+
             elif cmd == OBJCMD_CTFFIND4:
                 from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
                 self.enqueue(lambda: createCtfPlot(inputObj, objId))
-                
+
             elif cmd == OBJCMD_GCTF:
                 from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
 
         except Exception, ex:
             print "There was an error executing object command !!!:"
             print  ex
     
-
-
-
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
         create the subset.
