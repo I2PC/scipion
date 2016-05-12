@@ -29,12 +29,12 @@
 from pyworkflow.protocol.params import PointerParam, EnumParam
 
 from pyworkflow.em.protocol import ProtOperateParticles
+from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
                                                    getImageLocation,
                                                    geometryFromMatrix)
 import xmipp
 from pyworkflow.em import ImageHandler
-
 
 
 class XmippProtSubtractProjection(ProtOperateParticles):
@@ -54,6 +54,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
 
     def __init__(self, *args, **kwargs):
         ProtOperateParticles.__init__(self, *args, **kwargs)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -103,7 +104,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             indexPart, expProjFilename = part.getLocation()
             shifts, angles = geometryFromMatrix(part.getTransform().getMatrix(), True)
             self._insertFunctionStep('projectStep', index+1, shifts, angles,
-                                     samplingRate,expProjFilename, projGalleryFn,
+                                     samplingRate,expProjFilename, projGalleryFn, indexPart,
                                      prerequisites=deps)
         self._insertFunctionStep('createOutputStep', projGalleryFn)
 
@@ -125,7 +126,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         xmipp.createEmptyFile(projGalleryFn,x,y,1,n)
 
     def projectStep(self,i, shifts, angles, samplingRate,
-                    expProjFilename, projGalleryFn):
+                    expProjFilename, projGalleryFn, indexPart):
         # Project
         self.projection =self.vol.projectVolumeDouble(angles[0],
                                                       angles[1],
@@ -146,7 +147,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         # Shift image
         self.projection.applyGeo(self.md,i,True,False)#onlyapplyshist, wrap
         ih = ImageHandler()
-        expProj = ih.read((i, expProjFilename))
+        expProj = ih.read((indexPart, expProjFilename))
         expProj.convert2DataType(xmipp.DT_DOUBLE)
         # Subtract from experimental and write result
         self.projection.resetOrigin()
