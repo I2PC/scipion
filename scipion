@@ -110,10 +110,7 @@ if __version__ == 'devel':
     versionFile = join(SCIPION_HOME, '.devel_version')
     if exists(versionFile):
         f = open(versionFile)
-        print "SCIPION_HOME", SCIPION_HOME
-        print "os.getcwd()", os.getcwd()
         line = f.readline()
-        print " line: ", line
         __version__ = line.split()[1]
         __nickname__, __releasedate__ = f.readline().split()[:2]
         f.close()
