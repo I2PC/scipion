@@ -282,9 +282,14 @@ class ProtImportImages(ProtImportFiles):
                 errors.append("Folders can not be selected.")
                 errors.append('  %s' % imgFn)
             else:
-                # try to read the header of the imported images
-                # except for the special case of compressed movies (bz2 extension)
-                if not (imgFn.endswith('bz2') or imgFn.endswith('tbz') or ih.isImageFile(imgFn)): 
+                # Check if images are correct by reading the header of the imported files:
+                # Exceptions: 
+                #  - Compressed movies (bz2 or tbz extensions)
+                #  - Importing in streaming, since files may be incomplete
+                if (not self.dataStreaming and 
+                    not (imgFn.endswith('bz2') or 
+                         imgFn.endswith('tbz') or 
+                         ih.isImageFile(imgFn))): 
                     if not errors: # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
