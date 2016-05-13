@@ -114,7 +114,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       expertLevel=LEVEL_ADVANCED,
                       label="Angular sampling rate")  
                       
-        form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=0, mpi=1)
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _createFilenameTemplates(self):
@@ -262,7 +262,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             
             self.runJob('xmipp_angular_projection_matching',
                         args, 
-                        numberOfMpi = self.numberOfMpi.get() * self.numberOfThreads.get()) 
+                        numberOfMpi = self.numberOfMpi.get())
+                        #numberOfMpi = self.numberOfMpi.get() * self.numberOfThreads.get()) 
            
             params =  '  -i %s' % fnImgsAlignN
             params += '  -o %s' % fnRootN+"_%02d_%02d.vol"%(i, iteration)
