@@ -114,7 +114,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       expertLevel=LEVEL_ADVANCED,
                       label="Angular sampling rate")  
                       
-        form.addParallelSection(threads=4, mpi=1)
+        form.addParallelSection(threads=1, mpi=1)
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _createFilenameTemplates(self):
@@ -224,7 +224,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += ' --sym %s' % self.symmetryGroup.get()
             params += ' --max_resolution %0.3f' % self.maxRes
             params += ' --padding 2'
-            params += ' --thr %d' % self.numberOfThreads.get()
+            params += ' --thr 1'
+            #params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)
             
@@ -268,7 +269,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             params += ' --sym %s' % self.symmetryGroup.get()
             params += ' --max_resolution %0.3f' % self.maxRes
             params += ' --padding 2'
-            params += ' --thr %d' % self.numberOfThreads.get()
+            params += ' --thr 1'
+            #params += ' --thr %d' % self.numberOfThreads.get()
             params += ' --sampling %f' % Ts
             self.runJob('xmipp_reconstruct_fourier', params)     
             
