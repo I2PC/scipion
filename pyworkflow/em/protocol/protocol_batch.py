@@ -147,9 +147,10 @@ class ProtUserSubSet(BatchProtocol):
         className = inputImages.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputImages.getClass()(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet.loadAllProperties()
         
         output = createFunc()
-        output.copyInfo(inputImages)
+        output.copyInfo(modifiedSet)
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)

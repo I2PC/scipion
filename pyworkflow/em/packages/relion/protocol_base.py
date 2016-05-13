@@ -36,12 +36,13 @@ from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam,
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
+import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
-from convert import convertBinaryVol, writeSqliteIterData, writeSetOfParticles, getVersion
+from convert import convertBinaryVol, writeSetOfParticles, getVersion
 
 
 class ProtRelionBase(EMProtocol):
@@ -732,8 +733,11 @@ class ProtRelionBase(EMProtocol):
         data_sqlite = self._getFileName('data_scipion', iter=it)
         
         if not exists(data_sqlite):
-            data = self._getFileName('data', iter=it)
-            writeSqliteIterData(data, data_sqlite, **kwargs)
+            iterImgSet = em.SetOfParticles(filename=data_sqlite)
+            iterImgSet.copyInfo(self._getInputParticles())
+            self._fillDataFromIter(iterImgSet, it)
+            iterImgSet.write()
+            iterImgSet.close()
         
         return data_sqlite
     

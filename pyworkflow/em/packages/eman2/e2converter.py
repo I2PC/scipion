@@ -42,8 +42,8 @@ MODE_READ = 'read'
 
 
 def writeParticles():
-    i = 0
     line = sys.stdin.readline()
+    fnHdf = ""
     while line:
     #for line in sys.stdin:
         objDict=json.loads(line)
@@ -93,6 +93,10 @@ def writeParticles():
             imageData.set_attr('xform.projection', transformation)
         
         outputFile = str(objDict['hdfFn'])
+        if outputFile != fnHdf:
+            i = 0
+            fnHdf = outputFile
+
         imageData.write_image(outputFile, i, eman.EMUtil.ImageType.IMAGE_HDF, False)
         i += 1
         print "OK"
@@ -140,34 +144,45 @@ def readParticles(inputParts, inputCls, inputClasses, outputTxt):
             classes = classesEven
         else:
             classes = classesOdd
-        az = classes[int(classNum)].get_attr_dict()['xform.projection'].get_rotation("eman")['az']
-        alt = classes[int(classNum)].get_attr_dict()['xform.projection'].get_rotation("eman")['alt']
         
-        if flipList[index] == 1:
-            transform = eman.Transform({"type": "eman",
-                                        "az": az + 180,
-                                        "alt": 180 - alt,
-                                        "phi": dAlphaList[index]*-1,
-                                        "tx": shiftXList[index],
-                                        "ty": shiftYList[index]
-                                        })
+        imgRotation = classes[int(classNum)].get_attr_dict().get('xform.projection', None)
+        
+        if imgRotation is not None:
+            enable = 1
+            az = imgRotation.get_rotation("eman")['az']
+            alt = imgRotation.get_rotation("eman")['alt']
+            
+            if flipList[index] == 1:
+                transform = eman.Transform({"type": "eman",
+                                            "az": az + 180,
+                                            "alt": 180 - alt,
+                                            "phi": dAlphaList[index]*-1,
+                                            "tx": shiftXList[index],
+                                            "ty": shiftYList[index]
+                                            })
+            else:
+                transform = eman.Transform({"type": "eman",
+                                            "az": az,
+                                            "alt": alt,
+                                            "phi": dAlphaList[index],
+                                            "tx": shiftXList[index], 
+                                            "ty":shiftYList[index]
+                                            })
+            transform = transform.inverse()
+            
+            rot = transform.get_rotation("spider")['psi']
+            tilt = transform.get_rotation("spider")['theta']
+            psi = transform.get_rotation("spider")['phi']
+            shiftX = transform.get_trans()[0]
+            shiftY = transform.get_trans()[1]
         else:
-            transform = eman.Transform({"type": "eman",
-                                        "az": az,
-                                        "alt": alt,
-                                        "phi": dAlphaList[index],
-                                        "tx": shiftXList[index], 
-                                        "ty":shiftYList[index]
-                                        })
-        transform = transform.inverse()
-        
-        rot = transform.get_rotation("spider")['psi']
-        tilt = transform.get_rotation("spider")['theta']
-        psi = transform.get_rotation("spider")['phi']
-        shiftX = transform.get_trans()[0]
-        shiftY = transform.get_trans()[1]
-        
-        print >> f, index, rot, tilt, psi, shiftX, shiftY
+            enable = 0
+            rot = 0
+            tilt = 0
+            psi = 0
+            shiftX = 0
+            shiftY = 0
+        print >> f, index, enable, rot, tilt, psi, shiftX, shiftY
     f.close()
     
     
