@@ -119,18 +119,21 @@ class ProtAlignMovies(ProtProcessMovies):
         return outputSet
 
     def _checkNewOutput(self):
-        # Load previously done items (from text file)
         if getattr(self, 'finished', False):
             return
 
+        # Load previously done items (from text file)
         doneList = self._readDoneList()
         # Check for newly done items
         newDone = [m for m in self.listOfMovies
                    if m.getObjId() not in doneList and self._isMovieDone(m)]
 
         # Update the file with the newly done movies
+        # or exit from the function if no new done movies
         if newDone:
             self._writeDoneList(newDone)
+        else:
+            return
 
         firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
