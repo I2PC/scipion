@@ -194,15 +194,20 @@ class Canvas(tk.Canvas, Scrollable):
         self._handleMouseEvent(event, self.onDoubleClickCallback)
 
     def onDrag(self, event):
+        try:
+            if self.lastItem:
+                xc, yc = self.getCoordinates(event)
+                self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
+                self.lastPos = (xc, yc)
 
-        if self.lastItem:
-            xc, yc = self.getCoordinates(event)
-            self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
-            self.lastPos = (xc, yc)
-
-        elif self.firstPos is None:
-            self.firstPos = (event.x, event.y)
-            # print "onDrag position captured."
+            elif self.firstPos is None:
+                self.firstPos = (event.x, event.y)
+                # print "onDrag position captured."
+        except Exception, ex:
+            # JMRT: We are having a weird exception here.
+            # Presumably because there is concurrency between the onDrag
+            # event and the refresh one. For now, just ignore it.
+            pass
 
     def onButton1Release(self, event):
 

@@ -78,14 +78,21 @@ class ProjectWindow(ProjectBaseWindow):
         menu = MenuConfig()
 
         projMenu = menu.addSubMenu('Project')
-        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
-        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
-        projMenu.addSubMenu('Manage project labels', 'labels', icon=Icon.TAGS)
-        projMenu.addSubMenu('Toogle color mode', 'color_mode', shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
-        projMenu.addSubMenu('Select all protocols', 'select all', shortCut="Ctrl+a")
-        projMenu.addSubMenu('Find protocol to add', 'find protocol', shortCut="Ctrl+f")
+        projMenu.addSubMenu('Browse files', 'browse',
+                            icon='fa-folder-open.png')
+        projMenu.addSubMenu('Remove temporary files', 'delete',
+                            icon='fa-trash-o.png')
+        projMenu.addSubMenu('Manage project labels', 'labels',
+                            icon=Icon.TAGS)
+        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+                            shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all',
+                            shortCut="Ctrl+a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol',
+                            shortCut="Ctrl+f")
         projMenu.addSubMenu('', '') # add separator
-        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Import workflow', 'load_workflow',
+                            icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
@@ -93,8 +100,10 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
-        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
-        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+        helpMenu.addSubMenu('Online help', 'online_help',
+                            icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about',
+                            icon='fa-question-circle.png')
 
         self.menuCfg = menu
         # TODO: up to here
@@ -103,7 +112,8 @@ class ProjectWindow(ProjectBaseWindow):
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
-        ProjectBaseWindow.__init__(self, projTitle, master, icon=self.icon, minsize=(900,500))
+        ProjectBaseWindow.__init__(self, projTitle, master,
+                                   icon=self.icon, minsize=(900,500))
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
