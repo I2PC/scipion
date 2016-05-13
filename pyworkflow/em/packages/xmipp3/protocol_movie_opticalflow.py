@@ -98,9 +98,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
 
         command = ' -i %s -o %s ' % (inputFn, outputMicFn)
         command += '--frameRange %d %d ' % (a0-1, aN-1)
-        if dark is not None:
+        if dark:
             command += '--dark %s ' % dark
-        if gain is not None:
+        if gain:
             command += '--gain %s ' % gain
         winSize = self.winSize.get()
         doSaveMovie = self.doSaveMovie.get()
@@ -123,7 +123,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         try:
             self.runJob(program, command)
         except:
-            print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
+            print >> sys.stderr, program, " failed for movie %s" % inputFn
 
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
         self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(), roi, dark, gain)
