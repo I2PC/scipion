@@ -207,7 +207,10 @@ class Object(object):
     def getObjCreation(self):
         """ Return the stored creation time of the object. """
         return self._objCreation
-    
+
+    def getObjectCreationAsDate(self):
+        """ Return the stored creation time of the object as date """
+
     def strId(self):
         """String representation of id"""
         return str(self._objId)
@@ -808,7 +811,7 @@ class List(Object, list):
     
     def _stringToIndex(self, strIndex):
         """ From the string index representation obtain the index.
-        For simetry the number in the index string will be 
+        For symetry the number in the index string will be
         decreased in 1.
         """
         return int(strIndex.split(self.ITEM_PREFIX)[1]) - 1
