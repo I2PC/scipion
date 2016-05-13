@@ -81,6 +81,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
               help="If set Yes, the alignment information (if"
                    " it exists) will take into account to align"
                    " your movies.")
+        form.addParallelSection(threads=8, mpi=0)
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def _processMovie(self, movie):
