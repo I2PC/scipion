@@ -121,7 +121,7 @@ class ProtSummovie(ProtProcessMovies):
         # special case is mrc but ends in mrcs
         inMovieName= os.path.join(movieFolder,movieName)
         if movieName.endswith('.mrc'):
-            movieNameAux = inMovieName
+            movieNameAux = movieName
         elif movieName.endswith('.mrcs'):
             movieNameAux= pwutils.replaceExt(inMovieName, "mrc")
             createLink(inMovieName,movieNameAux)
