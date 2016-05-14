@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import unittest, sys
-import numpy as np
 
 from pyworkflow.em import *
 from pyworkflow.tests import *
@@ -39,48 +36,57 @@ class TestBrandeisBase(BaseTest):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.micFn = cls.dataset.getFile('allMics')
         cls.volFn = cls.dataset.getFile('vol2')
-        #cls.parFn = cls.dataset.getFile('aligned_particles')
 
     @classmethod
-    def runImportMicrograph(cls, pattern, samplingRate, voltage, scannedPixelSize, magnification, sphericalAberration):
+    def runImportMicrograph(cls, pattern, samplingRate, voltage,
+                            scannedPixelSize, magnification,
+                            sphericalAberration):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
-        if not samplingRate is None:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=0, filesPath=pattern, samplingRate=samplingRate, magnification=magnification, 
-                                                   voltage=voltage, sphericalAberration=sphericalAberration)
+        # We have two options: pass the SamplingRate or
+        # the ScannedPixelSize + microscope magnification
+        kwargs = {
+            'filesPath': pattern,
+            'magnification': magnification,
+            'voltage': voltage,
+            'sphericalAberration': sphericalAberration
+        }
+
+        if samplingRate is not None:
+            kwargs.update({'samplingRateMode': 0,
+                           'samplingRate': samplingRate})
         else:
-            cls.protImport = ProtImportMicrographs(samplingRateMode=1, filesPath=pattern, scannedPixelSize=scannedPixelSize, 
-                                                   voltage=voltage, magnification=magnification, sphericalAberration=sphericalAberration)
-        
-        cls.proj.launchProtocol(cls.protImport, wait=True)
-        # check that input micrographs have been imported (a better way to do this?)
+            kwargs.update({'samplingRateMode': 1,
+                           'scannedPixelSize': scannedPixelSize})
+
+        cls.protImport = ProtImportMicrographs(**kwargs)
+        cls.launchProtocol(cls.protImport)
+
+        # Check that input micrographs have been imported
         if cls.protImport.outputMicrographs is None:
-            raise Exception('Import of micrograph: %s, failed. outputMicrographs is None.' % pattern)
+            raise Exception('Import of micrograph: %s, failed. '
+                            'outputMicrographs is None.' % pattern)
+
         return cls.protImport
 
     @classmethod
     def runImportVolumes(cls, pattern, samplingRate,
-                         importFrom = ProtImportParticles.IMPORT_FROM_FILES):
+                         importFrom=ProtImportParticles.IMPORT_FROM_FILES):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
                                          filesPath=pattern,
                                          samplingRate=samplingRate
                                         )
-                                         #not yet implemented
-                                         #importFrom=importFrom
-                                         #)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False,
-                           importFrom = ProtImportParticles.IMPORT_FROM_FILES):
+                           importFrom=ProtImportParticles.IMPORT_FROM_FILES):
         """ Run an Import particles protocol. """
         if importFrom == ProtImportParticles.IMPORT_FROM_SCIPION:
             objLabel = 'from scipion (particles)'
         elif importFrom == ProtImportParticles.IMPORT_FROM_FILES:
             objLabel = 'from file (particles)'
-
 
         cls.protImport = cls.newProtocol(ProtImportParticles,
                                          objLabel=objLabel,
@@ -91,11 +97,11 @@ class TestBrandeisBase(BaseTest):
                                          importFrom=importFrom)
 
         cls.launchProtocol(cls.protImport)
-        # check that input images have been imported (a better way to do this?)
+        # Check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+            raise Exception('Import of images: %s, failed. '
+                            'outputParticles is None.' % pattern)
         return cls.protImport
-
 
     @classmethod
     def runImportMicrographBPV(cls, pattern):
@@ -141,22 +147,25 @@ class TestImportParticles(BaseTest):
 
         self.launchProtocol(protImport)      
         # check that input images have been imported (a better way to do this?)
-        if protImport.outputParticles is None:
+        outputParticles = getattr(protImport, 'outputParticles', None)
+
+        if outputParticles is None:
             raise Exception('Import failed. Par file: %s' % parFile)
         
-        self.assertTrue(protImport.outputParticles.getSize() == 180)
+        self.assertTrue(outputParticles.getSize() == 180)
         
         goldFile = self.dataset.getFile('particles/particles.sqlite')
         goldSet = SetOfParticles(filename=goldFile)
         
-        for p1, p2 in izip(goldSet, protImport.outputParticles.iterItems(orderBy=['_micId', 'id'],
-                                                                     direction='ASC')):
+        for p1, p2 in izip(goldSet,
+                           outputParticles.iterItems(orderBy=['_micId', 'id'],
+                                                     direction='ASC')):
             m1 = p1.getTransform().getMatrix()
             m2 = p2.getTransform().getMatrix()
             self.assertTrue(np.allclose(m1, m2, atol=0.01))
             
-        self.assertTrue(protImport.outputParticles.hasCTF())
-        self.assertTrue(protImport.outputParticles.hasAlignmentProj())
+        self.assertTrue(outputParticles.hasCTF())
+        self.assertTrue(outputParticles.hasAlignmentProj())
 
     
 class TestBrandeisCtffind(TestBrandeisBase):
@@ -172,14 +181,18 @@ class TestBrandeisCtffind(TestBrandeisBase):
         protCTF.ctfDownFactor.set(2)
         protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=True)
-        self.assertIsNotNone(protCTF.outputCTF, "SetOfCTF has not been produced.")
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "SetOfCTF has not been produced.")
         
-        valuesList = [[23861, 23664, 56], [22383, 22153, 52.6], [22716, 22526, 59.1]]
+        valuesList = [[23861, 23664, 56],
+                      [22383, 22153, 52.6],
+                      [22716, 22526, 59.1]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
-            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(),
+                                    2.474, delta=0.001)
 
     def testCtffind2(self):
         protCTF = ProtCTFFind(useCtffind4=False)
@@ -193,7 +206,8 @@ class TestBrandeisCtffind(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
-            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(),
+                                    1.237, delta=0.001)
 
 
 class TestBrandeisCtffind4(TestBrandeisBase):
@@ -216,7 +230,8 @@ class TestBrandeisCtffind4(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
-            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 2.474, delta=0.001)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(),
+                                    2.474, delta=0.001)
 
     def testCtffind4V22(self):
         protCTF = ProtCTFFind()
@@ -230,7 +245,8 @@ class TestBrandeisCtffind4(TestBrandeisBase):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
-            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 1.237, delta=0.001)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(),
+                                    1.237, delta=0.001)
 
 
 class TestFrealignRefine(TestBrandeisBase):
@@ -240,10 +256,10 @@ class TestFrealignRefine(TestBrandeisBase):
         dataProject='grigorieff'
         dataset = DataSet.getDataSet(dataProject)
         TestBrandeisBase.setData()
-        particlesPattern   = dataset.getFile('particles.sqlite')
-        volFn              = dataset.getFile('ref_volume.vol')
+        particlesPattern = dataset.getFile('particles.sqlite')
+        volFn = dataset.getFile('ref_volume.vol')
         cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
-        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
+        cls.protImportVol = cls.runImportVolumesGrigorieff(volFn)
 
     def testFrealign(self):
         frealign = self.newProtocol(ProtFrealign,
@@ -267,7 +283,6 @@ class TestFrealignRefine(TestBrandeisBase):
         frealign.inputParticles.set(self.protImportPart.outputParticles)
         frealign.input3DReference.set(self.protImportVol.outputVolume)
         self.launchProtocol(frealign)
-        print "Assert is missing: testFrealign"
 
 
 class TestFrealignClassify(TestBrandeisBase):
@@ -277,10 +292,10 @@ class TestFrealignClassify(TestBrandeisBase):
         dataProject='grigorieff'
         dataset = DataSet.getDataSet(dataProject)
         TestBrandeisBase.setData()
-        particlesPattern   = dataset.getFile('particles.sqlite')
-        volFn              = dataset.getFile('ref_volume.vol')
+        particlesPattern = dataset.getFile('particles.sqlite')
+        volFn = dataset.getFile('ref_volume.vol')
         cls.protImportPart = cls.runImportParticleGrigorieff(particlesPattern)
-        cls.protImportVol  = cls.runImportVolumesGrigorieff(volFn)
+        cls.protImportVol = cls.runImportVolumesGrigorieff(volFn)
 
     def testFrealignClassify(self):
         frealign = self.newProtocol(ProtFrealignClassify,
@@ -307,9 +322,4 @@ class TestFrealignClassify(TestBrandeisBase):
         frealign.inputParticles.set(self.protImportPart.outputParticles)
         frealign.input3DReference.set(self.protImportVol.outputVolume)
         self.launchProtocol(frealign)
-        print "Assert is missing: testFrealign"
 
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestBrandeisCtffind)
-    suite = unittest.TestLoader().loadTestsFromName('test_protocols_brandeis.TestBrandeisCtffind.testCtffind')
-    unittest.TextTestRunner(verbosity=2).run(suite)
