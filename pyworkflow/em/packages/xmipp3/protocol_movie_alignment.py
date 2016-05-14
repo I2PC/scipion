@@ -296,6 +296,8 @@ class ProtMovieAlignment(ProtProcessMovies):
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
             movieSuffix = ':mrcs'
+        elif movieName.endswith('.em'):
+            movieSuffix = ':ems'
         else:
             movieSuffix = ''
             
