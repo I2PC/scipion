@@ -96,13 +96,8 @@ leads to objective and high-quality results.
             vol.setSamplingRate(imgSet.getSamplingRate())
             
             outImgSet = self._createSetOfParticles()
-            outImgsFn = self._getFileName('data', iter=self._lastIter())
-            
             outImgSet.copyInfo(imgSet)
-            outImgSet.setAlignmentProj()
-            outImgSet.copyItems(imgSet,
-                                updateItemCallback=self._createItemMatrix,
-                                itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
+            self._fillDataFromIter(outImgSet, self._lastIter())
 
             self._defineOutputs(outputVolume=vol)
             self._defineSourceRelation(self.inputParticles, vol)
@@ -167,6 +162,13 @@ leads to objective and high-quality results.
             return ProtRelionBase._summary(self)
 
     #--------------------------- UTILS functions --------------------------------------------
+    def _fillDataFromIter(self, imgSet, iteration):
+        outImgsFn = self._getFileName('data', iter=iteration)
+        imgSet.setAlignmentProj()
+        imgSet.copyItems(self._getInputParticles(),
+                         updateItemCallback=self._createItemMatrix,
+                         itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
+    
     def _createItemMatrix(self, item, row):
         from pyworkflow.em.packages.relion.convert import createItemMatrix
         from pyworkflow.em import ALIGN_PROJ
