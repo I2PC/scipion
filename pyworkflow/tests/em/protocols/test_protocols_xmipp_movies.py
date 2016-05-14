@@ -52,10 +52,11 @@ class TestXmippBase(BaseTest):
 
         if samplingRate is not None:
             kwargs.update({'samplingRateMode': 0,
-                         'samplingRate': samplingRate})
+                           'samplingRate': samplingRate})
         else:
             kwargs.update({'samplingRateMode': 1,
-                         'scannedPixelSize': scannedPixelSize})
+                           'scannedPixelSize': scannedPixelSize})
+
         cls.protImport = ProtImportMovies(**kwargs)
         cls.proj.launchProtocol(cls.protImport, wait=True)
 

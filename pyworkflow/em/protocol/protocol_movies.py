@@ -23,26 +23,20 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM Micrographs
-"""
+
 import os
 from os.path import join, basename, exists
 
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.utils.path import createLink, removeBaseExt, makePath, cleanPath
+from pyworkflow.utils.path import createLink, removeBaseExt, makePath
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.convert import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
-#from pyworkflow.em.packages.dosefgpu.protocol_dosefgpu import ProtDosefGpu
-#from pyworkflow.em.protocol import ProtProcessMovies
-#from pyworkflow.utils import startDebugger
 
 PLOT_CART = 0
 PLOT_POLAR = 1
@@ -93,16 +87,12 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieStepId = self._insertFunctionStep('processMovieStep',
                                                movie.getObjId(), movie.getFileName(),
                                                prerequisites=[])  
-        
-        return movieStepId      
-        
-        
+        return movieStepId
+
     #--------------------------- STEPS functions ---------------------------------------------------
     def processMovieStep(self, movieId, movieFn, *args):
         movieFolder = self._getMovieFolder(movieId)
         movieName = basename(movieFn)
-        #export SCIPION_DEBUG=1 # passwd=a
-        #startDebugger()
 
         if self._filterMovie(movieId, movieFn):
             makePath(movieFolder)
@@ -110,13 +100,15 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             toDelete = [movieName]
     
             if movieName.endswith('bz2'):
-                movieMrc = movieName.replace('.bz2', '') # we assume that if compressed the name ends with .mrc.bz2
+                # We assume that if compressed the name ends with .mrc.bz2
+                movieMrc = movieName.replace('.bz2', '')
                 toDelete.append(movieMrc)
                 if not exists(movieMrc):
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
 
             elif movieName.endswith('tbz'):
-                movieMrc = movieName.replace('.tbz', '.mrc') # we assume that if compressed the name ends with .tbz
+                # We assume that if compressed the name ends with .tbz
+                movieMrc = movieName.replace('.tbz', '.mrc')
                 toDelete.append(movieMrc)
                 if not exists(movieMrc):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
