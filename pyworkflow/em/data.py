@@ -659,7 +659,8 @@ class EMSet(Set, EMObject):
                 if updateItemCallback:
                     row = None if itemDataIterator is None else next(itemDataIterator)
                     updateItemCallback(newItem, row)
-                # If updateCallBack function returns attribute _appendItem to False do not append the item
+                # If updateCallBack function returns attribute
+                # _appendItem to False do not append the item
                 if getattr(newItem, "_appendItem", True):
                     self.append(newItem)
             else:
@@ -1445,6 +1446,10 @@ class SetOfClasses(EMSet):
                 if updateItemCallback:
                     row = None if itemDataIterator is None else next(itemDataIterator)
                     updateItemCallback(newItem, row)
+                    # If updateCallBack function returns attribute
+                    # _appendItem to False do not append the item
+                    if not getattr(newItem, "_appendItem", True):
+                        continue
                 ref = newItem.getClassId()
                 if ref is None:
                     raise Exception('Particle classId is None!!!')                    
