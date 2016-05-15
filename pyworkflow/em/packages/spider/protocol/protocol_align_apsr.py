@@ -45,8 +45,13 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
 
     def _defineAlignParams(self, form):
         SpiderProtAlign._defineAlignParams(self, form)
-        
-        form.addParallelSection(threads=0, mpi=0) 
+
+        # Hide the center of gravity option from the GUI since it is not
+        # used in this particular alignment method
+        cgOption = form.getParam('cgOption')
+        cgOption.config(condition='False')
+
+        form.addParallelSection(threads=0, mpi=0)
         
     def alignParticlesStep(self, innerRadius, outerRadius):
         """ Apply the selected filter to particles. 
