@@ -160,9 +160,14 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                 node.classId = classCount
                 nodeDict[classCount] = node
                 for i in node.imageList:
-                    classDict[i] = node
+                    classDict[int(i)] = classCount
 
-        updateItem = lambda p, i: p.setClassId(classDict[i].classId)
+        def updateItem(p, i):
+            classId = classDict.get(i, None)
+            if classId is None:
+                p._appendItem = False
+            else:
+                p.setClassId(classId)
 
         def updateClass(cls):
             node = nodeDict[cls.getObjId()]
@@ -202,8 +207,8 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         doc = SpiderDocFile(dendroFile)
         values = []
         indexes = []
-        for c, h, _ in doc.iterValues(): 
-            indexes.append(c)
+        for _, h, i in doc.iterValues():
+            indexes.append(i)
             values.append(h)
         doc.close()
         
@@ -220,27 +225,29 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
     def getImage(self, particleNumber):
         return self.ih.read((particleNumber, self.dendroImages))
         
-    def addChildNode(self, node, leftIndex, rightIndex, index, writeAverages, level):
-        child = self._buildDendrogram(leftIndex, rightIndex, index, writeAverages, level+1)
+    def addChildNode(self, node, leftIndex, rightIndex, index,
+                     writeAverages, level, searchStop):
+        child = self._buildDendrogram(leftIndex, rightIndex, index,
+                                      writeAverages, level+1, searchStop)
         node.addChild(child)
-        node.length += child.length
-        node.imageList += child.imageList
-        
+        node.extendImageList(child.imageList)
+
         if writeAverages:
-            if node.image is None:
-                node.image = child.image
-            else:
-                node.image += child.image
+            node.addImage(child.image)
             del child.image # Allow to free child image memory
                 
     def _buildDendrogram(self, leftIndex, rightIndex, index,
-                         writeAverages=False, level=0):
+                         writeAverages=False, level=0, searchStop=0):
         """ This function is recursively called to create the dendrogram
         graph (binary tree) and also to write the average image files.
         Params:
             leftIndex, rightIndex: the indexes within the list where to search.
             index: the index of the class average.
-            writeImages: flag to select when to write averages.
+            writeAverages: flag to select when to write averages
+            searchStop: this could be 1, means that we will search until the
+                last element (used for right childs of the dendogram or,
+                can be 0, meaning that the last element was already the max
+                (used for left childs )
         From self:
             self.dendroValues: the list with the heights of each node
             self.dendroImages: image stack filename to read particles
@@ -255,23 +262,25 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         if rightIndex == leftIndex: # Just only one element
             height = self.dendroValues[leftIndex]
             node = DendroNode(index, height)
-            node.imageList = [self.dendroIndexes[leftIndex]]
-            node.image = self.getImage(node.imageList[0])
-            node.length = 1
-        
+            node.extendImageList([self.dendroIndexes[leftIndex]])
+            node.addImage(self.getImage(node.imageList[0]))
+
         elif rightIndex == leftIndex + 1: # Two elements
             height = max(self.dendroValues[leftIndex], 
                          self.dendroValues[rightIndex])
             node = DendroNode(index, height)
-            node.imageList = [self.dendroIndexes[leftIndex],
-                              self.dendroIndexes[rightIndex]]
-            node.image = self.getImage(node.imageList[0]) + self.getImage(node.imageList[1])
-            node.length = 2
+            node.extendImageList([self.dendroIndexes[leftIndex],
+                                  self.dendroIndexes[rightIndex]])
+            node.addImage(self.getImage(node.imageList[0]),
+                          self.getImage(node.imageList[1]))
         else: # 3 or more elements
             # Find the max value (or height) of the elements
             maxValue = self.dendroValues[leftIndex]
             maxIndex = 0
-            for i, v in enumerate(self.dendroValues[leftIndex+1:rightIndex]):
+            # searchStop could be 0 (do not consider last element, coming from
+            # left child, or 1 (consider also the last one, coming from right)
+            values = self.dendroValues[leftIndex+1:rightIndex+searchStop]
+            for i, v in enumerate(values):
                 if v > maxValue:
                     maxValue = v
                     maxIndex = i+1
@@ -280,18 +289,16 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
 
             if maxValue > 0:
                 self.addChildNode(node, leftIndex, m, 2*index,
-                                  writeAverages, level)
-                self.addChildNode(node, m+1, rightIndex, 2*index+1,
-                                  writeAverages, level)
-            else:
-                node.imageList = self.dendroIndexes[leftIndex:rightIndex]
-                node.image = self.getImage(node.imageList[0])
-                for img in node.imageList[1:]:
-                    node.image.inplaceAdd(self.getImage(img))
-                node.length = len(node.imageList)
-                node.height = maxValue # it should be 0 here
+                                  writeAverages, level, 0)
 
-            
+                if m < rightIndex:
+                    self.addChildNode(node, m+1, rightIndex, 2 * index + 1,
+                                      writeAverages, level, 1)
+
+            else:
+                node.extendImageList(self.dendroIndexes[leftIndex:rightIndex+1])
+                node.addImage(*[self.getImage(img) for img in node.imageList])
+
         if level < self.dendroMaxLevel:
             node.avgCount = avgCount
             node.path = '%d@%s' % (node.avgCount, self.dendroAverages)
@@ -328,4 +335,15 @@ class DendroNode(graph.Node):
     def getSize(self):
         """ Return the number of images assigned to this class. """
         return len(self.imageList)
-          
+
+    def addImage(self, *images):
+        """ Add some images to this node. """
+        for img in images:
+            if self.image is None:
+                self.image = img
+            else:
+                self.image.inplaceAdd(img)
+
+    def extendImageList(self, imageList):
+        self.imageList.extend(imageList)
+        self.length = self.getSize()
