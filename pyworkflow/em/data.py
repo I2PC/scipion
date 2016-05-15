@@ -758,7 +758,7 @@ class SetOfImages(EMSet):
             if self._firstDim.isEmpty():
                 self._firstDim.set(image.getDim())
         EMSet.append(self, image)
-    
+
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
@@ -831,18 +831,10 @@ class SetOfImages(EMSet):
         if not sampling:
             print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
             sampling = -999.0
-        if self._firstDim.isEmpty():
-            try:
-                firstItem = self.getFirstItem()
-                if firstItem is not None:
-                    self._firstDim.set(firstItem.getDim())
-            except Exception, ex:
-                if pwutils.envVarOn('SCIPION_DEBUG'):
-                    print "Error reading dimension: ", ex
-                    import traceback
-                    traceback.print_exc()
-        dimStr = str(self._firstDim)
-        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), dimStr, sampling)
+
+        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(),
+                                               self.getSize(),
+                                               self._firstDim, sampling)
         return s
 
     def iterItems(self, orderBy='id', direction='ASC'):
@@ -1553,9 +1545,9 @@ class Movie(Micrograph):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         if not self.isCompressed():
-            fn = self.getFileName()
-            if fn is not None and os.path.exists(fn.replace(':mrc', '')):
-                return ImageHandler().getDimensions(self)
+            x, y, z, n = ImageHandler().getDimensions(self.getFileName())
+            if x is not None: # Means file exists
+                return x, y, max(z, n)
         return None
     
     def hasAlignment(self):
@@ -1605,8 +1597,7 @@ class SetOfMovies(SetOfMicrographsBase):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
         self._darkFile = String()
-        self._firstFrameNum = Integer(0)
-        
+
     def setGain(self, gain):
         self._gainFile.set(gain)
         
@@ -1619,27 +1610,6 @@ class SetOfMovies(SetOfMicrographsBase):
     def getDark(self):
         return self._darkFile.get()
 
-    def __str__(self):
-        """ String representation of a set of movies. """
-        sampling = self.getSamplingRate()
-
-        if not sampling:
-            print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
-            sampling = -999.0
-        ####self._firstFrameNum.set(self.getDimensions()[3])
-        if self._firstDim.isEmpty() or self._firstFrameNum==0:
-            try:
-                self._firstDim.set(self.getFirstItem().getDim())
-                self._firstFrameNum.set(self.getDimensions()[3])
-            except Exception, ex:
-                if pwutils.envVarOn('SCIPION_DEBUG'):
-                    print "Error reading dimension: ", ex
-                    import traceback
-                    traceback.print_exc()
-        dimStr = str(self._firstDim)
-        s = "%s (%d items, %d frames, %s, %0.2f A/px)" % (self.getClassName(), self.getSize(), self._firstFrameNum, dimStr, sampling)
-        return s
-    
     
 class MovieParticle(Particle):
     def __init__(self, **kwargs):
