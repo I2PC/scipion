@@ -20,12 +20,12 @@
 ;
 ; '***' denotes group number
 ; INPUT FILES:
-;   [params]                ../params                            Params file  
-;   [vol_orig]              ../Reconstruction/vol01              Initial volume file  
-;   [sel_group_orig]        ../Reconstruction/sel_group_cclim    Group selection file
-;   [sel_particles_orig]    ../Reconstruction/sel_particles_***  Group particle selection files 
-;   [group_align_orig]      ../Alignment/align_01_***            Alignment parameter files 
-;   [unaligned_images_orig] ../Alignment/input/data***           Unaligned image stacks 
+;   [params]                ../params                            Params file
+;   [vol_orig]              ../vol01                             Initial volume file
+;   [sel_group_orig]        ../sel_group                         Group selection file
+;   [sel_particles_orig]    ../group***_selfile                  Group particle selection files
+;   [group_align_orig]      ../group***_align                    Alignment parameter files
+;   [unaligned_images_orig] ../group***_stack                    Unaligned image stacks
 ;
 ; OUTPUT FILES:
 ;   [input_dir]             input                                Directory
