@@ -63,43 +63,48 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
     def getNumberOfClasses(self):
         return None
     
-    #--------------------------- DEFINE param functions --------------------------------------------  
+    #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         self._defineBasicParams(form)
         form.addParallelSection(threads=4, mpi=0)
 
     def _defineBasicParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+        form.addParam('inputParticles', PointerParam,
+                      label="Input particles", important=True,
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
         form.addParam('pcaFile', PointerParam, pointerClass='PcaFile',
                       label="IMC/SEQ file", 
                       help='The IMC file contains the coordinates of each image '
                            'in the reduced-dimension space. '
-                           'The SEQ file contains, for all images, the pixel values under the mask. ')
+                           'The SEQ file contains, for all images, '
+                           'the pixel values under the mask. ')
         form.addParam('numberOfFactors', IntParam, default=10,
                       label='Number of factors',
-                      help='After running, examine the eigenimages and decide which ones to use.\n'
+                      help='After running, examine the eigenimages and decide '
+                           'which ones to use. \n'
                            'Typically all but the first few are noisy.')
         
 
     
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions -----------------------
     
     def _insertAllSteps(self):    
         
         pcaFile = self.pcaFile.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
-                                 self._getFileName('particles'), self._getFileName('particlesSel'))
+                                 self._getFileName('particles'),
+                                 self._getFileName('particlesSel'))
         
         self._insertFunctionStep('classifyStep', pcaFile, 
-                                 self.numberOfFactors.get(), self.getNumberOfClasses())
+                                 self.numberOfFactors.get(),
+                                 self.getNumberOfClasses())
         
         self._insertFunctionStep('createOutputStep')
         
-    #--------------------------- STEPS functions --------------------------------------------    
+    #--------------------------- STEPS functions ------------------------------
 
     def _updateParams(self):   
         pass 
@@ -135,16 +140,16 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
     def __init__(self, script, classDir, **kwargs):
         SpiderProtClassify.__init__(self, script, classDir, **kwargs)
 
-    #--------------------------- STEPS functions --------------------------------------------    
+    #--------------------------- STEPS functions ------------------------------
        
     def createOutputStep(self):
         self.buildDendrogram(True)
          
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions ------------------------------
     
     def _fillClassesFromNodes(self, classes2D, nodeList):
         """ Create the SetOfClasses2D from the images of each node
-        in the dendogram.
+        in the dendrogram.
         """
         particles = classes2D.getImages()
         sampling = classes2D.getSamplingRate()
@@ -175,13 +180,15 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
             rep.setSamplingRate(sampling)
             rep.setLocation(node.avgCount, self.dendroAverages)
 
+        particlesRange = range(1, particles.getSize()+1)
+
         classes2D.classifyItems(updateItemCallback=updateItem,
                                 updateClassCallback=updateClass,
-                                itemDataIterator=iter(range(1, particles.getSize()+1)))
+                                itemDataIterator=iter(particlesRange))
                 
     def _fillParticlesFromNodes(self, inputParts, outputParts, nodeList):
         """ Create the SetOfClasses2D from the images of each node
-        in the dendogram. 
+        in the dendrogram.
         """
         allImages = set()
         for node in nodeList:
@@ -192,12 +199,14 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         def updateItem(item, index):
             item._appendItem = index in allImages
 
+        particlesRange = range(1, inputParts.getSize()+1)
+
         outputParts.copyItems(inputParts,
                               updateItemCallback=updateItem,
-                              itemDataIterator=iter(range(1, inputParts.getSize()+1)))
+                              itemDataIterator=iter(particlesRange))
 
     def buildDendrogram(self, writeAverages=False, stripSingleChild=False):
-        """ Parse Spider docfile with the information to build the dendogram.
+        """ Parse Spider docfile with the information to build the dendrogram.
         Params:
             writeAverages: whether to write class averages or not.
             stripSingleChild: If True, and the node has a single child, we will
@@ -248,7 +257,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
             index: the index of the class average.
             writeAverages: flag to select when to write averages
             searchStop: this could be 1, means that we will search until the
-                last element (used for right childs of the dendogram or,
+                last element (used for right childs of the dendrogram or,
                 can be 0, meaning that the last element was already the max
                 (used for left childs )
         From self:
@@ -330,7 +339,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
     
 
 class DendroNode(graph.Node):
-    """ Special type of Node to store dendogram values. """
+    """ Special type of Node to store dendrogram values. """
     def __init__(self, index, height):
         graph.Node.__init__(self, 'class_%03d' % index)
         self.index = index

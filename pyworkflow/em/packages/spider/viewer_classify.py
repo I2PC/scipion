@@ -57,7 +57,7 @@ class SpiderViewerClassify(ProtocolViewer):
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        group1 = form.addGroup('Dendogram')
+        group1 = form.addGroup('Dendrogram')
         group1.addParam('doShowDendrogram', LabelParam,
                         label="Show dendrogram", default=True,
                         help='In a dendrogram larger vertical bars signify a '
