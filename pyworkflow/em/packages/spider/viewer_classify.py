@@ -141,7 +141,8 @@ class SpiderViewerWard(SpiderViewerClassify):
         def getInfo2(level, classNo):
             return classTemplate % classNo, averages % classNo
         
-        node = self.protocol.buildDendrogram()
+        node = self.protocol.buildDendrogram(writeAverages=False,
+                                             stripSingleChild=True)
         
         g = Graph(root=node)
         self.graph = g
@@ -273,7 +274,6 @@ class SpiderImageBox(ImageBox):
         self.node.selected = not self.node.selected
         if self.node.selected:
             self.label.config(bd=2, bg='green')
-            
         else:
             self.label.config(bd=0, bg='grey')
             

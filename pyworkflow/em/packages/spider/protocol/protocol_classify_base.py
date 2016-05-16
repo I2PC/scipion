@@ -144,7 +144,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
     
     def _fillClassesFromNodes(self, classes2D, nodeList):
         """ Create the SetOfClasses2D from the images of each node
-        in the dendogram. 
+        in the dendogram.
         """
         particles = classes2D.getImages()
         sampling = classes2D.getSamplingRate()
@@ -196,12 +196,14 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                               updateItemCallback=updateItem,
                               itemDataIterator=iter(range(1, inputParts.getSize()+1)))
 
-    def buildDendrogram(self, writeAverages=False):
+    def buildDendrogram(self, writeAverages=False, stripSingleChild=False):
         """ Parse Spider docfile with the information to build the dendogram.
         Params:
-            dendroFile: docfile with a row per image. 
-                 Each row contains the image id and the height.
-        """ 
+            writeAverages: whether to write class averages or not.
+            stripSingleChild: If True, and the node has a single child, we will
+                remove a node just to advance in the level of the tree to get
+                more different class averages
+        """
         dendroFile = self._getFileName('dendroDoc')
         # Dendrofile is a docfile with at least 3 data colums (class, height, id)
         doc = SpiderDocFile(dendroFile)
@@ -219,6 +221,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         self.dendroAverageCount = 0 # Write only the number of needed averages
         self.dendroMaxLevel = 10 # FIXME: remove hard coding if working the levels
         self.ih = ImageHandler()
+        self.stripSingleChild = stripSingleChild
         
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
     
@@ -294,7 +297,16 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                 if m < rightIndex:
                     self.addChildNode(node, m+1, rightIndex, 2 * index + 1,
                                       writeAverages, level, 1)
-
+                else:
+                    # If the node has a single child, we will remove a node
+                    # just to advance in the level of the tree to get more
+                    # different class averages
+                    if self.stripSingleChild and node.getChilds():
+                        child = node.getChilds()[0]
+                        child.image = node.image
+                        child.height = node.height
+                        child.parents = []
+                        node = child
             else:
                 node.extendImageList(self.dendroIndexes[leftIndex:rightIndex+1])
                 node.addImage(*[self.getImage(img) for img in node.imageList])
