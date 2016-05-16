@@ -25,29 +25,34 @@
 # *
 # **************************************************************************
 
+from pyworkflow.em import *
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3 import *
+from pyworkflow.em.packages.grigoriefflab import *
 
 
 # Some utility functions to import movies that are used in several tests.
-class TestXmippBase(BaseTest):
+class TestMoviesBase(BaseTest):
     @classmethod
-    def setData(cls):
+    def setUpClass(cls):
+        setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('movies')
         cls.movie1 = cls.dataset.getFile('qbeta/qbeta.mrc')
         cls.movie2 = cls.dataset.getFile('cct/cct_1.em')
+        cls.movies = cls.dataset.getFile('ribo/*.mrcs')
     
     @classmethod
-    def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize,
-                       magnification, sphericalAberration):
+    def runImportMovie(cls, pattern, objLabel, samplingRate, voltage,
+                       scannedPixelSize, magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
         # We have two options: pass the SamplingRate or
         # the ScannedPixelSize + microscope magnification
         kwargs = {
+            'objLabel': objLabel,
             'filesPath': pattern,
             'magnification': magnification,
             'voltage': voltage,
-            'sphericalAberration': sphericalAberration
+            'sphericalAberration': sphericalAberration,
+            'amplitudContrast': 0.1
         }
 
         if samplingRate is not None:
@@ -57,7 +62,7 @@ class TestXmippBase(BaseTest):
             kwargs.update({'samplingRateMode': 1,
                            'scannedPixelSize': scannedPixelSize})
 
-        cls.protImport = ProtImportMovies(**kwargs)
+        cls.protImport = cls.newProtocol(ProtImportMovies, **kwargs)
         cls.proj.launchProtocol(cls.protImport, wait=True)
 
         if cls.protImport.isFailed():
@@ -72,40 +77,66 @@ class TestXmippBase(BaseTest):
         return cls.protImport
     
     @classmethod
-    def runImportMovie1(cls, pattern):
+    def runImportMovie1(cls):
         """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.14, voltage=300,
+        return cls.runImportMovie(cls.movie1, 'movie - qbeta.mrc',
+                                  samplingRate=1.14, voltage=300,
                                   sphericalAberration=2.26,
                                   scannedPixelSize=None, magnification=50000)
     
     @classmethod
-    def runImportMovie2(cls, pattern):
+    def runImportMovie2(cls):
         """ Run an Import movie protocol. """
-        return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300,
+        return cls.runImportMovie(cls.movie2, 'movie - cct.em',
+                                  samplingRate=1.4, voltage=300,
                                   sphericalAberration=2.7,
                                   scannedPixelSize=None, magnification=61000)
 
-
-class TestXmippAlingMovies(TestXmippBase):
     @classmethod
-    def setUpClass(cls):
-        setupTestProject(cls)
-        TestXmippBase.setData()
-        cls.protImport1 = cls.runImportMovie1(cls.movie1)
-        cls.protImport2 = cls.runImportMovie2(cls.movie2)
-    
-    def testAlignOFMovie1(self):
-        # test downsampling a set of micrographs
-        protOF1 = ProtMovieAlignment(alignMethod=0)
-        protOF1.inputMovies.set(self.protImport1.outputMovies)
-        self.proj.launchProtocol(protOF1, wait=True)
-        self.assertIsNotNone(protOF1.outputMicrographs,
-                             "SetOfMicrographs has not been created.")
-    
-    def testAlignOFMovie2(self):
-        # test downsampling a set of micrographs
-        protOF2 = ProtMovieAlignment(alignMethod=0)
-        protOF2.inputMovies.set(self.protImport2.outputMovies)
-        self.proj.launchProtocol(protOF2, wait=True)
-        self.assertIsNotNone(protOF2.outputMicrographs,
-                             "SetOfMicrographs has not been created.")
+    def runImportMovies(cls):
+        """ Run an Import movie protocol. """
+        return cls.runImportMovie(cls.movies, 'movies - betagal.mrcs',
+                                  samplingRate=3.54, voltage=300,
+                                  sphericalAberration=2.,
+                                  scannedPixelSize=None, magnification=50000)
+
+    def runBasicTests(self, ProtocolClass):
+        # Run some basic tests for both Unblur and Summovie
+
+        # Expected dimensions
+        dims = [(4096, 4096, 7), (4096, 4096, 7), (1950, 1950, 16)]
+
+        # Launch unblur for 3 different set of movies
+        for i, protImport in enumerate([self.runImportMovie1(),
+                                        self.runImportMovie2(),
+                                        self.runImportMovies()]):
+            inputMovies = getattr(protImport, 'outputMovies')
+            self.assertIsNotNone(inputMovies)
+            self.assertEqual(dims[i], inputMovies.getDim())
+
+            protUnblur = self.newProtocol(ProtocolClass,
+                                          objLabel=ProtocolClass._label + str(i),
+                                          alignFrameRange=-1,
+                                          doApplyDoseFilter=True,
+                                          exposurePerFrame=1.3)
+            protUnblur.inputMovies.set(inputMovies)
+            self.launchProtocol(protUnblur)
+            outputMics = getattr(protUnblur, 'outputMicrographs', None)
+            self.assertIsNotNone(outputMics)
+            self.assertEqual(protImport.outputMovies.getSize(),
+                             outputMics.getSize())
+
+            for mic in outputMics:
+                micFn = mic.getFileName()
+                self.assertTrue(os.path.exists(self.proj.getPath(micFn)))
+
+
+class TestUnblur(TestMoviesBase):
+    def test_movies(self):
+        self.runBasicTests(ProtUnblur)
+
+
+class TestSummovie(TestMoviesBase):
+    def test_movies(self):
+        self.runBasicTests(ProtSummovie)
+

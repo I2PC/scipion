@@ -45,7 +45,7 @@ from spider import SpiderShell, runTemplate, runCustomMaskScript
 from constants import FILTER_SPACE_REAL, FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
-                      SpiderProtFilter, SpiderProtCustomMask)
+                      SpiderProtFilter, SpiderProtCustomMask, SpiderProtRefinement)
 
 
 #===============================================================================
@@ -53,7 +53,8 @@ from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairw
 #===============================================================================
 
 class SpiderProtMaskWizard(ParticleMaskRadiusWizard):
-    _targets = [(SpiderProtCAPCA, ['radius'])]
+    _targets = [(SpiderProtCAPCA, ['radius']),
+                (SpiderProtRefinement, ['radius'])]
     
     def _getParameters(self, protocol):
         

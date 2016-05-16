@@ -52,10 +52,12 @@ class ProtSummovie(ProtProcessMovies):
                       help='How many frames per monie. -1 -> all frames ')
         form.addParam('doApplyDoseFilter', BooleanParam, default=True,
                       label='Apply Dose filter',
-                      help='Apply a dose-dependent filter to frames before summing them')
+                      help='Apply a dose-dependent filter to frames '
+                           'before summing them')
         form.addParam('exposurePerFrame', FloatParam,
                       label='Exposure per frame (e/A^2)',
-                      help='Exposure per frame, in electrons per square Angstrom')
+                      help='Exposure per frame, in electrons per square '
+                           'Angstrom')
 
         #group = form.addGroup('Expert Options')
         form.addParam('Bfactor', FloatParam,
@@ -116,84 +118,65 @@ class ProtSummovie(ProtProcessMovies):
         return True
 
     def _processMovie(self, movieId, movieName, movieFolder):
-        """call program here"""
         # if not mrc convert format to mrc
         # special case is mrc but ends in mrcs
-        inMovieName= os.path.join(movieFolder,movieName)
-        if movieName.endswith('.mrc'):
-            movieNameAux = inMovieName
-        elif movieName.endswith('.mrcs'):
-            movieNameAux= pwutils.replaceExt(inMovieName, "mrc")
-            createLink(inMovieName,movieNameAux)
-            movieNameAux = pwutils.replaceExt(movieName, "mrc")
-        else:
-            micFnMrc = pwutils.replaceExt(inMovieName, "mrc")
-            ImageHandler().convert(inMovieName, micFnMrc, DT_FLOAT)
-            movieNameAux = pwutils.replaceExt(movieName, "mrc")
+        moviePath = os.path.join(movieFolder, movieName)
+        movieNameMrc = pwutils.replaceExt(movieName, "mrc")
+        moviePathMrc = pwutils.replaceExt(moviePath, "mrc")
+        ih = ImageHandler()
 
-        #get number of frames
-        if self.alignFrameRange == -1:
-            numberOfFramesPerMovie = self.inputMovies.get().getDimensions()[3]
+        if movieName.endswith('.mrc'):
+            pass # Do nothing
+        elif movieName.endswith('.mrcs'):
+            # Create a link to the mrc or mrcs file but with .mrc extension
+            createLink(moviePath, moviePathMrc)
         else:
-            numberOfFramesPerMovie = self.alignFrameRange.get()
-        #write dummy auxiliary shift file.
-        #TODO: this should be done properly when we define how to transfer shift
-        #between movies
-        shiftFnName= os.path.join(movieFolder,self._getShiftFnName(movieId))
-        f=open(shiftFnName,'w')
-        shift= ("0 " * numberOfFramesPerMovie + "\n" ) *2
+            # Convert to mrc if the movie is in other format
+            ih.convert(moviePath, moviePathMrc, DT_FLOAT)
+
+        _, _, z, n = ih.getDimensions(moviePathMrc)
+        numberOfFrames = max(z, n) # Deal with mrc ambiguity
+
+        # Write dummy auxiliary shift file.
+        # TODO: this should be done properly when we define
+        # how to transfer between movies
+        shiftFnName = os.path.join(movieFolder, self._getShiftFnName(movieId))
+        f = open(shiftFnName,'w')
+        shift = ("0 " * numberOfFrames + "\n" ) * 2
         f.write(shift)
         f.close()
 
-        doApplyDoseFilter = self.doApplyDoseFilter.get()
-        exposurePerFrame = self.exposurePerFrame.get()
-        self._argsSummovie(movieNameAux
-                        , movieFolder
-                        , movieId
-                        , numberOfFramesPerMovie
-                        , doApplyDoseFilter
-                        , exposurePerFrame
-                        )
-        try:
+        if self.alignFrameRange != -1:
+            if self.alignFrameRange > numberOfFrames:
+                raise Exception('Frame number (%d) is greater than '
+                                'the total frames of the movie (%d)' %
+                                (numberOfFrames, self.alignFrameRange))
+            numberOfFrames = self.alignFrameRange.get()
 
+        self._argsSummovie(movieNameMrc, movieFolder, movieId, numberOfFrames)
+
+        try:
             self.runJob(self._program, self._args, cwd=movieFolder)
         except:
             print("ERROR: Movie %s failed\n"%movieName)
 
         logFile = self._getLogFile(movieId)
 
-    def _argsSummovie(self
-                    , movieName
-                    , movieFolder
-                    , movieId
-                    , numberOfFramesPerMovie
-                    , doApplyDoseFilter
-                    , exposurePerFrame):
-        """format input as Summovie likes it"""
+    def _argsSummovie(self, movieNameMrc, movieFolder, movieId, numberOfFrames):
         args = {}
 
-        args['movieName'] = movieName
-        args['numberOfFramesPerMovie'] = numberOfFramesPerMovie
-        ##args['micFnName'] = self._getMicFnName(movieId,movieFolder)
-        args['micFnName'] = relpath(self._getExtraPath(self._getNameExt(movieName,'', 'mrc')),movieFolder)
+        args['movieName'] = movieNameMrc
+        args['numberOfFramesPerMovie'] = numberOfFrames
+        args['micFnName'] = relpath(self._getMicName(movieNameMrc), movieFolder)
         args['shiftFnName'] = self._getShiftFnName(movieId)
         args['samplingRate'] = self.samplingRate
         args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
         args['fscFn'] = self._getFSCFnName(movieId)
         args['Bfactor'] = self.Bfactor.get()
-        doRestoreNoisePower = self.doRestoreNoisePower.get()
-
-        if doApplyDoseFilter:
-            args['doApplyDoseFilter'] = 'YES'
-        else:
-            args['doApplyDoseFilter'] = 'NO'
-
-        if doRestoreNoisePower:
-            args['doRestoreNoisePower'] = 'YES'
-        else:
-            args['doRestoreNoisePower'] = 'NO'
-
-        args['exposurePerFrame'] = exposurePerFrame
+        args['doApplyDoseFilter'] = 'YES' if self.doApplyDoseFilter else 'NO'
+        args['doRestoreNoisePower'] = 'YES' if self.doRestoreNoisePower else 'NO'
+        args['doVerboseOutput'] = 'YES' if self.doVerboseOutput else 'NO'
+        args['exposurePerFrame'] = self.exposurePerFrame.get()
 
         self._program = 'export OMP_NUM_THREADS=1; ' + SUMMOVIE_PATH
         self._args = """ << eof
@@ -211,7 +194,7 @@ class ProtSummovie(ProtProcessMovies):
 0
 %(doRestoreNoisePower)s
 eof
-"""%args
+""" % args
 
     def createOutputStep(self):
         inputMovies = self.inputMovies.get()
@@ -220,7 +203,7 @@ eof
         for movie in self.inputMovies.get():
             mic = Micrograph()
             # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getExtraPath(self._getNameExt(movie.getFileName(),'', 'mrc')))
+            mic.setFileName(self._getMicName(movie.getFileName()))
             micSet.append(mic)
         self._defineOutputs(outputMicrographs=micSet)
 
@@ -240,8 +223,12 @@ eof
         return []
 
     def _validate(self):
-        errors=[]
+        errors = []
         if not exists(SUMMOVIE_PATH):
-            errors.append("Cannot find the Summovie program at: "+SUMMOVIE_PATH)
+            errors.append("Cannot find the Summovie program at: " + SUMMOVIE_PATH)
         return errors
 
+    def _getMicName(self, movieName):
+        """ Return the name for the output micrograph given the movie name.
+        """
+        return self._getExtraPath(self._getNameExt(movieName, '', 'mrc'))

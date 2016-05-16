@@ -46,7 +46,7 @@ SCRIPTS_DIR = 'scripts'
 
 # Match strings of the type
 # key = value ; some comment
-REGEX_KEYVALUE = re.compile("(?P<prefix>[^[]*)(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<suffix>\s+.*)")
+REGEX_KEYVALUE = re.compile("(?P<prefix>[^[a-zA-Z0-9_-]*)(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<s1>\s*)=(?P<s2>\s*)(?P<value>\S+)(?P<suffix>\s+.*)")
 # Match strings of the type [key]value
 # just before a 'fr l' line
 REGEX_KEYFRL = re.compile("(?P<var>\[?[a-zA-Z0-9_-]+\]?)(?P<value>\S+)(?P<suffix>\s+.*)")
@@ -111,7 +111,7 @@ def writeScript(inputScript, outputScript, paramsDict):
     fOut = open(outputScript, 'w')
     inHeader = True # After the end of header, not more value replacement
     inFrL = False
-    
+
     for i, line in enumerate(fIn):
         if END_HEADER in line:
             inHeader = False
