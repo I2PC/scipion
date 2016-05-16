@@ -205,13 +205,10 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                               updateItemCallback=updateItem,
                               itemDataIterator=iter(particlesRange))
 
-    def buildDendrogram(self, writeAverages=False, stripSingleChild=False):
+    def buildDendrogram(self, writeAverages=False):
         """ Parse Spider docfile with the information to build the dendrogram.
         Params:
             writeAverages: whether to write class averages or not.
-            stripSingleChild: If True, and the node has a single child, we will
-                remove a node just to advance in the level of the tree to get
-                more different class averages
         """
         dendroFile = self._getFileName('dendroDoc')
         # Dendrofile is a docfile with at least 3 data colums (class, height, id)
@@ -230,10 +227,9 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         self.dendroAverageCount = 0 # Write only the number of needed averages
         self.dendroMaxLevel = 10 # FIXME: remove hard coding if working the levels
         self.ih = ImageHandler()
-        self.stripSingleChild = stripSingleChild
-        
+
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
-    
+
     def getImage(self, particleNumber):
         return self.ih.read((particleNumber, self.dendroImages))
         
@@ -298,22 +294,23 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
                     maxIndex = i+1
             m = maxIndex + leftIndex
             node = DendroNode(index, maxValue)
+            hasRightChild = m < rightIndex
 
             if maxValue > 0:
-                self.addChildNode(node, leftIndex, m, 2*index,
+                nextIndex = 2 * index if hasRightChild else index
+                self.addChildNode(node, leftIndex, m, nextIndex,
                                   writeAverages, level, 0)
 
-                if m < rightIndex:
+                if hasRightChild:
                     self.addChildNode(node, m+1, rightIndex, 2 * index + 1,
                                       writeAverages, level, 1)
                 else:
                     # If the node has a single child, we will remove a node
                     # just to advance in the level of the tree to get more
                     # different class averages
-                    if self.stripSingleChild and node.getChilds():
+                    if node.getChilds():
                         child = node.getChilds()[0]
                         child.image = node.image
-                        child.height = node.height
                         child.parents = []
                         node = child
             else:

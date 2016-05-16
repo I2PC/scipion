@@ -141,8 +141,7 @@ class SpiderViewerWard(SpiderViewerClassify):
         def getInfo2(level, classNo):
             return classTemplate % classNo, averages % classNo
         
-        node = self.protocol.buildDendrogram(writeAverages=False,
-                                             stripSingleChild=True)
+        node = self.protocol.buildDendrogram(writeAverages=False)
         
         g = Graph(root=node)
         self.graph = g
