@@ -1,29 +1,19 @@
 #!/usr/bin/env python
-import unittest, os, sys
 """
 @summary: This pyUnit test module defines the unit tests for the Xmipp Python Interface
 """
-from unittest import TestResult, _TextTestResult
-from protlib_filesystem import getXmippPath
+
+import os
+from os.path import join, exists
+import sys
+import unittest
 from tempfile import NamedTemporaryFile
 from time import time
-from os.path import  exists
-from random import randint
-try:
-   from unittest.runner import _WritelnDecorator # Python 2.7+
-except ImportError:
-   from unittest import _WritelnDecorator # Python <2.6
-#scriptdir = getXmippPath('lib')
-#sys.path.append(scriptdir) # add default search path
-#scriptdir = getXmippPath()))[0] + '/protocols'
-#sys.path.append(scriptdir)
-from xmipp import *
-#from test.test_array import NumberTest
-#from json.tests.test_fail import TestFail
 
-import sys
-import os
-from os.path import join
+from xmipp import *
+from pyworkflow.em.packages.xmipp3 import getXmippPath
+
+
 
 def testFile(filename):
     return join("pythoninterface", filename)
@@ -291,9 +281,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         self.assertEqual(imgSum, imgSum2)
         self.assertNotEqual(imgSum, img1)
         self.assertEqual(imgSum, img2)
-        
-            
-    
+
     def test_Image_compare(self):
         imgPath = testFile("singleImage.spi")
         img1 = Image()
@@ -322,8 +310,8 @@ class TestXmippPythonInterface(unittest.TestCase):
         img2.setDataType(DT_FLOAT)
         img.resize(3, 3)
         img2.resize(3, 3)
-        img.setPixel(1, 1, 1.)
-        img2.setPixel(1, 1, 1.01)
+        img.setPixel(0, 0, 1, 1, 1.)
+        img2.setPixel(0, 0, 1, 1, 1.01)
 
         self.assertFalse(img.equal(img2, 0.005))
         self.assertTrue(img.equal(img2, 0.1))
@@ -343,7 +331,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         img.initConstant(1.) 
         for i in range(0, 3):
             for j in range (0, 3):
-                p = img.getPixel(i, j)
+                p = img.getPixel(0, 0, i, j)
                 self.assertAlmostEquals(p, 1.0)
     
     def test_Image_initRandom(self):
@@ -378,7 +366,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         count = 0.
         for i in range(0, 3):
             for j in range (0, 3):
-                p = img.getPixel(i, j)
+                p = img.getPixel(0, 0, i, j)
                 self.assertAlmostEquals(p, count)
                 count += 1.
                 
@@ -410,7 +398,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         img = Image()
         img.setDataType(DT_FLOAT)
         img.resize(3, 3)
-        img.setPixel(1, 1, 1.)
+        img.setPixel(0, 0, 1, 1, 1.)
         img.computeStats()
         mean, dev, min, max = img.computeStats()
         self.assertAlmostEqual(mean, 0.111111, 5)
@@ -428,46 +416,47 @@ class TestXmippPythonInterface(unittest.TestCase):
         imgY.resize(dim, dim)
         for i in range(0,dim):
             for j in range(0,dim):
-                img.setPixel(i, j, 1.*dim*i+j)
+                img.setPixel(0, 0, i, j, 1.*dim*i+j)
         img.mirrorY();
         for i in range(0,dim):
             for j in range(0,dim):
-                imgY.setPixel(dim -1 -i, j, 1.*dim*i+j)
+                imgY.setPixel(0, 0, dim -1 -i, j, 1.*dim*i+j)
         self.assertEquals(img, imgY)
         
     def test_Image_applyTransforMatScipion(self):
-            img = Image()
-            img2 = Image()
-            img.setDataType(DT_FLOAT)
-            img2.setDataType(DT_FLOAT)
-            dim=3
-            img.resize(dim, dim)
-            img2.resize(dim, dim)
-            for i in range(0,dim):
-                for j in range(0,dim):
-                    img.setPixel(dim -1 -i, j, 1.*dim*i+j)
-            A=[0.,-1.,0.,0.,
-               1.,0.,0.,0.,
-               0.,0.,1.,1.]
-            img2.setPixel(0,0,0)
-            img2.setPixel(0,1,3.)
-            img2.setPixel(0,2,6.)
+        img = Image()
+        img2 = Image()
+        img.setDataType(DT_FLOAT)
+        img2.setDataType(DT_FLOAT)
+        dim=3
+        img.resize(dim, dim)
+        img2.resize(dim, dim)
+        for i in range(0,dim):
+            for j in range(0,dim):
+                img.setPixel(0, 0, dim -1 -i, j, 1.*dim*i+j)
+        A=[0.,-1.,0.,0.,
+           1.,0.,0.,0.,
+           0.,0.,1.,1.]
+        img2.setPixel(0, 0, 0,0,0)
+        img2.setPixel(0, 0, 0,1,3.)
+        img2.setPixel(0, 0, 0,2,6.)
 
-            img2.setPixel(1,0,1.)
-            img2.setPixel(1,1,4.)
-            img2.setPixel(1,2,7.)
+        img2.setPixel(0, 0, 1,0,1.)
+        img2.setPixel(0, 0, 1,1,4.)
+        img2.setPixel(0, 0, 1,2,7.)
 
-            img2.setPixel(2,0,2.)
-            img2.setPixel(2,1,5.)
-            img2.setPixel(2,2,8.)
+        img2.setPixel(0, 0, 2,0,2.)
+        img2.setPixel(0, 0, 2,1,5.)
+        img2.setPixel(0, 0, 2,2,8.)
 
-            img.applyTransforMatScipion(A)
-            #print img.getData(),"\n", img2.getData()
-            for i in range(0, dim):
-                for j in range (0, dim):
-                    p1 = img.getPixel(i, j)
-                    p2 = img2.getPixel(i, j)
-                    self.assertAlmostEquals(p1, p2)
+        img.applyTransforMatScipion(A)
+        #print img.getData(),"\n", img2.getData()
+        for i in range(0, dim):
+            for j in range (0, dim):
+                p1 = img.getPixel(0, 0, i, j)
+                p2 = img2.getPixel(0, 0, i, j)
+                self.assertAlmostEquals(p1, p2)
+
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
         mdPath = testFile("test.xmd")
@@ -571,37 +560,6 @@ _rlnDefocusU #2
         self.assertEqual(md, md2)
         os.remove(tmpFileName)
 
-    def test_xmipp_exportReliontoMetadataFile(self):
-        from protlib_import import exportReliontoMetadataFile
-
-        tmpFileNameRe = '/tmp/exportReliontoMetadataFile.star'
-        tmpFileNameXm = '/tmp/exportReliontoMetadataFile.xmd'
-        line1="""data_images
-
-loop_
-_rlnVoltage #1
-_rlnDefocusU #2
-  200.0 10000.0
-  201.0 10000.0"""
-        #createR
-        f = open(tmpFileNameRe,'w')
-        f.write(line1)
-        f.flush()
-        f.close()
-        exportReliontoMetadataFile(tmpFileNameRe,tmpFileNameXm)
-        md = MetaData(tmpFileNameXm)
-        md2=MetaData()
-        id = md2.addObject()
-        md2.setValue(MDL_CTF_VOLTAGE, 200.0, id)
-        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
-        id = md2.addObject()
-        md2.setValue(MDL_CTF_VOLTAGE, 201.0, id)
-        md2.setValue(MDL_CTF_DEFOCUSU, 10000.0, id)
-
-        self.assertEqual(md, md2)
-        os.remove(tmpFileNameRe)
-        os.remove(tmpFileNameXm)
-        
     def test_Metadata_renameColumn(self):
         '''test_Metadata_renameColumn'''
         md = MetaData()
@@ -758,7 +716,6 @@ _rlnDefocusU #2
             mdout.setValue(MDL_COUNT, (i * 10L), id)
             mdout.setValue(MDL_ANGLE_PSI, 1., id)
 
-
         self.assertEqual(mdout, md)
                  
     def test_Metadata_read(self):
@@ -877,8 +834,6 @@ _rlnDefocusU #2
             md2.setValue(MDL_COUNT, (i * 10L), id)
         self.assertEqual(md, md2)
 
-        
-        
     def test_Metadata_setColumnFormat(self):
         '''MetaData_setValues'''
         '''This test should produce the following metadata, which is the same of 'test_row.xmd'
@@ -1098,30 +1053,7 @@ _rlnDefocusU #2
         md1.fillExpand(MDL_CTF_MODEL)
         self.assertEqual(md1, md2)
 
-#RESULTS test_metadata_stress
-#no blocks:1000, no lines=100
-#BUFFER FILLING took 11.34 seconds
-#write(append) sqlite took 113.89 seconds
-#write(append) star took 11.15 seconds
-#write(random) sqlite took 215.04 seconds
-#write(random) star took 13.18 seconds
-#read(random) sqlite took 22.55 seconds
-#read(random) star took 9.16 seconds
-#
-#no blocks:1, no lines=1000000
-#BUFFER FILLING took 53.60 seconds
-#write(append) sqlite took 35.81 seconds
-#write(append) star took 53.84 seconds
-#write(random) sqlite took 35.70 seconds
-#write(random) star took 53.57 seconds
-#read(random) sqlite took 2.34 seconds
-#read(random) star took 28.91 seconds
-#
-#
     def test_metadata_stress(self):
-        #create set and save 1000 block with 100 lines each
-        #numberMetadatas=1000+1
-        #numberLines=100+1
         numberMetadatas=10+1
         numberLines=10+1
         md = MetaData()
@@ -1178,36 +1110,6 @@ _rlnDefocusU #2
         print "\nwrite(append) star took %.2f seconds" % (timestamp2 - timestamp1)
         self.assertEqual(1, 1)
 
-#        #sqlite random write
-#        timestamp1 = time()
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnSqlite)
-#            for lin in range(1, numberLines):
-#                id = md.addObject() 
-#                
-#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
-#            md.write(outFileName,MD_APPEND) 
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nwrite(random) sqlite took %.2f seconds" % (timestamp2 - timestamp1)
-#
-#        #star random write
-#        timestamp1 = time()
-#        for met in range(1, numberMetadatas):
-#            outFileName = "b%06d@%s" % (randint(1,numberMetadatas),fnStar)
-#            for lin in range(1, numberLines):
-#                id = md.addObject() 
-#                
-#                md.setValue(MDL_IMAGE, '%06d@proj.stk' % met, id)
-#                md.setValue(MDL_XCOOR,   lin+met*(numberLines-1), id)
-#                md.setValue(MDL_YCOOR, 1+lin+met*(numberLines-1), id)
-#            md.write(outFileName,MD_APPEND) 
-#            md.clear()
-#        timestamp2 = time()
-#        print "\nwrite(random) star took %.2f seconds" % (timestamp2 - timestamp1)
-
         #read random ///////////////////////////////////////////////////7
         timestamp1 = time()
         for met in range(1, numberMetadatas):
@@ -1255,27 +1157,4 @@ _rlnDefocusU #2
         id = md.firstObject()
         total = md.getValue(MDL_ANGLE_DIFF, id)
         self.assertAlmostEqual(total, 5.23652, 4)
-#    //EXPECT_NEAR (total, 5.23652,0.00001);
-#    XMIPP_CATCH
-#}
 
-       
-from  XmippPythonTestResult import XmippPythonTestResult
-
-                                        
-if __name__ == '__main__':
-    #unittest.main()   
-    argc = len(sys.argv)      
-    if  argc > 1:  
-        xmlFile = sys.argv[1]
-    else: 
-        xmlFile = '/dev/null'
-
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippPythonInterface)
-    result = XmippPythonTestResult()
-    result.openXmlReport("TestXmippPythonInterface", xmlFile)    
-    suite(result)
-    result.closeXmlReport()
-    
-    if result.testFailed != 0:
-       result = unittest.TextTestRunner(verbosity=2).run(suite)    

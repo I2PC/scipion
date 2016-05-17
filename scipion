@@ -31,6 +31,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 import sys
 import os
 from os.path import join, exists, dirname
+import subprocess
 
 try:
     from ConfigParser import ConfigParser, ParsingError
@@ -38,9 +39,9 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'v1.0.1'
-__nickname__ = 'Augusto'
-__releasedate__ = '2016-02-20'
+__version__ = 'devel'
+__nickname__ = 'devel'
+__releasedate__ = 'devel'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -93,6 +94,37 @@ any doubt.
 ***""" % dirname(SCIPION_LOCAL_CONFIG))
 
 
+#
+# Check the version if in devel mode
+#
+
+if __version__ == 'devel':
+    # Find out if the is a .git directory
+    if exists(join(SCIPION_HOME, '.git')):
+        def call(cmd):
+            subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
+        call('git branch | grep \* > .devel_version')
+        call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
+
+    # If in a future we release a nigthly build, we could add the .devel_version
+    versionFile = join(SCIPION_HOME, '.devel_version')
+    if exists(versionFile):
+        f = open(versionFile)
+        line = f.readline()
+        __version__ = line.split()[1]
+        __nickname__, __releasedate__ = f.readline().split()[:2]
+        f.close()
+
+def getVersion(long=True):
+    if long:
+        return "%s (%s) %s" % (__version__, __releasedate__, __nickname__)
+    else:
+        return __version__
+
+def printVersion():
+    """ Print Scipion version """
+    # Print the version and some more info
+    sys.stdout.write('\nScipion %s\n\n' % getVersion())
 
 #
 # Initialize variables from config file.
@@ -108,7 +140,7 @@ for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
 # directories and packages.
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
-    'SCIPION_VERSION': __version__,
+    'SCIPION_VERSION': getVersion(),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
@@ -136,7 +168,7 @@ try:
         VARIABLES = getValues('VARIABLES')
     else: # For now, allow old scipion.conf without the VARIABLES section
         sys.stdout.write("Warning: Missing section 'VARIABLES' in the "
-                         "configuration file ~/.config/scipion.conf.\n")
+                         "configuration file ~/.config/scipion/scipion.conf\n")
         VARIABLES = {}
 
     REMOTE = dict(config.items('REMOTE'))
@@ -224,13 +256,6 @@ def runApp(app, args='', chdir=True):
     if isinstance(args, list):
         args = ' '.join('"%s"' % x for x in args)
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
-
-
-def printVersion():
-    """ Print Scipion version """
-    # Print the version and some more info
-    sys.stdout.write('\nScipion %s (%s) %s\n\n' % (__version__, __releasedate__, __nickname__))
-
 
 #
 # Modes (first argument given to scipion).
