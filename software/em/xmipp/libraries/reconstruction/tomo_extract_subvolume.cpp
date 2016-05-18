@@ -273,7 +273,7 @@ void ProgTomoExtractSubvolume::processImage(const FileName &fnImg2
             fn_aux.compose(oroot,image_num);
         }
         else
-            fn_aux = oroot + "_" + fnImg.getBaseName();
+            fn_aux = oroot + "_" + fnImg.afterLastOf("/");
     }
     else if (!oroot.empty())
         fn_aux = oroot;
