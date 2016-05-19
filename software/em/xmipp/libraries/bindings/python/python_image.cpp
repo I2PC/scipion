@@ -657,11 +657,17 @@ Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
 
     ImageObject *self = (ImageObject*) obj;
+    ImageObject * result = NULL;
     double rot, tilt, psi;
+
     if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
     {
         try
         {
+            // We use the following macro to release the Python Interpreter Lock (GIL)
+            // while running this C extension code and allows threads to run concurrently.
+            // See: https://docs.python.org/2.7/c-api/init.html for details.
+            Py_BEGIN_ALLOW_THREADS
             Projection P;
             MultidimArray<double> * pVolume;
             self->image->data->getMultidimArrayPointer(pVolume);
@@ -669,12 +675,12 @@ Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
             pVolume->getDimensions(aDim);
             pVolume->setXmippOrigin();
             projectVolume(*pVolume, P, aDim.xdim, aDim.ydim,rot, tilt, psi);
-            ImageObject * result = PyObject_New(ImageObject, &ImageType);
+            result = PyObject_New(ImageObject, &ImageType);
             Image <double> I;
-
             result->image = new ImageGeneric();
             result->image->setDatatype(DT_Double);
             result->image->data->setImage(MULTIDIM_ARRAY(P));
+            Py_END_ALLOW_THREADS
             return (PyObject *)result;
         }
         catch (XmippError &xe)
