@@ -94,13 +94,12 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         volumeId = self._insertFunctionStep('initVolumeStep',
                                             inputVolume, partSet, mdFn)
 
-        deps = []
-        ####deps.append(volumeId)
 
         projGalleryFn = self._getProjGalleryFn()
         galleryId = self._insertFunctionStep('createEmptyFileStep',
-                                             projGalleryFn)
-        deps.append(galleryId)
+                                             projGalleryFn,
+                                             prerequisites=[])
+        deps = [volumeId, galleryId]
 
         # Create xmipp metadata
         # partSet
