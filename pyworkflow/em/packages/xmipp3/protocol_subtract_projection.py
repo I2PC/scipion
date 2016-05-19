@@ -95,7 +95,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
                                             inputVolume, partSet, mdFn)
 
         deps = []
-        deps.append(volumeId)
+        ####deps.append(volumeId)
 
         projGalleryFn = self._getProjGalleryFn()
         galleryId = self._insertFunctionStep('createEmptyFileStep',
@@ -109,6 +109,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         md = xmipp.MetaData()
         setOfParticlesToMd(partSet, md)
         #convert angles and shifts from volume system of coordinates to projection system of coordinates
+        depsOutPut=[]
         for index, part in enumerate(partSet):
             objId = index + 1
             shifts, angles = geometryFromMatrix(part.getTransform().getMatrix(), True)
@@ -132,10 +133,11 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             #save metadata otherwise protocol will not start on continue.
             mdAux.write(self._getInputParticlesSubsetFn(thread))
             #indexPart, expProjFilename = part.getLocation()
-            self._insertFunctionStep('projectStep', start, end,
+            idStep = self._insertFunctionStep('projectStep', start, end,
                                      samplingRate, thread,
                                      prerequisites=deps)
-        self._insertFunctionStep('createOutputStep', projGalleryFn)
+            depsOutPut.append(idStep)
+        self._insertFunctionStep('createOutputStep', projGalleryFn,prerequisites=depsOutPut)
 
     #--------------------------- STEPS functions -------------------------------
     def initVolumeStep(self,volName, partSet, mdFn):
