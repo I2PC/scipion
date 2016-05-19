@@ -182,8 +182,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             expProj = ih.read(md.getValue(xmipp.MDL_IMAGE, id))
             expProj.convert2DataType(xmipp.DT_DOUBLE)
             # Subtract from experimental and write result
-            expProj.write( "%d@/tmp/expProj.stk"%id)
-            projection.write( "%d@/tmp/thProj.stk"%id)
+            #expProj.write( "%d@/tmp/expProj.stk"%id)
+            #projection.write( "%d@/tmp/thProj.stk"%id)
             projection.resetOrigin()
             expProj.inplaceSubtract(projection) #0, -64
             expProj.write( self._getProjGalleryIndexFn(id+start-1))
