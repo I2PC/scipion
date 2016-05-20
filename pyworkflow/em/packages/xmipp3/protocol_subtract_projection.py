@@ -26,7 +26,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import PointerParam, EnumParam
+from pyworkflow.protocol.params import PointerParam, EnumParam, BooleanParam
 
 from pyworkflow.em.protocol import ProtOperateParticles
 from pyworkflow.protocol.constants import STEPS_PARALLEL
@@ -76,6 +76,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
                       choices=['NO','full CTF','abs(CTF) (phase flip)'],
                       label='apply CTF?',
                       help='apply CTF to the reference gallery of projections')
+        form.addParam('normalize', BooleanParam, default=False,
+                   label='normalize', help = "adjust grey scale range so experimental data and synthetic data match")
 
         form.addParallelSection(threads=3, mpi=0)
 
@@ -190,8 +192,11 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             expProj.convert2DataType(xmipp.DT_DOUBLE)
             # Subtract from experimental and write result
             projection.resetOrigin()
-            #expProj.inplaceSubtract(projection) #0, -64
-            expProj = expProj.adjustAndSubtract(projection)
+            if self.normalize:
+                expProj = expProj.adjustAndSubtract(projection)
+            else:
+                expProj.inplaceSubtract(projection)
+
             expProj.write( self._getProjGalleryIndexFn(id+start-1))
 
     def createOutputStep(self):
