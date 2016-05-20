@@ -33,7 +33,7 @@ from pyworkflow.em.packages.xmipp3 import getEnviron, runXmippProgram
 from pyworkflow.em.protocol import ProtImportParticles, ProtImportMask, ProtImportVolumes
 from pyworkflow.em.packages.xmipp3 import XmippProtSubtractProjection
 from pyworkflow.em.data import  VolumeMask
-
+from pyworkflow.em.packages.relion import ProtRelionSubtract
 proj1 = [(0, 0, 53, 55, 0.5), (0, 0, 53, 56, 1.0), (0, 0, 53, 57, 0.5), (0, 0, 53, 63, 0.5), (0, 0, 53, 64, 1.0),
          (0, 0, 53, 65, 0.5), (0, 0, 54, 54, 1.75), (0, 0, 54, 55, 4.0), (0, 0, 54, 56, 4.5), (0, 0, 54, 57, 4.0),
          (0, 0, 54, 58, 1.75), (0, 0, 54, 62, 1.75), (0, 0, 54, 63, 4.0), (0, 0, 54, 64, 4.5), (0, 0, 54, 65, 4.0),
@@ -374,11 +374,11 @@ class TestSubProj(BaseTest):
         self.partSet.setSamplingRate(samplingRate)
         self.partSet.setHasCTF(True)
         aList = [np.array(m) for m in mList]
-        defocus=15000 + 5000* random.random()
+        #defocus=15000 + 5000* random.random()
         for i, a in enumerate(aList):
             p = Particle()
             if doCtf:
-                defocusU = defocusList[i]+500.
+                defocusU = defocusList[i]#+500.
                 defocusV = defocusList[i]
                 ctf = CTFModel(defocusU=defocusU,
                                defocusV=defocusV,
@@ -397,9 +397,11 @@ class TestSubProj(BaseTest):
         img.setDataType(xmipp.DT_FLOAT)
         img.resize(projSize, projSize)
 
-        img.initRandom(0., 1., xmipp.XMIPP_RND_UNIFORM)
+        #img.initRandom(0., 1., xmipp.XMIPP_RND_GAUSSIAN)
+        img.initConstant(0.)
         for coor in proj:
-            img.setPixel(coor[0], coor[1], coor[2], coor[3], coor[4])  # coor4 is the pixel value
+            value = img.getPixel(coor[0], coor[1], coor[2], coor[3])
+            img.setPixel(coor[0], coor[1], coor[2], coor[3], coor[4]+value)  # coor4 is the pixel value
         img.write("%d@"%num + baseName)
 
     def createVol(self, volume):
@@ -407,7 +409,8 @@ class TestSubProj(BaseTest):
         vol.setDataType(xmipp.DT_FLOAT)
         vol.resize(projSize, projSize, projSize)
 
-        vol.initRandom(0., .5, xmipp.XMIPP_RND_UNIFORM)
+        #vol.initRandom(0., .5, xmipp.XMIPP_RND_UNIFORM)
+        vol.initConstant(0.)
         for coor in volume:
             vol.setPixel(coor[0], coor[1], coor[2], coor[3], coor[4])  # coor4 is the pixel value
         vol.write(self.volBaseFn)
@@ -535,6 +538,26 @@ class TestSubProj(BaseTest):
         protSubtract.refMask.set(_protImportMask.outputMask)
         protSubtract.projType.set(XmippProtSubtractProjection.CORRECT_NONE)
         self.launchProtocol(protSubtract)
+
+        protSubtractCTF = self.newProtocol(XmippProtSubtractProjection)
+        protSubtractCTF.inputParticles.set(protCTFProj.outputParticles)
+        protSubtractCTF.inputVolume.set(_protImportVol.outputVolume)
+        protSubtractCTF.refMask.set(_protImportMask.outputMask)
+        protSubtractCTF.projType.set(XmippProtSubtractProjection.CORRECT_FULL_CTF)
+        self.launchProtocol(protSubtractCTF)
+
+        protSubtractCTFpos = self.newProtocol(XmippProtSubtractProjection)
+        protSubtractCTFpos.inputParticles.set(protCTFposProj.outputParticles)
+        protSubtractCTFpos.inputVolume.set(_protImportVol.outputVolume)
+        protSubtractCTFpos.refMask.set(_protImportMask.outputMask)
+        protSubtractCTFpos.projType.set(XmippProtSubtractProjection.CORRECT_PHASE_FLIP)
+        self.launchProtocol(protSubtractCTFpos)
+
+        protSubtractCTFRelion = self.newProtocol(ProtRelionSubtract)
+        protSubtractCTFRelion.inputParticles.set(protCTFProj.outputParticles)
+        protSubtractCTFRelion.inputVolume.set(_protImportVol.outputVolume)
+        #protSubtractCTFRelion.refMask.set(_protImportMask.outputMask)
+        self.launchProtocol(protSubtractCTFRelion)
 
         self.assertTrue(True)
         # create 3D reconstruction

@@ -197,7 +197,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             expProj.convert2DataType(xmipp.DT_DOUBLE)
             # Subtract from experimental and write result
             projection.resetOrigin()
-            expProj.inplaceSubtract(projection) #0, -64
+            #expProj.inplaceSubtract(projection) #0, -64
+            expProj = expProj.adjustAndSubtract(projection)
             expProj.write( self._getProjGalleryIndexFn(id+start-1))
 
     def createOutputStep(self, projGalleryFn):
