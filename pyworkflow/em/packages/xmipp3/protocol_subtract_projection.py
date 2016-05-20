@@ -91,15 +91,10 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         samplingRate = partSet.getSamplingRate()
         inputVolume = getImageLocation(self.inputVolume.get())
         mdFn = self._getInputParticlesFn()
-        volumeId = self._insertFunctionStep('initVolumeStep',
+        convertId = self._insertFunctionStep('convertInputStep',
                                             inputVolume)
 
-
-        projGalleryFn = self._getProjGalleryFn()
-        galleryId = self._insertFunctionStep('createEmptyFileStep',
-                                             projGalleryFn,
-                                             prerequisites=[])
-        deps = [volumeId, galleryId]
+        deps = [convertId]
 
         # Create xmipp metadata
         # partSet
@@ -117,10 +112,10 @@ class XmippProtSubtractProjection(ProtOperateParticles):
                                               samplingRate, thread,
                                               prerequisites=deps)
             depsOutPut.append(idStep)
-        self._insertFunctionStep('createOutputStep', projGalleryFn,prerequisites=depsOutPut)
+        self._insertFunctionStep('createOutputStep', prerequisites=depsOutPut)
 
     #--------------------------- STEPS functions -------------------------------
-    def initVolumeStep(self,volName):
+    def convertInputStep(self, volName):
         # Read volume and convert to DOUBLE
         self.vol = xmipp.Image(volName)
         self.vol.convert2DataType(xmipp.DT_DOUBLE)
@@ -137,7 +132,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         taskSize = nPart / numberOfTasks
         md = xmipp.MetaData()
 
-        #convert angles and shifts from volume system of coordinates to projection system of coordinates
+        # Convert angles and shifts from volume system of coordinates to
+        # projection system of coordinates
         mdCount = 0
 
         for index, part in enumerate(partSet):
@@ -164,11 +160,8 @@ class XmippProtSubtractProjection(ProtOperateParticles):
                 md.clear()
                 mdCount += 1
 
-
-    def createEmptyFileStep(self, projGalleryFn):
-        n = len(self.inputParticles.get())
-        x, y, z = self.inputParticles.get().getDimensions()
-        xmipp.createEmptyFile(projGalleryFn,x,y,1,n)
+        x, y, _ = partSet.getDim()
+        xmipp.createEmptyFile(self._getProjGalleryFn(), x, y, 1, nPart)
 
     def projectStep(self, start, end, samplingRate, threadNumber):
         # Project
@@ -201,14 +194,14 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             expProj = expProj.adjustAndSubtract(projection)
             expProj.write( self._getProjGalleryIndexFn(id+start-1))
 
-    def createOutputStep(self, projGalleryFn):
+    def createOutputStep(self):
         partSet = self.inputParticles.get()
         outImgSet = self._createSetOfParticles()
         outImgSet.copyInfo(partSet)
         outImgSet.setAlignmentProj()
         for index, part in enumerate(partSet):
             part2 = part.clone()
-            part2.setLocation(index+1, projGalleryFn)
+            part2.setLocation(index+1, self._getProjGalleryFn())
             outImgSet.append(part2)
 
         self._defineOutputs(outputParticles=outImgSet)
