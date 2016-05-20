@@ -30,7 +30,7 @@ from pyworkflow.protocol.params import PointerParam, EnumParam
 
 from pyworkflow.em.protocol import ProtOperateParticles
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, setOfParticlesToMd,
+from pyworkflow.em.packages.xmipp3.convert import (XmippMdRow, particleToRow,
                                                    getImageLocation,
                                                    geometryFromMatrix)
 import xmipp
@@ -92,7 +92,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         inputVolume = getImageLocation(self.inputVolume.get())
         mdFn = self._getInputParticlesFn()
         volumeId = self._insertFunctionStep('initVolumeStep',
-                                            inputVolume, partSet, mdFn)
+                                            inputVolume)
 
 
         projGalleryFn = self._getProjGalleryFn()
@@ -104,42 +104,23 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         # Create xmipp metadata
         # partSet
         #writeSetOfParticles(partSet, mdFn, blockName="images")
-
-        md = xmipp.MetaData()
-        setOfParticlesToMd(partSet, md)
-        #convert angles and shifts from volume system of coordinates to projection system of coordinates
-        depsOutPut=[]
-        for index, part in enumerate(partSet):
-            objId = index + 1
-            shifts, angles = geometryFromMatrix(part.getTransform().getMatrix(), True)
-            md.setValue(xmipp.MDL_SHIFT_X,-shifts[0],objId)
-            md.setValue(xmipp.MDL_SHIFT_Y,-shifts[1],objId)
-            md.setValue(xmipp.MDL_SHIFT_Z,0.,objId)
-            md.setValue(xmipp.MDL_ANGLE_ROT,angles[0],objId)
-            md.setValue(xmipp.MDL_ANGLE_TILT,angles[1],objId)
-            md.setValue(xmipp.MDL_ANGLE_PSI,angles[2],objId)
-
         groupSize = nPart/numberOfThreads
         groupRemainder = nPart%numberOfThreads
 
+        depsOutPut=[]
         for thread in range(0, numberOfThreads):
-            mdAux = xmipp.MetaData()
             start = long(thread * groupSize+1)
             end = long(thread * groupSize+groupSize)
             if thread == (numberOfThreads-1):
                 end += groupRemainder
-            mdAux.importObjects(md, xmipp.MDValueRange(xmipp.MDL_OBJID,start,end))
-            #save metadata otherwise protocol will not start on continue.
-            mdAux.write(self._getInputParticlesSubsetFn(thread))
-            #indexPart, expProjFilename = part.getLocation()
             idStep = self._insertFunctionStep('projectStep', start, end,
-                                     samplingRate, thread,
-                                     prerequisites=deps)
+                                              samplingRate, thread,
+                                              prerequisites=deps)
             depsOutPut.append(idStep)
         self._insertFunctionStep('createOutputStep', projGalleryFn,prerequisites=depsOutPut)
 
     #--------------------------- STEPS functions -------------------------------
-    def initVolumeStep(self,volName, partSet, mdFn):
+    def initVolumeStep(self,volName):
         # Read volume and convert to DOUBLE
         self.vol = xmipp.Image(volName)
         self.vol.convert2DataType(xmipp.DT_DOUBLE)
@@ -149,6 +130,40 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             self.mask = xmipp.Image(maskName)
             self.mask.convert2DataType(xmipp.DT_DOUBLE)
             self.vol.inplaceMultiply(self.mask)
+
+        partSet = self.inputParticles.get()
+        nPart = len(partSet)
+        numberOfTasks = min(nPart, max(self.numberOfThreads.get()-1, 1))
+        taskSize = nPart / numberOfTasks
+        md = xmipp.MetaData()
+
+        #convert angles and shifts from volume system of coordinates to projection system of coordinates
+        mdCount = 0
+
+        for index, part in enumerate(partSet):
+            objId = md.addObject()
+            imgRow = XmippMdRow()
+            particleToRow(part, imgRow)
+            shifts, angles = geometryFromMatrix(part.getTransform().getMatrix(), True)
+
+            imgRow.setValue(xmipp.MDL_SHIFT_X,-shifts[0])
+            imgRow.setValue(xmipp.MDL_SHIFT_Y,-shifts[1])
+            imgRow.setValue(xmipp.MDL_SHIFT_Z,0.)
+            imgRow.setValue(xmipp.MDL_ANGLE_ROT,angles[0])
+            imgRow.setValue(xmipp.MDL_ANGLE_TILT,angles[1])
+            imgRow.setValue(xmipp.MDL_ANGLE_PSI,angles[2])
+
+            imgRow.writeToMd(md, objId)
+
+            # Write a new metadata every taskSize number of elements
+            # except in the last chunk where we want to add also the
+            # remainder and the condition is the last element
+            if ((index % taskSize == taskSize-1 and
+                 mdCount < numberOfTasks-1) or index == nPart-1):
+                md.write(self._getInputParticlesSubsetFn(mdCount))
+                md.clear()
+                mdCount += 1
+
 
     def createEmptyFileStep(self, projGalleryFn):
         n = len(self.inputParticles.get())
