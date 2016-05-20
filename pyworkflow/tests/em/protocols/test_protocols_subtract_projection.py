@@ -397,9 +397,10 @@ class TestSubProj(BaseTest):
         img.setDataType(xmipp.DT_FLOAT)
         img.resize(projSize, projSize)
 
-        img.initRandom(0., 1., xmipp.XMIPP_RND_UNIFORM)
+        img.initRandom(0., 1., xmipp.XMIPP_RND_GAUSSIAN)
         for coor in proj:
-            img.setPixel(coor[0], coor[1], coor[2], coor[3], coor[4])  # coor4 is the pixel value
+            value = img.getPixel(coor[0], coor[1], coor[2], coor[3])
+            img.setPixel(coor[0], coor[1], coor[2], coor[3], coor[4]+value)  # coor4 is the pixel value
         img.write("%d@"%num + baseName)
 
     def createVol(self, volume):
@@ -407,7 +408,8 @@ class TestSubProj(BaseTest):
         vol.setDataType(xmipp.DT_FLOAT)
         vol.resize(projSize, projSize, projSize)
 
-        vol.initRandom(0., .5, xmipp.XMIPP_RND_UNIFORM)
+        #vol.initRandom(0., .5, xmipp.XMIPP_RND_UNIFORM)
+        vol.initConstant(0.)
         for coor in volume:
             vol.setPixel(coor[0], coor[1], coor[2], coor[3], coor[4])  # coor4 is the pixel value
         vol.write(self.volBaseFn)
