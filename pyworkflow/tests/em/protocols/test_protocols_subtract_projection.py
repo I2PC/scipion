@@ -556,8 +556,12 @@ class TestSubProj(BaseTest):
         protSubtractCTFRelion = self.newProtocol(ProtRelionSubtract)
         protSubtractCTFRelion.inputParticles.set(protCTFProj.outputParticles)
         protSubtractCTFRelion.inputVolume.set(_protImportVol.outputVolume)
-        #protSubtractCTFRelion.refMask.set(_protImportMask.outputMask)
         self.launchProtocol(protSubtractCTFRelion)
+
+        self.assertIsNotNone(protSubtract.outputParticles, "There was a problem with subtract projection")
+
+
+
 
         self.assertTrue(True)
         # create 3D reconstruction
