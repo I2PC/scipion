@@ -37,6 +37,7 @@ from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
 import socket
+from pyworkflow.gui.text import _open_cmd
 
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.utils import Environ, runJob
@@ -696,3 +697,16 @@ class VmdViewer(Viewer):
         else:
             raise Exception('VmdViewer.visualize: can not visualize class: %s' % obj.getClassName())     
         
+class PDFReportViewer(Viewer):
+    """ Wrapper to visualize PDF objects. """
+    _environments = [DESKTOP_TKINTER]
+    from pyworkflow.em.protocol.protocol_pdf_report import ProtPDFReport
+    _targets = [ProtPDFReport]
+    
+    def __init__(self, **args):
+        Viewer.__init__(self, **args)
+
+    def visualize(self, obj, **args):        
+        prot = self.protocol
+        fnPDF = prot._getPath("report.pdf")
+        _open_cmd(fnPDF)
