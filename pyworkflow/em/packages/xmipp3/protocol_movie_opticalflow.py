@@ -37,7 +37,6 @@ import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.utils.path import moveFile
 from convert import writeShiftsMovieAlignment, getMovieFileName
 
 
@@ -49,7 +48,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     CONVERT_TO_MRC = 'mrcs'
     
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
         # GROUP GPU PARAMETERS
@@ -83,7 +82,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                    " your movies.")
         form.addParallelSection(threads=8, mpi=0)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
 
         inputFn = self._getMovieOrMd(movie)
@@ -126,15 +125,17 @@ class XmippProtOFAlignment(ProtAlignMovies):
             print >> sys.stderr, program, " failed for movie %s" % inputFn
 
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
-        self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(), roi, dark, gain)
+        self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(),
+                          roi, dark, gain)
         uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
         correctedPSD = self._getFnInMovieFolder(movie, "corrected")
 
         self.computePSD(aveMic, uncorrectedPSD)
         self.computePSD(outputMicFn, correctedPSD)
-        self.composePSD(uncorrectedPSD + ".psd", correctedPSD + ".psd", psdCorrName)
+        self.composePSD(uncorrectedPSD + ".psd",
+                        correctedPSD + ".psd", psdCorrName)
     
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         numThreads = self.numberOfThreads
@@ -163,7 +164,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
         lastFrame = self.alignFrameN.get()
         summary = []
         if self.inputMovies.get():
-            summary.append('Number of input movies: *%d*' % self.inputMovies.get().getSize())
+            summary.append('Number of input movies: '
+                           '*%d*' % self.inputMovies.get().getSize())
         summary.append('The number of frames to cut from the front: '
                        '*%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
 
