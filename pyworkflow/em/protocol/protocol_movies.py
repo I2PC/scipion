@@ -33,6 +33,7 @@ import os
 from os.path import join, basename, exists
 from datetime import datetime
 
+import pyworkflow.object as pwobj
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
 import pyworkflow.utils as pwutils
@@ -265,6 +266,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                                                              outputMovieFn))
                 ImageHandler().convertStack(inputMovieFn, outputMovieFn)
 
+            # Just store the original name in case it is needed in _processMovie
+            movie._originalFileName = pwobj.String(objDoStore=False)
+            movie._originalFileName.set(movie.getFileName())
+            # Now set the new filename (either linked or converted)
             movie.setFileName(os.path.join(movieFolder, newMovieName))
             self.info("Processing movie: %s" % movie.getFileName())
 
