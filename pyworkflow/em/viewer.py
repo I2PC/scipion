@@ -37,7 +37,6 @@ from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
 import socket
-from pyworkflow.gui.text import _open_cmd
 
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.utils import Environ, runJob
@@ -51,6 +50,7 @@ import xmipp
 from data import PdbFile
 
 from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
 
 #------------------------ Some common Views ------------------
 
@@ -316,6 +316,7 @@ class ChimeraViewer(Viewer):
         else:
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
+
 class ChimeraClient:
     
     def __init__(self, volfile, sendEnd=True,**kwargs):
@@ -392,6 +393,7 @@ class ChimeraClient:
     def answer(self, msg):
         if msg == 'exit_server':
             self.listen = False
+
 
 class ChimeraAngDistClient(ChimeraClient):
 
@@ -696,17 +698,3 @@ class VmdViewer(Viewer):
             # the first approach is better 
         else:
             raise Exception('VmdViewer.visualize: can not visualize class: %s' % obj.getClassName())     
-        
-class PDFReportViewer(Viewer):
-    """ Wrapper to visualize PDF objects. """
-    _environments = [DESKTOP_TKINTER]
-    from pyworkflow.em.protocol.protocol_pdf_report import ProtPDFReport
-    _targets = [ProtPDFReport]
-    
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
-
-    def visualize(self, obj, **args):        
-        prot = self.protocol
-        fnPDF = prot._getPath("report.pdf")
-        _open_cmd(fnPDF)
