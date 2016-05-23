@@ -36,7 +36,7 @@ import xmipp
 import pyworkflow.dataset as ds
 from pyworkflow.object import ObjectWrap
 
-from pyworkflow.utils import Environ
+from pyworkflow.utils import Environ, runJob
 from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE,\
     COL_RENDER_VOLUME
 
@@ -60,6 +60,10 @@ def getEnviron(xmippFirst=True):
             'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib')
             }, position=pos)
     return environ
+
+def runXmippProgram(program, args=""):
+    """ Internal shortcut function to launch a Xmipp program. """
+    runJob(None, program, args, env=getEnviron())
     
 def getLabelPythonType(label):
     """ From xmipp label to python variable type """
