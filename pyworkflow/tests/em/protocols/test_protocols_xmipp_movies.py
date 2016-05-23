@@ -26,7 +26,7 @@
 # **************************************************************************
 
 import unittest, sys
-from pyworkflow.em import *
+# from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 
@@ -95,21 +95,51 @@ class TestOFAlignment(TestXmippBase):
         cls.protImport1 = cls.runImportMovie1(cls.movie1)
         cls.protImport2 = cls.runImportMovie2(cls.movie2)
     
-    def testAlignOFMovie1(self):
-        # test downsampling a set of micrographs
-        protOF1 = XmippProtOFAlignment(alignMethod=0)
-        protOF1.inputMovies.set(self.protImport1.outputMovies)
-        self.launchProtocol(protOF1)
+    def runOFProtocol(self, movies, label="Default", saveMic=True, saveMovie=False):
+        protOF = XmippProtOFAlignment(doSaveAveMic=saveMic,
+                                      doSaveMovie=saveMovie)
+        protOF.setObjLabel(label)
+        protOF.inputMovies.set(movies)
+        self.launchProtocol(protOF)
+        return protOF
+    
+    def testAlignOF1(self):
+        protOF1 = self.runOFProtocol(self.protImport1.outputMovies,
+                                     label="Movie MRC")
         self.assertIsNotNone(protOF1.outputMicrographs,
                              "SetOfMicrographs has not been created.")
     
-    def testAlignOFMovie2(self):
-        # test downsampling a set of micrographs
-        protOF2 = XmippProtOFAlignment(alignMethod=0)
-        protOF2.inputMovies.set(self.protImport2.outputMovies)
-        self.launchProtocol(protOF2)
+    def testAlignOF2(self):
+        protOF2 = self.runOFProtocol(self.protImport2.outputMovies,
+                                     label="Movie EM")
         self.assertIsNotNone(protOF2.outputMicrographs,
                              "SetOfMicrographs has not been created.")
+    
+    def testAlignOFSaveMovieAndMic(self):
+        protOF3 = self.runOFProtocol(self.protImport1.outputMovies,
+                                     label="Save Movie", saveMovie=True)
+        self.assertIsNotNone(protOF3.outputMovies,
+                             "SetOfMovies has not been created.")
+    
+    def testAlignOFSaveMovieNoMic(self):
+        protOF4 = self.runOFProtocol(self.protImport1.outputMovies,
+                                     label="Save Movie", saveMic=False, 
+                                     saveMovie=True)
+        self.assertIsNotNone(protOF4.outputMovies,
+                             "SetOfMovies has not been created.")
+    
+    def testAlignOFWAlignment(self):
+        prot = XmippProtMovieCorr(doSaveAveMic=False)
+        prot.inputMovies.set(self.protImport1.outputMovies)
+        self.launchProtocol(prot)
+        
+        protOF5 = self.runOFProtocol(prot.outputMovies,
+                                     label="Movie w Alignment",
+                                     saveMic=False, 
+                                     saveMovie=True)
+        self.assertIsNotNone(protOF5.outputMovies,
+                             "SetOfMovies has not been created.")
+
 
 
 class TestCorrelationAlignment(BaseTest):
