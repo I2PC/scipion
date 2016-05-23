@@ -25,7 +25,7 @@
 
 #include "xmippmodule.h"
 #include "data/ctf.h"
-
+#include "data/xmipp_image_macros.h"
 PyObject * PyXmippError;
 
 
@@ -163,6 +163,7 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 
 /* createEmptyFile */
+//ROB: argument of this python function do not much arguments of C funcion Ndim does not exists in C
 PyObject *
 xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -175,6 +176,7 @@ xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
                          &Ndim))
     {
         createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,Ndim,true,WRITE_REPLACE);
+//        createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,APPEND_IMAGE,true,WRITE_REPLACE);
         Py_RETURN_NONE;
     }
     return NULL;

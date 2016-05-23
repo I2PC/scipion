@@ -432,10 +432,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         unCorrectedPSD = em.ImageHandler().createImage()
         correctedPSD.read(join(movieFolder, 'correctedpsd.psd'))
         unCorrectedPSD.read(join(movieFolder, 'uncorrectedpsd.psd'))
-        x, y, z, n = correctedPSD.getDimensions()
+        x, y, z, n = correctedPSD.getDimensions()        
+        #ROB: is this OK? I think it should start in 0 range (0,y)
         for i in range(1,y):
             for j in range(1,x//2):
-                unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
+                unCorrectedPSD.setPixel(0, 0, i, j, correctedPSD.getPixel(0, 0, i,j))
         unCorrectedPSD.write(join(movieFolder, psdCorrName))
 
         # Move output micrograph and related information to 'extra' folder
