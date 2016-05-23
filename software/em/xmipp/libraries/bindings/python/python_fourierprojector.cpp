@@ -97,6 +97,9 @@
      {
          PyObject *image = NULL;
          double padding_factor, max_freq, spline_degree;
+         padding_factor = 2;
+         max_freq = 0.5;
+         spline_degree = 2;
          if (PyArg_ParseTuple(args, "O|ddd", &image, &padding_factor, &max_freq, &spline_degree))
          {
         	 ArrayDim dims;

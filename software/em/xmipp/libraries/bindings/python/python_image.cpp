@@ -143,6 +143,8 @@ PyMethodDef Image_methods[] =
           "Set the value of some pixel" },
         { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
           "Return image dimensions as a tuple" },
+        { "resetOrigin", (PyCFunction) Image_resetOrigin, METH_VARARGS,
+          "set origin to 0 0 0" },
         { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
           "Return euler angles as a tuple" },
         { "getMainHeaderValue", (PyCFunction) Image_getMainHeaderValue, METH_VARARGS,
@@ -163,7 +165,7 @@ PyMethodDef Image_methods[] =
         { "inplaceSubtract", (PyCFunction) Image_inplaceSubtract, METH_VARARGS,
           "Subtract another image from self (does not create another Image instance)" },
         { "inplaceMultiply", (PyCFunction) Image_inplaceMultiply, METH_VARARGS,
-          "Multiply image by a constant (does not create another Image instance)" },
+          "Multiply image by a constant or another image (does not create a new Image instance)" },
         { "inplaceDivide", (PyCFunction) Image_inplaceDivide, METH_VARARGS,
           "Divide image by a constant (does not create another Image instance)" },
 
@@ -655,11 +657,17 @@ Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
 
     ImageObject *self = (ImageObject*) obj;
+    ImageObject * result = NULL;
     double rot, tilt, psi;
+
     if (PyArg_ParseTuple(args, "ddd", &rot,&tilt,&psi))
     {
         try
         {
+            // We use the following macro to release the Python Interpreter Lock (GIL)
+            // while running this C extension code and allows threads to run concurrently.
+            // See: https://docs.python.org/2.7/c-api/init.html for details.
+            Py_BEGIN_ALLOW_THREADS
             Projection P;
             MultidimArray<double> * pVolume;
             self->image->data->getMultidimArrayPointer(pVolume);
@@ -667,12 +675,12 @@ Image_projectVolumeDouble(PyObject *obj, PyObject *args, PyObject *kwargs)
             pVolume->getDimensions(aDim);
             pVolume->setXmippOrigin();
             projectVolume(*pVolume, P, aDim.xdim, aDim.ydim,rot, tilt, psi);
-            ImageObject * result = PyObject_New(ImageObject, &ImageType);
+            result = PyObject_New(ImageObject, &ImageType);
             Image <double> I;
-
             result->image = new ImageGeneric();
             result->image->setDatatype(DT_Double);
             result->image->data->setImage(MULTIDIM_ARRAY(P));
+            Py_END_ALLOW_THREADS
             return (PyObject *)result;
         }
         catch (XmippError &xe)
@@ -727,14 +735,18 @@ PyObject *
 Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
-    int i, j;
+    int i, j, k, n;
+    double value;
 
-    if (self != NULL && PyArg_ParseTuple(args, "ii", &i, &j))
+    if (self != NULL && PyArg_ParseTuple(args, "iiii", &n, &k, &i, &j ))
     {
         try
         {
             self->image->data->im->resetOrigin();
-            double value = self->image->getPixel(i, j);
+            if (n==0 && k==0)
+                 value = self->image->getPixel(i, j);
+            else
+                 value = self->image->getPixel(n, k , i, j);
             return PyFloat_FromDouble(value);
         }
         catch (XmippError &xe)
@@ -750,14 +762,18 @@ PyObject *
 Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) obj;
-    int i, j;
+    int i, j, k, n;
     double value = -1;
 
-    if (self != NULL && PyArg_ParseTuple(args, "iid", &i, &j, &value))
+    if (self != NULL && PyArg_ParseTuple(args, "iiiid", &n, &k, &i, &j, &value))
     {
         try
         {
-            self->image->setPixel(i, j, value);
+            if (n==0 && k==0)
+                self->image->setPixel(i, j, value);
+            else
+                self->image->setPixel(n, k, i, j, value);
+
             Py_RETURN_NONE;
         }
         catch (XmippError &xe)
@@ -984,6 +1000,26 @@ Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
             size_t xdim, ydim, zdim, ndim;
             MULTIDIM_ARRAY_GENERIC(*self->image).getDimensions(xdim, ydim, zdim, ndim);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_getDimensions
+
+/* reset origin */
+PyObject *
+Image_resetOrigin(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    if (self != NULL)
+    {
+        try
+        {
+            self->image->data->im->resetOrigin();
+            Py_RETURN_NONE; 
         }
         catch (XmippError &xe)
         {
@@ -1319,7 +1355,7 @@ Image_inplaceSubtract(PyObject *self, PyObject *args, PyObject *kwargs)
       PyErr_SetString(PyXmippError, xe.msg.c_str());
   }
   return NULL;
-}// similar to -=
+}
 
 /* Multiply image and constant, operator * */
 PyObject *
@@ -1375,12 +1411,18 @@ Image_inplaceMultiply(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *other = NULL;
     if (PyArg_ParseTuple(args, "O", &other))
     {
-      double value = PyFloat_AsDouble(other);
-      Image_Value(self).multiply(value);
+      if (Image_Check(other))
+      {
+        Image_Value(self).multiply(Image_Value(other));
+      }
+      else
+      {
+        Image_Value(self).multiply(PyFloat_AsDouble(other));
+      }
       Py_RETURN_NONE;
     }
     else
-      PyErr_SetString(PyXmippError, "Expecting Number as second argument");
+      PyErr_SetString(PyXmippError, "Expecting Number or Image as second argument");
   }
   catch (XmippError &xe)
   {
@@ -1501,7 +1543,7 @@ Image_applyTransforMatScipion(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             double scale, shiftX, shiftY, shiftZ, rot,tilt, psi;
             bool flip;
-            transformationMatrix2Parameters2D(A, flip, scale, shiftX, shiftY, psi);//, shiftZ, rot,tilt, psi);
+            transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
             double _rot;
             if (tilt==0.)
                 _rot=rot + psi;
@@ -1532,31 +1574,44 @@ Image_applyCTF(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *input = NULL;
     double Ts=1.0;
+    size_t rowId;
+    PyObject *pyReplace = Py_False;
+    bool absPhase = false;
+
     try
     {
-        PyArg_ParseTuple(args, "Od", &input,&Ts);
+        PyArg_ParseTuple(args, "Od|kO", &input,&Ts,&rowId,&pyReplace);
         if (input != NULL)
         {
-			PyObject *pyStr;
-			if ((pyStr = PyObject_Str(input)) != NULL)
-			{
-				FileName fnCTF=PyString_AsString(pyStr);
-			    ImageObject *self = (ImageObject*) obj;
+                if(PyBool_Check(pyReplace))
+                    absPhase = pyReplace == Py_True;
+
+		PyObject *pyStr;
+		if (PyString_Check(input) || MetaData_Check(input))
+		{
+		    ImageObject *self = (ImageObject*) obj;
 	            ImageGeneric *image = self->image;
 	            image->convert2Datatype(DT_Double);
 	            MultidimArray<double> * pImage=NULL;
 	            MULTIDIM_ARRAY_GENERIC(*image).getMultidimArrayPointer(pImage);
 
-			    self->image->data->getMultidimArrayPointer(pImage);
+		    self->image->data->getMultidimArrayPointer(pImage);
 
-		        CTFDescription ctf;
-		        ctf.enable_CTF=true;
-		        ctf.enable_CTFnoise=false;
-		        ctf.read(fnCTF);
-		        ctf.produceSideInfo();
-		        ctf.applyCTF(*pImage,Ts);
-		        Py_RETURN_NONE;
-			}
+		    CTFDescription ctf;
+		    ctf.enable_CTF=true;
+		    ctf.enable_CTFnoise=false;
+                    if (MetaData_Check(input))
+                        ctf.readFromMetadataRow(MetaData_Value(input), rowId );
+                    else
+                       { 
+                       pyStr = PyObject_Str(input);
+                       FileName fnCTF = PyString_AsString(pyStr);
+		       ctf.read(fnCTF);
+                       }
+		    ctf.produceSideInfo();
+		    ctf.applyCTF(*pImage,Ts,absPhase);
+		    Py_RETURN_NONE;
+		}
         }
     }
     catch (XmippError &xe)
