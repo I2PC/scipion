@@ -64,12 +64,22 @@ class ProtSummovie(ProtAlignMovies):
         group.addParam('exposurePerFrame', params.FloatParam,
                       label='Exposure per frame (e/A^2)',
                       help='Exposure per frame, in electrons per square Angstrom')
-
         group.addParam('doRestoreNoisePower', params.BooleanParam,
                       default=True,
                       label='Restore Noise Power? ',
                       help='Restore Noise Power? ',
                       expertLevel=cons.LEVEL_ADVANCED)
+        form.addParam('cleanInputMovies', params.BooleanParam, default=False,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      label='Clean input movies?',
+                      help='If set *Yes*, the input movies will be deleted. '
+                           'This option is useful if your input movies are '
+                           'an intermediates files, obtained with local '
+                           'alignment protocols; for instance, *Optical* '
+                           '*Flow* protocol or in cases of global alignment '
+                           'protocols when you save the movies. If in the '
+                           'previous alignment protocol, you save *only* the '
+                           'alignment, you *MUST* set *NO*')
         
         form.addParallelSection(threads=1, mpi=0)
     
@@ -104,6 +114,11 @@ class ProtSummovie(ProtAlignMovies):
         
         try:
             self.runJob(self._program, self._args % params)
+            
+            if self.cleanInputMovies:
+                pwutils.cleanPath(movie._originalFileName.get())
+                print ("Movie %s erased" % movie._originalFileName.get())
+                
         except:
             print("ERROR: Movie %s failed\n" % movie.getFileName())
         
