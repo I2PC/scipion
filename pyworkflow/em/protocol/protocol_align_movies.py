@@ -289,8 +289,7 @@ class ProtAlignMovies(ProtProcessMovies):
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        from pyworkflow.utils import runJob
-        runJob(None, program, args, env=xmipp3.getEnviron())
+        xmipp3.runXmippProgram(program, args)
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
                      dark=None, gain=None):
@@ -345,14 +344,17 @@ class ProtAlignMovies(ProtProcessMovies):
         self.__runXmippProgram('xmipp_ctf_estimate_from_micrograph', args)
 
     def composePSD(self, psd1, psd2, outputFn):
-        """ Compose a single image with left part from psd1,
-         right-part from psd2 and produce a new file.
+        """ Compose a single PSD image:
+         left part from psd1 (corrected PSD),
+         right-part from psd2 (uncorrected PSD)
         """
         ih = ImageHandler()
-        correctedPSD = ih.read(psd1)
-        unCorrectedPSD = ih.read(psd2)
-        x, y, z, n = correctedPSD.getDimensions()
-        for i in range(1,y):
-            for j in range(1,x//2):
-                unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
-        unCorrectedPSD.write(outputFn)
+        psd = ih.read(psd1)
+        data1 = psd.getData()
+        data2 = ih.read(psd2).getData()
+        # Compute middle index
+        x, _, _, _ = psd.getDimensions()
+        m = int(round(x/2.))
+        data1[:, m:] = data2[:, m:]
+        psd.setData(data1)
+        psd.write(outputFn)
