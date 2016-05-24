@@ -114,15 +114,13 @@ class ProtSummovie(ProtAlignMovies):
         
         try:
             self.runJob(self._program, self._args % params)
-            
+            self._storeSummary(movie)
             if self.cleanInputMovies:
                 pwutils.cleanPath(movie._originalFileName.get())
                 print ("Movie %s erased" % movie._originalFileName.get())
                 
         except:
             print("ERROR: Movie %s failed\n" % movie.getFileName())
-        
-        self._storeSummary(movie)
     
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
