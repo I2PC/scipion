@@ -97,6 +97,13 @@ def dateStr(dt=None, time=True, secs=False):
 prettyTime = dateStr
 
 
+def prettyTimestamp(dt=None, format='%Y-%m-%d_%H%M%S'):
+    if dt is None:
+        dt = datetime.now()
+
+    return dt.strftime(format)
+
+
 def prettySize(size):
     """Human friendly file size"""
     from math import log
