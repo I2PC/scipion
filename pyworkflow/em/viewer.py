@@ -51,6 +51,7 @@ from data import PdbFile
 
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
 
 #------------------------ Some common Views ------------------
 
