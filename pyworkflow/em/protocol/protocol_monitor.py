@@ -52,31 +52,39 @@ class ProtMonitor(EMProtocol):
                       pointerClass='EMProtocol',
                       help="this protocol/s will be monitorized")
 
-        form.addParam('samplingInterval', params.IntParam,default=60,
+        form.addParam('samplingInterval', params.IntParam, default=60,
                       label="Sampling Interval (sec)",
                       help="Take one sample each SAmplinInteval seconds")
 
         self._sendMailParams(form)
 
     def _sendMailParams(self, form):
-        form.addParam('doMail', params.BooleanParam,
-                      label="send e-mail", default=False,
-                      help="this protocol/s will be monitorized")
-        form.addParam('emailFrom',params.StringParam, condition='doMail',
-                      label='From',default = "from@from.fakeadress.com",
-                      help='Select a previous run to continue from.')
-        form.addParam('emailTo', params.StringParam, condition='doMail',
-                      label='To',default = "to@to.fakeadress.com",
-                      help='Select a previous run to continue from.')
-        form.addParam('smtp', params.StringParam, condition='doMail',
-                      label='mail server',default = "smtp.fakeadress.com",
-                      help='Select a previous run to continue from.')
+        g = form.addGroup('Email settings')
 
-    #--------------------------- INSERT steps functions --------------------------------------------   
+        g.addParam('doMail', params.BooleanParam,
+                      label="Enable Email notification?", default=False,
+                      help="Allow monitors to notify via email.")
+
+        g.addParam('emailFrom',params.StringParam, condition='doMail',
+                   default = "from@from.fakeadress.com",
+                   label='From',
+                   help='Provide the sender address for notifications.')
+
+        g.addParam('emailTo', params.StringParam, condition='doMail',
+                   default = "to@to.fakeadress.com",
+                   label='To',
+                   help='Provide the destination address for notifications.')
+
+        g.addParam('smtp', params.StringParam, condition='doMail',
+                   default = "smtp.fakeadress.com",
+                   label='SMTP Mail server',
+                   help='Provide the address of SMTP mail server.')
+
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('monitorStep')
 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
         finished = False
         completedDict = {}
@@ -92,7 +100,7 @@ class ProtMonitor(EMProtocol):
             print pwutils.prettyTime()
             print completedDict
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         return []  # no errors
 
@@ -102,7 +110,7 @@ class ProtMonitor(EMProtocol):
     def _methods(self):
         return []
 
-    def sendEMail(self,emailSubject,emailMessage):
+    def sendEMail(self, emailSubject, emailMessage):
         # Import smtplib for the actual sending function
         import smtplib
         # Import the email modules we'll need
