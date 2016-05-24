@@ -50,6 +50,7 @@ import xmipp
 from data import PdbFile
 
 from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
 
 #------------------------ Some common Views ------------------
 
@@ -315,6 +316,7 @@ class ChimeraViewer(Viewer):
         else:
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s' % obj.getClassName())
 
+
 class ChimeraClient:
     
     def __init__(self, volfile, sendEnd=True,**kwargs):
@@ -391,6 +393,7 @@ class ChimeraClient:
     def answer(self, msg):
         if msg == 'exit_server':
             self.listen = False
+
 
 class ChimeraAngDistClient(ChimeraClient):
 
@@ -695,4 +698,3 @@ class VmdViewer(Viewer):
             # the first approach is better 
         else:
             raise Exception('VmdViewer.visualize: can not visualize class: %s' % obj.getClassName())     
-        
