@@ -24,14 +24,14 @@
 # *
 # **************************************************************************
 
-import sys
-import time
+import os
 import Tkinter as tk
 
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.gui.tree import TreeProvider, BoundTree
 from pyworkflow.gui.widgets import Button, HotButton
+import pyworkflow.gui.text as text
 import pyworkflow.gui as pwgui
 
 import pyworkflow.protocol.params as params
@@ -63,8 +63,12 @@ class SummaryProvider(TreeProvider):
                                    ('Number', 100)]
         self._parentDict = {}
         self.acquisition = []
+        self.refreshObjects()
 
     def getObjects(self):
+        return self._objects
+
+    def refreshObjects(self):
         objects = []
 
         def addObj(objId, name, output='', size='', parent=None):
@@ -93,16 +97,17 @@ class SummaryProvider(TreeProvider):
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 if isinstance(prot, ProtImportImages):
-                    self.acquisition.append(("Microscope Voltage: ",
-                                             prot.voltage.get()))
-                    self.acquisition.append(("Spherical aberration: ",
-                                             prot.sphericalAberration.get()))
-                    self.acquisition.append(("Magnification: ",
-                                             prot.magnification.get()))
-                    self.acquisition.append(("Pixel Size (A/px): ",
-                                             outSet.getSamplingRate()))
+                    self.acquisition = [("Microscope Voltage: ",
+                                         prot.voltage.get()),
+                                        ("Spherical aberration: ",
+                                         prot.sphericalAberration.get()),
+                                        ("Magnification: ",
+                                         prot.magnification.get()),
+                                        ("Pixel Size (A/px): ",
+                                         outSet.getSamplingRate())
+                                        ]
 
-        return objects
+        self._objects = objects
 
     def getObjectInfo(self, obj):
         info = {'key': obj.strId(),
@@ -179,7 +184,8 @@ class SummaryWindow(pwgui.Window):
         self._updateLabel()
 
     def _fillButtonsFrame(self, frame):
-        pdfBtn = HotButton(frame, 'Generate PDF Report', command=self._generatePDF)
+        pdfBtn = HotButton(frame, 'Generate PDF Report',
+                           command=self._generatePDF)
         pdfBtn.grid(row=0, column=0, sticky='nw', padx=10, pady=2)
 
         closeBtn = self.createCloseButton(frame)
@@ -191,8 +197,81 @@ class SummaryWindow(pwgui.Window):
         self.tree.after(self.refresh * 1000, self._updateData)
 
     def _updateData(self):
+        self.provider.refreshObjects()
         self.tree.update()
         self._updateLabel()
 
     def _generatePDF(self, e=None):
-        pass
+        reportName = 'report_%s.tex' % pwutils.prettyTimestamp()
+        reportPath = self.protocol._getExtraPath(reportName)
+
+        acquisitionLines = ''
+        for item in self.provider.acquisition:
+            acquisitionLines += '%s & %s \\\\\n' % item
+
+        runLines = ''
+        for obj in self.provider.getObjects():
+            if obj.name:
+                runLines += ' %s &  &  \\\\\n' % obj.name
+            else:
+                runLines += ' & %s & %s \\\\\n' % (obj.output, obj.outSize)
+
+        args = {'acquisitionLines': acquisitionLines,
+                'runLines': runLines,
+                'dateStr': pwutils.prettyTime(secs=True),
+                'projectName': self.protocol.getProject().getShortName(),
+                'scipionVersion': os.environ['SCIPION_VERSION']
+                }
+
+        reportTemplate = """
+\documentclass{article}
+
+\usepackage[table]{xcolor}
+\setlength{\\tabcolsep}{15pt}
+\\renewcommand{\\arraystretch}{1.5}
+\\begin{document}
+
+%% Heading
+\hfil{\Huge\\bf Scipion Report}\hfil
+\hfill \\break
+\hrule
+
+\\begin{itemize}
+\item Date: \\textbf{%(dateStr)s}
+\item Project: \\textbf{%(projectName)s}
+\item Scipion version: \\textbf{%(scipionVersion)s}
+\end{itemize}
+
+\hfill \\break
+\hfill \\break
+
+\\begin{tabular}{ |p{5cm} p{5cm}|  }
+\hline
+\multicolumn{2}{|c|}{\\textbf{Acquisition}} \\\\
+\hline
+%(acquisitionLines)s
+\hline
+\end{tabular}
+
+\hfill \\break
+\hfill \\break
+\hfill \\break
+
+\\begin{tabular}{ |p{5cm} p{3cm} p{3cm}|  }
+\hline
+\multicolumn{3}{|c|}{\\textbf{Runs Summary}} \\\\
+\hline
+%(runLines)s
+\hline
+\end{tabular}
+
+\end{document}
+
+        """
+        reportFile = open(reportPath, 'w')
+        reportFile.write(reportTemplate % args)
+        reportFile.close()
+        pwutils.runJob(None, 'pdflatex',
+                       '-interaction=nonstopmode ' + reportName,
+                       cwd=self.protocol._getExtraPath())
+        text._open_cmd(reportPath.replace('.tex', '.pdf'))
