@@ -156,7 +156,8 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --dontReconstruct'
-        params += ' --useForValidation %0.3f' % (self.numOrientations.get()-1)        
+        params += ' --useForValidation %0.3f' % (self.numOrientations.get()-1)
+        params += ' --dontCheckMirrors'
         return params
         
     
@@ -164,11 +165,11 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         params =  '  -i %s' % self._getPath('reference_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --dontReconstruct'
-        params += ' --useForValidation %0.3f' % (self.numOrientations.get()-1)       
+        params += ' --useForValidation %0.3f' % (self.numOrientations.get()-1)
+        params += ' --dontCheckMirrors'
         return params
     
     def phantomProject(self,volName):
-        
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get()         
         pathParticles = self._getPath('input_particles.xmd')

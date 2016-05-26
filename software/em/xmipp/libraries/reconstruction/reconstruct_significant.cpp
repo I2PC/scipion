@@ -60,6 +60,8 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
     addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
     addParamsLine("  [--useForValidation <numOrientationsPerParticle=10>] : Use the program for validation. This number defines the number of possible orientations per particle");
+    addParamsLine("  [--dontCheckMirrors]         : Don't check mirrors in the alignment process");
+
 }
 
 // Read arguments ==========================================================
@@ -86,6 +88,7 @@ void ProgReconstructSignificant::readParams()
     doReconstruct=!checkParam("--dontReconstruct");
     useForValidation=checkParam("--useForValidation");
     numOrientationsPerParticle = getIntParam("--useForValidation");
+    dontCheckMirrors = checkParam("--dontCheckMirrors");
 
     if (!doReconstruct)
     {
@@ -115,6 +118,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         std::cout << "useForValidation            : "  << useForValidation << std::endl;
+        std::cout << "dontCheckMirrors            : "  << dontCheckMirrors << std::endl;
+
 
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
@@ -199,7 +204,7 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					mGalleryProjection.aliasImageInStack(gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
 					double corr;
-					if (! useForValidation)
+					if (! dontCheckMirrors)
 						corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
 								mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					else
