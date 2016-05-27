@@ -54,8 +54,7 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
                         'particlesSel': 'input_particles_sel',
                         'dendroPs': 'dendrogram',
                         'dendroDoc': '%s/docdendro' % self._classDir,
-                        'averages': 'averages',   
-                        'x30': self.numberOfThreads.get()                     
+                        'averages': 'averages'
                         }  
         
     def getClassDir(self):
@@ -64,40 +63,48 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
     def getNumberOfClasses(self):
         return None
     
-    #--------------------------- DEFINE param functions --------------------------------------------  
-     
+    #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
+        self._defineBasicParams(form)
+        form.addParallelSection(threads=4, mpi=0)
+
+    def _defineBasicParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam, label="Input particles", important=True, 
+        form.addParam('inputParticles', PointerParam,
+                      label="Input particles", important=True,
                       pointerClass='SetOfParticles',
                       help='Input images to perform PCA')
         form.addParam('pcaFile', PointerParam, pointerClass='PcaFile',
                       label="IMC/SEQ file", 
                       help='The IMC file contains the coordinates of each image '
                            'in the reduced-dimension space. '
-                           'The SEQ file contains, for all images, the pixel values under the mask. ')
+                           'The SEQ file contains, for all images, '
+                           'the pixel values under the mask. ')
         form.addParam('numberOfFactors', IntParam, default=10,
                       label='Number of factors',
-                      help='After running, examine the eigenimages and decide which ones to use.\n'
+                      help='After running, examine the eigenimages and decide '
+                           'which ones to use. \n'
                            'Typically all but the first few are noisy.')
         
-        form.addParallelSection(threads=4, mpi=0)
+
     
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions -----------------------
     
     def _insertAllSteps(self):    
         
         pcaFile = self.pcaFile.get().filename.get()
         
         self._insertFunctionStep('convertInput', 'inputParticles',
-                                 self._getFileName('particles'), self._getFileName('particlesSel'))
+                                 self._getFileName('particles'),
+                                 self._getFileName('particlesSel'))
         
         self._insertFunctionStep('classifyStep', pcaFile, 
-                                 self.numberOfFactors.get(), self.getNumberOfClasses())
+                                 self.numberOfFactors.get(),
+                                 self.getNumberOfClasses())
         
         self._insertFunctionStep('createOutputStep')
         
-    #--------------------------- STEPS functions --------------------------------------------    
+    #--------------------------- STEPS functions ------------------------------
 
     def _updateParams(self):   
         pass 
@@ -118,84 +125,98 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
         imcPrefix = imcBase.replace('_IMC', '').replace('_SEQ', '')
         
         self._params.update({'x27': numberOfFactors,
+                             'x30': self.numberOfThreads.get(),
                              '[cas_prefix]': imcPrefix,
                              '[cas_file]': imcBase,
                              })
         self._updateParams()
 
-        self.runTemplate(self.getScript(), self.getExt(), self._params)   
-        
-        
+        self.runTemplate(self.getScript(), self.getExt(), self._params)
+
+
 class SpiderProtClassifyCluster(SpiderProtClassify):
     """ Base for Clustering Spider classification protocols.
     """
     def __init__(self, script, classDir, **kwargs):
         SpiderProtClassify.__init__(self, script, classDir, **kwargs)
 
-    #--------------------------- STEPS functions --------------------------------------------    
+    #--------------------------- STEPS functions ------------------------------
        
     def createOutputStep(self):
         self.buildDendrogram(True)
          
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions ------------------------------
     
-    def _fillClassesFromNodes(self, classes, nodeList):
+    def _fillClassesFromNodes(self, classes2D, nodeList):
         """ Create the SetOfClasses2D from the images of each node
-        in the dendogram. 
+        in the dendrogram.
         """
-        img = Particle()
-        sampling = classes.getSamplingRate()
-        
+        particles = classes2D.getImages()
+        sampling = classes2D.getSamplingRate()
+
+        # We need to first create a map between the particles index and
+        # the assigned class number
+        classDict = {}
+        nodeDict = {}
+        classCount = 0
         for node in nodeList:
             if node.path:
-                #print "node.path: ", node.path
-                class2D = Class2D()
-                avg = Particle()
-                #avg.copyObjId(class2D)
-                avg.setLocation(node.avgCount, self.dendroAverages)
-                avg.setSamplingRate(sampling)
-                
-                class2D.setRepresentative(avg)
-                class2D.setSamplingRate(sampling)
-                classes.append(class2D)
-                #print "class2D.id: ", class2D.getObjId()
+                classCount += 1
+                node.classId = classCount
+                nodeDict[classCount] = node
                 for i in node.imageList:
-                    #img.setObjId(i) # FIXME: this is wrong if the id is different from index
-                    img.cleanObjId()
-                    img.setLocation(int(i), self.dendroImages)
-                    class2D.append(img)
+                    classDict[int(i)] = classCount
+
+        def updateItem(p, i):
+            classId = classDict.get(i, None)
+            if classId is None:
+                p._appendItem = False
+            else:
+                p.setClassId(classId)
+
+        def updateClass(cls):
+            node = nodeDict[cls.getObjId()]
+            rep = cls.getRepresentative()
+            rep.setSamplingRate(sampling)
+            rep.setLocation(node.avgCount, self.dendroAverages)
+
+        particlesRange = range(1, particles.getSize()+1)
+
+        classes2D.classifyItems(updateItemCallback=updateItem,
+                                updateClassCallback=updateClass,
+                                itemDataIterator=iter(particlesRange))
                 
-                classes.update(class2D)
-                
-                
-    def _fillParticlesFromNodes(self, particles, nodeList):
+    def _fillParticlesFromNodes(self, inputParts, outputParts, nodeList):
         """ Create the SetOfClasses2D from the images of each node
-        in the dendogram. 
+        in the dendrogram.
         """
-        img = Particle()
-        
+        allImages = set()
         for node in nodeList:
             if node.path:
                 for i in node.imageList:
-                    #img.setObjId(i) # FIXME: this is wrong if the id is different from index
-                    img.cleanObjId()
-                    img.setLocation(int(i), self.dendroImages)
-                    particles.append(img)
-                
-        
+                    allImages.add(i)
+
+        def updateItem(item, index):
+            item._appendItem = index in allImages
+
+        particlesRange = range(1, inputParts.getSize()+1)
+
+        outputParts.copyItems(inputParts,
+                              updateItemCallback=updateItem,
+                              itemDataIterator=iter(particlesRange))
+
     def buildDendrogram(self, writeAverages=False):
-        """ Parse Spider docfile with the information to build the dendogram.
+        """ Parse Spider docfile with the information to build the dendrogram.
         Params:
-            dendroFile: docfile with a row per image. 
-                 Each row contains the image id and the height.
-        """ 
+            writeAverages: whether to write class averages or not.
+        """
         dendroFile = self._getFileName('dendroDoc')
         # Dendrofile is a docfile with at least 3 data colums (class, height, id)
         doc = SpiderDocFile(dendroFile)
         values = []
         indexes = []
-        for c, h, _ in doc.iterValues(): 
-            indexes.append(c)
+        for _, h, i in doc.iterValues():
+            indexes.append(i)
             values.append(h)
         doc.close()
         
@@ -206,32 +227,35 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         self.dendroAverageCount = 0 # Write only the number of needed averages
         self.dendroMaxLevel = 10 # FIXME: remove hard coding if working the levels
         self.ih = ImageHandler()
-        
+
         return self._buildDendrogram(0, len(values)-1, 1, writeAverages)
-    
+
     def getImage(self, particleNumber):
         return self.ih.read((particleNumber, self.dendroImages))
         
-    def addChildNode(self, node, leftIndex, rightIndex, index, writeAverages, level):
-        child = self._buildDendrogram(leftIndex, rightIndex, index, writeAverages, level+1)
+    def addChildNode(self, node, leftIndex, rightIndex, index,
+                     writeAverages, level, searchStop):
+        child = self._buildDendrogram(leftIndex, rightIndex, index,
+                                      writeAverages, level+1, searchStop)
         node.addChild(child)
-        node.length += child.length
-        node.imageList += child.imageList
-        
+        node.extendImageList(child.imageList)
+
         if writeAverages:
-            if node.image is None:
-                node.image = child.image
-            else:
-                node.image += child.image
+            node.addImage(child.image)
             del child.image # Allow to free child image memory
                 
-    def _buildDendrogram(self, leftIndex, rightIndex, index, writeAverages=False, level=0):
-        """ This function is recursively called to create the dendogram graph(binary tree)
-        and also to write the average image files.
+    def _buildDendrogram(self, leftIndex, rightIndex, index,
+                         writeAverages=False, level=0, searchStop=0):
+        """ This function is recursively called to create the dendrogram
+        graph (binary tree) and also to write the average image files.
         Params:
-            leftIndex, rightIndex: the indinxes within the list where to search.
+            leftIndex, rightIndex: the indexes within the list where to search.
             index: the index of the class average.
-            writeImages: flag to select when to write averages.
+            writeAverages: flag to select when to write averages
+            searchStop: this could be 1, means that we will search until the
+                last element (used for right childs of the dendrogram or,
+                can be 0, meaning that the last element was already the max
+                (used for left childs )
         From self:
             self.dendroValues: the list with the heights of each node
             self.dendroImages: image stack filename to read particles
@@ -246,32 +270,53 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
         if rightIndex == leftIndex: # Just only one element
             height = self.dendroValues[leftIndex]
             node = DendroNode(index, height)
-            node.imageList = [self.dendroIndexes[leftIndex]]
-            node.image = self.getImage(node.imageList[0])
-            node.length = 1
-        
+            node.extendImageList([self.dendroIndexes[leftIndex]])
+            node.addImage(self.getImage(node.imageList[0]))
+
         elif rightIndex == leftIndex + 1: # Two elements
             height = max(self.dendroValues[leftIndex], 
                          self.dendroValues[rightIndex])
             node = DendroNode(index, height)
-            node.imageList = [self.dendroIndexes[leftIndex],
-                              self.dendroIndexes[rightIndex]]
-            node.image = self.getImage(node.imageList[0]) + self.getImage(node.imageList[1])
-            node.length = 2
+            node.extendImageList([self.dendroIndexes[leftIndex],
+                                  self.dendroIndexes[rightIndex]])
+            node.addImage(self.getImage(node.imageList[0]),
+                          self.getImage(node.imageList[1]))
         else: # 3 or more elements
             # Find the max value (or height) of the elements
             maxValue = self.dendroValues[leftIndex]
             maxIndex = 0
-            for i, v in enumerate(self.dendroValues[leftIndex+1:rightIndex]):
+            # searchStop could be 0 (do not consider last element, coming from
+            # left child, or 1 (consider also the last one, coming from right)
+            values = self.dendroValues[leftIndex+1:rightIndex+searchStop]
+            for i, v in enumerate(values):
                 if v > maxValue:
                     maxValue = v
                     maxIndex = i+1
             m = maxIndex + leftIndex
             node = DendroNode(index, maxValue)
-            
-            self.addChildNode(node, leftIndex, m, 2*index, writeAverages, level)
-            self.addChildNode(node, m+1, rightIndex, 2*index+1, writeAverages, level)
-            
+            hasRightChild = m < rightIndex
+
+            if maxValue > 0:
+                nextIndex = 2 * index if hasRightChild else index
+                self.addChildNode(node, leftIndex, m, nextIndex,
+                                  writeAverages, level, 0)
+
+                if hasRightChild:
+                    self.addChildNode(node, m+1, rightIndex, 2 * index + 1,
+                                      writeAverages, level, 1)
+                else:
+                    # If the node has a single child, we will remove a node
+                    # just to advance in the level of the tree to get more
+                    # different class averages
+                    if node.getChilds():
+                        child = node.getChilds()[0]
+                        child.image = node.image
+                        child.parents = []
+                        node = child
+            else:
+                node.extendImageList(self.dendroIndexes[leftIndex:rightIndex+1])
+                node.addImage(*[self.getImage(img) for img in node.imageList])
+
         if level < self.dendroMaxLevel:
             node.avgCount = avgCount
             node.path = '%d@%s' % (node.avgCount, self.dendroAverages)
@@ -291,7 +336,7 @@ class SpiderProtClassifyCluster(SpiderProtClassify):
     
 
 class DendroNode(graph.Node):
-    """ Special type of Node to store dendogram values. """
+    """ Special type of Node to store dendrogram values. """
     def __init__(self, index, height):
         graph.Node.__init__(self, 'class_%03d' % index)
         self.index = index
@@ -308,4 +353,15 @@ class DendroNode(graph.Node):
     def getSize(self):
         """ Return the number of images assigned to this class. """
         return len(self.imageList)
-          
+
+    def addImage(self, *images):
+        """ Add some images to this node. """
+        for img in images:
+            if self.image is None:
+                self.image = img
+            else:
+                self.image.inplaceAdd(img)
+
+    def extendImageList(self, imageList):
+        self.imageList.extend(imageList)
+        self.length = self.getSize()
