@@ -531,6 +531,11 @@ def writeSetOfParticles(imgSet, starFile,
     kwargs['filesDict'] = filesDict
     partMd = md.MetaData()
     setOfImagesToMd(imgSet, partMd, particleToRow, **kwargs)
+    # Remove Magnification from metadata to avoid wrong values of pixel size.
+    # In Relion if Magnification and DetectorPixelSize are set, pixel size
+    # in the command line is ignored.
+    partMd.removeLabel(md.RLN_CTF_MAGNIFICATION)
+
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
     
