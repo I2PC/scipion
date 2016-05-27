@@ -35,7 +35,6 @@ from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
 
 
-
 if __name__ == '__main__':
 
     # Add callback for remote debugging if available.

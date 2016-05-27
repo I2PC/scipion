@@ -127,6 +127,7 @@ class TreeProvider():
         'text': text of the object to be displayed (if not passed the 'key' will be used)
         'image': image path to be displayed as icon (optional)
         'parent': the object's parent in which insert this object (optional)
+        'tags': list of tags names (optional)
         """
         pass
     
@@ -147,7 +148,18 @@ class TreeProvider():
         as the default one when the element is double-clicked.
         """
         return []
-        
+
+    def configureTags(self, tree):
+        """
+        Configure the available tags in the tree that
+        will be setup later for each item in the tree.
+        Returns
+        -------
+        Nothing
+
+        Adds tags to the tree for customizing
+        """
+        pass
         
 class BoundTree(Tree):
     """ This class is base on Tree but fetch the
@@ -156,7 +168,7 @@ class BoundTree(Tree):
     def __init__(self, master, provider, frame=True, **opts):
         """Create a new Tree, if frame=True, a container
         frame will be created and an scrollbar will be added"""
-        # Get colums to display and width
+        # Get columns to display and width
         cols = provider.getColumns()
         colsTuple = tuple([c[0] for c in cols[1:]])
         Tree.__init__(self, master, frame, columns=colsTuple, **opts)
@@ -170,8 +182,9 @@ class BoundTree(Tree):
         self.grid(row=0, column=0, sticky='news')
         
         self.menu = tk.Menu(self, tearoff=0)
+
         self.setProvider(provider)
-        
+
         self.bind("<Button-3>", self._onRightClick)
         # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
@@ -231,6 +244,7 @@ class BoundTree(Tree):
                     
     def update(self):
         self.clear()
+        self.provider.configureTags(self)
         self._objDict = {} # Store the mapping between Tree ids and objects
         self._objects = self.provider.getObjects()
         
@@ -257,9 +271,12 @@ class BoundTree(Tree):
                     if image is None:
                         image = ''
                 values = objDict.get('values', ())
+
+                tags = objDict.get('tags', ())
+
                 try:
                     obj._treeId = self.insert(parentId, 'end', key,
-                                text=text, image=image, values=values)
+                                text=text, image=image, values=values, tags=tags)
                     self._objDict[obj._treeId] = obj
                     
                     if objDict.get('open', False):
@@ -393,3 +410,4 @@ class ProjectRunsTreeProvider(TreeProvider):
     
     def getObjectFromId(self, objId):
         return self._objDict[objId]
+
