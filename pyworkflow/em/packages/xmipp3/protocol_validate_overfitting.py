@@ -114,7 +114,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
                       expertLevel=LEVEL_ADVANCED,
                       label="Angular sampling rate")  
                       
-        form.addParallelSection(threads=0, mpi=1)
+        form.addParallelSection(threads=0, mpi=4)
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _createFilenameTemplates(self):
@@ -232,24 +232,24 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
             #for noise
             noiseStk = fnRoot+"_noises_%02d.stk"%i
             self.runJob ("xmipp_image_convert",
-                         "-i %s -o %s" % (fnImgs, noiseStk))
+                         "-i %s -o %s" % (fnImgs, noiseStk), numberOfMpi = 1)
             self.runJob("xmipp_image_operate", 
                         "-i %s --mult 0" % noiseStk)
             self.runJob("xmipp_transform_add_noise", 
-                        "-i %s --type gaussian 3" % noiseStk)
+                        "-i %s --type gaussian 3" % noiseStk, numberOfMpi = 1)
             fnImgsNL = fnRoot+"_noisesL_%02d.xmd" % i
             noiseStk2 = fnRoot+"_noises2_%02d.stk" % i
             self.runJob ("xmipp_image_convert", 
                          "-i %s -o %s --save_metadata_stack %s" % (
-                         noiseStk, noiseStk2, fnImgsNL))
+                         noiseStk, noiseStk2, fnImgsNL), numberOfMpi = 1)
             fnImgsNoiseOld = fnRoot+"_noisesOld_%02d.xmd" % i
             fnImgsN = fnRoot+"_noises_%02d_%02d.xmd" % (i, iteration)
             self.runJob("xmipp_metadata_utilities",
                         '-i %s -o %s --operate drop_column "image"' % ( 
-                        fnImgs,fnImgsNoiseOld))
+                        fnImgs,fnImgsNoiseOld), numberOfMpi = 1)
             self.runJob("xmipp_metadata_utilities",
                         "-i %s  --set merge %s -o %s" % (
-                        fnImgsNL, fnImgsNoiseOld, fnImgsN))               
+                        fnImgsNL, fnImgsNoiseOld, fnImgsN), numberOfMpi = 1)               
             
             #alignment gaussian noise
             fnImgsAlign = self._getExtraPath("Nfraction_alignment%02d" % fractionCounter)
