@@ -471,7 +471,7 @@ class ProtFrealignBase(EMProtocol):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        form.addParallelSection(threads=1, mpi=4)
+        form.addParallelSection(threads=4, mpi=0)
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -482,7 +482,7 @@ class ProtFrealignBase(EMProtocol):
         self._insertContinueStep()
         self._insertItersSteps()
         self._insertFunctionStep("createOutputStep")
-
+    
     def _insertContinueStep(self):
         if self.doContinue:
             continueRun = self.continueRun.get()
@@ -1230,11 +1230,12 @@ eot
             micIdMap[mic['_micId']]=counter
             counter = counter +1
         return micIdMap
-
+    
     def _getInputParticlesPointer(self):
-        if self.doContinue and self.inputParticles is None:
-            self.inputParticles.set(self.continueRun.get().inputParticles.get())
-        return self.inputParticles
+        if self.doContinue:
+            return self.continueRun.get().inputParticles
+        else:
+            return self.inputParticles
     
     def _getInputParticles(self):
         return self._getInputParticlesPointer().get()
