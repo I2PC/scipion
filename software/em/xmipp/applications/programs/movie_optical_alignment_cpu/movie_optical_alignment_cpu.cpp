@@ -48,15 +48,15 @@ class ProgOpticalAligment: public XmippProgram
 {
 
 public:
-    FileName fnMovie, foname, fnGain, fnDark;
+    FileName fnMovie, fnOut, fnGain, fnDark;
+    FileName fnMovieOut, fnMicOut;
     Image<double> gain, dark;
     ImageGeneric movieStack;
     std::vector< Matrix1D<double> > shiftVector;
     MetaData shiftMD, movie;
     int winSize, gpuDevice, nfirst, nlast;
     int groupSize;
-    bool saveCorrMovie, globalShiftCorr;
-    bool gainImageCorr, darkImageCorr;
+    bool globalShiftCorr;
 
     /*****************************/
     /** crop corner **/
@@ -73,40 +73,36 @@ public:
     void defineParams()
     {
         addUsageLine ("Align movies using optical flow");
-        addParamsLine("     -i <inMoviewFnName>          : input movie File Name");
-        addParamsLine("     -o <outAverageMoviewFnName>  : output aligned micrograhp File Name");
-        addParamsLine("    [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
-        addParamsLine("    [--cropDRCorner <x=-1> <y=-1>]    : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
+        addParamsLine("    -i <inMoviewFnName>           : input movie File Name");
+        addParamsLine("   [-o <fn=\"out.xmd\">]           : Metadata with the shifts of each frame.");
+        addParamsLine("   [--oavg <fn=\"\">]              : Give the name of a micrograph to generate an aligned micrograph");
+        addParamsLine("   [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
+        addParamsLine("   [--cropDRCorner <x=-1> <y=-1>]  : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
         addParamsLine("   [--frameRange <n0=-1> <nF=-1>]  : First and last frame to align, frame numbers start at 0");
         addParamsLine("   [--bin <s=-1>]               : Binning factor, it may be any floating number");
-        addParamsLine("     [--winSize <int=150>]     : window size for optical flow algorithm");
-        addParamsLine("     [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
-        addParamsLine("     [--ssc]             : save corrected stack");
+        addParamsLine("   [--winSize <int=150>]        : window size for optical flow algorithm");
+        addParamsLine("   [--groupSize <int=1>]        : the depth of pyramid for optical flow algorithm");
+        addParamsLine("   [--outMovie <fn=\"\">]       : save corrected stack");
         addParamsLine("   [--dark <fn=\"\">]           : Dark correction image");
         addParamsLine("   [--gain <fn=\"\">]           : Gain correction image");
 #ifdef GPU
 
-        addParamsLine("     [--gpu <int=0>]         : GPU device to be used");
+        addParamsLine("   [--gpu <int=0>]              : GPU device to be used");
 #endif
 
     }
     void readParams()
     {
         fnMovie = getParam("-i");
-        foname = getParam("-o");
-        if ((gainImageCorr = checkParam("--gain")))
-        {
-            fnGain = getParam("--gain");
-        }
-        if ((darkImageCorr = checkParam("--dark")))
-        {
-            fnDark = getParam("--dark");
-        }
+        fnOut = getParam("-o");
+        fnGain = getParam("--gain");
+        fnDark = getParam("--dark");
+        fnMicOut = getParam("--oavg");
+        fnMovieOut = getParam("--outMovie");
         groupSize = getIntParam("--groupSize");
         nfirst = getIntParam("--frameRange",0);
         nlast = getIntParam("--frameRange",1);
         winSize   = getIntParam("--winSize");
-        saveCorrMovie = checkParam("--ssc");
         xLTcorner= getIntParam("--cropULCorner",0);
         yLTcorner= getIntParam("--cropULCorner",1);
         xDRcorner = getIntParam("--cropDRCorner",0);
@@ -311,7 +307,7 @@ public:
         Matrix1D<double> meanStdev;
         Image<double> II, preImg, avgCurr;
         MetaData MD; // To save plot information
-        FileName motionInfFile, flowFileName;
+        FileName flowFileName;
         FileName flowXFileName, flowYFileName;
         FileName tmpFileName, fnBaseOut;
         FileName fnFrame, fnmovieRoot;
@@ -338,13 +334,15 @@ public:
 
         fnmovieRoot=fnMovie.getDir();
         tmpFileName=fnmovieRoot+"tmpMovie.stk";
-        fnBaseOut=foname.removeDirectories();
-        motionInfFile=foname.replaceExtension("xmd");
-        std::cerr<<motionInfFile<<std::endl;
+        fnBaseOut=fnOut.removeDirectories();
+        std::cerr<<fnOut<<std::endl;
         std::string extension=fnMovie.getExtension();
         //if input is an stack create a metadata.
         if (fnMovie.isMetaData())
+        {
             movie.read(fnMovie);
+            getImageSize(movie, Xdim, Ydim, Zdim, Ndim);
+        }
         else
         {
             ImageGeneric movieStack;
@@ -361,7 +359,6 @@ public:
                 movie.setValue(MDL_IMAGE, fn, id);
             }
         }
-        getImageSize(movie, Xdim, Ydim, Zdim, Ndim);
         if (yDRcorner!=-1)
         {
             Xdim = xDRcorner - xLTcorner +1 ;
@@ -406,9 +403,7 @@ public:
         d_calc.polySigma=1.1;
         d_calc.flags=0;
 #endif
-        // Initialize the stack for the output movie
-        if (saveCorrMovie)
-            outputMovie.initZeros(imagenum, 1, Ydim, Xdim);
+
         // Read shifts if we have shift in the metadata
         if (movie.containsLabel(MDL_SHIFT_X))
         {
@@ -418,7 +413,7 @@ public:
             Image<double> frameImage;
             FOR_ALL_OBJECTS_IN_METADATA(movie)
             {
-            	movie.getValue(MDL_IMAGE, fnFrame, __iter.objId);
+                movie.getValue(MDL_IMAGE, fnFrame, __iter.objId);
                 shiftMD.getValue(MDL_SHIFT_X, XX(shiftMatrix), __iter.objId);
                 shiftMD.getValue(MDL_SHIFT_Y, YY(shiftMatrix), __iter.objId);
                 shiftVector.push_back(shiftMatrix);
@@ -433,7 +428,7 @@ public:
             fnMovie=fnmovieRoot+"tmpMovie.stk";
         }
         else
-        	globalShiftCorr=false;
+            globalShiftCorr=false;
         tStart2=clock();
         // the frame index begin from 1 in this program
         if (nfirst<0)
@@ -445,6 +440,9 @@ public:
         else
             nlast++;
         imagenum=nlast-nfirst+1;
+        // Initialize the stack for the output movie
+        if (fnMovieOut!="")
+            outputMovie.initZeros(imagenum, 1, Ydim, Xdim);
         levelNum=sqrt(double(imagenum));
         computeAvg(nfirst, nlast, avgCurr());
         xmipp2Opencv(avgCurr(), avgcurr);
@@ -497,9 +495,9 @@ public:
                     d_calc(d_avgcurr, d_preimg, d_flowx, d_flowy);
                 else
                 {
-                	flowXFileName=fnmovieRoot;
-                	flowYFileName=fnmovieRoot;
-                	flowXFileName+=fnBaseOut.removeLastExtension()+formatString("flowx%d%d.txt",div*2,flowCounter);
+                    flowXFileName=fnmovieRoot;
+                    flowYFileName=fnmovieRoot;
+                    flowXFileName+=fnBaseOut.removeLastExtension()+formatString("flowx%d%d.txt",div*2,flowCounter);
                     flowYFileName+=fnBaseOut.removeLastExtension()+formatString("flowy%d%d.txt",div*2,flowCounter);
                     readMat(flowXFileName.c_str(), flowx);
                     readMat(flowYFileName.c_str(), flowy);
@@ -521,7 +519,7 @@ public:
                     calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, 0);
                 else
                 {
-                	flowFileName=fnmovieRoot;
+                    flowFileName=fnmovieRoot;
                     flowFileName+=fnBaseOut.removeLastExtension()+formatString("flow%d%d.txt",div*2,flowCounter);
                     readMat(flowFileName.c_str(), flow);
                     calcOpticalFlowFarneback(avgcurr8, preimg8, flow, 0.5, 6, winSize, 1, 5, 1.1, cv::OPTFLOW_USE_INITIAL_FLOW);
@@ -540,7 +538,7 @@ public:
                         MD.setValue(MDL_OPTICALFLOW_MEANY, double(meanStdev(2)), id);
                         MD.setValue(MDL_OPTICALFLOW_STDX, double(meanStdev(1)), id);
                         MD.setValue(MDL_OPTICALFLOW_STDY, double(meanStdev(3)), id);
-                        MD.write(motionInfFile, MD_APPEND);
+                        MD.write(fnOut, MD_APPEND);
                     }
                     planes[0].copyTo(flowxPre);
                     planes[1].copyTo(flowyPre);
@@ -548,9 +546,9 @@ public:
                 else
                 {
 #ifdef GPU
-                	flowXFileName=fnmovieRoot;
-					flowYFileName=fnmovieRoot;
-                	flowXFileName+=fnBaseOut.removeLastExtension()+formatString("flowx%d%d.txt",div,i+1);
+                    flowXFileName=fnmovieRoot;
+                    flowYFileName=fnmovieRoot;
+                    flowXFileName+=fnBaseOut.removeLastExtension()+formatString("flowx%d%d.txt",div,i+1);
                     flowYFileName+=fnBaseOut.removeLastExtension()+formatString("flowy%d%d.txt",div,i+1);
                     saveMat(flowXFileName.c_str(), planes[0]);
                     saveMat(flowYFileName.c_str(), planes[1]);
@@ -587,7 +585,7 @@ public:
                     xmipp2Opencv(preImg(), preimg);
                 }
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
-                if (div==1 && saveCorrMovie)
+                if (div==1 &&  fnMovieOut!="")
                 {
                     mappedImg.aliasImageInStack(outputMovie, i);
                     opencv2Xmipp(dest, mappedImg);
@@ -601,12 +599,12 @@ public:
             levelCounter++;
         }
         opencv2Xmipp(avgcurr, avgCurr());
-        avgCurr.write(foname);
+        avgCurr.write(fnMicOut);
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
-        if (saveCorrMovie)
+        if (fnMovieOut!="")
         {
             II()=outputMovie;
-            II.write(foname.replaceExtension("mrcs"));
+            II.write(fnMovieOut);
         }
 
         // Release the memory

@@ -35,6 +35,7 @@ import numpy as np
 
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtAlignMovies
+from pyworkflow.utils.path import moveFile
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
 from convert import writeShiftsMovieAlignment, getMovieFileName
@@ -86,7 +87,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
     def _processMovie(self, movie):
 
         inputFn = self._getMovieOrMd(movie)
-        outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
+        outputMicFn = self._getFnInMovieFolder(movie, self._getOutputMicName(movie))
+        #outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
+        metadataName = self._getNameExt(movie, '_aligned_mic', 'xmd')
         dark = self.inputMovies.get().getDark()
         gain = self.inputMovies.get().getGain()
         # Get the number of frames and the range to be used for alignment and sum
@@ -95,8 +98,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
         psdCorrName = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
         gpuId = self.GPUCore.get()
 
-        command = ' -i %s -o %s ' % (inputFn, outputMicFn)
+        command = '-i %s ' % inputFn
+        command += '-o %s ' % self._getExtraPath(metadataName)
         command += '--frameRange %d %d ' % (a0-1, aN-1)
+
         if dark:
             command += '--dark %s ' % dark
         if gain:
@@ -110,14 +115,15 @@ class XmippProtOFAlignment(ProtAlignMovies):
             command += '--gpu %d ' % gpuId
         else:
             program = 'xmipp_movie_optical_alignment_cpu'
+        command += '--oavg %s ' % outputMicFn
         if doSaveMovie:
-            command += '--ssc '
+            command += '--outMovie %s ' % self._getExtraPath(self._getOutputMovieName(movie))
         
         roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
                self.cropDimX.get(), self.cropDimY.get()]
         
         command += '--cropULCorner %d %d ' % (roi[0], roi[1])
-        command += '--cropDRCorner %d %d'  % (roi[0] + roi[2] -1,
+        command += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1,
                                               roi[1] + roi[3] -1)
         try:
             self.runJob(program, command)
@@ -134,6 +140,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
         self.computePSD(outputMicFn, correctedPSD)
         self.composePSD(uncorrectedPSD + ".psd",
                         correctedPSD + ".psd", psdCorrName)
+        if self.doSaveAveMic:
+            moveFile(outputMicFn, self._getExtraPath(self._getOutputMicName(movie)))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
