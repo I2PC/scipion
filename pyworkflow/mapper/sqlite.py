@@ -834,11 +834,15 @@ class SqliteFlatDb(SqliteDb):
         """ Insert or update the property with a value. """
         # Just ignore the set property for empty sets
         if not self.hasTable('Properties'):
-            return         
+            return
+
+        # All properties are stored as string, except for None type
+        value = str(value) if value is not None else None
+
         if self.hasProperty(key):
-            self.executeCommand(self.UPDATE_PROPERTY, (str(value), key))
+            self.executeCommand(self.UPDATE_PROPERTY, (value, key))
         else:
-            self.executeCommand(self.INSERT_PROPERTY, (key, str(value)))
+            self.executeCommand(self.INSERT_PROPERTY, (key, value))
             
     def getPropertyKeys(self):
         """ Return all properties stored of this object. """
