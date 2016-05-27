@@ -94,7 +94,7 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         for f in pwutils.getFiles(self.importFolder.get()):
             pwutils.copyFile(f, extraDir)
 
-        self.registerCoords(extraDir)
+        self.registerCoords(extraDir, readFromExtra=True)
 
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
@@ -184,12 +184,17 @@ class XmippProtParticlePickingPairs(ProtParticlePicking, XmippProtocol):
         anglesSet.write()
         return anglesSet
 
-    def registerCoords(self, coordsDir, store=True):
+    def registerCoords(self, coordsDir, store=True, readFromExtra=False):
         micTiltPairs = self.inputMicrographsTiltedPair.get()
         suffix = self.__getOutputSuffix()
 
         uCoordSet, tCoordSet = self._readCoordinates(coordsDir, suffix)
-        micsFn = self._getPath('input_micrographs.xmd')
+        
+        if readFromExtra:
+            micsFn = self._getExtraPath('input_micrographs.xmd')
+        else:
+            micsFn = self._getPath('input_micrographs.xmd')
+            
         anglesSet = self._readAngles(micsFn, suffix)
         # Create CoordinatesTiltPair object
         outputset = self._createCoordinatesTiltPair(micTiltPairs,
