@@ -378,7 +378,7 @@ class EditObjectDialog(Dialog):
         self.textComment = Text(bodyFrame, height=self.commentHeight, 
                          width=self.commentWidth)
         self.textComment.setReadOnly(False)
-        self.textComment.addText(self.valueComment)
+        self.textComment.setText(self.valueComment)
         self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
         self.initial_focus = self.textComment
         
