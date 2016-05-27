@@ -23,14 +23,12 @@ def main():
     parser.add_argument('--output', help='Output file or folder')
     parser.add_argument('--extra', help='To add extra parameters')
 
-
-
-    
     args = parser.parse_args()
     fromType = args.fromType
     toType = args.toType
     input = args.input
     output = args.output
+
     if args.coordinates:
         #print 'converting coordinates ...'
         micSet = loadSetFromDb(input)
@@ -46,14 +44,14 @@ def main():
                 readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
                 writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
-        if fromType == 'dogpicker':
+        elif fromType == 'dogpicker':
             if toType == 'xmipp': 
                 #print 'from dogpicker to xmipp...'
                 from pyworkflow.em.packages.appion.convert import readSetOfCoordinates
                 readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
                 writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
-        if fromType == 'relion':
+        elif fromType == 'relion':
             if toType == 'xmipp': 
                 #print 'from relion to xmipp...'
                 inputCoords = args.extra
@@ -61,6 +59,18 @@ def main():
                      for mic in micSet]
                 from pyworkflow.em.packages.relion.convert import readSetOfCoordinates
                 readSetOfCoordinates(coordSet, starFiles)
+                from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
+                writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
+        elif fromType == 'gautomatch':
+            if toType == 'xmipp':
+                from pyworkflow.em.packages.gautomatch.convert import readSetOfCoordinates
+                readSetOfCoordinates(outputDir, micSet, coordSet)
+                from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
+                writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
+        elif fromType == 'gempicker':
+            if toType == 'xmipp':
+                from pyworkflow.em.packages.igbmc.convert import readSetOfCoordinates
+                readSetOfCoordinates(outputDir, micSet, coordSet)
                 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates
                 writeSetOfCoordinates(outputDir, coordSet, ismanual=False)
         

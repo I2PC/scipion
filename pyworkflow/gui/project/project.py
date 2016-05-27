@@ -36,20 +36,23 @@ import os, sys
 import threading
 import shlex
 import subprocess
+import uuid
+import SocketServer
 
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
-from pyworkflow.gui import Message
+from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
 from pyworkflow.gui.text import _open_cmd, openTextFileEditor
-import SocketServer
+
+from labels import LabelsDialog
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, 
+from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD,
                                  OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4,
                                  OBJCMD_GCTF)
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
@@ -75,10 +78,21 @@ class ProjectWindow(ProjectBaseWindow):
         menu = MenuConfig()
 
         projMenu = menu.addSubMenu('Project')
-        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
-        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('Browse files', 'browse',
+                            icon='fa-folder-open.png')
+        projMenu.addSubMenu('Remove temporary files', 'delete',
+                            icon='fa-trash-o.png')
+        projMenu.addSubMenu('Manage project labels', 'labels',
+                            icon=Icon.TAGS)
+        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+                            shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all',
+                            shortCut="Ctrl+a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol',
+                            shortCut="Ctrl+f")
         projMenu.addSubMenu('', '') # add separator
-        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Import workflow', 'load_workflow',
+                            icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
@@ -86,8 +100,10 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
-        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
-        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+        helpMenu.addSubMenu('Online help', 'online_help',
+                            icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about',
+                            icon='fa-question-circle.png')
 
         self.menuCfg = menu
         # TODO: up to here
@@ -96,7 +112,8 @@ class ProjectWindow(ProjectBaseWindow):
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
-        ProjectBaseWindow.__init__(self, projTitle, master, icon=self.icon, minsize=(900,500))
+        ProjectBaseWindow.__init__(self, projTitle, master,
+                                   icon=self.icon, minsize=(900,500))
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
@@ -198,6 +215,23 @@ class ProjectWindow(ProjectBaseWindow):
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
+    def onManageProjectLabels(self):
+        self.manageLabels()
+
+    def onToogleColorMode(self):
+        self.getViewWidget()._toggleColorScheme(None)
+
+    def onSelectAllProtocols(self):
+        self.getViewWidget()._selectAllProtocols(None)
+
+    def onFindProtocolToAdd(self):
+        self.getViewWidget()._findProtocol(None)
+
+    def manageLabels(self):
+        return LabelsDialog(self.root,
+                            self.project.settings.getLabels(),
+                            allowSelect=True)
+
     def initProjectTCPServer(self):
         server = ProjectTCPServer((self.project.address, self.project.port),
                                   ProjectTCPRequestHandler)
@@ -242,14 +276,12 @@ class ProjectWindow(ProjectBaseWindow):
 
             elif cmd == OBJCMD_GCTF:
                 from pyworkflow.em.packages.gctf.viewer import createCtfPlot
+                self.enqueue(lambda: createCtfPlot(inputObj, objId))
 
         except Exception, ex:
             print "There was an error executing object command !!!:"
             print  ex
     
-
-
-
     def recalculateCTF(self, inputObjId, sqliteFile):
         """ Load the project and launch the protocol to
         create the subset.

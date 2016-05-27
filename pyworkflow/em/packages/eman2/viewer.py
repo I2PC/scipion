@@ -31,7 +31,8 @@ import os
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER,
                                WEB_DJANGO, Viewer)
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
-import pyworkflow.em as em
+import pyworkflow.em.showj as showj
+import pyworkflow.em.viewer as vw
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
@@ -109,16 +110,16 @@ Examples:
         
         group = form.addGroup('Volumes')
         
-        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
-              default=VOLUME_SLICES, display=EnumParam.DISPLAY_COMBO, 
-              label='Display volume with',
-              help='*slices*: display volumes as 2D slices along z axis.\n'
-                   '*chimera*: display volumes as surface with Chimera.')
         group.addParam('showHalves', EnumParam, choices=['half even', 'half odd', 'full map', 'all maps'], default=HALF_EVEN,
               label='Map to visualize',
               help='Select which map do you want to visualize.')
+        group.addParam('displayVol', EnumParam, choices=['slices', 'chimera'], 
+              default=VOLUME_SLICES, display=EnumParam.DISPLAY_HLIST,
+              label='Display volume with',
+              help='*slices*: display volumes as 2D slices along z axis.\n'
+                   '*chimera*: display volumes as surface with Chimera.')
         group.addParam('displayAngDist', EnumParam, choices=['2D plot', 'chimera'], 
-              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_COMBO, 
+              default=ANGDIST_2DPLOT, display=EnumParam.DISPLAY_HLIST, 
               label='Display angular distribution',
               help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
                    '*chimera*: display angular distribution using Chimera with red spheres.') 
@@ -126,7 +127,7 @@ Examples:
               expertLevel=LEVEL_ADVANCED,
               label='Spheres size',
               help='')
-
+        
         group = form.addGroup('Resolution')
         
         group.addParam('resolutionPlotsFSC', EnumParam, choices=['unmasked', 'masked', 'masked tight', 'all'], 
@@ -144,7 +145,7 @@ Examples:
     def _getVisualizeDict(self):
         self._load()
         return {'showImagesAngularAssignment' : self._showImagesAngularAssignment,
-                'showHalves': self._showVolumes,
+                'displayVol': self._showVolumes,
                 'displayAngDist': self._showAngularDistribution,
                 'resolutionPlotsFSC': self._showFSC
                 }
@@ -167,11 +168,11 @@ Examples:
         inputParticlesId = self.protocol.inputParticles.get().strId()
         
         labels =  'enabled id _size _filename _transform._matrix'
-        viewParams = {em.ORDER:labels,
-                      em.VISIBLE: labels, em.RENDER:'_filename',
+        viewParams = {showj.ORDER:labels,
+                      showj.VISIBLE: labels, showj.RENDER:'_filename',
                       'labels': 'id',
                       }
-        return em.ObjectView(self._project, 
+        return vw.ObjectView(self._project, 
                           self.protocol.strId(), filename, other=inputParticlesId,
                           env=self._env, viewParams=viewParams)
     
@@ -199,9 +200,9 @@ Examples:
                     f.write("open %s\n" % localVol)
             f.write('tile\n')
             f.close()
-            view = em.ChimeraView(cmdFile)
+            view = vw.ChimeraView(cmdFile)
         else:
-            view = em.ChimeraClientView(volumes[0])
+            view = vw.ChimeraClientView(volumes[0])
             
         return [view]
     
@@ -217,7 +218,7 @@ Examples:
             if os.path.exists(vol):
                 files.append(vol)
         self.createVolumesSqlite(files, path, samplingRate)
-        return [em.ObjectView(self._project, self.protocol.strId(), path)]
+        return [vw.ObjectView(self._project, self.protocol.strId(), path)]
     
 #===============================================================================
 # showAngularDistribution
@@ -262,7 +263,7 @@ Examples:
             else:
                 raise Exception("Please, select a single volume to show it's angular distribution")
             
-            view = em.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
+            view = vw.ChimeraClientView(volumes[0], showProjection=True, angularDistFile=sqliteFn, spheresDistance=radius)
         return view
     
     def _createAngDist2D(self, it):

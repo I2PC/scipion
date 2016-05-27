@@ -683,7 +683,7 @@ class SetOfImages(EMSet):
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
         self._firstDim = ImageDim() # Dimensions of the first image
-           
+
     def getAcquisition(self):
         return self._acquisition
         
@@ -740,7 +740,7 @@ class SetOfImages(EMSet):
     
     def setIsAmplitudeCorrected(self, value):
         self._isAmplitudeCorrected.set(value)
-        
+
     def append(self, image):
         """ Add a image to the set. """
         # If the sampling rate was set before, the same value
@@ -786,12 +786,16 @@ class SetOfImages(EMSet):
     def getSamplingRate(self):
         return self._samplingRate.get()
     
-    def writeStack(self, fnStack, orderBy='id', direction='ASC'):
+    def writeStack(self, fnStack, orderBy='id', direction='ASC',
+                   applyTransform=False):
         # TODO create empty file to improve efficiency
         ih = ImageHandler()
+        applyTransform = applyTransform and self.hasAlignment2D()
+
         for i, img in enumerate(self.iterItems(orderBy=orderBy,
                                                direction=direction)):
-            ih.convert(img, (i+1, fnStack))
+            transform = img.getTransform() if applyTransform else None
+            ih.convert(img, (i+1, fnStack), transform=transform)
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
@@ -928,7 +932,7 @@ class SetOfParticles(SetOfImages):
     def __init__(self, **args):
         SetOfImages.__init__(self, **args)
         self._coordsPointer = Pointer()
-        
+
     def hasCoordinates(self):
         return self._coordsPointer.hasValue()
     
@@ -1230,6 +1234,10 @@ class Transform(EMObject):
 
     def getMatrix(self):
         return self._matrix.getMatrix()
+
+    def getMatrixAsList(self):
+        """ Return the values of the Matrix as a list. """
+        return self._matrix.getMatrix().flatten().tolist()
     
     def setMatrix(self, matrix):
         self._matrix.setMatrix(matrix)
@@ -1659,13 +1667,12 @@ class MovieParticle(Particle):
     def setFrameId(self, frameId):
         self._frameId.set(frameId)
 
-
 class SetOfMovieParticles(SetOfParticles):
     """ This is just to distinguish the special case
     when the particles have been extracted from a set of movies.
     """
     ITEM_TYPE = MovieParticle
-    
+
 
 class FSC(EMObject):
     """Store a Fourier Shell Correlation"""
@@ -1697,7 +1704,6 @@ class FSC(EMObject):
     def setData(self, xData, yData):
         self._x.set(xData)
         self._y.set(yData)
-
 
 class SetOfFSCs(EMSet):
     """Represents a set of Volumes"""

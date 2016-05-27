@@ -27,7 +27,11 @@
 This module implement some wizards
 """
 
-from pyworkflow.em.wizard import ParticleMaskRadiusWizard, UNIT_PIXEL
+import os
+
+import pyworkflow.em.wizard as emwiz
+import pyworkflow.utils as pwutils
+from pyworkflow.em.viewer import CoordinatesObjectView
 
 from protocol_gempicker import ProtGemPicker
 
@@ -37,7 +41,7 @@ from protocol_gempicker import ProtGemPicker
 # MASKS
 #===============================================================================
 
-class GemPickerMaskWizard(ParticleMaskRadiusWizard):
+class GemPickerMaskWizard(emwiz.ParticleMaskRadiusWizard):
     _targets = [(ProtGemPicker, ['maskRadius'])]
     
     def _getParameters(self, protocol):
@@ -52,12 +56,80 @@ class GemPickerMaskWizard(ParticleMaskRadiusWizard):
     
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input'] 
-        return ParticleMaskRadiusWizard._getListProvider(self, _objs)
+        return emwiz.ParticleMaskRadiusWizard._getListProvider(self, _objs)
     
     def show(self, form):
         params = self._getParameters(form.protocol)
         _value = params['value']
         _label = params['label']
-        ParticleMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+        emwiz.ParticleMaskRadiusWizard.show(self, form, _value, _label,
+                                            emwiz.UNIT_PIXEL)
         
     
+#===============================================================================
+# PICKER
+#===============================================================================
+
+class GemPickerWizard(emwiz.EmWizard):
+    _targets = [(ProtGemPicker, ['diameter', 'thresholdLow', 'thresholdHigh'])]
+
+    def show(self, form):
+        prot = form.protocol
+        micSet = prot.getInputMicrographs()
+
+        if not micSet:
+            print 'must specify input micrographs'
+            return
+
+        project = prot.getProject()
+        micfn = micSet.getFileName()
+
+        # Prepare a temporary folder to convert some input files
+        # and put some of the intermediate result files
+        coordsDir = project.getTmpPath(micSet.getName())
+        pwutils.cleanPath(coordsDir)
+        pwutils.makePath(coordsDir)
+        prot.convertInputs(coordsDir)
+
+        pickerConfig = os.path.join(coordsDir, 'picker.conf')
+        f = open(pickerConfig, "w")
+
+        pickScript = os.path.join(os.environ['SCIPION_HOME'],
+                                  'pyworkflow','em', 'packages',
+                                  'igbmc', 'run_gempicker.py')
+
+        pickCmd = prot.getArgs(threshold=False, workingDir=coordsDir)
+        convertCmd = os.path.join(os.environ['SCIPION_HOME'],
+                                  'pyworkflow','apps', 'pw_convert.py')
+
+        args = {
+                "pickScript": pickScript,
+                "pickCmd": pickCmd,
+                "convertCmd": convertCmd,
+                'coordsDir': coordsDir,
+                'micsSqlite': micSet.getFileName(),
+                'thresholdLow': prot.thresholdLow,
+                'thresholdHigh': prot.thresholdHigh,
+                "useGPU": prot.useGPU
+          }
+
+        f.write("""
+        parameters = thresholdLow,thresholdHigh
+        thresholdLow.value =  %(thresholdLow)s
+        thresholdLow.label = Threshold Low
+        thresholdLow.help = Low value cut-off
+        thresholdHigh.value =  %(thresholdHigh)s
+        thresholdHigh.label = Threshold High
+        thresholdHigh.help = High value cut-off
+        autopickCommand = %(pickScript)s %%(micrograph) %(coordsDir)s %(useGPU)s %(pickCmd)s --thresh=%%(thresholdLow) --threshHigh=%%(thresholdHigh)
+        convertCommand = %(convertCmd)s --coordinates --from gempicker --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
+        """ % args)
+
+        f.close()
+
+        process = CoordinatesObjectView(project, micfn, coordsDir, prot,
+                                        pickerProps=pickerConfig).show()
+        process.wait()
+        myprops = pwutils.readProperties(pickerConfig)
+        form.setVar('thresholdLow', myprops['thresholdLow.value'])
+        form.setVar('thresholdHigh', myprops['thresholdHigh.value'])

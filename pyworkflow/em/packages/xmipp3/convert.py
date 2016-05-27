@@ -1214,9 +1214,8 @@ def rowToAlignment(alignmentRow, alignType):
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
+                angles[0] = - angles[0] # rot = -rot
                 angles[1] = 180 + angles[1] # tilt = tilt + 180
-                angles[2] = 180 - angles[2] # psi = -psi + 180
-                shifts[0] = -shifts[0] # shx = -shx
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
@@ -1428,3 +1427,15 @@ def createClassesFromImages(inputImages, inputMd,
 
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
+
+
+def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):
+    f = open(filename,'w')
+    str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % (dimX, dimX)
+    str += "_projAngleFile %s\n" % partSetMd
+    str += "_ctfPhaseFlipped %d\n_ctfCorrected %d\n" % (phFlip, ctfCorr)
+    str += "_applyShift 1\n_noisePixelLevel    '0 0'\n"
+    f.write(str)
+    f.close()
+    
+    

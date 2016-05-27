@@ -138,8 +138,8 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                   "expParticles" : self._getMdParticles()
                   }
         
-        args = '-i %(inputVol)s -o %(gallery)s --sampling_rate %(sampling)f --sym %(symmetry)s'
-        args += ' --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %(angSampling)f'
+        args = '-i %(inputVol)s -o %(gallery)s --sampling_rate %(angSampling)f --sym %(symmetry)s'
+        args += ' --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1'
         args += ' --experimental_images %(expParticles)s --max_tilt_angle 90'
         
         self.runJob("xmipp_angular_project_library", args % params)                    
@@ -153,7 +153,7 @@ class XmippProtValidateNonTilt(ProtAnalysis3D):
                   "outDir" : self._getVolDir(volId)
                   }
 
-        args = ' -i %(inputParts)s --sym %(symmetry)s --angularSampling %(orientations)0.3f --dontReconstruct'
+        args = ' -i %(inputParts)s --sym %(symmetry)s --angularSampling %(angSampling)0.3f --dontReconstruct'
         args += ' --useForValidation %(orientations)0.3f --initgallery  %(gallery)s --odir %(outDir)s --iter 1'
         
         self.runJob('xmipp_reconstruct_significant', args % params)
