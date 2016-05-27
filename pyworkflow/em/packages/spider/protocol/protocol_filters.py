@@ -120,6 +120,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         self._insertFunctionStep('convertInput', 'inputParticles', 
                                  self._getFileName('particles'), self._getFileName('particlesSel'))
         self._insertFunctionStep('filterStep', self.filterType.get())
+        self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions --------------------------------------------       
     def filterStep(self, filterType):
@@ -146,9 +147,6 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         filterNumber = filterType * 2 + 1
         # Consider low-pass or high-pass
         filterNumber += self.filterMode.get()
-        
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputParticles.get())
 
         self._enterWorkingDir() # Do operations inside the run working dir
         
@@ -166,11 +164,17 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         spi.close()
             
         self._leaveWorkingDir() # Go back to project dir
-            
-        for i, img in enumerate(particles):
-            img.setLocation(i+1, self.particlesStk)
-            imgSet.append(img)            
-            
+
+    def createOutputStep(self):
+        particles = self.inputParticles.get()
+        imgSet = self._createSetOfParticles()
+        imgSet.copyInfo(particles)
+
+        updateItem = lambda p, i: p.setLocation(i, self.particlesStk)
+        imgSet.copyItems(particles,
+                         updateItemCallback=updateItem,
+                         itemDataIterator=iter(range(1, particles.getSize()+1)))
+
         self._defineOutputs(outputParticles=imgSet)
         self._defineTransformRelation(particles, imgSet)
         
@@ -191,7 +195,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
  
         if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
             summary.append('Filter radius: *%s px^-1*' % self.filterRadius)
-            radiusAngstroms = pixelSize/self.filterRadius
+            radiusAngstroms = pixelSize/float(self.filterRadius)
             summary.append('Filter radius: *%s Angstroms*' % radiusAngstroms )
         else:
             summary.append('Frequency range: *%s - %s*' % (self.lowFreq, self.highFreq))

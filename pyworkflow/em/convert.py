@@ -252,8 +252,7 @@ class ImageHandler(object):
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmippEnv = xmipp3.getEnviron()
-        runJob(None, program, args, env=xmippEnv)        
+        xmipp3.runXmippProgram(program, args)
         
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)

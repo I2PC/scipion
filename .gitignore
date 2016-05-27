@@ -80,3 +80,6 @@ static/
 /config.log
 /Debug/
 /bin/
+
+# Ignore version file
+.devel_version
