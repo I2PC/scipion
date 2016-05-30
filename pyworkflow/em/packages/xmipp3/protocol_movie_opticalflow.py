@@ -128,12 +128,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                               roi[1] + roi[3] -1)
         try:
             self.runJob(program, command)
-            
             if not exists(outputMicFn):
                 raise Exception("Micrograph %s not produced after running %s " %(outputMicFn, program))
-            
-            if self.doSaveAveMic and  not exists(outMovieName):
-                raise Exception("Movie %s not produced after running %s " %(outMovieName, program))
+            if self.doSaveMovie:
+                if not exists(outMovieName):
+                    raise Exception("Movie %s not produced after running %s " %(outMovieName, program))
             
             aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
             self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(),
@@ -207,7 +206,15 @@ class XmippProtOFAlignment(ProtAlignMovies):
         return self._getMovieRoot(movie) + postFix + '.' + ext
     
     def _doGenerateOutputMovies(self):
-        return True
+        """ Returns True if an output set of movies will be generated.
+        The most common case is to always generate output movies,
+        either with alignment only or the binary aligned movie files.
+        Subclasses can override this function to change this behavior.
+        """
+        if self.doSaveMovie:
+            return True
+        else:
+            return False
     
     def _getFnInMovieFolder(self, movie, filename):
         movieFolder = self._getOutputMovieFolder(movie)
