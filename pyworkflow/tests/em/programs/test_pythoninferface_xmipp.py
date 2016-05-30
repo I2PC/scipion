@@ -389,6 +389,23 @@ class TestXmippPythonInterface(unittest.TestCase):
         proj=vol.projectVolumeDouble(0.,0.,0.)
         self.assertEqual(1,1)
 
+    def test_Image_projectFourier(self):
+        vol = Image(testFile('progVol.vol'))
+        vol.convert2DataType(DT_DOUBLE)
+        proj = Image()
+        proj.setDataType(DT_DOUBLE)
+
+        padding = 2
+        maxFreq = 0.5
+        splineDegree = 2
+        vol.write('/tmp/vol1.vol')
+        fp = FourierProjector(vol, padding, maxFreq, splineDegree)
+        # After creating the f
+        fp.projectVolume(proj, 0, 0, 0)
+
+        #vol.write('/tmp/vol2.vol')
+        proj.write('/tmp/kk.spi')
+
     def test_Image_read(self):
         imgPath = testFile("tinyImage.spi")
         img = Image(imgPath)
