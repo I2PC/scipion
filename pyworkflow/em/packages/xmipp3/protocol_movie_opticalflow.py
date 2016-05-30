@@ -29,7 +29,7 @@
 In this module are protocol base classes related to EM Micrographs
 """
 
-from os.path import join
+from os.path import join, exists
 import sys
 import numpy as np
 
@@ -88,6 +88,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
 
         inputFn = self._getMovieOrMd(movie)
         outputMicFn = self._getFnInMovieFolder(movie, self._getOutputMicName(movie))
+        outMovieName = self._getExtraPath(self._getOutputMovieName(movie))
         #outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
         metadataName = self._getNameExt(movie, '_aligned_mic', 'xmd')
         dark = self.inputMovies.get().getDark()
@@ -117,7 +118,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             program = 'xmipp_movie_optical_alignment_cpu'
         command += '--oavg %s ' % outputMicFn
         if doSaveMovie:
-            command += '--outMovie %s ' % self._getExtraPath(self._getOutputMovieName(movie))
+            command += '--outMovie %s ' % outMovieName
         
         roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
                self.cropDimX.get(), self.cropDimY.get()]
@@ -127,21 +128,28 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                               roi[1] + roi[3] -1)
         try:
             self.runJob(program, command)
+            
+            if not exists(outputMicFn):
+                raise Exception("Micrograph %s not produced after running %s " %(outputMicFn, program))
+            
+            if self.doSaveAveMic and  not exists(outMovieName):
+                raise Exception("Movie %s not produced after running %s " %(outMovieName, program))
+            
+            aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
+            self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(),
+                              roi, dark, gain)
+            uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
+            correctedPSD = self._getFnInMovieFolder(movie, "corrected")
+            
+            self.computePSD(aveMic, uncorrectedPSD)
+            self.computePSD(outputMicFn, correctedPSD)
+            self.composePSD(uncorrectedPSD + ".psd",
+                            correctedPSD + ".psd", psdCorrName)
+            if self.doSaveAveMic:
+                moveFile(outputMicFn, self._getExtraPath(self._getOutputMicName(movie)))
         except:
             print >> sys.stderr, program, " failed for movie %s" % inputFn
 
-        aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
-        self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(),
-                          roi, dark, gain)
-        uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
-        correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-
-        self.computePSD(aveMic, uncorrectedPSD)
-        self.computePSD(outputMicFn, correctedPSD)
-        self.composePSD(uncorrectedPSD + ".psd",
-                        correctedPSD + ".psd", psdCorrName)
-        if self.doSaveAveMic:
-            moveFile(outputMicFn, self._getExtraPath(self._getOutputMicName(movie)))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
