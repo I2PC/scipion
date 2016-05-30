@@ -196,6 +196,8 @@ void FourierProjector::produceSideInfo()
     // Zero padding
     MultidimArray<double> Vpadded;
     int paddedDim=(int)(paddingFactor*volumeSize);
+    // JMRT: TODO: I think it is a very poor design to modify the volume passed
+    // in the construct, it will be padded anyway, so new memory should be allocated
     volume->window(Vpadded,FIRST_XMIPP_INDEX(paddedDim),FIRST_XMIPP_INDEX(paddedDim),FIRST_XMIPP_INDEX(paddedDim),
                    LAST_XMIPP_INDEX(paddedDim),LAST_XMIPP_INDEX(paddedDim),LAST_XMIPP_INDEX(paddedDim));
     volume->clear();
