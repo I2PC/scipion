@@ -71,6 +71,7 @@ class ProtMonitorCTF(ProtMonitor):
         form.addParam('interval', params.FloatParam,default=300,
               label="Total Logging time (min)",
               help="Log during this interval")
+        ProtMonitor._sendMailParams(self, form)
 
     #--------------------------- STEPS functions --------------------------------------------
     def monitorStep(self):
@@ -142,21 +143,26 @@ class ProtMonitorCTF(ProtMonitor):
                      sys.stdout.flush()
 
                      self.swapAlert = swap.percent
-                     self.sendEMail("scipion system monitor warning", "defocus ratio  =%f."%defocusU/defocusV)
+                     if self.doMail:
+                          self.sendEMail("scipion system monitor warning", "defocus ratio  =%f."%defocusU/defocusV)
 
                 if  defocusU > self.maxDefocus:
                      print("Error Message", "defocusU =%f."%defocusU)
                      sys.stdout.flush()
 
                      self.maxDefocus = defocusU
-                     self.sendEMail("scipion system monitor warning", "defocusU  =%f."%defocusU)
+
+                     if self.doMail:
+                         self.sendEMail("scipion system monitor warning", "defocusU  =%f."%defocusU)
 
                 if  defocusV < self.minDefocus:
                      print("Error Message", "defocusV =%f."%defocusV)
                      sys.stdout.flush()
 
-                     self.maxDefocus = defocusU
-                     self.sendEMail("scipion system monitor warning", "defocusV  =%f."%defocusV)
+                     self.maxDefocus = defocusV
+
+                     if self.doMail:
+                         self.sendEMail("scipion system monitor warning", "defocusV  =%f."%defocusV)
 
             self.readCTFs.update(diffSet)
             if (time.time() > timeout) or finished:

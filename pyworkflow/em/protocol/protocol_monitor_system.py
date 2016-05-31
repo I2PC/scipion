@@ -64,6 +64,7 @@ class ProtMonitorSystem(ProtMonitor):
         form.addParam('interval', params.FloatParam,default=300,
               label="Total Logging time (min)",
               help="Log during this interval")
+        form._sendMailParams(self, form)
 
     #--------------------------- STEPS functions --------------------------------------------
     def monitorStep(self):
@@ -119,7 +120,8 @@ class ProtMonitorSystem(ProtMonitor):
                  sys.stdout.flush()
 
                  self.cpuAlert = cpu
-                 self.sendEMail("scipion system monitor warning", "CPU allocation =%f."%cpu.percent)
+                 if self.doMail:
+                     self.sendEMail("scipion system monitor warning", "CPU allocation =%f."%cpu.percent)
 
 
              if self.memAlert < 100 and mem.percent > self.memAlert :
@@ -127,14 +129,16 @@ class ProtMonitorSystem(ProtMonitor):
                  sys.stdout.flush()
 
                  self.memAlert = mem.percent
-                 self.sendEMail("scipion system monitor warning", "Memory allocation =%f."%mem.percent)
+                 if self.doMail:
+                     self.sendEMail("scipion system monitor warning", "Memory allocation =%f."%mem.percent)
 
              if self.swapAlert < 100 and swap.percent > self.swapAlert :
                  print("Error Message", "SWAP allocation =%f."%swap.percent)
                  sys.stdout.flush()
 
                  self.swapAlert = swap.percent
-                 self.sendEMail("scipion system monitor warning", "SWAP allocation =%f."%swap.percent)
+                 if self.doMail:
+                     self.sendEMail("scipion system monitor warning", "SWAP allocation =%f."%swap.percent)
 
              if doDisk:
                 disks_after = psutil.disk_io_counters(perdisk=False)
