@@ -118,8 +118,6 @@ class ProtMonitor(EMProtocol):
 
         msg = MIMEText(emailMessage)
 
-        # me == the sender's email address
-        # you == the recipient's email address
         msg['Subject'] = emailSubject
         msg['From'] = self.emailFrom.get()
         msg['To'] = self.emailTo.get()
