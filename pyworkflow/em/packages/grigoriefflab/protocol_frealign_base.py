@@ -1233,7 +1233,7 @@ eot
     
     def _getInputParticlesPointer(self):
         if self.doContinue:
-            return self.continueRun.get().inputParticles
+            return self.continueRun.get()._getInputParticlesPointer()
         else:
             return self.inputParticles
     
