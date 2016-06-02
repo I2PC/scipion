@@ -115,9 +115,8 @@ class MonitorCTF(Monitor):
         self.maxDefocus = kwargs['maxDefocus']
         self.minDefocus = kwargs['minDefocus']
         self.astigmatism = kwargs['astigmatism']
-
-        self._dataBase = 'log.sqlite'
-        self._tableName = 'log'
+        self._dataBase = kwargs.get('dbName', 'ctf_log.sqlite')
+        self._tableName = kwargs.get('tableName', 'log')
         self.readCTFs = set()
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),

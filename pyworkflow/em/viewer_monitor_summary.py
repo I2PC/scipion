@@ -191,6 +191,13 @@ class SummaryWindow(pwgui.Window):
         closeBtn = self.createCloseButton(frame)
         closeBtn.grid(row=0, column=1, sticky='nw')
 
+        ctfBtn = Button(frame, "CTF Monitor", command=self._monitorCTF)
+        ctfBtn.grid(row=0, column=2, sticky='nw')
+
+    def _monitorCTF(self, e=None):
+        from pyworkflow.em.protocol.protocol_monitor_ctf import CtfMonitorPlotter
+        CtfMonitorPlotter(self.protocol.createMonitor()).show()
+
     def _updateLabel(self):
         self.updateVar.set('Updated: %s' % pwutils.prettyTime(secs=True))
         # Schedule a refresh in some seconds
