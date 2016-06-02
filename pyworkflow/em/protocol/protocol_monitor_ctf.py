@@ -33,6 +33,8 @@ from matplotlib import pyplot
 import tkMessageBox
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.em.plotter import EmPlotter
+
 
 
 class ProtMonitorCTF(ProtMonitor):
@@ -188,29 +190,34 @@ class ProtMonitorCTF(ProtMonitor):
         cur.execute(sql)
 
 
-from pyworkflow.viewer import ( DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer)
+from pyworkflow.viewer import ( DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, FloatParam, IntParam)
 from matplotlib import animation
 
-class ProtMonitorCTFViewer(ProtocolViewer):
-    """" ProtMonitorCTFViewer help
-"""
+
+class ProtMonitorCTFViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _label = 'CTF Monitor'
+    _label = 'ctf monitor'
     _targets = [ProtMonitorCTF]
 
-    def __init__(self, *args, **kwargs):
-        ProtocolViewer.__init__(self, *args, **kwargs)
+    def _visualize(self, obj, **kwargs):
+        return [CtfMonitorPlotter(obj)]
+
+
+class CtfMonitorPlotter(EmPlotter):
+    def __init__(self, protocol):
+        EmPlotter.__init__(self, windowTitle="CTF Monitor")
+        self.protocol = protocol
         self.y2 = 0.; self.y1 = 100.
         self.win = 250 # number of samples to be ploted
         self.step = 50 # self.win  will be modified in steps of this size
-        self.fig, self.ax = pyplot.subplots()
+
+        self.createSubPlot("Use scrool wheel to change view window (win=%d)\n S stops, C continues plotting" % self.win, "Micrographs", "Defocus (A)")
+        self.fig = self.getFigure()
+        self.ax = self.getLastSubPlot()
         self.ax.margins(0.05)
-        self.ax.set_xlabel("micrographs")
-        self.ax.set_ylabel("Defocus (A)")
         self.ax.grid(True)
-        self.ax.set_title('use scroll wheel to change view window (win=%d)\n S stops, C continues plotting'%self.win)
         self.oldWin = self.win
 
         self.lines = {}
@@ -219,7 +226,7 @@ class ProtMonitorCTFViewer(ProtocolViewer):
 
         baseFn = self.protocol._getPath(self.protocol.dataBase)
         self.tableName = self.protocol.tableName
-
+        self.samplingInterval = self.protocol.samplingInterval
         self.conn  = lite.connect(baseFn, isolation_level=None)
         self.cur   = self.conn.cursor()
 
@@ -235,24 +242,29 @@ class ProtMonitorCTFViewer(ProtocolViewer):
         if self.oldWin != self.win:
             self.ax.set_title('use scroll wheel to change view window (win=%d)\n S stops, C continues plotting'%self.win)
             self.oldWin= self.win
-
-        self.animate(-1)
+        self.animate()
+        EmPlotter.show(self)
 
     def press(self,event):
-        print('press', event.key)
+
         sys.stdout.flush()
         if event.key == 'S':
             self.stop = True
+            self.ax.set_title('Plot is Stopped. Press C to continue plotting')
         elif event.key == 'C':
+	    self.ax.set_title('use scroll wheel to change view window (win=%d)\n S stops, C continues plotting'%self.win)
             self.stop = False
-        self.animate(-1)
+        self.animate()
+        EmPlotter.show(self)
+
 
     def has_been_closed(self,ax):
         fig = ax.figure.canvas.manager
         active_fig_managers = pyplot._pylab_helpers.Gcf.figs.values()
         return fig not in active_fig_managers
 
-    def animate(self,i, doDraw=False):
+    def animate(self,i=0): #do NOT remove i
+                           #FuncAnimation adds it as argument
         if self.stop:
             return
 
@@ -270,58 +282,22 @@ class ProtMonitorCTFViewer(ProtocolViewer):
         self.ax.relim()
         self.ax.autoscale()
         self.ax.grid(True)
-        #self.ax.legend(loc="upper left")
         self.ax.legend(loc=2).get_frame().set_alpha(0.5)
-        #time.sleep(self.updateEach.get() * 1000)
-        if doDraw:
-            pyplot.draw()
+	self.ax.axhline(y=self.protocol.minDefocus, c="red", linewidth=0.5, linestyle='dashed', zorder=0)
+	self.ax.axhline(y=self.protocol.maxDefocus, c="red", linewidth=0.5, linestyle='dashed', zorder=0)
+    def show(self):
+        self.paint(['defocusU','defocusV'])
 
 
-    def _defineParams(self, form):
+    def paint(self, labels):
+        for label in labels:
+            self.lines[label],=self.ax.plot([], [], '-',label=label)
 
-        form.addSection(label='Visualization')
-        form.addParam('doDefocusU', params.HiddenBooleanParam, default=True,
-              label='DefocusU',
-              help='show defocus usage' )
-        form.addParam('doDefocusV', params.HiddenBooleanParam, default=True,
-              label='DefocusV',
-              help='show defocus usage' )
-        form.addParam('updateEach', params.IntParam,default=60,
-              label="Update Interval (sec)",
-              help="update plot each XX seconds")
-
-    def _getVisualizeDict(self):
-        return {'doDefocusU': self._defocusU,
-                'doDefocusV': self._defocusV
-                }
-
-    def initAnimate(self,label):
-        self.lines[label],=self.ax.plot([], [], '-',label=label)
-        #print self.has_been_closed(self.ax)
-
-        if self.init or self.has_been_closed(self.ax):
-            self.init=False
-            self.paint(label)
-        else:
-            self.animate(1)
-
-    def _defocusU(self, e=None):
-        self.initAnimate('defocusU')
-
-    def _defocusV(self, e=None):
-        self.initAnimate('defocusV')
-
-    def paint(self,label):
-
-        anim = animation.FuncAnimation(self.fig, self.animate, interval=self.updateEach.get() * 1000)#miliseconds
+        anim = animation.FuncAnimation(self.fig, self.animate, interval = self.samplingInterval.get() * 1000)#miliseconds
 
         self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
         self.fig.canvas.mpl_connect('key_press_event', self.press)
-
-        pyplot.show()
-
-    def visualize(self, obj, **args):
-        ProtocolViewer.visualize(self,obj,**args)
+        EmPlotter.show(self)
 
     def getData(self):
 
