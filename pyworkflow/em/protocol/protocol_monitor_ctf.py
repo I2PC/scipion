@@ -120,7 +120,7 @@ class MonitorCTF(Monitor):
         self.readCTFs = set()
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
-                                              isolation_level=None)
+                                 isolation_level=None)
         self.cur = self.conn.cursor()
 
     def _getUpdatedProtocol(self):
@@ -136,64 +136,60 @@ class MonitorCTF(Monitor):
     def warning(self, msg):
         self.notify("Scipion CTF Monitor WARNING", msg)
 
-    def loop(self):
+    def initLoop(self):
         self._createTable()
-        timeout = time.time() + 60. * self.monitorTime   # interval minutes from now
-        #ignore first meassure because is very unrealiable
-        while True:
-            prot = self._getUpdatedProtocol()
-            finished = prot.getStatus() != STATUS_RUNNING
-            # Create set of processed CTF from CTF protocol
-            CTFset = prot.outputCTF.getIdSet()
-            #find difference
-            sys.stdout.flush()
-            diffSet = CTFset -  self.readCTFs
-            setOfCTFs = prot.outputCTF
-            astigmatism = self.astigmatism
 
-            for ctfID in diffSet:
-                ctf = setOfCTFs[ctfID]
-                defocusU = ctf.getDefocusU()
-                defocusV = ctf.getDefocusV()
-                defocusAngle = ctf.getDefocusAngle()
+    def step(self):
+        prot = self._getUpdatedProtocol()
+        # Create set of processed CTF from CTF protocol
+        CTFset = prot.outputCTF.getIdSet()
+        # find difference
+        sys.stdout.flush()
+        diffSet = CTFset - self.readCTFs
+        setOfCTFs = prot.outputCTF
+        astigmatism = self.astigmatism
 
-                if defocusU < defocusV:
-                    aux = defocusV
-                    defocusV = defocusU
-                    defocusU = aux
-                    #TODO: check if this is always true
-                    defocusAngle = 180. - defocusAngle
-                    print("ERROR: defocusU should be greater than defocusV")
+        for ctfID in diffSet:
+            ctf = setOfCTFs[ctfID]
+            defocusU = ctf.getDefocusU()
+            defocusV = ctf.getDefocusV()
+            defocusAngle = ctf.getDefocusAngle()
 
-                #get CTFs with this ids a fill table
-                #do not forget to compute astigmatism
-                sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio) VALUES(%f,%f,%f,%f);""" \
-                      %(self._tableName, defocusU, defocusV, defocusAngle, defocusU/defocusV)
-                try:
-                    self.cur.execute(sql)
-                except Exception as e:
-                    print("ERROR: saving one data point (CTF monitor). I continue")
+            if defocusU < defocusV:
+                aux = defocusV
+                defocusV = defocusU
+                defocusU = aux
+                # TODO: check if this is always true
+                defocusAngle = 180. - defocusAngle
+                print("ERROR: defocusU should be greater than defocusV")
 
-                if (defocusU/defocusV) > (1. + astigmatism):
-                     self.warning("Defocus ratio (defocusU / defocusV)  = %f."
-                                  % defocusU / defocusV)
+            # get CTFs with this ids a fill table
+            # do not forget to compute astigmatism
+            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio) VALUES(%f,%f,%f,%f);""" \
+                  % (self._tableName, defocusU, defocusV, defocusAngle,
+                     defocusU / defocusV)
+            try:
+                self.cur.execute(sql)
+            except Exception as e:
+                print("ERROR: saving one data point (CTF monitor). I continue")
 
-                if defocusU > self.maxDefocus:
-                    self.warning("DefocusU (%f) is larger than defocus "
-                                 "maximum (%f)" % (defocusU, self.maxDefocus))
-                    self.maxDefocus = defocusU
+            if (defocusU / defocusV) > (1. + astigmatism):
+                self.warning("Defocus ratio (defocusU / defocusV)  = %f."
+                             % defocusU / defocusV)
 
-                if  defocusV < self.minDefocus:
-                    self.warning("DefocusV (%f) is smaller than defocus "
-                                 "minumum (%f)" % (defocusV, self.maxDefocus))
-                    self.minDefocus = defocusV
+            if defocusU > self.maxDefocus:
+                self.warning("DefocusU (%f) is larger than defocus "
+                             "maximum (%f)" % (defocusU, self.maxDefocus))
+                self.maxDefocus = defocusU
 
-            self.readCTFs.update(diffSet)
+            if defocusV < self.minDefocus:
+                self.warning("DefocusV (%f) is smaller than defocus "
+                             "minumum (%f)" % (defocusV, self.maxDefocus))
+                self.minDefocus = defocusV
 
-            if (time.time() > timeout) or finished:
-                return
-
-            time.sleep(self.samplingInterval)
+        self.readCTFs.update(diffSet)
+        # Finish when protocol is not longer running
+        return prot.getStatus() != STATUS_RUNNING
 
     def _createTable(self):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS  %s(

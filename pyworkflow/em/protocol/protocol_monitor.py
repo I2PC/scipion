@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import sys
+import time
 
 import pyworkflow.protocol.params as params
 from protocol import EMProtocol
@@ -144,6 +145,24 @@ class Monitor():
     def notify(self, title, message):
         for n in self._notifiers:
             n.notify(title, message)
+
+    def initLoop(self):
+        """ To be defined in subclasses. """
+        pass
+
+    def loop(self):
+        self.initLoop()
+        timeout = time.time() + 60. * self.monitorTime   # interval minutes from now
+
+        while True:
+            finished = self.step()
+            if (time.time() > timeout) or finished:
+                break
+            time.sleep(self.samplingInterval)
+
+    def step(self):
+        """ To be defined in subclasses. """
+        pass
 
 
 class EmailNotifier():

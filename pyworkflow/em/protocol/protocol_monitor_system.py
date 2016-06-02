@@ -121,7 +121,7 @@ class MonitorSystem(Monitor):
         self._tableName = kwargs.get('tableName', 'log')
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
-                                              isolation_level=None)
+                                 isolation_level=None)
         self.cur = self.conn.cursor()
 
     def _getUpdatedProtocol(self, prot):
@@ -136,44 +136,39 @@ class MonitorSystem(Monitor):
     def warning(self, msg):
         self.notify("Scipion System Monitor WARNING", msg)
 
-    def loop(self):
+    def initLoop(self):
         self._createTable()
-        timeout = time.time() + 60. * self.monitorTime   # interval minutes from now
         psutil.cpu_percent(True)
         psutil.virtual_memory()
 
-        while True:
-            finished = all(self._getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
-                           for prot in self.protocols)
+    def step(self):
+        cpu = psutil.cpu_percent(interval=0)
+        mem = psutil.virtual_memory()
+        swap = psutil.swap_memory()
 
-            if (time.time() > timeout) or finished:
-                break
+        if self.cpuAlert < 100 and cpu > self.cpuAlert:
+            self.warning("CPU allocation =%f." % cpu.percent)
+            self.cpuAlert = cpu
 
-            cpu = psutil.cpu_percent(interval=0)
-            mem = psutil.virtual_memory()
-            swap = psutil.swap_memory()
+        if self.memAlert < 100 and mem.percent > self.memAlert:
+            self.warning("Memory allocation =%f." % mem.percent)
+            self.memAlert = mem.percent
 
-            if self.cpuAlert < 100 and cpu > self.cpuAlert:
-                self.warning("CPU allocation =%f." % cpu.percent)
-                self.cpuAlert = cpu
+        if self.swapAlert < 100 and swap.percent > self.swapAlert:
+            self.warning("SWAP allocation =%f." % swap.percent)
+            self.swapAlert = swap.percent
 
-            if self.memAlert < 100 and mem.percent > self.memAlert:
-                self.warning("Memory allocation =%f." % mem.percent)
-                self.memAlert = mem.percent
+        sql = """INSERT INTO %s(mem,cpu,swap) VALUES(%f,%f,%f);""" % (
+            self._tableName, mem.percent, cpu, swap.percent)
 
-            if self.swapAlert < 100 and swap.percent > self.swapAlert:
-                self.warning("SWAP allocation =%f." % swap.percent)
-                self.swapAlert = swap.percent
+        try:
+            self.cur.execute(sql)
+        except Exception as e:
+            print("ERROR: saving one data point (monitor). I continue")
 
-            sql = """INSERT INTO %s(mem,cpu,swap) VALUES(%f,%f,%f);""" % (
-                self._tableName, mem.percent, cpu, swap.percent)
-
-            try:
-                self.cur.execute(sql)
-            except Exception as e:
-                print("ERROR: saving one data point (monitor). I continue")
-            time.sleep(self.samplingInterval)
-
+        # Return finished = True if all protocols have finished
+        return all(self._getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
+                   for prot in self.protocols)
 
     def _createTable(self):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS  %s(
