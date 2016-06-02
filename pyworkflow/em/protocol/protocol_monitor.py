@@ -24,12 +24,11 @@
 # *
 # **************************************************************************
 
+import sys
 
-import pyworkflow.object as pwobj
-import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from protocol import EMProtocol
-#import tkMessageBox
+
 
 
 class ProtMonitor(EMProtocol):
@@ -56,7 +55,7 @@ class ProtMonitor(EMProtocol):
                       label="Sampling Interval (sec)",
                       help="Take one sample each SAmplinInteval seconds")
 
-        self._sendMailParams(form)
+        #self._sendMailParams(form)
 
     def _sendMailParams(self, form):
         g = form.addGroup('Email settings')
@@ -86,19 +85,7 @@ class ProtMonitor(EMProtocol):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
-        finished = False
-        completedDict = {}
-
-        while not finished:
-            for protPointer in self.inputProtocols:
-                prot = protPointer.get()
-                for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
-                    outSet.load()
-                    completedDict[(prot.getObjId(), outName)] = outSet.getSize()
-                    outSet.close()
-            print "=" * 80
-            print pwutils.prettyTime()
-            print completedDict
+        pass
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -128,6 +115,63 @@ class ProtMonitor(EMProtocol):
         s.sendmail(self.emailFrom.get(), self.emailTo.get(), msg.as_string())
         s.quit()
 
-#    def noBlockingWindow(self, title, message, fontSize=30, color= 'red'):
-#        target = tkMessageBox.showerror(title, message)
+    def createEmailNotifier(self):
+        if getattr(self, 'doMail', False):
+            email = EmailNotifier(self.smtp.get(),
+                                  self.emailFrom.get(),
+                                  self.emailTo.get())
+        else:
+            email = None
 
+        return email
+
+
+class Monitor():
+    def __init__(self, **kwargs):
+        # Where to store any data from this monitor
+        self.workingDir = kwargs['workingDir']
+        self.samplingInterval = kwargs.get('samplingInterval', None)
+        self.monitorTime = kwargs.get('monitorTime', None)
+
+        self._notifiers = []
+
+        if kwargs.get('email', None) is not None:
+            self._notifiers.append(kwargs['email'])
+
+        if 'stdout' in kwargs:
+            self._notifiers.append(PrintNotifier())
+
+    def notify(self, title, message):
+        for n in self._notifiers:
+            n.notify(title, message)
+
+
+class EmailNotifier():
+    def __init__(self, smtpServer, emailFrom, emailTo):
+        self._stmpServer = smtpServer
+        self._emailFrom = emailFrom
+        self._emailTo = emailTo
+
+    def notify(self, title, message):
+        # Import smtplib for the actual sending function
+        import smtplib
+        # Import the email modules we'll need
+        from email.mime.text import MIMEText
+
+        msg = MIMEText(message)
+
+        msg['Subject'] = title
+        msg['From'] = self._emailFrom
+        msg['To'] = self._emailTo
+
+        # Send the message via our own SMTP server, but don't include the
+        # envelope header.
+        s = smtplib.SMTP(self._smtpServer)
+        s.sendmail(self._emailFrom, self._emailTo, msg.as_string())
+        s.quit()
+
+
+def PrintNotifier():
+    def notify(title, message):
+        print title, message
+        sys.stdout.flush()
