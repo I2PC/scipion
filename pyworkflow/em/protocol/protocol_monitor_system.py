@@ -34,6 +34,7 @@ from matplotlib import pyplot
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
 import sys
+from pyworkflow.em.plotter import EmPlotter
 
 class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
@@ -64,7 +65,7 @@ class ProtMonitorSystem(ProtMonitor):
         form.addParam('interval', params.FloatParam,default=300,
               label="Total Logging time (min)",
               help="Log during this interval")
-        form._sendMailParams(self, form)
+        ProtMonitor._sendMailParams(self, form)
 
     #--------------------------- STEPS functions --------------------------------------------
     def monitorStep(self):
@@ -183,12 +184,18 @@ class ProtMonitorSystem(ProtMonitor):
         cur.execute(sql)
 
 
-from pyworkflow.viewer import ( DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer)
-
+from pyworkflow.viewer import ( DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 from matplotlib import animation
 
+class ProtMonitorSystemViewer(Viewer):
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _label = 'system monitor'
+    _targets = [ProtMonitorSystem]
 
-class ProtMonitorSystemViewer(ProtocolViewer):
+    def _visualize(self, obj, **kwargs):
+        return [systemMonitorPlotter(obj)]
+
+class systemMonitorPlotter(EmPlotter):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'System Monitor'
     _targets = [ProtMonitorSystem]
@@ -196,17 +203,17 @@ class ProtMonitorSystemViewer(ProtocolViewer):
     #add param time refresh
     #boolean time refresh
 
-    def __init__(self, *args, **kwargs):
-        ProtocolViewer.__init__(self, *args, **kwargs)
+    def __init__(self, protocol):
+        EmPlotter.__init__(self, windowTitle="system Monitor")
+        self.protocol = protocol
         self.y2 = 0.; self.y1 = 100.
         self.win = 250 # number of samples to be ploted
         self.step = 50 # self.win  will be modified in steps of this size
-        self.fig, self.ax = pyplot.subplots()
+        self.createSubPlot("Use scrool wheel to change view window (win=%d)\n S stops, C continues plotting" % self.win, "time (hours)", "percentage (or Mb for IO)")
+        self.fig = self.getFigure()
+        self.ax = self.getLastSubPlot()
         self.ax.margins(0.05)
-        self.ax.set_xlabel("time (hours)")
-        self.ax.set_ylabel("percentage (or Mb for IO)")
         self.ax.grid(True)
-        self.ax.set_title('use scroll wheel to change view window (win=%d)\n S stops, C continues plotting'%self.win)
         self.oldWin = self.win
 
         self.lines = {}
@@ -215,7 +222,7 @@ class ProtMonitorSystemViewer(ProtocolViewer):
 
         baseFn = self.protocol._getExtraPath(self.protocol.dataBase)
         self.tableName = self.protocol.tableName
-
+        self.samplingInterval = self.protocol.samplingInterval
         self.conn  = lite.connect(baseFn, isolation_level=None)
         self.cur   = self.conn.cursor()
 
@@ -231,24 +238,29 @@ class ProtMonitorSystemViewer(ProtocolViewer):
         if self.oldWin != self.win:
             self.ax.set_title('use scroll wheel to change view window (win=%d)\n S stops, C continues plotting'%self.win)
             self.oldWin= self.win
-
-        self.animate(-1)
+        self.animate()
+        EmPlotter.show(self)
 
     def press(self,event):
-        print('press', event.key)
+
         sys.stdout.flush()
         if event.key == 'S':
             self.stop = True
+            self.ax.set_title('Plot is Stopped. Press C to continue plotting')
         elif event.key == 'C':
+	    self.ax.set_title('use scroll wheel to change view window (win=%d)\n S stops, C continues plotting'%self.win)
             self.stop = False
-        self.animate(-1)
+        self.animate()
+        EmPlotter.show(self)
 
     def has_been_closed(self,ax):
         fig = ax.figure.canvas.manager
         active_fig_managers = pyplot._pylab_helpers.Gcf.figs.values()
         return fig not in active_fig_managers
 
-    def animate(self,i):
+    def animate(self,i=0): #do NOT remove i
+                                         #FuncAnimation add it as argument
+
         if self.stop:
             return
 
@@ -269,73 +281,31 @@ class ProtMonitorSystemViewer(ProtocolViewer):
         self.ax.legend(loc=2).get_frame().set_alpha(0.5)
         self.doDisk = False
 
-
-    def _defineParams(self, form):
-
-        form.addSection(label='Visualization')
-        form.addParam('doCpu', params.HiddenBooleanParam, default=True,
-              label='CPU',
-              help='show CPU usage' )
-        form.addParam('doMem', params.HiddenBooleanParam, default=True,
-              label='Memory',
-              help='show memory usage' )
-        form.addParam('doSwap', params.HiddenBooleanParam, default=True,
-              label='Swap',
-              help='show swap usage' )
-        form.addParam('updateEach', params.IntParam,default=60,
-              label="Upddate Interval (sec)",
-              help="update plot each XX seconds")
-        ##form.addParam('doDisk', params.BooleanParam, default=False,
-        #      label='Disk IO',
-        #      help='show disk IO usage' )
+#    def _disk(self, e=None):
+#        self.initAnimate('disks_read_per_sec')
+#        self.initAnimate('disks_write_per_sec')
+#        self.initAnimate('disks_read_time_sec')
+#        self.initAnimate('disks_write_time_sec')
+    def show(self):
+        self.paint(['cpu','mem', 'swap'])
+        #EmPlotter.show(self)
+        #if EmPlotter.show() is here instead of in paint it does not work
 
 
-    def _getVisualizeDict(self):
-        return {'doCpu': self._cpu,
-                'doMem': self._mem,
-                'doSwap': self._swap,
-                'doDisk': self._disk,
-                }
 
-    def initAnimate(self,label):
-        self.lines[label],=self.ax.plot([], [], '-',label=label)
-        print self.has_been_closed(self.ax)
-        if self.init:
-            self.init=False
-            self.paint(label)
-        else:
-            self.animate(1)
+    def paint(self,labels):
+        for label in labels:
+            self.lines[label],=self.ax.plot([], [], '-',label=label)
 
-    def _cpu(self, e=None):
-        self.initAnimate('cpu')
-
-    def _mem(self, e=None):
-        self.initAnimate('mem')
-
-    def _swap(self, e=None):
-        self.initAnimate('swap')
-
-    def _disk(self, e=None):
-        self.initAnimate('disks_read_per_sec')
-        self.initAnimate('disks_write_per_sec')
-        self.initAnimate('disks_read_time_sec')
-        self.initAnimate('disks_write_time_sec')
-
-    def paint(self,label):
-        #pyplot.legend()
-
-        anim = animation.FuncAnimation(self.fig, self.animate, interval=self.updateEach.get() * 1000)#miliseconds
-
-        #tracker = IndexTracker(self.ax)
+        anim = animation.FuncAnimation(self.fig, self.animate, interval=self.samplingInterval.get() * 1000)#miliseconds
 
         self.fig.canvas.mpl_connect('scroll_event', self.onscroll)
         self.fig.canvas.mpl_connect('key_press_event', self.press)
+        EmPlotter.show(self)
 
-        pyplot.show()
-
-    def visualize(self, obj, **args):
-        print("visualize")
-        ProtocolViewer.visualize(self,obj,**args)
+    def show(self):
+        self.paint(['mem','cpu', 'swap'])
+        #EmPlotter.show(self)
 
     def getData(self):
 
