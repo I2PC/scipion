@@ -25,14 +25,14 @@
 # **************************************************************************
 
 import time
+import threading
 
-import pyworkflow.object as pwobj
-import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtCTFMicrographs
 
-from protocol_monitor import ProtMonitor
+from protocol_monitor import ProtMonitor, Monitor
 from protocol_monitor_ctf import MonitorCTF
+from protocol_monitor_system import MonitorSystem
 
 
 
@@ -58,9 +58,24 @@ class ProtMonitorSummary(ProtMonitor):
               label="Raise Alarm if astigmatism >",
               help="Raise alarm if astigmatism is greater than given value")
 
-        form.addParam('monitorTime', params.FloatParam, default=300,
+        form.addParam('monitorTime', params.FloatParam, default=30000,
               label="Total Logging time (min)",
               help="Log during this interval")
+
+        form.addSection('System Monitor')
+        form.addParam('cpuAlert', params.FloatParam, default=101,
+                      label="Raise Alarm if CPU > XX%",
+                      help="Raise alarm if memory allocated is greater "
+                           "than given percentage")
+
+        form.addParam('memAlert', params.FloatParam, default=101,
+                      label="Raise Alarm if Memory > XX%",
+                      help="Raise alarm if cpu allocated is greater "
+                           "than given percentage")
+        form.addParam('swapAlert', params.FloatParam, default=101,
+                      label="Raise Alarm if Swap > XX%",
+                      help="Raise alarm if swap allocated is greater "
+                           "than given percentage")
 
         form.addSection('Mail settings')
         ProtMonitor._sendMailParams(self, form)
@@ -71,36 +86,26 @@ class ProtMonitorSummary(ProtMonitor):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
-        # finished = False
-        # completedDict = {}
-        # f = open(self._getPath('log.txt'), 'w')
-        #
-        # def log(msg):
-        #     print >> f, msg
-        #     f.flush()
-        #
-        # log("Inside monitorStep......")
-        #
-        # while not finished:
-        #     log("Iterating over protocols...")
-        #     for protPointer in self.inputProtocols:
-        #         prot = protPointer.get()
-        #         log(" prot.getObjId(): %s" % prot.getObjId())
-        #         for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
-        #             outSet.load()
-        #             outSet.loadAllProperties()
-        #             completedDict[(prot.getObjId(), outName)] = outSet.getSize()
-        #             outSet.close()
-        #     log("=" * 80)
-        #     log(pwutils.prettyTime())
-        #     log(completedDict)
-        #     # Wait some seconds before checking for new data
-        #     time.sleep(self.samplingInterval.get())
-        #
-        # f.close()
 
-        self.createMonitor().loop()
+        ctfMonitor = self.createCtfMonitor()
+        sysMonitor = self.createSystemMonitor()
 
+        monitor = Monitor(workingDir=self.workingDir.get(),
+                          samplingInterval=self.samplingInterval.get(),
+                          monitorTime=self.monitorTime.get())
+
+        def initAll():
+            ctfMonitor.initLoop()
+            sysMonitor.initLoop()
+
+        def stepAll():
+            ctfMonitor.step()
+            sysMonitor.step()
+
+        monitor.initLoop = initAll
+        monitor.step = stepAll
+
+        monitor.loop()
 
     def _getCtfProtocol(self):
         for protPointer in self.inputProtocols:
@@ -109,7 +114,7 @@ class ProtMonitorSummary(ProtMonitor):
                 return prot
         return None
 
-    def createMonitor(self):
+    def createCtfMonitor(self):
         ctfProt = self._getCtfProtocol()
         ctfProt.setProject(self.getProject())
 
@@ -123,3 +128,21 @@ class ProtMonitorSummary(ProtMonitor):
                                 maxDefocus=self.maxDefocus.get(),
                                 astigmatism=self.astigmatism.get())
         return ctfMonitor
+
+    def createSystemMonitor(self):
+        protocols = []
+        for protPointer in self.inputProtocols:
+            prot = protPointer.get()
+            prot.setProject(self.getProject())
+            protocols.append(prot)
+
+        sysMonitor = MonitorSystem(protocols,
+                                   workingDir=self.workingDir.get(),
+                                   samplingInterval=self.samplingInterval.get(),
+                                   monitorTime=self.monitorTime.get(),
+                                   email=self.createEmailNotifier(),
+                                   stdout=True,
+                                   cpuAlert=self.cpuAlert.get(),
+                                   memAlert=self.memAlert.get(),
+                                   swapAlert=self.swapAlert.get())
+        return sysMonitor

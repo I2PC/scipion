@@ -184,19 +184,26 @@ class SummaryWindow(pwgui.Window):
         self._updateLabel()
 
     def _fillButtonsFrame(self, frame):
+        ctfBtn = Button(frame, "CTF Monitor", command=self._monitorCTF)
+        ctfBtn.grid(row=0, column=0, sticky='nw', padx=(0, 10))
+
+        sysBtn = Button(frame, "System Monitor", command=self._monitorSystem)
+        sysBtn.grid(row=0, column=1, sticky='nw', padx=(0, 10))
+
         pdfBtn = HotButton(frame, 'Generate PDF Report',
                            command=self._generatePDF)
-        pdfBtn.grid(row=0, column=0, sticky='nw', padx=10, pady=2)
+        pdfBtn.grid(row=0, column=2, sticky='nw', padx=(0, 50), pady=2)
 
         closeBtn = self.createCloseButton(frame)
-        closeBtn.grid(row=0, column=1, sticky='nw')
-
-        ctfBtn = Button(frame, "CTF Monitor", command=self._monitorCTF)
-        ctfBtn.grid(row=0, column=2, sticky='nw')
+        closeBtn.grid(row=0, column=3, sticky='nw')
 
     def _monitorCTF(self, e=None):
         from pyworkflow.em.protocol.protocol_monitor_ctf import CtfMonitorPlotter
-        CtfMonitorPlotter(self.protocol.createMonitor()).show()
+        CtfMonitorPlotter(self.protocol.createCtfMonitor()).show()
+
+    def _monitorSystem(self, e=None):
+        from pyworkflow.em.protocol.protocol_monitor_system import SystemMonitorPlotter
+        SystemMonitorPlotter(self.protocol.createSystemMonitor()).show()
 
     def _updateLabel(self):
         self.updateVar.set('Updated: %s' % pwutils.prettyTime(secs=True))
