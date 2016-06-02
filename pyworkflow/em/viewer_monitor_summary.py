@@ -143,7 +143,7 @@ class SummaryWindow(pwgui.Window):
         treeFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
 
         buttonsFrame = tk.Frame(content)
-        buttonsFrame.grid(row=2, column=0, sticky='ne', padx=5, pady=5)
+        buttonsFrame.grid(row=2, column=0, sticky='new', padx=5, pady=5)
 
         self._fillTreeFrame(treeFrame)
         # JMRT: We fill the top frame after the tree, to make sure
@@ -184,18 +184,22 @@ class SummaryWindow(pwgui.Window):
         self._updateLabel()
 
     def _fillButtonsFrame(self, frame):
-        ctfBtn = Button(frame, "CTF Monitor", command=self._monitorCTF)
-        ctfBtn.grid(row=0, column=0, sticky='nw', padx=(0, 10))
+        subframe = tk.Frame(frame)
+        subframe.grid(row=0, column=0, sticky='nw')
+        frame.columnconfigure(1, weight=1)
 
-        sysBtn = Button(frame, "System Monitor", command=self._monitorSystem)
-        sysBtn.grid(row=0, column=1, sticky='nw', padx=(0, 10))
+        ctfBtn = Button(subframe, "CTF Monitor", command=self._monitorCTF)
+        ctfBtn.grid(row=0, column=0, sticky='nw', padx=(0, 5))
 
-        pdfBtn = HotButton(frame, 'Generate PDF Report',
+        sysBtn = Button(subframe, "System Monitor", command=self._monitorSystem)
+        sysBtn.grid(row=0, column=1, sticky='nw', padx=(0, 5))
+
+        pdfBtn = HotButton(subframe, 'Generate PDF Report',
                            command=self._generatePDF)
-        pdfBtn.grid(row=0, column=2, sticky='nw', padx=(0, 50), pady=2)
+        pdfBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
-        closeBtn.grid(row=0, column=3, sticky='nw')
+        closeBtn.grid(row=0, column=1, sticky='ne')
 
     def _monitorCTF(self, e=None):
         from pyworkflow.em.protocol.protocol_monitor_ctf import CtfMonitorPlotter
