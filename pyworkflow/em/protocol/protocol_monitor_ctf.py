@@ -107,9 +107,8 @@ class ProtMonitorCTF(ProtMonitor):
         timeout = time.time() + 60.*interval   # interval minutes from now
         #ignore first meassure because is very unrealiable
         while True:
-            finished = True
             prot = self._updateProtocol(self.inputProtocol.get())
-            finished = finished and (prot.getStatus()!=STATUS_RUNNING)
+            finished = prot.getStatus()!=STATUS_RUNNING
             #create set of processed CTF from CTF protocol
             CTFset=prot.outputCTF.getIdSet()#set([ctf.getObjId() for ctf in prot.outputCTF])
             #find difference
