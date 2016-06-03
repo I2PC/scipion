@@ -471,9 +471,6 @@ public abstract class ParticlePicker {
         return null;
     }
 
-
-    
-
     /**
      * Return the number of particles imported from a file
      */

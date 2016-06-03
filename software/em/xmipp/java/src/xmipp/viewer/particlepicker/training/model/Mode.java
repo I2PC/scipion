@@ -1,6 +1,6 @@
 package xmipp.viewer.particlepicker.training.model;
 public enum Mode {
-	Manual, Supervised, Available, Review, ReadOnly, Extract;
+	Manual, Supervised, Available, Review, ReadOnly, Extract, Tmp;
 	
 	
 	public static Mode getMode(String s)
@@ -17,6 +17,8 @@ public enum Mode {
 			return Mode.ReadOnly;
 		else if(s.equalsIgnoreCase(Mode.Extract.toString()))
 			return Mode.Extract;
+        else if(s.equalsIgnoreCase(Mode.Tmp.toString()))
+            return Mode.Tmp;
 		return null;
 	}
 
