@@ -1181,7 +1181,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 self.runCoarseSearch(fnVol, self.postSymmetryHelicalDihedral, 0.9, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, 0, radius, height, TsCurrent)
                 self.runFineSearch(fnVol, self.postSymmetryHelicalDihedral, fnCoarse, fnFine, 0.9, z0, zF, rot0, rotF, 0, radius, height, TsCurrent)
                 cleanPath(fnCoarse)
-                self.runSymmetrize(fnVol, self.postSymmetryHelicalDihedral, fnFine, fnVol, 0.9, 0, radius, height)
+                self.runSymmetrize(fnVol, self.postSymmetryHelicalDihedral, fnFine, fnVol, 0.9, 0, radius, height, TsCurrent)
     
             if self.postScript!="":
                 img = ImageHandler()
