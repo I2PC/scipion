@@ -101,7 +101,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         else:
             writeSetOfParticles(imgSet, self.imgsFn)
     
-    def produceResiduals(self):
+    def produceResiduals(self, fnVol, fnAngles, Ts):
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
