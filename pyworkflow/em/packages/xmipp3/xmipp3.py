@@ -596,7 +596,7 @@ class HelicalFinder():
         rot0=md.getValue(MDL_ANGLE_ROT,objId)
         z0=md.getValue(MDL_SHIFT_Z,objId)
         args="-i %s --sym %s --helixParams %f %f --heightFraction %f -o %s --sampling %f"%(fnVol,self.getSymmetry(dihedral),z0,rot0,heightFraction,fnOut,Ts)
-        self.runJob('xmipp_transform_symmetrize',args)
+        self.runJob('xmipp_transform_symmetrize',args,numberOfMpi=1)
         doMask=False
         if cylinderOuterRadius>0 and cylinderInnerRadius<0:
             args="-i %s --mask cylinder %d %d"%(fnVol,-cylinderOuterRadius,-height)
@@ -605,7 +605,7 @@ class HelicalFinder():
             args="-i %s --mask tube %d %d %d"%(fnVol,-cylinderInnerRadius,-cylinderOuterRadius,-height)
             doMask=True
         if doMask:
-            self.runJob('xmipp_transform_mask',args)
+            self.runJob('xmipp_transform_mask',args,numberOfMpi=1)
             
 
 # ---------------- Legacy code from 'protlib_xmipp.py' ----------------------
