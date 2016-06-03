@@ -1178,8 +1178,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 fnFine=join(fnDirCurrent,"fineHelical%02d.xmd"%i)
                 radius=int(self.postSymmetryHelicalRadius.get())
                 height=int(volXdim)
-                self.runCoarseSearch(fnVol, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, radius, height)
-                self.runFineSearch(fnVol, fnCoarse, fnFine, z0, zF, rot0, rotF, radius, height)
+                self.runCoarseSearch(fnVol, self.postSymmetryHelicalDihedral, 0.9, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, 0, radius, height, TsCurrent)
+                self.runFineSearch(fnVol, self.postSymmetryHelicalDihedral, fnCoarse, fnFine, 0.9, z0, zF, rot0, rotF, 0, radius, height, TsCurrent)
                 cleanPath(fnCoarse)
                 self.runSymmetrize(fnVol, fnFine, fnVol, radius, height)
                 if self.postSymmetryHelicalDihedral:
