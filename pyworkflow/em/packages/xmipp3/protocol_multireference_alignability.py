@@ -108,8 +108,6 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             volName = getImageLocation(vol)
             volDir = self._getVolDir(i+1)
                    
-            print volName
-            print volDir                                    
             pmStepId = self._insertFunctionStep('projectionLibraryStep',                                                    
                                                 volName, volDir,self.angularSampling.get(),
                                                 prerequisites=[convertId])
@@ -326,73 +324,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             self._defineOutputs(outputParticles=outImgSet)
             
             self.createPlot2D(volPrefix,m_pruned)
-
-            '''            
-            m1_pruned = md.MetaData()
-            m2_pruned = md.MetaData()
-            mdJoin_pruned = md.MetaData()            
-            m1_pruned.read(volDir+'/pruned_particles_alignability_precision.xmd')
-            m2_pruned.read(volDir+'/pruned_particles_alignability_accuracy.xmd')                
-            mdJoin_pruned = m1_pruned
-            mdJoin_pruned.merge(m2_pruned)
-            mdJoin_pruned.write(volDir+'/pruned_particles_alignability.xmd')
-            
-            prunedMd = self._getExtraPath(volPrefix + 'pruned_particles_alignability.xmd')
-            moveFile(join(volDir, 'pruned_particles_alignability.xmd'), prunedMd)
-
-
-            m1_volScore = md.MetaData()
-            m2_volScore = md.MetaData()
-            mdJoin_volScore = md.MetaData()
-	                
-            m1_volScore.read(volDir+'/validationAlignabilityPrecision.xmd')
-            m2_volScore.read(volDir+'/validationAlignabilityAccuracy.xmd') 
-	    
-            mdJoin_volScore = m1_volScore           
-            mdJoin_volScore.merge(m2_volScore)
-            mdJoin_volScore.write(volDir+'/validation_alignability.xmd')
-            
-            validationMd = self._getExtraPath(volPrefix + 'validation_alignability.xmd')
-            moveFile(join(volDir, 'validation_alignability.xmd'), validationMd)
-                           
-            outputVols = self._createSetOfVolumes()
-            imgSet = self.inputParticles.get()                  
-
-            outImgSet = self._createSetOfParticles(volPrefix)            
-            outImgSet.copyInfo(imgSet)
-
-            outImgSet.copyItems(imgSet,
-            updateItemCallback=self._setWeight,
-            itemDataIterator=md.iterRows(mdJoin_pruned, sortByLabel=md.MDL_ITEM_ID))
-
-                        
-            mdValidatoin = md.getFirstRow(validationMd)	    
-	   
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_ALIGNABILITY)	    
-            volume.weightAlignabilityPrecision  = Float(weight)
-	    
-            weight = mdValidatoin.getValue(md.MDL_WEIGHT_PRECISION_MIRROR)	    
-            volume.weightMirror  = Float(weight)
-	    
-    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_PROJ)	    
-            volume.AlignabilityPCAProj  = Float(weight)
-
-    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL_EXP)	    
-            volume.AlignabilityPCAExp  = Float(weight)
-
-            weight = mdValidatoin.getValue(md.MDL_SCORE_BY_PCA_RESIDUAL)        
-            volume.AlignabilityPCA  = Float(weight)
-            
-    	    weight = mdValidatoin.getValue(md.MDL_SCORE_BY_ZSCORE)	    
-            volume.ZScore  = Float(weight)
-            	    
-            volume.clusterMd = String(mdJoin_pruned)
-            volume.cleanObjId() # clean objects id to assign new ones inside the set            
-            outputVols.append(volume)
-            self._defineOutputs(outputParticles=outImgSet)
-            
-            '''
-        
+       
         outputVols.setSamplingRate(volume.getSamplingRate())
         self._defineOutputs(outputVolumes=outputVols)
         

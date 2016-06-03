@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -200,7 +200,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		newYdim = Ydim;
 	}
 
-	Matrix2D<double> proj; //projRef;
+	Matrix2D<double> proj;;
 	imgno = 0;
 	Projection P;
 	FileName image;
@@ -209,7 +209,7 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	Matrix2D<double> E, Trans(3,3);
 	Matrix1D<double> opt_offsets(2);
 
-/*
+#ifdef DEBUG
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
 	{
 		int enabled;
@@ -273,7 +273,8 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 	//pca.projectOnPCABasis(projRef);
 	pca.v.clear();
 
-*/
+#endif
+
 	imgno = 0;
 	FileName f;
 
@@ -423,22 +424,10 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		recons[imgno].resize(newYdim*newXdim);
 		recons[imgno].setXmippOrigin();
 
-		//imgRes() = (temp - (recons[imgno]))*ROI;
-		//R2_Proj = imgRes().computeStddev();
-		//R2_Proj = R2_Proj*R2_Proj;
 		R2_Proj = correlationIndex(temp,recons[imgno],&ROI);
-
-		//ApplyGeoParams params;
-		//params.only_apply_shifts = true;
-		//img.readApplyGeo(SF,__iter.objId,params);
 
 		SF.getValue(MDL_SHIFT_X,shiftX,__iter.objId);
 		SF.getValue(MDL_SHIFT_Y,shiftY,__iter.objId);
-
-		//geo2TransformationMatrix(input, Trans);
-		//ApplyGeoParams params;
-		//params.only_apply_shifts = true;
-		//img.readApplyGeo(SF,__iter.objId,params);
 
 		SF.getValue(MDL_IMAGE,f,__iter.objId);
 		img.read(f);
@@ -454,9 +443,6 @@ void ProgAngularAccuracyPCA::obtainPCAs(MetaData &SF, size_t numPCAs)
 		temp.statisticsAdjust(0,1);
 		temp.setXmippOrigin();
 
-		//imgRes() = (temp - (recons[imgno]))*ROI;
-		//R2_Exp = imgRes().computeStddev();
-		//R2_Exp = R2_Exp*R2_Exp;
 		R2_Exp = correlationIndex(temp,recons[imgno],&ROI);
 
 		SF.setValue(MDL_SCORE_BY_PCA_RESIDUAL_PROJ,R2_Proj,__iter.objId);
