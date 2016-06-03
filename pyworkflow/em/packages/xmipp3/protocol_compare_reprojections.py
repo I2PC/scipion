@@ -102,6 +102,8 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
             writeSetOfParticles(imgSet, self.imgsFn)
     
     def produceResiduals(self, fnVol, fnAngles, Ts):
+        if fnVol.endswith(".mrc"):
+            fnVol+=":mrc"
         anglesOutFn=self._getExtraPath("anglesCont.stk")
         residualsOutFn=self._getExtraPath("residuals.stk")
         projectionsOutFn=self._getExtraPath("projections.stk")
@@ -109,7 +111,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         originalTs=self.inputVolume.get().getSamplingRate()
         Ts=originalTs*xdim/float(self.inputSet.get().getSamplingRate())
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
-                    (self._getExtraPath('images.xmd'),anglesOutFn,self._getExtraPath("volume.vol"),floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
+                    (self.imgsFn,anglesOutFn,fnVol,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
         fnNewParticles=self._getExtraPath("images.stk")
         if exists(fnNewParticles):
             cleanPath(fnNewParticles)
