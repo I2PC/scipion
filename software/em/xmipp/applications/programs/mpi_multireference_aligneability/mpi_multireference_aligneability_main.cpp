@@ -23,61 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef ANGULAR_ACCURACY_PCA_H_
-#define ANGULAR_ACCURACY_PCA_H_
 
-#include <data/xmipp_program.h>
-#include <math.h>
-#include <data/basic_pca.h>
-#include <data/projection.h>
-#include <data/filters.h>
-
-
-/**@defgroup Assign accuracy to angular assignment by pca
-   @ingroup ReconsLibrary */
-//@{
-class ProgAngularAccuracyPCA: public XmippProgram
-{
-
-
-public:
-    /** Filenames */
-    FileName fnPhantom, fnNeighbours, fnOut, fnOutQ;
-
-    Image<double> phantomVol;
-
-    MetaData mdPartial;
-
-    size_t rank, Nprocessors;
-
-    PCAMahalanobisAnalyzer pca;
-
-	int newXdim;
-
-	int newYdim;
-
-
-
-public:
-
-    void readParams();
-
-    void defineParams();
-
-    void run();
-
-    void obtainPCAs(MetaData &SF, size_t numPCAs);
-
-public:
-
-    ProgAngularAccuracyPCA();
-
-    /// Gather alignment
-    virtual void gatherResults() {}
-
-    /// Synchronize with other processors
-    virtual void synchronize() {}
-
-};
-
-#endif /* ANGULAR_ACCURACY_PCA_H_ */
+#include <parallel/mpi_multireference_aligneability.h>
+RUN_XMIPP_PROGRAM(MpiMultireferenceAligneability)

@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -23,61 +23,37 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef ANGULAR_ACCURACY_PCA_H_
-#define ANGULAR_ACCURACY_PCA_H_
+#ifndef MPI_MULTIREFERENCE_ALIGNEABILITY_H_
+#define MPI_MULTIREFERENCE_ALIGNEABILITY_H_
 
-#include <data/xmipp_program.h>
-#include <math.h>
-#include <data/basic_pca.h>
-#include <data/projection.h>
-#include <data/filters.h>
+#include <reconstruction/multireference_aligneability.h>
+#include "parallel/xmipp_mpi.h"
 
-
-/**@defgroup Assign accuracy to angular assignment by pca
-   @ingroup ReconsLibrary */
+/**@defgroup MpiProgValidationNonTilt validate a volume analyzing the clusterability of each projection image (MPI)
+   @ingroup ParallelLibrary */
 //@{
-class ProgAngularAccuracyPCA: public XmippProgram
+
+/** Validation parameters. */
+class MpiMultireferenceAligneability: public MultireferenceAligneability
 {
-
-
 public:
-    /** Filenames */
-    FileName fnPhantom, fnNeighbours, fnOut, fnOutQ;
-
-    Image<double> phantomVol;
-
-    MetaData mdPartial;
-
-    size_t rank, Nprocessors;
-
-    PCAMahalanobisAnalyzer pca;
-
-	int newXdim;
-
-	int newYdim;
-
-
-
+	MpiNode *node;
 public:
+	// Empty constructor
+	MpiMultireferenceAligneability();
 
-    void readParams();
+	// Destructor
+	~MpiMultireferenceAligneability();
 
-    void defineParams();
+	// Redefine how to read the command line
+	void read(int argc, char** argv);
 
-    void run();
+	// Redefine how to synchronize
+	void synchronize();
 
-    void obtainPCAs(MetaData &SF, size_t numPCAs);
-
-public:
-
-    ProgAngularAccuracyPCA();
-
-    /// Gather alignment
-    virtual void gatherResults() {}
-
-    /// Synchronize with other processors
-    virtual void synchronize() {}
-
+	// Redefine how to gather the alignment
+    void gatherResults();
 };
+//@}
 
-#endif /* ANGULAR_ACCURACY_PCA_H_ */
+#endif /* MPI_MULTIREFERENCE_ALIGNEABILITY_H_ */

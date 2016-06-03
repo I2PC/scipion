@@ -176,6 +176,8 @@ public:
     bool doPhaseFlip;
     //Apply shift
     bool applyShift;
+    //Do CTF correction
+    bool doCTFCorrection;
 
     /// Document filename
     FileName fn_angle;
