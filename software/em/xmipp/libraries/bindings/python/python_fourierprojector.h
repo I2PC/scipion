@@ -41,7 +41,7 @@
 typedef struct
 {
     PyObject_HEAD
-    ArrayDim* dims;
+    ArrayDim dims;
     FourierProjector* fourier_projector;
 }
 FourierProjectorObject;
