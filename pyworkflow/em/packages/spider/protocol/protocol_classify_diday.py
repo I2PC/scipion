@@ -42,6 +42,10 @@ class SpiderProtClassifyDiday(SpiderProtClassifyCluster):
     
     def _validate(self):
         errors = []
+        # Dirty way to validate that the SEQ file is not used as input here
+        if '_SEQ' in self.pcaFile.get().getFileName():
+            errors.append("Diday's methods does not work with SEQ file. "
+                          "Please choose the IMC file.")
         return errors
     
     def _citations(self):

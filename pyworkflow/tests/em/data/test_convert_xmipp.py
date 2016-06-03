@@ -652,8 +652,7 @@ class TestReconstruct(TestConvertBase):
             b=rowToAlignment(rowa, ALIGN_PROJ)
             alignmentToRow(b, rowb, ALIGN_PROJ)
             aMatrix = a.getMatrix()
-            aMatrix[:,1] *= -1;aMatrix[:,2] *= -1;aMatrix[:,3] *= -1;
-            aMatrix[3,3]=1.
+            aMatrix[0,:] *= -1; aMatrix[2,:] *= -1;
             #same two matrices with flip
             self.assertTrue(np.allclose(aMatrix, b.getMatrix(), rtol=1e-2))
 
@@ -767,6 +766,7 @@ class TestReconstruct(TestConvertBase):
         a3 -> flip(a2) with equivalent euler angles
         a4 -> flip a1 matrix. a3 and a4 matrix are equivalent
         """
+        # COSS: This test is incorrect
         mList = [
                  [[1., 0., 0., 0.],#a1
                   [0., 1., 0., 0.],
@@ -776,9 +776,9 @@ class TestReconstruct(TestConvertBase):
                   [  0.90961589,  0.26325835,  0.3213938, -20.82490128],
                   [ -0.41317591,  0.49240388,  0.76604444,  3.33947946],
                   [  0.,          0.,          0.,          1.        ]],
-                 [[  0.04341204,   0.82959837,   0.5566704,   -7.42774284],#a3
-                  [  0.90961589,  -0.26325835,   0.3213938,   20.82490128],
-                  [  0.41317591,   0.49240388,  -0.76604444,   3.33947946],
+                 [[ -0.04341204,   0.82959837,  -0.5566704,   -7.42774284],#a3
+                  [  0.90961589,   0.26325835,   0.3213938,   -20.82490128],
+                  [  0.41317591,  -0.49240388,  -0.76604444,  -3.33947946],
                   [  0.,           0.,           0.,           1.        ]],
   #               [[  -0.04341204, 0.82959837,  -0.5566704,   -7.42774284],#a4
   #                [  0.90961589,  0.26325835,  0.3213938, -20.82490128],

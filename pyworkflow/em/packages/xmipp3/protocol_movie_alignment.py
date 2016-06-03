@@ -296,6 +296,8 @@ class ProtMovieAlignment(ProtProcessMovies):
         # Some movie have .mrc or .mrcs format but it is recognized as a volume
         if movieName.endswith('.mrcs') or movieName.endswith('.mrc'):
             movieSuffix = ':mrcs'
+        elif movieName.endswith('.em'):
+            movieSuffix = ':ems'
         else:
             movieSuffix = ''
             
@@ -432,10 +434,11 @@ class ProtMovieAlignment(ProtProcessMovies):
         unCorrectedPSD = em.ImageHandler().createImage()
         correctedPSD.read(join(movieFolder, 'correctedpsd.psd'))
         unCorrectedPSD.read(join(movieFolder, 'uncorrectedpsd.psd'))
-        x, y, z, n = correctedPSD.getDimensions()
+        x, y, z, n = correctedPSD.getDimensions()        
+        #ROB: is this OK? I think it should start in 0 range (0,y)
         for i in range(1,y):
             for j in range(1,x//2):
-                unCorrectedPSD.setPixel(i, j, correctedPSD.getPixel(i,j))
+                unCorrectedPSD.setPixel(0, 0, i, j, correctedPSD.getPixel(0, 0, i,j))
         unCorrectedPSD.write(join(movieFolder, psdCorrName))
 
         # Move output micrograph and related information to 'extra' folder
