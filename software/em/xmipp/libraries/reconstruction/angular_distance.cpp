@@ -369,7 +369,8 @@ void ProgAngularDistance::computeWeights()
 			while (id1<currentId && iter1.hasNext())
 			{
 				iter1.moveNext();
-				DF1sorted.getValue(label,id1,iter1.objId);
+				if (iter1.hasNext())
+					DF1sorted.getValue(label,id1,iter1.objId);
 			}
 
 			// If we are at the end of DF1, then we did not find id1 such that id1==currentId
