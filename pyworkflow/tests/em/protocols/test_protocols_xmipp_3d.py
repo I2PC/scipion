@@ -528,6 +528,106 @@ class TestXmippCropResizeVolumes(TestXmippBase):
             inV, ignore=['_index', '_filename', '_samplingRate'], verbose=True))
 
 
+class TestXmippOperateVolumes(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData()
+        cls.protImport1 = cls.runImportVolumes(cls.vol1, 9.896)
+        cls.protImport2 = cls.runImportVolumes(cls.vol2, 9.896)
+        cls.protImport3 = cls.runImportVolumes(cls.volumes, 9.896)
+
+    # Tests with single volume as input.
+    def launchSingle(self, **kwargs):
+        "Launch XmippProtImageOperateVolumes and return output volume."
+        print magentaStr("\n==> Operate single volume input params: %s" % kwargs)
+        prot = XmippProtImageOperateVolumes()
+        prot.operation.set(kwargs.get('operation', 1))
+        prot.inputVolumes.set(self.protImport1.outputVolume)
+        prot.setObjLabel(kwargs.get('objLabel', None))
+        prot.isValue.set(kwargs.get('isValue', False))
+        prot.inputVolumes2.set(kwargs.get('volumes2', None))
+        prot.value.set(kwargs.get('value', None))
+        prot.intValue.set(kwargs.get('intValue', None))
+        
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem producing the output")
+        return prot.outputVol
+
+    def testMultiplyVolumes(self):
+        vol2 = self.protImport2.outputVolume  # short notation
+        prot1 = self.launchSingle(operation=2,
+                                  objLabel='Multiply two Volumes',
+                                  volumes2=vol2)
+
+    def testMultiplyValue(self):
+        prot2 = self.launchSingle(operation=2,
+                                  isValue=True,
+                                  objLabel='Multiply by a Value',
+                                  value=2.5)
+    
+    def testDotProduct(self):
+        vol2 = self.protImport2.outputVolume  # short notation
+        prot3 = self.launchSingle(operation=6,
+                                  objLabel='Dot Product',
+                                  volumes2=vol2)
+
+    def testSqrt(self):
+        prot4 = self.launchSingle(operation=9,
+                                  objLabel='Sqrt')
+
+    def testColumn(self):
+        prot5 = self.launchSingle(operation=13,
+                                  objLabel='Column',
+                                  intValue=20)
+
+#     # Tests with multiple volumes as input.
+    def launchSet(self, **kwargs):
+        "Launch XmippProtImageOperateVolumes and return output volumes."
+        print magentaStr("\n==> Operate set of volumes input params: %s" % kwargs)
+        prot = XmippProtImageOperateVolumes()
+        prot.operation.set(kwargs.get('operation', 1))
+        prot.inputVolumes.set(self.protImport3.outputVolumes)
+        prot.setObjLabel(kwargs.get('objLabel', None))
+        prot.isValue.set(kwargs.get('isValue', False))
+        prot.inputVolumes2.set(kwargs.get('volumes2', None))
+        prot.value.set(kwargs.get('value', None))
+        prot.intValue.set(kwargs.get('intValue', None))
+        
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputVol") and prot.outputVol is not None,
+                        "There was a problem producing the output")
+        return prot.outputVol
+        
+    def testMultiplyVolSets(self):
+        vol2 = self.protImport3.outputVolumes  # short notation
+        prot6 = self.launchSet(operation=2,
+                                  objLabel='Multiply two SetOfVolumes',
+                                  volumes2=vol2)
+
+    def testMultiplyValue2(self):
+        prot7 = self.launchSet(operation=2,
+                               isValue=True,
+                               objLabel='Multiply by a Value 2',
+                               value=2.5)
+    
+    def testDotProduct2(self):
+        vol2 = self.protImport3.outputVolumes  # short notation
+        prot8 = self.launchSet(operation=6,
+                               objLabel='Dot Product 2',
+                               volumes2=vol2)
+
+    def testSqrt2(self):
+        prot9 = self.launchSet(operation=9,
+                               objLabel='Sqrt 2')
+
+    def testColumn2(self):
+        prot10 = self.launchSet(operation=13,
+                                objLabel='Column 2',
+                                intValue=20)
+
+
 class TestXmippProtAlignVolume(TestXmippBase):
     @classmethod
     def setData(cls, dataProject='xmipp_tutorial'):
