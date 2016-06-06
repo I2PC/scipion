@@ -450,23 +450,27 @@ void ProgAngularDistance::computeWeights()
 			DFweights.setValue(angleDiffLabel,meanDistance,newObjId);
 			double meanDistanceShift=cumulatedDistanceShift/ang2.size();
 			DFweights.setValue(shiftDiffLabel,meanDistanceShift,newObjId);
+			ang1.clear();
+			ang2.clear();
     	}
     	else
     		if (newObjId>0)
     		{
 				DFweights.setValue(angleDiffLabel,-1.0,newObjId);
 				DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+				ang1.clear();
+				ang2.clear();
     		}
         anotherImageIn2=iter2.hasNext();
     }
     // If there are more images in MD1 than in MD2, set the last images to 0
-    while (iter1.hasNext())
+    while (iter2.hasNext())
     {
 		size_t newObjId=DFweights.addObject();
 		DFweights.setValue(label,currentId,newObjId);
 		DFweights.setValue(angleDiffLabel,-1.0,newObjId);
 		DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
-		iter1.moveNext();
+		iter2.moveNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances
