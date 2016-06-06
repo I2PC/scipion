@@ -463,6 +463,17 @@ void ProgAngularDistance::computeWeights()
     		}
         anotherImageIn2=iter2.hasNext();
     }
+    if (ang2.size()>0)
+    {
+    	for (size_t i=0; i<ang2.size(); i++)
+    	{
+    		size_t newObjId=DFweights.addObject();
+    		DFweights.setValue(label,currentId,newObjId);
+    		DFweights.setValue(angleDiffLabel,-1.0,newObjId);
+    		DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+    	}
+    }
+
     // If there are more images in MD1 than in MD2, set the last images to 0
     while (iter2.hasNext())
     {
