@@ -37,6 +37,7 @@ public abstract class ParticlePicker {
     protected static Logger logger;
     protected String outputdir = ".";
     protected boolean changed;
+    protected boolean saved;
     protected Mode mode;
     protected List<IJCommand> filters;
     protected String selfile;
@@ -398,6 +399,14 @@ public abstract class ParticlePicker {
 
     public boolean isChanged() {
         return changed;
+    }
+
+    public boolean isSaved() {
+        return saved;
+    }
+
+    public void setSaved(boolean saved) {
+        this.saved = saved;
     }
 
     public Mode getMode() {

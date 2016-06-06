@@ -136,6 +136,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 		super.saveData();
 		saveData(micrograph);
 		setChanged(false);
+        setSaved(true);
 	}
 
 	/* Save changes to ALL micrographs, mainly used when importing. */
@@ -756,6 +757,8 @@ public class SupervisedParticlePicker extends ParticlePicker
 				md.clear();
 			}
 			md.destroy();
+
+            this.setSaved(false);
 		}
 		catch (Exception e)
 		{
@@ -1111,7 +1114,7 @@ public class SupervisedParticlePicker extends ParticlePicker
 	 * micrograph, but only for those micrographs containing manual particles.
 	 * 
 	 * @param frame
-	 * @param autopickout
+	 * @param trainmic
 	 */
 	public void trainAndAutopick(SupervisedPickerJFrame frame, SupervisedPickerMicrograph trainmic)
 	{
