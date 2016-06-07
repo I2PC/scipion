@@ -38,6 +38,7 @@ from protocol_mask import XmippProtMaskVolumes
 from protocol_preprocess import XmippProtPreprocessParticles
 from protocol_preprocess import XmippProtPreprocessVolumes
 
+from protocol_image_operate import XmippOperateHelper
 from protocol_image_operate import XmippProtImageOperateParticles
 from protocol_image_operate import XmippProtImageOperateVolumes
 
