@@ -497,6 +497,16 @@ class TestXmippPythonInterface(unittest.TestCase):
                 p2 = img2.getPixel(i, j)
                 self.assertAlmostEquals(p1, p2)
 
+    def test_createEmptyFile(self):
+        x, y, z, n = 10, 10, 1, 100
+        img = Image()
+
+        for ext in ['stk', 'mrcs']:
+            imgPath = testFile('empty_100.%s' % ext)
+            createEmptyFile(imgPath, x, y, z, n)
+            img.read(imgPath, HEADER)
+            self.assertEqual(img.getDimensions(), (x, y, z, n))
+
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
         mdPath = testFile("test.xmd")
