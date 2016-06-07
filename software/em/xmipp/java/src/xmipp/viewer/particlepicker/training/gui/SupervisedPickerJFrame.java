@@ -290,7 +290,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         try {
 
             setResizable(false);
-            setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+            setTitle();
             initMenuBar();
             setJMenuBar(mb);
 
@@ -377,7 +377,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                     if (isautopick) {
                         ppicker.setMode(Mode.Supervised);
                         ppicker.trainAndAutopick(SupervisedPickerJFrame.this, trainmic);
-                        setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+                        setTitle();
 
                     } else if (autopickchb.isSelected()) {
                         autopickchb.setSelected(false);
@@ -394,7 +394,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                             }
                             getMicrograph().resetParticlesRectangle();
                             canvas.refreshActive(null);
-                            setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+                            setTitle();
                         } else {
                             autopickchb.setSelected(true);
                         }

@@ -819,8 +819,17 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public abstract ParticlePicker getParticlePicker();
 
 	public abstract void setChanged(boolean changed);
-    public void setSaved(boolean saved){
 
+    protected void setTitle(){
+
+        String title = "Xmipp Particle Picker - " + getParticlePicker().getMode();
+
+        if (this.getParticlePicker().getParams().tmp){
+            title = title + " - in Temporal folder.";
+        }
+        setTitle(title);
+    }
+    public void setSaved(boolean saved){
     };
 
 	protected void initColorPane(Color color)
