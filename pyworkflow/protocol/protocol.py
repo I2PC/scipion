@@ -1514,6 +1514,13 @@ class Protocol(Step):
         """
         pass
 
+
+class LegacyProtocol(Protocol):
+    """ Special subclass of Protocol to be used when a protocol class
+    is not found. It means that have been removed or it is in another
+    development branch. In such, we will use the LegacyProtocol to
+    simply store the parameters and inputs/outputs."""
+    pass
                 
 #---------- Helper functions related to Protocols --------------------
 
