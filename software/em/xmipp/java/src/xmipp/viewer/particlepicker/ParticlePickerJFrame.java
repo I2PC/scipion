@@ -177,8 +177,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     @Override
                     public void actionPerformed(ActionEvent arg0)
                     {
-                        getParticlePicker().saveData();
-                        setChanged(false);
+                        saveData(false);
                         
                     }
                 });
@@ -309,6 +308,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         return "Are you sure you want to remove all particles from micrograph?";
     }
 
+    private ParticlePickerJFrame getMyself(){
+        return this;
+    }
 	private void initMenuBar(ParticlePicker picker)
 	{
 		filemn = new JMenu(bundle.getString("file"));
@@ -322,10 +324,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				getParticlePicker().saveData();
-				showMessage("Data saved successfully");
-				setChanged(false);
-			}
+                saveData(true);
+            }
 		});
 		filemn.add(savemi);
 		importmi = new JMenuItem("Import coordinates...", XmippResource.getIcon("import_wiz.gif"));
@@ -472,7 +472,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem(XmippImageJ.substractBackgroundFilter, true, picker);
         addFilterAppliedListener();
 	}
-        
+
+    protected boolean saveData(boolean notify) {
+        try {
+            getParticlePicker().saveData();
+            if (notify) showMessage("Data saved successfully");
+            setChanged(false);
+            return true;
+        } catch (Exception e1) {
+            XmippDialog.showException(getMyself(), e1);
+            return false;
+        }
+    }
+
     protected void addFilterAppliedListener() {
 
         Recorder.record = true;

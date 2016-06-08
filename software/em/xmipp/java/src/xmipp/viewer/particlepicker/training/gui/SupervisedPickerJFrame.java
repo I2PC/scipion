@@ -671,7 +671,15 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if (micindex == index && canvas != null && canvas.getIw().isVisible()) {
             return;
         }
-        
+
+        // Save particles first before moving and loading the clicked micrograph.
+        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised)
+        {
+            if (!saveData(false)) {
+                micrographstb.getSelectionModel().setSelectionInterval(micindex,micindex);
+                return;
+            }
+        }
 
         SupervisedPickerMicrograph next = ppicker.getMicrographs().get(index);
         SupervisedPickerMicrograph current = getMicrograph();
@@ -685,11 +693,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                 return;
             }
             
-        }
-        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised) 
-        {
-            ppicker.saveData(current);
-            setChanged(false);
         }
         ppicker.setMicrograph(next);
         ppicker.saveConfig();

@@ -26,15 +26,11 @@
 package xmipp.jni;
 
 import ij.IJ;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+
+import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IllegalFormatCodePointException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -693,8 +689,45 @@ public class MetaData {
     public void putCTF(long id, EllipseCTF ellipseCTF) {
         ctfs.put(id, ellipseCTF);
     }
-    
 
+    private long getFileTimeStamp(String filename){
+        File file = new File(filename);
+        return getFileTimeStamp(file);
+    }
+    private long getFileTimeStamp(File file){
+        return file.lastModified();
+    }
+
+    public void writeWithException(String xmippFilename) throws IOException{
+
+        String OSFilename = Filename.getFilename(xmippFilename);
+
+        File fileObj = new File(OSFilename);
+
+        boolean exist = fileObj.exists();
+        long fileTs = 0;
+        if (exist) {
+
+            fileTs = getFileTimeStamp(fileObj);
+
+            if (!fileObj.canWrite()){
+                throw new IOException("Can't  write on " + OSFilename + ". Please check you have permissions to write.");
+            }
+        }
+
+        this.write(xmippFilename);
+
+        if (!exist && !fileObj.exists()) {
+
+            throw new IOException("File: " + OSFilename + " couldn't be created. Check you have permission on the folder.");
+
+        } else if (fileTs == getFileTimeStamp(fileObj)){
+
+            throw new IOException("File: " + OSFilename + " couldn't be written. Something went wrong.");
+        }
+
+
+    }
     
        
        
