@@ -57,7 +57,6 @@ from protocol_particle_pick_pairs import XmippProtParticlePickingPairs
 from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_preprocess_micrographs import XmippProtPreprocessMicrographs
 from protocol_rotational_spectra import XmippProtRotSpectra
-from protocol_screen_classes import XmippProtScreenClasses
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
@@ -90,8 +89,7 @@ class XmippViewer(Viewer):
                 ProtParticlePicking, 
                 XmippProtParticlePickingPairs,
                 XmippProtRotSpectra, 
-                XmippProtScreenClasses, 
-                XmippProtScreenParticles, 
+                XmippProtScreenParticles,
                 XmippProtCTFMicrographs, 
                 ProtMovieAlignment,
                 XmippProtValidateNonTilt,
@@ -294,24 +292,7 @@ class XmippViewer(Viewer):
                                                            'labels': '_size',
                                                            'sortby': 'id'})
         
-        elif issubclass(cls, XmippProtScreenClasses):
-            if isinstance(obj.inputSet.get(), SetOfClasses2D):
-                fn = obj.outputClasses
-                labels = 'id enabled _size _representative._filename _xmipp_imageRef _xmipp_image _xmipp_imageResidual _xmipp_maxCC _xmipp_cost'
-                labelRender = "_representative._filename _xmipp_imageRef _xmipp_image _xmipp_imageResidual"
-                self._visualize(fn, viewParams={ORDER: labels, 
-                                                VISIBLE: labels,
-                                                SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
-                                                MODE: MODE_MD})
-            else:
-                fn = obj.outputAverages.getFileName()
-                labels = 'id enabled _filename _xmipp_imageRef _xmipp_image1 _xmipp_maxCC'
-                labelRender = "_filename _xmipp_imageRef _xmipp_image1"
-                self._views.append(ObjectView(self._project, obj.outputAverages.strId(), fn,
-                                              viewParams={ORDER: labels, 
-                                                      VISIBLE: labels, 
-                                                      SORT_BY: '_xmipp_maxCC desc', RENDER:labelRender,
-                                                      MODE: MODE_MD}))
+
         
         elif issubclass(cls, XmippProtCompareReprojections):
                 fn = obj.outputParticles.getFileName()
