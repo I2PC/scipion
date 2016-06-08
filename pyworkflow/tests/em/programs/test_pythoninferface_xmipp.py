@@ -12,6 +12,7 @@ from time import time
 
 from xmipp import *
 from pyworkflow.em.packages.xmipp3 import getXmippPath
+import pyworkflow.utils as pwutils
 
 
 
@@ -506,6 +507,7 @@ class TestXmippPythonInterface(unittest.TestCase):
             createEmptyFile(imgPath, x, y, z, n)
             img.read(imgPath, HEADER)
             self.assertEqual(img.getDimensions(), (x, y, z, n))
+            pwutils.cleanPath(imgPath)
 
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
