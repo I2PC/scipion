@@ -230,6 +230,16 @@ class TestObject(BaseTest):
         
         self.assertEqual(s1, "i = 10, f = 3.345")
 
+    def test_Dict(self):
+        d = Dict(default='missing')
+        d.update({1: 'one', 2: 'two'})
+
+        # Return default value for any non-present key
+        self.assertEqual('missing', d[10])
+
+        # Return true for any 'contains' query
+        self.assertTrue(100 in d)
+        
 
 class TestUtils(BaseTest):
     

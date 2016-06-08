@@ -865,8 +865,7 @@ class CsvList(Scalar, list):
         self._pType = pType
         
     def _convertValue(self, value):
-        """Value should be a str with comman separated values
-        or a list.
+        """ Value should be a str with comma separated values or a list.
         """
         self.clear()
         if value:
@@ -1144,4 +1143,16 @@ def ObjectWrap(value):
     # If it is str, unicode or unknown type, convert to string
     return String(value)
          
-           
+
+class Dict(dict):
+    """ Simple wrapper around dict class to have a default value. """
+    def __init__(self, default=None):
+        self._default = default
+        dict.__init__(self)
+
+    def __getitem__(self, key):
+        """ Get the image with the given id. """
+        return self.get(key, self._default)
+
+    def __contains__(self, item):
+        return True
