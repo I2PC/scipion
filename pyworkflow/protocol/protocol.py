@@ -1520,7 +1520,9 @@ class LegacyProtocol(Protocol):
     is not found. It means that have been removed or it is in another
     development branch. In such, we will use the LegacyProtocol to
     simply store the parameters and inputs/outputs."""
-    pass
+
+    def __str__(self):
+        return self.getObjLabel()
                 
 #---------- Helper functions related to Protocols --------------------
 

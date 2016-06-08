@@ -42,7 +42,7 @@ from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
 from pyworkflow.viewer import DESKTOP_TKINTER
 import pyworkflow.protocol.params as params
-from pyworkflow.protocol import Protocol
+from pyworkflow.protocol import Protocol, LegacyProtocol
 import gui
 from gui import configureWeigths, Window
 from browser import FileBrowserWindow
@@ -1137,8 +1137,11 @@ class FormWindow(Window):
         if self.protocol.allowHeader:
             commonFrame = self._createCommon(mainFrame)
             commonFrame.grid(row=1, column=0, sticky='nw')
-            
-        paramsFrame = self._createParams(mainFrame)
+
+        if self._isLegacyProtocol():
+            paramsFrame = self._createLegacyInfo(mainFrame)
+        else:
+            paramsFrame = self._createParams(mainFrame)
         paramsFrame.grid(row=2, column=0, sticky='news')
         
         buttonsFrame = self._createButtons(mainFrame)
@@ -1392,12 +1395,29 @@ class FormWindow(Window):
                                             self._onExpertLevelChanged, font=self.font) 
         expCombo.grid(row=0, column=1, sticky='nw', pady=5)
         expFrame.grid(row=0, column=0, sticky='nw')
-        
+
         contentFrame = self._createSections(paramsFrame)
         contentFrame.grid(row=1, column=0, sticky='news')
         
         return paramsFrame
-                
+
+    def _isLegacyProtocol(self):
+        return isinstance(self.protocol, LegacyProtocol)
+
+    def _createLegacyInfo(self, parent):
+        frame = tk.Frame(parent)
+        t = tk.Label(frame,
+                     text="This is a legacy protocol, it means that its class "
+                          "is missed. \nThis could be because you are opening "
+                          "an old project and some of \nthe executed protocols "
+                          "does not exist in the current version.\n\n"
+                          "If you are a developer, it could be the case that "
+                          "you have changed \nto another branch where the "
+                          "protocol does not exist.")
+        t.grid(row=0, column=0, padx=5, pady=5)
+
+        return frame
+
     def _createSections(self, parent):
         """Create section widgets"""
         r = 0
@@ -1431,9 +1451,12 @@ class FormWindow(Window):
         btnClose = self.createCloseButton(btnFrame)
         btnClose.grid(row=0, column=0, padx=5, pady=5, sticky='se')
         # Save button is not added in VISUALIZE or CHILD modes
-        if not self.visualizeMode and not self.childMode:
-            btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN, Icon.ACTION_SAVE, 
-                                command=self.save)
+        # Neither in the case of a LegacyProtocol
+
+        if (not self.visualizeMode and not self.childMode and
+            not self._isLegacyProtocol()):
+            btnSave = Button(btnFrame, Message.LABEL_BUTTON_RETURN,
+                             Icon.ACTION_SAVE, command=self.save)
             btnSave.grid(row=0, column=1, padx=5, pady=5, sticky='se')
             btnExecute = HotButton(btnFrame, Message.LABEL_BUTTON_EXEC, 
                                    Icon.ACTION_EXECUTE, command=self.execute)
