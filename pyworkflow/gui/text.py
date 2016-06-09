@@ -172,7 +172,12 @@ class Text(tk.Text, Scrollable):
         self.delete(0.0, tk.END)
 
     def getText(self):
-        return self.get(0.0, tk.END)
+
+        textWithNewLine = self.get(0.0, tk.END)
+
+        # Remove the last new line
+        return textWithNewLine.rstrip('\n')
+
     
     def setText(self, text):
         """ Replace the current text with new one. """
@@ -296,7 +301,7 @@ class TaggedText(Text):
     Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
-    some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
+    some_link or [[some_link][some_label]] will display some_link as hyperlink or some_label as hyperlink to some_link
     also colors are recognized if set option colors=True
     """           
     def __init__(self, master, colors=True, **opts):  

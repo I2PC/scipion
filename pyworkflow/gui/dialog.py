@@ -35,7 +35,7 @@ import gui
 from tree import BoundTree
 from text import Text, TaggedText
 from pyworkflow.utils.properties import Message, Icon
-
+from tkColorChooser import askcolor as _askColor
 
 # Possible result values for a Dialog
 RESULT_YES = 0
@@ -378,7 +378,7 @@ class EditObjectDialog(Dialog):
         self.textComment = Text(bodyFrame, height=self.commentHeight, 
                          width=self.commentWidth)
         self.textComment.setReadOnly(False)
-        self.textComment.addText(self.valueComment)
+        self.textComment.setText(self.valueComment)
         self.textComment.grid(row=1, column=1, sticky='news', padx=5, pady=5)
         self.initial_focus = self.textComment
         
@@ -423,32 +423,48 @@ def showWarning(title, msg, parent):
     
 def showError(title, msg, parent):
     MessageDialog(parent, title, msg, 'fa-times-circle_alert.png')
-    
+
+
 def askString(title, label, parent, entryWidth=20, defaultValue='', headerLabel=None):
     d = EntryDialog(parent, title, label, entryWidth, defaultValue, headerLabel)
     return d.value
+
+
+def askColor(defaultColor='black'):
+    (rgbcolor, hexcolor) = _askColor(defaultColor)
+    return hexcolor
 
                 
 class ListDialog(Dialog):
     """
     Dialog to select an element from a list.
-    It is implemented using a Tree widget.
+    It is implemented using the Tree widget.
     """
-    def __init__(self, parent, title, provider, 
-                 message=None, **kwargs):
+    def __init__(self, parent, title, provider, message=None, **kwargs):
         """ From kwargs:
                 message: message tooltip to show when browsing.
                 selected: the item that should be selected.
-                validateSelectionCallback: a callback function to validate selected items.
+                validateSelectionCallback:
+                    a callback function to validate selected items.
+                allowSelect: if set to False, the 'Select' button will not
+                    be shown.
+                allowsEmptySelection: if set to True, it will not validate
+                    that at least one element was selected.
         """
         self.values = []
         self.provider = provider
         self.message = message
-        self.validateSelectionCallback = kwargs.get('validateSelectionCallback', None)
+        self.validateSelectionCallback = kwargs.get('validateSelectionCallback',
+                                                    None)
         self._selectmode = kwargs.get('selectmode', 'extended')
-        
-        Dialog.__init__(self, parent, title,
-                        buttons=[('Select', RESULT_YES), ('Cancel', RESULT_CANCEL)])
+        self._allowsEmptySelection = kwargs.get('allowsEmptySelection', False)
+
+        buttons = []
+        if kwargs.get('allowSelect', True):
+            buttons.append(('Select', RESULT_YES))
+        buttons.append(('Cancel', RESULT_CANCEL))
+
+        Dialog.__init__(self, parent, title, buttons=buttons)
         
     def body(self, bodyFrame):
         bodyFrame.config(bg='white')
@@ -474,15 +490,73 @@ class ListDialog(Dialog):
             if self.validateSelectionCallback:
                 err = self.validateSelectionCallback(self.values)
         else:
-            err = "Please select an element"
+            if not self._allowsEmptySelection:
+                err = "Please select an element"
             
         if err:
             showError("Validation error", err, self)
             return False
         
         return True
-        
-        
+
+
+class ToolbarButton():
+    """
+    Store information about the buttons that will be added to the toolbar.
+    """
+    def __init__(self, text, command, icon=None, tooltip=None):
+        self.text = text
+        self.command = command
+        self.icon = icon
+        self.tooltip = tooltip
+
+
+class ToolbarListDialog(ListDialog):
+    """
+    This class extend from ListDialog to allow an
+    extra toolbar to handle operations over the elements
+    in the list (e.g. Edit, New, Delete).
+    """
+    def __init__(self, parent, title, provider,
+                 message=None, toolbarButtons=None, **kwargs):
+        """ From kwargs:
+                message: message tooltip to show when browsing.
+                selected: the item that should be selected.
+                validateSelectionCallback:
+                    a callback function to validate selected items.
+                allowSelect: if set to False, the 'Select' button will not
+                    be shown.
+        """
+        self.toolbarButtons = toolbarButtons
+        self._itemDoubleClick = kwargs.get('itemDoubleClick', None)
+        ListDialog.__init__(self, parent, title, provider, message, **kwargs)
+
+    def body(self, bodyFrame):
+        bodyFrame.config(bg='white')
+        gui.configureWeigths(bodyFrame, 1, 0)
+
+        # Add an extra frame to insert the Toolbar
+        # and another one for the ListDialog's body
+        self.toolbarFrame = tk.Frame(bodyFrame, bg='white')
+        self.toolbarFrame.grid(row=0, column=0, sticky='new')
+        if self.toolbarButtons:
+            for i, b in enumerate(self.toolbarButtons):
+                self._addButton(b, i)
+
+        subBody = tk.Frame(bodyFrame)
+        subBody.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        ListDialog.body(self, subBody)
+        if self._itemDoubleClick:
+            self.tree.itemDoubleClick = self._itemDoubleClick
+
+    def _addButton(self, button, col):
+        btn = tk.Label(self.toolbarFrame, text=button.text,
+                       image=self.getImage(button.icon),
+                       compound=tk.LEFT, cursor='hand2', bg='white')
+        btn.grid(row=0, column=col, sticky='nw', padx=(5, 0), pady=(5, 0))
+        btn.bind('<Button-1>', button.command)
+
+
 class FlashMessage():
     def __init__(self, master, msg, delay=5, relief='solid', func=None):
         self.root = tk.Toplevel(master=master)

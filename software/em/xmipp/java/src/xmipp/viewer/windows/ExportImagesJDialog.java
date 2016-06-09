@@ -143,7 +143,7 @@ public class ExportImagesJDialog extends JDialog{
     
     private void saveImages()
     {
-            XmippWindowUtil.blockGUI(frame, "Exporting images..");
+            XmippWindowUtil.blockGUI(frame, "Exporting images..", true);
             new Thread(new Runnable() {
 
                 @Override
@@ -164,10 +164,12 @@ public class ExportImagesJDialog extends JDialog{
                     		md = frame.data.getMd();
                     	
                     	md.writeMdToStack(path, applygeochb.isSelected(), frame.data.isWrap(), label);
-                        XmippWindowUtil.releaseGUI(frame.getRootPane());
 
                     } catch (Exception ex) {
-                        throw new IllegalArgumentException(ex.getMessage());
+
+                        XmippDialog.showException(frame,ex);
+                    } finally {
+                        XmippWindowUtil.releaseGUI(frame.getRootPane());
                     }
 
                 }

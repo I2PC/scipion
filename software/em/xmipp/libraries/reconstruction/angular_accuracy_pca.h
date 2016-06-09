@@ -30,6 +30,7 @@
 #include <math.h>
 #include <data/basic_pca.h>
 #include <data/projection.h>
+#include <data/filters.h>
 
 
 /**@defgroup Assign accuracy to angular assignment by pca
@@ -41,7 +42,7 @@ class ProgAngularAccuracyPCA: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnPhantom, fnNeighbours, fnResiduals, fnReconstructed, fnOut;
+    FileName fnPhantom, fnNeighbours, fnOut, fnOutQ;
 
     Image<double> phantomVol;
 
@@ -51,9 +52,9 @@ public:
 
     PCAMahalanobisAnalyzer pca;
 
-	size_t newXdim;
+	int newXdim;
 
-	size_t newYdim;
+	int newYdim;
 
 
 
@@ -65,7 +66,7 @@ public:
 
     void run();
 
-    void obtainPCAs(MetaData &SF, String fnTempResiduals, String fnTempReconstructed, size_t numPCAs);
+    void obtainPCAs(MetaData &SF, size_t numPCAs);
 
 public:
 
