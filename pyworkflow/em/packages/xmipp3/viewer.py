@@ -196,12 +196,12 @@ class XmippViewer(Viewer):
             # FIXME: (JMRT) We are always writing the SetOfCoordinates and removing
             # the tmpDir, we need to take into account if the user have pick
             # some particles in the tmpDir and have not save them, that now
-            # will loose all picked partices.
+            # will loose all picked particles.
             # A possible solution could be to alert that changes have not been
             # written during modification of tmpDir or create a new Xmipp picking
             # protocol to continue picking later without loosing the coordinates.
             writeSetOfCoordinates(tmpDir, obj)
-            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol))
+            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol, inTmpFolder=True))
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
@@ -307,15 +307,17 @@ class XmippViewer(Viewer):
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
             mdFn = getattr(micSet, '_xmippMd', None)
+            inTmpFolder = False
             if mdFn:
                 micsfn = mdFn.get()
             else:  # happens if protocol is not an xmipp one
                 micsfn = self._getTmpPath(micSet.getName() + '_micrographs.xmd')
                 writeSetOfMicrographs(micSet, micsfn)
+                inTmpFolder = True
                 
             posDir = obj._getExtraPath()  
             memory = '%dg'%obj.memory.get(), 
-            launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory)
+            launchSupervisedPickerGUI(micsfn, posDir, obj, mode='review', memory=memory, inTmpFolder=inTmpFolder)
 
          # We need this case to happens before the ProtParticlePicking one
         elif issubclass(cls, XmippProtAssignmentTiltPair):
