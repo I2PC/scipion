@@ -328,8 +328,12 @@ class SubclassesTreeProvider(TreeProvider):
         condition = self.param.pointerCondition.get()
         # Get the classes that are valid as input object
         classes = [em.findClass(c.strip()) for c in className.split(",")]
-        objects = []        
-        runs = project.getRuns()
+        objects = []
+
+        # Do no refresh again and take the runs that are loaded
+        # already in the project. We will prefer to save time
+        # here than have the 'very last' version of the runs and objects
+        runs = project.getRuns(refresh=False)
         
         for prot in runs:
             # Make sure we don't include previous output of the same 
