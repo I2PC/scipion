@@ -30,6 +30,7 @@ public class ParticlePickerParams {
     public final static String FASTOPT = "fast";
     public final static String INCOREOPT = "incore";
     public final static String CLASSIFIER = "classifier";
+    public final static String TMP = "tmp";
     private CommandLine cmdLine;
     
     
@@ -41,6 +42,7 @@ public class ParticlePickerParams {
     public boolean fast;
     public boolean incore;
     public String classifierProperties;
+    public boolean tmp;
     
     public ParticlePickerParams(Mode mode)
     {
@@ -67,6 +69,7 @@ public class ParticlePickerParams {
         options.addOption(INCOREOPT, true, "");
         options.addOption(SCIPIONOPT, true, "");
         options.addOption(CLASSIFIER, true, "");
+        options.addOption(TMP,true, "Warns about loosing data. Coordinates mus be generated.");
     }
 
     public void processArgs(String args[]) throws ParseException {
@@ -82,7 +85,7 @@ public class ParticlePickerParams {
 	        String str = cmdLine.getOptionValue(MODEOPT);
 	        mode = Mode.getMode(str);
 	        if(!(mode == Mode.Review || mode == Mode.ReadOnly))
-	        	throw new IllegalArgumentException("Only Review and ReadOnly modes can be specified from the command line");
+	        	throw new IllegalArgumentException("Only Review or ReadOnly modes can be specified from the command line");
         }
         if (cmdLine.hasOption(THREADSOPT)) 
             threads = Integer.parseInt(cmdLine.getOptionValue(THREADSOPT));
@@ -101,6 +104,11 @@ public class ParticlePickerParams {
             classifierProperties = cmdLine.getOptionValue(CLASSIFIER);
            
         }
+        if (cmdLine.hasOption(TMP)) {
+            tmp = Boolean.parseBoolean(cmdLine.getOptionValue(TMP));
+
+        }
+
 
     }
     
