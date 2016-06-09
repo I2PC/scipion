@@ -577,11 +577,6 @@ class TestXmippOperateVolumes(TestXmippBase):
         prot4 = self.launchSingle(operation=9,
                                   objLabel='Sqrt')
 
-    def testColumn(self):
-        prot5 = self.launchSingle(operation=13,
-                                  objLabel='Column',
-                                  intValue=20)
-
 #     # Tests with multiple volumes as input.
     def launchSet(self, **kwargs):
         "Launch XmippProtImageOperateVolumes and return output volumes."
@@ -621,11 +616,6 @@ class TestXmippOperateVolumes(TestXmippBase):
     def testSqrt2(self):
         prot9 = self.launchSet(operation=9,
                                objLabel='Sqrt 2')
-
-    def testColumn2(self):
-        prot10 = self.launchSet(operation=13,
-                                objLabel='Column 2',
-                                intValue=20)
 
 
 class TestXmippProtAlignVolume(TestXmippBase):

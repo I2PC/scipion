@@ -620,11 +620,6 @@ class TestXmippOperateParticles(TestXmippBase):
         prot4 = self.launchSet(operation=9,
                                objLabel='Sqrt')
 
-#     def testColumn(self):
-#         prot5 = self.launchSet(operation=13,
-#                                objLabel='Column',
-#                                intValue=20)
-
 
 class TestXmippML2D(TestXmippBase):
     """This class check if the protocol to classify with ML2D in Xmipp works properly."""

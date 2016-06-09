@@ -52,10 +52,8 @@ OP_SQRT = 9
 OP_ABS = 10
 OP_POW = 11
 OP_SLICE = 12
-OP_COLUMN = 13
-OP_ROW = 14
-OP_RADIAL = 15
-OP_RESET = 16
+OP_RADIAL = 13
+OP_RESET = 14
 
 OP_CHOICES = ['plus', 'minus', 'multiply', 'divide', 'minimum', 'maximum',
               'dot product', 'log', 'log10', 'sqrt', 'abs', 'pow', 'slice',
@@ -67,8 +65,7 @@ binaryCondition = '(operation == 0 or operation == 1 or operation == 2 or '\
 noValueCondition = '(operation == 7 or operation == 8 or operation == 9 or '\
                    'operation == 10 or operation == 15 or operation == 16) '
 
-intValueCondition = '(operation == 12 or operation == 13 or '\
-                    'operation == 14)'
+intValueCondition = '(operation == 14)'
 
 dotCondition = 'operation == 6'
 powCondition = 'operation == 11'
@@ -79,8 +76,7 @@ operationDict = {OP_PLUS : ' --plus ', OP_MINUS : ' --minus ',
                  OP_DOTPRODUCT : ' --dot_product ', OP_LOG : ' --log ',
                  OP_LOG10 : ' --log10', OP_SQRT : ' --sqrt ',
                  OP_ABS : ' --abs ', OP_POW : ' --pow ',
-                 OP_SLICE : ' --slice ', OP_COLUMN : ' --column ',
-                 OP_ROW : ' --row ', OP_RADIAL : ' --radial_avg ',
+                 OP_SLICE : ' --slice ', OP_RADIAL : ' --radial_avg ',
                  OP_RESET : ' --reset '}
 
 
@@ -174,8 +170,7 @@ class XmippOperateHelper():
     
     def _isintValueCond(self):
         operation = self.operation.get()
-        return (operation == OP_SLICE or operation == OP_COLUMN or
-                operation == OP_ROW)
+        return (operation == OP_SLICE)
     
     def _getSecondSetFn(self):
         return self._getTmpPath("images_to_apply.xmd")
