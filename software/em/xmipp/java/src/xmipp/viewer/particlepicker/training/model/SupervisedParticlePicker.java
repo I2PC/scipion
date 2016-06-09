@@ -505,8 +505,10 @@ public class SupervisedParticlePicker extends ParticlePicker
 //			}
 //			md.destroy();
 //			saveAutomaticParticles(tm);
-                        JMetaDataIO.saveData((SupervisedPickerMicrograph) m, getOutputPath(m.getPosFile()));
-                        saveTemplates();
+
+
+        JMetaDataIO.saveData((SupervisedPickerMicrograph) m, getOutputPath(m.getPosFile()));
+        saveTemplates();
                 //System.out.println("saved");
 //		}
 //		catch (Exception e)
