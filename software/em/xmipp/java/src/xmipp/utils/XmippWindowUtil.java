@@ -213,11 +213,26 @@ public class XmippWindowUtil
 		}
 	}
 
-	/** Block the gui and show the InfiniteProgressPanel */
-	public static void blockGUI(JFrame window, String status)
+    /** Block the gui and show the InfiniteProgressPanel without hiding the content */
+    public static void blockGUI(JFrame window, String status){
+
+        blockGUI(window, status, false);
+    }
+
+    /** Block the gui and show the InfiniteProgressPanel */
+    /**
+     * The hide content parameter is needed for the galleryData export process.
+     *  If the content is hidden, there will not be any refresh and therefore there will not be a concurrency access to
+     *  the metadata object in different threads (painting the window and exporting).
+     *
+    **/
+	public static void blockGUI(JFrame window, String status, boolean hideContent)
 	{
 		final InfiniteProgressPanel progressPanel = new InfiniteProgressPanel(window, status);
 		window.setGlassPane(progressPanel);
+        if (hideContent) {
+            window.getLayeredPane().setVisible(false);
+        }
 		progressPanel.start();
 	}
 
@@ -227,6 +242,7 @@ public class XmippWindowUtil
 		InfiniteProgressPanel progressPanel = (InfiniteProgressPanel) panel.getGlassPane();
 		progressPanel.stop();
 		progressPanel.setVisible(false);
+        panel.getLayeredPane().setVisible(true);
 	}
 
     public static void executeGUICommand(final String[] command, final JFrame frame, String msg)

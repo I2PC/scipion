@@ -172,7 +172,12 @@ class Text(tk.Text, Scrollable):
         self.delete(0.0, tk.END)
 
     def getText(self):
-        return self.get(0.0, tk.END)
+
+        textWithNewLine = self.get(0.0, tk.END)
+
+        # Remove the last new line
+        return textWithNewLine.rstrip('\n')
+
     
     def setText(self, text):
         """ Replace the current text with new one. """

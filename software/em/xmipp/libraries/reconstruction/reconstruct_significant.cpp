@@ -60,6 +60,8 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
     addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
     addParamsLine("  [--useForValidation <numOrientationsPerParticle=10>] : Use the program for validation. This number defines the number of possible orientations per particle");
+    addParamsLine("  [--dontCheckMirrors]         : Don't check mirrors in the alignment process");
+
 }
 
 // Read arguments ==========================================================
@@ -86,6 +88,7 @@ void ProgReconstructSignificant::readParams()
     doReconstruct=!checkParam("--dontReconstruct");
     useForValidation=checkParam("--useForValidation");
     numOrientationsPerParticle = getIntParam("--useForValidation");
+    dontCheckMirrors = checkParam("--dontCheckMirrors");
 
     if (!doReconstruct)
     {
@@ -115,6 +118,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         std::cout << "useForValidation            : "  << useForValidation << std::endl;
+        std::cout << "dontCheckMirrors            : "  << dontCheckMirrors << std::endl;
+
 
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
@@ -198,8 +203,14 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					mCurrentImageAligned=mCurrentImage;
 					mGalleryProjection.aliasImageInStack(gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
-					double corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
-							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					double corr;
+					if (! dontCheckMirrors)
+						corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
+								mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					else
+						corr = alignImages(mGalleryProjection, mCurrentImageAligned,
+						                   M, DONT_WRAP);
+
 //					double corr=alignImagesConsideringMirrors(mGalleryProjection,
 //							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
@@ -248,6 +259,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 			double scale, shiftX, shiftY, anglePsi;
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
+			if (useForValidation)
+				flip = false;
 
 			if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
 			{
@@ -301,6 +314,9 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
+						if (useForValidation)
+							flip = false;
+
 						if (maxShift>0)
 							if (fabs(shiftX)>maxShift || fabs(shiftY)>maxShift)
 								continue;

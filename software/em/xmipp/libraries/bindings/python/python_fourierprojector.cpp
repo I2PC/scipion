@@ -97,11 +97,12 @@
      {
          PyObject *image = NULL;
          double padding_factor, max_freq, spline_degree;
+         padding_factor = 2;
+         max_freq = 0.5;
+         spline_degree = 2;
          if (PyArg_ParseTuple(args, "O|ddd", &image, &padding_factor, &max_freq, &spline_degree))
          {
-        	 ArrayDim dims;
-        	 Image_Value(image).getDimensions(dims);
-        	 self->dims = &dims;
+        	 Image_Value(image).getDimensions(self->dims);
         	 MultidimArray<double> *pdata;
         	 Image_Value(image).data->getMultidimArrayPointer(pdata);
         	 pdata->setXmippOrigin();
@@ -118,7 +119,7 @@
   void FourierProjector_dealloc(FourierProjectorObject* self)
  {
      delete self->fourier_projector;
-     delete self->dims;
+     //delete self->dims;
      self->ob_type->tp_free((PyObject*) self);
  }
 
@@ -134,7 +135,7 @@ PyObject * FourierProjector_projectVolume(PyObject * obj, PyObject *args, PyObje
           try
           {
         	  Projection P;
-              projectVolume(FourierProjector_Value(self), P, self->dims->xdim, self->dims->ydim, rot, tilt, psi);
+              projectVolume(FourierProjector_Value(self), P, self->dims.xdim, self->dims.ydim, rot, tilt, psi);
               Image_Value(projection_image).data->setImage(MULTIDIM_ARRAY(P));
           }
           catch (XmippError &xe)

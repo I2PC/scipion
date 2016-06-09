@@ -1214,9 +1214,8 @@ def rowToAlignment(alignmentRow, alignType):
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
+                angles[0] = - angles[0] # rot = -rot
                 angles[1] = 180 + angles[1] # tilt = tilt + 180
-                angles[2] = 180 - angles[2] # psi = -psi + 180
-                shifts[0] = -shifts[0] # shx = -shx
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
