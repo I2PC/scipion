@@ -39,6 +39,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected ParticlePicker picker;
 	protected XmippImageWindow iw;
 	protected Cursor eraserCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
+    protected Cursor linearCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("linearPicking.png").getImage(), new Point(0, 0), "Linear");
 
 	
         
@@ -66,26 +67,28 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		this.picker = frame.getParticlePicker();
 		this.micrograph = micrograph;
 		micrograph.runImageJFilters(picker.getFilters());
-		addKeyListener(new KeyListener()
-		{
 
-			@Override
-			public void keyTyped(KeyEvent arg0)
-			{
-			}
-
-			@Override
-			public void keyReleased(KeyEvent arg0)
-			{
-			}
-
-			@Override
-			public void keyPressed(KeyEvent e)
-			{
-				ParticlePickerCanvas.this.keyPressed(e);
-
-			}
-		});
+        addKeyListener(this);
+//		addKeyListener(new KeyListener()
+//		{
+//
+//			@Override
+//			public void keyTyped(KeyEvent arg0)
+//			{
+//			}
+//
+//			@Override
+//			public void keyReleased(KeyEvent arg0)
+//			{
+//			}
+//
+//			@Override
+//			public void keyPressed(KeyEvent e)
+//			{
+//				ParticlePickerCanvas.this.keyPressed(e);
+//
+//			}
+//		});
 
 		addMouseMotionListener(this);
 
@@ -97,6 +100,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 	public void keyPressed(KeyEvent e)
 	{
+        super.keyPressed(e);
+
 		PickerParticle active = getActive();
 		int step = 1;
 		int code = e.getKeyCode();
@@ -130,10 +135,14 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			getFrame().circlechb.setSelected(tongleSetSelected);
 			getFrame().rectanglechb.setSelected(tongleSetSelected);
 			tongleSetSelected = !tongleSetSelected;
-		}
-		
-		
-		else
+		}else if (code == ParticlePickerJFrame.TOGGLE_ERASE_MODE_KEY){
+            // Toggle erase mode.
+            getFrame().toogleEraseMode();
+        }else if (code == ParticlePickerJFrame.TOGGLE_LINEAR_MODE_KEY){
+            // Toggle linear mode
+            getFrame().toogleLinearMode();
+
+        }else
 			return;// do not repaint if not needed
 		repaint();
 	}
@@ -171,12 +180,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		return iw;
 	}
 
-	
-
-	
-	
-
-
 	public void moveTo(PickerParticle p)
 	{
 		int width = (int) getSrcRect().getWidth();
@@ -213,17 +216,27 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
 	}
-	
-	
+
+    public void setCustomCursor(){
+        setCustomCursor(null);
+    }
 	protected void setCustomCursor(MouseEvent e)
 	{
-		if (getFrame().isPickingAvailable(e))
-		{
-			if (!getFrame().isEraserMode())
-				setCursor(crosshairCursor);
-			else 
-				setCursor(eraserCursor);
-		}
+        boolean proceeed = true;
+
+		if (e != null) {
+            proceeed =  getFrame().isPickingAvailable(e);
+        }
+
+        if (getFrame().isEraserMode())
+            setCursor(eraserCursor);
+
+        else if (getFrame().isLinearMode())
+            setCursor(linearCursor);
+
+        else
+            setCursor(crosshairCursor);
+
 	}
 
 	public abstract void refreshActive(Particle p);
