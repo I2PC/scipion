@@ -19,9 +19,9 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 {
 
     public static final int POLIGONAL_MODE_KEY = KeyEvent.VK_C;
-    private static final int ERASER_MEDIUM_SIZE_KEY = KeyEvent.VK_M;
-    private static final int ERASER_LARGE_SIZE_KEY = KeyEvent.VK_L;
-    private static final int ERASER_X_LARGE_SIZE_KEY = KeyEvent.VK_X;
+    public static final int ERASER_MEDIUM_SIZE_KEY = KeyEvent.VK_M;
+    public static final int ERASER_LARGE_SIZE_KEY = KeyEvent.VK_L;
+    public static final int ERASER_X_LARGE_SIZE_KEY = KeyEvent.VK_X;
     private ManualParticle active;
     private Point linearPickingStartPoint;
 

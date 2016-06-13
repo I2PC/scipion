@@ -1022,6 +1022,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         map.put((char)TOGGLE_ERASE_MODE_KEY, "Toggle between erase and picking");
 
         if (linearModeAvailable()) {
+
+            map.put((char)SupervisedPickerCanvas.ERASER_MEDIUM_SIZE_KEY+ "(while erasing)", "Use a Medium size eraser");
+            map.put((char)SupervisedPickerCanvas.ERASER_LARGE_SIZE_KEY+ "(while erasing)", "Use a Large size eraser");
+            map.put((char)SupervisedPickerCanvas.ERASER_X_LARGE_SIZE_KEY+ "(while erasing)", "Use a X-large size eraser");
+
             map.put((char)TOGGLE_LINEAR_MODE_KEY, "Toggle between normal picking and linear picking mode");
             map.put((char)SupervisedPickerCanvas.POLIGONAL_MODE_KEY + " (continuous)", "While in linear picking mode, linear picking will be continuous (polygonal mode).");
             map.put("ESCAPE", "Will reset the linear picking canceling the pending line");
