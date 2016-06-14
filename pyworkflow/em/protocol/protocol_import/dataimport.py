@@ -51,14 +51,10 @@ class ScipionImport():
                              % self._sqliteFile)
 
         # Update both samplingRate and acquisition with parameters
-<<<<<<< HEAD
-        # selected in the protocol form
-=======
         # selected in the protocol form.
         # Acquisition should be updated before, just to ensure that
         # scannedPixedSize will be computed properly when calling
         # setSamplingRate
->>>>>>> v1.0
         self.protocol.fillAcquisition(micSet.getAcquisition())
         self.protocol.setSamplingRate(micSet)
         micSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
