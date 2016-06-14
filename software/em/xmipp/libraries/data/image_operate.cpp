@@ -426,7 +426,7 @@ void ProgOperate::readParams()
             isValue = false;
             fn2 = file_or_value;
             md2.read(fn2);
-            if (md2.size() > 1)
+            if (md2.isMetadataFile || md2.size() > 1)
             {
                 if (mdInSize != md2.size())
                     REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
