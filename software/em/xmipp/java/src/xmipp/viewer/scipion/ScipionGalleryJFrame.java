@@ -12,6 +12,7 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -179,7 +180,18 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 buttonspn.add(createvolbt);
                 createvolbt.setVisible(!data.isTableMode());
             }
-            pack();
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        ScipionGalleryJFrame.this.pack();
+                    }
+                });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
             enableActions();
             jcbBlocks.addActionListener(new ActionListener() {
 

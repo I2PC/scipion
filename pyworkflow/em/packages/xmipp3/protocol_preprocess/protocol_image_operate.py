@@ -1,8 +1,10 @@
-# **************************************************************************
+# *****************************************************************************
 # *
 # * Authors:  Carlos Oscar Sanchez Sorzano (coss@cnb.csic.es), Sep 2013
 # * Ported to Scipion:
 # *           Vahid Abrishami (vabrishami@cnb.csic.es), Oct 2014
+# *
+# * Refactored/Updated: Josue Gomez-Blanco (jgomez@cnb.csic.es), Jun 2016
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,15 +26,17 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
-# **************************************************************************
+# *****************************************************************************
 
-import os
-import xmipp
-from pyworkflow.protocol.params import FileParam, EnumParam, PointerParam
-from pyworkflow.em import *
+# import os
+# import xmipp
+from pyworkflow.em.constants import ALIGN_NONE
+import pyworkflow.protocol.params as params
+from pyworkflow.em.protocol import ProtOperateParticles, ProtOperateVolumes
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
-from pyworkflow.utils.properties import Message
-from ..convert import writeSetOfParticles, writeSetOfVolumes
+from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles,
+                                                   writeSetOfVolumes,
+                                                   getImageLocation)
 
 # Operands enum
 OP_PLUS = 0
@@ -48,19 +52,23 @@ OP_SQRT = 9
 OP_ABS = 10
 OP_POW = 11
 OP_SLICE = 12
-OP_COLUMN = 13
-OP_ROW = 14
-OP_RADIAL = 15
-OP_AVERAGE = 16
-OP_RESET = 17
+OP_RADIAL = 13
+OP_RESET = 14
 
 OP_CHOICES = ['plus', 'minus', 'multiply', 'divide', 'minimum', 'maximum',
               'dot product', 'log', 'log10', 'sqrt', 'abs', 'pow', 'slice',
-              'column', 'row', 'radial', 'average', 'reset']
+              'column', 'row', 'radial average', 'reset']
 
-conditionStr = '(operation == 0 or operation == 1 or operation == 2 or ' \
-                'operation == 3 or operation == 4 or operation == 5 or ' \
-                'operation == 6)'
+binaryCondition = '(operation == 0 or operation == 1 or operation == 2 or '\
+                  'operation == 3 or operation == 4 or operation == 5) '\
+
+noValueCondition = '(operation == 7 or operation == 8 or operation == 9 or '\
+                   'operation == 10 or operation == 15 or operation == 16) '
+
+intValueCondition = '(operation == 14)'
+
+dotCondition = 'operation == 6'
+powCondition = 'operation == 11'
 
 operationDict = {OP_PLUS : ' --plus ', OP_MINUS : ' --minus ',
                  OP_MULTIPLY : ' --mult ', OP_DIVIDE : ' --divide ',
@@ -68,181 +76,286 @@ operationDict = {OP_PLUS : ' --plus ', OP_MINUS : ' --minus ',
                  OP_DOTPRODUCT : ' --dot_product ', OP_LOG : ' --log ',
                  OP_LOG10 : ' --log10', OP_SQRT : ' --sqrt ',
                  OP_ABS : ' --abs ', OP_POW : ' --pow ',
-                 OP_SLICE : ' --slice ', OP_COLUMN : ' --column ',
-                 OP_ROW : ' --row ', OP_RADIAL : ' --radial_avg ',
+                 OP_SLICE : ' --slice ', OP_RADIAL : ' --radial_avg ',
                  OP_RESET : ' --reset '}
 
 
-class XmippProtImageOperate():
+class XmippOperateHelper():
     """ Some image operations such as: Dot product or Summation. """
     _label = 'image operate'
 
-    def __init__(self,_isParticle, **args):
-        self._program = "xmipp_image_operate"
-        self._isParticle = _isParticle
-
-    #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineProcessParams(self, form):
-        form.addParam('operation', EnumParam, choices=OP_CHOICES,
-                      default=OP_PLUS,
-                      label="Operation")
-        form.addParam('isValue', BooleanParam, default=False,
-                      label="Second operand is a value", help="Set to true if you want to use a "
-                                                              "value of the second operand")
-        if self._isParticle:
-            form.addParam('inputParticles2', PointerParam, important=True,
-                           condition=conditionStr + ' and (not isValue)',
-                           label='Input Particles (2nd)',
-                           help = 'It can be a metadata, a stack of images',
-                           pointerClass='SetOfParticles')
-        else:
-            form.addParam('inputVolumes2', PointerParam, important=True,
-                           condition=conditionStr + ' and (not isValue)',
-                           label='Input Volumes (2nd)',
-                           help = 'It can be a metadata, a stack of volumes',
-                           pointerClass='Volume, SetOfVolumes')
-        form.addParam('inputValue', FloatParam, important=True,
-                       condition='isValue', label='Input value ',
-                       help = 'For the operations which support values')
-
-
-    def _insertProcessStep(self):
-
-        inputFn = self.inputFn
-        # determine the command line for
-        operationStr = operationDict[self.operation.get()]
-        if not self.isValue.get():
-            if self._isParticle:
-                inputFn2 = self._getTmpPath('input_particles2.xmd')
-                writeSetOfParticles(self.inputParticles2.get(), inputFn2)
-            else:
-                inputFn2 = self._getTmpPath('input_volumes2.xmd')
-                #if we do not create this case them getAlignment must be defined
-                if isinstance(self.inputVolumes2.get(), Volume):
-                    inputFn2 = self.inputVolumes2.get().getFileName()
-                else:#set of volumes
-                    #TODO ROB: how to deal with binary conversions?
-                    writeSetOfVolumes(self.inputVolumes2.get(), inputFn2)
-            args = (self._args + operationStr + ' ' + inputFn2) % locals()
-        else:
-            val = self.inputValue.get()
-            args = (self._args + operationStr) % locals()
-            args += ' %f' % val
-        self._insertFunctionStep("operationStep", args)
-        #--------------------------- INSERT steps functions --------------------------------------------
-
-
-class XmippProtImageOperateParticles(ProtOperateParticles, XmippProcessParticles, XmippProtImageOperate):
-    """ Apply an operation to two sets of particles  """
-    _label = 'calculator2D'
-    _isParticle = True
-
     def __init__(self, **args):
-        ProtProcessParticles.__init__(self, **args)
-        XmippProcessParticles.__init__(self)
-        XmippProtImageOperate.__init__(self, self._isParticle, **args)
+        self._program = "xmipp_image_operate"
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):
-        XmippProtImageOperate._defineProcessParams(self, form)
+        form.addParam('operation', params.EnumParam, choices=OP_CHOICES,
+                      default=OP_PLUS,
+                      label="Operation",
+                      help="Binary operations: \n"
+                           "*plus*: Sums two images, volumes or adds a "
+                           "numerical value to an image. \n"
+                           "*minus*: Subtracts two images, volumes or "
+                           "subtracts a numerical value to an image. \n"
+                           "*multiply*: Multiplies two images, volumes, or "
+                           "multiplies per a given number. \n"
+                           "*divide*: Divides two images, volumes, or divides "
+                           "per a given number. \n"
+                           "*minimum*: Minimum of two images, volumes, or "
+                           "number (pixel-wise). \n"
+                           "*maximum*: Maximum of two images, volumes, or "
+                           "number (pixel-wise). \n"
+                           "*dot product*: Dot product between two images or"
+                           " volumes. \n"
+                           "Unary operations: \n"
+                           "*log*: Computes the natural logarithm of an "
+                           "image. \n"
+                           "*log10*: Computes the decimal logarithm of "
+                           "an image. \n"
+                           "*sqrt*: Computes the square root of an image \n"
+                           "*abs*: Computes the absolute value of an image. \n"
+                           "*pow*: Computes the power of an image. \n"
+                           "*slice*: Extracts a given slice from a volume "
+                           "(first slice=0). \n"
+                           "*column*: Extracts a given column from a image "
+                           "or volume. \n"
+                           "*row*: Extracts a given row from a image or "
+                           "volume. \n"
+                           "*radial average*: Compute the radial average of "
+                           "an image. \n"
+                           "*reset*: Set the image to 0")
+        form.addParam('isValue', params.BooleanParam, default=False,
+                      label="Second operand is a value?",
+                      condition=binaryCondition,
+                      help="Set to true if you want to use a "
+                           "value of the second operand")
+        self._defineSpecificParams(form)
+        form.addParam('value', params.FloatParam,
+                      allowNull=True,
+                      condition='isValue and '+binaryCondition+' or '+powCondition,
+                      label='Input value ',
+                      help = 'Set the desire float value')
+        form.addParam('intValue', params.IntParam,
+                      allowNull=True,
+                      condition=intValueCondition,
+                      label='Input value ',
+                      help = 'This value must be integer')
+    
+    #--------------------------- INSERT STEPS functions ------------------------
+    def _insertProcessStep(self):
+        operationStr = operationDict[self.operation.get()]
+        self._insertFunctionStep("operationStep", operationStr)
+    
+    #--------------------------- UTILS functions ------------------------------
+    def _isBinaryCond(self):
+        operation = self.operation.get()
+        return (operation == OP_PLUS or operation == OP_MINUS or
+                operation == OP_MULTIPLY or operation == OP_DIVIDE
+                or operation == OP_MINIMUM or operation == OP_MAXIMUM)
+    
+    def _isNoValueCond(self):
+        operation = self.operation.get()
+        return (operation == OP_LOG or operation == OP_LOG10 or
+                operation == OP_SQRT or operation == OP_ABS or
+                operation == OP_RADIAL or operation == OP_RESET)
+    
+    def _isPowCond(self):
+        operation = self.operation.get()
+        return operation == OP_POW
+    
+    def _isDotCond(self):
+        operation = self.operation.get()
+        return operation == OP_DOTPRODUCT
+        
+    
+    def _isintValueCond(self):
+        operation = self.operation.get()
+        return (operation == OP_SLICE)
+    
+    def _getSecondSetFn(self):
+        return self._getTmpPath("images_to_apply.xmd")
 
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def operationStep(self, args):
-        print "operationStep"
-        args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
-        self.runJob("xmipp_image_operate", args)
-    #--------------------------- INFO functions --------------------------------------------
+
+class XmippProtImageOperateParticles(ProtOperateParticles,
+                                     XmippProcessParticles,
+                                     XmippOperateHelper):
+    """ Apply an operation to two sets of particles  """
+    _label = 'operate particle'
+    
+    def __init__(self, **args):
+        ProtOperateParticles.__init__(self, **args)
+        XmippProcessParticles.__init__(self)
+        XmippOperateHelper.__init__(self, **args)
+
+    #--------------------------- DEFINE param functions -----------------------
+    def _defineProcessParams(self, form):
+        XmippOperateHelper._defineProcessParams(self, form)
+    
+    def _defineSpecificParams(self, form):
+        form.addParam('inputParticles2', params.PointerParam,
+                      allowNull=True,
+                      condition=(binaryCondition+' and (not isValue) or '
+                                 +dotCondition),
+                      label='Input Particles (2nd)',
+                      help = 'Set a SetOfParticles. The particles must be '
+                             'the same dimensions as the input particles.',
+                      pointerClass='SetOfParticles')
+    
+    #--------------------------- STEPS functions ------------------------------
+    def convertInputStep(self):
+        """ convert to Xmipp image model"""
+        writeSetOfParticles(self.inputParticles.get(), self.inputFn,
+                            alignType=ALIGN_NONE)
+        
+        if self.inputParticles2.get() is not None:
+            writeSetOfParticles(self.inputParticles2.get(),
+                                self._getSecondSetFn(),
+                                alignType=ALIGN_NONE)
+    
+    def operationStep(self, operationStr):
+        dictImgFn = {"inputFn" : self.inputFn}
+        args = self._args  % dictImgFn + operationStr
+        
+        if self._isBinaryCond():
+            if self.isValue:
+                args += ' %f' % self.value.get()
+            else:
+                args += ' %s' % self._getSecondSetFn()
+        elif self._isPowCond():
+            args += ' %f' % self.value.get()
+        elif self._isDotCond():
+            args += ' %s' % self._getSecondSetFn()
+        elif self._isintValueCond():
+            args += ' %d' % self.intValue.get()
+        
+        args += " -o %s --save_metadata_stack %s" % (self.outputStk,
+                                                     self.outputMd)
+        args += " --keep_input_columns"
+        
+        self.runJob(self._program, args)
+    
+    #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-        operation = self.operation.get()
-        N1 = self.inputParticles.get().getSize()
-        if self.isValue.get == False:
-            N2 = self.inputParticles2.get().getSize()
-        else:
-            N2=1
-        checkDimension = False
-        if operation == OP_COLUMN or operation == OP_SLICE or operation == OP_ROW:
-            if not self.isValue.get():
-                errors.append("You should give a number for the column, slice or row")
-        elif operation == OP_DOTPRODUCT:
-            if self.isValue.get():
-                errors.append("Second operand can not be a number")
-            else:
-                checkDimension = True
-        elif operation == OP_PLUS or operation == OP_MINUS or operation == OP_MULTIPLY or \
-                          operation == OP_DIVIDE or operation == OP_MINIMUM or \
-                          operation == OP_MAXIMUM:
-            if not self.isValue.get():
-                checkDimension = True
-        if checkDimension:
-            x1, y1, z1 = self.inputParticles.get().getDimensions()
-            x2, y2, z2 = self.inputParticles2.get().getDimensions()
-            if x1 != x2 or y1 != y2 or z1 != z2:
-                errors.append("Image sizes in the two operands are not the same")
-            if N2 > 1:
-                if N1 != N2:
-                    errors.append("The number of images in two operands are not the same")
+        def _errorDimensions():
+            if not (self.inputParticles.get() is None and
+                    self.inputParticles2.get() is None):
+                dim1 = self.inputParticles.get().getDimensions()
+                dim2 = self.inputParticles2.get().getDimensions()
+                if dim1 != dim2:
+                    errors.append("The number of images in two operands are "
+                                  "not the same. ")
+        def _errorSize():
+            if not (self.inputParticles.get() is None and
+                    self.inputParticles2.get() is None):
+                size1 = self.inputParticles.get().getSize()
+                size2 = self.inputParticles2.get().getSize()
+                if size1 != size2:
+                    errors.append("Size of both *SetOfParticles* are not the"
+                                  " same. ")
+        
+        if self._isBinaryCond():
+            if not self.isValue:
+                if not self.inputParticles2.get() is None:
+                    _errorSize()
+                    _errorDimensions()
+        elif self._isDotCond():
+            if not self.inputParticles2.get() is None:
+                _errorDimensions()
         return errors
 
 
 class XmippProtImageOperateVolumes(ProtOperateVolumes,
                                    XmippProcessVolumes,
-                                   XmippProtImageOperate):
+                                   XmippOperateHelper):
     """ Apply an operation to two sets of volumes """
-    _label = 'calculator3D'
-    _isParticle = False
-
+    _label = 'operate volume'
+     
     def __init__(self, **args):
-        ProtPreprocessVolumes.__init__(self, **args)
+        ProtOperateVolumes.__init__(self, **args)
         XmippProcessVolumes.__init__(self)
-        XmippProtImageOperate.__init__(self, self._isParticle, **args)
-
-    #--------------------------- DEFINE param functions --------------------------------------------
+        XmippOperateHelper.__init__(self, **args)
+    
+    #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):
-        XmippProtImageOperate._defineProcessParams(self, form)
+        XmippOperateHelper._defineProcessParams(self, form)
+    
+    def _defineSpecificParams(self, form):
+        form.addParam('inputVolumes2', params.PointerParam,
+                      allowNull=True,
+                      condition=(binaryCondition+' and (not isValue) or '
+                                 +dotCondition),
+                      label='Input Volumes (2nd)',
+                      help = 'This parameter depends of the input volume(s). '
+                             'If it is set a volume (or a SetOfVolumes) as '
+                             'input, this must be a *Volume* (or '
+                             '*SetOfVolumes*) object.',
+                      pointerClass='Volume, SetOfVolumes')
 
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def operationStep(self, args):
-       if self._isSingleInput():
-            args += " -o %s" % ImageHandler().getVolFileName(self.outputStk)
-       else:
-            args += " -o %s --save_metadata_stack %s --keep_input_columns" % (self.outputStk, self.outputMd)
-
-       self.runJob("xmipp_image_operate", args)
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- STEPS functions ------------------------------
+    def convertInputStep(self):
+        """ convert to Xmipp image model"""
+        if not self._isSingleInput():
+            writeSetOfVolumes(self.inputVolumes.get(), self.inputFn)
+            
+            if self.inputVolumes2.get() is not None:
+                writeSetOfVolumes(self.inputVolumes2.get(), self._getSecondSetFn())
+    
+    def operationStep(self, operationStr):
+        dictImgFn = {"inputFn" : self.inputFn}
+        args = self._args  % dictImgFn + operationStr
+        
+        if self._isBinaryCond():
+            if self.isValue:
+                args += ' %f' % self.value.get()
+            else:
+                args += ' %s' % self._getSecondVolumeFn()
+        elif self._isPowCond():
+            args += ' %f' % self.value.get()
+        elif self._isDotCond():
+            args += ' %s' % self._getSecondVolumeFn()
+        elif self._isintValueCond():
+            args += ' %d' % self.intValue.get()
+        
+        args += " -o %s " % self.outputStk
+        if not self._isSingleInput():
+            args += " --save_metadata_stack %s" \
+                    " --keep_input_columns" % self.outputMd
+        self.runJob(self._program, args)
+    
+    #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-        operation = self.operation.get()
-        #N1 = self.inputVolumes.get().getSize()
-        #N2 = self.inputVolumes2.get().getSize()
-        checkDimension = False
-        if operation == OP_COLUMN or operation == OP_SLICE or operation == OP_ROW:
-            if not self.isValue.get():
-                errors.append("You should give a number for the column, slice or row")
-        elif operation == OP_DOTPRODUCT:
-            if self.isValue.get():
-                errors.append("Second operand can not be a number")
-            else:
-                checkDimension = True
-        elif operation == OP_PLUS or operation == OP_MINUS or operation == OP_MULTIPLY or \
-                          operation == OP_DIVIDE or operation == OP_MINIMUM or \
-                          operation == OP_MAXIMUM:
-            if not self.isValue.get():
-                checkDimension = True
-        if checkDimension:
-            #TODO ROB: this should be getDimensions even for single objects
-            #Do the same with 2D?
-            # but I cannot make it work
-            if isinstance(self.inputVolumes2.get(), Volume)\
-               or isinstance(self.inputVolumes2.get(), Particle):
-                x1, y1, z1 = self.inputVolumes.get().getDim()
-                x2, y2, z2 = self.inputVolumes2.get().getDim()
-            else:
-                x1, y1, z1 = self.inputVolumes.get().getDimensions()
-                x2, y2, z2 = self.inputVolumes2.get().getDimensions()
-            if x1 != x2 or y1 != y2 or z1 != z2:
-                errors.append("Volume sizes in the two operands are not the same")
-            #if N2 > 1:
-                #if N1 != N2:
-                    #errors.append("The number of volumes in two operands are not the same")
+        def _errorDimensions():
+            if not (self.inputVolumes.get() is None and
+                    self.inputVolumes2.get() is None):
+                dim1 = self.inputVolumes.get().getDimensions()
+                dim2 = self.inputVolumes2.get().getDimensions()
+                if dim1 != dim2:
+                    errors.append("The number of volumes in two operands are "
+                                  "not the same. ")
+        def _errorSize():
+            if (not (self.inputVolumes.get() is None and
+                    self.inputVolumes2.get() is None) and
+                    not self._isSingleInput()):
+                size1 = self.inputVolumes.get().getSize()
+                size2 = self.inputVolumes2.get().getSize()
+                if size1 != size2:
+                    errors.append("Size of both volumes are not the same. ")
+        
+        if self._isBinaryCond():
+            if not self.isValue:
+                if not self.inputVolumes2.get() is None:
+                    _errorSize()
+                    _errorDimensions()
+        elif self._isDotCond():
+            if not self.inputVolumes2.get() is None:
+                _errorDimensions()
         return errors
+    
+    #--------------------------- UTILS functions ------------------------------
+    def _getSecondVolumeFn(self):
+        if self._isSingleInput():
+            return getImageLocation(self.inputVolumes2.get())
+        else:
+            return self._getSecondSetFn()
