@@ -201,11 +201,7 @@ byte *Smooth(byte *picSrc8, size_t swide, size_t shigh, size_t dwide, size_t dhi
 					*ptrPicSmooth++ = cD;
 				else {
 					/* compute weighting factors */
-<<<<<<< HEAD
 					apx = abs((int) px);//apx = abs(px);
-=======
-					apx = abs((int) px);
->>>>>>> v1.0
 					apx_100 = 100 - apx;
 					pA = apx * apy;
 					pB = apy * apx_100;
