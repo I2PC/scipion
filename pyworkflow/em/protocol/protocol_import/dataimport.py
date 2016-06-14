@@ -47,10 +47,18 @@ class ScipionImport():
         self._findImagesPath(inputSet)
         
         micSet = self.protocol._createSetOfMicrographs()
-        micSet.setObjComment('Micrographs imported from sqlite file:\n%s' % self._sqliteFile)
+        micSet.setObjComment('Micrographs imported from sqlite file:\n%s'
+                             % self._sqliteFile)
 
         # Update both samplingRate and acquisition with parameters
+<<<<<<< HEAD
         # selected in the protocol form
+=======
+        # selected in the protocol form.
+        # Acquisition should be updated before, just to ensure that
+        # scannedPixedSize will be computed properly when calling
+        # setSamplingRate
+>>>>>>> v1.0
         self.protocol.fillAcquisition(micSet.getAcquisition())
         self.protocol.setSamplingRate(micSet)
         micSet.setIsPhaseFlipped(self.protocol.haveDataBeenPhaseFlipped.get())
@@ -69,7 +77,8 @@ class ScipionImport():
         partSet = self.protocol._createSetOfParticles()
         partSet.copyInfo(inputSet)
         
-        partSet.setObjComment('Particles imported from Scipion sqlite file:\n%s' % self._sqliteFile)
+        partSet.setObjComment('Particles imported from Scipion sqlite file:\n%s'
+                              % self._sqliteFile)
         partSet.copyItems(inputSet, updateItemCallback=self._updateParticle)
         
         # Update both samplingRate and acquisition with parameters
@@ -83,12 +92,14 @@ class ScipionImport():
         """ Find the relative path from which the images exists
         repect to the sqlite location. 
         """
-        self._imgDict = {} # store which images stack have been linked/copied and the new path
+        # Store which images stack have been linked/copied and the new path
+        self._imgDict = {}
         img = inputSet.getFirstItem()
         self._imgPath = findRootFrom(self._sqliteFile, img.getFileName())
         
         if self._imgPath is None:
-            self.protocol.warning("Binary data was not found from sqlite: %s" % self._sqliteFile)
+            self.protocol.warning("Binary data was not found from sqlite: %s"
+                                  % self._sqliteFile)
     
     def validate(self):
         """ Try to find errors on import. """
@@ -115,17 +126,17 @@ class ScipionImport():
     def loadAcquisitionInfo(self):
         """ Return a dictionary with acquisition values and 
         the sampling rate information.
-        In the case of Xmipp, they are stored in files:
-        acquisition_info.xmd and microscope.xmd 
+        In the case of Scipion, these values will be read from the
+        'Properties' table of the particles.sqlite file.
         """
-        acquisitionDict = OrderedDict()
+        acq = OrderedDict()
         inputSet = SetOfParticles(filename=self._sqliteFile)
-        acquisitionDict['samplingRate'] = inputSet.getProperty('_samplingRate')
-        acquisitionDict['voltage'] = inputSet.getProperty('_acquisition._voltage')
-        acquisitionDict['amplitudeContrast'] = inputSet.getProperty('_acquisition._amplitudeContrast')
-        acquisitionDict['sphericalAberration'] = float(inputSet.getProperty('_acquisition._sphericalAberration'))
 
-        
-        return acquisitionDict
-          
-                
+        def _get(key):
+            return inputSet.getProperty(key)
+        acq['samplingRate'] = _get('_samplingRate')
+        acq['voltage'] = _get('_acquisition._voltage')
+        acq['amplitudeContrast'] = _get('_acquisition._amplitudeContrast')
+        acq['sphericalAberration'] = float(_get('_acquisition._sphericalAberration'))
+
+        return acq
