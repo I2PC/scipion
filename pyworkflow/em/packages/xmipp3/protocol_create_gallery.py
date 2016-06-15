@@ -33,7 +33,8 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 
 class XmippProtCreateGallery(ProtAnalysis3D):
-    """ Create a gallery of projections.
+    """ Create a gallery of projections from a volume. This gallery of projections may help to understand the images
+        observed in the microscope.
     """
     _label = 'create gallery'
     
@@ -49,8 +50,8 @@ class XmippProtCreateGallery(ProtAnalysis3D):
         form.addParam('rot0',FloatParam,default=0,label='Minimum rotational angle',expertLevel=LEVEL_ADVANCED, help="In degrees")
         form.addParam('rotF',FloatParam,default=360,label='Maximum rotational angle',expertLevel=LEVEL_ADVANCED, help="In degrees")
         form.addParam('rotStep',FloatParam,default=5,label='Angular step',expertLevel=LEVEL_ADVANCED, help="In degrees")
-        form.addParam('tilt0',FloatParam,default=0,label='Minimum tilt angle',expertLevel=LEVEL_ADVANCED, help="In degrees")
-        form.addParam('tiltF',FloatParam,default=180,label='Maximum tilt angle',expertLevel=LEVEL_ADVANCED, help="In degrees")
+        form.addParam('tilt0',FloatParam,default=0,label='Minimum tilt angle',expertLevel=LEVEL_ADVANCED, help="In degrees. tilt=0 is a top view, while tilt=90 is a side view")
+        form.addParam('tiltF',FloatParam,default=180,label='Maximum tilt angle',expertLevel=LEVEL_ADVANCED, help="In degrees. tilt=0 is a top view, while tilt=90 is a side view")
         form.addParam('tiltStep',FloatParam,default=5,label='Tilt step',expertLevel=LEVEL_ADVANCED, help="In degrees")
         form.addParam('maxFreq',FloatParam,default=0.25,label='Maximum frequency',expertLevel=LEVEL_ADVANCED, help="Normalized to 0.5")
 
