@@ -33,7 +33,8 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 
 class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
-    """ Estimate the orientation of a rotational axis and symmetrize.
+    """ Estimate the orientation of a rotational axis and symmetrize. The user should know the order of the axis (two-fold, three-fold, ...) If
+        this is unknown you may try several and see the most consistent results.
     """
     _label = 'rotational symmetry'
     
@@ -49,13 +50,13 @@ class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
         form.addParam('searchMode', EnumParam, choices=['Global','Local','Global+Local'], default=self.GLOBAL_LOCAL_SEARCH)
         
         form.addParam('rot',FloatParam,default=0,label='Initial rotational angle',condition='searchMode==1', help="In degrees")
-        form.addParam('tilt',FloatParam,default=0,label='Initial tilt angle',condition='searchMode==1', help="In degrees")
+        form.addParam('tilt',FloatParam,default=0,label='Initial tilt angle',condition='searchMode==1', help="In degrees. tilt=0 is a top axis while tilt=90 defines a side axis")
 
         form.addParam('rot0',FloatParam,default=0,label='Minimum rotational angle',condition='searchMode!=1', help="In degrees")
         form.addParam('rotF',FloatParam,default=360,label='Maximum rotational angle',condition='searchMode!=1', help="In degrees")
         form.addParam('rotStep',FloatParam,default=5,label='Angular step',condition='searchMode!=1', help="In degrees")
-        form.addParam('tilt0',FloatParam,default=0,label='Minimum tilt angle',condition='searchMode!=1', help="In degrees")
-        form.addParam('tiltF',FloatParam,default=180,label='Maximum tilt angle',condition='searchMode!=1', help="In degrees")
+        form.addParam('tilt0',FloatParam,default=0,label='Minimum tilt angle',condition='searchMode!=1', help="In degrees. tilt=0 is a top axis while tilt=90 defines a side axis")
+        form.addParam('tiltF',FloatParam,default=180,label='Maximum tilt angle',condition='searchMode!=1', help="In degrees. tilt=0 is a top axis while tilt=90 defines a side axis")
         form.addParam('tiltStep',FloatParam,default=5,label='Tilt step',condition='searchMode!=1', help="In degrees")
         self.rotSym=Float()
         self.tiltSym=Float()
