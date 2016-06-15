@@ -33,8 +33,10 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 
 class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
-    """ Estimate the orientation of a rotational axis and symmetrize. The user should know the order of the axis (two-fold, three-fold, ...) If
-        this is unknown you may try several and see the most consistent results.
+    """
+    Estimate the orientation of a rotational axis and symmetrize.
+    The user should know the order of the axis (two-fold, three-fold, ...)
+    If this is unknown you may try several and see the most consistent results.
     """
     _label = 'rotational symmetry'
     
@@ -42,28 +44,50 @@ class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
     LOCAL_SEARCH = 1
     GLOBAL_LOCAL_SEARCH = 2
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='General parameters')
-        form.addParam('inputVolume', PointerParam, pointerClass="Volume", label='Input volume')
-        form.addParam('symOrder',IntParam, default=3,label='Symmetry order', help="3 for a three-fold symmetry axis, 4 for a four-fold symmetry axis, ...")
-        form.addParam('searchMode', EnumParam, choices=['Global','Local','Global+Local'], default=self.GLOBAL_LOCAL_SEARCH)
-        
-        form.addParam('rot',FloatParam,default=0,label='Initial rotational angle',condition='searchMode==1', help="In degrees")
-        form.addParam('tilt',FloatParam,default=0,label='Initial tilt angle',condition='searchMode==1', help="In degrees. tilt=0 is a top axis while tilt=90 defines a side axis")
+        form.addParam('inputVolume', PointerParam, pointerClass="Volume",
+                      label='Input volume')
+        form.addParam('symOrder',IntParam, default=3,
+                      label='Symmetry order',
+                      help="3 for a three-fold symmetry axis, "
+                           "4 for a four-fold symmetry axis, ...")
+        form.addParam('searchMode', EnumParam,
+                      choices=['Global','Local','Global+Local'],
+                      default=self.GLOBAL_LOCAL_SEARCH)
 
-        form.addParam('rot0',FloatParam,default=0,label='Minimum rotational angle',condition='searchMode!=1', help="In degrees")
-        form.addParam('rotF',FloatParam,default=360,label='Maximum rotational angle',condition='searchMode!=1', help="In degrees")
-        form.addParam('rotStep',FloatParam,default=5,label='Angular step',condition='searchMode!=1', help="In degrees")
-        form.addParam('tilt0',FloatParam,default=0,label='Minimum tilt angle',condition='searchMode!=1', help="In degrees. tilt=0 is a top axis while tilt=90 defines a side axis")
-        form.addParam('tiltF',FloatParam,default=180,label='Maximum tilt angle',condition='searchMode!=1', help="In degrees. tilt=0 is a top axis while tilt=90 defines a side axis")
-        form.addParam('tiltStep',FloatParam,default=5,label='Tilt step',condition='searchMode!=1', help="In degrees")
-        self.rotSym=Float()
-        self.tiltSym=Float()
+        form.addParam('rot', FloatParam, default=0,
+                      condition='searchMode==%d' % self.LOCAL_SEARCH,
+                      label='Initial rotational angle', help="In degrees")
+        form.addParam('tilt', FloatParam, default=0,
+                      condition='searchMode==%d' % self.LOCAL_SEARCH,
+                      label='Initial tilt angle',
+                      help="In degrees. tilt=0 is a top axis while "
+                           "tilt=90 defines a side axis")
+
+        rot = form.addLine('Rotational angle',
+                           condition='searchMode!=%d' % self.LOCAL_SEARCH,
+                           help='Minimum, maximum and step values for '
+                                'rotational angle range, all in degrees.')
+        rot.addParam('rot0', FloatParam, default=0, label='Min')
+        rot.addParam('rotF', FloatParam, default=360, label='Max')
+        rot.addParam('rotStep', FloatParam, default=5, label='Step')
+
+        tilt = form.addLine('Tilt angle',
+                            condition='searchMode!=%d' % self.LOCAL_SEARCH,
+                            help='In degrees. tilt=0 is a top axis while '
+                                 'tilt=90 defines a side axis')
+        tilt.addParam('tilt0', FloatParam, default=0, label='Min')
+        tilt.addParam('tiltF', FloatParam, default=180, label='Max')
+        tilt.addParam('tiltStep', FloatParam, default=5, label='Step')
+
+        self.rotSym = Float()
+        self.tiltSym = Float()
 
         form.addParallelSection(threads=4, mpi=0)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('copyInput')
         if self.searchMode.get()!=self.LOCAL_SEARCH:
@@ -76,14 +100,17 @@ class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
         self.fnVolSym=self._getPath('volume_symmetrized.vol')
         [self.height,_,_]=self.inputVolume.get().getDim()
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def copyInput(self):
         ImageHandler().convert(self.inputVolume.get(), self.fnVolSym)
                         
     def coarseSearch(self):
-        self.runJob("xmipp_volume_find_symmetry","-i %s -o %s --rot %f %f %f --tilt %f %f %f --sym rot %d --thr %d"%
-                    (self.fnVolSym,self._getExtraPath('coarse.xmd'),self.rot0.get(), self.rotF.get(), self.rotStep.get(),
-                     self.tilt0.get(), self.tiltF.get(), self.tiltStep.get(), self.symOrder.get(),self.numberOfThreads))
+        self.runJob("xmipp_volume_find_symmetry",
+                    "-i %s -o %s --rot %f %f %f --tilt %f %f %f --sym rot %d --thr %d" %
+                    (self.fnVolSym, self._getExtraPath('coarse.xmd'),
+                     self.rot0, self.rotF, self.rotStep,
+                     self.tilt0, self.tiltF, self.tiltStep,
+                     self.symOrder, self.numberOfThreads))
 
     def getAngles(self, fnAngles=""):
         if fnAngles=="":
@@ -98,17 +125,21 @@ class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
         return (rot0,tilt0)
 
     def fineSearch(self):
-        if self.searchMode.get()==self.LOCAL_SEARCH:
+        if self.searchMode == self.LOCAL_SEARCH:
             rot0 = self.rot.get()
             tilt0 = self.tilt.get()
         else:
             rot0, tilt0 = self.getAngles(self._getExtraPath('coarse.xmd'))
-        self.runJob("xmipp_volume_find_symmetry","-i %s -o %s --localRot %f %f --sym rot %d"%
-                    (self.fnVolSym,self._getExtraPath('fine.xmd'),rot0, tilt0, self.symOrder.get()))
+        self.runJob("xmipp_volume_find_symmetry",
+                    "-i %s -o %s --localRot %f %f --sym rot %d"%
+                    (self.fnVolSym,self._getExtraPath('fine.xmd'),
+                     rot0, tilt0, self.symOrder.get()))
 
     def symmetrize(self):
         rot0, tilt0 = self.getAngles()
-        self.runJob("xmipp_transform_geometry","-i %s --rotate_volume euler %f %f 0 --dont_wrap"%(self.fnVolSym,rot0,tilt0))
+        self.runJob("xmipp_transform_geometry",
+                    "-i %s --rotate_volume euler %f %f 0 --dont_wrap" %
+                    (self.fnVolSym,rot0,tilt0))
 
     def createOutput(self):
         volume = Volume()
@@ -118,20 +149,26 @@ class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
         self._defineTransformRelation(self.inputVolume, self.outputVolume)
         
         rot0, tilt0 = self.getAngles()
-        self._defineOutputs(rotSym=pwobj.Float(rot0),tiltSym=pwobj.Float(tilt0))
+        self._defineOutputs(rotSym=pwobj.Float(rot0),
+                            tiltSym=pwobj.Float(tilt0))
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _summary(self):
         messages = []
         if self.rotSym.hasValue():
-            messages.append('Rot. Angle of Symmetry axis=%f (degrees)'%self.rotSym.get())
-            messages.append('Tilt.Angle of Symmetry axis=%f (degrees)'%self.tiltSym.get())
+            messages.append('Rot. Angle of Symmetry axis=%0.2f (degrees)' %
+                            self.rotSym.get())
+            messages.append('Tilt.Angle of Symmetry axis=%0.2f (degrees)' %
+                            self.tiltSym.get())
         return messages
 
     def _methods(self):
         messages = []      
-        messages.append('We looked for the %d-fold rotational axis of the volume %s using Xmipp [delaRosaTrevin2013]. ' % (self.symOrder.get(),self.getObjectTag('inputVolume'))+
-                        'We found it to be with an orientation given by a rotational angle of %f and a tilt angle of %f degrees.'
-                        %(self.rotSym.get(),self.tiltSym.get()))
+        messages.append('We looked for the %d-fold rotational axis of the '
+                        'volume %s using Xmipp [delaRosaTrevin2013]. '
+                        'We found it to be with an orientation given by a '
+                        'rotational angle of %f and a tilt angle of %f degrees.'
+                        % (self.symOrder, self.getObjectTag('inputVolume'),
+                          self.rotSym, self.tiltSym))
         return messages
 

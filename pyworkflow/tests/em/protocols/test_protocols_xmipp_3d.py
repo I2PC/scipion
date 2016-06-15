@@ -813,7 +813,8 @@ class TestXmippRotationalSymmetry(TestXmippBase):
                                          filesPath=self.vol,
                                          samplingRate=7.08)
         self.launchProtocol(protImportVol)
-        self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
+        self.assertIsNotNone(protImportVol.getFiles(),
+                             "There was a problem with the import")
         
         print "Run find rotational symmetry axis"
         protRotSym = self.newProtocol(XmippProtRotationalSymmetry,
@@ -823,7 +824,8 @@ class TestXmippRotationalSymmetry(TestXmippBase):
                                          tiltF=110)
         protRotSym.inputVolume.set(protImportVol.outputVolume)
         self.launchProtocol(protRotSym)
-        self.assertIsNotNone(protRotSym.outputVolume, "There was a problem with Rotational Symmetry")
+        self.assertIsNotNone(protRotSym.outputVolume,
+                             "There was a problem with Rotational Symmetry")
 
 
 class TestXmippProjMatching(TestXmippBase):
