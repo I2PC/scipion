@@ -924,6 +924,21 @@ class TestXmippCompareReprojections(TestXmippBase):
         self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from projections with angles")
 
 
+class TestXmippCreateGallery(TestXmippBase):
+    """This class check if the protocol create gallery in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+    
+    def test_particles1(self):
+        print "Run Create Gallery"
+        prot = self.newProtocol(XmippProtCreateGallery, symmetryGroup="d6")
+        prot.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputReprojections, "There was a problem with create gallery")
+
 class TestXmippBreakSym(TestXmippBase):
     @classmethod
     def setUpClass(cls):
