@@ -14,7 +14,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener,
 	
 	private boolean invertx;
 	private boolean inverty;
-    boolean[] keys = new boolean[256];
+    boolean[] keys = new boolean[1024];
 
 	public Tool getTool()
 	{

@@ -9,16 +9,14 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
 
+import sun.awt.image.ToolkitImage;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
@@ -38,11 +36,11 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected Micrograph micrograph;
 	protected ParticlePicker picker;
 	protected XmippImageWindow iw;
-	protected Cursor eraserCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
-    protected Cursor linearCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("linearPicking.png").getImage(), new Point(0, 0), "Linear");
+	protected Cursor eraserCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("eraserC.png").getImage(), new Point(3, 31), "Eraser");
+    protected Cursor linearCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("linearPickingC.png").getImage(), new Point(0, 0), "Linear");
+    private byte pickingCursorIndex = 1;
+    protected Cursor pickingCursor = getPickingCursor(pickingCursorIndex); ;
 
-	
-        
 	public void setMicrograph(Micrograph m)
 	{
 		micrograph = m;
@@ -142,12 +140,42 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
             // Toggle linear mode
             getFrame().toogleLinearMode();
 
+        }else if (code == KeyEvent.VK_PLUS){
+            changePickingCursor((byte) (pickingCursorIndex+1));
+
+        }else if (code == KeyEvent.VK_MINUS){
+            changePickingCursor((byte) (pickingCursorIndex-1));
+
         }else
 			return;// do not repaint if not needed
 		repaint();
 	}
-	
-	public void zoomIn(int sx, int sy)
+
+    private void changePickingCursor(byte index) {
+        Cursor newCursor = getPickingCursor(index);
+
+        if (newCursor != null){
+            pickingCursorIndex = index;
+            pickingCursor = newCursor;
+            setCustomCursor();
+        }
+    }
+
+    private Cursor getPickingCursor(int index) {
+
+        String pickingCursorImageName = "picking" + index + ".png";
+
+        ToolkitImage image = (ToolkitImage) XmippResource.getIcon(pickingCursorImageName).getImage();
+        if (image.hasError()) {
+            // Fall back on crosshair cursor
+            return crosshairCursor;
+        } else {
+            return Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(2, 0), "Picking");
+        }
+
+    }
+
+    public void zoomIn(int sx, int sy)
 	{
 		super.zoomIn(sx, sy);
 		getFrame().displayZoom(getMagnification());
@@ -235,7 +263,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
             setCursor(linearCursor);
 
         else
-            setCursor(crosshairCursor);
+            setCursor(pickingCursor);
 
 	}
 
