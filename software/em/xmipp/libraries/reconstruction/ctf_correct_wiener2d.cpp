@@ -237,15 +237,6 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
         int y0 = FIRST_XMIPP_INDEX(paddimY);
         int yF = LAST_XMIPP_INDEX(paddimY);
         img().selfWindow(y0, x0, yF, xF);
-
-    	std::cout << "entro 1" << std::endl;
-    	std::cout << Ydim << std::endl;
-    	std::cout << Xdim << std::endl;
-    	std::cout << x0 << std::endl;
-    	std::cout << y0 << std::endl;
-    	std::cout << xF << std::endl;
-    	std::cout << yF << std::endl;
-
     }
 
     transformer.FourierTransform(img(), Faux);
@@ -263,15 +254,6 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
         int xF = LAST_XMIPP_INDEX(Xdim);
         int yF = LAST_XMIPP_INDEX(Ydim);
         img().selfWindow(y0, x0, yF, xF);
-
-    	std::cout << "entro 2" << std::endl;
-    	std::cout << Ydim << std::endl;
-    	std::cout << Xdim << std::endl;
-    	std::cout << x0 << std::endl;
-    	std::cout << y0 << std::endl;
-    	std::cout << xF << std::endl;
-    	std::cout << yF << std::endl;
-
     }
 
     img.write(fnImgOut);

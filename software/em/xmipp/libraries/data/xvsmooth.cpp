@@ -168,7 +168,7 @@ byte *Smooth(byte *picSrc8, size_t swide, size_t shigh, size_t dwide, size_t dhi
 				if (y1 > shigh - 1)
 					y1 = shigh - 1;
 			}
-			abs((int) py);//apy = abs(py);
+			apy = abs((int) py);//apy = abs(py);
 			apy_100 = 100 - apy;
 
 			cyOff = (size_t) cy * swide; /* current line */

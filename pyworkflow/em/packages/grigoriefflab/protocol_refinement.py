@@ -44,14 +44,14 @@ reconstructions.
     def createOutputStep(self):
         lastIter = self._getLastIter()
         inputSet = self._getInputParticles()
-
+        
         # Register output volume
         volFn = self._getFileName('iter_vol', iter=lastIter)
         vol = em.Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(inputSet.getSamplingRate())
         self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(self.inputParticles, vol)
+        self._defineSourceRelation(self._getInputParticlesPointer(), vol)
         # Register output Particles with their 3D alignment
         partSet = self._createSetOfParticles()
         partSet.copyInfo(inputSet)

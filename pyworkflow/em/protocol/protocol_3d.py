@@ -59,10 +59,13 @@ class ProtFilterVolumes(ProtPreprocessVolumes):
     between the ProtPreprocessVolumes """
     pass
 
+
 class ProtOperateVolumes(ProtPreprocessVolumes):
     """ This is the base for the branch of filters,
     between the ProtPreprocessParticles """
-    pass
+    def __init__(self, **args):
+        ProtPreprocessVolumes.__init__(self, **args)
+
 
 class ProtMaskVolumes(ProtPreprocessVolumes):
     """ This is the base for the branch of mask, 

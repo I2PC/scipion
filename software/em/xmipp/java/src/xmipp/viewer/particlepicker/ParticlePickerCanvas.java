@@ -41,6 +41,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
     private byte pickingCursorIndex = 1;
     protected Cursor pickingCursor = getPickingCursor(pickingCursorIndex); ;
 
+    Dimension size;
 	public void setMicrograph(Micrograph m)
 	{
 		micrograph = m;
@@ -67,7 +68,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		micrograph.runImageJFilters(picker.getFilters());
 
         addKeyListener(this);
-//		addKeyListener(new KeyListener()
+//      addKeyListener(new KeyListener()
 //		{
 //
 //			@Override
@@ -98,9 +99,9 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	
 	public void keyPressed(KeyEvent e)
 	{
-        super.keyPressed(e);
+		super.keyPressed(e);
 
-		PickerParticle active = getActive();
+        PickerParticle active = getActive();
 		int step = 1;
 		int code = e.getKeyCode();
 		int x = screenX(imp.getWidth()/2);
@@ -175,16 +176,37 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
     }
 
+    protected void captureWindowSize(){
+        size = this.imp.getWindow().getSize();
+        this.imp.getWindow().setIgnoreRepaint(true);
+
+    }
+    protected void restoreWindowSize(){
+        if (size != null) {
+            this.imp.getWindow().setSize(size);
+            this.imp.getWindow().setIgnoreRepaint(false);
+        }
+    }
+
     public void zoomIn(int sx, int sy)
 	{
+
+        captureWindowSize();
+
 		super.zoomIn(sx, sy);
 		getFrame().displayZoom(getMagnification());
+
+        restoreWindowSize();
 	}
 	
 	public void zoomOut(int sx, int sy)
 	{
+        captureWindowSize();
+
 		super.zoomOut(sx, sy);
 		getFrame().displayZoom(getMagnification());
+
+        restoreWindowSize();
 	}
 
 	protected abstract Particle getLastParticle();
@@ -256,15 +278,16 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
             proceeed =  getFrame().isPickingAvailable(e);
         }
 
-        if (getFrame().isEraserMode())
-            setCursor(eraserCursor);
+        if (proceeed) {
+            if (getFrame().isEraserMode())
+                setCursor(eraserCursor);
 
-        else if (getFrame().isLinearMode())
-            setCursor(linearCursor);
+            else if (getFrame().isLinearMode())
+                setCursor(linearCursor);
 
-        else
-            setCursor(pickingCursor);
-
+            else
+                setCursor(pickingCursor);
+        }
 	}
 
 	public abstract void refreshActive(Particle p);

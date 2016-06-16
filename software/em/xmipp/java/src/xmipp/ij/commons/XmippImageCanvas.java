@@ -113,7 +113,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener,
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		
+
 
 	}
 
