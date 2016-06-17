@@ -5,12 +5,19 @@
 #ifdef LOGGING
 #include "log.h"
 #endif
-#include "/home/jnavas/workspace/Delaunay_Scipion/statistics.h"
+#ifdef LOCATION_STATISTICS
+#include "statistics.h"
+#endif
+#include "point.h"
+#include "polygon.h"
 #include "sorting.h"
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef LOCATION_STATISTICS
+#include "/home/jnavas/workspace/Delaunay_Scipion/performance.h"
+#endif
 
 #ifdef DEBUG
 #include <GL/glut.h>
@@ -37,7 +44,7 @@ int			is_Interior_To_Node( struct DCEL_T *dcel, struct Graph_T *graph,
 														struct Point_T *p,
 														int node_Index);
 int         is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, struct Point_T *p, int node_Index);
-void		analyze_Face( struct Delaunay_T *delaunay, int point_Index);
+bool		analyze_Face( struct Delaunay_T *delaunay, int point_Index);
 void    	split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index, int node_Index, int nTriangles);
 double  	modified_Signed_Area( struct DCEL_T *dcel, struct  Node_T *node);
 int     	select_Colinear_Edge( struct DCEL_T *dcel, int point_Index, int edge_ID);
@@ -116,7 +123,6 @@ void	delete_Delaunay( struct Delaunay_T *delaunay)
 {
 	// Deallocate DCEL.
 	finalize_DCEL(delaunay->dcel);
-	free(delaunay->dcel);
 
 	// Deallocate Delaunay.
 	finalize_Delaunay(delaunay);
@@ -273,6 +279,7 @@ void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 }
 
 
+//#define DEBUG_INCREMENTAL_DELAUNAY
 /***************************************************************************
 * Name: incremental_Delaunay
 * IN:		N/A
@@ -293,6 +300,7 @@ void	incremental_Delaunay(struct Delaunay_T *delaunay)
     delaunay_Stat.trianglesFound[2] = 0;
     delaunay_Stat.nFlipped = 0;
 #endif
+    delaunay->dcel->incremental = true;
 
     // Set highest point at first position of the DCEL vertex array.
     set_Highest_First( delaunay->dcel, &lexicographic_Higher);
@@ -314,11 +322,6 @@ void	incremental_Delaunay(struct Delaunay_T *delaunay)
     // Insert first internal face and external face.
     insertFace( delaunay->dcel, 4);
     insertFace( delaunay->dcel, 1);
-
-#ifdef DEBUG
-    print_Graph(graph);
-    print_DCEL( dcel);
-#endif
 
     // Loop all other points.
     for (point_Index=1; point_Index<delaunay->dcel->nVertex ; point_Index++)
@@ -360,6 +363,7 @@ void 	build_Delaunay_From_Triangulation(struct DCEL_T *dcel)
 	// Initialize variables.
 	i=0;
 	nPending = dcel->nEdges;
+	dcel->incremental = false;
 
 	// Analyze all edges.
 	while (nPending > 0)
@@ -786,6 +790,7 @@ bool select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
 #ifdef LOCATION_STATISTICS
     // # triangles searched before a new point is located.
     location_Stat.current++;
+	location_Stat.begin[location_Stat.current] = getTime();
     location_Stat.nTrianglesSearched[location_Stat.current] = 0;
 #endif
 
@@ -1060,10 +1065,14 @@ bool select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     	}
     }
 
+#ifdef LOCATION_STATISTICS
+    location_Stat.end[location_Stat.current] = getTime();
+#endif
+
     return(found);
 }
 
-
+#define DEBUG_SELECT_CLOSEST_DCEL
 /***************************************************************************
 * Name: select_Closest_Point_DCEL
 * IN:	dcel			triangulation DCEL
@@ -1079,13 +1088,17 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
 																	   double *lowest_Distance)
 {
 	bool	error=false;			// Convex hull error flag.
-	bool 	found=false;			// Return value.
-	struct Point_T	*anchors;		// Anchors vector.
+	bool 	foundClosest=false;		// Return value.
+	bool 	foundEdge=false;		// Found edge flag.
 	int		i=0;					// Loop index.
 	int		index=0;				// Array index.
+	int		edgeIndex=0;			// DCEL edge index.
 	int		selectedVertex=0;		// Vertex selected as initial point.
 	int		faceID=0;				// Face identifier.
 	double	newDistance=0.0;		// Distance to between points.
+	struct Point_T *r1, *r2;		// Points references.
+	int		nPoints=0;				// # points in convex hull.
+	int		*points;
 
 	// Initialize output value.
 	(*lowest_Distance) = DBL_MAX;
@@ -1096,66 +1109,173 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
     location_Stat.nTrianglesSearched[location_Stat.current] = 0;
 #endif
 
-    if (is_Interior_To_Convex_Hull( dcel, p, &error))
+    // Check if point is exterior to convex hull.
+    if (!is_Interior_To_Convex_Hull( dcel, p, &error))
     {
-    	//CHECK ONLY CONVEX HULL POINTS.
-    }
-
-    if ((anchors = (struct Point_T *) malloc(sizeof(struct Point_T)*nAnchors)) == NULL)
-    {
-#ifdef LOGGING
-		sprintf("Function select_Closest_Point_DCEL: Error allocating anchors array\n");
-		write_Log( log_Text);
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+    	printf("Point (%f,%f) is exterior to convex hull\n");
 #endif
-		printf("Function select_Closest_Point_DCEL: Error allocating anchors array\n");
-    	found = false;
+    	// Get points in convex hull.
+    	get_Convex_Hull( dcel, &nPoints, points);
+
+    	// Check all points in convex hull.
+    	for (i=0; i<nPoints ;i++)
+    	{
+			// Check if current anchor is closest point.
+			newDistance = distance( p, &dcel->vertex[index].vertex);
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+			printf("Point %d is (%f,%f). Distance %lf\n", index+1,
+										dcel->vertex[index].vertex.x,
+										dcel->vertex[index].vertex.y,
+										newDistance);
+#endif
+			if (newDistance < (*lowest_Distance))
+			{
+				// Update output data.
+				(*lowest_Distance) = newDistance;
+				selectedVertex = index;
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+				printf("New point is closer\n");
+#endif
+			}
+    	}
     }
     else
     {
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+    	printf("Point (%f,%f) is INTERIOR to convex hull\n", p->x, p->y);
+    	printf("Selecting %d random anchors\n", nAnchors);
+#endif
     	srand((int) time(NULL));
 
-    	// Create anchor points.
+    	// Select random anchor points.
 		for (i=0; i<nAnchors ;i++)
 		{
 	        // Select a new random point.
 			index = rand() % dcel->nVertex;
 
 			// Check if current anchor is closest point.
-			newDistance = distance( p, &anchors[i]);
+			newDistance = distance( p, &dcel->vertex[index].vertex);
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+			printf("Point %d is (%f,%f). Distance %lf\n", index+1,
+										dcel->vertex[index].vertex.x,
+										dcel->vertex[index].vertex.y,
+										newDistance);
+#endif
 			if (newDistance < (*lowest_Distance))
 			{
 				// Update output data.
 				(*lowest_Distance) = newDistance;
 				selectedVertex = index;
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+				printf("New point is closer\n");
+#endif
 			}
 		}
 
-		// Select face where anchor point lays on.
+		// Get face where selected point is the origin vertex.
 		faceID = dcel->edges[dcel->vertex[selectedVertex].origin_Edge-1].face;
 
-		//COMPROBAR SI ES EXTERIOR AL CONVEX HULL ANTES DE USAR LOS ANCHORS
-
 		// Main loop to start location from selected anchor.
-		found = false;
-		while (!found)
+		foundClosest = false;
+		while (!foundClosest)
 		{
-
-			// Check if current face surrounds point.
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+			printf("Searching in face %d\n", faceID);
+#endif
+			// Check if point is internal to face.
 			if (is_Interior_To_Face( dcel, p, faceID))
 			{
-				// SELECT CLOSEST POINT AMONT THREE VERTICES IN FACE.
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+				printf("Is interior\n", faceID);
+#endif
+				// Initialize output value.
+				(*lowest_Distance) = DBL_MAX;
+
+				// Get edge in current face.
+				edgeIndex = dcel->faces[faceID].edge - 1;
+
+				// Check all triangle vertex.
+				for (i=0; i<N_POINTS_TRIANGLE ;i++)
+				{
+					// Get vertex.
+					index = dcel->edges[edgeIndex].origin_Vertex-1;
+
+					// Check if current vertex is closer.
+					newDistance = distance( p, &dcel->vertex[index].vertex);
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+					printf("Point %d is (%f,%f). Distance %lf\n", index+1,
+												dcel->vertex[index].vertex.x,
+												dcel->vertex[index].vertex.y,
+												newDistance);
+#endif
+					if (newDistance < (*lowest_Distance))
+					{
+						// Update output data.
+						(*lowest_Distance) = newDistance;
+						selectedVertex = index;
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+						printf("New point %d is closer\n", index+1);
+#endif
+					}
+
+					// Get next edge.
+					edgeIndex = dcel->edges[edgeIndex].next_Edge - 1;
+				}
+
+				// Get reference to closest point.
+				q->x = dcel->vertex[selectedVertex].vertex.x;
+				q->y = dcel->vertex[selectedVertex].vertex.y;
+				foundClosest = true;
+
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+				printf("Closest point index %d is (%lf,%lf)\n", selectedVertex+1);
+#endif
 			}
 			else
 			{
-				// SELECT NEW FACE.
+				// Get first edge.
+				edgeIndex = dcel->faces[faceID].edge - 1;
+
+				// Check edge to continue searching face.
+				foundEdge = false;
+				while(!foundEdge)
+				{
+					// Get edge extreme points.
+					r1 = &dcel->vertex[dcel->edges[edgeIndex].origin_Vertex-1].vertex;
+					r2 = &dcel->vertex[dcel->edges[dcel->edges[edgeIndex].twin_Edge-1].origin_Vertex-1].vertex;
+
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+					printf("Checking edge %d. Points %d %d\n", edgeIndex+1,
+							dcel->edges[edgeIndex].origin_Vertex,
+							dcel->edges[dcel->edges[edgeIndex].twin_Edge-1].origin_Vertex);
+#endif
+					// If right turn then this is the edge.
+					if (check_Turn( r1, r2, p) == RIGHT_TURN)
+					{
+						// End inner loop.
+						foundEdge = true;
+
+						// Get next edge.
+						faceID = dcel->edges[dcel->edges[edgeIndex].twin_Edge-1].face;
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+						printf("Right turn. New face is %d\n", faceID);
+#endif
+					}
+					// Get next edge in triangle.
+					else
+					{
+						edgeIndex = dcel->edges[edgeIndex].next_Edge - 1;
+#ifdef DEBUG_SELECT_CLOSEST_DCEL
+						printf("Left turn. New edge is %d\n", edgeIndex+1);
+#endif
+					}
+				}
 			}
 		}
-
-		// Deallocate vector.
-		free(anchors);
     }
 
-	return(found);
+	return(foundClosest);
 }
 
 //*****************************************************************************
@@ -1234,13 +1354,13 @@ int is_Strictly_Interior_To_Node(struct DCEL_T *dcel, struct Graph_T *graph, str
 
 
 //#define DEBUG_ANALYZE_FACE
-void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
+bool analyze_Face( struct Delaunay_T *delaunay, int point_Index)
 {
     int     i=0;                            // Loop counter.
     int     node_Index=0;                   // Index of current node analyzed.
-    int		found=FALSE;					// Loop control flag.
-	int		finished=FALSE;					// Loop control flag.
-    struct  Dcel_Vertex_T   *point=NULL;   // Pointer to points in DCEL.
+    bool	found=false;					// Loop control flag and return value.
+	bool	finished=false;					// Loop control flag.
+    struct  Dcel_Vertex_T   *point=NULL;   	// Pointer to points in DCEL.
 
     // Get new point to insert.
     point = get_Vertex( delaunay->dcel, point_Index);
@@ -1322,6 +1442,8 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
                 else
                 {
                     i++;
+
+                    // Check if all children checked.
                     if (i == delaunay->graph.nodes[node_Index].nChildren)
                     {
                     	// Force exit function.
@@ -1338,6 +1460,8 @@ void analyze_Face( struct Delaunay_T *delaunay, int point_Index)
             }
         }
     }
+
+	return(found);
 }
 
 //#define DEBUG_SPLIT_TRIANGLE
@@ -1421,7 +1545,6 @@ void split_Triangle( struct DCEL_T *dcel, struct Graph_T *graph, int point_Index
 		new_Node[2].points_Index[2] = get_Edge_Origin_Vertex( dcel, prev_Edge_ID - 1);
         new_Node[2].face_ID = new_Face_ID + 1;
         area[2] = modified_Signed_Area( dcel, &new_Node[2]);
-
         if (area[0] > area[1])
         {
             // 2nd, 0th, 1st.
@@ -1645,9 +1768,9 @@ double   modified_Signed_Area( struct DCEL_T *dcel, struct  Node_T *node)
     else
     {
         // Compute area.
-        area = signed_Area( &dcel->vertex[node->points_Index[0]].vertex,
-                            &dcel->vertex[node->points_Index[1]].vertex,
-                            &dcel->vertex[node->points_Index[2]].vertex);
+        area = signed_Area( &dcel->vertex[node->points_Index[0]-1].vertex,
+                            &dcel->vertex[node->points_Index[1]-1].vertex,
+                            &dcel->vertex[node->points_Index[2]-1].vertex);
     }
 
     return(area);

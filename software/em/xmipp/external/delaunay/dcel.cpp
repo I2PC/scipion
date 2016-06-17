@@ -259,10 +259,10 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 	    if (fscanf( fd, "%d", &number_Points) != 1)
 	    {
 #ifdef LOGGING
-			sprintf( log_Text, "Error reading number of points from file: ../data/points_input.txt.\n");
+			sprintf( log_Text, "Error %d reading number of points from file: %s.", errno, fileName);
 			write_Log( log_Text);
 #endif
-            printf("Error reading number of points from file: ../data/points_input.txt.");
+            printf("Error %d reading number of points from file: %s.", errno, fileName);
 			ret = FAILURE;
 	    }
 	    else
@@ -297,8 +297,8 @@ int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName)
 	return(ret);
 }
 
-
-int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
+//#define DEBUG_WRITE_DCEL
+int		write_DCEL( struct DCEL_T *dcel, int type, const char *fileName)
 {
 	int		i=0;			// Loop counter.
 	int		ret=SUCCESS;	// Return value.
@@ -312,13 +312,17 @@ int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 		sprintf( log_Text, "Error %d opening input file: %s\n", errno, fileName);
 		write_Log( log_Text);
 #endif
-	    printf("Error %d opening input file: %s\n", errno, fileName);
+	    printf("Error %d opening output file: %s\n", errno, fileName);
 		ret = FAILURE;
 	}
 	else
 	{
 		if (type == DCEL_TYPE)
 		{
+#ifdef DEBUG_WRITE_DCEL
+			printf("Writing DCEL data to %s file\n", fileName);
+#endif
+
 			// Write number of vertex.
 			fprintf( fd, "%d\n", dcel->nVertex);
 
@@ -357,6 +361,9 @@ int		write_DCEL( struct DCEL_T *dcel, int	type, const char *fileName)
 		}
 		else
 		{
+#ifdef DEBUG_WRITE_DCEL
+			printf("Writing only points to %s file\n", fileName);
+#endif
 			// Write number of vertex.
 			fprintf( fd, "%d ", dcel->nVertex);
 
@@ -971,7 +978,7 @@ int 	get_Number_Real_Edges( struct DCEL_T *dcel)
 		}
 	}
 
-	return(nEdges);
+	return(nEdges / 2);
 }
 
 
@@ -1561,7 +1568,6 @@ int   get_Face_Vertex( struct DCEL_T *dcel, int face_ID, struct Dcel_Vertex_T *v
 int     get_Number_Real_Faces(struct DCEL_T *dcel)
 {
 	int		i=0;					// Loop counter.
-	int		index=0;				// Edge index.
 	struct Dcel_Face_T  *face=NULL;	// Current face.
 	int		nFaces=0;				// Return value.
 
@@ -1570,10 +1576,9 @@ int     get_Number_Real_Faces(struct DCEL_T *dcel)
 	{
 		// Get i-face.
 		face = get_Face( dcel, i);
-		index = face->edge-1;
 
 		// Check if it is a real face.
-		if (index >= 0)
+		if (face->imaginaryFace == VALID)
 		{
 			nFaces++;
 		}
@@ -2107,6 +2112,9 @@ int 	read_Points_DCEL( FILE *fd, int nPoints, struct DCEL_T *dcel)
 	i=0;
     while ((i<nPoints) && (ret==SUCCESS))
 	{
+#ifdef DEBUG_READ_POINTS_DCEL
+    	printf("Reading point %d\n", i+1);
+#endif
 		// Read point.
 		if (fscanf( fd, "%f", &point.vertex.x) != 1)
 		{
@@ -2357,9 +2365,9 @@ void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 	clutter( dcel);
 }
 
-
+//#define DEBUG_PRINT_DCEL_STATISTICS
 /***************************************************************************
-* Name: 	generate_Cluster_Points_DCEL
+* Name: 	print_Dcel_Statistics
 * IN:		fileName				output file.
 * 			dcel					DCEL structure data.
 * OUT:		N/A
@@ -2369,10 +2377,13 @@ void	generate_Cluster_Points_DCEL( int nPoints, struct DCEL_T *dcel,
 ***************************************************************************/
 void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel)
 {
-	FILE 	*fd=NULL;		// File descriptor.
+	FILE 	*fd=NULL;				// File descriptor.
+	int		length=0;				// Convex hull length.
+	int		*convex_Hull_Set=NULL;	// Set of points in the convex hull.
+	bool	error=false;
+	long long int		memory=0;	// Amount of memory use.
 
-	// Open input file.
-	if ((fd = fopen( fileName, "w")) == NULL)
+	if (dcel->nFaces > 0)
 	{
 #ifdef DEBUG_PRINT_DCEL_STATISTICS
 		printf("DCEL has %d faces\n", dcel->nFaces);
@@ -2425,9 +2436,7 @@ void 	print_Dcel_Statistics( char *fileName, struct DCEL_T *dcel)
 	}
 	else
 	{
-		fprintf( fd, "%d\n", dcel->nVertex);
-		fprintf( fd, "%d\n", dcel->nVertex);
-		fprintf( fd, "%d\n", get_Number_Real_Faces( dcel));
+		printf("DCEL has no triangles\n");
 	}
 }
 

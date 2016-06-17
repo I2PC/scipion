@@ -9,12 +9,14 @@
 /**************************************************************************
 * Defines
 **************************************************************************/
-#define     EXTERNAL_FACE       0
+#define     EXTERNAL_FACE       	0
 
-#define 	POINTS_TYPE		    1
-#define 	DCEL_TYPE		    2
+#define 	POINTS_TYPE		    	1
+#define 	DCEL_TYPE		    	2
 
-#define     NO_UPDATE           -1
+#define     NO_UPDATE           	-1
+
+#define 	CONVEX_HULL_LEN_FACTOR 	1
 
 /**************************************************************************
 * Data types definition
@@ -47,6 +49,8 @@ struct	Dcel_Face_T
 
 struct DCEL_T
 {
+	bool					incremental;
+
 	// Vertex data.
 	int 					nVertex;
 	int						sizeVertex;
