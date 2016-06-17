@@ -875,6 +875,7 @@ class TestXmippKerdensom(TestXmippBase):
         self.launchProtocol(xmippProtKerdensom)
         self.assertIsNotNone(xmippProtKerdensom.outputClasses, "There was a problem with Kerdensom")
 
+
 class TestXmippCompareReprojections(TestXmippBase):
     """This class check if the protocol compare reprojections in Xmipp works properly."""
     @classmethod
@@ -922,6 +923,34 @@ class TestXmippCompareReprojections(TestXmippBase):
         prot.inputVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from projections with angles")
+
+
+class TestXmippCreateGallery(TestXmippBase):
+    """This class check if the protocol create gallery in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+    
+    def _createGallery(self, step, projections):
+        prot = self.newProtocol(XmippProtCreateGallery,
+                                symmetryGroup="d6",
+                                rotStep=step, tiltStep=step)
+        prot.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(prot)
+        outSet = getattr(prot, 'outputReprojections', None)
+        self.assertIsNotNone(outSet, "There was a problem with create gallery")
+        self.assertEqual(projections, outSet.getSize())
+
+        return prot
+
+    def test_step5(self):
+        prot = self._createGallery(step=5, projections=131)
+
+    def test_step10(self):
+        prot = self._createGallery(step=10, projections=32)
+
 
 
 class TestXmippBreakSym(TestXmippBase):
