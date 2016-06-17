@@ -115,7 +115,8 @@ Protocols SPA = [
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCLTomo", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtHelicalParameters", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtHelicalParameters", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtRotationalSymmetry", "text": "default"}
             ]}
          ]},
         {"tag": "protocol_group", "text": "Refine", "openItem": "False", "children": [
