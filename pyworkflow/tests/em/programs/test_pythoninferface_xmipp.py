@@ -12,6 +12,7 @@ from time import time
 
 from xmipp import *
 from pyworkflow.em.packages.xmipp3 import getXmippPath
+import pyworkflow.utils as pwutils
 
 
 
