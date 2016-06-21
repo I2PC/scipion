@@ -835,7 +835,12 @@ class Project(object):
         return self.runs
     def checkPid(self, protocol):
 
-        if protocol.isActive() and not pwutils.isProcessAlive(protocol._pid):
+        from pyworkflow.protocol.launch import _isLocal
+
+        if protocol.isActive() \
+                and _isLocal(protocol)\
+                and not protocol.useQueue() \
+                and not pwutils.isProcessAlive(protocol._pid):
             protocol.setFailed("Process " + str(protocol._pid.get()) + " not found running on the machine." +
                    " It probably has died or been killed without reporting the status to scipion." +
                    " Logs might have information about what happened to this process.")
