@@ -81,6 +81,7 @@ public class UntiltedMicrographCanvas extends ParticlePickerCanvas
 					getMicrograph().removeParticles(x, y);
 					active = getLastParticle();
 					refresh();
+                    getFrame().getTiltedCanvas().repaint();
 					return;
 				}
 				if (active != null && !active.isAdded() && active.getTiltedParticle() != null)

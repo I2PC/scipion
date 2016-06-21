@@ -70,6 +70,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
+from protocol_create_gallery import XmippProtCreateGallery
 from protocol_ctf_discrepancy import XmippProtCTFDiscrepancy
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
@@ -97,6 +98,7 @@ from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_rotational_spectra import XmippProtRotSpectra 
+from protocol_rotational_symmetry import XmippProtRotationalSymmetry 
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
