@@ -363,7 +363,7 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def _updateProtocol(self, protocol, tries=0):
+    def _updateProtocol(self, protocol, tries=0, checkPid=False):
         if not self.isReadOnly():
             try:
                 # Backup the values of 'jobId', 'label' and 'comment'
@@ -379,6 +379,9 @@ class Project(object):
                 prot2 = pwprot.getProtocolFromDb(self.path,
                                                  protocol.getDbPath(),
                                                  protocol.getObjId())
+
+                if checkPid:
+                    self.checkPid(prot2)
 
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
@@ -804,7 +807,7 @@ class Project(object):
             # Update with changes
             self._storeProtocol(protocol)
 
-    def getRuns(self, iterate=False, refresh=True):
+    def getRuns(self, iterate=False, refresh=True, checkPids=False):
         """ Return the existing protocol runs in the project. 
         """
         if self.runs is None or refresh:
@@ -818,16 +821,25 @@ class Project(object):
                                               objectFilter=lambda o: isinstance(o, pwprot.Protocol))
             for r in self.runs:
                 self._setProtocolMapper(r)
+
                 # Update nodes that are running and are not invoked by other protocols
                 if r.isActive():
                     if not r.isChild():
                         # pwutils.prettyLog("Updating protocol %s, because isActive (%s)" % (pwutils.green(r.getRunName()),
                         #                                                                   r.getStatus()))
 
-                        self._updateProtocol(r)
+                        self._updateProtocol(r, checkPid=checkPids)
+
             self.mapper.commit()
 
         return self.runs
+    def checkPid(self, protocol):
+
+        if protocol.isActive() and not pwutils.isProcessAlive(protocol._pid):
+            protocol.setFailed("Process " + str(protocol._pid.get()) + " not found running on the machine." +
+                   " It probably has died or been killed without reporting the status to scipion." +
+                   " Logs might have information about what happened to this process.")
+
 
     def iterSubclasses(self, classesName, objectFilter=None):
         """ Retrieve all objects from the project that are instances
@@ -840,13 +852,14 @@ class Project(object):
                                                  objectFilter=objectFilter):
                 yield obj
 
-    def getRunsGraph(self, refresh=True):
+    def getRunsGraph(self, refresh=True, checkPids=False):
         """ Build a graph taking into account the dependencies between
         different runs, ie. which outputs serves as inputs of other protocols. 
         """
+
         if refresh or self._runsGraph is None:
             outputDict = {}  # Store the output dict
-            runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
+            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
             g = pwutils.graph.Graph(rootName='PROJECT')
 
             for r in runs:
@@ -866,7 +879,7 @@ class Project(object):
                     if pointedId in outputDict:
                         parentNode = outputDict[pointedId]
                         if parentNode is node:
-                            print "WARNING: Found a cyclic dependence from node %s to itself, problably a bug. " % pointedId
+                            print "WARNING: Found a cyclic dependence from node %s to itself, probably a bug. " % pointedId
                         else:
                             parentNode.addChild(node)
                             return True

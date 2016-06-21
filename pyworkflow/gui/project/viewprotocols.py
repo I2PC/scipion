@@ -698,7 +698,7 @@ class ProtocolsView(tk.Frame):
             except Exception:
                 self._selection.remove(protId)
 
-    def refreshRuns(self, e=None, initRefreshCounter=True):
+    def refreshRuns(self, e=None, initRefreshCounter=True, checkPids=False):
         """ Refresh the status of displayed runs.
          Params:
             e: Tk event input
@@ -717,7 +717,7 @@ class ProtocolsView(tk.Frame):
                 print "    - %s, %s" % (f.path, f.fd)
             print "  memory percent: ", proc.get_memory_percent()
 
-        self.updateRunsGraph(True)
+        self.updateRunsGraph(True, checkPids=checkPids)
         self.updateRunsTree(False)
 
 
@@ -883,7 +883,12 @@ class ProtocolsView(tk.Frame):
         
     def createRunsTree(self, parent):
         self.provider = RunsTreeProvider(self.project, self._runActionClicked)
-        t = pwgui.tree.BoundTree(parent, self.provider)        
+
+        ## This line triggers the getRuns for the first time. Ne need to force the check pids here, temporaly
+        self.provider._checkPids = True
+        t = pwgui.tree.BoundTree(parent, self.provider)
+        self.provider._checkPids = False
+
         t.itemDoubleClick = self._runItemDoubleClick
         t.itemClick = self._runTreeItemClick
             
@@ -916,11 +921,11 @@ class ProtocolsView(tk.Frame):
         self.settings.getNodes().updateDict()
         self.settings.getLabels().updateDict()
 
-        self.updateRunsGraph()        
+        self.updateRunsGraph()
 
-    def updateRunsGraph(self, refresh=False, reorganize=False):  
+    def updateRunsGraph(self, refresh=False, reorganize=False, checkPids=False):
 
-        self.runsGraph = self.project.getRunsGraph(refresh=refresh)
+        self.runsGraph = self.project.getRunsGraph(refresh=refresh, checkPids=checkPids)
         self.runsGraphCanvas.clear()
         
         # Check if there are positions stored
@@ -1680,7 +1685,7 @@ class ProtocolsView(tk.Frame):
         if action == ACTION_TREE:
             self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
-            self.refreshRuns()
+            self.refreshRuns(checkPids=True)
         elif action == ACTION_SWITCH_VIEW:
             self.switchRunsView()
     
