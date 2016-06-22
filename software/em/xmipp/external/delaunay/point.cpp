@@ -149,20 +149,20 @@ int	in_Circle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3, struct
 	return(ret);
 }
 
-int		interior_Triangle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3, struct Point_T *q)
+bool	interior_Triangle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3, struct Point_T *q)
 {
-    int     is_In_Triangle=FALSE;   // Return value.
+    bool is_In_Triangle=false;   // Return value.
 
 	// Check if new point is interior to triangle formed by p1, p2 and p3.
 	if ((signed_Area( p1, p2, q) > 0) &&
         (signed_Area( p2, p3, q) > 0) &&
         (signed_Area( p3, p1, q) > 0))
 	{
-	    is_In_Triangle = TRUE;
+	    is_In_Triangle = true;
 	}
 	else
 	{
-	    is_In_Triangle = FALSE;
+	    is_In_Triangle = false;
 	}
 
 	return(is_In_Triangle);
@@ -266,7 +266,7 @@ TYPE Euclidean( struct Point_T *p, struct Point_T *q)
 
 TYPE signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3)
 {
-	TYPE	area=0.0;			// Return value.
+	double	area=0.0;			// Return value.
 
 	area = (- (double) p2->x*p1->y + (double) p3->x*p1->y + (double) p1->x*p2->y -
 			(double) p3->x*p2->y - (double) p1->x*p3->y + (double) p2->x*p3->y);

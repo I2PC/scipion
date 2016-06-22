@@ -34,7 +34,7 @@ int initialize_Voronoi( struct Voronoi_T *voronoi, int nPoints)
 	voronoi->computed = FALSE;
 
     // Initialize Voronoi DCEL.
-	if (initialize_DCEL( &voronoi->dcel, nPoints, nPoints*8, (nPoints+2)*2) == FAILURE)
+	if (initialize_DCEL( &voronoi->dcel, nPoints, INVALID, INVALID) == FAILURE)
 	{
 #ifdef LOGGING
 		sprintf( log_Text, "Error allocating memory in initialize_Voronoi\n");
