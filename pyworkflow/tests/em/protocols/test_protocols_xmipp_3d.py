@@ -799,6 +799,35 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.maxFreq = 12
 
 
+class TestXmippRotationalSymmetry(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.vol = cls.dataset.getFile('vol110')
+
+    def test_rotsym(self):
+        print "Import Volume"
+        protImportVol = self.newProtocol(ProtImportVolumes,
+                                         objLabel='Volume',
+                                         filesPath=self.vol,
+                                         samplingRate=7.08)
+        self.launchProtocol(protImportVol)
+        self.assertIsNotNone(protImportVol.getFiles(),
+                             "There was a problem with the import")
+        
+        print "Run find rotational symmetry axis"
+        protRotSym = self.newProtocol(XmippProtRotationalSymmetry,
+                                         symOrder=2,
+                                         searchMode=2,
+                                         tilt0=70,
+                                         tiltF=110)
+        protRotSym.inputVolume.set(protImportVol.outputVolume)
+        self.launchProtocol(protRotSym)
+        self.assertIsNotNone(protRotSym.outputVolume,
+                             "There was a problem with Rotational Symmetry")
+
+
 class TestXmippProjMatching(TestXmippBase):
 
     @classmethod

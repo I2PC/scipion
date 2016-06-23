@@ -88,6 +88,9 @@ public class XmippQuestionDialog extends XmippMessageDialog {
 			panelBtn.add(btnQuestionCancel);
                         btnQuestionCancel.addActionListener(this);
 		}
+
+        // Cancel close!
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 	}
 	
 	public boolean isCanceled(){

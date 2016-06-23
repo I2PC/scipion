@@ -115,7 +115,8 @@ Protocols SPA = [
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCLTomo", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtHelicalParameters", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtHelicalParameters", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtRotationalSymmetry", "text": "default"}
             ]}
          ]},
         {"tag": "protocol_group", "text": "Refine", "openItem": "False", "children": [
@@ -141,6 +142,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtValidateNonTilt",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
+            {"tag": "protocol", "value": "XmippProtCreateGallery", "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
                 {"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
