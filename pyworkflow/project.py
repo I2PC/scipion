@@ -177,7 +177,8 @@ class Project(object):
                 or read from ~/.config/scipion/hosts.conf
             settings: where to read the settings.
                 If None, use the settings.sqlite in project folder.
-            If forProtocol is True, the settings and protocols.conf will not be loaded.
+                If forProtocol is True, the settings and protocols.conf will
+                not be loaded.
         """
         if not os.path.exists(self.path):
             raise Exception(
@@ -295,7 +296,8 @@ class Project(object):
                protocolsConf=None):
         """Prepare all required paths and files to create a new project.
         Params:
-         hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
+         hosts: a list of configuration hosts associated to this projects
+               (class ExecutionHostConfig)
         """
         # Create project path if not exists
         pwutils.path.makePath(self.path)
@@ -330,7 +332,8 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
+        3. Call the launch method in protocol.job to handle submition:
+           mpi, thread, queue,
         and also take care if the execution is remotely."""
 
         isRestart = protocol.getRunMode() == MODE_RESTART
@@ -349,8 +352,8 @@ class Project(object):
         self.mapper.commit()
 
         # Prepare a separate db for this run
-        # NOTE: now we are simply copying the entire project db, this can be changed later
-        # to only create a subset of the db need for the run
+        # NOTE: now we are simply copying the entire project db, this can be
+        # changed later to only create a subset of the db need for the run
         pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
 
         # Launch the protocol, the jobId should be set after this call
@@ -372,10 +375,8 @@ class Project(object):
                 label = protocol.getObjLabel()
                 comment = protocol.getObjComment()
 
-                # TODO: when launching remote protocols, the db should be retrieved
-                # in a different way.
-
-                # join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
+                # TODO: when launching remote protocols, the db should be
+                # TODO: retrieved in a different way.
                 prot2 = pwprot.getProtocolFromDb(self.path,
                                                  protocol.getDbPath(),
                                                  protocol.getObjId())
@@ -398,11 +399,13 @@ class Project(object):
                 prot2.closeMappers()
 
             except Exception, ex:
-                print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (
-                protocol.getObjName(), jobId, ex, tries)
+                print("Error trying to update protocol: %s(jobId=%s)\n "
+                      "ERROR: %s, tries=%d"
+                      % (protocol.getObjName(), jobId, ex, tries))
                 if tries == 3:  # 3 tries have been failed
                     traceback.print_exc()
-                    # If any problem happens, the protocol will be marked with a status fail
+                    # If any problem happens, the protocol will be marked
+                    # with a FAILED status
                     protocol.setFailed(str(ex))
                     self.mapper.store(protocol)
                 else:
@@ -610,10 +613,12 @@ class Project(object):
                     newChildProt = newDict.get(childNode.run.getObjId(), None)
 
                     if newChildProt:
-                        # Get the matches between outputs/inputs of node and childNode
+                        # Get the matches between outputs/inputs of
+                        # node and childNode
                         matches = self.__getIOMatches(node, childNode)
-                        # For each match, set the pointer and the extend attribute
-                        # to reproduce the dependencies in the new workflow
+                        # For each match, set the pointer and the extend
+                        # attribute to reproduce the dependencies in the
+                        # new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
                             childPointer.set(newProt)
@@ -655,7 +660,8 @@ class Project(object):
                 childProt = childNode.run
                 if childId in newDict:
                     childDict = newDict[childId]
-                    # Get the matches between outputs/inputs of node and childNode
+                    # Get the matches between outputs/inputs of
+                    # node and childNode
                     matches = self.__getIOMatches(node, childNode)
                     for oKey, iKey in matches:
                         inputAttr = getattr(childProt, iKey)
@@ -816,34 +822,37 @@ class Project(object):
                 for r in self.runs:
                     r.closeMappers()
 
-            #self.runs = self.mapper.selectByClass("Protocol", iterate=False)
             self.runs = self.mapper.selectAll(iterate=False,
-                                              objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+                          objectFilter=lambda o: isinstance(o, pwprot.Protocol))
             for r in self.runs:
                 self._setProtocolMapper(r)
 
-                # Update nodes that are running and are not invoked by other protocols
+                # Update nodes that are running and were not invoked
+                # by other protocols
                 if r.isActive():
                     if not r.isChild():
-                        # pwutils.prettyLog("Updating protocol %s, because isActive (%s)" % (pwutils.green(r.getRunName()),
-                        #                                                                   r.getStatus()))
-
                         self._updateProtocol(r, checkPid=checkPids)
 
             self.mapper.commit()
 
         return self.runs
+
     def checkPid(self, protocol):
-
+        """ Check if a running protocol is still alive or not.
+        The check will only be done for protocols that have not been sent
+        to a queue system.
+        """
         from pyworkflow.protocol.launch import _isLocal
+        pid = protocol.getPid()
 
-        if protocol.isActive() \
-                and _isLocal(protocol)\
-                and not protocol.useQueue() \
-                and not pwutils.isProcessAlive(protocol._pid):
-            protocol.setFailed("Process " + str(protocol._pid.get()) + " not found running on the machine." +
-                   " It probably has died or been killed without reporting the status to scipion." +
-                   " Logs might have information about what happened to this process.")
+        if (protocol.isActive() and _isLocal(protocol)
+            and not protocol.useQueue()
+            and not pwutils.isProcessAlive(pid)):
+            protocol.setFailed("Process %s not found running on the machine. "
+                               "It probably has died or been killed without "
+                               "reporting the status to Scipion. Logs might "
+                               "have information about what happened to this "
+                               "process." % pid)
 
 
     def iterSubclasses(self, classesName, objectFilter=None):
@@ -851,7 +860,8 @@ class Project(object):
             of any of the classes in classesName list.
         Params: 
             classesName: String with commas separated values of classes name. 
-            objectFilter: a filter function to discard some of the retrieved objects."""
+            objectFilter: a filter function to discard some of the retrieved
+            objects."""
         for objClass in classesName.split(","):
             for obj in self.mapper.selectByClass(objClass.strip(), iterate=True,
                                                  objectFilter=objectFilter):
@@ -864,7 +874,8 @@ class Project(object):
 
         if refresh or self._runsGraph is None:
             outputDict = {}  # Store the output dict
-            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
+            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids)
+                    if not r.isChild()]
             g = pwutils.graph.Graph(rootName='PROJECT')
 
             for r in runs:
@@ -884,7 +895,8 @@ class Project(object):
                     if pointedId in outputDict:
                         parentNode = outputDict[pointedId]
                         if parentNode is node:
-                            print "WARNING: Found a cyclic dependence from node %s to itself, probably a bug. " % pointedId
+                            print("WARNING: Found a cyclic dependence from node"
+                                  " %s to itself, probably a bug. " % pointedId)
                         else:
                             parentNode.addChild(node)
                             return True
@@ -895,8 +907,8 @@ class Project(object):
                 for _, attr in r.iterInputAttributes():
                     if attr.hasValue():
                         pointed = attr.getObjValue()
-                        # Only checking pointed object and its parent, if more levels
-                        # we need to go up to get the correct dependencies
+                        # Only checking pointed object and its parent, if more
+                        # levels we need to go up to get the correct dependencies
                         if not _checkInputAttr(node, pointed):
                             parent = self.mapper.getParent(pointed)
                             _checkInputAttr(node, parent)
@@ -941,7 +953,8 @@ class Project(object):
                 parent = g.getNode(pp.getUniqueId())
 
             if not parent:
-                print "project._getRelationGraph: ERROR, parent Node is None: ", pid
+                print("project._getRelationGraph: ERROR, parent Node "
+                      "is None: ", pid)
             else:
                 cObj = self.getObject(rel['object_child_id'])
                 if cObj:
@@ -950,14 +963,15 @@ class Project(object):
                     child = g.getNode(cp.getUniqueId())
 
                     if not child:
-                        print "project._getRelationGraph: ERROR, child Node is None: ", cp.getUniqueId()
-                        print "   parent: ", pid
+                        print("project._getRelationGraph: ERROR, child Node "
+                              "is None: ", cp.getUniqueId())
+                        print("   parent: ", pid)
                     else:
                         parent.addChild(child)
                 else:
-                    print "project._getRelationGraph: ERROR, child Obj is None, id: ", \
-                    rel['object_child_id']
-                    print "   parent: ", pid
+                    print("project._getRelationGraph: ERROR, child Obj "
+                          "is None, id: ", rel['object_child_id'])
+                    print("   parent: ", pid)
 
         for n in g.getNodes():
             if n.isRoot() and not n is root:
