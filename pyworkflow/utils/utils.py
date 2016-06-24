@@ -418,7 +418,7 @@ def parseBibTex(bibtexStr):
     import bibtexparser
 
     if hasattr(bibtexparser, 'loads'):
-        return bibtexparser.loads(bibtexStr).entries_dict()
+        return bibtexparser.loads(bibtexStr).entries_dict
 
     # For older bibtexparser version 0.5
     from bibtexparser.bparser import BibTexParser
