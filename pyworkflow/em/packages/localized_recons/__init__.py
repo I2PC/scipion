@@ -32,6 +32,5 @@ from bibtex import _bibtex # Load bibtex dict with references
 _logo = ""
 
 from convert import *
-from data import *
 from protocol_localized import ProtLocalizedRecons
 

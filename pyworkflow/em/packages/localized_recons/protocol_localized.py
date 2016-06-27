@@ -27,19 +27,17 @@
 This module contains the protocol for localized reconstruction.
 """
 
+from pyworkflow.protocol.params import (PointerParam, BooleanParam, 
+                                        StringParam, IntParam, Positive,
+                                        EnumParam, NumericRangeParam,
+                                        PathParam, LEVEL_ADVANCED, FloatParam)
 from pyworkflow.em.protocol import ProtParticles
-import pyworkflow.protocol.params as params
 
-from pyworkflow.em.packages.relion.convert import (convertBinaryVol, 
-                                                   writeSetOfParticles, 
-                                                   getVersion)
-from convert import vectorsFromCmm
-from data import Vector, SetOfVectors
+from convert import writeSetOfParticles
 # import re
 # from glob import glob
 # from os.path import exists
 # 
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
 # from pyworkflow.utils.path import cleanPath
 
 # import pyworkflow.em.metadata as md
@@ -59,7 +57,8 @@ class ProtLocalizedRecons(ProtParticles):
     corresponding to the subunits can be extracted and treated as 
     single particles.
     """
-    label='localized reconstruction'
+    
+    _label = 'localized reconstruction'
     
     def __init__(self, **args):        
         ProtParticles.__init__(self, **args)
@@ -81,25 +80,22 @@ class ProtLocalizedRecons(ProtParticles):
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', params.PointerParam,
+        form.addParam('inputParticles', PointerParam,
                       pointerClass='SetOfParticles',
                       pointerCondition='hasAlignmentProj',
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
-        form.addParam('splitParticles', params.BooleanParam, default=False,
-                      label='Do split particle stacks?',
-                      help='Split particle stacks (needs to be done once).')
-        form.addParam('inputVolume', params.PointerParam, 
+        form.addParam('inputVolume', PointerParam, 
                       pointerClass='Volume',
+                      important=True,
                       label="Input volume", allowsNull=True,
                       help='Map with density that to be subtracted from '
                            'particle images.')
-        form.addParam('refMask', params.PointerParam,
-                      pointerClass='VolumeMask',
-                      label='Reference mask (optional)', allowsNull=True,
-                      help="The volume will be masked applying this mask.")
-        form.addParam('symmetryGroup', params.StringParam, default='c1',
+        form.addParam('splitParticles', BooleanParam, default=False,
+                      label='Do split particle stacks?',
+                      help='Split particle stacks (needs to be done once).')
+        form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry", 
                       help='If the molecule is asymmetric, set Symmetry group '
                            'to C1. Note their are multiple possibilities for '
@@ -109,57 +105,56 @@ class ProtLocalizedRecons(ProtParticles):
                            '* I2: Crowther 222 \n'
                            '* I3: 52-setting (as used in SPIDER?) \n'
                            '* I4: A different 52 setting \n')
-        form.addParam('boxSize', params.IntParam, default=0,
+        form.addParam('boxSize', IntParam, default=0,
                       label='Sub-particle box size',
-                      validators=[params.Positive],
+                      validators=[Positive],
                       help='In pixels.  Size of the sub-particle box')
-        form.addParam('randomize', params.BooleanParam, default=False,
+        form.addParam('randomize', BooleanParam, default=False,
                       label='Randomize the order of the symmetry matrices?',
                       help='Useful for preventing preferred orientations.')
-        form.addParam('relaxSym', params.BooleanParam, default=False,
+        form.addParam('relaxSym', BooleanParam, default=False,
                       label='Relax symmetry?',
                       help='Create one random subparticle for each particle ')
-        form.addParam('defineVector',  params.EnumParam, default=CMM,
+        form.addParam('defineVector',  EnumParam, default=CMM,
                       label='Is vector defined by?',
                       choices=['cmm file', 'by hand'], 
-                      display=params.EnumParam.DISPLAY_HLIST,
+                      display=EnumParam.DISPLAY_HLIST,
                       help='')
-        form.addParam('vector', params.NumericRangeParam, default='0,0,1',
+        form.addParam('vector', NumericRangeParam, default='0,0,1',
                       label='Location vectors', condition="defineVector==1",
-                      help='Vector(s) defining the location of the '
-                           'subparticle(s). The vector is defined by 3 '
-                           'values(x,y,z). To define different vectors, must '
-                           'be separated by dot and comma(;) among them.')
-        form.addParam('vectorFile', params.PathParam, default='',
+                      help='Vector defining the location of the '
+                           'subparticle. The vector is defined by 3 '
+                           'values(x,y,z).')
+        form.addParam('vectorFile', PathParam, default='',
                       condition="defineVector==0",
                       label='file obtained by Chimera: ',
                       help='CMM file defining the location(s) of the '
                            'sub-particle(s). Use instead of vector. ')
-        form.addParam('length', params.NumericRangeParam, default=-1,
+        form.addParam('length', NumericRangeParam, default=-1,
                       experlevel=LEVEL_ADVANCED,
                       label='Alternative length of the vector (A)',
                       help='Use to adjust the sub-particle center. If it '
                            'is <= 0, the length of the given vector. '
                            'Different values must be separated by commas.')
-        form.addParam('alignSubparticles', params.BooleanParam, default=False,
+        form.addParam('alignSubparticles', BooleanParam, default=False,
                       label='Align the subparticles?',
                       help='Align sub-particles to the standard orientation. ')
-        form.addParam('unique', params.FloatParam, default=1,
+        form.addParam('unique', FloatParam, default=-1,
                       label='Angle to keep unique sub-particles: ',
                       help='Keep only unique subparticles within angular '
                            'distance. It is useful to remove overlapping '
                            'sub-particles on symmetry axis.')
-        form.addParam('mindist', params.FloatParam, default=5,
+        form.addParam('mindist', FloatParam, default=-1,
                       label='Minimum distance between sub-particles',
                       help='In pixels. Minimum distance between the '
                            'subparticles in the image. All overlapping ones '
                            'will be discarded.')
-        form.addParam('side', params.FloatParam, default=25,
+        form.addParam('side', FloatParam, default=-1,
                       label='Angle to keep sub-particles from side views',
                       help='Keep only particles within specified angular '
                            'distance from side views. All others will be '
                            'discarded. ')
-        form.addParam('top', params.FloatParam, default=25,
+        form.addParam('top', FloatParam, default=-1,
                       label='Angle to keep sub-particles from top views',
                       help='Keep only particles within specified angular '
                            'distance from top views. All others will be '
@@ -173,7 +168,6 @@ class ProtLocalizedRecons(ProtParticles):
         
         self._initialize()
         self._insertFunctionStep('convertInputStep', partsId, volId)
-        self._insertFunctionStep('splitStep')
         self._insertFunctionStep('localizedReconsStep')
         self._insertFunctionStep('createOutputStep')
     
@@ -196,149 +190,48 @@ class ProtLocalizedRecons(ProtParticles):
         # Pass stack file as None to avoid write the images files
         writeSetOfParticles(imgSet, imgStar, self._getExtraPath())
     
-    def splitStep(self):
-        import pyworkflow.em.packages.bsoft.getEnviron as bsEnviron
-        import pyworkflow.em.packages.relion.getEnviron as relEnviron
-        if self.splitParticles:
-            print "Creating and splitting the particle stack..."
-            print "Creating a normal stack from which nothing is subtracted..."
-            x = self.inputParticles.get().getXDim()
-            args = "-create %d,%d,%d " % (x, x, x)
-            args += " -fill 0 %s" % self._getFileName('dummy_mask')
-            self.runJob('beditimg', args, env=bsEnviron)
-            
-            
-            
-#             
-#             run_command("beditimg -create " + str(part_image_size) + "," + str(part_image_size) + "," + str(part_image_size) + " -fill 0 dummy_mask.mrc", "")
-#             run_command("relion_project --i dummy_mask.mrc --o " + path + "particles" + " --ang " + input_star_filename + " --subtract_exp --angpix " + str(angpix), "")
-#             run_command("rm -f dummy_mask.mrc", "")
-#             run_command("bsplit -digits 6 -first 1 " + path + "particles" + ".mrcs:mrc " + path + "particles" + ".mrc", "")
-#             print "Finished splitting the particle stack!"
-#             print " "
-#     
-#         if subtract_masked_map:
-#             print "Creating and splitting the particle stack..."
-#             print " Creating a stack from which the projections of the masked particle have been subtracted..."
-#             run_command("relion_project --i " + masked_map + " --o " + path + "particles_subtracted" + " --ang " + input_star_filename + " --subtract_exp --ctf --angpix " + str(angpix))
-#             print "Finished subtracting the model projections!"
-#             print " "
-#     
-#             print "Splitting the subtracted particle stack..."
-#             run_command("bsplit -digits 6 -first 1 " + path + "particles_subtracted" + ".mrcs:mrc " + path + "particles_subtracted" + ".mrc", "")
-#             print "Finished splitting the subtracted particle stack!"
-#             print " "
-    
     def localizedReconsStep(self):
-        vectorSet = SetOfVectors()
-        pxSize = self.inputParticles.get().getSamplingRate()
-        
-        lengthList = self.getListFromValues(self.length.get(), float, ",")
-        lengthList = [x/pxSize for x in lengthList]
-        
-        if self.defineVector.get () == CMM:
-            cmmFn = self.vectorFile.get()
-            vectorsFromCmm(cmmFn, vectorSet, pxSize)
-            
-            if lengthList[0] > 0:
-                if len(lengthList) == vectorSet.getSize():
-                    for i, vector in enumerate(vectorSet):
-                        vector.setDistance(lengthList[i])
-                else:
-                    raise Exception("Error: The number of distances doesn't "
-                                    "match the number of vectors!")
-        else:
-            vector = Vector()
-            vectorList = self.getListFromValues(self.vector.get(), spacer=";")
-            for i, l in enumerate(vectorList):
-                vec = [float(a) for a in l.split(",")]
-                vector.setVector(vec)
-                
-                if lengthList[0] > 0:
-                    if len(lengthList) == len(vectorList):
-                        vector.setDistance(lengthList[i])
-                    elif len(lengthList) == 1:
-                        vector.setDistance(lengthList[0])
-                    else:
-                        raise Exception("Error: The number of distances doesn't "
-                                        "match the number of vectors!")
-                else:
-                    vector.setDistance(vector.length())
-                vectorSet.append(vector)
-        
-        print "Creating subparticles using:"
-        
-        for vector in vectorSet:
-            print "Vector: ", vector.getVector()
-            print ""
-            print "Length: %.2f pixels" % vector.getDistance()
-            
-
-
-
-
+        pass
+    
     def createOutputStep(self):
         pass
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-        self.validatePackageVersion('RELION_HOME', errors)
-        if self._getInputParticles().isOddX():
-            errors.append("Relion only works with even values for the image dimensions!")
-        
-            errors += self._validateNormal()
+#         self.validatePackageVersion('RELION_HOME', errors)
+#         if self._getInputParticles().isOddX():
+#             errors.append("Relion only works with even values for the image dimensions!")
+#         
+#             errors += self._validateNormal()
         return errors
-    
-    def _validateNormal(self):
-        """ Should be overriden in subclasses to 
-        return summary message for NORMAL EXECUTION. 
-        """
-        return []
-    
-    def _validateContinue(self):
-        """ Should be overriden in subclasses to
-        return summary messages for CONTINUE EXECUTION.
-        """
-        return []
     
     def _citations(self):
         cites = []
         return cites
     
     def _summary(self):
+        summary = []
         self._initialize()
-
-        lastIter = self._lastIter()
-
-        if lastIter is not None:
-            iterMsg = 'Iteration %d' % lastIter
-            if self.hasAttribute('numberOfIterations'):
-                iterMsg += '/%d' % self._getnumberOfIters()
-        else:
-            iterMsg = 'No iteration finished yet.'
-        summary = [iterMsg]
-
-        flip = '' if self._getInputParticles().isPhaseFlipped() else 'not '
-        flipMsg = "Your images have %sbeen ctf-phase corrected" % flip
-        summary.append(flipMsg)
-        
-        if self.doContinue:
-            summary += self._summaryContinue()
-        summary += self._summaryNormal()
+# 
+#         lastIter = self._lastIter()
+# 
+#         if lastIter is not None:
+#             iterMsg = 'Iteration %d' % lastIter
+#             if self.hasAttribute('numberOfIterations'):
+#                 iterMsg += '/%d' % self._getnumberOfIters()
+#         else:
+#             iterMsg = 'No iteration finished yet.'
+#         summary = [iterMsg]
+# 
+#         flip = '' if self._getInputParticles().isPhaseFlipped() else 'not '
+#         flipMsg = "Your images have %sbeen ctf-phase corrected" % flip
+#         summary.append(flipMsg)
+#         
+#         if self.doContinue:
+#             summary += self._summaryContinue()
+#         summary += self._summaryNormal()
         return summary
-    
-    def _summaryNormal(self):
-        """ Should be overriden in subclasses to 
-        return summary message for NORMAL EXECUTION. 
-        """
-        return []
-    
-    def _summaryContinue(self):
-        """ Should be overriden in subclasses to
-        return summary messages for CONTINUE EXECUTION.
-        """
-        return []
     
     def _methods(self):
         """ Should be overriden in each protocol.
@@ -346,21 +239,15 @@ class ProtLocalizedRecons(ProtParticles):
         return []
     
     #--------------------------- UTILS functions ------------------------------
-    def getListFromValues(self, valuesStr, valType=str, spacer=" "):
-        listValues = []
-        for values in valuesStr.split(spacer):
-            listValues.append(valType(values))
-        return listValues
-
+    def _getInputParticles(self):
+        return self.inputParticles.get()
+    
 #     def _getProgram(self, program='relion_refine'):
 #         """ Get the program name depending on the MPI use or not. """
 #         if self.numberOfMpi > 1:
 #             program += '_mpi'
 #         return program
-#     
-#     def _getInputParticles(self):
-#         return self.inputParticles.get()
-#     
+    
 #     def _getIterNumber(self, index):
 #         """ Return the list of iteration files, give the iterTemplate. """
 #         result = None

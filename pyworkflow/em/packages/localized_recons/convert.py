@@ -43,7 +43,7 @@ from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from data import Vector, SetOfVectors
+
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
@@ -84,7 +84,7 @@ IMAGE_EXTRA_LABELS = [
     md.RLN_SELECT_PARTICLES_ZSCORE,
     md.RLN_IMAGE_FRAME_NR,
     ]
- 
+
 # ANGLES_DICT = OrderedDict([
 #        ("_angleY", md.RLN_ANGLE_Y),
 #        ("_angleY2", md.RLN_ANGLE_Y2),
@@ -101,26 +101,30 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def getEnviron():
+def getEnviron(xmippFirst=True):
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
+    pos = Environ.BEGIN if xmippFirst else Environ.END
     environ.update({
-            'PATH': join(os.environ['RELION_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
+            'PATH': join(os.environ['RELION_HOME'], 'bin') + ":" + 
+                    os.path.join(os.environ['BSOFT_HOME'], 'bin'),
+            'PYTHONPATH': os.environ['LOCALIZED_HOME'],
+            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + 
+                               join(os.environ['RELION_HOME'], 'lib64'),
             'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
-            }, position=Environ.BEGIN)
+            }, position=pos)
     return environ
 
 
-def getVersion():
+def getRelionVersion():
     path = os.environ['RELION_HOME']
-    for v in getSupportedVersions():
+    for v in getRelionSupportedVersions():
         if v in path:
             return v
     return ''
 
 
-def getSupportedVersions():
+def getRelionSupportedVersions():
     return ['1.3', '1.4']
 
 
@@ -499,7 +503,7 @@ def readSetOfParticles(filename, partSet, **kwargs):
         
     partSet.setHasCTF(img.hasCTF())
     partSet.setAlignment(kwargs['alignType'])
-    
+
 
 def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
     """ This function will fill Relion metadata from a SetOfMicrographs
@@ -565,21 +569,6 @@ def writeReferences(inputSet, outputRoot):
         pass
     else:
         raise Exception('Invalid object type: %s' % type(inputSet)) 
-
-
-def micrographToRow(mic, micRow, **kwargs):
-    """ Set labels values from Micrograph mic to md row. """
-    imageToRow(mic, micRow, imgLabel=md.RLN_MICROGRAPH_NAME, **kwargs)
-
-    
-def writeSetOfMicrographs(micSet, starFile, **kwargs):
-    """ If 'outputDir' is in kwargs, the micrographs are\
-    converted or linked in the outputDir.
-    """
-    micMd = md.MetaData()
-    setOfImagesToMd(micSet, micMd, micrographToRow, **kwargs)
-    blockName = kwargs.get('blockName', 'Particles')
-    micMd.write('%s@%s' % (blockName, starFile))
 
 
 def writeSqliteIterData(imgStar, imgSqlite, **kwargs):
@@ -773,70 +762,4 @@ def convertBinaryVol(vol, outputDir):
 
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
-
-
-def dotProduct(v1, v2):
-    """returns the dot product of two vectors"""
-    value = 0
-    for a, b in izip(v1.getVector(), v2.getVector()):
-        value += a*b
-    return value
-
-
-def crossProduct(v1, v2):
-    """returns the cross product of two vectors.
-    The output is a new vector"""
-    vector = Vector()
-    v = [0,0,0]
-    v[0] = v1.yAxis() * v2.zAxis() - v2.yAxis() * v1.zAxis()
-    v[1] = v1.zAxis() * v2.xAxis() - v2.zAxis() * v1.xAxis()
-    v[2] = v1.xAxis() * v2.yAxis() - v2.xAxis() * v1.yAxis()
-    vector.setVector(v)
-    vector.setDistance(vector.length())
-    return vector
-
-
-def vectorFromTwoEulers(rot, tilt):
-    """function that obtains a vector from the first two Euler angles"""
-    from math import sin, cos
-    
-    x = sin(tilt) * cos(rot)
-    y = sin(tilt) * sin(rot)
-    z = cos(tilt)
-    v = Vector([x,y,z], 1)
-    return v
-
-
-def vectorsFromCmm(cmmFn, vectorSet, pixSize):
-    """function that obtains the input vector from a cmm file"""
-    
-    # coordinates in the CMM file need to be in Angstrom
-    f = open(cmmFn, "r")
-    counter = 0
-    initCoords = [0,0,0]
-    finalCoords = [0,0,0]
-    vector = Vector(initCoords)
-    
-    for line in f.readlines():
-        if 'marker id=' in line:
-            values = line.split()
-            
-            for i in range(len(values)):
-                a = re.search('"(.*)"', values[i]).group(0)
-                val = float(a.translate(None, '""')) / pixSize
-                if 'x=' in values[i]:
-                    finalCoords[0] = val
-                elif 'y=' in values[i]:
-                    finalCoords[1] = val
-                elif 'z=' in values[i]:
-                    finalCoords[2] = val
-            
-            if counter == 0:
-                initCoords = finalCoords
-                counter = 1
-            else:
-                coordList = [a-b for a,b in izip(finalCoords, initCoords)]
-                vector.setVector(coordList)
-                vector.setDistance(vector.length())
-                vectorSet.append(vector)
 
