@@ -250,7 +250,8 @@ def getChimeraEnviron():
     environ = Environ(os.environ)
     environ.set('PATH', os.path.join(os.environ['CHIMERA_HOME'], 'bin'),
                 position=Environ.BEGIN)
-    environ.set('LD_LIBRARY_PATH', os.environ['REMOTE_MESA_LIB'], position=Environ.BEGIN) 
+    if "REMOTE_MESA_LIB" in os.environ:
+        environ.set('LD_LIBRARY_PATH', os.environ['REMOTE_MESA_LIB'], position=Environ.BEGIN)
     return environ    
     
   
