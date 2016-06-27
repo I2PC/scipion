@@ -25,22 +25,26 @@
 # *
 # **************************************************************************
 
-from pyworkflow.protocol.params import (PointerParam, FloatParam, PathParam,
+import os
+
+from pyworkflow.protocol.params import (PointerParam, FloatParam, FileParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume, VolumeMask
 from pyworkflow.em.protocol import ProtAnalysis3D
+import pyworkflow.em.metadata as md
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
+
 
 
 class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
     """
     Relion post-processing protocol for automated masking,
-    overfitting estimation, MTF-correction and B-factor sharpening
+    overfitting estimation, MTF-correction and B-factor sharpening.
     """
     _label = 'post-processing'
     
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
         form.addSection(label='Input')
@@ -73,7 +77,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
                       help='Use this to skip auto-masking by providing your own mask') 
         
         form.addSection(label='Sharpening')
-        form.addParam('mtf', PathParam,
+        form.addParam('mtf', FileParam,
                       label='MTF-curve file',
                       help='User-provided STAR-file with the MTF-curve of the detector.'
                            'Relion param: <--mtf>')
@@ -125,7 +129,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         
         form.addParallelSection(threads=0, mpi=0) 
             
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
         self._initialize()
@@ -171,7 +175,7 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         
         self._insertFunctionStep('postProcessStep', args)
         
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def postProcessStep(self, params):
         self.runJob('relion_postprocess', params)
         
@@ -183,24 +187,36 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
         mask = VolumeMask()
         mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
         mask.setSamplingRate(self.samplingRate)
-        
-        
+
         self._defineOutputs(outputVolume=volume)
         self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(vol, volume)
         self._defineSourceRelation(vol, mask)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        errors = []
+        mtfFile = self.mtf.get()
+
+        if mtfFile and not os.path.exists(mtfFile):
+            errors.append("Missing MTF-file '%s'" % mtfFile)
+
+        return errors
     
     def _summary(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        summary = []
+        postStarFn = self._getExtraPath("postprocess.star")
+        if os.path.exists(postStarFn):
+            mdResol = md.RowMetaData(postStarFn)
+            resol = mdResol.getValue(md.RLN_POSTPROCESS_FINAL_RESOLUTION)
+            summary.append("Final resolution: *%0.2f*" % resol)
+        
+        return summary
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------

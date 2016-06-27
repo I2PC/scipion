@@ -18,6 +18,7 @@ protected:
         int  symmetry, sym_order;
         double max_tilt_angle = 180;
         double min_tilt_angle = 0;
+
         FileName fn_sym("i3h");
         FileName fnExperimentalImages(fn_root + "experimental_images.xmd");
 
@@ -44,10 +45,13 @@ TEST_F(SamplingTest, computeSamplingPoints)
 {
     XMIPP_TRY
     Sampling s1;
+    //by default no sampling points are read
     s1.readSamplingFile(fn_root + "ref");
     Sampling s2;
-    s2.setSampling(3.);
-    s2.computeSamplingPoints(false, 91., -91.);
+    s2.setSampling(3.0);
+    s2.computeSamplingPoints(false, 180., 0.);
+    //s1.saveSamplingFile("/tmp/s1");
+    //s2.saveSamplingFile("/tmp/s2");
     EXPECT_EQ(s1, s2);
     XMIPP_CATCH
 }
@@ -56,15 +60,18 @@ TEST_F(SamplingTest, removeRedundantPointsI3H)
 {
     XMIPP_TRY
     int  symmetry, sym_order;
-    Sampling s1;
-    s1.readSamplingFile(fn_root + "ref_i3h");
+    Sampling s1;//<- check number of sampling points...
+    s1.readSamplingFile(fn_root + "ref_i3h",true,false);
+    FileName fn_sym("i3h");
     Sampling s2;
     s2.setSampling(3.);
-    s2.computeSamplingPoints(false, 91., -91.);
-    s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
-    s2.SL.readSymmetryFile("i3h");
+    s2.computeSamplingPoints(false, 180, 0);
+    s2.SL.isSymmetryGroup(fn_sym, symmetry, sym_order);
+    s2.SL.readSymmetryFile(fn_sym);
     s2.fillLRRepository();
     s2.removeRedundantPoints(symmetry, sym_order);
+    //s2.saveSamplingFile("/tmp/s2");
+    //s1.saveSamplingFile("/tmp/s1");
     EXPECT_EQ(s1, s2);
     XMIPP_CATCH
 }
@@ -77,7 +84,7 @@ TEST_F(SamplingTest, removeRedundantPointsC1)
     s1.readSamplingFile(fn_root + "ref_c1");
     Sampling s2;
     s2.setSampling(3.);
-    s2.computeSamplingPoints(false, 91., -91.);
+    s2.computeSamplingPoints(false, 180, 0.);
     s2.SL.isSymmetryGroup("c1", symmetry, sym_order);
     s2.SL.readSymmetryFile("c1");
     s2.fillLRRepository();
@@ -95,7 +102,7 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataI3H)
     s1.readSamplingFile(fn_root + "ref_i3h_exp");
     Sampling s2;
     s2.setSampling(3);//degrees
-    s2.computeSamplingPoints(false,91.,-91.);
+    s2.computeSamplingPoints(false,180.,0.);
     s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
     s2.SL.readSymmetryFile("i3h");
     s2.fillLRRepository();
@@ -115,7 +122,7 @@ TEST_F(SamplingTest, removePointsFarAwayFromExperimentalDataC1)
     s1.readSamplingFile(fn_root + "ref_c1_exp");
     Sampling s2;
     s2.setSampling(3);//degrees
-    s2.computeSamplingPoints(false,91.,-91.);
+    s2.computeSamplingPoints(false,180.,0.);
     s2.SL.isSymmetryGroup("c1", symmetry, sym_order);
     s2.SL.readSymmetryFile("c1");
     s2.fillLRRepository();
@@ -151,7 +158,7 @@ TEST_F(SamplingTest, computeNeighborsI3H)
     s1.readSamplingFile(fn_root + "neigh_ref_i3h_exp");
     Sampling s2;
     s2.setSampling(3);//degrees
-    s2.computeSamplingPoints(false,91.,-91.);
+    s2.computeSamplingPoints(false,180.,0.);
     s2.SL.isSymmetryGroup("i3h", symmetry, sym_order);
     s2.SL.readSymmetryFile("i3h");
     s2.fillLRRepository();
@@ -173,7 +180,7 @@ TEST_F(SamplingTest, computeNeighborsC1)
     s1.readSamplingFile(fn_root + "neigh_ref_c1_exp");
     Sampling s2;
     s2.setSampling(3);//degrees
-    s2.computeSamplingPoints(false,91.,-91.);
+    s2.computeSamplingPoints(false,180.,0.);
     s2.SL.isSymmetryGroup("c1", symmetry, sym_order);
     s2.SL.readSymmetryFile("c1");
     s2.fillLRRepository();

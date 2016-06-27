@@ -168,7 +168,7 @@ Examples:
         views = []
 
         for it in self._iterations:
-            fn = self._getIterData(it)
+            fn = self.protocol._getIterData(it)
             v = self.createScipionPartView(fn)
             views.append(v)
         
@@ -496,21 +496,6 @@ Examples:
             clsSet.close()
 
         return dataClasses
-    
-    def _getIterData(self, it, **kwargs):
-        from convert import readSetOfParticles
-        
-        imgSqlite = self.protocol._getFileName('data_scipion', iter=it)
-        
-        if not exists(imgSqlite):
-            imgPar = self.protocol._getFileName('output_par', iter=it)
-            
-            cleanPath(imgSqlite)
-            imgSet = em.SetOfParticles(filename=imgSqlite)
-            readSetOfParticles(self.protocol.inputParticles.get(), imgSet, imgPar)
-            imgSet.write()
-            
-        return imgSqlite
     
     def _iterAngles(self, it, dataAngularDist):
         f = open(dataAngularDist)

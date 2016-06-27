@@ -3,8 +3,6 @@ package xmipp.viewer.particlepicker;
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
-import ij.WindowManager;
-import ij.io.SaveDialog;
 import ij.plugin.frame.Recorder;
 
 import java.awt.Color;
@@ -21,7 +19,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -141,17 +138,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 {
                     public void windowClosing(WindowEvent winEvt)
                     {
-                        
-                        if (getParticlePicker().isChanged())
-                        {
-                            XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
-                            boolean save = qd.showDialog();
-                            if (save)
-                                getParticlePicker().saveData();
-                            else if (qd.isCanceled())
-                                return;
-                        }
-                        close();
+
+                        if (canExit()) close();
                         
                     }
                 });
@@ -177,9 +165,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     @Override
                     public void actionPerformed(ActionEvent arg0)
                     {
-                        getParticlePicker().saveData();
-                        setChanged(false);
-                        
+                        saveData(false);
+
                     }
                 });
                 
@@ -223,7 +210,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     @Override
                     public void actionPerformed(ActionEvent e)
                     {
-                        close();
+                        if (canExit()) close();
                     }
                 });
                 if(picker.isScipionSave())
@@ -286,8 +273,29 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 throw new IllegalArgumentException(ex);
             }
 	}
-        
-        protected class MicrographsSelectionListener implements ListSelectionListener
+
+    protected boolean canExit() {
+
+        if (getParticlePicker().getParams().tmp && (getParticlePicker().isSaved() || getParticlePicker().isChanged()))
+        {
+            XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "You are picking in a temporary folder. None of the saved or changed data will remain unless you export \"Coordinates\". Do you really want to exit?", false );
+            boolean exit = qd.showDialog();
+            if (!exit)
+                return false;
+
+        }else if (getParticlePicker().isChanged())
+        {
+            XmippQuestionDialog qd = new XmippQuestionDialog(ParticlePickerJFrame.this, "Save changes before closing?");
+            boolean save = qd.showDialog();
+            if (save)
+                return saveData(true);
+            else if (qd.isCanceled())
+                return false;
+        }
+        return true;
+    }
+
+    protected class MicrographsSelectionListener implements ListSelectionListener
         {
 
 			@Override
@@ -309,6 +317,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         return "Are you sure you want to remove all particles from micrograph?";
     }
 
+    private ParticlePickerJFrame getMyself(){
+        return this;
+    }
 	private void initMenuBar(ParticlePicker picker)
 	{
 		filemn = new JMenu(bundle.getString("file"));
@@ -322,10 +333,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				getParticlePicker().saveData();
-				showMessage("Data saved successfully");
-				setChanged(false);
-			}
+                saveData(true);
+            }
 		});
 		filemn.add(savemi);
 		importmi = new JMenuItem("Import coordinates...", XmippResource.getIcon("import_wiz.gif"));
@@ -472,7 +481,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem(XmippImageJ.substractBackgroundFilter, true, picker);
         addFilterAppliedListener();
 	}
-        
+
+    protected boolean saveData(boolean notify) {
+        try {
+            getParticlePicker().saveData();
+            if (notify) showMessage("Data saved successfully");
+            setChanged(false);
+            return true;
+        } catch (Exception e1) {
+            XmippDialog.showException(getMyself(), e1);
+            return false;
+        }
+    }
+
     protected void addFilterAppliedListener() {
 
         Recorder.record = true;
@@ -809,6 +830,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	public abstract ParticlePicker getParticlePicker();
 
 	public abstract void setChanged(boolean changed);
+
+    protected void setTitle(){
+
+        String title = "Xmipp Particle Picker - " + getParticlePicker().getMode();
+
+        if (this.getParticlePicker().getParams().tmp){
+            title = title + " - in Temporal folder.";
+        }
+        setTitle(title);
+    }
+    public void setSaved(boolean saved){
+    };
 
 	protected void initColorPane(Color color)
 	{

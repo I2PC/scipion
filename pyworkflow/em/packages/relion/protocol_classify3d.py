@@ -180,7 +180,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(md.RLN_PARTICLE_CLASS))
-        item.setTransform(rowToAlignment(row, em.ALIGN_3D))
+        item.setTransform(rowToAlignment(row, em.ALIGN_PROJ))
         
         item._rlnLogLikeliContribution = em.Float(row.getValue('rlnLogLikeliContribution'))
         item._rlnMaxValueProbDistribution = em.Float(row.getValue('rlnMaxValueProbDistribution'))
