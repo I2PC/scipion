@@ -138,25 +138,34 @@ class ProtUserSubSet(BatchProtocol):
 
         # Register outputs
         self._defineOutput(className, output)
+
         if inputObj.hasObjId():
             self._defineTransformRelation(inputObj, output)
+
         return output
 
-    
-    def _createSubSetFromImages(self, inputImages):
+    def _createSubSetFromImages(self, inputImages,
+                                copyInfoCallback=None):
         className = inputImages.getClassName()
         createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputImages.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        modifiedSet.loadAllProperties()
-        
+        modifiedSet = inputImages.getClass()(filename=self._dbName,
+                                             prefix=self._dbPrefix)
+
         output = createFunc()
-        output.copyInfo(modifiedSet)
+
+        if copyInfoCallback is None:
+            modifiedSet.loadAllProperties()
+            output.copyInfo(modifiedSet)
+        else:
+            copyInfoCallback(output)
+
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+
         if inputImages.hasObjId():
             self._defineTransformRelation(inputImages, output)
-        
+
         # Define an informative summary of the subset operation
         sizeIn = inputImages.getSize()
         sizeOut = output.getSize()
@@ -183,9 +192,13 @@ class ProtUserSubSet(BatchProtocol):
                 if outputClassName.startswith('SetOfParticles'):
                     return self._createImagesFromClasses(inputClasses)
                 else:
-                    return self._createRepresentativesFromClasses(inputClasses, outputClassName.split(',')[0])
+                    return self._createRepresentativesFromClasses(inputClasses,
+                                                                  outputClassName.split(',')[0])
             else:
-                return self._createSubSetFromImages(inputClasses.getImages())
+                callback = lambda output: self._copyInfoAndSetAlignment(inputClasses,
+                                                                        output)
+                return self._createSubSetFromImages(inputClasses.getImages(),
+                                                    copyInfoCallback=callback)
         elif outputClassName.startswith('SetOfClasses'):
             return self._createClassesFromClasses(inputClasses)
         else:
@@ -260,6 +273,19 @@ class ProtUserSubSet(BatchProtocol):
         self.summaryVar.set(msg)
         return output
 
+
+    def _copyInfoAndSetAlignment(self, inputClasses, output):
+        """ This method is used when creating subset of images from classes.
+        We need to copy the information from the original classes images
+        and also set the proper alignment contained in the classes.
+        """
+        inputImages = inputClasses.getImages()
+        # Copy all info form the original 'classified' images
+        output.copyInfo(inputImages)
+        # Take the alignment of the first class
+        alignment = inputClasses.getFirstItem().getAlignment()
+        output.setAlignment(alignment)
+
     def _createImagesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
         assigned to each class.
@@ -271,11 +297,7 @@ class ProtUserSubSet(BatchProtocol):
         self.info("Creating subset of images from classes,  sqlite file: %s" % self._dbName)
         
         output = createFunc()
-        output.copyInfo(inputImages)
-        for sampleClass in inputClasses:
-            alignment = sampleClass.getAlignment()
-            break
-        output.setAlignment(alignment)
+        self._copyInfoAndSetAlignment(inputClasses, output)
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
@@ -319,7 +341,6 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
         """ Create a subset of Micrographs Tilt Pair. """
         output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
-        print "self._dbName=%s" % self._dbName
         modifiedSet = MicrographsTiltPair(filename=self._dbName, prefix=self._dbPrefix)
         inputU = micrographsTiltPair.getUntilted()
         inputT = micrographsTiltPair.getTilted()
@@ -327,11 +348,12 @@ class ProtUserSubSet(BatchProtocol):
         outputT = SetOfParticles(filename=self._getPath('mics_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
+
         for micPairI in modifiedSet:
             untilted = micPairI.getUntilted()
             tilted = micPairI.getTilted()
-            if micPairI.isEnabled():
 
+            if micPairI.isEnabled():
                 micPairO = TiltPair()
                 micPairO.setUntilted(untilted)
                 micPairO.setTilted(tilted)
