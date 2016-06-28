@@ -34,6 +34,8 @@ import xmipp.viewer.windows.GalleryJFrame;
  */
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
+    private static Logger logger = Logger.getLogger(ScipionGalleryJFrame.class.getName());
+
     private String type;
     private Integer port;
     private JButton cmdbutton;
@@ -71,7 +73,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             other = parameters.other;
             initComponents();
         } catch (Exception ex) {
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             throw new IllegalArgumentException(ex.getMessage());
         }
     }
@@ -180,18 +182,27 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 buttonspn.add(createvolbt);
                 createvolbt.setVisible(!data.isTableMode());
             }
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
+
+
+            if (!SwingUtilities.isEventDispatchThread()) {
+
+                Runnable pack = new Runnable() {
                     @Override
                     public void run() {
                         ScipionGalleryJFrame.this.pack();
                     }
-                });
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                };
+
+                try {
+                    SwingUtilities.invokeAndWait(pack);
+                } catch (Exception e) {
+
+                    logger.log(Level.WARNING, "ScipionGalleryJFrame.pack threw an exception: " + e.getMessage());
+                }
+            } else {
+                pack();
             }
+
             enableActions();
             jcbBlocks.addActionListener(new ActionListener() {
 
@@ -362,7 +373,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             XmippWindowUtil.runCommand(command, port);
             //close(false);
         } catch (SQLException ex) {
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
     /**
@@ -437,7 +448,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     selection = gallery.getSelection();
                 ((ScipionGalleryData)data).overwrite(path, selection);
             } catch (SQLException ex) {
-                Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
 
