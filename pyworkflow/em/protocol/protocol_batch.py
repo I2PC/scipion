@@ -34,9 +34,12 @@ from itertools import izip
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles,\
-    SetOfMicrographs
-from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
+from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
+                                SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
+                                SetOfNormalModes, SetOfParticles,
+                                Class2D, Class3D, SetOfMicrographs)
+from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
+                                          ParticlesTiltPair)
 from pyworkflow.em.data import Mask
 from pyworkflow.utils import moveFile
 
@@ -109,16 +112,17 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, EMProtocol):
             otherid = self.other.get()
             otherObj = self.getProject().mapper.selectById(int(otherid))
+
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
-                output = self._createSubSetFromClasses(setObj)
+                self._createSubSetFromClasses(setObj)
 
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
-                output = self._createSubSetFromImages(setObj)
-                
+                self._createSubSetFromImages(setObj)
+
             elif isinstance(setObj, SetOfNormalModes):
-                output = self._createSimpleSubset(otherObj)
+                self._createSimpleSubset(otherObj)
             
         else:
             output = self._createSimpleSubset(inputObj)
@@ -147,9 +151,11 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromImages(self, inputImages,
                                 copyInfoCallback=None):
         className = inputImages.getClassName()
+        setClass = inputImages.getClass()
+        inputClass = False
+
         createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputImages.getClass()(filename=self._dbName,
-                                             prefix=self._dbPrefix)
+        modifiedSet = setClass(filename=self._dbName, prefix=self._dbPrefix)
 
         output = createFunc()
 
@@ -188,6 +194,7 @@ class ProtUserSubSet(BatchProtocol):
             from pyworkflow.mapper.sqlite import SqliteFlatDb
             db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
             itemClassName = db.getSelfClassName()
+
             if itemClassName.startswith('Class'):
                 if outputClassName.startswith('SetOfParticles'):
                     return self._createImagesFromClasses(inputClasses)
@@ -195,10 +202,12 @@ class ProtUserSubSet(BatchProtocol):
                     return self._createRepresentativesFromClasses(inputClasses,
                                                                   outputClassName.split(',')[0])
             else:
-                callback = lambda output: self._copyInfoAndSetAlignment(inputClasses,
-                                                                        output)
+                def callback(output):
+                    self._copyInfoAndSetAlignment(inputClasses, output)
+
                 return self._createSubSetFromImages(inputClasses.getImages(),
                                                     copyInfoCallback=callback)
+
         elif outputClassName.startswith('SetOfClasses'):
             return self._createClassesFromClasses(inputClasses)
         else:
@@ -283,8 +292,8 @@ class ProtUserSubSet(BatchProtocol):
         # Copy all info form the original 'classified' images
         output.copyInfo(inputImages)
         # Take the alignment of the first class
-        alignment = inputClasses.getFirstItem().getAlignment()
-        output.setAlignment(alignment)
+        cls = inputClasses.getFirstItem()
+        output.setAlignment(cls.getAlignment())
 
     def _createImagesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
@@ -369,7 +378,6 @@ class ProtUserSubSet(BatchProtocol):
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
-        print 'create subset from particles tilt pair'
         """ Create a subset of Micrographs Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         
@@ -396,7 +404,6 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(particlesTiltPair, output)
         return output
 
-
     def createSetObject(self):
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
         self._dbName = self._getPath('subset.sqlite')
@@ -406,7 +413,11 @@ class ProtUserSubSet(BatchProtocol):
             self._dbPrefix = self._dbPrefix[:-1]
 
         from pyworkflow.em import loadSetFromDb
-        setObj = loadSetFromDb(self._dbName, self._dbPrefix)
+
+        # Ignoring self._dbPrefix here, since we want to load
+        # the top-level set in the sqlite file
+        setObj = loadSetFromDb(self._dbName)
+
         return setObj
 
     def _summary(self):
@@ -464,7 +475,6 @@ class ProtCreateMask(BatchProtocol):
             samplingRate = inputObj.getSamplingRate()
         else:
             for key, attr in inputObj.iterInputAttributes():
-                print key
                 if hasattr(attr.get(), "getSamplingRate"):
                     samplingRate = attr.get().getSamplingRate()
         if  not samplingRate:
