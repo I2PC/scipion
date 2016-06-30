@@ -27,13 +27,15 @@
 This module contains the protocol for localized reconstruction.
 """
 
+from pyworkflow.em import ALIGN_PROJ
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, 
                                         StringParam, IntParam, Positive,
                                         EnumParam, NumericRangeParam,
-                                        PathParam, LEVEL_ADVANCED, FloatParam)
+                                        PathParam, FloatParam)
 from pyworkflow.em.protocol import ProtParticles
 
-from convert import writeSetOfParticles
+from convert import (writeSetOfParticles, convertBinaryVol, getEnviron,
+                     getProgram, readSetOfParticles)
 # import re
 # from glob import glob
 # from os.path import exists
@@ -130,8 +132,7 @@ class ProtLocalizedRecons(ProtParticles):
                       label='file obtained by Chimera: ',
                       help='CMM file defining the location(s) of the '
                            'sub-particle(s). Use instead of vector. ')
-        form.addParam('length', NumericRangeParam, default=-1,
-                      experlevel=LEVEL_ADVANCED,
+        form.addParam('length', FloatParam, default=-1,
                       label='Alternative length of the vector (A)',
                       help='Use to adjust the sub-particle center. If it '
                            'is <= 0, the length of the given vector. '
@@ -164,8 +165,7 @@ class ProtLocalizedRecons(ProtParticles):
     #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         partsId = self.inputParticles.get().getObjId()
-        volId = self.inputVolume.get().getObjId()
-        
+        volId = self.inputVolume.get().getObjId() if self.inputVolume else 0
         self._initialize()
         self._insertFunctionStep('convertInputStep', partsId, volId)
         self._insertFunctionStep('localizedReconsStep')
@@ -191,143 +191,96 @@ class ProtLocalizedRecons(ProtParticles):
         writeSetOfParticles(imgSet, imgStar, self._getExtraPath())
     
     def localizedReconsStep(self):
-        pass
+        params = {"symmetryGroup" : self.symmetryGroup.get(),
+                  "output" : self._getFileName('output'),
+                  "boxSize" : self.boxSize.get(),
+                  "vector" : self.vector.get(),
+                  "vectorFile" : self.vectorFile.get(),
+                  "length" : self.length.get(),
+                  "unique" : self.unique.get(),
+                  "mindist" : self.mindist.get(),
+                  "side" : self.side.get(),
+                  "top" : self.top.get(),
+                  "pxSize" : self.inputParticles.get().getSamplingRate(),
+                  "dim" : self.inputParticles.get().getXDim()
+                  }
+        
+        args = "--create_star --extract_subparticles "
+        
+        if self.splitParticles:
+            args += "--split_stacks "
+        
+        if self.inputVolume:
+            args += "--masked_map %s " % convertBinaryVol(self.inputVolume.get(),
+                                                          self._getTmpPath())
+        
+        if self.randomize:
+            args += "--randomize "
+        
+        if self.relaxSym:
+            args += "--relax_symmetry "
+        
+        if self.alignSubparticles:
+            args += "--align_subparticles "
+        
+        args += "--j %d --np %d " %(self.numberOfThreads.get(),
+                                    self.numberOfMpi.get())
+        
+        if self.defineVector.get() == CMM:
+            args += "--cmm %s " % self.vectorFile.get()
+        else:
+            args += "--vector %s " % self.vector.get()
+        
+        if params["length"] > 0:
+            args += "--length %f " % params["length"]
+        
+        args += ("--output %(output)s --angpix %(pxSize)f "
+                 "--sym %(symmetryGroup)s --particle_size %(dim)d "
+                 "--subparticle_size %(boxSize)d " ) % params
+        
+        if params["unique"] > 0:
+            args += "--unique %f " % params["unique"]
+        
+        if params["mindist"] > 0:
+            args += "--mindist %f " % params["mindist"]
+        
+        if params["side"] > 0:
+            args += "--side %f " % params["side"]
+        
+        if params["top"] > 0:
+            args += "--top %f " % params["top"]
+        
+        args += "%s " % self._getFileName('input_star')
+        
+        self.runJob(getProgram(), args, env=getEnviron(), numberOfMpi=1)
     
     def createOutputStep(self):
-        pass
+        inputSet = self._getInputParticles()
+        outputSet = self._createSetOfParticles()
+        outputSet.copyInfo(inputSet)
+        readSetOfParticles(self._getFileName('output_star'),
+                           outputSet, alignType=ALIGN_PROJ)
+        
+        self._defineOutputs(outputParticles=outputSet)
+        self._defineSourceRelation(self.inputParticles, outputSet)
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-#         self.validatePackageVersion('RELION_HOME', errors)
-#         if self._getInputParticles().isOddX():
-#             errors.append("Relion only works with even values for the image dimensions!")
-#         
-#             errors += self._validateNormal()
         return errors
     
     def _citations(self):
-        cites = []
-        return cites
-    
+        return ['Serban2015']
+
     def _summary(self):
         summary = []
         self._initialize()
-# 
-#         lastIter = self._lastIter()
-# 
-#         if lastIter is not None:
-#             iterMsg = 'Iteration %d' % lastIter
-#             if self.hasAttribute('numberOfIterations'):
-#                 iterMsg += '/%d' % self._getnumberOfIters()
-#         else:
-#             iterMsg = 'No iteration finished yet.'
-#         summary = [iterMsg]
-# 
-#         flip = '' if self._getInputParticles().isPhaseFlipped() else 'not '
-#         flipMsg = "Your images have %sbeen ctf-phase corrected" % flip
-#         summary.append(flipMsg)
-#         
-#         if self.doContinue:
-#             summary += self._summaryContinue()
-#         summary += self._summaryNormal()
         return summary
     
     def _methods(self):
-        """ Should be overriden in each protocol.
-        """
         return []
     
     #--------------------------- UTILS functions ------------------------------
     def _getInputParticles(self):
         return self.inputParticles.get()
     
-#     def _getProgram(self, program='relion_refine'):
-#         """ Get the program name depending on the MPI use or not. """
-#         if self.numberOfMpi > 1:
-#             program += '_mpi'
-#         return program
-    
-#     def _getIterNumber(self, index):
-#         """ Return the list of iteration files, give the iterTemplate. """
-#         result = None
-#         files = sorted(glob(self._iterTemplate))
-#         if files:
-#             f = files[index]
-#             s = self._iterRegex.search(f)
-#             if s:
-#                 result = int(s.group(1)) # group 1 is 3 digits iteration number
-#         return result
-#         
-#     def _lastIter(self):
-#         return self._getIterNumber(-1)
-# 
-#     def _firstIter(self):
-#         return self._getIterNumber(0) or 1
-#     
-#     def _getIterClasses(self, it, clean=False):
-#         """ Return a classes .sqlite file for this iteration.
-#         If the file doesn't exists, it will be created by 
-#         converting from this iteration data.star file.
-#         """
-#         data_classes = self._getFileName('classes_scipion', iter=it)
-#         
-#         if clean:
-#             cleanPath(data_classes)
-#         
-#         if not exists(data_classes):
-#             clsSet = self.OUTPUT_TYPE(filename=data_classes)
-#             clsSet.setImages(self.inputParticles.get())
-#             self._fillClassesFromIter(clsSet, it)
-#             clsSet.write()
-#             clsSet.close()
-# 
-#         return data_classes
-#     
-#     def _getIterData(self, it, **kwargs):
-#         """ Sort the it??.data.star file by the maximum likelihood. """
-#         data_sqlite = self._getFileName('data_scipion', iter=it)
-#         
-#         if not exists(data_sqlite):
-#             iterImgSet = em.SetOfParticles(filename=data_sqlite)
-#             iterImgSet.copyInfo(self._getInputParticles())
-#             self._fillDataFromIter(iterImgSet, it)
-#             iterImgSet.write()
-#             iterImgSet.close()
-#         
-#         return data_sqlite
-#     
-#     def _splitInCTFGroups(self, imgStar):
-#         """ Add a new colunm in the image star to separate the particles into ctf groups """
-#         from convert import splitInCTFGroups
-#         splitInCTFGroups(imgStar
-#                          , self.defocusRange.get()
-#                          , self.numParticles.get())
-#     
-#     def _getContinueIter(self):
-#         continueRun = self.continueRun.get()
-#         
-#         if continueRun is not None:
-#             continueRun._initialize()
-#         
-#         if self.doContinue:
-#             if self.continueIter.get() == 'last':
-#                 continueIter = continueRun._lastIter()
-#             else:
-#                 continueIter = int(self.continueIter.get())
-#         else:
-#             continueIter = 0
-#             
-#         return continueIter
-#     
-#     def _getnumberOfIters(self):
-#         return self._getContinueIter() + self.numberOfIterations.get()
-#     
-#     def _postprocessImageRow(self, img, imgRow):
-# #         from convert import locationToRelion
-#         partId = img.getParticleId()
-#         magnification = img.getAcquisition().getMagnification()
-#         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
-#         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
-#         imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%06d@fake_movie_%06d.mrcs" %(img.getFrameId() + 1, img.getMicId()))
-        

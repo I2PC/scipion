@@ -101,10 +101,9 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def getEnviron(xmippFirst=True):
+def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
-    pos = Environ.BEGIN if xmippFirst else Environ.END
     environ.update({
             'PATH': join(os.environ['RELION_HOME'], 'bin') + ":" + 
                     os.path.join(os.environ['BSOFT_HOME'], 'bin'),
@@ -112,7 +111,7 @@ def getEnviron(xmippFirst=True):
             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + 
                                join(os.environ['RELION_HOME'], 'lib64'),
             'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
-            }, position=pos)
+            }, position=Environ.BEGIN)
     return environ
 
 
@@ -763,3 +762,9 @@ def convertBinaryVol(vol, outputDir):
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
+
+def getProgram():
+    program = os.path.join(os.environ['LOCALIZED_HOME'],
+                           "relion_localized_reconstruction.py")
+    #raise Exception('EMAN_PYTHON is not load in environment')
+    return 'python %s ' % program
