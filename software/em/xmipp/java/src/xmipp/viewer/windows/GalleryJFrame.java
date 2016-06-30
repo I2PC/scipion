@@ -1726,6 +1726,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					runInBackground(Worker.FSC);
 				else if (cmd.equals(FILE_OPEN))
 				{
+                    fc.setDialogTitle("Open");
+                    fc.setApproveButtonToolTipText("File to open");
                     fc.setApproveButtonText("Open");
 					if (fc.showOpenDialog(GalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
 					{
@@ -2431,6 +2433,8 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         	if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
             {
                 fc.setApproveButtonText("Open");
+                fc.setDialogTitle("Open with Chimera");
+                fc.setApproveButtonToolTipText("Choose a chimera compatible file.");
                 int result = fc.showOpenDialog(GalleryJFrame.this);
                 if(result != XmippFileChooser.CANCEL_OPTION)
                 {

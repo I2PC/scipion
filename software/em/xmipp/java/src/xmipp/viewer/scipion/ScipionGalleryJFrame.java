@@ -250,7 +250,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 if(gallery.hasSelection() && !data.hasDisabled())
                 { 
                 	if(selection[emo.index] && emo.childmd != null)
-                		size += emo.childmd.size();
+                		size += emo.childmd.getEnabledCount();
                 }
                 else if(emo.isEnabled() && emo.childmd != null)
                     size += emo.childmd.getEnabledCount();
@@ -416,12 +416,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     if (cmd.equals(FILE_LOAD_SEL))
                     {
                     	fc.setApproveButtonText("Open");
+                        fc.setDialogTitle("Load a status file");
+                        fc.setApproveButtonToolTipText("Choose a file with state data");
+
                         if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             loadSelection(fc.getSelectedPath());
                     }
                     if (cmd.equals(FILE_SAVE_SEL))
                     {
                         fc.setSelectedFile(new File(sqlitefile));
+                        fc.setDialogTitle("Save state");
+                        fc.setApproveButtonToolTipText("Choose where to save the status");
                         fc.setApproveButtonText("Save");
                          if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             saveSelection(fc.getSelectedPath());
