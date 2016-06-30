@@ -67,7 +67,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             type = data.hasClasses()? "Particles": setType.replace("SetOf", "");
             port = parameters.port;
             inputid = parameters.inputid;
-            sqlitefile = data.getTmpFile("_selection");
+            sqlitefile = data.getTmpFile("_state");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "create subset");
             other = parameters.other;

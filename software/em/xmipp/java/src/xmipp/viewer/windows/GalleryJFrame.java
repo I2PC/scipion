@@ -1834,7 +1834,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(HELP_ONLINE))
 				{
-					XmippWindowUtil.openURI("http://scipion.cnb.csic.es/bin/view/TWiki/ShowJ");
+					XmippWindowUtil.openURI("http://github.com/I2PC/scipion/wiki/ShowJ");
 				}
 				else if (cmd.equals(KEY_ASSIST))
 				{
