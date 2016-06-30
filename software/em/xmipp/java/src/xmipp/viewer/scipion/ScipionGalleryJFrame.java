@@ -259,17 +259,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         else if (gallery.hasSelection() && !data.hasDisabled())
             size = gallery.getSelectionCount();
         else
-            size = ((ScipionGalleryData)data).getEnabledCount();
+            size = data.getEnabledCount();
         
         if (confirmCreate(type, size)) 
         {
             String command = String.format(runProtCreateSubset, 
-                    inputid, sqlitefile, ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), other, getRunLabel());
+                    inputid, sqlitefile, data.getPreffix(), String.format("SetOf%s", type), other, getRunLabel());
             runCommand(command, "Creating set ...");
         }
     }
-    
-    
+
     protected void createSubsetFromClasses()
     {
         if (confirmCreate("Classes")) {
@@ -443,10 +442,18 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
         protected void saveSelection(String path) {
             try {
-                boolean[] selection = null;
-                if(gallery.hasSelection() && !data.hasDisabled())
-                    selection = gallery.getSelection();
-                ((ScipionGalleryData)data).overwrite(path, selection);
+//                boolean[] selection = null;
+//                if(gallery.hasSelection() && !data.hasDisabled())
+//                    selection = gallery.getSelection();
+//                ((ScipionGalleryData)data).overwrite(path, selection);
+
+                ScipionGalleryData sgData = (ScipionGalleryData)data;
+
+                if (sgData.getScipionMetaData().getParent() != null) {
+                    sgData.getScipionMetaData().getParent().overwrite(getFilename(), path, null);
+                } else {
+                    sgData.overwrite(path, null);
+                }
             } catch (SQLException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
@@ -455,8 +462,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 		@Override
 		public void addExtraMenuItems()
 		{
-			addItem(FILE_LOAD_SEL, "Load selection ...");
-            addItem(FILE_SAVE_SEL, "Save selection ...", "save_as.gif");
+			addItem(FILE_LOAD_SEL, "Load state ...");
+            addItem(FILE_SAVE_SEL, "Save state ...", "save_as.gif");
 			
 		}
     }
