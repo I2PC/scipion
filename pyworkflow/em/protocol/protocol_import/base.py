@@ -59,7 +59,7 @@ class ProtImportFiles(ProtImport):
         filesCondition = self._getFilesCondition()
         
         form.addSection(label='Import')
-        if len(importChoices) > 1: # only from files
+        if len(importChoices) > 1: # not only from files
             form.addParam('importFrom', EnumParam, 
                           choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',

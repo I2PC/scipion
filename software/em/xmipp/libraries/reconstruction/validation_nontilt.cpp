@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jlvilas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -61,7 +61,7 @@ void ProgValidationNonTilt::run()
 {
     //Clustering Tendency and Cluster Validity Stephen D. Scott
     randomize_random_generator();
-    MetaData md,mdGallery,mdOut,mdOut2;
+    MetaData md,mdGallery,mdOut,mdOut2,mdSort;
     MDRow row;
 
     FileName fnOut,fnOut2, fnGallery;
@@ -72,15 +72,16 @@ void ProgValidationNonTilt::run()
 
     md.read(fnParticles);
     mdGallery.read(fnGallery);
+    mdSort.sort(md,MDL_IMAGE_IDX,true,-1,0);
 
     size_t maxNImg;
     size_t sz = md.size();
 
     if (useSignificant)
-    	md.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+    	mdSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
     else
     {
-    	md.getValue(MDL_ITEM_ID,maxNImg,sz);
+    	mdSort.getValue(MDL_ITEM_ID,maxNImg,sz);
     }
 
     String expression;
@@ -111,7 +112,7 @@ void ProgValidationNonTilt::run()
 
 	for (size_t idx=0; idx<=maxNImg;idx++)
 	{
-		if ((idx+1)%Nprocessors==rank)
+		if ((idx)%Nprocessors==rank)
 		{
 			if (useSignificant)
 				expression = formatString("imageIndex == %lu",idx);
@@ -120,11 +121,11 @@ void ProgValidationNonTilt::run()
 
 			tempMd.importObjects(md, MDExpression(expression));
 
+
 			if (tempMd.size()==0)
 				continue;
 
 			//compute H_0 from noise
-			//obtainSumU(tempMd,sum_u,H0);
 			obtainSumU_2(mdGallery, tempMd,sum_u,H0);
 			//compute H from experimental
 			obtainSumW(tempMd,sum_w,sum_u,H,correction);
@@ -148,7 +149,6 @@ void ProgValidationNonTilt::run()
 				rowP.setValue(MDL_ITEM_ID,idx);
 
 			rowP.setValue(MDL_WEIGHT,P);
-			rowP.setValue(MDL_WEIGHT_P,p.at(size_t(significance_noise*nSamplesRandom)));
 			mdPartial.addRow(rowP);
 			tempMd.clear();
 
@@ -176,12 +176,12 @@ void ProgValidationNonTilt::run()
 			num_images += 1.;
 		}
 		validation /= (num_images);
-	}
 
-    row2.setValue(MDL_IMAGE,fnInit);
-    row2.setValue(MDL_WEIGHT,validation);
-    mdOut2.addRow(row2);
-    mdOut2.write(fnOut2);
+		row2.setValue(MDL_IMAGE,fnInit);
+		row2.setValue(MDL_WEIGHT,validation);
+		mdOut2.addRow(row2);
+		mdOut2.write(fnOut2);
+	}
 }
 
 void ProgValidationNonTilt::obtainSumU(const MetaData & tempMd,std::vector<double> & sum_u,std::vector<double> & H0)
@@ -361,7 +361,7 @@ void ProgValidationNonTilt::obtainSumW(const MetaData & tempMd, double & sum_W, 
         sumW +=  W;
     }
 
-    //Here the problem is that maybe the changes are only in psi angle. We give the best solution assuming an angular sampling of 0.5º
+    //Here the problem is that maybe the changes are only in psi angle. We give the best solution assuming an angular sampling of 0.5Âº
     if (sumW == 0)
     	sumW = 0.075*tempMd.size();
 

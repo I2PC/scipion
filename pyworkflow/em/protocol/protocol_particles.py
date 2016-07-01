@@ -29,7 +29,7 @@ In this module are protocol base classes related to EM Particles
 
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import EMObject
+from pyworkflow.em.data import EMObject, SetOfCoordinates
 from pyworkflow.utils.properties import Message
 
 
@@ -64,7 +64,7 @@ class ProtProcessParticles(ProtParticles):
         """ Return the default value for thread and MPI
         for the parallel section definition.
         """
-        return (2, 1)
+        return (0, 0)
 
 
 class ProtFilterParticles(ProtProcessParticles):
@@ -74,7 +74,8 @@ class ProtFilterParticles(ProtProcessParticles):
 
 class ProtOperateParticles(ProtProcessParticles):
     """Base class for operations on particles of type ProtPreprocessParticles"""
-    pass
+    def __init__(self, **args):
+        ProtProcessParticles.__init__(self, **args)
 
 
 class ProtMaskParticles(ProtProcessParticles):
@@ -89,71 +90,67 @@ class ProtExtractParticles(ProtParticles):
 
 class ProtParticlePicking(ProtParticles):
     OUTPUT_PREFIX = 'outputCoordinates'
-    
+
     def _defineParams(self, form):
 
         form.addSection(label='Input')
         form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
-                      label=Message.LABEL_INPUT_MIC, important=True,                      
+                      label=Message.LABEL_INPUT_MIC, important=True,
                       help='Select the SetOfMicrographs to be used during picking.')
 
     #--------------------------- INFO functions ----------------------------------------------------
     def getSummary(self, coordSet):
         summary = []
-        summary.append("Number of particles picked: %d" % coordSet.getSize())
-        summary.append("Particle size: %d" % coordSet.getBoxSize())
+        summary.append("Number of particles picked: %s" % coordSet.getSize())
+        summary.append("Particle size: %s" % coordSet.getBoxSize())
         return "\n".join(summary)
 
     def getMethods(self, output):
-        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(), output.getBoxSize())
+        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(),
+                                                                        output.getBoxSize())
         return msg
-    
+
     def _methods(self):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
-        methodsMsgs.append("Input micrographs %s of size %d." % (self.getObjectTag(self.getInputMicrographs()), self.getInputMicrographs().getSize()))
-        
-        if self.getOutputsSize() > 1:
+
+        methodsMsgs.append("Input micrographs %s of size %d."
+                           % (self.getObjectTag(self.getInputMicrographs()),
+                              self.getInputMicrographs().getSize()))
+
+        if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes(EMObject):
                 msg = self.getMethods(output)
-                methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
-        elif(self.getOutputsSize() == 1):
-            output = self.getCoords()
-            msg = self.getMethods(output)
-            methodsMsgs.append("*%s:*\n%s"%(self.getObjectTag(output), msg))
+                methodsMsgs.append("%s: %s"%(self.getObjectTag(output), msg))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
-    
+
     def getInputMicrographsPointer(self):
         return self.inputMicrographs
-    
+
     def getInputMicrographs(self):
         return self.getInputMicrographsPointer().get()
-    
+
+    def _getCoords(self, CoordClass):
+        result = None
+        for _, attr in self.iterOutputAttributes(CoordClass):
+            result = attr # Get the last output that is SetOfCoordinates or so
+        return result
+
     def getCoords(self):
-        count = self.getOutputsSize()
-        if count == 0:
-            return None
-        suffix = str(count) if count > 1 else ''
-        outputName = 'outputCoordinates' + suffix
-        return getattr(self, outputName)
-    
+        return self._getCoords(SetOfCoordinates)
+
     def getCoordsTiltPair(self):
-        count = self.getOutputsSize()
-        if count == 0:
-            return None
-        suffix = str(count) if count > 1 else ''
-        outputName = 'outputCoordinatesTiltPair' + suffix
-        return getattr(self, outputName)
+        from pyworkflow.em.data_tiltpairs import CoordinatesTiltPair
+        return self._getCoords(CoordinatesTiltPair)
 
     def _createOutput(self, outputDir):
         micSet = self.getInputMicrographs()
-        count = self.getOutputsSize()
-        suffix = str(count + 1) if count > 0 else ''
-        outputName = 'outputCoordinates' + suffix
+        suffix = self.__getOutputSuffix()
+        outputName = self.OUTPUT_PREFIX + suffix
         coordSet = self._createSetOfCoordinates(micSet, suffix)
         self.readSetOfCoordinates(outputDir, coordSet)
         coordSet.setObjComment(self.getSummary(coordSet))
@@ -169,12 +166,9 @@ class ProtParticlePicking(ProtParticles):
         if self.getInputMicrographs() is  not None:
             summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
 
-        if(self.getOutputsSize() > 1):
+        if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes(EMObject):
-                label = output.getObjLabel() if output.getObjLabel() != "" else key
-                summary.append("*%s:*\n%s"%(key, output.getObjComment()))
-        elif(self.getOutputsSize() == 1):
-            summary.append(self.getCoords().getObjComment())
+                summary.append("*%s:* \n %s " % (key, output.getObjComment()))
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
@@ -189,16 +183,16 @@ class ProtParticlePicking(ProtParticles):
         and number with a higher value.
         """
         maxCounter = -1
-        for attrName, _ in self.iterOutputEM():
+        for attrName, _ in self.iterOutputAttributes(SetOfCoordinates):
             suffix = attrName.replace(self.OUTPUT_PREFIX, '')
             try:
                 counter = int(suffix)
             except:
                 counter = 1 # when there is not number assume 1
             maxCounter = max(counter, maxCounter)
-            
+
         return str(maxCounter+1) if maxCounter > 0 else '' # empty if not outputs
-        
+
     def registerCoords(self, coordsDir):
         """ This methods is usually inherited from all Pickers
         and it is used from the Java picking GUI to register
@@ -206,10 +200,11 @@ class ProtParticlePicking(ProtParticles):
         """
         suffix = self.__getOutputSuffix()
         outputName = self.OUTPUT_PREFIX + suffix
-        
+
         from pyworkflow.em.packages.xmipp3 import readSetOfCoordinates
         inputset = self.getInputMicrographs()
-        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)#micrographs are the input set if protocol is not finished
+        # micrographs are the input set if protocol is not finished
+        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)
         readSetOfCoordinates(coordsDir, outputset.getMicrographs(), outputset)
         summary = self.getSummary(outputset)
         outputset.setObjComment(summary)

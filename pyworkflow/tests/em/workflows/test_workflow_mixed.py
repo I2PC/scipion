@@ -50,11 +50,10 @@ class TestMixedBPV(TestWorkflow):
         self.launchProtocol(protCTF)
         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
         
-        valuesList = [[24000, 24000, 12.5], [22548, 22518, 56.2], [23058, 23029, 60.63]]
+        valuesList = [[24000, 24000], [22548, 22518], [23058, 23029]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-            self.assertAlmostEquals(ctfModel.getDefocusAngle(),values[2], delta=5)
             self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 6.185, delta=0.001)
 
 #         self.validateFiles('protCTF', protCTF)
@@ -176,7 +175,7 @@ class TestMixedBPV2(TestWorkflow):
         
         print "Run Initial Model"
         protIniModel = self.newProtocol(EmanProtInitModel, numberOfIterations=1, numberOfModels=2,
-                                 shrink=1, symmetry='icos', numberOfThreads=3)
+                                 shrink=5, symmetry='icos', numberOfThreads=3)
         protIniModel.inputSet.set(protML2D.outputClasses)
         self.launchProtocol(protIniModel)        
         self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  

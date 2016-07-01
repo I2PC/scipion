@@ -36,7 +36,7 @@ public class ParticlesDialog extends Dialog
 			public void windowClosing(WindowEvent winEvt)
 			{
 				resetParticlesDialog();
-                                close();
+                close();
 			}
 
 		});

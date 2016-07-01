@@ -209,14 +209,21 @@ class XmippProtProjMatch(ProtRefine3D, ProtClassify3D):
     def _validate(self):
         errors = []
 
-        if (self.doCTFCorrection and not self.doAutoCTFGroup
-            and not exists(self.setOfDefocus.get())):
-            errors.append("Error: for non-automated ctf grouping, please provide a docfile!")
+        if self.doCTFCorrection:
+
+            if not self.doAutoCTFGroup and not exists(self.setOfDefocus.get()):
+                errors.append("Error: for non-automated ctf grouping, "
+                              "please provide a docfile!")
+
+            if not self.inputParticles.get().hasCTF():
+                errors.append("Error: for doing CTF correction the input "
+                              "particles should have CTF information.")
 
         if self.numberOfMpi <= 1:
             errors.append("The number of MPI processes has to be larger than 1")
         
-        self._validateDim(self.inputParticles.get(), self.input3DReferences.get(),
+        self._validateDim(self.inputParticles.get(),
+                          self.input3DReferences.get(),
                           errors, 'Input particles', 'Reference volume')
 
         return errors
