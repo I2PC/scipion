@@ -31,8 +31,6 @@ Protocol wrapper around the MotionCorr for movie alignment
 
 import os, sys
 
-#import pyworkflow.em as em
-#import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
@@ -42,14 +40,15 @@ from convert import parseMovieAlignment
 
 class ProtMotionCorr(ProtAlignMovies):
     """
-    Wrapper protocol to Dose Fractionation Tool: Flat fielding and Drift correction
+    Wrapper protocol to Dose Fractionation Tool:
+        Flat fielding and Drift correction
     Wrote by Xueming Li @ Yifan Cheng Lab, UCSF   
     """
 
     _label = 'motioncorr alignment'
     CONVERT_TO_MRC = 'mrc'
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         form.addParam('gpuMsg', params.LabelParam, default=True,
                       label='WARNING! You need to have installed CUDA'
@@ -82,7 +81,7 @@ class ProtMotionCorr(ProtAlignMovies):
         # Since only runs in GPU, does not allow neither threads or mpi
         form.addParallelSection(threads=0, mpi=0)
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
 
         inputMovies = self.inputMovies.get()
@@ -91,7 +90,8 @@ class ProtMotionCorr(ProtAlignMovies):
         outputMovieFn = self._getAbsPath(self._getOutputMovieName(movie))
         logFile = self._getAbsPath(self._getMovieLogFile(movie))
 
-        # Get the number of frames and the range to be used for alignment and sum
+        # Get the number of frames and the range to be used
+        # for alignment and sum
         numberOfFrames = movie.getNumberOfFrames()
         a0, aN = self._getFrameRange(numberOfFrames, 'align')
         s0, sN = self._getFrameRange(numberOfFrames, 'sum')
@@ -128,12 +128,11 @@ class ProtMotionCorr(ProtAlignMovies):
         program = 'dosefgpu_driftcorr'
 
         try:
-            #self.info("Running: %s %s" % (program, command))
             self.runJob(program, args, cwd=movieFolder)
         except:
-            print >> sys.stderr, program, " failed for movie %(movieName)s" % locals()
+            print >> sys.stderr, program, " failed for movie %s" % movie.getName()
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
         return summary
