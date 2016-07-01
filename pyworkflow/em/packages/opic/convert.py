@@ -107,7 +107,8 @@ def getEnviron():
     environ.update({
             'PATH': join(os.environ['RELION_HOME'], 'bin') + ":" + 
                     os.path.join(os.environ['BSOFT_HOME'], 'bin'),
-            'PYTHONPATH': os.environ['LOCALIZED_HOME'],
+            'PYTHONPATH': os.environ['LOCALREC_HOME'] +":" + 
+                          join(os.environ['LOCALREC_HOME'], 'scripts'),
             'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + 
                                join(os.environ['RELION_HOME'], 'lib64'),
             'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
@@ -764,7 +765,7 @@ def createItemMatrix(item, row, align):
 
 
 def getProgram():
-    program = os.path.join(os.environ['LOCALIZED_HOME'],
+    program = os.path.join(os.environ['LOCALREC_HOME'], 'scripts',
                            "relion_localized_reconstruction.py")
     #raise Exception('EMAN_PYTHON is not load in environment')
     return 'python %s ' % program

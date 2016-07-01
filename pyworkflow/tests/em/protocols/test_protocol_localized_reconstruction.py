@@ -28,7 +28,7 @@ import sys, unittest
 
 from pyworkflow.em import ProtImportParticles, ProtImportVolumes
 from pyworkflow.tests import *
-from pyworkflow.em.packages.localized_recons import *
+from pyworkflow.em.packages.opic import *
 
 
 # Some utility functions to import micrographs that are used
