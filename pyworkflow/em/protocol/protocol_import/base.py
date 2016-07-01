@@ -23,16 +23,13 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
 from os.path import join
 from glob import glob
 import re
 
 import pyworkflow.protocol.params as params
-from pyworkflow.utils.path import expandPattern, createLink, copyFile, createAbsLink
+from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
 from pyworkflow.em.protocol import EMProtocol
 
 
@@ -48,17 +45,19 @@ class ProtImportFiles(ProtImport):
     2) First option will always be "from files". (for this option 
       files with a given pattern will be retrieved  and the ### will 
       be used to mark an ID part from the filename.
-      - For each file a function to process it will be called (_importFile(fileName, fileId))
+      - For each file a function to process it will be called
+        (_importFile(fileName, fileId))
     """
     IMPORT_FROM_FILES = 0
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         importChoices = self._getImportChoices()
         filesCondition = self._getFilesCondition()
         
         form.addSection(label='Import')
-        if len(importChoices) > 1: # only from files
+
+        if len(importChoices) > 1: # not only from files
             form.addParam('importFrom', params.EnumParam, 
                           choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',
@@ -141,7 +140,7 @@ class ProtImportFiles(ProtImport):
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_FILES
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
@@ -151,7 +150,8 @@ class ProtImportFiles(ProtImport):
                 # Just check the number of files matching the pattern
                 self.getMatchFiles()
                 if self.numberOfFiles == 0:
-                    errors.append("There are no files matching the pattern " + "%s" % self.getPattern())
+                    errors.append("There are no files matching the pattern %s"
+                                  % self.getPattern())
             
         return errors
     
@@ -170,7 +170,7 @@ class ProtImportFiles(ProtImport):
         """
         return '(importFrom == %d)' % self.IMPORT_FROM_FILES
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getPattern(self):
         """ Expand the pattern using environ vars or username
         and also replacing special character # by digit matching.
@@ -196,7 +196,9 @@ class ProtImportFiles(ProtImport):
         return pattern   
     
     def getMatchFiles(self, pattern=None):
-        """ Return a sorted list with the paths of files that matched the pattern"""
+        """ Return a sorted list with the paths of files that
+        matched the pattern.
+        """
         if pattern is None:
             pattern = self.getPattern()
         filePaths = glob(pattern)
@@ -225,7 +227,8 @@ class ProtImportFiles(ProtImport):
                 # this is set by the user by using #### format in the pattern
                 match = self._idRegex.match(fileName)
                 if match is None:
-                    raise Exception("File '%s' doesn't match the pattern '%s'" % (fileName, self.getPattern()))
+                    raise Exception("File '%s' doesn't match the pattern '%s'"
+                                    % (fileName, self.getPattern()))
                 fileId = int(match.group(1))
             else:
                 fileId = None

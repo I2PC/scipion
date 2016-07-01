@@ -143,8 +143,12 @@ class ProtResMap(ProtAnalysis3D):
         # Insert processing steps
         if self.useSplitVolume:
             inputs = [self.volumeHalf1, self.volumeHalf2]
+            self.inputVolume.set(None)
         else:
             inputs = [self.inputVolume]
+            self.volumeHalf1.set(None)
+            self.volumeHalf2.set(None)
+            
         locations = [i.get().getLocation() for i in inputs]
             
         self._insertFunctionStep('convertInputStep', *locations)

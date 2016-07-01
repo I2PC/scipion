@@ -90,7 +90,7 @@ class XmippValidateOverfittingViewer(Viewer):
         md = xmipp.MetaData(fnOutput)
         xValue = md.getColumnValues(xmipp.MDL_COUNT)
         yValue = md.getColumnValues(xmipp.MDL_AVG)
-        plt.plot(xValue, yValue, color='g', label='Real data-set')
+        plt.plot(xValue, yValue, color='g', label='Aligned particles')
                 
         # putting error bar 
         md = xmipp.MetaData(fnOutput)

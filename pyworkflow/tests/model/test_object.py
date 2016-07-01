@@ -286,6 +286,16 @@ class TestObject(BaseTest):
         self.assertEqual(ma1.getObjDict(includeBasic=True),
                          ma2.getObjDict(includeBasic=True))
 
+    def test_Dict(self):
+        d = Dict(default='missing')
+        d.update({1: 'one', 2: 'two'})
+
+        # Return default value for any non-present key
+        self.assertEqual('missing', d[10])
+
+        # Return true for any 'contains' query
+        self.assertTrue(100 in d)
+        
 
 class TestUtils(BaseTest):
     
@@ -332,9 +342,3 @@ class TestUtils(BaseTest):
         self.assertEqual(env3['LD_LIBRARY_PATH'],env['LD_LIBRARY_PATH'] + os.pathsep +  '/usr/local/xmipp/lib')      
         
         
-        
-        
-            
-if __name__ == '__main__':
-    unittest.main()
-    

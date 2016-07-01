@@ -248,7 +248,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 	/**
-	 * Open another metadata separataly *
+	 * Open another metadata separately *
 	 */
 	public void openMetadata(final MetaData md)
 	{
@@ -1611,7 +1611,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
 			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
-			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
+			addItem(MD_SAVE_SELECTION, "Save state", "save.gif");
 			addSeparator(METADATA);
 			// Help
 			addItem(HELP, "Help");
@@ -1726,6 +1726,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					runInBackground(Worker.FSC);
 				else if (cmd.equals(FILE_OPEN))
 				{
+                    fc.setDialogTitle("Open");
+                    fc.setApproveButtonToolTipText("File to open");
+                    fc.setApproveButtonText("Open");
 					if (fc.showOpenDialog(GalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
 					{
 						if (Filename.exists(fc.getSelectedFile().getPath()))
@@ -1831,7 +1834,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(HELP_ONLINE))
 				{
-					XmippWindowUtil.openURI("http://scipion.cnb.csic.es/bin/view/TWiki/ShowJ");
+					XmippWindowUtil.openURI("http://github.com/I2PC/scipion/wiki/ShowJ");
 				}
 				else if (cmd.equals(KEY_ASSIST))
 				{
@@ -2429,6 +2432,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         {
         	if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
             {
+                fc.setApproveButtonText("Open");
+                fc.setDialogTitle("Open with Chimera");
+                fc.setApproveButtonToolTipText("Choose a chimera compatible file.");
                 int result = fc.showOpenDialog(GalleryJFrame.this);
                 if(result != XmippFileChooser.CANCEL_OPTION)
                 {

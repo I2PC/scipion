@@ -67,7 +67,7 @@ public class ExtractPickerJFrame extends ParticlePickerJFrame
 	private void initComponents()
 	{
 		setResizable(false);
-		setTitle("Xmipp Particle Picker - " + picker.getMode());
+		setTitle();
 		initMenuBar();
 		setJMenuBar(mb);
 		savemi.setEnabled(false);

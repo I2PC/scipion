@@ -847,9 +847,11 @@ class List(Object, list):
         """
         return int(strIndex.split(self.ITEM_PREFIX)[1]) - 1
             
-    #TODO: check if needed
     def __len__(self):
         return list.__len__(self)
+
+    def getSize(self): # Just to have similar API than Set
+        return len(self)
     
     def isEmpty(self):
         return len(self) == 0
@@ -899,8 +901,7 @@ class CsvList(Scalar, list):
         self._pType = pType
         
     def _convertValue(self, value):
-        """Value should be a str with comman separated values
-        or a list.
+        """ Value should be a str with comma separated values or a list.
         """
         self.clear()
         if value:
@@ -1205,4 +1206,16 @@ def ObjectWrap(value):
     # If it is str, unicode or unknown type, convert to string
     return String(value)
          
-           
+
+class Dict(dict):
+    """ Simple wrapper around dict class to have a default value. """
+    def __init__(self, default=None):
+        self._default = default
+        dict.__init__(self)
+
+    def __getitem__(self, key):
+        """ Get the image with the given id. """
+        return self.get(key, self._default)
+
+    def __contains__(self, item):
+        return True

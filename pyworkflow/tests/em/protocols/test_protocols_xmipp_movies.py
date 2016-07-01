@@ -21,18 +21,16 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-import unittest, sys
-# from pyworkflow.em import *
+
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
 
 
-# Some utility functions to import movies that are used
-# in several tests.
+# Some utility functions to import movies that are used in several tests.
 class TestXmippBase(BaseTest):
     @classmethod
     def setData(cls):
@@ -44,30 +42,35 @@ class TestXmippBase(BaseTest):
     def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize,
                        magnification, sphericalAberration):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or
+
+        kwargs = {
+            'filesPath': pattern,
+            'magnification': magnification,
+            'voltage': voltage,
+            'sphericalAberration': sphericalAberration
+        }
+
+        # We have two options: pass the SamplingRate or
         # the ScannedPixelSize + microscope magnification
-        if not samplingRate is None:
-            cls.protImport = ProtImportMovies(samplingRateMode=0,
-                                              filesPath=pattern,
-                                              samplingRate=samplingRate,
-                                              magnification=magnification,
-                                              voltage=voltage,
-                                              sphericalAberration=sphericalAberration)
+        if samplingRate is not None:
+            kwargs.update({'samplingRateMode': 0,
+                           'samplingRate': samplingRate})
         else:
-            cls.protImport = ProtImportMovies(samplingRateMode=1,
-                                              filesPath=pattern,
-                                              scannedPixelSize=scannedPixelSize,
-                                              voltage=voltage,
-                                              magnification=magnification,
-                                              sphericalAberration=sphericalAberration)
-        
+            kwargs.update({'samplingRateMode': 1,
+                           'scannedPixelSize': scannedPixelSize})
+
+        cls.protImport = cls.newProtocol(ProtImportMovies, **kwargs)
         cls.proj.launchProtocol(cls.protImport, wait=True)
+
         if cls.protImport.isFailed():
             raise Exception("Protocol has failed. Error: ",
                             cls.protImport.getErrorMessage())
-        # check that input movies have been imported (a better way to do this?)
+
+        # Check that input movies have been imported (a better way to do this?)
         if cls.protImport.outputMovies is None:
-            raise Exception('Import of movies: %s, failed. outputMovies is None.' % pattern)
+            raise Exception('Import of movies: %s, failed, '
+                            'outputMovies is None.' % pattern)
+
         return cls.protImport
     
     @classmethod
@@ -88,6 +91,7 @@ class TestXmippBase(BaseTest):
 class TestOFAlignment(TestXmippBase):
     """This class check if the preprocessing micrographs protocol
     in Xmipp works properly."""
+
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -95,7 +99,8 @@ class TestOFAlignment(TestXmippBase):
         cls.protImport1 = cls.runImportMovie1(cls.movie1)
         cls.protImport2 = cls.runImportMovie2(cls.movie2)
     
-    def runOFProtocol(self, movies, label="Default", saveMic=True, saveMovie=False):
+    def runOFProtocol(self, movies, label="Default", saveMic=True,
+                      saveMovie=False):
         protOF = XmippProtOFAlignment(doSaveAveMic=saveMic,
                                       doSaveMovie=saveMovie)
         protOF.setObjLabel(label)
@@ -188,8 +193,8 @@ class TestCorrelationAlignment(BaseTest):
         alignment = movie.getAlignment()
         range = alignment.getRange()
         msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
-        self.assertEqual(goldRange, range,
-                         msgRange % (goldRange, range, type(goldRange), type(range)))
+        self.assertEqual(goldRange, range, msgRange
+                         % (goldRange, range, type(goldRange), type(range)))
         roi = alignment.getRoi()
         msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
         self.assertEqual(goldRoi, roi,
@@ -312,7 +317,6 @@ class TestAverageMovie(BaseTest):
 
         self._checkMicrographs(protAverage2, (4096,4096))
 
-        
     def test_cct(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
                                        cropRegion=2,
@@ -324,7 +328,6 @@ class TestAverageMovie(BaseTest):
 
         self._checkMicrographs(protAverage, (1500,1500))
 
-
     def test_cct2(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
                                        cropRegion=1)
@@ -333,3 +336,4 @@ class TestAverageMovie(BaseTest):
         self.launchProtocol(protAverage)
 
         self._checkMicrographs(protAverage, (4096,4096))
+

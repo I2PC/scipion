@@ -45,30 +45,39 @@ class ProtSummovie(ProtAlignMovies):
     CONVERT_TO_MRC = 'mrc'
     doSaveAveMic = True    
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         form.addHidden('binFactor', params.FloatParam, default=1.)
 
         group = form.addGroup('Average')
         line = group.addLine('Remove frames to SUM from',
                              help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
+                                  'from beginning and/or from the end of '
+                                  'each movie.')
+        line.addParam('sumFrame0', params.IntParam, default=0,
+                      label='beginning')
+        line.addParam('sumFrameN', params.IntParam, default=0,
+                      label='end')
         
         group.addParam('useAlignment', params.BooleanParam, default=True,
               label="Use movie alignment to Sum frames?")
+
         group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                       label='Apply Dose filter',
-                      help='Apply a dose-dependent filter to frames before summing them')
-        group.addParam('exposurePerFrame', params.FloatParam,
+                      help='Apply a dose-dependent filter to frames '
+                           'before summing them')
+
+        form.addParam('exposurePerFrame', params.FloatParam,
                       label='Exposure per frame (e/A^2)',
-                      help='Exposure per frame, in electrons per square Angstrom')
-        group.addParam('doRestoreNoisePower', params.BooleanParam,
+                      help='Exposure per frame, in electrons per square '
+                           'Angstrom')
+
+        form.addParam('doRestoreNoisePower', params.BooleanParam,
                       default=True,
                       label='Restore Noise Power? ',
                       help='Restore Noise Power? ',
                       expertLevel=cons.LEVEL_ADVANCED)
+
         form.addParam('cleanInputMovies', params.BooleanParam, default=False,
                       expertLevel=cons.LEVEL_ADVANCED,
                       label='Clean input movies?',
@@ -83,7 +92,7 @@ class ProtSummovie(ProtAlignMovies):
         
         form.addParallelSection(threads=1, mpi=0)
     
-    #--------------------------- STEPS functions ----------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         self._createLink(movie)
         self._writeMovieAlignment(movie)
@@ -99,19 +108,11 @@ class ProtSummovie(ProtAlignMovies):
                   'samplingRate' : movie.getSamplingRate(),
                   'voltage' : movie.getAcquisition().getVoltage(),
                   'frcFn' : self._getFrcFn(movie),
-                  'exposurePerFrame' : self.exposurePerFrame.get()
+                  'exposurePerFrame' : self.exposurePerFrame.get(),
+                  'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
+                  'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
                   }
-        
-        if self.doApplyDoseFilter:
-            params['doApplyDoseFilter'] = 'YES'
-        else:
-            params['doApplyDoseFilter'] = 'NO'
-        
-        if self.doRestoreNoisePower:
-            params['doRestoreNoisePower'] = 'YES'
-        else:
-            params['doRestoreNoisePower'] = 'NO'
-        
+
         try:
             self.runJob(self._program, self._args % params)
             self._storeSummary(movie)
@@ -122,15 +123,16 @@ class ProtSummovie(ProtAlignMovies):
         except:
             print("ERROR: Movie %s failed\n" % movie.getFileName())
     
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _citations(self):
         return []
         
     def _methods(self):
         return []
 
+
     def _validate(self):
-        errors=[]
+        errors = []
         if not exists(SUMMOVIE_PATH):
             errors.append("Cannot find the Summovie program at: " + SUMMOVIE_PATH)
         return errors

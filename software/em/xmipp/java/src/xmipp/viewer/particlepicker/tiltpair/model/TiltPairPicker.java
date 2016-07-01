@@ -286,14 +286,14 @@ public class TiltPairPicker extends ParticlePicker
 					}
 				}
 
-				mdU.write(getParticlesBlock(file));
+				mdU.writeWithException(getParticlesBlock(file));
 				file = getOutputPath(um.getTiltedMicrograph().getPosFile());
-				mdT.write(getParticlesBlock(file));
+				mdT.writeWithException(getParticlesBlock(file));
 				
 				mdU.destroy();
 				mdT.destroy();
 			}
-                        saveMicrographAngles(um);
+            saveMicrographAngles(um);
 		}
 		catch (Exception e)
 		{

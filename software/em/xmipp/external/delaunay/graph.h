@@ -1,6 +1,6 @@
 #ifndef GRAPH_H
 #define GRAPH_H
-
+#include <stdio.h>
 
 /**************************************************************************
 * Defines
@@ -42,7 +42,6 @@ int             get_Graph_Size(struct Graph_T *graph);
 int             get_nChildren_Node(struct Graph_T *graph, int index);
 int				get_iChildren_Node(struct Graph_T *graph, int node_Index, int child_Index);
 int				get_Face_Of_Node(struct Graph_T *graph, int index);
-void			get_Vertex_Of_Node( struct Graph_T *graph, int node_Index, int *index1, int *index2, int *index3);
 int             is_Graph_Full(struct Graph_T *graph);
 
 // Graph modification interface.
@@ -57,7 +56,6 @@ int				number_Imaginary_Points( struct Graph_T *graph, int nodeIndex);
 // I/O interface.
 void print_Node(struct Node_T *node);
 void print_Graph(struct Graph_T *graph);
-void print_Graph_Statistics( char *fileName, struct Graph_T *graph);
 
 
 #endif

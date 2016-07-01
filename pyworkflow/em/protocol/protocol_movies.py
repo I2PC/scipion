@@ -23,23 +23,22 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM Micrographs
-"""
+
 import os
 from os.path import join, basename, exists
 from datetime import datetime
 
 import pyworkflow.object as pwobj
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
+
 from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment, Acquisition
-from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
@@ -221,14 +220,16 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
             if movieName.endswith('bz2'):
                 newMovieName = movieName.replace('.bz2', '')
-                # we assume that if compressed the name ends with .mrc.bz2
+                # We assume that if compressed the name ends with .mrc.bz2
                 if not exists(newMovieName):
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
+
             elif movieName.endswith('tbz'):
                 newMovieName = movieName.replace('.tbz', '.mrc')
-                # we assume that if compressed the name ends with .tbz
+                # We assume that if compressed the name ends with .tbz
                 if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
+
             elif movieName.endswith('.tif'):
                 #FIXME: It seems that we have some flip problem with compressed
                 # tif files, we need to check that

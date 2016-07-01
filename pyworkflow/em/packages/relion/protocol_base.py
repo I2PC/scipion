@@ -474,7 +474,6 @@ class ProtRelionBase(EMProtocol):
                      '--particle_diameter': maskDiameter,
                      '--angpix': self._getInputParticles().getSamplingRate(),
                     })
-        self._setMaskArgs(args)
         self._setCTFArgs(args)
         
         if self.maskZero == MASK_FILL_ZERO:
@@ -520,6 +519,7 @@ class ProtRelionBase(EMProtocol):
             args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
+        self._setMaskArgs(args)
     
     def _setCTFArgs(self, args):        
         # CTF stuff

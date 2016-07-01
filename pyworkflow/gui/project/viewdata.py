@@ -329,7 +329,7 @@ class ProjectDataView(tk.Frame):
 
 
         if obj.getObjComment():
-            self._infoText.addText('*Comments:* ' + str(obj.getObjComment()))
+            self._infoText.addText('*Comments:* ' + obj.getObjComment())
         self._infoText.setReadOnly(True)
         
     def _onClick(self, e=None):
