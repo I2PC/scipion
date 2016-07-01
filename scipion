@@ -72,6 +72,7 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_LOCAL_CONFIG = SCIPION_CONFIG  # global and local are the same!
     else:
         sys.exit('Unknown argument: %s' % arg)
+
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
 SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 
@@ -106,8 +107,9 @@ if __version__ == 'devel':
         call('git branch | grep \* > .devel_version')
         call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
 
-    # If in a future we release a nigthly build, we could add the .devel_version
+    # If in a future we release a nightly build, we could add the .devel_version
     versionFile = join(SCIPION_HOME, '.devel_version')
+
     if exists(versionFile):
         f = open(versionFile)
         line = f.readline()
@@ -333,7 +335,8 @@ def main():
                 args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
         else:
             args = option
-            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n" % (args, MODE_WEBSERVER))
+            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n"
+                             % (args, MODE_WEBSERVER))
 
         runScript('%s %s' % (manage, args))
 

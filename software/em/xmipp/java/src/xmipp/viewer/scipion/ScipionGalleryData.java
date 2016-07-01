@@ -134,6 +134,10 @@ public class ScipionGalleryData extends GalleryData {
 
     }
 
+    public ScipionMetaData getScipionMetaData(){
+        return (ScipionMetaData) md;
+    }
+
     /**
      * Get the assigned class of some element
      */

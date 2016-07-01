@@ -180,7 +180,7 @@ class XmippProtImageOperateParticles(ProtOperateParticles,
                                      XmippProcessParticles,
                                      XmippOperateHelper):
     """ Apply an operation to two sets of particles  """
-    _label = 'operate particle'
+    _label = 'operate particles'
     
     def __init__(self, **args):
         ProtOperateParticles.__init__(self, **args)
@@ -269,7 +269,7 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
                                    XmippProcessVolumes,
                                    XmippOperateHelper):
     """ Apply an operation to two sets of volumes """
-    _label = 'operate volume'
+    _label = 'operate volumes'
      
     def __init__(self, **args):
         ProtOperateVolumes.__init__(self, **args)
@@ -283,8 +283,8 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
     def _defineSpecificParams(self, form):
         form.addParam('inputVolumes2', params.PointerParam,
                       allowNull=True,
-                      condition=(binaryCondition+' and (not isValue) or '
-                                 +dotCondition),
+                      condition=(binaryCondition + ' and (not isValue) or '
+                                 + dotCondition),
                       label='Input Volumes (2nd)',
                       help = 'This parameter depends of the input volume(s). '
                              'If it is set a volume (or a SetOfVolumes) as '
