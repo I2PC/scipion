@@ -144,7 +144,8 @@ class Monitor():
 
     def notify(self, title, message):
         for n in self._notifiers:
-            n.notify(title, message)
+            if n: 
+                n.notify(title, message)
 
     def initLoop(self):
         """ To be defined in subclasses. """
@@ -167,7 +168,7 @@ class Monitor():
 
 class EmailNotifier():
     def __init__(self, smtpServer, emailFrom, emailTo):
-        self._stmpServer = smtpServer
+        self._smtpServer = smtpServer
         self._emailFrom = emailFrom
         self._emailTo = emailTo
 
