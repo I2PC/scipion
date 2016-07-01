@@ -175,7 +175,7 @@ class MonitorCTF(Monitor):
 
             if (defocusU / defocusV) > (1. + astigmatism):
                 self.warning("Defocus ratio (defocusU / defocusV)  = %f."
-                             % defocusU / defocusV)
+                             % (defocusU / defocusV))
 
             if defocusU > self.maxDefocus:
                 self.warning("DefocusU (%f) is larger than defocus "
