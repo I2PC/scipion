@@ -48,9 +48,11 @@ class ResmapPrewhitenWizard(EmWizard):
         self.prot = form.protocol
         self.form = form
         
-        emptyInput = ((not self.prot.inputVolume.get().hasValue()) or
-                      (self.prot.useSplitVolume == True and 
-                       not self.prot.volumeHalf1.get().hasValue()))
+        if not self.prot.useSplitVolume:
+            emptyInput = self.prot.inputVolume.get() is None
+        else:
+            emptyInput = (self.prot.volumeHalf1.get() is None or 
+                          self.prot.volumeHalf2.get() is None)
         
         if emptyInput:
             dialog.showWarning("Empty input", "Select input volume(s) first", self.form.root)
@@ -139,7 +141,6 @@ def myCreatePrewhiteningFigure(results, figure, newElbowAngstrom, newRampWeight)
                                  dataSlice     = data[int(dataSize/2),:,:],
                                  dataPWSlice   = dataPW[int(dataSize/2),:,:])
         
-        
 
 class PreWhiteningDialog(dialog.Dialog):
     def __init__(self, form, workingDir, **kwargs):
@@ -157,10 +158,11 @@ class PreWhiteningDialog(dialog.Dialog):
         prot = self.form.protocol
         # Convert input volumes
         ih = ImageHandler()
-        ih.convert(prot.inputVolume.get(), join(self.workingDir, 'volume1.map'))
         if prot.useSplitVolume:
             ih.convert(prot.volumeHalf1.get(), join(self.workingDir, 'volume1.map'))
             ih.convert(prot.volumeHalf2.get(), join(self.workingDir, 'volume2.map'))
+        else:
+            ih.convert(prot.inputVolume.get(), join(self.workingDir, 'volume1.map'))
     
         self.results = prot.runResmap(self.workingDir, wizardMode=True)
          
@@ -170,7 +172,6 @@ class PreWhiteningDialog(dialog.Dialog):
         
         self.figure.clear()
         myCreatePrewhiteningFigure(results, self.figure, newElbowAngstrom, newRampWeight)
-        
         
     def body(self, bodyFrame):
         figFrame = FigureFrame(bodyFrame, figsize=(18, 9))

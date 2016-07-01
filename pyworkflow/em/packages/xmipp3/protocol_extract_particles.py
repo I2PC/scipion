@@ -145,11 +145,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       'that a higher value may be preferable.')
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast', 
-                      help='Invert the contrast if your particles are black over a white background.')
+                      help='Invert the contrast if your particles are black over a white background.\n'
+                           'Xmipp, Spider, Relion and Eman require white particles over a black background\n'
+                           'Frealign (up to v9.07) requires black particles over a white background')
         
         form.addParam('doFlip', BooleanParam, default=None,
                       label='Phase flipping (Recommended)', 
-                      help='Use the information from the CTF to compensate for phase reversals.')
+                      help='Use the information from the CTF to compensate for phase reversals.\n'
+                           'Phase flip is recommended in Xmipp or Eman\n'
+                           '(even Wiener filtering and bandpass filter are recommeded for obtaining better 2D classes)\n'
+                           'Otherwise (Frealign, Relion, Spider, ...), phase flip is not recommended.'
+                    )
         
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize (Recommended)', 

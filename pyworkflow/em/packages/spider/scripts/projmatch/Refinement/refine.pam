@@ -26,11 +26,11 @@
 ;
 ; INPUT FILES:
 ;   [params]                ../params                             Input params file  
-;   [vol_orig]              ../Reconstruction/vol01               Input volume file  
-;   [sel_group_orig]        ../Reconstruction/sel_group_cclim     Group selection file
-;   [sel_particles_orig]    ../Reconstruction/sel_particles_***   Particle selection files 
-;   [group_align_orig]      ../Alignment/align_01_***             Alignment parameter files 
-;   [unaligned_images]      ../Alignment/data***                  Original unaligned images stack
+;   [vol_orig]              ../vol01                              Input volume file
+;   [sel_group_orig]        ../sel_group                          Group selection file
+;   [sel_particles_orig]    ../group***_selfile                   Particle selection files
+;   [group_align_orig]      ../group***_align                     Alignment parameter files
+;   [unaligned_images]      ../group***_stack                     Original unaligned images stack
 ;
 ; PROCEDURES CALLED:
 ;    refine_settings          <a href="./refine_settings.pam">refine_settings.pam</a>

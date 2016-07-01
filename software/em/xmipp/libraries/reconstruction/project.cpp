@@ -249,6 +249,9 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
             	MD.getValue(MDL_CTF_DATA_PHASE_FLIPPED, doPhaseFlip, objId);
+            	doPhaseFlip = !doPhaseFlip;
+            	MD.getValue(MDL_CTF_CORRECTED, doCTFCorrection, objId);
+            	doCTFCorrection = !doCTFCorrection;
             	MD.getValue(MDL_APPLY_SHIFT, applyShift, objId);
             }
 
@@ -1033,7 +1036,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
         //If there is CTF information use it
         CTFDescription ctf;
-    	if (side.DF.containsLabel(MDL_CTF_DEFOCUSU) || side.DF.containsLabel(MDL_CTF_MODEL))
+    	if ( (side.DF.containsLabel(MDL_CTF_DEFOCUSU) || side.DF.containsLabel(MDL_CTF_MODEL)) && (prm.doCTFCorrection) )
     	{
     		//JV he tenido que tocar esta función para poder acceder al sampling rate
     		hasCTF = true;
@@ -1075,6 +1078,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
             if (hasCTF)
             	ctf.applyCTF(proj(),sampling_rate, prm.doPhaseFlip);
+
             hasCTF = false;
 
             Matrix1D<double> shifts(2);

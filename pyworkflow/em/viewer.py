@@ -218,12 +218,13 @@ class Classes3DView(ClassesView):
 
 class CoordinatesObjectView(DataView):
     """ Wrapper to View but for displaying Scipion objects. """
-    def __init__(self, project, path, outputdir, protocol, pickerProps=None, viewParams={}, **kwargs):
+    def __init__(self, project, path, outputdir, protocol, pickerProps=None, inTmpFolder=False, **kwargs):
         DataView.__init__(self, path, **kwargs)
         self.project = project
         self.outputdir = outputdir
         self.protocol = protocol
         self.pickerProps = pickerProps
+        self.inTmpFolder = inTmpFolder
         
 #     def getShowJParams(self):
 #         params = '--input %s --output %s --mode %s'%(self._path, self.outputdir, self.mode)
@@ -231,7 +232,7 @@ class CoordinatesObjectView(DataView):
     
     def show(self):
         #showj.runJavaIJapp(self._memory, 'xmipp.viewer.particlepicker.training.SupervisedPickerRunner', self.getShowJParams(), env=self._env)
-        return showj.launchSupervisedPickerGUI(self._path, self.outputdir, self.protocol, pickerProps=self.pickerProps)
+        return showj.launchSupervisedPickerGUI(self._path, self.outputdir, self.protocol, pickerProps=self.pickerProps, inTmpFolder=self.inTmpFolder)
         
         
 class ImageView(View):
