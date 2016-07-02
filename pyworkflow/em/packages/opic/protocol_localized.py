@@ -94,10 +94,13 @@ class ProtLocalizedRecons(ProtParticles):
                       label="Input volume", allowsNull=True,
                       help='Map with density that to be subtracted from '
                            'particle images.')
-        form.addParam('splitParticles', BooleanParam, default=False,
-                      label='Do split particle stacks?',
-                      help='Split particle stacks (needs to be done once).')
-        form.addParam('symmetryGroup', StringParam, default='c1',
+        form.addParam('boxSize', IntParam, default=0,
+                      label='Sub-particle box size',
+                      validators=[Positive],
+                      help='In pixels.  Size of the sub-particle box')
+
+        group = form.addGroup('Symmetry')
+        group.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry", 
                       help='If the molecule is asymmetric, set Symmetry group '
                            'to C1. Note their are multiple possibilities for '
@@ -107,37 +110,38 @@ class ProtLocalizedRecons(ProtParticles):
                            '* I2: Crowther 222 \n'
                            '* I3: 52-setting (as used in SPIDER?) \n'
                            '* I4: A different 52 setting \n')
-        form.addParam('boxSize', IntParam, default=0,
-                      label='Sub-particle box size',
-                      validators=[Positive],
-                      help='In pixels.  Size of the sub-particle box')
-        form.addParam('randomize', BooleanParam, default=False,
+
+        group.addParam('randomize', BooleanParam, default=False,
                       label='Randomize the order of the symmetry matrices?',
                       help='Useful for preventing preferred orientations.')
-        form.addParam('relaxSym', BooleanParam, default=False,
+        group.addParam('relaxSym', BooleanParam, default=False,
                       label='Relax symmetry?',
                       help='Create one random subparticle for each particle ')
-        form.addParam('defineVector',  EnumParam, default=CMM,
+
+        group = form.addGroup('Vectors')
+        group.addParam('defineVector',  EnumParam, default=CMM,
                       label='Is vector defined by?',
                       choices=['cmm file', 'by hand'], 
                       display=EnumParam.DISPLAY_HLIST,
                       help='')
-        form.addParam('vector', NumericRangeParam, default='0,0,1',
+        group.addParam('vector', NumericRangeParam, default='0,0,1',
                       label='Location vectors', condition="defineVector==1",
                       help='Vector defining the location of the '
                            'subparticle. The vector is defined by 3 '
                            'values(x,y,z).')
-        form.addParam('vectorFile', PathParam, default='',
+        group.addParam('vectorFile', PathParam, default='',
                       condition="defineVector==0",
                       label='file obtained by Chimera: ',
                       help='CMM file defining the location(s) of the '
                            'sub-particle(s). Use instead of vector. ')
-        form.addParam('length', FloatParam, default=-1,
+        group.addParam('length', FloatParam, default=-1,
                       label='Alternative length of the vector (A)',
                       help='Use to adjust the sub-particle center. If it '
                            'is <= 0, the length of the given vector. '
                            'Different values must be separated by commas.')
-        form.addParam('alignSubparticles', BooleanParam, default=False,
+
+        form.addSection('Sub-particles')
+        form.addParam('alignSubparticles', BooleanParam, default=True,
                       label='Align the subparticles?',
                       help='Align sub-particles to the standard orientation. ')
         form.addParam('unique', FloatParam, default=-1,
@@ -205,10 +209,7 @@ class ProtLocalizedRecons(ProtParticles):
                   "dim" : self.inputParticles.get().getXDim()
                   }
         
-        args = "--create_star --extract_subparticles "
-        
-        if self.splitParticles:
-            args += "--split_stacks "
+        args = "--create_star --extract_subparticles --split_stacks "
         
         if self.inputVolume:
             args += "--masked_map %s " % convertBinaryVol(self.inputVolume.get(),
