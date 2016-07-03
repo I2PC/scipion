@@ -39,9 +39,9 @@ class XmippProcessParticles(ProtProcessParticles):
     """
     def __init__(self, **kwargs):
         ProtProcessParticles.__init__(self, **kwargs)
-        self._args = "-i %(inputFn)s"
+        self._args = "-i %(inputFn)s "
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._defineFilenames()
         self._insertFunctionStep("convertInputStep")
@@ -73,20 +73,16 @@ class XmippProcessParticles(ProtProcessParticles):
         newLoc = xmippToLocation(newFn)
         item.setLocation(newLoc)
             
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions ------------------------------
     def convertInputStep(self):
         """ convert if necessary"""
         # By default the prepocess protocol will ignore geometry
         # info and apply the operation on the binary data only.
         # then the new location (index, filename) is the most
         # common property to update in the single items.
-        if hasattr(self, 'inputVolumes2'):
-            if isinstance(self.inputVolumes2.get(), Volume):
-                print ("WRITE  A SINGLE VOLUME1")
-                return
         writeSetOfParticles(self.inputParticles.get(), self.inputFn,
                             alignType=ALIGN_NONE)
-        
+    
     def createOutputStep(self):
         inputSet = self.inputParticles.get()
         # outputSet could be SetOfParticles, SetOfAverages or any future sub-class of SetOfParticles
@@ -105,12 +101,11 @@ class XmippProcessParticles(ProtProcessParticles):
         self._defineOutputs(**{outputKey: outputSet})
         self._defineTransformRelation(inputSet, outputSet)
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions ------------------------------
     def _defineFilenames(self):
         self.inputFn = self._getTmpPath('input_particles.xmd')
         self.outputMd = self._getExtraPath('output_images.xmd')
         self.outputStk = self._getExtraPath('output_images.stk')
-
 
 
 class XmippProcessVolumes(ProtPreprocessVolumes):
@@ -121,7 +116,7 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
         ProtPreprocessVolumes.__init__(self, **kwargs)
         self._args = "-i %(inputFn)s "
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._defineFilenames()
         self._insertFunctionStep("convertInputStep")
@@ -142,7 +137,7 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
         """
         pass
         
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions ------------------------------
     def convertInputStep(self):
         """ convert if necessary"""
         if not self._isSingleInput():
@@ -175,7 +170,7 @@ class XmippProcessVolumes(ProtPreprocessVolumes):
             
         self._defineTransformRelation(self.inputVolumes, self.outputVol)
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions ------------------------------
     def _isSingleInput(self):
         return isinstance(self.inputVolumes.get(), Volume)
         

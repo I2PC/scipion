@@ -5,17 +5,16 @@ import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.*;
 import javax.swing.SwingUtilities;
 
 
-public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
+public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener, KeyListener
 {
 	
 	private boolean invertx;
 	private boolean inverty;
+    boolean[] keys = new boolean[1024];
 
 	public Tool getTool()
 	{
@@ -114,7 +113,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			zoomIn(x, y);
 		else
 			zoomOut(x, y);
-		
+
 
 	}
 
@@ -214,6 +213,28 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		inverty = value;
 	}
 
+    @Override
+    public void keyTyped(KeyEvent keyEvent) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent keyEvent) {
+
+        keys[keyEvent.getKeyCode()] = true;
+    }
+
+    @Override
+    public void keyReleased(KeyEvent keyEvent) {
+        keys[keyEvent.getKeyCode()] = false;
+    }
+
+    protected boolean isKeyPressed(int keyCode){
+        if (keyCode < keys.length){
+            return keys[keyCode];
+        }
+        return false;
+    }
 
 
 }

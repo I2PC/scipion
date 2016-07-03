@@ -72,6 +72,7 @@ class SqliteMapper(Mapper):
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
                                           self.__getObjectValue(obj), obj._objParentId,
                                           obj._objLabel, obj._objComment)
+        self.updateDict[obj._objId] = obj
         sid = obj.strId()
         if namePrefix is None:
             namePrefix = sid
@@ -137,19 +138,24 @@ class SqliteMapper(Mapper):
             self.db.updateObject(ptr._objId, ptr._objName, ptr.getClassName(),
                              self.__getObjectValue(obj), ptr._objParentId, 
                              ptr._objLabel, ptr._objComment)
-        
+
+        # Delete any child objects that have not been found.
+        # This could be the case if some elements (such as inside List)
+        # were stored in the database and were removed from the object
+        self.db.deleteMissingObjectsByAncestor(self.__getNamePrefix(obj),
+                                               self.updateDict.keys())
+
     def __updateTo(self, obj, level):
         self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
                              self.__getObjectValue(obj), obj._objParentId, 
                              obj._objLabel, obj._objComment)
+
         if obj.getObjId() in self.updateDict:
-            print "id: %d found already in dict. " % obj.getObjId()
-            print "FULL DICT:"
-#            for k, v in self.updateDict.iteritems():
-#                print "%d -> %s" % (k, v.getName())
-            raise Exception('Circular reference, object: %s found twice' % obj.getName())
+            raise Exception('Circular reference, object: %s found twice'
+                            % obj.getName())
         
         self.updateDict[obj._objId] = obj
+
         for key, attr in obj.getAttributesToStore():
             if attr._objId is None: # Insert new items from the previous state
                 attr._objParentId = obj._objId
@@ -158,7 +164,7 @@ class SqliteMapper(Mapper):
                 self.__insert(attr, namePrefix)
             else:  
                 self.__updateTo(attr, level + 2)
-        
+
     def updateFrom(self, obj):
         objRow = self.db.selectObjectById(obj._objId)
         self.fillObject(obj, objRow)
@@ -481,9 +487,10 @@ class SqliteObjectsDb(SqliteDb):
     
     def selectObjectsByAncestor(self, ancestor_namePrefix, iterate=False):
         """Select all objects in the hierarchy of ancestor_id"""
-        self.executeCommand(self.selectCmd("name LIKE '%s.%%'" % ancestor_namePrefix))
-        return self._results(iterate)          
-    
+        self.executeCommand(self.selectCmd("name LIKE '%s.%%'"
+                                           % ancestor_namePrefix))
+        return self._results(iterate)
+
     def selectObjectsBy(self, iterate=False, **args):     
         """More flexible select where the constrains can be passed
         as a dictionary, the concatenation is done by an AND"""
@@ -504,8 +511,26 @@ class SqliteObjectsDb(SqliteDb):
     def deleteChildObjects(self, ancestor_namePrefix):
         """ Delete from db all objects that are childs 
         of an ancestor, now them will have the same starting prefix"""
-        self.executeCommand(self.DELETE + "name LIKE '%s.%%'" % ancestor_namePrefix)
-        
+        self.executeCommand(self.DELETE + "name LIKE '%s.%%'"
+                            % ancestor_namePrefix)
+
+    def selectMissingObjectsByAncestor(self, ancestor_namePrefix,
+                                           idList):
+        """Select all objects in the hierarchy of ancestor_id"""
+        idStr = ','.join(str(i) for i in idList)
+        cmd = self.selectCmd("name LIKE '%s.%%' AND id NOT IN (%s) "
+                             % (ancestor_namePrefix, idStr))
+        self.executeCommand(cmd)
+        return self._results(iterate=False)
+
+    def deleteMissingObjectsByAncestor(self, ancestor_namePrefix, idList):
+        """Select all objects in the hierarchy of ancestor_id"""
+        idStr = ','.join(str(i) for i in idList)
+        cmd = "%s name LIKE '%s.%%' AND id NOT IN (%s) " % (self.DELETE,
+                                                            ancestor_namePrefix,
+                                                            idStr)
+        self.executeCommand(cmd)
+
     def deleteAll(self):
         """ Delete all objects from the db. """
         self.executeCommand(self.DELETE + "1")

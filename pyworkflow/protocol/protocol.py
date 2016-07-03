@@ -808,8 +808,8 @@ class Protocol(Step):
         self._stepsDone.set(startIndex)
         self._numberOfSteps.set(len(self._steps))
         self.setRunning()
-        self._originalRunMode = self.runMode.get() # Keep the original value to set in sub-protocols
-        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
+        self._originalRunMode = self.runMode.get()  # Keep the original value to set in sub-protocols
+        self.runMode.set(MODE_RESUME)  # Always set to resume, even if set to restart
         self._store()
         
         if startIndex == len(self._steps):
@@ -1514,6 +1514,15 @@ class Protocol(Step):
         """
         pass
 
+
+class LegacyProtocol(Protocol):
+    """ Special subclass of Protocol to be used when a protocol class
+    is not found. It means that have been removed or it is in another
+    development branch. In such, we will use the LegacyProtocol to
+    simply store the parameters and inputs/outputs."""
+
+    def __str__(self):
+        return self.getObjLabel()
                 
 #---------- Helper functions related to Protocols --------------------
 

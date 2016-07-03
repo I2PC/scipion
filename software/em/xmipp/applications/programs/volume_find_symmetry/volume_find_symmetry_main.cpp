@@ -91,7 +91,7 @@ public:
         addExampleLine("xmipp_volume_center -i volume.vol");
         addExampleLine("xmipp_volume_find_symmetry -i volume.vol --sym rot 3");
         addExampleLine("Presume the symmetry axis is in rot=20, tilt=10. To align vertically the axis use",false);
-        addExampleLine("xmipp_transform_geometry -i volume.vol --rotate euler 20 10 0");
+        addExampleLine("xmipp_transform_geometry -i volume.vol --rotate_volume euler 20 10 0");
         addExampleLine("For locating the helical parameters use",false);
         addExampleLine("xmipp_volume_find_symmetry -i volume --sym helical -z 0 6 1 --mask circular -32 --thr 2 -o parameters.xmd");
     }
