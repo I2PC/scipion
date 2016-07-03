@@ -414,15 +414,21 @@ def parseHyperText(text, matchCallback):
 #    return text
 
 def parseBibTex(bibtexStr):
-    """ Parse a bibtex file and return a dictioray. """
+    """ Parse a bibtex file and return a dictionary. """
+    import bibtexparser
+
+    if hasattr(bibtexparser, 'loads'):
+        return bibtexparser.loads(bibtexStr).entries_dict
+
+    # For older bibtexparser version 0.5
     from bibtexparser.bparser import BibTexParser
     from StringIO import StringIO
-    
+
     f = StringIO()
     f.write(bibtexStr)
     f.seek(0, 0)
     parser = BibTexParser(f)
-    
+
     return parser.get_entry_dict()
 
 

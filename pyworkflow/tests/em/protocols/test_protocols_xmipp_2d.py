@@ -934,7 +934,7 @@ class TestXmippBreakSym(TestXmippBase):
         from tempfile import NamedTemporaryFile
         import pyworkflow.em.metadata as md
         
-        fileTmp = NamedTemporaryFile(delete=False)
+        fileTmp = NamedTemporaryFile(delete=False, suffix='.sqlite')
         partSet = SetOfParticles(filename=fileTmp.name)
         partSet.setAlignment(ALIGN_PROJ)
         # Populate the SetOfParticles with  images
