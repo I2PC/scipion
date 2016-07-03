@@ -184,11 +184,28 @@ void ProgassignmentTiltPair::run()
 	std::cout << "Starting..." << std::endl;
 
 	//LOAD METADATA and TRIANGULATIONS
-	MetaData md_untilt, md_tilt, mduntilt, mdtilt;;
+	MetaData md_untilt, md_tilt, mduntilt, mdtilt;
 	size_t Ndim, Zdim, Ydim , Xdim, objId;
 
 	getImageSize(fnmic, Xdim, Ydim, Zdim, Ndim);
 
+	bool exist1, exist2;
+	bool flag_assign = true;
+
+	exist1 = fnuntilt.existsTrim();
+	exist2 = fntilt.existsTrim();
+
+
+
+//	std::cout << "fnuntilt = " << fnuntilt << std::endl;
+//	std::cout << "exist 1 = " << exist1 << std::endl;
+//	std::cout << "fntilt = " << fntilt << std::endl;
+//	std::cout << "exist 2 = " << exist2 << std::endl;
+//	std::cout << "exist = " << (exist1 && exist2) << std::endl;
+
+
+	if ((exist1 && exist2) == true)
+	{
 	md_untilt.read(fnuntilt);
 	md_tilt.read(fntilt);
 
@@ -235,6 +252,14 @@ void ProgassignmentTiltPair::run()
 	{
 		thrs = len_t;
 	}
+
+	if (len_u == 0 || len_t == 0)
+	{
+		flag_assign = false;
+	}
+
+	if (flag_assign == true)
+	{
 	create_Delaunay_Triangulation( &delaunay_tilt, 1);
 	int tri_number_tilt = get_Number_Real_Faces(delaunay_tilt.dcel);
 	//////////////DATA LOAD AND TRIANGULATIONS FINISHED
@@ -542,11 +567,21 @@ void ProgassignmentTiltPair::run()
 				mdtilt.setValue(MDL_YCOOR,(int) t_closest.y,objId);
 			}
 		}
-
+		delete_Delaunay(&delaunay_untilt);
+		delete_Delaunay(&delaunay_tilt);
+	}
+	}
+	else
+	{
+		std::cout << "WARNING: input pos. file does not exist, therefore output files are empty" << std::endl;
+	}
+	if (flag_assign == false)
+	{
+		std::cout << "WARNING: input pos file is empty." << std::endl;
+	}
 
 	mduntilt.write((String)"particles@"+fndir+'/'+fnuntilt.getBaseName() + ".pos" );
 	mdtilt.write((String)"particles@"+fndir+'/'+fntilt.getBaseName() + ".pos" );
 	/////////////////////////////////////////////////////////////////////////////////////////////////
-	delete_Delaunay(&delaunay_untilt);
-	delete_Delaunay(&delaunay_tilt);
+
 }

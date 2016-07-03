@@ -1374,7 +1374,7 @@ class Protocol(Step):
             if useKeyLabel:
                 label = cite['id']
             else:
-                label = cite['author'].split('and')[0].split(',')[0].strip()
+                label = cite['author'].split(' and ')[0].split(',')[0].strip()
                 label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
             
             return '[[%s][%s]] ' % (cite['doi'].strip(), label)
@@ -1514,6 +1514,15 @@ class Protocol(Step):
         """
         pass
 
+
+class LegacyProtocol(Protocol):
+    """ Special subclass of Protocol to be used when a protocol class
+    is not found. It means that have been removed or it is in another
+    development branch. In such, we will use the LegacyProtocol to
+    simply store the parameters and inputs/outputs."""
+
+    def __str__(self):
+        return self.getObjLabel()
                 
 #---------- Helper functions related to Protocols --------------------
 

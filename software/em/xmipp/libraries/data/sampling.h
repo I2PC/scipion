@@ -42,7 +42,8 @@
     A triangular grid based on an icosahedron was first introduced in a
     meteorological model by Sadourny et al. (1968) and Williamson (1969). The
     approach outlined here, especially the code implementation, is based on the work
-    of Baumgardner (1995).
+    of Baumgardner (1995). http://www.wmo.int/pages/prog/www/DPS/Icosah.pdf
+
 */
 class Sampling
 {
@@ -212,7 +213,7 @@ public:
 
     /** Read neighbors i
     */
-    void readSamplingFile(const FileName &infilename,bool read_vectors=true, bool write_sampling_sphere = false);
+    void readSamplingFile(const FileName &infilename,bool read_vectors=true, bool read_sampling_sphere = false);
 
     /** remove all those points that are further away from experimental data
         than neighborhood_radius_rad */

@@ -63,7 +63,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		initComponents();
 		XmippWindowUtil.setScipionImageIcon(this);
 	}
-        
+
     protected void initComponents()
     {
     	
@@ -92,7 +92,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 
     }
 
-        @Override
+    @Override
 	public void openMaskToolbar()
 	{
 		menu.runCommand("Masks Tool Bar", new IJRequirement[] { IJRequirement.IMAGEJ });
@@ -118,7 +118,7 @@ public class XmippImageWindow extends ImageWindow implements XmippIJWindow
 		saveDataAs(imp.getTitle());
 	}
 
-        @Override
+    @Override
 	public ImagePlusLoader getImagePlusLoader()
 	{
 		return ipl;

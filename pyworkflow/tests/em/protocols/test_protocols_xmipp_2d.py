@@ -572,6 +572,55 @@ class TestXmippFilterParticles(TestXmippBase):
              filterModeWavelets=xfh.FM_DAUB12, waveletMode=xfh.FM_REMOVE_SCALE)
 
 
+class TestXmippOperateParticles(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
+        setupTestProject(cls)
+        TestXmippBase.setData('xmipp_tutorial')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True, True)
+
+    def launchSet(self, **kwargs):
+        "Launch XmippProtImageOperateParticles and return output volumes."
+        print magentaStr("\n==> Operate set of volumes input params: %s" % kwargs)
+        prot = XmippProtImageOperateParticles()
+        prot.operation.set(kwargs.get('operation', 1))
+        prot.inputParticles.set(self.protImport.outputParticles)
+        prot.setObjLabel(kwargs.get('objLabel', None))
+        prot.isValue.set(kwargs.get('isValue', False))
+        prot.inputParticles2.set(kwargs.get('particles2', None))
+        prot.value.set(kwargs.get('value', None))
+        prot.intValue.set(kwargs.get('intValue', None))
+        
+        self.proj.launchProtocol(prot, wait=True)
+        self.assertTrue(hasattr(prot, "outputParticles") and
+                        prot.outputParticles is not None,
+                        "There was a problem producing the output")
+        return prot.outputParticles
+        
+    def testMultiplyVolSets(self):
+        part2 = self.protImport.outputParticles  # short notation
+        prot1 = self.launchSet(operation=2,
+                                  objLabel='Multiply two SetOfParticles',
+                                  particles2=part2)
+
+    def testMultiplyValue(self):
+        prot2 = self.launchSet(operation=2,
+                               isValue=True,
+                               objLabel='Multiply by a Value',
+                               value=2.5)
+    
+    def testDotProduct(self):
+        part2 = self.protImport.outputParticles  # short notation
+        prot3 = self.launchSet(operation=6,
+                               objLabel='Dot Product',
+                               particles2=part2)
+
+    def testSqrt(self):
+        prot4 = self.launchSet(operation=9,
+                               objLabel='Sqrt')
+
+
 class TestXmippML2D(TestXmippBase):
     """This class check if the protocol to classify with ML2D in Xmipp works properly."""
     @classmethod
@@ -885,7 +934,7 @@ class TestXmippBreakSym(TestXmippBase):
         from tempfile import NamedTemporaryFile
         import pyworkflow.em.metadata as md
         
-        fileTmp = NamedTemporaryFile(delete=False)
+        fileTmp = NamedTemporaryFile(delete=False, suffix='.sqlite')
         partSet = SetOfParticles(filename=fileTmp.name)
         partSet.setAlignment(ALIGN_PROJ)
         # Populate the SetOfParticles with  images

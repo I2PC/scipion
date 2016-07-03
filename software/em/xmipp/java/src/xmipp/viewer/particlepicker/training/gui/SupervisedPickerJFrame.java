@@ -72,6 +72,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     protected JButton iconbt;
     protected JLabel manuallb;
     protected JLabel autolb;
+    protected JLabel savedlb;
+
     protected JSlider thresholdsl;
     protected JPanel thresholdpn;
     protected JFormattedTextField thresholdtf;
@@ -256,7 +258,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         ppicker.setChanged(changed);
         savemi.setEnabled(changed);
         savebt.setEnabled(changed);
-        
+    }
+    public void setSaved(boolean saved) {
+        ppicker.setSaved(saved);
+        // Do not print anything: for debugging --> savedlb.setText(saved?"Saved":"");
     }
 
     public void updateMicrographsModel(boolean all) {
@@ -285,7 +290,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         try {
 
             setResizable(false);
-            setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+            setTitle();
             initMenuBar();
             setJMenuBar(mb);
 
@@ -372,7 +377,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                     if (isautopick) {
                         ppicker.setMode(Mode.Supervised);
                         ppicker.trainAndAutopick(SupervisedPickerJFrame.this, trainmic);
-                        setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+                        setTitle();
 
                     } else if (autopickchb.isSelected()) {
                         autopickchb.setSelected(false);
@@ -389,7 +394,7 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                             }
                             getMicrograph().resetParticlesRectangle();
                             canvas.refreshActive(null);
-                            setTitle("Xmipp Particle Picker - " + ppicker.getMode());
+                            setTitle();
                         } else {
                             autopickchb.setSelected(true);
                         }
@@ -645,6 +650,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         formatMicrographsTable();
         sp.setViewportView(micrographstb);
         micrographpn.add(sp, XmippWindowUtil.getConstraints(constraints, 0, 0, 1));
+
+        // Info panel
         JPanel infopn = new JPanel();
         manuallb = new JLabel(Integer.toString(ppicker.getManualParticlesNumber()));
         autolb = new JLabel(Integer.toString(ppicker.getAutomaticParticlesNumber(getThreshold())));
@@ -652,6 +659,11 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         infopn.add(manuallb);
         infopn.add(new JLabel("Automatic:"));
         infopn.add(autolb);
+
+        // Saved
+        savedlb = new JLabel("");
+        infopn.add(savedlb);
+
         micrographpn.add(infopn, XmippWindowUtil.getConstraints(constraints, 0, 1, 1));
         JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -671,7 +683,15 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         if (micindex == index && canvas != null && canvas.getIw().isVisible()) {
             return;
         }
-        
+
+        // Save particles first before moving and loading the clicked micrograph.
+        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised)
+        {
+            if (!saveData(false)) {
+                micrographstb.getSelectionModel().setSelectionInterval(micindex,micindex);
+                return;
+            }
+        }
 
         SupervisedPickerMicrograph next = ppicker.getMicrographs().get(index);
         SupervisedPickerMicrograph current = getMicrograph();
@@ -685,11 +705,6 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
                 return;
             }
             
-        }
-        if (ppicker.isChanged() && ppicker.getMode() != Mode.Supervised) 
-        {
-            ppicker.saveData(current);
-            setChanged(false);
         }
         ppicker.setMicrograph(next);
         ppicker.saveConfig();

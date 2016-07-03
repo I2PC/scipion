@@ -107,9 +107,12 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if self.getOutputsSize() > 0:
             return ProtParticlePicking._methods(self)
         else:
-            return [self.getMethods(None)]
+            return [self._getTmpMethods()]
     
-    def getMethods(self, output):#output is not used but to overwrite getMethods it is used
+    def _getTmpMethods(self):
+        """ Return the message when there is not output generated yet.
+         We will read the Xmipp .pos files and other configuration files.
+        """
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
         msg = ''
@@ -120,21 +123,32 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             pickingState = md.getValue(xmipp.MDL_PICKING_STATE, configobj)
             particleSize = md.getValue(xmipp.MDL_PICKING_PARTICLE_SIZE, configobj)
             isAutopick = pickingState != "Manual"
-            manualParticlesSize = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
-            autoParticlesSize = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
+            manualParts = md.getValue(xmipp.MDL_PICKING_MANUALPARTICLES_SIZE, configobj)
+            autoParts = md.getValue(xmipp.MDL_PICKING_AUTOPARTICLES_SIZE, configobj)
 
-            if manualParticlesSize is None:
-                manualParticlesSize = 0
+            if manualParts is None:
+                manualParts = 0
 
-            if autoParticlesSize is None:
-                autoParticlesSize = 0
-            msg = 'User picked %d particles with a particle size of %d.' % (autoParticlesSize + manualParticlesSize, particleSize)
+            if autoParts is None:
+                autoParts = 0
+
+            msg = 'User picked %d particles ' % (autoParts + manualParts)
+            msg += 'with a particle size of %d.' % particleSize
 
             if isAutopick:
-                msg += "Automatic picking was used ([Abrishami2013]). %d particles were picked automatically and %d  manually."%(autoParticlesSize, manualParticlesSize)
+                msg += "Automatic picking was used ([Abrishami2013]). "
+                msg += "%d particles were picked automatically " %  autoParts
+                msg += "and %d  manually." % manualParts
+
         return msg
 
-    def getSummary(self, coordSet):
+    def _summary(self):
+        if self.getOutputsSize() > 0:
+            return ProtParticlePicking._summary(self)
+        else:
+            return [self._getTmpSummary()]
+
+    def _getTmpSummary(self):
         summary = []
         configfile = join(self._getExtraPath(), 'config.xmd')
         existsConfig = exists(configfile)
@@ -157,7 +171,6 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
             summary.append("Last micrograph: " + activeMic)
         return "\n".join(summary)
 
-    
     def getCoordsDir(self):
         return self._getExtraPath()
     

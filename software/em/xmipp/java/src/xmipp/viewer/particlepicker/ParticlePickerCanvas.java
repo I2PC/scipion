@@ -39,10 +39,10 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 	protected ParticlePicker picker;
 	protected XmippImageWindow iw;
 	protected Cursor eraserCursor = Toolkit.getDefaultToolkit().createCustomCursor(XmippResource.getIcon("eraser.png").getImage(), new Point(0, 0), "Eraser");
+    private Dimension  size;
 
-	
-        
-	public void setMicrograph(Micrograph m)
+
+    public void setMicrograph(Micrograph m)
 	{
 		micrograph = m;
 
@@ -137,17 +137,38 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			return;// do not repaint if not needed
 		repaint();
 	}
-	
+
+    protected void captureWindowSize(){
+        size = this.imp.getWindow().getSize();
+        this.imp.getWindow().setIgnoreRepaint(true);
+
+    }
+    protected void restoreWindowSize(){
+        if (size != null) {
+            this.imp.getWindow().setSize(size);
+            this.imp.getWindow().setIgnoreRepaint(false);
+        }
+    }
+
 	public void zoomIn(int sx, int sy)
 	{
+
+        captureWindowSize();
+
 		super.zoomIn(sx, sy);
 		getFrame().displayZoom(getMagnification());
+
+        restoreWindowSize();
 	}
 	
 	public void zoomOut(int sx, int sy)
 	{
+        captureWindowSize();
+
 		super.zoomOut(sx, sy);
 		getFrame().displayZoom(getMagnification());
+
+        restoreWindowSize();
 	}
 
 	protected abstract Particle getLastParticle();

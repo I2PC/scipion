@@ -23,9 +23,6 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
 from os.path import exists
 
@@ -43,13 +40,15 @@ class ProtImportParticles(ProtImportImages):
     _label = 'import particles'
     _outputClassName = 'SetOfParticles'
 
-    IMPORT_FROM_EMX    = 1
+    IMPORT_FROM_EMX = 1
     IMPORT_FROM_XMIPP3 = 2
     IMPORT_FROM_RELION = 3
     IMPORT_FROM_SCIPION = 4
     IMPORT_FROM_FREALIGN = 5
-    
-    alignTypeList=[ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
+
+    importFormats = ['emx', 'xmipp3', 'relion', 'scipion', 'frealign']
+    importExts = ['emx', 'xmd', 'star', 'sqlite', 'par']
+    alignTypeList = [ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE]
 
     def _getImportChoices(self):
         """ Return a list of possible choices
@@ -57,15 +56,31 @@ class ProtImportParticles(ProtImportImages):
         (usually packages formas such as: xmipp3, eman2, relion...etc.
         """
         choices = ProtImportImages._getImportChoices(self)
-        return choices + ['emx', 'xmipp3', 'relion', 'scipion', 'frealign']#the order of this list is related to the constants defined
+        # Do not change the order of this list since
+        # it is related to the constants defined
+        return choices + self.importFormats
     
     def _defineImportParams(self, form):
         """ Import files from: emx, xmipp3, relion, scipion  formats. """
+        param = form.getParam('importFrom')
+        # Customize the help of this parameter with specific information
+        # of the import particles
+        param.help.set("You can import particles directly from the binary "
+                       "files, or import from other packages formats. \n"
+                       "Currently, we can import from: %s \n"
+                       "Following are the expected import files for each one:\n"
+                       "*emx*: particles.emx\n"
+                       "*xmipp3*: images.xmd\n"
+                       "*relion*: itXX_data.star\n"
+                       "*scipion*: particles.sqlite\n"
+                       "" % ', '.join(self.importFormats))
+
         form.addParam('emxFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
                       label='Input EMX file',
-                      help="Select the EMX file containing particles information.\n"
-                           "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
+                      help="Select the EMX file containing particles "
+                           "information.\n See more about \n"
+                           "[[http://i2pc.cnb.csic.es/emx][EMX format]]")
 
         form.addParam('alignType', params.EnumParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
@@ -78,14 +93,17 @@ class ProtImportParticles(ProtImportImages):
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Particles metadata file',
                       help="Select the particles Xmipp metadata file.\n"
-                           "It is usually a images.xmd_ file result\n"
+                           "It is usually a images.xmd file result\n"
                            "from Xmipp protocols execution.")
         
         form.addParam('starFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_RELION,
                       label='Star file',
-                      help="Select a *_data.star file from a.\n"
-                           "previous Relion execution.")
+                      help="Select a *_data.star file from a\n"
+                           "previous Relion execution."
+                           "To detect if the input particles contains alignment "
+                           "information, it is required to have the "
+                           "optimeser.star file corresponding to the data.star")
         
         form.addParam('ignoreIdColumn', params.BooleanParam, default=False,
                       condition='(importFrom == %d)' % self.IMPORT_FROM_RELION,
@@ -193,13 +211,29 @@ class ProtImportParticles(ProtImportImages):
             return ci.loadAcquisitionInfo()
         else:
             return None
-        
+
+    def _validateFileExtension(self):
+        """ Simple check about the expected file extension. """
+        # Since 'from files' is index 0, we need to subtract 1 to
+        # get the proper index
+        i = self.importFrom.get() - 1
+        ext = self.importExts[i]
+        if not self.importFilePath.endswith(ext):
+            return ["Expected *%s* file extension for importing from *%s*" %
+                    (ext, self.importFormats[i])]
+        else:
+            return []
+
     def _validate(self):
         ci = self.getImportClass()
         if ci is None:
             return ProtImportImages._validate(self)
         else:
-            return ci.validateParticles()
+            errors = self._validateFileExtension()
+            if errors:
+                return errors
+            else:
+                return ci.validateParticles()
     
     def _summary(self):
         if self.importFrom == self.IMPORT_FROM_FILES:

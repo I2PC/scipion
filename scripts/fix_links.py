@@ -23,7 +23,7 @@ if len(sys.argv) != 3:
     usage("Incorrect number of input parameters")
 
 projName = sys.argv[1]
-searchDir = sys.argv[2]
+searchDir = os.path.abspath(sys.argv[2])
 
 # Create a new project
 manager = Manager()
@@ -44,6 +44,9 @@ for prot in runs:
         for _, attr in prot.iterOutputEM():
             fn = attr.getFiles()
             for f in attr.getFiles():
+                if ':' in f:
+                    f = f.split(':')[0]
+
                 if not os.path.exists(f):                    
                     if not broken:
                         broken = True
