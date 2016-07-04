@@ -492,6 +492,10 @@ def readSetOfParticles(filename, partSet, **kwargs):
         rowToParticle: this function will be used to convert the row to Object
     """    
     imgMd = md.MetaData(filename)
+
+    if imgMd.isEmpty():
+        raise Exception('Metadata %s is empty!!!' % filename)
+    
     # By default remove disabled items from metadata
     # be careful if you need to preserve the original number of items
     if kwargs.get('removeDisabled', True):
