@@ -121,14 +121,19 @@ class ProtLocalizedRecons(ProtParticles):
         group = form.addGroup('Vectors')
         group.addParam('defineVector',  EnumParam, default=CMM,
                       label='Is vector defined by?',
-                      choices=['cmm file', 'by hand'], 
+                      choices=['cmm file', 'string'],
                       display=EnumParam.DISPLAY_HLIST,
                       help='')
         group.addParam('vector', NumericRangeParam, default='0,0,1',
                       label='Location vectors', condition="defineVector==1",
                       help='Vector defining the location of the '
-                           'subparticle. The vector is defined by 3 '
-                           'values(x,y,z).')
+                           'subparticles. The vector is defined by 3 '
+                           'values x,y,z separated by comma. \n'
+                           'More than one vector can be specified separated by'
+                           'semicolon. For example: \n'
+                           '0,0,1            # Defines only one vector.\n'
+                           '0,0,1; 1,0,0;    # Defines two vectors.'
+                       )
         group.addParam('vectorFile', PathParam, default='',
                       condition="defineVector==0",
                       label='file obtained by Chimera: ',
@@ -210,9 +215,11 @@ class ProtLocalizedRecons(ProtParticles):
                   }
         
         args = "--create_star --extract_subparticles --split_stacks "
-        
-        if self.inputVolume:
-            args += "--masked_map %s " % convertBinaryVol(self.inputVolume.get(),
+
+        inputVol = self.inputVolume.get()
+
+        if inputVol is not None:
+            args += "--masked_map %s " % convertBinaryVol(inputVol,
                                                           self._getTmpPath())
         
         if self.randomize:
@@ -224,13 +231,12 @@ class ProtLocalizedRecons(ProtParticles):
         if self.alignSubparticles:
             args += "--align_subparticles "
         
-        args += "--j %d --np %d " %(self.numberOfThreads.get(),
-                                    self.numberOfMpi.get())
+        args += "--j %d --np %d " % (self.numberOfThreads, self.numberOfMpi)
         
-        if self.defineVector.get() == CMM:
-            args += "--cmm %s " % self.vectorFile.get()
+        if self.defineVector == CMM:
+            args += "--cmm %s " % self.vectorFile
         else:
-            args += "--vector %s " % self.vector.get()
+            args += "--vector %s " % self.vector
         
         if params["length"] > 0:
             args += "--length %f " % params["length"]
