@@ -174,7 +174,8 @@ class ProtLocalizedRecons(ProtParticles):
     #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         partsId = self.inputParticles.get().getObjId()
-        volId = self.inputVolume.get().getObjId() if self.inputVolume else 0
+        inputVol = self.inputVolume.get()
+        volId = 0 if inputVol is None else inputVol.getObjId()
         self._initialize()
         self._insertFunctionStep('convertInputStep', partsId, volId)
         self._insertFunctionStep('localizedReconsStep')
