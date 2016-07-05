@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam,
 from pyworkflow.em.protocol import ProtParticles
 
 from convert import (writeSetOfParticles, convertBinaryVol, getEnviron,
-                     getProgram, readSetOfParticles)
+                     getProgram, readSetOfSubCoordinates)
 # import re
 # from glob import glob
 # from os.path import exists
@@ -244,12 +244,11 @@ class ProtLocalizedRecons(ProtParticles):
     
     def createOutputStep(self):
         inputSet = self._getInputParticles()
-        outputSet = self._createSetOfParticles()
-        outputSet.copyInfo(inputSet)
-        readSetOfParticles(self._getFileName('output_star'),
-                           outputSet, alignType=ALIGN_PROJ)
+        outputSet = self._createSetOfCoordinates(inputSet)
         
-        self._defineOutputs(outputParticles=outputSet)
+        readSetOfSubCoordinates(self._getFileName('output_star'), outputSet)
+        
+        self._defineOutputs(outputCoordinates=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
     
     #--------------------------- INFO functions -------------------------------

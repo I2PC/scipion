@@ -346,17 +346,15 @@ def rowToAlignment(alignmentRow, alignType):
     return alignment
 
 
-def coordinateToRow(coord, coordRow, copyId=True):
+def coordinateToRow(coord, coordRow, label, copyId=True):
     """ Set labels values from Coordinate coord to md row. """
     if copyId:
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT)
-    #FIXME: THE FOLLOWING IS NOT CLEAN
     if coord.getMicId():
-        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
-
-
-def rowToCoordinate(coordRow):
+        coordRow.setValue(label, long(coord.getMicId()))
+    
+def rowToCoordinate(coordRow, label):
     """ Create a Coordinate from a row of a meta """
     # Check that all required labels are present in the row
     if coordRow.containsAll(COOR_DICT):
@@ -365,7 +363,7 @@ def rowToCoordinate(coordRow):
             
         #FIXME: THE FOLLOWING IS NOT CLEAN
         try:
-            coord.setMicId(int(coordRow.getValue(md.RLN_MICROGRAPH_NAME)))
+            coord.setMicId(int(coordRow.getValue(label)))
         except Exception:
             pass
     else:
@@ -373,7 +371,7 @@ def rowToCoordinate(coordRow):
         
     return coord
 
-    
+
 def imageToRow(img, imgRow, imgLabel, **kwargs):
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -416,7 +414,7 @@ def particleToRow(part, partRow, **kwargs):
     """ Set labels values from Particle to md row. """
     coord = part.getCoordinate()
     if coord is not None:
-        coordinateToRow(coord, partRow, copyId=False)
+        coordinateToRow(coord, partRow, md.RLN_MICROGRAPH_ID, copyId=False)
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
         # If the row does not contains the micrgraphs name
@@ -467,7 +465,7 @@ def rowToParticle(partRow, **kwargs):
     rowToObject(partRow, img, {}, 
                 extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
-    img.setCoordinate(rowToCoordinate(partRow))
+    img.setCoordinate(rowToCoordinate(partRow, md.RLN_MICROGRAPH_ID))
     
     # copy micId if available from row to particle
     if partRow.hasLabel(md.RLN_MICROGRAPH_ID):
@@ -507,6 +505,31 @@ def readSetOfParticles(filename, partSet, **kwargs):
         
     partSet.setHasCTF(img.hasCTF())
     partSet.setAlignment(kwargs['alignType'])
+
+
+def readSetOfSubCoordinates(filename, coordSet, **kwargs):
+    """read from Relion image meta
+        filename: The metadata filename where the coords of subparticles are.
+        coordSet: the SetOfCoordinates that will be populated.
+    """
+    imgMd = md.MetaData(filename)
+
+    if imgMd.isEmpty():
+        raise Exception('Metadata %s is empty!!!' % filename)
+    
+    # By default remove disabled items from metadata
+    # be careful if you need to preserve the original number of items
+    if kwargs.get('removeDisabled', True):
+        imgMd.removeDisabled()
+    
+    micSet = coordSet.getMicrographs()
+    
+    for coordRow in md.iterRows(imgMd):
+        coord = rowToCoordinate(coordRow, md.RLN_IMAGE_ID)
+        if micSet.hasCTF():
+            coord._ctfModel = rowToCtfModel(coordRow)
+        coord._transform =  rowToAlignment(coordRow, em.ALIGN_PROJ)
+        coordSet.append(coord)
 
 
 def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
