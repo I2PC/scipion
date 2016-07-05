@@ -187,7 +187,6 @@ class ProtLocalizedRecons(ProtParticles):
     def localizedReconsStep(self):
         params = {"symmetryGroup" : self.symmetryGroup.get(),
                   "output" : self._getFileName('output'),
-                  "boxSize" : self.boxSize.get(),
                   "vector" : self.vector.get(),
                   "vectorFile" : self.vectorFile.get(),
                   "length" : self.length.get(),
