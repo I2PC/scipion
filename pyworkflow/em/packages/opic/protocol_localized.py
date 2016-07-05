@@ -73,9 +73,7 @@ class ProtLocalizedRecons(ProtParticles):
         myDict = {
                   'input_star': self._getPath('input_particles.star'),
                   'output': self._getExtraPath('output_particles'),
-                  'output_star': self._getExtraPath('output_particles.star'),
-                  'volume_masked': self._getTmpPath('volume_masked.mrc'),
-                  'dummy_mask': self._getTmpPath('dummy_mask.mrc')
+                  'output_star': self._getExtraPath('output_particles.star')
                   }
         self._updateFilenamesDict(myDict)
     
@@ -88,16 +86,6 @@ class ProtLocalizedRecons(ProtParticles):
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
-        form.addParam('inputVolume', PointerParam, 
-                      pointerClass='Volume',
-                      important=True,
-                      label="Input volume", allowsNull=True,
-                      help='Map with density that to be subtracted from '
-                           'particle images.')
-        form.addParam('boxSize', IntParam, default=0,
-                      label='Sub-particle box size',
-                      validators=[Positive],
-                      help='In pixels.  Size of the sub-particle box')
 
         group = form.addGroup('Symmetry')
         group.addParam('symmetryGroup', StringParam, default='c1',
@@ -174,21 +162,17 @@ class ProtLocalizedRecons(ProtParticles):
     #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         partsId = self.inputParticles.get().getObjId()
-        inputVol = self.inputVolume.get()
-        volId = 0 if inputVol is None else inputVol.getObjId()
         self._initialize()
-        self._insertFunctionStep('convertInputStep', partsId, volId)
+        self._insertFunctionStep('convertInputStep', partsId)
         self._insertFunctionStep('localizedReconsStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ------------------------------
-    def convertInputStep(self, particlesId, volId):
+    def convertInputStep(self, particlesId):
         """ Create the input file in STAR format as expected by Relion.
         Params:
             particlesId: use this parameters just to force redo of convert if 
                 the input particles are changed.
-            volId: use this parameters just to force redo of convert if 
-                the input volume is changed.
         """
         
         imgSet = self._getInputParticles()
@@ -215,14 +199,8 @@ class ProtLocalizedRecons(ProtParticles):
                   "dim" : self.inputParticles.get().getXDim()
                   }
         
-        args = "--create_star --extract_subparticles --split_stacks "
+        args = ""
 
-        inputVol = self.inputVolume.get()
-
-        if inputVol is not None:
-            args += "--masked_map %s " % convertBinaryVol(inputVol,
-                                                          self._getTmpPath())
-        
         if self.randomize:
             args += "--randomize "
         
@@ -241,10 +219,13 @@ class ProtLocalizedRecons(ProtParticles):
         
         if params["length"] > 0:
             args += "--length %f " % params["length"]
-        
+
+        # We use --subparitcle_size of 1 because we are not going to
+        # extract the subparticles at this point, so we really need the
+        # subparticle box size later
         args += ("--output %(output)s --angpix %(pxSize)f "
                  "--sym %(symmetryGroup)s --particle_size %(dim)d "
-                 "--subparticle_size %(boxSize)d " ) % params
+                 "--subparticle_size 1 " ) % params
         
         if params["unique"] > 0:
             args += "--unique %f " % params["unique"]

@@ -73,7 +73,7 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         TestLocalizedReconsBase.setData('relion_tutorial')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 7.08)
         cls.protImportVol = cls.runImportVolumes(cls.vol, 7.08)
-      
+
     def testProtLocalizedReconstruction(self):
         print "Run ProtLocalizedReconstruction"
         localizedRecons = self.newProtocol(ProtLocalizedRecons,
@@ -81,7 +81,6 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
                                         boxSize=10,
                                         defineVector=1)
         localizedRecons.inputParticles.set(self.protImport.outputParticles)
-        localizedRecons.inputVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(localizedRecons)
         self.assertIsNotNone(localizedRecons.outputParticles,"There was a "
                              "problem with localized reconstruction protocol")
