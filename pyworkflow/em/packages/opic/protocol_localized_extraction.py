@@ -104,7 +104,10 @@ class ProtLocalizedExtraction(ProtParticles):
             # Load the particle if it has changed from the last sub-particle
             if partId != lastPartId:
                 particle = inputParticles[partId]
-                print "New particle: ", particle.getLocation()
+
+                if particle is None:
+                    raise Exception('Missing particle with id %s from '
+                                    'input particles set' % partId)
                 lastPartId = partId
                 # Now load the particle image to extract later sub-particles
                 img = ih.read(particle)
@@ -129,6 +132,13 @@ class ProtLocalizedExtraction(ProtParticles):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
+        inputCoords = self.inputCoordinates.get()
+        firstCoord = inputCoords.getFirstItem()
+
+        if not firstCoord.hasAttribute('_subparticle'):
+            errors.append('The selected input coordinates does not are the'
+                          'output from a localized-subparticles protocol.')
+
         return errors
     
     def _citations(self):
