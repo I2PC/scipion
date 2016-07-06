@@ -529,7 +529,7 @@ def readSetOfSubCoordinates(filename, coordSet, **kwargs):
         partId = coordRow.getValue(md.RLN_IMAGE_ID)
         
         if lastPartId != partId:
-            particle = micSet[partId]
+            particle = micSet[partId].clone()
             lastPartId = partId
              
         coord = rowToCoordinate(coordRow, md.RLN_IMAGE_ID)
