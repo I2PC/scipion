@@ -29,7 +29,7 @@ wrapping Localized recontruction of subunits.
 """
 from bibtex import _bibtex # Load bibtex dict with references
 
-_logo = ""
+_logo = "opic_logo.png"
 
 from convert import *
 from protocol_localized import ProtLocalizedRecons
