@@ -27,25 +27,14 @@
 This module contains the protocol for localized reconstruction.
 """
 
-from pyworkflow.em import ALIGN_PROJ
-from pyworkflow.protocol.params import (PointerParam, BooleanParam, 
+from pyworkflow.protocol.params import (PointerParam, BooleanParam,
                                         StringParam, IntParam, Positive,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam)
 from pyworkflow.em.protocol import ProtParticles
 
-from convert import (writeSetOfParticles, convertBinaryVol, getEnviron,
+from convert import (writeSetOfParticles, getEnviron,
                      getProgram, readSetOfSubCoordinates)
-# import re
-# from glob import glob
-# from os.path import exists
-# 
-# from pyworkflow.utils.path import cleanPath
-
-# import pyworkflow.em.metadata as md
-# from pyworkflow.em.data import SetOfClasses3D
-
-# from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
 
 
 CMM = 0
@@ -60,7 +49,7 @@ class ProtLocalizedRecons(ProtParticles):
     single particles.
     """
     
-    _label = 'localized reconstruction'
+    _label = 'localized subparticles'
     
     def __init__(self, **args):        
         ProtParticles.__init__(self, **args)
@@ -157,7 +146,8 @@ class ProtLocalizedRecons(ProtParticles):
                       help='Keep only particles within specified angular '
                            'distance from top views. All others will be '
                            'discarded. ')
-        form.addParallelSection(threads=1, mpi=3)
+
+        form.addParallelSection(threads=0, mpi=0)
     
     #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
