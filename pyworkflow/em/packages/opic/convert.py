@@ -523,12 +523,20 @@ def readSetOfSubCoordinates(filename, coordSet, **kwargs):
         imgMd.removeDisabled()
     
     micSet = coordSet.getMicrographs()
+    lastPartId = None
     
-    for coordRow in md.iterRows(imgMd):
+    for coordRow in md.iterRows(imgMd, sortByLabel=md.RLN_IMAGE_ID):
+        partId = coordRow.getValue(md.RLN_IMAGE_ID)
+        
+        if lastPartId != partId:
+            particle = micSet[partId]
+            lastPartId = partId
+             
         coord = rowToCoordinate(coordRow, md.RLN_IMAGE_ID)
         if micSet.hasCTF():
-            coord._ctfModel = rowToCtfModel(coordRow)
-        coord._transform =  rowToAlignment(coordRow, em.ALIGN_PROJ)
+            particle.setCTF(rowToCtfModel(coordRow))
+        particle.setTransform(rowToAlignment(coordRow, em.ALIGN_PROJ))
+        coord._subparticle = particle
         coordSet.append(coord)
 
 
