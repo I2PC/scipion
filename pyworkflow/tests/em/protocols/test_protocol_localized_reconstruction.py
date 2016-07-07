@@ -35,18 +35,21 @@ from pyworkflow.em.packages.opic import *
 # in several tests.
 class TestLocalizedReconsBase(BaseTest):
     @classmethod
-    def setData(cls, dataProject='relion_tutorial'):
+    def setData(cls, dataProject='xmipp_programs'):
         cls.dataset = DataSet.getDataSet(dataProject)
-        cls.particlesFn = cls.dataset.getFile('import/refine3d/extra/relion_it001_data.star')
-        cls.vol = cls.dataset.getFile('volume')
+        cls.particlesFn = cls.dataset.getFile('input/Protocol_Projection_Match'
+                                              'ing/ProjMatch/goldStandard/Iter'
+                                              '_01/current_angles.xmd')
+        cls.chimeraFile = cls.dataset.getFile('input/Protocol_Projection_Match'
+                                              'ing/ico.cmm')
     
     @classmethod
     def runImportParticles(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         protImport = cls.newProtocol(ProtImportParticles, 
-                                     objLabel='from relion (auto-refine 3d)',
-                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                     starFile=pattern,
+                                     objLabel='from Xmipp ProjMatch',
+                                     importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                     mdFile=pattern,
                                      magnification=65000,
                                      samplingRate=samplingRate,
                                      haveDataBeenPhaseFlipped=True
@@ -70,18 +73,29 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        TestLocalizedReconsBase.setData('relion_tutorial')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 7.08)
-        cls.protImportVol = cls.runImportVolumes(cls.vol, 7.08)
+        TestLocalizedReconsBase.setData('xmipp_programs')
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1)
+#         cls.protImportVol = cls.runImportVolumes(cls.vol, 1)
 
     def testProtLocalizedReconstruction(self):
-        print "Run ProtLocalizedReconstruction"
-        localizedRecons = self.newProtocol(ProtLocalizedRecons,
-                                        splitParticles=True,
-                                        boxSize=10,
-                                        defineVector=1)
-        localizedRecons.inputParticles.set(self.protImport.outputParticles)
-        self.launchProtocol(localizedRecons)
-        self.assertIsNotNone(localizedRecons.outputParticles,"There was a "
-                             "problem with localized reconstruction protocol")
+        print "Run ProtLocalized Reconstruction"
+        
+        localSubparticles = self.newProtocol(ProtLocalizedRecons,
+                                             symmetryGroup="I3",
+                                             defineVector=0,
+                                             unique=5)
+        localSubparticles.vectorFile.set(self.chimeraFile)
+        localSubparticles.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(localSubparticles)
+        self.assertIsNotNone(localSubparticles.outputCoordinates,"There was a "
+                             "problem with localized subparticles protocol")
+        
+        localExtraction = self.newProtocol(ProtLocalizedExtraction,
+                                             boxSize=14)
+        localExtraction.inputParticles.set(self.protImport.outputParticles)
+        localExtraction.inputCoordinates.set(localSubparticles.outputCoordinates)
+        self.launchProtocol(localExtraction)
+        self.assertIsNotNone(localExtraction.outputParticles,"There was a "
+                             "problem with localized extraction protocol")
+        
         
