@@ -75,27 +75,42 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         setupTestProject(cls)
         TestLocalizedReconsBase.setData('xmipp_programs')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1)
-#         cls.protImportVol = cls.runImportVolumes(cls.vol, 1)
+    #         cls.protImportVol = cls.runImportVolumes(cls.vol, 1)
+
+    def _runSubparticles(self, checkSize, **kwargs):
+        label = 'localized subpartices ('
+        for t in kwargs.iteritems():
+            label += '%s=%s' % t
+        label += ')'
+
+        prot = self.newProtocol(ProtLocalizedRecons,
+                                 objLabel=label,
+                                 symmetryGroup="I3",
+                                 defineVector=0,
+                                 unique=5, **kwargs)
+        prot.vectorFile.set(self.chimeraFile)
+        prot.inputParticles.set(self.protImport.outputParticles)
+        self.launchProtocol(prot)
+        self.assertIsNotNone(prot.outputCoordinates,
+                             "There was a problem with localized subparticles protocol")
+        self.assertEqual(checkSize, prot.outputCoordinates.getSize())
+
+        return prot
 
     def testProtLocalizedReconstruction(self):
         print "Run ProtLocalized Reconstruction"
-        
-        localSubparticles = self.newProtocol(ProtLocalizedRecons,
-                                             symmetryGroup="I3",
-                                             defineVector=0,
-                                             unique=5)
-        localSubparticles.vectorFile.set(self.chimeraFile)
-        localSubparticles.inputParticles.set(self.protImport.outputParticles)
-        self.launchProtocol(localSubparticles)
-        self.assertIsNotNone(localSubparticles.outputCoordinates,"There was a "
-                             "problem with localized subparticles protocol")
-        
-        localExtraction = self.newProtocol(ProtLocalizedExtraction,
-                                             boxSize=14)
+
+        localSubparticles = self._runSubparticles(120)
+
+        self._runSubparticles(94, mindist=10)
+        self._runSubparticles(47, side=25)
+        self._runSubparticles(20, top=50)
+
+        localExtraction = self.newProtocol(ProtLocalizedExtraction, boxSize=14)
         localExtraction.inputParticles.set(self.protImport.outputParticles)
         localExtraction.inputCoordinates.set(localSubparticles.outputCoordinates)
         self.launchProtocol(localExtraction)
-        self.assertIsNotNone(localExtraction.outputParticles,"There was a "
-                             "problem with localized extraction protocol")
+        self.assertIsNotNone(localExtraction.outputParticles,
+                             "There was a problem with localized extraction protocol")
         
         
