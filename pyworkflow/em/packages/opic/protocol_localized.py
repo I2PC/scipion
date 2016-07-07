@@ -127,22 +127,22 @@ class ProtLocalizedRecons(ProtParticles):
                       label='Align the subparticles?',
                       help='Align sub-particles to the standard orientation. ')
         form.addParam('unique', FloatParam, default=-1,
-                      label='Angle to keep unique sub-particles: ',
+                      label='Angle to keep unique sub-particles (deg)',
                       help='Keep only unique subparticles within angular '
                            'distance. It is useful to remove overlapping '
                            'sub-particles on symmetry axis.')
         form.addParam('mindist', FloatParam, default=-1,
-                      label='Minimum distance between sub-particles',
+                      label='Minimum distance between sub-particles (px)',
                       help='In pixels. Minimum distance between the '
                            'subparticles in the image. All overlapping ones '
                            'will be discarded.')
         form.addParam('side', FloatParam, default=-1,
-                      label='Angle to keep sub-particles from side views',
+                      label='Angle to keep sub-particles from side views (deg)',
                       help='Keep only particles within specified angular '
                            'distance from side views. All others will be '
                            'discarded. ')
         form.addParam('top', FloatParam, default=-1,
-                      label='Angle to keep sub-particles from top views',
+                      label='Angle to keep sub-particles from top views (deg)',
                       help='Keep only particles within specified angular '
                            'distance from top views. All others will be '
                            'discarded. ')
