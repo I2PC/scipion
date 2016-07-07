@@ -79,6 +79,36 @@ SymList_getTrueSymsNo(PyObject * obj, PyObject *args, PyObject *kwargs)
     return PyInt_FromLong(self->symlist->true_symNo);
 }
 
+/* getTrueSymsNo */
+PyObject *
+SymList_getSymmetryMatrices(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+    Matrix2D<double>  L(4, 4), R(4, 4);
+
+    char * str = NULL;
+
+    if (PyArg_ParseTuple(args, "s", &str))
+    {
+        try
+        {
+            SymListObject *self = (SymListObject*) obj;
+            self->symlist->readSymmetryFile(str);
+
+            for (int i=0; i < self->symlist->true_symNo; ++i)
+            {
+                self->symlist->getMatrices(i, L, R);
+                std::cout << R;
+            }
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* computeDistance */
 PyObject *
 SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
@@ -220,6 +250,8 @@ PyMethodDef SymList_methods[] =
 	   METH_VARARGS, "Returns the list of equivalent angles" },
    { "getTrueSymsNo", (PyCFunction) SymList_getTrueSymsNo,
 	   METH_VARARGS, "Get the number os symmetries" },
+   { "getSymmetryMatrices", (PyCFunction) SymList_getSymmetryMatrices,
+	   METH_VARARGS, "Return all the symmetry matrices for a given symmetry string" },
    { NULL } /* Sentinel */
 };//SymList_methods
 

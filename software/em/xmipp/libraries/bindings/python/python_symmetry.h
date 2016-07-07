@@ -55,6 +55,10 @@ SymList_readSymmetryFile(PyObject * obj, PyObject *args, PyObject *kwargs);
 PyObject *
 SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs);
 
+/* getSymmetryMatrices */
+PyObject *
+SymList_getSymmetryMatrices(PyObject * obj, PyObject *args, PyObject *kwargs);
+
 /* SymList methods */
 extern PyMethodDef SymList_methods[];
 /*SymList Type */
