@@ -105,12 +105,13 @@ def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     environ = Environ(os.environ)
     environ.update({
-            'PATH': join(os.environ['RELION_HOME'], 'bin') + ":" + 
-                    os.path.join(os.environ['BSOFT_HOME'], 'bin'),
-            'PYTHONPATH': os.environ['LOCALREC_HOME'] +":" + 
-                          join(os.environ['LOCALREC_HOME'], 'scripts'),
-            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + 
-                               join(os.environ['RELION_HOME'], 'lib64'),
+            'PATH': os.pathsep.join([
+                join(os.environ['RELION_HOME'], 'bin'),
+                os.environ['LOCALREC_HOME']]),
+            'PYTHONPATH': join(os.environ['LOCALREC_HOME'], 'lib'),
+            'LD_LIBRARY_PATH': os.pathsep.join([
+                join(os.environ['RELION_HOME'], 'lib'),
+                join(os.environ['RELION_HOME'], 'lib64')]),
             'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
             }, position=Environ.BEGIN)
     return environ
@@ -676,26 +677,7 @@ def copyOrLinkFileName(imgRow, prefixDir, outputDir, copyFiles=False):
             createLink(os.path.join(prefixDir, imgPath), newName)
             
     imgRow.setValue(md.RLN_IMAGE_NAME, locationToRelion(index, newName))
-    
 
-# def setupCTF(imgRow, sampling):
-#     """ Do some validations and set some values
-#     for Relion import.
-#     """
-#     imgRow.setValue(md.MDL_SAMPLINGRATE, sampling)
-#     # TODO: check if we want to move this behaviour to setup CTFModel by default
-#     hasDefocusU = imgRow.containsLabel(md.MDL_CTF_DEFOCUSU)
-#     hasDefocusV = imgRow.containsLabel(md.MDL_CTF_DEFOCUSV)
-#     hasDefocusAngle = imgRow.containsLabel(md.MDL_CTF_DEFOCUS_ANGLE)
-#     
-#     if hasDefocusU or hasDefocusV:
-#         if not hasDefocusU:
-#             imgRow.setValue(md.MDL_CTF_DEFOCUSU, imgRow.getValue(md.MDL_CTF_DEFOCUSV))
-#         if not hasDefocusV:
-#             imgRow.setValue(md.MDL_CTF_DEFOCUSV, imgRow.getValue(md.MDL_CTF_DEFOCUSU))
-#         if not hasDefocusAngle:
-#             imgRow.setValue(md.MDL_CTF_DEFOCUS_ANGLE, 0.)
-            
 
 def convertBinaryFiles(imgSet, outputDir, extension='mrcs'):
     """ Convert binary images files to a format read by Relion.
@@ -800,7 +782,6 @@ def createItemMatrix(item, row, align):
 
 
 def getProgram():
-    program = os.path.join(os.environ['LOCALREC_HOME'], 'scripts',
-                           "relion_localized_reconstruction.py")
+    program = ""
     #raise Exception('EMAN_PYTHON is not load in environment')
     return 'python %s ' % program

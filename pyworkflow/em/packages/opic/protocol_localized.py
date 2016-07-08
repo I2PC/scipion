@@ -30,7 +30,7 @@ This module contains the protocol for localized reconstruction.
 from pyworkflow.protocol.params import (PointerParam, BooleanParam,
                                         StringParam, IntParam, Positive,
                                         EnumParam, NumericRangeParam,
-                                        PathParam, FloatParam)
+                                        PathParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtParticles
 
 from convert import (writeSetOfParticles, getEnviron,
@@ -92,8 +92,9 @@ class ProtLocalizedRecons(ProtParticles):
                       label='Randomize the order of the symmetry matrices?',
                       help='Useful for preventing preferred orientations.')
         group.addParam('relaxSym', BooleanParam, default=False,
-                      label='Relax symmetry?',
-                      help='Create one random subparticle for each particle ')
+                       expertLevel=LEVEL_ADVANCED,
+                       label='Relax symmetry?',
+                       help='Create one random subparticle for each particle ')
 
         group = form.addGroup('Vectors')
         group.addParam('defineVector',  EnumParam, default=CMM,
@@ -230,7 +231,8 @@ class ProtLocalizedRecons(ProtParticles):
         
         args += "%s " % self._getFileName('input_star')
         
-        self.runJob(getProgram(), args, env=getEnviron(), numberOfMpi=1)
+        self.runJob('relion_localized_reconstruction.py', args,
+                    env=getEnviron(), numberOfMpi=1)
     
     def createOutputStep(self):
         inputSet = self._getInputParticles()
