@@ -476,4 +476,8 @@ env.addPackage('Gautomatch_v0.53',
                tar='Gautomatch_v0.53.tgz',
                default=False)
 
+env.addPackage('motioncor2',
+               tar='motioncor2_03162016.tgz',
+               default=False)
+
 env.execute()
