@@ -94,6 +94,7 @@ class ProtLocalizedExtraction(ProtParticles):
         ih = ImageHandler()
 
         i = 0
+        outliers = 0
         lastPartId = None
 
         for coord in inputCoords.iterItems(orderBy=['_subparticle._micId',
@@ -111,10 +112,17 @@ class ProtLocalizedExtraction(ProtParticles):
                 lastPartId = partId
                 # Now load the particle image to extract later sub-particles
                 img = ih.read(particle)
+                x, y, _, _ = img.getDimensions()
                 data = img.getData()
 
             xpos = coord.getX()
             ypos = coord.getY()
+
+            # Check that the sub-particle will not lay out of the particle
+            if (ypos - b2 < 0 or ypos + b2 > y or
+                xpos - b2 < 0 or xpos + b2 > x):
+                outliers += 1
+                continue
 
             # Crop the sub-particle data from the whole particle image
             center[:, :] = data[ypos-b2:ypos+b2, xpos-b2:xpos+b2]
@@ -125,6 +133,10 @@ class ProtLocalizedExtraction(ProtParticles):
             subpart.setLocation((i, outputStack)) # Change path to new stack
             subpart.setObjId(None) # Force to insert as a new item
             outputSet.append(subpart)
+
+        if outliers:
+            self.info("WARNING: Discarded %s particles because laid out of the "
+                      "particle (for a box size of %d" % (outliers, boxSize))
 
         self._defineOutputs(outputParticles=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
