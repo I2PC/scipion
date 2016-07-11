@@ -95,12 +95,14 @@ class ProtSummovie(ProtAlignMovies):
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         self._createLink(movie)
-        self._writeMovieAlignment(movie)
+        numberOfFrames = movie.getNumberOfFrames()
+        s0, sN = self._getFrameRange(numberOfFrames, 'sum')
+
+        self._writeMovieAlignment(movie, s0, sN)
         self._argsSummovie()
-        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-        
+
         params = {'movieFn' : self._getMovieFn(movie),
-                  'numberOfFrames' : self._getNumberOfFrames(movie),
+                  'numberOfFrames' : numberOfFrames,
                   'micFn' : self._getMicFn(movie),
                   'initFrame' : s0,
                   'finalFrame' : sN,
@@ -129,7 +131,6 @@ class ProtSummovie(ProtAlignMovies):
         
     def _methods(self):
         return []
-
 
     def _validate(self):
         errors = []
@@ -178,18 +179,13 @@ eof
     def _getFrcFn(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_frc.txt')
     
-    def _getNumberOfFrames(self, movie):
-        _, _, n = movie.getDim()
-        return n
-    
-    def _writeMovieAlignment(self, movie):
+    def _writeMovieAlignment(self, movie, s0, sN):
         shiftsFn = self._getShiftsFn(movie)
-        s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-        
+
         if movie.hasAlignment() and self.useAlignment:
             writeShiftsMovieAlignment(movie, shiftsFn, s0, sN)
         else:
-            f=open(shiftsFn,'w')
+            f = open(shiftsFn,'w')
             frames = sN - s0 + 1
             shift= ("0 " * frames + "\n" ) *2
             f.write(shift)
