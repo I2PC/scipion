@@ -94,3 +94,6 @@ CUDA = False
 DEBUG = False
 MATLAB = False
 OPENCV = True
+
+# This variable is needed to set openGL library to work with remote desktops
+REMOTE_MESA_LIB = /services/guacamole/usr/mesa/lib/

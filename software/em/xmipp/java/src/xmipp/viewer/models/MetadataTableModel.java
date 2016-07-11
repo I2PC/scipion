@@ -30,7 +30,7 @@ import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
@@ -51,8 +51,8 @@ import xmipp.viewer.windows.ImagesWindowFactory;
 
 public class MetadataTableModel extends MetadataGalleryTableModel {
 	private static final long serialVersionUID = 1L;
-
-	int sortColumnIndex = -1;
+    final static int NO_COLUMN_INDEX = -1;
+	int sortColumnIndex = NO_COLUMN_INDEX;
 	boolean ascending = true;
         
 
@@ -461,9 +461,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			TableColumnModel colModel = table.getColumnModel();
 			// Get the clicked column index
 			int columnModelIndex = colModel.getColumnIndexAtX(e.getX());
-			// Take into account a possible reordering of columns
-			int modelIndex = colModel.getColumn(columnModelIndex)
-					.getModelIndex();
+
+            // Get the column
+            final TableColumn column = colModel.getColumn(columnModelIndex);
+
+            // Take into account a possible reordering of columns
+			int modelIndex = column.getModelIndex();
+
 			// Take into account possible invisible columns indexing
 			modelIndex = data.getVisibleColumnIndex(modelIndex);
 			if (modelIndex < 0)
@@ -471,15 +475,48 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 			if (sortColumnIndex == modelIndex)
 				ascending = !ascending;
 			else
-				sortColumnIndex = modelIndex;
-			data.sortMd(data.labels.get(sortColumnIndex), ascending);
-			clearSelection();
-			updateTableSelection(table);
-			cache.clear();
 
-			// fireTableDataChanged();
+                // Remove previous sorting icon
+                removePreviousSortingIcon();
+                sortColumnIndex = modelIndex;
+
+
+            final String columnName = data.labels.get(sortColumnIndex).labelName;
+
+            column.setHeaderValue( "⌛ " + columnName);
+            Runnable sort = new Runnable() {
+                @Override
+                public void run() {
+
+                    data.sortMd(data.labels.get(sortColumnIndex), ascending);
+                    column.setHeaderValue((ascending? "▲ ": "▼ ")+columnName);
+                    table.getTableHeader().repaint();
+                    clearSelection();
+                    updateTableSelection(table);
+                    cache.clear();
+                    table.repaint();
+
+                }
+            };
+
+            SwingUtilities.invokeLater(sort);
+
 		}
-	}
+
+        protected void removePreviousSortingIcon() {
+
+            // If there is a previous column sorted
+            if (sortColumnIndex != NO_COLUMN_INDEX){
+                // Get the column model
+                TableColumnModel colModel = table.getColumnModel();
+
+                // Get the column
+                TableColumn previousSortedColumn = colModel.getColumn(sortColumnIndex);
+                previousSortedColumn.setHeaderValue(data.labels.get(sortColumnIndex).labelName);
+
+            }
+        }
+    }
         
 	@Override
 	public int getIndex(int row, int col) {
