@@ -1,6 +1,6 @@
 # *****************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:    J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -23,13 +23,10 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # *****************************************************************************
-"""
-This module contains the protocol for localized reconstruction.
-"""
 
 import numpy as np
 
-from pyworkflow.em import ALIGN_PROJ, ImageHandler
+from pyworkflow.em import ImageHandler
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import ProtParticles, IntParam
 

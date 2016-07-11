@@ -20,25 +20,24 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
 """
 This module contains the protocol for localized reconstruction.
 """
 
-from pyworkflow.protocol.params import (PointerParam, BooleanParam,
-                                        StringParam, IntParam, Positive,
+from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtParticles
 
-from convert import (writeSetOfParticles, getEnviron,
-                     getProgram, readSetOfSubCoordinates)
+from convert import writeSetOfParticles, getEnviron, readSetOfSubCoordinates
 
 
 CMM = 0
 HAND = 1
+
 
 
 class ProtLocalizedRecons(ProtParticles):
