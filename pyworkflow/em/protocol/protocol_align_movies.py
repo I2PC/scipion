@@ -112,8 +112,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         inputMovies = self.inputMovies.get()
         outputSet.copyInfo(inputMovies)
+
         if fixSampling:
-            newSampling = inputMovies.getSamplingRate() * self.binFactor.get()
+            newSampling = inputMovies.getSamplingRate() * self._getBinFactor()
             outputSet.setSamplingRate(newSampling)
 
         return outputSet
@@ -144,7 +145,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if self._doGenerateOutputMovies():
             # FIXME: Even if we save the movie or not, both are aligned
-            saveMovie = self.doSaveMovie.get()
+            saveMovie = self.getAttributeValue('doSaveMovie', False)
             suffix = '_aligned' if saveMovie else '_original'
             movieSet = self._loadOutputSet(SetOfMovies,
                                            'movies%s.sqlite' % suffix,
@@ -162,7 +163,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
-        if self.doSaveAveMic:
+        if self.getAttributeValue('doSaveAveMic', True):
             micSet = self._loadOutputSet(SetOfMicrographs,'micrographs.sqlite')
 
             for movie in newDone:
@@ -207,12 +208,12 @@ class ProtAlignMovies(ProtProcessMovies):
         Params:
         :param n: Number of frames of the movies
         :param prefix: what range we want to consider, either 'align' or 'sum'
-        :return: (i, f) inital and last frame range
+        :return: (i, f) initial and last frame range
         """
         first = 1 + self.getAttributeValue('%sFrame0' % prefix)
         last = n - self.getAttributeValue('%sFrameN' % prefix)
 
-        return (first, last)
+        return first, last
     
     def _createOutputMovie(self, movie):
         movieId = movie.getObjId()
@@ -222,7 +223,10 @@ class ProtAlignMovies(ProtProcessMovies):
         n = movie.getNumberOfFrames()
         first, last = self._getFrameRange(n, 'align')
 
-        if self.doSaveMovie:
+        # Check if user selected to save movie, use the getAttriveValue
+        # function for allow the protocol to not define this flag
+        # and use False as default
+        if self.getAttributeValue('doSaveMovie', False):
             # The subclass protocol is responsible of generating the output
             # movie file in the extra path with the required name
             extraMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
@@ -235,16 +239,20 @@ class ProtAlignMovies(ProtProcessMovies):
             xshifts, yshifts = self._getMovieShifts(movie)
 
         alignment = MovieAlignment(first=first, last=last,
-                                      xshifts=xshifts, yshifts=yshifts)
+                                   xshifts=xshifts, yshifts=yshifts)
 
-        alignment.setRoi([self.cropOffsetX.get(), self.cropOffsetY.get(),
-                          self.cropDimX.get(), self.cropDimY.get()])
+        roiList = [self.getAttributeValue(s, 0) for s in
+                   ['cropOffsetX', 'cropOffsetY', 'cropDimX', 'cropDimY']]
+        alignment.setRoi(roiList)
 
         alignedMovie.setAlignment(alignment)
 
         return alignedMovie
 
     #---------- Hook functions that need to be implemented in subclasses ------
+
+    def _getBinFactor(self):
+        return self.getAttributeValue('binFactor', 1.0)
 
     def _getMovieRoot(self, movie):
         return pwutils.removeBaseExt(movie.getFileName())
