@@ -1613,7 +1613,8 @@ class MovieAlignment(EMObject):
 
     def getRange(self):
         """ Return the first and last frames used for alignment.
-        The first frame in a movie stack is 0.
+        The first frame in a movie stack is numbered 1 and the maximum value
+        for the last one is N,  where N is the total number of frames.
         """
         return self._first.get(), self._last.get()
     
