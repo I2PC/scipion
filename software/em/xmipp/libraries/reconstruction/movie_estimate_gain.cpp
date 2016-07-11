@@ -155,6 +155,7 @@ void ProgMovieEstimateGain::run()
 			else
 				DIRECT_A2D_ELEM(mICorrection,i,j)=DIRECT_A2D_ELEM(sumIdeal,i,j)/den;
 		}
+		mICorrection/=mICorrection.computeAvg();
 
 #ifdef NEVER_DEFINED
 	ICorrection.write(fnCorr);
