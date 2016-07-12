@@ -28,7 +28,7 @@
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Grigorieff packages specific files
-2. Read from Grigo packs files to base classes
+2. Read from Grigorieff packages files to base classes
 """
 
 import os
@@ -279,3 +279,13 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
               + initShifts + shiftsY + " " + finalShifts)
     f.write(shifts)
     f.close()
+
+def parseMagEstOutput(filename):
+    dist_amount, dist_angle, major_axis, minor_axis = None, None, None, None
+    if os.path.exists(filename):
+        f = open(filename)
+        for line in f:
+            if "The Total Distortion" in line:
+                dist_amount = tuple(map(float, line.split()[5]))
+        f.close()
+    return dist_amount, dist_angle, major_axis, minor_axis
