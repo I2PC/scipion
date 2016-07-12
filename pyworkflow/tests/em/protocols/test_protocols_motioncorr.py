@@ -111,8 +111,8 @@ class TestMotioncorrAlingMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [0, 0, 0, 0], ([-0.5104,0.2292,0.2760,0.0,-0.3490,-0.8646],
-                                                   [-1.3281,-0.4948,-0.2083,0.0,-0.0521, -0.0729]))
+                             (1,7), [0, 0, 0, 0], ([0.0,0.0,0.0,0.0,0.0,0.0],
+                                                   [0.0,0.0,0.0,0.0,0.0,0.0]))
     
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(ProtMotionCorr,
