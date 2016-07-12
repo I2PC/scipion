@@ -40,7 +40,7 @@ from pyworkflow.em.protocol import ProtProcessMovies
 class ProtAlignMovies(ProtProcessMovies):
     """
     Base class for movie alignment protocols such as:
-    motioncorr, crosscrorrelation and optical flow
+    motioncorr, crosscorrelation and optical flow
 
     Alignment parameters are defined in common. For example,
     the frames range used for alignment and final sum, the binning factor
@@ -54,19 +54,17 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')
-        line = group.addLine('Remove frames to ALIGN from',
-                            help='How many frames remove'
-                                 ' from movie alignment.')
+        line = group.addLine('Use frames to ALIGN from',
+                            help='Which frames to use in movie alignment.')
         line.addParam('alignFrame0', params.IntParam, default=0, label='beginning')
         line.addParam('alignFrameN', params.IntParam, default=0, label='end')
-        line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of each movie.')
+        line = group.addLine('Use frames to SUM from',
+                             help='Which frames to use in sum.')
         line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
         line.addParam('sumFrameN', params.IntParam, default=0, label='end')
         group.addParam('binFactor', params.FloatParam, default=1.,
                        label='Binning factor',
-                       help='1x or 2x. Bin stack before processing.')
+                       help='E.g., 1x or 2x. Bin stacks before processing.')
         
         line = group.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
@@ -97,7 +95,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         Load the output set if it exists or create a new one.
         fixSampling: correct the output sampling rate if binning was used,
-        except for the case when the original movies are kepts and shifts
+        except for the case when the original movies are kept and shifts
         refers to that one.
         """
         setFile = self._getPath(baseName)
@@ -194,7 +192,7 @@ class ProtAlignMovies(ProtProcessMovies):
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
             self.cropDimY > 0 and self.cropDimX <= 0):
             errors.append("If you give cropDimX, you should also give cropDimY "
-                          "and viceversa")
+                          "and vice versa")
         return errors
 
     #--------------------------- INFO functions -------------------------------

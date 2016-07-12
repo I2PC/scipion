@@ -20,13 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from bibtex import _bibtex # Load bibtex dict with references
-#_logo = "resmap_logo.png"
-_references = ['lix2013']
+#_logo = "motioncorr_logo.png"
+_references = ['Li2013', 'Zheng2016']
 
 from protocol_motioncorr import ProtMotionCorr
 

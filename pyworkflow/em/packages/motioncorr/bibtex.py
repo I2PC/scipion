@@ -21,12 +21,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
-List of related references in Bibtex format for dosefgpu programs
-developed by Xueming Li at Yifan Cheng lab.
+List of related references in Bibtex format for dosefgpu program
+developed by Xueming Li at Yifan Cheng lab and
+motioncor2 program developed by Shawn Zheng at David Agard lab.
 """
 
 _bibtexStr = """
@@ -41,6 +42,14 @@ _bibtexStr = """
   year="2013",
   publisher="Nature Publishing Group",
   doi = "http://dx.doi.org/10.1038/nmeth.2727"
+}
+
+@article{Zheng2016,
+  title="Anisotropic Correction of Beam-induced Motion for Improved Single-particle Electron Cryo-microscopy",
+  author="Zheng, Shawn and Palovcak, Eugene and Armache, Jean-Paule and Cheng, Yifan and Agard, David",
+  year="2016",
+  journal="submitted",
+  doi = "http://dx.doi.org/10.1101/061960"
 }
 
 """
