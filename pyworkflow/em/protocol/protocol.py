@@ -33,7 +33,7 @@ from itertools import izip
 
 from pyworkflow.protocol import Protocol
 from pyworkflow.object import Set
-from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles,
+from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles, SetOfImages, 
                                 SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
                                 SetOfVolumes, SetOfCTF, SetOfMovies, SetOfFSCs,
                                 SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
@@ -92,6 +92,9 @@ class EMProtocol(Protocol):
         _createSetFunc = getattr(self, '_create%s' % className)
         return _createSetFunc(suffix)
         
+    def _createSetOfImages(self, suffix=''):
+        return self.__createSet(SetOfImages, 'images%s.sqlite', suffix)
+
     def _createSetOfParticles(self, suffix=''):
         return self.__createSet(SetOfParticles, 'particles%s.sqlite', suffix)
 
