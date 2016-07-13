@@ -22,6 +22,7 @@ Protocols SPA = [
         {"tag": "protocol", "value": "ProtUnblur", "text": "default"},
         {"tag": "protocol", "value": "ProtSummovie", "text": "default"},
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
+        {"tag": "protocol", "value": "XmippProtMovieGain", "text": "default"},
         {"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtCTFFind",   "text": "default"},
             {"tag": "protocol", "value": "ProtGctf",   "text": "default"},
