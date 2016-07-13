@@ -33,6 +33,7 @@ import sys
 from os.path import join
 
 from pyworkflow.utils.properties import Message
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import MultiPointerParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtPreprocessMicrographs, EMProtocol
 import pyworkflow.em as em
@@ -94,6 +95,7 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
     def estimateGain(self, movieId, fnMovie):
         self.runJob("xmipp_movie_estimate_gain","-i %s --oroot %s --iter 1 --singleRef"%(fnMovie,self._getPath("movie_%06d"%movieId)),
                     numberOfMpi=1)
+        cleanPath(self._getPath("movie_%06d_correction.xmp"%movieId))
     
     #--------------------------- INFO functions --------------------------------------------
     def _citations(self):
