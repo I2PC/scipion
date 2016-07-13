@@ -1,8 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
-# *              Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -25,6 +23,7 @@
 # *
 # **************************************************************************
 
+from os.path import exists
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -99,7 +98,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
     def _defineInputs(self):
         """ Store some of the input parameters in a dictionary for
-        an easy replacement in the programs command line.
+        an easy replacement in the program command line.
         """
         pixSize = self.inputMicrographs.get().getSamplingRate()
         self.params = {'scaleFactor': self.scaleFactor.get(),
@@ -127,14 +126,14 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     # --------------------------- STEPS functions ---------------------------------------------------
 
     def convertInputStep(self):
-        """ Convert input micrographs into a single mrc stack """
+        """ Convert input micrographs into a single mrcs stack """
         inputMics = self.inputMicrographs.get()
         stackFn = self._getExtraPath('input_stack.mrcs')
         stackFnMrc = self._getExtraPath('input_stack.mrc')
 
         inputMics.writeStack(stackFn, applyTransform=False)
+        # Grigorieff's program recognizes only mrc extension
         pwutils.moveFile(stackFn, stackFnMrc)
-
 
     def runMagDistEst(self):
         self._defineInputs()
@@ -153,15 +152,20 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
         return self.params
 
-
     def createOutputStep(self):
-        result = self._parseOutputLog()
-        print result
+        pass
 
     # --------------------------- INFO functions ----------------------------------------------------
 
     def _validate(self):
         validateMsgs = []
+        # Check that the program exists
+        if not exists(MAGDISTEST_PATH):
+            validateMsgs.append("Binary '%s' does not exits.\n"
+                          "Check configuration file: \n"
+                          "~/.config/scipion/scipion.conf\n"
+                          "and set MAGDIST_HOME variable properly."
+                          % MAGDISTEST_PATH)
 
         return validateMsgs
 
@@ -193,6 +197,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
         return txt
 
     # --------------------------- UTILS functions --------------------------------------------
+
     def getOutputLog(self):
         return self._getExtraPath('mag_dist_estimation.log')
 
