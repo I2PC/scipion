@@ -25,7 +25,6 @@
 # *
 # **************************************************************************
 
-#from os.path import exists, join
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -37,10 +36,10 @@ from convert import parseMagEstOutput
 
 
 class ProtMagDistEst(ProtPreprocessMicrographs):
-    """ mag_distortion_estimate automatically estimates anisotropic magnification
+    """ This program automatically estimates anisotropic magnification
     distortion from a set of images of a standard gold shadowed diffraction grating
     """    
-    _label = 'mag_distortion estimate'
+    _label = 'magnification distortion estimation'
 
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
@@ -49,40 +48,49 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     # --------------------------- DEFINE params functions --------------------------------------------
 
     def _defineParams(self, form):
-        form.addSection(label='Preprocess')
+        form.addSection(label='Input')
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       label="Input micrographs", important=True,
-                      help='Select the SetOfMicrograph containing ~20 images of different areas of polycrystalline gold')
+                      help='Select the SetOfMicrograph containing ~20 images of different areas '
+                           'of polycrystalline gold')
 
-        form.addParam('scaleFactor', params.FloatParam, default=0.03, expertLevel=params.LEVEL_ADVANCED,
+        form.addParam('scaleFactor', params.FloatParam, default=0.03,
+                      expertLevel=params.LEVEL_ADVANCED,
                       label='Scale factor',
                       help='Maximum allowed scale factor.')
-        form.addParam('scaleStep', params.FloatParam, default=0.0005, expertLevel=params.LEVEL_ADVANCED,
+        form.addParam('scaleStep', params.FloatParam, default=0.0005,
+                      expertLevel=params.LEVEL_ADVANCED,
                       label='Scale step',
                       help='Step size for the scale search.')
 
-        line = form.addLine('Resolution limit', expertLevel=params.LEVEL_ADVANCED,
-                            help='Resolution limits for the search.')
+        line = form.addLine('Resolution limit',
+                            expertLevel=params.LEVEL_ADVANCED,
+                            help='Resolution limits for the search. Default values are optimized'
+                                 'for the gold diffraction ring')
         line.addParam('lowRes', params.FloatParam, default=2.5, label='Low')
         line.addParam('highRes', params.FloatParam, default=2.1, label='High')
 
-        line = form.addLine('Angle range (deg)', expertLevel=params.LEVEL_ADVANCED,
+        line = form.addLine('Angle range (deg)',
+                            expertLevel=params.LEVEL_ADVANCED,
                             help='Allowed angle range for the search.')
         line.addParam('minAng', params.FloatParam, default=0.0, label='Min')
         line.addParam('maxAng', params.FloatParam, default=180.0, label='Max')
 
-        form.addParam('angStep', params.FloatParam, default=0.1, expertLevel=params.LEVEL_ADVANCED,
+        form.addParam('angStep', params.FloatParam, default=0.1,
+                      expertLevel=params.LEVEL_ADVANCED,
                       label='Angular step (deg)',
                       help='Step size for the angle search.')
 
-        line = form.addLine('Filter radius (freq.)', expertLevel=params.LEVEL_ADVANCED,
+        line = form.addLine('Filter radius (freq.)',
+                            expertLevel=params.LEVEL_ADVANCED,
                             help='Filter radius for the amplitude bandpass filter.')
 
         line.addParam('lowp', params.FloatParam, default=0.2, label='Low-pass')
         line.addParam('highp', params.FloatParam, default=0.01, label='High-pass')
 
-        form.addParam('box', params.IntParam, default=512, expertLevel=params.LEVEL_ADVANCED,
+        form.addParam('box', params.IntParam, default=512,
+                      expertLevel=params.LEVEL_ADVANCED,
                       label='Amplitude box size',
                       help='Box size for the calculated amplitudes.')
 
@@ -93,6 +101,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
         """ Store some of the input parameters in a dictionary for
         an easy replacement in the programs command line.
         """
+        pixSize = self.inputMicrographs.get().getSamplingRate()
         self.params = {'scaleFactor': self.scaleFactor.get(),
                        'scaleStep': self.scaleStep.get(),
                        'lowRes': self.lowRes.get(),
@@ -103,52 +112,51 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
                        'lowp': self.lowp.get(),
                        'highp': self.highp.get(),
                        'box': self.box.get(),
-                       'pixSize': self.inputMicrographs.get().getSamplingRate(),
+                       'pixSize': pixSize,
                        'nthr': self.numberOfThreads.get()}
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
-    def _prepareStack(self):
+    def _insertAllSteps(self):
+        self._insertFunctionStep('convertInputStep')
+        parameters = self.runMagDistEst()
+        self._argsMagDist()
+        self._insertRunJobStep(self._program % parameters, self._args % parameters)
+        self._insertFunctionStep('createOutputStep')
+
+    # --------------------------- STEPS functions ---------------------------------------------------
+
+    def convertInputStep(self):
         """ Convert input micrographs into a single mrc stack """
         inputMics = self.inputMicrographs.get()
         stackFn = self._getExtraPath('input_stack.mrcs')
         stackFnMrc = self._getExtraPath('input_stack.mrc')
 
-        for fn in inputMics:
-            cmd = ' %s %s' %(fn, stackFn)
-            self.runJob('e2proc2d.py', cmd)
-
+        inputMics.writeStack(stackFn, applyTransform=False)
         pwutils.moveFile(stackFn, stackFnMrc)
 
 
-    def _processStack(self):
-        self._prepareStack()
+    def runMagDistEst(self):
+        self._defineInputs()
+
         stackFnMrc = self._getExtraPath('input_stack.mrc')
-        spectraFn = self._getExtraPath('output_amp.mrc')
-        rotAvgFn = self._getExtraPath('output_amp_rot.mrc')
-        spectraCorrFn = self._getExtraPath('output_amp_corrected.mrc')
-        logFn = self._getExtraPath('mag_dist_estimation.log')
+        spectraFn = self.getOutputAmplitudes()
+        rotAvgFn = self.getOutputAmplitudesRot()
+        spectraCorrFn = self.getOutputAmplitudesCorr()
+        logFn = self.getOutputLog()
 
-        self.params = {'stackFnMrc': stackFnMrc,
-                       'spectraFn': spectraFn,
-                       'rotAvgFn': rotAvgFn,
-                       'spectraCorrFn': spectraCorrFn,
-                       'logFn': logFn}
+        self.params['stackFnMrc'] = stackFnMrc
+        self.params['spectraFn'] = spectraFn
+        self.params['rotAvgFn'] = rotAvgFn
+        self.params['spectraCorrFn'] = spectraCorrFn
+        self.params['logFn'] = logFn
 
-        self._argsMagDist()
+        return self.params
 
-        try:
-            self.runJob(self._program, self._args % params)
-
-        except:
-            print("ERROR: Mag. distortion estimation for %s failed\n" % stackFnMrc)
-
-    # --------------------------- STEPS functions ---------------------------------------------------
 
     def createOutputStep(self):
-        pass
-        #self._defineOutputs(outputMicrographs=None)
-        #self._defineTransformRelation(self.inputMics, outputMics)
+        result = self._parseOutputLog()
+        print result
 
     # --------------------------- INFO functions ----------------------------------------------------
 
@@ -162,20 +170,35 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
     def _summary(self):
         summary = []
-        for value in self._parseOutputLog():
-            summary.append('dist_amount, dist_angle, major_axis, minor_axis= ' % value)
+        result = self._parseOutputLog()
+
+        if result is not None:
+            distAngle, majorAxis, minorAxis, totDist = result
+            summary.append('This protocol does not generate any output. '
+                           'It only estimates magnification distortion parameters.\n\n'
+                           'Total amount of distortion: *%0.2f%%* ' % totDist)
+            summary.append('Distortion Angle: *%0.2f*' % distAngle)
+            summary.append('Major Scale: *%0.3f*' % majorAxis)
+            summary.append('Minor Scale: *%0.3f*' % minorAxis)
+        else:
+            summary.append('Output is not ready yet.')
 
         return summary
 
     def _methods(self):
-        txt = "The micrographs in set %s have " % self.getObjectTag('inputMicrographs')
+        txt = []
+        txt.append("Anisotropic magnification distortion was estimated using "
+                   "Grigorieff's program *mag_distortion_estimate*")
 
         return txt
 
     # --------------------------- UTILS functions --------------------------------------------
+    def getOutputLog(self):
+        return self._getExtraPath('mag_dist_estimation.log')
+
     def _parseOutputLog(self):
         """ Return the distortion amount, angle and two scale params. """
-        fnOut = self._getExtraPath('mag_dist_estimation.log')
+        fnOut = self.getOutputLog()
 
         return parseMagEstOutput(fnOut)
 
@@ -200,3 +223,12 @@ YES
 %(box)d
 eof
 """
+
+    def getOutputAmplitudes(self):
+        return self._getExtraPath('output_amp.mrc')
+
+    def getOutputAmplitudesCorr(self):
+        return self._getExtraPath('output_amp_corrected.mrc')
+
+    def getOutputAmplitudesRot(self):
+        return self._getExtraPath('output_amp_rot.mrc')

@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -31,7 +31,7 @@ This module contains converter functions that will serve to:
 2. Read from Grigorieff packages files to base classes
 """
 
-import os
+import os, re
 
 from itertools import izip
 import numpy
@@ -281,11 +281,32 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     f.close()
 
 def parseMagEstOutput(filename):
-    dist_amount, dist_angle, major_axis, minor_axis = None, None, None, None
+    result, result1, result2, result3, result4 = None, None, None, None, None
+    ansi_escape = re.compile(r'\x1b[^m]*m')
     if os.path.exists(filename):
         f = open(filename)
+        parsing = False
         for line in f:
-            if "The Total Distortion" in line:
-                dist_amount = tuple(map(float, line.split()[5]))
+            line = ansi_escape.sub('', line)
+            if line.startswith(" The following distortion parameters were found"):
+                parsing = True
+            if parsing:
+                # Take angle, two axis scale as a tuple that is a 4-th value in the line
+                if 'Distortion Angle' in line:
+                    result1 = tuple(line.split()[3:])
+                if 'Major Scale' in line:
+                    result2 = tuple(line.split()[3:])
+                if 'Minor Scale' in line:
+                    result3 = tuple(line.split()[3:])
+            if line.startswith(" Stretch only parameters would be as follows"):
+                parsing = False
+            if 'The Total Distortion =' in line:
+                # Take total distortion as a tuple
+                # that is a 5-th value in the line
+                # but remove escape characters first
+                line = re.sub('[%]', '', line)
+                result4 = tuple(line.split()[4:])
+                result = map(float, result1 + result2 + result3 + result4)
+                break
         f.close()
-    return dist_amount, dist_angle, major_axis, minor_axis
+    return result

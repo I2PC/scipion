@@ -20,12 +20,12 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
 This sub-package contains data and protocol classes
-wrapping Grigrorieff Lab programs at Brandeis
+wrapping Grigorieff Lab programs at Brandeis
 """
 from bibtex import _bibtex # Load bibtex dict with references
 
@@ -35,9 +35,10 @@ from grigoriefflab import *
 
 from protocol_ctffind import ProtCTFFind
 from protocol_refinement import ProtFrealign
+from protocol_magdist_estimate import ProtMagDistEst
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_unblur import ProtUnblur
 from protocol_summovie import ProtSummovie
-from viewer import ProtCTFFindViewer, FrealignViewer
+from viewer import ProtCTFFindViewer, FrealignViewer, MagDistEstViewer
 # Wizards
 from wizard import *

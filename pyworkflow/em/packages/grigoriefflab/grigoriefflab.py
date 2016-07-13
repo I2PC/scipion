@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -61,6 +61,7 @@ CALC_OCC_PATH = join(FREALING_HOME, 'bin', CALC_OCC)
 RSAMPLE_PATH = join(FREALING_HOME, 'bin', RSAMPLE)
 
 MAGDISTEST_PATH = join(_getHome('MAGDIST_HOME', 'mag_distortion'), 'bin', MAGDISTEST)
+MAGDISTCORR_PATH = join(_getHome('MAGDIST_HOME', 'mag_distortion'), 'bin', MAGDISTCORR)
 
 UNBLUR_PATH  = join(_getHome('UNBLUR_HOME', 'unblur'), 'bin', UNBLUR)
 SUMMOVIE_PATH  = join(_getHome('SUMMOVIE_HOME', 'summovie'), 'bin', SUMMOVIE)
