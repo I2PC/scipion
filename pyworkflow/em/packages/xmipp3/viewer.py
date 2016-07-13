@@ -162,6 +162,11 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
             
+            
+        elif issubclass(cls, SetOfImages):            
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
+            
 
         elif issubclass(cls, MicrographsTiltPair):          
             labels = 'id enabled _untilted._filename _tilted._filename'
