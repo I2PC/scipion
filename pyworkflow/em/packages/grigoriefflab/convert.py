@@ -280,33 +280,35 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     f.write(shifts)
     f.close()
 
+
 def parseMagEstOutput(filename):
-    result, result1, result2, result3, result4 = None, None, None, None, None
+    a, b, c, d, e = None, None, None, None, None
     ansi_escape = re.compile(r'\x1b[^m]*m')
     if os.path.exists(filename):
         f = open(filename)
         parsing = False
         for line in f:
             line = ansi_escape.sub('', line)
-            if line.startswith(" The following distortion parameters were found"):
-                parsing = True
-            if parsing:
-                # Take angle, two axis scale as a tuple that is a 4-th value in the line
-                if 'Distortion Angle' in line:
-                    result1 = tuple(line.split()[3:])
-                if 'Major Scale' in line:
-                    result2 = tuple(line.split()[3:])
-                if 'Minor Scale' in line:
-                    result3 = tuple(line.split()[3:])
             if line.startswith(" Stretch only parameters would be as follows"):
                 parsing = False
+            if parsing:
+                if 'Distortion Angle' in line:
+                    a = tuple(line.split()[3:])
+                if 'Major Scale' in line:
+                    b = tuple(line.split()[3:])
+                if 'Minor Scale' in line:
+                    c = tuple(line.split()[3:])
+            if line.startswith(" The following distortion parameters were found"):
+                parsing = True
             if 'The Total Distortion =' in line:
                 # Take total distortion as a tuple
                 # that is a 5-th value in the line
-                # but remove escape characters first
+                # but remove percent character first
                 line = re.sub('[%]', '', line)
-                result4 = tuple(line.split()[4:])
-                result = map(float, result1 + result2 + result3 + result4)
-                break
+                d = tuple(line.split()[4:])
+            if 'Corrected Pixel Size' in line:
+                e = tuple(line.split()[4:])
         f.close()
+        result = map(float, a + b + c + d + e)
+
     return result

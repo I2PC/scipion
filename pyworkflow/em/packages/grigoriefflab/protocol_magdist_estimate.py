@@ -177,13 +177,14 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
         result = self._parseOutputLog()
 
         if result is not None:
-            distAngle, majorAxis, minorAxis, totDist = result
+            distAngle, majorAxis, minorAxis, totDist, pixCorr = result
             summary.append('This protocol does not generate any output. '
                            'It only estimates magnification distortion parameters.\n\n'
                            'Total amount of distortion: *%0.2f%%* ' % totDist)
-            summary.append('Distortion Angle: *%0.2f*' % distAngle)
+            summary.append('Distortion Angle: *%0.2f* degrees' % distAngle)
             summary.append('Major Scale: *%0.3f*' % majorAxis)
             summary.append('Minor Scale: *%0.3f*' % minorAxis)
+            summary.append('Corrected pixel size: *%0.3f*A' % pixCorr)
         else:
             summary.append('Output is not ready yet.')
 
