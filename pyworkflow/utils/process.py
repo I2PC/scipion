@@ -33,6 +33,8 @@ import os.path
 import resource
 from subprocess import check_call
 
+from psutil import NoSuchProcess
+
 from utils import greenStr, envVarOn
 
 
@@ -118,8 +120,8 @@ def isProcessAlive(pid):
 
     import psutil
     try:
-        proc = psutil.Process(pid.get())
+        proc = psutil.Process(pid)
         return proc.is_running()
-    except:
+    except NoSuchProcess, e:
         return False
 

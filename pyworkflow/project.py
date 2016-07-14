@@ -381,12 +381,8 @@ class Project(object):
                                                  protocol.getDbPath(),
                                                  protocol.getObjId())
 
-                # FIXME: It seems that checkPid is not working for some cases
-                # FIXME: Coss reported that some protocols running are reported
-                # FIXME: as failed and not further processing can be done
-                # JMRT: So I will comment the following lines for now
-                #if checkPid:
-                #    self.checkPid(prot2)
+                if checkPid:
+                    self.checkPid(prot2)
 
                 # Copy is only working for db restored objects
                 protocol.setMapper(self.mapper)
