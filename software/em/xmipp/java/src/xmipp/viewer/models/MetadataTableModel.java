@@ -483,13 +483,13 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 
             final String columnName = data.labels.get(sortColumnIndex).labelName;
 
-            column.setHeaderValue( "⌛ " + columnName);
+            column.setHeaderValue( "\u231B " + columnName);
             Runnable sort = new Runnable() {
                 @Override
                 public void run() {
 
                     data.sortMd(data.labels.get(sortColumnIndex), ascending);
-                    column.setHeaderValue((ascending? "▲ ": "▼ ")+columnName);
+                    column.setHeaderValue((ascending? "\u25B2 ": "\u25BC ")+columnName);
                     table.getTableHeader().repaint();
                     clearSelection();
                     updateTableSelection(table);
