@@ -102,9 +102,10 @@ if __version__ == 'devel':
     # Find out if the is a .git directory
     if exists(join(SCIPION_HOME, '.git')):
         def call(cmd):
-            subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
-        call('git branch | grep \* > .devel_version')
-        call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
+            return subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
+        if call('which git') == 0: # Means git command is found
+            call('git branch | grep \* > .devel_version')
+            call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
 
     # If in a future we release a nigthly build, we could add the .devel_version
     versionFile = join(SCIPION_HOME, '.devel_version')
