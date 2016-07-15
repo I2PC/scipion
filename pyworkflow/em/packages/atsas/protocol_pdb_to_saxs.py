@@ -48,10 +48,10 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
         form.addParam('numberOfSamples', IntParam, default=256, expertLevel=LEVEL_ADVANCED, 
                       label='Number of samples',
                       help='Number of samples of the curve (parameter ns)') 
-        form.addParam('maximumFrequency', FloatParam, default=0.3, 
+        form.addParam('maximumFrequency', FloatParam, default=0.3, expertLevel=LEVEL_ADVANCED, 
                       label='Maximum frequency (1/A)',
                       help='Maximum frequency of the curve (parameter sm)') 
-        form.addParam('numberOfHarmonics', IntParam, default=18, 
+        form.addParam('numberOfHarmonics', IntParam, default=18, expertLevel=LEVEL_ADVANCED, 
                       label='Number of harmonics',
                       help='Number of harmonics to generate the curve (parameter lm)')
         form.addParam('experimentalSAXS', FileParam, filter="*.dat", default='', label='Experimental SAXS curve (optional)',
@@ -94,6 +94,16 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
             summary.append('Experimental SAXS curve: %s'%self.experimentalSAXS.get())
         if not self.otherCrysol.empty():
             summary.append('Other crysol parameters: %d'%self.otherCrysol.get())
+
+        # Goodness of fit
+        fnInt=self._getPath("pseudoatoms00.fit")
+        if exists(fnInt):
+            import numpy
+            x=numpy.loadtxt(fnInt,skiprows=1)
+            diff = numpy.log(x[:,1])-numpy.log(x[:,2])
+            idx = numpy.isfinite(diff)
+            RMS=math.sqrt(1.0/numpy.sum(idx)*numpy.dot(diff[idx],diff[idx]))
+            summary.append("RMS=%f"%RMS)
         return summary
 
     def _methods(self):
