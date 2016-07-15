@@ -101,14 +101,14 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
     def _summary(self):
         summary = []
         summary.append('Number of samples: %d' % self.numberOfSamples)
-        summary.append('Maximum frequency: %d' % self.maximumFrequency)
+        summary.append('Maximum frequency: %f' % self.maximumFrequency)
         summary.append('Number of Harmonics: %d' % self.numberOfHarmonics)
 
         if not self.experimentalSAXS.empty():
             summary.append('Experimental SAXS curve: %s' % self.experimentalSAXS)
 
         if not self.otherCrysol.empty():
-            summary.append('Other crysol parameters: %d' % self.otherCrysol)
+            summary.append('Other crysol parameters: %s' % self.otherCrysol)
 
         # Goodness of fit
         fnInt = self._getPath("pseudoatoms00.fit")
