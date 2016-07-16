@@ -53,7 +53,7 @@ def getVersion():
 
 
 def getSupportedVersions():
-    return ['2.1', '2(new)']
+    return ['_v2.1', '_2(new)']
 
 
 def validateVersion(protocol, errors):
@@ -98,7 +98,7 @@ def parseMovieAlignment2(logFile):
 
     for line in f:
         l = line.strip()
-        if not '# full frame alignment' in l:
+        if not '#' in l and len(l) > 0:
             parts = l.split()
             if first is None: # read the first frame number
                 first = int(parts[0]) # take the id from first column

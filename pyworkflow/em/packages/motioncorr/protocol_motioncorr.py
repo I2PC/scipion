@@ -34,8 +34,9 @@ import os, sys
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
+from pyworkflow.utils.path import removeExt
 
-from convert import getVersion, parseMovieAlignment, parseMovieAlignment2
+from convert import getVersion, getSupportedVersions, validateVersion, parseMovieAlignment, parseMovieAlignment2
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -107,17 +108,17 @@ class ProtMotionCorr(ProtAlignMovies):
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
                       help="""
--*Bft       100*      BFactor for alignment, in px^2.
--*Iter      5*        Maximum iterations for iterative alignment.
--*MaskCent  0 0*      Center of subarea that will be used for alignment,
+- Bft       100       BFactor for alignment, in px^2.
+- Iter      5         Maximum iterations for iterative alignment.
+-MaskCent  0 0        Center of subarea that will be used for alignment,
                       default *0 0* corresponding to the frame center.
--*MaskSize  1.0 1.0*  The size of subarea that will be used for alignment,
+-MaskSize  1.0 1.0    The size of subarea that will be used for alignment,
                       default *1.0 1.0* corresponding full size.
--*Align     1*        Generate aligned sum (1) or simple sum (0).
--*FmRef     0*        Specify which frame to be the reference to which
+-Align     1          Generate aligned sum (1) or simple sum (0).
+-FmRef     0          Specify which frame to be the reference to which
                       all other frames are aligned, by default *0* all aligned to the first frame,
                       other value aligns to the central frame.
--*Tilt      0 0*      Tilt angle range for a dose fractionated tomographic tilt series,
+-Tilt      0 0        Tilt angle range for a dose fractionated tomographic tilt series,
                       e.g. *-60 60*
                       """)
 
@@ -145,10 +146,10 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-cdx': self.cropDimX.get(),
                         '-cdy': self.cropDimY.get(),
                         '-bin': self.binFactor.get(),
-                        '-nst': a0,
-                        '-ned': aN,
-                        '-nss': s0,
-                        '-nes': sN,
+                        '-nst': '%d' % (a0-1),
+                        '-ned': '%d' % (aN-1),
+                        '-nss': '%d' % (s0-1),
+                        '-nes': '%d' % (sN-1),
                         '-gpu': self.GPUIDs.get(),
                         '-flg': logFile,
                         }
@@ -174,34 +175,42 @@ class ProtMotionCorr(ProtAlignMovies):
         else:
             movieFolder = self._getOutputMovieFolder(movie)
             outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
-            logFilePattern = self._getMovieRoot(movie) + '_'
+            logFileFn = self._getAbsPath(self._getMovieLogFile(movie))
+            logFileBase = logFileFn.replace('0-Full.log', '')
+            logFileBase = logFileBase.replace('0-Patch-Full.log', '')
 
-            self._doGenerateOutputMovies = False
-            self.saveAveMic = True
+
+            #self.doSaveMovie = False
+            #self.doSaveAveMic = True
 
             # Get the number of frames and the range to be used
             # for alignment and sum
             numberOfFrames = movie.getNumberOfFrames()
             a0, aN = self._getFrameRange(numberOfFrames, 'align')
 
+            # default values for motioncor2 are (1.0, 1.0)
+            if self.cropDimX.get() == 0:
+                self.cropDim = 1.0
+            elif self.cropDimY.get() == 0:
+                self.cropDimY = 1.0
+
             argsDict = {'-OutMrc': outputMicFn,
                         '-Patch': self.patch.get(),
-                        #'-crx': self.cropOffsetX.get(),
-                        #'-cry': self.cropOffsetY.get(),
-                        '-Crop': '%f %f' % (self.cropDimX.get(), self.cropDimY.get()),
+                        '-MaskCent': '%f %f' % (self.cropOffsetX.get(), self.cropOffsetY.get()),
+                        '-MaskSize': '%f %f' % (self.cropDimX.get(), self.cropDimY.get()),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
                         '-FmDose': self.frameDose.get(),
-                        '-Throw': a0,
-                        '-Trunc': aN,
+                        '-Throw': '%d' % (a0 - 1),
+                        '-Trunc': '%d' % (abs(aN - numberOfFrames)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
                         '-Gpu': self.GPUIDs.get(),
-                        '-LogFile': logFilePattern,
+                        '-LogFile': logFileBase,
                         }
 
-            args = ' -InMrc %s' % movie.getBaseName()
+            args = ' -InMrc %s ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
@@ -216,10 +225,10 @@ class ProtMotionCorr(ProtAlignMovies):
             print >> sys.stderr, program, " failed for movie %s" % movie.getName()
 
 
-    def createOutputStep(self):
-        pass
-        #if self.frameDose.get() != '0.0':
-        #    outputMicFnWt = self._getAbsPath(self._getOutputMicWtName(movie))
+    #def createOutputStep(self, movie):
+    #    pass
+    #    if self.useMotioncor2 and self.frameDose.get() != '0.0':
+    #        outputMicFnWt = self._getAbsPath(self._getOutputMicWtName(movie))
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -228,6 +237,8 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
+        #FIXME: this doesn't work :(
+        #validateVersion(self, errors)
         gpu = self.GPUIDs.get()
 
         if not self.useMotioncor2:
@@ -237,7 +248,7 @@ class ProtMotionCorr(ProtAlignMovies):
             if len(gpu) > 1:
                 errors.append("Old motioncorr2.1 does not support multiple GPUs, use motioncor2.")
         else:
-            if self.saveMovie:
+            if self.doSaveMovie:
                 errors.append('Saving aligned movies is not supported by motioncor2.')
             elif self.alignFrame0.get() != self.sumFrame0.get() or self.alignFrameN.get() != self.sumFrameN.get():
                 errors.append('Frame range for align and sum must be equivalent in case of motioncor2.')
@@ -249,7 +260,10 @@ class ProtMotionCorr(ProtAlignMovies):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
         else:
-            return '%s0-Full.log' % self._getMovieRoot(movie)
+            if self.patch.get() == '0 0':
+                return 'micrograph_%06d_0-Full.log' % movie.getObjId()
+            else:
+                return 'micrograph_%06d_0-Patch-Full.log' % movie.getObjId()
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
@@ -268,9 +282,3 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
-
-    def _getOutputMicWtName(self, movie):
-        """ Returns the name of the output dose-weighted micrograph
-        (relative to micFolder)
-        """
-        return self._getMovieRoot(movie) + '_aligned_mic_DW.mrc'
