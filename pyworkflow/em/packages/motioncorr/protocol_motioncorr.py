@@ -65,7 +65,7 @@ class ProtMotionCorr(ProtAlignMovies):
                             " First core index is 0, second 1 and so on."
                             " Motioncor2 can use multiple GPUs - in that case set to i.e. *0 1 2*.")
 
-        form.addParam('useMotioncor2', params.BooleanParam, default=True,
+        form.addParam('useMotioncor2', params.BooleanParam, default=False,
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local patch-based motion '
                            'correction and dose weighting.')
@@ -176,8 +176,7 @@ class ProtMotionCorr(ProtAlignMovies):
             movieFolder = self._getOutputMovieFolder(movie)
             outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
             logFileFn = self._getAbsPath(self._getMovieLogFile(movie))
-            logFileBase = logFileFn.replace('0-Full.log', '')
-            logFileBase = logFileBase.replace('0-Patch-Full.log', '')
+            logFileBase = logFileFn.replace('0-Full.log', '').replace('0-Patch-Full.log', '')
 
             # Get the number of frames and the range to be used
             # for alignment and sum

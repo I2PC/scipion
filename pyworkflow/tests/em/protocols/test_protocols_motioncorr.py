@@ -126,3 +126,29 @@ class TestMotioncorrAlingMovies(BaseTest):
                              (3,5), [10, 10, 0, 0], ([-0.125, 0.0, 0.4375],
                                                      [-0.2708, 0.0, -0.3854]))
 
+
+    def test_qbeta_motioncor2(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                useMotioncor2=True,
+                                frameDose=3,
+                                patch='0 0')
+        prot.inputMovies.set(self.protImport1.outputMovies)
+        self.launchProtocol(prot)
+
+        self._checkMicrographs(prot)
+        self._checkAlignment(prot.outputMovies[1],
+                             (1, 7), [0, 0, 0, 0], ([0.7135, 0.2344, 0.026, 0.0, 0.4375, 0.8073],
+                                                    [-0.375, -0.4792, -0.2344, 0.0, -0.1875, 0.2448]))
+
+    def test_qbeta_motioncor2_patch(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                useMotioncor2=True,
+                                patch='2 2',
+                                group=2)
+        prot.inputMovies.set(self.protImport1.outputMovies)
+        self.launchProtocol(prot)
+
+        self._checkMicrographs(prot)
+        self._checkAlignment(prot.outputMovies[1],
+                             (1, 7), [0, 0, 0, 0], ([0.7135, 0.2344, 0.026, 0.0, 0.4375, 0.8073],
+                                                    [-0.375, -0.4792, -0.2344, 0.0, -0.1875, 0.2448]))
