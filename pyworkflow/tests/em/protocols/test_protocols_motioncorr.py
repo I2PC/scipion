@@ -74,14 +74,24 @@ class TestMotioncorrAlingMovies(BaseTest):
         self.assertIsNotNone(getattr(protocol, 'outputMicrographs', None),
                              "Output SetOfMicrographs were not created.")
 
-    def _checkAlignment(self, movie, goldRange, goldRoi):
+    def _checkAlignment(self, movie, goldRange, goldRoi, goldShifts):
         alignment = movie.getAlignment()
         range = alignment.getRange()
         msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
-        self.assertEqual(goldRange, range, msgRange % (goldRange, range, type(goldRange), type(range)))
+        self.assertEqual(goldRange, range, msgRange % (goldRange,
+                                                       type(goldRange),
+                                                       range,
+                                                       type(range)))
         roi = alignment.getRoi()
+        shifts = alignment.getShifts()
         msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
-        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
+        msgShifts = "Alignment SHIFTS must be %s (%s) and it is %s (%s)"
+        self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, type(goldRoi),
+                                                 roi, type(roi)))
+        self.assertEqual(goldShifts, shifts, msgShifts % (goldShifts, 
+                                                          type(goldShifts),
+                                                          shifts,
+                                                          type(shifts)))
 
     def test_qbeta(self):
         prot = self.newProtocol(ProtMotionCorr)
@@ -90,7 +100,8 @@ class TestMotioncorrAlingMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [0, 0, 0, 0])
+                             (1,7), [0, 0, 0, 0], ([0.7135,0.2344,0.026,0.0,0.4375,0.8073],
+                                                   [-0.375,-0.4792,-0.2344,0.0,-0.1875, 0.2448]))
 
     def test_cct(self):
         prot = self.newProtocol(ProtMotionCorr,
@@ -100,8 +111,9 @@ class TestMotioncorrAlingMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [0, 0, 0, 0])
-
+                             (1,7), [0, 0, 0, 0], ([0.0,0.0,0.0,0.0,0.0,0.0],
+                                                   [0.0,0.0,0.0,0.0,0.0,0.0]))
+    
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(ProtMotionCorr,
                                 alignFrame0=2, alignFrameN=2,
@@ -111,5 +123,6 @@ class TestMotioncorrAlingMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (3,5), [10, 10, 0, 0])
+                             (3,5), [10, 10, 0, 0], ([-0.125, 0.0, 0.4375],
+                                                     [-0.2708, 0.0, -0.3854]))
 
