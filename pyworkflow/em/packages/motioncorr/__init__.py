@@ -30,6 +30,6 @@ _references = ['Li2013', 'Zheng2016']
 
 from protocol_motioncorr import ProtMotionCorr
 
-from convert import getEnviron
+from convert import *
 
 _environ = getEnviron()

@@ -36,7 +36,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
 
-from convert import getVersion, parseMovieAlignment, parseMovieAlignment2
+from convert import getVersion, validateVersion, parseMovieAlignment, parseMovieAlignment2
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -228,7 +228,7 @@ class ProtMotionCorr(ProtAlignMovies):
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
         #FIXME: this doesn't work :(
-        #validateVersion(self, errors)
+        validateVersion(self, errors)
         gpu = self.GPUIDs.get()
 
         if not self.useMotioncor2:
@@ -237,7 +237,11 @@ class ProtMotionCorr(ProtAlignMovies):
                 errors.append("Binning factor can only be 1 or 2")
             if len(gpu) > 1:
                 errors.append("Old motioncorr2.1 does not support multiple GPUs, use motioncor2.")
+            #if getVersion() != 'motioncorr':
+            #    errors.append('motioncorr not found. Check your config file!')
         else:
+            #if getVersion() != 'motioncor2':
+            #    errors.append('motioncor2 not found. Check your config file!')
             if self.doSaveMovie:
                 errors.append('Saving aligned movies is not supported by motioncor2.')
             elif self.alignFrame0.get() != self.sumFrame0.get() or self.alignFrameN.get() != self.sumFrameN.get():

@@ -28,13 +28,12 @@ import os
 from os.path import join
 
 from pyworkflow.utils import Environ
-#from pyworkflow.em.data import MovieAlignment
 
 
 def getEnviron():
     """ Return the envirion settings to run motioncorr programs. """
     """ Setup the environment variables needed to launch Motioncorr. """
-    MOTIONCORR_HOME = os.environ.get('MOTIONCORR_HOME', 
+    MOTIONCORR_HOME = os.environ.get('MOTIONCORR_HOME',
                                      join(os.environ['EM_ROOT'], 'motioncorr'))
     environ = Environ(os.environ)
     environ.update({
@@ -53,7 +52,7 @@ def getVersion():
 
 
 def getSupportedVersions():
-    return ['_v2.1', '_2(new)']
+    return ['motioncorr', 'motioncor2']
 
 
 def validateVersion(protocol, errors):
