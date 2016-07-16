@@ -3,6 +3,7 @@
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Vahid Abrishami (vabrishami@cnb.csic.es)
 # *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -34,9 +35,8 @@ import os, sys
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
-from pyworkflow.utils.path import removeExt
 
-from convert import getVersion, getSupportedVersions, validateVersion, parseMovieAlignment, parseMovieAlignment2
+from convert import getVersion, parseMovieAlignment, parseMovieAlignment2
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -179,10 +179,6 @@ class ProtMotionCorr(ProtAlignMovies):
             logFileBase = logFileFn.replace('0-Full.log', '')
             logFileBase = logFileBase.replace('0-Patch-Full.log', '')
 
-
-            #self.doSaveMovie = False
-            #self.doSaveAveMic = True
-
             # Get the number of frames and the range to be used
             # for alignment and sum
             numberOfFrames = movie.getNumberOfFrames()
@@ -224,12 +220,6 @@ class ProtMotionCorr(ProtAlignMovies):
         except:
             print >> sys.stderr, program, " failed for movie %s" % movie.getName()
 
-
-    #def createOutputStep(self, movie):
-    #    pass
-    #    if self.useMotioncor2 and self.frameDose.get() != '0.0':
-    #        outputMicFnWt = self._getAbsPath(self._getOutputMicWtName(movie))
-
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
@@ -243,7 +233,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if not self.useMotioncor2:
             bin = int(self.binFactor.get())
-            if not (bin == 1 or bin == 2):
+            if not (bin == 1.0 or bin == 2.0):
                 errors.append("Binning factor can only be 1 or 2")
             if len(gpu) > 1:
                 errors.append("Old motioncorr2.1 does not support multiple GPUs, use motioncor2.")
