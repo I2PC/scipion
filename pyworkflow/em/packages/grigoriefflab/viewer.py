@@ -665,10 +665,10 @@ class MagDistEstViewer(ProtocolViewer):
         if param == 'doShowLog':
             view = self.textView([self.protocol.getOutputLog()], "Output log file")
         elif param == 'doShowAmp':
-            view = DataView([self.protocol.getOutputAmplitudes()])
+            view = DataView(self.protocol.getOutputAmplitudes())
         elif param == 'doShowAmpRot':
-            view = DataView([self.protocol.getOutputAmplitudesRot()])
+            view = DataView(self.protocol.getOutputAmplitudesRot())
         elif param == 'doShowAmpCorr':
-            view = DataView([self.protocol.getOutputAmplitudesCorr()])
+            view = DataView(self.protocol.getOutputAmplitudesCorr())
 
         return [view]
