@@ -119,7 +119,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     def _insertAllSteps(self):
         self._insertFunctionStep('convertInputStep')
         parameters = self.runMagDistEst()
-        self._argsMagDist()
+        self._argsMagDistEst()
         self._insertRunJobStep(self._program % parameters, self._args % parameters)
         self._insertFunctionStep('createOutputStep')
 
@@ -128,8 +128,8 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     def convertInputStep(self):
         """ Convert input micrographs into a single mrcs stack """
         inputMics = self.inputMicrographs.get()
-        stackFn = self._getExtraPath('input_stack.mrcs')
-        stackFnMrc = self._getExtraPath('input_stack.mrc')
+        stackFn = self._getTmpPath('input_stack.mrcs')
+        stackFnMrc = self._getTmpPath('input_stack.mrc')
 
         inputMics.writeStack(stackFn, applyTransform=False)
         # Grigorieff's program recognizes only mrc extension
@@ -138,7 +138,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     def runMagDistEst(self):
         self._defineInputs()
 
-        stackFnMrc = self._getExtraPath('input_stack.mrc')
+        stackFnMrc = self._getTmpPath('input_stack.mrc')
         spectraFn = self.getOutputAmplitudes()
         rotAvgFn = self.getOutputAmplitudesRot()
         spectraCorrFn = self.getOutputAmplitudesCorr()
@@ -158,16 +158,16 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     # --------------------------- INFO functions ----------------------------------------------------
 
     def _validate(self):
-        validateMsgs = []
+        errors = []
         # Check that the program exists
         if not exists(MAGDISTEST_PATH):
-            validateMsgs.append("Binary '%s' does not exits.\n"
+            errors.append("Binary '%s' does not exits.\n"
                           "Check configuration file: \n"
                           "~/.config/scipion/scipion.conf\n"
                           "and set MAGDIST_HOME variable properly."
                           % MAGDISTEST_PATH)
 
-        return validateMsgs
+        return errors
 
     def _citations(self):
         return ["Grant2015"]
@@ -176,17 +176,18 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
         summary = []
         result = self._parseOutputLog()
 
-        if result is not None:
-            distAngle, majorAxis, minorAxis, totDist, pixCorr = result
+        if result is None or len(result) <5:
+            summary.append('Output is not ready yet.')
+        else:
+            result = tuple(result)
+            distAngle, majorAxis, minorAxis, pixCorr, totDist = result
             summary.append('This protocol does not generate any output. '
                            'It only estimates magnification distortion parameters.\n\n'
                            'Total amount of distortion: *%0.2f%%* ' % totDist)
             summary.append('Distortion Angle: *%0.2f* degrees' % distAngle)
             summary.append('Major Scale: *%0.3f*' % majorAxis)
             summary.append('Minor Scale: *%0.3f*' % minorAxis)
-            summary.append('Corrected pixel size: *%0.3f*A' % pixCorr)
-        else:
-            summary.append('Output is not ready yet.')
+            summary.append('Corrected pixel size: *%0.3f* A' % pixCorr)
 
         return summary
 
@@ -208,7 +209,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
         return parseMagEstOutput(fnOut)
 
-    def _argsMagDist(self):
+    def _argsMagDistEst(self):
         self._program = 'export NCPUS=%(nthr)d ; ' + MAGDISTEST_PATH
         self._args = """   << eof > %(logFn)s
 %(stackFnMrc)s

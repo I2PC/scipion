@@ -282,33 +282,54 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
 
 
 def parseMagEstOutput(filename):
-    a, b, c, d, e = None, None, None, None, None
+    result = []
     ansi_escape = re.compile(r'\x1b[^m]*m')
     if os.path.exists(filename):
         f = open(filename)
         parsing = False
         for line in f:
-            line = ansi_escape.sub('', line)
-            if line.startswith(" Stretch only parameters would be as follows"):
-                parsing = False
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("The following distortion parameters were found"):
+                parsing = True
             if parsing:
                 if 'Distortion Angle' in line:
-                    a = tuple(line.split()[3:])
+                    result.append(float(line.split()[3]))
                 if 'Major Scale' in line:
-                    b = tuple(line.split()[3:])
+                    result.append(float(line.split()[3]))
                 if 'Minor Scale' in line:
-                    c = tuple(line.split()[3:])
-            if line.startswith(" The following distortion parameters were found"):
-                parsing = True
-            if 'The Total Distortion =' in line:
-                # Take total distortion as a tuple
-                # that is a 5-th value in the line
-                # but remove percent character first
-                line = re.sub('[%]', '', line)
-                d = tuple(line.split()[4:])
+                    result.append(float(line.split()[3]))
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = False
             if 'Corrected Pixel Size' in line:
-                e = tuple(line.split()[4:])
+                result.append(float(line.split()[4]))
+            if 'The Total Distortion =' in line:
+                result.append(float(line.split()[4]))
         f.close()
-        result = map(float, a + b + c + d + e)
+
+    return result
+
+
+def parseMagCorrInput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+        f.close()
 
     return result
