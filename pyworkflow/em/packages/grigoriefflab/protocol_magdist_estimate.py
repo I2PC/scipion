@@ -42,7 +42,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
-        self.stepsExecutionMode = cons.STEPS_PARALLEL
+        self.stepsExecutionMode = cons.STEPS_SERIAL
 
     # --------------------------- DEFINE params functions --------------------------------------------
 

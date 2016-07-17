@@ -44,6 +44,7 @@ class ProtMagDistCorr(ProtProcessMovies):
     CONVERT_TO_MRC = 'mrc'
     _label = 'magnification distortion correction'
     doSaveAveMic = False
+    doSaveMovie = True
 
     # --------------------------- DEFINE params functions --------------------------------------------
 
@@ -99,7 +100,6 @@ class ProtMagDistCorr(ProtProcessMovies):
         outputMovieFn = self._getAbsPath(self._getOutputMovieName(movie))
         logFn = self._getAbsPath(self.getOutputLog(movie))
 
-        self.doSaveMovie = True
         self._createLink(movie)
         self._argsMagDistCor()
 
@@ -114,15 +114,15 @@ class ProtMagDistCorr(ProtProcessMovies):
         if self.useEst:
             inputEst = self.inputEst.get().getOutputLog()
             input_params = parseMagCorrInput(inputEst)
-            params['scaleMaj'] = input_params[0]
-            params['scaleMin'] = input_params[1]
-            params['angDist'] = input_params[2]
+            params['angDist'] = input_params[0]
+            params['scaleMaj'] = input_params[1]
+            params['scaleMin'] = input_params[2]
             params['corrPix'] = input_params[3]
 
         else:
+            params['angDist'] = self.angDist.get()
             params['scaleMaj'] = self.scaleMaj.get()
             params['scaleMin'] = self.scaleMin.get()
-            params['angDist'] = self.angDist.get()
             params['corrPix'] = inputMovies.getSamplingRate()
 
         if self.doGain:
@@ -131,10 +131,6 @@ class ProtMagDistCorr(ProtProcessMovies):
         if self.doResample:
             params['newX'] = self.newX.get()
             params['newY'] = self.newY.get()
-
-        #FIXME this is bad
-        global newPixSize
-        newPixSize = params['corrPix']
 
         self._storeSummary(movie)
 
@@ -167,7 +163,7 @@ class ProtMagDistCorr(ProtProcessMovies):
         outputSet.copyInfo(inputMovies)
 
         if fixSampling:
-            outputSet.setSamplingRate(newPixSize)
+            outputSet.setSamplingRate(self.calcPixSize())
 
         return outputSet
 
@@ -240,9 +236,7 @@ class ProtMagDistCorr(ProtProcessMovies):
         return ["Grant2015"]
 
     def _summary(self):
-        summary = []
-
-        return summary
+        return [self.summaryVar.get()]
 
     def _methods(self):
         txt = []
@@ -344,12 +338,36 @@ eof
 
     def _storeSummary(self, movie):
         """ Implement this method if you want to store the summary. """
-        #FIXME: this does not work
-        #self.summaryVar.set("Input magnification distortion parameters that were used for correction:\n\n"
-        #                    "Distortion Angle: *%0.2f* degrees\n"
-        #                    "Major Scale: *%0.3f*\n"
-        #                    "Minor Scale: *%0.3f*\n"
-        #                    "Corrected pixel size: *%0.3f* A" % (self.params['angDist'],
-        #                                                         self.params['scaleMaj'],
-        #                                                         self.params['scaleMin'],
-        #                                                         self.params['corrPix']))
+        if self.getAttributeValue('useEst', False):
+            inputFn = self.getAttributeValue('inputEst', None).getOutputLog()
+            input_params = parseMagCorrInput(inputFn)
+            self.summaryVar.set("Input magnification distortion parameters that were used for correction:\n\n"
+                                "Distortion Angle: *%0.2f* degrees\n"
+                                "Major Scale: *%0.3f*\n"
+                                "Minor Scale: *%0.3f*\n"
+                                "Corrected pixel size: *%0.3f* A" % (input_params[0],
+                                                                     input_params[1],
+                                                                     input_params[2],
+                                                                     input_params[3]))
+        else:
+            defPix = movie.getSamplingRate()
+            self.summaryVar.set("Input magnification distortion parameters that were used for correction:\n\n"
+                                "Distortion Angle: *%0.2f* degrees\n"
+                                "Major Scale: *%0.3f*\n"
+                                "Minor Scale: *%0.3f*\n"
+                                "Corrected pixel size: *%0.3f* A" % (self.getAttributeValue('angDist', 1.0),
+                                                                     self.getAttributeValue('scaleMaj', 1.0),
+                                                                     self.getAttributeValue('scaleMin', 1.0),
+                                                                     self.getAttributeValue('corrPix', defPix)))
+
+    def calcPixSize(self):
+        origPix = self.inputMovies.get().getSamplingRate()
+
+        #TODO: recalculate pixel size if rescaling images is set
+        if self.useEst:
+            inputEst = self.inputEst.get().getOutputLog()
+            input_params = parseMagCorrInput(inputEst)
+            newPix = input_params[3]
+            return newPix
+        else:
+            return origPix
