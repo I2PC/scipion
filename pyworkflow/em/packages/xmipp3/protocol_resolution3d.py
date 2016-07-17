@@ -78,15 +78,16 @@ class XmippProtResolution3D(ProtAnalysis3D):
         self._insertFunctionStep('createSummaryStep')
 
     def createOutputStep(self):
-        mData = md.MetaData(self._defineFscName())
-        # Create the FSC object and set the same protocol label
-        fsc = FSC(objLabel=self.getRunName())
-        fsc.loadFromMd(mData,
-                       md.MDL_RESOLUTION_FREQ,
-                       md.MDL_RESOLUTION_FRC)
-        self._defineOutputs(outputFSC=fsc)
-        self._defineSourceRelation(self.referenceVolume,fsc)
-        self._defineSourceRelation(self.inputVolume,fsc)
+        if self.doFSC:
+            mData = md.MetaData(self._defineFscName())
+            # Create the FSC object and set the same protocol label
+            fsc = FSC(objLabel=self.getRunName())
+            fsc.loadFromMd(mData,
+                           md.MDL_RESOLUTION_FREQ,
+                           md.MDL_RESOLUTION_FRC)
+            self._defineOutputs(outputFSC=fsc)
+            self._defineSourceRelation(self.referenceVolume,fsc)
+            self._defineSourceRelation(self.inputVolume,fsc)
 
     #--------------------------- STEPS steps functions --------------------------------------------
     def calculateFscStep(self):
