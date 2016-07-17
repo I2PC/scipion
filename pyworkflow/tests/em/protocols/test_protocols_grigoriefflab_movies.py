@@ -43,7 +43,7 @@ class TestMoviesBase(BaseTest):
     @classmethod
     def runImportMovie(cls, pattern, objLabel, samplingRate, voltage,
                        scannedPixelSize, magnification, sphericalAberration):
-        """ Run an Import micrograph protocol. """
+        """ Run an Import movies protocol. """
         # We have two options: pass the SamplingRate or
         # the ScannedPixelSize + microscope magnification
         kwargs = {
@@ -52,7 +52,7 @@ class TestMoviesBase(BaseTest):
             'magnification': magnification,
             'voltage': voltage,
             'sphericalAberration': sphericalAberration,
-            'amplitudContrast': 0.1
+            'amplitudeContrast': 0.1
         }
 
         if samplingRate is not None:
