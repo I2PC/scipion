@@ -2,6 +2,7 @@
 # *
 # * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
 # *             Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *             Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -33,7 +34,7 @@ from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 
 # Some utility functions to import movies that are used
 # in several tests.
-class TestMotioncorrAlingMovies(BaseTest):
+class TestMotioncor2AlingMovies(BaseTest):
     @classmethod
     def setData(cls):
         cls.ds = DataSet.getDataSet('movies')
@@ -93,38 +94,46 @@ class TestMotioncorrAlingMovies(BaseTest):
                                                           shifts,
                                                           type(shifts)))
 
-    def test_qbeta(self):
+    def test_qbeta_motioncor2_base(self):
         prot = self.newProtocol(ProtMotionCorr,
-                                objLabel='qbeta - motioncorr test1')
+                                objLabel='qbeta - motioncor2 test1 (global)',
+                                useMotioncor2=True,
+                                frameDose=1.3,
+                                patch='0 0')
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
                              (1, 7), [0, 0, 0, 0], ([2.5893, 0.7946, 0.2589, 0.0536, 0.0000, 0.4643, 0.8705],
-                                                   [0.2545, -0.3304, -0.4375, -0.2277, 0.0000, -0.0804, 0.1339]))
+                                                    [0.2545, -0.3304, -0.4375, -0.2277, 0.0000, -0.0804, 0.1339]))
 
-    def test_cct(self):
+    def test_qbeta_motioncor2_patch(self):
         prot = self.newProtocol(ProtMotionCorr,
-                                objLabel='cct - motioncorr test',
-                                doSaveMovie=True)
-        prot.inputMovies.set(self.protImport2.outputMovies)
-        self.launchProtocol(prot)
-
-        self._checkMicrographs(prot)
-        self._checkAlignment(prot.outputMovies[1],
-                             (1, 7), [0, 0, 0, 0], ([0.0,0.0,0.0,0.0,0.0,0.0],
-                                                   [0.0,0.0,0.0,0.0,0.0,0.0]))
-    
-    def test_qbeta_SkipCrop(self):
-        prot = self.newProtocol(ProtMotionCorr,
-                                objLabel='qbeta - motioncorr test2',
-                                alignFrame0=2, alignFrameN=2,
-                                cropOffsetX=10, cropOffsetY=10)
+                                objLabel='qbeta - motioncor2 test2 (patch-based)',
+                                useMotioncor2=True,
+                                patch='2 2',
+                                group=2)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (3, 5), [10, 10, 0, 0], ([-0.125, 0.0, 0.4375],
-                                                     [-0.2708, 0.0, -0.3854]))
+                             (1, 7), [0, 0, 0, 0], ([0.0, 0.85, 1.7, 2.07, 1.95, 1.84, 1.72],
+                                                    [0.0, 0.22, 0.43, 0.46, 0.3, 0.15, -0.01]))
+
+    def test_qbeta_motioncor2_sel(self):
+        prot = self.newProtocol(ProtMotionCorr,
+                                objLabel='qbeta - motioncor2 test3 (frame range)',
+                                useMotioncor2=True,
+                                alignFrame0=1,
+                                alignFrameN=1,
+                                sumFrame0=1,
+                                sumFrameN=1)
+        prot.inputMovies.set(self.protImport1.outputMovies)
+        self.launchProtocol(prot)
+
+        self._checkMicrographs(prot)
+        self._checkAlignment(prot.outputMovies[1],
+                             (2, 6), [0, 0, 0, 0], ([0.0, 0.58, 0.73, 0.74, 0.3],
+                                                    [0.0, 0.14, -0.1, -0.35, -0.15]))

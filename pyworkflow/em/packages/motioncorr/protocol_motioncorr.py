@@ -36,7 +36,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
 
-from convert import getVersion, validateVersion, parseMovieAlignment, parseMovieAlignment2
+from convert import MOTIONCORR_PATH, MOTIONCOR2_PATH, parseMovieAlignment, parseMovieAlignment2
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -170,7 +170,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 args += " -fct %s -ssc 1" % outputMovieFn
 
             args += ' ' + self.extraParams.get()
-            program = 'dosefgpu_driftcorr'
+            program = MOTIONCORR_PATH
 
         else:
             movieFolder = self._getOutputMovieFolder(movie)
@@ -197,7 +197,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
                         '-FmDose': self.frameDose.get(),
-                        '-Throw': '%d' % (a0 - 1),
+                        '-Throw': '%d' % (a0-1),
                         '-Trunc': '%d' % (abs(aN - numberOfFrames)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
@@ -212,7 +212,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 args += " -Gain " + inputMovies.getGain()
 
             args += ' ' + self.extraParams2.get()
-            program = 'motioncor2'
+            program = MOTIONCOR2_PATH
 
         try:
             self.runJob(program, args, cwd=movieFolder)
@@ -225,25 +225,31 @@ class ProtMotionCorr(ProtAlignMovies):
         return summary
 
     def _validate(self):
-        errors = ProtAlignMovies._validate(self)
-        #FIXME: this doesn't work :(
-        validateVersion(self, errors)
+        errors = []
+        program = MOTIONCOR2_PATH if self.useMotioncor2 else MOTIONCORR_PATH
+        if not os.path.exists(program):
+            errors.append('Missing %s' % program)
+
         gpu = self.GPUIDs.get()
 
         if not self.useMotioncor2:
-            bin = int(self.binFactor.get())
+            bin = self.binFactor.get()
             if not (bin == 1.0 or bin == 2.0):
                 errors.append("Binning factor can only be 1 or 2")
             if len(gpu) > 1:
                 errors.append("Old motioncorr2.1 does not support multiple GPUs, use motioncor2.")
-            #if getVersion() != 'motioncorr':
-            #    errors.append('motioncorr not found. Check your config file!')
-        else:
-            #if getVersion() != 'motioncor2':
-            #    errors.append('motioncor2 not found. Check your config file!')
+
+            if not self.doSaveAveMic:
+                errors.append('Option not supported. Please select Yes for Save aligned micrograph. ')
+                errors.append('Optionally you could add -Align 0 to additional parameters so that protocol ')
+                errors.append('produces simple movie sum.')
+
             if self.doSaveMovie:
-                errors.append('Saving aligned movies is not supported by motioncor2.')
-            elif self.alignFrame0.get() != self.sumFrame0.get() or self.alignFrameN.get() != self.sumFrameN.get():
+                errors.append('Saving aligned movies is not supported by motioncor2. ')
+                errors.append('By default, the protocol will produce outputMovies equivalent to the input ')
+                errors.append('however containing alignment information.')
+
+            if self.alignFrame0.get() != self.sumFrame0.get() or self.alignFrameN.get() != self.sumFrameN.get():
                 errors.append('Frame range for align and sum must be equivalent in case of motioncor2.')
 
         return errors

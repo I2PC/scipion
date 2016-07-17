@@ -25,44 +25,34 @@
 # **************************************************************************
 
 import os
-from os.path import join
+from os.path import join, exists
 
 from pyworkflow.utils import Environ
 
 
+MOTIONCORR = 'dosefgpu_driftcorr'
+MOTIONCOR2 = 'motioncor2'
+MOTIONCORR_PATH = join(os.environ['MOTIONCORR_HOME'], 'bin', MOTIONCORR)
+MOTIONCOR2_PATH = join(os.environ['MOTIONCOR2_HOME'], 'bin', MOTIONCOR2)
+
+
 def getEnviron():
-    """ Return the envirion settings to run motioncorr programs. """
-    """ Setup the environment variables needed to launch Motioncorr. """
-    MOTIONCORR_HOME = os.environ.get('MOTIONCORR_HOME',
-                                     join(os.environ['EM_ROOT'], 'motioncorr'))
+    """ Return the environ settings to run motioncorr programs. """
     environ = Environ(os.environ)
-    environ.update({
-            'PATH': join(MOTIONCORR_HOME, 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))                                    
-            }, position=Environ.BEGIN)
+
+    if exists(MOTIONCORR_PATH):
+        environ.update({'PATH': join(os.environ['MOTIONCORR_HOME'], 'bin')},
+                       position=Environ.BEGIN)
+
+    if exists(MOTIONCOR2_PATH):
+        environ.update({'PATH': join(os.environ['MOTIONCOR2_HOME'], 'bin')},
+                       position=Environ.BEGIN)
+
+    #FIXME: do we need separate libs for motioncor2?
+    environ.update({'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))},
+                   position=Environ.BEGIN)
+
     return environ
-
-
-def getVersion():
-    path = os.environ['MOTIONCORR_HOME']
-    for v in getSupportedVersions():
-        if v in path:
-            return v
-    return ''
-
-
-def getSupportedVersions():
-    return ['motioncorr', 'motioncor2']
-
-
-def validateVersion(protocol, errors):
-    """ Validate if motioncorr version is set properly according
-     to installed version and the one set in the config file.
-     Params:
-        protocol: the input protocol calling to validate
-        errors: a list that will be used to add the error message.
-    """
-    protocol.validatePackageVersion('MOTIONCORR_HOME', errors)
 
 
 def parseMovieAlignment(logFile):
@@ -85,6 +75,7 @@ def parseMovieAlignment(logFile):
             yshifts.append(float(parts[-1]))
     f.close()
     return xshifts, yshifts
+
 
 def parseMovieAlignment2(logFile):
     """ Get the first and last frames together with the shifts
