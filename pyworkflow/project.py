@@ -845,7 +845,7 @@ class Project(object):
         from pyworkflow.protocol.launch import _isLocal
         pid = protocol.getPid()
 
-        if (protocol.isActive() and _isLocal(protocol)
+        if (protocol.isRunning() and _isLocal(protocol)
             and not protocol.useQueue()
             and not pwutils.isProcessAlive(pid)):
             protocol.setFailed("Process %s not found running on the machine. "
