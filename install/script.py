@@ -267,7 +267,7 @@ mpi4py = env.addModule(
 
 scipy = env.addModule(
     'scipy',
-    tar='scipy-0.14.0.tgz',
+    tar='scipy-0.16.1.tar.gz',
     default=not noScipy,
     deps=[lapack, numpy, matplotlib])
 
