@@ -34,6 +34,8 @@ import xmipp.viewer.windows.GalleryJFrame;
  */
 public class ScipionGalleryJFrame extends GalleryJFrame {
 
+    private static Logger logger = Logger.getLogger(ScipionGalleryJFrame.class.getName());
+
     private String type;
     private Integer port;
     private JButton cmdbutton;
@@ -65,13 +67,13 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             type = data.hasClasses()? "Particles": setType.replace("SetOf", "");
             port = parameters.port;
             inputid = parameters.inputid;
-            sqlitefile = data.getTmpFile("_selection");
+            sqlitefile = data.getTmpFile("_state");
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "create subset");
             other = parameters.other;
             initComponents();
         } catch (Exception ex) {
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
             throw new IllegalArgumentException(ex.getMessage());
         }
     }
@@ -180,18 +182,27 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 buttonspn.add(createvolbt);
                 createvolbt.setVisible(!data.isTableMode());
             }
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
+
+
+            if (!SwingUtilities.isEventDispatchThread()) {
+
+                Runnable pack = new Runnable() {
                     @Override
                     public void run() {
                         ScipionGalleryJFrame.this.pack();
                     }
-                });
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                };
+
+                try {
+                    SwingUtilities.invokeAndWait(pack);
+                } catch (Exception e) {
+
+                    logger.log(Level.WARNING, "ScipionGalleryJFrame.pack threw an exception: " + e.getMessage());
+                }
+            } else {
+                pack();
             }
+
             enableActions();
             jcbBlocks.addActionListener(new ActionListener() {
 
@@ -239,7 +250,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                 if(gallery.hasSelection() && !data.hasDisabled())
                 { 
                 	if(selection[emo.index] && emo.childmd != null)
-                		size += emo.childmd.size();
+                		size += emo.childmd.getEnabledCount();
                 }
                 else if(emo.isEnabled() && emo.childmd != null)
                     size += emo.childmd.getEnabledCount();
@@ -248,17 +259,16 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         else if (gallery.hasSelection() && !data.hasDisabled())
             size = gallery.getSelectionCount();
         else
-            size = ((ScipionGalleryData)data).getEnabledCount();
+            size = data.getEnabledCount();
         
         if (confirmCreate(type, size)) 
         {
             String command = String.format(runProtCreateSubset, 
-                    inputid, sqlitefile, ((ScipionGalleryData)data).getPreffix(), String.format("SetOf%s", type), other, getRunLabel());
+                    inputid, sqlitefile, data.getPreffix(), String.format("SetOf%s", type), other, getRunLabel());
             runCommand(command, "Creating set ...");
         }
     }
-    
-    
+
     protected void createSubsetFromClasses()
     {
         if (confirmCreate("Classes")) {
@@ -363,7 +373,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             XmippWindowUtil.runCommand(command, port);
             //close(false);
         } catch (SQLException ex) {
-            Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
     /**
@@ -407,12 +417,17 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     if (cmd.equals(FILE_LOAD_SEL))
                     {
                     	fc.setApproveButtonText("Open");
+                        fc.setDialogTitle("Load a status file");
+                        fc.setApproveButtonToolTipText("Choose a file with state data");
+
                         if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             loadSelection(fc.getSelectedPath());
                     }
                     if (cmd.equals(FILE_SAVE_SEL))
                     {
                         fc.setSelectedFile(new File(sqlitefile));
+                        fc.setDialogTitle("Save state");
+                        fc.setApproveButtonToolTipText("Choose where to save the status");
                         fc.setApproveButtonText("Save");
                          if (fc.showOpenDialog(ScipionGalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
                             saveSelection(fc.getSelectedPath());
@@ -433,20 +448,28 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
 
         protected void saveSelection(String path) {
             try {
-                boolean[] selection = null;
-                if(gallery.hasSelection() && !data.hasDisabled())
-                    selection = gallery.getSelection();
-                ((ScipionGalleryData)data).overwrite(path, selection);
+//                boolean[] selection = null;
+//                if(gallery.hasSelection() && !data.hasDisabled())
+//                    selection = gallery.getSelection();
+//                ((ScipionGalleryData)data).overwrite(path, selection);
+
+                ScipionGalleryData sgData = (ScipionGalleryData)data;
+
+                if (sgData.getScipionMetaData().getParent() != null) {
+                    sgData.getScipionMetaData().getParent().overwrite(getFilename(), path, null);
+                } else {
+                    sgData.overwrite(path, null);
+                }
             } catch (SQLException ex) {
-                Logger.getLogger(ScipionGalleryJFrame.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
 
 		@Override
 		public void addExtraMenuItems()
 		{
-			addItem(FILE_LOAD_SEL, "Load selection ...");
-            addItem(FILE_SAVE_SEL, "Save selection ...", "save_as.gif");
+			addItem(FILE_LOAD_SEL, "Load state ...");
+            addItem(FILE_SAVE_SEL, "Save state ...", "save_as.gif");
 			
 		}
     }

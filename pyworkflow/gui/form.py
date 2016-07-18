@@ -1417,7 +1417,10 @@ class FormWindow(Window):
                           "does not exist in the current version.\n\n"
                           "If you are a developer, it could be the case that "
                           "you have changed \nto another branch where the "
-                          "protocol does not exist.")
+                          "protocol does not exist.\n\n"
+                          "Anyway, you can still inspect the parameters by "
+                          "opening the DB from the toolbar."
+                     )
         t.grid(row=0, column=0, padx=5, pady=5)
 
         return frame

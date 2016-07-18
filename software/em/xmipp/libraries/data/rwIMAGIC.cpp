@@ -41,6 +41,10 @@
 
 #define IMAGICSIZE 1024 // Size of the IMAGIC header for each image
 
+#ifndef SIZEOF_INT
+#define SIZEOF_INT sizeof(int)
+#endif
+
 ///@defgroup Imagic Imagic File format
 ///@ingroup ImageFormats
 
