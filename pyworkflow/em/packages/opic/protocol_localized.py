@@ -23,16 +23,22 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
+from pyworkflow.em.data import Coordinate
 """
 This module contains the protocol for localized reconstruction.
 """
+import os
+import sys
+import math
 
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtParticles
+import pyworkflow.em.metadata as md
 
-from convert import writeSetOfParticles, getEnviron, readSetOfSubCoordinates
+from convert import particleToRow, rowToSubcoordinate, setEnviron
+
 
 
 CMM = 0
@@ -47,23 +53,11 @@ class ProtLocalizedRecons(ProtParticles):
     corresponding to the subunits can be extracted and treated as 
     single particles.
     """
-    
     _label = 'localized subparticles'
     
     def __init__(self, **args):        
         ProtParticles.__init__(self, **args)
-    
-    def _initialize(self):
-        self._createFilenameTemplates()
-    
-    def _createFilenameTemplates(self):
-        """ Centralize how files are called. """
-        myDict = {
-                  'input_star': self._getPath('input_particles.star'),
-                  'output': self._getExtraPath('output_particles'),
-                  'output_star': self._getExtraPath('output_particles.star')
-                  }
-        self._updateFilenamesDict(myDict)
+        setEnviron()
     
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
@@ -116,7 +110,7 @@ class ProtLocalizedRecons(ProtParticles):
                       label='file obtained by Chimera: ',
                       help='CMM file defining the location(s) of the '
                            'sub-particle(s). Use instead of vector. ')
-        group.addParam('length', FloatParam, default=-1,
+        group.addParam('length', StringParam, default=-1,
                       label='Alternative length of the vector (A)',
                       help='Use to adjust the sub-particle center. If it '
                            'is <= 0, the length of the given vector. '
@@ -151,32 +145,16 @@ class ProtLocalizedRecons(ProtParticles):
     
     #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
-        partsId = self.inputParticles.get().getObjId()
-        self._initialize()
-        self._insertFunctionStep('convertInputStep', partsId)
-        self._insertFunctionStep('localizedReconsStep')
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ------------------------------
-    def convertInputStep(self, particlesId):
-        """ Create the input file in STAR format as expected by Relion.
-        Params:
-            particlesId: use this parameters just to force redo of convert if 
-                the input particles are changed.
-        """
+    def createOutputStep(self):
+        import localrec as lr
+        import pyrelion.metadata as lrMd
         
-        imgSet = self._getInputParticles()
-        imgStar = self._getFileName('input_star')
-
-        self.info("Converting set from '%s' into '%s'" %
-                           (imgSet.getFileName(), imgStar))
-        
-        # Pass stack file as None to avoid write the images files
-        writeSetOfParticles(imgSet, imgStar, self._getExtraPath())
-    
-    def localizedReconsStep(self):
+        inputSet = self._getInputParticles()
+        outputSet = self._createSetOfCoordinates(inputSet)
         params = {"symmetryGroup" : self.symmetryGroup.get(),
-                  "output" : self._getFileName('output'),
                   "vector" : self.vector.get(),
                   "vectorFile" : self.vectorFile.get(),
                   "length" : self.length.get(),
@@ -187,57 +165,46 @@ class ProtLocalizedRecons(ProtParticles):
                   "pxSize" : self.inputParticles.get().getSamplingRate(),
                   "dim" : self.inputParticles.get().getXDim()
                   }
-        
-        args = ""
 
-        if self.randomize:
-            args += "--randomize "
-        
-        if self.relaxSym:
-            args += "--relax_symmetry "
-        
-        if self.alignSubparticles:
-            args += "--align_subparticles "
-        
-        args += "--j %d --np %d " % (self.numberOfThreads, self.numberOfMpi)
-        
+        symMatrices = lr.matrix_from_symmetry(params["symmetryGroup"])
+
         if self.defineVector == CMM:
-            args += "--cmm %s " % self.vectorFile
+            cmmFn = params["vectorFile"]
+            vector = " "
         else:
-            args += "--vector %s " % self.vector
+            cmmFn = " "
+            vector = params["vector"]
+            
+        subpartVectorList = lr.load_vectors(cmmFn, vector, params["length"],
+                                            params["pxSize"])
         
-        if params["length"] > 0:
-            args += "--length %f " % params["length"]
-
-        # We use --subparitcle_size of 1 because we are not going to
-        # extract the subparticles at this point, so we really need the
-        # subparticle box size later
-        args += ("--output %(output)s --angpix %(pxSize)f "
-                 "--sym %(symmetryGroup)s --particle_size %(dim)d "
-                 "--subparticle_size 1 " ) % params
+        # Define some conditions to filter subparticles
+        filters = lr.load_filters(math.radians(params["side"]),
+                                  math.radians(params["top"]),
+                                  params["mindist"])
         
-        if params["unique"] > 0:
-            args += "--unique %f " % params["unique"]
-        
-        if params["mindist"] > 0:
-            args += "--mindist %f " % params["mindist"]
-        
-        if params["side"] > 0:
-            args += "--side %f " % params["side"]
-        
-        if params["top"] > 0:
-            args += "--top %f " % params["top"]
-        
-        args += "%s " % self._getFileName('input_star')
-        
-        self.runJob('relion_localized_reconstruction.py', args,
-                    env=getEnviron(), numberOfMpi=1)
-    
-    def createOutputStep(self):
-        inputSet = self._getInputParticles()
-        outputSet = self._createSetOfCoordinates(inputSet)
-        
-        readSetOfSubCoordinates(self._getFileName('output_star'), outputSet)
+        coord = Coordinate()
+        for part in inputSet:
+            partItem = lrMd.Item()
+            particleToRow(part, partItem)
+            
+            subparticles, _ = lr.create_subparticles(partItem,
+                                                     symMatrices,
+                                                     subpartVectorList,
+                                                     params["dim"],
+                                                     self.relaxSym,
+                                                     self.randomize,
+                                                     "subparticles",
+                                                     params["unique"],
+                                                     0,
+                                                     self.alignSubparticles,
+                                                     "",
+                                                     True,
+                                                     filters)
+            for subpart in subparticles:
+                rowToSubcoordinate(subpart, coord, part)
+                coord.setObjId(None) # Force to insert as a new item
+                outputSet.append(coord)
         
         self._defineOutputs(outputCoordinates=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
