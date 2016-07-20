@@ -103,13 +103,9 @@ ALIGNMENT_DICT = OrderedDict([
 
 def getRelionEnviron():
     """ Setup the environment variables needed to launch Relion. """
-    environ = Environ(os.environ)
-    environ.update({
-            'PATH': join(os.environ['RELION_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
-            'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
-            }, position=Environ.BEGIN)
-    return environ
+    from pyworkflow.em.packages.relion import getEnviron
+    return getEnviron()
+
 
 def setEnviron():
     """ Setup the environment variables needed to import localrec classes. """
