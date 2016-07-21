@@ -82,11 +82,11 @@ public:
         addParamsLine("   [--dont_apply_geo]        : for 2D-images: do not apply transformation stored in the header");
         addParamsLine("   [--do_dpr]                : compute dpr, by default only frc is computed");
         addParamsLine("   [--max_sam <max_sr=-1>]   : set fsc to 0 for frequencies above this one (Angstrom), -1 -> all fequencies");
-        addUsageLine ("             --max_sam = 10A -> frequencies higher than 0.1 A^-1 =0");
+        addParamsLine("                             : --max_sam = 10A -> frequencies higher than 0.1 A^-1 =0");
         //for R-factor
         addParamsLine("   [--do_rfactor]            : compute R-factor for input volumes");
         addParamsLine("   [--min_sam <min_sr=-1>]   : minimum frequency may use for calculating R-factor (Angstrom)");
-        addUsageLine ("             --min_sam = 10A -> frequencies smaller than 0.1 A^-1 =0");
+        addParamsLine("                             : --min_sam = 10A -> frequencies smaller than 0.1 A^-1 =0");
 
         addExampleLine("Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom):", false);
         addExampleLine("xmipp_resolution_fsc --ref subset1.vol  -i subset2.vol --sampling_rate 5.6 ");
