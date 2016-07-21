@@ -35,10 +35,14 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtParticles
-import pyworkflow.em.metadata as md
 
 from convert import particleToRow, rowToSubcoordinate, setEnviron
 
+setEnviron()
+import localrec as lr
+import pyrelion.metadata as lrMd
+
+import pyworkflow.em.metadata as md
 
 
 CMM = 0
@@ -57,7 +61,7 @@ class ProtLocalizedRecons(ProtParticles):
     
     def __init__(self, **args):        
         ProtParticles.__init__(self, **args)
-        setEnviron()
+        
     
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
@@ -149,9 +153,7 @@ class ProtLocalizedRecons(ProtParticles):
     
     #--------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
-        import localrec as lr
-        import pyrelion.metadata as lrMd
-        
+
         inputSet = self._getInputParticles()
         outputSet = self._createSetOfCoordinates(inputSet)
         params = {"symmetryGroup" : self.symmetryGroup.get(),
@@ -166,7 +168,7 @@ class ProtLocalizedRecons(ProtParticles):
                   "dim" : self.inputParticles.get().getXDim()
                   }
 
-        symMatrices = lr.matrix_from_symmetry(params["symmetryGroup"])
+        symMatrices = self._getSymMatrices()
 
         if self.defineVector == CMM:
             cmmFn = params["vectorFile"]
@@ -177,6 +179,9 @@ class ProtLocalizedRecons(ProtParticles):
             
         subpartVectorList = lr.load_vectors(cmmFn, vector, params["length"],
                                             params["pxSize"])
+        
+        
+        
         
         # Define some conditions to filter subparticles
         filters = lr.load_filters(math.radians(params["side"]),
@@ -219,7 +224,6 @@ class ProtLocalizedRecons(ProtParticles):
 
     def _summary(self):
         summary = []
-        self._initialize()
         return summary
     
     def _methods(self):
@@ -229,3 +233,21 @@ class ProtLocalizedRecons(ProtParticles):
     def _getInputParticles(self):
         return self.inputParticles.get()
     
+    def _getSymMatrices(self):
+        matricesObjs = lr.matrix_from_symmetry(self.symmetryGroup.get())
+        # We implement the binding to remove the dependency with relion. When
+        # we test the new implementation (code below) and the results were
+        # different. THe nunmber of particles removed are diverge in dependency of
+        # how you obtain the symmetry matrices.
+        # There aren't any obvious bug in the matrices.
+        
+        
+#         matricesObjs = []
+#         matrices = md.getSymmetryMatrices(self.symmetryGroup.get())
+#         for matrix in matrices:
+#             a = matrix[0]
+#             a.extend(matrix[1])
+#             a.extend(matrix[2])
+#             print "Cadena Xmipp: ", a
+#             matricesObjs.append(lr.Matrix3(a))
+        return matricesObjs
