@@ -349,7 +349,6 @@ sklearn = env.addModule(
     deps=[scipy, numpy, cython])
 
 
-
 #  ************************************************************************
 #  *                                                                      *
 #  *                       External (EM) Packages                         *
