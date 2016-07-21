@@ -167,7 +167,7 @@ void ProgAngularProjectionMatching::show()
         std::cout << "  -> Using "<<threads<<" parallel threads"<<std::endl;
     }
 
-    if (number_orientations != 1)
+    if (numOrientations != 1)
     	 std::cout << "  -> Using "<<numOrientations<<" possible orientations for each particle"<<std::endl;
 
 
@@ -1022,13 +1022,19 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     opt_rot   = (double *)calloc (numOrientations, sizeof(double));
     opt_tilt   = (double *)calloc (numOrientations, sizeof(double));
 
-    //memset(opt_scale,1.0,sizeof(double)*numOrientations);
-    //memset(maxcorr,-99.e99,sizeof(double)*numOrientations);
-    //memset(opt_refno,-1,sizeof(int)*numOrientations);
-
-
+    // Allocate threads.
     structThreadRotationallyAlignOneImage * threads_d = (structThreadRotationallyAlignOneImage *)
             malloc ( threads * sizeof( structThreadRotationallyAlignOneImage ) );
+
+    // Allocate threads vectors.
+    for( int c = 0 ; c < threads ; c++ )
+    {
+        threads_d[c].opt_refno = (int *)malloc (sizeof(int)*numOrientations);
+        threads_d[c].opt_psi =  (double *)malloc (sizeof(double)*numOrientations);
+        threads_d[c].opt_flip =  (bool *) malloc (sizeof(bool)*numOrientations);
+        threads_d[c].maxcorr =  (double *)malloc (sizeof(double)*numOrientations);
+        threads_d[c].numOrientations = numOrientations;
+    }
 
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
@@ -1044,11 +1050,6 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             threads_d[c].prm = this;
             threads_d[c].img = &img();
             threads_d[c].this_image = imgid;
-            threads_d[c].opt_refno = (int *)malloc (sizeof(int)*numOrientations);
-            threads_d[c].opt_psi =  (double *)malloc (sizeof(double)*numOrientations);
-            threads_d[c].opt_flip =  (bool *) malloc (sizeof(bool)*numOrientations);
-            threads_d[c].maxcorr =  (double *)malloc (sizeof(double)*numOrientations);
-            threads_d[c].numOrientations = numOrientations;
             for (size_t i=0; i<numOrientations ;i++)
             {
             	threads_d[c].maxcorr[i] = -99.e99;
