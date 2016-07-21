@@ -41,6 +41,7 @@ import pyworkflow.gui as pwgui
 import pyworkflow.em as em
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
+from pyworkflow.gui.text import SEARCH_BOX_NAME
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
 
@@ -1576,6 +1577,14 @@ class ProtocolsView(tk.Frame):
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self):
+
+        # get the widget with the focus
+        widget = self.focus_get()
+
+        # If it's the search box
+        if str(widget).endswith(SEARCH_BOX_NAME):
+            return
+
         protocols = self._getSelectedProtocols()
 
         if len(protocols) == 0:
