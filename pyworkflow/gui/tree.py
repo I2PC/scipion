@@ -387,12 +387,13 @@ class ProjectRunsTreeProvider(TreeProvider):
         self.project = project
         self._objDict = {}
         self._refresh = True
+        self._checkPids = False
         
     def setRefresh(self, value):
         self._refresh = value
     
     def getObjects(self):
-        return self.project.getRuns(refresh=self._refresh) 
+        return self.project.getRuns(refresh=self._refresh, checkPids=self._checkPids)
         
     def getColumns(self):
         return [('Run', 250), ('State', 100), ('Time', 100)]

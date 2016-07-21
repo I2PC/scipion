@@ -638,10 +638,11 @@ public class ScipionMetaData extends MetaData {
     public void overwrite(String src, String path, boolean[] selection) throws SQLException {
         try {
             XmippUtil.copyFile(src, path);
-            if (parent != null) {
-                parent.overwrite(src, path, null);//this will write parent and siblings
-                return;
-            }
+            // Do not overwrite the parent. This looses the selection. issue #498
+            //            if (parent != null) {
+            //                parent.overwrite(src, path, null);//this will write parent and siblings
+            //                return;
+            //            }
             overwriteBlock(path, selection);
             if (haschilds) {
                 for (EMObject emo : emobjects) {

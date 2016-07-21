@@ -808,8 +808,8 @@ class Protocol(Step):
         self._stepsDone.set(startIndex)
         self._numberOfSteps.set(len(self._steps))
         self.setRunning()
-        self._originalRunMode = self.runMode.get() # Keep the original value to set in sub-protocols
-        self.runMode.set(MODE_RESUME) # Always set to resume, even if set to restart
+        self._originalRunMode = self.runMode.get()  # Keep the original value to set in sub-protocols
+        self.runMode.set(MODE_RESUME)  # Always set to resume, even if set to restart
         self._store()
         
         if startIndex == len(self._steps):
