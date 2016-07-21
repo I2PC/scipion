@@ -421,7 +421,7 @@ env.addPackage('relion-1.3',
                default=False)
 
 env.addPackage('localrec',
-               tar='localrec-1.0.3.tgz',
+               tar='localrec-1.1.0.tgz',
                default=False)
 
 env.addPackage('resmap',
