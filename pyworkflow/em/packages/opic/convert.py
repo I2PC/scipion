@@ -109,8 +109,6 @@ def getRelionEnviron():
 
 def setEnviron():
     """ Setup the environment variables needed to import localrec classes. """
-    os.environ.update({'PYTHONPATH': join(os.environ['LOCALREC_HOME'], 'lib')
-                       })
     os.environ.update(getRelionEnviron())
     sys.path.append(os.path.join(os.environ["LOCALREC_HOME"], "lib"))
 
