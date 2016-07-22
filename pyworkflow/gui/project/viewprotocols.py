@@ -933,7 +933,7 @@ class ProtocolsView(tk.Frame):
     def createRunsGraph(self, parent):
         self.runsGraphCanvas = pwgui.Canvas(parent, width=400, height=400, 
                                 tooltipCallback=self._runItemTooltip,
-                                tooltipDelay=1000, name=ProtocolsView.RUNS_CANVAS_NAME, takefocus=True)
+                                tooltipDelay=1000, name=ProtocolsView.RUNS_CANVAS_NAME, takefocus=True, highlightthickness=0)
 
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
