@@ -180,11 +180,12 @@ class XmippProtMtfCalculation(Protocol):
         from sxt.readTomo_moshen import accessData
         accessDataObj = accessData()
         tomo = accessDataObj.readTomo(fhInputImage)
-        imgs_ss = tomo[79:81, :, :]
+        imgs_ss = tomo[78:82, :, :]
         single_imgss = accessDataObj.readImg(fhInputImage, 80)
         print 'single image dimensions=\n' , np.shape(single_imgss)
         print 'set of images dimensions=\n' , np.shape(tomo)
-        
+        print 'partial set of images dimensions=\n' , np.shape(imgs_ss)
+       
         
         
         from sxt.getResolutionfromSiemensStar import MTFgetResolution
@@ -198,7 +199,8 @@ class XmippProtMtfCalculation(Protocol):
         from sxt.ConvertCartPolar import ConvertCartPolar
         convCartPolar = ConvertCartPolar()
         #polar_img = convCartPolar.convertImCart2Polar(single_imgss)
-        polar_img = convCartPolar.convertImCart2Polar(tomo)
+        #polar_img = convCartPolar.convertImCart2Polar(tomo)
+        polar_img = convCartPolar.convertImCart2Polar(imgs_ss)
         print '#######   ******   #######'
         print "Polar image = \n" , polar_img
         
@@ -218,7 +220,8 @@ class XmippProtMtfCalculation(Protocol):
         dx = ss_img_resolution[0]
         print "dx=", dx ,"\n"
         #mtf_out = MTFObj.getMTFfromSiemensStar(single_imgss, dx, nRef, orders, ringPos) 
-        mtf_out = MTFObj.getMTFfromSiemensStar(tomo, dx, nRef, orders, ringPos)
+        #mtf_out = MTFObj.getMTFfromSiemensStar(tomo, dx, nRef, orders, ringPos)
+        mtf_out = MTFObj.getMTFfromSiemensStar(imgs_ss, dx, nRef, orders, ringPos)
         pickle.dump(mtf_out, open("mtfoutputsingleimg_512.p", "wb")) #### 512 in the code should be checked and replace with the proper number....ask from Kino
         mtf_out = pickle.load(open("mtfoutputsingleimg_512.p", "rb"))
         fx = mtf_out['fx']
