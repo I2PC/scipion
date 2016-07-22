@@ -42,8 +42,6 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
 from pyworkflow.utils.properties import Message, Color, Icon
 
 
-SEARCH_BOX_NAME = "log_searchbox"
-
 # Define a function to open files cleanly in a system-dependent way
 if sys.platform.startswith('darwin'):  # macs use the "open" command
     _open_cmd = lambda path: subprocess.Popen(['open', path])
@@ -518,7 +516,7 @@ class TextFileViewer(tk.Frame):
         self.searchVar = tk.StringVar()
         if self._allowSearch:
             tk.Label(right, text='Search:').grid(row=0, column=3, padx=5)
-            self.searchEntry = tk.Entry(right, textvariable=self.searchVar, name=SEARCH_BOX_NAME)
+            self.searchEntry = tk.Entry(right, textvariable=self.searchVar)
             self.searchEntry.grid(row=0, column=4, sticky='ew', padx=5)
             btn = IconButton(right, "Search", Icon.ACTION_SEARCH, tooltip=Message.TOOLTIP_SEARCH,
                              command=self.findText, bg=None)

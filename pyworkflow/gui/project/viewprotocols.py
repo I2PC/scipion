@@ -41,10 +41,8 @@ import pyworkflow.gui as pwgui
 import pyworkflow.em as em
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
-from pyworkflow.gui.text import SEARCH_BOX_NAME
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
-
 
 from constants import STATUS_COLORS
 
