@@ -967,6 +967,7 @@ class Protocol(Step):
         
         self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
+        self.info('          PID: %s' % self._pid)
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: %s' % self.workingDir)
