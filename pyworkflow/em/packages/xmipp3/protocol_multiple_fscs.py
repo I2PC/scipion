@@ -74,7 +74,7 @@ class XmippProtMultipleFSCs(em.ProtAnalysis3D):
         allVols = []
         for i, vol in enumerate(self.inputVolumes):
             volId = self._insertFunctionStep('compareVolumeStep',
-                                             vol.get().getLocation(), i+1,
+                                             vol.get().getFileName(), i+1,
                                              prerequisites=[stepId])
             allVols.append(volId)
 
