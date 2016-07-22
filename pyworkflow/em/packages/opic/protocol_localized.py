@@ -23,31 +23,22 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
-from pyworkflow.em.data import Coordinate
-"""
-This module contains the protocol for localized reconstruction.
-"""
-import os
-import sys
+
 import math
 
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol import ProtParticles
+from pyworkflow.em.data import Coordinate
 
 from convert import particleToRow, rowToSubcoordinate, setEnviron
 
-setEnviron()
-import localrec as lr
-import pyrelion.metadata as lrMd
 
-import pyworkflow.em.metadata as md
 
 
 CMM = 0
 HAND = 1
-
 
 
 class ProtLocalizedRecons(ProtParticles):
@@ -153,6 +144,9 @@ class ProtLocalizedRecons(ProtParticles):
     
     #--------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
+        setEnviron() # Set the environment to access localrec modules
+        import localrec
+        import pyrelion
 
         inputSet = self._getInputParticles()
         outputSet = self._createSetOfCoordinates(inputSet)
@@ -168,7 +162,7 @@ class ProtLocalizedRecons(ProtParticles):
                   "dim" : self.inputParticles.get().getXDim()
                   }
 
-        symMatrices = self._getSymMatrices()
+        symMatrices = localrec.matrix_from_symmetry(self.symmetryGroup.get())
 
         if self.defineVector == CMM:
             cmmFn = params["vectorFile"]
@@ -177,23 +171,21 @@ class ProtLocalizedRecons(ProtParticles):
             cmmFn = " "
             vector = params["vector"]
             
-        subpartVectorList = lr.load_vectors(cmmFn, vector, params["length"],
-                                            params["pxSize"])
-        
-        
-        
+        subpartVectorList = localrec.load_vectors(cmmFn, vector,
+                                                  params["length"],
+                                                  params["pxSize"])
         
         # Define some conditions to filter subparticles
-        filters = lr.load_filters(math.radians(params["side"]),
-                                  math.radians(params["top"]),
-                                  params["mindist"])
+        filters = localrec.load_filters(math.radians(params["side"]),
+                                        math.radians(params["top"]),
+                                        params["mindist"])
         
         coord = Coordinate()
         for part in inputSet:
-            partItem = lrMd.Item()
+            partItem = pyrelion.Item()
             particleToRow(part, partItem)
             
-            subparticles, _ = lr.create_subparticles(partItem,
+            subparticles, _ = localrec.create_subparticles(partItem,
                                                      symMatrices,
                                                      subpartVectorList,
                                                      params["dim"],
@@ -234,7 +226,8 @@ class ProtLocalizedRecons(ProtParticles):
         return self.inputParticles.get()
     
     def _getSymMatrices(self):
-        matricesObjs = lr.matrix_from_symmetry(self.symmetryGroup.get())
+        pass
+        #matricesObjs = lr.matrix_from_symmetry(self.symmetryGroup.get())
         # We implement the binding to remove the dependency with relion. When
         # we test the new implementation (code below) and the results were
         # different. THe nunmber of particles removed are diverge in dependency of
@@ -250,4 +243,4 @@ class ProtLocalizedRecons(ProtParticles):
 #             a.extend(matrix[2])
 #             print "Cadena Xmipp: ", a
 #             matricesObjs.append(lr.Matrix3(a))
-        return matricesObjs
+#        return matricesObjs
