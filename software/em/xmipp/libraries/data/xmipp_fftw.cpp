@@ -528,7 +528,8 @@ void frc_dpr(MultidimArray< double > & m1,
                 FFT_IDX2DIGFREQ_FAST(j,m1sizeX, sizeX_2, ixsize, XX(f));
 
                 double R2 =fz2_fy2 + XX(f)*XX(f);
-
+                std::cout << "R2 = " << R2 << std::endl;
+                //std::cout << "maxFreq_2 = " << maxFreq_2 << std::endl;
                 if (R2>maxFreq_2)
                     continue;
 
