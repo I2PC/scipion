@@ -132,7 +132,7 @@ public:
                     const MultidimArray<double> &frc_noise,
                     const MultidimArray<double> &dpr,
                     const MultidimArray<double> &error_l2,
-                    float max_sam, bool do_dpr, double rFactor)
+					double max_sam, bool do_dpr, double rFactor)
     {
         MetaData MD;
 
@@ -147,15 +147,15 @@ public:
             if (i>0)
             {
                 id=MD.addObject();
-                if(max_sam >=0 && ((1./dAi(freq, i))<max_sam) )
+                if(max_sam >0 && ((1./dAi(freq, i))<max_sam) )
                 {
                     if(do_dpr)
                         dAi(dpr, i)=0.;
                     dAi(frc, i)=0.;
                 }
-                if(min_sam >=0 && ((1./dAi(freq, i))>min_sam) )
+                if(min_sam >0 && ((1./dAi(freq, i))>min_sam) )
                 {
-                    if(do_dpr)
+                	if(do_dpr)
                         dAi(dpr, i)=0.;
                     dAi(frc, i)=0.;
                 }
@@ -193,12 +193,13 @@ public:
 
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
         double rFactor=-1.;
+        double min_samp = sam/min_sam;
         if (min_sam <0)
-		   min_sam = 0.;
+		   min_samp = 0.;
         if (max_sam <0)
 		   max_sam = 2 * sam;
 
-        frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr, do_rfactor, sam/min_sam, sam/max_sam, &rFactor);
+        frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr, do_rfactor, min_samp, sam/max_sam, &rFactor);
 
         writeFiles((fn_root.empty())?img.name():fn_root, freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr, rFactor);
         return true;

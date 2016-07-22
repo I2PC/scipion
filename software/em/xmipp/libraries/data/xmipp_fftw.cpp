@@ -528,8 +528,6 @@ void frc_dpr(MultidimArray< double > & m1,
                 FFT_IDX2DIGFREQ_FAST(j,m1sizeX, sizeX_2, ixsize, XX(f));
 
                 double R2 =fz2_fy2 + XX(f)*XX(f);
-                std::cout << "R2 = " << R2 << std::endl;
-                //std::cout << "maxFreq_2 = " << maxFreq_2 << std::endl;
                 if (R2>maxFreq_2)
                     continue;
 
@@ -546,7 +544,7 @@ void frc_dpr(MultidimArray< double > & m1,
                 //for calculating r-factor
                 if ( R > minFreq && R < maxFreq)
                 {
-                   	rFactorNumerator += fabs(absz1 - absz2);
+                	rFactorNumerator += fabs(absz1 - absz2);
                 	rFactorDenominator += absz1;
                 }
 
@@ -576,7 +574,7 @@ void frc_dpr(MultidimArray< double > & m1,
         
         //std::cout << "R-factor = " << rFactorValue << std::endl;
         //*rFactor = rFactorValue;
-        //std::cout << "R-rFactor = " << *rFactor << std::endl;   
+        //std::cout << "R-rFactor = " << *rFactor << std::endl;
     }
 
     FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
