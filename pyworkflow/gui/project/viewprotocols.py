@@ -513,6 +513,7 @@ class ProtocolsView(tk.Frame):
     This extended tk.Frame is what will appear when Protocols is on.
     """
 
+    RUNS_CANVAS_NAME = "runs_canvas"
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
@@ -934,7 +935,7 @@ class ProtocolsView(tk.Frame):
     def createRunsGraph(self, parent):
         self.runsGraphCanvas = pwgui.Canvas(parent, width=400, height=400, 
                                 tooltipCallback=self._runItemTooltip,
-                                tooltipDelay=1000)
+                                tooltipDelay=1000, name=ProtocolsView.RUNS_CANVAS_NAME, takefocus=True)
 
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
@@ -1275,6 +1276,8 @@ class ProtocolsView(tk.Frame):
         
     def _runItemClick(self, item=None):
 
+        self.runsGraphCanvas.focus_set()
+
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
@@ -1582,7 +1585,7 @@ class ProtocolsView(tk.Frame):
         widget = self.focus_get()
 
         # If it's the search box
-        if str(widget).endswith(SEARCH_BOX_NAME):
+        if not str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
             return
 
         protocols = self._getSelectedProtocols()
