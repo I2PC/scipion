@@ -94,19 +94,19 @@ class TestMotioncor2AlingMovies(BaseTest):
                                                           shifts,
                                                           type(shifts)))
 
-    def test_qbeta_motioncor2_base(self):
+    def test_cct_motioncor2_patch(self):
         prot = self.newProtocol(ProtMotionCorr,
-                                objLabel='qbeta - motioncor2 test1 (global)',
+                                objLabel='cct - motioncor2 test1 (patch-based)',
                                 useMotioncor2=True,
-                                frameDose=1.3,
-                                patch='0 0')
-        prot.inputMovies.set(self.protImport1.outputMovies)
+                                patch='2 2',
+                                frameDose=1.3)
+        prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1, 7), [0, 0, 0, 0], ([2.5893, 0.7946, 0.2589, 0.0536, 0.0000, 0.4643, 0.8705],
-                                                    [0.2545, -0.3304, -0.4375, -0.2277, 0.0000, -0.0804, 0.1339]))
+                             (1, 7), [0, 0, 0, 0], ([0.0, -1.31, -2.14, -2.13, -1.87, -1.53, -1.07],
+                                                    [0.0, -1.32, -2.22, -2.47, -2.61, -2.6, -2.52]))
 
     def test_qbeta_motioncor2_patch(self):
         prot = self.newProtocol(ProtMotionCorr,
@@ -126,6 +126,7 @@ class TestMotioncor2AlingMovies(BaseTest):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='qbeta - motioncor2 test3 (frame range)',
                                 useMotioncor2=True,
+                                patch='2 2',
                                 alignFrame0=1,
                                 alignFrameN=1,
                                 sumFrame0=1,

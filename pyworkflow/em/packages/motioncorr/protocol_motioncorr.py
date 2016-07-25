@@ -190,14 +190,14 @@ class ProtMotionCorr(ProtAlignMovies):
                 self.cropDimY = 1.0
 
             argsDict = {'-OutMrc': outputMicFn,
-                        '-Patch': self.patch.get(),
+                        '-Patch': self.patch.get() or '5 5',
                         '-MaskCent': '%f %f' % (self.cropOffsetX.get(), self.cropOffsetY.get()),
                         '-MaskSize': '%f %f' % (self.cropDimX.get(), self.cropDimY.get()),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
                         '-FmDose': self.frameDose.get(),
-                        '-Throw': '%d' % (a0-1),
+                        '-Throw': '%d' % (a0 - 1),
                         '-Trunc': '%d' % (abs(aN - numberOfFrames)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
@@ -238,7 +238,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 errors.append("Binning factor can only be 1 or 2")
             if len(gpu) > 1:
                 errors.append("Old motioncorr2.1 does not support multiple GPUs, use motioncor2.")
-
+        else:
             if not self.doSaveAveMic:
                 errors.append('Option not supported. Please select Yes for Save aligned micrograph. ')
                 errors.append('Optionally you could add -Align 0 to additional parameters so that protocol ')
