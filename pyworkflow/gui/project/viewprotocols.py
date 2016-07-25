@@ -44,7 +44,6 @@ from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
 
-
 from constants import STATUS_COLORS
 
 DEFAULT_BOX_COLOR = '#f8f8f8'
@@ -512,6 +511,7 @@ class ProtocolsView(tk.Frame):
     This extended tk.Frame is what will appear when Protocols is on.
     """
 
+    RUNS_CANVAS_NAME = "runs_canvas"
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
@@ -933,7 +933,7 @@ class ProtocolsView(tk.Frame):
     def createRunsGraph(self, parent):
         self.runsGraphCanvas = pwgui.Canvas(parent, width=400, height=400, 
                                 tooltipCallback=self._runItemTooltip,
-                                tooltipDelay=1000)
+                                tooltipDelay=1000, name=ProtocolsView.RUNS_CANVAS_NAME, takefocus=True, highlightthickness=0)
 
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
@@ -1274,6 +1274,8 @@ class ProtocolsView(tk.Frame):
         
     def _runItemClick(self, item=None):
 
+        self.runsGraphCanvas.focus_set()
+
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
@@ -1576,6 +1578,14 @@ class ProtocolsView(tk.Frame):
         self._scheduleRunsUpdate()
         
     def _deleteProtocol(self):
+
+        # get the widget with the focus
+        widget = self.focus_get()
+
+        # If it's the search box
+        if not str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
+            return
+
         protocols = self._getSelectedProtocols()
 
         if len(protocols) == 0:
