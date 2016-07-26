@@ -130,15 +130,22 @@ class ProtCTFMicrographs(ProtMicrographs):
                                                self.inputMicrographs.get())
             # Insert step to create output objects
             fDeps = self._insertFinalSteps(deps)
+            # For the streaming mode, the steps function have a 'wait' flag that
+            # can be turned on/off. For example, here we insert the createOutputStep
+            # but it wait=True, which means that can not be executed until it is
+            # set to False (when the input micrographs stream is closed)
+            waitCondition = self._getFirstJoinStepName() == 'createOutputStep'
         else:
             if self.isFirstTime:
                 # Insert previous estimation or re-estimation an so on...
                 self._insertPreviousSteps()
                 self.isFirstTime.set(False)
             fDeps = self._insertRecalculateSteps()
+            # For now the streaming is not allowed for recalculate CTF
+            waitCondition = False
 
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps,
-                                 wait=(self._getFirstJoinStepName()=='createOutputStep'))
+                                 wait=waitCondition)
 
     def _insertFinalSteps(self, deps):
         """ This should be implemented in subclasses"""
@@ -200,6 +207,10 @@ class ProtCTFMicrographs(ProtMicrographs):
         return ctfSet, newCTFs
 
     def _stepsCheck(self):
+        # For now the streaming is not allowed for recalculate CTF
+        if self.recalculate:
+            return
+
         # Check if there are new micrographs to process
         micFn = self.inputMicrographs.get().getFileName()
         micSet = SetOfMicrographs(filename=micFn)
