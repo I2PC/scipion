@@ -27,6 +27,8 @@
 import os
 import Tkinter as tk
 
+from os.path import join
+
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.gui.tree import TreeProvider, BoundTree
@@ -55,72 +57,74 @@ class ViewerMonitorSummary(Viewer):
         self.summaryWindow.show()
 
 
-class SummaryProvider(TreeProvider):
-    """Create the tree elements for a Protocol run"""
-    def __init__(self, protocol):
-        self.protocol = protocol
-        self.getColumns = lambda: [('Name', 300), ('Output', 150),
-                                   ('Number', 100)]
-        self._parentDict = {}
-        self.acquisition = []
-        self.refreshObjects()
+if __name__ == '__main__':
+    class SummaryProvider(TreeProvider):
+        """Create the tree elements for a Protocol run"""
+        def __init__(self, protocol):
+            self.protocol = protocol
+            self.getColumns = lambda: [('Name', 300), ('Output', 150),
+                                       ('Number', 100)]
+            self._parentDict = {}
+            self.acquisition = []
+            self.refreshObjects()
 
-    def getObjects(self):
-        return self._objects
+        def getObjects(self):
+            return self._objects
 
-    def refreshObjects(self):
-        objects = []
+        def refreshObjects(self):
+            objects = []
 
-        def addObj(objId, name, output='', size='', parent=None):
-            obj = pwobj.Object(objId=objId)
-            obj.name = name
-            obj.output = output
-            obj.outSize = size
-            obj._objParent = parent
-            objects.append(obj)
-            return obj
+            def addObj(objId, name, output='', size='', parent=None):
+                obj = pwobj.Object(objId=objId)
+                obj.name = name
+                obj.output = output
+                obj.outSize = size
+                obj._objParent = parent
+                objects.append(obj)
+                return obj
 
-        runs = [p.get() for p in self.protocol.inputProtocols]
-        g = self.protocol.getProject().getGraphFromRuns(runs)
+            runs = [p.get() for p in self.protocol.inputProtocols]
+            g = self.protocol.getProject().getGraphFromRuns(runs)
 
-        nodes = g.getRoot().iterChildsBreadth()
+            nodes = g.getRoot().iterChildsBreadth()
 
-        for n in nodes:
-            prot = n.run
-            pobj = addObj(prot.getObjId(),
-                          '%s (id=%s)' % (prot.getRunName(), prot.strId()))
+            for n in nodes:
+                prot = n.run
+                pobj = addObj(prot.getObjId(),
+                              '%s (id=%s)' % (prot.getRunName(), prot.strId()))
 
-            for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
-                outSet.load()
-                outSet.loadAllProperties()
-                addObj(outSet.getObjId(), '', outName, outSet.getSize(), pobj)
-                outSet.close()
-                # Store acquisition parameters in case of the import protocol
-                if isinstance(prot, ProtImportImages):
-                    self.acquisition = [("Microscope Voltage: ",
-                                         prot.voltage.get()),
-                                        ("Spherical aberration: ",
-                                         prot.sphericalAberration.get()),
-                                        ("Magnification: ",
-                                         prot.magnification.get()),
-                                        ("Pixel Size (A/px): ",
-                                         outSet.getSamplingRate())
-                                        ]
+                for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
+                    outSet.load()
+                    outSet.loadAllProperties()
+                    addObj(outSet.getObjId(), '', outName, outSet.getSize(), pobj)
+                    outSet.close()
+                    # Store acquisition parameters in case of the import protocol
+                    if isinstance(prot, ProtImportImages):
+                        self.acquisition = [("Microscope Voltage: ",
+                                             prot.voltage.get()),
+                                            ("Spherical aberration: ",
+                                             prot.sphericalAberration.get()),
+                                            ("Magnification: ",
+                                             prot.magnification.get()),
+                                            ("Pixel Size (A/px): ",
+                                             outSet.getSamplingRate())
+                                            ]
 
-        self._objects = objects
+            self._objects = objects
 
-    def getObjectInfo(self, obj):
-        info = {'key': obj.strId(),
-                'parent': obj._objParent,
-                'text': obj.name,
-                'values': (obj.output, obj.outSize),
-                'open': True
-               }
+        def getObjectInfo(self, obj):
+            info = {'key': obj.strId(),
+                    'parent': obj._objParent,
+                    'text': obj.name,
+                    'values': (obj.output, obj.outSize),
+                    'open': True
+                   }
 
-        return info
+            return info
 
 
 class SummaryWindow(pwgui.Window):
+
     def __init__(self, **kwargs):
         pwgui.Window.__init__(self, **kwargs)
 
@@ -132,6 +136,33 @@ class SummaryWindow(pwgui.Window):
         self._createContent(content)
         content.grid(row=0, column=0, sticky='news')
         content.columnconfigure(0, weight=1)
+
+    @staticmethod
+    def getHTMLReportText():
+
+        htmlTemplate = SummaryWindow.getSummaryHTMLTemplate()
+
+        if htmlTemplate is not None:
+            return open(htmlTemplate, 'r').read()
+        else:
+            return ""
+        return
+
+    @staticmethod
+    def getSummaryHTMLTemplate():
+
+        htmlFile = SummaryWindow.getSummaryHTMLTemplatePath()
+
+        # If the html template does not exist..
+        if not (os.path.exists(htmlFile)):
+            print "Html template files not found. Please get a valid HTML template and put it at %s", htmlFile
+        else:
+            return htmlFile
+
+    @staticmethod
+    def getSummaryHTMLTemplatePath():
+
+        return join(pwutils.getTemplatesFolder(), 'execution.summary.html.template')
 
     def _createContent(self, content):
         topFrame = tk.Frame(content)
@@ -197,6 +228,10 @@ class SummaryWindow(pwgui.Window):
         pdfBtn = HotButton(subframe, 'Generate PDF Report',
                            command=self._generatePDF)
         pdfBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
+
+        htmlBtn = HotButton(subframe, 'Generate HTML Report',
+                           command=self._generateHTML)
+        htmlBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
         closeBtn.grid(row=0, column=1, sticky='ne')
@@ -293,3 +328,33 @@ class SummaryWindow(pwgui.Window):
                        '-interaction=nonstopmode ' + reportName,
                        cwd=self.protocol._getExtraPath())
         text._open_cmd(reportPath.replace('.tex', '.pdf'))
+
+
+    def _generateHTML(self, e=None):
+        reportName = 'report_%s.html' % pwutils.prettyTimestamp()
+        reportPath = self.protocol._getExtraPath(reportName)
+
+        acquisitionLines = ''
+        for item in self.provider.acquisition:
+            acquisitionLines += '%s & %s <BR/>' % item
+
+        runLines = ''
+        for obj in self.provider.getObjects():
+            if obj.name:
+                runLines += ' %s &  &  <BR/>' % obj.name
+            else:
+                runLines += ' & %s & %s <BR/>' % (obj.output, obj.outSize)
+
+        args = {'acquisitionLines': acquisitionLines,
+                'runLines': runLines,
+                'dateStr': pwutils.prettyTime(secs=True),
+                'projectName': self.protocol.getProject().getShortName(),
+                'scipionVersion': os.environ['SCIPION_VERSION']
+                }
+
+        reportTemplate = SummaryWindow.getHTMLReportText()
+
+        reportFile = open(reportPath, 'w')
+        reportFile.write(reportTemplate % args)
+        reportFile.close()
+        text._open_cmd(reportFile)
