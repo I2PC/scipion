@@ -21,15 +21,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from os.path import exists, dirname, join
 
 from pyworkflow.object import Boolean
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_NEW
-from pyworkflow.protocol.params import PointerParam, FloatParam, IntParam, BooleanParam, FileParam
+from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
+                                           STATUS_NEW)
+from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
+                                        BooleanParam, FileParam)
 from pyworkflow.utils.path import copyTree, removeBaseExt, makePath
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.protocol import EMProtocol
@@ -49,10 +51,11 @@ class ProtCTFMicrographs(ProtMicrographs):
         self.stepsExecutionMode = STEPS_PARALLEL
         self.isFirstTime = Boolean(False)
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
-        form.addParam('recalculate', BooleanParam, default=False, condition='recalculate',
+        form.addParam('recalculate', BooleanParam, default=False,
+                      condition='recalculate',
                       label="Do recalculate ctf?")
 
         form.addParam('continueRun', PointerParam, allowsNull=True,
@@ -67,41 +70,51 @@ class ProtCTFMicrographs(ProtMicrographs):
         form.addParam('ctfDownFactor', FloatParam, default=1.,
                       label='CTF Downsampling factor',
                       condition='not recalculate',
-                      help='Set to 1 for no downsampling. Non-integer downsample factors are possible. '
-                           'This downsampling is only used for estimating the CTF and it does not affect '
-                           'any further calculation. Ideally the estimation of the CTF is optimal when '
-                           'the Thon rings are not too concentrated at the origin (too small to be seen) '
-                           'and not occupying the whole power spectrum (since this downsampling might '
-                           'entail aliasing).')
+                      help='Set to 1 for no downsampling. Non-integer downsample '
+                           'factors are possible. This downsampling is only used '
+                           'for estimating the CTF and it does not affect any '
+                           'further calculation. Ideally the estimation of the '
+                           'CTF is optimal when the Thon rings are not too '
+                           'concentrated at the origin (too small to be seen) '
+                           'and not occupying the whole power spectrum (since '
+                           'this downsampling might entail aliasing).')
 
         self._defineProcessParams(form)
 
         line = form.addLine('Resolution', condition='not recalculate',
-                            help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
-                                 'These cut-offs prevent the typical peak at the center of the PSD and high-resolution'
-                                 'terms where only noise exists, to interfere with CTF estimation. The default lowest '
-                                 'value is 0.05 but for micrographs with a very fine sampling this may be lowered towards 0.'
-                                 'The default highest value is 0.35, but it should '+'be increased for micrographs with '
-                                                                                     'signals extending beyond this value. However, if your micrographs extend further than '
-                                                                                     '0.35, you should consider sampling them at a finer rate.')
-        line.addParam('lowRes', FloatParam, default=0.05,
-                      label='Lowest' )
-        line.addParam('highRes', FloatParam, default=0.35,
-                      label='Highest')
-        # Switched (microns) by 'in microns' by fail in the identifier with jquery
-        line = form.addLine('Defocus search range (microns)', expertLevel=LEVEL_ADVANCED,
+                            help='Give a value in digital frequency '
+                                 '(i.e. between 0.0 and 0.5). These cut-offs '
+                                 'prevent the typical peak at the center of the'
+                                 ' PSD and high-resolution terms where only '
+                                 'noise exists, to interfere with CTF '
+                                 'estimation. The default lowest value is 0.05 '
+                                 'but for micrographs with a very fine sampling '
+                                 'this may be lowered towards 0. The default '
+                                 'highest value is 0.35, but it should be '
+                                 'increased for micrographs with signals '
+                                 'extending beyond this value. However, if '
+                                 'your micrographs extend further than 0.35, '
+                                 'you should consider sampling them at a finer '
+                                 'rate.')
+        line.addParam('lowRes', FloatParam, default=0.05, label='Lowest' )
+        line.addParam('highRes', FloatParam, default=0.35, label='Highest')
+        line = form.addLine('Defocus search range (microns)',
                             condition='not recalculate',
-                            help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
-                                 'Underfocus is represented by a positive number.')
+                            expertLevel=LEVEL_ADVANCED,
+                            help='Select _minimum_ and _maximum_ values for '
+                                 'defocus search range (in microns). Underfocus'
+                                 ' is represented by a positive number.')
         line.addParam('minDefocus', FloatParam, default=0.25,
                       label='Min')
         line.addParam('maxDefocus', FloatParam, default=4.,
                       label='Max')
 
-        form.addParam('windowSize', IntParam, default=256, expertLevel=LEVEL_ADVANCED,
+        form.addParam('windowSize', IntParam, default=256,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Window size', condition='not recalculate',
-                      help='The PSD is estimated from small patches of this size. Bigger patches '
-                           'allow identifying more details. However, since there are fewer windows, '
+                      help='The PSD is estimated from small patches of this '
+                           'size. Bigger patches allow identifying more '
+                           'details. However, since there are fewer windows, '
                            'estimations are noisier.')
 
         form.addParallelSection(threads=2, mpi=1)
@@ -111,11 +124,13 @@ class ProtCTFMicrographs(ProtMicrographs):
         to add other parameter relatives to the specific operation."""
         pass
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        """ Insert the steps to perform CTF estimation, or re-estimation, on a set of micrographs.
+        """ Insert the steps to perform CTF estimation, or re-estimation,
+        on a set of micrographs.
         """
-        deps = [] # Store all steps ids, final step createOutput depends on all of them
+        # Store all steps ids, final step createOutput depends on all of them
+        deps = []
         fDeps = []
         self.insertedDict = {}
 
@@ -124,14 +139,23 @@ class ProtCTFMicrographs(ProtMicrographs):
                                                self.inputMicrographs.get())
             # Insert step to create output objects
             fDeps = self._insertFinalSteps(deps)
+            # For the streaming mode, the steps function have a 'wait' flag
+            # that can be turned on/off. For example, here we insert the
+            # createOutputStep but it wait=True, which means that can not be
+            # executed until it is set to False
+            # (when the input micrographs stream is closed)
+            waitCondition = self._getFirstJoinStepName() == 'createOutputStep'
         else:
             if self.isFirstTime:
-                self._insertPreviousSteps() # Insert previous estimation or re-estimation an so on...
+                # Insert previous estimation or re-estimation an so on...
+                self._insertPreviousSteps()
                 self.isFirstTime.set(False)
             fDeps = self._insertRecalculateSteps()
+            # For now the streaming is not allowed for recalculate CTF
+            waitCondition = False
 
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps,
-                                 wait=(self._getFirstJoinStepName()=='createOutputStep'))
+                                 wait=waitCondition)
 
     def _insertFinalSteps(self, deps):
         """ This should be implemented in subclasses"""
@@ -140,7 +164,8 @@ class ProtCTFMicrographs(ProtMicrographs):
     def _getFirstJoinStepName(self):
         # This function will be used for streamming, to check which is
         # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses (ej in Xmipp 'sortPSDStep') 
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
         return 'createOutputStep'
 
     def _getFirstJoinStep(self):
@@ -192,6 +217,10 @@ class ProtCTFMicrographs(ProtMicrographs):
         return ctfSet, newCTFs
 
     def _stepsCheck(self):
+        # For now the streaming is not allowed for recalculate CTF
+        if self.recalculate:
+            return
+
         # Check if there are new micrographs to process
         micFn = self.inputMicrographs.get().getFileName()
         micSet = SetOfMicrographs(filename=micFn)
@@ -202,6 +231,9 @@ class ProtCTFMicrographs(ProtMicrographs):
         outputStep = self._getFirstJoinStep()
         self._checkNewMicrographs(micSet, outputStep)
         ctfSet, newCTFs = self._checkNewCTFs(micSet)
+
+        if ctfSet is None:
+            return
 
         endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
 
@@ -249,7 +281,7 @@ class ProtCTFMicrographs(ProtMicrographs):
                 recalDeps.append(stepId)
         return recalDeps
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Do the CTF estimation with the specific program
         and the parameters required.
@@ -299,18 +331,18 @@ class ProtCTFMicrographs(ProtMicrographs):
             ctfSet = self._createSetOfCTF("_recalculated")
             prot = self.continueRun.get() or self
             micSet = prot.outputCTF.getMicrographs()
-            # README: We suppose this is reading the ctf selection (with enabled/disabled)
-            # to only consider the enabled ones in the final SetOfCTF
-
+            # We suppose this is reading the ctf selection
+            # (with enabled/disabled) to only consider the enabled ones
+            # in the final SetOfCTF
             #TODO: maybe we can remove the need of the extra text file
             # with the recalculate parameters
             newCount = 0
             for ctfModel in self.recalculateSet:
                 if ctfModel.isEnabled() and ctfModel.getObjComment():
                     mic = ctfModel.getMicrograph()
-                    # Update the CTF models that where recalculated
-                    # and append later to the set
-                    # we don't want to copy the id here since it is already correct
+                    # Update the CTF models that where recalculated and append
+                    # later to the set, we don't want to copy the id here since
+                    # it is already correct
                     newCtf = self._createCtfModel(mic, updateSampling=False)
                     ctfModel.copy(newCtf, copyId=False)
                     ctfModel.setEnabled(True)
@@ -320,11 +352,12 @@ class ProtCTFMicrographs(ProtMicrographs):
             self._defineOutputs(outputCTF=ctfSet)
             self._defineCtfRelation(micSet, ctfSet)
             self._computeDefocusRange(ctfSet)
-            self.summaryVar.set("CTF Re-estimation of %d micrographs" % newCount)
+            self.summaryVar.set("CTF Re-estimation of %d micrographs"
+                                % newCount)
         else:
             self._createOutputStep()
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
 
@@ -353,17 +386,17 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         return methods
 
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _defineValues(self):
         """ This function get some parameters of the micrographs"""
         # Get pointer to input micrographs 
         self.inputMics = self.inputMicrographs.get()
-        acquisition = self.inputMics.getAcquisition()
+        acq = self.inputMics.getAcquisition()
 
-        self._params = {'voltage': acquisition.getVoltage(),
-                        'sphericalAberration': acquisition.getSphericalAberration(),
-                        'magnification': acquisition.getMagnification(),
-                        'ampContrast': acquisition.getAmplitudeContrast(),
+        self._params = {'voltage': acq.getVoltage(),
+                        'sphericalAberration': acq.getSphericalAberration(),
+                        'magnification': acq.getMagnification(),
+                        'ampContrast': acq.getAmplitudeContrast(),
                         'samplingRate': self.inputMics.getSamplingRate(),
                         'scannedPixelSize': self.inputMics.getScannedPixelSize(),
                         'windowSize': self.windowSize.get(),
@@ -378,12 +411,13 @@ class ProtCTFMicrographs(ProtMicrographs):
         """ This function get the acquisition info of the micrographs"""
         mic = ctfModel.getMicrograph()
 
-        acquisition = mic.getAcquisition()
-        scannedPixelSize = mic.getSamplingRate() * acquisition.getMagnification() / 10000
-        self._params = {'voltage': acquisition.getVoltage(),
-                        'sphericalAberration': acquisition.getSphericalAberration(),
-                        'magnification': acquisition.getMagnification(),
-                        'ampContrast': acquisition.getAmplitudeContrast(),
+        acq = mic.getAcquisition()
+        mag = acq.getMagnification()
+        scannedPixelSize = mic.getSamplingRate() * mag / 10000
+        self._params = {'voltage': acq.getVoltage(),
+                        'sphericalAberration': acq.getSphericalAberration(),
+                        'magnification': mag,
+                        'ampContrast': acq.getAmplitudeContrast(),
                         'scannedPixelSize': scannedPixelSize,
                         'samplingRate': mic.getSamplingRate()
                         }
