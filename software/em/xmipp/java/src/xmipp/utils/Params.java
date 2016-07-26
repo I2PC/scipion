@@ -51,7 +51,7 @@ public class Params {
     public final static String SAMPLINGRATE = "sampling_rate";
     public final static String CHIMERAPORT = "chimera_port";
     public final static String INVERTY = "inverty";
-    private static final String NO_RECALCULATE_CTF = "dont_recalc_cft";
+    private static final String NO_RECALCULATE_CTF = "dont_recalc_ctf";
 
 
     public String directory;

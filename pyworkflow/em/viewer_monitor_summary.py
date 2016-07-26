@@ -230,7 +230,7 @@ class SummaryWindow(pwgui.Window):
 
         htmlBtn = HotButton(subframe, 'Generate HTML Report',
                            command=self._generateHTML)
-        htmlBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
+        htmlBtn.grid(row=0, column=3, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
         closeBtn.grid(row=0, column=1, sticky='ne')
@@ -334,14 +334,14 @@ class SummaryWindow(pwgui.Window):
 
         acquisitionLines = ''
         for item in self.provider.acquisition:
-            acquisitionLines += '%s & %s <BR/>' % item
+            acquisitionLines += '%s %s <BR/>' % item
 
         runLines = ''
         for obj in self.provider.getObjects():
             if obj.name:
-                runLines += ' %s &  &  <BR/>' % obj.name
+                runLines += ' %s <BR/>' % obj.name
             else:
-                runLines += ' & %s & %s <BR/>' % (obj.output, obj.outSize)
+                runLines += ' %s %s <BR/>' % (obj.output, obj.outSize)
 
         args = {'acquisitionLines': acquisitionLines,
                 'runLines': runLines,
@@ -355,4 +355,4 @@ class SummaryWindow(pwgui.Window):
         reportFile = open(reportPath, 'w')
         reportFile.write(reportTemplate % args)
         reportFile.close()
-        text._open_cmd(reportFile)
+        text._open_cmd(reportPath)
