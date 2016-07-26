@@ -33,9 +33,9 @@ class ProgResolutionFsc : public XmippProgram
 public:
 
     FileName    fn_ref, fn_root,fn_img, fn_out;
-    float       sam;
-    float       max_sam;
-    bool        do_dpr, do_set_of_images, do_o;
+    double       sam;
+    double       max_sam, min_sam;
+    bool        do_dpr, do_set_of_images, do_o, do_rfactor;
 
     FileName    fn_sel;
     bool        apply_geo;
@@ -82,6 +82,11 @@ public:
         addParamsLine("   [--dont_apply_geo]        : for 2D-images: do not apply transformation stored in the header");
         addParamsLine("   [--do_dpr]                : compute dpr, by default only frc is computed");
         addParamsLine("   [--max_sam <max_sr=-1>]   : set fsc to 0 for frequencies above this one (Angstrom), -1 -> all fequencies");
+        addParamsLine("                             : --max_sam = 10A -> frequencies higher than 0.1 A^-1 =0");
+        //for R-factor
+        addParamsLine("   [--do_rfactor]            : compute R-factor for input volumes");
+        addParamsLine("   [--min_sam <min_sr=-1>]   : minimum frequency may use for calculating R-factor (Angstrom)");
+        addParamsLine("                             : --min_sam = 10A -> frequencies smaller than 0.1 A^-1 =0");
 
         addExampleLine("Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom):", false);
         addExampleLine("xmipp_resolution_fsc --ref subset1.vol  -i subset2.vol --sampling_rate 5.6 ");
@@ -98,6 +103,10 @@ public:
         max_sam = getDoubleParam("--max_sam");
         do_dpr = checkParam("--do_dpr");
         do_set_of_images = checkParam("--set_of_images");
+        //for calculating r-factor
+        min_sam = getDoubleParam("--min_sam");
+        do_rfactor = checkParam("--do_rfactor");
+
         if(do_set_of_images)
         {
             fn_sel = getParam("--set_of_images");
@@ -123,7 +132,7 @@ public:
                     const MultidimArray<double> &frc_noise,
                     const MultidimArray<double> &dpr,
                     const MultidimArray<double> &error_l2,
-                    float max_sam, bool do_dpr)
+					double max_sam, bool do_dpr, double rFactor)
     {
         MetaData MD;
 
@@ -138,9 +147,15 @@ public:
             if (i>0)
             {
                 id=MD.addObject();
-                if(max_sam >=0 && ((1./dAi(freq, i))<max_sam) )
+                if(max_sam >0 && ((1./dAi(freq, i))<max_sam) )
                 {
                     if(do_dpr)
+                        dAi(dpr, i)=0.;
+                    dAi(frc, i)=0.;
+                }
+                if(min_sam >0 && ((1./dAi(freq, i))>min_sam) )
+                {
+                	if(do_dpr)
                         dAi(dpr, i)=0.;
                     dAi(frc, i)=0.;
                 }
@@ -154,6 +169,12 @@ public:
             }
         }
         MD.write(fn_frc);
+        MetaData MD2;
+        MD2.setColumnFormat(false);
+        id=MD2.addObject();
+        MD2.setValue(MDL_RESOLUTION_RFACTOR,rFactor,id);
+        fn_frc.compose("rfactor", fn_frc);
+        MD2.write(fn_frc, MD_APPEND);
     }
 
     bool process_img()
@@ -171,9 +192,16 @@ public:
         img().setXmippOrigin();
 
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
-        frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr);
+        double rFactor=-1.;
+        double min_samp = sam/min_sam;
+        if (min_sam <0)
+		   min_samp = 0.;
+        if (max_sam <0)
+		   max_sam = 2 * sam;
 
-        writeFiles((fn_root.empty())?img.name():fn_root, freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr);
+        frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr, do_rfactor, min_samp, sam/max_sam, &rFactor);
+
+        writeFiles((fn_root.empty())?img.name():fn_root, freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr, rFactor);
         return true;
     }
 
