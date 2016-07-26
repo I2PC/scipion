@@ -198,10 +198,12 @@ class ProtCTFMicrographs(ProtMicrographs):
         newCTFs = []
         ctfDict = {}
         ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
+
         for ctf in ctfSet:
             ctfDict[ctf.getObjId()] = True
 
         if ctfDict: # it means there are previous ctfs computed
+            ctfSet.loadAllProperties()
             if ctfSet.getSize():
                 ctfSet.enableAppend()
         else:
@@ -246,6 +248,7 @@ class ProtCTFMicrographs(ProtMicrographs):
             outputStep.setStatus(STATUS_NEW)
 
         micSet.close()
+        ctfSet.close()
 
     def _insertEstimationSteps(self, insertedDict, inputMics):
         estimDeps = []
