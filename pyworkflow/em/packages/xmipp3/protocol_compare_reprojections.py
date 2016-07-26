@@ -25,18 +25,20 @@
 # **************************************************************************
 
 from math import floor
+import os
 
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.em.constants import ALIGN_PROJ
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.protocol import ProtAnalysis3D
-from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages,\
-    SetOfParticles
+from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages, SetOfParticles, Class2D
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
 import pyworkflow.em.metadata as md
 
 import xmipp
 from xmipp3 import ProjMatcher
+from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 
         
 class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
@@ -92,7 +94,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         from convert import writeSetOfClasses2D, writeSetOfParticles
         imgSet = self.inputSet.get()
         if isinstance(imgSet, SetOfClasses2D):
-            writeSetOfClasses2D(imgSet, self.imgsFn, writeParticles=False)
+            writeSetOfClasses2D(imgSet, self.imgsFn, writeParticles=True)
         else:
             writeSetOfParticles(imgSet, self.imgsFn)
     
@@ -121,11 +123,19 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
+        self.newAssignmentPerformed = os.path.exists(self._getExtraPath("angles.xmd"))
+        self.samplingRate = self.inputSet.get().getSamplingRate()
         if isinstance(imgSet, SetOfClasses2D):
+            outputSet = self._createSetOfClasses2D(imgSet)
             outputSet.copyInfo(imgSet.getImages())
-        else:
+        elif isinstance(imgSet, SetOfAverages):
+            outputSet = self._createSetOfAverages()
             outputSet.copyInfo(imgSet)
-        outputSet.setAlignmentProj()
+        else:
+            outputSet = self._createSetOfParticles()
+            outputSet.copyInfo(imgSet)
+            if not self.newAssignmentPerformed:
+                outputSet.setAlignmentProj()
         outputSet.copyItems(imgSet,
                             updateItemCallback=self._processRow,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))

@@ -118,8 +118,8 @@ def isProcessAlive(pid):
 
     import psutil
     try:
-        proc = psutil.Process(pid.get())
+        proc = psutil.Process(pid)
         return proc.is_running()
-    except:
+    except psutil.NoSuchProcess, e:
         return False
 
