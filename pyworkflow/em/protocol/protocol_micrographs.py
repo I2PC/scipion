@@ -198,10 +198,12 @@ class ProtCTFMicrographs(ProtMicrographs):
         newCTFs = []
         ctfDict = {}
         ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
+
         for ctf in ctfSet:
             ctfDict[ctf.getObjId()] = True
 
         if ctfDict: # it means there are previous ctfs computed
+            ctfSet.loadAllProperties()
             if ctfSet.getSize():
                 ctfSet.enableAppend()
         else:
@@ -226,7 +228,6 @@ class ProtCTFMicrographs(ProtMicrographs):
         micSet = SetOfMicrographs(filename=micFn)
         micSet.loadAllProperties()
         streamClosed = micSet.isStreamClosed()
-        endCTFs = False
 
         outputStep = self._getFirstJoinStep()
         self._checkNewMicrographs(micSet, outputStep)
@@ -236,11 +237,11 @@ class ProtCTFMicrographs(ProtMicrographs):
             return
 
         endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
-
         if newCTFs:
-            if endCTFs:
-                ctfSet.setStreamState(ctfSet.STREAM_CLOSED)
-            self._updateOutput(ctfSet)
+            streamMode = ctfSet.STREAM_CLOSED if endCTFs else ctfSet.STREAM_OPEN
+            self._updateOutputSet('outputCTF', ctfSet, streamMode)
+        else:
+            ctfSet.close()
 
         if outputStep and outputStep.isWaiting() and endCTFs:
             outputStep.setStatus(STATUS_NEW)
