@@ -125,7 +125,7 @@ class XmippProtMtfCalculation(Protocol):
         #              help='Resolution, or pixel size. e.g: 13.11')
         form.addParam('refNumber', params.IntParam, default=-1,
                       expertLevel=params.LEVEL_ADVANCED,
-                      label="Number of times the randomization is performed",
+                      label="Reference number",
                       help="image index of siemens star pattern used to "
                            "calculate de reference image.\n"
                            "By default, nRef = -1  automatically selects central "
@@ -180,7 +180,7 @@ class XmippProtMtfCalculation(Protocol):
         from sxt.readTomo_moshen import accessData
         accessDataObj = accessData()
         tomo = accessDataObj.readTomo(fhInputImage)
-        imgs_ss = tomo[78:82, :, :]
+        imgs_ss = tomo[79:81, :, :]
         single_imgss = accessDataObj.readImg(fhInputImage, 80)
         print 'single image dimensions=\n' , np.shape(single_imgss)
         print 'set of images dimensions=\n' , np.shape(tomo)
@@ -198,23 +198,25 @@ class XmippProtMtfCalculation(Protocol):
         
         from sxt.ConvertCartPolar import ConvertCartPolar
         convCartPolar = ConvertCartPolar()
-        #polar_img = convCartPolar.convertImCart2Polar(single_imgss)
+        polar_img = convCartPolar.convertImCart2Polar(single_imgss)
         #polar_img = convCartPolar.convertImCart2Polar(tomo)
-        polar_img = convCartPolar.convertImCart2Polar(imgs_ss)
+        #polar_img = convCartPolar.convertImCart2Polar(imgs_ss)###### az kino soal va barresi shavad ke koja estefade mishavad va nahayatan agar lazem bood dar yek loop baraye tak take image ha in class farakhan shavad va imBW normalize nahaie dar ye arraye append shavad ... 
         print '#######   ******   #######'
-        print "Polar image = \n" , polar_img
+        print "Polar image dimensions = \n" , np.shape(polar_img)
+        #print "Polar image = \n" , polar_img
         
         polar_img_name = "polar.npy"
         np.save(polar_img_name, polar_img)
         polar_read_img = np.load("polar.npy")
         
         
-        
+        ###################################################################### ba kino sohbat shavad ke imBW va polar o psf o mtf bayad baraye yek image bashad ya hameye image ha....
         from sxt.getMTFfromSiemensStar import MTFfromSiemensStar
         MTFObj = MTFfromSiemensStar()
         imBW = MTFObj.getpolarStarNorm(polar_read_img) ### nrows_radius=-1 this should be an input value  or a fixed value like this in the main code??
         print '#######   ******   #######'
-        print "BW image = \n" , imBW
+        print "BW image dimensions = \n" , np.shape(imBW)
+        #print "BW image = \n" , imBW
         
         
         dx = ss_img_resolution[0]
