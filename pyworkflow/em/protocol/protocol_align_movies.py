@@ -233,10 +233,17 @@ class ProtAlignMovies(ProtProcessMovies):
             alignedMovie.setFileName(extraMovieFn)
             # When the output movies are saved, the shifts
             # will be set to zero since they are aligned
-            xshifts = [0] * (last - first + 1)
+            totalFrames = last - first + 1
+            xshifts = [0] * totalFrames
             yshifts = xshifts
+            # If we save the movies, we need to modify which are
+            # first and last frames if only a subset of frames have
+            # been used to align
+            first = 1
+            last = totalFrames
         else:
             xshifts, yshifts = self._getMovieShifts(movie)
+
 
         alignment = MovieAlignment(first=first, last=last,
                                    xshifts=xshifts, yshifts=yshifts)
