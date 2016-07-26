@@ -90,11 +90,8 @@ class XmippProtCreateGallery(ProtAnalysis3D):
 data_block1
 _dimensions2D   '%d %d'
 _projRotRange    '%f %f %d'
-_projRotRandomness   even 
 _projTiltRange    '%f %f %d'
-_projTiltRandomness   even 
 _projPsiRange    '0 0 1'
-_projPsiRandomness   even 
 """ % (xdim, xdim, self.rot0, self.rotF,rotN, self.tilt0, self.tiltF, tiltN)
         fhParam = open(self._getExtraPath("projectionParameters.xmd"), 'w')
         fhParam.write(paramContent)
