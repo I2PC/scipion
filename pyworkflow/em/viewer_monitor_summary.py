@@ -57,70 +57,69 @@ class ViewerMonitorSummary(Viewer):
         self.summaryWindow.show()
 
 
-if __name__ == '__main__':
-    class SummaryProvider(TreeProvider):
-        """Create the tree elements for a Protocol run"""
-        def __init__(self, protocol):
-            self.protocol = protocol
-            self.getColumns = lambda: [('Name', 300), ('Output', 150),
-                                       ('Number', 100)]
-            self._parentDict = {}
-            self.acquisition = []
-            self.refreshObjects()
+class SummaryProvider(TreeProvider):
+    """Create the tree elements for a Protocol run"""
+    def __init__(self, protocol):
+        self.protocol = protocol
+        self.getColumns = lambda: [('Name', 300), ('Output', 150),
+                                   ('Number', 100)]
+        self._parentDict = {}
+        self.acquisition = []
+        self.refreshObjects()
 
-        def getObjects(self):
-            return self._objects
+    def getObjects(self):
+        return self._objects
 
-        def refreshObjects(self):
-            objects = []
+    def refreshObjects(self):
+        objects = []
 
-            def addObj(objId, name, output='', size='', parent=None):
-                obj = pwobj.Object(objId=objId)
-                obj.name = name
-                obj.output = output
-                obj.outSize = size
-                obj._objParent = parent
-                objects.append(obj)
-                return obj
+        def addObj(objId, name, output='', size='', parent=None):
+            obj = pwobj.Object(objId=objId)
+            obj.name = name
+            obj.output = output
+            obj.outSize = size
+            obj._objParent = parent
+            objects.append(obj)
+            return obj
 
-            runs = [p.get() for p in self.protocol.inputProtocols]
-            g = self.protocol.getProject().getGraphFromRuns(runs)
+        runs = [p.get() for p in self.protocol.inputProtocols]
+        g = self.protocol.getProject().getGraphFromRuns(runs)
 
-            nodes = g.getRoot().iterChildsBreadth()
+        nodes = g.getRoot().iterChildsBreadth()
 
-            for n in nodes:
-                prot = n.run
-                pobj = addObj(prot.getObjId(),
-                              '%s (id=%s)' % (prot.getRunName(), prot.strId()))
+        for n in nodes:
+            prot = n.run
+            pobj = addObj(prot.getObjId(),
+                          '%s (id=%s)' % (prot.getRunName(), prot.strId()))
 
-                for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
-                    outSet.load()
-                    outSet.loadAllProperties()
-                    addObj(outSet.getObjId(), '', outName, outSet.getSize(), pobj)
-                    outSet.close()
-                    # Store acquisition parameters in case of the import protocol
-                    if isinstance(prot, ProtImportImages):
-                        self.acquisition = [("Microscope Voltage: ",
-                                             prot.voltage.get()),
-                                            ("Spherical aberration: ",
-                                             prot.sphericalAberration.get()),
-                                            ("Magnification: ",
-                                             prot.magnification.get()),
-                                            ("Pixel Size (A/px): ",
-                                             outSet.getSamplingRate())
-                                            ]
+            for outName, outSet in prot.iterOutputAttributes(pwobj.Set):
+                outSet.load()
+                outSet.loadAllProperties()
+                addObj(outSet.getObjId(), '', outName, outSet.getSize(), pobj)
+                outSet.close()
+                # Store acquisition parameters in case of the import protocol
+                if isinstance(prot, ProtImportImages):
+                    self.acquisition = [("Microscope Voltage: ",
+                                         prot.voltage.get()),
+                                        ("Spherical aberration: ",
+                                         prot.sphericalAberration.get()),
+                                        ("Magnification: ",
+                                         prot.magnification.get()),
+                                        ("Pixel Size (A/px): ",
+                                         outSet.getSamplingRate())
+                                        ]
 
-            self._objects = objects
+        self._objects = objects
 
-        def getObjectInfo(self, obj):
-            info = {'key': obj.strId(),
-                    'parent': obj._objParent,
-                    'text': obj.name,
-                    'values': (obj.output, obj.outSize),
-                    'open': True
-                   }
+    def getObjectInfo(self, obj):
+        info = {'key': obj.strId(),
+                'parent': obj._objParent,
+                'text': obj.name,
+                'values': (obj.output, obj.outSize),
+                'open': True
+               }
 
-            return info
+        return info
 
 
 class SummaryWindow(pwgui.Window):
@@ -328,7 +327,6 @@ class SummaryWindow(pwgui.Window):
                        '-interaction=nonstopmode ' + reportName,
                        cwd=self.protocol._getExtraPath())
         text._open_cmd(reportPath.replace('.tex', '.pdf'))
-
 
     def _generateHTML(self, e=None):
         reportName = 'report_%s.html' % pwutils.prettyTimestamp()
