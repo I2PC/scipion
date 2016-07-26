@@ -1,0 +1,18 @@
+<HTML>
+    <HEAD>
+        <TITLE>Scipion Report</TITLE>
+    </HEAD>
+    <BODY>
+        Date: {%(dateStr)s}<BR/>
+        Project: {%(projectName)s}<BR/>
+        Scipion version: {%(scipionVersion)s}<BR/>
+        <BR/>
+
+        <H2>Acquisition</H2>
+        %(acquisitionLines)s
+        <BR/>
+        
+        <H2>Runs Summary</H2>
+        %(runLines)s
+    </BODY>
+<HTML>
