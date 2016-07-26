@@ -232,6 +232,9 @@ class ProtCTFMicrographs(ProtMicrographs):
         self._checkNewMicrographs(micSet, outputStep)
         ctfSet, newCTFs = self._checkNewCTFs(micSet)
 
+        if ctfSet is None:
+            return
+
         endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
 
         if newCTFs:
