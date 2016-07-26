@@ -70,24 +70,32 @@ class ProtCTFMicrographs(ProtMicrographs):
         form.addParam('ctfDownFactor', FloatParam, default=1.,
                       label='CTF Downsampling factor',
                       condition='not recalculate',
-                      help='Set to 1 for no downsampling. Non-integer downsample factors are possible. '
-                           'This downsampling is only used for estimating the CTF and it does not affect '
-                           'any further calculation. Ideally the estimation of the CTF is optimal when '
-                           'the Thon rings are not too concentrated at the origin (too small to be seen) '
-                           'and not occupying the whole power spectrum (since this downsampling might '
-                           'entail aliasing).')
+                      help='Set to 1 for no downsampling. Non-integer downsample '
+                           'factors are possible. This downsampling is only used '
+                           'for estimating the CTF and it does not affect any '
+                           'further calculation. Ideally the estimation of the '
+                           'CTF is optimal when the Thon rings are not too '
+                           'concentrated at the origin (too small to be seen) '
+                           'and not occupying the whole power spectrum (since '
+                           'this downsampling might entail aliasing).')
 
         self._defineProcessParams(form)
 
         line = form.addLine('Resolution', condition='not recalculate',
-                            help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
-                                 'These cut-offs prevent the typical peak at the center of the PSD and high-resolution'
-                                 'terms where only noise exists, to interfere with CTF estimation. The default lowest '
-                                 'value is 0.05 but for micrographs with a very fine sampling this may be lowered towards 0.'
-                                 'The default highest value is 0.35, but it should '
-                                 'be increased for micrographs with '
-                                 'signals extending beyond this value. However, if your micrographs extend further than '
-                                 '0.35, you should consider sampling them at a finer rate.')
+                            help='Give a value in digital frequency '
+                                 '(i.e. between 0.0 and 0.5). These cut-offs '
+                                 'prevent the typical peak at the center of the'
+                                 ' PSD and high-resolution terms where only '
+                                 'noise exists, to interfere with CTF '
+                                 'estimation. The default lowest value is 0.05 '
+                                 'but for micrographs with a very fine sampling '
+                                 'this may be lowered towards 0. The default '
+                                 'highest value is 0.35, but it should be '
+                                 'increased for micrographs with signals '
+                                 'extending beyond this value. However, if '
+                                 'your micrographs extend further than 0.35, '
+                                 'you should consider sampling them at a finer '
+                                 'rate.')
         line.addParam('lowRes', FloatParam, default=0.05, label='Lowest' )
         line.addParam('highRes', FloatParam, default=0.35, label='Highest')
         line = form.addLine('Defocus search range (microns)',
@@ -104,8 +112,9 @@ class ProtCTFMicrographs(ProtMicrographs):
         form.addParam('windowSize', IntParam, default=256,
                       expertLevel=LEVEL_ADVANCED,
                       label='Window size', condition='not recalculate',
-                      help='The PSD is estimated from small patches of this size. Bigger patches '
-                           'allow identifying more details. However, since there are fewer windows, '
+                      help='The PSD is estimated from small patches of this '
+                           'size. Bigger patches allow identifying more '
+                           'details. However, since there are fewer windows, '
                            'estimations are noisier.')
 
         form.addParallelSection(threads=2, mpi=1)
@@ -130,10 +139,11 @@ class ProtCTFMicrographs(ProtMicrographs):
                                                self.inputMicrographs.get())
             # Insert step to create output objects
             fDeps = self._insertFinalSteps(deps)
-            # For the streaming mode, the steps function have a 'wait' flag that
-            # can be turned on/off. For example, here we insert the createOutputStep
-            # but it wait=True, which means that can not be executed until it is
-            # set to False (when the input micrographs stream is closed)
+            # For the streaming mode, the steps function have a 'wait' flag
+            # that can be turned on/off. For example, here we insert the
+            # createOutputStep but it wait=True, which means that can not be
+            # executed until it is set to False
+            # (when the input micrographs stream is closed)
             waitCondition = self._getFirstJoinStepName() == 'createOutputStep'
         else:
             if self.isFirstTime:
@@ -318,8 +328,9 @@ class ProtCTFMicrographs(ProtMicrographs):
             ctfSet = self._createSetOfCTF("_recalculated")
             prot = self.continueRun.get() or self
             micSet = prot.outputCTF.getMicrographs()
-            # We suppose this is reading the ctf selection (with enabled/disabled)
-            # to only consider the enabled ones in the final SetOfCTF
+            # We suppose this is reading the ctf selection
+            # (with enabled/disabled) to only consider the enabled ones
+            # in the final SetOfCTF
             #TODO: maybe we can remove the need of the extra text file
             # with the recalculate parameters
             newCount = 0
