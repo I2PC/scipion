@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -47,7 +47,7 @@ class ProtAlignMovies(ProtProcessMovies):
     or the cropping options (region of interest)
     """
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
         self._defineAlignmentParams(form)
@@ -55,15 +55,21 @@ class ProtAlignMovies(ProtProcessMovies):
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')
         line = group.addLine('Remove frames to ALIGN from',
-                            help='How many frames remove'
-                                 ' from movie alignment.')
-        line.addParam('alignFrame0', params.IntParam, default=0, label='beginning')
-        line.addParam('alignFrameN', params.IntParam, default=0, label='end')
+                            help='How many frames you want to remove to ALIGN '
+                                 'from the beginning and/or from the end of '
+                                 'each movie. ')
+        line.addParam('alignFrame0', params.IntParam, default=0,
+                      label='beginning')
+        line.addParam('alignFrameN', params.IntParam, default=0,
+                      label='end')
         line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
+                             help='How many frames you want remove to SUM '
+                                  'from beginning and/or from the end of each '
+                                  'movie.')
+        line.addParam('sumFrame0', params.IntParam, default=0,
+                      label='beginning')
+        line.addParam('sumFrameN', params.IntParam, default=0,
+                      label='end')
         group.addParam('binFactor', params.FloatParam, default=1.,
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
@@ -79,7 +85,8 @@ class ProtAlignMovies(ProtProcessMovies):
         line.addParam('cropDimY', params.IntParam, default=0, label='Y')
         
         form.addParam('doSaveAveMic', params.BooleanParam, default=True,
-                      label="Save aligned micrograph", expertLevel=cons.LEVEL_ADVANCED)
+                      label="Save aligned micrograph",
+                      expertLevel=cons.LEVEL_ADVANCED)
         
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
@@ -191,24 +198,26 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _validate(self):
         errors = []
+
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
             self.cropDimY > 0 and self.cropDimX <= 0):
             errors.append("If you give cropDimX, you should also give cropDimY"
                           " and viceversa")
+
         movie = self.inputMovies.get().getFirstItem()
         frames = movie.getNumberOfFrames()
+
         if frames is not None:
-            a0, aN = self._getFrameRange(frames, "align")
-            s0, sN = self._getFrameRange(frames, "sum")
-            if aN < a0:
-                errors.append("The final frame must be greater than the initial"
-                              " frame. Please, check the range to remove frames"
-                              " to *align* the movies.")
-            if sN < s0:
-                errors.append("The final frame must be greater than the initial"
-                              " frame. Please, check the range to remove frames"
-                              " to *sum* the movies.")
-            
+            def _validateRange(prefix):
+                f0, fN = self._getFrameRange(frames, prefix)
+                if fN < f0:
+                    errors.append("Check the selected frames range to *%s*. "
+                                  "Last frame should be greater than initial "
+                                  "frame. " % prefix.upper())
+
+            _validateRange("align")
+            _validateRange("sum")
+
         return errors
 
     #--------------------------- INFO functions -------------------------------
