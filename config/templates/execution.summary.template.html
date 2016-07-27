@@ -4,16 +4,22 @@
     </HEAD>
     <STYLE>
         /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
-        H1, H2 {
+        H1 {
             background: #b42222;
             color: white
         }
+        H2 {
+/*            background: grey;*/
+            color: firebrick;
+            border-bottom: 1px solid firebrick;
+            padding-left: 8px
+        }
+
         SECTION {
             
         }
         LABEL {
             font-weight: bold;
-            color: #930B0B;
             margin: 8px;
         }
         FOOTER {
@@ -74,7 +80,12 @@
             </TABLE>
         </SECTION>
         <SECTION id="ctf">
-            <H2>CTF chart</H2>
+            <H2>CTF monitor</H2>
+            <DIV id="ctfChart"></DIV>
+        </SECTION>
+        <SECTION id="system">
+            <H2>System monitor</H2>
+            <DIV id="systemChart"></DIV>
         </SECTION>
         
         
@@ -94,7 +105,8 @@
             runs:[
                 %(runLines)s
             ],
-            ctfData: %(ctfData)s
+            ctfData: %(ctfData)s,
+            systemData: %(systemData)s
         }
         
         function addAcquisition(){
@@ -103,7 +115,7 @@
             
             // For each acquisition property
             $.each(report.acquisition, function(index, value){
-                var line = "<label>" + value.propertyName + ":</label> " + value.propertyValue + "<BR/>";
+                var line = "<label>" + value.propertyName + "</label> " + value.propertyValue + "<BR/>";
                 $(acquisitionSection).append(line);
             });
             
@@ -129,15 +141,15 @@
         
         function addCTFChart () {
             
-            $('#ctf').highcharts({
+            $('#ctfChart').highcharts({
                 title: {
-                    text: 'CTF monitor data',
+                    text: '',
                     x: -20 //center
                 },
-                subtitle: {
-                    text: 'Source: Scipion',
-                    x: -20
-                },
+//                subtitle: {
+//                    text: 'Source: Scipion',
+//                    x: -20
+//                },
                 xAxis: {
                     categories: report.ctfData.idValues
                 },
@@ -174,11 +186,67 @@
 
             
         };
-        
+
+        function addSystemChart () {
+            
+            $('#systemChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+//                subtitle: {
+//                    text: 'Source: Scipion',
+//                    x: -20
+//                },
+                xAxis: {
+                    categories: report.systemData.idValues,
+                    labels:{
+                        format:"{value:.2f}"
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Percentage'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: ''
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Memory',
+                    data: report.systemData.mem,
+                    color: '#24307B'
+                    
+                }, {
+                    name: 'Swap',
+                    data: report.systemData.swap,
+                    color: '#B4AC22'
+                }, {
+                    name: 'cpu',
+                    data: report.systemData.cpu,
+                    color: '#D14242'
+                }]
+            });
+
+            
+        };
+
         function populateReport(){
             addAcquisition();
             addRuns();
             addCTFChart();
+            addSystemChart();
         };
         
         populateReport();
