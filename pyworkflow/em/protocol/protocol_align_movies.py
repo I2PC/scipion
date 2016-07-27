@@ -203,11 +203,11 @@ class ProtAlignMovies(ProtProcessMovies):
             if aN < a0:
                 errors.append("The final frame must be greater than the initial"
                               " frame. Please, check the range to remove frames"
-                              " in to *align* the movie.")
+                              " to *align* the movies.")
             if sN < s0:
                 errors.append("The final frame must be greater than the initial"
                               " frame. Please, check the range to remove frames"
-                              " in to *sum* the movie.")
+                              " to *sum* the movies.")
             
         return errors
 
