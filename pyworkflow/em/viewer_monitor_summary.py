@@ -358,11 +358,18 @@ class SummaryWindow(pwgui.Window):
         # End the runLines JSON object
         runLines += ']}'
 
+        # Ctf monitor chart data
+        data = self.protocol.createCtfMonitor().getData()
+
+        import json
+        ctfData = json.dumps(data)
+
         args = {'acquisitionLines': acquisitionLines,
                 'runLines': runLines,
                 'dateStr': pwutils.prettyTime(secs=True),
                 'projectName': self.protocol.getProject().getShortName(),
-                'scipionVersion': os.environ['SCIPION_VERSION']
+                'scipionVersion': os.environ['SCIPION_VERSION'],
+                'ctfData': ctfData
                 }
 
         reportTemplate = SummaryWindow.getHTMLReportText()
