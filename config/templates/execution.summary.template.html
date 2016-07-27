@@ -1,0 +1,127 @@
+<HTML>
+    <HEAD>
+        <TITLE>Scipion execution summary for %(projectName)s </TITLE>
+    </HEAD>
+    <STYLE>
+        /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
+        H1, H2 {
+            background: #b42222;
+            color: white
+        }
+        LABEL {
+            font-weight: bold;
+            color: #930B0B;
+        }
+        FOOTER {
+            text-align: center;
+            font-style: italic;
+            font-size: small;
+            margin-top: 20px;
+                
+        }
+        BODY {
+            margin: 0px;
+            padding: 0px;
+            
+        }
+        .icon {
+            margin-left: 4px;
+            height: 16px;
+            width: 16px;
+            vertical-align: middle;
+        }
+        TABLE {
+            border-collapse: collapse;
+        }
+        TH {
+            background: #B4AC22;
+            padding: 3px;
+        }
+        .protocolLine {
+            background: #F3EC71;
+        }
+        .center {
+            text-align: center;
+        }
+    </STYLE>
+    <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+    <BODY>
+        <HEADER>
+            <H1><img src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png"> Scipion execution summary report</H1>
+            <label>Date:</label> %(dateStr)s<BR/>
+            <label>Project:</label> %(projectName)s<BR/>
+            <label>Scipion version:</label> %(scipionVersion)s<BR/>
+        </HEADER>
+
+        <SECTION id="acquisition">
+            <H2>Acquisition</H2>
+        </SECTION>
+
+        <SECTION id="runs">
+            <H2>Runs Summary</H2>
+            <TABLE id="runsTable">
+                <TR>
+                    <TH>Name</TH>
+                    <TH>Output</TH>
+                    <TH>Number</TH>
+                </TR>
+            </TABLE>
+        </SECTION>
+        <FOOTER>
+            Powered by <A href="http://scipion.cnb.csic.es">Scipion</A><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
+        </FOOTER>
+    </BODY>
+    <SCRIPT>
+    
+        var report ={
+            date:"%(dateStr)s",
+            project:"%(projectName)s",
+            scipionVersion:"%(scipionVersion)s",
+            acquisition:[
+                %(acquisitionLines)s    
+            ],
+            runs:[
+                %(runLines)s
+            ]
+        }
+        
+        function addAcquisition(){
+            // Get the acquisition section
+            var acquisitionSection = $('#acquisition');
+            
+            // For each acquisition property
+            $.each(report.acquisition, function(index, value){
+                var line = "<label>" + value.propertyName + ":</label> " + value.propertyValue + "<BR/>";
+                $(acquisitionSection).append(line);
+            });
+            
+        };
+        
+        function addRuns(){
+            // Get the runs table
+            var runsTable = $('#runsTable');
+            
+            
+            // For each protocol property
+            $.each(report.runs, function(index, value){
+                var line = "<TR class='protocolLine'><TD colspan='3'>" + value.protocolName + "</TD></TR>";
+                $(runsTable).append(line);
+            
+                $.each(value.output, function(index, value){
+                    var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
+                    $(runsTable).append(outputLine);
+                
+                });
+            });
+        };
+        
+        function populateReport(){
+            addAcquisition();
+            addRuns();
+        };
+        
+        populateReport();
+        
+        
+    </SCRIPT>
+<HTML>
