@@ -152,7 +152,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
-        errors = ProtAlignMovies._validate()
+        errors = ProtAlignMovies._validate(self)
         numThreads = self.numberOfThreads
         if numThreads>1:
             if self.doGPU:
