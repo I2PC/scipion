@@ -193,8 +193,22 @@ class ProtAlignMovies(ProtProcessMovies):
         errors = []
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
             self.cropDimY > 0 and self.cropDimX <= 0):
-            errors.append("If you give cropDimX, you should also give cropDimY "
-                          "and viceversa")
+            errors.append("If you give cropDimX, you should also give cropDimY"
+                          " and viceversa")
+        movie = self.inputMovies.get().getFirstItem()
+        frames = movie.getNumberOfFrames()
+        if frames is not None:
+            a0, aN = self._getFrameRange(frames, "align")
+            s0, sN = self._getFrameRange(frames, "sum")
+            if aN < a0:
+                errors.append("The final frame must be greater than the initial"
+                              " frame. Please, check the range to remove frames"
+                              " in to *align* the movie.")
+            if sN < s0:
+                errors.append("The final frame must be greater than the initial"
+                              " frame. Please, check the range to remove frames"
+                              " in to *sum* the movie.")
+            
         return errors
 
     #--------------------------- INFO functions -------------------------------
