@@ -20,26 +20,41 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This package contains the protocols and data for BSOFT
-"""
-
-from bibtex import _bibtex # Load bibtex dict with references
- 
-_logo = "bsoft_logo.png"
-_references = ['Heymann2007']
 
 
-from protocol_particle_pick import BsoftProtParticlePicking
-from protocol_bfilter import BsoftProtBfilter
+from pyworkflow.em.viewer import CommandView, Viewer, DESKTOP_TKINTER
+from pyworkflow.em.data import Volume
 
-from wizard import BsoftFilterParticlesWizard
+from convert import getEnviron
 
 
-from convert import getEnviron, getVersion
-_environ = getEnviron()
+#------------------------ Some views and  viewers ------------------------
+        
 
-from viewer import BsoftViewer
+class BsoftVolumeView(CommandView):
+    def __init__(self, inputFile, **kwargs):
+
+        # Small trick to handle .vol Spider volumes
+        if inputFile.endswith('.vol'):
+            inputFile += ":spi"
+
+        CommandView.__init__(self, 'bshow "%s" &' % inputFile,
+                             env=getEnviron(), **kwargs)
+
+             
+class BsoftViewer(Viewer):
+    _environments = [DESKTOP_TKINTER]
+    _targets = [Volume]
+    
+    def __init__(self, **kwargs):
+        Viewer.__init__(self, **kwargs)
+
+    def visualize(self, obj, **kwargs):
+        cls = type(obj)
+
+        fn = obj.getFileName()
+        BsoftVolumeView(fn).show()
+
