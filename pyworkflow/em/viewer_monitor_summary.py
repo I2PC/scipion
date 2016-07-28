@@ -161,7 +161,7 @@ class SummaryWindow(pwgui.Window):
     @staticmethod
     def getSummaryHTMLTemplatePath():
 
-        return join(pwutils.getTemplatesFolder(), 'execution.summary.html.template')
+        return join(pwutils.getTemplatesFolder(), 'execution.summary.template.html')
 
     def _createContent(self, content):
         topFrame = tk.Frame(content)
@@ -334,20 +334,48 @@ class SummaryWindow(pwgui.Window):
 
         acquisitionLines = ''
         for item in self.provider.acquisition:
-            acquisitionLines += '%s %s <BR/>' % item
+            if not acquisitionLines == '':
+                acquisitionLines += ','
+
+            acquisitionLines += '{propertyName:"%s", propertyValue:"%s"}' % item
 
         runLines = ''
+        wasProtocol = None
         for obj in self.provider.getObjects():
-            if obj.name:
-                runLines += ' %s <BR/>' % obj.name
+
+            # If it's a protocol
+            isProtocol = True if obj.name else False
+
+            if isProtocol:
+                if runLines != '': runLines += ']},'
+                runLines += '{protocolName: "%s", output:[' % obj.name
             else:
-                runLines += ' %s %s <BR/>' % (obj.output, obj.outSize)
+                if not wasProtocol: runLines += ','
+                runLines += '{name: "%s",  size:"%s"}' % (obj.output, obj.outSize)
+
+            wasProtocol = isProtocol
+
+        # End the runLines JSON object
+        runLines += ']}'
+
+        # Charts
+        import json
+
+        # Ctf monitor chart data
+        data = self.protocol.createCtfMonitor().getData()
+        ctfData = json.dumps(data)
+
+        # system monitor chart data
+        data = self.protocol.createSystemMonitor().getData()
+        systemData = json.dumps(data)
 
         args = {'acquisitionLines': acquisitionLines,
                 'runLines': runLines,
                 'dateStr': pwutils.prettyTime(secs=True),
                 'projectName': self.protocol.getProject().getShortName(),
-                'scipionVersion': os.environ['SCIPION_VERSION']
+                'scipionVersion': os.environ['SCIPION_VERSION'],
+                'ctfData': ctfData,
+                'systemData': systemData
                 }
 
         reportTemplate = SummaryWindow.getHTMLReportText()

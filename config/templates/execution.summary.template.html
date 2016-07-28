@@ -1,0 +1,256 @@
+<HTML>
+    <HEAD>
+        <TITLE>Scipion execution summary for %(projectName)s </TITLE>
+    </HEAD>
+    <STYLE>
+        /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
+        H1 {
+            background: #b42222;
+            color: white
+        }
+        H2 {
+/*            background: grey;*/
+            color: firebrick;
+            border-bottom: 1px solid firebrick;
+            padding-left: 8px
+        }
+
+        SECTION {
+            
+        }
+        LABEL {
+            font-weight: bold;
+            margin: 8px;
+        }
+        FOOTER {
+            text-align: center;
+            font-style: italic;
+            font-size: small;
+            margin-top: 20px;
+                
+        }
+        BODY {
+            margin: 0px;
+            padding: 0px;
+            
+        }
+        .icon {
+            margin-left: 6px;
+            height: 16px;
+            width: 16px;
+            vertical-align: middle;
+        }
+        TABLE {
+            border-collapse: collapse;
+            margin: 8px;
+        }
+        TH {
+            background: #B4AC22;
+            padding: 3px;
+        }
+        .protocolLine {
+            background: #F3EC71;
+        }
+        .center {
+            text-align: center;
+        }
+    </STYLE>
+    <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+    <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
+    <BODY>
+        <HEADER>
+            <H1><img src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png"> Scipion execution summary report</H1>
+            <label>Date:</label> %(dateStr)s<BR/>
+            <label>Project:</label> %(projectName)s<BR/>
+            <label>Scipion version:</label> %(scipionVersion)s<BR/>
+        </HEADER>
+
+        <SECTION id="acquisition">
+            <H2>Acquisition</H2>
+        </SECTION>
+
+        <SECTION id="runs">
+            <H2>Runs Summary</H2>
+            <TABLE id="runsTable">
+                <TR>
+                    <TH>Name</TH>
+                    <TH>Output</TH>
+                    <TH>Number</TH>
+                </TR>
+            </TABLE>
+        </SECTION>
+        <SECTION id="ctf">
+            <H2>CTF monitor</H2>
+            <DIV id="ctfChart"></DIV>
+        </SECTION>
+        <SECTION id="system">
+            <H2>System monitor</H2>
+            <DIV id="systemChart"></DIV>
+        </SECTION>
+        
+        
+        <FOOTER>
+            Powered by <A href="http://scipion.cnb.csic.es">Scipion</A><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
+        </FOOTER>
+    </BODY>
+    <SCRIPT>
+    
+        var report ={
+            date:"%(dateStr)s",
+            project:"%(projectName)s",
+            scipionVersion:"%(scipionVersion)s",
+            acquisition:[
+                %(acquisitionLines)s    
+            ],
+            runs:[
+                %(runLines)s
+            ],
+            ctfData: %(ctfData)s,
+            systemData: %(systemData)s
+        }
+        
+        function addAcquisition(){
+            // Get the acquisition section
+            var acquisitionSection = $('#acquisition');
+            
+            // For each acquisition property
+            $.each(report.acquisition, function(index, value){
+                var line = "<label>" + value.propertyName + "</label> " + value.propertyValue + "<BR/>";
+                $(acquisitionSection).append(line);
+            });
+            
+        };
+        
+        function addRuns(){
+            // Get the runs table
+            var runsTable = $('#runsTable');
+            
+            
+            // For each protocol property
+            $.each(report.runs, function(index, value){
+                var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
+                $(runsTable).append(line);
+            
+                $.each(value.output, function(index, value){
+                    var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
+                    $(runsTable).append(outputLine);
+                
+                });
+            });
+        };
+        
+        function addCTFChart () {
+            
+            $('#ctfChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+//                subtitle: {
+//                    text: 'Source: Scipion',
+//                    x: -20
+//                },
+                xAxis: {
+                    categories: report.ctfData.idValues
+                },
+                yAxis: {
+                    title: {
+                        text: 'Defocus(A)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: 'A'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Defocus U',
+                    data: report.ctfData.defocusU,
+                    color: '#24307B'
+                    
+                }, {
+                    name: 'Defocus V',
+                    data: report.ctfData.defocusV,
+                    color: '#B4AC22'
+                }]
+            });
+
+            
+        };
+
+        function addSystemChart () {
+            
+            $('#systemChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+//                subtitle: {
+//                    text: 'Source: Scipion',
+//                    x: -20
+//                },
+                xAxis: {
+                    categories: report.systemData.idValues,
+                    labels:{
+                        format:"{value:.2f}"
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Percentage'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: ''
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Memory',
+                    data: report.systemData.mem,
+                    color: '#24307B'
+                    
+                }, {
+                    name: 'Swap',
+                    data: report.systemData.swap,
+                    color: '#B4AC22'
+                }, {
+                    name: 'cpu',
+                    data: report.systemData.cpu,
+                    color: '#D14242'
+                }]
+            });
+
+            
+        };
+
+        function populateReport(){
+            addAcquisition();
+            addRuns();
+            addCTFChart();
+            addSystemChart();
+        };
+        
+        populateReport();
+        
+        
+    </SCRIPT>
+<HTML>
