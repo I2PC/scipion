@@ -37,6 +37,11 @@ from glob import glob
 
 import pyworkflow as pw
 
+# Constants for paths.
+SCIPION_HOME_PROPERTY_NAME = 'SCIPION_HOME'
+TEMPLATES_FOLDER = 'templates'
+CONFIGURATION_FOLDER = 'config'
+
 
 def findFileRecursive(filename, path):
     for root, dirs, files in os.walk(path):
@@ -395,3 +400,18 @@ def createUniqueFileName(fn):
 def getFileSize(fn):
     """ Shortcut to inspect the size of a file. """
     return os.stat(fn).st_size
+
+
+def getScipionHomeFolder():
+
+    return os.environ[SCIPION_HOME_PROPERTY_NAME]
+
+
+def getConfigFolder():
+
+    return join(getScipionHomeFolder(), CONFIGURATION_FOLDER)
+
+
+def getTemplatesFolder():
+
+    return join(getConfigFolder(), TEMPLATES_FOLDER)

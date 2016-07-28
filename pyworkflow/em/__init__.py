@@ -44,7 +44,6 @@ import transformations
 #from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
-
 _emPackagesDict = None
 
 def getPackages():
