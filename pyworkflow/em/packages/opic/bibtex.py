@@ -1,7 +1,7 @@
 # coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -21,12 +21,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'coss@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Bibtex string file for Cryoem package.
-"""
 
 _bibtexStr = """
 
