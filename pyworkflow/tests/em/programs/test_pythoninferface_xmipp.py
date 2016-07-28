@@ -1205,3 +1205,14 @@ _rlnDefocusU #2
         total = md.getValue(MDL_ANGLE_DIFF, id)
         self.assertAlmostEqual(total, 5.23652, 4)
 
+    def test_SymList_getSymmetryMatrices(self):
+        try:
+            SL = SymList()
+            _symList = SL.getSymmetryMatrices("C4")
+        except Exception as e:
+            print e.message
+        m = _symList[1]
+        l = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
+        self.assertAlmostEqual(m[1][1],l[1][1])
+        self.assertAlmostEqual(m[0][0],l[0][0])
+        self.assertAlmostEqual(m[1][1],0.)

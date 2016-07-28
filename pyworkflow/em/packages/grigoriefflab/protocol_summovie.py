@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from os.path import exists
+from os.path import exists, realpath, abspath
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -134,11 +134,29 @@ class ProtSummovie(ProtAlignMovies):
 
     def _validate(self):
         errors = []
+
         if not exists(SUMMOVIE_PATH):
-            errors.append("Cannot find the Summovie program at: " + SUMMOVIE_PATH)
+            errors.append("Cannot find the Summovie program at: %s"
+                          % SUMMOVIE_PATH)
+
+        # If this protocol is going to delete the input movies, let's double
+        # check that they has been produced by the previous protocol and
+        # are not the original input movies data, what can be a serious problem
+        if self.cleanInputMovies:
+            inputMovies = self.inputMovies.get()
+            firstMovie = inputMovies.getFirstItem()
+            fullPath = realpath(firstMovie.getFileName())
+            prevProt = self.getMapper().getParent(inputMovies)
+            protPath = abspath(prevProt.getWorkingDir())
+            if not fullPath.startswith(protPath):
+                errors.append("You have selected to delete the input movies "
+                              "and they are not produced by the previous "
+                              "protocol. This is not allowed because you could "
+                              "lost your original data.")
+
         return errors
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _argsSummovie(self):
         self._program = 'export OMP_NUM_THREADS=1; ' + SUMMOVIE_PATH
         self._args = """ << eof

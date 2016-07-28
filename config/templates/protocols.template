@@ -202,3 +202,8 @@ HEMNMA = [
         {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "Image analysis with selected modes"}]},
     {"tag": "section", "text": "6. 3D reconstructions & animations", "children": [
         {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}]}]
+
+Localized Reconstruction = [
+	{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "1. Compute sub-particles"},
+	{"tag": "protocol", "value": "ProtRelionSubtract",  "text": "2. (Optional) Relion projection subtraction"},
+	{"tag": "protocol", "value": "ProtLocalizedExtraction",  "text": "3. Sub-particles extraction"}]
