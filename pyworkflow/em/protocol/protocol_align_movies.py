@@ -142,17 +142,20 @@ class ProtAlignMovies(ProtProcessMovies):
         self.debug('   listOfMovies: %s, doneList: %s, newDone: %s'
                    % (len(self.listOfMovies), len(doneList), len(newDone)))
 
-        if newDone:
-            self._writeDoneList(newDone)
-        else:
-            return
-
         firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input movies (stream closed)
         # and the number of processed movies is equal to the number of inputs
         self.finished = self.streamClosed and allDone == len(self.listOfMovies)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        if newDone:
+            self._writeDoneList(newDone)
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
 
         self.debug('   finished: %s ' % self.finished)
         self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
@@ -215,6 +218,9 @@ class ProtAlignMovies(ProtProcessMovies):
                           " and viceversa")
 
         movie = self.inputMovies.get().getFirstItem()
+        # Close movies db because the getFirstItem open it
+        # we do not want to leave the file open
+        self.inputMovies.get().close()
         frames = movie.getNumberOfFrames()
 
         if frames is not None:
