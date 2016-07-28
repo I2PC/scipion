@@ -138,6 +138,10 @@ class ProtAlignMovies(ProtProcessMovies):
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
+        self.debug('_checkNewOutput: ')
+        self.debug('   listOfMovies: %s, doneList: %s, newDone: %s'
+                   % (len(self.listOfMovies), len(doneList), len(newDone)))
+
         if newDone:
             self._writeDoneList(newDone)
         else:
@@ -150,12 +154,18 @@ class ProtAlignMovies(ProtProcessMovies):
         self.finished = self.streamClosed and allDone == len(self.listOfMovies)
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
+        self.debug('   finished: %s ' % self.finished)
+        self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
+        self.debug('        allDone (%s) == len(self.listOfMovies (%s)'
+                   % (allDone, len(self.listOfMovies)))
+        self.debug('   streamMode: %s' % streamMode)
+
         if self._doGenerateOutputMovies():
             # FIXME: Even if we save the movie or not, both are aligned
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             suffix = '_aligned' if saveMovie else '_original'
             movieSet = self._loadOutputSet(SetOfMovies,
-                                           'movies%s.sqlite' % suffix,
+                                           'movies_%s.sqlite' % suffix,
                                            fixSampling=saveMovie)
 
             for movie in newDone:
