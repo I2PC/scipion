@@ -149,11 +149,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
-        else:
-            if (outputStep is not None and self.streamClosed
-                and outputStep.isWaiting()):
-                outputStep.setStatus(STATUS_NEW)
-                self.updateSteps()
 
     def _checkNewOutput(self):
         pass # To be implemented in sub-classes
