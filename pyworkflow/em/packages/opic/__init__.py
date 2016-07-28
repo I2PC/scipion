@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,26 +20,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This package contains the protocols and data for BSOFT
+This sub-package contains data and protocol classes
+wrapping Localized recontruction of subunits.
 """
-
 from bibtex import _bibtex # Load bibtex dict with references
- 
-_logo = "bsoft_logo.png"
-_references = ['Heymann2007']
 
+_logo = "opic_logo.png"
 
-from protocol_particle_pick import BsoftProtParticlePicking
-from protocol_bfilter import BsoftProtBfilter
-
-from wizard import BsoftFilterParticlesWizard
-
-
-from convert import getEnviron, getVersion
-_environ = getEnviron()
-
-from viewer import BsoftViewer
+from convert import *
+from protocol_localized import ProtLocalizedRecons
+from protocol_localized_extraction import ProtLocalizedExtraction

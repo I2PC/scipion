@@ -16,7 +16,6 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 
-import sun.awt.image.ToolkitImage;
 import xmipp.ij.commons.XmippImageCanvas;
 import xmipp.ij.commons.XmippImageWindow;
 import xmipp.jni.Particle;
@@ -24,6 +23,7 @@ import xmipp.utils.XmippDialog;
 import xmipp.utils.XmippResource;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
 
+import javax.swing.*;
 
 public abstract class ParticlePickerCanvas extends XmippImageCanvas
 {
@@ -166,12 +166,13 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
         String pickingCursorImageName = "picking" + index + ".png";
 
-        ToolkitImage image = (ToolkitImage) XmippResource.getIcon(pickingCursorImageName).getImage();
-        if (image.hasError()) {
+        ImageIcon icon = XmippResource.getIcon(pickingCursorImageName);
+
+        if (icon.getIconHeight() == -1) {
             // Fall back on crosshair cursor
             return crosshairCursor;
         } else {
-            return Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(2, 0), "Picking");
+            return Toolkit.getDefaultToolkit().createCustomCursor(icon.getImage(), new Point(2, 0), "Picking");
         }
 
     }

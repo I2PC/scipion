@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,26 +21,25 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
+_bibtexStr = """
+
+@Article{Serban2015,
+  Title                    = {Localized reconstruction of subunits from electron cryomicroscopy images.},
+  Author                   = {Ilca, Serban L. and Kotecha, A. Sun, Xiaoyu and Poranen, Minna M. and Stuart, David I. and Huiskonen, Juha T.},
+  Journal                  = {Nat Commun},
+  Year                     = {2015},
+  Month                    = {November},
+  Volume                   = {6},
+  Doi                      = {http://dx.doi.org/10.1038/ncomms9843},
+  Url                      = {http://www.nature.com/ncomms/2015/151104/ncomms9843/full/ncomms9843.html}
+}
+
 """
-This package contains the protocols and data for BSOFT
-"""
 
-from bibtex import _bibtex # Load bibtex dict with references
- 
-_logo = "bsoft_logo.png"
-_references = ['Heymann2007']
+from pyworkflow.utils import parseBibTex
 
-
-from protocol_particle_pick import BsoftProtParticlePicking
-from protocol_bfilter import BsoftProtBfilter
-
-from wizard import BsoftFilterParticlesWizard
-
-
-from convert import getEnviron, getVersion
-_environ = getEnviron()
-
-from viewer import BsoftViewer
+_bibtex = parseBibTex(_bibtexStr)  
