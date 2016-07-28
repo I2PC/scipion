@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -31,6 +31,8 @@ CTFFIND3 = 'ctffind3.exe'
 CTFFIND4 = 'ctffind'
 FREALIGN = 'frealign_v9.exe'
 FREALIGNMP = 'frealign_v9_mp.exe'
+MAGDISTEST = 'mag_distortion_estimate_openmp_1_12_16.exe'
+MAGDISTCORR = 'mag_distortion_correct_openmp_8_18_15.exe'
 CALC_OCC = 'calc_occ.exe'
 RSAMPLE = 'rsample.exe'
 UNBLUR = 'unblur'
@@ -57,6 +59,9 @@ FREALIGN_PATH = join(FREALING_HOME, 'bin', FREALIGN)
 FREALIGNMP_PATH = join(FREALING_HOME, 'bin', FREALIGNMP)
 CALC_OCC_PATH = join(FREALING_HOME, 'bin', CALC_OCC)
 RSAMPLE_PATH = join(FREALING_HOME, 'bin', RSAMPLE)
+
+MAGDISTEST_PATH = join(_getHome('MAGDIST_HOME', 'mag_distortion'), 'bin', MAGDISTEST)
+MAGDISTCORR_PATH = join(_getHome('MAGDIST_HOME', 'mag_distortion'), 'bin', MAGDISTCORR)
 
 UNBLUR_PATH  = join(_getHome('UNBLUR_HOME', 'unblur'), 'bin', UNBLUR)
 SUMMOVIE_PATH  = join(_getHome('SUMMOVIE_HOME', 'summovie'), 'bin', SUMMOVIE)

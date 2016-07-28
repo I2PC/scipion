@@ -52,6 +52,7 @@ OP_SQRT = 9
 OP_ABS = 10
 OP_POW = 11
 OP_SLICE = 12
+
 OP_RADIAL = 13
 OP_RESET = 14
 
@@ -132,7 +133,8 @@ class XmippOperateHelper():
         self._defineSpecificParams(form)
         form.addParam('value', params.FloatParam,
                       allowNull=True,
-                      condition='isValue and '+binaryCondition+' or '+powCondition,
+                      condition='isValue and %s or %s' %
+                                (binaryCondition, powCondition),
                       label='Input value ',
                       help = 'Set the desire float value')
         form.addParam('intValue', params.IntParam,
@@ -299,7 +301,8 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
             writeSetOfVolumes(self.inputVolumes.get(), self.inputFn)
             
             if self.inputVolumes2.get() is not None:
-                writeSetOfVolumes(self.inputVolumes2.get(), self._getSecondSetFn())
+                writeSetOfVolumes(self.inputVolumes2.get(),
+                                  self._getSecondSetFn())
     
     def operationStep(self, operationStr):
         dictImgFn = {"inputFn" : self.inputFn}

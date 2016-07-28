@@ -264,8 +264,20 @@ def fixVolumeFileName(image):
         if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'
         
-    return fn   
-    
+    return fn
+
+def getMovieFileName(movie):
+    """ Add the :mrcs or :ems extensions to movie files to be
+    recognized by Xmipp as proper stack files.
+    """
+    fn = movie.getFileName()
+    if fn.endswith('.mrc'):
+        fn += ':mrcs'
+    elif fn.endswith('.em'):
+        fn += ':ems'
+
+    return fn
+
 def getImageLocation(image):
     xmippFn = locationToXmipp(image.getIndex(),
                               fixVolumeFileName(image))
@@ -589,11 +601,9 @@ def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
 def mdToCTFModel(md, mic):    
     ctfRow = rowFromMd(md, md.firstObject())
     ctfObj = rowToCtfModel(ctfRow)
-    if md.containsLabel(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY):
-        ctfObj._xmipp_ctfCritNonAstigmaticValidty = Float(ctfRow.getValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY))
-    if md.containsLabel(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY):
-        ctfObj._xmipp_ctfCritCtfMargin = Float(ctfRow.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO))
-    # the ctf id is set to micId when calling setMicrograph
+    setXmippAttributes(ctfObj, ctfRow,
+                       xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
+                       xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO)
     ctfObj.setMicrograph(mic)
     
     return ctfObj
@@ -1034,7 +1044,7 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
     classMd.write(classFn) # Empty write to ensure the classes is the first block
-    
+    #FIXME: review implementation of this function since there are syntax errors
     classRow = XmippMdRow()
     for classVol in classesVolSet:        
         classVolToRow(classVol, classRow)
@@ -1433,6 +1443,51 @@ def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 
 
+def readShiftsMovieAlignment(xmdFn):
+    shiftsMd = md.MetaData(xmdFn)
+    shiftsMd.removeDisabled()
+
+    return (shiftsMd.getColumnValues(md.MDL_SHIFT_X),
+            shiftsMd.getColumnValues(md.MDL_SHIFT_Y))
+
+
+def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
+    
+    movieAlignment=movie.getAlignment()
+    shiftListX, shiftListY = movieAlignment.getShifts()
+    # Generating metadata for global shifts
+    a0, aN = movieAlignment.getRange()
+    globalShiftsMD = xmipp.MetaData()
+    alFrame = a0
+    
+    if s0 < a0:
+        for i in range(s0, a0):
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(i, getMovieFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0.0, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)
+            
+    for shiftX, shiftY in izip(shiftListX, shiftListY):
+        if alFrame >= s0 and alFrame <= sN:
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(alFrame, getMovieFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
+        alFrame += 1
+
+    if sN > aN:
+        for j in range(aN, sN):
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(j+1, getMovieFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0.0, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)
+    
+    globalShiftsMD.write(xmdFn)
+
+
 def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):
     f = open(filename,'w')
     str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % (dimX, dimX)
@@ -1441,5 +1496,3 @@ def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=Fals
     str += "_applyShift 1\n_noisePixelLevel    '0 0'\n"
     f.write(str)
     f.close()
-    
-    
