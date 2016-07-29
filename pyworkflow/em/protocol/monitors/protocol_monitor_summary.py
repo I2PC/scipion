@@ -24,16 +24,12 @@
 # *
 # **************************************************************************
 
-import time
-import threading
-
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol import ProtCTFMicrographs
-
 from protocol_monitor import ProtMonitor, Monitor
 from protocol_monitor_ctf import MonitorCTF
 from protocol_monitor_system import MonitorSystem
-
+from pyworkflow.em.protocol import ProtCTFMicrographs
+from pyworkflow.em.protocol.monitors.report_html import ReportHtml
 
 
 class ProtMonitorSummary(ProtMonitor):
@@ -89,6 +85,7 @@ class ProtMonitorSummary(ProtMonitor):
 
         ctfMonitor = self.createCtfMonitor()
         sysMonitor = self.createSystemMonitor()
+        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor)
 
         monitor = Monitor(workingDir=self.workingDir.get(),
                           samplingInterval=self.samplingInterval.get(),
@@ -101,6 +98,7 @@ class ProtMonitorSummary(ProtMonitor):
         def stepAll():
             ctfMonitor.step()
             sysMonitor.step()
+            reportHtml.generate()
 
         monitor.initLoop = initAll
         monitor.step = stepAll
@@ -146,3 +144,10 @@ class ProtMonitorSummary(ProtMonitor):
                                    memAlert=self.memAlert.get(),
                                    swapAlert=self.swapAlert.get())
         return sysMonitor
+
+    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None):
+        ctfMonitor = ctfMonitor or self.createCtfMonitor()
+        sysMonitor = sysMonitor or self.createSystemMonitor()
+
+        return ReportHtml(self, ctfMonitor, sysMonitor)
+
