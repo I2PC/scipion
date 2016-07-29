@@ -36,7 +36,8 @@ from convert import parseMagEstOutput
 
 class ProtMagDistEst(ProtPreprocessMicrographs):
     """ This program automatically estimates anisotropic magnification
-    distortion from a set of images of a standard gold shadowed diffraction grating
+    distortion from a set of images of a standard gold shadowed diffraction
+    grating
     """    
     _label = 'magnification distortion estimation'
 
@@ -44,15 +45,15 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
         ProtPreprocessMicrographs.__init__(self, **args)
         self.stepsExecutionMode = cons.STEPS_SERIAL
 
-    # --------------------------- DEFINE params functions --------------------------------------------
+    # --------------------------- DEFINE params functions ----------------------
 
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       label="Input micrographs", important=True,
-                      help='Select the SetOfMicrograph containing ~20 images of different areas '
-                           'of polycrystalline gold')
+                      help='Select the SetOfMicrograph containing ~20 images '
+                           'of different areas of polycrystalline gold')
 
         form.addParam('scaleFactor', params.FloatParam, default=0.03,
                       expertLevel=params.LEVEL_ADVANCED,
@@ -65,7 +66,8 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
         line = form.addLine('Resolution limit',
                             expertLevel=params.LEVEL_ADVANCED,
-                            help='Resolution limits for the search. Default values are optimized'
+                            help='Resolution limits for the search. '
+                                 'Default values are optimized '
                                  'for the gold diffraction ring')
         line.addParam('lowRes', params.FloatParam, default=2.5, label='Low')
         line.addParam('highRes', params.FloatParam, default=2.1, label='High')
@@ -83,10 +85,12 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
         line = form.addLine('Filter radius (freq.)',
                             expertLevel=params.LEVEL_ADVANCED,
-                            help='Filter radius for the amplitude bandpass filter.')
+                            help='Filter radius for the amplitude bandpass '
+                                 'filter.')
 
         line.addParam('lowp', params.FloatParam, default=0.2, label='Low-pass')
-        line.addParam('highp', params.FloatParam, default=0.01, label='High-pass')
+        line.addParam('highp', params.FloatParam, default=0.01,
+                      label='High-pass')
 
         form.addParam('box', params.IntParam, default=512,
                       expertLevel=params.LEVEL_ADVANCED,
@@ -114,16 +118,17 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
                        'pixSize': pixSize,
                        'nthr': self.numberOfThreads.get()}
 
-    # --------------------------- INSERT steps functions --------------------------------------------
+    # --------------------------- INSERT steps functions -----------------------
 
     def _insertAllSteps(self):
         self._insertFunctionStep('convertInputStep')
         parameters = self.runMagDistEst()
         self._argsMagDistEst()
-        self._insertRunJobStep(self._program % parameters, self._args % parameters)
+        self._insertRunJobStep(self._program % parameters,
+                               self._args % parameters)
         self._insertFunctionStep('createOutputStep')
 
-    # --------------------------- STEPS functions ---------------------------------------------------
+    # --------------------------- STEPS functions ------------------------------
 
     def convertInputStep(self):
         """ Convert input micrographs into a single mrcs stack """
@@ -155,7 +160,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     def createOutputStep(self):
         pass
 
-    # --------------------------- INFO functions ----------------------------------------------------
+    # --------------------------- INFO functions -------------------------------
 
     def _validate(self):
         errors = []
@@ -176,13 +181,13 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
         summary = []
         result = self._parseOutputLog()
 
-        if result is None or len(result) <5:
+        if result is None or len(result) < 5:
             summary.append('Output is not ready yet.')
         else:
             result = tuple(result)
             distAngle, majorAxis, minorAxis, pixCorr, totDist = result
-            summary.append('This protocol does not generate any output. '
-                           'It only estimates magnification distortion parameters.\n\n'
+            summary.append('This protocol does not generate any output. It only'
+                           ' estimates magnification distortion parameters.\n\n'
                            'Total amount of distortion: *%0.2f%%* ' % totDist)
             summary.append('Distortion Angle: *%0.2f* degrees' % distAngle)
             summary.append('Major Scale: *%0.3f*' % majorAxis)
@@ -198,7 +203,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
 
         return txt
 
-    # --------------------------- UTILS functions --------------------------------------------
+    # --------------------------- UTILS functions ------------------------------
 
     def getOutputLog(self):
         return self._getExtraPath('mag_dist_estimation.log')
