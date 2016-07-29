@@ -17,6 +17,7 @@
         H1 {
             border-bottom: 2px solid firebrick;
             color: #6E6E6E;
+            text-align: center;
         }
         H2 {
 /*            background: grey;*/
@@ -30,6 +31,10 @@
         LABEL {
             font-weight: bold;
             margin: 8px;
+        }
+        .propertyline {
+            margin-top: 3px;
+            margin-bottom: 4px;
         }
         FOOTER {
             text-align: center;
@@ -50,11 +55,15 @@
         }
         TABLE {
             border-collapse: collapse;
-            margin: 8px;
+            margin: auto;
+            width: 100%%;
         }
         TH {
             background: #EAEBEC;
             padding: 3px;
+        }
+        TD {
+            padding: 5px;
         }
         .protocolLine {
             background: #F2F2F2;
@@ -165,9 +174,9 @@
             <DIV class="row">
                 <DIV class="column column-5">
                     <H2>Project properties</H2>
-                    <label>Date:</label> %(dateStr)s<BR/>
-                    <label>Project:</label> %(projectName)s<BR/>
-                    <label>Scipion version:</label> %(scipionVersion)s<BR/>
+                    <P class="propertyline"><label>Date:</label> %(dateStr)s</P>
+                    <P class="propertyline"><label>Project:</label> %(projectName)s</P>
+                    <P class="propertyline"><label>Scipion version:</label> %(scipionVersion)s</P>
 
                     <DIV id="acquisition">
                         <H2>Acquisition</H2>
@@ -176,7 +185,7 @@
 
                 <DIV id="runs" class="column column-7">
                     <H2>Runs summary</H2>
-                    <TABLE id="runsTable">
+                    <TABLE id="runsTable" class='center'>
                         <TR>
                             <TH>Name</TH>
                             <TH>Output</TH>
@@ -222,7 +231,7 @@
             
             // For each acquisition property
             $.each(report.acquisition, function(index, value){
-                var line = "<label>" + value.propertyName + "</label> " + value.propertyValue + "<BR/>";
+                var line = "<P class='propertyline'><label>" + value.propertyName + "</label> " + value.propertyValue + '</P>';
                 $(acquisitionSection).append(line);
             });
             
