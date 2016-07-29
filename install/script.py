@@ -420,6 +420,10 @@ env.addPackage('relion-1.3',
                            'bin/relion'])],
                default=False)
 
+env.addPackage('localrec',
+               tar='localrec-1.1.0.tgz',
+               default=False)
+
 env.addPackage('resmap',
                tar='resmap-1.1.5-s2.tgz',
                deps=['scipy'],
@@ -433,7 +437,6 @@ env.addPackage('spider',
 env.addPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
-
 env.addPackage('simple',
                tar='simple2.tgz',
                default=False)

@@ -100,8 +100,9 @@ class TestMotioncorrAlingMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1,7), [0, 0, 0, 0], ([0.7135,0.2344,0.026,0.0,0.4375,0.8073],
-                                                   [-0.375,-0.4792,-0.2344,0.0,-0.1875, 0.2448]))
+                             (1,7), [0, 0, 0, 0], 
+                             ([2.5893, 0.7946, 0.2589, 0.0536,0.0, 0.4643, 0.8705],
+                              [0.2545, -0.3304, -0.4375, -0.2277, 0.0, -0.0804, 0.1339]))
 
     def test_cct(self):
         prot = self.newProtocol(ProtMotionCorr,
@@ -123,6 +124,6 @@ class TestMotioncorrAlingMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (3,5), [10, 10, 0, 0], ([-0.125, 0.0, 0.4375],
-                                                     [-0.2708, 0.0, -0.3854]))
+                             (3,5), [10, 10, 0, 0], ([0.2604, -0.1042, 0.0],
+                                                     [-0.3958, -0.2604, 0.0]))
 

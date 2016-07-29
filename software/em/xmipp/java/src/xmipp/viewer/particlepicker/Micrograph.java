@@ -145,6 +145,11 @@ public abstract class Micrograph {
 			int pos = name.lastIndexOf('.');
 			if (pos != -1)
 				name = name.substring(0, pos);
+
+			pos = tokens[0].lastIndexOf('@');
+			if (pos != -1) {
+			    name = tokens[0].substring(0, pos) + "_at_" + name;
+			}
 		}
 		return name;
 	}

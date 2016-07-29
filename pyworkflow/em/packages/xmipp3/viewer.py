@@ -201,7 +201,9 @@ class XmippViewer(Viewer):
             # written during modification of tmpDir or create a new Xmipp picking
             # protocol to continue picking later without loosing the coordinates.
             writeSetOfCoordinates(tmpDir, obj)
-            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol, inTmpFolder=True))
+            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir,
+                                                     self.protocol,
+                                                     inTmpFolder=True))
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()

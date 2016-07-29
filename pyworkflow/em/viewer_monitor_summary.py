@@ -27,6 +27,8 @@
 import os
 import Tkinter as tk
 
+from os.path import join
+
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 from pyworkflow.gui.tree import TreeProvider, BoundTree
@@ -121,6 +123,7 @@ class SummaryProvider(TreeProvider):
 
 
 class SummaryWindow(pwgui.Window):
+
     def __init__(self, **kwargs):
         pwgui.Window.__init__(self, **kwargs)
 
@@ -132,6 +135,33 @@ class SummaryWindow(pwgui.Window):
         self._createContent(content)
         content.grid(row=0, column=0, sticky='news')
         content.columnconfigure(0, weight=1)
+
+    @staticmethod
+    def getHTMLReportText():
+
+        htmlTemplate = SummaryWindow.getSummaryHTMLTemplate()
+
+        if htmlTemplate is not None:
+            return open(htmlTemplate, 'r').read()
+        else:
+            return ""
+        return
+
+    @staticmethod
+    def getSummaryHTMLTemplate():
+
+        htmlFile = SummaryWindow.getSummaryHTMLTemplatePath()
+
+        # If the html template does not exist..
+        if not (os.path.exists(htmlFile)):
+            print "Html template files not found. Please get a valid HTML template and put it at %s", htmlFile
+        else:
+            return htmlFile
+
+    @staticmethod
+    def getSummaryHTMLTemplatePath():
+
+        return join(pwutils.getTemplatesFolder(), 'execution.summary.template.html')
 
     def _createContent(self, content):
         topFrame = tk.Frame(content)
@@ -197,6 +227,10 @@ class SummaryWindow(pwgui.Window):
         pdfBtn = HotButton(subframe, 'Generate PDF Report',
                            command=self._generatePDF)
         pdfBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
+
+        htmlBtn = HotButton(subframe, 'Generate HTML Report',
+                           command=self._generateHTML)
+        htmlBtn.grid(row=0, column=3, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
         closeBtn.grid(row=0, column=1, sticky='ne')
@@ -293,3 +327,60 @@ class SummaryWindow(pwgui.Window):
                        '-interaction=nonstopmode ' + reportName,
                        cwd=self.protocol._getExtraPath())
         text._open_cmd(reportPath.replace('.tex', '.pdf'))
+
+    def _generateHTML(self, e=None):
+        reportName = 'report_%s.html' % pwutils.prettyTimestamp()
+        reportPath = self.protocol._getExtraPath(reportName)
+
+        acquisitionLines = ''
+        for item in self.provider.acquisition:
+            if not acquisitionLines == '':
+                acquisitionLines += ','
+
+            acquisitionLines += '{propertyName:"%s", propertyValue:"%s"}' % item
+
+        runLines = ''
+        wasProtocol = None
+        for obj in self.provider.getObjects():
+
+            # If it's a protocol
+            isProtocol = True if obj.name else False
+
+            if isProtocol:
+                if runLines != '': runLines += ']},'
+                runLines += '{protocolName: "%s", output:[' % obj.name
+            else:
+                if not wasProtocol: runLines += ','
+                runLines += '{name: "%s",  size:"%s"}' % (obj.output, obj.outSize)
+
+            wasProtocol = isProtocol
+
+        # End the runLines JSON object
+        runLines += ']}'
+
+        # Charts
+        import json
+
+        # Ctf monitor chart data
+        data = self.protocol.createCtfMonitor().getData()
+        ctfData = json.dumps(data)
+
+        # system monitor chart data
+        data = self.protocol.createSystemMonitor().getData()
+        systemData = json.dumps(data)
+
+        args = {'acquisitionLines': acquisitionLines,
+                'runLines': runLines,
+                'dateStr': pwutils.prettyTime(secs=True),
+                'projectName': self.protocol.getProject().getShortName(),
+                'scipionVersion': os.environ['SCIPION_VERSION'],
+                'ctfData': ctfData,
+                'systemData': systemData
+                }
+
+        reportTemplate = SummaryWindow.getHTMLReportText()
+
+        reportFile = open(reportPath, 'w')
+        reportFile.write(reportTemplate % args)
+        reportFile.close()
+        text._open_cmd(reportPath)

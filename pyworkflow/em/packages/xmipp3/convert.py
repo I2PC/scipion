@@ -650,7 +650,12 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
     # Create a dictionary with the pos filenames for each micrograph
     posDict = {}
     for mic in coordSet.iterMicrographs():
-        micName = mic.getFileName()
+        micIndex, micFileName = mic.getLocation()
+        micName = os.path.basename(micFileName)
+
+        if micIndex != NO_INDEX:
+            micName = '%06d_at_%s' % (micIndex, micName)
+
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
         posDict[mic.getObjId()] = posFn
         
@@ -671,9 +676,8 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
         c += 1
-        f.write(" %06d   1   %d  %d  %d   %06d\n" % (coord.getObjId(), 
-                                                 coord.getX(), coord.getY(), 1,
-                                                 micId))
+        f.write(" %06d   1   %d  %d  %d   %06d\n"
+                % (coord.getObjId(), coord.getX(), coord.getY(), 1, micId))
     
     if f:
         f.close()
