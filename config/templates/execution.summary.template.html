@@ -258,7 +258,7 @@
                 },
                 xAxis: {
                     type:'linear',
-                    range:10
+                    range:50
                 },
                 yAxis: {
                     title: {
@@ -295,6 +295,12 @@
                     panKey:'shift'    
                 }                
             });
+            
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var ctfChart = $('#ctfChart').highcharts()
+            ctfChart.showResetZoom();
+
 
             
         };
@@ -314,7 +320,7 @@
                     labels:{
                         format:"{value:.2f}"
                     },
-                    range:20
+                    range:50
                 },
                 yAxis: {
                     title: {
@@ -356,6 +362,11 @@
                 } 
             });
 
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var systemChart = $('#systemChart').highcharts()
+            systemChart.showResetZoom();
+            
             
         };
 
