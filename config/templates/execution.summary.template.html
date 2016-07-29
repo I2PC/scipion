@@ -257,12 +257,16 @@
                     text: 'Click and drag to zoom in. Hold down shift key to pan.'
                 },
                 xAxis: {
+                    title: {
+                        text: 'Micrograph index'
+                    },
+
                     type:'linear',
                     range:50
                 },
                 yAxis: {
                     title: {
-                        text: 'Defocus(A)'
+                        text: 'Defocus(Å)'
                     },
                     plotLines: [{
                         value: 0,
@@ -271,7 +275,7 @@
                     }]
                 },
                 tooltip: {
-                    valueSuffix: 'A'
+                    valueSuffix: ' Å'
                 },
                 legend: {
                     layout: 'vertical',
@@ -316,6 +320,10 @@
                     text: 'Click and drag to zoom in. Hold down shift key to pan.'
                 },
                 xAxis: {
+                    title: {
+                        text: 'Time (hours)'
+                    },
+
                     type:'linear',
                     labels:{
                         format:"{value:.2f}"
@@ -324,7 +332,7 @@
                 },
                 yAxis: {
                     title: {
-                        text: 'Percentage'
+                        text: 'Percentage (%%)'
                     },
                     plotLines: [{
                         value: 0,
@@ -333,7 +341,7 @@
                     }]
                 },
                 tooltip: {
-                    valueSuffix: ''
+                    valueSuffix: '%%'
                 },
                 legend: {
                     layout: 'vertical',

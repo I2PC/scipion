@@ -51,7 +51,7 @@ class ReportHtml():
 
     def getHTMLReportText(self):
         if exists(self.template):
-            return open(self.template).read()
+            return open(self.template, 'rb').read().decode('utf-8')
         else:
             return ""
 
@@ -123,7 +123,9 @@ class ReportHtml():
 
         self.info("Writing report html to: %s" % reportPath)
         reportFile = open(reportPath, 'w')
-        reportFile.write(reportTemplate % args)
+        reportTemplate = reportTemplate % args
+        reportFile.write(reportTemplate.encode('utf-8'))
+
         reportFile.close()
 
         return reportPath
