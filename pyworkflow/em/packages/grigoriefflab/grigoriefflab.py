@@ -60,8 +60,9 @@ FREALIGNMP_PATH = join(FREALING_HOME, 'bin', FREALIGNMP)
 CALC_OCC_PATH = join(FREALING_HOME, 'bin', CALC_OCC)
 RSAMPLE_PATH = join(FREALING_HOME, 'bin', RSAMPLE)
 
-MAGDISTEST_PATH = join(_getHome('MAGDIST_HOME', 'mag_distortion'), 'bin', MAGDISTEST)
-MAGDISTCORR_PATH = join(_getHome('MAGDIST_HOME', 'mag_distortion'), 'bin', MAGDISTCORR)
+MAGDIST_HOME = _getHome('MAGDIST_HOME', 'mag_distortion')
+MAGDISTEST_PATH = join(MAGDIST_HOME, 'bin', MAGDISTEST)
+MAGDISTCORR_PATH = join(MAGDIST_HOME, 'bin', MAGDISTCORR)
 
 UNBLUR_PATH  = join(_getHome('UNBLUR_HOME', 'unblur'), 'bin', UNBLUR)
 SUMMOVIE_PATH  = join(_getHome('SUMMOVIE_HOME', 'summovie'), 'bin', SUMMOVIE)

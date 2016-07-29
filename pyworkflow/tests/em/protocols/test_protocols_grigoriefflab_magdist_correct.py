@@ -1,8 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Laura del Cano (ldelcano@cnb.csic.es)
-# *             Josue Gomez Blanco (jgomez@cnb.csic.es)
-# *             Grigory Sharov (sharov@igbmc.fr)
+# * Authors:    Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *

@@ -46,14 +46,15 @@ class ProtMagDistCorr(ProtProcessMovies):
     doSaveAveMic = False
     doSaveMovie = True
 
-    # --------------------------- DEFINE params functions --------------------------------------------
+    # --------------------------- DEFINE params functions ----------------------
 
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
 
         form.addParam('useEst', params.BooleanParam, default=False,
                       label='Use previous estimation?',
-                      help='Use previously calculated parameters of magnification anisotropy.')
+                      help='Use previously calculated parameters of '
+                           'magnification anisotropy.')
         form.addParam('inputEst', params.PointerParam,
                       pointerClass='ProtMagDistEst', condition='useEst',
                       label='Input protocol',
@@ -73,12 +74,13 @@ class ProtMagDistCorr(ProtProcessMovies):
         form.addParam('doGain', params.BooleanParam, default=False,
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Do gain correction before undistorting?',
-                      help='If Yes, gain reference that you provided during movies import will be chosen.')
+                      help='If Yes, gain reference that you provided during '
+                           'movies import will be chosen.')
         form.addParam('doResample', params.BooleanParam, default=False,
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Resample images?',
-                      help='Resample images after distortion correction and gain correction, '
-                           'by cropping their Fourier transforms')
+                      help='Resample images after distortion correction and gain'
+                           ' correction, by cropping their Fourier transforms')
         line = form.addLine('New dimensions (px)',
                             expertLevel=params.LEVEL_ADVANCED,
                             condition='doResample')
@@ -93,7 +95,7 @@ class ProtMagDistCorr(ProtProcessMovies):
 
         form.addParallelSection(threads=2, mpi=0)
 
-    # --------------------------- STEPS functions --------------------------------------------
+    # --------------------------- STEPS functions ------------------------------
 
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
@@ -137,7 +139,8 @@ class ProtMagDistCorr(ProtProcessMovies):
         try:
             self.runJob(self._program % params, self._args % params)
         except:
-            print("ERROR: Distortion correction for movie %s failed\n" % movie.getFileName())
+            print("ERROR: Distortion correction for movie %s failed\n"
+                  % movie.getFileName())
 
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
@@ -214,7 +217,7 @@ class ProtMagDistCorr(ProtProcessMovies):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    # --------------------------- INFO functions ----------------------------------------------------
+    # --------------------------- INFO functions -------------------------------
 
     def _validate(self):
         errors = []
@@ -245,7 +248,7 @@ class ProtMagDistCorr(ProtProcessMovies):
 
         return txt
 
-    # --------------------------- UTILS functions --------------------------------------------
+    # --------------------------- UTILS functions ------------------------------
 
     def getOutputLog(self, movie):
         return 'micrograph_%06d_Log.txt' % movie.getObjId()
@@ -341,24 +344,26 @@ eof
         if self.getAttributeValue('useEst', False):
             inputFn = self.getAttributeValue('inputEst', None).getOutputLog()
             input_params = parseMagCorrInput(inputFn)
-            self.summaryVar.set("Input magnification distortion parameters that were used for correction:\n\n"
+            self.summaryVar.set("Input magnification distortion parameters that"
+                                " were used for correction:\n\n"
                                 "Distortion Angle: *%0.2f* degrees\n"
                                 "Major Scale: *%0.3f*\n"
                                 "Minor Scale: *%0.3f*\n"
-                                "Corrected pixel size: *%0.3f* A" % (input_params[0],
-                                                                     input_params[1],
-                                                                     input_params[2],
-                                                                     input_params[3]))
+                                "Corrected pixel size: *%0.3f* A"
+                                % (input_params[0], input_params[1],
+                                   input_params[2], input_params[3]))
         else:
             defPix = movie.getSamplingRate()
-            self.summaryVar.set("Input magnification distortion parameters that were used for correction:\n\n"
+            self.summaryVar.set("Input magnification distortion parameters "
+                                "that were used for correction:\n\n"
                                 "Distortion Angle: *%0.2f* degrees\n"
                                 "Major Scale: *%0.3f*\n"
                                 "Minor Scale: *%0.3f*\n"
-                                "Corrected pixel size: *%0.3f* A" % (self.getAttributeValue('angDist', 1.0),
-                                                                     self.getAttributeValue('scaleMaj', 1.0),
-                                                                     self.getAttributeValue('scaleMin', 1.0),
-                                                                     self.getAttributeValue('corrPix', defPix)))
+                                "Corrected pixel size: *%0.3f* A"
+                                % (self.getAttributeValue('angDist', 1.0),
+                                   self.getAttributeValue('scaleMaj', 1.0),
+                                   self.getAttributeValue('scaleMin', 1.0),
+                                   self.getAttributeValue('corrPix', defPix)))
 
     def calcPixSize(self):
         origPix = self.inputMovies.get().getSamplingRate()
