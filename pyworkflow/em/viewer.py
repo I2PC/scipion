@@ -51,6 +51,7 @@ from data import PdbFile
 
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
 
 #------------------------ Some common Views ------------------
 
@@ -183,6 +184,9 @@ class CtfView(ObjectView):
 
         if psdLabels:
             viewParams[showj.RENDER] = psdLabels
+
+        if ctfSet.isStreamOpen():
+            viewParams['dont_recalc_ctf'] = ''
 
         if first.hasAttribute('_ctffind4_ctfResolution'):
             viewParams[showj.OBJCMDS] = "'%s'" % showj.OBJCMD_CTFFIND4

@@ -28,8 +28,7 @@ from bibtex import _bibtex # Load bibtex dict with references
 #_logo = "resmap_logo.png"
 _references = ['lix2013']
 
-#from protocol_dosefgpu import ProtDosefGpu
-#from protocol_import import ProtDosefGpuImport
+from protocol_motioncorr import ProtMotionCorr
 
 from convert import getEnviron
 

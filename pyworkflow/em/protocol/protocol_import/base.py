@@ -23,17 +23,13 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
 from os.path import join
 from glob import glob
 import re
 
-from pyworkflow.protocol.params import (PathParam, BooleanParam, 
-                                        EnumParam, StringParam, LEVEL_ADVANCED)
-from pyworkflow.utils.path import expandPattern, createLink, copyFile
+import pyworkflow.protocol.params as params
+from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
 from pyworkflow.em.protocol import EMProtocol
 
 
@@ -49,27 +45,29 @@ class ProtImportFiles(ProtImport):
     2) First option will always be "from files". (for this option 
       files with a given pattern will be retrieved  and the ### will 
       be used to mark an ID part from the filename.
-      - For each file a function to process it will be called (_importFile(fileName, fileId))
+      - For each file a function to process it will be called
+        (_importFile(fileName, fileId))
     """
     IMPORT_FROM_FILES = 0
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         importChoices = self._getImportChoices()
         filesCondition = self._getFilesCondition()
         
         form.addSection(label='Import')
+
         if len(importChoices) > 1: # not only from files
-            form.addParam('importFrom', EnumParam, 
+            form.addParam('importFrom', params.EnumParam, 
                           choices=importChoices, default=self._getDefaultChoice(),
                           label='Import from',
                           help='Select the type of import.')
         else:
-            form.addHidden('importFrom', EnumParam, 
+            form.addHidden('importFrom', params.EnumParam, 
                           choices=importChoices, default=self.IMPORT_FROM_FILES,
                           label='Import from',
                           help='Select the type of import.')
-        form.addParam('filesPath', PathParam, 
+        form.addParam('filesPath', params.PathParam, 
                       condition=filesCondition,
                       label="Files directory",
                       help="Directory with the files you want to import.\n\n"
@@ -78,7 +76,7 @@ class ProtImportFiles(ProtImport):
                            "For example:\n"
                            "  ~/Particles/\n"
                            "  data/day??_micrographs/")
-        form.addParam('filesPattern', StringParam,
+        form.addParam('filesPattern', params.StringParam,
                       label='Pattern', 
                       condition=filesCondition,
                       help="Pattern of the files to be imported.\n\n"
@@ -86,8 +84,8 @@ class ProtImportFiles(ProtImport):
                            "*, ?, etc, or special ones like ### to mark some\n"
                            "digits in the filename as ID.")
 
-        form.addParam('copyFiles', BooleanParam, default=False, 
-                      expertLevel=LEVEL_ADVANCED, 
+        form.addParam('copyFiles', params.BooleanParam, default=False, 
+                      expertLevel=params.LEVEL_ADVANCED, 
                       label="Copy files?",
                       help="By default the files are not copied into the\n"
                            "project to avoid data duplication and to save\n"
@@ -95,6 +93,42 @@ class ProtImportFiles(ProtImport):
                            "created pointing to original files. This approach\n"
                            "has the drawback that if the project is moved to\n"
                            "another computer, the links need to be restored.\n")
+        
+        group = form.addGroup('Process Streaming Data',
+                              expertLevel=params.LEVEL_ADVANCED)
+        
+        group.addParam('dataStreaming', params.BooleanParam, default=False, 
+              expertLevel=params.LEVEL_ADVANCED, 
+              label="Process data in streammig?",
+              help="Select this option if you want import data as it is\n"
+                   "generated and process on the fly by next protocols."
+                   "In this case the protocol will keep running to check \n"
+                   "new files and will update the output Set, which can \n"
+                   "be used right away by next steps.\n")
+        
+        group.addParam('timeout', params.IntParam, default=300,
+              expertLevel=params.LEVEL_ADVANCED, 
+              condition='dataStreaming',
+              label="Timeout (secs)",
+              help="Interval of time (in seconds) after which, if no new \n"
+                   "file is detected, the protocol will ends.\n"
+                   "When finished, the output Set will be closed and\n"
+                   "not more data will be added to it. \n")
+
+        group.addParam('fileTimeout', params.IntParam, default=30,
+              expertLevel=params.LEVEL_ADVANCED,
+              condition='dataStreaming',
+              label="File timeout (secs)",
+              help="Interval of time (in seconds) after which, if a file \n"
+                   "have not changed, we consider as a new file. \n")
+        
+        group.addParam('endTokenFile', params.StringParam, default=None, 
+              expertLevel=params.LEVEL_ADVANCED, 
+              condition='dataStreaming',
+              label="End token file",
+              help="Specify an ending file if you want to have more control\n"
+                   "about when to stop the import of files.")
+        
         self._defineImportParams(form)
         
     def _defineImportParams(self, form):
@@ -106,7 +140,7 @@ class ProtImportFiles(ProtImport):
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_FILES
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         if self.importFrom == self.IMPORT_FROM_FILES:
@@ -116,7 +150,8 @@ class ProtImportFiles(ProtImport):
                 # Just check the number of files matching the pattern
                 self.getMatchFiles()
                 if self.numberOfFiles == 0:
-                    errors.append("There are no files matching the pattern " + "%s" % self.getPattern())
+                    errors.append("There are no files matching the pattern %s"
+                                  % self.getPattern())
             
         return errors
     
@@ -135,7 +170,7 @@ class ProtImportFiles(ProtImport):
         """
         return '(importFrom == %d)' % self.IMPORT_FROM_FILES
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getPattern(self):
         """ Expand the pattern using environ vars or username
         and also replacing special character # by digit matching.
@@ -161,7 +196,9 @@ class ProtImportFiles(ProtImport):
         return pattern   
     
     def getMatchFiles(self, pattern=None):
-        """ Return a sorted list with the paths of files that matched the pattern"""
+        """ Return a sorted list with the paths of files that
+        matched the pattern.
+        """
         if pattern is None:
             pattern = self.getPattern()
         filePaths = glob(pattern)
@@ -176,7 +213,7 @@ class ProtImportFiles(ProtImport):
         if self.copyFiles:
             return copyFile
         else:
-            return createLink
+            return createAbsLink
         
     def iterFiles(self):
         """ Iterate through the files matched with the pattern.
@@ -190,7 +227,8 @@ class ProtImportFiles(ProtImport):
                 # this is set by the user by using #### format in the pattern
                 match = self._idRegex.match(fileName)
                 if match is None:
-                    raise Exception("File '%s' doesn't match the pattern '%s'" % (fileName, self.getPattern()))
+                    raise Exception("File '%s' doesn't match the pattern '%s'"
+                                    % (fileName, self.getPattern()))
                 fileId = int(match.group(1))
             else:
                 fileId = None

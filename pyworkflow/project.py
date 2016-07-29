@@ -873,56 +873,62 @@ class Project(object):
         """
 
         if refresh or self._runsGraph is None:
-            outputDict = {}  # Store the output dict
-            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids)
-                    if not r.isChild()]
-            g = pwutils.graph.Graph(rootName='PROJECT')
-
-            for r in runs:
-                n = g.createNode(r.strId())
-                n.run = r
-                n.setLabel(r.getRunName())
-                outputDict[r.getObjId()] = n
-                for _, attr in r.iterOutputAttributes(em.EMObject):
-                    outputDict[
-                        attr.getObjId()] = n  # mark this output as produced by r
-
-            def _checkInputAttr(node, pointed):
-                """ Check if an attr is registered as output"""
-                if pointed is not None:
-                    pointedId = pointed.getObjId()
-
-                    if pointedId in outputDict:
-                        parentNode = outputDict[pointedId]
-                        if parentNode is node:
-                            print("WARNING: Found a cyclic dependence from node"
-                                  " %s to itself, probably a bug. " % pointedId)
-                        else:
-                            parentNode.addChild(node)
-                            return True
-                return False
-
-            for r in runs:
-                node = g.getNode(r.strId())
-                for _, attr in r.iterInputAttributes():
-                    if attr.hasValue():
-                        pointed = attr.getObjValue()
-                        # Only checking pointed object and its parent, if more
-                        # levels we need to go up to get the correct dependencies
-                        if not _checkInputAttr(node, pointed):
-                            parent = self.mapper.getParent(pointed)
-                            _checkInputAttr(node, parent)
-            rootNode = g.getRoot()
-            rootNode.run = None
-            rootNode.label = "PROJECT"
-
-            for n in g.getNodes():
-                if n.isRoot() and not n is rootNode:
-                    rootNode.addChild(n)
-            self._runsGraph = g
-
+            runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
+            self._runsGraph = self.getGraphFromRuns(runs)
+            
         return self._runsGraph
 
+    def getGraphFromRuns(self, runs):
+        """ This function will build a dependencies graph from a set
+         of given runs.
+        :param runs: The input runs to build the graph
+        :return: The graph taking into account run dependencies
+        """
+        outputDict = {} # Store the output dict
+        g = pwutils.graph.Graph(rootName='PROJECT')
+
+        for r in runs:
+            n = g.createNode(r.strId())
+            n.run = r
+            n.setLabel(r.getRunName())
+            outputDict[r.getObjId()] = n
+            for _, attr in r.iterOutputAttributes(em.EMObject):
+                outputDict[attr.getObjId()] = n # mark this output as produced by r
+
+        def _checkInputAttr(node, pointed):
+            """ Check if an attr is registered as output"""
+            if pointed is not None:
+                pointedId = pointed.getObjId()
+
+                if pointedId in outputDict:
+                    parentNode = outputDict[pointedId]
+                    if parentNode is node:
+                        print "WARNING: Found a cyclic dependence from node %s to itself, problably a bug. " % pointedId
+                    else:
+                        parentNode.addChild(node)
+                        return True
+            return False
+
+        for r in runs:
+            node = g.getNode(r.strId())
+            for _, attr in r.iterInputAttributes():
+                if attr.hasValue():
+                    pointed = attr.getObjValue()
+                    # Only checking pointed object and its parent, if more levels
+                    # we need to go up to get the correct dependencies
+                    if not _checkInputAttr(node, pointed):
+                        parent = self.mapper.getParent(pointed)
+                        _checkInputAttr(node, parent)
+        rootNode = g.getRoot()
+        rootNode.run = None
+        rootNode.label = "PROJECT"
+
+        for n in g.getNodes():
+            if n.isRoot() and not n is rootNode:
+                rootNode.addChild(n)
+
+        return g
+    
     def _getRelationGraph(self, relation=em.RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
