@@ -195,7 +195,7 @@ class XmippProtMtfCalculation(Protocol):
         print "Resolution = \n" , ss_img_resolution
         
         
-        
+        """
         from sxt.ConvertCartPolar import ConvertCartPolar
         convCartPolar = ConvertCartPolar()
         polar_img = convCartPolar.convertImCart2Polar(single_imgss)
@@ -217,13 +217,15 @@ class XmippProtMtfCalculation(Protocol):
         print '#######   ******   #######'
         print "BW image dimensions = \n" , np.shape(imBW)
         #print "BW image = \n" , imBW
-        
+        """
         
         dx = ss_img_resolution[0]
         print "dx=", dx ,"\n"
+        from sxt.getMTFfromSiemensStar import MTFfromSiemensStar
+        MTFObj = MTFfromSiemensStar()
         #mtf_out = MTFObj.getMTFfromSiemensStar(single_imgss, dx, nRef, orders, ringPos) 
-        #mtf_out = MTFObj.getMTFfromSiemensStar(tomo, dx, nRef, orders, ringPos)
-        mtf_out = MTFObj.getMTFfromSiemensStar(imgs_ss, dx, nRef, orders, ringPos)
+        mtf_out = MTFObj.getMTFfromSiemensStar(tomo, dx, nRef, orders, ringPos)
+        #mtf_out = MTFObj.getMTFfromSiemensStar(imgs_ss, dx, nRef, orders, ringPos)
         pickle.dump(mtf_out, open("mtfoutputsingleimg_512.p", "wb")) #### 512 in the code should be checked and replace with the proper number....ask from Kino
         mtf_out = pickle.load(open("mtfoutputsingleimg_512.p", "rb"))
         fx = mtf_out['fx']
@@ -233,7 +235,14 @@ class XmippProtMtfCalculation(Protocol):
         print '#######   ******   #######'
         print "mtf dimension = " , np.shape(mtf)
         
-        
+        """
+        plt.plot(fx, mtf[:,0],'-')
+        plt.xlabel('Frequency (1/nm)')
+        plt.ylabel('MTF')
+        plt.title('MTF basd on a single image')
+        plt.grid()
+        plt.show()
+        """
         
         
         from sxt.mtf2psf import MTF2PSFClass
