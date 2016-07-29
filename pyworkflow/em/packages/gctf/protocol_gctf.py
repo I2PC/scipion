@@ -50,7 +50,8 @@ class ProtGctf(em.ProtCTFMicrographs):
 
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)
-        form.addParam('recalculate', params.BooleanParam, default=False, condition='recalculate',
+        form.addParam('recalculate', params.BooleanParam, default=False,
+              condition='recalculate',
               label="Do recalculate ctf?")
         
         form.addParam('continueRun', params.PointerParam, allowsNull=True,
@@ -65,30 +66,36 @@ class ProtGctf(em.ProtCTFMicrographs):
         form.addParam('ctfDownFactor', params.FloatParam, default=1.,
               label='CTF Downsampling factor',
               condition='not recalculate',
-              help='Set to 1 for no downsampling. Non-integer downsample factors are possible. '
-              'This downsampling is only used for estimating the CTF and it does not affect '
-              'any further calculation. Ideally the estimation of the CTF is optimal when '
-              'the Thon rings are not too concentrated at the origin (too small to be seen) '
-              'and not occupying the whole power spectrum (since this downsampling might '
-              'entail aliasing).')
+              help='Set to 1 for no downsampling. Non-integer downsample '
+                   'factors are possible. This downsampling is only used for '
+                   'estimating the CTF and it does not affect any further '
+                   'calculation. Ideally the estimation of the CTF is optimal '
+                   'when the Thon rings are not too concentrated at the origin '
+                   '(too small to be seen) and not occupying the whole power '
+                   'spectrum (since this downsampling might entail aliasing).')
         
         line = form.addLine('Resolution', condition='not recalculate',
               help='Give a value in digital frequency (i.e. between 0.0 and 0.5). '
-              'These cut-offs prevent the typical peak at the center of the PSD and high-resolution'
-              'terms where only noise exists, to interfere with CTF estimation. The default lowest '
-              'value is 0.05 but for micrographs with a very fine sampling this may be lowered towards 0.'
-              'The default highest value is 0.35, but it should '+'be increased for micrographs with '
-              'signals extending beyond this value. However, if your micrographs extend further than '
-              '0.35, you should consider sampling them at a finer rate.')
+                   'These cut-offs prevent the typical peak at the center of the '
+                   'PSD and high-resolution terms where only noise exists, to '
+                   'interfere with CTF estimation. The default lowest value is '
+                   '0.05 but for micrographs with a very fine sampling this '
+                   'may be lowered towards 0. The default highest value is '
+                   '0.35, but it should be increased for micrographs with '
+                   'signals extending beyond this value. However, if your '
+                   'micrographs extend further than 0.35, you should consider '
+                   'sampling them at a finer rate.')
         line.addParam('lowRes', params.FloatParam, default=0.05,
                       label='Lowest' )
         line.addParam('highRes', params.FloatParam, default=0.35,
                       label='Highest')
         # Switched (microns) by 'in microns' by fail in the identifier with jquery
-        line = form.addLine('Defocus search range (microns)', expertLevel=params.LEVEL_ADVANCED,
+        line = form.addLine('Defocus search range (microns)',
+              expertLevel=params.LEVEL_ADVANCED,
               condition='not recalculate',
-              help='Select _minimum_ and _maximum_ values for defocus search range (in microns).'
-              'Underfocus is represented by a positive number.')
+              help='Select _minimum_ and _maximum_ values for defocus search '
+                   'range (in microns). Underfocus is represented by a '
+                   'positive number.')
         line.addParam('minDefocus', params.FloatParam, default=0.25, 
               label='Min')
         line.addParam('maxDefocus', params.FloatParam, default=4.,
@@ -98,21 +105,24 @@ class ProtGctf(em.ProtCTFMicrographs):
               label='Expected (tolerated) astigmatism',
               help='Estimated astigmatism in Angstroms',
               expertLevel=params.LEVEL_ADVANCED)
-        form.addParam('windowSize', params.IntParam, default=512, expertLevel=params.LEVEL_ADVANCED,
+        form.addParam('windowSize', params.IntParam, default=512,
+              expertLevel=params.LEVEL_ADVANCED,
               label='Window size', condition='not recalculate',
-              help='The PSD is estimated from small patches of this size. Bigger patches '
-              'allow identifying more details. However, since there are fewer windows, '
-              'estimations are noisier.')
+              help='The PSD is estimated from small patches of this size. '
+                   'Bigger patches allow identifying more details. However, '
+                   'since there are fewer windows, estimations are noisier.')
     
         form.addParam('plotResRing', params.BooleanParam, default=True,
               label='Plot a resolution ring on a PSD file',
-              help='Whether to plot an estimated resolution ring on the power spectrum',
+              help='Whether to plot an estimated resolution ring on the '
+                   'power spectrum',
               expertLevel=params.LEVEL_ADVANCED)
         form.addParam('GPUCore', params.IntParam, default=0,
               expertLevel=params.LEVEL_ADVANCED,
               label="Choose GPU core",
-              help='GPU may have several cores. Set it to zero if you do not know '
-              'what we are talking about. First core index is 0, second 1 and so on.')
+              help='GPU may have several cores. Set it to zero if you do '
+                   'not know what we are talking about. First core index '
+                   'is 0, second 1 and so on.')
 
         form.addSection(label='Advanced')
         form.addParam('bfactor', params.IntParam, default=150,
@@ -138,8 +148,9 @@ class ProtGctf(em.ProtCTFMicrographs):
         form.addParam('convsize', params.IntParam, default=85,
               expertLevel=params.LEVEL_ADVANCED,
               label="Boxsize for smoothing",
-              help='Boxsize to be used for smoothing, suggested 1/5 ~ 1/20 of boxsize in pixel, '
-              'e.g. 99 for 512 boxsize')
+              help='Boxsize to be used for smoothing, '
+                   'suggested 1/5 ~ 1/20 of boxsize in pixel, '
+                   'e.g. 99 for 512 boxsize')
 
         group = form.addGroup('High-res refinement')
         group.addParam('doHighRes', params.BooleanParam, default=False,
@@ -152,17 +163,20 @@ class ProtGctf(em.ProtCTFMicrographs):
               expertLevel=params.LEVEL_ADVANCED,
               condition='doHighRes',
               label="Lowest resolution",
-              help='Lowest resolution  to be used for High-resolution refinement, in Angstroms')
+              help='Lowest resolution  to be used for High-resolution '
+                   'refinement, in Angstroms')
         group.addParam('HighResH', params.FloatParam, default=4.0,
               expertLevel=params.LEVEL_ADVANCED,
               condition='doHighRes',
               label="Highest resolution",
-              help='Highest resolution  to be used for High-resolution refinement, in Angstroms')
+              help='Highest resolution  to be used for High-resolution '
+                   'refinement, in Angstroms')
         group.addParam('HighResBf', params.IntParam, default=50,
               expertLevel=params.LEVEL_ADVANCED,
               condition='doHighRes',
               label="B-factor",
-              help='B-factor to be used for High-resolution refinement, in Angstroms')
+              help='B-factor to be used for High-resolution '
+                   'refinement, in Angstroms')
 
         form.addParam('doValidate', params.BooleanParam, default=False,
               expertLevel=params.LEVEL_ADVANCED,
@@ -172,7 +186,7 @@ class ProtGctf(em.ProtCTFMicrographs):
 #        form.addParallelSection(threads=1, mpi=1)
 
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run Gctf with required parameters """
         # Create micrograph dir 
@@ -181,11 +195,17 @@ class ProtGctf(em.ProtCTFMicrographs):
         micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
         micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
         micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
+
         if downFactor != 1:
-            #Replace extension by 'mrc' cause there are some formats that cannot be written (such as dm3)
+            # Replace extension by 'mrc' cause there are some formats
+            # that cannot be written (such as dm3)
             import pyworkflow.em.packages.xmipp3 as xmipp3
-            self.runJob("xmipp_transform_downsample","-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor), env=xmipp3.getEnviron())
-            self._params['scannedPixelSize'] = self.inputMicrographs.get().getScannedPixelSize() * downFactor
+            self.runJob("xmipp_transform_downsample",
+                        "-i %s -o %s --step %f --method fourier"
+                        % (micFn, micFnMrc, downFactor),
+                        env=xmipp3.getEnviron())
+            sps = self.inputMicrographs.get().getScannedPixelSize() * downFactor
+            self._params['scannedPixelSize'] = sps
         else:
             em.ImageHandler().convert(micFn, micFnMrc, em.DT_FLOAT)
         
@@ -193,10 +213,12 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._params['micFn'] = micFnMrc
         self._params['micDir'] = micDir
         self._params['gctfOut'] = self._getCtfOutPath(micDir)
+
         try:
             self.runJob(self._getProgram(), self._args % self._params)
         except Exception, ex:
             print >> sys.stderr, "Gctf has failed with micrograph %s" % micFnMrc
+
         psdFile = self._getPsdPath(micDir)
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
@@ -245,42 +267,28 @@ class ProtGctf(em.ProtCTFMicrographs):
         ctfModel2.setPsdFile(psdFile)
         ctfModel2.setMicrograph(mic)
         return ctfModel2
-    
-    def _createOutputStep(self):
-        ctfSet = self._createSetOfCTF()
+
+    def _updateOutput(self, ctfSet):
+        firstTime = not self.hasAttribute('outputCTF')
         ctfSet.setMicrographs(self.inputMics)
-        defocusList = []
-        
-        for _, micDir, mic in self._iterMicrographs():
-            samplingRate = mic.getSamplingRate() * self.ctfDownFactor.get()
-            mic.setSamplingRate(samplingRate)
-            micFn = mic.getFileName()
-            psdFile = self._getPsdPath(micDir)
-            out = self._getCtfOutPath(micDir)
-            
-            ctfModel = em.CTFModel()
-            readCtfModel(ctfModel, out)
-            ctfModel.setPsdFile(psdFile)
-            ctfModel.setMicrograph(mic)
-            
-            defocusList.append(ctfModel.getDefocusU())
-            defocusList.append(ctfModel.getDefocusV())
-            ctfSet.append(ctfModel)
-        
-        self._defocusMaxMin(defocusList)
+        self._computeDefocusRange(ctfSet)
         self._defineOutputs(outputCTF=ctfSet)
-        self._defineCtfRelation(self.inputMics, ctfSet)
+        if firstTime:  # define relation just once
+            self._defineCtfRelation(self.inputMics, ctfSet)
+
+    def _createOutputStep(self):
+        pass
         
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
         if not exists(self._getProgram()):
-            errors.append("Binary '%s' does not exits. \n"
-                          "Check configuration file: ~/.config/scipion/scipion.conf\n"
-                          "and set GCTF variables properly." % self._getProgram())
-            print "os.environ['GCTF_HOME']", os.environ['GCTF_HOME']
-            print "os.environ['GCTF']", os.environ['GCTF']
+            errors.append("Binary '%s' does not exits.\n"
+                          "Check configuration file: \n"
+                          "~/.config/scipion/scipion.conf\n"
+                          "and set GCTF variables properly."
+                          % self._getProgram())
         return errors
     
     def _citations(self):
@@ -289,13 +297,17 @@ class ProtGctf(em.ProtCTFMicrographs):
     def _methods(self):
         if self.inputMicrographs.get() is None:
             return ['Input micrographs not available yet.']
-        methods = "We calculated the CTF of %s using Gctf [Zhang2016]. " % self.getObjectTag('inputMicrographs')
+        methods = "We calculated the CTF of "
+        methods += self.getObjectTag('inputMicrographs')
+        methods += " using Gctf [Zhang2016]. "
         methods += self.methodsVar.get('')
-        methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
+
+        if self.hasAttribute('outputCTF'):
+            methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
         
         return [methods]
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
         # Convert digital frequencies to spatial frequencies

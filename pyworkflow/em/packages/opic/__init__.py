@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,17 +20,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
-
+"""
+This sub-package contains data and protocol classes
+wrapping Localized recontruction of subunits.
+"""
 from bibtex import _bibtex # Load bibtex dict with references
-#_logo = "resmap_logo.png"
-_references = ['lix2013']
 
-#from protocol_dosefgpu import ProtDosefGpu
-#from protocol_import import ProtDosefGpuImport
+_logo = "opic_logo.png"
 
-from convert import getEnviron
-
-_environ = getEnviron()
+from convert import *
+from protocol_localized import ProtLocalizedRecons
+from protocol_localized_extraction import ProtLocalizedExtraction

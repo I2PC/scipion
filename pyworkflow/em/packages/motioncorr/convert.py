@@ -31,7 +31,6 @@ from pyworkflow.utils import Environ
 from pyworkflow.em.data import MovieAlignment
 
 
-
 def getEnviron():
     """ Return the envirion settings to run dosefgpu programs. """
     """ Setup the environment variables needed to launch Relion. """
@@ -42,7 +41,7 @@ def getEnviron():
             'PATH': join(MOTIONCORR_HOME, 'bin'),
             'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))                                    
             }, position=Environ.BEGIN)
-    return environ  
+    return environ
 
 
 def parseMovieAlignment(logFile):
@@ -51,8 +50,9 @@ def parseMovieAlignment(logFile):
     """
     f = open(logFile)
     first = None
-    shifts = []
-    
+    xshifts = []
+    yshifts = []
+
     for line in f:
         l = line.strip()
         if 'Add Frame #' in l:
@@ -60,9 +60,7 @@ def parseMovieAlignment(logFile):
             if first is None: # read the first frame number
                 first = int(parts[2][1:]) # take the id from #000 format
             # take the id from the last two colums of the line
-            shifts.append(float(parts[-2]))
-            shifts.append(float(parts[-1]))
-            
+            xshifts.append(float(parts[-2]))
+            yshifts.append(float(parts[-1]))
     f.close()
-    
-    return MovieAlignment(first=first, last=first+len(shifts)/2-1, shifts=shifts)
+    return xshifts, yshifts

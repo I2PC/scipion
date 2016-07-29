@@ -63,3 +63,5 @@ MDValueRange = xmipp.MDValueRange
 addLabelAlias = xmipp.addLabelAlias
 
 activateMathExtensions = xmipp.activateMathExtensions
+
+getSymmetryMatrices = xmipp.SymList().getSymmetryMatrices
