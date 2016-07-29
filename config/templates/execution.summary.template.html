@@ -15,8 +15,8 @@
           margin: 0 auto;
         }        
         H1 {
-            background: #b42222;
-            color: white
+            border-bottom: 2px solid firebrick;
+            color: #6E6E6E;
         }
         H2 {
 /*            background: grey;*/
@@ -42,6 +42,10 @@
             margin-left: 6px;
             height: 16px;
             width: 16px;
+        }
+        
+        .icon,
+        .valign {
             vertical-align: middle;
         }
         TABLE {
@@ -49,11 +53,11 @@
             margin: 8px;
         }
         TH {
-            background: #B4AC22;
+            background: #EAEBEC;
             padding: 3px;
         }
         .protocolLine {
-            background: #F3EC71;
+            background: #F2F2F2;
         }
         .center {
             text-align: center;
@@ -157,7 +161,7 @@
     <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
     <BODY>
         <DIV id="content">
-            <H1><img src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png"> Scipion execution summary report</H1>
+            <H1><img class="valign" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo_small.png"> Project %(projectName)s </H1>
             <DIV class="row">
                 <DIV class="column column-5">
                     <H2>Project properties</H2>
@@ -249,12 +253,12 @@
                     text: '',
                     x: -20 //center
                 },
-//                subtitle: {
-//                    text: 'Source: Scipion',
-//                    x: -20
-//                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
                 xAxis: {
-                    categories: report.ctfData.idValues
+                    type:'linear',
+                    range:10
                 },
                 yAxis: {
                     title: {
@@ -284,7 +288,12 @@
                     name: 'Defocus V',
                     data: report.ctfData.defocusV,
                     color: '#B4AC22'
-                }]
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'    
+                }                
             });
 
             
@@ -297,15 +306,15 @@
                     text: '',
                     x: -20 //center
                 },
-//                subtitle: {
-//                    text: 'Source: Scipion',
-//                    x: -20
-//                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
                 xAxis: {
-                    categories: report.systemData.idValues,
+                    type:'linear',
                     labels:{
                         format:"{value:.2f}"
-                    }
+                    },
+                    range:20
                 },
                 yAxis: {
                     title: {
@@ -339,7 +348,12 @@
                     name: 'cpu',
                     data: report.systemData.cpu,
                     color: '#D14242'
-                }]
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'
+                } 
             });
 
             
