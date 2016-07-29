@@ -26,17 +26,14 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Protocol wrapper around MotionCorr programs for movie alignment
-"""
-
 import os, sys
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
 
-from convert import MOTIONCORR_PATH, MOTIONCOR2_PATH, parseMovieAlignment, parseMovieAlignment2
+from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH,
+                     parseMovieAlignment, parseMovieAlignment2)
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -63,15 +60,17 @@ class ProtMotionCorr(ProtAlignMovies):
                        help="GPU may have several cores. Set it to zero"
                             " if you do not know what we are talking about."
                             " First core index is 0, second 1 and so on."
-                            " Motioncor2 can use multiple GPUs - in that case set to i.e. *0 1 2*.")
+                            " Motioncor2 can use multiple GPUs - in that case"
+                            " set to i.e. *0 1 2*.")
 
         form.addParam('useMotioncor2', params.BooleanParam, default=False,
                       label='Use motioncor2',
-                      help='Use new *motioncor2* program with local patch-based motion '
-                           'correction and dose weighting.')
+                      help='Use new *motioncor2* program with local '
+                           'patch-based motion correction and dose weighting.')
 
         group.addParam('extraParams', params.StringParam, default='',
-                       label='Additional parameters', condition='not useMotioncor2',
+                       label='Additional parameters',
+                       condition='not useMotioncor2',
                        help="""
 -bft       150               BFactor in pix^2.
 -pbx       96                Box dimension for searching CC peak.
@@ -87,18 +86,21 @@ class ProtMotionCorr(ProtAlignMovies):
                             """)
         form.addParam('patch', params.StringParam, default='5 5',
                       label='Number of patches', condition='useMotioncor2',
-                      help='Number of patches to be used for patch based alignment. '
-                           'Set to *0 0* to do only global motion correction.')
+                      help='Number of patches to be used for patch based '
+                           'alignment. Set to *0 0* to do only global motion '
+                           'correction.')
 
         form.addParam('frameDose', params.FloatParam, default='0.0',
                       label='Frame dose (e/A^2)', condition='useMotioncor2',
-                      help='Frame dose in e/A^2. If set to *0.0*, dose weighting will be skipped.')
+                      help='Frame dose in e/A^2. If set to *0.0*, dose '
+                           'weighting will be skipped.')
 
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
-                      help='Group every specified number of frames by adding them together. '
-                           'The alignment is then performed on the summed frames. '
-                           'By default, no grouping is performed.')
+                      help='Group every specified number of frames by adding '
+                           'them together. The alignment is then performed on '
+                           'the summed frames. By default, no grouping is '
+                           'performed.')
 
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
@@ -116,7 +118,8 @@ class ProtMotionCorr(ProtAlignMovies):
                       default *1.0 1.0* corresponding full size.
 -Align     1          Generate aligned sum (1) or simple sum (0).
 -FmRef     0          Specify which frame to be the reference to which
-                      all other frames are aligned, by default *0* all aligned to the first frame,
+                      all other frames are aligned, by default *0* all aligned
+                      to the first frame,
                       other value aligns to the central frame.
 -Tilt      0 0        Tilt angle range for a dose fractionated tomographic tilt series,
                       e.g. *-60 60*
@@ -237,24 +240,31 @@ class ProtMotionCorr(ProtAlignMovies):
             if not (bin == 1.0 or bin == 2.0):
                 errors.append("Binning factor can only be 1 or 2")
             if len(gpu) > 1:
-                errors.append("Old motioncorr2.1 does not support multiple GPUs, use motioncor2.")
+                errors.append("Old motioncorr2.1 does not support multiple "
+                              "GPUs, use motioncor2.")
         else:
             if not self.doSaveAveMic:
-                errors.append('Option not supported. Please select Yes for Save aligned micrograph. ')
-                errors.append('Optionally you could add -Align 0 to additional parameters so that protocol ')
+                errors.append('Option not supported. Please select Yes for '
+                              'Save aligned micrograph. ')
+                errors.append('Optionally you could add -Align 0 to additional'
+                              ' parameters so that protocol ')
                 errors.append('produces simple movie sum.')
 
             if self.doSaveMovie:
-                errors.append('Saving aligned movies is not supported by motioncor2. ')
-                errors.append('By default, the protocol will produce outputMovies equivalent to the input ')
+                errors.append('Saving aligned movies is not supported by '
+                              'motioncor2. ')
+                errors.append('By default, the protocol will produce '
+                              'outputMovies equivalent to the input ')
                 errors.append('however containing alignment information.')
 
-            if self.alignFrame0.get() != self.sumFrame0.get() or self.alignFrameN.get() != self.sumFrameN.get():
-                errors.append('Frame range for align and sum must be equivalent in case of motioncor2.')
+            if (self.alignFrame0.get() != self.sumFrame0.get() or 
+                self.alignFrameN.get() != self.sumFrameN.get()):
+                errors.append('Frame range for align and sum must be '
+                              'equivalent in case of motioncor2.')
 
         return errors
 
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions ------------------------------
     def _getMovieLogFile(self, movie):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
@@ -266,8 +276,8 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
-         The shifts should refer to the original micrograph without any binning.
-         In case of a binning greater than 1, the shifts should be scaled.
+        The shifts should refer to the original micrograph without any binning.
+        In case of a binning greater than 1, the shifts should be scaled.
         """
         logPath = self._getExtraPath(self._getMovieLogFile(movie))
         binning = self.binFactor.get()
