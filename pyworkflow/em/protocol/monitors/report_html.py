@@ -78,6 +78,7 @@ class ReportHtml():
         reportPath = join(reportDir, reportName)
 
         acquisitionLines = ''
+        self.provider.refreshObjects()
 
         for item in self.provider.acquisition:
             if not acquisitionLines == '':
@@ -97,7 +98,8 @@ class ReportHtml():
                 runLines += '{protocolName: "%s", output:[' % obj.name
             else:
                 if not wasProtocol: runLines += ','
-                runLines += '{name: "%s",  size:"%s"}' % (obj.output, obj.outSize)
+                runLines += '{name: "%s",  size:"%s"}' % (obj.output,
+                                                          obj.outSize)
 
             wasProtocol = isProtocol
 
