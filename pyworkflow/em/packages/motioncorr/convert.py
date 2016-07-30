@@ -20,33 +20,44 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import os
-from os.path import join
+from os.path import join, exists
 
 from pyworkflow.utils import Environ
-from pyworkflow.em.data import MovieAlignment
+
+
+MOTIONCORR = 'dosefgpu_driftcorr'
+MOTIONCOR2 = 'motioncor2'
+MOTIONCORR_PATH = join(os.environ['MOTIONCORR_HOME'], 'bin', MOTIONCORR)
+MOTIONCOR2_PATH = join(os.environ['MOTIONCOR2_HOME'], 'bin', MOTIONCOR2)
 
 
 def getEnviron():
-    """ Return the envirion settings to run dosefgpu programs. """
-    """ Setup the environment variables needed to launch Relion. """
-    MOTIONCORR_HOME = os.environ.get('MOTIONCORR_HOME', 
-                                     join(os.environ['EM_ROOT'], 'motioncorr'))
+    """ Return the environ settings to run motioncorr programs. """
     environ = Environ(os.environ)
-    environ.update({
-            'PATH': join(MOTIONCORR_HOME, 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))                                    
-            }, position=Environ.BEGIN)
+
+    if exists(MOTIONCORR_PATH):
+        environ.update({'PATH': join(os.environ['MOTIONCORR_HOME'], 'bin')},
+                       position=Environ.BEGIN)
+
+    if exists(MOTIONCOR2_PATH):
+        environ.update({'PATH': join(os.environ['MOTIONCOR2_HOME'], 'bin')},
+                       position=Environ.BEGIN)
+
+    #FIXME: do we need separate libs for motioncor2?
+    environ.update({'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))},
+                   position=Environ.BEGIN)
+
     return environ
 
 
 def parseMovieAlignment(logFile):
     """ Get the first and last frames together with the shifts
-    between frames aligned.
+    between frames aligned. Motioncorr old version
     """
     f = open(logFile)
     first = None
@@ -62,5 +73,27 @@ def parseMovieAlignment(logFile):
             # take the id from the last two colums of the line
             xshifts.append(float(parts[-2]))
             yshifts.append(float(parts[-1]))
+    f.close()
+    return xshifts, yshifts
+
+
+def parseMovieAlignment2(logFile):
+    """ Get the first and last frames together with the shifts
+    between frames aligned. Motioncor2 new version
+    """
+    f = open(logFile)
+    first = None
+    xshifts = []
+    yshifts = []
+
+    for line in f:
+        l = line.strip()
+        if not '#' in l and len(l) > 0:
+            parts = l.split()
+            if first is None: # read the first frame number
+                first = int(parts[0]) # take the id from first column
+            # take the shifts from the last two columns of the line
+            xshifts.append(float(parts[1]))
+            yshifts.append(float(parts[2]))
     f.close()
     return xshifts, yshifts
