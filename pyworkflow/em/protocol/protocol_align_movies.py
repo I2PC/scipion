@@ -40,7 +40,7 @@ from pyworkflow.em.protocol import ProtProcessMovies
 class ProtAlignMovies(ProtProcessMovies):
     """
     Base class for movie alignment protocols such as:
-    motioncorr, crosscrorrelation and optical flow
+    motioncorr, crosscorrelation and optical flow
 
     Alignment parameters are defined in common. For example,
     the frames range used for alignment and final sum, the binning factor
@@ -73,17 +73,17 @@ class ProtAlignMovies(ProtProcessMovies):
         group.addParam('binFactor', params.FloatParam, default=1.,
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
-        
+
         line = group.addLine('Crop offsets (px)')
         line.addParam('cropOffsetX', params.IntParam, default=0, label='X')
         line.addParam('cropOffsetY', params.IntParam, default=0, label='Y')
-        
+
         line = group.addLine('Crop dimensions (px)',
                              help='How many pixels to crop from offset\n'
                                   'If equal to 0, use maximum size.')
         line.addParam('cropDimX', params.IntParam, default=0, label='X')
         line.addParam('cropDimY', params.IntParam, default=0, label='Y')
-        
+
         form.addParam('doSaveAveMic', params.BooleanParam, default=True,
                       label="Save aligned micrograph",
                       expertLevel=cons.LEVEL_ADVANCED)
@@ -92,10 +92,9 @@ class ProtAlignMovies(ProtProcessMovies):
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
                       help="Save Aligned movie")
 
+    # --------------------------- STEPS functions ----------------------------
 
-    #--------------------------- STEPS functions ----------------------------
-
-    #FIXME: Methods will change when using the streaming for the output
+    # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
         pass
@@ -104,7 +103,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         Load the output set if it exists or create a new one.
         fixSampling: correct the output sampling rate if binning was used,
-        except for the case when the original movies are kepts and shifts
+        except for the case when the original movies are kept and shifts
         refers to that one.
         """
         setFile = self._getPath(baseName)
@@ -184,7 +183,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
         if self.getAttributeValue('doSaveAveMic', True):
-            micSet = self._loadOutputSet(SetOfMicrographs,'micrographs.sqlite')
+            micSet = self._loadOutputSet(SetOfMicrographs, 'micrographs.sqlite')
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -202,12 +201,32 @@ class ProtAlignMovies(ProtProcessMovies):
             if firstTime:
                 self._defineSourceRelation(self.inputMovies, micSet)
 
-        if self.finished: # Unlock createOutputStep if finished all jobs
+            if (self.getAttributeValue('useMotioncor2', False) == True and
+                self.getAttributeValue('frameDose', 0.0) != 0.0):
+                micSet2 = self._loadOutputSet(SetOfMicrographs, 'micrographs_dose-weighted.sqlite')
+
+                for movie in newDone:
+                    mic2 = micSet2.ITEM_TYPE()
+                    mic2.copyObjId(movie)
+                    mic2.setMicName(movie.getMicName())
+                    # The subclass protocol is responsible of generating the output
+                    # micrograph file in the extra path with the required name
+                    extraMicFn2 = self._getExtraPath(self._getOutputMicWtName(movie))
+                    mic2.setFileName(extraMicFn2)
+                    self._preprocessOutputMicrograph(mic2, movie)
+                    # FIXME The micSet is not setting properly dimensions (No-Dim)
+                    micSet2.append(mic2)
+
+                self._updateOutputSet('outputMicrographsDoseWt', micSet2, streamMode)
+                if firstTime:
+                    self._defineSourceRelation(self.inputMovies, micSet2)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    #--------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions --------------------------------
 
     def _validate(self):
         errors = []
@@ -236,12 +255,12 @@ class ProtAlignMovies(ProtProcessMovies):
 
         return errors
 
-    #--------------------------- INFO functions -------------------------------
+    # --------------------------- INFO functions -------------------------------
 
     def _summary(self):
         return [self.summaryVar.get('')]
 
-    #--------------------------- UTILS functions ----------------------------
+    # --------------------------- UTILS functions ----------------------------
     def _getFrameRange(self, n, prefix):
         """
         Params:
@@ -253,7 +272,7 @@ class ProtAlignMovies(ProtProcessMovies):
         last = n - self.getAttributeValue('%sFrameN' % prefix)
 
         return first, last
-    
+
     def _createOutputMovie(self, movie):
         movieId = movie.getObjId()
 
@@ -295,7 +314,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         return alignedMovie
 
-    #---------- Hook functions that need to be implemented in subclasses ------
+    # ---------- Hook functions that need to be implemented in subclasses ------
 
     def _getBinFactor(self):
         return self.getAttributeValue('binFactor', 1.0)
@@ -314,6 +333,12 @@ class ProtAlignMovies(ProtProcessMovies):
         (relative to micFolder)
         """
         return self._getMovieRoot(movie) + '_aligned_mic.mrc'
+
+    def _getOutputMicWtName(self, movie):
+        """ Returns the name of the output dose-weighted micrograph
+        (relative to micFolder)
+        """
+        return self._getMovieRoot(movie) + '_aligned_mic_DW.mrc'
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
@@ -357,13 +382,13 @@ class ProtAlignMovies(ProtProcessMovies):
 
          The output will be the averaged micrograph.
         """
-        args  = '-i %s ' % inputFn
+        args = '-i %s ' % inputFn
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--useInputShifts '
 
         if binFactor > 1:
             args += '--bin %f ' % binFactor
-        
+
         if roi is not None:
             x, y, _ = movie.getDim()
             offsetX, offsetY, cropDimX, cropDimY = roi
@@ -372,15 +397,15 @@ class ProtAlignMovies(ProtProcessMovies):
                 dimX = x - 1
             else:
                 dimX = offsetX + cropDimX - 1
-    
+
             if cropDimY <= 0:
                 dimY = y - 1
             else:
                 dimY = offsetY + cropDimY - 1
-    
+
             args += '--cropULCorner %d %d ' % (offsetX, offsetY)
             args += '--cropDRCorner %d %d ' % (dimX, dimY)
-        
+
         args += ' --oavg %s ' % outputMicFn
 
         if dark is not None:
@@ -408,7 +433,7 @@ class ProtAlignMovies(ProtProcessMovies):
         data2 = ih.read(psd2).getData()
         # Compute middle index
         x, _, _, _ = psd.getDimensions()
-        m = int(round(x/2.))
+        m = int(round(x / 2.))
         data1[:, m:] = data2[:, m:]
         psd.setData(data1)
         psd.write(outputFn)
