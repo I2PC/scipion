@@ -20,19 +20,19 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
 import sys
-from os.path import basename, exists, isdir
+import os
+from os.path import basename, exists, isdir, join, dirname
+import time
+from datetime import timedelta, datetime
 
-from pyworkflow.utils.path import commonPath
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FloatParam, IntParam, LabelParam, BooleanParam
+import pyworkflow.protocol.params as params
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Acquisition
 
@@ -41,7 +41,7 @@ from base import ProtImportFiles
 
 
 class ProtImportImages(ProtImportFiles):
-    """Common protocol to import a set of images into the project"""
+    """ Common protocol to import a set of images into the project. """
     # The following class property should be set in each import subclass
     # for example, if set to SetOfParticles, this will the output classes
     # It is also assumed that a function with the name _createSetOfParticles
@@ -51,7 +51,7 @@ class ProtImportImages(ProtImportFiles):
     # see if it is a binary stack containing more items
     _checkStacks = True
         
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtImportFiles._defineParams(self, form)
         self._defineAcquisitionParams(form)
@@ -61,37 +61,48 @@ class ProtImportImages(ProtImportFiles):
         by subclasses to change what parameters to include.
         """
         group = form.addGroup('Acquisition info')
-        group.addParam('haveDataBeenPhaseFlipped', BooleanParam, default=False,
+        group.addParam('haveDataBeenPhaseFlipped', params.BooleanParam,
+                       default=False,
                       label='Have data been phase-flipped?',
-                      help='Set this to Yes if the images have been ctf-phase corrected.')       
-        group.addParam('acquisitionWizard', LabelParam, important=True,
+                      help='Set this to Yes if the images have been ctf-phase '
+                           'corrected.')
+        group.addParam('acquisitionWizard', params.LabelParam, important=True,
                        condition='importFrom != %d' % self.IMPORT_FROM_FILES,
                        label='Use the wizard button to import acquisition.',
                        help='Depending on the import Format, the wizard\n'
                             'will try to import the acquisition values.\n'
                             'If not found, required ones should be provided.')
-        group.addParam('voltage', FloatParam, default=200,
+        group.addParam('voltage', params.FloatParam, default=200,
                    label=Message.LABEL_VOLTAGE, 
                    help=Message.TEXT_VOLTAGE)
-        group.addParam('sphericalAberration', FloatParam, default=2,
+        group.addParam('sphericalAberration', params.FloatParam, default=2,
                    label=Message.LABEL_SPH_ABERRATION, 
                    help=Message.TEXT_SPH_ABERRATION)
-        group.addParam('amplitudeContrast', FloatParam, default=0.1,
+        group.addParam('amplitudeContrast', params.FloatParam, default=0.1,
                       label=Message.LABEL_AMPLITUDE,
                       help=Message.TEXT_AMPLITUDE)
-        group.addParam('magnification', IntParam, default=50000,
+        group.addParam('magnification', params.IntParam, default=50000,
                    label=Message.LABEL_MAGNI_RATE, 
                    help=Message.TEXT_MAGNI_RATE)
         return group
     
-    #--------------------------- INSERT functions ---------------------------------------------------
+    #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('importImagesStep', self.getPattern(), 
-                                 self.voltage.get(), self.sphericalAberration.get(), 
-                                 self.amplitudeContrast.get(), self.magnification.get())
         
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def importImagesStep(self, pattern, voltage, sphericalAberration, amplitudeContrast, magnification):
+        if self.dataStreaming:
+            funcName = 'importImagesStreamStep' 
+        else:
+            funcName = 'importImagesStep'
+        
+        self._insertFunctionStep(funcName, self.getPattern(),
+                                 self.voltage.get(),
+                                 self.sphericalAberration.get(),
+                                 self.amplitudeContrast.get(),
+                                 self.magnification.get())
+        
+    #--------------------------- STEPS functions -------------------------------
+    def importImagesStep(self, pattern, voltage, sphericalAberration, 
+                         amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
         Register other parameters.
         """
@@ -132,7 +143,8 @@ class ProtImportImages(ProtImportFiles):
             else:
                 img.setObjId(fileId)
                 img.setFileName(dst)
-                self._fillMicName(img, fileName) # fill the micName if img is a Micrograph.
+                # Fill the micName if img is a Micrograph.
+                self._fillMicName(img, fileName)
                 imgSet.append(img)
             outFiles.append(dst)
             
@@ -147,8 +159,136 @@ class ProtImportImages(ProtImportFiles):
         self._defineOutputs(**args)
         
         return outFiles
+
+    def __addImageToSet(self, img, imgSet, fileName):
+        """ Add an image to a set, check if the first image to handle
+         some special condition to read dimensions such as .txt or compressed
+         movie files.
+        """
+        if imgSet.getSize() == 0:
+            ih = ImageHandler()
+            fn = img.getFileName()
+            if fn.lower().endswith('.txt'):
+                origin = dirname(fileName)
+                with open(fn) as f:
+                    lines = [l.strip() for l in f.readlines() if l.strip()]
+                    fn = join(origin, lines[0].strip())
+                    x, y, _, _ = ih.getDimensions(fn)
+                    dim = (x, y, len(lines))
+            else:
+                dim = img.getDim()
+            imgSet.setDim(dim)
+        imgSet.append(img)
+
+    def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
+                         amplitudeContrast, magnification):
+        """ Copy images matching the filename pattern
+        Register other parameters.
+        """
+        self.info("Using pattern: '%s'" % pattern)
+        createSetFunc = getattr(self, '_create' + self._outputClassName)
+        imgSet = createSetFunc()
+        imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
+        acquisition = imgSet.getAcquisition()
+        self.fillAcquisition(acquisition)
+        # Call a function that should be implemented by each subclass
+        self.setSamplingRate(imgSet)
+        outFiles = [imgSet.getFileName()]
+        imgh = ImageHandler()
+        img = imgSet.ITEM_TYPE()
+        img.setAcquisition(acquisition)
+        n = 1
+        copyOrLink = self.getCopyOrLink()
+        outputName = self._getOutputName()
+
+        finished = False
+        importedFiles = set()
+        i = 0
+        lastDetectedChange = datetime.now()
+        timeout = timedelta(seconds=self.timeout.get())
+        fileTimeout = timedelta(seconds=self.fileTimeout.get())
+
+        while not finished:
+            time.sleep(3) # wait 3 seconds before check for new files
+            someNew = False
+            someAdded = False
+
+            for fileName, fileId in self.iterFiles():
+                # If file already imported, skip it
+                if fileName in importedFiles:
+                    continue
+
+                someNew = True
+                self.debug('Checking file: %s' % fileName)
+                mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
+                delta = datetime.now() - mTime
+                self.debug('   Modification time: %s' % pwutils.prettyTime(mTime))
+                self.debug('   Delta: %s' % pwutils.prettyDelta(delta))
+
+                if delta < fileTimeout: # Skip if the file is still changing
+                    self.debug('   delta < fileTimeout, skipping...')
+                    continue
+
+                self.info('Importing file: %s' % fileName)
+                importedFiles.add(fileName)
+                dst = self._getExtraPath(basename(fileName))
+                copyOrLink(fileName, dst)
+
+                if self._checkStacks:
+                    _, _, _, n = imgh.getDimensions(dst)
+
+                someAdded = True
+                self.debug('Appending file to DB...')
+                if importedFiles: # enable append after first append
+                    imgSet.enableAppend()
+
+                if n > 1:
+                    for index in range(1, n+1):
+                        img.cleanObjId()
+                        img.setMicId(fileId)
+                        img.setFileName(dst)
+                        img.setIndex(index)
+                        self.__addImageToSet(img, imgSet, fileName)
+                else:
+                    img.setObjId(fileId)
+                    img.setFileName(dst)
+                    # Fill the micName if img is a Micrograph.
+                    self._fillMicName(img, fileName)
+                    self.__addImageToSet(img, imgSet, fileName)
+
+                outFiles.append(dst)
+                self.debug('After append. Files: %d' % len(outFiles))
+
+            if someAdded:
+                self.debug('Updating output...')
+                self._updateOutputSet(outputName, imgSet,
+                                      state=imgSet.STREAM_OPEN)
+                self.debug('Update Done.')
+
+            self.debug('Checking if finished...someNew: %s' % someNew)
+
+            now = datetime.now()
+
+            if not someNew:
+                # If there are no new detected files, we should check the
+                # inactivity time elapsed (from last event to now) and
+                # if it is greater than the defined timeout, we conclude
+                # the import and close the output set
+                finished = now - lastDetectedChange > timeout
+                self.debug("Checking if finished:")
+                self.debug("   Now - Last Change: %s"
+                           % pwutils.prettyDelta(now - lastDetectedChange))
+                self.debug("Finished: %s" % finished)
+            else:
+                # If we have detected some files, we should update
+                # the timestamp of the last event
+                lastDetectedChange = now
+
+        self._updateOutputSet(outputName, imgSet,
+                              state=imgSet.STREAM_CLOSED)
+        return outFiles
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validateImages(self):
         errors = []
         ih = ImageHandler()
@@ -159,9 +299,15 @@ class ProtImportImages(ProtImportFiles):
                 errors.append("Folders can not be selected.")
                 errors.append('  %s' % imgFn)
             else:
-                # try to read the header of the imported images
-                # except for the special case of compressed movies (bz2 extension)
-                if not (imgFn.endswith('bz2') or imgFn.endswith('tbz') or ih.isImageFile(imgFn)): 
+                # Check if images are correct by reading the header of the
+                # imported files:
+                # Exceptions: 
+                #  - Compressed movies (bz2 or tbz extensions)
+                #  - Importing in streaming, since files may be incomplete
+                if (not self.dataStreaming and 
+                    not (imgFn.endswith('bz2') or 
+                         imgFn.endswith('tbz') or 
+                         ih.isImageFile(imgFn))): 
                     if not errors: # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
@@ -170,7 +316,11 @@ class ProtImportImages(ProtImportFiles):
         
     def _validate(self):
         errors = ProtImportFiles._validate(self)
-        if self.importFrom == self.IMPORT_FROM_FILES:
+        # Check that files are proper EM images, only when importing from
+        # files and not using streamming. In the later case we could
+        # have partial files not completed.
+        if (self.importFrom == self.IMPORT_FROM_FILES and
+            not self.dataStreaming):
             errors += self._validateImages()
         
         return errors
@@ -185,7 +335,9 @@ class ProtImportImages(ProtImportFiles):
                                "This will make another copy of your data and may take \n"
                                "more time to import. ")
         else:
-            summary.append("*%d* %s imported from %s" % (outputSet.getSize(), self._getOutputItemName(), self.getPattern()))
+            summary.append("*%d* %s imported from %s" % (outputSet.getSize(),
+                                                         self._getOutputItemName(),
+                                                         self.getPattern()))
             summary.append("Is the data phase flipped : %s" % outputSet.isPhaseFlipped())
             summary.append("Sampling rate : *%0.2f* A/px" % outputSet.getSamplingRate())
         
@@ -195,13 +347,18 @@ class ProtImportImages(ProtImportFiles):
         methods = []
         outputSet = self._getOutputSet()
         if outputSet is not None:
-            methods.append("*%d* %s were imported" % (outputSet.getSize(), self._getOutputItemName())+\
-                           " with a sampling rate of *%0.2f* A/px (microscope voltage %d kV, magnification %dx). Output set is %s."%
-                            (outputSet.getSamplingRate(),round(self.voltage.get()),round(self.magnification.get()), self.getObjectTag(self._getOutputName())))
+            methods.append("*%d* %s were imported with a sampling rate of "
+                           "*%0.2f* A/px (microscope voltage %d kV, "
+                           "magnification %dx). Output set is %s."
+                           % (outputSet.getSize(), self._getOutputItemName(),
+                              outputSet.getSamplingRate(),
+                              round(self.voltage.get()),
+                              round(self.magnification.get()),
+                              self.getObjectTag(self._getOutputName())))
             
         return methods
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getFiles(self):
         outputSet = self._getOutputSet()
         if outputSet is not None:
@@ -241,7 +398,7 @@ class ProtImportImages(ProtImportFiles):
         from pyworkflow.em import Micrograph
         if isinstance(img, Micrograph):
             filePaths = self.getMatchFiles()
-            commPath = commonPath(filePaths)
+            commPath = pwutils.commonPath(filePaths)
             micName = filename.replace(commPath + "/", "").replace("/", "_")
             img.setMicName(micName)
             
@@ -264,4 +421,11 @@ class ProtImportImages(ProtImportFiles):
         if src2 is not None and exists(src2):
             copyOrLink(src2, dst2)
     
-    
+    def _onNewFile(self, newFile):
+        """ This method will be called we a new files is found in
+        streaming mode. """
+        pass
+
+    def _createOutputSet(self):
+        """ Create the output set that will be populated as more data is
+        imported. """
