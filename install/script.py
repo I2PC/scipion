@@ -386,13 +386,13 @@ env.addPackage('unblur',
 env.addPackage('eman2.11',
                tar='eman2.11.linux64.tgz',
                commands=[('./eman2-installer', 
-                          'eman2.bashrc')],
+                          'eman2%s' % env.getRcFile())],
                default=False)
 
 env.addPackage('eman2.12',
                tar='eman2.12.linux64.tgz',
                commands=[('./eman2-installer', 
-                          'eman2.bashrc')],
+                          'eman2%s' % env.getRcFile())],
                default=False)
 
 env.addPackage('frealign',
