@@ -31,6 +31,7 @@ import sys
 import time
 from glob import glob
 from subprocess import STDOUT, call
+from pyworkflow.utils.path import removeBaseExt
 
 try:
     unicode = unicode
@@ -44,6 +45,7 @@ WINDOWS = (platform.system() == 'Windows')
 LINUX = (platform.system() == 'Linux')
 
 SCIPION_URL_SOFTWARE = os.environ['SCIPION_URL_SOFTWARE']
+SHELLNAME = os.environ['SHELL']
 
 
 def ansi(n):
@@ -246,6 +248,17 @@ class Environment:
         self._downloadCmd = ('wget -nv -c -O %(tar)s.part %(url)s\n'
                              'mv -v %(tar)s.part %(tar)s')
         self._tarCmd = 'tar -xzf %s'
+
+    def getRcFile(self):
+        shellName = removeBaseExt(SHELLNAME)
+        if shellName in ('tcsh', 'csh'):
+            return '.cshrc'
+        elif shellName in ('bash', 'sh'):
+            return '.bashrc'
+        elif shellName is 'zsh':
+            return '.zshrc'
+        else:
+            raise Exception('Unknown shell. You will need to set up your enviroment variables manually.')
 
     def getLibSuffix(self):
         return self._libSuffix
