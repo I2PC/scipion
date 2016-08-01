@@ -76,6 +76,15 @@ class ProtMonitorSummary(ProtMonitor):
         form.addSection('Mail settings')
         ProtMonitor._sendMailParams(self, form)
 
+        form.addSection('HTML Report')
+        form.addParam('publishCmd', params.StringParam, default='',
+                      label="Publish command",
+                      help="Specify a command to publish the template. "
+                           "You can use the special token %(REPORT_FOLDER)s "
+                           "that will be replaced with the report folder. "
+                           "For example: \n"
+                           "rsync -av %(REPORT_FOLDER)s scipion@webserver:public_html/")
+
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('monitorStep')
@@ -85,7 +94,8 @@ class ProtMonitorSummary(ProtMonitor):
 
         ctfMonitor = self.createCtfMonitor()
         sysMonitor = self.createSystemMonitor()
-        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor)
+        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor,
+                                           publishCmd=self.publishCmd.get())
 
         monitor = Monitor(workingDir=self.workingDir.get(),
                           samplingInterval=self.samplingInterval.get(),
@@ -145,9 +155,10 @@ class ProtMonitorSummary(ProtMonitor):
                                    swapAlert=self.swapAlert.get())
         return sysMonitor
 
-    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None):
+    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None,
+                         publishCmd=None):
         ctfMonitor = ctfMonitor or self.createCtfMonitor()
         sysMonitor = sysMonitor or self.createSystemMonitor()
 
-        return ReportHtml(self, ctfMonitor, sysMonitor)
+        return ReportHtml(self, ctfMonitor, sysMonitor, publishCmd)
 

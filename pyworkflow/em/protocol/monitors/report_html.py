@@ -27,7 +27,7 @@
 
 import json
 import os
-from os.path import join, exists
+from os.path import join, exists, abspath
 
 import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
@@ -37,7 +37,8 @@ class ReportHtml():
     """ Create an html report with a summary of the processing.
     The report will be updated with a given frequency.
     """
-    def __init__(self, protocol, ctfMonitor, sysMonitor, **kwargs):
+    def __init__(self, protocol, ctfMonitor, sysMonitor, publishCmd=None,
+                 **kwargs):
         # The CTF protocol to monitor
         self.protocol = protocol
         self.provider = SummaryProvider(protocol)
@@ -48,6 +49,7 @@ class ReportHtml():
         self.template = kwargs.get('template',
                                    join(pwutils.getTemplatesFolder(),
                                         'execution.summary.template.html'))
+        self.publishCmd = publishCmd
 
     def getHTMLReportText(self):
         if exists(self.template):
@@ -69,7 +71,8 @@ class ReportHtml():
                             % self.template)
 
         reportName = 'index.html'
-        reportDir = self.protocol._getExtraPath('Report')
+        projName = self.protocol.getProject().getShortName()
+        reportDir = abspath(self.protocol._getExtraPath(projName))
 
         self.info("Creating report directory: %s" % reportDir)
         pwutils.cleanPath(reportDir)
@@ -123,11 +126,16 @@ class ReportHtml():
                 'systemData': systemData
                 }
 
-        self.info("Writing report html to: %s" % reportPath)
+        self.info("Writing report html to: %s" % abspath(reportPath))
         reportFile = open(reportPath, 'w')
         reportTemplate = reportTemplate % args
         reportFile.write(reportTemplate.encode('utf-8'))
-
         reportFile.close()
+
+        if self.publishCmd:
+
+            self.info("Publishing the report:")
+            cmd = self.publishCmd % {'REPORT_FOLDER': reportDir}
+            os.system(cmd)
 
         return reportPath
