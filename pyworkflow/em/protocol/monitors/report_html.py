@@ -50,6 +50,7 @@ class ReportHtml():
                                    join(pwutils.getTemplatesFolder(),
                                         'execution.summary.template.html'))
         self.publishCmd = publishCmd
+        self.refreshSecs = kwargs.get('refreshSecs', 60)
 
     def getHTMLReportText(self):
         if exists(self.template):
@@ -123,7 +124,8 @@ class ReportHtml():
                 'projectName': self.protocol.getProject().getShortName(),
                 'scipionVersion': os.environ['SCIPION_VERSION'],
                 'ctfData': ctfData,
-                'systemData': systemData
+                'systemData': systemData,
+                'refreshSecs': self.refreshSecs
                 }
 
         self.info("Writing report html to: %s" % abspath(reportPath))
