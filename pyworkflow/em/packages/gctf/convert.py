@@ -49,10 +49,10 @@ def parseGctfOutput(filename):
                 result1 = tuple(map(float, line.split()[:4]))
             if 'Resolution limit estimated by EPA' in line:
                 # Take ctfResolution as a tuple
-                # that is a 5-th value in the line
+                # that is the last value in the line
                 # but remove escape characters first
                 result2 = ansi_escape.sub('', line)
-                result3 = tuple(map(float,result2.split()[5:6]))
+                result3 = tuple(map(float,result2.split()[-1:]))
                 result = result1 + result3
                 break
         f.close()

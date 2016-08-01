@@ -436,6 +436,11 @@ env.addPackage('spider',
 env.addPackage('motioncorr',
                tar='motioncorr_v2.1.tgz',
                default=False)
+
+env.addPackage('motioncor2',
+               tar='motioncor2_03162016.tgz',
+               default=False)
+
 env.addPackage('simple',
                tar='simple2.tgz',
                default=False)
