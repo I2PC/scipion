@@ -94,8 +94,7 @@ class ProtMonitorSummary(ProtMonitor):
 
         ctfMonitor = self.createCtfMonitor()
         sysMonitor = self.createSystemMonitor()
-        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor,
-                                           publishCmd=self.publishCmd.get())
+        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor)
 
         monitor = Monitor(workingDir=self.workingDir.get(),
                           samplingInterval=self.samplingInterval.get(),
@@ -155,10 +154,8 @@ class ProtMonitorSummary(ProtMonitor):
                                    swapAlert=self.swapAlert.get())
         return sysMonitor
 
-    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None,
-                         publishCmd=None):
+    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None):
         ctfMonitor = ctfMonitor or self.createCtfMonitor()
         sysMonitor = sysMonitor or self.createSystemMonitor()
 
-        return ReportHtml(self, ctfMonitor, sysMonitor, publishCmd)
-
+        return ReportHtml(self, ctfMonitor, sysMonitor, self.publishCmd.get())

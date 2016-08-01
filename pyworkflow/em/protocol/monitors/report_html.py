@@ -133,9 +133,9 @@ class ReportHtml():
         reportFile.close()
 
         if self.publishCmd:
-
             self.info("Publishing the report:")
             cmd = self.publishCmd % {'REPORT_FOLDER': reportDir}
+            self.info(cmd)
             os.system(cmd)
 
         return reportPath
