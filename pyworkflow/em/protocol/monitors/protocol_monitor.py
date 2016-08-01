@@ -28,7 +28,7 @@ import sys
 import time
 
 import pyworkflow.protocol.params as params
-from protocol import EMProtocol
+from pyworkflow.em.protocol.protocol import EMProtocol
 
 
 
@@ -54,7 +54,7 @@ class ProtMonitor(EMProtocol):
 
         form.addParam('samplingInterval', params.IntParam, default=60,
                       label="Sampling Interval (sec)",
-                      help="Take one sample each SAmplinInteval seconds")
+                      help="Take one sample each *samplingInterval* seconds")
 
         #self._sendMailParams(form)
 

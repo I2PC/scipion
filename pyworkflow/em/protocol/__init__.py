@@ -44,11 +44,9 @@ from protocol_alignment_assign import ProtAlignmentAssign
 from protocol_batch import *
 from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
 from protocol_extract_coordinates import ProtExtractCoords
-from protocol_monitor import ProtMonitor
-from protocol_monitor_system import ProtMonitorSystem, ProtMonitorSystemViewer
 from protocol_stress import ProtStress
 from protocol_create_stream_data import ProtCreateStreamData
-from protocol_monitor_ctf import ProtMonitorCTF, ProtMonitorCTFViewer
-from protocol_monitor_summary import ProtMonitorSummary
 from parallel import ProtTestParallel
+
+from monitors import *
 
