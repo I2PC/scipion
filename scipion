@@ -30,6 +30,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
+from collections import OrderedDict
 from os.path import join, exists, dirname
 import subprocess
 
@@ -496,7 +497,8 @@ Arguments:
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        for k, v in VARS.items():
+        sortedVars = OrderedDict(sorted(VARS.items()))
+        for k, v in sortedVars.items():
             sys.stdout.write('export %s="%s"\n' % (k, v))
 
         sys.exit(0)
@@ -589,7 +591,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv run
+  help install manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
