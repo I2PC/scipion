@@ -54,7 +54,7 @@ class ProtMonitor(EMProtocol):
 
         form.addParam('samplingInterval', params.IntParam, default=60,
                       label="Sampling Interval (sec)",
-                      help="Take one sample each SAmplinInteval seconds")
+                      help="Take one sample each *samplingInterval* seconds")
 
         #self._sendMailParams(form)
 
