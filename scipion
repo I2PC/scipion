@@ -30,7 +30,6 @@ Main entry point to scipion. It launches the gui, tests, etc.
 """
 import sys
 import os
-from collections import OrderedDict
 from os.path import join, exists, dirname
 import subprocess
 
@@ -497,9 +496,8 @@ Arguments:
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        sortedVars = OrderedDict(sorted(VARS.items()))
-        for k, v in sortedVars.items():
-            sys.stdout.write('export %s="%s"\n' % (k, v))
+        for key in sorted(VARS):
+            sys.stdout.write('export %s="%s"\n' % (key, VARS[key]))
 
         sys.exit(0)
 
