@@ -541,7 +541,7 @@ class ProtocolsView(tk.Frame):
         self.keybinds = dict()
 
         # Register key binds
-        self._bindKeyPress('Delete', self._deleteProtocol)
+        self._bindKeyPress('Delete', self._onDelPressed)
 
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
@@ -1576,16 +1576,20 @@ class ProtocolsView(tk.Frame):
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
-        
-    def _deleteProtocol(self):
+
+    def _onDelPressed(self):
+        # This function will be connected to the key 'Del' press event
+        # We need to check if the canvas have the focus and then
+        # proceed with the delete action
 
         # get the widget with the focus
         widget = self.focus_get()
 
-        # If it's the search box
-        if not str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
-            return
+        # Call the delete action only if the widget is the canvas
+        if str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
+            self._deleteProtocol()
 
+    def _deleteProtocol(self):
         protocols = self._getSelectedProtocols()
 
         if len(protocols) == 0:
