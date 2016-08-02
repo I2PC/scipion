@@ -284,7 +284,8 @@ class ProjectImportWindow(Window):
                         icon=icon, minsize=minsize, enableQueue=True)
 
         self.parent = parent
-        self.projectsPath = getHomePath()
+        # Dirty hack, need to add a slash for the explorer to pick up the right default path.
+        self.projectsPath = getHomePath()+"/"
         self.projName = tk.StringVar()
         self.projName.set('')
         self.projLocation = tk.StringVar()
