@@ -60,14 +60,17 @@ class ProjectsView(tk.Frame):
         self.manager = Manager()
 
         # Add the create project button
-        btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont,
+        btnFrame = tk.Frame(self, bg='white')
+        btn = HotButton(btnFrame, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont,
                      command=self._onCreateProject)
         btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
 
         # Add the Import project button
-        btn = Button(self, text=Message.LABEL_IMPORT_PROJECT, font=self.projNameFont,
+        btn = Button(btnFrame, text=Message.LABEL_IMPORT_PROJECT, font=self.projNameFont,
                      command=self._onImportProject)
         btn.grid(row=0, column=1, sticky='nw', padx=10, pady=10)
+
+        btnFrame.grid(row=0, column=0, sticky='nw')
 
 
         self.columnconfigure(0, weight=1)
