@@ -58,14 +58,22 @@ class ProjectsView(tk.Frame):
         self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
         self.projDelFont = tkFont.Font(size=smallSize, family=fontName, weight='bold')
         self.manager = Manager()
-        btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont, 
+
+        # Add the create project button
+        btn = HotButton(self, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont,
                      command=self._onCreateProject)
         btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
-        
+
+        # Add the Import project button
+        btn = Button(self, text=Message.LABEL_IMPORT_PROJECT, font=self.projNameFont,
+                     command=self._onImportProject)
+        btn.grid(row=0, column=1, sticky='nw', padx=10, pady=10)
+
+
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         text = TaggedText(self, width=40, height=15, bd=0, bg='white')
-        text.grid(row=1, column=0, sticky='news')
+        text.grid(row=1, columnspan=2, column=0, sticky='news')
       
         self.createProjectList(text)
         text.setReadOnly(True)
@@ -76,7 +84,7 @@ class ProjectsView(tk.Frame):
         r = 0
         text.setReadOnly(False)
         text.clear()
-        parent = tk.Frame(text, bg='white')    
+        parent = tk.Frame(text, bg='white')
         parent.columnconfigure(0, weight=1)
         colors = ['white', '#EAEBFF']
         for i, p in enumerate(self.manager.listProjects()):
@@ -121,6 +129,19 @@ class ProjectsView(tk.Frame):
     def _onCreateProject(self, e=None):
         projWindow = ProjectCreateWindow("Create project", self)
         projWindow.show()
+
+    def _onImportProject(self, e=None):
+        print "import project"
+
+        importProjWindow = ProjectImportWindow("Import project", self)
+        importProjWindow.show()
+
+    def importProject(self, projLocation, copyFiles, projName ):
+
+        self.manager.importProject(projLocation , copyFiles, projName)
+        self.createProjectList(self.text)
+        self.openProject(projName)
+
 
     def openProject(self, projName):
         from subprocess import Popen
@@ -249,4 +270,100 @@ class ProjectCreateWindow(Window):
             showError("Validation error", "Project path already exists", self.root)
         else:
             self.parent.createNewProject(projName, projLocation)
+            self.close()
+
+class ProjectImportWindow(Window):
+    """ Windows to import a project. """
+    def __init__(self, title, parent=None, weight=True, minsize=(400, 150),
+                 icon="scipion_bn.xbm", **args):
+        """
+         We assume the parent should be ProjectsView
+        """
+        Window.__init__(self, title, parent.windows, weight=weight,
+                        icon=icon, minsize=minsize, enableQueue=True)
+
+        self.parent = parent
+        self.projectsPath = self.parent.manager.PROJECTS
+        self.projName = tk.StringVar()
+        self.projName.set('')
+        self.projLocation = tk.StringVar()
+        self.projLocation.set(self.projectsPath)
+
+        content = tk.Frame(self.root)
+        content.columnconfigure(0, weight=1)
+        content.columnconfigure(1, weight=1)
+        content.config(bg='white')
+        content.grid(row=0, column=0, sticky='news',
+                       padx=5, pady=5)
+        labelName = tk.Label(content, text=Message.LABEL_PROJECT, bg='white', bd=0)
+        labelName.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        entryName = tk.Entry(content, bg=cfgEntryBgColor, width=20, textvariable=self.projName)
+        entryName.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+
+        labelCheck = tk.Label(content, text="Copy files", bg='white', bd=0)
+        labelCheck.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
+        self.tkCheckVar = tk.IntVar()
+        btnCheck = tk.Checkbutton(content, variable=self.tkCheckVar, bg='white', bd=0)
+        btnCheck.grid(row=1, column=1, sticky='nw', padx=5, pady=5)
+
+        self.browseFrame = tk.Frame(content, bg='white')
+        self.browseFrame.grid(row=2, column=0, padx=0, pady=0, columnspan=2, sticky='nw')
+        self.entryBrowse = tk.Entry(self.browseFrame, bg=cfgEntryBgColor, width=40, textvariable=self.projLocation)
+        self.entryBrowse.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        self.btnBrowse = IconButton(self.browseFrame, 'Browse', Icon.ACTION_BROWSE, command=self._browsePath)
+        self.btnBrowse.grid(row=0, column=1, sticky='e', padx=5, pady=5)
+
+        self.initial_focus = entryName
+        btnCheck.select()
+
+        btnFrame = tk.Frame(content)
+        btnFrame.columnconfigure(0, weight=1)
+        btnFrame.grid(row=3, column=0, sticky='sew', padx=5, pady=(0, 5), columnspan=2)
+        btnFrame.config(bg='white')
+
+        # Create buttons
+        btnSelect = HotButton(btnFrame, 'Import', Icon.BUTTON_SELECT, command=self._select)
+        btnSelect.grid(row=0, column=0, sticky='e', padx=5, pady=5)
+        btnCancel = Button(btnFrame, 'Cancel', Icon.BUTTON_CANCEL, command=self.close)
+        btnCancel.grid(row=0, column=1, sticky='e', padx=5, pady=5)
+
+    def _browsePath(self, e=None):
+        def onSelect(obj):
+            self.projLocation.set(obj.getPath())
+
+        v = self.projLocation.get().strip()
+        path = None
+        if v:
+            v = os.path.dirname(v)
+            if os.path.exists(v):
+                path = v
+        if not path:
+            path = self.projectsPath
+
+        browser = FileBrowserWindow("Browsing", self, path=path, onSelect=onSelect)
+        browser.show()
+
+    def _select(self):
+        projName = self.projName.get().strip()
+        projLocation = self.projLocation.get().strip()
+        copyFiles = self.tkCheckVar.get() != 0
+
+        # If project name is empty we will use the same name as the source
+        if not projName:
+            projName = os.path.basename(projLocation)
+
+        # Validate that project location is not empty
+        if not projLocation:
+            showError("Validation error", "Project location is empty", self.root)
+        # Validate that project location exists
+        elif not os.path.exists(projLocation):
+            showError("Validation error", "Project location does not exist", self.root)
+        # Validate that project location is a directory
+        elif not os.path.isdir(projLocation):
+            showError("Validation error", "Project location is not a directory", self.root)
+        # Validate that project path (location + name) does not exists
+        elif os.path.exists(os.path.join(projLocation, projName)):
+            showError("Validation error", "Project path already exists", self.root)
+        else:
+            self.parent.importProject(projLocation, copyFiles, projName)
             self.close()
