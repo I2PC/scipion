@@ -42,6 +42,7 @@ class Message():
     # Projects Template
     LABEL_PROJECTS = 'Projects'
     LABEL_CREATE_PROJECT = 'Create Project'
+    LABEL_IMPORT_PROJECT = 'Import project'
     TITLE_CREATE_PROJECT = 'Enter the project name'
     TITLE_CREATE_PROJECT_NAME = 'Project Name: '
     TITLE_EDIT_OBJECT = 'Edit Object properties'
