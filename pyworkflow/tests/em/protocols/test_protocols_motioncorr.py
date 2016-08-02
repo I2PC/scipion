@@ -33,7 +33,7 @@ from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 
 # Some utility functions to import movies that are used
 # in several tests.
-class TestMotioncorrAlingMovies(BaseTest):
+class TestMotioncorrAlignMovies(BaseTest):
     @classmethod
     def setData(cls):
         cls.ds = DataSet.getDataSet('movies')
