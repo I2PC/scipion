@@ -138,7 +138,7 @@ class ProjectsView(tk.Frame):
 
     def importProject(self, projLocation, copyFiles, projName ):
 
-        self.manager.importProject(projLocation , copyFiles, projName)
+        self.manager.importProject(projLocation, copyFiles, projName)
         self.createProjectList(self.text)
         self.openProject(projName)
 
@@ -272,6 +272,7 @@ class ProjectCreateWindow(Window):
             self.parent.createNewProject(projName, projLocation)
             self.close()
 
+
 class ProjectImportWindow(Window):
     """ Windows to import a project. """
     def __init__(self, title, parent=None, weight=True, minsize=(400, 150),
@@ -283,7 +284,7 @@ class ProjectImportWindow(Window):
                         icon=icon, minsize=minsize, enableQueue=True)
 
         self.parent = parent
-        self.projectsPath = self.parent.manager.PROJECTS
+        self.projectsPath = getHomePath()
         self.projName = tk.StringVar()
         self.projName.set('')
         self.projLocation = tk.StringVar()
@@ -295,23 +296,26 @@ class ProjectImportWindow(Window):
         content.config(bg='white')
         content.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
-        labelName = tk.Label(content, text=Message.LABEL_PROJECT, bg='white', bd=0)
-        labelName.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
-        entryName = tk.Entry(content, bg=cfgEntryBgColor, width=20, textvariable=self.projName)
-        entryName.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+        # Path explorer
+        self.browseFrame = tk.Frame(content, bg='white')
+        self.browseFrame.grid(row=0, column=0, padx=0, pady=0, columnspan=2, sticky='nw')
+        self.entryBrowse = tk.Entry(self.browseFrame, bg=cfgEntryBgColor, width=40, textvariable=self.projLocation)
+        self.entryBrowse.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        self.btnBrowse = IconButton(self.browseFrame, 'Browse', Icon.ACTION_BROWSE, command=self._browsePath)
+        self.btnBrowse.grid(row=0, column=1, sticky='e', padx=5, pady=5)
 
+        # Copy files check
         labelCheck = tk.Label(content, text="Copy files", bg='white', bd=0)
         labelCheck.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
         self.tkCheckVar = tk.IntVar()
         btnCheck = tk.Checkbutton(content, variable=self.tkCheckVar, bg='white', bd=0)
         btnCheck.grid(row=1, column=1, sticky='nw', padx=5, pady=5)
 
-        self.browseFrame = tk.Frame(content, bg='white')
-        self.browseFrame.grid(row=2, column=0, padx=0, pady=0, columnspan=2, sticky='nw')
-        self.entryBrowse = tk.Entry(self.browseFrame, bg=cfgEntryBgColor, width=40, textvariable=self.projLocation)
-        self.entryBrowse.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
-        self.btnBrowse = IconButton(self.browseFrame, 'Browse', Icon.ACTION_BROWSE, command=self._browsePath)
-        self.btnBrowse.grid(row=0, column=1, sticky='e', padx=5, pady=5)
+        # Project name
+        labelName = tk.Label(content, text=Message.LABEL_PROJECT, bg='white', bd=0)
+        labelName.grid(row=2, column=0, sticky='nw', padx=5, pady=5)
+        entryName = tk.Entry(content, bg='white', width=20, textvariable=self.projName)
+        entryName.grid(row=2, column=1, sticky='nw', padx=5, pady=5)
 
         self.initial_focus = entryName
         btnCheck.select()

@@ -120,11 +120,16 @@ class Manager(object):
         if copyFiles:
             # Copy the whole folder
             pwutils.path.copyTree(os.path.abspath(fromLocation), os.path.abspath(projectPath))
+
         else:
             # Link the folder
             pwutils.path.createAbsLink(os.path.abspath(fromLocation), projectPath)
 
-        return Project(projectPath)
+        project = self.loadProject(projectName)
+
+        project.fixLinks(fromLocation)
+
+        return project
 
     def loadProject(self, projId, **kwargs):
         """ Retrieve a project object, given its id. """
