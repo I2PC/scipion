@@ -40,7 +40,7 @@ MOTIONCORR = 'dosefgpu_driftcorr'
 MOTIONCOR2 = 'motioncor2'
 MOTIONCORR_PATH = join(_getHome('MOTIONCORR_HOME', 'motioncorr'),
                        'bin', MOTIONCORR)
-MOTIONCOR2_PATH = join(_getHome('MOTIONCOR2_HOME', 'motioncorr2'),
+MOTIONCOR2_PATH = join(_getHome('MOTIONCOR2_HOME', 'motioncor2'),
                        'bin', MOTIONCOR2)
 
 

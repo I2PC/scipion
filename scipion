@@ -496,8 +496,8 @@ Arguments:
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        for k, v in VARS.items():
-            sys.stdout.write('export %s="%s"\n' % (k, v))
+        for key in sorted(VARS):
+            sys.stdout.write('export %s="%s"\n' % (key, VARS[key]))
 
         sys.exit(0)
 
@@ -589,7 +589,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv run
+  help install manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 
