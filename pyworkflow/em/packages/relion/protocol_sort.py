@@ -28,13 +28,13 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 import pyworkflow.em.metadata as md
 from pyworkflow.utils import exists
-from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.protocol import ProtProcessParticles
 from convert import convertBinaryVol, readSetOfParticles, writeSetOfParticles, writeReferences
 
 
 
 
-class ProtRelionSort(EMProtocol):
+class ProtRelionSort(ProtProcessParticles):
     """
     Relion particle sorting protocol.
     It calculates difference images between particles and their aligned (and CTF-convoluted)
@@ -44,9 +44,7 @@ class ProtRelionSort(EMProtocol):
     """
     _label = 'sort particles'
 
-    def __init__(self, **args):
-        EMProtocol.__init__(self, **args)
-    
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         

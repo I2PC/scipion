@@ -514,10 +514,7 @@ class Particle(Image):
         self._coordinate = None
         self._micId = Integer()
         self._classId = Integer()
-        self._pickFom = Float()
-        self._pickRef = Integer()
-        self._pickAngle = Float()
-        
+
     def hasCoordinate(self):
         return self._coordinate is not None
     
@@ -555,14 +552,6 @@ class Particle(Image):
         
     def hasClassId(self):
         return self._classId.hasValue()
-
-    def getPickExtraParams(self):
-        return self._pickFom.get(), self._pickRef.get(), self._pickAngle.get()
-
-    def setPickExtraParams(self, pickFom, pickRef, pickAngle):
-        self._pickFom.set(pickFom)
-        self._pickRef.set(pickRef)
-        self._pickAngle.set(pickAngle)
 
 
 class Mask(Particle):

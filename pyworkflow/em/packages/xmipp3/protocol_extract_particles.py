@@ -423,9 +423,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 ##img.setCTF(ctfModel)####JM
             img.setMicId(coord.getMicId())
             img.setCoordinate(coord)
-            pickFom, pickRef, pickAngle = coord.getPickFom(), coord.getPickRef(), coord.getPickAngle()
-            #TODO check if not None
-            img.setPickExtraParams(pickFom, pickRef, pickAngle)
             imgSet.append(img)
             
         self._storeMethodsInfo(fnImages)
