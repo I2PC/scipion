@@ -24,17 +24,15 @@
 # *
 # **************************************************************************
 
+#from os.path import exists
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
-import pyworkflow.em.metadata as md
-from pyworkflow.utils import exists
-from pyworkflow.em.protocol import ProtProcessParticles
+from pyworkflow.utils import replaceExt, removeExt, exists
+from pyworkflow.em.protocol import ProtParticles
 from convert import convertBinaryVol, readSetOfParticles, writeSetOfParticles, writeReferences
 
 
-
-
-class ProtRelionSort(ProtProcessParticles):
+class ProtRelionSort(ProtParticles):
     """
     Relion particle sorting protocol.
     It calculates difference images between particles and their aligned (and CTF-convoluted)
@@ -44,10 +42,9 @@ class ProtRelionSort(ProtProcessParticles):
     """
     _label = 'sort particles'
 
-
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-        
+        form.addSection(label='Input')
         form.addParam('inputParticles', PointerParam,
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       label='Input particles',
@@ -56,7 +53,7 @@ class ProtRelionSort(ProtProcessParticles):
                            'It can be particles after 2D/3D classification, 3D refinement or '
                            'reference-based auto-picking.')
         form.addParam('inputReferences', PointerParam,
-                      pointerClass="SetOfClasses2D, SetOfClasses3D, Volume",
+                      pointerClass="SetOfClasses2D, SetOfClasses3D, Volume, SetOfAverages",
                       label='Input references',
                       help='Select references: a set of classes or a 3D volume')
         form.addParam('maskDiameterA', IntParam, default=-1,
@@ -130,6 +127,7 @@ class ProtRelionSort(ProtProcessParticles):
         imgSet = self.inputParticles.get()
         refSet = self.inputReferences.get()
         imgStar = self._getPath('input_particles.star')
+        refStar = self._getPath('input_references.star')
 
         # Pass stack file as None to avoid write the images files
         self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
@@ -138,8 +136,8 @@ class ProtRelionSort(ProtProcessParticles):
         if refSet.getClassName() == 'Volume':
             refVol = convertBinaryVol(refSet, self._getTmpPath())
         else:
-            self.info("Converting set from '%s' into input_references.star" % refSet.getFileName())
-            writeReferences(refSet, self._getExtraPath('input_references'))
+            self.info("Converting set from '%s' into %s" % (refSet.getFileName(), refStar))
+            writeReferences(refSet, removeExt(refStar))
 
     def runRelionStep(self, params):
         """ Execute the relion steps with given params. """
@@ -169,19 +167,18 @@ class ProtRelionSort(ProtProcessParticles):
     
     #--------------------------- UTILS functions -------------------------------
     def _setArgs(self, args):
-
         maskDiameter = self.maskDiameterA.get()
         if maskDiameter <= 0:
             x, _, _ = self.inputParticles.get().getDim()
             maskDiameter = self.inputParticles.get().getSamplingRate() * x
 
-        vol = self.getInputReferences.get().getFileName()
+        refFn = self.inputReferences.get().getFileName()
 
-        if exists(self._getPath('input_references.star')):
-            args.update({'--ref': self._getPath('input_references.star')})
+        if self._getPath('input_references.star'):
+            args['--ref'] = self._getPath('input_references.star')
 
-        elif exists(vol.endswith('.mrc')):
-            args.update({'--ref': vol})
+        if exists(replaceExt(refFn, '.mrc')):
+            args['--ref'] = refFn
 
         args.update({'--i': self._getPath('input_particles.star'),
                      '--particle_diameter': maskDiameter,
@@ -199,7 +196,7 @@ class ProtRelionSort(ProtProcessParticles):
         if self.doCTF:
             args['--ctf'] = ''
 
-    def _getProgram(self, program='relion_refine'):
+    def _getProgram(self, program='relion_particle_sort'):
         """ Get the program name depending on the MPI use or not. """
         if self.numberOfMpi > 1:
             program += '_mpi'

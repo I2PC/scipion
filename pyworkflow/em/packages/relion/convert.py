@@ -58,12 +58,12 @@ COOR_DICT = OrderedDict([
              ("_y", md.RLN_IMAGE_COORD_Y)
              ])
 
-COOR_EXTRA_LABELS = OrderedDict([
+COOR_EXTRA_LABELS = [
     # Additional autopicking-related metadata
-    ("_autopickFigureOfMerit", md.RLN_PARTICLE_AUTOPICK_FOM),
-    ("_classNumber", md.RLN_PARTICLE_CLASS),
-    ("_anglePsi", md.RLN_ORIENT_PSI)
-    ])
+    md.RLN_PARTICLE_AUTOPICK_FOM,
+    md.RLN_PARTICLE_CLASS,
+    md.RLN_ORIENT_PSI
+    ]
 
 CTF_DICT = OrderedDict([
        ("_defocusU", md.RLN_CTF_DEFOCUSU),
@@ -182,7 +182,7 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
             row.setValue(label, value)
 
 
-def rowToObject(row, obj, attrDict, extraLabels={}):
+def rowToObject(row, obj, attrDict, extraLabels=[]):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
@@ -570,7 +570,13 @@ def writeReferences(inputSet, outputRoot):
         refsMd.write(starFile)
             
     elif isinstance(inputSet, em.SetOfClasses2D):
-        pass
+        row = md.Row()
+        for i, img in enumerate(inputSet):
+            ih.convert(img, (i + 1, stackFile))
+            img.setLocation((i + 1, baseStack))  # make the star with relative
+            particleToRow(img, row)
+            row.writeToMd(refsMd, refsMd.addObject())
+        refsMd.write(starFile)
     else:
         raise Exception('Invalid object type: %s' % type(inputSet)) 
 
