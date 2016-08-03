@@ -54,19 +54,23 @@ class ProjectsView(tk.Frame):
         smallSize = pwgui.cfgFontSize - 2
         fontName = pwgui.cfgFontName
         
-        self.projNameFont = tkFont.Font(size=bigSize, family=fontName, weight='bold')
+        self.projNameFont = tkFont.Font(size=bigSize, family=fontName,
+                                        weight='bold')
         self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
-        self.projDelFont = tkFont.Font(size=smallSize, family=fontName, weight='bold')
+        self.projDelFont = tkFont.Font(size=smallSize, family=fontName,
+                                       weight='bold')
         self.manager = Manager()
 
         # Add the create project button
         btnFrame = tk.Frame(self, bg='white')
-        btn = HotButton(btnFrame, text=Message.LABEL_CREATE_PROJECT, font=self.projNameFont,
+        btn = HotButton(btnFrame, text=Message.LABEL_CREATE_PROJECT,
+                        font=self.projNameFont,
                      command=self._onCreateProject)
         btn.grid(row=0, column=0, sticky='nw', padx=10, pady=10)
 
         # Add the Import project button
-        btn = Button(btnFrame, text=Message.LABEL_IMPORT_PROJECT, font=self.projNameFont,
+        btn = Button(btnFrame, text=Message.LABEL_IMPORT_PROJECT,
+                     font=self.projNameFont,
                      command=self._onImportProject)
         btn.grid(row=0, column=1, sticky='nw', padx=10, pady=10)
 

@@ -208,7 +208,7 @@ class Tester():
     def _runNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
-            scipion = join(os.environ['SCIPION_HOME'], 'scipion')
+            scipion = pw.getScipionScript()
             cmd = "%s %s test %s" % (spaces, scipion, itemName)
             run = ((itemType == MODULE and self.mode == 'module') or
                    (itemType == CLASS and self.mode == 'classes') or
