@@ -134,8 +134,6 @@ class ProjectsView(tk.Frame):
         projWindow.show()
 
     def _onImportProject(self, e=None):
-        print "import project"
-
         importProjWindow = ProjectImportWindow("Import project", self)
         importProjWindow.show()
 
@@ -188,32 +186,32 @@ class ProjectCreateWindow(Window):
 
         content = tk.Frame(self.root)
         content.columnconfigure(0, weight=1)
-        content.columnconfigure(1, weight=1)
+        content.columnconfigure(1, weight=3)
         content.config(bg='white')
         content.grid(row=0, column=0, sticky='news',
                        padx=5, pady=5)
-        labelName = tk.Label(content, text=Message.LABEL_PROJECT, bg='white', bd=0)
-        labelName.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+
+        #  Project name line
+
+        labelName = tk.Label(content, text=Message.LABEL_PROJECT + ' name', bg='white', bd=0)
+        labelName.grid(row=0, sticky=tk.W, padx=5, pady=5)
         entryName = tk.Entry(content, bg=cfgEntryBgColor, width=20, textvariable=self.projName)
-        entryName.grid(row=0, column=1, sticky='nw', padx=5, pady=5)
+        entryName.grid(row=0, column=1, columnspan=2, sticky=tk.W, padx=5, pady=5)
 
-        labelCheck = tk.Label(content, text="Use default location", bg='white', bd=0)
-        labelCheck.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
-        self.tkCheckVar = tk.IntVar()
-        btnCheck = tk.Checkbutton(content, variable=self.tkCheckVar, bg='white', bd=0)
-        btnCheck.grid(row=1, column=1, sticky='nw', padx=5, pady=5)
+        # Project location line
+        # self.browseFrame = tk.Frame(content, bg='white')
+        # #self.browseFrame.columnconfigure(1, weight=1)
+        # self.browseFrame.grid(row=1, column=0, padx=0, pady=0, columnspan=3, sticky='nw')
 
-        self.browseFrame = tk.Frame(content, bg='white')
-        #self.browseFrame.columnconfigure(1, weight=1)
-        self.browseFrame.grid(row=2, column=0, padx=0, pady=0, columnspan=2, sticky='nw')
-        self.entryBrowse = tk.Entry(self.browseFrame, bg=cfgEntryBgColor, width=40, textvariable=self.projLocation)
-        self.entryBrowse.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
-        self.btnBrowse = IconButton(self.browseFrame, 'Browse', Icon.ACTION_BROWSE, command=self._browsePath)
-        self.btnBrowse.grid(row=0, column=1, sticky='e', padx=5, pady=5)
+        labelLocation = tk.Label(content, text=Message.LABEL_PROJECT + ' location', bg='white', bd=0)
+        labelLocation.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
+
+        self.entryBrowse = tk.Entry(content, bg=cfgEntryBgColor, width=40, textvariable=self.projLocation)
+        self.entryBrowse.grid(row=1, column=1, sticky='nw', padx=5, pady=5)
+        self.btnBrowse = IconButton(content, 'Browse', Icon.ACTION_BROWSE, command=self._browsePath)
+        self.btnBrowse.grid(row=1, column=2, sticky='e', padx=5, pady=5)
 
         self.initial_focus = entryName
-        self.tkCheckVar.trace('w', self._onVarChanged)
-        btnCheck.select()
 
         btnFrame = tk.Frame(content)
         btnFrame.columnconfigure(0, weight=1)
@@ -225,16 +223,6 @@ class ProjectCreateWindow(Window):
         btnSelect.grid(row=0, column=0, sticky='e', padx=5, pady=5)
         btnCancel = Button(btnFrame, 'Cancel', Icon.BUTTON_CANCEL, command=self.close)
         btnCancel.grid(row=0, column=1, sticky='e', padx=5, pady=5)
-
-
-    def _onVarChanged(self, *args):
-        if self.tkCheckVar.get() == 0:
-            self.entryBrowse.config(state='normal')
-            self.btnBrowse.config(state='normal')
-        else:
-            self.projLocation.set(self.projectsPath)
-            self.entryBrowse.config(state='readonly')
-            self.btnBrowse.config(state='disabled')
 
     def _browsePath(self, e=None):
         def onSelect(obj):
