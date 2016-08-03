@@ -1030,6 +1030,9 @@ class Coordinate(EMObject):
         self._y = Integer(kwargs.get('y', None))
         self._micId = Integer()
         self._micName = String()
+        self._pickFom = Float(kwargs.get('autopickFigureOfMerit', None))
+        self._pickRef = Integer(kwargs.get('classNumber', None))
+        self._pickAngle = Float(kwargs.get('anglePsi', None))
         
     def getX(self):
         return self._x.get()
@@ -1102,6 +1105,24 @@ class Coordinate(EMObject):
     
     def getMicName(self):
         return self._micName.get()
+
+    def getPickFom(self):
+        return self._pickFom.get()
+
+    def getPickRef(self):
+        return self._pickRef.get()
+
+    def getPickAngle(self):
+        return self._pickAngle.get()
+
+    def setPickFom(self, pickFom):
+        self._pickFom.set(pickFom)
+
+    def setPickRef(self, pickRef):
+        self._pickRef.set(pickRef)
+
+    def setPickAngle(self, pickAngle):
+        self._pickAngle.set(pickAngle)
 
 
 class SetOfCoordinates(EMSet):

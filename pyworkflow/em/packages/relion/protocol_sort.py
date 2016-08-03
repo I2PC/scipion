@@ -1,7 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco     (jgomez@cnb.csic.es)
-# *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov     (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -21,25 +20,27 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-import os
-
-from pyworkflow.protocol.params import (PointerParam, FloatParam,
+from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
-from pyworkflow.em.data import Volume, VolumeMask
 import pyworkflow.em.metadata as md
+from pyworkflow.utils import exists
+from pyworkflow.em.protocol import EMProtocol
+from convert import convertBinaryVol, readSetOfParticles, writeSetOfParticles, writeReferences
 
-from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
 
 
-class ProtRelionSort(ProtRelionBase):
+class ProtRelionSort(EMProtocol):
     """
-    Relion post-processing protocol for automated masking,
-    overfitting estimation, MTF-correction and B-factor sharpening.
+    Relion particle sorting protocol.
+    It calculates difference images between particles and their aligned (and CTF-convoluted)
+    references, and calculate Z-score on the characteristics of these difference images (such
+    as mean, standard deviation, skewness, excess kurtosis and rotational symmetry).
+
     """
     _label = 'sort particles'
     
@@ -47,21 +48,16 @@ class ProtRelionSort(ProtRelionBase):
     def _defineParams(self, form):
         
         form.addParam('inputParticles', PointerParam,
-                      pointerClass="ProtRelionRefine3D, ProtRelionClassify2D, ProtRelionClassify3D",
-                      label='Select a previous relion protocol',
-                      help='Select a previous relion class2D, class3D or refine3D protocol.')
-        #form.addParam('inputreferences', PointerParam,
-        #              pointerClass="SetOfClasses2D, SetOfClasses3D, Volume",
-        #              label='Select references',
-        #              help='Select references: a set of classes or a 3D volume')
-        form.addParam('initMaskThreshold', FloatParam, default=0.02,
-                      condition='doAutoMask',
-                      label='Initial binarisation threshold',
-                      help='This threshold is used to make an initial binary mask from the'
-                           "average of the two unfiltered half-reconstructions. If you don't"
-                           "know what value to use, display one of the unfiltered half-maps in a 3D"
-                           "surface rendering viewer, like Chimera, and find the lowest threshold"
-                           " that gives no noise peaks outside the reconstruction.")
+                      pointerClass='SetOfParticles', pointerCondition='hasAlignment',
+                      label='Input particles',
+                      help='Select a set of particles that were previously matched against the references. '
+                           'Input should have 2D alignment parameters and class assignment. '
+                           'It can be particles after 2D/3D classification, 3D refinement or '
+                           'reference-based auto-picking.')
+        form.addParam('inputReferences', PointerParam,
+                      pointerClass="SetOfClasses2D, SetOfClasses3D, Volume",
+                      label='Input references',
+                      help='Select references: a set of classes or a 3D volume')
         form.addParam('maskDiameterA', IntParam, default=-1,
                       label='Particle mask diameter (A)',
                       help='The experimental images will be masked with a soft circular mask '
@@ -74,10 +70,9 @@ class ProtRelionSort(ProtRelionBase):
         form.addParam('doLowPass', IntParam, default=-1,
                       label='Low pass filter references to (A):',
                       help='Lowpass filter in Angstroms for the references (prevent Einstein-from-noise!)')
-
         form.addParam('doInvert', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Invert contrast of references?',
-                      help='Density in particles is inverted w.r.t. density in template')
+                      help='Density in particles is inverted compared to the density in references')
         form.addParam('doCTF', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label='Do CTF-correction?',
                       help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
@@ -93,97 +88,118 @@ class ProtRelionSort(ProtRelionBase):
         form.addParam('minZ', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
                       label='Min Z-value?',
                       help='Minimum Z-value to count in the sorting of outliers')
+        form.addParam('extraParams', StringParam, default='',
+                      label='Additional parameters',
+                      help="In this box command-line arguments may be provided that "
+                           "are not generated by the GUI. This may be useful for testing "
+                           "developmental options and/or expert use of the program, e.g: \n"
+                           "--verb 1\n")
 
         form.addParallelSection(threads=0, mpi=1)
             
     #--------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
-        self._initialize()
-        self._insertSortingStep()
+        self._insertFunctionStep('convertInputStep',
+                                 self.inputParticles.get().getObjId(),
+                                 self.inputReferences.get().getObjId())
+        self._insertRelionStep()
         self._insertFunctionStep('createOutputStep')
-        
-        
-    def _initialize(self):
-        # ToDo: implement a better way to get the pattern of unmasked maps.
-        self.input = self.protRelionRefine.get()._getExtraPath('relion')
-        print "INPUT: ", self.input
-        
-    def _insertSortingStep(self):
-        
-        output = self._getExtraPath('sorted')
-        self.samplingRate = self.protRelionRefine.get().inputParticles.get().getSamplingRate()
-        
-        args = " --i %s --o %s --angpix %f" %(self.input, output, self.samplingRate)
 
-        if self.doAutoMask:
-            args += " --auto_mask --inimask_threshold %f" % self.initMaskThreshold.get()
-            args += " --extend_inimask %d" % self.extendInitMask.get()
-            args += " --width_mask_edge %d" % self.addMaskEdge.get()
-        else:
-            args += ' --mask %s' % self.mask.get().getFileName()
-            
-        mtfFile = self.mtf.get()
-        if mtfFile:
-            args += ' --mtf %s' % mtfFile
-            
-        if self.doAutoBfactor:
-            args += ' --auto_bfac --autob_lowres %f' % self.bfactorLowRes.get()
-            args += ' --autob_highres %f' % self.bfactorHighRes.get()
-        else:
-            args += ' --adhoc_bfac %f' % self.bfactor.get()
-            
-        if self.skipFscWeighting:
-            args += ' --skip_fsc_weighting --low_pass %f' % self.lowRes.get()
-            
-        # Expert params
-        args += ' --filter_edge_width %d' % self.filterEdgeWidth.get()
-        args += ' --randomize_at_fsc %f' % self.randomizeAtFsc.get()
-        
-        self._insertFunctionStep('sortingStep', args)
-        
+    def _insertRelionStep(self):
+        """ Prepare the command line arguments before calling Relion. """
+        # Join in a single line all key, value pairs of the args dict
+        args = {}
+        self._setArgs(args)
+        params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
+
+        if self.extraParams.hasValue():
+            params += ' ' + self.extraParams.get()
+
+        self._insertFunctionStep('runRelionStep', params)
+
     #--------------------------- STEPS functions -------------------------------
-    def postProcessStep(self, params):
-        self.runJob('relion_postprocess', params)
+    def convertInputStep(self, particlesId, referencesId):
+        """ Create the input file in STAR format as expected by Relion.
+        If the input particles comes from Relion, just link the file.
+        Params:
+            particlesId: use this parameters just to force redo of convert if
+                the input particles are changed.
+        """
+        imgSet = self.inputParticles.get()
+        refSet = self.inputReferences.get()
+        imgStar = self._getPath('input_particles.star')
+
+        # Pass stack file as None to avoid write the images files
+        self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
+        writeSetOfParticles(imgSet, imgStar, self._getExtraPath())
+
+        if refSet.getClassName() == 'Volume':
+            refVol = convertBinaryVol(refSet, self._getTmpPath())
+        else:
+            self.info("Converting set from '%s' into input_references.star" % refSet.getFileName())
+            writeReferences(refSet, self._getExtraPath('input_references'))
+
+    def runRelionStep(self, params):
+        """ Execute the relion steps with given params. """
+        self.runJob(self._getProgram(), params)
         
     def createOutputStep(self):
-        volume = Volume()
-        volume.setFileName(self._getExtraPath('postprocess.mrc'))
-        volume.setSamplingRate(self.samplingRate)
-        vol = self.protRelionRefine.get().outputVolume
-        mask = VolumeMask()
-        mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
-        mask.setSamplingRate(self.samplingRate)
+        imgSet = self.inputParticles.get()
+        sortedImgSet = self._createSetOfParticles()
+        sortedImgSet.copyInfo(imgSet)
+        readSetOfParticles(self._getPath('sorted_particles.star'),
+                           sortedImgSet,
+                           alignType=imgSet.getAlignment())
 
-        self._defineOutputs(outputVolume=volume)
-        self._defineOutputs(outputMask=mask)
-        self._defineSourceRelation(vol, volume)
-        self._defineSourceRelation(vol, mask)
-    
+        self._defineOutputs(outputParticles=sortedImgSet)
+        self._defineSourceRelation(imgSet, sortedImgSet)
+
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to 
-        return summary message for NORMAL EXECUTION. 
-        """
         errors = []
-        mtfFile = self.mtf.get()
-
-        if mtfFile and not os.path.exists(mtfFile):
-            errors.append("Missing MTF-file '%s'" % mtfFile)
 
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
-        return summary message for NORMAL EXECUTION. 
-        """
         summary = []
-        postStarFn = self._getExtraPath("postprocess.star")
-        if os.path.exists(postStarFn):
-            mdResol = md.RowMetaData(postStarFn)
-            resol = mdResol.getValue(md.RLN_POSTPROCESS_FINAL_RESOLUTION)
-            summary.append("Final resolution: *%0.2f*" % resol)
-        
+
         return summary
     
     #--------------------------- UTILS functions -------------------------------
+    def _setArgs(self, args):
+
+        maskDiameter = self.maskDiameterA.get()
+        if maskDiameter <= 0:
+            x, _, _ = self.inputParticles.get().getDim()
+            maskDiameter = self.inputParticles.get().getSamplingRate() * x
+
+        vol = self.getInputReferences.get().getFileName()
+
+        if exists(self._getPath('input_references.star')):
+            args.update({'--ref': self._getPath('input_references.star')})
+
+        elif exists(vol.endswith('.mrc')):
+            args.update({'--ref': vol})
+
+        args.update({'--i': self._getPath('input_particles.star'),
+                     '--particle_diameter': maskDiameter,
+                     '--angpix': self.inputParticles.get().getSamplingRate(),
+                     '--min_z': self.minZ.get(),
+                     '--o': self._getPath('sorted_particles.star')
+                     })
+
+        if self.doInvert:
+            args[' --invert'] = ''
+
+        if self.ignoreCTFUntilFirstPeak:
+            args['--ctf_intact_first_peak'] = ''
+
+        if self.doCTF:
+            args['--ctf'] = ''
+
+    def _getProgram(self, program='relion_refine'):
+        """ Get the program name depending on the MPI use or not. """
+        if self.numberOfMpi > 1:
+            program += '_mpi'
+        return program

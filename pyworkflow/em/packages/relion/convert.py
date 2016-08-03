@@ -58,6 +58,13 @@ COOR_DICT = OrderedDict([
              ("_y", md.RLN_IMAGE_COORD_Y)
              ])
 
+COOR_EXTRA_LABELS = OrderedDict([
+    # Additional autopicking-related metadata
+    ("_autopickFigureOfMerit", md.RLN_PARTICLE_AUTOPICK_FOM),
+    ("_classNumber", md.RLN_PARTICLE_CLASS),
+    ("_anglePsi", md.RLN_ORIENT_PSI)
+    ])
+
 CTF_DICT = OrderedDict([
        ("_defocusU", md.RLN_CTF_DEFOCUSU),
        ("_defocusV", md.RLN_CTF_DEFOCUSV),
@@ -347,7 +354,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
     """ Set labels values from Coordinate coord to md row. """
     if copyId:
         setRowId(coordRow, coord)
-    objectToRow(coord, coordRow, COOR_DICT)
+    objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     #FIXME: THE FOLLOWING IS NOT CLEAN
     if coord.getMicId():
         coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
@@ -358,7 +365,7 @@ def rowToCoordinate(coordRow):
     # Check that all required labels are present in the row
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
-        rowToObject(coordRow, coord, COOR_DICT)
+        rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
             
         #FIXME: THE FOLLOWING IS NOT CLEAN
         try:
@@ -769,7 +776,7 @@ def convertBinaryVol(vol, outputDir):
         vol: input volume object to be converted.
         outputDir: where to put the converted file(s)
     Return:
-        new file name of the volume (convrted or not).
+        new file name of the volume (converted or not).
     """
     
     ih = em.ImageHandler()
