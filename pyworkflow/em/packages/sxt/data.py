@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Mohsen Kazemi  (mkazemi@cnb.csic.es)
-# *              Joaquin Oton   (joton@cnb.csic.es)
+# *              
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -30,52 +30,45 @@ for ET data objects like: Tilt Series, Focal Series and others
 """
 
 import os
-from pyworkflow.object import *
-#import pyworkflow.utils as pwutils
+ 
+import pyworkflow.object as pwobj
+import pyworkflow.em as em
+from h5py import File
 
-from constants import *
-from pyworkflow.em.convert import *
 
-from xmipp import *
-
-"""
     
-class TiltSeries(SetOfImages):
-    """Represents an ET Tilt-series object"""
+class TiltSeries(em.Image):    
     
-    def __init__(self, **kwargs):
-        SetOfImages.__init__(self, **kwargs)
-        
-    
-    
-    def getFileName(self):
-        """ Use the _objValue attribute to store filename. """
-        return self._filename.get()
-    
-    def setFileName(self, filename):
-        """ Use the _objValue attribute to store filename. """
-        self._filename.set(filename) 
-        
+    def __init__(self, **kwargs):        
+        em.Image.__init__(self, **kwargs)
+        self._angles = pwobj.CsvList()
+        self._normalized = pwobj.Boolean()
+        self._focalSeries = None    
+      
         
     def getAngles(self):
-        """ Return ET angles """
         return self._angles.get()
     
+    def setNormalized(self,fileName):
+        fhHdf5 = File(fileName, 'r')
+        if "TomoNormalized" in fhHdf5:
+            self._normalized.set(True)
+        else:    
+            self._normalized.set(False)
+            
     def getNormalized(self):
-        """ Return true if data are normalized """
         return self._normalized.get()
     
     
 
   
-class FocalSeries(TiltSeries):
-    """ Represents a set of Tomograms """
-    ITEM_TYPE = TiltSeries
-    
-    def __init__(self, **kwargs):
-        TiltSeries.__init__(self, **kwargs)
+#class FocalSeries(em.EmObject):
+#    ITEM_TYPE = TiltSeries
+   
+#    def __init__(self, **kwargs):
+#        TiltSeries.__init__(self, **kwargs)
         
-"""
+
 
 
 

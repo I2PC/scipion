@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Mohsen Kazemi  (mkazemi@cnb.csic.es)
-# *              Joaquin Oton   (joton@cnb.csic.es)
+# *              
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -30,10 +30,10 @@ from bibtex import _bibtex # Load bibtex dict with references
 _logo = "xmipp_logo.png"
 _references = ['from bib tex ...', 'from bib tex ...']
 
-from sxt import *
-
+#from sxt import *
 from data import *
-from protocol_import import XmippProtImport
+
+from protocol_import import ProtImportTiltSeries
 from protocol_mtf_calculation import XmippProtMtfCalculation
 
 

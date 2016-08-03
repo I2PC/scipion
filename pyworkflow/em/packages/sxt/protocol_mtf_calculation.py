@@ -29,7 +29,7 @@
 
 #import os
 #import glob
-from xmipp import *
+#from xmipp import *
 import pyworkflow.protocol.params as params
 from pyworkflow.em import Protocol
 from pyworkflow.utils import getFloatListFromValues
@@ -144,7 +144,7 @@ class XmippProtMtfCalculation(Protocol):
                            "calculation. Default values are set to match "
                            "Xradia manufactured SS pattern") 
                       
-        form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=1, mpi=2)
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):
@@ -177,7 +177,7 @@ class XmippProtMtfCalculation(Protocol):
         imSS.writeStack(fhInputImage)
         
         
-        from sxt.readTomo_moshen import accessData
+        from xpytools.readTomo import accessData
         accessDataObj = accessData()
         tomo = accessDataObj.readTomo(fhInputImage)
         imgs_ss = tomo[79:81, :, :]
@@ -185,47 +185,25 @@ class XmippProtMtfCalculation(Protocol):
         print 'single image dimensions=\n' , np.shape(single_imgss)
         print 'set of images dimensions=\n' , np.shape(tomo)
         print 'partial set of images dimensions=\n' , np.shape(imgs_ss)
-       
         
         
-        from sxt.getResolutionfromSiemensStar import MTFgetResolution
+        
+        from xpytools.getResolutionfromSiemensStar import MTFgetResolution
         resolutionObj = MTFgetResolution()
         ss_img_resolution = resolutionObj.getResolutionfromSiemensStar(single_imgss, ringPos)
         print '#######   ******   #######'
         print "Resolution = \n" , ss_img_resolution
         
         
-        """
-        from sxt.ConvertCartPolar import ConvertCartPolar
-        convCartPolar = ConvertCartPolar()
-        polar_img = convCartPolar.convertImCart2Polar(single_imgss)
-        #polar_img = convCartPolar.convertImCart2Polar(tomo)
-        #polar_img = convCartPolar.convertImCart2Polar(imgs_ss)###### az kino soal va barresi shavad ke koja estefade mishavad va nahayatan agar lazem bood dar yek loop baraye tak take image ha in class farakhan shavad va imBW normalize nahaie dar ye arraye append shavad ... 
-        print '#######   ******   #######'
-        print "Polar image dimensions = \n" , np.shape(polar_img)
-        #print "Polar image = \n" , polar_img
         
-        polar_img_name = "polar.npy"
-        np.save(polar_img_name, polar_img)
-        polar_read_img = np.load("polar.npy")
-        
-        
-        ###################################################################### ba kino sohbat shavad ke imBW va polar o psf o mtf bayad baraye yek image bashad ya hameye image ha....
-        from sxt.getMTFfromSiemensStar import MTFfromSiemensStar
-        MTFObj = MTFfromSiemensStar()
-        imBW = MTFObj.getpolarStarNorm(polar_read_img) ### nrows_radius=-1 this should be an input value  or a fixed value like this in the main code??
-        print '#######   ******   #######'
-        print "BW image dimensions = \n" , np.shape(imBW)
-        #print "BW image = \n" , imBW
-        """
         
         dx = ss_img_resolution[0]
         print "dx=", dx ,"\n"
-        from sxt.getMTFfromSiemensStar import MTFfromSiemensStar
+        from xpytools.getMTFfromSiemensStar import MTFfromSiemensStar
         MTFObj = MTFfromSiemensStar()
         #mtf_out = MTFObj.getMTFfromSiemensStar(single_imgss, dx, nRef, orders, ringPos) 
-        mtf_out = MTFObj.getMTFfromSiemensStar(tomo, dx, nRef, orders, ringPos)
-        #mtf_out = MTFObj.getMTFfromSiemensStar(imgs_ss, dx, nRef, orders, ringPos)
+        #mtf_out = MTFObj.getMTFfromSiemensStar(tomo, dx, nRef, orders, ringPos)
+        mtf_out = MTFObj.getMTFfromSiemensStar(imgs_ss, dx, nRef, orders, ringPos)
         pickle.dump(mtf_out, open("mtfoutputsingleimg_512.p", "wb")) #### 512 in the code should be checked and replace with the proper number....ask from Kino
         mtf_out = pickle.load(open("mtfoutputsingleimg_512.p", "rb"))
         fx = mtf_out['fx']
@@ -243,9 +221,9 @@ class XmippProtMtfCalculation(Protocol):
         plt.grid()
         plt.show()
         """
+    
         
-        
-        from sxt.mtf2psf import MTF2PSFClass
+        from xpytools.mtf2psf import MTF2PSFClass
         mtf2psfObj = MTF2PSFClass()
         psfdict = mtf2psfObj.mtf2psf(mtf, fx, dx, fov=400, fc=-1) ## fov and fc should be an input value  or a fixed value like this in the main code??
         pickle.dump(psfdict, open("psf_xdim512_dx10_fov400_singleimg.p", "wb"))
@@ -253,7 +231,7 @@ class XmippProtMtfCalculation(Protocol):
         psfarray = psfdict['psf']
         print '#######   ******   #######'
         print "psfarray dimension = " , np.shape(psfarray)
-
+        
         """
         psfimg = psfarray[:,:,0]
         im = plt.imshow(psfimg, cmap="hot")
