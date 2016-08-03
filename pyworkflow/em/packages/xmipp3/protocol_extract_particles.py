@@ -424,7 +424,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             img.setMicId(coord.getMicId())
             img.setCoordinate(coord)
             pickFom, pickRef, pickAngle = coord.getPickFom(), coord.getPickRef(), coord.getPickAngle()
-            #TODO DODDODODOODDODOD
+            #TODO append this to Particle
             imgSet.append(img)
             
         self._storeMethodsInfo(fnImages)
