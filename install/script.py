@@ -348,6 +348,13 @@ sklearn = env.addModule(
     default=False,
     deps=[scipy, numpy, cython])
 
+h5py = env.addModule(
+    'h5py',
+    tar='h5py-2.6.0.tar.gz',
+    targets=['h5py-2.6.0*'],
+    #default=False,
+    deps=[numpy, cython, six])
+
 
 #  ************************************************************************
 #  *                                                                      *
