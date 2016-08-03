@@ -43,6 +43,9 @@ class ProtRelionSort(EMProtocol):
 
     """
     _label = 'sort particles'
+
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
