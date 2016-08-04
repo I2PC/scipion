@@ -286,7 +286,11 @@ class BoundTree(Tree):
                         self.selectChild(obj._treeId)
                 except Exception as ex:
                     print "error: ", ex
-                    print "error object with id=%d (%s) is duplicated!!!" % (obj.getObjId(), str(obj))
+                    if obj.getObjId():
+                        print "error object with id=%d (%s) is duplicated!!!" % (obj.getObjId(), str(obj))
+                    else:
+                        print "error, object %s does not have an id. This could be due to the load of old project that"\
+                              " does not have recently added attributes (e.g.:datastreaming)" % str(obj)
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """
