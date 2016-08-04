@@ -41,6 +41,8 @@ if "SCIPION_USER_DATA" not in os.environ:
 SCIPION_HOME = os.environ['SCIPION_HOME']
 SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
+SCIPION_PYTHON = PYTHON
+
 
 
 SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
@@ -60,6 +62,20 @@ def findResource(filename):
 
     return findFile(filename, *RESOURCES)
 
+# Following are a set of functions to centralize the way to get
+# files from several scipion folder such as: config or apps
 
-def getTemplateFile(*paths):
-    return os.path.join(SCIPION_HOME, 'config', 'templates', *paths)
+def getScipionPath(*paths):
+     return os.path.join(SCIPION_HOME, *paths)
+
+
+def getScipionScript():
+    return getScipionPath('scipion')
+
+
+def getConfigPath(*paths):
+    return getScipionPath('config', *paths)
+
+
+def getTemplatePath(*paths):
+    return getConfigPath('templates', *paths)
