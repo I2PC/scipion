@@ -103,7 +103,7 @@ class Manager(object):
 
         return project
 
-    def importProject(self, fromLocation, copyFiles=True, projectName=None,):
+    def importProject(self, fromLocation, copyFiles=True, projectName=None, searchLocation=None):
         """Import a project that is somewhere else in the FS
         Folder can be copied (default) or linked
         Optionally a name can be specified, otherwise name will match location folder name
@@ -127,7 +127,7 @@ class Manager(object):
 
         project = self.loadProject(projectName)
 
-        project.fixLinks(fromLocation)
+        if searchLocation: project.fixLinks(searchLocation)
 
         return project
 

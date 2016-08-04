@@ -67,6 +67,7 @@ class Project(object):
         self.name = path
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
+        self._isLink = os.path.islink(path)
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -103,7 +104,9 @@ class Project(object):
             return os.path.join(*paths)
         else:
             return self.path
-
+    def isLink(self):
+        """Returns if the project path is a link to another folder."""
+        return self._isLink
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
