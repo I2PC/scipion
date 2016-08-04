@@ -29,6 +29,7 @@ import json
 import os
 from os.path import join, exists, abspath
 
+from pyworkflow import getTemplatePath
 import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
 
@@ -46,9 +47,9 @@ class ReportHtml():
         self.sysMonitor = sysMonitor
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
-        self.template = kwargs.get('template',
-                                   join(pwutils.getTemplatesFolder(),
-                                        'execution.summary.template.html'))
+        defaultTemplate = getTemplatePath('execution.summary.template.html')
+        self.template = kwargs.get('template', defaultTemplate)
+
         self.publishCmd = publishCmd
         self.refreshSecs = kwargs.get('refreshSecs', 60)
 

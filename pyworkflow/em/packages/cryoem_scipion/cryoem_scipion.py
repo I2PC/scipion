@@ -26,7 +26,8 @@
 
 import os
 
-from pyworkflow.utils import Environ
+import pyworkflow as pw
 
-CRYOEM_HOME = os.path.join(os.environ.get('SCIPION_HOME'),'software/lib/python2.7/site-packages/cryoem')
+
+CRYOEM_HOME = pw.getScipionPath('software/lib/python2.7/site-packages/cryoem')
 CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')

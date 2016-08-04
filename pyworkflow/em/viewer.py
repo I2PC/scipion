@@ -38,6 +38,7 @@ from multiprocessing.connection import Client
 from numpy import flipud
 import socket
 
+import pyworkflow as pw
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.utils import getFreePort
@@ -355,8 +356,7 @@ class ChimeraClient:
         self.address = ''
         self.port = getFreePort()
 
-        serverfile = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow', 'em', 'chimera_server.py')
+        serverfile = pw.join('em', 'chimera_server.py')
         command = CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port,serverName),
                              env=getChimeraEnviron(),).show()

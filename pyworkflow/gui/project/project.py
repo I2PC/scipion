@@ -39,7 +39,8 @@ import subprocess
 import uuid
 import SocketServer
 
-from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
+import pyworkflow as pw
+import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
@@ -66,8 +67,8 @@ class ProjectWindow(ProjectBaseWindow):
         self.projName = Message.LABEL_PROJECT + os.path.basename(path)
         try:
             projTitle = '%s (%s on %s)' % (self.projName, 
-                                           getLocalUserName(), 
-                                           getLocalHostName())
+                                           pwutils.getLocalUserName(),
+                                           pwutils.getLocalHostName())
         except Exception:
             projTitle = self.projName 
             
@@ -208,7 +209,7 @@ class ProjectWindow(ProjectBaseWindow):
 
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)
-        useId = not envVarOn('SCIPION_TREE_NAME')
+        useId = not pwutils.envVarOn('SCIPION_TREE_NAME')
         runsGraph.printDot(useId=useId)
         if useId:
             print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
@@ -334,8 +335,8 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
         try:
             title = '%s (%s on %s)' % (Message.LABEL_PROJECTS, 
-                                       getLocalUserName(), 
-                                       getLocalHostName())
+                                       pwutils.getLocalUserName(),
+                                       pwutils.getLocalHostName())
         except Exception:
             title = Message.LABEL_PROJECTS
         
@@ -351,27 +352,34 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def onBrowseFiles(self):
         # File -> Browse files
         FileBrowserWindow("Browse files", self,
-                          os.environ['SCIPION_USER_DATA'], selectButton=None).show()
+                          os.environ['SCIPION_USER_DATA'],
+                          selectButton=None).show()
 
     def onGeneral(self):
         # Config -> General
-        _open_cmd('%s/config/scipion.conf' % os.environ['SCIPION_HOME'])
+        _open_cmd(pw.getConfigPath('scipion.conf'))
+
+    def _openConfigFile(self, configFile, userOnly=False):
+        """ Open an Scipion configuration file, if the user have one defined,
+        also open that one with the defined text editor.
+        """
+        if not userOnly:
+            _open_cmd(pw.getConfigPath(configFile))
+
+        userHostConf = os.path.join(pwutils.getHomePath(),
+                                    '.config', 'scipion', configFile)
+        if os.path.exists(userHostConf):
+            _open_cmd(userHostConf)
 
     def onHosts(self):
         # Config -> Hosts
-        _open_cmd('%s/config//hosts.conf' % os.environ['SCIPION_HOME'])
-        if os.path.exists('%s/.config/scipion/hosts.conf' % os.environ['HOME']):
-            _open_cmd('%s/.config/scipion/hosts.conf' % os.environ['HOME'])
+        self._openConfigFile('hosts.conf')
 
     def onProtocols(self):
-        # Config -> Protocols
-        _open_cmd('%s/config/protocols.conf' % os.environ['SCIPION_HOME'])
-        if os.path.exists('%s/.config/scipion/protocols.conf' % os.environ['HOME']):
-            _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])
+        self._openConfigFile('protocols.conf')
 
     def onUser(self):
-        # Config -> User
-        _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
+        self._openConfigFile('scipion.conf', userOnly=True)
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
