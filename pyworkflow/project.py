@@ -67,6 +67,7 @@ class Project(object):
         self.name = path
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
+        self._isLink = os.path.islink(path)
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -103,7 +104,9 @@ class Project(object):
             return os.path.join(*paths)
         else:
             return self.path
-
+    def isLink(self):
+        """Returns if the project path is a link to another folder."""
+        return self._isLink
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
@@ -1068,3 +1071,29 @@ class Project(object):
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
+
+    def fixLinks(self, searchDir):
+
+        runs = self.getRuns()
+
+        for prot in runs:
+            broken = False
+            if isinstance(prot, em.ProtImport):
+                for _, attr in prot.iterOutputEM():
+                    fn = attr.getFiles()
+                    for f in attr.getFiles():
+                        if ':' in f:
+                            f = f.split(':')[0]
+
+                        if not os.path.exists(f):
+                            if not broken:
+                                broken = True
+                                print "Found broken links in run: ", pwutils.magenta(prot.getRunName())
+                            print "  Missing: ", pwutils.magenta(f)
+                            if os.path.islink(f):
+                                print "    -> ", pwutils.red(os.path.realpath(f))
+                            newFile = pwutils.findFile(os.path.basename(f), searchDir, recursive=True)
+                            if newFile:
+                                print "  Found file %s, creating link..." % newFile
+                                print pwutils.green("   %s -> %s" % (f, newFile))
+                                pwutils.createAbsLink(newFile, f)

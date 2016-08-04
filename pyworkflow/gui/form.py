@@ -702,7 +702,7 @@ class ParamWidget():
         
     def _addButton(self, text, imgPath, cmd):
         if self.btnFrame:
-            btn = IconButton(self.btnFrame, text, imgPath, command=cmd)
+            btn = IconButton(self.btnFrame, text, imgPath, highlightthickness=0, command=cmd)
             btn.grid(row=0, column=self._btnCol, sticky='e', padx=2, pady=2)
             self.btnFrame.columnconfigure(self._btnCol, weight=1)
             self._btnCol += 1
@@ -744,9 +744,9 @@ class ParamWidget():
         if 'font' in frameArgs:
             del frameArgs['font']
         frame = tk.Frame(parent, **frameArgs)
-        rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
+        rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, highlightthickness=0, value=1, **args)
         rb1.grid(row=0, column=0, padx=2, sticky='w')
-        rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
+        rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, highlightthickness=0, value=0, **args)
         rb2.grid(row=0, column=1, padx=2, sticky='w') 
         
         return (var, frame)
@@ -775,7 +775,7 @@ class ParamWidget():
             elif param.display == params.EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
                     rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, 
-                                        value=opt, font=self.window.font, bg='white')
+                                        value=opt, font=self.window.font, bg='white', highlightthickness=0)
                     rb.grid(row=i, column=0, sticky='w')
             elif param.display == params.EnumParam.DISPLAY_HLIST:
                 rbFrame = tk.Frame(content, bg='white')
@@ -1207,7 +1207,7 @@ class FormWindow(Window):
         entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.runNameVar, 
                          state='readonly')
         entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
-        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
+        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, highlightthickness=0,command=self._editObjParams)
         btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
         
         c = 3 # Comment
@@ -1216,7 +1216,7 @@ class FormWindow(Window):
         entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.commentVar, 
                          state='readonly')
         entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
-        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
+        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, highlightthickness=0,command=self._editObjParams)
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
         
         self.updateLabelAndCommentVars()
@@ -1230,8 +1230,8 @@ class FormWindow(Window):
                                            self._onRunModeChanged, 
                                            bg='white', font=self.font)   
         runMode.grid(row=0, column=0, sticky='new', padx=(0, 5), pady=5)
-        btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                             command=self._createHelpCommand(Message.HELP_RUNMODE))
+        btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0, command=self._createHelpCommand(Message.HELP_RUNMODE))
         btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
         #modeFrame.columnconfigure(0, minsize=60)
         modeFrame.columnconfigure(0, weight=1)
@@ -1289,7 +1289,7 @@ class FormWindow(Window):
                     for i, opt in enumerate([THREADS, MPI]):
                         rb = tk.Radiobutton(procCombo, text=opt, 
                                             variable=self.procTypeVar, 
-                                            value=opt, bg='white')
+                                            value=opt, bg='white', highlightthickness=0)
                         rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
                         
                     procCombo.grid(row=0, column=0, sticky='nw', pady=5)
@@ -1314,8 +1314,8 @@ class FormWindow(Window):
                     entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
                     entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
                 
-            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                                 command=self._createHelpCommand(Message.HELP_MPI_THREADS))
+            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                                 highlightthickness=0, command=self._createHelpCommand(Message.HELP_MPI_THREADS))
             btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
             procFrame.columnconfigure(0, minsize=60)
             procFrame.grid(row=r, column=1, sticky='new', columnspan=2)
@@ -1332,8 +1332,8 @@ class FormWindow(Window):
         #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
         #                          command=self._editQueueParams)
         #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
-        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
+        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0, command=self._createHelpCommand(Message.HELP_USEQUEUE))
         btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
@@ -1510,7 +1510,7 @@ class FormWindow(Window):
             
         frame = tk.Frame(parent, **frameArgs)
         for i, opt in enumerate(param.choices):
-            rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt, **rbArgs)
+            rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt, highlightthickness=0, **rbArgs)
             rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
         
         return frame

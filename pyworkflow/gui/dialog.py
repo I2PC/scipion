@@ -258,7 +258,7 @@ def createMessageBody(bodyFrame, message, image,
         msg: a str or list with the lines.
     """
     bodyFrame.config(bg=frameBg, bd=0)
-    text = TaggedText(bodyFrame, bg=textBg, bd=0)
+    text = TaggedText(bodyFrame, bg=textBg, bd=0, highlightthickness=0)
     # Insert image
     if image:
         label = tk.Label(bodyFrame, image=image, bg=textBg, bd=0)
