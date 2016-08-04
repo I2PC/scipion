@@ -152,7 +152,7 @@ def relionToLocation(filename):
         return em.NO_INDEX, str(filename)
 
 
-def objectToRow(obj, row, attrDict, extraLabels={}):
+def objectToRow(obj, row, attrDict, extraLabels=[]):
     """ This function will convert an EMObject into a XmippMdRow.
     Params:
         obj: the EMObject instance (input)
@@ -570,15 +570,28 @@ def writeReferences(inputSet, outputRoot):
         refsMd.write(starFile)
             
     elif isinstance(inputSet, em.SetOfClasses2D):
+        pass
+    else:
+        raise Exception('Invalid object type: %s' % type(inputSet))
+
+
+def writeReferencesNew(inputSet, outputRoot):
+    """ Write an references star and stack files from
+    a given SetOfAverages or SetOfClasses2D.
+    """
+    refsMd = md.MetaData()
+    stackFile = outputRoot + '.stk'
+    starFile = outputRoot + '.star'
+    ih = em.ImageHandler()
+
+    if isinstance(inputSet, em.SetOfAverages):
         row = md.Row()
         for i, img in enumerate(inputSet):
             ih.convert(img, (i + 1, stackFile))
-            img.setLocation((i + 1, baseStack))  # make the star with relative
+            img.setLocation((i + 1, stackFile))
             particleToRow(img, row)
             row.writeToMd(refsMd, refsMd.addObject())
         refsMd.write(starFile)
-    else:
-        raise Exception('Invalid object type: %s' % type(inputSet)) 
 
 
 def micrographToRow(mic, micRow, **kwargs):
