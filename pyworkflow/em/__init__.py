@@ -30,6 +30,7 @@ import os
 import sys
 
 import pyworkflow as pw
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.reflection import getSubclassesFromModules, getSubclasses, getModules
 from data import *
 from data_tiltpairs import *
@@ -162,4 +163,23 @@ def loadSetFromDb(dbName, dbPrefix=''):
     setClassName = db.getProperty('self') # get the set class name
     setObj = getObjects()[setClassName](filename=dbName, prefix=dbPrefix)
     return setObj
-    
+
+
+def runProgram(program, params):
+    env = None
+
+    if program.startswith('xmipp'):
+        import pyworkflow.em.packages.xmipp3 as xmipp3
+        env = xmipp3.getEnviron()
+    if program.startswith('relion'):
+        import pyworkflow.em.packages.relion as relion
+        env = relion.getEnviron()
+    elif (program.startswith('e2') or
+              program.startswith('sx')):
+        import pyworkflow.em.packages.eman2 as eman2
+        env = eman2.getEnviron()
+    elif program.startswith('b'):
+        import pyworkflow.em.packages.bsoft as bsoft
+        env = bsoft.getEnviron()
+
+    pwutils.runJob(None, program, params, env=env)
