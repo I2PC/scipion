@@ -49,9 +49,6 @@ class ViewerMonitorSummary(Viewer):
         self.summaryWindow.show()
 
 
-
-
-
 class SummaryWindow(pwgui.Window):
 
     def __init__(self, **kwargs):
