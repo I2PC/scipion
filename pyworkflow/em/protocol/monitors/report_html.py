@@ -34,7 +34,7 @@ import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
 
 
-class ReportHtml():
+class ReportHtml:
     """ Create an html report with a summary of the processing.
     The report will be updated with a given frequency.
     """
@@ -72,8 +72,9 @@ class ReportHtml():
             raise Exception("HTML template file '%s' not found. "
                             % self.template)
 
+        project = self.protocol.getProject()
         reportName = 'index.html'
-        projName = self.protocol.getProject().getShortName()
+        projName = project.getShortName()
         reportDir = abspath(self.protocol._getExtraPath(projName))
 
         self.info("Creating report directory: %s" % reportDir)
@@ -81,6 +82,9 @@ class ReportHtml():
         pwutils.makePath(reportDir)
 
         reportPath = join(reportDir, reportName)
+
+        # TODO properly (Ask JM)
+        projectFinished = self.ctfMonitor.isFinished()
 
         acquisitionLines = ''
         self.provider.refreshObjects()
@@ -119,14 +123,17 @@ class ReportHtml():
         data = self.sysMonitor.getData()
         systemData = json.dumps(data)
 
-        args = {'acquisitionLines': acquisitionLines,
-                'runLines': runLines,
+        args = {'projectName': projName,
+                'startTime': pwutils.dateStr(project.getCreationTime(), secs=True),
                 'dateStr': pwutils.prettyTime(secs=True),
-                'projectName': self.protocol.getProject().getShortName(),
+                'projectDuration': pwutils.prettyDelta(project.getElapsedTime()),
+                'projectStatus': "FINISHED" if projectFinished else "RUNNING",
                 'scipionVersion': os.environ['SCIPION_VERSION'],
+                'acquisitionLines': acquisitionLines,
+                'runLines': runLines,
                 'ctfData': ctfData,
                 'systemData': systemData,
-                'refreshSecs': self.refreshSecs
+                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not projectFinished else ''
                 }
 
         self.info("Writing report html to: %s" % abspath(reportPath))

@@ -1,7 +1,7 @@
 <HTML>
     <HEAD>
         <TITLE>Scipion execution summary for %(projectName)s </TITLE>
-        <META http-equiv="refresh" content="%(refreshSecs)s" >
+        %(refresh)s
     </HEAD>
     <STYLE>
         /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
@@ -175,8 +175,10 @@
             <DIV class="row">
                 <DIV class="column column-5">
                     <H2>Project properties</H2>
-                    <P class="propertyline"><label>Date:</label> %(dateStr)s</P>
-                    <P class="propertyline"><label>Project:</label> %(projectName)s</P>
+                    <P class="propertyline"><label>Start time:</label> %(startTime)s</P>
+                    <P class="propertyline"><label>Last update:</label> %(dateStr)s</P>
+                    <P class="propertyline"><label>Duration:</label> %(projectDuration)s</P>
+                    <P class="propertyline"><label>Status:</label> %(projectStatus)s</P>
                     <P class="propertyline"><label>Scipion version:</label> %(scipionVersion)s</P>
 
                     <DIV id="acquisition">
