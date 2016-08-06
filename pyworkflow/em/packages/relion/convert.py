@@ -433,6 +433,26 @@ def particleToRow(part, partRow, **kwargs):
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
 
 
+def particleToRowNew(part, partRow, **kwargs):
+    """ Set labels values from Particle to md row. """
+    coord = part.getCoordinate()
+    if coord is not None:
+        coordinateToRow(coord, partRow, copyId=False)
+    if part.hasClassId() and partRow.hasLabel(md.RLN_PARTICLE_AUTOPICK_FOM):
+        #classId from classification has higher priority then autopick classId
+        partRow.setValue(md.RLN_PARTICLE_CLASS, int(part.getClassId()))
+    if part.hasMicId():
+        partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
+        # If the row does not contains the micrgraphs name
+        # use a fake micrograph name using id to relion
+        # could at least group for CTF using that
+        if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
+            partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
+    if part.hasAttribute('_rlnParticleId'):
+        partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
+    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
+
+
 def rowToParticle(partRow, **kwargs):
     """ Create a Particle from a row of a meta """
     img = em.Particle()
@@ -520,7 +540,7 @@ def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
     
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
-        
+
     for img in imgSet:
         objId = imgMd.addObject()
         imgRow = md.Row()
@@ -548,6 +568,28 @@ def writeSetOfParticles(imgSet, starFile,
 
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
+
+
+def writeSetOfParticlesNew(imgSet, starFile,
+                        outputDir, **kwargs):
+    """ This function will write a SetOfImages as Relion meta
+    Params:
+        imgSet: the SetOfImages instance.
+        starFile: the filename where to write the meta
+        filesMapping: this dict will help when there is need to replace images names
+    """
+    filesDict = convertBinaryFiles(imgSet, outputDir)
+    kwargs['filesDict'] = filesDict
+    partMd = md.MetaData()
+    setOfImagesToMd(imgSet, partMd, particleToRowNew, **kwargs)
+
+    # Remove Magnification from metadata to avoid wrong values of pixel size.
+    # In Relion if Magnification and DetectorPixelSize are in metadata,
+    # pixel size is ignored in the command line.
+    partMd.removeLabel(md.RLN_CTF_MAGNIFICATION)
+
+    blockName = kwargs.get('blockName', 'Particles')
+    partMd.write('%s@%s' % (blockName, starFile))
     
     
 def writeReferences(inputSet, outputRoot):
@@ -568,7 +610,7 @@ def writeReferences(inputSet, outputRoot):
             particleToRow(img, row)
             row.writeToMd(refsMd, refsMd.addObject())
         refsMd.write(starFile)
-            
+
     elif isinstance(inputSet, em.SetOfClasses2D):
         pass
     else:
@@ -577,7 +619,7 @@ def writeReferences(inputSet, outputRoot):
 
 def writeReferencesNew(inputSet, outputRoot):
     """ Write an references star and stack files from
-    a given SetOfAverages or SetOfClasses2D.
+    a given SetOfAverages or SetOfClasses2D/3D.
     """
     refsMd = md.MetaData()
     stackFile = outputRoot + '.stk'
@@ -590,8 +632,32 @@ def writeReferencesNew(inputSet, outputRoot):
             ih.convert(img, (i + 1, stackFile))
             img.setLocation((i + 1, stackFile))
             particleToRow(img, row)
+            #renumber class numbers
+            row.setValue(md.RLN_PARTICLE_CLASS, int(i + 1))
             row.writeToMd(refsMd, refsMd.addObject())
         refsMd.write(starFile)
+
+    elif isinstance(inputSet, em.SetOfClasses2D):
+        row = md.Row()
+        for i, classX in enumerate(inputSet):
+            if classX.hasRepresentative():
+                rep = classX.getRepresentative()
+                rep.setObjId(classX.getObjId())
+                rep.setSamplingRate(classX.getSamplingRate())
+                ih.convert(rep, (i + 1, stackFile))
+                rep.setLocation((i + 1, stackFile))
+                particleToRow(rep, row)
+                # renumber class numbers
+                row.setValue(md.RLN_PARTICLE_CLASS, int(i + 1))
+                row.writeToMd(refsMd, refsMd.addObject())
+            refsMd.write(starFile)
+
+    elif isinstance(inputSet, em.SetOfClasses3D):
+        pass
+        #TODO: not yet implemented
+
+    else:
+        raise Exception('Invalid object type: %s' % type(inputSet))
 
 
 def micrographToRow(mic, micRow, **kwargs):

@@ -28,7 +28,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.utils import removeExt
 from pyworkflow.em.protocol import ProtParticles
-from convert import convertBinaryVol, readSetOfParticles, writeSetOfParticles, writeReferencesNew
+from convert import convertBinaryVol, readSetOfParticles, writeSetOfParticlesNew, writeReferencesNew
 
 
 class ProtRelionSort(ProtParticles):
@@ -47,14 +47,12 @@ class ProtRelionSort(ProtParticles):
         form.addParam('inputParticles', PointerParam,
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       label='Input particles',
-                      help='Select a set of particles that were previously matched against the references. '
-                           'Input should have 2D alignment parameters and class assignment. '
-                           'It can be particles after 2D/3D classification, 3D refinement or '
-                           'reference-based auto-picking.')
+                      help='Select a set of particles after Relion 2D/3D classification, refinement '
+                           'or auto-picking. Particles should have alignment parameters and class assignment.')
         form.addParam('inputReferences', PointerParam,
                       pointerClass="SetOfClasses2D, SetOfClasses3D, Volume, SetOfAverages",
                       label='Input references',
-                      help='Select references: a set of classes or a 3D volume')
+                      help='Select references: a set of classes/averages or a 3D volume')
         form.addParam('maskDiameterA', IntParam, default=-1,
                       label='Particle mask diameter (A)',
                       help='The experimental images will be masked with a soft circular mask '
@@ -120,9 +118,9 @@ class ProtRelionSort(ProtParticles):
     def _createFilenameTemplates(self):
         """ Centralize how files are called. """
         myDict = {
-            'input_particles': self._getPath('input_particles.star'),
-            'input_refs': self._getPath('input_references.star'),
-            'output_star': self._getPath('input_particles_sorted.star')
+            'input_particles': self._getExtraPath('input_particles.star'),
+            'input_refs': self._getExtraPath('input_references.star'),
+            'output_star': self._getExtraPath('input_particles_sorted.star')
         }
         self._updateFilenamesDict(myDict)
 
@@ -140,7 +138,7 @@ class ProtRelionSort(ProtParticles):
 
         # Pass stack file as None to avoid write the images files
         self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
-        writeSetOfParticles(imgSet, imgStar, self._getPath())
+        writeSetOfParticlesNew(imgSet, imgStar, self._getPath())
 
         if not refSet.getClassName() == 'Volume':
             self.info("Converting set from '%s' into %s" % (refSet.getFileName(), refStar))
@@ -185,7 +183,7 @@ class ProtRelionSort(ProtParticles):
                      '--min_z': self.minZ.get(),
                      '--o': 'sorted'
                      })
-
+        #if inputReferences is a volume, convert it to mrc here
         if self.inputReferences.get().getClassName() == 'Volume':
             args['--ref'] = convertBinaryVol(self.inputReferences.get(), self._getTmpPath())
 
