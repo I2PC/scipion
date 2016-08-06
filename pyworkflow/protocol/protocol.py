@@ -1018,7 +1018,7 @@ class Protocol(Step):
 
         if envVarOn('SCIPION_DEBUG_NOCLEAN'):
             self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
-        else:
+        elif not self.isFailed():
             self.info('Cleaning temporarly files....')
             self.cleanTmp()
             
