@@ -53,15 +53,14 @@ from pyworkflow.gui.text import _open_cmd, openTextFileEditor
 from labels import LabelsDialog
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD,
-                                 OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4,
-                                 OBJCMD_GCTF)
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
 
 
 class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
+    _OBJECT_COMMANDS = {}
+
     def __init__(self, path, master=None):
         # Load global configuration
         self.projName = Message.LABEL_PROJECT + os.path.basename(path)
@@ -246,38 +245,33 @@ class ProjectWindow(ProjectBaseWindow):
     def schedulePlot(self, path, *args):
         self.enqueue(lambda: plotFile(path, *args).show())    
 
+    @classmethod
+    def registerObjectCommand(cls, cmd, func):
+        """ Register an object command to be handled when receiving the
+        action from showj. """
+        cls._OBJECT_COMMANDS[cmd] = func
+
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         try:
-            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
-            from pyworkflow.em.packages.xmipp3.protocol_movie_opticalflow import createPlots
-            from pyworkflow.em.protocol.protocol_movies import PLOT_CART
-            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
             objId = int(objStrId)
             project = self.project
+
             if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
                 from pyworkflow.em import loadSetFromDb
                 inputObj = loadSetFromDb(inputStrId)
             else:
                 inputId = int(inputStrId)
                 inputObj = project.mapper.selectById(inputId)
-            #Plotter.setBackend('TkAgg')
-            if cmd == OBJCMD_NMA_PLOTDIST:
-                self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
-    
-            elif cmd == OBJCMD_NMA_VMD:
-                vmd = createVmdView(inputObj, modeNumber=objId)
-                vmd.show()
 
-            elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-                self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
+            func = self._OBJECT_COMMANDS.get(cmd, None)
 
-            elif cmd == OBJCMD_CTFFIND4:
-                from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
-                self.enqueue(lambda: createCtfPlot(inputObj, objId))
-
-            elif cmd == OBJCMD_GCTF:
-                from pyworkflow.em.packages.gctf.viewer import createCtfPlot
-                self.enqueue(lambda: createCtfPlot(inputObj, objId))
+            if func is None:
+                print "Error, command '%s' not found. " % cmd
+            else:
+                def myfunc():
+                    func(inputObj, objId)
+                    inputObj.close()
+                self.enqueue(myfunc)
 
         except Exception, ex:
             print "There was an error executing object command !!!:"

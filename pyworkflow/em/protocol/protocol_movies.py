@@ -43,8 +43,6 @@ from pyworkflow.em import ImageHandler
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
 
-PLOT_CART = 0
-PLOT_POLAR = 1
 
 
 class ProtProcessMovies(ProtPreprocessMicrographs):
