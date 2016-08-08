@@ -225,8 +225,7 @@ class Project(object):
         creationTime = self.mapper.selectBy(name=PROJECT_CREATION_TIME)
 
         if creationTime: # CreationTime was found in project.sqlite
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            self._creationTime = dt.datetime.strptime(creationTime[0].get(), f)
+            self._creationTime = creationTime[0].datetime()
         else:
             # We should read the creation time from settings.sqlite and
             # update the CreationTime in the project.sqlite

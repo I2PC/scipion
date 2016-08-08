@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains utilities functions and classes.
-"""
 
 import sys
 import os
@@ -33,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+
 
 def prettyDate(time=False):
     """
