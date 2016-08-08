@@ -786,16 +786,16 @@ void ProgReconstructSignificant::produceSideinfo()
 						deleteFile(fnAngles);
 
 					// Symmetrize with many different possibilities to have a spherical volume
-					args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i1 --spline 1 -v 0",fnVolume.c_str());
 					cmd=(String)"xmipp_transform_symmetrize "+args;
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-					args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i3 --spline 1 -v 0",fnVolume.c_str());
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-					args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i2 --spline 1 -v 0",fnVolume.c_str());
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 					deleteFile(fnAngles);

@@ -247,11 +247,8 @@ class ProjectSettings(pwobj.OrderedObject):
         self.readOnly.set(value)
         
     def getCreationTime(self):
-        f = "%Y-%m-%d %H:%M:%S.%f"
-        creationTime = self.creationTime.get()
+        return self.creationTime.datetime()
 
-        return dt.datetime.strptime(creationTime, f)
-    
     def setCreationTime(self, value):
         self.creationTime.set(value)
         
