@@ -151,5 +151,5 @@ class SummaryWindow(pwgui.Window):
 
     def _generateHTML(self, e=None):
         reportHtml = self.protocol.createHtmlReport()
-        reportPath = reportHtml.generate()
+        reportPath = reportHtml.generate(self.protocol.isFinished())
         text._open_cmd(reportPath)

@@ -45,6 +45,7 @@ class ReportHtml:
         self.provider = SummaryProvider(protocol)
         self.ctfMonitor = ctfMonitor
         self.sysMonitor = sysMonitor
+
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
         defaultTemplate = getTemplatePath('execution.summary.template.html')
@@ -65,7 +66,7 @@ class ReportHtml:
         else:
             print msg
 
-    def generate(self):
+    def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
 
         if not reportTemplate:
@@ -73,6 +74,7 @@ class ReportHtml:
                             % self.template)
 
         project = self.protocol.getProject()
+
         reportName = 'index.html'
         projName = project.getShortName()
         reportDir = abspath(self.protocol._getExtraPath(projName))
@@ -82,9 +84,6 @@ class ReportHtml:
         pwutils.makePath(reportDir)
 
         reportPath = join(reportDir, reportName)
-
-        # TODO properly (Ask JM)
-        projectFinished = self.ctfMonitor.isFinished()
 
         acquisitionLines = ''
         self.provider.refreshObjects()
@@ -127,13 +126,13 @@ class ReportHtml:
                 'startTime': pwutils.dateStr(project.getCreationTime(), secs=True),
                 'dateStr': pwutils.prettyTime(secs=True),
                 'projectDuration': pwutils.prettyDelta(project.getElapsedTime()),
-                'projectStatus': "FINISHED" if projectFinished else "RUNNING",
+                'projectStatus': "FINISHED" if finished else "RUNNING",
                 'scipionVersion': os.environ['SCIPION_VERSION'],
                 'acquisitionLines': acquisitionLines,
                 'runLines': runLines,
                 'ctfData': ctfData,
                 'systemData': systemData,
-                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not projectFinished else ''
+                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else ''
                 }
 
         self.info("Writing report html to: %s" % abspath(reportPath))
