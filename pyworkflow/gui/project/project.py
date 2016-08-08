@@ -268,7 +268,10 @@ class ProjectWindow(ProjectBaseWindow):
             if func is None:
                 print "Error, command '%s' not found. "
             else:
-                self.enqueue(lambda: func(inputObj, objId))
+                def myfunc():
+                    func(inputObj, objId)
+                    inputObj.close()
+                self.enqueue(myfunc)
 
         except Exception, ex:
             print "There was an error executing object command !!!:"
