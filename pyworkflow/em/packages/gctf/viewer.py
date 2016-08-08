@@ -1,7 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# *
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -19,21 +20,24 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Visualization of the results of the Gctf.
-"""
 
 import os
 from os.path import exists
+
+from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.viewer import (DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
+import pyworkflow.utils as pwutils
 from pyworkflow.em.plotter import EmPlotter
 from protocol_gctf import ProtGctf
 from convert import readCtfModel
+
+
+OBJCMD_GCTF = "Display Ctf Analysis"
 
 
 class ProtGctfViewer(Viewer):
@@ -41,7 +45,6 @@ class ProtGctfViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'viewer Gctf'
     _targets = [ProtGctf]
-     
      
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -117,15 +120,15 @@ class ProtGctfViewer(Viewer):
                                                          showj.VISIBLE: labels,
                                                          showj.ZOOM: 50,
                                                          showj.RENDER: psdLabels,
-                                                         showj.OBJCMDS: "'%s'" % showj.OBJCMD_GCTF}))
+                                                         showj.OBJCMDS: "'%s'" % OBJCMD_GCTF}))
 
         return self._views
 
+
 def createCtfPlot(ctfSet, ctfId):
-    from pyworkflow.utils.path import removeExt
     ctfModel = ctfSet[ctfId]
     psdFn = ctfModel.getPsdFile()
-    fn = removeExt(psdFn) + "_EPA.txt"
+    fn = pwutils.removeExt(psdFn) + "_EPA.txt"
     gridsize = [1, 1]
     xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
     plot_title = "CTF Fitting"
@@ -140,10 +143,15 @@ def createCtfPlot(ctfSet, ctfId):
     a.grid(True)
     xplotter.show()
 
+
+ProjectWindow.registerObjectCommand(OBJCMD_GCTF, createCtfPlot)
+
+
 def _plotCurve(a, i, fn):
     freqs = _getValues(fn, 0)
     curv = _getValues(fn, i)
     a.plot(freqs, curv)
+
 
 def _getValues(fn, col):
     f = open(fn)
