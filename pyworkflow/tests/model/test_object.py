@@ -75,6 +75,11 @@ class TestObject(BaseTest):
         s2.set('something')
         # No empty after some value
         self.assertFalse(s2.empty(), "s2 string should not be empty after value")
+
+        now = dt.datetime.now()
+        s.set(now)
+        self.assertEqual(now, s.datetime())
+
         
     def test_Pointer(self):
         c = Complex.createComplex()
