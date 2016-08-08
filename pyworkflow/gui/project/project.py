@@ -266,7 +266,7 @@ class ProjectWindow(ProjectBaseWindow):
             func = self._OBJECT_COMMANDS.get(cmd, None)
 
             if func is None:
-                print "Error, command '%s' not found. "
+                print "Error, command '%s' not found. " % cmd
             else:
                 def myfunc():
                     func(inputObj, objId)
