@@ -443,7 +443,7 @@ def particleToRowNew(part, partRow, **kwargs):
         partRow.setValue(md.RLN_PARTICLE_CLASS, int(part.getClassId()))
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
-        # If the row does not contains the micrgraphs name
+        # If the row does not contains the micrographs name
         # use a fake micrograph name using id to relion
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
@@ -587,6 +587,25 @@ def writeSetOfParticlesNew(imgSet, starFile,
     # In Relion if Magnification and DetectorPixelSize are in metadata,
     # pixel size is ignored in the command line.
     partMd.removeLabel(md.RLN_CTF_MAGNIFICATION)
+
+    # Renumber class numbers
+    _classesList = []  # store old classes info
+    for imgRow in md.iterRows(partMd):
+        clsOld = imgRow.getValue(md.RLN_PARTICLE_CLASS)
+
+        if clsOld not in _classesList:
+            _classesList.append(clsOld)
+
+    _classesList.sort()
+    _classesDict = {} # # store new classes info
+
+    for clsNew, clsOld in enumerate(_classesList):
+        _classesDict[clsOld] = clsNew + 1
+
+    for imgRow in md.iterRows(partMd):
+        classOld = imgRow.getValue(md.RLN_PARTICLE_CLASS)
+        imgRow.setValue(md.RLN_PARTICLE_CLASS, int(_classesDict[classOld]))
+        print "CLA=", imgRow.getValue(md.RLN_PARTICLE_CLASS)
 
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
