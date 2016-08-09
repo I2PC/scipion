@@ -53,6 +53,8 @@ PROJECT_CONFIG = '.config'
 PROJECT_CONFIG_HOSTS = 'hosts.conf'
 PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 
+PROJECT_CREATION_TIME = 'CreationTime'
+
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
 
@@ -67,6 +69,7 @@ class Project(object):
         self.name = path
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
+        self._isLink = os.path.islink(path)
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -86,6 +89,9 @@ class Project(object):
         # Host configuration
         self._hosts = None
         self._protocolViews = None
+        #  Creation time should be stored in project.sqlite when the project
+        # is created and then loaded with other properties from the database
+        self._creationTime = None
 
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -103,7 +109,9 @@ class Project(object):
             return os.path.join(*paths)
         else:
             return self.path
-
+    def isLink(self):
+        """Returns if the project path is a link to another folder."""
+        return self._isLink
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
@@ -112,6 +120,9 @@ class Project(object):
         """ Return the time when the project was created. """
         # In project.create method, the first object inserted
         # in the mapper should be the creation time
+        return self._creationTime
+
+    def getSettingsCreationTime(self):
         return self.settings.getCreationTime()
 
     def getElapsedTime(self):
@@ -204,6 +215,22 @@ class Project(object):
                 self.settings = pwconfig.loadSettings(settingsPath)
             else:
                 self.settings = None
+
+        self._loadCreationTime()
+
+    def _loadCreationTime(self):
+        # Load creation time, it should be in project.sqlite or
+        # in some old projects it is found in settings.sqlite
+
+        creationTime = self.mapper.selectBy(name=PROJECT_CREATION_TIME)
+
+        if creationTime: # CreationTime was found in project.sqlite
+            self._creationTime = creationTime[0].datetime()
+        else:
+            # We should read the creation time from settings.sqlite and
+            # update the CreationTime in the project.sqlite
+            self._creationTime = self.getSettingsCreationTime()
+            self._storeCreationTime(self._creationTime)
 
     # ---- Helper functions to load different pieces of a project
     def _loadDb(self, dbPath):
@@ -306,10 +333,8 @@ class Project(object):
         print "Creating project at: ", os.path.abspath(self.dbPath)
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
-        creation = pwobj.String(objName='CreationTime')  # Store creation time
-        creation.set(dt.datetime.now())
-        self.mapper.insert(creation)
-        self.mapper.commit()
+        # Store creation time
+        self._storeCreationTime(dt.datetime.now())
         # Load settings from .conf files and write .sqlite
         self.settings = pwconfig.ProjectSettings()
         self.settings.setRunsView(runsView)
@@ -322,6 +347,14 @@ class Project(object):
         self._loadHosts(hostsConf)
 
         self._loadProtocols(protocolsConf)
+
+    def _storeCreationTime(self, creationTime):
+        """ Store the creation time in the project db. """
+        # Store creation time
+        creation = pwobj.String(objName=PROJECT_CREATION_TIME)
+        creation.set(creationTime)
+        self.mapper.insert(creation)
+        self.mapper.commit()
 
     def _cleanData(self):
         """Clean all project data"""
@@ -1068,3 +1101,29 @@ class Project(object):
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
+
+    def fixLinks(self, searchDir):
+
+        runs = self.getRuns()
+
+        for prot in runs:
+            broken = False
+            if isinstance(prot, em.ProtImport):
+                for _, attr in prot.iterOutputEM():
+                    fn = attr.getFiles()
+                    for f in attr.getFiles():
+                        if ':' in f:
+                            f = f.split(':')[0]
+
+                        if not os.path.exists(f):
+                            if not broken:
+                                broken = True
+                                print "Found broken links in run: ", pwutils.magenta(prot.getRunName())
+                            print "  Missing: ", pwutils.magenta(f)
+                            if os.path.islink(f):
+                                print "    -> ", pwutils.red(os.path.realpath(f))
+                            newFile = pwutils.findFile(os.path.basename(f), searchDir, recursive=True)
+                            if newFile:
+                                print "  Found file %s, creating link..." % newFile
+                                print pwutils.green("   %s -> %s" % (f, newFile))
+                                pwutils.createAbsLink(newFile, f)

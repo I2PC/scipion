@@ -28,6 +28,7 @@ This module implement the wrappers around Xmipp NMA protocol
 visualization program.
 """
 
+from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.protocol.params import LabelParam, IntParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import ObjectView, VmdView
@@ -35,8 +36,10 @@ from protocol_nma import XmippProtNMA
 from plotter import XmippNmaPlotter
 import xmipp
 
+OBJCMD_NMA_PLOTDIST = "Plot distance profile"
+OBJCMD_NMA_VMD = "Display VMD animation"
 
-        
+
 class XmippNMAViewer(ProtocolViewer):
     """ Visualization of results from the NMA protocol.    
         Normally, NMA modes with high collectivity and low NMA score are preferred.
@@ -89,7 +92,9 @@ class XmippNMAViewer(ProtocolViewer):
         mode = modes[modeNumber]
         
         if mode is None:
-            return [self.errorMessage("Invalid mode number *%d*\nDisplay the output Normal Modes to see the availables ones." % modeNumber, 
+            return [self.errorMessage("Invalid mode number *%d*\n"
+                                      "Display the output Normal Modes to see "
+                                      "the availables ones." % modeNumber,
                                       title="Invalid input")]
         elif paramName == 'displayVmd':
             return [createVmdView(self.protocol, modeNumber)]
@@ -103,11 +108,31 @@ def createShiftPlot(mdFn, title, ylabel):
     plotter.plotMdFile(mdFn, None, xmipp.MDL_NMA_ATOMSHIFT)
     return plotter
 
+
 def createDistanceProfilePlot(protocol, modeNumber):
-    vectorMdFn = protocol._getExtraPath("distanceProfiles","vec%d.xmd" % modeNumber)
-    plotter = createShiftPlot(vectorMdFn, "Atom shifts for mode %d" % modeNumber, "shift")
+    vectorMdFn = protocol._getExtraPath("distanceProfiles","vec%d.xmd"
+                                        % modeNumber)
+    plotter = createShiftPlot(vectorMdFn, "Atom shifts for mode %d"
+                              % modeNumber, "shift")
     return plotter
 
+
 def createVmdView(protocol, modeNumber):
-    vmdFile = protocol._getExtraPath("animations", "animated_mode_%03d.vmd" % modeNumber)
+    vmdFile = protocol._getExtraPath("animations", "animated_mode_%03d.vmd"
+                                     % modeNumber)
     return VmdView('-e "%s"' % vmdFile)
+
+
+def showDistanceProfilePlot(protocol, modeNumber):
+    createDistanceProfilePlot(protocol, modeNumber).show()
+
+
+def showVmdView(protocol, modeNumber):
+    createVmdView(protocol, modeNumber).show()
+
+
+ProjectWindow.registerObjectCommand(OBJCMD_NMA_PLOTDIST,
+                                    showDistanceProfilePlot)
+ProjectWindow.registerObjectCommand(OBJCMD_NMA_VMD,
+                                    showVmdView)
+

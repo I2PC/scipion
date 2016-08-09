@@ -63,6 +63,8 @@ public:
     bool            wrap;
     /// Sum or average the result
     bool            sum;
+    /// Spline order
+    int splineOrder;
 public:
     /** Read parameters from command line. */
     void readParams();
@@ -93,7 +95,7 @@ public:
 
 /** Symmetrize volume.*/
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
-                      MultidimArray<double> &V_out,
+                      MultidimArray<double> &V_out, int spline=BSPLINE3,
                       bool wrap=true, bool do_outside_avg=false, bool sum=false, bool helical=false, bool dihedral=false,
                       bool helicalDihedral=false,
                       double rotHelical=0.0, double rotPhaseHelical=0.0, double zHelical=0.0, double heightFraction=0.95,
@@ -101,7 +103,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
 
 /** Symmetrize image.*/
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
-                      MultidimArray<double> &I_out,
+                      MultidimArray<double> &I_out, int spline=BSPLINE3,
                       bool wrap=true, bool do_outside_avg=false, bool sum=false);
 //@}
 #endif

@@ -31,6 +31,8 @@ basic classes.
 
 from itertools import izip
 from collections import OrderedDict
+import datetime as dt
+
 
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
@@ -616,7 +618,10 @@ class Integer(Scalar):
     
         
 class String(Scalar):
-    """String object"""
+    """String object. """
+    DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+    FS = ".%f" # Fento seconds
+
     def _convertValue(self, value):
         return str(value)
     
@@ -625,8 +630,21 @@ class String(Scalar):
         if not self.hasValue():
             return True
         return len(self.get().strip()) == 0
-    
-        
+
+    def datetime(self, formatStr=None, fs=True):
+        """ Get the datetime from the string value.
+        Params:
+            formatStr: if is None, use the default DATETIME_FORMAT.
+            fs: Use femto seconds or not, only when format=None
+        """
+        if formatStr is None:
+            formatStr = self.DATETIME_FORMAT
+            if fs:
+                formatStr += self.FS
+
+        return dt.datetime.strptime(self._objValue, formatStr)
+
+
 class Float(Scalar):
     """Float object"""
     EQUAL_PRECISION = 0.001
