@@ -20,15 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement some wizards
-"""
 
 import os
 
+import pyworkflow as pw
 import pyworkflow.em.wizard as emwiz
 import pyworkflow.utils as pwutils
 from pyworkflow.em.viewer import CoordinatesObjectView
@@ -94,13 +92,10 @@ class GemPickerWizard(emwiz.EmWizard):
         pickerConfig = os.path.join(coordsDir, 'picker.conf')
         f = open(pickerConfig, "w")
 
-        pickScript = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow','em', 'packages',
-                                  'igbmc', 'run_gempicker.py')
+        pickScript = pw.join('em', 'packages', 'igbmc', 'run_gempicker.py')
 
         pickCmd = prot.getArgs(threshold=False, workingDir=coordsDir)
-        convertCmd = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow','apps', 'pw_convert.py')
+        convertCmd = pw.join('apps', 'pw_convert.py')
 
         args = {
                 "pickScript": pickScript,

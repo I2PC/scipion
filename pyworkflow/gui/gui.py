@@ -32,7 +32,7 @@ import Tkinter as tk
 import tkFont
 import Queue
 from pyworkflow.object import OrderedObject
-from pyworkflow.utils.path import findResource
+from pyworkflow import findResource
 from pyworkflow.utils.properties import Message, Color, Icon
 from widgets import Button
 

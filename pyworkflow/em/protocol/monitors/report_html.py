@@ -29,11 +29,12 @@ import json
 import os
 from os.path import join, exists, abspath
 
+from pyworkflow import getTemplatePath
 import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
 
 
-class ReportHtml():
+class ReportHtml:
     """ Create an html report with a summary of the processing.
     The report will be updated with a given frequency.
     """
@@ -44,11 +45,12 @@ class ReportHtml():
         self.provider = SummaryProvider(protocol)
         self.ctfMonitor = ctfMonitor
         self.sysMonitor = sysMonitor
+
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
-        self.template = kwargs.get('template',
-                                   join(pwutils.getTemplatesFolder(),
-                                        'execution.summary.template.html'))
+        defaultTemplate = getTemplatePath('execution.summary.template.html')
+        self.template = kwargs.get('template', defaultTemplate)
+
         self.publishCmd = publishCmd
         self.refreshSecs = kwargs.get('refreshSecs', 60)
 
@@ -64,15 +66,17 @@ class ReportHtml():
         else:
             print msg
 
-    def generate(self):
+    def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
 
         if not reportTemplate:
             raise Exception("HTML template file '%s' not found. "
                             % self.template)
 
+        project = self.protocol.getProject()
+
         reportName = 'index.html'
-        projName = self.protocol.getProject().getShortName()
+        projName = project.getShortName()
         reportDir = abspath(self.protocol._getExtraPath(projName))
 
         self.info("Creating report directory: %s" % reportDir)
@@ -118,14 +122,17 @@ class ReportHtml():
         data = self.sysMonitor.getData()
         systemData = json.dumps(data)
 
-        args = {'acquisitionLines': acquisitionLines,
-                'runLines': runLines,
+        args = {'projectName': projName,
+                'startTime': pwutils.dateStr(project.getCreationTime(), secs=True),
                 'dateStr': pwutils.prettyTime(secs=True),
-                'projectName': self.protocol.getProject().getShortName(),
+                'projectDuration': pwutils.prettyDelta(project.getElapsedTime()),
+                'projectStatus': "FINISHED" if finished else "RUNNING",
                 'scipionVersion': os.environ['SCIPION_VERSION'],
+                'acquisitionLines': acquisitionLines,
+                'runLines': runLines,
                 'ctfData': ctfData,
                 'systemData': systemData,
-                'refreshSecs': self.refreshSecs
+                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else ''
                 }
 
         self.info("Writing report html to: %s" % abspath(reportPath))

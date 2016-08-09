@@ -191,8 +191,8 @@ class RelionAutopickParams(EmWizard):
         
         
         args = {
-          "picker" : os.path.join(os.environ['SCIPION_HOME'],  "scipion relion_autopick"),
-          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
+          "picker" : "%s relion_autopick" % pw.getScipionScript(),
+          "convert" : pw.join('apps', 'pw_convert.py'),
           'coordsDir':coordsDir,
           'micsSqlite': micSet.getFileName(),
           "diameter": autopickFomProt.particleDiameter,

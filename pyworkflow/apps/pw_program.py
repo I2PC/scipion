@@ -29,7 +29,7 @@ Launch main project window
 """
 
 import sys
-import pyworkflow.utils as pwutils
+from pyworkflow.em import runProgram
 
 
 
@@ -37,22 +37,6 @@ if __name__ == '__main__':
 
     program = sys.argv[1]
     params = ' '.join('"%s"' % x for x in sys.argv[2:])
+
+    runProgram(program, params)
     
-    env = None
-    
-    if program.startswith('xmipp'):
-        import pyworkflow.em.packages.xmipp3 as xmipp3
-        env = xmipp3.getEnviron()
-    if program.startswith('relion'):
-        import pyworkflow.em.packages.relion as relion
-        env = relion.getEnviron()        
-    elif (program.startswith('e2') or 
-          program.startswith('sx')):
-        import pyworkflow.em.packages.eman2 as eman2
-        env = eman2.getEnviron()
-    elif program.startswith('b'):
-        import pyworkflow.em.packages.bsoft as bsoft
-        env = bsoft.getEnviron()
-    
-    pwutils.runJob(None, program, params, env=env)
-         

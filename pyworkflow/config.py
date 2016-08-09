@@ -95,7 +95,7 @@ def loadHostsConf(hostsConf):
                 
                 return od
 
-            host.setScipionHome(get('SCIPION_HOME', os.environ['SCIPION_HOME']))
+            host.setScipionHome(get('SCIPION_HOME', pw.SCIPION_HOME))
             host.setScipionConfig(get('SCIPION_CONFIG'))
             # Read the address of the remote hosts, 
             # using 'localhost' as default for backward compatibility
@@ -247,11 +247,8 @@ class ProjectSettings(pwobj.OrderedObject):
         self.readOnly.set(value)
         
     def getCreationTime(self):
-        f = "%Y-%m-%d %H:%M:%S.%f"
-        creationTime = self.creationTime.get()
+        return self.creationTime.datetime()
 
-        return dt.datetime.strptime(creationTime, f)
-    
     def setCreationTime(self, value):
         self.creationTime.set(value)
         
