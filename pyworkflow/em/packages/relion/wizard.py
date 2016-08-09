@@ -159,8 +159,7 @@ class RelionVolFilterWizard(FilterVolumesWizard):
 #===============================================================================
 
 class RelionPartDiameter(RelionPartMaskDiameterWizard):  
-    _targets = [(ProtRelionAutopickFom, ['particleDiameter']),
-                ]
+    _targets = [(ProtRelionAutopickFom, ['particleDiameter'])]
     
     def _getProtocolImages(self, protocol):
         return protocol.inputReferences 

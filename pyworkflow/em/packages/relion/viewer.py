@@ -30,6 +30,7 @@ from os.path import exists
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 import pyworkflow.em.metadata as md
+from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
@@ -1407,7 +1408,7 @@ class RelionSortViewer(Viewer):
     """ Wrapper to visualize Relion sort protocol results
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtRelionSort]
+    _targets = [ProtRelionSort, SetOfImages]
 
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -1422,6 +1423,16 @@ class RelionSortViewer(Viewer):
     def _visualize(self, obj, **args):
         cls = type(obj)
 
+        if issubclass(cls, SetOfParticles):
+            fn = obj.getFileName()
+            labels = 'id enabled _index _filename _rlnParticleSelectZScore _coordinate._rlnAutopickFigureOfMerit '
+            labels += '_sampling _ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
+            self._views.append(em.ObjectView(self._project, obj.strId(), fn,
+                                          viewParams={showj.ORDER: labels,
+                                                      showj.VISIBLE: labels,
+                                                      'sortby': '_rlnParticleSelectZScore asc',
+                                                      showj.RENDER:'_filename'}))
+
         if issubclass(cls, ProtRelionSort):
             particles = obj.outputParticles
             self._visualize(particles)
@@ -1432,6 +1443,7 @@ class RelionSortViewer(Viewer):
             if mdFn.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE):
                 xplotter = RelionPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                xplotter.plotMd(mdFn, False, mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE, nbins=100)
+                xplotter.plotMd(mdFn, False, mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE)
                 self._views.append(xplotter)
+
         return self._views
