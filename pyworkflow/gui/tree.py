@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -23,6 +24,10 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
+FIRST_TREE_COLUMN = '#0'
+
 """
 Tree widget implementation.
 """
@@ -104,10 +109,14 @@ class Tree(ttk.Treeview, Scrollable):
             
             
 class TreeProvider():
-    """ Class class will serve to separete the logic of feed data
+    """ Class class will serve to separate the logic of feed data
     from the graphical Tree build. Subclasses should implement 
     the abstract methods """
-        
+
+    def __init__(self):
+        self._sortingColumnName = None
+        self._sortingAscending = True
+
     def getColumns(self):
         """Return a list of tuples (c, w) where:
         c: is the column name and index
@@ -160,7 +169,35 @@ class TreeProvider():
         Adds tags to the tree for customizing
         """
         pass
-        
+
+    def setSortingParams(self, columnName, ascending):
+        """
+        Column name to sort by it ans sorting direction
+        Parameters
+        ----------
+        columnName: Name of the column
+        ascending: If true sorting will be ascending.
+
+        Returns
+        -------
+        Nothing
+        """
+        self._sortingColumnName = columnName
+        self._sortingAscending = ascending
+
+    def getSortingColumnName(self):
+        return self._sortingColumnName
+
+    def isSortingAscending(self):
+
+        return self._sortingAscending
+
+    def sortEnabled(self):
+
+        # return self._sortingColumnName is not None
+        return False
+
+
 class BoundTree(Tree):
     """ This class is base on Tree but fetch the
     items from a TreeProvider, which provides columns
@@ -173,12 +210,12 @@ class BoundTree(Tree):
         colsTuple = tuple([c[0] for c in cols[1:]])
         Tree.__init__(self, master, frame, columns=colsTuple, **opts)
         # Set the special case of first tree column
-        self.heading('#0', text=cols[0][0])
-        self.column('#0', width=cols[0][1])
+        self.heading(FIRST_TREE_COLUMN, text=cols[0][0], command=lambda: self.sortTree(FIRST_TREE_COLUMN, cols[0][0]))
+        self.column(FIRST_TREE_COLUMN, width=cols[0][1])
         # Set other columns
         for c, w in cols[1:]:
             self.column(c, width=w)
-            self.heading(c, text=c)
+            self.heading(c, text=c, command=lambda _c=c: self.sortTree(_c, _c))
         self.grid(row=0, column=0, sticky='news')
         
         self.menu = tk.Menu(self, tearoff=0)
@@ -189,19 +226,24 @@ class BoundTree(Tree):
         # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
         self.bind("<Key>", self._unpostMenu)
-        self.bind('<Button-1>', self._unpostMenu)
+        self.bind('<Button-1>', self._onClick())
         self.bind('<Double-1>', self._onDoubleClick)
-        self.bind('<<TreeviewSelect>>', self._onClick)
-        
+        self.bind('<<TreeviewSelect>>', self._onSelect)
+
     def setProvider(self, provider):
         """ Set new provider and updated items. """
         self.provider = provider
         self.update()
-        
+
+    def _onClick(self, e=None):
+
+        self._unpostMenu()
+
     def _unpostMenu(self, e=None):
+
         self.menu.unpost()
         
-    def _onClick(self, e=None):
+    def _onSelect(self, e=None):
         if hasattr(self, 'itemClick'):
             selected = self.getFirst()
             if selected:
@@ -285,12 +327,47 @@ class BoundTree(Tree):
                     if objDict.get('selected', False):
                         self.selectChild(obj._treeId)
                 except Exception as ex:
-                    print "error: ", ex
+                    print("error: ", ex)
                     if obj.getObjId():
-                        print "error object with id=%d (%s) is duplicated!!!" % (obj.getObjId(), str(obj))
+                        print("error object with id=%d (%s) is duplicated!!!" % (obj.getObjId(), str(obj)))
                     else:
-                        print "error, object %s does not have an id. This could be due to the load of old project that"\
-                              " does not have recently added attributes (e.g.:datastreaming)" % str(obj)
+                        print("error, object %s does not have an id. This could be due to the load of old project that "
+                              "does not have recently added attributes (e.g.:datastreaming)" % str(obj))
+
+    def sortTree(self, heading, column):
+
+        if not self.provider.sortEnabled(): return
+
+        # Calculate the sorting direction. default to true
+        ascending = True
+
+        # Current sorted column
+        currentSortedColumn = self.provider.getSortingColumnName()
+
+        # If its the same column
+        if column == currentSortedColumn:
+            ascending = not self.provider.isSortingAscending()
+        else:
+            # Remove previous arrow
+            previousHeading = self.getColumnKeyByColumnName(currentSortedColumn)
+            self.heading(previousHeading, text=currentSortedColumn)
+
+        # Visualize column sorted in the header
+        if ascending:
+            self.heading(heading, text=column + ' ▲')
+        else:
+            self.heading(heading, text=column + ' ▼')
+
+        self.provider.setSortingParams(column, ascending)
+
+        self.update()
+
+    def getColumnKeyByColumnName(self, columnName):
+        try:
+            self.column(columnName)
+            return columnName
+        except Exception as e:
+            return FIRST_TREE_COLUMN
 
     def itemConfig(self, obj, **args):
         """ Configure inserted items. """
@@ -316,7 +393,7 @@ class ObjectTreeProvider(TreeProvider):
         self._parentDict = {}
     
     def getObjectInfo(self, obj):
-        #if obj.isPointer() and not obj.hasValue():
+        # if obj.isPointer() and not obj.hasValue():
         #    return None
         cls = obj.getClassName()
         if obj.getName() is None:
@@ -343,7 +420,7 @@ class ObjectTreeProvider(TreeProvider):
         return info
     
     def getObjectPreview(self, obj):
-        return (None, None)
+        return None, None
     
     def getObjectActions(self, obj):
         return []
@@ -415,4 +492,3 @@ class ProjectRunsTreeProvider(TreeProvider):
     
     def getObjectFromId(self, objId):
         return self._objDict[objId]
-

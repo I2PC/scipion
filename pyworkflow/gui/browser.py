@@ -162,13 +162,18 @@ class FileInfo(object):
         return self._fullpath
     
     def getSize(self):
+        return self._stat.st_size if self._stat else 0
+    
+    def getSizeStr(self):
         """ Return a human readable string of the file size."""
-        return prettySize(self._stat.st_size) if self._stat else 0
-    
+        return prettySize(self.getSize()) if self._stat else '0'
+
+    def getDateStr(self):
+        return dateStr(self.getDate()) if self._stat else '0'
+
     def getDate(self):
-        return dateStr(self._stat.st_mtime) if self._stat else 0
-    
-    
+        return self._stat.st_mtime if self._stat else 0
+
 class FileHandler(object):
     """ This class will be used to get the icon, preview and info
     from the different types of objects.
@@ -354,7 +359,9 @@ class FileTreeProvider(TreeProvider):
     
     _FILE_HANDLERS = {}
     _DEFAULT_HANDLER = FileHandler()
-    
+    FILE_COLUMN = 'File'
+    SIZE_COLUMN = 'Size'
+
     @classmethod
     def registerFileHandler(cls, fileHandler, *extensions):
         """ Register a FileHandler for a given file extension. 
@@ -366,9 +373,11 @@ class FileTreeProvider(TreeProvider):
             cls._FILE_HANDLERS[fileExt] = fileHandler
         
     def __init__(self, currentDir=None, showHidden=False):
+        TreeProvider.__init__(self)
         self._currentDir = os.path.abspath(currentDir)
         self._showHidden = showHidden
-        self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
+        self.getColumns = lambda: [(self.FILE_COLUMN, 300), (self.SIZE_COLUMN, 70), ('Time', 150)]
+        self._sortingColumnName = self.FILE_COLUMN
     
     def getFileHandler(self, obj):
         filename = obj.getFileName()
@@ -381,7 +390,7 @@ class FileTreeProvider(TreeProvider):
         icon = fileHandler.getFileIcon(obj)
         
         info = {'key': filename, 'text': filename, 
-                'values': (obj.getSize(), obj.getDate()), 'image': icon
+                'values': (obj.getSizeStr(), obj.getDateStr()), 'image': icon
                 }
             
         return info
@@ -403,10 +412,24 @@ class FileTreeProvider(TreeProvider):
     
     def getObjects(self):
         files = os.listdir(self._currentDir)
-        files.sort()
+        #files.sort()
+        fileInfoList = []
         for f in files:
             if self._showHidden or not f.startswith('.'):
-                yield FileInfo(self._currentDir, f)
+                fileInfoList.append(FileInfo(self._currentDir, f))
+
+        # Sort objects
+        fileInfoList.sort(key=self.fileKey, reverse=not self.isSortingAscending())
+
+        return fileInfoList
+
+    def sortEnabled(self):
+        return True
+
+    def fileKey(self, f):
+        sortDict = {self.FILE_COLUMN: 'getFileName',
+                    self.SIZE_COLUMN: 'getSize'}
+        return getattr(f, sortDict.get(self._sortingColumnName, 'getDate'))()
 
     def getDir(self):
         return self._currentDir
