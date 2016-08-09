@@ -1441,6 +1441,8 @@ class RelionSortViewer(Viewer):
             mdFn = md.MetaData(fn)
             # If Zscore in output images plot Zscore particle sorting
             if mdFn.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE):
+                # sort output by Z-score
+                mdFn.sort(md.RLN_SELECT_PARTICLES_ZSCORE)
                 xplotter = RelionPlotter(windowTitle="Zscore particles sorting")
                 xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
                 xplotter.plotMd(mdFn, False, mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE)
