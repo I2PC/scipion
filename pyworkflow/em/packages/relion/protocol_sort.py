@@ -188,10 +188,6 @@ class ProtRelionSort(ProtParticles):
         if not imgSet.hasCTF() and self.doCTF:
             errors.append('Input particles have no CTF information!')
 
-        img = imgSet.getFirstItem()
-        if img.getAttributeValue('_rlnAnglePsi', defaultValue=None) is None:
-            errors.append('Input particles have no alignment parameters!')
-
         return errors
     
     def _summary(self):
