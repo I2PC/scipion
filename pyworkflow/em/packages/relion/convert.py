@@ -2,6 +2,7 @@
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Laura del Cano (ldelcano@cnb.csic.es)
+# *              Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -423,27 +424,7 @@ def particleToRow(part, partRow, **kwargs):
         coordinateToRow(coord, partRow, copyId=False)
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
-        # If the row does not contains the micrgraphs name
-        # use a fake micrograph name using id to relion
-        # could at least group for CTF using that
-        if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
-            partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
-    if part.hasAttribute('_rlnParticleId'):
-        partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
-    imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
-
-
-def particleToRowNew(part, partRow, **kwargs):
-    """ Set labels values from Particle to md row. """
-    coord = part.getCoordinate()
-    if coord is not None:
-        coordinateToRow(coord, partRow, copyId=False)
-    if part.hasClassId() and partRow.hasLabel(md.RLN_PARTICLE_AUTOPICK_FOM):
-        #classId from classification has higher priority then autopick classId
-        partRow.setValue(md.RLN_PARTICLE_CLASS, int(part.getClassId()))
-    if part.hasMicId():
-        partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
-        # If the row does not contains the micrographs name
+        # If the row does not contains the micrograph name
         # use a fake micrograph name using id to relion
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
@@ -569,47 +550,6 @@ def writeSetOfParticles(imgSet, starFile,
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
 
-
-def writeSetOfParticlesNew(imgSet, starFile,
-                        outputDir, **kwargs):
-    """ This function will write a SetOfImages as Relion meta
-    Params:
-        imgSet: the SetOfImages instance.
-        starFile: the filename where to write the meta
-        filesMapping: this dict will help when there is need to replace images names
-    """
-    filesDict = convertBinaryFiles(imgSet, outputDir)
-    kwargs['filesDict'] = filesDict
-    partMd = md.MetaData()
-    setOfImagesToMd(imgSet, partMd, particleToRowNew, **kwargs)
-
-    # Remove Magnification from metadata to avoid wrong values of pixel size.
-    # In Relion if Magnification and DetectorPixelSize are in metadata,
-    # pixel size is ignored in the command line.
-    partMd.removeLabel(md.RLN_CTF_MAGNIFICATION)
-
-    # Renumber class numbers
-    _classesList = []  # store old classes info
-    for imgRow in md.iterRows(partMd):
-        clsOld = imgRow.getValue(md.RLN_PARTICLE_CLASS)
-
-        if clsOld not in _classesList:
-            _classesList.append(clsOld)
-
-    _classesList.sort()
-    _classesDict = {} # # store new classes info
-
-    for clsNew, clsOld in enumerate(_classesList):
-        _classesDict[clsOld] = clsNew + 1
-
-    for imgRow in md.iterRows(partMd):
-        classOld = imgRow.getValue(md.RLN_PARTICLE_CLASS)
-        imgRow.setValue(md.RLN_PARTICLE_CLASS, int(_classesDict[classOld]))
-        print "CLA=", imgRow.getValue(md.RLN_PARTICLE_CLASS)
-
-    blockName = kwargs.get('blockName', 'Particles')
-    partMd.write('%s@%s' % (blockName, starFile))
-    
     
 def writeReferences(inputSet, outputRoot):
     """ Write an references star and stack files from
@@ -636,7 +576,7 @@ def writeReferences(inputSet, outputRoot):
         raise Exception('Invalid object type: %s' % type(inputSet))
 
 
-def writeReferencesNew(inputSet, outputRoot):
+def writeReferencesNew(inputSet, outputRoot, **kwargs):
     """ Write an references star and stack files from
     a given SetOfAverages or SetOfClasses2D/3D.
     """
@@ -649,10 +589,8 @@ def writeReferencesNew(inputSet, outputRoot):
         row = md.Row()
         for i, img in enumerate(inputSet):
             ih.convert(img, (i + 1, stackFile))
-            img.setLocation((i + 1, stackFile))
-            particleToRow(img, row)
-            #renumber class numbers
-            row.setValue(md.RLN_PARTICLE_CLASS, int(i + 1))
+            img.setLocation((i + 1, stackFile)) # location is not relative
+            particleToRow(img, row, **kwargs)
             row.writeToMd(refsMd, refsMd.addObject())
         refsMd.write(starFile)
 
@@ -665,15 +603,33 @@ def writeReferencesNew(inputSet, outputRoot):
                 rep.setSamplingRate(classX.getSamplingRate())
                 ih.convert(rep, (i + 1, stackFile))
                 rep.setLocation((i + 1, stackFile))
-                particleToRow(rep, row)
-                # renumber class numbers
-                row.setValue(md.RLN_PARTICLE_CLASS, int(i + 1))
+                particleToRow(rep, row, **kwargs)
                 row.writeToMd(refsMd, refsMd.addObject())
-            refsMd.write(starFile)
+        refsMd.write(starFile)
 
     elif isinstance(inputSet, em.SetOfClasses3D):
-        pass
-        #TODO: not yet implemented
+        row = md.Row()
+        for i, classX in enumerate(inputSet):
+            if classX.hasRepresentative():
+                rep = classX.getRepresentative()
+                rep.setObjId(classX.getObjId())
+                rep.setSamplingRate(classX.getSamplingRate())
+                ih.convert(rep, (i + 1, stackFile))
+                rep.setLocation((i + 1, stackFile))
+                #TODO: this gives a stack of vols, maybe save separate vols?
+                imageToRow(rep, row, md.RLN_IMAGE_NAME, **kwargs)
+                row.writeToMd(refsMd, refsMd.addObject())
+        refsMd.write(starFile)
+
+    elif isinstance(inputSet, em.SetOfVolumes):
+        row = md.Row()
+        for i, vol in enumerate(inputSet):
+            ih.convert(vol, (i + 1, stackFile))
+            vol.setLocation((i + 1, stackFile))
+            #TODO: this gives a stack of vols, maybe save separate vols?
+            imageToRow(vol, row, md.RLN_IMAGE_NAME, **kwargs)
+            row.writeToMd(refsMd, refsMd.addObject())
+        refsMd.write(starFile)
 
     else:
         raise Exception('Invalid object type: %s' % type(inputSet))

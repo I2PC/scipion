@@ -41,6 +41,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
+from protocol_sort import ProtRelionSort
 
 
 ITER_LAST = 0
@@ -1400,3 +1401,37 @@ Examples:
             return 'Masked Maps'
         else:
             return 'Phase Randomized Masked Maps'
+
+
+class RelionSortViewer(Viewer):
+    """ Wrapper to visualize Relion sort protocol results
+    """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtRelionSort]
+
+    def __init__(self, **args):
+        Viewer.__init__(self, **args)
+        self._views = []
+
+    def visualize(self, obj, **args):
+        self._visualize(obj, **args)
+
+        for v in self._views:
+            v.show()
+
+    def _visualize(self, obj, **args):
+        cls = type(obj)
+
+        if issubclass(cls, ProtRelionSort):
+            particles = obj.outputParticles
+            self._visualize(particles)
+
+            fn = obj._getExtraPath('input_particles_sorted.star')
+            mdFn = md.MetaData(fn)
+            # If Zscore in output images plot Zscore particle sorting
+            if mdFn.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE):
+                xplotter = RelionPlotter(windowTitle="Zscore particles sorting")
+                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
+                xplotter.plotMd(mdFn, False, mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE, nbins=100)
+                self._views.append(xplotter)
+        return self._views
