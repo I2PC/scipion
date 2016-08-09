@@ -190,7 +190,8 @@ class CtfView(ObjectView):
             viewParams['dont_recalc_ctf'] = ''
 
         if first.hasAttribute('_ctffind4_ctfResolution'):
-            viewParams[showj.OBJCMDS] = "'%s'" % showj.OBJCMD_CTFFIND4
+            import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
+            viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,

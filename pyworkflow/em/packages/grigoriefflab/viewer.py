@@ -28,12 +28,13 @@ Visualization of the results of the Frealign protocol.
 """
 import os
 from os.path import exists, relpath
-from pyworkflow.utils.path import cleanPath, removeBaseExt
+from pyworkflow.utils.path import cleanPath, removeBaseExt, removeExt
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
 from pyworkflow.em.viewer import CtfView, DataView
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 
+from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
@@ -597,7 +598,6 @@ class ProtCTFFindViewer(Viewer):
         return ctfSet
     
 def createCtfPlot(ctfSet, ctfId):
-    from pyworkflow.utils.path import removeExt
     ctfModel = ctfSet[ctfId]
     psdFn = ctfModel.getPsdFile()
     fn = removeExt(psdFn) + "_avrot.txt"
@@ -616,6 +616,9 @@ def createCtfPlot(ctfSet, ctfId):
     xplotter.showLegend(legendName)
     a.grid(True)
     xplotter.show()
+
+OBJCMD_CTFFIND4 = "Display Ctf Fitting"
+ProjectWindow.registerObjectCommand(OBJCMD_CTFFIND4, createCtfPlot)
 
 def _plotCurve(a, i, fn):
     freqs = _getValues(fn, 0)
