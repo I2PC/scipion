@@ -314,8 +314,10 @@ class SubclassesTreeProvider(TreeProvider):
     of subclasses objects(of className) found by mapper"""
     CREATION_COLUMN = 'Creation'
     INFO_COLUMN = 'Info'
+
     def __init__(self, protocol, pointerParam, selected=None):
-        TreeProvider.__init__(self)
+
+        TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN, sortingAscending=False)
 
         self.param = pointerParam
         self.selected = selected # FIXME
@@ -323,9 +325,6 @@ class SubclassesTreeProvider(TreeProvider):
         self.protocol = protocol
         self.mapper = protocol.mapper
         self.maxNum = 200
-
-        self._sortingColumnName = self.CREATION_COLUMN
-        self._sortingAscending = False
 
     def sortEnabled(self):
         return True
@@ -397,12 +396,14 @@ class SubclassesTreeProvider(TreeProvider):
                         if hasattr(attr, subParam):
                             _checkParam('%s.%s' % (paramName, subParam), 
                                         getattr(attr, subParam))
-                                
 
         # Sort objects before returning them
-        objects.sort(key=self.objectKey, reverse=not self.isSortingAscending())
+        self._sortObjects(objects)
 
         return objects
+
+    def _sortObjects(self, objects):
+        objects.sort(key=self.objectKey, reverse=not self.isSortingAscending())
 
     def objectKey(self, pobj):
 
@@ -496,6 +497,9 @@ class RelationsTreeProvider(SubclassesTreeProvider):
             for pobj in project.getRelatedObjects(self.relationParam.getName(), 
                                                  self.item, self.direction):
                 objects.append(pobj.clone())
+
+        # Sort objects
+        self._sortObjects(objects)
         
         return objects
     
