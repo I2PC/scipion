@@ -551,88 +551,48 @@ def writeSetOfParticles(imgSet, starFile,
     partMd.write('%s@%s' % (blockName, starFile))
 
     
-def writeReferences(inputSet, outputRoot):
-    """ Write an references star and stack files from
-    a given SetOfAverages or SetOfClasses2D.
+def writeReferences(inputSet, outputRoot, useBasename=False, **kwargs):
+    """
+    Write references star and stack files from SetOfAverages or SetOfClasses2D/3D.
+    Params:
+        inputSet: the input SetOfParticles to be converted
+        outputRoot: where to write the output files.
+        basename: If True, use the basename of the stack for setting path.
     """
     refsMd = md.MetaData()
     stackFile = outputRoot + '.stk'
-    baseStack = basename(stackFile)
+    stackName = basename(stackFile) if useBasename else stackFile
     starFile = outputRoot + '.star'
     ih = em.ImageHandler()
-     
-    if isinstance(inputSet, em.SetOfAverages):
-        row = md.Row()
-        for i, img in enumerate(inputSet):
-            ih.convert(img, (i+1, stackFile))
-            img.setLocation((i+1, baseStack)) # make the star with relative
-            particleToRow(img, row)
-            row.writeToMd(refsMd, refsMd.addObject())
-        refsMd.write(starFile)
+    row = md.Row()
 
-    elif isinstance(inputSet, em.SetOfClasses2D):
-        pass
-    else:
-        raise Exception('Invalid object type: %s' % type(inputSet))
-
-
-def writeReferencesNew(inputSet, outputRoot, **kwargs):
-    """ Write an references star and stack files from
-    a given SetOfAverages or SetOfClasses2D/3D.
-    """
-    refsMd = md.MetaData()
-    stackFile = outputRoot + '.stk'
-    starFile = outputRoot + '.star'
-    ih = em.ImageHandler()
+    def _convert(item, i, convertFunc):
+        index = i + 1
+        ih.convert(item, (index, stackFile))
+        item.setLocation(index, stackName)
+        convertFunc(item, row, **kwargs)
+        row.writeToMd(refsMd, refsMd.addObject())
 
     if isinstance(inputSet, em.SetOfAverages):
-        row = md.Row()
         for i, img in enumerate(inputSet):
-            ih.convert(img, (i + 1, stackFile))
-            img.setLocation((i + 1, stackFile)) # location is not relative
-            particleToRow(img, row, **kwargs)
-            row.writeToMd(refsMd, refsMd.addObject())
-        refsMd.write(starFile)
+            _convert(img, i, particleToRow)
 
     elif isinstance(inputSet, em.SetOfClasses2D):
-        row = md.Row()
-        for i, classX in enumerate(inputSet):
-            if classX.hasRepresentative():
-                rep = classX.getRepresentative()
-                rep.setObjId(classX.getObjId())
-                rep.setSamplingRate(classX.getSamplingRate())
-                ih.convert(rep, (i + 1, stackFile))
-                rep.setLocation((i + 1, stackFile))
-                particleToRow(rep, row, **kwargs)
-                row.writeToMd(refsMd, refsMd.addObject())
-        refsMd.write(starFile)
+        for i, rep in enumerate(inputSet.iterRepresentatives()):
+            _convert(rep, i, particleToRow)
 
     elif isinstance(inputSet, em.SetOfClasses3D):
-        row = md.Row()
-        for i, classX in enumerate(inputSet):
-            if classX.hasRepresentative():
-                rep = classX.getRepresentative()
-                rep.setObjId(classX.getObjId())
-                rep.setSamplingRate(classX.getSamplingRate())
-                ih.convert(rep, (i + 1, stackFile))
-                rep.setLocation((i + 1, stackFile))
-                #TODO: this gives a stack of vols, maybe save separate vols?
-                imageToRow(rep, row, md.RLN_IMAGE_NAME, **kwargs)
-                row.writeToMd(refsMd, refsMd.addObject())
-        refsMd.write(starFile)
+        for i, rep in enumerate(inputSet.iterRepresentatives()):
+            _convert(rep, i, imageToRow)
 
     elif isinstance(inputSet, em.SetOfVolumes):
-        row = md.Row()
         for i, vol in enumerate(inputSet):
-            ih.convert(vol, (i + 1, stackFile))
-            vol.setLocation((i + 1, stackFile))
-            #TODO: this gives a stack of vols, maybe save separate vols?
-            imageToRow(vol, row, md.RLN_IMAGE_NAME, **kwargs)
-            row.writeToMd(refsMd, refsMd.addObject())
-        refsMd.write(starFile)
+            _convert(vol, i, imageToRow)
 
     else:
         raise Exception('Invalid object type: %s' % type(inputSet))
+
+    refsMd.write(starFile)
 
 
 def micrographToRow(mic, micRow, **kwargs):
