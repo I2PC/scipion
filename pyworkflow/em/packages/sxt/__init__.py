@@ -28,13 +28,14 @@
 from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = "xmipp_logo.png"
-_references = ['from bib tex ...', 'from bib tex ...']
+_references = ['J.Oton2015', 'J.Oton2016']
 
-#from sxt import *
 from data import *
 
 from protocol_import import ProtImportTiltSeries
-from protocol_mtf_calculation import XmippProtMtfCalculation
+from protocol_mtf_calculation import ProtMtfCalculation
+
+from viewer_import import ProtImportTiltSeriesViewer
 
 
 

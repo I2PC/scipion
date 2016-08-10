@@ -30,34 +30,40 @@ Bibtex string file for SXT.
 
 _bibtexStr = """
 
-@article{????,
-author = {????},
-title = {???},
-volume = {?},
-number = {?},
-pages = {?},
-year = {?},
-doi = {???},
-url = {???},
-journal = {???}
+@article{J.Oton2015,
+title = "Measurement of the modulation transfer function of an X-ray microscope based on multiple Fourier orders analysis of a Siemens star",
+journal = "Optics Express",
+volume = "23",
+number = "8",
+pages = "",
+year = "2015",
+note = "",
+issn = "",
+doi = "10.1364/OE.23.009567",
+url = "http://www.ncbi.nlm.nih.gov/pubmed/25968993",
+author = "J. Oton, C.O.S. Sorzano, R. Marabini, Eva Pereiro. J.M. Carazo",
+keywords = "",
+keywords = "",
+keywords = "",
+keywords = ""
 }
 
-@article{???,
-title = "??? ",
-journal = "??? ",
-volume = "??",
-number = "??",
-pages = "???",
-year = "??",
+@article{J.Oton2016,
+title = "XTEND: Extending the depth of field in soft X-ray tomography",
+journal = "Journal",
+volume = "",
+number = "",
+pages = "",
+year = "2016",
 note = "",
-issn = "???",
-doi = "???",
-url = "????",
-author = "???",
-keywords = "????",
-keywords = "???",
-keywords = "??",
-keywords = "???"
+issn = "",
+doi = "",
+url = "http://www.biocomp.cnb.csic.es/publications",
+author = "J. Oton, E. Pereiro, J.J. Conesa, F.J. Chichon, D. Luque, J.M. Rodriguez, A.J. Perez-Berna, C.O.S. Sorzano, J. Klukowska, G.T. Herman, J. Vargas, R. Marabini, J.L. Carrascosa, J.M. Carazo",
+keywords = "",
+keywords = "",
+keywords = "",
+keywords = ""
 }
 
 """
