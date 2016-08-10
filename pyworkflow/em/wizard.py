@@ -49,10 +49,11 @@ from pyworkflow.em.constants import (UNIT_PIXEL,
                                      FILTER_BAND_PASS, 
                                      FILTER_HIGH_PASS
                                      )
-from pyworkflow.em.data import (Volume, 
-                                SetOfMicrographs, SetOfParticles, SetOfVolumes)
-from pyworkflow.em.protocol import ProtImportImages
-from pyworkflow.em.protocol.protocol_import import ProtImportCoordinates
+from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
+                                SetOfVolumes)
+from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
+                                                    ProtImportMovies,
+                                                    ProtImportCoordinates)
 
 
 import xmipp
@@ -277,18 +278,23 @@ class MaskRadiiWizard(EmWizard):
     @classmethod    
     def getView(self):
         return "wiz_volume_mask_radii"   
-                
+
+
 class ParticleMaskRadiusWizard(MaskRadiusWizard):
     pass       
-    
+
+
 class VolumeMaskRadiusWizard(MaskRadiusWizard):
     pass       
 
+
 class ParticlesMaskRadiiWizard(MaskRadiiWizard):
     pass
-        
+
+
 class VolumeMaskRadiiWizard(MaskRadiiWizard):
     pass
+
 
 class FilterWizard(EmWizard):
                 
@@ -334,10 +340,12 @@ class FilterWizard(EmWizard):
 
 class FilterParticlesWizard(FilterWizard):
     pass
-    
+
+
 class FilterVolumesWizard(FilterWizard):    
     pass
-    
+
+
 class GaussianWizard(EmWizard):
     
     def show(self, form, value, label, units=UNIT_PIXEL_FOURIER):
@@ -368,28 +376,39 @@ class ImportAcquisitionWizard(EmWizard):
     _targets = [(ProtImportImages, ['acquisitionWizard'])]
     
     def show(self, form, *params):
-        prot = form.protocol
-        acquisitionInfo = prot.loadAcquisitionInfo()
-        
-        if prot.importFilePath:
-            if exists(prot.importFilePath):
-                if acquisitionInfo:
-                    msg = ''
-                    for k, v in acquisitionInfo.iteritems():
-                        msg += '%s = %s\n' % (k, v)
-                    msg += '\n*Do you want to use detected acquisition values?*'
-                    response = dialog.askYesNo("Import acquisition", msg, form.root)
-                    if response:
-                        for k, v in acquisitionInfo.iteritems():
-                            form.setVar(k, v)
-                else:
-                    dialog.showWarning("Import failed", 
-                                       "Could not import acquisition info.", form.root)
-            else:
-                dialog.showError("Input error", "*Import file doesn't exist.*\nFile:\n%s" % prot.importFilePath, form.root)
+        acquisitionInfo = form.protocol.loadAcquisitionInfo()
+
+        if isinstance(acquisitionInfo, dict):
+            # If acquisitionInfo is None means something is wrong.
+            # Now, let's try to show a meanful error message.
+            self._setAcquisition(form, acquisitionInfo)
         else:
-            dialog.showError("Input error", "Select import file first", form.root) 
-            
+            # If not dict, it should be an error message
+            dialog.showError("Input error", acquisitionInfo, form.root)
+
+    def _setAcquisition(self, form, acquisitionInfo):
+        """ Ask whether to set the AcquisitionInfo to the protocol parameters.
+        Params:
+            acquisitionInfo: Should be a dictionary with acquisition values.
+                If None, show an error.
+        """
+        msg = ''
+        for k, v in acquisitionInfo.iteritems():
+            msg += '%s = %s\n' % (k, v)
+        msg += '\n*Do you want to use detected acquisition values?*'
+        response = dialog.askYesNo("Import acquisition",
+                                   msg, form.root)
+        if response:
+            prot = form.protocol
+            comment = ''
+
+            for k, v in acquisitionInfo.iteritems():
+                if prot.hasAttribute(k):
+                    form.setVar(k, v)
+                else:
+                    comment += "%s = %s\n" % (k, v)
+            if comment:
+                prot.setObjComment(comment)
 
 #===============================================================================
 #  Dialogs used by wizards
@@ -414,8 +433,10 @@ class PreviewDialog(dialog.Dialog):
             
         self.provider = provider
         self.firstItem = provider.getObjects()[0]
-        buttons = [('Select', dialog.RESULT_YES), ('Cancel', dialog.RESULT_CANCEL)]
-        dialog.Dialog.__init__(self, parent, "Wizard", buttons=buttons, default='Select', **args)
+        buttons = [('Select', dialog.RESULT_YES),
+                   ('Cancel', dialog.RESULT_CANCEL)]
+        dialog.Dialog.__init__(self, parent, "Wizard",
+                               buttons=buttons, default='Select', **args)
 
     def body(self, bodyFrame):
         bodyFrame.config()
@@ -464,7 +485,6 @@ class PreviewDialog(dialog.Dialog):
         """ This will be call when an item in the tree is selected. """
         pass
         
-    
 
 class ImagePreviewDialog(PreviewDialog):
     
@@ -498,7 +518,8 @@ class ImagePreviewDialog(PreviewDialog):
         except Exception, e:
             from pyworkflow.gui.matplotlib_image import getPngData
             self.Z = getPngData(findResource('no-image.png'))
-            dialog.showError("Input particles", "Error reading image <%s>" % filename, self) 
+            dialog.showError("Input particles", "Error reading image <%s>"
+                             % filename, self)
         self.preview.updateData(self.Z)
        
         
@@ -550,12 +571,12 @@ class DownsampleDialog(ImagePreviewDialog):
         ImagePreviewDialog._itemSelected(self, obj)
         
         dialog.FlashMessage(self, self.message, func=self._computeRightPreview)
-        #self._computeRightPreview(obj)
         self.rightPreview.updateData(self.rightImage.getData())
         
     def _doPreview(self, e=None):
         if self.lastObj is None:
-            dialog.showError("Empty selection", "Select an item first before preview", self)
+            dialog.showError("Empty selection",
+                             "Select an item first before preview", self)
         else:
             self._itemSelected(self.lastObj)
         
@@ -563,17 +584,21 @@ class DownsampleDialog(ImagePreviewDialog):
         """ This function should compute the right preview
         using the self.lastObj that was selected
         """
-        xmipp.fastEstimateEnhancedPSD(self.rightImage, self.lastObj.getFileName(), self.getDownsample(), self.dim, 2)
+        xmipp.fastEstimateEnhancedPSD(self.rightImage,
+                                      self.lastObj.getFileName(),
+                                      self.getDownsample(), self.dim, 2)
         
 
 class CtfDialog(DownsampleDialog):
     
     def _createRightPreview(self, rightFrame):
         from pyworkflow.gui.matplotlib_image import PsdPreview  
-        return PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf, label=self.rightPreviewLabel)
+        return PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf,
+                          label=self.rightPreviewLabel)
 
     def _createControls(self, frame):
-        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
+        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies",
+                                        padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
         self.lfSlider = self.addFreqSlider('Low freq', self.lf, col=0)
         self.hfSlider = self.addFreqSlider('High freq', self.hf, col=1)
@@ -582,7 +607,9 @@ class CtfDialog(DownsampleDialog):
         return 1.0 # Micrograph previously downsample, not taken into account here
 
     def addFreqSlider(self, label, value, col):
-        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5, value=value, callback=lambda a, b, c:self.updateFreqRing())
+        slider = LabelSlider(self.freqFrame, label, from_=0, to=0.5,
+                             value=value,
+                             callback=lambda a, b, c:self.updateFreqRing())
         slider.grid(row=0, column=col, padx=5, pady=5)
         return slider
         
@@ -594,7 +621,8 @@ class CtfDialog(DownsampleDialog):
         
     def getHighFreq(self):
         return self.hfSlider.get()
-    
+
+
 class CtfDownsampleDialog(CtfDialog):
 
     def _createControls(self, frame):
@@ -604,6 +632,7 @@ class CtfDownsampleDialog(CtfDialog):
         
     def getDownsample(self):
         return float(self.downVar.get())
+
 
 class BandPassFilterDialog(DownsampleDialog):
     
@@ -616,7 +645,8 @@ class BandPassFilterDialog(DownsampleDialog):
         self.rightImage = ImageHandler()._img
 
     def _createControls(self, frame):
-        self.freqFrame = ttk.LabelFrame(frame, text="Frequencies ("+self.unit+")", 
+        self.freqFrame = ttk.LabelFrame(frame,
+                                        text="Frequencies (%s)" % self.unit,
                                         padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
         
@@ -647,7 +677,8 @@ class BandPassFilterDialog(DownsampleDialog):
         if self.showHighFreq:
             self.hfSlider = self.addFreqSlider(label_high, self.highFreq, col=1)
         if self.showDecay:
-            self.freqDecaySlider = self.addFreqSlider('Decay', self.freqDecay, col=2)
+            self.freqDecaySlider = self.addFreqSlider('Decay',
+                                                      self.freqDecay, col=2)
 
     def addFreqSlider(self, label, value, col):
         fromValue = self.sliFrom
@@ -656,7 +687,8 @@ class BandPassFilterDialog(DownsampleDialog):
             fromValue = self.sliTo
             toValue = self.sliFrom
         slider = LabelSlider(self.freqFrame, label, from_=fromValue, to=toValue,
-                             step=self.step , value=value, callback=lambda a, b, c:self.updateFilteredImage())
+                             step=self.step , value=value,
+                             callback=lambda a, b, c:self.updateFilteredImage())
         slider.grid(row=0, column=col, padx=5, pady=5)
         return slider
 
@@ -669,7 +701,9 @@ class BandPassFilterDialog(DownsampleDialog):
         using the self.lastObj that was selected
         """
         from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj), self.getLowFreq(), self.getHighFreq(), self.getFreqDecay(), self.dim)
+        xmipp.bandPassFilter(self.rightImage, getImageLocation(self.lastObj),
+                             self.getLowFreq(), self.getHighFreq(),
+                             self.getFreqDecay(), self.dim)
 
     def getLowFreq(self):
         if self.showLowFreq:
@@ -705,7 +739,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         freqFrame.grid(row=0, column=0, sticky='nw')
         downEntry = tk.Entry(freqFrame, width=10, textvariable=self.freqVar)
         downEntry.grid(row=0, column=1, padx=5, pady=5)
-        downButton = tk.Button(freqFrame, text='Preview', command=self._doPreview)
+        downButton = tk.Button(freqFrame, text='Preview',
+                               command=self._doPreview)
         downButton.grid(row=0, column=2, padx=5, pady=5)    
         
     def getFreqSigma(self):
@@ -716,7 +751,8 @@ class GaussianFilterDialog(BandPassFilterDialog):
         using the self.lastObj that was selected
         """
         from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj), self.getFreqSigma(), self.dim)
+        xmipp.gaussianFilter(self.rightImage, getImageLocation(self.lastObj),
+                             self.getFreqSigma(), self.dim)
 
 
 class MaskPreviewDialog(ImagePreviewDialog):
@@ -746,14 +782,19 @@ class MaskPreviewDialog(ImagePreviewDialog):
         else:
             self.iniRadius = self.maskRadius
             
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=self.iniRadius*self.ratio)
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel,
+                                   outerRadius=self.iniRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
         self.addRadiusBox(frame) 
         
     def addRadiusBox(self, parent):
-        self.radiusSlider = LabelSlider(parent, 'Outer radius (%s)' % self.unit, from_=0, to=int(self.dim_par/2), value=self.iniRadius, step=self.samplingRate, callback=lambda a, b, c:self.updateRadius())
+        self.radiusSlider = LabelSlider(parent, 'Outer radius (%s)' % self.unit,
+                                        from_=0, to=int(self.dim_par/2),
+                                        value=self.iniRadius,
+                                        step=self.samplingRate,
+                                        callback=lambda a, b, c:self.updateRadius())
         self.radiusSlider.grid(row=0, column=0, padx=5, pady=5) 
     
     def updateRadius(self):
@@ -774,7 +815,9 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
             self.innerRadius = 0
         if self.outerRadius is None or self.outerRadius == -1 or self.outerRadius > self.dim_par/2:
             self.outerRadius = int(self.dim_par/2)
-        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel, outerRadius=int(self.outerRadius)*self.ratio, innerRadius=self.innerRadius*self.ratio)
+        self.preview = MaskPreview(frame, self.dim, label=self.previewLabel,
+                                   outerRadius=int(self.outerRadius)*self.ratio,
+                                   innerRadius=self.innerRadius*self.ratio)
         self.preview.grid(row=0, column=0) 
     
     def _createControls(self, frame):
@@ -782,7 +825,7 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         self.radiusSliderOut = LabelSlider(frame, 'Outer radius', 
                                            from_=0, to=int(self.dim_par/2), 
                                            value=self.outerRadius, step=1, 
-                                           callback=lambda a, b, c:self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
+                                           callback=lambda a, b, c: self.updateRadius(self.radiusSliderOut, self.radiusSliderIn))
         self.radiusSliderOut.grid(row=0, column=0, padx=5, pady=5) 
 
         self.radiusSliderIn = LabelSlider(frame, 'Inner radius', 
@@ -797,7 +840,8 @@ class MaskRadiiPreviewDialog(MaskPreviewDialog):
         
     def getRadius(self, radiusSlider):
         return int(radiusSlider.get())
-    
+
+
 class ImportCoordinatesBoxSizeWizard(Wizard):
     _targets = [(ProtImportCoordinates, ['boxSize'])]
 
