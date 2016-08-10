@@ -29,16 +29,17 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
 from pyworkflow.utils import removeExt
 from pyworkflow.em.protocol import ProtParticles
 from convert import (convertBinaryVol, readSetOfParticles,
-                     writeSetOfParticles, writeReferencesNew)
+                     writeSetOfParticles, writeReferences)
 import pyworkflow.em.metadata as md
 
 
 class ProtRelionSort(ProtParticles):
     """
     Relion particle sorting protocol.
-    It calculates difference images between particles and their aligned (and CTF-convoluted)
-    references, and produces Z-score on the characteristics of these difference images (such
-    as mean, standard deviation, skewness, excess kurtosis and rotational symmetry).
+    It calculates difference images between particles and their aligned
+    (and CTF-convoluted) references, and produces Z-score on the characteristics
+    of these difference images (such as mean, standard deviation, skewness,
+    excess kurtosis and rotational symmetry).
 
     """
     _label = 'sort particles'
@@ -147,7 +148,8 @@ class ProtRelionSort(ProtParticles):
                 self.classesList.append(classId)
         self.classesList.sort()
         # Pass stack file as None to avoid write the images files
-        self.info("Converting set from '%s' into '%s'" % (imgSet.getFileName(), imgStar))
+        self.info("Converting set from '%s' into '%s'"
+                  % (imgSet.getFileName(), imgStar))
 
         # case refine3D
         if self.classesList[0] == None and refSet.getClassName() == 'Volume':
@@ -162,9 +164,10 @@ class ProtRelionSort(ProtParticles):
                                 postprocessImageRow=self._postProcessImageRow)
 
         if not refSet.getClassName() == 'Volume':
-            self.info("Converting set from '%s' into %s" % (refSet.getFileName(), refStar))
-            writeReferencesNew(refSet, removeExt(refStar),
-                               postprocessImageRow=self._updateClasses)
+            self.info("Converting set from '%s' into %s"
+                      % (refSet.getFileName(), refStar))
+            writeReferences(refSet, removeExt(refStar),
+                            postprocessImageRow=self._updateClasses)
 
     def runRelionStep(self, params):
         """ Execute relion steps with given params. """
