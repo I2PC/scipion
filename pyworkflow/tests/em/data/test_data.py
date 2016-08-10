@@ -13,6 +13,8 @@ from pyworkflow.em.convert import ImageHandler
 
 
 class TestFSC(unittest.TestCase):
+    
+    _labels = [WEEKLY]
         
     def testIO(self):
         """Test basic FSC object"""
@@ -44,6 +46,8 @@ class TestFSC(unittest.TestCase):
 
 
 class TestImage(unittest.TestCase):
+    
+    _labels = [WEEKLY]
 
     @classmethod
     def setUpClass(cls):
@@ -72,6 +76,9 @@ class TestImage(unittest.TestCase):
 
 
 class TestImageHandler(unittest.TestCase):
+    
+    _labels = [WEEKLY]
+    
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)

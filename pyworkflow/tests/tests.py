@@ -7,15 +7,39 @@ import unittest
 from os.path import join, relpath
 from itertools import izip
 
-import pyworkflow as pw
 from pyworkflow.utils.path import cleanPath, makePath
 from pyworkflow.manager import Manager
 from pyworkflow.utils.utils import envVarOn, redStr, greenStr
 from pyworkflow.object import Object, Float
 from pyworkflow.protocol import MODE_RESTART
 
-TESTS_INPUT = join(pw.SCIPION_HOME, 'data', 'tests')
-TESTS_OUTPUT = join(pw.SCIPION_USER_DATA, 'Tests')
+TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
+TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
+
+
+PULL_REQUEST = 'pull'
+DAILY = 'daily'
+WEEKLY = 'weekly'
+
+# Procedure to check if a test class has an attribute called _labels and if so
+# then it checks if the class test matches any of the labels in input label parameter.
+def hasLabel(TestClass, label):
+    
+    # Get _labels attributes in class if any.
+    classLabels = getattr(TestClass, '_labels', None)
+
+    # Check if no label in test class.    
+    if classLabels is None:
+        labelExists = False
+    else:
+        # Check if any of the class labels matches.
+        for i in classLabels:
+            for j in label:
+                if (i == j):
+                    labelExists = True
+                else:
+                    labelExists = False
+    return labelExists
 
 
 class DataSet:
@@ -48,11 +72,10 @@ class DataSet:
         """
         assert name in cls._datasetDict, "Dataset: %s dataset doesn't exist." % name
         folder = cls._datasetDict[name].folder
-
         if not envVarOn('SCIPION_TEST_NOSYNC'):
-            command = "%s %s testdata --download %s" % (pw.SCIPION_PYTHON,
-                                                        pw.getScipionScript(),
-                                                        folder)
+            scipion = "%s %s/scipion" % (os.environ['SCIPION_PYTHON'],
+                                         os.environ['SCIPION_HOME'])
+            command = scipion + " testdata --download " + folder
             print ">>>> " + command
             os.system(command)
         return cls._datasetDict[name]
@@ -60,6 +83,8 @@ class DataSet:
 
 class BaseTest(unittest.TestCase):
     
+    _labels = [WEEKLY]
+     
     @classmethod
     def getOutputPath(cls, *filenames):
         """Return the path to the SCIPION_HOME/tests/output dir
@@ -171,6 +196,7 @@ class Complex(Object):
         c.imag.set(cls.cGold.imag)
         c.real.set(cls.cGold.real)
         return c
+       
     
         
 class GTestResult(unittest.TestResult):
