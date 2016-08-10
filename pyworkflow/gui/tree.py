@@ -24,14 +24,9 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+
 from __future__ import print_function
 
-FIRST_TREE_COLUMN = '#0'
-
-"""
-Tree widget implementation.
-"""
-        
 import os
 import Tkinter as tk
 import ttk
@@ -41,6 +36,8 @@ from pyworkflow.mapper import SqliteMapper
 from pyworkflow.utils import prettyDelta, prettySize, dateStr, getExt
 import gui
 from widgets import Scrollable
+
+FIRST_TREE_COLUMN = '#0'
 
 
 class Tree(ttk.Treeview, Scrollable):
@@ -133,7 +130,8 @@ class TreeProvider():
         object that will be inserted. A dictionary should be 
         returned with the possible following entries:
         'key': the key value to insert in the Tree
-        'text': text of the object to be displayed (if not passed the 'key' will be used)
+        'text': text of the object to be displayed
+            (if not passed the 'key' will be used)
         'image': image path to be displayed as icon (optional)
         'parent': the object's parent in which insert this object (optional)
         'tags': list of tags names (optional)
@@ -172,7 +170,7 @@ class TreeProvider():
 
     def setSortingParams(self, columnName, ascending):
         """
-        Column name to sort by it ans sorting direction
+        Column name to sort by it and sorting direction
         Parameters
         ----------
         columnName: Name of the column
@@ -202,6 +200,7 @@ class BoundTree(Tree):
     """ This class is base on Tree but fetch the
     items from a TreeProvider, which provides columns
     values for each item and items info to insert into the Tree """
+
     def __init__(self, master, provider, frame=True, **opts):
         """Create a new Tree, if frame=True, a container
         frame will be created and an scrollbar will be added"""
@@ -210,7 +209,8 @@ class BoundTree(Tree):
         colsTuple = tuple([c[0] for c in cols[1:]])
         Tree.__init__(self, master, frame, columns=colsTuple, **opts)
         # Set the special case of first tree column
-        self.heading(FIRST_TREE_COLUMN, text=cols[0][0], command=lambda: self.sortTree(FIRST_TREE_COLUMN, cols[0][0]))
+        self.heading(FIRST_TREE_COLUMN, text=cols[0][0],
+                     command=lambda: self.sortTree(FIRST_TREE_COLUMN, cols[0][0]))
         self.column(FIRST_TREE_COLUMN, width=cols[0][1])
         # Set other columns
         for c, w in cols[1:]:
@@ -259,7 +259,8 @@ class BoundTree(Tree):
             else: # If not callback, use default action
                 actions = self.provider.getObjectActions(obj)
                 if len(actions):
-                    actions[0][1]() # actions[0] = first Action, [1] = the action callback
+                    # actions[0] = first Action, [1] = the action callback
+                    actions[0][1]()
             
     def _onRightClick(self, e=None):
         item = self.identify('item', e.x, e.y)
@@ -326,13 +327,17 @@ class BoundTree(Tree):
                     
                     if objDict.get('selected', False):
                         self.selectChild(obj._treeId)
+
                 except Exception as ex:
                     print("error: ", ex)
                     if obj.getObjId():
-                        print("error object with id=%d (%s) is duplicated!!!" % (obj.getObjId(), str(obj)))
+                        print("error object with id=%d (%s) is duplicated!!!"
+                              % (obj.getObjId(), str(obj)))
                     else:
-                        print("error, object %s does not have an id. This could be due to the load of old project that "
-                              "does not have recently added attributes (e.g.:datastreaming)" % str(obj))
+                        print("error, object %s does not have an id. This could"
+                              " be due to the load of old project that does not"
+                              " have recently added attributes "
+                              "(e.g.:datastreaming)" % str(obj))
 
     def sortTree(self, heading, column):
 
@@ -412,7 +417,8 @@ class ObjectTreeProvider(TreeProvider):
         else:
             t += " = %s" % str(obj)
             
-        info = {'key': obj.getObjId(), 'parent': self._parentDict.get(obj.getObjId(), None),
+        info = {'key': obj.getObjId(),
+                'parent': self._parentDict.get(obj.getObjId(), None),
                 'text': t, 'values': (obj.strId(), cls)}
         if issubclass(obj.__class__, Scalar):
             info['image'] = 'step.gif'
@@ -474,7 +480,8 @@ class ProjectRunsTreeProvider(TreeProvider):
         self._refresh = value
     
     def getObjects(self):
-        return self.project.getRuns(refresh=self._refresh, checkPids=self._checkPids)
+        return self.project.getRuns(refresh=self._refresh,
+                                    checkPids=self._checkPids)
         
     def getColumns(self):
         return [('Run', 250), ('State', 100), ('Time', 100)]
@@ -483,7 +490,9 @@ class ProjectRunsTreeProvider(TreeProvider):
         objId = obj.getObjId()
         self._objDict[objId] = obj
         info = {'key': obj.getObjId(), 'text': obj.getRunName(),
-                'values': (obj.getStatusMessage(), prettyDelta(obj.getElapsedTime()))}
+                'values': (obj.getStatusMessage(),
+                           prettyDelta(obj.getElapsedTime()))
+                }
         objPid = obj.getObjParentId()
         if objPid in self._objDict:
             info['parent'] = self._objDict[objPid]
