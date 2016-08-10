@@ -33,7 +33,7 @@ from convert import (convertBinaryVol, readSetOfParticles,
 import pyworkflow.em.metadata as md
 
 
-class ProtRelionSort(ProtParticles):
+class ProtRelionSortParticles(ProtParticles):
     """
     Relion particle sorting protocol.
     It calculates difference images between particles and their aligned

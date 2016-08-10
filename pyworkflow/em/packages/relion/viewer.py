@@ -42,7 +42,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
-from protocol_sort import ProtRelionSort
+from protocol_sort import ProtRelionSortParticles
 
 
 ITER_LAST = 0
@@ -1408,7 +1408,7 @@ class RelionSortViewer(Viewer):
     """ Wrapper to visualize Relion sort protocol results
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtRelionSort, SetOfImages]
+    _targets = [ProtRelionSortParticles, SetOfImages]
 
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -1433,7 +1433,7 @@ class RelionSortViewer(Viewer):
                                                       'sortby': '_rlnParticleSelectZScore asc',
                                                       showj.RENDER:'_filename'}))
 
-        if issubclass(cls, ProtRelionSort):
+        if issubclass(cls, ProtRelionSortParticles):
             particles = obj.outputParticles
             self._visualize(particles)
 
