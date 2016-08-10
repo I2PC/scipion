@@ -148,6 +148,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
 
 class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
+
     def __init__(self, project, actionFunc):
         pwgui.tree.ProjectRunsTreeProvider.__init__(self, project)
         self.actionFunc = actionFunc

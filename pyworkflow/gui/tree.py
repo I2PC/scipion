@@ -471,7 +471,13 @@ class ProjectRunsTreeProvider(TreeProvider):
     """ Provide run list from a project
     to populate a tree.
     """
+    ID_COLUMN = 'Id'
+    RUN_COLUMN = 'Run'
+    STATE_COLUMN = 'State'
+    TIME_COLUMN = 'Time'
+
     def __init__(self, project, **kwargs):
+        TreeProvider.__init__(self,  sortingColumnName=ProjectRunsTreeProvider.ID_COLUMN)
         self.project = project
         self._objDict = {}
         self._refresh = True
@@ -481,17 +487,32 @@ class ProjectRunsTreeProvider(TreeProvider):
         self._refresh = value
     
     def getObjects(self):
-        return self.project.getRuns(refresh=self._refresh,
+        runs = self.project.getRuns(refresh=self._refresh,
                                     checkPids=self._checkPids)
+
+        # Sort objects
+        runs.sort(key=self.runsKey, reverse=not self.isSortingAscending())
+
+        return runs
+
+    def runsKey(self, run):
+        sortDict = {ProjectRunsTreeProvider.ID_COLUMN: 'getObjId',
+                    ProjectRunsTreeProvider.TIME_COLUMN: 'getElapsedTime',
+                    ProjectRunsTreeProvider.RUN_COLUMN: 'getRunName',
+                    ProjectRunsTreeProvider.STATE_COLUMN: 'getStatusMessage'}
+        return getattr(run, sortDict.get(self._sortingColumnName))()
         
     def getColumns(self):
-        return [('Run', 250), ('State', 100), ('Time', 100)]
+        return [(ProjectRunsTreeProvider.ID_COLUMN, 5),
+                (ProjectRunsTreeProvider.RUN_COLUMN, 300),
+                (ProjectRunsTreeProvider.STATE_COLUMN, 50),
+                (ProjectRunsTreeProvider.TIME_COLUMN, 50)]
     
     def getObjectInfo(self, obj):
         objId = obj.getObjId()
         self._objDict[objId] = obj
-        info = {'key': obj.getObjId(), 'text': obj.getRunName(),
-                'values': (obj.getStatusMessage(),
+        info = {'key': objId, 'text': objId,
+                'values': (obj.getRunName(), obj.getStatusMessage(),
                            prettyDelta(obj.getElapsedTime()))
                 }
         objPid = obj.getObjParentId()
