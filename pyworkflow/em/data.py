@@ -1377,6 +1377,15 @@ class SetOfClasses(EMSet):
         for classItem in EMSet.iterItems(self, orderBy=orderBy, direction=direction):
             self._setItemMapperPath(classItem)
             yield classItem
+
+    def iterRepresentatives(self, orderBy='id', direction='ASC'):
+        for classItem in self.iterItems(orderBy, direction):
+            if classItem.hasRepresentative():
+                rep = classItem.getRepresentative()
+                rep.setObjId(classItem.getObjId())
+                rep.setSamplingRate(classItem.getSamplingRate())
+
+                yield rep
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
