@@ -500,7 +500,7 @@ class RelationsTreeProvider(SubclassesTreeProvider):
 
         # Sort objects
         self._sortObjects(objects)
-        
+
         return objects
     
 #---------------------- Other widgets ----------------------------------------
