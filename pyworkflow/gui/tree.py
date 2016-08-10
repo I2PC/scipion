@@ -110,9 +110,10 @@ class TreeProvider():
     from the graphical Tree build. Subclasses should implement 
     the abstract methods """
 
-    def __init__(self):
-        self._sortingColumnName = None
-        self._sortingAscending = True
+    def __init__(self, sortingColumnName = None, sortingAscending = True):
+        self._sortingColumnName = sortingColumnName
+        self._sortingAscending = sortingAscending
+        self._sortEnabled = (sortingColumnName is not None)
 
     def getColumns(self):
         """Return a list of tuples (c, w) where:
@@ -193,7 +194,7 @@ class TreeProvider():
     def sortEnabled(self):
 
         # return self._sortingColumnName is not None
-        return False
+        return self._sortEnabled
 
 
 class BoundTree(Tree):

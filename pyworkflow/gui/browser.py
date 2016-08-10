@@ -24,6 +24,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+In this module a simple ObjectBrowser is implemented.
+This class can be subclasses to extend its functionality.
+A concrete use of ObjectBrowser is FileBrowser, where the
+elements to inspect and preview are files.
+"""
 
 import os.path
 import stat
@@ -373,12 +379,11 @@ class FileTreeProvider(TreeProvider):
             cls._FILE_HANDLERS[fileExt] = fileHandler
         
     def __init__(self, currentDir=None, showHidden=False):
-        TreeProvider.__init__(self)
+        TreeProvider.__init__(self, sortingColumnName=self.FILE_COLUMN)
         self._currentDir = os.path.abspath(currentDir)
         self._showHidden = showHidden
         self.getColumns = lambda: [(self.FILE_COLUMN, 300),
                                    (self.SIZE_COLUMN, 70), ('Time', 150)]
-        self._sortingColumnName = self.FILE_COLUMN
     
     def getFileHandler(self, obj):
         filename = obj.getFileName()
@@ -423,9 +428,6 @@ class FileTreeProvider(TreeProvider):
         fileInfoList.sort(key=self.fileKey, reverse=not self.isSortingAscending())
 
         return fileInfoList
-
-    def sortEnabled(self):
-        return True
 
     def fileKey(self, f):
         sortDict = {self.FILE_COLUMN: 'getFileName',

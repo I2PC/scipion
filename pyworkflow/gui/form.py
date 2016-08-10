@@ -312,13 +312,23 @@ def getObjectLabel(pobj, mapper):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
+    CREATION_COLUMN = 'Creation'
+    INFO_COLUMN = 'Info'
     def __init__(self, protocol, pointerParam, selected=None):
+        TreeProvider.__init__(self)
+
         self.param = pointerParam
         self.selected = selected # FIXME
         self.selectedDict = {}
         self.protocol = protocol
         self.mapper = protocol.mapper
         self.maxNum = 200
+
+        self._sortingColumnName = self.CREATION_COLUMN
+        self._sortingAscending = False
+
+    def sortEnabled(self):
+        return True
             
     def getObjects(self):
         import pyworkflow.em as em 
@@ -389,10 +399,24 @@ class SubclassesTreeProvider(TreeProvider):
                                         getattr(attr, subParam))
                                 
 
+        # Sort objects before returning them
+        objects.sort(key=self.objectKey, reverse=not self.isSortingAscending())
+
         return objects
-        
+
+    def objectKey(self, pobj):
+
+        obj = self._getParentObject(pobj,pobj)
+
+        if self._sortingColumnName == SubclassesTreeProvider.CREATION_COLUMN:
+            return self._getObjectCreation(obj.get())
+        elif self._sortingColumnName == SubclassesTreeProvider.INFO_COLUMN:
+            return self._getObjectInfoValue(obj.get())
+        else:
+            return self._getPointerLabel(obj)
+
     def getColumns(self):
-        return [('Object', 300), ('Info', 250), ('Creation', 150)]
+        return [('Object', 300), (SubclassesTreeProvider.INFO_COLUMN, 250), (SubclassesTreeProvider.CREATION_COLUMN, 150)]
     
     def isSelected(self, obj):
         """ Check if an object is selected or not. """
@@ -401,24 +425,47 @@ class SubclassesTreeProvider(TreeProvider):
                 if s and s.getObjId() == obj.getObjId():
                     return True
         return False
-    
+
+    @staticmethod
+    def _getParentObject(pobj, default=None):
+        return getattr(pobj, '_parentObject', default)
+
     def getObjectInfo(self, pobj):
-        parent = getattr(pobj, '_parentObject', None)
-        if parent is None:
-            label = getObjectLabel(pobj, self.mapper)
-        else: # This is an item coming from a set
-            label = 'item %s' % pobj.get().strId()
+        parent = self._getParentObject(pobj)
+
+        # Get the label
+        label = self._getPointerLabel(pobj, parent)
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
         
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
-        info = str(obj).replace(obj.getClassName(), '')
             
         return {'key': objId, 'text': label,
-                'values': (info, obj.getObjCreation()), 
+                'values': (self._getObjectInfoValue(obj), self._getObjectCreation(obj)),
                 'selected': isSelected, 'parent': parent}
+
+    @staticmethod
+    def _getObjectCreation(obj):
+
+        return obj.getObjCreation()
+
+    @staticmethod
+    def _getObjectInfoValue(obj):
+
+        return str(obj).replace(obj.getClassName(), '')
+
+    def _getPointerLabel(self, pobj, parent=None):
+
+        # If parent is not provided, try to get it, it might have none.
+        if parent is None: parent = self._getParentObject(pobj)
+
+        # If there is no parent
+        if parent is None:
+            return getObjectLabel(pobj, self.mapper)
+        else:  # This is an item coming from a set
+            return 'item %s' % pobj.get().strId()
 
     def getObjectActions(self, pobj):
         obj = pobj.get()
