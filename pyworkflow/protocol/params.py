@@ -250,13 +250,20 @@ class Form(object):
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
         param = self.getParam(paramName)
+
         if not param.hasCondition():
             return True
         condStr = param.condition.get()
+        localDict = {}
+        globalDict = dict(globals())
+        from pyworkflow.em import getObjects
+        globalDict.update(getObjects())
+
         for t in param._conditionParams:
             if self.hasParam(t) or self._protocol.hasAttribute(t):
-                condStr = condStr.replace(t, self.escapeLiteral(self._protocol.getAttributeValue(t)))
-        return eval(condStr)
+                localDict[t] = self._protocol.getAttributeValue(t)
+
+        return eval(condStr, globalDict, localDict)
     
     def validateParams(self, protocol):
         """ Check that all validations of the params in the form
