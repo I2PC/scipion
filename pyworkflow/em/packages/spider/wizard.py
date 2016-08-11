@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -32,7 +32,7 @@ import os
 import Tkinter as tk
 import ttk
 
-from pyworkflow.utils.path import cleanPath, removeExt
+from pyworkflow.utils.path import cleanPath
 from pyworkflow.em.constants import UNIT_PIXEL
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesMaskRadiiWizard,
@@ -41,8 +41,8 @@ from pyworkflow.em.wizard import (EmWizard, ParticleMaskRadiusWizard, ParticlesM
 import pyworkflow.gui.dialog as dialog
 from pyworkflow.gui.widgets import LabelSlider, HotButton
 
-from spider import SpiderShell, runTemplate, runCustomMaskScript
-from constants import FILTER_SPACE_REAL, FILTER_FERMI
+from spider import SpiderShell, runCustomMaskScript
+from constants import FILTER_FERMI
 from convert import locationToSpider
 from protocol import (SpiderProtCAPCA, SpiderProtAlignAPSR, SpiderProtAlignPairwise, 
                       SpiderProtFilter, SpiderProtCustomMask, SpiderProtRefinement)
@@ -108,7 +108,8 @@ class SpiderParticlesMaskRadiiWizard(ParticlesMaskRadiiWizard):
 
 
 class SpiderFilterParticlesWizard(FilterParticlesWizard):    
-    _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq', 'highFreq', 'temperature'])]
+    _targets = [(SpiderProtFilter, ['filterRadius', 'lowFreq',
+                                    'highFreq', 'temperature'])]
     
     def _getParameters(self, protocol):
         
@@ -118,7 +119,8 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
         protParams['input']= protocol.inputParticles
         protParams['label']= label
         protParams['value']= value
-        protParams['mode']= [protocol.filterType.get(), protocol.filterMode.get(), protocol.usePadding.get()]
+        protParams['mode']= [protocol.filterType.get(), protocol.filterMode.get(),
+                             protocol.usePadding.get()]
 
         return protParams
     
@@ -134,13 +136,13 @@ class SpiderFilterParticlesWizard(FilterParticlesWizard):
             d = SpiderFilterDialog(form.root, provider, 
                                           protocolParent=protocol)
             if d.resultYes():
-                if protocol.filterType <= FILTER_SPACE_REAL:
+                if protocol.filterType <= FILTER_FERMI:
                     form.setVar('filterRadius', d.getRadius())
                 else:
                     form.setVar('lowFreq', d.getLowFreq())
                     form.setVar('highFreq', d.getHighFreq())
-                    if protocol.filterType == FILTER_FERMI:
-                        form.setVar('temperature', d.getTemperature())
+                if protocol.filterType == FILTER_FERMI:
+                    form.setVar('temperature', d.getTemperature())
         else:
             dialog.showWarning("Input particles", "Select particles first", form.root)  
     
@@ -163,13 +165,13 @@ class SpiderFilterDialog(DownsampleDialog):
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame, text="Frequencies", padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
-        if self.protocolParent.filterType <= FILTER_SPACE_REAL:
+        if self.protocolParent.filterType <= FILTER_FERMI:
             self.radiusSlider = self.addFreqSlider('Radius', self.protocolParent.filterRadius.get(), col=0)
         else:
             self.lfSlider = self.addFreqSlider('Low freq', self.protocolParent.lowFreq.get(), col=0)
             self.hfSlider = self.addFreqSlider('High freq', self.protocolParent.highFreq.get(), col=1)        
-            if self.protocolParent.filterType == FILTER_FERMI:
-                self.tempSlider = self.addFreqSlider('Temperature', self.protocolParent.temperature.get(), col=2)
+        if self.protocolParent.filterType == FILTER_FERMI:
+            self.tempSlider = self.addFreqSlider('Temperature', self.protocolParent.temperature.get(), col=2)
         radiusButton = tk.Button(self.freqFrame, text='Preview', command=self._doPreview)
         radiusButton.grid(row=0, column=3, padx=5, pady=5)
         
@@ -222,7 +224,7 @@ class SpiderFilterDialog(DownsampleDialog):
         pars["usePadding"] = self.protocolParent.usePadding.get()
         pars["op"] = "FQ"
         
-        if self.protocolParent.filterType <= FILTER_SPACE_REAL:
+        if self.protocolParent.filterType <= FILTER_FERMI:
             pars['filterRadius'] = self.getRadius()
         else:
             pars['lowFreq'] = self.getLowFreq()
@@ -257,7 +259,7 @@ def filter_spider(inputLocStr, outputLocStr, **pars):
         
     args = []
     
-    if pars["filterType"] <= FILTER_SPACE_REAL:
+    if pars["filterType"] <= FILTER_FERMI:
         args.append(pars['filterRadius'])
     else:
         args.append('%f %f' % (pars['lowFreq'], pars['highFreq']))
