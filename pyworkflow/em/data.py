@@ -1322,10 +1322,16 @@ class SetOfClasses(EMSet):
         self._representatives = Boolean(False) # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
-    def iterClassImages(self):
-        """ Iterate over the images of a class. """
-        pass
-    
+    def iterClassItems(self, iterDisabled=False):
+        """ Iterate over the images of a class.
+        Params:
+            iterDisabled: If True, also include the disabled items. """
+        for cls in self.iterItems():
+            if iterDisabled or cls.isEnabled():
+                for img in cls:
+                    if iterDisabled or img.isEnabled():
+                        yield img
+
     def hasRepresentatives(self):
         return self._representatives.get()
     

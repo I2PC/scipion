@@ -430,14 +430,18 @@ class TestSetOfClasses2D(BaseTest):
         # Check iteration is working properly even after 
         # a close operation, it should open automatically
         for i, cls in enumerate(classes2DSet):
-            print cls.getSamplingRate()
-            l = images[i]         
+            l = images[i]
             for j, img in enumerate(cls):
                 self.assertEquals(img.getObjId(), l[j])
 
         for i, rep in enumerate(classes2DSet.iterRepresentatives()):
             self.assertIsNotNone(rep.getLocation())
-                        
+
+        # Check the SetOfClasses.iterClassItems method
+        allImages = [img for imgList in images for img in imgList]
+        idsImages = [img.getObjId()
+                     for img in classes2DSet.iterClassItems(iterDisabled=True)]
+        self.assertEqual(allImages, idsImages)
 
     def test_subsetsFromSelection(self):
         """ From a sqlite file of a SetOfClasses2D, with some
