@@ -152,6 +152,7 @@ class MultiPointerTreeProvider(TreeProvider):
     storage from MultiPointerVar. 
     """
     def __init__(self, mapper):
+        TreeProvider.__init__(self)
         self._objectDict = OrderedDict()
         self._mapper = mapper
         
@@ -255,6 +256,7 @@ class ProtocolClassTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
     def __init__(self, protocolClassName):
+        TreeProvider.__init__(self)
         self.protocolClassName = protocolClassName
      
     def getObjects(self):

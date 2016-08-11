@@ -394,6 +394,7 @@ class BoundTree(Tree):
 class ObjectTreeProvider(TreeProvider):
     """ Populate Tree from Objects. """
     def __init__(self, objList=None):
+        TreeProvider.__init__(self)
         self.objList = objList
         self.getColumns = lambda: [('Object', 300), ('Id', 70), ('Class', 150)]
         self._parentDict = {}

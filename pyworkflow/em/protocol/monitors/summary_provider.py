@@ -31,6 +31,7 @@ from pyworkflow.gui.tree import TreeProvider
 class SummaryProvider(TreeProvider):
     """Create the tree elements for a Protocol run"""
     def __init__(self, protocol):
+        TreeProvider.__init__(self)
         self.protocol = protocol
         self.getColumns = lambda: [('Name', 300), ('Output', 150),
                                    ('Number', 100)]
