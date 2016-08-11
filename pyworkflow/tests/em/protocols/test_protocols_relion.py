@@ -244,7 +244,7 @@ class TestRelionSortParticles(TestRelionBase):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dataset = DataSet.getDataSet('relion_tutorial')
-        cls.partFn = cls.dataset.getFile('particles.star') # not ready yet
+        cls.partFn = cls.dataset.getFile('import/particles.sqlite')
         cls.partAvg = cls.dataset.getFile('import/averages.mrcs')
         cls.partCl2dFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
         cls.partCl3dFn = cls.dataset.getFile('import/classify3d/extra/relion_it015_data.star')
@@ -257,11 +257,10 @@ class TestRelionSortParticles(TestRelionBase):
         """ Import particles after relion autopicking and extraction.
         """
         protPart = self.newProtocol(ProtImportParticles,
-                                    importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                    starFile=self.partFn,
-                                    magnification=10000,
-                                    samplingRate=7.08,
-                                    haveDataBeenPhaseFlipped=True
+                                    objLabel='from xmipp extract (after relion auto-picking)',
+                                    importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                    sqliteFile=self.partFn,
+                                    samplingRate=7.08
                                     )
         self.launchProtocol(protPart)
         return protPart
