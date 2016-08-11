@@ -24,10 +24,13 @@
 # *
 # **************************************************************************
 
+import pyworkflow.object as pwobj
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.utils import removeExt
+import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtParticles
+from pyworkflow.em.data import SetOfClasses3D, SetOfParticles, SetOfClasses
 from convert import (convertBinaryVol, readSetOfParticles,
                      writeSetOfParticles, writeReferences)
 import pyworkflow.em.metadata as md
@@ -47,16 +50,26 @@ class ProtRelionSortParticles(ProtParticles):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam,
-                      pointerClass='SetOfParticles',
-                      label='Input particles',
-                      help='Select a set of particles after Relion 2D/3D classification, refinement '
-                           'or auto-picking. Particles should have at least in-plane alignment '
-                           'parameters and class assignment.')
-        form.addParam('inputReferences', PointerParam,
-                      pointerClass="SetOfClasses2D, SetOfClasses3D, SetOfVolumes, Volume, SetOfAverages",
-                      label='Input references',
-                      help='Select references: a set of classes/averages or a 3D volume')
+        form.addParam('inputSet', PointerParam,
+                      pointerClass='SetOfParticles,SetOfClasses2D,SetOfClasses3D',
+                      label='Input particles', important=True,
+                      help='Select a set of particles after Relion auto-picking'
+                           ' or 3D refinement. You can also select Relion 2D/3D'
+                           ' classes. Particles should have at least in-plane '
+                           'alignment parameters and class assignment.')
+
+        form.addParam('referenceAverage', PointerParam,
+                      pointerClass="SetOfAverages",
+                      condition='inputSet and isInputAutoPicking',
+                      label='Reference 2D averages',
+                      help='Select references 2D averages used for auto-picking')
+
+        form.addParam('referenceVolume', PointerParam,
+                      pointerClass="Volume",
+                      condition='inputSet and isInputAutoRefine',
+                      label='Reference volume',
+                      help='Select reference volume 2D after 3D auto-refine')
+
         form.addParam('maskDiameterA', IntParam, default=-1,
                       label='Particle mask diameter (A)',
                       help='The experimental images will be masked with a soft circular mask '
@@ -99,11 +112,28 @@ class ProtRelionSortParticles(ProtParticles):
             
     #--------------------------- INSERT steps functions ------------------------
 
+    def isInputAutoPicking(self):
+        inputSet = self.inputSet.get()
+        return (isinstance(inputSet, SetOfParticles) and
+                not inputSet.hasAlignmentProj())
+
+    def isInputAutoRefine(self):
+        inputSet = self.inputSet.get()
+        return (isinstance(inputSet, SetOfParticles) and
+                inputSet.hasAlignmentProj())
+
+    def isInputClasses(self):
+        return isinstance(self.inputSet.get(), SetOfClasses)
+
     def _insertAllSteps(self):
         self._createFilenameTemplates()
+        refAvg = self.referenceAverage.get()
+        avgId = refAvg.getObjId() if refAvg is not None else None
+        refVol = self.referenceVolume.get()
+        volId = refVol.getObjId() if refAvg is not None else None
+
         self._insertFunctionStep('convertInputStep',
-                                 self.inputParticles.get().getObjId(),
-                                 self.inputReferences.get().getObjId())
+                                 self.inputSet.get().getObjId(), avgId, volId)
         self._insertRelionStep()
         self._insertFunctionStep('createOutputStep')
 
@@ -120,76 +150,96 @@ class ProtRelionSortParticles(ProtParticles):
         self._insertFunctionStep('runRelionStep', params)
 
     #--------------------------- STEPS functions -------------------------------
+
     def _createFilenameTemplates(self):
         """ Centralize how files are called. """
         myDict = {
             'input_particles': self._getExtraPath('input_particles.star'),
             'input_refs': self._getExtraPath('input_references.star'),
-            'output_star': self._getExtraPath('input_particles_sorted.star')}
+            'output_star': self._getExtraPath('input_particles_sorted.star'),
+            'input_refvol': self._getTmpPath('input_vol.mrc')
+        }
         self._updateFilenamesDict(myDict)
 
-    def convertInputStep(self, particlesId, referencesId):
+    def convertInputStep(self, inputId, avgId, volId):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
         Params:
             particlesId: use this parameters just to force redo of convert if
                 the input particles are changed.
         """
-        imgSet = self.inputParticles.get()
-        refSet = self.inputReferences.get()
+        inputSet = self.inputSet.get()
         imgStar = self._getFileName('input_particles')
         refStar = self._getFileName('input_refs')
-        self.classesList = []
-
-        for img in imgSet:
-            # Take classId from img
-            classId = img.getClassId()
-            if not classId in self.classesList:
-                self.classesList.append(classId)
-        self.classesList.sort()
         # Pass stack file as None to avoid write the images files
         self.info("Converting set from '%s' into '%s'"
-                  % (imgSet.getFileName(), imgStar))
+                  % (inputSet.getFileName(), imgStar))
 
+        kwargs = {}
         # case refine3D
-        if self.classesList[0] == None and refSet.getClassName() == 'Volume':
-            writeSetOfParticles(imgSet, imgStar, self._getPath(),
-                                postprocessImageRow=self._resetClasses)
-        # case auto-pick, no classIds
-        elif self.classesList[0] == None:
-            writeSetOfParticles(imgSet, imgStar, self._getPath())
-        # case cl2d or cl3d
+        if self.isInputAutoRefine():
+            em.ImageHandler().convert(self.referenceVolume.get(),
+                                   self._getFileName('input_refvol'))
+            kwargs['alignType'] = em.ALIGN_PROJ
         else:
-            writeSetOfParticles(imgSet, imgStar, self._getPath(),
-                                postprocessImageRow=self._postProcessImageRow)
+            if self.isInputAutoPicking():
+                refSet = self.inputReferences.get()
+            else:
+                refSet = self.inputSet.get() # 2D or 3D classes
 
-        if not refSet.getClassName() == 'Volume':
-            self.info("Converting set from '%s' into %s"
+            self.info("Converting reference from '%s' into %s"
                       % (refSet.getFileName(), refStar))
             writeReferences(refSet, removeExt(refStar),
                             postprocessImageRow=self._updateClasses)
+
+        # Write particles star file
+        particlesIter = self._allParticles(iterate=False)
+        writeSetOfParticles(particlesIter, imgStar, self._getPath(),
+                            postprocessImageRow=self._resetClasses)
+        # self.classesList = []
+        #
+        # for img in inputSet:
+        #     # Take classId from img
+        #     classId = img.getClassId()
+        #     if not classId in self.classesList:
+        #         self.classesList.append(classId)
+        # self.classesList.sort()
+
+        # # case auto-pick, no classIds
+        # elif self.classesList[0] == None:
+        #     writeSetOfParticles(inputSet, imgStar, self._getPath())
+        # # case cl2d or cl3d
+        # else:
+        #     writeSetOfParticles(imgSet, imgStar, self._getPath(),
+        #                         postprocessImageRow=self._postProcessImageRow)
 
     def runRelionStep(self, params):
         """ Execute relion steps with given params. """
         self.runJob(self._getProgram(), params)
         
     def createOutputStep(self):
-        imgSet = self.inputParticles.get()
         sortedImgSet = self._createSetOfParticles()
-        sortedImgSet.copyInfo(imgSet)
-        readSetOfParticles(self._getFileName('output_star'),
-                           sortedImgSet,
-                           alignType=imgSet.getAlignment())
+
+        particles = self._sampleParticles()
+        sortedImgSet.copyInfo(particles)
+
+        particlesIter = self._allParticles(iterate=False)
+
+        sortedStar = self._getFileName('output_star')
+        sortedImgSet.copyItems(particlesIter,
+                               updateItemCallback=self._updateZScore,
+                               itemDataIterator=md.iterRows(sortedStar))
 
         self._defineOutputs(outputParticles=sortedImgSet)
-        self._defineSourceRelation(imgSet, sortedImgSet)
+        self._defineSourceRelation(self.inputSet, sortedImgSet)
+
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
-        imgSet = self.inputParticles.get()
-        if not imgSet.hasCTF() and self.doCTF:
-            errors.append('Input particles have no CTF information!')
+        #imgSet = self.inputParticles.get()
+        #if not imgSet.hasCTF() and self.doCTF:
+        #    errors.append('Input particles have no CTF information!')
 
         return errors
     
@@ -199,28 +249,53 @@ class ProtRelionSortParticles(ProtParticles):
             summary.append("Output particles not ready yet.")
         else:
             summary.append("Input %s particles: %s were sorted by Z-score" %
-                           (self.inputParticles.get().getSize(),
-                            self.inputParticles.get().getNameId()))
+                           (self.inputSet.get().getSize(),
+                            self.inputSet.get().getNameId()))
         return summary
     
     #--------------------------- UTILS functions -------------------------------
+    def _allParticles(self, iterate=False):
+        # A handler function to iterate over the particles
+        if self.isInputClasses():
+            iterParticles = self.inputSet.get().iterClassItems()
+            if iterate:
+                return iterParticles
+            else:
+                particles = SetOfParticles(filename=":memory:")
+                particles.copyItems(iterParticles)
+                return particles
+        else:
+            if iterate:
+                return self.inputSet.get().iterItems()
+            else:
+                return self.inputSet.get()
+
+    def _sampleParticles(self):
+        """ Return the input particles set, or the first class
+        in the case the input are classes.
+        """
+        if self.isInputClasses():
+            return self.inputSet.get().getFirstItem()
+        else:
+            return self.inputSet.get()
+
     def _setArgs(self, args):
-        maskDiameter = self.maskDiameterA.get()
-        if maskDiameter <= 0:
-            x, _, _ = self.inputParticles.get().getDim()
-            maskDiameter = self.inputParticles.get().getSamplingRate() * x
+        particles = self._sampleParticles()
+
+        if self.maskDiameterA <= 0:
+            maskDiameter = particles.getSamplingRate() * particles.getXDim()
+        else:
+            maskDiameter = self.maskDiameterA.get()
 
         args.update({'--i': self._getFileName('input_particles'),
                      '--particle_diameter': maskDiameter,
-                     '--angpix': self.inputParticles.get().getSamplingRate(),
+                     '--angpix': particles.getSamplingRate(),
                      '--min_z': self.minZ.get(),
                      '--o': 'sorted'
                      })
         #if inputReferences is a volume, convert it to mrc here
-        if self.inputReferences.get().getClassName() == 'Volume':
-            args['--ref'] = convertBinaryVol(self.inputReferences.get(),
-                                             self._getTmpPath())
-
+        if self.isInputAutoRefine():
+            args['--ref'] = self._getFileName('input_refvol')
         else:
             args['--ref'] = self._getFileName('input_refs')
 
@@ -258,3 +333,8 @@ class ProtRelionSortParticles(ProtParticles):
     def _resetClasses(self, img, imgRow):
         # after auto-refine 3D we have just 1 class
         imgRow.setValue(md.RLN_PARTICLE_CLASS, 1)
+
+    def _updateZScore(self, img, imgRow):
+        # TODO: Take the ZScore from imgRow
+        zscore = imgRow.getValue(md.RLN_SELECT_PARTICLES_ZSCORE)
+        img._rlnSelectParticlesZscore = pwobj.Float(zscore)
