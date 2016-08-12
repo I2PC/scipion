@@ -39,7 +39,7 @@ class ProtImportTiltSeriesViewer(Viewer):
     _targets = [ProtImportTiltSeries]
         
     def _visualize(self, e=None):
-        viewLabels = 'id enabled image angleTilt _ctfModel._defocusU'
+        viewLabels = 'id enabled image angleTilt tomogramMetadata focalGroup tiltSeriesIndex defocus refIndex'
         fnMd = self.protocol._defineOutputMdName()
         
         if not os.path.exists(fnMd):
