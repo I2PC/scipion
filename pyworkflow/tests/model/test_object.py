@@ -13,7 +13,8 @@ class ListContainer(Object):
     
     
 class TestObject(BaseTest):
-    
+    _labels = [SMALL]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -303,7 +304,8 @@ class TestObject(BaseTest):
         
 
 class TestUtils(BaseTest):
-    
+    _labels = [SMALL]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
