@@ -237,28 +237,20 @@ class TestRelionSubtract(TestRelionBase):
         self.launchProtocol(protSubtract)
         self.assertIsNotNone(protSubtract.outputParticles, "There was a problem with subtract projection")
 
+
 class TestRelionSortParticles(TestRelionBase):
     """ This class helps to test sort particles protocol from Relion. """
 
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        cls.dataset = DataSet.getDataSet('relion_tutorial')
-        cls.partFn = cls.dataset.getFile('particles.star') # not ready yet
-        cls.partAvg = cls.dataset.getFile('import/averages.mrcs')
-        cls.partCl2dFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
-        cls.partCl3dFn = cls.dataset.getFile('import/classify3d/extra/relion_it015_data.star')
-        #FIXME: import from completed relion 3d refine run is not working
-        #cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
-        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_it025_data.star')
-        cls.volFn = cls.dataset.getFile('import/refine3d/extra/relion_class001.mrc')
+        cls.ds = DataSet.getDataSet('relion_tutorial')
 
-    def ImportPart(self):
-        """ Import particles after relion autopicking and extraction.
-        """
+    def importParticles(self, partStar):
+        """ Import particles from Relion star file. """
         protPart = self.newProtocol(ProtImportParticles,
                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                    starFile=self.partFn,
+                                    starFile=partStar,
                                     magnification=10000,
                                     samplingRate=7.08,
                                     haveDataBeenPhaseFlipped=True
@@ -266,176 +258,62 @@ class TestRelionSortParticles(TestRelionBase):
         self.launchProtocol(protPart)
         return protPart
 
-    def ImportAvg(self):
-        """ Import averages used for relion autopicking.
-        """
+    def importAverages(self):
+        """ Import averages used for relion autopicking. """
+        partAvg = self.ds.getFile('import/averages.mrcs')
         protAvg = self.newProtocol(ProtImportAverages,
                                    importFrom=ProtImportParticles.IMPORT_FROM_FILES,
-                                   filesPath=self.partAvg,
-                                   samplingRate=7.08,
+                                   filesPath=partAvg,
+                                   samplingRate=7.08
                                    )
         self.launchProtocol(protAvg)
         return protAvg
 
-    def ImportPartCl2d(self):
-        """ Import particles after CL2D.
-        """
-        protCl2D = self.newProtocol(ProtImportParticles,
-                                    objLabel='from relion (classify 2d)',
-                                    importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                    starFile=self.partCl2dFn,
-                                    magnification=10000,
-                                    samplingRate=7.08,
-                                    haveDataBeenPhaseFlipped=True
-                                    )
-        self.launchProtocol(protCl2D)
-        self.checkOutput(protCl2D, 'outputParticles', ['outputParticles.hasAlignment2D()',
-                                                    'outputParticles.isPhaseFlipped()'])
-        self.checkOutput(protCl2D, 'outputClasses')
-        return protCl2D
-
-    def ImportPartCl3d(self):
-        """ Import particles after CL3D.
-        """
-        protCl3D = self.newProtocol(ProtImportParticles,
-                                    objLabel='from relion (classify 3d)',
-                                    importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                    starFile=self.partCl3dFn,
-                                    magnification=10000,
-                                    samplingRate=7.08,
-                                    haveDataBeenPhaseFlipped=True
-                                    )
-        self.launchProtocol(protCl3D)
-        self.checkOutput(protCl3D, 'outputParticles', ['outputParticles.hasAlignmentProj()',
-                                                       'outputParticles.isPhaseFlipped()'])
-        self.checkOutput(protCl3D, 'outputClasses')
-        return protCl3D
-
-    def ImportPartRef3d(self):
-        """ Import particles after Refine 3D.
-        """
-        protRef3D = self.newProtocol(ProtImportParticles,
-                                     objLabel='from relion (refine 3d)',
-                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                     starFile=self.partRef3dFn,
-                                     magnification=10000,
-                                     samplingRate=7.08,
-                                     haveDataBeenPhaseFlipped=True
-                                     )
-        self.launchProtocol(protRef3D)
-        return protRef3D
-
-    def ImportVol(self):
+    def importVolume(self):
+        volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
         protVol = self.newProtocol(ProtImportVolumes,
                                    objLabel='import volume',
-                                   filesPath=self.volFn,
+                                   filesPath=volFn,
                                    samplingRate=7.08)
         self.launchProtocol(protVol)
         return protVol
 
-    def test_relionSortAfterCl2D(self):
+    def test_afterCl2D(self):
+        partCl2dFn = self.ds.getFile(
+            'import/classify2d/extra/relion_it015_data.star')
+        importRun = self.importParticles(partCl2dFn)
+
         prot = self.newProtocol(ProtRelionSortParticles)
         prot.setObjLabel('relion - sort after cl2d')
-        importRun = self.ImportPartCl2d()
-        prot.inputParticles.set(importRun.outputParticles)
-        prot.inputReferences.set(importRun.outputClasses)
+        prot.inputSet.set(importRun.outputClasses)
         self.launchProtocol(prot)
 
-    def test_relionSortAfterCl3D(self):
+    def test_afterCl3D(self):
         prot = self.newProtocol(ProtRelionSortParticles)
         prot.setObjLabel('relion - sort after cl3d')
-        importRun = self.ImportPartCl3d()
-        prot.inputParticles.set(importRun.outputParticles)
-        prot.inputReferences.set(importRun.outputClasses)
+        partCl3dFn = self.ds.getFile(
+            'import/classify3d/extra/relion_it015_data.star')
+        importRun = self.importParticles(partCl3dFn)
+        prot.inputSet.set(importRun.outputClasses)
         self.launchProtocol(prot)
 
-    def test_relionSortAfterRef(self):
+    def test_after3DRefinement(self):
         prot = self.newProtocol(ProtRelionSortParticles)
         prot.setObjLabel('relion - sort after ref3d')
-        prot.inputParticles.set(self.ImportPartRef3d().outputParticles)
-        prot.inputReferences.set(self.ImportVol().outputVolume)
+        # FIXME: import from completed relion 3d refine run is not working
+        # partRef3dFn = self.ds.getFile('import/refine3d/extra/relion_data.star')
+        partRef3dFn = self.ds.getFile(
+            'import/refine3d/extra/relion_it025_data.star')
+        importRun = self.importParticles(partRef3dFn)
+        prot.inputParticles.set(importRun.outputParticles)
+        prot.inputReferences.set(self.importVolume().outputVolume)
         self.launchProtocol(prot)
 
-    def test_relionSortAfterPicking(self):
+    def test_afterPicking(self):
         prot = self.newProtocol(ProtRelionSortParticles)
         prot.setObjLabel('relion - sort after picking')
-        prot.inputParticles.set(self.ImportPart().outputParticles)
-        prot.inputReferences.set(self.ImportAvg().outputAverages)
+        partFn = self.ds.getFile('particles.star')
+        prot.inputParticles.set(self.importParticles(partFn).outputParticles)
+        prot.inputReferences.set(self.importAverages().outputAverages)
         self.launchProtocol(prot)
 
-
-        # class TestPolishParticles(TestRelionBase):
-#     @classmethod
-#     def setUpClass(cls):
-#         setupTestProject(cls)
-#         cls.dataset = DataSet.getDataSet('ribo_movies')
-#         cls.movies = cls.dataset.getFile('movies')
-#         cls.crdsDir = cls.dataset.getFile('posAllDir')
-#         cls.vol = cls.dataset.getFile('volume')
-#         cls.protImportVol = cls.runImportVolumes(cls.vol, 4.74)
-#     
-#     def test_polish(self):
-#         #First, import a set of movies
-#         print "Importing a set of movies..."
-#         protImport = self.newProtocol(ProtImportMovies,
-#                                       filesPath=self.movies,
-#                                       samplingRate=2.37, magnification=59000,
-#                                       voltage=300, sphericalAberration=2.0)
-#         protImport.setObjLabel('import movies')
-#         self.proj.launchProtocol(protImport, wait=True)
-#         self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
-#         
-#         print "Aligning the movies..."
-#         protAlignMov = self.newProtocol(ProtMovieAlignment, numberOfThreads=4)
-#         protAlignMov.inputMovies.set(protImport.outputMovies)
-#         protAlignMov.setObjLabel('align movies')
-#         self.proj.launchProtocol(protAlignMov, wait=True)
-#         self.assertIsNotNone(protAlignMov.outputMicrographs, "There was a problem aligning movies")
-#          
-#         print "Preprocessing the micrographs..."
-#         protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True,
-#                                           cropPixels=50, doDownsample=True, downFactor=2,
-#                                           numberOfThreads=4)
-#         protPreprocess.inputMicrographs.set(protAlignMov.outputMicrographs)
-#         protPreprocess.setObjLabel('crop and Down')
-#         self.proj.launchProtocol(protPreprocess, wait=True)
-#         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the crop")
-#          
-#         # Now estimate CTF on the micrographs
-#         print "Performing CTF Micrographs..."
-#         protCTF = self.newProtocol(ProtCTFFind, lowRes=0.03, highRes=0.31, numberOfThreads=4)
-#         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
-#         protCTF.setObjLabel('ctf')
-#         self.proj.launchProtocol(protCTF, wait=True)
-#         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
-#  
-#         print "Running Xmipp Import Coordinates"
-#         protPP = self.newProtocol(ProtImportCoordinates,
-#                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-#                                  filesPath=self.crdsDir,
-#                                  filesPattern='*.pos', boxSize=120, scale=0.5)
-#         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
-#         protPP.setObjLabel('Picking')
-#         self.launchProtocol(protPP)
-#         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
-#  
-#         print "Run extract particles with <Other> option"
-#         protExtract = self.newProtocol(XmippProtExtractParticles,
-#                                        boxSize=110, doInvert=True,
-#                                                  doFlip=False, numberOfThreads=4)
-#         protExtract.inputCoordinates.set(protPP.outputCoordinates)
-#         protExtract.ctfRelations.set(protCTF.outputCTF)
-#         protExtract.setObjLabel('extract particles')
-#         self.proj.launchProtocol(protExtract, wait=True)
-#         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-#         
-#         print "Run Relion Refine"
-#         proRef = self.newProtocol(ProtRelionRefine3D,
-#                                   initialLowPassFilterA=40, maskDiameterA=500,
-#                                   numberOfMpi=8, numberOfThreads=2)
-#         proRef.inputParticles.set(protExtract.outputParticles)
-#         proRef.referenceVolume.set(self.protImportVol.outputVolume)
-#         proRef.setObjLabel('relion Refine')
-#         self.launchProtocol(proRef)
-#         self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
-#         self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
