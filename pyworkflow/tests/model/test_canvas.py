@@ -9,10 +9,13 @@ import Tkinter
 import math
 from pyworkflow.tests import *
 
+
 class TestCanvas(BaseTest):
     # IMPORTANT: Tk requires at least that DISPLAY is defined
     # hence in some environments (like buildbot) the test may fail,
     # check for the TclError exception
+    
+    _labels = [PULL_REQUEST] 
     
     @classmethod
     def setUpClass(cls):
