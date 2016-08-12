@@ -246,6 +246,23 @@ def _createErrorCtf3Fn(self, filename):
     f.close()
 
 
+def readShiftsMovieAlignment(shiftFn):
+    f = open(shiftFn)
+    xshifts = []
+    yshifts = []
+
+    for line in f:
+        l = line.strip()
+        if not l.startswith('#'):
+            parts = l.split()
+            if len(xshifts) == 0:
+                xshifts = [float(i) for i in parts]
+            else:
+                yshifts = [float(i) for i in parts]
+    f.close()
+    return xshifts, yshifts
+
+
 def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     movieAlignment=movie.getAlignment()
     shiftListX, shiftListY = movieAlignment.getShifts()
