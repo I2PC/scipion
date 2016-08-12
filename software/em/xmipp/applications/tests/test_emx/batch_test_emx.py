@@ -54,6 +54,9 @@ except ImportError:
     sys.stderr.write('Could not import OrderedDict, test not available')
 
 class TestEMX(unittest.TestCase):
+    
+    _labels = [WEEKLY]
+    
     testsPath = getXmippPath("resources", "test")
     def setUp(self):
         """This function performs all the setup stuff.      

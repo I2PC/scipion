@@ -122,11 +122,11 @@ class Step(OrderedObject):
     def getStatus(self):
         return self.status.get(STATUS_NEW)
     
-    def getElapsedTime(self):
+    def getElapsedTime(self, default=dt.timedelta()):
         """ Return the time that took to run 
         (or the actual running time if still is running )
         """
-        elapsed = None
+        elapsed = default
 
         if self.initTime.hasValue():
             t1 = self.initTime.datetime()

@@ -29,6 +29,7 @@ import unittest
 import threading
 import subprocess
 
+from pyworkflow.tests import *
 import pyworkflow.utils as pwutils
 
 import xmipp
@@ -66,6 +67,8 @@ class ProgramTest(unittest.TestCase):
     _testDir = None
     _environ = None
     _timeout = 300
+    
+    _labels = [WEEKLY]
                
     @classmethod
     def setTestDir(cls, newTestDir):
