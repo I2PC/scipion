@@ -187,52 +187,37 @@ class Tester():
             if moduleName.startswith('unittest.loader.ModuleImportFailure'):
                 print pwutils.red(moduleName), "  test:", t.id()
                 continue
-      
-            if (self.labels is not None):
-                
-                # Get class and create a new instance.
+
+            def _hasLabels():
+                if self.labels is None:
+                    return True
+
+                # Check if class has a label that matches input labels.
                 import importlib
                 my_module = importlib.import_module(moduleName)
                 MyClass = getattr(my_module, className)
 
-                # Check if class has a label that matches input labels.
-                if (pwtests.hasLabel(MyClass, self.labels)):
-                
-                    if moduleName != lastModule:
-                        lastModule = moduleName
-                        newItemCallback(MODULE, moduleName)
-                        #print "scipion test %s" % moduleName
-                        
-                    if mode in ['classes', 'all'] and className != lastClass:
-                        lastClass = className
-                        newItemCallback(CLASS, "%s.%s" % (moduleName, className))
-                        #print "  scipion test %s.%s" % (moduleName, className)
-                        
-                    if mode == 'all':
-                        newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
-                        #print "    scipion test %s.%s.%s" % (moduleName, className, testName)
-            else:
-                
+                return pwtests.hasLabel(MyClass, self.labels)
+
+            if _hasLabels():
+
                 if moduleName != lastModule:
                     lastModule = moduleName
                     newItemCallback(MODULE, moduleName)
-                    #print "scipion test %s" % moduleName
-                        
+
                 if mode in ['classes', 'all'] and className != lastClass:
                     lastClass = className
                     newItemCallback(CLASS, "%s.%s" % (moduleName, className))
-                    #print "  scipion test %s.%s" % (moduleName, className)
-                        
+
                 if mode == 'all':
                     newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
-                    #print "    scipion test %s.%s.%s" % (moduleName, className, testName)
 
         # If label is "pull" then add all basic xmipp tests.
         if (self.labels is not None):
             if PULL_REQUEST in self.labels:
-                self.discoverXmippTest( newItemCallback)
+                self.discoverXmippTest(newItemCallback)
         else:
-            self.discoverXmippTest( newItemCallback)
+            self.discoverXmippTest(newItemCallback)
     
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
