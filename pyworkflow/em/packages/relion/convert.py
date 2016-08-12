@@ -2,6 +2,7 @@
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Laura del Cano (ldelcano@cnb.csic.es)
+# *              Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -21,20 +22,15 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from itertools import izip
-"""
-This module contains converter functions that will serve to:
-1. Write from base classes to Relion specific files
-2. Read from Relion files to base classes
-"""
 
 import os
 from os.path import join, basename
 import numpy
 from collections import OrderedDict
+from itertools import izip
 
 from pyworkflow.object import ObjectWrap, String, Integer
 from pyworkflow.utils import Environ
@@ -57,6 +53,13 @@ COOR_DICT = OrderedDict([
              ("_x", md.RLN_IMAGE_COORD_X),
              ("_y", md.RLN_IMAGE_COORD_Y)
              ])
+
+COOR_EXTRA_LABELS = [
+    # Additional autopicking-related metadata
+    md.RLN_PARTICLE_AUTOPICK_FOM,
+    md.RLN_PARTICLE_CLASS,
+    md.RLN_ORIENT_PSI
+    ]
 
 CTF_DICT = OrderedDict([
        ("_defocusU", md.RLN_CTF_DEFOCUSU),
@@ -145,7 +148,7 @@ def relionToLocation(filename):
         return em.NO_INDEX, str(filename)
 
 
-def objectToRow(obj, row, attrDict, extraLabels={}):
+def objectToRow(obj, row, attrDict, extraLabels=[]):
     """ This function will convert an EMObject into a XmippMdRow.
     Params:
         obj: the EMObject instance (input)
@@ -175,7 +178,7 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
             row.setValue(label, value)
 
 
-def rowToObject(row, obj, attrDict, extraLabels={}):
+def rowToObject(row, obj, attrDict, extraLabels=[]):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
@@ -347,7 +350,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
     """ Set labels values from Coordinate coord to md row. """
     if copyId:
         setRowId(coordRow, coord)
-    objectToRow(coord, coordRow, COOR_DICT)
+    objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     #FIXME: THE FOLLOWING IS NOT CLEAN
     if coord.getMicId():
         coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
@@ -358,7 +361,7 @@ def rowToCoordinate(coordRow):
     # Check that all required labels are present in the row
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
-        rowToObject(coordRow, coord, COOR_DICT)
+        rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
             
         #FIXME: THE FOLLOWING IS NOT CLEAN
         try:
@@ -370,8 +373,8 @@ def rowToCoordinate(coordRow):
         
     return coord
 
-    
-def imageToRow(img, imgRow, imgLabel, **kwargs):
+
+def imageToRow(img, imgRow, imgLabel=md.RLN_IMAGE_NAME, **kwargs):
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
     preprocessImageRow = kwargs.get('preprocessImageRow', None)
@@ -416,7 +419,7 @@ def particleToRow(part, partRow, **kwargs):
         coordinateToRow(coord, partRow, copyId=False)
     if part.hasMicId():
         partRow.setValue(md.RLN_MICROGRAPH_ID, long(part.getMicId()))
-        # If the row does not contains the micrgraphs name
+        # If the row does not contains the micrograph name
         # use a fake micrograph name using id to relion
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
@@ -513,7 +516,7 @@ def setOfImagesToMd(imgSet, imgMd, imgToFunc, **kwargs):
     
     if 'alignType' not in kwargs:
         kwargs['alignType'] = imgSet.getAlignment()
-        
+
     for img in imgSet:
         objId = imgMd.addObject()
         imgRow = md.Row()
@@ -541,31 +544,50 @@ def writeSetOfParticles(imgSet, starFile,
 
     blockName = kwargs.get('blockName', 'Particles')
     partMd.write('%s@%s' % (blockName, starFile))
+
     
-    
-def writeReferences(inputSet, outputRoot):
-    """ Write an references star and stack files from
-    a given SetOfAverages or SetOfClasses2D.
+def writeReferences(inputSet, outputRoot, useBasename=False, **kwargs):
+    """
+    Write references star and stack files from SetOfAverages or SetOfClasses2D/3D.
+    Params:
+        inputSet: the input SetOfParticles to be converted
+        outputRoot: where to write the output files.
+        basename: If True, use the basename of the stack for setting path.
     """
     refsMd = md.MetaData()
     stackFile = outputRoot + '.stk'
-    baseStack = basename(stackFile)
+    stackName = basename(stackFile) if useBasename else stackFile
     starFile = outputRoot + '.star'
     ih = em.ImageHandler()
-     
+    row = md.Row()
+
+    def _convert(item, i, convertFunc):
+        index = i + 1
+        ih.convert(item, (index, stackFile))
+        item.setLocation(index, stackName)
+        convertFunc(item, row, **kwargs)
+        row.writeToMd(refsMd, refsMd.addObject())
+
     if isinstance(inputSet, em.SetOfAverages):
-        row = md.Row()
         for i, img in enumerate(inputSet):
-            ih.convert(img, (i+1, stackFile))
-            img.setLocation((i+1, baseStack)) # make the star with relative
-            particleToRow(img, row)
-            row.writeToMd(refsMd, refsMd.addObject())
-        refsMd.write(starFile)
-            
+            _convert(img, i, particleToRow)
+
     elif isinstance(inputSet, em.SetOfClasses2D):
-        pass
+        for i, rep in enumerate(inputSet.iterRepresentatives()):
+            _convert(rep, i, particleToRow)
+
+    elif isinstance(inputSet, em.SetOfClasses3D):
+        for i, rep in enumerate(inputSet.iterRepresentatives()):
+            _convert(rep, i, imageToRow)
+
+    elif isinstance(inputSet, em.SetOfVolumes):
+        for i, vol in enumerate(inputSet):
+            _convert(vol, i, imageToRow)
+
     else:
-        raise Exception('Invalid object type: %s' % type(inputSet)) 
+        raise Exception('Invalid object type: %s' % type(inputSet))
+
+    refsMd.write(starFile)
 
 
 def micrographToRow(mic, micRow, **kwargs):
@@ -769,7 +791,7 @@ def convertBinaryVol(vol, outputDir):
         vol: input volume object to be converted.
         outputDir: where to put the converted file(s)
     Return:
-        new file name of the volume (convrted or not).
+        new file name of the volume (converted or not).
     """
     
     ih = em.ImageHandler()

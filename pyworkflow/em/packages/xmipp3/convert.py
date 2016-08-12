@@ -56,6 +56,13 @@ COOR_DICT = OrderedDict([
              ("_y", xmipp.MDL_YCOOR) 
              ])
 
+COOR_EXTRA_LABELS = [
+    # Additional autopicking-related metadata
+    md.RLN_PARTICLE_AUTOPICK_FOM,
+    md.RLN_PARTICLE_CLASS,
+    md.RLN_ORIENT_PSI
+    ]
+
 CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
        ("_defocusV", xmipp.MDL_CTF_DEFOCUSV),
@@ -146,7 +153,7 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def objectToRow(obj, row, attrDict, extraLabels={}):
+def objectToRow(obj, row, attrDict, extraLabels=[]):
     """ This function will convert an EMObject into a XmippMdRow.
     Params:
         obj: the EMObject instance (input)
@@ -176,7 +183,7 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
             row.setValue(label, value)
             
 
-def rowToObject(row, obj, attrDict, extraLabels={}):
+def rowToObject(row, obj, attrDict, extraLabels=[]):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
@@ -436,7 +443,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
     """ Set labels values from Coordinate coord to md row. """
     if copyId:
         setRowId(coordRow, coord)
-    objectToRow(coord, coordRow, COOR_DICT)
+    objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     if coord.getMicId():
         coordRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
 
@@ -446,7 +453,7 @@ def rowToCoordinate(coordRow):
     # Check that all required labels are present in the row
     if _containsAll(coordRow, COOR_DICT):
         coord = Coordinate()
-        rowToObject(coordRow, coord, COOR_DICT)
+        rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
             
         # Setup the micId if is integer value
         try:
