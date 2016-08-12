@@ -354,23 +354,19 @@ class ProtUserSubSet(BatchProtocol):
         inputU = micrographsTiltPair.getUntilted()
         inputT = micrographsTiltPair.getTilted()
         outputU = SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
-        outputT = SetOfParticles(filename=self._getPath('mics_tilted.sqlite'))
+        outputT = SetOfMicrographs(filename=self._getPath('mics_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
 
-        for micPairI in modifiedSet:
-            untilted = micPairI.getUntilted()
-            tilted = micPairI.getTilted()
-
-            if micPairI.isEnabled():
-                micPairO = TiltPair()
-                micPairO.setUntilted(untilted)
-                micPairO.setTilted(tilted)
-                output.append(micPairO)
-                outputU.append(untilted)
-                outputT.append(tilted)
+        for micPair, u, t in izip(modifiedSet, inputU, inputT):
+            if micPair.isEnabled():
+                output.append(micPair)
+                outputU.append(u)
+                outputT.append(t)
         output.setUntilted(outputU)
         output.setTilted(outputT)
+        outputU.write()
+        outputT.write()
         # Register outputs
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict)
@@ -378,7 +374,7 @@ class ProtUserSubSet(BatchProtocol):
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
-        """ Create a subset of Micrographs Tilt Pair. """
+        """ Create a subset of Particles Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         
         inputU = particlesTiltPair.getUntilted()
@@ -387,7 +383,7 @@ class ProtUserSubSet(BatchProtocol):
         outputT = SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
-        
+
         modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
 
         for pair, u, t in izip(modifiedSet, inputU, inputT):
@@ -398,6 +394,8 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         output.setUntilted(outputU)
         output.setTilted(outputT)
+        outputU.write()
+        outputT.write()
         
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
