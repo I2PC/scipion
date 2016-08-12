@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement some wizards
-"""
 
 from pyworkflow.em.packages.xmipp3.constants import *
 
@@ -45,12 +42,7 @@ from pyworkflow.utils.utils import readProperties
 #===============================================================================
 
 class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
-    _targets = [
-#                 (ProtRelionClassify2D, ['backRadius']),
-#                 (ProtRelionRefine3D, ['backRadius']),
-#                 (ProtRelionClassify3D, ['backRadius']),
-#                 (ProtRelionClassify2D, ['backRadius']),
-                (ProtRelionPreprocessParticles, ['backRadius'])]
+    _targets = [(ProtRelionPreprocessParticles, ['backRadius'])]
     _unit = UNIT_PIXEL
     
     def _getProtocolImages(self, protocol):
@@ -81,22 +73,36 @@ class RelionPartMaskDiameterWizard(RelionBackRadiusWizard):
     _targets = [(ProtRelionClassify2D, ['maskDiameterA']),
                 (ProtRelionRefine3D, ['maskDiameterA']),
                 (ProtRelionClassify3D, ['maskDiameterA']),
-                (ProtRelionClassify2D, ['maskDiameterA']),
-                (ProtRelionSortParticles, ['maskDiameterA'])]
+                (ProtRelionClassify2D, ['maskDiameterA'])]
     _unit = UNIT_ANGSTROM
-    
+
     def _getParameters(self, protocol):
         protParams = RelionBackRadiusWizard._getParameters(self, protocol)
         # adjust to from diameter to radius
         protParams['value'] = protParams['value'] / 2
-        
-        return protParams 
-    
+
+        return protParams
+
     def setVar(self, form, label, value):
         # adjust again from radius to diameter
         form.setVar(label, value * 2)
 
-        
+
+# We need this specific wizard for the sort protocol because
+# this protocol have a particular way to grab the input images
+class RelionSortMaskWizard(RelionPartMaskDiameterWizard):
+    _targets = [(ProtRelionSortParticles, ['maskDiameterA'])]
+
+    def _getProvider(self, protocol):
+        particles = self._getParticles(protocol._allParticles(iterate=True))
+        return ListTreeProvider(particles)
+
+    def _getProtocolImages(self, protocol):
+        return None
+        #return protocol._allParticles(iterate=True)
+
+
+
 #===============================================================================
 # FILTER
 #===============================================================================
