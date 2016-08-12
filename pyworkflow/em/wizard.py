@@ -169,6 +169,7 @@ class EmWizard(Wizard):
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
     def __init__(self, objList=None):
+        TreeProvider.__init__(self)
         self.objList = objList
         self.getColumns = lambda: [('Object', 150)]
         self.getObjects = lambda: self.objList
