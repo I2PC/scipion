@@ -180,7 +180,11 @@ class ListTreeProvider(TreeProvider):
     
     def getText(self, obj):
         """ Get the text to display for an object. """
-        return os.path.basename(obj.getFileName())
+        index, fn = obj.getLocation()
+        name = os.path.basename(fn)
+        if index:
+            name = "%s@%s" % (index, name)
+        return name
     
     def getObjs(self):
         """ Get the objects. """
