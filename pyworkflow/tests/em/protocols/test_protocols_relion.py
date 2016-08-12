@@ -246,6 +246,17 @@ class TestRelionSortParticles(TestRelionBase):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
 
+        # FIXME
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.partFn = cls.dataset.getFile('import/particles.sqlite')
+        cls.partAvg = cls.dataset.getFile('import/averages.mrcs')
+        cls.partCl2dFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
+        cls.partCl3dFn = cls.dataset.getFile('import/classify3d/extra/relion_it015_data.star')
+        #FIXME: import from completed relion 3d refine run is not working
+        #cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
+        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_it025_data.star')
+        cls.volFn = cls.dataset.getFile('import/refine3d/extra/relion_class001.mrc')
+
     def importParticles(self, partStar):
         """ Import particles from Relion star file. """
         protPart = self.newProtocol(ProtImportParticles,
@@ -255,6 +266,20 @@ class TestRelionSortParticles(TestRelionBase):
                                     samplingRate=7.08,
                                     haveDataBeenPhaseFlipped=True
                                     )
+        self.launchProtocol(protPart)
+        return protPart
+
+    def importParticlesFromScipion(self):
+        partFn = self.ds.getFile('import/particles.sqlite')
+        protPart = self.newProtocol(ProtImportParticles,
+                                    objLabel='from xmipp extract (after relion auto-picking)',
+                                    importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                    sqliteFile=partFn,
+                                    magnification=10000,
+                                    samplingRate=7.08,
+                                    haveDataBeenPhaseFlipped=True
+                                    )
+
         self.launchProtocol(protPart)
         return protPart
 
@@ -305,15 +330,14 @@ class TestRelionSortParticles(TestRelionBase):
         partRef3dFn = self.ds.getFile(
             'import/refine3d/extra/relion_it025_data.star')
         importRun = self.importParticles(partRef3dFn)
-        prot.inputParticles.set(importRun.outputParticles)
-        prot.inputReferences.set(self.importVolume().outputVolume)
+        prot.inputSet.set(importRun.outputParticles)
+        prot.referenceVolume.set(self.importVolume().outputVolume)
         self.launchProtocol(prot)
 
     def test_afterPicking(self):
         prot = self.newProtocol(ProtRelionSortParticles)
         prot.setObjLabel('relion - sort after picking')
-        partFn = self.ds.getFile('particles.star')
-        prot.inputParticles.set(self.importParticles(partFn).outputParticles)
-        prot.inputReferences.set(self.importAverages().outputAverages)
+        prot.inputSet.set(self.importParticlesFromScipion().outputParticles)
+        prot.referenceAverages.set(self.importAverages().outputAverages)
         self.launchProtocol(prot)
 
