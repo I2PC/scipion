@@ -1408,7 +1408,7 @@ class RelionSortViewer(Viewer):
     """ Wrapper to visualize Relion sort protocol results
     """
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtRelionSortParticles, SetOfImages]
+    _targets = [ProtRelionSortParticles]
 
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -1425,12 +1425,12 @@ class RelionSortViewer(Viewer):
 
         if issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
-            labels = 'id enabled _index _filename _rlnParticleSelectZScore _coordinate._rlnAutopickFigureOfMerit '
+            labels = 'id enabled _index _filename _rlnSelectParticlesZscore _coordinate._rlnAutopickFigureOfMerit '
             labels += '_sampling _ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
             self._views.append(em.ObjectView(self._project, obj.strId(), fn,
                                           viewParams={showj.ORDER: labels,
                                                       showj.VISIBLE: labels,
-                                                      'sortby': '_rlnParticleSelectZScore asc',
+                                                      'sortby': '_rlnSelectParticlesZscore asc',
                                                       showj.RENDER:'_filename'}))
 
         if issubclass(cls, ProtRelionSortParticles):
