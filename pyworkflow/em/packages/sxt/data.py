@@ -38,9 +38,9 @@ class TiltSeries(em.Image):
     def __init__(self, **kwargs):        
         em.Image.__init__(self, **kwargs)
         self._angles = pwobj.CsvList(pType=float)
-        self._focalSeries = None
+        self._size = pwobj.Integer(0)
         self._acquisition = XrayAcquisition()
-        self._size = pwobj.Integer(0)      
+        self._focalSeries = FocalSeries()
         
     def getAngles(self):
         return self._angles.get()
@@ -51,25 +51,24 @@ class TiltSeries(em.Image):
             angles: Python list with angles. """
         self._angles.set(angles)
     
-    def hasXrayAcquisition(self):
-        return (self._acquisition is not None and
-                self._acquisition.getLensLabel() is not None and
-                self._acquisition.getEnergy() is not None and
-                self._acquisition.getDate() is not None        
-                )
-        
-    def getXrayAcquisition(self):
-        return self._acquisition
-
-    def setXrayAcquisition(self, acquisition):
-        self._acquisition = acquisition
-        
     def getSize(self):
         return  self._size.get()   
     
     def setSize(self, value):
         self._size.set(value)             
     
+    def getXrayAcquisition(self):
+        return self._acquisition
+
+    def setXrayAcquisition(self, acquisition):
+        self._acquisition = acquisition
+        
+    def getFocalSeries(self):
+        return self._focalSeries
+
+    def setFocalSeries(self, focalSeries):
+        self._focalSeries = focalSeries 
+        
 class XrayAcquisition(em.EMObject):
     """Soft Xray acquisition information"""
     def __init__(self, **kwargs):
@@ -100,27 +99,66 @@ class XrayAcquisition(em.EMObject):
         self._date.set(value)
         
     def __str__(self):
-        return "\n    lensLabel=%s\n    energy= %f\n    date=%d\n\n" % (
+        return "\n    lensLabel=%s\n    energy= %f\n    date=%s\n\n" % (
                 self._lensLabel.get(),
                 self._energy.get(),
                 self._date.get()
                 )
     
-#class FocalSeries(em.EmObject):
-#    ITEM_TYPE = TiltSeries
+class FocalSeries(em.EMObject):
    
-#    def __init__(self, **kwargs):
-#        TiltSeries.__init__(self, **kwargs)
+    def __init__(self, **kwargs):
+        em.EMObject.__init__(self, **kwargs)
+        self._tiltSeriesGroup = pwobj.Integer(kwargs.get('tiltSeriesGroup', None))
+        self._index = pwobj.Integer(kwargs.get('index', None))
+        self._defocus = pwobj.Float(kwargs.get('defocus', None))
+        self._reference = pwobj.Integer(kwargs.get('reference', None))
         
-
-    #def append(self, image):
-    #    """ Add a image to the set. """
-    #    if self.hasXrayAcquisition(): 
-    #        self.setXrayAcquisition(self.getXrayAcquisition())
-    #    if self.getSize() == 0: 
-    #        if self._firstDim.isEmpty():
-    #            self._firstDim.set(image.getDim())
-    #    em.EMSet.append(self, image)   
+    def copyInfo(self, other):
+        self.copyAttributes(other, '_tiltSeriesGroup', '_index', '_defocus', '_reference')
+    
+    def gettiltSeriesGroup(self):
+        return self._tiltSeriesGroup.get()
+    
+    def settiltSeriesGroup(self, tiltSeriesGroup):
+        self._tiltSeriesGroup.set(tiltSeriesGroup)
         
+    def getIndex(self):
+        return self._index.get()
+    
+    def setIndex(self, index):
+        self._index.set(index)
+        
+    def getDefocus(self):
+        return self._defocus.get()
+    
+    def setDefocus(self, defocus):
+        self._defocus.set(defocus)
+        
+    def getReference(self):
+        return  self._reference.get()   
+    
+    def setReference(self, reference):
+        self._reference.set(reference)
+        
+    def __str__(self):
+        return "\n    tiltSeriesGroup = %d\n index = %d\n    defocus = %d\n    reference = %d\n\n" % (
+                self._index.get(),
+                self._defocus.get(),
+                self._reference.get()
+                )
 
+class SetOfTiltSeries(em.SetOfImages):
+    
+    ITEM_TYPE = TiltSeries
+    
+    def __init__(self, **kwargs):        
+        em.SetOfImages.__init__(self, **kwargs)
+        
+    def append(self, tiltSeries):
+        """ Add a tilt series to the set. """
+        if self.getSize() == 0: # only check this for first time append is called
+            if self._firstDim.isEmpty():
+                self._firstDim.set(tiltSeries.getDim())
+        em.EMSet.append(self, tiltSeries)
 
