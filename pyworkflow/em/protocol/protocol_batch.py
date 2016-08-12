@@ -20,14 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains protocols that are launched
-through other GUI (such as showj) and that
-are called "batch" protocols.
-"""
 
 import os
 from itertools import izip
@@ -350,7 +345,8 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
         """ Create a subset of Micrographs Tilt Pair. """
         output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
-        modifiedSet = MicrographsTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = MicrographsTiltPair(filename=self._dbName,
+                                          prefix=self._dbPrefix)
         inputU = micrographsTiltPair.getUntilted()
         inputT = micrographsTiltPair.getTilted()
         outputU = SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
@@ -365,8 +361,6 @@ class ProtUserSubSet(BatchProtocol):
                 outputT.append(t)
         output.setUntilted(outputU)
         output.setTilted(outputT)
-        outputU.write()
-        outputT.write()
         # Register outputs
         outputDict = {'outputMicrographsTiltPair': output}
         self._defineOutputs(**outputDict)
@@ -384,7 +378,8 @@ class ProtUserSubSet(BatchProtocol):
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
 
-        modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = ParticlesTiltPair(filename=self._dbName,
+                                        prefix=self._dbPrefix)
 
         for pair, u, t in izip(modifiedSet, inputU, inputT):
             if pair.isEnabled():
@@ -394,9 +389,7 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         output.setUntilted(outputU)
         output.setTilted(outputT)
-        outputU.write()
-        outputT.write()
-        
+
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
         self._defineTransformRelation(particlesTiltPair, output)
@@ -486,7 +479,9 @@ class ProtCreateMask(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created mask %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created mask %s'
+                       % (self.getObjectTag("inputObj"),
+                          self.getObjectTag("outputMask")))
         return summary
         
     def _methods(self):
@@ -507,7 +502,9 @@ class ProtCreateFSC(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created fsc %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created fsc %s'
+                       % (self.getObjectTag("inputObj"),
+                          self.getObjectTag("outputMask")))
         return summary
 
     def _methods(self):
