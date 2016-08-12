@@ -58,7 +58,7 @@ class ProtRelionSortParticles(ProtParticles):
                            ' classes. Particles should have at least in-plane '
                            'alignment parameters and class assignment.')
 
-        form.addParam('referenceAverage', PointerParam,
+        form.addParam('referenceAverages', PointerParam,
                       pointerClass="SetOfAverages",
                       condition='inputSet and isInputAutoPicking',
                       label='Reference 2D averages',
@@ -127,10 +127,10 @@ class ProtRelionSortParticles(ProtParticles):
 
     def _insertAllSteps(self):
         self._createFilenameTemplates()
-        refAvg = self.referenceAverage.get()
+        refAvg = self.referenceAverages.get()
         avgId = refAvg.getObjId() if refAvg is not None else None
         refVol = self.referenceVolume.get()
-        volId = refVol.getObjId() if refAvg is not None else None
+        volId = refVol.getObjId() if refVol is not None else None
 
         self._insertFunctionStep('convertInputStep',
                                  self.inputSet.get().getObjId(), avgId, volId)
@@ -175,43 +175,37 @@ class ProtRelionSortParticles(ProtParticles):
         self.info("Converting set from '%s' into '%s'"
                   % (inputSet.getFileName(), imgStar))
 
-        kwargs = {}
+        refSet = None
         # case refine3D
-        if self.isInputAutoRefine():
-            em.ImageHandler().convert(self.referenceVolume.get(),
-                                   self._getFileName('input_refvol'))
-            kwargs['alignType'] = em.ALIGN_PROJ
-        else:
-            if self.isInputAutoPicking():
-                refSet = self.inputReferences.get()
-            else:
-                refSet = self.inputSet.get() # 2D or 3D classes
+        if self.isInputClasses():
+            refSet = self.inputSet.get()  # 2D or 3D classes
 
+        else:
+            if self.isInputAutoRefine():
+                em.ImageHandler().convert(self.referenceVolume.get(),
+                                       self._getFileName('input_refvol'))
+            else: # Autopicking case
+                refSet = self.referenceAverages.get()
+
+        self.classDict = {}
+
+        if refSet:
             self.info("Converting reference from '%s' into %s"
                       % (refSet.getFileName(), refStar))
+
+            # Compute class mapping
+            classList = [cls.getObjId() for cls in refSet]
+            classList.sort()
+            for i, c in enumerate(classList):
+                self.classDict[c] = i + 1
+
             writeReferences(refSet, removeExt(refStar),
                             postprocessImageRow=self._updateClasses)
 
         # Write particles star file
-        particlesIter = self._allParticles(iterate=False)
-        writeSetOfParticles(particlesIter, imgStar, self._getPath(),
-                            postprocessImageRow=self._resetClasses)
-        # self.classesList = []
-        #
-        # for img in inputSet:
-        #     # Take classId from img
-        #     classId = img.getClassId()
-        #     if not classId in self.classesList:
-        #         self.classesList.append(classId)
-        # self.classesList.sort()
-
-        # # case auto-pick, no classIds
-        # elif self.classesList[0] == None:
-        #     writeSetOfParticles(inputSet, imgStar, self._getPath())
-        # # case cl2d or cl3d
-        # else:
-        #     writeSetOfParticles(imgSet, imgStar, self._getPath(),
-        #                         postprocessImageRow=self._postProcessImageRow)
+        allParticles = self._allParticles(iterate=False)
+        writeSetOfParticles(allParticles, imgStar, self._getPath(),
+                            postprocessImageRow=self._postProcessImageRow)
 
     def runRelionStep(self, params):
         """ Execute relion steps with given params. """
@@ -256,19 +250,22 @@ class ProtRelionSortParticles(ProtParticles):
     #--------------------------- UTILS functions -------------------------------
     def _allParticles(self, iterate=False):
         # A handler function to iterate over the particles
+        inputSet = self.inputSet.get()
+
         if self.isInputClasses():
-            iterParticles = self.inputSet.get().iterClassItems()
+            iterParticles = inputSet.iterClassItems()
             if iterate:
                 return iterParticles
             else:
                 particles = SetOfParticles(filename=":memory:")
+                particles.copyInfo(inputSet.getFirstItem())
                 particles.copyItems(iterParticles)
                 return particles
         else:
             if iterate:
-                return self.inputSet.get().iterItems()
+                return inputSet.iterItems()
             else:
-                return self.inputSet.get()
+                return inputSet
 
     def _sampleParticles(self):
         """ Return the input particles set, or the first class
@@ -315,26 +312,19 @@ class ProtRelionSortParticles(ProtParticles):
         return program
 
     def _postProcessImageRow(self, img, imgRow):
-        if img.hasClassId() and imgRow.hasLabel(md.RLN_PARTICLE_AUTOPICK_FOM):
-            # classId from classification has higher priority then autopick classId
-            imgRow.setValue(md.RLN_PARTICLE_CLASS, int(img.getClassId()))
+        if self.classDict:
+            classId = img.getClassId() or imgRow.getValue(md.RLN_PARTICLE_CLASS)
+            newClassId = self.classDict[classId]
+        else:
+            newClassId = 1
 
-        #now renumber classes
-        classId = imgRow.getValue(md.RLN_PARTICLE_CLASS)
-        newClassId = [i for i, x in enumerate(self.classesList) if x == classId]
-        #print "oldcls=", classId, "newcls=", newClassId[0] + 1
-        imgRow.setValue(md.RLN_PARTICLE_CLASS, newClassId[0] + 1)
+        imgRow.setValue(md.RLN_PARTICLE_CLASS, newClassId)
 
     def _updateClasses(self, img, imgRow):
         index, _ = img.getLocation()
         # renumber class numbers
         imgRow.setValue(md.RLN_PARTICLE_CLASS, int(index))
 
-    def _resetClasses(self, img, imgRow):
-        # after auto-refine 3D we have just 1 class
-        imgRow.setValue(md.RLN_PARTICLE_CLASS, 1)
-
     def _updateZScore(self, img, imgRow):
-        # TODO: Take the ZScore from imgRow
         zscore = imgRow.getValue(md.RLN_SELECT_PARTICLES_ZSCORE)
         img._rlnSelectParticlesZscore = pwobj.Float(zscore)
