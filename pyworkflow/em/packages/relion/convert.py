@@ -22,20 +22,15 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-from itertools import izip
-"""
-This module contains converter functions that will serve to:
-1. Write from base classes to Relion specific files
-2. Read from Relion files to base classes
-"""
 
 import os
 from os.path import join, basename
 import numpy
 from collections import OrderedDict
+from itertools import izip
 
 from pyworkflow.object import ObjectWrap, String, Integer
 from pyworkflow.utils import Environ
@@ -378,8 +373,8 @@ def rowToCoordinate(coordRow):
         
     return coord
 
-    
-def imageToRow(img, imgRow, imgLabel, **kwargs):
+
+def imageToRow(img, imgRow, imgLabel=md.RLN_IMAGE_NAME, **kwargs):
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
     preprocessImageRow = kwargs.get('preprocessImageRow', None)
