@@ -17,29 +17,21 @@ TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
+SMALL = 'small'
 PULL_REQUEST = 'pull'
 DAILY = 'daily'
 WEEKLY = 'weekly'
 
+
 # Procedure to check if a test class has an attribute called _labels and if so
 # then it checks if the class test matches any of the labels in input label parameter.
-def hasLabel(TestClass, label):
+def hasLabel(TestClass, labels):
     
     # Get _labels attributes in class if any.
     classLabels = getattr(TestClass, '_labels', None)
 
     # Check if no label in test class.    
-    if classLabels is None:
-        labelExists = False
-    else:
-        # Check if any of the class labels matches.
-        for i in classLabels:
-            for j in label:
-                if (i == j):
-                    labelExists = True
-                else:
-                    labelExists = False
-    return labelExists
+    return classLabels is not None and any(l in classLabels for l in labels)
 
 
 class DataSet:
