@@ -3,6 +3,7 @@ package xmipp.viewer.particlepicker.training.gui;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import xmipp.jni.Particle;
@@ -181,8 +182,44 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
         if (refresh) refresh();
     }
 
-    // Erases having a larger point (square in this case)
     protected void erase(int x, int y, MouseEvent e)
+    {
+        // Get the eraser size and coordinates and apply zoom
+        int size = getFrame().getEraserSize();
+        double distance = size/getMagnification();
+
+        int cursorX = (int) (e.getX()/getMagnification());
+        int cursorY = (int) (e.getY()/getMagnification());
+
+        List<ManualParticle> particlesToDelete = new ArrayList<ManualParticle>();
+        // Go through the list of particles
+        for (ManualParticle particle : getMicrograph().getParticles()) {
+
+            // if particle is within the distance (inside eraser)
+            int length = length(particle.getX(),particle.getY(), cursorX, cursorY);
+
+            System.out.println("Particle at " + particle.getX() + ", " + particle.getY() + " is " + length + " from cursor: " + cursorX + ", " + cursorY);
+            System.out.println("Radius = " + distance);
+            if (length <= distance){
+                particlesToDelete.add(particle);
+            }
+        }
+
+        // For each particle to delete
+        for (ManualParticle particle : particlesToDelete) {
+            getMicrograph().removeParticle(particle,getParticlePicker());
+        }
+
+        refresh();
+    }
+
+    private int length (int x, int y, int x1, int y1) {
+
+        return (int) Math.ceil(Math.sqrt(Math.pow((x - x1), 2) + Math.pow((y - y1), 2)));
+
+    }
+    // Erases having a larger point (square in this case)
+    protected void eraseOld(int x, int y, MouseEvent e)
     {
 
         int particleSize = getFrame().getSide();
@@ -409,6 +446,8 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
         if (getFrame().isLinearMode()){
             paintLine(e);
+        } else if (getFrame().isEraserMode()){
+            paintEraser(e);
         }
     }
 
@@ -437,6 +476,22 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
             g.setColor(Color.YELLOW);
             g.drawLine(getXOnImage(this.linearPickingStartPoint.x), getYOnImage(this.linearPickingStartPoint.y), e.getX(),e.getY());
         }
+
+    }
+
+    private void paintEraser(MouseEvent e){
+
+        Graphics g = this.getGraphics();
+
+        // Repaint
+        this.paint(g);
+        // Draw a circle from the center
+        g.setColor(Color.YELLOW);
+        int r = getFrame().getEraserSize();
+        int x = e.getX()-(r/2);
+        int y = e.getY()-(r/2);
+
+        g.drawOval(x,y,r,r);
 
     }
 }

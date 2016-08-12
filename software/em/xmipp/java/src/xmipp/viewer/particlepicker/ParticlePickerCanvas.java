@@ -68,27 +68,6 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		micrograph.runImageJFilters(picker.getFilters());
 
         addKeyListener(this);
-//      addKeyListener(new KeyListener()
-//		{
-//
-//			@Override
-//			public void keyTyped(KeyEvent arg0)
-//			{
-//			}
-//
-//			@Override
-//			public void keyReleased(KeyEvent arg0)
-//			{
-//			}
-//
-//			@Override
-//			public void keyPressed(KeyEvent e)
-//			{
-//				ParticlePickerCanvas.this.keyPressed(e);
-//
-//			}
-//		});
-
 		addMouseMotionListener(this);
 
 		this.iw = new XmippImageWindow(getImage(), this, null);
@@ -136,10 +115,13 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			tongleSetSelected = !tongleSetSelected;
 		}else if (code == ParticlePickerJFrame.TOGGLE_ERASE_MODE_KEY){
             // Toggle erase mode.
-            getFrame().toogleEraseMode();
+            getFrame().activateEraseMode();
         }else if (code == ParticlePickerJFrame.TOGGLE_LINEAR_MODE_KEY){
             // Toggle linear mode
-            getFrame().toogleLinearMode();
+            getFrame().activateLinearMode();
+        }else if (code == ParticlePickerJFrame.TOGGLE_NORMAL_MODE_KEY){
+            // Toggle linear mode
+            getFrame().activateNormalMode();
 
         }else if (code == KeyEvent.VK_PLUS){
             changePickingCursor((byte) (pickingCursorIndex+1));
@@ -164,7 +146,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 
     private Cursor getPickingCursor(int index) {
 
-        String pickingCursorImageName = "picking" + index + ".png";
+        String pickingCursorImageName = "pickingC" + index + ".png";
 
         ImageIcon icon = XmippResource.getIcon(pickingCursorImageName);
 
@@ -470,10 +452,7 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 			active.getParticleCanvas(getFrame()).repaint();
 	}
 
-	
-
-	public void paint(Graphics g)
-	{
+	public void paint(Graphics g) {
 		Graphics offgc;//Off screen graphic
 		Image offscreen = null;//Off screen image
 		Dimension d = getSize();
@@ -489,11 +468,8 @@ public abstract class ParticlePickerCanvas extends XmippImageCanvas
 		//drawing offscreen image
 		g.drawImage(offscreen, 0, 0, this);
 	}
-	
 
 	protected abstract void doCustomPaint(Graphics2D g2);
-        
-   
          
     public abstract ParticlePicker getParticlePicker();
 

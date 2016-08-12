@@ -5,12 +5,7 @@ import ij.ImageListener;
 import ij.ImagePlus;
 import ij.plugin.frame.Recorder;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -69,14 +64,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
     public static final int TOGGLE_LINEAR_MODE_KEY = KeyEvent.VK_L;
     public static final int TOGGLE_ERASE_MODE_KEY = KeyEvent.VK_E;
+    public static final int TOGGLE_NORMAL_MODE_KEY = KeyEvent.VK_P;
     protected ParticlesDialog particlesdialog;
 
 	protected JMenuItem ijmi;
 	protected JToggleButton circlechb;
 	protected JToggleButton rectanglechb;
-	protected JFormattedTextField sizetf;
 	protected JToggleButton centerchb;
-	protected JPanel shapepn;
+	protected JLabel shapelb;
 	protected JMenuItem savemi;
 	protected JMenuItem hcontentsmi;
 	protected JMenuItem pmi;
@@ -84,9 +79,19 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem exportmi;
 	protected JMenu filtersmn;
 	protected String activefilter;
+
+    // Particle size
 	protected JSlider sizesl;
 	protected JPanel sizepn;
-	private List<JCheckBoxMenuItem> mifilters;
+    protected JLabel sizelb;
+    protected JFormattedTextField sizetf;
+
+    // Eraser size
+    protected JPanel eSizepn;
+    protected JLabel eSizelb;
+    protected JSpinner eSize;
+
+    private List<JCheckBoxMenuItem> mifilters;
 	protected JMenu filemn;
 	protected JMenuItem importmi;
 	protected JButton colorbt;
@@ -98,12 +103,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected JMenuItem exitmi;
 	protected JLabel positionlb;
 	protected JToggleButton usezoombt;
-	private JToggleButton eraserbt;
 
-    protected NoneSelectedButtonGroup modesgrp;
+    // MODES
+    protected ButtonGroup modesgrp; // buttons group
+    private JToggleButton normalPickingbt;// Linear picking
+    private JToggleButton linearPickingbt;// Linear picking
+    private JToggleButton eraserbt; // Erase button
 
-    // Linear picking
-    private JToggleButton linearPickingbt;
+    // Linear picking parameters
     private JPanel steppn;
     private JLabel steplb;
     private JFormattedTextField steptf;
@@ -116,9 +123,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     protected ResourceBundle bundle;
     protected String command;
     protected JButton closebt;
-
-	protected JLabel sizelb;
-
 
 	public ParticlePickerJFrame(ParticlePicker picker)
 	{
@@ -153,6 +157,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                             resetMicrograph();
                     }
                 });
+
+                // Create the text button
+                createZoomButton();
                 
                 savebt = XmippWindowUtil.getTextIconButton(bundle.getString("save"), "save.gif", new ActionListener()
                 {
@@ -458,21 +465,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		addFilterMenuItem(XmippImageJ.bandPassFilter, true, picker);
 		addFilterMenuItem(XmippImageJ.enhanceContrastFilter, true, picker);
 		addFilterMenuItem(XmippImageJ.brightnessContrastFilter, true, picker);
-
-//		JCheckBoxMenuItem admi = addFilterMenuItem(XmippImageJ.anisotropicDiffFilter, false, picker);
-//		admi.addActionListener(new ActionListener()
-//		{
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e)
-//			{
-//				activefilter = "8-bit";
-//				IJ.run(activefilter);
-//				activefilter = ((JCheckBoxMenuItem) e.getSource()).getText();
-//				IJ.run(activefilter);
-//			}
-//		});
-		addFilterMenuItem(XmippImageJ.invertLUTFilter, true, picker);
+        addFilterMenuItem(XmippImageJ.invertLUTFilter, true, picker);
 		addFilterMenuItem(XmippImageJ.substractBackgroundFilter, true, picker);
         addFilterAppliedListener();
 	}
@@ -711,74 +704,116 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected void initShapePane()
 	{
 
-		shapepn = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		ShapeItemListener shapelistener = new ShapeItemListener();
-        shapepn.add(new JLabel("Shape:"));
-        Icon icon = XmippResource.getIcon("circle.png");
-		circlechb = new JToggleButton(icon);
-		//circlechb.setSelected(true);
-		circlechb.addItemListener(shapelistener);
-                
-		rectanglechb = new JToggleButton(XmippResource.getIcon("square.png"));
-        rectanglechb.setPreferredSize(null);
-		rectanglechb.setSelected(true);
-		rectanglechb.addItemListener(shapelistener);
+		ShapeItemListener shapeListener = new ShapeItemListener();
+        shapelb = new JLabel("Shape:");
+        tb.add(shapelb);
 
-		centerchb = new JToggleButton(XmippResource.getIcon("plus.png"));
-		centerchb.setSelected(true);
-		centerchb.addItemListener(shapelistener);
-
-		shapepn.add(circlechb);
-		shapepn.add(rectanglechb);
-		shapepn.add(centerchb);
+        // Add shapes buttons
+        circlechb = addShapeButton("circle.png", shapeListener);
+        rectanglechb = addShapeButton("square.png", shapeListener);
+        centerchb = addShapeButton("plus.png", shapeListener);
 
 	}
+    private JToggleButton addShapeButton(String iconName, ShapeItemListener listener){
+        Icon icon = XmippResource.getIcon(iconName);
+        JToggleButton button = new JToggleButton("", icon);
+        button.setSelected(true);
+        button.addItemListener(listener);
+        tb.add(button);
 
+
+        return button;
+    }
+
+    private void createZoomButton(){
+
+        usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
+        usezoombt.setToolTipText("Keep zoom");
+        usezoombt.setFocusable(false);
+        usezoombt.setSelected(true);
+        usezoombt.addActionListener(new ActionListener()
+        {
+
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if(!usezoombt.isSelected())
+                    getParticlePicker().setZoom(-1);
+            }
+        });
+    }
+
+    private JToggleButton createModeButton(String iconName, int mnemonic, ItemListener itemListener){
+
+        JToggleButton button = new JToggleButton("", XmippResource.getIcon(iconName));
+        button.addItemListener(itemListener);
+        modesgrp.add(button);
+        //button.setMnemonic(mnemonic);
+        tb.add(button);
+
+        return button;
+    }
 	public void initToolBar()
 	{
 		tb = new JToolBar();
-
 		tb.setFloatable(false);
-                
-		usezoombt = new JToggleButton("-1", XmippResource.getIcon("zoom.png"));
-		usezoombt.setToolTipText("Keep zoom");
-		usezoombt.setFocusable(false);
-        usezoombt.setSelected(true);
-        usezoombt.addActionListener(new ActionListener()
-		{
-			
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if(!usezoombt.isSelected())
-					getParticlePicker().setZoom(-1);
-			}
-		});
-		tb.add(usezoombt);
-        initShapePane();
-        tb.add(shapepn);
-		initSizePane();
-		tb.add(sizepn);
-		if (!(this instanceof ExtractPickerJFrame))
-		{
-			initColorPane(getParticlePicker().getColor());
-			tb.add(colorpn);
-            modesgrp = new NoneSelectedButtonGroup();
-			eraserbt = new JToggleButton(bundle.getString("eraser"), XmippResource.getIcon("eraser.png"));
-            modesgrp.add(eraserbt);
-            eraserbt.setMnemonic(TOGGLE_ERASE_MODE_KEY);
-			tb.add(eraserbt);
-		}
+        tb.setBackground(this.color);
 
+
+        // To group modes buttons
+        modesgrp = new ButtonGroup();
+
+        // Create an ItemListener to listen to mode changes
+        ItemListener changeListener = new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent itemEvent) {
+                System.out.print(itemEvent.toString());
+                showHideModeParameters();
+            }
+        };
+
+        // Add the normal picking mode
+        normalPickingbt = createModeButton("picking.png",TOGGLE_NORMAL_MODE_KEY, changeListener);
+
+        // If it's supervised picking.
         if ((this instanceof SupervisedPickerJFrame))
         {
-            linearPickingbt = new JToggleButton(bundle.getString("linearPicking"), XmippResource.getIcon("linearPicking.png"));
-            linearPickingbt.setMnemonic(TOGGLE_LINEAR_MODE_KEY);
-            modesgrp.add(linearPickingbt);
-            tb.add(linearPickingbt);
+            // Linear picking mode
+            linearPickingbt = createModeButton("linearPicking.png",TOGGLE_LINEAR_MODE_KEY, changeListener);
+
+            // Step pane
             initStepPane();
-            tb.add(steppn);
         }
+
+        // Eraser modes
+        if (!(this instanceof ExtractPickerJFrame))
+        {
+            // Add eraser
+            eraserbt = createModeButton("eraser.png",TOGGLE_ERASE_MODE_KEY, changeListener);
+
+            // Color pane
+            initColorPane(getParticlePicker().getColor());
+
+            // Eraser size pane
+            initEraserSizePane();
+
+        }
+
+        tb.addSeparator();
+
+        // Size pane
+        initSizePane();
+        tb.add(sizepn);
+
+        // Shape pane
+        initShapePane();
+
+        // Add color
+        if (colorbt != null) tb.add(colorpn);
+
+        // Add step
+        if (steppn != null)  tb.add(steppn);
+
 	}
 
 	public boolean isEraserMode()
@@ -792,10 +827,16 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         return eraserbt != null;
     }
 
-    public void toogleEraseMode(){
-        if (eraseAvailable()){
-            eraserbt.setSelected(!eraserbt.isSelected());
-            getCanvas().setCustomCursor();
+    public void activateEraseMode(){
+        if (eraseAvailable()) {
+
+            if (isEraserMode()) {
+                activateNormalMode();
+            } else {
+                eraserbt.setSelected(true);
+                getCanvas().setCustomCursor();
+                showHideModeParameters();
+            }
         }
     }
 
@@ -807,17 +848,44 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         }
     }
 
-    public void toogleLinearMode(){
-        if (linearModeAvailable()){
-            linearPickingbt.setSelected(!linearPickingbt.isSelected());
-            ((SupervisedPickerCanvas)getCanvas()).resetLinearPicking();
-            getCanvas().setCustomCursor();
+    public boolean isNormalMode() {
+
+        return normalPickingbt.isSelected();
+    }
+
+    public void activateLinearMode(){
+        if (linearModeAvailable()) {
+
+            if (isLinearMode()) {
+                activateNormalMode();
+            } else {
+                linearPickingbt.setSelected(true);
+                showHideModeParameters();
+                ((SupervisedPickerCanvas) getCanvas()).resetLinearPicking();
+                getCanvas().setCustomCursor();
+            }
         }
     }
 
+    public void activateNormalMode(){
+
+        normalPickingbt.setSelected(true);
+        showHideModeParameters();
+        getCanvas().setCustomCursor();
+
+
+    }
 
     protected boolean linearModeAvailable() {
         return linearPickingbt != null;
+    }
+
+    public int getEraserSize(){
+        if (isEraserMode()){
+            return (int) eSize.getValue();
+        } else {
+            return 1;
+        }
     }
 
     public int getStep(){
@@ -826,6 +894,23 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         } else {
             return 1000;
         }
+    }
+
+    protected void showHideModeParameters(){
+
+        boolean isEraseMode = isEraserMode();
+        boolean isLinearMode = isLinearMode();
+
+        sizepn.setVisible(!isEraseMode);
+        eSizepn.setVisible(isEraseMode);
+        colorpn.setVisible(!isEraseMode);
+        steppn.setVisible(isLinearMode);
+
+        // Shapes
+        shapelb.setVisible(!isEraseMode);
+        circlechb.setVisible(!isEraseMode);
+        centerchb.setVisible(!isEraseMode);
+        rectanglechb.setVisible(!isEraseMode);
     }
 
 	protected void displayZoom(double zoom)
@@ -887,6 +972,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 	protected void initColorPane(Color color)
 	{
 		colorpn = new JPanel();
+        colorpn.setOpaque(false);
 		this.color = color;
 		colorpn.add(new JLabel("Color:"));
 		colorbt = new JButton();
@@ -901,10 +987,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
     protected void initStepPane() {
         steppn = new JPanel();
+        steppn.setOpaque(false);
 
-        int size = getParticlePicker().getSize();
         steplb = new JLabel("Step:");
         steppn.add(steplb);
+
 
         steptf = new JFormattedTextField(NumberFormat.getIntegerInstance());
         steptf.setColumns(3);
@@ -912,22 +999,38 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         steppn.add(steptf);
     }
 
+    protected void initEraserSizePane()
+    {
+        eSizepn = new JPanel();
+        eSizepn.setOpaque(false);
+        int size = 10;
+        eSizelb = new JLabel("Eraser size:");
+        eSizepn.add(eSizelb);
+        eSize = new JSpinner();
+        eSize.setValue(size);
+        eSizepn.add(eSize);
+        // Default : hidden.
+        eSizepn.setVisible(false);
+        tb.add(eSizepn);
+
+    }
 
     protected void initSizePane()
 	{
 		sizepn = new JPanel();
-
+        sizepn.setOpaque(false);
 		int size = getParticlePicker().getSize();
 		sizelb = new JLabel("Size:");
 		sizepn.add(sizelb);
 		sizesl = new JSlider(10, ParticlePicker.sizemax, size);
-		sizesl.setPaintTicks(true);
+        sizesl.setOpaque(false);
+		sizesl.setPaintTicks(false);
 		sizesl.setMajorTickSpacing(100);
 		int height = (int) sizesl.getPreferredSize().getHeight();
 		sizesl.setPreferredSize(new Dimension(50, height));
 		sizepn.add(sizesl);
 		sizetf = new JFormattedTextField(NumberFormat.getIntegerInstance());
-		sizetf.setColumns(3);
+		sizetf.setColumns(4);
 		sizetf.setValue(size);
 		sizepn.add(sizetf);
 		sizetf.addFocusListener(new FocusListener()
