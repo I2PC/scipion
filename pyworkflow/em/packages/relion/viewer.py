@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -1410,32 +1410,23 @@ class RelionSortViewer(Viewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [ProtRelionSortParticles]
 
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
-        self._views = []
+    def _visualize(self, obj, **kwargs):
+        views = []
 
-    def visualize(self, obj, **args):
-        self._visualize(obj, **args)
-
-        for v in self._views:
-            v.show()
-
-    def _visualize(self, obj, **args):
-        cls = type(obj)
-
-        if issubclass(cls, SetOfParticles):
-            fn = obj.getFileName()
-            labels = 'id enabled _index _filename _rlnSelectParticlesZscore _coordinate._rlnAutopickFigureOfMerit '
-            labels += '_sampling _ctfModel._defocusU _ctfModel._defocusV _ctfModel._defocusAngle _transform._matrix'
-            self._views.append(em.ObjectView(self._project, obj.strId(), fn,
-                                          viewParams={showj.ORDER: labels,
-                                                      showj.VISIBLE: labels,
-                                                      'sortby': '_rlnSelectParticlesZscore asc',
-                                                      showj.RENDER:'_filename'}))
-
-        if issubclass(cls, ProtRelionSortParticles):
+        if obj.hasAttribute('outputParticles'): # Protocol finished
             particles = obj.outputParticles
-            self._visualize(particles)
+            labels = ('id enabled _index _filename _rlnSelectParticlesZscore '
+                      '_coordinate._rlnAutopickFigureOfMerit _sampling '
+                      '_ctfModel._defocusU _ctfModel._defocusV '
+                      '_ctfModel._defocusAngle _transform._matrix')
+            sortBy = '_rlnSelectParticlesZscore asc'
+            strId = particles.strId()
+            fn = particles.getFileName()
+            views.append(em.ObjectView(self._project, strId, fn,
+                                       viewParams={showj.ORDER: labels,
+                                                   showj.VISIBLE: labels,
+                                                   showj.SORT_BY: sortBy,
+                                                   showj.RENDER:'_filename'}))
 
             fn = obj._getExtraPath('input_particles_sorted.star')
             mdFn = md.MetaData(fn)
@@ -1444,8 +1435,10 @@ class RelionSortViewer(Viewer):
                 # sort output by Z-score
                 mdFn.sort(md.RLN_SELECT_PARTICLES_ZSCORE)
                 xplotter = RelionPlotter(windowTitle="Zscore particles sorting")
-                xplotter.createSubPlot("Particle sorting", "Particle number", "Zscore")
-                xplotter.plotMd(mdFn, False, mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE)
-                self._views.append(xplotter)
+                xplotter.createSubPlot("Particle sorting", "Particle number",
+                                       "Zscore")
+                xplotter.plotMd(mdFn, False,
+                                mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE)
+                views.append(xplotter)
 
-        return self._views
+        return views
