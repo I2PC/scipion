@@ -42,7 +42,8 @@ from pyworkflow.mapper.sqlite_db import SqliteDb
 
 
 class TestSqliteMapper(BaseTest):
-    
+    _labels = [SMALL]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -269,6 +270,7 @@ class TestSqliteMapper(BaseTest):
         
 class TestSqliteFlatMapper(BaseTest):
     """ Some tests for DataSet implementation. """
+    _labels = [SMALL]
 
     @classmethod
     def setUpClass(cls):
@@ -379,6 +381,7 @@ class TestXmlMapper(BaseTest):
 
 class TestDataSet(BaseTest):
     """ Some tests for DataSet implementation. """
+    _labels = [SMALL]
 
     @classmethod
     def setUpClass(cls):

@@ -110,7 +110,7 @@ class TreeProvider():
     from the graphical Tree build. Subclasses should implement 
     the abstract methods """
 
-    def __init__(self, sortingColumnName = None, sortingAscending = True):
+    def __init__(self, sortingColumnName=None, sortingAscending=True):
         self._sortingColumnName = sortingColumnName
         self._sortingAscending = sortingAscending
         self._sortEnabled = (sortingColumnName is not None)
@@ -188,11 +188,9 @@ class TreeProvider():
         return self._sortingColumnName
 
     def isSortingAscending(self):
-
         return self._sortingAscending
 
     def sortEnabled(self):
-
         # return self._sortingColumnName is not None
         return self._sortEnabled
 
