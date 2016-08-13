@@ -95,9 +95,7 @@ class ProtUserSubSet(BatchProtocol):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 output = self._createMicsSubSetFromCTF(inputObj)
-            else:
-                output = self._createSubSetOfCTF(inputObj)
-        
+
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
 
@@ -206,44 +204,40 @@ class ProtUserSubSet(BatchProtocol):
         elif outputClassName.startswith('SetOfClasses'):
             return self._createClassesFromClasses(inputClasses)
         else:
-            raise Exception("Unrecognized output type: '%s'" % outputClassName)  
-    
+            raise Exception("Unrecognized output type: '%s'" % outputClassName)
+
     def _createMicsSubSetFromCTF(self, inputCTFs):
-        """ Create a subset of Micrographs analyzing the CTFs. """
+        """ Create a subset of Micrographs and CTFs when analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
+        outputCtfs = self._createSetOfCTF()
         setOfMics = inputCTFs.getMicrographs()
         if setOfMics is None:
-            raise Exception('Could not create SetOfMicrographs subset from'
+            raise Exception('Could not create SetOfMicrographs subset from '
                             'this SetOfCTF, the micrographs were not set.')
         outputMics.copyInfo(setOfMics)
-        
+
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
+
+        count = 0
         for ctf in modifiedSet:
             if ctf.isEnabled():
                 mic = ctf.getMicrograph()
                 outputMics.append(mic)
-                
-        self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(setOfMics, outputMics)
-        return outputMics
-        
-    def _createSubSetOfCTF(self, inputCtf):
-        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
-        
-        setOfCtf = self._createSetOfCTF("_subset")
-        
-        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
-        for ctf in modifiedSet:
-            if ctf.isEnabled():
-                setOfCtf.append(ctf)
-                
+                outputCtfs.append(ctf)
+                count += 1
+
         # Register outputs
-        self._defineOutput(self.outputClassName.get(), setOfCtf)
-        self._defineTransformRelation(inputCtf, setOfCtf)
-        return setOfCtf
-        
+        outputCtfs.setMicrographs(outputMics)
+        self._defineOutputs(outputMicrographs=outputMics, outputCTF=outputCtfs)
+        self._defineTransformRelation(setOfMics, outputMics)
+        self._defineCtfRelation(outputMics, outputCtfs)
+        msg = 'From input %s of size %s created output '% (inputCTFs.getClassName(),
+                                                           inputCTFs.getSize())
+        msg += 'SetOfMicrographs and SetOfCTF of size %d' % count
+        self.summaryVar.set(msg)
+
+        return outputMics, outputCtfs
+
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
         """ Create a new set of images joining all images
         assigned to each class.
