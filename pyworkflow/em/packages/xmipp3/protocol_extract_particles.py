@@ -516,7 +516,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         self._setupCtfProperties()
         
-    def _setupCtfProperties(self):        
+    def _setupCtfProperties(self):
+        inputMics = self.getInputMicrographs()
         if self.ctfRelations.hasValue():
             # Load CTF dictionary for all micrographs, all CTF should be present
             self.ctfDict = {}
@@ -527,9 +528,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self.ctfDict[ctfMic.getMicName()] = newCTF
                 self.ctfDict[ctfMic.getObjId()] = newCTF
             
-            if all(mic.getMicName() in self.ctfDict for mic in self.inputMics):
+            if all(mic.getMicName() in self.ctfDict for mic in inputMics):
                 self.micKey = lambda mic: mic.getMicName()
-            elif all(mic.getObjId() in self.ctfDict for mic in self.inputMics):
+            elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
                 self.micKey = lambda mic: mic.getObjId()
             else:
                 self.micKey = None # some problem matching CTF
