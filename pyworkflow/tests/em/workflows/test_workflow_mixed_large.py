@@ -61,7 +61,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.launchProtocol(protCTF)
 
         print "Run extract particles with <Same as picking> option"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, micsSource=SAME_AS_PICKING, doRemoveDust=False,
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
@@ -96,7 +96,7 @@ class TestMixedRelionTutorial(TestWorkflow):
         self.assertIsNotNone(protPP2.outputCoordinates, "There was a problem with the Xmipp import coordinates")
         
         print "Run extract particles with <Same as picking> option"
-        protExtract2 = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False, doInvert=True,
+        protExtract2 = self.newProtocol(XmippProtExtractParticles, boxSize=60, micsSource=SAME_AS_PICKING, doRemoveDust=False, doInvert=True,
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract2.inputCoordinates.set(protPP2.outputCoordinates)
         protExtract2.ctfRelations.set(protCTF2.outputCTF)
@@ -175,7 +175,7 @@ class TestMixedFrealignClassify(TestWorkflow):
         self.launchProtocol(protCTF)
         
         print "Run extract particles with <Same as picking> option"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, downsampleType=SAME_AS_PICKING, doRemoveDust=False,
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=60, micsSource=SAME_AS_PICKING, doRemoveDust=False,
                                                 doFlip=False, backRadius=28, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)

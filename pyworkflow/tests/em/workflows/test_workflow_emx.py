@@ -88,11 +88,10 @@ class TestEmxWeb(tests.BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=128,
-                                       downsampleType=0,
+                                       micsSource=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
-                                       doFlip=False,
-                                       downFactor=1)
+                                       doFlip=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -139,12 +138,11 @@ class TestEmxWeb(tests.BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=129,
-                                       downsampleType=0,
+                                       micsSource=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
                                        doFlip=False,
-                                       doSort=False,
-                                       downFactor=1)
+                                       doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -180,12 +178,11 @@ class TestEmxWeb(tests.BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=128,
-                                       downsampleType=0,
+                                       micsSource=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
                                        doFlip=False,
-                                       doSort=False,
-                                       downFactor=1)
+                                       doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 

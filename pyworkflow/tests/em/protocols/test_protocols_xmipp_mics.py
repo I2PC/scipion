@@ -318,7 +318,7 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with downsampling factor equal to the one at picking"
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=110, 
-                                       downsampleType=SAME_AS_PICKING, 
+                                       micsSource=SAME_AS_PICKING,
                                        doFlip=False)
         protExtract.setObjLabel("extract-same as picking")
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
@@ -347,7 +347,7 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with downsampling factor equal to the original micrographs"
         protExtract = self.newProtocol(XmippProtExtractParticles, 
                                        boxSize=550, 
-                                       downsampleType=ORIGINAL, 
+                                       micsSource=OTHER,
                                        doFlip=False)
         protExtract.setObjLabel("extract-original")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -379,7 +379,8 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with downsampling factor equal to other"
         downFactor = 3.0
         protExtract = self.newProtocol(XmippProtExtractParticles, 
-                                       boxSize=183, downsampleType=OTHER, 
+                                       boxSize=183, micsSource=OTHER,
+                                       doDownsample=True,
                                        downFactor=downFactor,doFlip=False)
         # Get all the micrographs ids to validate that all particles
         # has the micId properly set
@@ -416,7 +417,7 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with CTF"#        
         protExtract = self.newProtocol(XmippProtExtractParticles, 
                                        boxSize=110, 
-                                       downsampleType=SAME_AS_PICKING,
+                                       micsSource=SAME_AS_PICKING,
                                        doFlip=True)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protCTF.inputMicrographs.get())
@@ -452,7 +453,7 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with sort by statistics"#
         protExtract = self.newProtocol(XmippProtExtractParticles, 
                                        boxSize=110, 
-                                       downsampleType=SAME_AS_PICKING,
+                                       micsSource=SAME_AS_PICKING,
                                        doFlip=True, doSort=True,
                                        rejectionMethod=1, maxZscore=2)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -503,7 +504,8 @@ class TestXmippExtractParticles(TestXmippBase):
         self.launchProtocol(protAssignCTF)
         
         protExtract = self.newProtocol(XmippProtExtractParticles, 
-                                       boxSize=183, downsampleType=OTHER, 
+                                       boxSize=183, micsSource=OTHER,
+                                       doDownsample=True,
                                        downFactor=3.0,doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(protAssignCTF.outputMicrographs)

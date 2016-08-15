@@ -70,7 +70,8 @@ class TestMixedBPV(TestWorkflow):
 
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, downsampleType=OTHER, doFlip=False, downFactor=8, runMode=1, doInvert=False)
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, micsSource=OTHER,
+                                       doFlip=False, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
@@ -148,7 +149,8 @@ class TestMixedBPV2(TestWorkflow):
 
 
         print "<Run extract particles with Same as picking>"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, downsampleType=SAME_AS_PICKING, doFlip=True, doInvert=True, runMode=1)
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, micsSource=SAME_AS_PICKING,
+                                       doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         self.launchProtocol(protExtract)

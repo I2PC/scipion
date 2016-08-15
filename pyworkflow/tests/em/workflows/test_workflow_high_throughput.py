@@ -60,8 +60,8 @@ class HighThroughputTest(TestWorkflow):
 
 
         print "Run extract particles with <Other> option"
-        protExtract = XmippProtExtractParticles(boxSize=60, downsampleType=OTHER, doInvert=True, doFlip=True,
-                                                downFactor=4, backRadius=28, runMode=1, numberOfThreads=3)
+        protExtract = XmippProtExtractParticles(boxSize=60, micsSource=OTHER, doInvert=True, doFlip=True,
+                                                backRadius=28, runMode=1, numberOfThreads=3)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protPreprocess.outputMicrographs)

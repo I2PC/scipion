@@ -38,7 +38,8 @@ class TestXmippRCTWorkflow(TestWorkflow):
 
         #Extract particles    
         print "Run extract particles with Same as picking"
-        protExtract = self.newProtocol(XmippProtExtractParticlesPairs, boxSize=60, downsampleType=OTHER, downFactor=2)
+        protExtract = self.newProtocol(XmippProtExtractParticlesPairs, boxSize=60,
+                                       micsSource=SAME_AS_PICKING)
         protExtract.inputCoordinatesTiltedPairs.set(protPicking.outputCoordinatesTiltPair)
 
         self.proj.launchProtocol(protExtract, wait=True)
