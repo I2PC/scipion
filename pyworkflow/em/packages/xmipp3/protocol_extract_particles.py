@@ -30,9 +30,11 @@
 # **************************************************************************
 
 from glob import glob
+from itertools import izip
 from os.path import exists, basename
 
 import pyworkflow.em.metadata as md
+import pyworkflow.utils as pwutils
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_FINISHED
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, IntParam, 
@@ -40,7 +42,6 @@ from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, Int
 from pyworkflow.em.protocol import ProtExtractParticles
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.constants import RELATION_CTF
-from pyworkflow.utils.path import removeBaseExt, replaceBaseExt, moveFile
 
 from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
 from xmipp3 import XmippProtocol
@@ -187,7 +188,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         for mic in self.inputMics:
             localDeps = [firstStepId]
             micrographToExtract = mic.getFileName()
-            baseMicName = removeBaseExt(mic.getFileName())
+            baseMicName = pwutils.removeBaseExt(mic.getFileName())
 
             if self.ctfRelations.hasValue():
                 micKey = self.micKey(mic)
@@ -224,6 +225,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                                                  mic.getObjId(), baseMicName,
                                                  fnCTF, micrographToExtract,
                                                  prerequisites=localDeps))
+
         # Insert step to create output objects
         metaDeps = self._insertFunctionStep('createMetadataImageStep', prerequisites=deps)
         
@@ -242,11 +244,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # We need to find the mapping (either by micName or micId)
         # between the micrographs in the SetOfCoordinates and
         # the Other micrographs if necessary
-        if self.micsSource != SAME_AS_PICKING:
+        if self.micsSource == OTHER:
             micDict = {}
             coordMics = self.inputCoords.getMicrographs()
             for mic in coordMics:
-                micBase = removeBaseExt(mic.getFileName())
+                micBase = pwutils.removeBaseExt(mic.getFileName())
                 micPos = self._getExtraPath(micBase + ".pos")
                 micDict[mic.getMicName()] = micPos
                 micDict[mic.getObjId()] = micPos
@@ -266,11 +268,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 if mk in micDict:
                     micPosCoord = micDict[mk]
                     if exists(micPosCoord):
-                        micBase = removeBaseExt(mic.getFileName())
+                        micBase = pwutils.removeBaseExt(mic.getFileName())
                         micPos = self._getExtraPath(micBase + ".pos")
                         if micPos != micPosCoord:
                             self.info('Moving %s -> %s' % (micPosCoord, micPos))
-                            moveFile(micPosCoord, micPos)
+                            pwutils.moveFile(micPosCoord, micPos)
                         
     def flipMicrographStep(self, baseMicName, fnCTF, micrographToExtract):
         """ Flip micrograph. """           
@@ -288,7 +290,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         particlesMd = 'particles@%s' % fnPosFile
         boxSize = self.boxSize.get()
         # get box size for extraction, before downsampling
-        if self.doDownsample and self.downFactor.get() != 1.0:
+        if self.doDownsample:
             boxSize *= self.downFactor.get()
         
         if exists(fnPosFile):
@@ -311,18 +313,19 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.doNormalize:
                 self.runNormalize(outputRoot + '.stk', self.normType.get(), self.backRadius.get())          
                                
-            if self.micsSource.get() == OTHER or self.doDownsample:
-                #rescale coords for Other mics and/or downsampling
+            if self.doDownsample:
+                #rescale coords in metadata file if doDownsample
                 selfile = outputRoot + ".xmd"
                 mdSelFile = md.MetaData(selfile)
-                if not self.doDownsample:
-                    downFactor = 1
-                mdSelFile.operate("Xcoor=Xcoor*%f*%f" % (self.samplingFactor, downFactor))
-                mdSelFile.operate("Ycoor=Ycoor*%f*%f" % (self.samplingFactor, downFactor))
+                mdSelFile.operate("Xcoor=Xcoor*%f" % (1.0 / downFactor))
+                mdSelFile.operate("Ycoor=Ycoor*%f" % (1.0 / downFactor))
                 mdSelFile.write(selfile)
         else:
             self.warning("The micrograph %s hasn't coordinate file! " % baseMicName)
             self.warning("Maybe you picked over a subset of micrographs")
+
+        # Let's clean the temporary mrc micrographs
+        pwutils.cleanPattern(self._getTmpPath(baseMicName) + '*')
 
     def runDownsample(self, stack, boxSize, downFactor):
         program = "xmipp_image_resize"
@@ -353,18 +356,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         imgsXmd = md.MetaData()
         posFiles = glob(self._getExtraPath('*.pos')) 
         for posFn in posFiles:
-            xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))
+            xmdFn = self._getExtraPath(pwutils.replaceBaseExt(posFn, "xmd"))
             if exists(xmdFn):
                 mdFn = md.MetaData(xmdFn)
                 mdPos = md.MetaData('particles@%s' % posFn)
                 mdPos.merge(mdFn) 
-                #imgSet.appendFromMd(mdPos)
                 imgsXmd.unionAll(mdPos)
             else:
                 self.warning("The coord file %s wasn't used for extraction! " % basename(posFn))
                 self.warning("Maybe you are extracting over a subset of micrographs")
         imgsXmd.write(fnImages)
-    
+
     def screenParticlesStep(self):
         # If selected run xmipp_image_sort_by_statistics to add zscore info to images.xmd
         fnImages = self._getOutputImgMd()
@@ -384,7 +386,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Create output SetOfParticles
         imgSet = self._createSetOfParticles()
         imgSet.copyInfo(self.inputMics)
+        # set coords from the input, will update later if needed
         imgSet.setCoordinates(self.inputCoords)
+
         if self.doFlip:
             # Check if self.inputMics are phase flipped.
             if self.inputMics.isPhaseFlipped():
@@ -412,27 +416,25 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         auxSet.copyInfo(imgSet)
         readSetOfParticles(fnImages, auxSet)
         
-        if self.micsSource != SAME_AS_PICKING or self.doDownsample:
+        if self.micsSource == OTHER or self.doDownsample:
             if not self.doDownsample:
                 downFactor = 1
             else:
                 downFactor = self.downFactor.get()
-            factor = (1 / self.samplingFactor) / downFactor
+            factor = 1 / self.samplingFactor / downFactor
         # For each particle retrieve micId from SetOfCoordinates and set it on the CTFModel
-        for img in auxSet:
-            #FIXME: This can be slow to make a query to grab the coord, maybe use zip(imgSet, coordSet)???
-            coord = self.inputCoords[img.getObjId()]
+        coordSet = self.getCoords()
+        for img, coord in izip(auxSet, coordSet):
             if self.micsSource == OTHER or self.doDownsample:
                 x, y = coord.getPosition()
                 coord.setPosition(x * factor, y * factor)
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
-                ##img.setCTF(ctfModel)####JM
             img.setMicId(coord.getMicId())
             img.setCoordinate(coord)
             imgSet.append(img)
-            
+
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoordinates, imgSet)
@@ -487,6 +489,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.micsSource == OTHER:
                 msg += " from another set of micrographs: %s" % self.getObjectTag('inputMicrographs')
 
+            msg += " using coordinates %s" % self.getObjectTag('inputCoordinates')
             msg += self.methodsVar.get('')
             methodsMsgs.append(msg)
 
@@ -538,15 +541,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             return self.inputCoordinates.get().getMicrographs()
         else:
             return self.inputMicrographs.get()
-    
-    def getImgIdFromCoord(self, coordId):
-        """ Get the image id from the related coordinate id. """
-        '%s:%06d'
-        parts = coordId.split(':')
-        imgFn = self._getExtraPath(replaceBaseExt(parts[0], "stk")) 
-        
-        return '%06d@%s' %(int(parts[1]), imgFn)
-    
+
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
         mdImgs = md.MetaData(fnImages)
@@ -555,13 +550,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         zScoreMax = mdImgs.getValue(md.MDL_ZSCORE, mdImgs.lastObject())
         numEnabled = mdImgs.size()
         numRejected = total - numEnabled
-
         msg = ""
 
         if self.doSort:
             if self.rejectionMethod != REJECT_NONE:
                 msg = " %d of them were rejected with Zscore greater than %.2f." % (numRejected, zScoreMax)
-
         if self.doFlip:
             msg += "\nPhase flipping was performed."
 
@@ -586,13 +579,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         # if micsSource same as picking sampling does not change, except if we doDownsample
         if self.micsSource.get() == SAME_AS_PICKING:
-            if self.doDownsample and self.downFactor.get() != 1.0:
+            if self.doDownsample:
                 return int(boxSize / self.downFactor.get())
             else:
                 return boxSize
         # if micsSource is Other, recalculate boxSize from pixel size difference
         else:
-            if self.doDownsample and self.downFactor.get() != 1.0:
+            if self.doDownsample:
                 return int(boxSize / samplingFactor / self.downFactor.get())
             else:
                 return int(boxSize / samplingFactor)
