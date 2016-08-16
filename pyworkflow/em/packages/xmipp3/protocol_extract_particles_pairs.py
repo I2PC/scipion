@@ -27,34 +27,32 @@
 # *
 # **************************************************************************
 
-from glob import glob
 from itertools import izip
-from os.path import exists, basename
+from os.path import exists
 
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
-from pyworkflow.em.packages.xmipp3 import XmippProtExtractParticles
-from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER 
+from pyworkflow.em.packages.xmipp3.protocol_extract_particles import XmippProtExtractParticles
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_FINISHED
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, IntParam,
                                         BooleanParam, Positive)
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
-               
-                            
+
+
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
     """Protocol to extract particles from a set of tilted pairs coordinates"""
     _label = 'extract particle pairs'
-    
+
     def __init__(self, **args):
         XmippProtExtractParticles.__init__(self, **args)
-        #self.stepsExecutionMode = STEPS_PARALLEL
-        
-    #--------------------------- DEFINE param functions --------------------------------------------   
+        self.stepsExecutionMode = STEPS_PARALLEL
+
+    # --------------------------- DEFINE param functions --------------------------------------------
 
     def _defineParams(self, form):
         form.addSection(label='Input')
-        
         form.addParam('inputCoordinatesTiltedPairs', PointerParam,
                       important=True, label="Coordinates tilted pairs",
                       pointerClass='CoordinatesTiltPair',
@@ -71,12 +69,10 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                            'micrographs and coordinates are related \n'
                            'by micName or by micId. Difference in pixel size will \n'
                            'be handled automatically.')
-
         form.addParam('inputMicrographsTiltedPair', PointerParam,
                       pointerClass='MicrographsTiltPair', condition='micsSource != 0',
                       important=True, label='Input tilt pair micrographs',
                       help='Select the tilt pair micrographs from which to extract.')
-
         form.addParam('boxSize', IntParam, default=0,
                       label='Particle box size', validators=[Positive],
                       help='In pixels. The box size is the size of the boxed particles, '
@@ -95,13 +91,11 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                            'deviation of the image will be affected. For cryo, 3.5 is a good value.'
                            'For high-contrast negative stain, the signal itself may be affected so '
                            'that a higher value may be preferable.')
-
         form.addParam('doInvert', BooleanParam, default=False,
                       label='Invert contrast',
                       help='Invert the contrast if your particles are black over a white background.\n'
                            'Xmipp, Spider, Relion and Eman require white particles over a black background\n'
                            'Frealign (up to v9.07) requires black particles over a white background')
-
         form.addParam('doDownsample', BooleanParam, default=False,
                       label='Downsample particles?',
                       help='Downsample particles by a given factor upon extraction.')
@@ -109,7 +103,6 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                       condition='doDownsample',
                       label='Downsampling factor',
                       help='Non-integer downsample factors are possible. Must be larger than 1.')
-
         form.addParam('doNormalize', BooleanParam, default=True,
                       label='Normalize (Recommended)',
                       help='It subtract a ramp in the gray values and normalizes so that in the '
@@ -129,13 +122,11 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
         form.addParallelSection(threads=4, mpi=1)
 
-
     def _insertAllSteps(self):
-        """for each micrograph insert the steps to preprocess it"""
         self._setupBasicProperties()
         # Write pos files for each micrograph
         firstStepId = self._insertFunctionStep('writePosFilesStep')
-           
+
         # For each micrograph insert the steps, run in parallel
         deps = []
         for mic in self.inputMics:
@@ -143,50 +134,59 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             micrographToExtract = mic.getFileName()
             micName = pwutils.removeBaseExt(mic.getFileName())
 
-            # If remove dust 
+            # If remove dust
             if self.doRemoveDust:
                 fnNoDust = self._getTmpPath(micName + "_noDust.xmp")
-                thresholdDust = self.thresholdDust.get() #TODO: remove this extra variable
-                args=" -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
-                localDeps=[self._insertRunJobStep("xmipp_transform_filter", args % locals(),
-                                                  prerequisites=localDeps)]
+                thresholdDust = self.thresholdDust.get()  # TODO: remove this extra variable
+                args = " -i %(micrographToExtract)s -o %(fnNoDust)s --bad_pixels outliers %(thresholdDust)f"
+                localDeps = [self._insertRunJobStep("xmipp_transform_filter", args % locals(),
+                                                    prerequisites=localDeps)]
                 micrographToExtract = fnNoDust
-                                        
+
+            # TODO: implement CTF
             # Actually extract
             deps.append(self._insertFunctionStep('extractParticlesStep', mic.getObjId(), micName,
                                                  None, micrographToExtract, prerequisites=localDeps))
-        # Insert step to create output objects
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
-                
-    #--------------------------- STEPS functions --------------------------------------------
+        metaDeps = self._insertFunctionStep('createMetadataImageStep', prerequisites=deps)
+
+        # Insert step to create output objects
+        self._insertFunctionStep('createOutputStep', prerequisites=[metaDeps])
+
+    # --------------------------- STEPS functions --------------------------------------------
     def writePosFilesStep(self):
         """ Write the pos file for each micrograph in metadata format
         (both untilted and tilted). """
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords.getUntilted())
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords.getTilted())
 
-        # We need to find the mapping (either by micName or micId)
-        # between the micrographs in the SetOfCoordinates and
-        # the Other micrographs if necessary
+        # We need to find the mapping by micName between the micrographs in
+        # the SetOfCoordinates and the Other micrographs
         if self.micsSource == OTHER:
             micDict = {}
-            coordMics = self.inputCoords.getMicrographs()
+            # create tmp set with all mics from coords set
+            coordMics = self._createSetOfParticles('auxCoordMics')
+            coordMics.copyInfo(self.inputCoords.getUntilted().getMicrographs())
+            coordMics.setStore(False)
+
+            for micU, micT in izip(self.inputCoords.getUntilted().getMicrographs(),
+                                   self.inputCoords.getTilted().getMicrographs()):
+                micU.cleanObjId()
+                micT.cleanObjId()
+                coordMics.append(micU)
+                coordMics.append(micT)
+
             for mic in coordMics:
                 micBase = pwutils.removeBaseExt(mic.getFileName())
                 micPos = self._getExtraPath(micBase + ".pos")
                 micDict[mic.getMicName()] = micPos
-                micDict[mic.getObjId()] = micPos
 
+            # now match micDict and inputMics
             if any(mic.getMicName() in micDict for mic in self.inputMics):
                 micKey = lambda mic: mic.getMicName()
-            elif any(mic.getObjId() in micDict for mic in self.inputMics):
-                self.warning('Could not match input micrographs and coordinates '
-                             'micrographs by micName, using micId.')
-                micKey = lambda mic: mic.getObjId()
             else:
                 raise Exception('Could not match input micrographs and coordinates '
-                                'neither by micName or micId.')
+                                'by micName.')
 
             for mic in self.inputMics:  # micrograph from input (other)
                 mk = micKey(mic)
@@ -199,11 +199,10 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                             self.info('Moving %s -> %s' % (micPosCoord, micPos))
                             pwutils.moveFile(micPosCoord, micPos)
 
-    def createOutputStep(self):
-        # Create the SetOfImages objects on the database and the ImagesTiltPair
+    def createMetadataImageStep(self):
         mdUntilted = md.MetaData()
         mdTilted = md.MetaData()
-        #for objId in mdPairs:
+        # for objId in mdPairs:
         for uMic, tMic in izip(self.uMics, self.tMics):
             umicName = pwutils.removeBaseExt(uMic.getFileName())
             fnMicU = self._getExtraPath(umicName + ".xmd")
@@ -228,21 +227,36 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         mdUntilted.write(fnUntilted)
         mdTilted.write(fnTilted)
 
+    def createOutputStep(self):
+        fnTilted = self._getExtraPath("images_tilted.xmd")
+        fnUntilted = self._getExtraPath("images_untilted.xmd")
+
         # Create outputs SetOfParticles both for tilted and untilted
         imgSetU = self._createSetOfParticles(suffix="Untilted")
         imgSetU.copyInfo(self.uMics)
-
         imgSetT = self._createSetOfParticles(suffix="Tilted")
         imgSetT.copyInfo(self.tMics)
 
         if self.micsSource == OTHER:
-            imgSetU.setSamplingRate(self.samplingFinal)
-            imgSetT.setSamplingRate(self.samplingFinal)
+            if self.doDownsample:
+                imgSetU.setSamplingRate(self.samplingMics * self.downFactor.get())
+                imgSetT.setSamplingRate(self.samplingMics * self.downFactor.get())
+            else:
+                imgSetU.setSamplingRate(self.samplingMics)
+                imgSetT.setSamplingRate(self.samplingMics)
+        else:
+            if self.doDownsample:
+                imgSetU.setSamplingRate(self.samplingInput * self.downFactor.get())
+                imgSetT.setSamplingRate(self.samplingInput * self.downFactor.get())
+            else:
+                imgSetU.setSamplingRate(self.samplingInput)
+                imgSetT.setSamplingRate(self.samplingInput)
 
+        # set coords from the input, will update later if needed
         imgSetU.setCoordinates(self.inputCoordinatesTiltedPairs.get().getUntilted())
         imgSetT.setCoordinates(self.inputCoordinatesTiltedPairs.get().getTilted())
 
-        #Read untilted and tilted particles on a temporary object (also disabled particles)
+        # Read untilted and tilted particles on a temporary object (also disabled particles)
         imgSetAuxU = self._createSetOfParticles('auxU')
         imgSetAuxU.copyInfo(imgSetU)
         readSetOfParticles(fnUntilted, imgSetAuxU, removeDisabled=False)
@@ -253,18 +267,24 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         readSetOfParticles(fnTilted, imgSetAuxT, removeDisabled=False)
         imgSetAuxT.write()
 
+        if self.micsSource == OTHER or self.doDownsample:
+            if not self.doDownsample:
+                downFactor = 1
+            else:
+                downFactor = self.downFactor.get()
+            factor = 1 / self.samplingFactor / downFactor
+
         coordsT = self.inputCoordinatesTiltedPairs.get().getTilted()
         # For each untilted particle retrieve micId from SetOFCoordinates untilted
         for imgU, coordU in izip(imgSetAuxU, self.inputCoordinatesTiltedPairs.get().getUntilted()):
-            #FIXME: REmove this check when sure that objIds are equal
+            # FIXME: REmove this check when sure that objIds are equal
             id = imgU.getObjId()
             if id != coordU.getObjId():
-                raise Exception('ObjId in untilted is not equal!!!!')
-
+                raise Exception('ObjIds in untilted img and coord are not the same!!!!')
             imgT = imgSetAuxT[id]
             coordT = coordsT[id]
 
-            #If both particles are enabled append them
+            # If both particles are enabled append them
             if imgU.isEnabled() and imgT.isEnabled():
                 imgU.setCoordinate(coordU)
                 imgSetU.append(imgU)
@@ -274,7 +294,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         imgSetU.write()
         imgSetT.write()
 
-        # Define output ParticlesTiltPair 
+        # Define output ParticlesTiltPair
         outputset = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         outputset.setTilted(imgSetT)
         outputset.setUntilted(imgSetU)
@@ -284,8 +304,8 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         outputset.setCoordsPair(self.inputCoordinatesTiltedPairs.get())
         self._defineOutputs(outputParticlesTiltPair=outputset)
         self._defineSourceRelation(self.inputCoordinatesTiltedPairs, outputset)
-            
-    #--------------------------- INFO functions -------------------------------------------- 
+
+    # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         if self.doDownsample and self.downFactor.get() <= 1.0:
@@ -296,12 +316,12 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                 errors.append("Background radius for normalization should be "
                               "equal or less than half of the box size.")
         return errors
-    
+
     def _citations(self):
         return ['Vargas2013b']
-      
+
     def _summary(self):
-        micsSourceText = {SAME_AS_PICKING:'Same as picking',
+        micsSourceText = {SAME_AS_PICKING: 'Same as picking',
                           OTHER: 'Other set'}
         summary = []
         summary.append("Micrographs source: %s" % micsSourceText.get(self.micsSource.get()))
@@ -310,7 +330,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         if not hasattr(self, 'outputParticlesTiltPair'):
             summary.append("Output images not ready yet.")
         else:
-            summary.append("Particle pairs extracted: %d" % (self.outputParticles.getSize()))
+            summary.append("Particle pairs extracted: %d" % (self.outputParticlesTiltPair.getSize()))
 
         return summary
 
@@ -319,7 +339,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
         if self.getStatus() == STATUS_FINISHED:
             msg = "A total of %d particle pairs of size %d were extracted" % (self.getOutput().getSize(),
-                                                                         self.boxSize)
+                                                                              self.boxSize)
             if self.micsSource == OTHER:
                 msg += " from another set of micrographs: %s" % self.getObjectTag('inputMicrographsTiltedPair')
 
@@ -338,19 +358,16 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
         return methodsMsgs
 
-    #--------------------------- UTILS functions --------------------------------------------
+    # --------------------------- UTILS functions --------------------------------------------
     def _setupBasicProperties(self):
-        # Set sampling rate (before and after doDownsample) and inputMics
-        # according to micsSource type
+        # Get sampling rate and inputMics according to micsSource type
         self.inputCoords = self.getCoords()
-        self.inputMics = self.getInputMicrographs()
-        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
-        self.samplingMics = self.inputMics.getSamplingRate()
+        self.uMics, self.tMics = self.getInputMicrographs()
+        self.samplingInput = self.inputCoords.getUntilted().getMicrographs().getSamplingRate()
+        self.samplingMics = self.uMics.getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
-        self.uMics = self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs()
-        self.tMics = self.inputCoordinatesTiltedPairs.get().getTilted().getMicrographs()
-
+        # create tmp set with all mic pairs
         self.inputMics = self._createSetOfParticles('auxMics')
         self.inputMics.copyInfo(self.uMics)
         self.inputMics.setStore(False)
@@ -361,26 +378,18 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             self.inputMics.append(micU)
             self.inputMics.append(micT)
 
-        self.samplingInput = self.uMics.getSamplingRate()
-
-        if self.micsSource.get() != OTHER:
-            # If 'same as picking' or 'original' get sampling rate from input micrographs
-            # TODO: Review this when downsampling before picking is possible
-            self.samplingFinal = self.samplingInput
-        else:
-            # If 'other' multiply the input sampling rate by the factor provided
-            self.samplingFinal = self.samplingInput * self.downFactor.get()
-
     def getInputMicrographs(self):
-        """ Return the micrographs associated to the SetOfCoordinates or
+        """ Return pairs of micrographs associated to the SetOfCoordinates or
         Other micrographs. """
         if self.micsSource == SAME_AS_PICKING:
-            return self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs()
+            return self.inputCoordinatesTiltedPairs.get().getUntilted().getMicrographs(), \
+                   self.inputCoordinatesTiltedPairs.get().getTilted().getMicrographs()
         else:
-            return self.inputMicrographsTiltedPair.get()
+            return self.inputMicrographsTiltedPair.get().getUntilted(), \
+                   self.inputMicrographsTiltedPair.get().getTilted()
 
     def getCoords(self):
-            return self.inputCoordinatesTiltedPairs.get()
+        return self.inputCoordinatesTiltedPairs.get()
 
     def getOutput(self):
         if self.hasAttribute('outputParticlesTiltPair') and self.outputParticlesTiltPair.hasValue():
