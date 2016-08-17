@@ -117,7 +117,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         else:
             msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
             if self.scale.get() != 1.:
-                msg += " Scale factor %d was applied." % self.scale
+                msg += " Scale factor %0.2f was applied." % self.scale
             if self.invertX.get():
                 msg += " X coordinate was inverted."
             if self.invertY.get():

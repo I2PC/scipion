@@ -99,12 +99,10 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
                       help='Low frequency cutoff to apply the filter.\n')  
         
         line = form.addLine('Frequency', 
-                            condition='filterType > %d and filterType != %d' % (FILTER_SPACE_REAL,FILTER_FERMI),
+                            condition='filterType > %d' % FILTER_FERMI,
                             help='Range to apply the filter. Expected values between 0 and 0.5.')
-        line.addParam('lowFreq', DigFreqParam, condition='filterMode==%d' % FILTER_HIGHPASS, default=0.1,
-                    label='Lowest')
-        line.addParam('highFreq', DigFreqParam, condition='filterMode==%d' % FILTER_LOWPASS,
-                    default=0.2, label='Highest')
+        line.addParam('lowFreq', DigFreqParam, default=0.1, label='Lowest')
+        line.addParam('highFreq', DigFreqParam, default=0.2, label='Highest')
          
         form.addParam('temperature', FloatParam, default=0.3, 
                       label='Temperature T:',
@@ -135,7 +133,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         if not self.usePadding:
             OP += ' NP'
         
-        if filterType <= FILTER_SPACE_REAL:
+        if filterType <= FILTER_FERMI:
             args.append(self.filterRadius.get())
         else:
             args.append('%f %f' % (self.lowFreq, self.highFreq))
@@ -193,7 +191,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
         summary = []
         summary.append('Used filter: *%s %s*' % (self.getEnumText('filterType'), self.getEnumText('filterMode')))
  
-        if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
+        if self.filterType <= FILTER_FERMI:
             summary.append('Filter radius: *%s px^-1*' % self.filterRadius)
             radiusAngstroms = pixelSize/float(self.filterRadius)
             summary.append('Filter radius: *%s Angstroms*' % radiusAngstroms )
@@ -212,7 +210,7 @@ See detailed description of the filter at [[http://spider.wadsworth.org/spider_d
                                                                           self.getEnumText('filterMode'),
                                                                           self.getEnumText('filterType'))
 
-        if self.filterType <= FILTER_SPACE_REAL or self.filterType == FILTER_FERMI: 
+        if self.filterType <= FILTER_FERMI:
             msg += ', using a radius of %s px^-1' % self.filterRadius
         else:
             msg += ', using a frequency range of %s to %s px^-1' % (self.lowFreq, self.highFreq)
