@@ -39,6 +39,7 @@ from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, Int
                                         BooleanParam, Positive)
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
+from pyworkflow.em.data import SetOfParticles
 
 
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
@@ -165,9 +166,8 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         if self.micsSource == OTHER:
             micDict = {}
             # create tmp set with all mics from coords set
-            coordMics = self._createSetOfParticles('auxCoordMics')
+            coordMics = SetOfParticles(filename=':memory:')
             coordMics.copyInfo(self.inputCoords.getUntilted().getMicrographs())
-            coordMics.setStore(False)
 
             for micU, micT in izip(self.inputCoords.getUntilted().getMicrographs(),
                                    self.inputCoords.getTilted().getMicrographs()):
@@ -237,47 +237,34 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         imgSetT = self._createSetOfParticles(suffix="Tilted")
         imgSetT.copyInfo(self.tMics)
 
-        if self.micsSource == OTHER:
-            if self.doDownsample:
-                imgSetU.setSamplingRate(self.samplingMics * self.downFactor.get())
-                imgSetT.setSamplingRate(self.samplingMics * self.downFactor.get())
-            else:
-                imgSetU.setSamplingRate(self.samplingMics)
-                imgSetT.setSamplingRate(self.samplingMics)
-        else:
-            if self.doDownsample:
-                imgSetU.setSamplingRate(self.samplingInput * self.downFactor.get())
-                imgSetT.setSamplingRate(self.samplingInput * self.downFactor.get())
-            else:
-                imgSetU.setSamplingRate(self.samplingInput)
-                imgSetT.setSamplingRate(self.samplingInput)
+        sampling = self.samplingMics if self.micsSource == OTHER else self.samplingInput
+        if self.doDownsample:
+            sampling *= self.downFactor.get()
+        imgSetU.setSamplingRate(sampling)
+        imgSetT.setSamplingRate(sampling)
 
         # set coords from the input, will update later if needed
         imgSetU.setCoordinates(self.inputCoordinatesTiltedPairs.get().getUntilted())
         imgSetT.setCoordinates(self.inputCoordinatesTiltedPairs.get().getTilted())
 
         # Read untilted and tilted particles on a temporary object (also disabled particles)
-        imgSetAuxU = self._createSetOfParticles('auxU')
+        imgSetAuxU = SetOfParticles(filename=':memory:')
         imgSetAuxU.copyInfo(imgSetU)
         readSetOfParticles(fnUntilted, imgSetAuxU, removeDisabled=False)
-        imgSetAuxU.write()
 
-        imgSetAuxT = self._createSetOfParticles('auxT')
+        imgSetAuxT = SetOfParticles(filename=':memory:')
         imgSetAuxT.copyInfo(imgSetT)
         readSetOfParticles(fnTilted, imgSetAuxT, removeDisabled=False)
-        imgSetAuxT.write()
 
-        if self.micsSource == OTHER or self.doDownsample:
-            if not self.doDownsample:
-                downFactor = 1
-            else:
-                downFactor = self.downFactor.get()
-            factor = 1 / self.samplingFactor / downFactor
+        # calculate factor for coords scaling
+        factor = 1 / self.samplingFactor
+        if self.doDownsample:
+            factor /= self.downFactor.get()
 
         coordsT = self.inputCoordinatesTiltedPairs.get().getTilted()
-        # For each untilted particle retrieve micId from SetOFCoordinates untilted
+        # For each untilted particle retrieve micId from SetOfCoordinates untilted
         for imgU, coordU in izip(imgSetAuxU, self.inputCoordinatesTiltedPairs.get().getUntilted()):
-            # FIXME: REmove this check when sure that objIds are equal
+            # FIXME: Remove this check when sure that objIds are equal
             id = imgU.getObjId()
             if id != coordU.getObjId():
                 raise Exception('ObjIds in untilted img and coord are not the same!!!!')
@@ -286,6 +273,9 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
 
             # If both particles are enabled append them
             if imgU.isEnabled() and imgT.isEnabled():
+                if self.micsSource == OTHER or self.doDownsample:
+                    coordU.scale(factor)
+                    coordT.scale(factor)
                 imgU.setCoordinate(coordU)
                 imgSetU.append(imgU)
                 imgT.setCoordinate(coordT)
@@ -402,7 +392,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         inputMics = self.getInputMicrographs()
         boxSize = self.getCoords().getUntilted().getBoxSize()
         samplingInput = self.getCoords().getUntilted().getMicrographs().getSamplingRate()
-        samplingMics = inputMics.getSamplingRate()
+        samplingMics = inputMics[0].getSamplingRate()
         samplingFactor = float(samplingMics / samplingInput)
 
         # if micsSource same as picking sampling does not change, except if we doDownsample

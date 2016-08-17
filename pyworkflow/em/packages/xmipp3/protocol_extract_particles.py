@@ -395,17 +395,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 imgSet.setIsPhaseFlipped(False)
             else:
                 imgSet.setIsPhaseFlipped(True)
-        
-        if self.micsSource == OTHER:
-            if self.doDownsample:
-                imgSet.setSamplingRate(self.samplingMics * self.downFactor.get())
-            else:
-                imgSet.setSamplingRate(self.samplingMics)
-        else:
-            if self.doDownsample:
-                imgSet.setSamplingRate(self.samplingInput * self.downFactor.get())
-            else:
-                imgSet.setSamplingRate(self.samplingInput)
+
+        sampling = self.samplingMics if self.micsSource == OTHER else self.samplingInput
+        if self.doDownsample:
+            sampling *= self.downFactor.get()
+        imgSet.setSamplingRate(sampling)
 
         # Create a temporary set to read from the metadata file
         # and later create the good one with the coordinates 
@@ -415,19 +409,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         auxSet = SetOfParticles(filename=':memory:')
         auxSet.copyInfo(imgSet)
         readSetOfParticles(fnImages, auxSet)
-        
-        if self.micsSource == OTHER or self.doDownsample:
-            if not self.doDownsample:
-                downFactor = 1
-            else:
-                downFactor = self.downFactor.get()
-            factor = 1 / self.samplingFactor / downFactor
+
+        # calculate factor for coords scaling
+        factor = 1 / self.samplingFactor
+        if self.doDownsample:
+            factor /= self.downFactor.get()
+
         # For each particle retrieve micId from SetOfCoordinates and set it on the CTFModel
         coordSet = self.getCoords()
         for img, coord in izip(auxSet, coordSet):
             if self.micsSource == OTHER or self.doDownsample:
-                x, y = coord.getPosition()
-                coord.setPosition(x * factor, y * factor)
+                coord.scale(factor)
             ctfModel = img.getCTF()
             if ctfModel is not None:
                 ctfModel.setObjId(coord.getMicId())
