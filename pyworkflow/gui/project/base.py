@@ -165,12 +165,12 @@ class ProjectBaseWindow(Window):
 
     def onOnlineHelp(self):
         # Help -> Online help
-        webbrowser.open_new("http://scipionwiki.cnb.csic.es/")
+        webbrowser.open_new("http://scipion.cnb.csic.es/docs/")
 
     def onAbout(self):
         # Help -> About
         self.showInfo("""
-[[http://scipionwiki.cnb.csic.es/][Scipion]] is an image processing framework to obtain 3D models of macromolecular complexes using Electron Microscopy.
+[[http://scipion.cnb.csic.es/][Scipion]] is an image processing framework to obtain 3D models of macromolecular complexes using Electron Microscopy.
 
 It integrates several software packages with a unified interface. This way you can combine them in a single workflow, while all the formats and conversions are taken care of automatically.
 
