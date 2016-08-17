@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -49,9 +49,9 @@ class ProjectBaseWindow(Window):
     It extends from Window and add some layout functions (header and footer)
     """
     def __init__(self, title, masterWindow=None, weight=True, minsize=(900, 500),
-                 icon="scipion_bn.xbm", **args):
+                 icon="scipion_bn.xbm", **kwargs):
         Window.__init__(self, title, masterWindow, weight=weight, 
-                        icon=icon, minsize=minsize, enableQueue=True)
+                        icon=icon, minsize=minsize, enableQueue=True, **kwargs)
         
         content = tk.Frame(self.root)
         content.columnconfigure(0, weight=1)
