@@ -39,7 +39,7 @@ from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, Int
                                         BooleanParam, Positive)
 from convert import writeSetOfCoordinates, readSetOfParticles
 from pyworkflow.em.data_tiltpairs import ParticlesTiltPair, TiltPair
-from pyworkflow.em.data import SetOfParticles
+from pyworkflow.em.data import SetOfMicrographs, SetOfParticles
 
 
 class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
@@ -166,7 +166,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         if self.micsSource == OTHER:
             micDict = {}
             # create tmp set with all mics from coords set
-            coordMics = SetOfParticles(filename=':memory:')
+            coordMics = SetOfMicrographs(filename=':memory:')
             coordMics.copyInfo(self.inputCoords.getUntilted().getMicrographs())
 
             for micU, micT in izip(self.inputCoords.getUntilted().getMicrographs(),
@@ -179,7 +179,8 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             for mic in coordMics:
                 micBase = pwutils.removeBaseExt(mic.getFileName())
                 micPos = self._getExtraPath(micBase + ".pos")
-                micDict[mic.getMicName()] = micPos
+                micDict[micBase] = micPos
+                mic.setMicName(micBase) # tilt pair mics do not have micName set
 
             # now match micDict and inputMics
             if any(mic.getMicName() in micDict for mic in self.inputMics):
@@ -358,13 +359,16 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
         # create tmp set with all mic pairs
-        self.inputMics = self._createSetOfParticles('auxMics')
+        self.inputMics = self._createSetOfMicrographs('auxMics')
         self.inputMics.copyInfo(self.uMics)
         self.inputMics.setStore(False)
 
         for micU, micT in izip(self.uMics, self.tMics):
             micU.cleanObjId()
             micT.cleanObjId()
+            # tilt pair mics do not have micName set
+            micU.setMicName(pwutils.removeBaseExt(micU.getFileName()))
+            micT.setMicName(pwutils.removeBaseExt(micT.getFileName()))
             self.inputMics.append(micU)
             self.inputMics.append(micT)
 
