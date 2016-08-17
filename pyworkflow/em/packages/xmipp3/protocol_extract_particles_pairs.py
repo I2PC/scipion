@@ -359,7 +359,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
         # create tmp set with all mic pairs
-        self.inputMics = self._createSetOfMicrographs('auxMics')
+        self.inputMics = SetOfMicrographs(filename=':memory:')
         self.inputMics.copyInfo(self.uMics)
         self.inputMics.setStore(False)
 
