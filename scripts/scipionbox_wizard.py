@@ -270,29 +270,36 @@ class BoxWizardView(tk.Frame):
 
         manager = Manager()
         project = manager.createProject(projName, location=scipionProjPath)
+        self.lastProt = None
 
-        # Create import movies
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies')
-        project.saveProtocol(protImport)
+
+        # Create import movies
+        protMonitor = project.newProtocol(em.ProtMonitorSummary,
+                                          objLabel='Summary Monitor')
+
+        def _saveProtocol(prot, movies=True, monitor=True):
+            if movies:
+                prot.inputMovies.set(self.lastProt)
+                prot.inputMovies.setExtended('outputMovies')
+            project.saveProtocol(prot)
+            self.lastProt = prot
+            if monitor:
+                protMonitor.inputProtocols.append(prot)
+
+        _saveProtocol(protImport, movies=False)
 
         useMC = self._getValue(MOTIONCORR)
         useOF = self._getValue(OPTICAL_FLOW)
         useSM = self._getValue(SUMMOVIE)
+        useCTF = self._getValue(CTFFIND4)
 
         kwargs = {}
         frames = self._getValue(SKIP_FRAMES).split()
         if frames:
-            kwargs['alignFrame0'] = frames[0]
-            kwargs['alignFrameN'] = frames[1]
-
-        self.lastProt = protImport
-
-        def _saveProtocol(prot):
-            prot.inputMovies.set(self.lastProt)
-            prot.inputMovies.setExtended('outputMovies')
-            project.saveProtocol(prot)
-            self.lastProt = prot
+            kwargs['alignFrame0'] = kwargs['sumFrame0'] = frames[0]
+            kwargs['alignFrameN'] = kwargs['sumFrameN'] = frames[1]
 
         if useMC:
             # Create motioncorr
@@ -316,8 +323,8 @@ class BoxWizardView(tk.Frame):
         if useSM:
             # If OF write the movie, then we need to reset frames count
             if frames and useOF:
-                kwargs['alignFrame0'] = 0
-                kwargs['alignFrameN'] = 0
+                kwargs['alignFrame0'] = kwargs['sumFrame0'] = 0
+                kwargs['alignFrameN'] = kwargs['sumFrameN'] = 0
 
             from pyworkflow.em.packages.grigoriefflab import ProtSummovie
             protSM = project.newProtocol(ProtSummovie,
@@ -325,6 +332,16 @@ class BoxWizardView(tk.Frame):
                                          cleanInputMovies=useOF,
                                          **kwargs)
             _saveProtocol(protSM)
+
+        if useCTF:
+            from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
+            protCTF = project.newProtocol(ProtCTFFind,
+                                          objLabel='Ctffind')
+            protCTF.inputMicrographs.set(self.lastProt)
+            protCTF.inputMicrographs.setExtended('outputMicrographs')
+            _saveProtocol(protCTF, movies=False)
+
+        project.saveProtocol(protMonitor)
 
         os.system('%s project %s &' % (pw.getScipionScript(), projName))
 
