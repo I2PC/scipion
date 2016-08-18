@@ -295,7 +295,8 @@ class BoxWizardView(tk.Frame):
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
                                          filesPath=projPath,
-                                         filesPattern=pattern)
+                                         filesPattern=pattern,
+                                         dataStreaming=True)
 
         # Create import movies
         protMonitor = project.newProtocol(em.ProtMonitorSummary,
@@ -354,13 +355,15 @@ class BoxWizardView(tk.Frame):
             protSM = project.newProtocol(ProtSummovie,
                                          objLabel='Summovie',
                                          cleanInputMovies=useOF,
+                                         numberOfThreads=1,
                                          **kwargs)
             _saveProtocol(protSM)
 
         if useCTF:
             from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
             protCTF = project.newProtocol(ProtCTFFind,
-                                          objLabel='Ctffind')
+                                          objLabel='Ctffind',
+                                          numberOfThreads=1)
             protCTF.inputMicrographs.set(self.lastProt)
             protCTF.inputMicrographs.setExtended('outputMicrographs')
             _saveProtocol(protCTF, movies=False)
