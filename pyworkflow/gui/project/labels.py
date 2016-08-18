@@ -40,6 +40,7 @@ import pyworkflow.gui.dialog as dialog
 class LabelsTreeProvider(TreeProvider):
     """ Populate Tree from Labels. """
     def __init__(self, objList=None):
+        TreeProvider.__init__(self)
         self.objList = objList
         self._parentDict = {}
 

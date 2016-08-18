@@ -514,7 +514,7 @@ class Particle(Image):
         self._coordinate = None
         self._micId = Integer()
         self._classId = Integer()
-        
+
     def hasCoordinate(self):
         return self._coordinate is not None
     
@@ -1030,7 +1030,7 @@ class Coordinate(EMObject):
         self._y = Integer(kwargs.get('y', None))
         self._micId = Integer()
         self._micName = String()
-        
+
     def getX(self):
         return self._x.get()
     
@@ -1322,10 +1322,16 @@ class SetOfClasses(EMSet):
         self._representatives = Boolean(False) # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
-    def iterClassImages(self):
-        """ Iterate over the images of a class. """
-        pass
-    
+    def iterClassItems(self, iterDisabled=False):
+        """ Iterate over the images of a class.
+        Params:
+            iterDisabled: If True, also include the disabled items. """
+        for cls in self.iterItems():
+            if iterDisabled or cls.isEnabled():
+                for img in cls:
+                    if iterDisabled or img.isEnabled():
+                        yield img
+
     def hasRepresentatives(self):
         return self._representatives.get()
     
@@ -1377,6 +1383,15 @@ class SetOfClasses(EMSet):
         for classItem in EMSet.iterItems(self, orderBy=orderBy, direction=direction):
             self._setItemMapperPath(classItem)
             yield classItem
+
+    def iterRepresentatives(self, orderBy='id', direction='ASC'):
+        for classItem in self.iterItems(orderBy, direction):
+            if classItem.hasRepresentative():
+                rep = classItem.getRepresentative()
+                rep.setObjId(classItem.getObjId())
+                rep.setSamplingRate(classItem.getSamplingRate())
+
+                yield rep
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()

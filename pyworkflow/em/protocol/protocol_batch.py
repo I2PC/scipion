@@ -20,14 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains protocols that are launched
-through other GUI (such as showj) and that
-are called "batch" protocols.
-"""
 
 import os
 from itertools import izip
@@ -100,9 +95,7 @@ class ProtUserSubSet(BatchProtocol):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 output = self._createMicsSubSetFromCTF(inputObj)
-            else:
-                output = self._createSubSetOfCTF(inputObj)
-        
+
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
 
@@ -211,44 +204,40 @@ class ProtUserSubSet(BatchProtocol):
         elif outputClassName.startswith('SetOfClasses'):
             return self._createClassesFromClasses(inputClasses)
         else:
-            raise Exception("Unrecognized output type: '%s'" % outputClassName)  
-    
+            raise Exception("Unrecognized output type: '%s'" % outputClassName)
+
     def _createMicsSubSetFromCTF(self, inputCTFs):
-        """ Create a subset of Micrographs analyzing the CTFs. """
+        """ Create a subset of Micrographs and CTFs when analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
+        outputCtfs = self._createSetOfCTF()
         setOfMics = inputCTFs.getMicrographs()
         if setOfMics is None:
-            raise Exception('Could not create SetOfMicrographs subset from'
+            raise Exception('Could not create SetOfMicrographs subset from '
                             'this SetOfCTF, the micrographs were not set.')
         outputMics.copyInfo(setOfMics)
-        
+
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
+
+        count = 0
         for ctf in modifiedSet:
             if ctf.isEnabled():
                 mic = ctf.getMicrograph()
                 outputMics.append(mic)
-                
-        self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(setOfMics, outputMics)
-        return outputMics
-        
-    def _createSubSetOfCTF(self, inputCtf):
-        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
-        
-        setOfCtf = self._createSetOfCTF("_subset")
-        
-        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
-        for ctf in modifiedSet:
-            if ctf.isEnabled():
-                setOfCtf.append(ctf)
-                
+                outputCtfs.append(ctf)
+                count += 1
+
         # Register outputs
-        self._defineOutput(self.outputClassName.get(), setOfCtf)
-        self._defineTransformRelation(inputCtf, setOfCtf)
-        return setOfCtf
-        
+        outputCtfs.setMicrographs(outputMics)
+        self._defineOutputs(outputMicrographs=outputMics, outputCTF=outputCtfs)
+        self._defineTransformRelation(setOfMics, outputMics)
+        self._defineCtfRelation(outputMics, outputCtfs)
+        msg = 'From input %s of size %s created output '% (inputCTFs.getClassName(),
+                                                           inputCTFs.getSize())
+        msg += 'SetOfMicrographs and SetOfCTF of size %d' % count
+        self.summaryVar.set(msg)
+
+        return outputMics, outputCtfs
+
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
         """ Create a new set of images joining all images
         assigned to each class.
@@ -350,25 +339,20 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
         """ Create a subset of Micrographs Tilt Pair. """
         output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
-        modifiedSet = MicrographsTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = MicrographsTiltPair(filename=self._dbName,
+                                          prefix=self._dbPrefix)
         inputU = micrographsTiltPair.getUntilted()
         inputT = micrographsTiltPair.getTilted()
         outputU = SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
-        outputT = SetOfParticles(filename=self._getPath('mics_tilted.sqlite'))
+        outputT = SetOfMicrographs(filename=self._getPath('mics_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
 
-        for micPairI in modifiedSet:
-            untilted = micPairI.getUntilted()
-            tilted = micPairI.getTilted()
-
-            if micPairI.isEnabled():
-                micPairO = TiltPair()
-                micPairO.setUntilted(untilted)
-                micPairO.setTilted(tilted)
-                output.append(micPairO)
-                outputU.append(untilted)
-                outputT.append(tilted)
+        for micPair, u, t in izip(modifiedSet, inputU, inputT):
+            if micPair.isEnabled():
+                output.append(micPair)
+                outputU.append(u)
+                outputT.append(t)
         output.setUntilted(outputU)
         output.setTilted(outputT)
         # Register outputs
@@ -378,7 +362,7 @@ class ProtUserSubSet(BatchProtocol):
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
-        """ Create a subset of Micrographs Tilt Pair. """
+        """ Create a subset of Particles Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         
         inputU = particlesTiltPair.getUntilted()
@@ -387,8 +371,9 @@ class ProtUserSubSet(BatchProtocol):
         outputT = SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
-        
-        modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+
+        modifiedSet = ParticlesTiltPair(filename=self._dbName,
+                                        prefix=self._dbPrefix)
 
         for pair, u, t in izip(modifiedSet, inputU, inputT):
             if pair.isEnabled():
@@ -398,7 +383,7 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         output.setUntilted(outputU)
         output.setTilted(outputT)
-        
+
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
         self._defineTransformRelation(particlesTiltPair, output)
@@ -488,7 +473,9 @@ class ProtCreateMask(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created mask %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created mask %s'
+                       % (self.getObjectTag("inputObj"),
+                          self.getObjectTag("outputMask")))
         return summary
         
     def _methods(self):
@@ -509,7 +496,9 @@ class ProtCreateFSC(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created fsc %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created fsc %s'
+                       % (self.getObjectTag("inputObj"),
+                          self.getObjectTag("outputMask")))
         return summary
 
     def _methods(self):

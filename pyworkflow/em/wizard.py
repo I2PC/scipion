@@ -65,30 +65,15 @@ import xmipp
 class EmWizard(Wizard):    
     
     def _getMics(self, objs):
-        mics = [mic.clone() for mic in objs]
-        for m in mics:
-            m.basename = basename(m.getFileName())
-            
-        return mics
-    
+        return [mic.clone() for mic in objs]
+
     def _getParticles(self, objs, num=100):
         particles = [] 
         for i, par in enumerate(objs):
-            
             # Cloning the particle
             particle = par.clone() 
-            
             if i == num: # Only load up to NUM particles
                 break
-            
-            particle.text = particle.getFileName()
-            particle.basename = basename(particle.text)
-            
-            index = particle.getIndex()
-            if index:
-                particle.text = "%03d@%s" % (index, particle.text)
-                particle.basename = "%03d@%s" % (index, particle.basename)
-        
             particles.append(particle)
 
         return particles
@@ -100,18 +85,7 @@ class EmWizard(Wizard):
         else: 
             vols = [vol.clone() for vol in objs]
         
-        for v in vols:
-            v.basename = basename(v.getFileName())
-        
         return vols
-    
-    def _getText(self, obj):
-        index = obj.getIndex()
-        text = os.path.basename(obj.getFileName())
-        if index:
-            return "%03d@%s" % (index, text)
-        return text
-    
     
     def _getListProvider(self, objs):
         """ This should be implemented to return the list
@@ -125,7 +99,6 @@ class EmWizard(Wizard):
                 vols_total = []
                 for pointer in objs:
                     obj = pointer.get()
-                    print obj
                     vols = self._getVols(obj)
                     vols_total.extend(vols)
                 provider = ListTreeProvider(vols_total)
@@ -139,7 +112,6 @@ class EmWizard(Wizard):
                 if isinstance(objs, SetOfParticles):
                     particles = self._getParticles(objs)
                     provider = ListTreeProvider(particles)
-                    provider.getText = self._getText
 
                 if isinstance(objs, SetOfVolumes) or isinstance(objs, Volume):
                     vols = self._getVols(objs)
@@ -170,6 +142,7 @@ class EmWizard(Wizard):
 class ListTreeProvider(TreeProvider):
     """ Simple list tree provider. """
     def __init__(self, objList=None):
+        TreeProvider.__init__(self)
         self.objList = objList
         self.getColumns = lambda: [('Object', 150)]
         self.getObjects = lambda: self.objList
@@ -180,7 +153,11 @@ class ListTreeProvider(TreeProvider):
     
     def getText(self, obj):
         """ Get the text to display for an object. """
-        return os.path.basename(obj.getFileName())
+        index, fn = obj.getLocation()
+        name = os.path.basename(fn)
+        if index:
+            name = "%03d@%s" % (index, name)
+        return name
     
     def getObjs(self):
         """ Get the objects. """
