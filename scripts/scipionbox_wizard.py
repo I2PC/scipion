@@ -63,6 +63,7 @@ CTFFIND4 = "Ctffind4"
 # Some related environment variables
 SCIPIONBOX_DATA_FOLDER = 'SCIPIONBOX_DATA_FOLDER'
 SCIPIONBOX_MICROSCOPE = 'SCIPIONBOX_MICROSCOPE'
+SCIPIONBOX_PATTERN = 'SCIPIONBOX_PATTERN'
 
 
 class BoxWizardWindow(ProjectBaseWindow):
@@ -248,7 +249,7 @@ class BoxWizardView(tk.Frame):
             self.windows.showError("\n  - ".join(errors))
         else:
             self._createDataFolder(projPath, scipionProjPath)
-            self._createScipionProject(projName, scipionProjPath)
+            self._createScipionProject(projName, projPath, scipionProjPath)
             self.windows.close()
 
     def _createDataFolder(self, projPath, scipionProjPath):
@@ -266,14 +267,20 @@ class BoxWizardView(tk.Frame):
 
         _createPath(scipionProjPath)
 
-    def _createScipionProject(self, projName, scipionProjPath):
+    def _createScipionProject(self, projName, projPath, scipionProjPath):
 
         manager = Manager()
         project = manager.createProject(projName, location=scipionProjPath)
         self.lastProt = None
+        pattern = os.environ.get(SCIPIONBOX_PATTERN,
+                                 os.path.join('GRID_??', 'DATA', 'Images-Disc?',
+                                              'GridSquare_*', 'Data',
+                                              'FoilHole_*frames.mrc'))
 
         protImport = project.newProtocol(em.ProtImportMovies,
-                                         objLabel='Import movies')
+                                         objLabel='Import movies',
+                                         filesPath=projPath,
+                                         filesPattern=pattern)
 
         # Create import movies
         protMonitor = project.newProtocol(em.ProtMonitorSummary,
