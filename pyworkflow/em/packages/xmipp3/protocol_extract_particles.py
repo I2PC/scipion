@@ -241,7 +241,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def writePosFilesStep(self):
         """ Write the pos file for each micrograph on metadata format. """
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords)
-        # We need to find the mapping (either by micName or micId)
+        # We need to find the mapping (either by micName (without ext) or micId)
         # between the micrographs in the SetOfCoordinates and
         # the Other micrographs if necessary
         if self.micsSource == OTHER:
@@ -250,11 +250,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             for mic in coordMics:
                 micBase = pwutils.removeBaseExt(mic.getFileName())
                 micPos = self._getExtraPath(micBase + ".pos")
-                micDict[mic.getMicName()] = micPos
+                micDict[pwutils.removeBaseExt(mic.getMicName())] = micPos
                 micDict[mic.getObjId()] = micPos
                 
-            if any(mic.getMicName() in micDict for mic in self.inputMics):
-                micKey = lambda mic: mic.getMicName()
+            if any(pwutils.removeBaseExt(mic.getMicName()) in micDict for mic in self.inputMics):
+                micKey = lambda mic: pwutils.removeBaseExt(mic.getMicName())
             elif any(mic.getObjId() in micDict for mic in self.inputMics):
                 self.warning('Could not match input micrographs and coordinates '
                              'micrographs by micName, using micId.')

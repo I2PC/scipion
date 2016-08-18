@@ -161,7 +161,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords.getUntilted())
         writeSetOfCoordinates(self._getExtraPath(), self.inputCoords.getTilted())
 
-        # We need to find the mapping by micName between the micrographs in
+        # We need to find the mapping by micName (without ext) between the micrographs in
         # the SetOfCoordinates and the Other micrographs
         if self.micsSource == OTHER:
             micDict = {}
@@ -179,12 +179,11 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
             for mic in coordMics:
                 micBase = pwutils.removeBaseExt(mic.getFileName())
                 micPos = self._getExtraPath(micBase + ".pos")
-                micDict[micBase] = micPos
-                mic.setMicName(micBase) # tilt pair mics do not have micName set
+                micDict[pwutils.removeExt(mic.getMicName())] = micPos
 
             # now match micDict and inputMics
-            if any(mic.getMicName() in micDict for mic in self.inputMics):
-                micKey = lambda mic: mic.getMicName()
+            if any(pwutils.removeExt(mic.getMicName()) in micDict for mic in self.inputMics):
+                micKey = lambda mic: pwutils.removeExt(mic.getMicName())
             else:
                 raise Exception('Could not match input micrographs and coordinates '
                                 'by micName.')
@@ -366,9 +365,6 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         for micU, micT in izip(self.uMics, self.tMics):
             micU.cleanObjId()
             micT.cleanObjId()
-            # tilt pair mics do not have micName set
-            micU.setMicName(pwutils.removeBaseExt(micU.getFileName()))
-            micT.setMicName(pwutils.removeBaseExt(micT.getFileName()))
             self.inputMics.append(micU)
             self.inputMics.append(micT)
 
