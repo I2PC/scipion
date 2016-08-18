@@ -58,12 +58,17 @@ MOTIONCORR = "MotionCorr"
 OPTICAL_FLOW = "Optical Flow"
 SUMMOVIE = "Summovie (dose compensation)"
 CTFFIND4 = "Ctffind4"
-
+EMAIL_NOTIFICATION = "Email notification"
+HTML_REPORT = "HTML Report"
 
 # Some related environment variables
 SCIPIONBOX_DATA_FOLDER = 'SCIPIONBOX_DATA_FOLDER'
 SCIPIONBOX_MICROSCOPE = 'SCIPIONBOX_MICROSCOPE'
 SCIPIONBOX_PATTERN = 'SCIPIONBOX_PATTERN'
+SCIPIONBOX_PUBLISH = 'SCIPIONBOX_PUBLISH'
+SCIPIONBOX_SMTP_SERVER = 'SCIPIONBOX_SMTP_SERVER'
+SCIPIONBOX_SMTP_FROM = 'SCIPIONBOX_SMTP_FROM'
+SCIPIONBOX_SMTP_TO = 'SCIPIONBOX_SMTP_TO'
 
 
 class BoxWizardWindow(ProjectBaseWindow):
@@ -200,6 +205,9 @@ class BoxWizardView(tk.Frame):
         _addCheckPair(OPTICAL_FLOW, 2, labelFrame2)
         _addCheckPair(SUMMOVIE, 3, labelFrame2)
         _addCheckPair(CTFFIND4, 4, labelFrame2)
+        _addPair("Monitors", 5, labelFrame2, entry=False)
+        _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2)
+        _addCheckPair(HTML_REPORT, 6, labelFrame2)
 
         frame.columnconfigure(0, weight=1)
         #frame.rowconfigure(0, weight=1)
@@ -277,6 +285,13 @@ class BoxWizardView(tk.Frame):
                                               'GridSquare_*', 'Data',
                                               'FoilHole_*frames.mrc'))
 
+        smtpServer = os.environ.get(SCIPIONBOX_SMTP_SERVER, '')
+        smtpFrom = os.environ.get(SCIPIONBOX_SMTP_FROM, '')
+        smtpTo = os.environ.get(SCIPIONBOX_SMTP_TO, '')
+        doMail = (self._getValue(EMAIL_NOTIFICATION) and 
+                  smtpServer and smtpFrom and smtpTo)
+        publish = os.environ.get(SCIPIONBOX_PUBLISH, '')
+
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
                                          filesPath=projPath,
@@ -284,7 +299,9 @@ class BoxWizardView(tk.Frame):
 
         # Create import movies
         protMonitor = project.newProtocol(em.ProtMonitorSummary,
-                                          objLabel='Summary Monitor')
+                                          objLabel='Summary Monitor',
+                                          doMail=doMail,
+                                          publishCmd=publish)
 
         def _saveProtocol(prot, movies=True, monitor=True):
             if movies:
