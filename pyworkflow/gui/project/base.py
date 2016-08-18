@@ -58,8 +58,9 @@ class ProjectBaseWindow(Window):
         content.rowconfigure(1, weight=1)
         content.grid(row=0, column=0, sticky='news')
         self.content = content
-        
-        Window.createMainMenu(self, self.menuCfg)
+
+        if getattr(self, 'menuCfg', None):
+            Window.createMainMenu(self, self.menuCfg)
         
         self.header = self.createHeaderFrame(content)
         self.header.grid(row=0, column=0, sticky='new')
