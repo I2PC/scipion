@@ -77,7 +77,7 @@ def prettyDate(time=False):
     return str(day_diff/365) + " years ago"
 
 
-def dateStr(dt=None, time=True, secs=False):
+def dateStr(dt=None, time=True, secs=False, dateFormat=None):
     """ Get a normal string representation of datetime. 
     If dt is None, use NOW.
     """
@@ -85,11 +85,14 @@ def dateStr(dt=None, time=True, secs=False):
         dt = datetime.now()
     elif isinstance(dt, float) or isinstance(dt, int):
         dt = datetime.fromtimestamp(dt)
-    dateFormat = '%d-%m-%Y'
-    if time:
-        dateFormat += ' %H:%M'
-        if secs:
-            dateFormat += ':%S'
+
+    if dateFormat is None:
+        dateFormat = '%d-%m-%Y'
+        if time:
+            dateFormat += ' %H:%M'
+            if secs:
+                dateFormat += ':%S'
+
     return dt.strftime(dateFormat)
 
 prettyTime = dateStr

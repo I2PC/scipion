@@ -67,7 +67,7 @@ class ProtImportImages(ProtImportFiles):
                       help='Set this to Yes if the images have been ctf-phase '
                            'corrected.')
         group.addParam('acquisitionWizard', params.LabelParam, important=True,
-                       condition='importFrom != %d' % self.IMPORT_FROM_FILES,
+                       condition=self._acquisitionWizardCondition(),
                        label='Use the wizard button to import acquisition.',
                        help='Depending on the import Format, the wizard\n'
                             'will try to import the acquisition values.\n'
@@ -85,6 +85,12 @@ class ProtImportImages(ProtImportFiles):
                    label=Message.LABEL_MAGNI_RATE, 
                    help=Message.TEXT_MAGNI_RATE)
         return group
+
+    def _acquisitionWizardCondition(self):
+        """ By default this wizard will appears only when we import from
+        a format that is not from files.
+        But movie-import also can have a wizard to read from FEI xml files. """
+        return 'importFrom != %d' % self.IMPORT_FROM_FILES
     
     #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
@@ -391,8 +397,27 @@ class ProtImportImages(ProtImportFiles):
         return acquisition   
     
     def loadAcquisitionInfo(self):
-        """ Override to import acquisition from the specified format. """
-        return None 
+        """ Return a proper acquistionInfo (dict)
+        or an error message (str).
+        """
+        result = "Could not import acquisition info."
+        # Check if the user selected to import from a given package
+        # the property self.importFilePath should be set
+        ci = self.getImportClass()
+
+        if self.hasAttribute('importFilePath'):
+            if not self.importFilePath:
+                result = "Select import file first"
+            elif not exists(self.importFilePath):
+                result = ("*Import file doesn't exist.*\n"
+                         "File:\n%s" % self.importFilePath)
+            else:
+
+                acq = ci.loadAcquisitionInfo()
+                if acq is not None:
+                    result = acq
+
+        return result
 
     def _fillMicName(self, img, filename):
         from pyworkflow.em import Micrograph
