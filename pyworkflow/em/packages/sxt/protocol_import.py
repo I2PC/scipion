@@ -80,31 +80,11 @@ class ProtImportTiltSeries(ProtImportImages):
                              "another computer, the links need to be restored.\n")        
         form.addParam('doCrop', params.BooleanParam, default=False,
                       label='Crop input tilt series?',
-                      help="This is used to avoid some black pixels of some cameras")
+                      help="This is used to avoid some black pixels "
+                           "of some cameras")
         form.addParam('cropSize', params.IntParam, default=20, condition="doCrop",
                       label='Crop size (px)',
-                      help="Number of pixels to crop from each side")
-        
-        
-        """
-        
-        group = form.addGroup('Focal tilt series info', 
-                              condition="importFocalSeries")
-        
-        group.addParam('defocusValue', params.NumericListParam,
-                      default="0 -2 +2",
-                      label="Defocus value (micron)",
-                      help="Defocus value related to each tilt series "
-                           "in the focal series.\n"
-                           "Note: the orders of these values should be the same "
-                           "as the selected files are importing.")
-        group.addParam('reference', params.IntParam, default=1,
-                      label='Reference tilt series',
-                      help="tilt series (file) with defocus value of 0")        
-        """
-        
-        
-        
+                      help="Number of pixels to crop from each side")        
         group = form.addGroup('Acquisition info')
         group.addParam('lensLabel', params.StringParam, default = 'lens1',
                    label = "Lens label", 
@@ -128,9 +108,11 @@ class ProtImportTiltSeries(ProtImportImages):
             dst = self._getExtraPath(basename(fnIn))        
             copyOrLink(fnIn, dst)            
             fnStack = removeExt(dst) + '.mrc'            
-            self._insertFunctionStep('createOutputStepTiltSeries', fnStack, dst, fnOutMd)
+            self._insertFunctionStep('createOutputStepTiltSeries', 
+                                     fnStack, dst, fnOutMd)
         else:
-            self._insertFunctionStep('createOutputStepSetOfTiltSeries', self.getPattern(), fnOutMd)    
+            self._insertFunctionStep('createOutputStepSetOfTiltSeries', 
+                                     self.getPattern(), fnOutMd)    
           
     #--------------------------- STEPS functions --------------------------------------------    
     def createOutputStepTiltSeries(self, fnStack, fnIn, fnAngles):          
@@ -154,27 +136,19 @@ class ProtImportTiltSeries(ProtImportImages):
         
         sys.stdout.write("\rImported %d/%d" % (1, 1))
         sys.stdout.flush()            
-        print "\n"
-                
+        print "\n"                
         self._defineOutputs(outputTiltSeries=tiltSeries)
         
     def createOutputStepSetOfTiltSeries(self, pattern, fnOutMd):
         self.info("Using pattern: '%s'" % pattern)
-        
-        #fnStack = self._getExtraPath('output_focalSeries.mrc')
-        #focalSeries = SetOfTiltSeries(fnStack)
-        #focalSeries.setFileName(fnStack)
         focalSeries = self._createSetOfTiltSeries()
-        focalSeries.setSamplingRate(self.samplingRate.get()* 10)
-        
+        focalSeries.setSamplingRate(self.samplingRate.get()* 10)        
         mdOut = xmipp.MetaData()
         tiltIndex = 0
         refTilt = 0
-        
-        #outFiles = [focalSeries.getFileName()]
-        imgh = ImageHandler()
-        
+        imgh = ImageHandler()        
         copyOrLink = self.getCopyOrLink()
+        
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
@@ -194,8 +168,7 @@ class ProtImportTiltSeries(ProtImportImages):
             acquisition = tiltSeries.getXrayAcquisition()
             self._fillXrayAcquisition(acquisition)
             tiltSeries.setXrayAcquisition(acquisition)
-            
-            
+                        
             fileBaseName = basename(fileName)
             for focalId in range(100):
                 if '_tomo_%02d' % focalId in fileBaseName:
@@ -214,10 +187,6 @@ class ProtImportTiltSeries(ProtImportImages):
                 defocusValue = +2.0
                 if tiltIndex == 1:
                     refTilt = 2
-                
-                   
-            
-            
             
             focalInfo = tiltSeries.getFocalSeries()            
             focalInfo.settiltSeriesGroup(focalId)
@@ -226,7 +195,6 @@ class ProtImportTiltSeries(ProtImportImages):
             focalInfo.setReference(refTilt)
             tiltSeries.setFocalSeries(focalInfo)
             
-            
             objId = mdOut.addObject()
             mdOut.setValue(xmipp.MDL_TOMOGRAMMD, fnOutMdTilt, objId)
             mdOut.setValue(xmipp.MDL_XRAY_FOCAL_IDX, focalId, objId)
@@ -234,43 +202,22 @@ class ProtImportTiltSeries(ProtImportImages):
             mdOut.setValue(xmipp.MDL_XRAY_DEFOCUS, defocusValue, objId)
             mdOut.setValue(xmipp.MDL_XRAY_REF_IDX, refTilt, objId)
             
-            
-            
             focalSeries.append(tiltSeries)
             sys.stdout.write("\rImported %d/%d\n\n" % (i+1, self.numberOfFiles))
             sys.stdout.flush()
-            #outFiles.append(fnStackTilt)
         
         mdOut.write(fnOutMd)
-        self._defineOutputs(outputFocalSeries=focalSeries)    
-
-            
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        """
-        angles, sampling, index, size, reference, acquisition, defocus ... moshabehe acquisition, baraye focal series
-        focalSeries = FocalSeries()
-        focalSeries.setFileName(fnStack)        
-        acquisition = tiltSeries.getXrayAcquisition()        
-        self._fillXrayAcquisition(acquisition)      
-        tiltSeries.setSamplingRate(self.samplingRate.get() * 10)
-        """    
+        self._defineOutputs(outputFocalSeries=focalSeries)      
     
     #--------------------------- INFO functions --------------------------------        
     def _validate(self):
         errors = []
+        hdf5 = self.filesPath.get().endswith('hdf5')
+        pattern = self.filesPattern.get()
         if self.filesPath.get():
-            if not self.filesPath.get().endswith('hdf5') and not self.filesPattern.get():
-                errors.append ("Expected hdf5 files for importing or indicate the files pattern!!!") 
+            if not hdf5 and not pattern:
+                errors.append ("Expected hdf5 files for importing or "
+                               "indicate the files pattern!!!") 
         else:
             errors.append("The path can not be empty!!!")   
         if self.getPattern():
@@ -288,14 +235,18 @@ class ProtImportTiltSeries(ProtImportImages):
         if not self.importFocalSeries.get() and outputSet1 is None:
             summary.append("Output TiltSeries is not ready yet.") 
             if self.copyFiles:
-                summary.append("*Warning*: You select to copy files into your project.\n"
-                               "This will make another copy of your data and may take \n"
+                summary.append("*Warning*: You select to copy files "
+                               "into your project.\n"
+                               "This will make another copy of your "
+                               "data and may take \n"
                                "more time to import.")
         elif self.importFocalSeries.get() and outputSet2 is None:
             summary.append("Output FocalSeries is not ready yet.") 
             if self.copyFiles:
-                summary.append("*Warning*: You select to copy files into your project.\n"
-                               "This will make another copy of your data and may take \n"
+                summary.append("*Warning*: You select to copy files "
+                               "into your project.\n"
+                               "This will make another copy of your "
+                               "data and may take \n"
                                "more time to import.")     
         if  outputSet1 is not None:  
             summary.append("*%d* %s imported from:  %s" % (
@@ -330,7 +281,8 @@ class ProtImportTiltSeries(ProtImportImages):
                            "*%0.2f* A/px (Lens label: %s, "
                            "Energy (ev): %f, Date of imaging (ddmmyyy): %s)."
                            " Output set is %s."
-                           % (outputSet1.getSize(), 'images related to the selected TiltSeries',
+                           % (outputSet1.getSize(), 
+                              'images related to the selected TiltSeries',
                               outputSet1.getSamplingRate()*10,
                               self.lensLabel.get(),
                               self.energy.get(), self.date.get(),
@@ -340,7 +292,8 @@ class ProtImportTiltSeries(ProtImportImages):
                            "*%0.2f* A/px (Lens label: %s, "
                            "Energy (ev): %f, Date of imaging (ddmmyyy): %s)."
                            " Output set is %s."
-                           % (outputSet2.getSize(), 'tiltSeries related to the selected FocalSeries',
+                           % (outputSet2.getSize(), 
+                              'tiltSeries related to the selected FocalSeries',
                               outputSet2.getSamplingRate()*10,
                               self.lensLabel.get(),
                               self.energy.get(), self.date.get(),
@@ -367,7 +320,7 @@ class ProtImportTiltSeries(ProtImportImages):
             mdOut = xmipp.MetaData()            
             for k in range(np.shape(anglesArray)[0]):
                 objId = mdOut.addObject()
-                mdOut.setValue(xmipp.MDL_IMAGE, "%d@%s"%(k+1,fnStack), objId)
+                mdOut.setValue(xmipp.MDL_IMAGE, "%d@%s" % (k+1,fnStack), objId)
                 mdOut.setValue(xmipp.MDL_ANGLE_TILT, anglesArray[k], objId)
             mdOut.write(fnOutMd)
             
@@ -390,7 +343,10 @@ class ProtImportTiltSeries(ProtImportImages):
             if self.doCrop.get():
                 fnStacknew = fnRoot + '_new.mrc'
                 self.runJob("xmipp_transform_window", 
-                            "-i %s -o %s --crop %d" % (fnStack, fnStacknew, pixels))
+                            "-i %s -o %s --crop %d" % (
+                                                       fnStack, 
+                                                       fnStacknew, 
+                                                       pixels))
                 copyFile(fnStacknew, fnStack)
                 cleanPattern(fnStacknew)          
                 
@@ -423,10 +379,8 @@ class ProtImportTiltSeries(ProtImportImages):
         setFn = self._getPath('focalSeries.sqlite')
         # Close the connection to the database if
         # it is open before deleting the file
-        cleanPath(setFn)
-        
+        cleanPath(setFn)        
         SqliteDb.closeConnection(setFn)        
         setObj = SetOfTiltSeries(filename=setFn)
         return setObj
-    
     
