@@ -67,7 +67,7 @@ class TiltSeries(em.Image):
         return self._focalSeries
 
     def setFocalSeries(self, focalSeries):
-        self._focalSeries = focalSeries 
+        self._focalSeries = focalSeries
         
 class XrayAcquisition(em.EMObject):
     """Soft Xray acquisition information"""
@@ -142,7 +142,8 @@ class FocalSeries(em.EMObject):
         self._reference.set(reference)
         
     def __str__(self):
-        return "\n    tiltSeriesGroup = %d\n index = %d\n    defocus = %d\n    reference = %d\n\n" % (
+        return "\n    tiltSeriesGroup = %d\n    index = %d\n    defocus = %f\n    reference = %d\n\n" % (
+                self._tiltSeriesGroup.get(),
                 self._index.get(),
                 self._defocus.get(),
                 self._reference.get()
@@ -161,4 +162,10 @@ class SetOfTiltSeries(em.SetOfImages):
             if self._firstDim.isEmpty():
                 self._firstDim.set(tiltSeries.getDim())
         em.EMSet.append(self, tiltSeries)
+        
+    
+    def iterItems(self, orderBy='id', direction='ASC'):
+        
+        for tiltSeries in em.Set.iterItems(self, orderBy=orderBy, direction=direction):
+            yield tiltSeries
 
