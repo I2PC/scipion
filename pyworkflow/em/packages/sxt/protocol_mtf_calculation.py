@@ -36,6 +36,11 @@ from pyworkflow.utils import getFloatListFromValues
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
+import pyworkflow.em.metadata as md
+
+
+from pyworkflow.utils.path import copyFile
+
 #from scipy.ndimage.interpolation import zoom
 #from scipy import interpolate, signal
 #import math
@@ -55,7 +60,7 @@ import matplotlib.pyplot as plt
 #from plotter import XmippPlotter
 
 
-class XmippProtMtfCalculation(Protocol):
+class ProtMtfCalculation(Protocol):
     """    
     
     ?????? NEEDS TO BE CHECKED
@@ -120,6 +125,22 @@ class XmippProtMtfCalculation(Protocol):
                            "(and same angle) for calculating the MTF.\n"
                            "Note: There is a different MTF for each different "
                            "ZP position.")
+        form.addParam('inputSiemensStar2', params.PointerParam, 
+                      pointerClass='TiltSeries',
+                      label="Siemens star pattern",  
+                      help="Siemens star pattern is the input image or the "
+                           "stack of input images with different ZP "
+                           "(and same angle) for calculating the MTF.\n"
+                           "Note: There is a different MTF for each different "
+                           "ZP position.")
+        form.addParam('inputSiemensStar3', params.PointerParam, 
+                      pointerClass='SetOfTiltSeries',
+                      label="Siemens star pattern",  
+                      help="Siemens star pattern is the input image or the "
+                           "stack of input images with different ZP "
+                           "(and same angle) for calculating the MTF.\n"
+                           "Note: There is a different MTF for each different "
+                           "ZP position.")
         #form.addParam('pixelSize', params.FloatParam,
         #              label="Resolution (nm)",  
         #              help='Resolution, or pixel size. e.g: 13.11')
@@ -153,18 +174,27 @@ class XmippProtMtfCalculation(Protocol):
         # supposed that SS file is setOfParticles to get Dimensions and etc.
         # all below code are a very first draft and need to be organized properly KHOSOOSAN dar return ha va Functions
         imSS = self.inputSiemensStar.get()
-        #dx = self.pixelSize.get()
         nRef = self.refNumber.get()
         orders = getFloatListFromValues(self.fractionOrders.get())
         ringPos = getFloatListFromValues(self.ringPosition.get())
         
-        self._insertFunctionStep('getMTFfromSiemensStar', imSS, nRef, 
-                                orders, ringPos)
+        
+        imSS2 = self.inputSiemensStar2.get()
+        imSS3 = self.inputSiemensStar3.get()
+        if imSS2:
+            self._insertFunctionStep('test',imSS2, imSS, imSS3)
+        #self._insertFunctionStep('getMTFfromSiemensStar', imSS, nRef, 
+        #                        orders, ringPos)
         
                  
         #self._insertFunctionStep('gatherResultsStep', ....)        
     #--------------------------- STEPS functions --------------------------------------------
     
+    
+        
+        
+        
+    """
     def getMTFfromSiemensStar(self, imSS, nRef, orders, ringPos):        
         
         
@@ -213,14 +243,14 @@ class XmippProtMtfCalculation(Protocol):
         print '#######   ******   #######'
         print "mtf dimension = " , np.shape(mtf)
         
-        """
+        
         plt.plot(fx, mtf[:,0],'-')
         plt.xlabel('Frequency (1/nm)')
         plt.ylabel('MTF')
         plt.title('MTF basd on a single image')
         plt.grid()
         plt.show()
-        """
+        
     
         
         from xpytools.mtf2psf import MTF2PSFClass
@@ -232,13 +262,13 @@ class XmippProtMtfCalculation(Protocol):
         print '#######   ******   #######'
         print "psfarray dimension = " , np.shape(psfarray)
         
-        """
+       
         psfimg = psfarray[:,:,0]
         im = plt.imshow(psfimg, cmap="hot")
         plt.colorbar(im, orientation='horizontal')
         plt.show()
-        """
-            
+        
+    """        
     
     #def gatherResultsStep(self, ...):
          
