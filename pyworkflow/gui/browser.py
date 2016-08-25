@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -162,13 +162,18 @@ class FileInfo(object):
         return self._fullpath
     
     def getSize(self):
+        return self._stat.st_size if self._stat else 0
+    
+    def getSizeStr(self):
         """ Return a human readable string of the file size."""
-        return prettySize(self._stat.st_size) if self._stat else 0
-    
+        return prettySize(self.getSize()) if self._stat else '0'
+
+    def getDateStr(self):
+        return dateStr(self.getDate()) if self._stat else '0'
+
     def getDate(self):
-        return dateStr(self._stat.st_mtime) if self._stat else 0
-    
-    
+        return self._stat.st_mtime if self._stat else 0
+
 class FileHandler(object):
     """ This class will be used to get the icon, preview and info
     from the different types of objects.
@@ -185,7 +190,7 @@ class FileHandler(object):
         return icon
     
     def getFilePreview(self, objFile):
-        """ Return the preview image and description for the specific object. """
+        """ Return the preview image and description for the specific object."""
         if objFile.isDir():
             return 'fa-folder-open.png', None
         return None, None
@@ -237,7 +242,8 @@ class ImageFileHandler(FileHandler):
         dim = 128
         
         if isStandardImage(filename):
-            self.tkImg = gui.getImage(os.path.abspath(filename), tkImage=True, maxheight=dim)
+            self.tkImg = gui.getImage(os.path.abspath(filename),
+                                      tkImage=True, maxheight=dim)
         else:
             fn = self._index + filename
             self.tkImg = gui.getTkImage(self._image, fn, dim)
@@ -251,7 +257,8 @@ class ImageFileHandler(FileHandler):
     def getFileActions(self, objFile):
         from pyworkflow.em.viewer import DataView
         fn = objFile.getPath()
-        return [('Open with Xmipp viewer', lambda : DataView(fn).show(), Icon.ACTION_VISUALIZE)]
+        return [('Open with Xmipp viewer', lambda : DataView(fn).show(),
+                 Icon.ACTION_VISUALIZE)]
     
     
 class ParticleFileHandler(ImageFileHandler):
@@ -274,7 +281,8 @@ class ChimeraHandler(FileHandler):
     def getFileActions(self, objFile):
         from pyworkflow.em.viewer import ChimeraView
         fn = objFile.getPath()
-        return [('Open with Chimera', lambda : ChimeraView(fn).show(), Icon.ACTION_VISUALIZE)]    
+        return [('Open with Chimera', lambda : ChimeraView(fn).show(),
+                 Icon.ACTION_VISUALIZE)]
     
     def getFileIcon(self, objFile):
         return 'file_text.gif' 
@@ -307,12 +315,14 @@ class MdFileHandler(ImageFileHandler):
             md.read(filename, 1)
         labels = md.getActiveLabels()
         msg =  "Metadata items: *%d*\n" % md.getParsedLines()
-        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmipp.label2Str(l) for l in labels])
+        msg += "Metadata labels: " + ''.join(["\n   - %s" % xmipp.label2Str(l)
+                                              for l in labels])
         
         imgPath = None
         for label in labels:
             if xmipp.labelIsImage(label):
-                imgPath = self._getImgPath(filename, md.getValue(label, md.firstObject()))
+                imgPath = self._getImgPath(filename,
+                                           md.getValue(label, md.firstObject()))
                 break
         if imgPath:
             self._imgPreview = self._getImagePreview(imgPath)
@@ -354,21 +364,26 @@ class FileTreeProvider(TreeProvider):
     
     _FILE_HANDLERS = {}
     _DEFAULT_HANDLER = FileHandler()
-    
+    FILE_COLUMN = 'File'
+    SIZE_COLUMN = 'Size'
+
     @classmethod
     def registerFileHandler(cls, fileHandler, *extensions):
         """ Register a FileHandler for a given file extension. 
         Params:
             fileHandler: the FileHandler that will take care of extensions.
-            *extensions: the extensions list that will be associated to this FileHandler.
+            *extensions: the extensions list that will be associated to this
+                FileHandler.
         """
         for fileExt in extensions:
             cls._FILE_HANDLERS[fileExt] = fileHandler
         
     def __init__(self, currentDir=None, showHidden=False):
+        TreeProvider.__init__(self, sortingColumnName=self.FILE_COLUMN)
         self._currentDir = os.path.abspath(currentDir)
         self._showHidden = showHidden
-        self.getColumns = lambda: [('File', 300), ('Size', 70), ('Time', 150)]
+        self.getColumns = lambda: [(self.FILE_COLUMN, 300),
+                                   (self.SIZE_COLUMN, 70), ('Time', 150)]
     
     def getFileHandler(self, obj):
         filename = obj.getFileName()
@@ -381,7 +396,7 @@ class FileTreeProvider(TreeProvider):
         icon = fileHandler.getFileIcon(obj)
         
         info = {'key': filename, 'text': filename, 
-                'values': (obj.getSize(), obj.getDate()), 'image': icon
+                'values': (obj.getSizeStr(), obj.getDateStr()), 'image': icon
                 }
             
         return info
@@ -403,10 +418,21 @@ class FileTreeProvider(TreeProvider):
     
     def getObjects(self):
         files = os.listdir(self._currentDir)
-        files.sort()
+        #files.sort()
+        fileInfoList = []
         for f in files:
             if self._showHidden or not f.startswith('.'):
-                yield FileInfo(self._currentDir, f)
+                fileInfoList.append(FileInfo(self._currentDir, f))
+
+        # Sort objects
+        fileInfoList.sort(key=self.fileKey, reverse=not self.isSortingAscending())
+
+        return fileInfoList
+
+    def fileKey(self, f):
+        sortDict = {self.FILE_COLUMN: 'getFileName',
+                    self.SIZE_COLUMN: 'getSize'}
+        return getattr(f, sortDict.get(self._sortingColumnName, 'getDate'))()
 
     def getDir(self):
         return self._currentDir
@@ -433,7 +459,7 @@ class FileBrowser(ObjectBrowser):
                  filterFunction=None, 
                  previewDim=144,
                  showHidden=False, # Show hidden files or not?
-                 selectButton='Select', # this option allows to change the Select button text
+                 selectButton='Select', # Change the Select button text
                  entryLabel=None, # Display an entry for some input
                  entryValue='' # Display a value in the entry field
                  ):
@@ -476,7 +502,8 @@ class FileBrowser(ObjectBrowser):
         if self.entryLabel:  
             entryFrame = tk.Frame(frame)
             entryFrame.grid(row=2, column=0, sticky='new') 
-            tk.Label(entryFrame, text=self.entryLabel).grid(row=0, column=0, sticky='nw')
+            tk.Label(entryFrame, text=self.entryLabel).grid(row=0, column=0,
+                                                            sticky='nw')
             tk.Entry(entryFrame, 
                      textvariable=self.entryVar, 
                      bg='white',
@@ -530,7 +557,8 @@ class FileBrowser(ObjectBrowser):
         else:
             actions = self._provider.getObjectActions(obj)
             if actions:
-                actions[0][1]() # actions[0] = first Action, [1] = the action callback
+                # actions[0] = first Action, [1] = the action callback
+                actions[0][1]()
             
     def onClose(self):
         pass
@@ -594,17 +622,20 @@ class FileBrowserWindow(BrowserWindow):
         return self.browser.getCurrentDir()
         
     def registerHandlers(self):
-        FileTreeProvider.registerFileHandler(TextFileHandler('file_text.gif'), 
-                                             '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx', '.json', '.xml', '.pam')
-        FileTreeProvider.registerFileHandler(TextFileHandler('file_python.gif'), '.py')
-        FileTreeProvider.registerFileHandler(TextFileHandler('file_java.gif'), '.java')
-        FileTreeProvider.registerFileHandler(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
-        FileTreeProvider.registerFileHandler(SqlFileHandler(), '.sqlite', '.db')
-        FileTreeProvider.registerFileHandler(ParticleFileHandler(), '.xmp', '.tif', '.tiff', '.spi', '.mrc', 
-                                             '.map', '.raw', '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', 
-                                             '.ser', '.img', '.hed', 
-                                             *STANDARD_IMAGE_EXTENSIONS)
-        FileTreeProvider.registerFileHandler(VolFileHandler(), '.vol')
-        FileTreeProvider.registerFileHandler(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
-        FileTreeProvider.registerFileHandler(ChimeraHandler(), '.bild')
+        register = FileTreeProvider.registerFileHandler # shortcut
+
+        register(TextFileHandler('file_text.gif'),
+                 '.txt', '.log', '.out', '.err', '.stdout', '.stderr', '.emx',
+                 '.json', '.xml', '.pam')
+        register(TextFileHandler('file_python.gif'), '.py')
+        register(TextFileHandler('file_java.gif'), '.java')
+        register(MdFileHandler(), '.xmd', '.star', '.pos', '.ctfparam', '.doc')
+        register(SqlFileHandler(), '.sqlite', '.db')
+        register(ParticleFileHandler(),
+                 '.xmp', '.tif', '.tiff', '.spi', '.mrc', '.map', '.raw',
+                 '.inf', '.dm3', '.em', '.pif', '.psd', '.spe', '.ser', '.img',
+                 '.hed', *STANDARD_IMAGE_EXTENSIONS)
+        register(VolFileHandler(), '.vol')
+        register(StackHandler(), '.stk', '.mrcs', '.st', '.pif')
+        register(ChimeraHandler(), '.bild')
     

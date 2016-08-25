@@ -20,15 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
-from os.path import exists
+import os
 
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import FileParam, FloatParam, EnumParam
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
@@ -69,7 +67,78 @@ class ProtImportMicBase(ProtImportImages):
             micSet.setSamplingRate(self.samplingRate.get())
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
-        
+
+    def _acquisitionWizardCondition(self):
+        """ By default this wizard will appears only when we import from
+        a format that is not from files.
+        But movie-import also can have a wizard to read from FEI xml files. """
+        return 'True'
+
+    def loadAcquisitionInfo(self):
+        """ Return a proper acquistionInfo (dict)
+        or an error message (str).
+        """
+        if self.importFrom != self.IMPORT_FROM_FILES:
+            return ProtImportImages.loadAcquisitionInfo(self)
+
+        result = "Could not find acquistion information"
+
+        for fileName, fileId in self.iterFiles():
+            baseName = pwutils.removeExt(fileName)
+            xml1 = baseName.replace('_frames', '.xml')
+            if os.path.exists(xml1):
+                result = self._parseXML(xml1)
+            else:
+                xml2 = baseName + '.xml'
+                result = self._parseXML(xml2)
+
+        return result
+
+    def _parseXML(self, fileName):
+        """ Parse micrograph XML files from FEI. """
+        import xml.etree.ElementTree as ET
+
+        # get context
+        context = iter(ET.iterparse(fileName,
+                                    events=('start', 'end')))
+
+        labels = {'AccelerationVoltage': 'voltage',
+                  'InstrumentModel': 'InstrumentModel',
+                  'NominalMagnification': 'magnification'}
+
+        # acq['amplitudeContrast'] = None
+        # acq['sphericalAberration'] = None
+        acq = {}
+
+        def get(key, elem):
+            acq[labels[key]] = elem.text
+
+        pixelSize = False
+
+        for event, elem in context:
+
+            if event == 'start':
+                if 'pixelSize' in elem.tag:
+                    print "started: pixelSize"
+                    pixelSize = True
+
+            elif event == 'end':
+                for l in labels:
+                    if '}%s' % l in elem.tag:
+                        get(l, elem)
+
+                if '}numericValue' in elem.tag and pixelSize:
+                    acq['samplingRate'] = float(elem.text) * 10e+09  # Convert to A
+                    pixelSize = False
+
+            else:
+                raise Exception("Unknown event type %s" % event)
+
+        # Correct for units conversion
+        acq['voltage'] = float(acq['voltage']) / 1000.
+
+        return acq
+
     
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
@@ -193,13 +262,6 @@ class ProtImportMicrographs(ProtImportMicBase):
         else:
             self.importFilePath = ''
             return None       
-    
-    def loadAcquisitionInfo(self):
-        ci = self.getImportClass()
-        if exists(self.importFilePath):
-            return ci.loadAcquisitionInfo()
-        else:
-            return None
 
 
 class ProtImportMovies(ProtImportMicBase):
@@ -216,9 +278,8 @@ class ProtImportMovies(ProtImportMicBase):
         form.addParam('darkFile', FileParam,  
                       label='Dark image', 
                       help='A dark image related to a set of movies')
-        
+
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
         movieSet.setDark(self.darkFile.get())
-                    
