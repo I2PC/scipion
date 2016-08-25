@@ -54,17 +54,53 @@ class StepExecutor():
                        numberOfMpi, numberOfThreads, 
                        self.hostConfig,
                        env=env, cwd=cwd)
-    
-    def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
-        """ Simply iterate over the steps and run each one. """
+        
+    def _getRunnable(self, steps):
+        """ Return the first step that is 'new' and all its
+        dependencies have been finished, or None if none ready.
+        """
         for s in steps:
-            if not s.isFinished():
-                s.setRunning()
-                stepStartedCallback(s)
-                s.run()
-                doContinue = stepFinishedCallback(s)
+            if (s.getStatus() == cts.STATUS_NEW and
+                    all(steps[i-1].isFinished() for i in s._prerequisites)):
+                return s
+        return None
+    
+    def _arePending(self, steps):
+        """ Return True if there are pending steps (either running or waiting)
+        that can be done and thus enable other steps to be executed.
+        """
+        return any(s.isRunning() or s.isWaiting() for s in steps)
+    
+    def runSteps(self, steps, 
+                 stepStartedCallback, 
+                 stepFinishedCallback,
+                 stepsCheckCallback):
+        # Even if this will run the steps in a single thread
+        # let's follow a similar approach than the parallel one
+        # In this way we can take into account the steps graph
+        # dependency and also the case when using streamming
+
+        while True:
+            # Get an step to run, if there is one
+            step = self._getRunnable(steps)
+            if step is not None:
+                # We found a step to work in, so let's start a new
+                # thread to do the job and book it.
+                step.setRunning()
+                stepStartedCallback(step)
+                step.run()
+                doContinue = stepFinishedCallback(step)
+            
                 if not doContinue:
                     break
+                
+            elif not self._arePending(steps):  # nothing running
+                break  # yeah, we are done, either failed or finished :)
+
+            time.sleep(3)  # be gentle on the main thread
+            stepsCheckCallback()
+
+        stepsCheckCallback() # one last check to finalize stuff
 
 
 class StepThread(threading.Thread):
@@ -97,25 +133,17 @@ class ThreadStepExecutor(StepExecutor):
         StepExecutor.__init__(self, hostConfig)
         self.numberOfProcs = nThreads
         
-    def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
+    def runSteps(self, steps, 
+                 stepStartedCallback, 
+                 stepFinishedCallback,
+                 stepsCheckCallback):
         """ Create threads and synchronize the steps execution.
         n: the number of threads.
         """
-
         sharedLock = threading.Lock()
 
         runningSteps = {}  # currently running step in each node ({node: step})
         freeNodes = range(self.numberOfProcs)  # available nodes to send mpi jobs
-
-        def getRunnable():
-            """ Return the first step that is 'new' and all its
-            dependencies have been finished, or None if none ready.
-            """
-            for s in steps:
-                if (s.getStatus() == cts.STATUS_NEW and
-                        all(steps[i-1].isFinished() for i in s._prerequisites)):
-                    return s
-            return None
 
         while True:
             # See which of the runningSteps are not really running anymore.
@@ -136,7 +164,7 @@ class ThreadStepExecutor(StepExecutor):
             # If there are available nodes, send next runnable step.
             with sharedLock:
                 if freeNodes:
-                    step = getRunnable()
+                    step = self._getRunnable(steps)
                     if step is not None:
                         # We found a step to work in, so let's start a new
                         # thread to do the job and book it.
@@ -147,10 +175,13 @@ class ThreadStepExecutor(StepExecutor):
                         t = StepThread(node, step, sharedLock)
                         t.daemon = True  # won't keep process up if main thread ends
                         t.start()
-                    elif not any(s.isRunning() for s in steps):  # nothing running
+                    elif not self._arePending(steps):  # nothing running
                         break  # yeah, we are done, either failed or finished :)
 
-            time.sleep(0.1)  # be gentle on the main thread
+            time.sleep(3)  # be gentle on the main thread
+            stepsCheckCallback()
+
+        stepsCheckCallback()
 
         # Wait for all threads now.
         for t in threading.enumerate():
@@ -175,8 +206,14 @@ class MPIStepExecutor(ThreadStepExecutor):
         runJobMPI(programName, params, self.comm, node,
                   numberOfMpi, hostConfig=self.hostConfig, env=env, cwd=cwd)
 
-    def runSteps(self, steps, stepStartedCallback, stepFinishedCallback):
-        ThreadStepExecutor.runSteps(self, steps, stepStartedCallback, stepFinishedCallback)
+    def runSteps(self, steps, 
+                 stepStartedCallback, 
+                 stepFinishedCallback,
+                 checkStepsCallback):
+        ThreadStepExecutor.runSteps(self, steps, 
+                                    stepStartedCallback, 
+                                    stepFinishedCallback,
+                                    checkStepsCallback)
 
         # Import mpi here so if MPI4py was not properly compiled
         # we can still run in parallel with threads.

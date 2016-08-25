@@ -41,3 +41,5 @@ from wizard import BsoftFilterParticlesWizard
 
 from convert import getEnviron, getVersion
 _environ = getEnviron()
+
+from viewer import BsoftViewer

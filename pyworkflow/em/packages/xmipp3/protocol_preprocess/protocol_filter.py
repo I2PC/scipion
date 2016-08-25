@@ -277,24 +277,29 @@ class XmippFilterHelper():
         def add(x): summary.append('  ' + x)  # short notation
         if protocol.filterSpace == FILTER_SPACE_FOURIER:
             add('Space: *Fourier*')
+            Ts = protocol.getInputSampling()
             inA = protocol.freqInAngstrom  # short notation
             lowA, highA = protocol.lowFreqA.get(), protocol.highFreqA.get()
+            lowAN = Ts/lowA
+            highAN = Ts/highA
             lowN, highN = protocol.lowFreqDig.get(), protocol.highFreqDig.get()
+            lowNA = Ts/lowN
+            highNA = Ts/highN
             mode = protocol.filterModeFourier.get()
             decayStr = ('*%g* A' % protocol.freqDecayA.get() if inA else
                         '*%g*' % protocol.freqDecayDig.get())
             if mode == cls.FM_LOW_PASS:
                 add('Mode: *Low-pass* ( %s, decay at %s )' %
-                    ('resolution > *%g* A' % highA if inA else
-                     'normalized frequency < *%g*' % highN, decayStr))
+                    ('resolution > *%g* A (normalized freq. %g)' % (highA,highAN) if inA else
+                     'normalized frequency < *%g* (%g A)' % (highN,highNA), decayStr))
             elif mode == cls.FM_HIGH_PASS:
                 add('Mode: *High-pass* ( %s, decay at %s )' %
-                    ('resolution < *%g* A' % lowA if inA else
-                     'normalized frequency > *%g*' % lowN, decayStr))
+                    ('resolution < *%g* A (normalized freq. %g)' % (lowA,lowAN) if inA else
+                     'normalized frequency > *%g* (%g A)' % (lowN,lowNA), decayStr))
             elif mode == cls.FM_BAND_PASS:
                 add('Mode: *Band-pass* ( %s, decay at %s )' %
-                    ('*%g* A < resolution < *%g* A' % (highA, lowA) if inA else
-                     '*%g* < normalized frequency < *%g*' % (lowN, highN),
+                    ('*%g* A (normalized freq. %g) < resolution < *%g* A (normalized freq. %g)' % (highA, highAN, lowA, lowAN) if inA else
+                     '*%g* (%g A) < normalized frequency < *%g* (%g A)' % (lowN, lowNA, highN, highNA),
                      decayStr))
         elif protocol.filterSpace == FILTER_SPACE_REAL:
             add('Mode: *Median*')

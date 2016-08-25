@@ -16,15 +16,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.sqlite.SQLiteConfig;
 import xmipp.ij.commons.ImagePlusFromFile;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.CTFDescription;
@@ -102,7 +98,8 @@ public class ScipionMetaData extends MetaData {
         Statement stmt = null;
         try {
         	String query;
-        	 c = getConnection(filename);
+//        	 c = etConnection(filename);
+             c = getConnectionReadOnly(filename);
              stmt = c.createStatement();
              ResultSet rs;
         	if (preffix == null || preffix.equals(""))
@@ -513,8 +510,7 @@ public class ScipionMetaData extends MetaData {
         Statement stmt = null;
         try {
 
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            c = getConnection(path);
             c.setAutoCommit(false);
             stmt = c.createStatement();
 
@@ -638,10 +634,11 @@ public class ScipionMetaData extends MetaData {
     public void overwrite(String src, String path, boolean[] selection) throws SQLException {
         try {
             XmippUtil.copyFile(src, path);
-            if (parent != null) {
-                parent.overwrite(src, path, null);//this will write parent and siblings
-                return;
-            }
+            // Do not overwrite the parent. This looses the selection. issue #498
+            //            if (parent != null) {
+            //                parent.overwrite(src, path, null);//this will write parent and siblings
+            //                return;
+            //            }
             overwriteBlock(path, selection);
             if (haschilds) {
                 for (EMObject emo : emobjects) {
@@ -661,8 +658,10 @@ public class ScipionMetaData extends MetaData {
         PreparedStatement stmt = null;
         try {
 
-            Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+//            Class.forName("org.sqlite.JDBC");
+//            c = DriverManager.getConnection("jdbc:sqlite:" + path);
+            c = getConnection(path);
+
             c.setAutoCommit(false);
             stmt = c.prepareStatement(String.format("UPDATE %sObjects SET %s=?, %s=?, %s=? WHERE id=?;", preffix, enabledci.labelName, labelci.labelName, commentci.labelName));
             boolean enabled;
@@ -833,7 +832,8 @@ public class ScipionMetaData extends MetaData {
             try {
                 String name, alias;
                 Object value;
-                c = getConnection(filename);
+//                c = getConnection(filename);
+                c = getConnectionReadOnly(filename);
                 String columns = column.comment;
                 ColumnInfo indexci = null;
                 if(column.labelName.endsWith("_filename"))
@@ -1057,16 +1057,38 @@ public class ScipionMetaData extends MetaData {
 
     public static Connection getConnection(String filename) throws ClassNotFoundException, SQLException
     {
-        Class.forName("org.sqlite.JDBC");
-        
-        Connection c = DriverManager.getConnection("jdbc:sqlite:" + filename);
+        return getConnection(filename, null);
+    }
+    public static Connection getConnectionReadOnly(String filename) throws ClassNotFoundException, SQLException
+    {
+
+        SQLiteConfig config = new SQLiteConfig();
+        config.setReadOnly(true);
+        Connection c = getConnection(filename, config.toProperties());
+        c.setReadOnly(true);
         return c;
     }
-    
+
+    private static Connection getConnection(String filename, Properties properties) throws ClassNotFoundException, SQLException {
+
+        Class.forName("org.sqlite.JDBC");
+        
+        Connection c = null ;
+
+        if (properties == null) {
+            c = DriverManager.getConnection("jdbc:sqlite:" + filename);
+        } else {
+            c = DriverManager.getConnection("jdbc:sqlite:" + filename, properties);
+        }
+        return c;
+
+    }
+
+
     void loadSelection(String selectedPath) {
         try {
-            Class.forName("org.sqlite.JDBC");
-            Connection c = DriverManager.getConnection("jdbc:sqlite:" + selectedPath);
+
+            Connection c = getConnectionReadOnly(selectedPath);
             if(parent != null)
                 parent.loadSelection(selectedPath, c);
             else
@@ -1213,7 +1235,8 @@ public class ScipionMetaData extends MetaData {
 		boolean result = true;
 		try
 		{
-			c = getConnection(filename);
+//			c = getConnection(filename);
+            c = getConnectionReadOnly(filename);
 			stmt = c.createStatement();
 			String query = "SELECT name FROM sqlite_master WHERE type='table' AND name='Classes';";
             rs = stmt.executeQuery(query);

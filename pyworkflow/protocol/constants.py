@@ -40,6 +40,8 @@ STATUS_FAILED = "failed"      # it run and failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
 STATUS_INTERACTIVE = "interactive"    # waiting for user interaction
+STATUS_WAITING = "waiting"            # following status is used for streamming only
+
 
 ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE]
 

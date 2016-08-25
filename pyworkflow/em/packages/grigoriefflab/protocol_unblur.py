@@ -19,34 +19,34 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import os
-import sys
+
 import pyworkflow.utils as pwutils
-from pyworkflow.em.protocol import ProtProcessMovies
-from pyworkflow.em import ImageHandler, DT_FLOAT, Micrograph
+from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.protocol.params import  (IntParam,
                                          BooleanParam, FloatParam,
                                          LEVEL_ADVANCED)
 from grigoriefflab import UNBLUR_PATH
-from pyworkflow.utils.path import createLink, relpath, removeBaseExt
+from convert import readShiftsMovieAlignment
 
 
-class ProtUnblur(ProtProcessMovies):
+
+class ProtUnblur(ProtAlignMovies):
     """ Unblur is used to align the frames of movies recorded on an electron
     microscope to reduce image blurring due to beam-induced motion.
     """
     _label = 'unblur'
+    CONVERT_TO_MRC = 'mrc'
 
-    def _defineParams(self, form):
-        ProtProcessMovies._defineParams(self, form)
+    def _defineAlignmentParams(self, form):
         form.addParam('alignFrameRange', IntParam,
                       default=-1,
                       label='Number frames per movie ',
-                      help='How many frames per monie. -1 -> all frames ')
+                      help='How many frames per movie. -1 -> all frames ')
         form.addParam('doApplyDoseFilter', BooleanParam, default=True,
                       label='Apply Dose filter',
                       help='Apply a dose-dependent filter to frames before '
@@ -137,80 +137,38 @@ class ProtUnblur(ProtProcessMovies):
 
     #--------------------------- STEPS functions ------------------------------
 
-    def _getMicFnName(self, movieId,movieFolder):
-        return relpath(self._getExtraPath('aligned_sum_%06d.mrc' % movieId),
-                       movieFolder)
-
-    def _getMicFnNameFromRun(self, movieId):
-        return self._getExtraPath('aligned_sum_%06d.mrc'%movieId)
-
-    def _getShiftFnName(self, movieId):
-        return 'shifts_%06d.txt'%movieId
-
-    def _getFSCFnName(self, movieId):
-        return 'fsc_%06d.txt'%movieId
-
-    def _filterMovie(self, movieId, movieFn):
-        """I really do not understand how I end writing this function ROB"""
-        return True
-
-    def _getNameExt(self, movieName, postFix, ext):
-        if movieName.endswith("bz2"):
-            # removeBaseExt function only eliminate the last extension,
-            # but if files are compressed, we need to eliminate two extensions:
-            # bz2 and its own image extension (e.g: mrcs, em, etc)
-            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
-        else:
-            return removeBaseExt(movieName) + postFix + '.' + ext
-
-    def _processMovie(self, movieId, movieName, movieFolder):
-        # if not mrc convert format to mrc
-        # special case is mrc but ends in mrcs
-        moviePath = os.path.join(movieFolder, movieName)
-        movieNameMrc = pwutils.replaceExt(movieName, "mrc")
-        moviePathMrc = pwutils.replaceExt(moviePath, "mrc")
-        ih = ImageHandler()
-
-        if movieName.endswith('.mrc'):
-            pass # Do nothing
-        elif movieName.endswith('.mrcs'):
-            # Create a link to the mrc or mrcs file but with .mrc extension
-            createLink(moviePath, moviePathMrc)
-        else:
-            # Convert to mrc if the movie is in other format
-            ih.convert(moviePath, moviePathMrc, DT_FLOAT)
-
-        _, _, z, n = ih.getDimensions(moviePathMrc)
-        numberOfFrames = max(z, n) # Deal with mrc ambiguity
+    def _processMovie(self, movie):
+        self._createLink(movie)
+        numberOfFrames = movie.getNumberOfFrames()
+        #FIXME: Figure out how to properly write shifts for unblur
+        #self._writeMovieAlignment(movie, numberOfFrames)
 
         if self.alignFrameRange != -1:
+
             if self.alignFrameRange > numberOfFrames:
                 raise Exception('Frame number (%d) is greater than '
                                 'the total frames of the movie (%d)' %
                                 (numberOfFrames, self.alignFrameRange))
-
             numberOfFrames = self.alignFrameRange.get()
 
-        self._argsUnblur(movieNameMrc, movieFolder, movieId, numberOfFrames)
+        self._argsUnblur(movie, numberOfFrames)
+
         try:
-
-            self.runJob(self._program, self._args, cwd=movieFolder)
+            self.runJob(self._program, self._args)
         except:
-            print("ERROR: Movie %s failed\n" % movieName)
+            print("ERROR: Movie %s failed\n" % movie.getName())
 
-        logFile = self._getLogFile(movieId)
-
-    def _argsUnblur(self, movieNameMrc, movieFolder, movieId, numberOfFrames):
+    def _argsUnblur(self, movie, numberOfFrames):
         """ Format argument for call unblur program. """
         args = {}
 
-        args['movieName'] = movieNameMrc
+        args['movieName'] = self._getMovieFn(movie)
         args['numberOfFramesPerMovie'] = numberOfFrames
-        args['micFnName'] = relpath(self._getMicName(movieNameMrc), movieFolder)
-        args['shiftFnName'] = self._getShiftFnName(movieId)
+        args['micFnName'] = self._getMicFn(movie)
+        args['shiftFnName'] = self._getShiftsFn(movie)
         args['samplingRate'] = self.samplingRate
         args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
-        args['fscFn'] = self._getFSCFnName(movieId)
+        args['fscFn'] = self._getFrcFn(movie)
         args['Bfactor'] = self.Bfactor.get()
         args['minShiftInitSearch'] = self.minShiftInitSearch.get()
         args['OutRadShiftLimit'] = self.OutRadShiftLimit.get()
@@ -247,26 +205,6 @@ YES
 eof
 """ % args
 
-    def createOutputStep(self):
-        inputMovies = self.inputMovies.get()
-        micSet = self._createSetOfMicrographs()
-        micSet.copyInfo(inputMovies)
-
-        for movie in inputMovies:
-            mic = Micrograph()
-            # All micrograph are copied to the 'extra' folder after each step
-            mic.setFileName(self._getMicName(movie.getFileName()))
-            micSet.append(mic)
-
-        self._defineOutputs(outputMicrographs=micSet)
-        self._defineSourceRelation(self.inputMovies, micSet)
-
-        # Also create a Set of Movies with the alignment parameters
-        #movieSet = self._createSetOfMovies()
-        #movieSet.copyInfo(inputMovies)
-        #movieSet.cropOffsetX = Integer(self.cropOffsetX)
-        #movieSet.cropOffsetY = Integer(self.cropOffsetY)
-
     def _citations(self):
         return []
 
@@ -276,7 +214,57 @@ eof
     def _methods(self):
         return []
 
+    def _validate(self):
+        errors = []
+        if not os.path.exists(UNBLUR_PATH):
+            errors.append("Cannot find the Unblur program at: " + UNBLUR_PATH)
+        return errors
+
     def _getMicName(self, movieName):
         """ Return the name for the output micrograph given the movie name.
         """
         return self._getExtraPath(self._getNameExt(movieName, '', 'mrc'))
+
+    def _getMovieFn(self, movie):
+        movieFn = movie.getFileName()
+        if movieFn.endswith("mrcs"):
+            return pwutils.replaceExt(movieFn, self.CONVERT_TO_MRC)
+        else:
+            return movieFn
+
+    def _createLink(self, movie):
+        movieFn = movie.getFileName()
+        if movieFn.endswith("mrcs"):
+            pwutils.createLink(movieFn, self._getMovieFn(movie))
+
+    def _getMicFn(self, movie):
+        return self._getExtraPath(self._getOutputMicName(movie))
+
+    def _getShiftsFn(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.txt')
+
+    def _getFrcFn(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_frc.txt')
+
+    def _getMovieShifts(self, movie):
+        """ Returns the x and y shifts for the alignment of this movie.
+        """
+        pixSize = movie.getSamplingRate()
+        shiftFn = self._getShiftsFn(movie)
+        xShifts, yShifts = readShiftsMovieAlignment(shiftFn)
+        # convert shifts from Angstroms to px (e.g. Summovie requires shifts in px)
+        xShiftsCorr = [x / pixSize for x in xShifts]
+        yShiftsCorr = [y / pixSize for y in yShifts]
+
+        return xShiftsCorr, yShiftsCorr
+
+    def _getFrameRange(self, n, prefix=''):
+        """
+        Params:
+        :param n: Number of frames of the movies
+        :param prefix: what range we want to consider, either 'align' or 'sum'
+        :return: (i, f) initial and last frame range
+        """
+        last = self.alignFrameRange.get() if self.alignFrameRange > 0 else n
+
+        return 1, min(last, n)

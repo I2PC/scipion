@@ -47,7 +47,8 @@ class GctfImportCTF():
         fnBase = pwutils.removeExt(fileName)
         for suffix in ['_psd.mrc', '.mrc', '.ctf']:
             psdPrefixes = [fnBase, 
-                           fnBase.replace('_ctffind3', '')]
+                           fnBase.replace('_ctffind3', ''),
+                           fnBase.replace('_gctf', '')]
             for prefix in psdPrefixes:
                 psdFile =  prefix + suffix
                 if os.path.exists(psdFile):

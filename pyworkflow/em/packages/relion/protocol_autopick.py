@@ -99,7 +99,7 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
                               preprocessImageRow=self._preprocessMicrographRow,
                               postprocessImageRow=self._postprocessMicrographRow)
         
-        writeReferences(self.getInputReferences(), self._getPath('input_references'))  
+        writeReferences(self.getInputReferences(), self._getPath('input_references'), useBasename=True)  
         
     def autopickMicrographStep(self, micStarFile, params, threshold, minDistance, fom):
         from convert import getEnviron

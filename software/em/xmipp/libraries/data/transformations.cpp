@@ -487,7 +487,7 @@ void applyGeometry(int SplineDegree,
                    MultidimArray< std::complex<double> >& V2,
                    const MultidimArray< std::complex<double> >& V1,
                    const Matrix2D< double > &A, bool inv,
-                   bool wrap, std::complex<double> outside)
+                   bool wrap, std::complex<double> outside, MultidimArray<double> *BcoeffsPtr)
 {
 
     if (SplineDegree > 1)

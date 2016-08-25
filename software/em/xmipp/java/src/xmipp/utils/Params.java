@@ -51,11 +51,9 @@ public class Params {
     public final static String SAMPLINGRATE = "sampling_rate";
     public final static String CHIMERAPORT = "chimera_port";
     public final static String INVERTY = "inverty";
+    private static final String NO_RECALCULATE_CTF = "dont_recalc_ctf";
 
-    
-    
-    
-    
+
     public String directory;
     public String files[];
     public Integer port;
@@ -92,7 +90,8 @@ public class Params {
     public Integer chimeraPort;
     public boolean inverty;
 	public boolean renderImages = true;
-    
+    public boolean recalculateCTF = true;
+
 
     public Params() {
     }
@@ -160,6 +159,9 @@ public class Params {
         options.addOption(SAMPLINGRATE, true, "");
         options.addOption(CHIMERAPORT, true, "");
         options.addOption(INVERTY, false, "");
+        // Do not offer to recalculate CFT if true
+        options.addOption(NO_RECALCULATE_CTF, false, "");
+
 
     }
     
@@ -267,6 +269,7 @@ public class Params {
             
             useGeo = !cmdLine.hasOption(NO_GEO);
             wrap = !cmdLine.hasOption(NO_WRAP);
+            recalculateCTF = !cmdLine.hasOption(NO_RECALCULATE_CTF);
             
             if (cmdLine.hasOption(VIEW)){
             	String view = cmdLine.getOptionValue(VIEW);

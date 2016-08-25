@@ -13,6 +13,8 @@ from pyworkflow.em.convert import ImageHandler
 
 
 class TestFSC(unittest.TestCase):
+    
+    _labels = [SMALL, WEEKLY]
         
     def testIO(self):
         """Test basic FSC object"""
@@ -45,6 +47,8 @@ class TestFSC(unittest.TestCase):
 
 class TestImage(unittest.TestCase):
 
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -59,8 +63,22 @@ class TestImage(unittest.TestCase):
         # Check that setFileName-getFileName is working properly
         self.assertEqual(fn, mic.getFileName())
 
+        # Check the location is accepted from constructor
+        mic2 = Micrograph(fn)
+        self.assertEqual(fn, mic2.getFileName())
+
+        volStk = '/data/current/volumes/all_volumes.stk'
+        vol1 = Volume((1, volStk))
+        self.assertEqual(1, vol1.getIndex())
+        self.assertEqual(volStk, vol1.getFileName())
+
+        self.assertEqual('all_volumes.stk', vol1.getBaseName())
+
 
 class TestImageHandler(unittest.TestCase):
+
+    _labels = [SMALL, WEEKLY]
+    
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -155,7 +173,9 @@ class TestImageHandler(unittest.TestCase):
 
 
 class TestSetOfMicrographs(BaseTest):
-    
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -243,8 +263,11 @@ class TestSetOfMicrographs(BaseTest):
 
 
 class TestSetOfParticles(BaseTest):
-    """ Check if the information of the images is copied to another image when a new SetOfParticles is created"""
-    
+    """ Check if the information of the images is copied to another image when
+    a new SetOfParticles is created"""
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -389,7 +412,9 @@ class TestSetOfParticles(BaseTest):
 
 
 class TestSetOfClasses2D(BaseTest):
-    
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -410,19 +435,30 @@ class TestSetOfClasses2D(BaseTest):
         img1 = cls1.getFirstItem()
         self.assertEqual(img1.getObjId(), 1) # First image of first class is 1 in this test
         
-        images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30, 35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74], 
-                  [2, 8, 10, 12, 13, 15, 19, 20, 23, 25, 27, 33, 34, 41, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 61, 63, 64, 68, 72, 73, 75, 76], 
+        images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30,
+                   35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74],
+                  [2, 8, 10, 12, 13, 15, 19, 20, 23, 25, 27, 33, 34, 41, 43, 44,
+                   46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 61, 63,
+                   64, 68, 72, 73, 75, 76],
                   [18, 31, 32], 
                   [6, 36, 66]]
         
         classes2DSet.close()
         # Check iteration is working properly even after 
         # a close operation, it should open automatically
-        for i, cls in enumerate(classes2DSet):   
-            l = images[i]         
+        for i, cls in enumerate(classes2DSet):
+            l = images[i]
             for j, img in enumerate(cls):
                 self.assertEquals(img.getObjId(), l[j])
-                        
+
+        for i, rep in enumerate(classes2DSet.iterRepresentatives()):
+            self.assertIsNotNone(rep.getLocation())
+
+        # Check the SetOfClasses.iterClassItems method
+        allImages = [img for imgList in images for img in imgList]
+        idsImages = [img.getObjId()
+                     for img in classes2DSet.iterClassItems(iterDisabled=True)]
+        self.assertEqual(allImages, idsImages)
 
     def test_subsetsFromSelection(self):
         """ From a sqlite file of a SetOfClasses2D, with some
@@ -507,7 +543,9 @@ class TestTransform(BaseTest):
         
     
 class TestCopyItems(BaseTest):
-    
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -551,14 +589,8 @@ class TestCopyItems(BaseTest):
         for i1, i2 in izip(inputSet, checkSet):
             self.assertTrue(i2.equalAttributes(i1, ignore=['_list']))
         
-        
     def _updateItem(self, item, row):
         item._list = CsvList()
         item._list.set([1.0, 2.0])
 
 
-if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
-#    unittest.TextTestRunner(verbosity=2).run(suite)
-    
-    unittest.main()

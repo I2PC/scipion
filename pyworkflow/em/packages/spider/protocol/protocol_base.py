@@ -71,8 +71,12 @@ class SpiderProtocol(EMProtocol):
         """
         self._enterWorkingDir()
         
-        log = getattr(self, '_log', None)        
+        log = getattr(self, '_log', None)
         runTemplate(inputScript, ext, paramsDict, log)
-        
         self._leaveWorkingDir()
     
+        f = open(self.getLogPaths()[0], 'r')
+        for line in f.readlines():
+            if 'FATAL ERROR ENCOUNTERED IN BATCH MODE' in line:
+                raise Exception('Spider script error!')
+        f.close()
