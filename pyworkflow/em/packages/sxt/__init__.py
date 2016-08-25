@@ -33,7 +33,7 @@ _references = ['J.Oton2015', 'J.Oton2016']
 from data import *
 
 from protocol_import import ProtImportTiltSeries
-from protocol_mtf_calculation import ProtMtfCalculation
+from protocol_psf_calculation import ProtPsfCalculation
 
 from viewer_import import ProtImportTiltSeriesViewer
 
