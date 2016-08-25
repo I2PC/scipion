@@ -258,7 +258,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         pwutils.moveFile(micFnCtfFit, ctffitFile)
         pwutils.cleanPattern(micFnMrc)
     
-    def _createNewCtfModel(self, mic):
+    def _createCtfModel(self, mic):
         micDir = self._getMicrographDir(mic)
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
