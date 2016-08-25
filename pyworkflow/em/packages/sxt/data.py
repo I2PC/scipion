@@ -106,7 +106,7 @@ class XrayAcquisition(em.EMObject):
                 )
     
 class FocalSeries(em.EMObject):
-   
+    """Info related to the setOfTiltSeries"""   
     def __init__(self, **kwargs):
         em.EMObject.__init__(self, **kwargs)
         self._tiltSeriesGroup = pwobj.Integer(kwargs.get('tiltSeriesGroup', None))
