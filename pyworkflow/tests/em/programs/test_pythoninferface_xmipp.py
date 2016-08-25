@@ -10,6 +10,7 @@ import unittest
 from tempfile import NamedTemporaryFile
 from time import time
 
+from pyworkflow.tests import *
 from xmipp import *
 from pyworkflow.em.packages.xmipp3 import getXmippPath
 import pyworkflow.utils as pwutils
@@ -40,6 +41,9 @@ def binaryFileComparison(nameo, namet):
 
 
 class TestXmippPythonInterface(unittest.TestCase):
+    
+    _labels = [WEEKLY]
+    
     testsPath = getXmippPath("resources", "test")
     # Temporary filenames used
 

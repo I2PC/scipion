@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains utilities functions and classes.
-"""
 
 import sys
 import os
@@ -33,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+
 
 def prettyDate(time=False):
     """
@@ -79,7 +77,7 @@ def prettyDate(time=False):
     return str(day_diff/365) + " years ago"
 
 
-def dateStr(dt=None, time=True, secs=False):
+def dateStr(dt=None, time=True, secs=False, dateFormat=None):
     """ Get a normal string representation of datetime. 
     If dt is None, use NOW.
     """
@@ -87,11 +85,14 @@ def dateStr(dt=None, time=True, secs=False):
         dt = datetime.now()
     elif isinstance(dt, float) or isinstance(dt, int):
         dt = datetime.fromtimestamp(dt)
-    dateFormat = '%d-%m-%Y'
-    if time:
-        dateFormat += ' %H:%M'
-        if secs:
-            dateFormat += ':%S'
+
+    if dateFormat is None:
+        dateFormat = '%d-%m-%Y'
+        if time:
+            dateFormat += ' %H:%M'
+            if secs:
+                dateFormat += ':%S'
+
     return dt.strftime(dateFormat)
 
 prettyTime = dateStr

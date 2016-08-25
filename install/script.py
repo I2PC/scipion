@@ -398,7 +398,7 @@ env.addPackage('eman2.11',
 env.addPackage('eman2.12',
                tar='eman2.12.linux64.tgz',
                commands=[('./eman2-installer', 
-                          'eman2.bashrc')],
+                          'eman2.*rc')],
                default=False)
 
 env.addPackage('frealign',
@@ -488,6 +488,10 @@ env.addPackage('Gctf_v0.50',
 
 env.addPackage('Gautomatch_v0.53',
                tar='Gautomatch_v0.53.tgz',
+               default=False)
+
+env.addPackage('mag_distortion',
+               tar='mag_distortion_v1.0.1.tgz',
                default=False)
 
 env.execute()

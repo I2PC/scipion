@@ -34,11 +34,17 @@ import sys
 import numpy as np
 
 import pyworkflow.em as em
+from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.utils.path import moveFile
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
 from convert import writeShiftsMovieAlignment, getMovieFileName
+
+
+PLOT_CART = 0
+PLOT_POLAR = 1
+OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
 
 
 class XmippProtOFAlignment(ProtAlignMovies):
@@ -234,11 +240,19 @@ class XmippProtOFAlignment(ProtAlignMovies):
         movieFolder = self._getOutputMovieFolder(movie)
         return join(movieFolder, self._getMovieRoot(movie) + '_shifts.xmd')
 
+
 def createPlots(plotType, protocol, micId):
     print "output Micrographs to create Plot %s" % protocol.outputMicrographs
     mic = protocol.outputMicrographs[micId]
     return movieCreatePlot(mic, False).show()
 
+
+def showCartesianShiftsPlot(protocol, movieId):
+    createPlots(PLOT_CART, protocol, movieId)
+
+
+ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,
+                                    showCartesianShiftsPlot)
 
 def movieCreatePlot(mic, saveFig):
     import pyworkflow.em.metadata as md

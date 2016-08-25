@@ -22,16 +22,16 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Grigorieff packages specific files
-2. Read from Grigo packs files to base classes
+2. Read from Grigorieff packages files to base classes
 """
 
-import os
+import os, re
 
 from itertools import izip
 import numpy
@@ -246,6 +246,23 @@ def _createErrorCtf3Fn(self, filename):
     f.close()
 
 
+def readShiftsMovieAlignment(shiftFn):
+    f = open(shiftFn)
+    xshifts = []
+    yshifts = []
+
+    for line in f:
+        l = line.strip()
+        if not l.startswith('#'):
+            parts = l.split()
+            if len(xshifts) == 0:
+                xshifts = [float(i) for i in parts]
+            else:
+                yshifts = [float(i) for i in parts]
+    f.close()
+    return xshifts, yshifts
+
+
 def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
     movieAlignment=movie.getAlignment()
     shiftListX, shiftListY = movieAlignment.getShifts()
@@ -279,3 +296,57 @@ def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
               + initShifts + shiftsY + " " + finalShifts)
     f.write(shifts)
     f.close()
+
+
+def parseMagEstOutput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("The following distortion parameters were found"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = False
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+            if 'The Total Distortion =' in line:
+                result.append(float(line.split()[4]))
+        f.close()
+
+    return result
+
+
+def parseMagCorrInput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+        f.close()
+
+    return result

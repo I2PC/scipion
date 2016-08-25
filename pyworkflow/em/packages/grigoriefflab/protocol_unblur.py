@@ -19,7 +19,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -31,7 +31,7 @@ from pyworkflow.protocol.params import  (IntParam,
                                          BooleanParam, FloatParam,
                                          LEVEL_ADVANCED)
 from grigoriefflab import UNBLUR_PATH
-from convert import writeShiftsMovieAlignment
+from convert import readShiftsMovieAlignment
 
 
 
@@ -246,18 +246,17 @@ eof
     def _getFrcFn(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_frc.txt')
 
-    def _writeMovieAlignment(self, movie, numberOfFrames):
-        shiftsFn = self._getShiftsFn(movie)
-        s0, sN = self._getFrameRange(numberOfFrames)
+    def _getMovieShifts(self, movie):
+        """ Returns the x and y shifts for the alignment of this movie.
+        """
+        pixSize = movie.getSamplingRate()
+        shiftFn = self._getShiftsFn(movie)
+        xShifts, yShifts = readShiftsMovieAlignment(shiftFn)
+        # convert shifts from Angstroms to px (e.g. Summovie requires shifts in px)
+        xShiftsCorr = [x / pixSize for x in xShifts]
+        yShiftsCorr = [y / pixSize for y in yShifts]
 
-        if movie.hasAlignment() and self.useAlignment:
-            writeShiftsMovieAlignment(movie, shiftsFn, s0, sN)
-        else:
-            f = open(shiftsFn, 'w')
-            frames = sN - s0 + 1
-            shift = ("0 " * frames + "\n") * 2
-            f.write(shift)
-            f.close()
+        return xShiftsCorr, yShiftsCorr
 
     def _getFrameRange(self, n, prefix=''):
         """

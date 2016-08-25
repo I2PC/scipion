@@ -1,6 +1,7 @@
 <HTML>
     <HEAD>
         <TITLE>Scipion execution summary for %(projectName)s </TITLE>
+        %(refresh)s
     </HEAD>
     <STYLE>
         /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
@@ -15,9 +16,10 @@
           margin: 0 auto;
         }        
         H1 {
-            background: #b42222;
-            color: white
+            border-bottom: 2px solid firebrick;
+            color: #6E6E6E;
         }
+        
         H2 {
 /*            background: grey;*/
             color: firebrick;
@@ -31,6 +33,10 @@
             font-weight: bold;
             margin: 8px;
         }
+        .propertyline {
+            margin-top: 3px;
+            margin-bottom: 4px;
+        }
         FOOTER {
             text-align: center;
             font-style: italic;
@@ -42,18 +48,26 @@
             margin-left: 6px;
             height: 16px;
             width: 16px;
+        }
+        
+        .icon,
+        .valign {
             vertical-align: middle;
         }
         TABLE {
             border-collapse: collapse;
-            margin: 8px;
+            margin: auto;
+            width: 100%%;
         }
         TH {
-            background: #B4AC22;
+            background: #EAEBEC;
             padding: 3px;
         }
+        TD {
+            padding: 5px;
+        }
         .protocolLine {
-            background: #F3EC71;
+            background: #F2F2F2;
         }
         .center {
             text-align: center;
@@ -157,13 +171,15 @@
     <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
     <BODY>
         <DIV id="content">
-            <H1><img src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png"> Scipion execution summary report</H1>
+            <H1><img class="valign" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo_small.png">&nbsp;&nbsp; Project %(projectName)s </H1>
             <DIV class="row">
                 <DIV class="column column-5">
                     <H2>Project properties</H2>
-                    <label>Date:</label> %(dateStr)s<BR/>
-                    <label>Project:</label> %(projectName)s<BR/>
-                    <label>Scipion version:</label> %(scipionVersion)s<BR/>
+                    <P class="propertyline"><label>Start time:</label> %(startTime)s</P>
+                    <P class="propertyline"><label>Last update:</label> %(dateStr)s</P>
+                    <P class="propertyline"><label>Duration:</label> %(projectDuration)s</P>
+                    <P class="propertyline"><label>Status:</label> %(projectStatus)s</P>
+                    <P class="propertyline"><label>Scipion version:</label> %(scipionVersion)s</P>
 
                     <DIV id="acquisition">
                         <H2>Acquisition</H2>
@@ -172,7 +188,7 @@
 
                 <DIV id="runs" class="column column-7">
                     <H2>Runs summary</H2>
-                    <TABLE id="runsTable">
+                    <TABLE id="runsTable" class='center'>
                         <TR>
                             <TH>Name</TH>
                             <TH>Output</TH>
@@ -218,7 +234,7 @@
             
             // For each acquisition property
             $.each(report.acquisition, function(index, value){
-                var line = "<label>" + value.propertyName + "</label> " + value.propertyValue + "<BR/>";
+                var line = "<P class='propertyline'><label>" + value.propertyName + "</label> " + value.propertyValue + '</P>';
                 $(acquisitionSection).append(line);
             });
             
@@ -249,12 +265,16 @@
                     text: '',
                     x: -20 //center
                 },
-//                subtitle: {
-//                    text: 'Source: Scipion',
-//                    x: -20
-//                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
                 xAxis: {
-                    categories: report.ctfData.idValues
+                    title: {
+                        text: 'Micrograph index'
+                    },
+                    allowDecimals: false,
+                    type:'linear',
+                    range:50
                 },
                 yAxis: {
                     title: {
@@ -267,7 +287,7 @@
                     }]
                 },
                 tooltip: {
-                    valueSuffix: 'A'
+                    valueSuffix: ' A'
                 },
                 legend: {
                     layout: 'vertical',
@@ -284,8 +304,19 @@
                     name: 'Defocus V',
                     data: report.ctfData.defocusV,
                     color: '#B4AC22'
-                }]
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'    
+                }                
             });
+            
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var ctfChart = $('#ctfChart').highcharts()
+            ctfChart.showResetZoom();
+
 
             
         };
@@ -297,19 +328,23 @@
                     text: '',
                     x: -20 //center
                 },
-//                subtitle: {
-//                    text: 'Source: Scipion',
-//                    x: -20
-//                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
                 xAxis: {
-                    categories: report.systemData.idValues,
+                    title: {
+                        text: 'Time (hours)'
+                    },
+
+                    type:'linear',
                     labels:{
                         format:"{value:.2f}"
-                    }
+                    },
+                    range:50
                 },
                 yAxis: {
                     title: {
-                        text: 'Percentage'
+                        text: 'Percentage (%%)'
                     },
                     plotLines: [{
                         value: 0,
@@ -318,7 +353,7 @@
                     }]
                 },
                 tooltip: {
-                    valueSuffix: ''
+                    valueSuffix: '%%'
                 },
                 legend: {
                     layout: 'vertical',
@@ -339,9 +374,19 @@
                     name: 'cpu',
                     data: report.systemData.cpu,
                     color: '#D14242'
-                }]
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'
+                } 
             });
 
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var systemChart = $('#systemChart').highcharts()
+            systemChart.showResetZoom();
+            
             
         };
 

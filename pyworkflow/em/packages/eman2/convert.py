@@ -22,14 +22,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains converter functions that will serve to:
-1. Write from base classes to Eman specific files
-2. Read from Eman files to base classes
-"""
 
 import os, glob
 import json
@@ -45,14 +40,6 @@ from pyworkflow.em.packages.eman2 import getEmanCommand, getEnviron
 from pyworkflow.utils.path import createLink, removeBaseExt, replaceBaseExt, cleanPath
 
 
-# LABEL_TYPES = { 
-#                xmipp.LABEL_SIZET: long,
-#                xmipp.LABEL_DOUBLE: float,
-#                xmipp.LABEL_INT: int,
-#                xmipp.LABEL_BOOL: bool              
-#                }
-
-#     @static
 def loadJson(jsonFn):
     """ This function loads the Json dictionary into memory """
     jsonFile = open(jsonFn)
@@ -260,25 +247,6 @@ def convertImage(inputLoc, outputLoc):
                                                  _getFn(outputLoc)))
     proc.wait()
 
-def getImageDimensions(imageFile):
-    proc = createEmanProcess('e2ih.py', args=imageFile)
-    return map(int, proc.stdout.readline().split())
-
-def convertImage(inputLoc, outputLoc):
-    def _getFn(loc):
-        """ Use similar naming convetion than in Xmipp.
-        This does not works for EMAN out of here.
-        """
-        if isinstance(loc, tuple):
-            if loc[0] != em.NO_INDEX:
-                return "%06d@%s" % loc
-            return loc[1]
-        else:
-            return loc
-
-    proc = createEmanProcess('e2ih.py', args='%s %s' % (_getFn(inputLoc),
-                                                 _getFn(outputLoc)))
-    proc.wait()
 
 def readSetOfParticles(filename, partSet, **kwargs):
     pass

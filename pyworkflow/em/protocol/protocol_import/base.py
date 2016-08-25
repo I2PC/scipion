@@ -106,7 +106,7 @@ class ProtImportFiles(ProtImport):
                    "new files and will update the output Set, which can \n"
                    "be used right away by next steps.\n")
         
-        group.addParam('timeout', params.IntParam, default=300,
+        group.addParam('timeout', params.IntParam, default=7200,
               expertLevel=params.LEVEL_ADVANCED, 
               condition='dataStreaming',
               label="Timeout (secs)",

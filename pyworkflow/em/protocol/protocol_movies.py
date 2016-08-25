@@ -43,8 +43,6 @@ from pyworkflow.em import ImageHandler
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
 
-PLOT_CART = 0
-PLOT_POLAR = 1
 
 
 class ProtProcessMovies(ProtPreprocessMicrographs):
@@ -99,10 +97,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return deps
 
     def _getFirstJoinStepName(self):
-        # This function will be used for streamming, to check which is
+        # This function will be used for streaming, to check which is
         # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses
-        # (ej in Xmipp 'sortPSDStep')
+        # to have completed, this can be overwritten in subclasses
+        # (eg in Xmipp 'sortPSDStep')
         return 'createOutputStep'
 
     def _getFirstJoinStep(self):

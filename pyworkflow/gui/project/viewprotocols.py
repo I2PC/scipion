@@ -148,6 +148,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
 
 class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
+
     def __init__(self, project, actionFunc):
         pwgui.tree.ProjectRunsTreeProvider.__init__(self, project)
         self.actionFunc = actionFunc
@@ -541,7 +542,7 @@ class ProtocolsView(tk.Frame):
         self.keybinds = dict()
 
         # Register key binds
-        self._bindKeyPress('Delete', self._deleteProtocol)
+        self._bindKeyPress('Delete', self._onDelPressed)
 
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
@@ -1016,18 +1017,13 @@ class ProtocolsView(tk.Frame):
             if node.run:
 
                 # Get the latest activity timestamp
-                ts = node.run.getObjCreation()
-
-                # This format comes from the database....tricky
-                ts = dt.datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+                ts = node.run.getObjCreation().datetime(fs=False)
 
                 if node.run.initTime.hasValue():
-                    f = "%Y-%m-%d %H:%M:%S.%f"
-                    ts = dt.datetime.strptime(node.run.initTime.get(), f)
+                    ts = node.run.initTime.datetime()
 
                 if node.run.endTime.hasValue():
-                    f = "%Y-%m-%d %H:%M:%S.%f"
-                    ts = dt.datetime.strptime(node.run.endTime.get(), f)
+                    ts = node.run.endTime.datetime()
 
                 age = dt.datetime.now() - ts
 
@@ -1576,16 +1572,20 @@ class ProtocolsView(tk.Frame):
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
-        
-    def _deleteProtocol(self):
+
+    def _onDelPressed(self):
+        # This function will be connected to the key 'Del' press event
+        # We need to check if the canvas have the focus and then
+        # proceed with the delete action
 
         # get the widget with the focus
         widget = self.focus_get()
 
-        # If it's the search box
-        if not str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
-            return
+        # Call the delete action only if the widget is the canvas
+        if str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
+            self._deleteProtocol()
 
+    def _deleteProtocol(self):
         protocols = self._getSelectedProtocols()
 
         if len(protocols) == 0:

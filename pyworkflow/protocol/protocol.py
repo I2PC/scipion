@@ -122,19 +122,20 @@ class Step(OrderedObject):
     def getStatus(self):
         return self.status.get(STATUS_NEW)
     
-    def getElapsedTime(self):
+    def getElapsedTime(self, default=dt.timedelta()):
         """ Return the time that took to run 
         (or the actual running time if still is running )
         """
-        elapsed = None
+        elapsed = default
+
         if self.initTime.hasValue():
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            t1 = dt.datetime.strptime(self.initTime.get(), f)
-            endTimeStr = self.endTime.get()
-            if endTimeStr:
-                t2 = dt.datetime.strptime(endTimeStr, f)
+            t1 = self.initTime.datetime()
+
+            if self.endTime.hasValue():
+                t2 = self.endTime.datetime()
             else:
                 t2 = dt.datetime.now()
+
             elapsed = t2 - t1
         
         return elapsed
@@ -794,8 +795,7 @@ class Protocol(Step):
         """
         self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-        self.info("  %s" % dt.datetime.strptime(step.initTime.get(),
-                                                "%Y-%m-%d %H:%M:%S.%f"))
+        self.info("  %s" % step.initTime.datetime())
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -818,8 +818,7 @@ class Protocol(Step):
         
         self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-        self.info("  %s" % dt.datetime.strptime(step.endTime.get(),
-                                                "%Y-%m-%d %H:%M:%S.%f"))
+        self.info("  %s" % step.endTime.datetime())
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
@@ -1018,7 +1017,7 @@ class Protocol(Step):
 
         if envVarOn('SCIPION_DEBUG_NOCLEAN'):
             self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
-        else:
+        elif not self.isFailed():
             self.info('Cleaning temporarly files....')
             self.cleanTmp()
             
@@ -1590,10 +1589,11 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # We run "scipion run pyworkflow/...mpirun.py blah" instead of
             # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
             # when it runs on a MPI node, it *always* has the scipion env.
-            prog = join(os.environ['SCIPION_HOME'], 'scipion')
-            params = ['runprotocol', 'pw_protocol_mpirun.py', projectPath, protDbPath, protId]
-            retcode = runJob(None, prog, params,
-                             numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
+            params = ['runprotocol', 'pw_protocol_mpirun.py',
+                      projectPath, protDbPath, protId]
+            retcode = runJob(None, pw.getScipionScript(), params,
+                             numberOfMpi=protocol.numberOfMpi.get(),
+                             hostConfig=hostConfig)
             sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,

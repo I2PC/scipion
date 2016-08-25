@@ -31,6 +31,8 @@ import pyworkflow.em.metadata as md
 
 
 class TestMetaData(unittest.TestCase):
+    
+    _labels = [WEEKLY]
 
     def _newMd(self):
         md0 = md.MetaData()
