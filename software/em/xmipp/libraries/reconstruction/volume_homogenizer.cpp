@@ -147,13 +147,8 @@ void ProgVolumeHomogenizer::run()
 	//inV.write("FinV.vol");
 	//refV.write("FrefV.vol");
 
-
-	//MetaData mdSetOfImgInSort;
-	//size_t sz = setOfImgIn.size(), maxNImg;
-	//mdSetOfImgInSort.sort(setOfImgIn,MDL_IMAGE_IDX,true,-1,0);
-	//mdSetOfImgInSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
 	size_t maxNImg = setOfImgIn.size();
-	std::cerr << maxNImg<<"@@@@@@@@@22"<<std::endl;
+
 
 	//calculating progress time
 	//std::cerr<<"calculating OF and remapping for each new reprojection......\n";
