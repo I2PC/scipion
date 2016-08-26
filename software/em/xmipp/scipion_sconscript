@@ -604,7 +604,7 @@ for p in ['angular_break_symmetry',
           'volume_enhance_contrast',
           'volume_find_symmetry',
           'volume_from_pdb',
-	  #'volume_homogeneitator',
+	  #'volume_homogenizer',
           'volume_initial_simulated_annealing',
           'volume_validate_pca',
           'volume_pca',
@@ -658,7 +658,8 @@ for p in ['angular_break_symmetry',
           'mpi_transform_normalize',
           'mpi_transform_threshold',
           'mpi_xray_project',
-	      'mpi_validation_nontilt',
+	  'mpi_validation_nontilt',
+	  'mpi_volume_homogenizer',
           'mpi_write_test',
 
           # Unittest for Xmipp libraries
@@ -707,7 +708,7 @@ if opencv:
     addProg('movie_optical_alignment_cpu',
             libs=opencvLibs,
             deps=['opencv'])
-    addProg('volume_homogeneitator',
+    addProg('volume_homogenizer',
                 libs=opencvLibs,
                 deps=['opencv'])
     if cuda: # also the gpu version
