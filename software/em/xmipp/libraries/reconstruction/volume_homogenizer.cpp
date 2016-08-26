@@ -148,23 +148,27 @@ void ProgVolumeHomogenizer::run()
 	//refV.write("FrefV.vol");
 
 
-	MetaData mdSetOfImgInSort;
-	size_t sz = setOfImgIn.size(), maxNImg;
-	mdSetOfImgInSort.sort(setOfImgIn,MDL_IMAGE_IDX,true,-1,0);
-	mdSetOfImgInSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+	//MetaData mdSetOfImgInSort;
+	//size_t sz = setOfImgIn.size(), maxNImg;
+	//mdSetOfImgInSort.sort(setOfImgIn,MDL_IMAGE_IDX,true,-1,0);
+	//mdSetOfImgInSort.getValue(MDL_IMAGE_IDX,maxNImg,sz);
+	size_t maxNImg = setOfImgIn.size();
+	std::cerr << maxNImg<<"@@@@@@@@@22"<<std::endl;
 
 	//calculating progress time
-	std::cerr<<"calculating OF and remapping for each new reprojection......\n";
+	//std::cerr<<"calculating OF and remapping for each new reprojection......\n";
 	if (rank == 0)
 		init_progress_bar(maxNImg);
 
 
-	size_t i = 0;
-	FOR_ALL_OBJECTS_IN_METADATA (setOfImgIn)
-	//for (size_t i=0; i <= maxNImg; i++)
+	//size_t i = 0;
+	//FOR_ALL_OBJECTS_IN_METADATA (setOfImgIn)
+	for (size_t i = 1; i <= maxNImg; i++)
 	{
 		if ((i+1) % Nprocessors == rank)
 		{
+
+			/* if I use FOR_ALL_Object... I have to uncomment this part
 			//get the coordinate of each image for reprojection purpose
 			//********WARNING: be careful about applying shift, for experimental data it needs to be checked
 			ApplyGeoParams p;
@@ -182,6 +186,82 @@ void ProgVolumeHomogenizer::run()
 			//	setOfImgIn.getValue(MDL_SHIFT_Y, yShift, __iter.objId);
 			if (setOfImgIn.containsLabel(MDL_FLIP))
 				setOfImgIn.getValue(MDL_FLIP, flip, __iter.objId);
+
+			//reprojection from input and reference volumes to calculate optical flow (OF)
+			projectVolume(inV(), projIn, YSIZE(inV()), XSIZE(inV()), rot, tilt, psi);
+			projectVolume(refV(), projRef, YSIZE(refV()), XSIZE(refV()), rot, tilt, psi);
+			if (flip)
+			{
+				projIn.mirrorX();
+				projRef.mirrorX();
+			}
+
+			//for test
+			//projIn.write(fnTestOut2, ALL_IMAGES, true, WRITE_APPEND);
+			//projRef.write(fnTestOut3, ALL_IMAGES, true, WRITE_APPEND);
+
+			//preparing input data to use for OF algorithm
+			xmipp2Opencv(imgIn(), ImgIn);
+			xmipp2Opencv(projIn(), ProjIn);
+			xmipp2Opencv(projRef(), ProjRef);
+			convert2Uint8(ProjIn,ProjIn8);
+			convert2Uint8(ProjRef,ProjRef8);
+
+			//OF algorithm
+			cv::calcOpticalFlowFarneback(ProjRef8, ProjIn8, flow, 0.5, 6, winSize, 3, 5, 1.1, 0);
+			cv::split(flow, planes);
+
+			//for test
+			//if (count == 0)
+			//{
+			//	std::cout<<"count: "<<count<<std::endl;
+			//	std::cout<<"planes[0]"<<planes[0]<<"\n"<<std::endl;
+			//	std::cout<<"planes[1]"<<planes[1]<<"\n"<<std::endl;
+			//}
+
+			for( int row = 0; row < planes[0].rows; row++ )
+			    for( int col = 0; col < planes[0].cols; col++ )
+			    {
+			        planes[0].at<float>(row,col) += (float)col;
+			        planes[1].at<float>(row,col) += (float)row;
+			    }
+
+			//applying the flow on the input image to use as the corrected one
+			cv::remap(ImgIn, ProjCorr, planes[0], planes[1], cv::INTER_CUBIC);
+
+			//for test
+			//cv::remap(ProjIn, ProjCorr_test, planes[0], planes[1], cv::INTER_CUBIC);
+			//opencv2Xmipp(ProjCorr_test, projCorr_test());
+			//fn_proj_test.compose(projIdx, stackName_test);
+			//objId = setOfImgOut_test.addObject();
+			//setOfImgOut_test.setValue(MDL_IMAGE, fn_proj_test, objId);
+			//setOfImgOut_test.setValue(MDL_ANGLE_ROT, rot, objId);
+			//setOfImgOut_test.setValue(MDL_ANGLE_TILT, tilt, objId);
+			//setOfImgOut_test.setValue(MDL_ANGLE_PSI, psi, objId);
+			//setOfImgOut_test.setValue(MDL_ENABLED, 1, objId);
+			//projCorr_test.write(fn_proj_test, projIdx, true, WRITE_OVERWRITE);
+
+
+			//preparing output data to use for xmipp
+			opencv2Xmipp(ProjCorr, projCorr());
+			*/
+			//get the coordinate of each image for reprojection purpose
+			//********WARNING: be careful about applying shift, for experimental data it needs to be checked
+			ApplyGeoParams p;
+			p.only_apply_shifts = true;
+			imgIn.readApplyGeo(setOfImgIn, i, p);
+			//setOfImgIn.getValue(MDL_IMAGE, fnIn, __iter.objId);
+			//imgIn.read(fnIn);
+
+			setOfImgIn.getValue(MDL_ANGLE_ROT, rot, i);
+			setOfImgIn.getValue(MDL_ANGLE_TILT, tilt, i);
+			setOfImgIn.getValue(MDL_ANGLE_PSI, psi, i);
+			//if (setOfImgIn.containsLabel(MDL_SHIFT_X))
+			//	setOfImgIn.getValue(MDL_SHIFT_X, xShift, __iter.objId);
+			//if (setOfImgIn.containsLabel(MDL_SHIFT_Y))
+			//	setOfImgIn.getValue(MDL_SHIFT_Y, yShift, __iter.objId);
+			if (setOfImgIn.containsLabel(MDL_FLIP))
+				setOfImgIn.getValue(MDL_FLIP, flip, i);
 
 			//reprojection from input and reference volumes to calculate optical flow (OF)
 			projectVolume(inV(), projIn, YSIZE(inV()), XSIZE(inV()), rot, tilt, psi);
@@ -264,8 +344,8 @@ void ProgVolumeHomogenizer::run()
 			projCorr.write(fn_proj, projIdx, true, WRITE_OVERWRITE);
 			projIdx++;
 		}
-		if (i <= maxNImg)
-			i++;
+		//if (i <= maxNImg)
+		//	i++;
 
 		//calculating progress time
 		//count++;
@@ -288,7 +368,8 @@ void ProgVolumeHomogenizer::run()
 	//for test
 	//setOfImgOut_test.write(mdName_test);
 
-	progress_bar(maxNImg);
+	//for test I have disabled this line...finally I think I have to uncomment it
+	//progress_bar(maxNImg);
 }
 
 
