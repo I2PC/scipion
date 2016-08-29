@@ -94,36 +94,41 @@ class ProtSummovie(ProtAlignMovies):
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
-        self._createLink(movie)
-        numberOfFrames = movie.getNumberOfFrames()
-        s0, sN = self._getFrameRange(numberOfFrames, 'sum')
-
-        self._writeMovieAlignment(movie, s0, sN)
-        self._argsSummovie()
-
-        params = {'movieFn' : self._getMovieFn(movie),
-                  'numberOfFrames' : numberOfFrames,
-                  'micFn' : self._getMicFn(movie),
-                  'initFrame' : s0,
-                  'finalFrame' : sN,
-                  'shiftsFn' : self._getShiftsFn(movie),
-                  'samplingRate' : movie.getSamplingRate(),
-                  'voltage' : movie.getAcquisition().getVoltage(),
-                  'frcFn' : self._getFrcFn(movie),
-                  'exposurePerFrame' : self.exposurePerFrame.get(),
-                  'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
-                  'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
-                  }
-
         try:
+            self._createLink(movie)
+            numberOfFrames = movie.getNumberOfFrames()
+
+            if numberOfFrames is None:
+                raise Exception("Could not read number of frames.")
+
+            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
+
+            self._writeMovieAlignment(movie, s0, sN)
+            self._argsSummovie()
+
+            params = {'movieFn' : self._getMovieFn(movie),
+                      'numberOfFrames' : numberOfFrames,
+                      'micFn' : self._getMicFn(movie),
+                      'initFrame' : s0,
+                      'finalFrame' : sN,
+                      'shiftsFn' : self._getShiftsFn(movie),
+                      'samplingRate' : movie.getSamplingRate(),
+                      'voltage' : movie.getAcquisition().getVoltage(),
+                      'frcFn' : self._getFrcFn(movie),
+                      'exposurePerFrame' : self.exposurePerFrame.get(),
+                      'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
+                      'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
+                      }
+
             self.runJob(self._program, self._args % params)
             self._storeSummary(movie)
             if self.cleanInputMovies:
                 pwutils.cleanPath(movie._originalFileName.get())
                 print ("Movie %s erased" % movie._originalFileName.get())
                 
-        except:
-            print("ERROR: Movie %s failed\n" % movie.getFileName())
+        except Exception as e:
+            print("ERROR: Movie %s failed.\n"
+                  "       Message: %s\n" % (movie.getFileName(), e))
     
     #--------------------------- INFO functions --------------------------------
     def _citations(self):
