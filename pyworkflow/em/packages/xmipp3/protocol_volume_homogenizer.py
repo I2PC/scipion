@@ -29,16 +29,18 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
 from pyworkflow.em.data import SetOfParticles
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
+
 
 
 
 class XmippProtVolumeHomogenizer(ProtProcessParticles):
     """    
     Method to get two volume from different classes (with different conformation)
-    and correcting all images of one of the volume (input volume) with respect to
-    the another one as a reference, using optical flow algorithm.
-    This is to later merging the corrected images (outputParticles) to the images
-    of the reference map to reconstruct a volume with better resolution
+    and correcting (reforming) all images of one of the volumes (input volume) 
+    with respect to the another one as a reference, using optical flow algorithm.
+    The output is a setOfParticles contaied reformed particles merged with 
+    reference particles.
     """
     _label = 'volume homogenizer'    
     #--------------------------- DEFINE param functions --------------------------------------------   
@@ -49,20 +51,33 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         form.addParam('referenceVolume', params.PointerParam,
                  pointerClass='Volume',
                  label='Reference volume', 
-                 help="This is the volume that its resolution "
-                      "is going to be improved.")
+                 help="This is the volume that will be used as the reference "
+                      "in OF algorithm.")
+        form.addParam('referenceParticles', params.PointerParam, 
+                      pointerClass='SetOfParticles',
+                      pointerCondition='hasAlignmentProj',
+                      label="Reference particles",  
+                      help="Aligned particles related to the reference "
+                           "volume.")
         form.addParam('inputVolume', params.PointerParam,
                  pointerClass='Volume',
                  label='Input volume', 
-                 help="volume with the better resolution. "
-                      "Input and reference volume are from "
-                      "two different class.")
+                 help="Volume that we want to reform its related particles.")
         form.addParam('inputParticles', params.PointerParam, 
                       pointerClass='SetOfParticles',
                       pointerCondition='hasAlignmentProj',
                       label="Input particles",  
-                      help="Aligned particles related to the input volume "
-                           "(not the reference volume!).")
+                      help="Aligned particles related to the input volume. "
+                           "These particles will be reformed (corrected) "
+                           "based on the reference volume using OF algorithm. "
+                           "Reformed particles will be merged with "
+                           "reference particles inside the protocol to "
+                           "create outputParticles.")
+        form.addParam('doAlignment', params.BooleanParam, default=False,
+                      label='Reference and input volumes need to be aligned?',
+                      help="Input and reference volumes must be aligned. "
+                           "If you have not aligned them before choose this "
+                           "option, so protocol will handle it internally.")
         form.addParam('cutOffFrequency', params.FloatParam, default = -1,
                       label="Cut-off frequency",
                       help="This digital frequency is used to filter both "
@@ -84,33 +99,67 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):            
-        self._insertFunctionStep('opticalFlowAlignmentStep')                   
-        self._insertFunctionStep('createOutputStep')        
-    #--------------------------- STEPS functions --------------------------------------------
-    
-    def opticalFlowAlignmentStep(self):
-        particlesMd = self._getExtraPath('input_particles.xmd')
+        inputParticlesMd = self._getExtraPath('input_particles.xmd')
         inputParticles = self.inputParticles.get()
-        writeSetOfParticles(inputParticles, particlesMd)
+        writeSetOfParticles(inputParticles, inputParticlesMd)
         
         inputVol = self.inputVolume.get().getFileName()
         referenceVol = self.referenceVolume.get().getFileName()
+        
+        if not self.doAlignment.get():
+            self._insertFunctionStep('opticalFlowAlignmentStep', inputVol, referenceVol, inputParticlesMd)
+        else:
+            #Alignment step (first FF and then local)
+            maskArgs = ''
+            alignArgsFf = " --frm"
+            fnAlignedVolFf = self._getExtraPath ('aligned_inputVol_to_refVol_FF.vol')
+            self._insertFunctionStep('alignVolumeStep', referenceVol, inputVol, fnAlignedVolFf,
+                                             maskArgs, alignArgsFf)
+            fnAlignVolFfLocal = self._getExtraPath ('aligned_FfAlignedVol_to_refVol_local.vol')
+            alignArgsLocal = " --local --rot 0 0 1 --tilt 0 0 1"
+            alignArgsLocal += "  --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1 --scale 1 1 0.005"
+            XmippProtAlignVolume._insertFunctionStep('alignVolumeStep', referenceVol, fnAlignedVolFf, fnAlignVolFfLocal,
+                                             maskArgs, alignArgsLocal)
+            #projection matching step to modify input particles angles
+            
+            """
+            projection matching to get new particles
+        
+            args = fnAlignVolFfLocal, referenceVol, KHorooji ye p matching baraye particles
+            """
+            
+                
+        self._insertFunctionStep('createOutputStep')        
+    #--------------------------- STEPS functions --------------------------------------------
+    
+    def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd):
         winSize = self.winSize.get()
         if self.cutOffFrequency.get() == -1:
             cutFreq = 0.5
         else:
             cutFreq = self.cutOffFrequency.get()
-        fnOutput = self._getExtraPath('OutputParticles_modified')
-            
+        fnOutput = self._getExtraPath('reformed-particles')        
+          
         self.runJob("xmipp_volume_homogenizer", 
                     "-i %s -ref %s -img %s -o %s --winSize %d --cutFreq %f" % (
-                    inputVol, referenceVol, particlesMd, 
+                    inputVol, referenceVol, inputParticlesMd, 
                     fnOutput, winSize, cutFreq), 
-                    numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-           
+                    numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())        
+    
     def createOutputStep(self):        
+        refernceParticlesMd = self._getExtraPath('reference_particles.xmd')
+        referenceParticles = self.referenceParticles.get()
+        writeSetOfParticles(referenceParticles, refernceParticlesMd)
         inputParticles = self.inputParticles.get()
-        fnOutputParticles = self._getExtraPath('OutputParticles_modified.xmd')
+        
+        fnReformedParticles = self._getExtraPath('reformed-particles.xmd')
+        fnOutputParticles = self._getExtraPath('OutputParticles_merged.xmd')
+        self.runJob("xmipp_metadata_utilities", 
+                    "-i %s -o %s -s union_all %s" % (
+                    refernceParticlesMd, fnOutputParticles, fnReformedParticles),
+                    numberOfMpi = 1)
+        
+        
         
         outputSetOfParticles = self._createSetOfParticles()
         readSetOfParticles(fnOutputParticles, outputSetOfParticles) 
