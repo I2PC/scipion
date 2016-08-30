@@ -44,17 +44,17 @@ void ProgVolumeHomogenizer::readParams()
 
 void ProgVolumeHomogenizer::defineParams()
 {
-    addUsageLine("Corrects the set of input images of the input volume with ");
+    addUsageLine("Correcting the set of input images of the input volume with ");
     addUsageLine("respect to the reference map and using optical flow algorithm");
-    addParamsLine("  -i <selfile>             : Selfile with input volume. This is the volume with better resolution.");
-    addParamsLine("                           : then we will use its reformed images to join with reference map images.");
-    addParamsLine("  -ref <selfile>           : Selfile with reference volume. This is the volume that we aimed to improve its resolution");
-    addParamsLine("                           : This is the volume that we aimed to improve its resolution");
+    addParamsLine("  -i <selfile>             : Selfile with input volume. This is the volume that we aimed to reform its related particles.");
+    addParamsLine("                           : Then we will use its reformed (corrected) images to merge with reference map images.");
+    addParamsLine("  -ref <selfile>           : Selfile with reference volume. This is the volume that we use as the reference in OF algorithm.");
+    addParamsLine("                           : This is the volume that we will be reformed");
     addParamsLine("  -img <selfile>           : Selfile with input aligned images. These images are related to the input map");
     addParamsLine(" [-o <rootname=\"\">]      : Output fileName");
-    addParamsLine("                           : Output contains the list of corrected images and their angles with respect to the reference map");
+    addParamsLine("                           : Output contains the list of corrected (reformed) images and their angles with respect to the reference map");
     addParamsLine("                           : NOTE: you do not need to define any extension for the output root name. ");
-    addParamsLine("                           : Program will automatically create one .stk and one .xmd");
+    addParamsLine("                           : This program will automatically create one .stk and one .xmd");
     addParamsLine(" [--winSize <winSize=50>]  : window size for optical flow algorithm");
     addParamsLine(" [--cutFreq <cutFreq=0.5>] : cut-off frequency to use for low-pass filtering of input and reference volumes. This is digital frequency");
     addExampleLine("xmipp_volume_homogenizer  -i volume1.vol -ref volume2.vol -img particlesOfVolume1.xmd -o outputParticles");
