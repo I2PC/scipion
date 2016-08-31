@@ -28,6 +28,7 @@ import os
 from os.path import join
 
 from protocol import Protocol
+from object import Object
 from pyworkflow.utils.path import cleanPath
 
 
@@ -206,6 +207,7 @@ class Viewer(object):
         """
         # We can not import em globally
         from pyworkflow.em import ObjectView
+        fn = None
 
         if isinstance(filenameOrObject, basestring):
             # If the input is a string filename, we should take the object id
@@ -215,13 +217,22 @@ class Viewer(object):
             if not hasattr(self, 'protocol'):
                 raise Exception("self.protocol is not defined for this Viewer.")
             strId = self.protocol.strId()
-        elif hasattr(filenameOrObject, 'getFilaName'):
-            # If the input is an object, we can take the id from it
-            fn = filenameOrObject.getFileName()
+
+        elif isinstance(filenameOrObject, Object):
             strId = filenameOrObject.strId()
-        else:
-            raise Exception("Incorrect input object, it should be string or"
-                            "it should has a 'getFileName' method.")
+
+            if hasattr(filenameOrObject, 'getLocation'):
+                # In this case fn will be a location tuple that will be
+                # correctly handled by the showj DataView
+                fn = filenameOrObject.getLocation()
+            elif hasattr(filenameOrObject, 'getFileName'):
+                # If the input is an object, we can take the id from it
+                fn = filenameOrObject.getFileName()
+
+        if fn is None:
+            raise Exception("Incorrect input object, it should be 'string' or "
+                            "'Object' (with 'getLocation' or 'getFileName' "
+                            "methods).")
 
         return ObjectView(self._project, strId, fn, **kwargs)
         
