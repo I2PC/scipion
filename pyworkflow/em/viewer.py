@@ -21,13 +21,10 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-"""
-This module implement viewers for some type of common objects.
-"""
 from __future__ import print_function
 import os
 import sys
@@ -66,14 +63,23 @@ class DataView(View):
         self._viewParams = viewParams
             
     def _loadPath(self, path):
+        self._tableName = None
+
+        # If path is a tuple, we will convert to the filename format
+        # expected by Showj
+        if isinstance(path, tuple):
+            self._path = '%s@%s' % path
         # Check if there is a table name with @ in path
         # in that case split table name and path
         # table names can never starts with a number
         # this is considering an image inside an stack
-        if '@' in path and path[0] not in '0123456789':
-            self._tableName, self._path = path.split('@')
+        elif isinstance(path, basestring):
+            if '@' in path and path[0] not in '0123456789':
+                self._tableName, self._path = path.split('@')
+            else:
+                self._path = path
         else:
-            self._tableName, self._path = None, path
+            raise Exception("Invalid input path, should be 'string' or 'tuple'")
             
     def show(self):        
         showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
@@ -83,7 +89,7 @@ class DataView(View):
         tableName = '%s@' % self._tableName if self._tableName else ''
         params = '-i "%s%s"' % (tableName, self._path)
         for key, value in self._viewParams.items():
-            params = "%s --%s %s"%(params, key, value)
+            params = "%s --%s %s" % (params, key, value)
         
         return params
     
@@ -139,7 +145,8 @@ class DataView(View):
         
 class ObjectView(DataView):
     """ Wrapper to DataView but for displaying Scipion objects. """
-    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='', viewParams={},
+                 **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
         self.type = type
         self.port = project.port
@@ -147,9 +154,9 @@ class ObjectView(DataView):
         self.other = other
         
     def getShowJParams(self):
-        # mandatory to provide scipion params
-        params = DataView.getShowJParams(self) + ' --scipion %s %s %s' % (self.port, self.inputid, self.other)
-        return params
+        # Add the scipion parameters over the normal showj params
+        return '%s --scipion %s %s %s' % (DataView.getShowJParams(self),
+                                          self.port, self.inputid, self.other)
     
     def show(self):
         showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
@@ -201,7 +208,8 @@ class CtfView(ObjectView):
 
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
-    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='',
+                 viewParams={}, **kwargs):
         labels =  'enabled id _size _representative._filename'
         defaultViewParams = {showj.ORDER:labels,
                              showj.VISIBLE: labels, 
@@ -216,7 +224,8 @@ class ClassesView(ObjectView):
         
 class Classes3DView(ClassesView):
     """ Customized ObjectView for SetOfClasses. """
-    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='',
+                 viewParams={}, **kwargs):
         defaultViewParams = {showj.ZOOM: '99', 
                              showj.MODE: 'metadata'}
         defaultViewParams.update(viewParams)
