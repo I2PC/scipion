@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains several conversion utilities
-"""
 
 import os
 import sys
@@ -45,7 +42,7 @@ class ImageHandler(object):
     def __init__(self):
         # Now it will use Xmipp image library
         # to read and write most of formats, in the future
-        # if we want to be indepent of Xmipp, we should have
+        # if we want to be independent of Xmipp, we should have
         # our own image library
         from packages.xmipp3 import fixVolumeFileName
         
@@ -66,12 +63,13 @@ class ImageHandler(object):
         elif isinstance(location, basestring):
             outLocation = (NO_INDEX, location)
             
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
-            outLocation = (location.getIndex(), self._fixVolumeFileName(location))
-            
+        elif hasattr(location, 'getLocation'):
+            # This case includes Image and its subclasses
+            outLocation = (location.getIndex(),
+                           self._fixVolumeFileName(location))
         else:
-            raise Exception('Can not convert object %s to (index, location)' % type(location))
+            raise Exception('Can not convert object %s to (index, location)'
+                            % type(location))
         
         return outLocation
     
@@ -85,8 +83,8 @@ class ImageHandler(object):
             fn = locationObj[1]
         elif isinstance(locationObj, basestring):
             fn = locationObj
-        elif hasattr(locationObj, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
+        elif hasattr(locationObj, 'getLocation'):
+            # This case includes Image and its subclasses
             fn = locationObj.getLocation()[1]
         else:
             raise Exception('Can not match object %s to '
@@ -266,26 +264,31 @@ class ImageHandler(object):
         The radius should be less or equal dim(refImage)/2
         The mask will be stored in 'outputFile'
         """
-        #TODO: right now we need to call an xmipp program to create 
-        # the spherical mask, it would be nicer to have such utility in the binding
+        #TODO: right now we need to call a Xmipp program to create
+        # the spherical mask, it would be nicer to have such utility
+        # in the binding
         import pyworkflow.em.packages.xmipp3 as xmipp3
         inputRef = xmipp3.getImageLocation(refImage)
         self.__runXmippProgram('xmipp_transform_mask', 
-                               '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius))
+                               '-i %s --create_mask  %s --mask circular -%d'
+                               % (inputRef, outputFile, radius))
         
     def addNoise(self, inputFile, outputFile, std=1., avg=0.):
-        """ Add Gaussian noise to an input image (or stack) and produce noisy images.
+        """ Add Gaussian noise to an input image (or stack)
+        to produce noisy images.
         Params:
             inputFile: the filename of the input images
             outputFile: the filename of the output noisy images
             noiseStd: standard deviation for the Gaussian noise.
         """
         self.__runXmippProgram('xmipp_transform_add_noise', 
-                               '-i %s -o %s --type gaussian %f %f' % (inputFile, outputFile, std, avg))
+                               '-i %s -o %s --type gaussian %f %f'
+                               % (inputFile, outputFile, std, avg))
         
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function
-        is implemented in the xmipp binding."""
+        is implemented in the Xmipp binding.
+        """
         return xmipp.FileName(imgFn).isImage()
 
     @classmethod
@@ -294,11 +297,11 @@ class ImageHandler(object):
             fn = location[1]
         elif isinstance(location, basestring):
             fn = location
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
+        elif hasattr(location, 'getLocation'):
             fn = location.getLocation()[1]
         else:
-            raise Exception('Can not match object %s to (index, location)' % type(location))
+            raise Exception('Can not match object %s to (index, location)'
+                            % type(location))
 
         if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'
