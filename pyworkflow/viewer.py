@@ -205,19 +205,25 @@ class Viewer(object):
                 to the ObjectView constructor
         """
         # We can not import em globally
-        if not hasattr(self, 'protocol'):
-            raise Exception("self.protocol is not defined for this Viewer.")
-
         from pyworkflow.em import ObjectView
+
         if isinstance(filenameOrObject, basestring):
+            # If the input is a string filename, we should take the object id
+            # from the protocol. This assumes that self.protocol have been
+            # previously set
             fn = filenameOrObject
+            if not hasattr(self, 'protocol'):
+                raise Exception("self.protocol is not defined for this Viewer.")
+            strId = self.protocol.strId()
         elif hasattr(filenameOrObject, 'getFilaName'):
+            # If the input is an object, we can take the id from it
             fn = filenameOrObject.getFileName()
+            strId = filenameOrObject.strId()
         else:
             raise Exception("Incorrect input object, it should be string or"
                             "it should has a 'getFileName' method.")
 
-        return ObjectView(self._project, self.protocol.strId(), fn, **kwargs)
+        return ObjectView(self._project, strId, fn, **kwargs)
         
         
 class ProtocolViewer(Protocol, Viewer):
