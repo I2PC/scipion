@@ -31,7 +31,10 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/video/video.hpp"
+
+#ifdef GPU
 #include "opencv2/gpu/gpu.hpp"
+#endif
 
 #include <data/multidim_array.h>
 #include <data/xmipp_image.h>
