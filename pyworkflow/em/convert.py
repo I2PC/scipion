@@ -28,10 +28,10 @@ import os
 import sys
 import PIL
 
-from constants import NO_INDEX
 import xmipp
+import pyworkflow.utils as pwutils
+
 from constants import *
-from pyworkflow.utils import runJob, getExt
 
 # TODO: remove dependency from Xmipp
 DT_FLOAT = xmipp.DT_FLOAT
@@ -44,13 +44,37 @@ class ImageHandler(object):
         # to read and write most of formats, in the future
         # if we want to be independent of Xmipp, we should have
         # our own image library
-        from packages.xmipp3 import fixVolumeFileName
-        
         self._img = xmipp.Image()
         self._imgClass = xmipp.Image
-        self._fixVolumeFileName = fixVolumeFileName
 
-    def _convertToLocation(self, location):
+    @classmethod
+    def fixXmippVolumeFileName(cls, image):
+        """ This method will add :mrc to .mrc volumes
+        because for mrc format is not possible to distinguish
+        between 3D volumes and 2D stacks.
+        """
+        # We can not import Volume from top level since
+        # data depends on this module
+        from data import Volume
+        fn = image.getFileName()
+        if isinstance(image, Volume):
+            if fn.endswith('.mrc') or fn.endswith('.map'):
+                fn += ':mrc'
+
+        return fn
+
+    @classmethod
+    def locationToXmipp(cls, location):
+        """ Convert an index and filename location
+        to a string with @ as expected in Xmipp.
+        """
+        index, filename = cls._convertToLocation(location)
+        if index != NO_INDEX:
+            return "%06d@%s" % (index, filename)
+        return filename
+
+    @classmethod
+    def _convertToLocation(cls, location):
         """ Get a location in a tuple format (index, filename).
         location could be:
             tuple -> (index, filename)
@@ -66,7 +90,7 @@ class ImageHandler(object):
         elif hasattr(location, 'getLocation'):
             # This case includes Image and its subclasses
             outLocation = (location.getIndex(),
-                           self._fixVolumeFileName(location))
+                           cls.fixXmippVolumeFileName(location))
         else:
             raise Exception('Can not convert object %s to (index, location)'
                             % type(location))
@@ -157,7 +181,7 @@ class ImageHandler(object):
         if self.existsLocation(locationObj):
             location = self._convertToLocation(locationObj)
             fn = location[1]
-            ext = getExt(fn).lower()
+            ext = pwutils.getExt(fn).lower()
 
             if ext == '.png' or ext == '.jpg':
                 im = PIL.Image.open(fn)
