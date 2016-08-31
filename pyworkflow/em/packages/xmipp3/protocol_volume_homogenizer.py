@@ -32,8 +32,6 @@ from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
 
 
-
-
 class XmippProtVolumeHomogenizer(ProtProcessParticles):
     """    
     Method to get two volume from different classes (with different conformation)
@@ -73,6 +71,12 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                            "Reformed particles will be merged with "
                            "reference particles inside the protocol to "
                            "create outputParticles.")
+        form.addParam('symmetryGroup', params.StringParam, default='c1',
+                      label="Symmetry group",
+                      expertLevel=params.LEVEL_ADVANCED, 
+                      help="See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page "
+                           "for a description of the symmetry format "
+                           "accepted by Xmipp")
         form.addParam('doAlignment', params.BooleanParam, default=False,
                       label='Reference and input volumes need to be aligned?',
                       help="Input and reference volumes must be aligned. "
@@ -105,6 +109,8 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         
         inputVol = self.inputVolume.get().getFileName()
         referenceVol = self.referenceVolume.get().getFileName()
+        samplingRate = self.inputVolume.get().getSamplingRate()
+        symmetry = self.symmetryGroup.get()
         
         if not self.doAlignment.get():
             self._insertFunctionStep('opticalFlowAlignmentStep', inputVol, referenceVol, inputParticlesMd)
@@ -121,12 +127,22 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             XmippProtAlignVolume._insertFunctionStep('alignVolumeStep', referenceVol, fnAlignedVolFf, fnAlignVolFfLocal,
                                              maskArgs, alignArgsLocal)
             #projection matching step to modify input particles angles
+            fnAlignedVolGallery = self._getExtraPath("alignedVolume_gallery.stk")
+            self.runJob("xmipp_angular_project_library", 
+                        "-i %s -o %s --sym %s --sampling_rate %f" % (
+                        fnAlignVolFfLocal, fnAlignedVolGallery, 
+                        symmetry, samplingRate))
             
-            """
-            projection matching to get new particles
-        
-            args = fnAlignVolFfLocal, referenceVol, KHorooji ye p matching baraye particles
-            """
+            self.runJob("xmipp_angular_projection_matching", 
+                        "" % (
+                        ))
+            
+            
+            
+            
+            
+            
+            #self._insertFunctionStep('opticalFlowAlignmentStep', fnAlignVolFfLocal, referenceVol, ??????)
             
                 
         self._insertFunctionStep('createOutputStep')        
@@ -158,9 +174,9 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                     "-i %s -o %s -s union_all %s" % (
                     refernceParticlesMd, fnOutputParticles, fnReformedParticles),
                     numberOfMpi = 1)
-        
-        
-        
+        self.runJob("xmipp_metadata_utilities", 
+                    "-i %s -o %s -l itemId lineal 1 1" % (
+                    fnOutputParticles, fnOutputParticles), numberOfMpi = 1)
         outputSetOfParticles = self._createSetOfParticles()
         readSetOfParticles(fnOutputParticles, outputSetOfParticles) 
         outputSetOfParticles.copyInfo(inputParticles)
