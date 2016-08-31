@@ -44,8 +44,10 @@ from pyworkflow.gui.matplotlib_image import ImageWindow
 # From pyworkflow.em level
 import showj
 import metadata as md
-import xmipp
 from data import PdbFile
+from convert import ImageHandler
+
+import xmipp
 
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
@@ -66,9 +68,9 @@ class DataView(View):
         self._tableName = None
 
         # If path is a tuple, we will convert to the filename format
-        # expected by Showj
+        # as expected by Showj
         if isinstance(path, tuple):
-            self._path = '%s@%s' % path
+            self._path = ImageHandler.locationToXmipp(path)
         # Check if there is a table name with @ in path
         # in that case split table name and path
         # table names can never starts with a number
