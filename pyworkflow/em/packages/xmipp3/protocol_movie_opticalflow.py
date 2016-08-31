@@ -241,10 +241,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
         return join(movieFolder, self._getMovieRoot(movie) + '_shifts.xmd')
 
 
-def createPlots(plotType, protocol, micId):
-    print "output Micrographs to create Plot %s" % protocol.outputMicrographs
-    mic = protocol.outputMicrographs[micId]
-    return movieCreatePlot(mic, False).show()
+def createPlots(plotType, inputObj, micId):
+    if isinstance(inputObj, XmippProtOFAlignment):
+        micSet = inputObj.outputMicrographs
+    else:
+        micSet = inputObj
+    return movieCreatePlot(micSet[micId], False).show()
 
 
 def showCartesianShiftsPlot(protocol, movieId):
@@ -261,6 +263,8 @@ def movieCreatePlot(mic, saveFig):
     meanY = []
     figureSize = (8, 6)
 
+    # FIXME: We should not rely on a metadata to do the plot
+    # if this information is important we should store it as a property
     mdAlign = md.MetaData(mic.alignMetaData)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
