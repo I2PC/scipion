@@ -369,7 +369,8 @@ class SubclassesTreeProvider(TreeProvider):
                         if isinstance(attr, em.EMSet):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
-                            if any(issubclass(attr.ITEM_TYPE, c) for c in classes):
+                            if (attr.ITEM_TYPE is not None and
+                                any(issubclass(attr.ITEM_TYPE, c) for c in classes)):
                                 if p is None: # This means the set have not be added
                                     p = pwobj.Pointer(prot, extended=paramName)
                                     p._allowsSelection = False
