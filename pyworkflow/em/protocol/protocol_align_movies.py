@@ -194,7 +194,6 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 self._preprocessOutputMicrograph(mic, movie)
-                # FIXME The micSet is not setting properly dimensions (No-Dim)
                 micSet.append(mic)
 
             self._updateOutputSet('outputMicrographs', micSet, streamMode)
@@ -281,7 +280,7 @@ class ProtAlignMovies(ProtProcessMovies):
         n = movie.getNumberOfFrames()
         first, last = self._getFrameRange(n, 'align')
 
-        # Check if user selected to save movie, use the getAttriveValue
+        # Check if user selected to save movie, use the getAttributeValue
         # function for allow the protocol to not define this flag
         # and use False as default
         if self.getAttributeValue('doSaveMovie', False):
