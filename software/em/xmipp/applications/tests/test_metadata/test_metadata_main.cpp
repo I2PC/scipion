@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_convert.h>
+#include <data/xmipp_funcs.h>
 #include <iostream>
 #include <gtest/gtest.h>
 #include <string.h>
@@ -10,36 +11,7 @@
 #include <sys/time.h>
 
 #define N_ROWS_TEST		2
-#define N_ROWS_PERFORMANCE_TEST		800
-
-struct timeval getTime()
-{
-    struct timeval time;
-    gettimeofday(&time, 0);
-
-    return(time);
-}
-
-void timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
-{
-  // Perform the carry for the later subtraction by updating y.
-  if (x->tv_usec < y->tv_usec)
-  {
-	  int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
-	  y->tv_usec -= 1000000 * nsec;
-	  y->tv_sec += nsec;
-  }
-  if (x->tv_usec - y->tv_usec > 1000000)
-  {
-	  int nsec = (x->tv_usec - y->tv_usec) / 1000000;
-	  y->tv_usec += 1000000 * nsec;
-	  y->tv_sec -= nsec;
-  }
-
-  // Compute the time remaining to wait. tv_usec is certainly positive.
-  result->tv_sec = x->tv_sec - y->tv_sec;
-  result->tv_usec = x->tv_usec - y->tv_usec;
-}
+#define N_ROWS_PERFORMANCE_TEST		8000
 
 
 /*
@@ -206,55 +178,63 @@ TEST_F( MetadataTest, AddRowsPerformance)
     int 	i,j;				// Loop counters.
     bool	inserted;			// Insertion return value.
     MetaData md, md2, md3;
-    MDRow 	row[N_ROWS_PERFORMANCE_TEST];	// Rows array.
+    MDRow 	row;	// Sample row
 
-    struct timeval begin, end, original, byrow, byset;
+    printf("N_ROWS_PERFORMANCE_TEST = %d\n", N_ROWS_PERFORMANCE_TEST);
 
-    // Initialize rows.
+    // Initialize row.
+    row.setValue(MDL_X,1.);
+    row.setValue(MDL_Y,2.);
+    row.setValue(MDL_ZSCORE,3.);
+    row.setValue(MDL_ZSCORE_HISTOGRAM,4.);
+    row.setValue(MDL_ZSCORE_RESMEAN,5.);
+    row.setValue(MDL_ZSCORE_RESVAR,6.);
+    row.setValue(MDL_ZSCORE_RESCOV,7.);
+    row.setValue(MDL_ZSCORE_SHAPE1,8.);
+    row.setValue(MDL_ZSCORE_SHAPE2,9.);
+    row.setValue(MDL_ZSCORE_SNR1,10.);
+    row.setValue(MDL_ZSCORE_SNR2,11.);
+    row.setValue(MDL_IMAGE, String("particles.stk"));
+    row.setValue(MDL_SHIFT_X_DIFF, 1.5);
+    row.setValue(MDL_SHIFT_Y_DIFF, 2.5);
+    row.setValue(MDL_CONTINUOUS_X, 1.5);
+    row.setValue(MDL_CONTINUOUS_Y, 2.5);
+    row.setValue(MDL_SHIFT_X, 1.5);
+    row.setValue(MDL_SHIFT_Y, 2.5);
+    row.setValue(MDL_SHIFT_Z, 3.5);
+
+    Timer t;
+    size_t s1, s2, s3;
+    float r;
+
+
+    t.tic();
+
     for (i=0; i<N_ROWS_PERFORMANCE_TEST; i++)
     {
-    	row[i].setValue(MDL_X,1.);
-    	row[i].setValue(MDL_Y,2.);
-    	row[i].setValue(MDL_ZSCORE,3.);
-    	row[i].setValue(MDL_ZSCORE_HISTOGRAM,4.);
-    	row[i].setValue(MDL_ZSCORE_RESMEAN,5.);
-    	row[i].setValue(MDL_ZSCORE_RESVAR,6.);
-    	row[i].setValue(MDL_ZSCORE_RESCOV,7.);
-    	row[i].setValue(MDL_ZSCORE_SHAPE1,8.);
-    	row[i].setValue(MDL_ZSCORE_SHAPE2,9.);
-    	row[i].setValue(MDL_ZSCORE_SNR1,10.);
-    	row[i].setValue(MDL_ZSCORE_SNR2,11.);
+    	md.addRow(row);
     }
+    s1 = t.toc("Time original:", false);
 
-    begin = getTime();
+    t.tic();
     for (i=0; i<N_ROWS_PERFORMANCE_TEST; i++)
     {
-    	md.addRow(row[i]);
+    	md2.addRow2(row);
     }
-    end = getTime();
-    timeval_subtract ( &original, &end, &begin);
-    printf("Time original: %ld %ld\n", original.tv_sec, original.tv_usec);
 
-    begin = getTime();
-    for (i=0; i<N_ROWS_PERFORMANCE_TEST; i++)
-    {
-    	md2.addRow(row[i]);
-    }
-    end = getTime();
-    timeval_subtract ( &byrow, &end, &begin);
-    printf("Time by row: %ld %ld\n", byrow.tv_sec, byrow.tv_usec);
-    printf("Speed up by row: %f\n", ((double) original.tv_usec / (double) byrow.tv_usec));
+    s2 = t.toc("Time by row: ", false);
+    printf("    Speed up from original: %f\n", ((float) s1 / (float) s2));
 
     // Initialize insertion.
-    begin = getTime();
-    if (md3.initAddRow( row[0]))
+    t.tic();
+    if (md3.initAddRow(row))
     {
         // Add rows loop.
     	i=0;
     	do
     	{
     		// Insert row and increase number of insertions.
-    		md3.execAddRow(row[i]);
+    		md3.execAddRow(row);
         	i++;
     	}
     	while (i<N_ROWS_PERFORMANCE_TEST);
@@ -262,11 +242,9 @@ TEST_F( MetadataTest, AddRowsPerformance)
         // Finalize statement.
     	md3.finalizeAddRow();
     }
-    end = getTime();
-    timeval_subtract ( &byset, &end, &begin);
-    printf("Time by set: %ld %ld\n", byset.tv_sec, byset.tv_usec);
-    printf("Speed up by set: %f\n", ((double) original.tv_usec / (double) byset.tv_usec));
-
+    s3 = t.toc("Time by set:", false);
+    printf("    Speed up from original: %f\n", ((float) s1 / (float) s3));
+    printf("    Speed up from row: %f\n", ((float) s2 / (float) s3));
     // Check result.
     EXPECT_EQ(md, md2);
     EXPECT_EQ(md2, md3);
