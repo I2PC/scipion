@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -30,6 +30,7 @@ from os.path import exists
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 import pyworkflow.em.metadata as md
+from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
@@ -41,6 +42,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
+from protocol_sort import ProtRelionSortParticles
 
 
 ITER_LAST = 0
@@ -1400,3 +1402,43 @@ Examples:
             return 'Masked Maps'
         else:
             return 'Phase Randomized Masked Maps'
+
+
+class RelionSortViewer(Viewer):
+    """ Wrapper to visualize Relion sort protocol results
+    """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtRelionSortParticles]
+
+    def _visualize(self, obj, **kwargs):
+        views = []
+
+        if obj.hasAttribute('outputParticles'): # Protocol finished
+            particles = obj.outputParticles
+            labels = ('id enabled _index _filename _rlnSelectParticlesZscore '
+                      '_coordinate._rlnAutopickFigureOfMerit _sampling '
+                      '_ctfModel._defocusU _ctfModel._defocusV '
+                      '_ctfModel._defocusAngle _transform._matrix')
+            sortBy = '_rlnSelectParticlesZscore asc'
+            strId = particles.strId()
+            fn = particles.getFileName()
+            views.append(em.ObjectView(self._project, strId, fn,
+                                       viewParams={showj.ORDER: labels,
+                                                   showj.VISIBLE: labels,
+                                                   showj.SORT_BY: sortBy,
+                                                   showj.RENDER:'_filename'}))
+
+            fn = obj._getExtraPath('input_particles_sorted.star')
+            mdFn = md.MetaData(fn)
+            # If Zscore in output images plot Zscore particle sorting
+            if mdFn.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE):
+                # sort output by Z-score
+                mdFn.sort(md.RLN_SELECT_PARTICLES_ZSCORE)
+                xplotter = RelionPlotter(windowTitle="Zscore particles sorting")
+                xplotter.createSubPlot("Particle sorting", "Particle number",
+                                       "Zscore")
+                xplotter.plotMd(mdFn, False,
+                                mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE)
+                views.append(xplotter)
+
+        return views

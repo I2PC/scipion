@@ -115,6 +115,8 @@ class XmippProtCL2DAlign(ProtAlign2D):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
+        if self.numberOfMpi <= 1:
+            errors.append('Mpi needs to be greater than 1.')
         if self.useReferenceImage:
             if self.referenceImage.hasValue():
                 refImage = self.referenceImage.get()

@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -303,7 +303,7 @@ class ProjectWindow(ProjectBaseWindow):
 
 class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
-    def __init__(self, **args):
+    def __init__(self, **kwargs):
         # Load global configuration
         settings = ProjectSettings()
 
@@ -334,7 +334,7 @@ class ProjectManagerWindow(ProjectBaseWindow):
         except Exception:
             title = Message.LABEL_PROJECTS
         
-        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **args)
+        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **kwargs)
         self.manager = Manager()
         
         self.switchView(VIEW_PROJECTS)
