@@ -101,6 +101,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         inputFn = self._getMovieOrMd(movie)
         outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+        aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
         dark = self.inputMovies.get().getDark()
         gain = self.inputMovies.get().getGain()
         # Get the number of frames and the range
@@ -133,6 +134,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
         if self.doSaveAveMic or self.doComputePSD:
             args += '--oavg %s ' % outMicFn
 
+        if self.doComputePSD:
+            args  += '--oavgInitial %s ' % aveMic
+
         if doSaveMovie:
             args += '--outMovie %s ' % outMovieFn
         
@@ -156,12 +160,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                     % (outMovieFn, program))
 
             if self.doComputePSD:
-                aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
-                self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(),
-                                  roi, dark, gain)
                 uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
                 correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-
+                # TODO: Compute the PSD inside the OF program?
                 self.computePSD(aveMic, uncorrectedPSD)
                 self.computePSD(outMicFn, correctedPSD)
                 self.composePSD(uncorrectedPSD + ".psd",

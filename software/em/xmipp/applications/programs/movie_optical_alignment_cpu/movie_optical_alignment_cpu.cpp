@@ -53,6 +53,7 @@ class ProgOpticalAligment: public XmippProgram
 public:
     FileName fnMovie, fnOut, fnGain, fnDark;
     FileName fnMovieOut, fnMicOut;
+    FileName fnMicInitial; // Filename if writing the initial average micrograph
     Image<double> gain, dark;
     ImageGeneric movieStack;
     std::vector< Matrix1D<double> > shiftVector;
@@ -79,6 +80,8 @@ public:
         addParamsLine("    -i <inMoviewFnName>           : input movie File Name");
         addParamsLine("   [-o <fn=\"out.xmd\">]           : Metadata with the shifts of each frame.");
         addParamsLine("   [--oavg <fn=\"\">]              : Give the name of a micrograph to generate an aligned micrograph");
+        addParamsLine("   [--oavgInitial <fn=\"\">]       : Use this option to save the initial average micrograph ");
+        addParamsLine("                                   : before applying any alignment. ");
         addParamsLine("   [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
         addParamsLine("   [--cropDRCorner <x=-1> <y=-1>]  : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
         addParamsLine("   [--frameRange <n0=-1> <nF=-1>]  : First and last frame to align, frame numbers start at 0");
@@ -101,6 +104,7 @@ public:
         fnGain = getParam("--gain");
         fnDark = getParam("--dark");
         fnMicOut = getParam("--oavg");
+        fnMicInitial = getParam("--oavgInitial");
         fnMovieOut = getParam("--outMovie");
         groupSize = getIntParam("--groupSize");
         nfirst = getIntParam("--frameRange",0);
@@ -448,6 +452,10 @@ public:
             outputMovie.initZeros(imagenum, 1, Ydim, Xdim);
         levelNum=sqrt(double(imagenum));
         computeAvg(nfirst, nlast, avgCurr());
+
+        if (!fnMicInitial.isEmpty())
+            avgCurr.write(fnMicInitial);
+
         xmipp2Opencv(avgCurr(), avgcurr);
         cout<<"Frames "<<nfirst<<" to "<<nlast<<" under processing ..."<<std::endl;
         while (div!=groupSize)
@@ -602,9 +610,13 @@ public:
             levelCounter++;
         }
         opencv2Xmipp(avgcurr, avgCurr());
-        avgCurr.write(fnMicOut);
+
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
-        if (fnMovieOut!="")
+
+        if (!fnMicOut.isEmpty())
+            avgCurr.write(fnMicOut);
+
+        if (!fnMovieOut.isEmpty())
         {
             II()=outputMovie;
             II.write(fnMovieOut);
