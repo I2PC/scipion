@@ -337,8 +337,11 @@ def createAlignmentPlot(meanX, meanY):
         #ax.plot(preX, preY, 'yo-')
         ax.text(preX-0.02, preY+0.02, str(i))
         i += 1
-    ax.plot(sumMeanX, sumMeanY)
-    ax.plot(sumMeanX, sumMeanY, 'yo-')
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
 
     return plotter
 

@@ -51,15 +51,13 @@ class XmippMovieAlignViewer(Viewer):
                       showj.OBJCMDS: "'%s'" % OBJCMD_MOVIE_ALIGNCARTESIAN
                       }
 
-        def _addView(attrName):
-            if obj.hasAttribute(attrName):
-                attr = getattr(obj, attrName)
-                views.append(self.objectView(attr, viewParams=viewParams))
-
-        _addView('outputMicrographs')
-        _addView('outputMovies')
-
-        if not views:
+        if obj.hasAttribute('outputMicrographs'):
+            views.append(self.objectView(obj.outputMicrographs,
+                                         viewParams=viewParams))
+        elif obj.hasAttribute('outputMovies'):
+            views.append(self.objectView(obj.outputMovies,
+                                         viewParams=viewParams))
+        else:
             views.append(self.infoMessage("Output (micrographs or movies) has "
                                           "not been produced yet."))
 
