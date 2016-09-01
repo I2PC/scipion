@@ -743,9 +743,10 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         });
     }
 
-    private JToggleButton createModeButton(String iconName, int mnemonic, ItemListener itemListener){
+    private JToggleButton createModeButton(String iconName, int mnemonic, ItemListener itemListener, boolean selected){
 
         JToggleButton button = new JToggleButton("", XmippResource.getIcon(iconName));
+        button.setSelected(selected);
         button.addItemListener(itemListener);
         modesgrp.add(button);
         //button.setMnemonic(mnemonic);
@@ -767,19 +768,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         ItemListener changeListener = new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent itemEvent) {
-                System.out.print(itemEvent.toString());
                 showHideModeParameters();
             }
         };
 
         // Add the normal picking mode
-        normalPickingbt = createModeButton("picking.png",TOGGLE_NORMAL_MODE_KEY, changeListener);
+        normalPickingbt = createModeButton("picking.png",TOGGLE_NORMAL_MODE_KEY, changeListener, true);
 
         // If it's supervised picking.
         if ((this instanceof SupervisedPickerJFrame))
         {
             // Linear picking mode
-            linearPickingbt = createModeButton("linearPicking.png",TOGGLE_LINEAR_MODE_KEY, changeListener);
+            linearPickingbt = createModeButton("linearPicking.png",TOGGLE_LINEAR_MODE_KEY, changeListener, false);
 
             // Step pane
             initStepPane();
@@ -789,7 +789,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         if (!(this instanceof ExtractPickerJFrame))
         {
             // Add eraser
-            eraserbt = createModeButton("eraser.png",TOGGLE_ERASE_MODE_KEY, changeListener);
+            eraserbt = createModeButton("eraser.png",TOGGLE_ERASE_MODE_KEY, changeListener, false);
 
             // Color pane
             initColorPane(getParticlePicker().getColor());
