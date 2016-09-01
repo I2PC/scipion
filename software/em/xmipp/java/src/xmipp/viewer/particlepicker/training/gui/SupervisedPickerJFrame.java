@@ -116,6 +116,10 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
         return centerparticlebt.isSelected();
     }
 
+    public boolean centerParticle() {
+        return centerparticlebt.isSelected() && isNormalMode();
+    }
+
     @Override
     public ParticlesDialog initParticlesJDialog() {
         return new ParticlesDialog(this);

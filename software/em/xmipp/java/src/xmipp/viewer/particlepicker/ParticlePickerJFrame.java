@@ -834,10 +834,14 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 activateNormalMode();
             } else {
                 eraserbt.setSelected(true);
-                getCanvas().setCustomCursor();
+                setCanvasCursor();
                 showHideModeParameters();
             }
         }
+    }
+
+    protected void setCanvasCursor(){
+        getCanvas().setCustomCursor();
     }
 
     public boolean isLinearMode() {
@@ -862,7 +866,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 linearPickingbt.setSelected(true);
                 showHideModeParameters();
                 ((SupervisedPickerCanvas) getCanvas()).resetLinearPicking();
-                getCanvas().setCustomCursor();
+                setCanvasCursor();
             }
         }
     }
@@ -871,8 +875,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
         normalPickingbt.setSelected(true);
         showHideModeParameters();
-        getCanvas().setCustomCursor();
-
+        setCanvasCursor();
 
     }
 
@@ -886,6 +889,11 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         } else {
             return 1;
         }
+    }
+
+    public void setEraserSize(int newSize){
+        if (newSize<1) newSize=1;
+        eSize.setValue(newSize);
     }
 
     public int getStep(){
@@ -904,7 +912,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         sizepn.setVisible(!isEraseMode);
         eSizepn.setVisible(isEraseMode);
         colorpn.setVisible(!isEraseMode);
-        steppn.setVisible(isLinearMode);
+        if (linearModeAvailable()) steppn.setVisible(isLinearMode);
 
         // Shapes
         shapelb.setVisible(!isEraseMode);
@@ -1003,16 +1011,34 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     {
         eSizepn = new JPanel();
         eSizepn.setOpaque(false);
-        int size = 10;
+        int size = 100;
         eSizelb = new JLabel("Eraser size:");
         eSizepn.add(eSizelb);
         eSize = new JSpinner();
+        JFormattedTextField text = getTextField(eSize);
+        text.setColumns(5);
         eSize.setValue(size);
         eSizepn.add(eSize);
         // Default : hidden.
         eSizepn.setVisible(false);
         tb.add(eSizepn);
 
+    }
+
+    /**
+     * Return the formatted text field used the spinner
+     * null if the editor doesn't descend from JSpinner.DefaultEditor.
+     */
+    public JFormattedTextField getTextField(JSpinner spinner) {
+        JComponent editor = spinner.getEditor();
+        if (editor instanceof JSpinner.DefaultEditor) {
+            return ((JSpinner.DefaultEditor)editor).getTextField();
+        } else {
+            System.err.println("Unexpected editor type: "
+                    + spinner.getEditor().getClass()
+                    + " isn't a descendant of DefaultEditor");
+            return null;
+        }
     }
 
     protected void initSizePane()
@@ -1117,9 +1143,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		if(getCanvas() != null)
 			getCanvas().repaint();
 		getParticlePicker().setSize(size);
-                //updateMicrographsModel();
-                if(particlesdialog != null)
-                    loadParticles(true);
+        //updateMicrographsModel();
+        if(particlesdialog != null)
+            loadParticles(true);
 		getParticlePicker().saveConfig();
 	}
 
@@ -1161,10 +1187,6 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         map.put((char)TOGGLE_ERASE_MODE_KEY, "Toggle between erase and picking");
 
         if (linearModeAvailable()) {
-
-            map.put((char)SupervisedPickerCanvas.ERASER_MEDIUM_SIZE_KEY+ "(while erasing)", "Use a Medium size eraser");
-            map.put((char)SupervisedPickerCanvas.ERASER_LARGE_SIZE_KEY+ "(while erasing)", "Use a Large size eraser");
-            map.put((char)SupervisedPickerCanvas.ERASER_X_LARGE_SIZE_KEY+ "(while erasing)", "Use a X-large size eraser");
 
             map.put((char)TOGGLE_LINEAR_MODE_KEY, "Toggle between normal picking and linear picking mode");
             map.put((char)SupervisedPickerCanvas.POLIGONAL_MODE_KEY + " (continuous)", "While in linear picking mode, linear picking will be continuous (polygonal mode).");

@@ -3,11 +3,12 @@ package xmipp.viewer.particlepicker.training.gui;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
 import javax.swing.SwingUtilities;
-import xmipp.jni.Particle;
+
+
 import xmipp.viewer.particlepicker.ParticlePickerCanvas;
+import xmipp.viewer.particlepicker.PickerParticle;
 import xmipp.viewer.particlepicker.training.model.AutomaticParticle;
 import xmipp.viewer.particlepicker.training.model.CenterParticleTask;
 import xmipp.viewer.particlepicker.training.model.ManualParticle;
@@ -20,10 +21,6 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 {
 
     public static final int POLIGONAL_MODE_KEY = KeyEvent.VK_C;
-    public static final int ERASER_MEDIUM_SIZE_KEY = KeyEvent.VK_M;
-    public static final int ERASER_LARGE_SIZE_KEY = KeyEvent.VK_B;
-    public static final int ERASER_X_LARGE_SIZE_KEY = KeyEvent.VK_X;
-    private ManualParticle active;
     private Point linearPickingStartPoint;
 
 
@@ -31,19 +28,27 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 	{
 		super(frame);
 		
-		active = getLastParticle();
+		active = getLastManualParticle();
 
 	}
 
-	protected ManualParticle getLastParticle()
+	protected ManualParticle getLastManualParticle(){
 
-	{
-		if (getMicrograph().getParticles().isEmpty())
+        if (getMicrograph().getParticles().isEmpty())
 			return null;
 		return getMicrograph().getLastAvailableParticle(getFrame().getThreshold());
 	}
+    @Override
+    public ManualParticle getActive(){
+        return (ManualParticle) active;
+    }
 
-	public void mousePressed(MouseEvent e)
+    protected ManualParticle getLastParticle(){
+        return getLastManualParticle();
+    }
+
+
+    public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
 
@@ -54,7 +59,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		{
 			if (frame.isEraserMode())
 			{
-				erase(x, y, e);
+				erase(e);
 				return;
 			}
 
@@ -62,7 +67,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
             if (frame.isLinearMode()) {
                 linearPickingMousePressed(x,y, isKeyPressed(POLIGONAL_MODE_KEY));
                 return;
-            };
+            }
 
 			ManualParticle p = getMicrograph().getParticle(x, y);
 			if (p == null)
@@ -89,12 +94,12 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
             p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
             getMicrograph().addManualParticle(p, getParticlePicker());
 
-            if(getFrame().isCenterParticle())
+            if(getFrame().centerParticle())
                 new CenterParticleTask(this, getParticlePicker(), p).execute();
 
             active = p;
             if(picker.getMode() == Mode.Manual)
-                new ParticleToTemplatesTask(active).execute();
+                new ParticleToTemplatesTask(getActive()).execute();
 
             if (refresh) refresh();
         }
@@ -170,97 +175,8 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
     }
 
-    protected void erase(int x, int y)
-	{
-        erase(x,y,true);
-	}
-
-    protected void erase(int x, int y, boolean refresh)
-    {
-        getMicrograph().removeParticles(x, y, getParticlePicker());
-        active = getLastParticle();
-        if (refresh) refresh();
-    }
-
-    protected void erase(int x, int y, MouseEvent e)
-    {
-        // Get the eraser size and coordinates and apply zoom
-        int size = getFrame().getEraserSize();
-        double distance = size/getMagnification();
-
-        int cursorX = (int) (e.getX()/getMagnification());
-        int cursorY = (int) (e.getY()/getMagnification());
-
-        List<ManualParticle> particlesToDelete = new ArrayList<ManualParticle>();
-        // Go through the list of particles
-        for (ManualParticle particle : getMicrograph().getParticles()) {
-
-            // if particle is within the distance (inside eraser)
-            int length = length(particle.getX(),particle.getY(), cursorX, cursorY);
-
-            System.out.println("Particle at " + particle.getX() + ", " + particle.getY() + " is " + length + " from cursor: " + cursorX + ", " + cursorY);
-            System.out.println("Radius = " + distance);
-            if (length <= distance){
-                particlesToDelete.add(particle);
-            }
-        }
-
-        // For each particle to delete
-        for (ManualParticle particle : particlesToDelete) {
-            getMicrograph().removeParticle(particle,getParticlePicker());
-        }
-
-        refresh();
-    }
-
-    private int length (int x, int y, int x1, int y1) {
-
-        return (int) Math.ceil(Math.sqrt(Math.pow((x - x1), 2) + Math.pow((y - y1), 2)));
-
-    }
-    // Erases having a larger point (square in this case)
-    protected void eraseOld(int x, int y, MouseEvent e)
-    {
-
-        int particleSize = getFrame().getSide();
-
-        //
-        int size = 1;
-
-        if (isKeyPressed(ERASER_MEDIUM_SIZE_KEY)) {
-            size = 2;
-        } else if (isKeyPressed(ERASER_LARGE_SIZE_KEY)){
-            size = 3;
-        } else if (isKeyPressed(ERASER_X_LARGE_SIZE_KEY)){
-            size = 4;
-        }
-
-        // Calculate the eraser "area" (square)
-        int side = (int) Math.ceil((size*particleSize/10)/getMagnification());
-
-        // Make it odd
-        if (side % 2 == 0){
-            side = side + 1;
-        }
-
-        // Half of if
-        int half = (side -1)/2;
-
-        int step = Math.round(particleSize/2);
-
-        for (int x2 = x-half; x2<=x+half; x2+=step ){
-
-            for (int y2 = y-half; y2<=y+half; y2+=step ){
-                erase(x2,y2, false);
-            }
-        }
-
-        refresh();
-    }
-
-
 	/**
-	 * Updates particle position and repaints if onpick.
+	 * Updates particle position and repaints if on pick.
 	 */
 	@Override
 	public void mouseDragged(MouseEvent e)
@@ -275,19 +191,21 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 			{
 				if (frame.isEraserMode())
 				{
-					erase(x, y, e);
+					erase(e);
 					return;
 				}
 				if (active == null)
 					return;
 
-				if (!micrograph.fits(x, y, active.getParticlePicker().getSize()))
+                ManualParticle activeParticle = getActive();
+
+				if (!micrograph.fits(x, y, activeParticle.getParticlePicker().getSize()))
 					return;
 				if (active instanceof AutomaticParticle)
 				{
-					getMicrograph().removeParticle(active, getParticlePicker());
-					active = new ManualParticle(active.getX(), active.getY(), picker, micrograph);
-					getMicrograph().addManualParticle(active, getParticlePicker());
+					getMicrograph().removeParticle(activeParticle, getParticlePicker());
+					active = new ManualParticle(activeParticle.getX(), activeParticle.getY(), picker, micrograph);
+					getMicrograph().addManualParticle(activeParticle, getParticlePicker());
 					
 				}
 				else
@@ -313,14 +231,14 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		{
 			if (frame.isEraserMode())
 			{
-				erase(x, y, e);
+				erase(e);
 				return;
 			}
 			//deleting when mouse released, takes less updates to templates and frame
 			if (active != null && SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
 			{
-				getMicrograph().removeParticle(active, getParticlePicker());
-				active = getLastParticle();
+				getMicrograph().removeParticle(getActive(), getParticlePicker());
+				active = getLastManualParticle();
 				refresh();
 
 			}
@@ -331,25 +249,28 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 				setActiveMoved(false);
 				if(picker.getMode() == Mode.Manual)
 //					TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
-					new ParticleToTemplatesTask(active).execute();
+					new ParticleToTemplatesTask(getActive()).execute();
 			}
 		}
 	}
 
 	public void manageActive(int x, int y)
 	{
+
+        ManualParticle activeParticle = getActive();
+
 		if (!activemoved)
 			return;
 
-		if (!micrograph.fits(x, y, active.getSize()))
+		if (!micrograph.fits(x, y, activeParticle.getSize()))
 			return;
 
 		if (active instanceof AutomaticParticle && !((AutomaticParticle) active).isDeleted())
 		{
 
-			getMicrograph().removeParticle(active, getParticlePicker());
-			active = new ManualParticle(active.getX(), active.getY(), active.getParticlePicker(), micrograph);
-			getMicrograph().addManualParticle(active, getParticlePicker());
+			getMicrograph().removeParticle(activeParticle, getParticlePicker());
+			active = new ManualParticle(activeParticle.getX(), activeParticle.getY(), activeParticle.getParticlePicker(), micrograph);
+			getMicrograph().addManualParticle(activeParticle, getParticlePicker());
 			repaint();
 		}
 		else
@@ -364,6 +285,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
 	protected void doCustomPaint(Graphics2D g2)
 	{
+
 		List<ManualParticle> particles;
 		int index;
 		Color color = picker.getColor();
@@ -378,9 +300,9 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
 			g2.setColor(autoColor);
 			List<AutomaticParticle> autoparticles = getMicrograph().getAutomaticParticles();
-			for (int i = 0; i < autoparticles.size(); i++)
-				if (!autoparticles.get(i).isDeleted() && autoparticles.get(i).getCost() >= getFrame().getThreshold())
-					drawShape(g2, autoparticles.get(i), false, continuousst);
+            for (AutomaticParticle autoparticle : autoparticles)
+                if (!autoparticle.isDeleted() && autoparticle.getCost() >= getFrame().getThreshold())
+                    drawShape(g2, autoparticle, false, continuousst);
 
 		}
 		if (active != null)
@@ -389,7 +311,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 			
 			color = isauto? Color.red.darker(): Color.red;
 			g2.setColor(color);
-			drawShape(g2, active, true, activest);
+			drawShape(g2, getActive(), true, activest);
 		}
 		Rectangle autopickout = getMicrograph().getRectangle();
 		if (autopickout != null && getMicrograph().hasManualParticles())
@@ -400,16 +322,15 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 			int y = getYOnImage((int) autopickout.getY());
 			g2.drawRect(x, y, (int) (autopickout.getWidth() * magnification), (int) (autopickout.getHeight() * magnification));
 		}
-
 	}
 
 	@Override
-	public void refreshActive(Particle p)
+	public void refreshActive(PickerParticle p)
 	{
 		if (p == null)
 			active = null;
 		else
-			active = (ManualParticle) p;
+			active = p;
 		repaint();
 
 	}
@@ -420,18 +341,16 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		return (SupervisedPickerJFrame)frame;
 	}
 
-	@Override
+    @Override
+    protected void removeParticle(PickerParticle particleToRemove) {
+        getMicrograph().removeParticle(particleToRemove,getParticlePicker());
+    }
+
+    @Override
 	public SupervisedPickerMicrograph getMicrograph()
 	{
 		return (SupervisedPickerMicrograph)micrograph;
 	}
-
-	@Override
-	public ManualParticle getActive()
-	{
-		return active;
-	}
-
 	
 	
 	@Override
@@ -441,15 +360,6 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		return (SupervisedParticlePicker)picker;
 	}
 
-    public void mouseMoved(MouseEvent e) {
-        super.mouseMoved(e);
-
-        if (getFrame().isLinearMode()){
-            paintLine(e);
-        } else if (getFrame().isEraserMode()){
-            paintEraser(e);
-        }
-    }
 
     public void keyPressed(KeyEvent e){
 
@@ -461,6 +371,13 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
                 resetLinearPicking();
             }
         }
+    }
+
+    public void mouseMoved(MouseEvent e) {
+        super.mouseMoved(e);
+
+        if (getFrame().isLinearMode())
+            paintLine(e);
     }
 
     private void paintLine(MouseEvent e){
@@ -479,19 +396,4 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 
     }
 
-    private void paintEraser(MouseEvent e){
-
-        Graphics g = this.getGraphics();
-
-        // Repaint
-        this.paint(g);
-        // Draw a circle from the center
-        g.setColor(Color.YELLOW);
-        int r = getFrame().getEraserSize();
-        int x = e.getX()-(r/2);
-        int y = e.getY()-(r/2);
-
-        g.drawOval(x,y,r,r);
-
-    }
 }

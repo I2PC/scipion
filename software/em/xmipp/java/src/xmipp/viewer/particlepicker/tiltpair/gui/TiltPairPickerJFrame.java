@@ -147,6 +147,11 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		viewmn.add(ijmi);
 	}
 
+    @Override
+    protected void setCanvasCursor(){
+        super.setCanvasCursor();
+        tiltedcanvas.setCustomCursor();
+    }
 	protected void showImportFromFilesDialog() {
 		if (importffilesjd == null)
 			importffilesjd = new ImportParticlesFromFilesTiltPairJDialog(this);

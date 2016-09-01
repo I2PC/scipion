@@ -2,22 +2,15 @@ package xmipp.viewer.particlepicker.extract;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 
 import javax.swing.SwingUtilities;
 
 import xmipp.jni.Particle;
-import xmipp.viewer.particlepicker.Micrograph;
-import xmipp.viewer.particlepicker.ParticlePicker;
-import xmipp.viewer.particlepicker.ParticlePickerCanvas;
-import xmipp.viewer.particlepicker.ParticlePickerJFrame;
-import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
+import xmipp.viewer.particlepicker.*;
 
 public class ExtractCanvas extends ParticlePickerCanvas
 {
-
-	private ExtractParticle active;
 
 	public ExtractCanvas(ExtractPickerJFrame frame)
 	{
@@ -26,9 +19,9 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	}
 
 	@Override
-	public void refreshActive(Particle p)
+	public void refreshActive(PickerParticle p)
 	{
-		active = (ExtractParticle) p;
+		active = p;
 		repaint();
 
 	}
@@ -36,10 +29,8 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	@Override
 	public ExtractParticle getActive()
 	{
-		return active;
+		return (ExtractParticle) active;
 	}
-
-
 
 	@Override
 	public ExtractMicrograph getMicrograph()
@@ -63,13 +54,12 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		}
 		if (active != null)
 		{
-			score = active.getScore(getFrame().getColorHelper().getId());
+			score = getActive().getScore(getFrame().getColorHelper().getId());
 			color = getFrame().getColorHelper().getColor(score);
 			drawShape(g2, active.getX(), active.getY(), frame.getParticlePicker().getSize(), true, activest, color);
 		}
 	}
 
-	@Override
 	protected ExtractParticle getLastParticle()
 	{
 		if (getMicrograph().getParticles().isEmpty())
@@ -103,7 +93,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 						p.setEnabled(!p.isEnabled());
 					active = p;
 				}
-				getFrame().refreshActiveOnGallery(active);
+				getFrame().refreshActiveOnGallery(getActive());
 			}
 
 			refresh();
@@ -132,8 +122,8 @@ public class ExtractCanvas extends ParticlePickerCanvas
 			if (!micrograph.fits(x, y, picker.getSize()))
 				return;
 			moveActiveParticle(x, y);
-			active.setEnabled(true);// if it was disabled gets enabled
-			getFrame().refreshActiveOnGallery(active);// if enabled propagate info
+			getActive().setEnabled(true);// if it was disabled gets enabled
+			getFrame().refreshActiveOnGallery(getActive());// if enabled propagate info
 			frame.setChanged(true);
 			repaint();
 		}
@@ -143,9 +133,9 @@ public class ExtractCanvas extends ParticlePickerCanvas
 	
 	protected void moveActiveParticle(int x, int y)
 	{
-		active.setEnabled(true);
+		getActive().setEnabled(true);
 		super.moveActiveParticle(x, y);
-		getFrame().refreshActiveOnGallery(active);
+		getFrame().refreshActiveOnGallery(getActive());
 	}
 
 	@Override
@@ -166,10 +156,14 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		return (ExtractPickerJFrame)frame;
 	}
 
-	@Override
+    @Override
+    protected void removeParticle(PickerParticle particleToRemove) {
+        getMicrograph().removeParticle((ExtractParticle) particleToRemove);
+    }
+
+    @Override
 	public ExtractParticlePicker getParticlePicker()
 	{
-		// TODO Auto-generated method stub
 		return (ExtractParticlePicker)picker;
 	}
 
