@@ -96,8 +96,9 @@ class ImageHandler(object):
                             % type(location))
         
         return outLocation
-    
-    def existsLocation(self, locationObj):
+
+    @classmethod
+    def existsLocation(cls, locationObj):
         """ Return True if a given location exists. 
         Location have the same meaning than in _convertToLocation.
         """
