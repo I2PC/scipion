@@ -40,20 +40,24 @@ class XmippMovieAlignViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         views = []
 
-        if obj.hasAttribute('outputMicrographs'):
-            plotLabels = ('psdCorr._filename plotPolar._filename '
-                          'plotCart._filename')
-            labels = plotLabels + ' _filename '
-            objCommands = "'%s'" % OBJCMD_MOVIE_ALIGNCARTESIAN
+        plotLabels = ('psdCorr._filename plotPolar._filename '
+                      'plotCart._filename')
+        labels = plotLabels + ' _filename '
+        viewParams = {showj.MODE: showj.MODE_MD,
+                      showj.ORDER: labels,
+                      showj.VISIBLE: labels,
+                      showj.RENDER: plotLabels,
+                      showj.ZOOM: 50,
+                      showj.OBJCMDS: "'%s'" % OBJCMD_MOVIE_ALIGNCARTESIAN
+                      }
 
-            views.append(self.objectView(obj.outputMicrographs,
-                                         viewParams={showj.MODE: showj.MODE_MD,
-                                                     showj.ORDER: labels,
-                                                     showj.VISIBLE: labels,
-                                                     showj.RENDER: plotLabels,
-                                                     showj.ZOOM: 50,
-                                                     showj.OBJCMDS: objCommands
-                                                     }))
+        def _addView(attrName):
+            if obj.hasAttribute(attrName):
+                attr = getattr(obj, attrName)
+                views.append(self.objectView(attr, viewParams=viewParams))
+
+        _addView('outputMicrographs')
+        _addView('outputMovies')
 
         if not views:
             views.append(self.infoMessage("Output (micrographs or movies) has "
