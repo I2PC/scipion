@@ -177,12 +177,16 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         fnReformedParticles = self._getExtraPath('reformed-particles.xmd')
         fnOutputParticles = self._getExtraPath('OutputParticles_merged.xmd')
         self.runJob("xmipp_metadata_utilities", 
-                    "-i %s -o %s -s union_all %s" % (
+                    '-i %s -o %s -s union_all %s' % (
                     refernceParticlesMd, fnOutputParticles, fnReformedParticles),
                     numberOfMpi = 1)
         self.runJob("xmipp_metadata_utilities", 
-                    "-i %s -o %s -l itemId lineal 1 1" % (
+                    '-i %s -o %s -l itemId lineal 1 1' % (
                     fnOutputParticles, fnOutputParticles), numberOfMpi = 1)
+        self.runJob("xmipp_metadata_utilities", 
+                    '-i %s -o %s --operate drop_column "ctfDefocusU ctfDefocusV"' % (
+                    fnOutputParticles, fnOutputParticles), numberOfMpi = 1)
+        
         outputSetOfParticles = self._createSetOfParticles()
         readSetOfParticles(fnOutputParticles, outputSetOfParticles) 
         outputSetOfParticles.copyInfo(inputParticles)
