@@ -52,6 +52,7 @@ class Canvas(tk.Canvas, Scrollable):
         
         self.lastItem = None # Track last item selected
         self.lastPos = (0, 0) # Track last clicked position
+        self.firstPos = None  # Track first clicked position (for a drag action)
         self.items = {} # Keep a dictionary with high-level items
         self.cleanSelected = True
         
@@ -59,9 +60,11 @@ class Canvas(tk.Canvas, Scrollable):
         self.onDoubleClickCallback = None
         self.onRightClickCallback = None
         self.onControlClickCallback = None
+        self.onAreaSelected = None
         
         # Add bindings
         self.bind("<Button-1>", self.onClick)
+        self.bind("<ButtonRelease-1>", self.onButton1Release)
         self.bind("<Button-3>", self.onRightClick)
         self.bind("<Double-Button-1>", self.onDoubleClick)
         self.bind("<B1-Motion>", self.onDrag)
@@ -130,7 +133,7 @@ class Canvas(tk.Canvas, Scrollable):
             self.lastItem.setSelected(False)
         self.lastItem = item
         item.setSelected(True)
-               
+
     def _findItem(self, xc, yc):
         """ Find if there is any item in the canvas
         in the mouse event coordinates.
@@ -151,7 +154,7 @@ class Canvas(tk.Canvas, Scrollable):
             if callback:
                 self.callbackResults = callback(self.lastItem)
             self.lastPos = (xc, yc)
-            
+
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
@@ -191,11 +194,29 @@ class Canvas(tk.Canvas, Scrollable):
         self._handleMouseEvent(event, self.onDoubleClickCallback)
 
     def onDrag(self, event):
-        if self.lastItem:
-            xc, yc = self.getCoordinates(event)
-            self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
-            self.lastPos = (xc, yc)  
-            
+        try:
+            if self.lastItem:
+                xc, yc = self.getCoordinates(event)
+                self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
+                self.lastPos = (xc, yc)
+
+            elif self.firstPos is None:
+                self.firstPos = (event.x, event.y)
+                # print "onDrag position captured."
+        except Exception, ex:
+            # JMRT: We are having a weird exception here.
+            # Presumably because there is concurrency between the onDrag
+            # event and the refresh one. For now, just ignore it.
+            pass
+
+    def onButton1Release(self, event):
+
+        if self.firstPos is not None:
+
+            self.onAreaSelected(self.firstPos[0], self.firstPos[1], event.x, event.y)
+
+            self.firstPos = None
+
     def onMotion(self, event):
         self.onLeave(event) # Hide tooltip and cancel schedule
             
@@ -284,7 +305,7 @@ class Canvas(tk.Canvas, Scrollable):
             node.item = item
             item.node = node
             self.addItem(item)
-            
+
             if getattr(node, 'expanded', True):
                 for child in node.getChilds():
                     self._drawNodes(child, visitedDict)
@@ -350,16 +371,31 @@ def findStrictClosestConnectors(item1, item2):
     return c1Coords, c2Coords
 
 
-class Item(object):      
-    socketSeparation=12
+def getConnectors(itemSource, itemDest):
 
-    def __init__(self,canvas,x,y):
-        self.activeConnector=None
-        self.canvas=canvas
-        self.x=x
-        self.y=y
-        self.sockets={}
+    srcConnector = itemSource.getOutputConnectorCoordinates()
+    dstConnector = itemDest.getInputConnectorCoordinates()
+
+    return srcConnector, dstConnector
+
+
+class Item(object):
+    socketSeparation = 12
+    verticalFlow = True
+
+    TOP = 0
+    RIGHT = 1
+    BOTTOM = 2
+    LEFT = 3
+
+    def __init__(self, canvas, x, y):
+        self.activeConnector = None
+        self.canvas = canvas
+        self.x = x
+        self.y = y
+        self.sockets = {}
         self.listeners = []
+        self.selectionListeners = []
 
     def getCenter(self,x1,y1,x2,y2):
         xc=(x2+x1)/2.0
@@ -370,6 +406,40 @@ class Item(object):
         x1,y1,x2,y2=self.getCorners()
         xc,yc=self.getCenter(x1,y1,x2,y2)
         return [(xc,y1), (x2,yc), (xc,y2), (x1,yc)]
+
+    def getTopConnectorCoordinates(self):
+
+        return self._getConnectorCoordinates(self.TOP)
+
+    def getBottomConnectorCoordinates(self):
+
+        return self._getConnectorCoordinates(self.BOTTOM)
+
+    def getLeftConnectorCoordinates(self):
+
+        return self._getConnectorCoordinates(self.LEFT)
+
+    def getRightConnectorCoordinates(self):
+
+        return self._getConnectorCoordinates(self.RIGHT)
+
+    def _getConnectorCoordinates(self, side):
+        fourConnectors = self.getConnectorsCoordinates()
+        return fourConnectors[side]
+
+    def getInputConnectorCoordinates(self):
+
+        if self.verticalFlow:
+            return self.getTopConnectorCoordinates()
+        else:
+            return self.getLeftConnectorCoordinates()
+
+    def getOutputConnectorCoordinates(self):
+
+        if self.verticalFlow:
+            return self.getBottomConnectorCoordinates()
+        else:
+            return self.getRightConnectorCoordinates()
 
     def getUpDownConnectorsCoordinates(self):
         corners = self.getCorners()
@@ -453,18 +523,31 @@ class Item(object):
         
     def addPositionListener(self, listenerFunc):
         self.listeners.append(listenerFunc)
-        
+
+    def addSelectionListener(self, listenerFunc):
+        self.selectionListeners.append(listenerFunc)
+
+    def _notifySelectionListeners(self, value):
+
+        for listenerFunc in self.selectionListeners:
+            listenerFunc(value)
+
     def setSelected(self, value):
-        bw = 1
+        bw = 0
         bc = 'black'
         if value:
-            bw = 3
-            bc = 'Firebrick'
+            bw = 2
+            self.lift()
+            # bc = 'Firebrick'
         self.canvas.itemconfig(self.id, width=bw, outline=bc)
+        self._notifySelectionListeners(value)
 
+
+    def lift(self):
+        self.canvas.lift(self.id)
         
 class TextItem(Item):
-    """This class will serve to paint and store rectange boxes with some text.
+    """This class will serve to paint and store rectangle boxes with some text.
        x and y are the coordinates of the center of this item"""
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
         super(TextItem,self).__init__(canvas,x,y)
@@ -489,18 +572,23 @@ class TextItem(Item):
         
     def paint(self):
         """Paint the object in a specific position."""
+
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
                                                justify=tk.CENTER, fill=self.textColor)
+
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
 
         self.id = self._paintBounds(xr-m, yr-m, w+m, h+m, fillColor=self.bgColor)
-        self.canvas.tag_raise(self.id_text)
+        self.canvas.lift(self.id_text)
 
     def move(self, dx, dy):
         super(TextItem, self).move(dx,dy)
         self.canvas.move(self.id_text, dx, dy)
-    
+
+    def lift(self):
+        super(TextItem, self).lift()
+        self.canvas.lift(self.id_text)
    
         
 class TextBox(TextItem):
@@ -508,7 +596,7 @@ class TextBox(TextItem):
         super(TextBox,self).__init__(canvas, text, x, y, bgColor, textColor)
 
     def _paintBounds(self, x, y, w, h, fillColor):
-        return self.canvas.create_rectangle(x, y, w, h, fill=fillColor) 
+        return self.canvas.create_rectangle(x, y, w, h, fill=fillColor, outline=fillColor)
 
 class RoundedTextBox(TextItem):
     def __init__(self, canvas, text, x, y, bgColor, textColor='black'):
@@ -625,6 +713,71 @@ class SquareConnector(ColoredConnector):
 
 
 # !!!! other figures: half circle, diamond...
+class Oval():
+
+    """Oval or circle"""
+    def __init__(self, canvas, x, y, radio, color='green', anchor=None):
+
+        self.anchor = anchor
+        self.X, self.Y = x, y
+        self.radio = radio
+        self.color = color
+        self.canvas = canvas
+        anchor.addPositionListener(self.updateSrc)
+        anchor.addSelectionListener(self.selectionListener)
+        self.id = None
+        self.paint()
+
+    def paint(self):
+
+        if self.id:
+            self.canvas.delete(self.id)
+
+        self.id = self.canvas.create_oval(self.X, self.Y, self.X + self.radio, self.Y + self.radio, fill=self.color, outline='black')
+        # self.canvas.tag_raise(self.id)
+
+    def updateSrc(self, dx, dy):
+        self.X += dx
+        self.Y += dy
+        self.paint()
+
+    def selectionListener(self, value):
+        if value:
+            self.canvas.lift(self.id)
+
+
+class Rectangle():
+
+    def __init__(self, canvas, x, y, width, height=None, color='green', anchor=None):
+
+        self.anchor = anchor
+        self.X, self.Y = x, y
+        self.width = width
+        self.height = height or width
+        self.color = color
+        self.canvas = canvas
+        anchor.addPositionListener(self.updateSrc)
+        anchor.addSelectionListener(self.selectionListener)
+        self.id = None
+        self.paint()
+
+    def paint(self):
+
+        if self.id:
+            self.canvas.delete(self.id)
+
+        self.id = self.canvas.create_rectangle(self.X, self.Y, self.X + self.width, self.Y + self.height, fill=self.color, outline=self.color)
+        # self.canvas.tag_raise(self.id)
+
+    def updateSrc(self, dx, dy):
+        self.X += dx
+        self.Y += dy
+        self.paint()
+
+    def selectionListener(self, value):
+        if value:
+            self.canvas.lift(self.id)
+
 
 class Edge():
     """Edge between two objects"""
@@ -640,7 +793,9 @@ class Edge():
         self.paint()
         
     def paint(self):
-        coords = findClosestConnectors(self.source,self.dest)
+        # coords = findClosestConnectors(self.source,self.dest)
+        coords = getConnectors(self.source, self.dest)
+
         if coords:
             c1Coords, c2Coords = coords
     
@@ -649,7 +804,7 @@ class Edge():
     
             self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
                                               c2Coords[0], c2Coords[1],
-                                              width=2)
+                                              width=1., fill='#ccc')
             self.canvas.tag_lower(self.id)
         
     def updateSrc(self, dx, dy):

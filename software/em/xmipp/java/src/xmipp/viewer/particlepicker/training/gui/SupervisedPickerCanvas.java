@@ -1,9 +1,7 @@
 package xmipp.viewer.particlepicker.training.gui;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import javax.swing.SwingUtilities;
@@ -20,10 +18,15 @@ import xmipp.viewer.particlepicker.training.model.SupervisedPickerMicrograph;
 public class SupervisedPickerCanvas extends ParticlePickerCanvas
 {
 
-	
-	private ManualParticle active;
+    public static final int POLIGONAL_MODE_KEY = KeyEvent.VK_C;
+    public static final int ERASER_MEDIUM_SIZE_KEY = KeyEvent.VK_M;
+    public static final int ERASER_LARGE_SIZE_KEY = KeyEvent.VK_B;
+    public static final int ERASER_X_LARGE_SIZE_KEY = KeyEvent.VK_X;
+    private ManualParticle active;
+    private Point linearPickingStartPoint;
 
-	public SupervisedPickerCanvas(SupervisedPickerJFrame frame)
+
+    public SupervisedPickerCanvas(SupervisedPickerJFrame frame)
 	{
 		super(frame);
 		
@@ -42,6 +45,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 	public void mousePressed(MouseEvent e)
 	{
 		super.mousePressed(e);
+
 		int x = offScreenX(e.getX());
 		int y = offScreenY(e.getY());
 
@@ -49,41 +53,174 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		{
 			if (frame.isEraserMode())
 			{
-				erase(x, y);
+				erase(x, y, e);
 				return;
 			}
+
+            // Filament/linear picking
+            if (frame.isLinearMode()) {
+                linearPickingMousePressed(x,y, isKeyPressed(POLIGONAL_MODE_KEY));
+                return;
+            };
 
 			ManualParticle p = getMicrograph().getParticle(x, y);
 			if (p == null)
 				p = getMicrograph().getAutomaticParticle(x, y, getFrame().getThreshold());
-			if (p != null && SwingUtilities.isLeftMouseButton(e))
+
+            if (p != null && SwingUtilities.isLeftMouseButton(e))
 			{
 				active = p;
 				repaint();
 
 			}
-			else if (SwingUtilities.isLeftMouseButton(e) && micrograph.fits(x, y, frame.getParticlePicker().getSize()))
-			{
-                            
-				p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
-				getMicrograph().addManualParticle(p, getParticlePicker());
-                                if(getFrame().isCenterParticle())
-                                    new CenterParticleTask(this, getParticlePicker(), p).execute();
-				active = p;
-				if(picker.getMode() == Mode.Manual)
-//					TasksManager.getInstance().addTask(new ParticleToTemplatesTask(active));
-					new ParticleToTemplatesTask(active).execute();
-				refresh();
-			}
-		}
+			else if (SwingUtilities.isLeftMouseButton(e)){
+                addParticle(x, y, true);
+            }
+        }
 	}
 
-	protected void erase(int x, int y)
+    protected void addParticle( int x, int y, boolean refresh) {
+
+        ManualParticle p;
+        if (micrograph.fits(x, y, frame.getParticlePicker().getSize()))
+        {
+
+            p = new ManualParticle(x, y, frame.getParticlePicker(), micrograph);
+            getMicrograph().addManualParticle(p, getParticlePicker());
+
+            if(getFrame().isCenterParticle())
+                new CenterParticleTask(this, getParticlePicker(), p).execute();
+
+            active = p;
+            if(picker.getMode() == Mode.Manual)
+                new ParticleToTemplatesTask(active).execute();
+
+            if (refresh) refresh();
+        }
+    }
+
+    private void linearPickingMousePressed(int x, int y, boolean continuous){
+
+        Point point = new Point(x,y);
+
+        if (haveFirstPoint()) {
+            finishLinearPicking(point, continuous);
+        } else {
+            startLinearPicking(point);
+        }
+    }
+
+    private boolean haveFirstPoint() {
+        return linearPickingStartPoint != null;
+    }
+
+    private void startLinearPicking(Point point) {
+
+        this.linearPickingStartPoint = point;
+    }
+
+    private void finishLinearPicking(Point point, boolean continuous) {
+
+        addParticlesInLine(point);
+
+        // Start from here.
+        if (continuous) {
+            this.linearPickingStartPoint = point;
+        } else {
+            resetLinearPicking();
+        }
+
+    }
+
+    public void resetLinearPicking(){
+        this.linearPickingStartPoint = null;
+    }
+
+    private void addParticlesInLine(Point endPoint) {
+
+        // To be moved to the interface!!
+        int gap = this.getFrame().getStep();
+
+        // Get the distance diff (x,y) between ent and start
+        double lengthX = endPoint.getX() - this.linearPickingStartPoint.getX();
+        double lengthY = endPoint.getY() - this.linearPickingStartPoint.getY();
+
+        // Get the angle (tan-1: inverse)
+        double angle = Math.atan2(lengthY, lengthX);
+
+        // Calculate the number length of the line
+        double lineLength = Math.sqrt(Math.pow(lengthY,2) + Math.pow(lengthX,2));
+
+        // Calculate number of segments for the iteration
+        int segmentsNum = (int) Math.round(lineLength/gap);
+
+        double actualGap = lineLength/segmentsNum;
+
+        // Now create as one particle each segment of size "gap"
+        for (int step = 0; step <= segmentsNum; step++){
+
+            // Calculate the X
+            int x = (int)Math.round(this.linearPickingStartPoint.getX() + (Math.cos(angle)*step*actualGap));
+            int y = (int)Math.round(this.linearPickingStartPoint.getY() + (Math.sin(angle)*step*actualGap));
+
+            addParticle(x,y,step==segmentsNum);
+
+        }
+
+    }
+
+    protected void erase(int x, int y)
 	{
-		getMicrograph().removeParticles(x, y, getParticlePicker());
-		active = getLastParticle();
-		refresh();
+        erase(x,y,true);
 	}
+
+    protected void erase(int x, int y, boolean refresh)
+    {
+        getMicrograph().removeParticles(x, y, getParticlePicker());
+        active = getLastParticle();
+        if (refresh) refresh();
+    }
+
+    // Erases having a larger point (square in this case)
+    protected void erase(int x, int y, MouseEvent e)
+    {
+
+        int particleSize = getFrame().getSide();
+
+        //
+        int size = 1;
+
+        if (isKeyPressed(ERASER_MEDIUM_SIZE_KEY)) {
+            size = 2;
+        } else if (isKeyPressed(ERASER_LARGE_SIZE_KEY)){
+            size = 3;
+        } else if (isKeyPressed(ERASER_X_LARGE_SIZE_KEY)){
+            size = 4;
+        }
+
+        // Calculate the eraser "area" (square)
+        int side = (int) Math.ceil((size*particleSize/10)/getMagnification());
+
+        // Make it odd
+        if (side % 2 == 0){
+            side = side + 1;
+        }
+
+        // Half of if
+        int half = (side -1)/2;
+
+        int step = Math.round(particleSize/2);
+
+        for (int x2 = x-half; x2<=x+half; x2+=step ){
+
+            for (int y2 = y-half; y2<=y+half; y2+=step ){
+                erase(x2,y2, false);
+            }
+        }
+
+        refresh();
+    }
+
 
 	/**
 	 * Updates particle position and repaints if onpick.
@@ -101,7 +238,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 			{
 				if (frame.isEraserMode())
 				{
-					erase(x, y);
+					erase(x, y, e);
 					return;
 				}
 				if (active == null)
@@ -139,7 +276,7 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		{
 			if (frame.isEraserMode())
 			{
-				erase(x, y);
+				erase(x, y, e);
 				return;
 			}
 			//deleting when mouse released, takes less updates to templates and frame
@@ -267,4 +404,39 @@ public class SupervisedPickerCanvas extends ParticlePickerCanvas
 		return (SupervisedParticlePicker)picker;
 	}
 
+    public void mouseMoved(MouseEvent e) {
+        super.mouseMoved(e);
+
+        if (getFrame().isLinearMode()){
+            paintLine(e);
+        }
+    }
+
+    public void keyPressed(KeyEvent e){
+
+        super.keyPressed(e);
+
+        if (e.getKeyCode() == KeyEvent.VK_ESCAPE){
+
+            if (haveFirstPoint()){
+                resetLinearPicking();
+            }
+        }
+    }
+
+    private void paintLine(MouseEvent e){
+
+        if (haveFirstPoint()){
+
+            Graphics g = this.getGraphics();
+
+            // Repaint
+            this.paint(g);
+            // Draw a line from the first point to the current mouse cursor point.
+
+            g.setColor(Color.YELLOW);
+            g.drawLine(getXOnImage(this.linearPickingStartPoint.x), getYOnImage(this.linearPickingStartPoint.y), e.getX(),e.getY());
+        }
+
+    }
 }

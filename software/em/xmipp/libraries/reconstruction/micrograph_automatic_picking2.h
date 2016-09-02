@@ -175,11 +175,11 @@ public:
                         MultidimArray<double> &features);
 
     /// Convert an image to its polar form
-    void convert2Polar(MultidimArray<double> &particleImage,
-                       MultidimArray<double> &polar);
+    void convert2PolarFourier(MultidimArray<double> &particleImage,
+    				   MultidimArray< std::complex< double > > &polar);
 
     /// Calculate the correlation of different polar channels
-    void polarCorrelation(MultidimArray<double> &Ipolar,
+    void polarCorrelation(const MultidimArray< std::complex< double > > &fourierPolarStack,
                           MultidimArray<double> &IpolarCorr);
 
     /// Convolve the micrograph with the different templates

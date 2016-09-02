@@ -91,9 +91,16 @@ class TiltPairSet(EMSet):
             self._tilted.close()
         if self._untilted is not None:
             self._untilted.close()
-        EMSet.close(self)    
-    
-    
+        EMSet.close(self)
+
+    def write(self, properties=True):
+        if self._tilted is not None:
+            self._tilted.write(properties=properties)
+        if self._untilted is not None:
+            self._untilted.write(properties=properties)
+        EMSet.write(self, properties=properties)
+
+
 class MicrographsTiltPair(TiltPairSet):
     """Represents a Micrographs Tilt Pair"""
     ITEM_TYPE = TiltPair

@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-import os
-from os.path import join, dirname, exists
-import unittest
-import filecmp
 
 from pyworkflow.object import *
 from pyworkflow.em.data import *
@@ -17,7 +13,8 @@ class ListContainer(Object):
     
     
 class TestObject(BaseTest):
-    
+    _labels = [SMALL]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -79,6 +76,11 @@ class TestObject(BaseTest):
         s2.set('something')
         # No empty after some value
         self.assertFalse(s2.empty(), "s2 string should not be empty after value")
+
+        now = dt.datetime.now()
+        s.set(now)
+        self.assertEqual(now, s.datetime())
+
         
     def test_Pointer(self):
         c = Complex.createComplex()
@@ -218,7 +220,7 @@ class TestObject(BaseTest):
         #groupByLabels   = ['_defocusMin'] # absolute minimum
         
         #print setOfDefocus.aggregate(operations, operationLabel, groupByLabels)
-    
+
     def test_formatString(self):
         """ Test that Scalar objects behave well
         when using string formating such as: %f or %d
@@ -229,6 +231,66 @@ class TestObject(BaseTest):
         s1 = "i = %d, f = %0.3f" % (i, f)
         
         self.assertEqual(s1, "i = 10, f = 3.345")
+
+    def test_getObjDict(self):
+        """
+         Test retrieving an object dictionary with its attribute values.
+        """
+        xs = range(1, 6)
+        ys = [x*x for x in xs]
+        ma1 = MovieAlignment(first=1, last=5, xshifts=xs, yshifts=ys)
+        ma1.setRoi([100, 100, 1000, 1000])
+        m1 = Movie('my_movie.mrc', objId=1,
+                   objLabel='test micrograph',
+                   objComment='Testing store and retrieve from dict.')
+        m1.setSamplingRate(1.6)
+        m1.setObjId(1)
+        m1.setAlignment(ma1)
+        m1Dict = m1.getObjDict(includeBasic=True)
+
+        goldDict1 = OrderedDict([('object.id', 1),
+                                  ('object.label', 'test micrograph'),
+                                  ('object.comment', 'Testing store and retrieve from dict.'),
+                                  ('_index',  0),
+                                  ('_filename',  'my_movie.mrc'),
+                                  ('_samplingRate',  1.6),
+                                  ('_micName',  None),
+                                  ('_alignment',  None),
+                                  ('_alignment._first',  1),
+                                  ('_alignment._last',  5),
+                                  ('_alignment._xshifts', '1.0,2.0,3.0,4.0,5.0'),
+                                  ('_alignment._yshifts', '1.0,4.0,9.0,16.0,25.0'),
+                                  ('_alignment._roi', '100,100,1000,1000')
+                                  ])
+
+        self.assertEqual(goldDict1, m1Dict)
+
+        ma2 = MovieAlignment()
+        m2 = Movie()
+        m2.setAlignment(ma2)
+
+        goldDict2 = OrderedDict([('object.id', None),
+                                  ('object.label', ''),
+                                  ('object.comment', ''),
+                                  ('_index',  0),
+                                  ('_filename',  None),
+                                  ('_samplingRate',  None),
+                                  ('_micName',  None),
+                                  ('_alignment',  None),
+                                  ('_alignment._first',  -1),
+                                  ('_alignment._last',  -1),
+                                  ('_alignment._xshifts', ''),
+                                  ('_alignment._yshifts', ''),
+                                  ('_alignment._roi', '')
+                                  ])
+
+
+        self.assertEqual(goldDict2, m2.getObjDict(includeBasic=True))
+        m2.setAttributesFromDict(m1Dict, setBasic=True)
+        self.assertEqual(goldDict1, m2.getObjDict(includeBasic=True))
+        # Test also dicts of nested objects
+        self.assertEqual(ma1.getObjDict(includeBasic=True),
+                         ma2.getObjDict(includeBasic=True))
 
     def test_Dict(self):
         d = Dict(default='missing')
@@ -242,7 +304,8 @@ class TestObject(BaseTest):
         
 
 class TestUtils(BaseTest):
-    
+    _labels = [SMALL]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -286,9 +349,3 @@ class TestUtils(BaseTest):
         self.assertEqual(env3['LD_LIBRARY_PATH'],env['LD_LIBRARY_PATH'] + os.pathsep +  '/usr/local/xmipp/lib')      
         
         
-        
-        
-            
-if __name__ == '__main__':
-    unittest.main()
-    

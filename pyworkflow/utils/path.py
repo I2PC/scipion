@@ -35,7 +35,6 @@ from os.path import (exists, join, splitext, isdir, isfile, islink, expanduser,
                      expandvars, basename, dirname, split, relpath)
 from glob import glob
 
-import pyworkflow as pw
 
 
 def findFileRecursive(filename, path):
@@ -65,6 +64,7 @@ def findFile(filename, *paths, **kwargs):
             
     return None
 
+
 def findRootFrom(referenceFile, searchFile):
     """ This method will find a path (root) from 'referenceFile'
     from which the 'searchFile' exists. 
@@ -84,17 +84,12 @@ def findRootFrom(referenceFile, searchFile):
         
     return None   
 
-def findResource(filename):
-    """ This function will search for a give
-    resource filename in the paths specified
-    in pyworkflow.RESOURCES path list.
-    """
-    return findFile(filename, *pw.RESOURCES)
 
 def replaceExt(filename, newExt):
     """ Replace the current path extension(from last .)
     with a new one. The new one should not contains the ."""
     return splitext(filename)[0] + '.' + newExt
+
 
 def replaceBaseExt(filename, newExt):
     """ Replace the current basename extension(from last .)
@@ -102,21 +97,26 @@ def replaceBaseExt(filename, newExt):
     """
     return replaceExt(basename(filename), newExt)
 
+
 def removeBaseExt(filename):
     """Take the basename of the filename and remove extension"""
     return removeExt(basename(filename))
+
 
 def removeExt(filename):
     """ Remove extension from basename """
     return splitext(filename)[0]
 
+
 def joinExt(*extensions):
     """ Join several path parts with a ."""
     return '.'.join(extensions)
 
+
 def getExt(filePath):
     """ Return the extesion given a file. """
     return splitext(filePath)[1]
+
 
 def cleanPath(*paths):
     """ Remove a list of paths, either folders or files"""
@@ -129,12 +129,14 @@ def cleanPath(*paths):
                     shutil.rmtree(p)
             else:
                 os.remove(p)
-                
+
+
 def cleanPattern(pattern):
     """ Remove all files that match the pattern. """
     files = glob(pattern)
     cleanPath(*files)
-            
+
+
 def makePath(*paths):
     """ Create a list of paths if they don't exists.
     Recursively create all folder needed in a path.
@@ -144,10 +146,12 @@ def makePath(*paths):
         if not exists(p) and len(p):
             os.makedirs(p)
 
+
 def makeFilePath(*files):
     """ Make the path to ensure that files can be written. """
     makePath(*[dirname(f) for f in files])    
-            
+
+
 def missingPaths(*paths):
     """ Check if the list of paths exists.
     Will return the list of missing files,
@@ -155,9 +159,11 @@ def missingPaths(*paths):
     """
     return [p for p in paths if not exists(p)]
 
+
 def getHomePath(user=''):
     """Return the home path of a give user."""
     return expanduser("~" + user)
+
 
 def expandPattern(pattern, vars=True, user=True):
     """ Expand environment vars and user from a given pattern. """
@@ -166,6 +172,7 @@ def expandPattern(pattern, vars=True, user=True):
     if user:
         pattern = expanduser(pattern)
     return pattern
+
 
 def getFiles(folderPath):
     """
@@ -178,6 +185,7 @@ def getFiles(folderPath):
         for f in files:
             filePaths.add(join(path, f))
     return filePaths
+
 
 def copyTree(source, dest):
     """
@@ -194,24 +202,28 @@ def copyTree(source, dest):
             elif os.path.isdir(fnPath):
                 copyTree(fnPath, join(dest, f))
 
+
 def moveTree(src, dest):
     copyTree(src, dest)
     cleanPath(src)
-                
+
+
 def copyFile(source, dest):
     """ Shortcut to shutil.copy. """
     shutil.copy(source, dest)
-    
+
+
 def moveFile(source, dest):
     """ Move file from source to dest. """
     copyFile(source, dest)
     cleanPath(source)
-    
+
+
 def createLink(source, dest):
     """ Creates a relative link to a given file path. 
     Try to use common path for source and dest to avoid errors. 
-    Different relative paths may exist since there are different valid paths for a file,
-    it depends on the current working dir path"""
+    Different relative paths may exist since there are different valid paths
+    for a file, it depends on the current working dir path"""
     if islink(dest):
         os.remove(dest)
         
@@ -222,7 +234,8 @@ def createLink(source, dest):
     destdir = dirname(dest)
     relsource = join(relpath(sourcedir, destdir), basename(source))
     os.symlink(relsource,dest)
-    
+
+
 def createAbsLink(source, dest):
     """ Creates a link to a given file path"""
     if islink(dest):
@@ -232,7 +245,8 @@ def createAbsLink(source, dest):
         raise Exception('Destination %s exists and is not a link' % dest)
 
     os.symlink(source, dest)
-    
+
+
 def getLastFile(pattern):
     """ Return the last file matching the pattern. """
     files = glob(pattern)
@@ -240,6 +254,7 @@ def getLastFile(pattern):
         files.sort()
         return files[-1]
     return None
+
 
 def commonPath(*paths):
     """ Return the common longest prefix path.
@@ -390,3 +405,11 @@ def createUniqueFileName(fn):
             return uni_fn
 
     return None
+
+
+def getFileSize(fn):
+    """ Shortcut to inspect the size of a file. """
+    return os.stat(fn).st_size
+
+
+

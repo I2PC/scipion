@@ -14,10 +14,10 @@
         "voltage": 300.0,
         "sphericalAberration": 2.0,
         "amplitudeContrast": 0.1,
-        "magnification": 50000,
+        "magnification": 39548,
         "samplingRateMode": 0,
         "samplingRate": 3.54,
-        "scannedPixelSize": 7.0,
+        "scannedPixelSize": 14.0,
         "gainFile": null
     },
     {

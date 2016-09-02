@@ -35,7 +35,7 @@ from pyworkflow.protocol import Protocol
 from pyworkflow.object import Set
 from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles,
                                 SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
-                                SetOfVolumes, SetOfCTF, SetOfMovies,
+                                SetOfVolumes, SetOfCTF, SetOfMovies, SetOfFSCs,
                                 SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
 from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
 from pyworkflow.em.data_tiltpairs import SetOfAngles, CoordinatesTiltPair, TiltPair
@@ -128,6 +128,9 @@ class EMProtocol(Protocol):
     
     def _createSetOfAngles(self, suffix=''):
         return self.__createSet(SetOfAngles, 'tiltpairs_angles%s.sqlite', suffix)
+
+    def _createSetOfFSCs(self, suffix=''):
+        return self.__createSet(SetOfFSCs, 'fscs%s.sqlite', suffix)
        
     def _defineSourceRelation(self, srcObj, dstObj):
         """ Add a DATASOURCE relation between srcObj and dstObj """

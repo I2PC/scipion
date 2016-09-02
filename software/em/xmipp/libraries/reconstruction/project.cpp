@@ -249,6 +249,9 @@ void ParametersProjection::read(const FileName &fn_proj_param)
             else
             {
             	MD.getValue(MDL_CTF_DATA_PHASE_FLIPPED, doPhaseFlip, objId);
+            	doPhaseFlip = !doPhaseFlip;
+            	MD.getValue(MDL_CTF_CORRECTED, doCTFCorrection, objId);
+            	doCTFCorrection = !doCTFCorrection;
             	MD.getValue(MDL_APPLY_SHIFT, applyShift, objId);
             }
 
@@ -841,10 +844,14 @@ int Assign_angles(MetaData &DF, const ParametersProjection &prm,
                 size_t NN=rotList.size();
                 for (size_t n=0; n<NN; ++n)
                 {
-                    size_t DFid=DF.addObject();
-                    DF.setValue(MDL_ANGLE_ROT,rotList[n],DFid);
-                    DF.setValue(MDL_ANGLE_TILT,tiltList[n],DFid);
-                    DF.setValue(MDL_ANGLE_PSI,0.0,DFid);
+                	if (tiltList[n]>=prm.tilt_range.ang0 && tiltList[n]<=prm.tilt_range.angF &&
+                		rotList[n]>=prm.rot_range.ang0 && rotList[n]<=prm.rot_range.angF)
+                	{
+						size_t DFid=DF.addObject();
+						DF.setValue(MDL_ANGLE_ROT,rotList[n],DFid);
+						DF.setValue(MDL_ANGLE_TILT,tiltList[n],DFid);
+						DF.setValue(MDL_ANGLE_PSI,0.0,DFid);
+                	}
                 }
             }
         }
@@ -1033,9 +1040,9 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
         //If there is CTF information use it
         CTFDescription ctf;
-    	if (side.DF.containsLabel(MDL_CTF_DEFOCUSU) || side.DF.containsLabel(MDL_CTF_MODEL))
+    	if ( (side.DF.containsLabel(MDL_CTF_DEFOCUSU) || side.DF.containsLabel(MDL_CTF_MODEL)) && (prm.doCTFCorrection) )
     	{
-    		//JV he tenido que tocar esta función para poder acceder al sampling rate
+    		//JV he tenido que tocar esta funcion para poder acceder al sampling rate
     		hasCTF = true;
     		MDRow row;
     		side.DF.getRow(row,__iter.objId);
@@ -1075,6 +1082,7 @@ int PROJECT_Effectively_project(const FileName &fnOut,
 
             if (hasCTF)
             	ctf.applyCTF(proj(),sampling_rate, prm.doPhaseFlip);
+
             hasCTF = false;
 
             Matrix1D<double> shifts(2);

@@ -25,6 +25,8 @@
 # **************************************************************************
 
 from protocol_convert_pdb import XmippProtConvertPdb
+from protocol_combine_pdb import XmippProtCombinePdb
 from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
 
 from viewer_pseudoatoms import XmippPseudoAtomsViewer
+from viewer_combine_pdb import XmippProtCombinePdbViewer
