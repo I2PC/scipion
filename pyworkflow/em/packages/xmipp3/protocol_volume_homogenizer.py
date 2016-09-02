@@ -70,18 +70,18 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                            "based on the reference volume using OF algorithm. "
                            "Reformed particles will be merged with "
                            "reference particles inside the protocol to "
-                           "create outputParticles.")
-        form.addParam('symmetryGroup', params.StringParam, default='c1',
-                      label="Symmetry group",
-                      expertLevel=params.LEVEL_ADVANCED, 
-                      help="See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page "
-                           "for a description of the symmetry format "
-                           "accepted by Xmipp")
+                           "create outputParticles.")        
         form.addParam('doAlignment', params.BooleanParam, default=False,
                       label='Reference and input volumes need to be aligned?',
                       help="Input and reference volumes must be aligned. "
                            "If you have not aligned them before choose this "
                            "option, so protocol will handle it internally.")
+        form.addParam('symmetryGroup', params.StringParam, default='c1',
+                      condition="doAlignment",
+                      label="Symmetry group", 
+                      help="See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] "
+                           "for a description of the symmetry format "
+                           "accepted by Xmipp")
         form.addParam('cutOffFrequency', params.FloatParam, default = -1,
                       label="Cut-off frequency",
                       help="This digital frequency is used to filter both "
@@ -113,38 +113,44 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         symmetry = self.symmetryGroup.get()
         
         if not self.doAlignment.get():
-            self._insertFunctionStep('opticalFlowAlignmentStep', inputVol, referenceVol, inputParticlesMd)
+            self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                     inputVol, referenceVol, inputParticlesMd)
         else:
             #Alignment step (first FF and then local)
             maskArgs = ''
             alignArgsFf = " --frm"
-            fnAlignedVolFf = self._getExtraPath ('aligned_inputVol_to_refVol_FF.vol')
-            self._insertFunctionStep('alignVolumeStep', referenceVol, inputVol, fnAlignedVolFf,
-                                             maskArgs, alignArgsFf)
-            fnAlignVolFfLocal = self._getExtraPath ('aligned_FfAlignedVol_to_refVol_local.vol')
+            fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
+            self._insertFunctionStep('alignVolumeStep', 
+                                     referenceVol, inputVol, fnAlignedVolFf,
+                                     maskArgs, alignArgsFf)
+            fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
             alignArgsLocal = " --local --rot 0 0 1 --tilt 0 0 1"
-            alignArgsLocal += "  --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1 --scale 1 1 0.005"
-            XmippProtAlignVolume._insertFunctionStep('alignVolumeStep', referenceVol, fnAlignedVolFf, fnAlignVolFfLocal,
-                                             maskArgs, alignArgsLocal)
+            alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
+            alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005"  
+            XmippProtAlignVolume._insertFunctionStep('alignVolumeStep', 
+                                                     referenceVol, 
+                                                     fnAlignedVolFf,fnAlnVolFfLcl,
+                                                     maskArgs, alignArgsLocal)
             #projection matching step to modify input particles angles
             fnAlignedVolGallery = self._getExtraPath("alignedVolume_gallery.stk")
             self.runJob("xmipp_angular_project_library", 
                         "-i %s -o %s --sym %s --sampling_rate %f" % (
-                        fnAlignVolFfLocal, fnAlignedVolGallery, 
+                        fnAlnVolFfLcl, fnAlignedVolGallery, 
                         symmetry, samplingRate))
-            
+            fnInParsNewAng = self._getExtraPath("inputParticles_anglesModified.xmd")
             self.runJob("xmipp_angular_projection_matching", 
-                        "" % (
-                        ))
+                       "-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append " % (
+                        inputParticlesMd, fnInParsNewAng, fnAlignedVolGallery),
+                        numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())            
+            #self.runJob("xmipp_angular_continuous_assign2",
+            #            "-i %s --ref %s -o %s --sampling %f --optimizeAngles --applyTo"%(
+            #            inputParticlesMd, fnAlnVolFfLcl, 
+            #            fnInParsNewAng, samplingRate),
+            #            numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
             
-            
-            
-            
-            
-            
-            #self._insertFunctionStep('opticalFlowAlignmentStep', fnAlignVolFfLocal, referenceVol, ??????)
-            
-                
+            self._insertFunctionStep('opticalFlowAlignmentStep', 
+                                     fnAlnVolFfLcl, referenceVol, fnInParsNewAng)
+                        
         self._insertFunctionStep('createOutputStep')        
     #--------------------------- STEPS functions --------------------------------------------
     
