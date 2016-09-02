@@ -64,6 +64,7 @@ from plotter import XmippPlotter
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from protocol_apply_alignment import XmippProtApplyAlignment
+from protocol_apply_transformation_matrix import XmippProtApplyTransformationMatrix
 from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
