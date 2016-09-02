@@ -249,6 +249,13 @@ public:
             croppedFrame()*=gain();
     }
 
+    /* Apply the window operation if crop option was used */
+    void applyWindow(MultidimArray<double> &data)
+    {
+        if (yDRcorner!=-1)
+            data.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+    }
+
     // Computes the average of a number of frames in movies
     void computeAvg(int begin, int end, MultidimArray<double> &avgImg)
     {
@@ -265,8 +272,7 @@ public:
             frame.read(fnFrame);
             if (!globalShiftCorr)
             {
-                if (yDRcorner!=-1)
-                    frame().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                applyWindow(frame());
                 correctDarkGainImage(frame);
             }
             if (i==begin)
@@ -374,21 +380,22 @@ public:
         if (Zdim!=1)
             REPORT_ERROR(ERR_ARG_INCORRECT,"This program is meant to align 2D frames, not 3D");
         imagenum=Ndim;
+
         if (fnDark!="")
         {
             dark.read(fnDark);
-            if (yDRcorner!=-1)
-                dark().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+            applyWindow(dark());
         }
+
         if (fnGain!="")
         {
             gain.read(fnGain);
-            if (yDRcorner!=-1)
-                gain().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
-            gain()=1.0/gain();
-            double avg=gain().computeAvg();
+            applyWindow(gain());
+            gain() = 1.0/gain();
+            double avg = gain().computeAvg();
             if (isinf(avg) || isnan(avg))
-                REPORT_ERROR(ERR_ARG_INCORRECT,"The input gain image is incorrect, its inverse produces infinite or nan");
+                REPORT_ERROR(ERR_ARG_INCORRECT,
+                             "The input gain image is incorrect, its inverse produces infinite or nan");
         }
         meanStdev.initZeros(4);
         //avgCurr.initZeros(Ydim, Xdim);
@@ -425,8 +432,7 @@ public:
                 shiftMD.getValue(MDL_SHIFT_Y, YY(shiftMatrix), __iter.objId);
                 shiftVector.push_back(shiftMatrix);
                 frameImage.read(fnFrame);
-                if (yDRcorner!=-1)
-                    frameImage().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                applyWindow(frameImage());
                 correctDarkGainImage(frameImage);
                 translate(LINEAR, preImg(), frameImage(), shiftMatrix, WRAP);
                 preImg.write(tmpFileName, ALL_IMAGES, true, WRITE_APPEND);
@@ -481,8 +487,7 @@ public:
                     preImg.read(fnFrame);
                     if (!globalShiftCorr)
                     {
-                        if (yDRcorner!=-1)
-                            preImg().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                        applyWindow(preImg());
                         correctDarkGainImage(preImg);
                     }
                 }
