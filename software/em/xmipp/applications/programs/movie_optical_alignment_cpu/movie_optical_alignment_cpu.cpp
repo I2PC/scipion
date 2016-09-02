@@ -468,7 +468,7 @@ public:
         while (div!=groupSize)
         {
             div=int(imagenum/cnt);
-            bool lastLevel = (div == groupSize)
+            bool lastLevel = (div == groupSize);
             // avgStep to hold the sum of aligned frames of each group at each step
             avgstep=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
 
