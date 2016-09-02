@@ -229,7 +229,7 @@ public:
         int w = opencvMat.cols;
         xmippArray.initZeros(h, w);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xmippArray)
-        DIRECT_A2D_ELEM(xmippArray,i,j) = opencvMat.at<float>(i,j);
+            DIRECT_A2D_ELEM(xmippArray,i,j) = opencvMat.at<float>(i,j);
     }
 
     // Converts an OpenCV float matrix to an OpenCV Uint8 matrix
@@ -314,11 +314,8 @@ public:
 
     int main2()
     {
-
-        MultidimArray<double> mappedImg;
-        MultidimArray<double> outputMovie;
         Matrix1D<double> meanStdev;
-        Image<double> II, preImg, avgCurr;
+        Image<double> outputMovieFrame, preImg, avgCurr;
         MetaData MD; // To save plot information
         FileName flowFileName;
         FileName flowXFileName, flowYFileName;
@@ -453,9 +450,11 @@ public:
         else
             nlast++;
         imagenum=nlast-nfirst+1;
+
         // Initialize the stack for the output movie
-        if (fnMovieOut!="")
-            outputMovie.initZeros(imagenum, 1, Ydim, Xdim);
+        if (!fnMovieOut.isEmpty())
+            createEmptyFile(fnMovieOut, Xdim, Ydim, 1, imagenum, true, WRITE_REPLACE);
+
         levelNum=sqrt(double(imagenum));
         computeAvg(nfirst, nlast, avgCurr());
 
@@ -463,25 +462,30 @@ public:
             avgCurr.write(fnMicInitial);
 
         xmipp2Opencv(avgCurr(), avgcurr);
+
         cout<<"Frames "<<nfirst<<" to "<<nlast<<" under processing ..."<<std::endl;
+
         while (div!=groupSize)
         {
             div=int(imagenum/cnt);
+            bool lastLevel = (div == groupSize)
             // avgStep to hold the sum of aligned frames of each group at each step
             avgstep=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
 
-            cout<<"Level "<<levelCounter<<"/"<<levelNum<<" of the pyramid is under processing"<<std::endl;
+            cout << "Level " << levelCounter << "/" << levelNum
+                 << " of the pyramid is under processing" << std::endl;
             // Compute time for each level
             tStart = clock();
 
             // Check if we are in the final step
-            if (div==1)
+            if (lastLevel)
                 cnt=imagenum;
+
             flowCounter=1;
             for (int i=0;i<cnt;i++)
             {
                 //Just compute the average in the last step
-                if (div==1)
+                if (lastLevel)
                 {
                     movie.getValue(MDL_IMAGE, fnFrame, nfirst+i);
                     preImg.read(fnFrame);
@@ -581,7 +585,7 @@ public:
                 for( int row = 0; row < planes[0].rows; row++ )
                     for( int col = 0; col < planes[0].cols; col++ )
                     {
-                        if (div==1 && globalShiftCorr)
+                        if (lastLevel && globalShiftCorr)
                         {
                             planes[0].at<float>(row,col) += (-1.0*XX(shiftVector[i]))+(float)col;
                             planes[1].at<float>(row,col) += (-1.0*YY(shiftVector[i]))+(float)row;
@@ -592,7 +596,7 @@ public:
                             planes[1].at<float>(row,col) += (float)row;
                         }
                     }
-                if (div==1 && globalShiftCorr)
+                if (lastLevel && globalShiftCorr)
                 {
                     //movieStack.readMapped(tmpFileName,nfirst+i);
                     //movieStack().getImage(preImg);
@@ -600,11 +604,13 @@ public:
                     preImg.read(fnFrame);
                     xmipp2Opencv(preImg(), preimg);
                 }
+
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
-                if (div==1 &&  fnMovieOut!="")
+
+                if (lastLevel &&  !fnMovieOut.isEmpty())
                 {
-                    mappedImg.aliasImageInStack(outputMovie, i);
-                    opencv2Xmipp(dest, mappedImg);
+                    opencv2Xmipp(dest, outputMovieFrame());
+                    outputMovieFrame.write(fnMovieOut, i+1, true, WRITE_REPLACE);
                 }
                 avgstep+=dest;
             }
@@ -621,12 +627,6 @@ public:
         if (!fnMicOut.isEmpty())
             avgCurr.write(fnMicOut);
 
-        if (!fnMovieOut.isEmpty())
-        {
-            II()=outputMovie;
-            II.write(fnMovieOut);
-        }
-
         // Release the memory
         avgstep.release();
         preimg.release();
@@ -640,7 +640,6 @@ public:
         movieStack.clear();
         preImg.clear();
         avgCurr.clear();
-        II.clear();
         return 0;
     }
 };
