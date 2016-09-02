@@ -105,9 +105,13 @@ class ProtMonitorSummary(ProtMonitor):
             sysMonitor.initLoop()
 
         def stepAll():
-            finished = ctfMonitor.step()
-            sysMonitor.step()
-            reportHtml.generate(finished)
+            finished = False
+            try:
+                finished = ctfMonitor.step()
+                sysMonitor.step()
+                reportHtml.generate(finished)
+            except Exception as ex:
+                print "An error happened: %s" % ex
             # Stop when the CTF monitor is done
             return finished
 
