@@ -203,8 +203,14 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					mCurrentImageAligned=mCurrentImage;
 					mGalleryProjection.aliasImageInStack(gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
-					double corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
-							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					double corr;
+					if (! dontCheckMirrors)
+						corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
+								mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					else
+						corr = alignImages(mGalleryProjection, mCurrentImageAligned,
+						                   M, DONT_WRAP);
+
 //					double corr=alignImagesConsideringMirrors(mGalleryProjection,
 //							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
