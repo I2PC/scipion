@@ -183,14 +183,10 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         self.runJob("xmipp_metadata_utilities", 
                     '-i %s -o %s -l itemId lineal 1 1' % (
                     fnOutputParticles, fnOutputParticles), numberOfMpi = 1)
-        self.runJob("xmipp_metadata_utilities", 
-                    '-i %s -o %s --operate drop_column "ctfDefocusU ctfDefocusV"' % (
-                    fnOutputParticles, fnOutputParticles), numberOfMpi = 1)
-        
+
         outputSetOfParticles = self._createSetOfParticles()
-        readSetOfParticles(fnOutputParticles, outputSetOfParticles) 
-        outputSetOfParticles.copyInfo(inputParticles)
-        
+        readSetOfParticles(fnOutputParticles, outputSetOfParticles)        
+        outputSetOfParticles.copyInfo(inputParticles)        
         self._defineOutputs(outputParticles=outputSetOfParticles)              
     #--------------------------- INFO functions -------------------------------------------- 
     

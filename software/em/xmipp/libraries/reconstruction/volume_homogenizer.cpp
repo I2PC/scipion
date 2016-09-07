@@ -106,6 +106,7 @@ void ProgVolumeHomogenizer::run()
     FileName stackName = fnSetOfImgOut.removeAllExtensions() + ".stk";
     FileName mdName = fnSetOfImgOut.removeAllExtensions() + ".xmd";
     FourierFilter filter;
+    MDRow rowInput;
 
 	inV.read(fnVol);
 	inV().setXmippOrigin();
@@ -141,11 +142,12 @@ void ProgVolumeHomogenizer::run()
 			p.only_apply_shifts = true;
 			imgIn.readApplyGeo(setOfImgIn, i, p);
 
-			setOfImgIn.getValue(MDL_ANGLE_ROT, rot, i);
-			setOfImgIn.getValue(MDL_ANGLE_TILT, tilt, i);
-			setOfImgIn.getValue(MDL_ANGLE_PSI, psi, i);
-			if (setOfImgIn.containsLabel(MDL_FLIP))
-				setOfImgIn.getValue(MDL_FLIP, flip, i);
+			setOfImgIn.getRow(rowInput,i);
+			rowInput.getValue(MDL_ANGLE_ROT, rot);
+			rowInput.getValue(MDL_ANGLE_TILT, tilt);
+			rowInput.getValue(MDL_ANGLE_PSI, psi);
+			if (rowInput.containsLabel(MDL_FLIP))
+				rowInput.getValue(MDL_FLIP, flip);
 
 			//reprojection from input and reference volumes to calculate optical flow (OF)
 			projectVolume(inV(), projIn, YSIZE(inV()), XSIZE(inV()), rot, tilt, psi);
@@ -182,14 +184,12 @@ void ProgVolumeHomogenizer::run()
 
 			//filling output metaData
 			fn_proj.compose(projIdx, stackName);
-			objId = mdPartialParticles.addObject();
-			mdPartialParticles.setValue(MDL_IMAGE, fn_proj, objId);
-			mdPartialParticles.setValue(MDL_ANGLE_ROT, rot, objId);
-			mdPartialParticles.setValue(MDL_ANGLE_TILT, tilt, objId);
-			mdPartialParticles.setValue(MDL_ANGLE_PSI, psi, objId);
-			mdPartialParticles.setValue(MDL_ENABLED, 1, objId);
+			rowInput.setValue(MDL_IMAGE, fn_proj);
 			projCorr.write(fn_proj, projIdx, true, WRITE_OVERWRITE);
 			projIdx++;
+
+			mdPartialParticles.addRow(rowInput);
+			rowInput.clear();
 		}
 
 		if (rank==0)
