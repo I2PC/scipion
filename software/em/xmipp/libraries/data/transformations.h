@@ -279,7 +279,7 @@ void applyGeometry(int SplineDegree,
                    MultidimArray<T>& V2,
                    const MultidimArray<T1>& V1,
                    const Matrix2D< double > &A, bool inv,
-                   bool wrap, T outside = 0)
+                   bool wrap, T outside = 0, MultidimArray<double> *BcoeffsPtr=NULL)
 {
 #ifndef RELEASE_MODE
     if (&V1 == (MultidimArray<T1>*)&V2)
@@ -305,6 +305,7 @@ void applyGeometry(int SplineDegree,
     }
 
     MultidimArray<double> Bcoeffs;
+    MultidimArray<double> *BcoeffsToUse=NULL;
     Matrix2D<double> Ainv;
     const Matrix2D<double> * Aptr=&A;
     if (!inv)
@@ -354,9 +355,15 @@ void applyGeometry(int SplineDegree,
         if (SplineDegree > 1)
         {
             // Build the B-spline coefficients
-            produceSplineCoefficients(SplineDegree, Bcoeffs, V1); //Bcoeffs is a single image
-            STARTINGX(Bcoeffs) = (int) minxp;
-            STARTINGY(Bcoeffs) = (int) minyp;
+        	if (BcoeffsPtr!=NULL)
+        		BcoeffsToUse=BcoeffsPtr;
+        	else
+        	{
+        		produceSplineCoefficients(SplineDegree, Bcoeffs, V1); //Bcoeffs is a single image
+        		BcoeffsToUse = &Bcoeffs;
+        	}
+            STARTINGX(*BcoeffsToUse) = (int) minxp;
+            STARTINGY(*BcoeffsToUse) = (int) minyp;
         }
 
         // Now we go from the output image to the input image, ie, for any pixel
@@ -525,12 +532,12 @@ void applyGeometry(int SplineDegree,
                 else if (SplineDegree==3)
                 {
                 	// B-spline interpolation
-                	dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D_Degree3(xp, yp);
+                	dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D_Degree3(xp, yp);
                 }
                 else
                 {
                 	// B-spline interpolation
-                	dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
+                	dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D(
                 			xp, yp, SplineDegree);
                 }
 #ifdef DEBUG_APPYGEO
@@ -587,9 +594,16 @@ void applyGeometry(int SplineDegree,
         if (SplineDegree > 1)
         {
             // Build the B-spline coefficients
-            produceSplineCoefficients(SplineDegree, Bcoeffs, V1); //Bcoeffs is a single image
-            STARTINGX(Bcoeffs) = (int) minxp;
-            STARTINGY(Bcoeffs) = (int) minyp;
+        	if (BcoeffsPtr!=NULL)
+        		BcoeffsToUse=BcoeffsPtr;
+        	else
+        	{
+        		produceSplineCoefficients(SplineDegree, Bcoeffs, V1); //Bcoeffs is a single image
+        		BcoeffsToUse = &Bcoeffs;
+        	}
+            STARTINGX(*BcoeffsToUse) = (int) minxp;
+            STARTINGY(*BcoeffsToUse) = (int) minyp;
+            STARTINGZ(*BcoeffsToUse) = (int) minzp;
         }
 
         // Now we go from the output MultidimArray to the input MultidimArray, ie, for any
@@ -771,7 +785,7 @@ void applyGeometry(int SplineDegree,
                         {
                             // B-spline interpolation
                             dAkij(V2, k, i, j) =
-                                (T) Bcoeffs.interpolatedElementBSpline3D(xp, yp, zp,SplineDegree);
+                                (T) BcoeffsToUse->interpolatedElementBSpline3D(xp, yp, zp, SplineDegree);
                         }
                     }
                     else
@@ -821,7 +835,7 @@ void applyGeometry(int SplineDegree,
                    MultidimArray< std::complex<double> >& V2,
                    const MultidimArray< std::complex<double> >& V1,
                    const Matrix2D< double > &A, bool inv,
-                   bool wrap, std::complex<double> outside);
+                   bool wrap, std::complex<double> outside, MultidimArray<double> *BcoeffsPtr);
 
 //Special cases for complex arrays
 template<>

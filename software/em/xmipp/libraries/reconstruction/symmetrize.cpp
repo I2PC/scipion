@@ -52,6 +52,7 @@ void ProgSymmetrize::readParams()
     wrap = !checkParam("--dont_wrap");
     sum = checkParam("--sum");
     heightFraction = getDoubleParam("--heightFraction");
+    splineOrder = getIntParam("--spline");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -76,6 +77,7 @@ void ProgSymmetrize::defineParams()
     addParamsLine("   [--dont_wrap]         : by default, the image/volume is wrapped");
     addParamsLine("   [--sum]               : compute the sum of the images/volumes instead of the average. This is useful for symmetrizing pieces");
     addParamsLine("   [--mask_in <fileName>]: symmetrize only in the masked area");
+    addParamsLine("   [--spline <order=3>]  : Spline order for the interpolation (valid values are 1 and 3)");
     addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
     addExampleLine("   xmipp_transform_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
@@ -92,7 +94,8 @@ void ProgSymmetrize::show()
     << "Symmetry: " << fn_sym << std::endl
     << "No group: " << do_not_generate_subgroup << std::endl
     << "Wrap:     " << wrap << std::endl
-    << "Sum:      " << sum << std::endl;
+    << "Sum:      " << sum << std::endl
+	<< "Spline:   " << splineOrder << std::endl;
     if (doMask)
         std::cout << "mask_in    " << fn_Maskin << std::endl;
     if (helical)
@@ -104,7 +107,7 @@ void ProgSymmetrize::show()
 
 /* Symmetrize ------------------------------------------------------- */
 void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
-                      MultidimArray<double> &V_out,
+                      MultidimArray<double> &V_out, int spline,
                       bool wrap, bool do_outside_avg, bool sum, bool helical, bool dihedral, bool helicalDihedral,
                       double rotHelical, double rotPhaseHelical, double zHelical, double heightFraction,
                       const MultidimArray<double> * mask)
@@ -129,6 +132,13 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
 
     if (!helical && !dihedral && !helicalDihedral)
     {
+    	MultidimArray<double> Bcoeffs;
+    	MultidimArray<double> *BcoeffsPtr=NULL;
+    	if (spline==3)
+    	{
+    		produceSplineCoefficients(BSPLINE3, Bcoeffs, V_in);
+    		BcoeffsPtr=&Bcoeffs;
+    	}
         for (int i = 0; i < SL.symsNo(); i++)
         {
             SL.getMatrices(i, L, R);
@@ -138,7 +148,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
                R(3, 1) = sh(1) * YSIZE(V_aux);
                R(3, 2) = sh(2) * ZSIZE(V_aux);
             */
-            applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
+            applyGeometry(spline, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg, BcoeffsPtr);
 
             if ( mask==NULL)
                 arrayByArray(V_out, V_aux, V_out, '+');
@@ -155,7 +165,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
     {
         symmetry_Helical(V_out,V_in,zHelical,rotHelical,rotPhaseHelical,NULL,true,heightFraction);
         MultidimArray<double> Vrotated;
-        rotate(BSPLINE3,Vrotated,V_out,180.0,'X',WRAP);
+        rotate(spline,Vrotated,V_out,180.0,'X',WRAP);
         V_out+=Vrotated;
         V_out*=0.5;
     }
@@ -167,7 +177,7 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
 }
 
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
-                     MultidimArray<double> &I_out,
+                     MultidimArray<double> &I_out, int spline,
                      bool wrap, bool do_outside_avg, bool sum,
                      const MultidimArray<double> * mask)
 {
@@ -188,7 +198,7 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
          REPORT_ERROR(ERR_NOT_IMPLEMENTED,"mask symmetrization not implemented for images");
     for (int i = 1; i < symorder; i++)
     {
-        rotate(BSPLINE3, rotatedImg, I_in, 360.0 / symorder * i,'Z',wrap,avg);
+        rotate(spline, rotatedImg, I_in, 360.0 / symorder * i,'Z',wrap,avg);
         I_out += rotatedImg;
     }
     if (!sum)
@@ -234,7 +244,7 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
         if (helical)
             REPORT_ERROR(ERR_ARG_INCORRECT,"Helical symmetrization is not meant for images");
         if (symorder!=-1)
-            symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap,sum,mmask);
+            symmetrizeImage(symorder,Iin(),Iout(),splineOrder,wrap,!wrap,sum,mmask);
         else
             REPORT_ERROR(ERR_ARG_MISSING,"The symmetry order is not valid for images");
     }
@@ -242,7 +252,7 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     {
         if (SL.symsNo()>0 || helical || dihedral || helicalDihedral)
         {
-            symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap,
+            symmetrizeVolume(SL,Iin(),Iout(),splineOrder,wrap,!wrap,
                              sum,helical,dihedral,helicalDihedral,rotHelical,rotPhaseHelical,zHelical,heightFraction,mmask);
         }
         else
