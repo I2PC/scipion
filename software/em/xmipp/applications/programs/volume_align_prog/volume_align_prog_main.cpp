@@ -29,6 +29,7 @@
 #include <data/mask.h>
 #include <data/xmipp_program.h>
 #include <interface/frm.h>
+#include <fstream>
 
 // Alignment parameters needed by fitness ----------------------------------
 class AlignParams
@@ -121,7 +122,7 @@ public:
     bool     apply;
     FileName fnOut;
     bool     mask_enabled;
-    bool     usePowell, onlyShift, useFRM;
+    bool     usePowell, onlyShift, useFRM, copyGeo;
     double   maxFreq;
     int      maxShift;
 public:
@@ -153,6 +154,7 @@ public:
         addParamsLine("                    : Maximum shift is in pixels");
         addParamsLine("                    :+ See Y. Chen, et al. Fast and accurate reference-free alignment of subtomograms. JSB, 182: 235-245 (2013)");
         addParamsLine("  [--onlyShift]     : Only shift");
+        addParamsLine("  [--copyGeo]       : copy transformation matrix in 'transformation-matrix.txt' file. ('A' matrix elements)");
         addParamsLine(" == Mask Options == ");
         mask.defineParams(this,INT_MASK,NULL,NULL,true);
         addExampleLine("Typically you first look for a rough approximation of the alignment using exhaustive search. For instance, for a global rotational alignment use",false);
@@ -238,6 +240,7 @@ public:
 
         tell = checkParam("--show_fit");
         apply = checkParam("--apply");
+        copyGeo = checkParam("--copyGeo");
         fnOut = getParam("--apply");
 
         if (checkParam("--covariance"))
@@ -433,6 +436,16 @@ public:
 					  << best_align(3) << " " << best_align(4)
 					  << "\n   Shifts: " << A(0,3) << " " << A(1,3) << " " << A(2,3)
 					  << std::endl;
+        if (copyGeo)
+        {
+        	std::ofstream outputGeo ("transformation-matrix.txt");
+        	outputGeo << A(0,0) << "\n" << A(0,1) << "\n" << A(0,2) << "\n" << A(0,3) << "\n"
+        			  << A(1,0) << "\n" << A(1,1) << "\n" << A(1,2) << "\n" << A(1,3) << "\n"
+					  << A(2,0) << "\n" << A(2,1) << "\n" << A(2,2) << "\n" << A(2,3) << "\n"
+					  << A(3,0) << "\n" << A(3,1) << "\n" << A(3,2) << "\n" << A(3,3) << "\n"
+					  << std::endl;
+        	outputGeo.close();
+        }
         if (apply)
         {
             applyTransformation(params.V2(),params.Vaux(),MATRIX1D_ARRAY(best_align));
