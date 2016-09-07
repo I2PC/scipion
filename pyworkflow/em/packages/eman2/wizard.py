@@ -28,6 +28,8 @@ This module implement some wizards
 """
 
 import os
+
+import pyworkflow as pw
 from pyworkflow.em.wizard import EmWizard
 from protocol_autopick import SparxGaussianProtPicking
 from pyworkflow.em import CoordinatesObjectView
@@ -35,6 +37,7 @@ from pyworkflow.em.showj import CLASSIFIER
 from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
 from pyworkflow.utils import makePath, cleanPath
 from pyworkflow.utils.utils import readProperties
+
 #===============================================================================
 # PICKER
 #===============================================================================
@@ -60,10 +63,10 @@ class SparxGaussianPickerWizard(EmWizard):
         params = ['boxSize', 'lowerThreshold', 'higherThreshold', 'gaussWidth']
         args = {
           "params": ','.join(params),
-          "preprocess" : os.path.join(os.environ['SCIPION_HOME'], "scipion sxprocess.py"),
-          "picker" : os.path.join(os.environ['SCIPION_HOME'], "scipion e2boxer.py"),
-          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
-          'coordsDir':coordsDir,
+          "preprocess" : "%s sxprocess.py" % pw.getScipionScript(),
+          "picker" : "%s e2boxer.py" % pw.getScipionScript(),
+          "convert" : pw.join('apps', 'pw_convert.py'),
+          'coordsDir': coordsDir,
           'micsSqlite': micSet.getFileName(),
           "boxSize": autopickProt.boxSize,
           "lowerThreshold": autopickProt.lowerThreshold,
@@ -93,9 +96,11 @@ class SparxGaussianPickerWizard(EmWizard):
         convertCommand = %(convert)s --coordinates --from eman2 --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
         """ % args)
         f.close()
-        process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerProps=pickerProps).show()
+        process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt,
+                                        pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)
+
         for param in params:
             form.setVar(param, myprops[param + '.value'])
 

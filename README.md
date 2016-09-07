@@ -11,3 +11,5 @@ Want to learn more? [See the wiki.](http://scipion.cnb.csic.es/docs/)
 <a href="http://xmipp.cnb.csic.es"><img src="http://xmipp.cnb.csic.es/twiki/pub/Xmipp/WebHome/xmippLogo.png" align="right" hspace="10" vspace="6" width="96"></a>
 
 **Xmipp** is a specialized suite of image processing programs, primarily aimed at obtaining the 3D reconstruction of biological specimens from large sets of projection images acquired by transmission electron microscopy. It is a comprehensive suite of image processing algorithms with a strong emphasis in the analysis of single particles although it is extending towards electron tomography and X-ray tomography.
+
+

@@ -32,10 +32,13 @@ GEMPICKER = gEMpicker_nocuda_Ubuntu_14.04.x64
 GEMPICKER_CUDA = None # gEMpicker_cuda_55.x64
 GCTF_HOME = %(EM_ROOT)s/Gctf_v0.50
 GCTF = Gctf-v0.50_sm_30_cu5.5_x86_64
+LOCALREC_HOME = %(EM_ROOT)s/localrec
+MAGDIST_HOME = %(EM_ROOT)s/mag_distortion
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
 MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr
 MOTIONCORR_CUDA_LIB = None
+MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2
 NMA_HOME = %(EM_ROOT)s/nma
 PYTOM_HOME = %(EM_ROOT)s/pytom
 RELION_HOME = %(EM_ROOT)s/relion-1.4
@@ -94,3 +97,6 @@ CUDA = False
 DEBUG = False
 MATLAB = False
 OPENCV = True
+
+# This variable is needed to set openGL library to work with remote desktops
+REMOTE_MESA_LIB = /services/guacamole/usr/mesa/lib/

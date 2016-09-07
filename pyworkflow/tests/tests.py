@@ -17,6 +17,23 @@ TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
+SMALL = 'small'
+PULL_REQUEST = 'pull'
+DAILY = 'daily'
+WEEKLY = 'weekly'
+
+
+# Procedure to check if a test class has an attribute called _labels and if so
+# then it checks if the class test matches any of the labels in input label parameter.
+def hasLabel(TestClass, labels):
+    
+    # Get _labels attributes in class if any.
+    classLabels = getattr(TestClass, '_labels', None)
+
+    # Check if no label in test class.    
+    return classLabels is not None and any(l in classLabels for l in labels)
+
+
 class DataSet:
 
     _datasetDict = {} # store all created datasets
@@ -58,6 +75,8 @@ class DataSet:
 
 class BaseTest(unittest.TestCase):
     
+    _labels = [WEEKLY]
+     
     @classmethod
     def getOutputPath(cls, *filenames):
         """Return the path to the SCIPION_HOME/tests/output dir
@@ -169,6 +188,7 @@ class Complex(Object):
         c.imag.set(cls.cGold.imag)
         c.real.set(cls.cGold.real)
         return c
+       
     
         
 class GTestResult(unittest.TestResult):

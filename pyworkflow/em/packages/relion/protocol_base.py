@@ -46,12 +46,12 @@ from convert import convertBinaryVol, writeSetOfParticles, getVersion
 
 
 class ProtRelionBase(EMProtocol):
-    """ This class cointains the common functionalities for all Relion protocols.
+    """ This class contains the common functions for all Relion protocols.
     In subclasses there should be little changes about how to create the command line
     and the files produced.
     
     Most of the Relion protocols, have two modes: NORMAL or CONTINUE. That's why
-    some of the function have a template pattern approach to define the behaivour
+    some of the function have a template pattern approach to define the behaviour
     depending on the case.
     """
     IS_CLASSIFY = True
@@ -474,7 +474,6 @@ class ProtRelionBase(EMProtocol):
                      '--particle_diameter': maskDiameter,
                      '--angpix': self._getInputParticles().getSamplingRate(),
                     })
-        self._setMaskArgs(args)
         self._setCTFArgs(args)
         
         if self.maskZero == MASK_FILL_ZERO:
@@ -520,6 +519,7 @@ class ProtRelionBase(EMProtocol):
             args['--iter'] = self._getnumberOfIters()
             
         self._setSamplingArgs(args)
+        self._setMaskArgs(args)
     
     def _setCTFArgs(self, args):        
         # CTF stuff
