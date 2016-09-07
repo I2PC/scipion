@@ -29,7 +29,7 @@ import pyworkflow.protocol.params as params
 
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-
+from convert import locationToXmipp
 
 
 class XmippProtMultipleFSCs(em.ProtAnalysis3D):
@@ -107,13 +107,12 @@ class XmippProtMultipleFSCs(em.ProtAnalysis3D):
             self._maskVolume(fnRef)
 
     def compareVolumeStep(self, volLoc, i):
-        ih = em.ImageHandler()
         fnRef = self._getExtraPath("reference.vol")
         sampling = self.referenceVolume.get().getSamplingRate()
         fnRoot = self._getExtraPath("volume_%02d" % i)
         fnVol = fnRoot + ".vol"
-        ih.convert(volLoc, fnVol)
-
+        self.runJob("xmipp_image_convert","-i %s -o %s -t vol"%(locationToXmipp(volLoc[0],volLoc[1]),fnVol))
+        
         # Resize if the volume has different size than the reference
         self._resizeVolume(fnVol)
 

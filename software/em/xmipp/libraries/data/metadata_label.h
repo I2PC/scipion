@@ -112,6 +112,7 @@ enum MDLabel
     MDL_CONTINUOUS_SCALE_Y, ///< b value of continuous assignment
 
     MDL_CTF_DATA_PHASE_FLIPPED, // Is the Data Phase-Flippled?
+    MDL_CTF_CORRECTED, // Is the CTF corrected?
     MDL_CTF_INPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTF_MODEL, ///< Name for the CTF Model (std::string)
     MDL_CTF_MODEL2, ///< Name for another CTF model (std::string)
@@ -349,6 +350,7 @@ enum MDLabel
     MDL_RESOLUTION_LOG_STRUCTURE_FACTOR, ///<Logarithm of the structure factor
     MDL_RESOLUTION_SSNR, ///<Fourier shell correlation (double)
     MDL_RESOLUTION_STRUCTURE_FACTOR, ///<Structure factor
+    MDL_RESOLUTION_RFACTOR, /// rfactor
 
     MDL_SAMPLINGRATE, ///< sampling rate in A/pixel (double)
     MDL_SAMPLINGRATE_ORIGINAL, ///< original sampling rate in A/pixel (double)
@@ -357,7 +359,18 @@ enum MDLabel
     MDL_SAMPLINGRATE_Z, ///< sampling rate in A/pixel (double)
 
     MDL_SCALE, ///< scaling factor for an image or volume (double)
+    MDL_SCORE_BY_PCA_RESIDUAL_PROJ,
+    MDL_SCORE_BY_PCA_RESIDUAL_EXP,
     MDL_SCORE_BY_PCA_RESIDUAL,
+    MDL_SCORE_BY_ALIGNABILITY, ///< score by alignability (double)
+    MDL_SCORE_BY_ALIGNABILITY_PRECISION, ///< score by alignability (double)
+    MDL_SCORE_BY_ALIGNABILITY_ACCURACY, ///< score by alignability (double)
+    MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP, ///< score by alignability experimental particles (double)
+    MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF, ///< score by alignability references (double)
+    MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, ///< score by alignability experimental particles (double)
+    MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, ///< score by alignability references (double)
+    MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
+    MDL_SCORE_BY_MIRROR, ///< score by mirror (double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -401,6 +414,10 @@ enum MDLabel
     MDL_WEIGHT_JUMPER2, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
     MDL_WEIGHT_SSNR, ///< Weight due to SSNR
+    MDL_WEIGHT_PRECISION_ALIGNABILITY, ///< Weight due to Alignability Precision
+    MDL_WEIGHT_ALIGNABILITY, ///< Weight due to Alignability Precision and Accuracy
+    MDL_WEIGHT_ACCURACY_ALIGNABILITY, ///< Weight due to Alignability Accuracy
+    MDL_WEIGHT_PRECISION_MIRROR, ///< Weight due to Mirror Precision
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_X, ///< X component (double)
     MDL_XCOOR, ///< X component (int)
@@ -1361,6 +1378,7 @@ private:
         MDL::addLabel(MDL_CTF_BG_R3, LABEL_DOUBLE, "ctfBgR3");
 
         MDL::addLabel(MDL_CTF_DATA_PHASE_FLIPPED, LABEL_BOOL, "ctfPhaseFlipped");
+        MDL::addLabel(MDL_CTF_CORRECTED, LABEL_BOOL, "ctfCorrected");
         MDL::addLabel(MDL_CTF_X0, LABEL_DOUBLE, "ctfX0");
         MDL::addLabel(MDL_CTF_XF, LABEL_DOUBLE, "ctfXF");
         MDL::addLabel(MDL_CTF_Y0, LABEL_DOUBLE, "ctfY0");
@@ -1685,6 +1703,7 @@ private:
         MDL::addLabel(MDL_RESOLUTION_LOG_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionLogStructure");
         MDL::addLabel(MDL_RESOLUTION_STRUCTURE_FACTOR, LABEL_DOUBLE, "resolutionStructure");
         MDL::addLabel(MDL_RESOLUTION_SSNR, LABEL_DOUBLE, "resolutionSSNR");
+        MDL::addLabel(MDL_RESOLUTION_RFACTOR, LABEL_DOUBLE, "resolutionRfactor");
 
         MDL::addLabelAlias(MDL_RESOLUTION_DPR, "DPR");
         MDL::addLabelAlias(MDL_RESOLUTION_ERRORL2, "Error_l2");
@@ -1706,7 +1725,19 @@ private:
         MDL::addLabelAlias(MDL_SAMPLINGRATE_Z, "sampling_rateZ"); //3.0
 
         MDL::addLabel(MDL_SCALE, LABEL_DOUBLE, "scale");
+        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL_PROJ, LABEL_DOUBLE, "scoreByPcaResidualProj");
+        MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL_EXP, LABEL_DOUBLE, "scoreByPcaResidualExp");
         MDL::addLabel(MDL_SCORE_BY_PCA_RESIDUAL, LABEL_DOUBLE, "scoreByPcaResidual");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY, LABEL_DOUBLE, "scoreByAlignability");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION, LABEL_DOUBLE, "scoreByAlignabilityPrecision");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, LABEL_DOUBLE, "scoreByAlignabilityAccuracy");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP, LABEL_DOUBLE, "scoreByAlignabilityPrecisionExp");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF, LABEL_DOUBLE, "scoreByAlignabilityPrecisionRef");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP, LABEL_DOUBLE, "scoreByAlignabilityAccuracyExp");
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, LABEL_DOUBLE, "scoreByAlignabilityAccuracyRef");
+
+        MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
+        MDL::addLabel(MDL_SCORE_BY_MIRROR, LABEL_DOUBLE, "scoreByMirror");
         MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 
         MDL::addLabelAlias(MDL_SCALE, "Scale");
@@ -1759,6 +1790,12 @@ private:
         MDL::addLabel(MDL_WEIGHT_JUMPER2, LABEL_DOUBLE, "weightJumper2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
         MDL::addLabel(MDL_WEIGHT_SSNR, LABEL_DOUBLE, "weightSSNR");
+
+        MDL::addLabel(MDL_WEIGHT_PRECISION_ALIGNABILITY, LABEL_DOUBLE, "weightPrecisionAlignability");
+        MDL::addLabel(MDL_WEIGHT_ACCURACY_ALIGNABILITY, LABEL_DOUBLE, "weightAccuracyAlignability");
+        MDL::addLabel(MDL_WEIGHT_ALIGNABILITY, LABEL_DOUBLE, "weightAlignability");
+        MDL::addLabel(MDL_WEIGHT_PRECISION_MIRROR, LABEL_DOUBLE, "weightPrecisionMirror");
+
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
         MDL::addLabel(MDL_XCOOR, LABEL_INT, "xcoor");
         MDL::addLabel(MDL_XCOOR_TILT, LABEL_INT, "xcoorTilt");

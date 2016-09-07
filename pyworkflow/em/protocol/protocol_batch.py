@@ -20,23 +20,21 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains protocols that are launched
-through other GUI (such as showj) and that
-are called "batch" protocols.
-"""
 
 import os
 from itertools import izip
 
 from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import SetOfImages, SetOfCTF, SetOfClasses, SetOfClasses3D, SetOfVolumes, EMObject, EMSet, SetOfNormalModes, SetOfParticles,\
-    SetOfMicrographs, FSC
-from pyworkflow.em.data_tiltpairs import TiltPair, MicrographsTiltPair, ParticlesTiltPair
+from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
+                                SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
+                                SetOfNormalModes, SetOfParticles, FSC,
+                                Class2D, Class3D, SetOfMicrographs)
+from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
+                                          ParticlesTiltPair)
 from pyworkflow.em.data import Mask
 from pyworkflow.utils import moveFile
 
@@ -97,9 +95,7 @@ class ProtUserSubSet(BatchProtocol):
             outputClassName = self.outputClassName.get()
             if outputClassName.startswith('SetOfMicrographs'):
                 output = self._createMicsSubSetFromCTF(inputObj)
-            else:
-                output = self._createSubSetOfCTF(inputObj)
-        
+
         elif isinstance(inputObj, MicrographsTiltPair):
             output = self._createSubSetFromMicrographsTiltPair(inputObj)
 
@@ -109,16 +105,17 @@ class ProtUserSubSet(BatchProtocol):
         elif isinstance(inputObj, EMProtocol):
             otherid = self.other.get()
             otherObj = self.getProject().mapper.selectById(int(otherid))
+
             if isinstance(setObj, SetOfClasses):
                 setObj.setImages(otherObj)
-                output = self._createSubSetFromClasses(setObj)
+                self._createSubSetFromClasses(setObj)
 
             elif isinstance(setObj, SetOfImages):
                 setObj.copyInfo(otherObj) # copy info from original images
-                output = self._createSubSetFromImages(setObj)
-                
+                self._createSubSetFromImages(setObj)
+
             elif isinstance(setObj, SetOfNormalModes):
-                output = self._createSimpleSubset(otherObj)
+                self._createSimpleSubset(otherObj)
             
         else:
             output = self._createSimpleSubset(inputObj)
@@ -138,25 +135,36 @@ class ProtUserSubSet(BatchProtocol):
 
         # Register outputs
         self._defineOutput(className, output)
+
         if inputObj.hasObjId():
             self._defineTransformRelation(inputObj, output)
+
         return output
 
-    
-    def _createSubSetFromImages(self, inputImages):
+    def _createSubSetFromImages(self, inputImages,
+                                copyInfoCallback=None):
         className = inputImages.getClassName()
+        setClass = inputImages.getClass()
+        inputClass = False
+
         createFunc = getattr(self, '_create' + className)
-        modifiedSet = inputImages.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        modifiedSet.loadAllProperties()
-        
+        modifiedSet = setClass(filename=self._dbName, prefix=self._dbPrefix)
+
         output = createFunc()
-        output.copyInfo(modifiedSet)
+
+        if copyInfoCallback is None:
+            modifiedSet.loadAllProperties()
+            output.copyInfo(modifiedSet)
+        else:
+            copyInfoCallback(output)
+
         output.appendFromImages(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
+
         if inputImages.hasObjId():
             self._defineTransformRelation(inputImages, output)
-        
+
         # Define an informative summary of the subset operation
         sizeIn = inputImages.getSize()
         sizeOut = output.getSize()
@@ -179,54 +187,57 @@ class ProtUserSubSet(BatchProtocol):
             from pyworkflow.mapper.sqlite import SqliteFlatDb
             db = SqliteFlatDb(dbName=self._dbName, tablePrefix=self._dbPrefix)
             itemClassName = db.getSelfClassName()
+
             if itemClassName.startswith('Class'):
                 if outputClassName.startswith('SetOfParticles'):
                     return self._createImagesFromClasses(inputClasses)
                 else:
-                    return self._createRepresentativesFromClasses(inputClasses, outputClassName.split(',')[0])
+                    return self._createRepresentativesFromClasses(inputClasses,
+                                                                  outputClassName.split(',')[0])
             else:
-                return self._createSubSetFromImages(inputClasses.getImages())
+                def callback(output):
+                    self._copyInfoAndSetAlignment(inputClasses, output)
+
+                return self._createSubSetFromImages(inputClasses.getImages(),
+                                                    copyInfoCallback=callback)
+
         elif outputClassName.startswith('SetOfClasses'):
             return self._createClassesFromClasses(inputClasses)
         else:
-            raise Exception("Unrecognized output type: '%s'" % outputClassName)  
-    
+            raise Exception("Unrecognized output type: '%s'" % outputClassName)
+
     def _createMicsSubSetFromCTF(self, inputCTFs):
-        """ Create a subset of Micrographs analyzing the CTFs. """
+        """ Create a subset of Micrographs and CTFs when analyzing the CTFs. """
         outputMics = self._createSetOfMicrographs()
+        outputCtfs = self._createSetOfCTF()
         setOfMics = inputCTFs.getMicrographs()
         if setOfMics is None:
-            raise Exception('Could not create SetOfMicrographs subset from'
+            raise Exception('Could not create SetOfMicrographs subset from '
                             'this SetOfCTF, the micrographs were not set.')
         outputMics.copyInfo(setOfMics)
-        
+
         modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
+
+        count = 0
         for ctf in modifiedSet:
             if ctf.isEnabled():
                 mic = ctf.getMicrograph()
                 outputMics.append(mic)
-                
-        self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(setOfMics, outputMics)
-        return outputMics
-        
-    def _createSubSetOfCTF(self, inputCtf):
-        """ Create a subset of CTF and Micrographs analyzing the CTFs. """
-        
-        setOfCtf = self._createSetOfCTF("_subset")
-        
-        modifiedSet = SetOfCTF(filename=self._dbName, prefix=self._dbPrefix)
-        
-        for ctf in modifiedSet:
-            if ctf.isEnabled():
-                setOfCtf.append(ctf)
-                
+                outputCtfs.append(ctf)
+                count += 1
+
         # Register outputs
-        self._defineOutput(self.outputClassName.get(), setOfCtf)
-        self._defineTransformRelation(inputCtf, setOfCtf)
-        return setOfCtf
-        
+        outputCtfs.setMicrographs(outputMics)
+        self._defineOutputs(outputMicrographs=outputMics, outputCTF=outputCtfs)
+        self._defineTransformRelation(setOfMics, outputMics)
+        self._defineCtfRelation(outputMics, outputCtfs)
+        msg = 'From input %s of size %s created output '% (inputCTFs.getClassName(),
+                                                           inputCTFs.getSize())
+        msg += 'SetOfMicrographs and SetOfCTF of size %d' % count
+        self.summaryVar.set(msg)
+
+        return outputMics, outputCtfs
+
     def _createRepresentativesFromClasses(self, inputClasses, outputClassName):
         """ Create a new set of images joining all images
         assigned to each class.
@@ -260,6 +271,19 @@ class ProtUserSubSet(BatchProtocol):
         self.summaryVar.set(msg)
         return output
 
+
+    def _copyInfoAndSetAlignment(self, inputClasses, output):
+        """ This method is used when creating subset of images from classes.
+        We need to copy the information from the original classes images
+        and also set the proper alignment contained in the classes.
+        """
+        inputImages = inputClasses.getImages()
+        # Copy all info form the original 'classified' images
+        output.copyInfo(inputImages)
+        # Take the alignment of the first class
+        cls = inputClasses.getFirstItem()
+        output.setAlignment(cls.getAlignment())
+
     def _createImagesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
         assigned to each class.
@@ -271,11 +295,7 @@ class ProtUserSubSet(BatchProtocol):
         self.info("Creating subset of images from classes,  sqlite file: %s" % self._dbName)
         
         output = createFunc()
-        output.copyInfo(inputImages)
-        for sampleClass in inputClasses:
-            alignment = sampleClass.getAlignment()
-            break
-        output.setAlignment(alignment)
+        self._copyInfoAndSetAlignment(inputClasses, output)
         output.appendFromClasses(modifiedSet)
         # Register outputs
         self._defineOutput(className, output)
@@ -319,25 +339,20 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
         """ Create a subset of Micrographs Tilt Pair. """
         output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
-        print "self._dbName=%s" % self._dbName
-        modifiedSet = MicrographsTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+        modifiedSet = MicrographsTiltPair(filename=self._dbName,
+                                          prefix=self._dbPrefix)
         inputU = micrographsTiltPair.getUntilted()
         inputT = micrographsTiltPair.getTilted()
         outputU = SetOfMicrographs(filename=self._getPath('mics_untilted.sqlite'))
-        outputT = SetOfParticles(filename=self._getPath('mics_tilted.sqlite'))
+        outputT = SetOfMicrographs(filename=self._getPath('mics_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
-        for micPairI in modifiedSet:
-            untilted = micPairI.getUntilted()
-            tilted = micPairI.getTilted()
-            if micPairI.isEnabled():
 
-                micPairO = TiltPair()
-                micPairO.setUntilted(untilted)
-                micPairO.setTilted(tilted)
-                output.append(micPairO)
-                outputU.append(untilted)
-                outputT.append(tilted)
+        for micPair, u, t in izip(modifiedSet, inputU, inputT):
+            if micPair.isEnabled():
+                output.append(micPair)
+                outputU.append(u)
+                outputT.append(t)
         output.setUntilted(outputU)
         output.setTilted(outputT)
         # Register outputs
@@ -347,8 +362,7 @@ class ProtUserSubSet(BatchProtocol):
         return output
 
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
-        print 'create subset from particles tilt pair'
-        """ Create a subset of Micrographs Tilt Pair. """
+        """ Create a subset of Particles Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
         
         inputU = particlesTiltPair.getUntilted()
@@ -357,8 +371,9 @@ class ProtUserSubSet(BatchProtocol):
         outputT = SetOfParticles(filename=self._getPath('particles_tilted.sqlite'))
         outputU.copyInfo(inputU)
         outputT.copyInfo(inputT)
-        
-        modifiedSet = ParticlesTiltPair(filename=self._dbName, prefix=self._dbPrefix)
+
+        modifiedSet = ParticlesTiltPair(filename=self._dbName,
+                                        prefix=self._dbPrefix)
 
         for pair, u, t in izip(modifiedSet, inputU, inputT):
             if pair.isEnabled():
@@ -368,12 +383,11 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         output.setUntilted(outputU)
         output.setTilted(outputT)
-        
+
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
         self._defineTransformRelation(particlesTiltPair, output)
         return output
-
 
     def createSetObject(self):
         _dbName, self._dbPrefix = self.sqliteFile.get().split(',')
@@ -384,7 +398,11 @@ class ProtUserSubSet(BatchProtocol):
             self._dbPrefix = self._dbPrefix[:-1]
 
         from pyworkflow.em import loadSetFromDb
-        setObj = loadSetFromDb(self._dbName, self._dbPrefix)
+
+        # Ignoring self._dbPrefix here, since we want to load
+        # the top-level set in the sqlite file
+        setObj = loadSetFromDb(self._dbName)
+
         return setObj
 
     def _summary(self):
@@ -442,7 +460,6 @@ class ProtCreateMask(BatchProtocol):
             samplingRate = inputObj.getSamplingRate()
         else:
             for key, attr in inputObj.iterInputAttributes():
-                print key
                 if hasattr(attr.get(), "getSamplingRate"):
                     samplingRate = attr.get().getSamplingRate()
         if  not samplingRate:
@@ -456,7 +473,9 @@ class ProtCreateMask(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created mask %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created mask %s'
+                       % (self.getObjectTag("inputObj"),
+                          self.getObjectTag("outputMask")))
         return summary
         
     def _methods(self):
@@ -477,7 +496,9 @@ class ProtCreateFSC(BatchProtocol):
 
     def _summary(self):
         summary = []
-        summary.append('From input %s created fsc %s'%(self.getObjectTag("inputObj"), self.getObjectTag("outputMask")))
+        summary.append('From input %s created fsc %s'
+                       % (self.getObjectTag("inputObj"),
+                          self.getObjectTag("outputMask")))
         return summary
 
     def _methods(self):

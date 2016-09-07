@@ -112,13 +112,22 @@ int		update_Face(struct DCEL_T *dcel, int edge_ID, int index);
 struct Dcel_Face_T *get_Face( struct DCEL_T *dcel, int index);
 int     get_Face_Vertex( struct DCEL_T *dcel, int face_ID, struct Dcel_Vertex_T *v1,
 									struct Dcel_Vertex_T *v2, struct Dcel_Vertex_T *v3);
-int     is_Interior_To_Face( struct DCEL_T *dcel, struct Point_T *p, int   face_ID);
 int     is_Negative_Any_Vertex( struct DCEL_T *dcel, int edge_Index);
+void	printFace( struct DCEL_T *dcel, int faceID);
 
 // Points interface.
+enum Turn_T return_Turn( struct DCEL_T *dcel, struct Point_T *p,
+												int source_ID,
+												int dest_ID);
 void    shake_Dcel( struct DCEL_T *dcel);
 void    get_Extreme_Point( struct DCEL_T *dcel, int (*f)(struct Point_T *, struct Point_T *),
 																				struct Point_T *p);
+void	get_Vertex_Of_Face( struct DCEL_T *dcel, int face, int *index1, int *index2, int *index3);
+bool	is_Interior_To_Face( struct DCEL_T *dcel, struct Point_T *p, int face);
+
+// Figures interface.
+bool	get_Convex_Hull( struct DCEL_T *dcel, int *length, int *edges);
+bool 	is_Interior_To_Convex_Hull( struct DCEL_T *dcel, struct Point_T *p, bool *error);
 
 // Figures interface.
 bool	get_Convex_Hull( struct DCEL_T *dcel, int *length, int *edges);

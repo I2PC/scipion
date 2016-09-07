@@ -168,7 +168,7 @@ byte *Smooth(byte *picSrc8, size_t swide, size_t shigh, size_t dwide, size_t dhi
 				if (y1 > shigh - 1)
 					y1 = shigh - 1;
 			}
-			apy = abs(py);
+			apy = abs((int) py);//apy = abs(py);
 			apy_100 = 100 - apy;
 
 			cyOff = (size_t) cy * swide; /* current line */
@@ -201,7 +201,7 @@ byte *Smooth(byte *picSrc8, size_t swide, size_t shigh, size_t dwide, size_t dhi
 					*ptrPicSmooth++ = cD;
 				else {
 					/* compute weighting factors */
-					apx = abs(px);
+					apx = abs((int) px);//apx = abs(px);
 					apx_100 = 100 - apx;
 					pA = apx * apy;
 					pB = apy * apx_100;

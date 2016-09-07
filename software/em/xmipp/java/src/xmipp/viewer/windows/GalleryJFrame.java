@@ -248,7 +248,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 	}
 
 	/**
-	 * Open another metadata separataly *
+	 * Open another metadata separately *
 	 */
 	public void openMetadata(final MetaData md)
 	{
@@ -1611,7 +1611,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(MD_ADD_OBJECT, "Add new object", "new_object.gif");
 			addItem(MD_REMOVE_DISABLED, "Remove disabled", "delete.gif");
 			addItem(MD_REMOVE_SELECTION, "Remove selection");
-			addItem(MD_SAVE_SELECTION, "Save selection", "save.gif");
+			addItem(MD_SAVE_SELECTION, "Save state", "save.gif");
 			addSeparator(METADATA);
 			// Help
 			addItem(HELP, "Help");
@@ -1726,6 +1726,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 					runInBackground(Worker.FSC);
 				else if (cmd.equals(FILE_OPEN))
 				{
+                    fc.setDialogTitle("Open");
+                    fc.setApproveButtonToolTipText("File to open");
+                    fc.setApproveButtonText("Open");
 					if (fc.showOpenDialog(GalleryJFrame.this) != XmippFileChooser.CANCEL_OPTION)
 					{
 						if (Filename.exists(fc.getSelectedFile().getPath()))
@@ -1831,7 +1834,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 				}
 				else if (cmd.equals(HELP_ONLINE))
 				{
-					XmippWindowUtil.openURI("http://scipion.cnb.csic.es/bin/view/TWiki/ShowJ");
+					XmippWindowUtil.openURI("http://github.com/I2PC/scipion/wiki/ShowJ");
 				}
 				else if (cmd.equals(KEY_ASSIST))
 				{
@@ -1956,8 +1959,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
 			addItem(CTF_PROFILE, "Show CTF profile");
-			addItem(CTF_RECALCULATE, "Recalculate CTF");
-            setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            if(data.parameters.recalculateCTF) {
+                addItem(CTF_RECALCULATE, "Recalculate CTF");
+                setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            }
 			addSeparator();
 			addItem(OPEN_IMAGES, "Open images");
 			addItem(SAVE_IMAGES, "Save images", "save.gif");
@@ -1966,12 +1971,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
 			addItem(SELECT_FROMHERE, "From here");
-                        addItem(INVERT_SELECT, "Invert selection");
-                        if(data.parameters.objectCommands != null)
-                            for(String cmd: data.parameters.objectCommands)
-                                addItem(cmd + "_mi", cmd);
-			initItems();
-		}// function createItems
+            addItem(INVERT_SELECT, "Invert selection");
+            if(data.parameters.objectCommands != null)
+                for(String cmd: data.parameters.objectCommands)
+                    addItem(cmd + "_mi", cmd);
+			        initItems();
+		    }// function createItems
 
 		public void show(Component cmpnt, Point location)
 		{
@@ -1983,7 +1988,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
-            setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            if(data.parameters.recalculateCTF){
+                setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            }
 			// Update menu items status depending on item.
 			getPopupMenu().show(cmpnt, location.x, location.y);
 
@@ -2004,7 +2011,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemVisible(OPEN, false);
 			setItemVisible(OPEN_ASTEXT, false);
 			setItemVisible(CTF_PROFILE, data.isCTFMd());
-			setItemVisible(CTF_RECALCULATE, data.isCTFMd());
+			if(data.parameters.recalculateCTF) setItemVisible(CTF_RECALCULATE, data.isCTFMd());
 		}
 
 		@Override
@@ -2429,6 +2436,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
         {
         	if(data.containsGeometryInfo("3D") || data.containsGeometryInfo("Projection") )
             {
+                fc.setApproveButtonText("Open");
+                fc.setDialogTitle("Open with Chimera");
+                fc.setApproveButtonToolTipText("Choose a chimera compatible file.");
                 int result = fc.showOpenDialog(GalleryJFrame.this);
                 if(result != XmippFileChooser.CANCEL_OPTION)
                 {

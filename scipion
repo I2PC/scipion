@@ -72,6 +72,7 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_LOCAL_CONFIG = SCIPION_CONFIG  # global and local are the same!
     else:
         sys.exit('Unknown argument: %s' % arg)
+
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
 SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 
@@ -102,12 +103,14 @@ if __version__ == 'devel':
     # Find out if the is a .git directory
     if exists(join(SCIPION_HOME, '.git')):
         def call(cmd):
-            subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
-        call('git branch | grep \* > .devel_version')
-        call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
+            return subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
+        if call('which git > /dev/null') == 0: # Means git command is found
+            call('git branch | grep \* > .devel_version')
+            call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
 
-    # If in a future we release a nigthly build, we could add the .devel_version
+    # If in a future we release a nightly build, we could add the .devel_version
     versionFile = join(SCIPION_HOME, '.devel_version')
+
     if exists(versionFile):
         f = open(versionFile)
         line = f.readline()
@@ -333,7 +336,8 @@ def main():
                 args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
         else:
             args = option
-            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n" % (args, MODE_WEBSERVER))
+            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n"
+                             % (args, MODE_WEBSERVER))
 
         runScript('%s %s' % (manage, args))
 
@@ -492,8 +496,8 @@ Arguments:
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        for k, v in VARS.items():
-            sys.stdout.write('export %s="%s"\n' % (k, v))
+        for key in sorted(VARS):
+            sys.stdout.write('export %s="%s"\n' % (key, VARS[key]))
 
         sys.exit(0)
 
@@ -585,7 +589,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv run
+  help install manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 

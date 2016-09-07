@@ -5,9 +5,12 @@
 //#define DEBUG_CLOSEST
 //#define DEBUG_TWO_CLOSEST
 //#define WINDOWS
-//#define GRAPH_STATISTICS
-//#define STAR_STATISTICS
+//#define DELAUNAY_STATISTICS
+//#define LOCATION_STATISTICS
 
+// MACROS DEFINITIONS
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
 
 // Trigonometric defines.
 #ifndef PI

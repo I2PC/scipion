@@ -615,7 +615,11 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
              MultidimArray< double >& error_l2,
-             bool skipdpr=false);
+             bool skipdpr=false,
+			 bool doRfactor = false,
+			 double minFreq = -1,
+			 double maxFreq = 0.5,
+                         double * rFactor= NULL);
 
 /** Scale matrix using Fourier transform
  * @ingroup FourierOperations

@@ -475,7 +475,11 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
              MultidimArray< double >& error_l2,
-             bool dodpr)
+             bool dodpr,
+			 bool doRfactor,
+			 double minFreq,
+			 double maxFreq,
+                         double * rFactor)
 {
     if (!m1.sameShape(m2))
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"MultidimArrays have different shapes!");
@@ -485,6 +489,14 @@ void frc_dpr(MultidimArray< double > & m1,
     MultidimArray< std::complex< double > > FT1;
     FourierTransformer transformer1(FFTW_BACKWARD);
     transformer1.FourierTransform(m1, FT1, false);
+
+//#define DEBUG
+#ifdef DEBUG
+     std::cerr << "FT1" << FT1 << std::endl; 
+#endif
+#undef DEBUG
+
+
     m1.clear(); // Free memory
 
     MultidimArray< std::complex< double > > FT2;
@@ -495,6 +507,11 @@ void frc_dpr(MultidimArray< double > & m1,
     MultidimArray< int > radial_count(m1sizeX/2+1);
     MultidimArray<double> num, den1, den2, den_dpr;
     Matrix1D<double> f(3);
+    //to calculate r-factor
+    double rFactorNumerator=0;
+    double rFactorDenominator=0;
+
+
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
     den2.initZeros(radial_count);
@@ -525,10 +542,14 @@ void frc_dpr(MultidimArray< double > & m1,
     double iysize = 1.0/m1sizeY;
     int sizeX_2 = m1sizeX/2;
     double ixsize = 1.0/m1sizeX;
+    double R;
 
     int ZdimFT1=(int)ZSIZE(FT1);
     int YdimFT1=(int)YSIZE(FT1);
     int XdimFT1=(int)XSIZE(FT1);
+
+    double maxFreq_2 =0.;
+    maxFreq_2 = maxFreq * maxFreq;
     for (int k=0; k<ZdimFT1; k++)
     {
         FFT_IDX2DIGFREQ_FAST(k,m1sizeZ,sizeZ_2,isizeZ,ZZ(f));
@@ -542,11 +563,10 @@ void frc_dpr(MultidimArray< double > & m1,
                 FFT_IDX2DIGFREQ_FAST(j,m1sizeX, sizeX_2, ixsize, XX(f));
 
                 double R2 =fz2_fy2 + XX(f)*XX(f);
-
-                if (R2>0.25)
+                if (R2>maxFreq_2)
                     continue;
 
-                double R = sqrt(R2);
+                R = sqrt(R2);
                 int idx = (int)round(R * m1sizeX);
                 std::complex<double> &z1 = dAkij(FT1, k, i, j);
                 std::complex<double> &z2 = dAkij(FT2, k, i, j);
@@ -556,6 +576,13 @@ void frc_dpr(MultidimArray< double > & m1,
                 dAi(den1,idx) += absz1*absz1;
                 dAi(den2,idx) += absz2*absz2;
                 dAi(error_l2,idx) += abs(z1-z2);
+                //for calculating r-factor
+                if ( R > minFreq && R < maxFreq)
+                {
+                	rFactorNumerator += fabs(absz1 - absz2);
+                	rFactorDenominator += absz1;
+                }
+
                 if (dodpr) //this takes to long for a huge volume
                 {
                     double phaseDiff=atan2(z1.imag(),z1.real()) - atan2(z2.imag(),z2.real());
@@ -572,6 +599,17 @@ void frc_dpr(MultidimArray< double > & m1,
                 dAi(radial_count,idx)++;
             }
         }
+    }
+    //to calculate r-factor
+    if (doRfactor)
+    {
+    	//std::cout << "rFactorNumerator = " << rFactorNumerator << std::endl;
+    	//std::cout << "rFactorDenominator = " << rFactorDenominator << std::endl;
+    	*rFactor = rFactorNumerator / rFactorDenominator;
+        
+        //std::cout << "R-factor = " << rFactorValue << std::endl;
+        //*rFactor = rFactorValue;
+        //std::cout << "R-rFactor = " << *rFactor << std::endl;
     }
 
     FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)

@@ -20,15 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module have the classes for protocol params definition:
-Param, Section and Form
-The definition will be holded at class level and will
-be shared by all protocol class instances
-"""
 
 import re
 import collections
@@ -51,8 +45,10 @@ class FormElement(OrderedObject):
         self.help = String(args.get('help', None))
         # This two list will be filled by the Form
         # which have a global-view of all parameters
-        self._dependants = [] # All param names in which condition appears this param
-        self._conditionParams = [] # All param names that appears in the condition
+        # All param names in which condition appears this param
+        self._dependants = []
+        # All param names that appears in the condition
+        self._conditionParams = []
         
     def isExpert(self):
         return self.expertLevel > LEVEL_NORMAL
@@ -86,7 +82,8 @@ class Param(FormElement):
     """Definition of a protocol parameter"""
     def __init__(self, **args):
         FormElement.__init__(self, **args)
-        self.paramClass = args.get('paramClass', None) # This should be defined in subclasses
+        # This should be defined in subclasses
+        self.paramClass = args.get('paramClass', None)
         self.default = String(args.get('default', None))
         #from pyworkflow.web.app.views_util import parseText
         #self.help = parseText(String(args.get('help', None)))
@@ -196,7 +193,8 @@ class Form(object):
         """ Build a Form from a given protocol. """
         object.__init__(self)
         self._sectionList = [] # Store list of sections
-        self._paramsDict = collections.OrderedDict() #{} # Dictionary to store all params, grouped by sections
+        # Dictionary to store all params, grouped by sections
+        self._paramsDict = collections.OrderedDict()
         self._lastSection = None
         self._protocol = protocol
         self.addGeneralSection()
@@ -239,24 +237,24 @@ class Form(object):
                 if self._protocol.hasAttribute(t):
                     param._conditionParams.append(t)
                     
-    def escapeLiteral(self, value):
-        if isinstance(value, str):
-            result = "'%s'" % value
-        else:
-            result = str(value)
-        return result
-    
     def evalParamCondition(self, paramName):
         """Evaluate if a condition is True for a give param
         with the values of a particular Protocol"""
         param = self.getParam(paramName)
+
         if not param.hasCondition():
             return True
         condStr = param.condition.get()
+        localDict = {}
+        globalDict = dict(globals())
+        from pyworkflow.em import getObjects
+        globalDict.update(getObjects())
+
         for t in param._conditionParams:
             if self.hasParam(t) or self._protocol.hasAttribute(t):
-                condStr = condStr.replace(t, self.escapeLiteral(self._protocol.getAttributeValue(t)))
-        return eval(condStr)
+                localDict[t] = self._protocol.getAttributeValue(t)
+
+        return eval(condStr, globalDict, localDict)
     
     def validateParams(self, protocol):
         """ Check that all validations of the params in the form
@@ -557,7 +555,8 @@ class Conditional(Validator):
     
 class Format(Conditional):
     """ Check if the format is right. """
-    def __init__(self, valueType, error='Value have not a correct format', allowsNull=False):
+    def __init__(self, valueType, error='Value have not a correct format',
+                 allowsNull=False):
         Conditional.__init__(self, error, allowsNull)
         self.valueType = valueType
         

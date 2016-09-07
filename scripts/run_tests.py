@@ -39,8 +39,9 @@ import unittest
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.tests import GTestResult
+import pyworkflow.tests as pwtests
 
+from pyworkflow.tests import *
 
 PATH_PATTERN = {'model': ('model em/data', 'test*.py'),
                 'xmipp': ('em/workflows', 'test*xmipp*.py'),
@@ -55,6 +56,7 @@ TEST = 2
 
 class Tester():
     def main(self):
+        
         parser = argparse.ArgumentParser(description=__doc__)
         g = parser.add_mutually_exclusive_group()
         g.add_argument('--run', action='store_true', help='run the selected tests')
@@ -70,6 +72,8 @@ class Tester():
             help='pattern for the files that will be used in the tests')
         add('--grep', default=None, nargs='+',
             help='only show/run tests containing the provided words')
+        add('--label', default=None, nargs='+',
+            help='only show/run tests containing the provided label')        
         add('--skip', default=None, nargs='+',
             help='skip tests that contains these words')
         add('--log', default=None, nargs='?',
@@ -79,7 +83,7 @@ class Tester():
         add('tests', metavar='TEST', nargs='*',
             help='test case from string identifier (module, class or callable)')
         args = parser.parse_args()
-    
+        
         if not args.run and not args.show and not args.tests:
             sys.exit(parser.format_help())
     
@@ -105,6 +109,7 @@ class Tester():
         self.skip = args.skip
         self.mode = args.mode
         self.log = args.log
+        self.labels = args.label
         
         if args.show:
             self.printTests(tests)
@@ -115,6 +120,26 @@ class Tester():
         elif args.tests:
             self.runSingleTest(tests)
     
+    def discoverXmippTest(self, newItemCallback):
+        """ Discovers all basic xmipp tests and prints or executes them 
+            depending on newItemCallback argument
+        """
+                
+        # Build base directory.
+        path = "software/em/xmipp/applications/tests/"
+        
+        # Get all folders in current path.
+        for folder in os.listdir(path):
+            
+            # Check if current folder starts with "test_"
+            if folder.startswith("test_"):
+                
+                # Build command to execute/print.
+                command = 'xmipp_%s' % folder
+                
+                # Execute input funcion.
+                newItemCallback(CLASS, command)            
+
     def discoverTests(self, paths, pattern):
         """ Return tests discovered in paths that follow the given pattern """
         tests = unittest.TestSuite()
@@ -157,30 +182,50 @@ class Tester():
         
         for t in testsFlat:
             moduleName, className, testName = t.id().rsplit('.', 2)
-    
+            
             # If there is a failure loading the test, show it
             if moduleName.startswith('unittest.loader.ModuleImportFailure'):
                 print pwutils.red(moduleName), "  test:", t.id()
                 continue
-    
-            if moduleName != lastModule:
-                lastModule = moduleName
-                newItemCallback(MODULE, moduleName)
-                #print "scipion test %s" % moduleName
-                
-            if mode in ['classes', 'all'] and className != lastClass:
-                lastClass = className
-                newItemCallback(CLASS, "%s.%s" % (moduleName, className))
-                #print "  scipion test %s.%s" % (moduleName, className)
-                
-            if mode == 'all':
-                newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
-                #print "    scipion test %s.%s.%s" % (moduleName, className, testName)
+
+            def _hasLabels():
+                if self.labels is None:
+                    return True
+
+                # Check if class has a label that matches input labels.
+                import importlib
+                my_module = importlib.import_module(moduleName)
+                MyClass = getattr(my_module, className)
+
+                return pwtests.hasLabel(MyClass, self.labels)
+
+            if _hasLabels():
+
+                if moduleName != lastModule:
+                    lastModule = moduleName
+                    newItemCallback(MODULE, moduleName)
+
+                if mode in ['classes', 'all'] and className != lastClass:
+                    lastClass = className
+                    newItemCallback(CLASS, "%s.%s" % (moduleName, className))
+
+                if mode == 'all':
+                    newItemCallback(TEST, "%s.%s.%s" % (moduleName, className, testName))
+
+        # If label is "pull" then add all basic xmipp tests.
+        if (self.labels is not None):
+            if PULL_REQUEST in self.labels:
+                self.discoverXmippTest(newItemCallback)
+        else:
+            self.discoverXmippTest(newItemCallback)
     
     def _printNewItem(self, itemType, itemName):
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
-            print "%s scipion test %s" % (spaces, itemName)
+            if (itemName.startswith("xmipp_")):
+                print "%s scipion %s" % (spaces, itemName)
+            else:
+                print "%s scipion test %s" % (spaces, itemName)
             
     def printTests(self, tests):
         self._visitTests(tests, self._printNewItem)
@@ -209,7 +254,10 @@ class Tester():
         if self._match(itemName):
             spaces = (itemType * 2) * ' '
             scipion = join(os.environ['SCIPION_HOME'], 'scipion')
-            cmd = "%s %s test %s" % (spaces, scipion, itemName)
+            if (itemName.startswith("xmipp_")):
+                cmd = "%s %s %s" % (spaces, scipion, itemName)
+            else:
+                cmd = "%s %s test %s" % (spaces, scipion, itemName)
             run = ((itemType == MODULE and self.mode == 'module') or
                    (itemType == CLASS and self.mode == 'classes') or
                    (itemType == TEST and self.mode == 'all'))
@@ -269,7 +317,7 @@ class Tester():
             print "\n\nOpen results in your browser: \nfile:///%s" % self.testLog
         
     def runSingleTest(self, tests):
-        result = GTestResult()
+        result = pwtests.GTestResult()
         tests.run(result)
         result.doReport()
         if result.testFailed > 0:
