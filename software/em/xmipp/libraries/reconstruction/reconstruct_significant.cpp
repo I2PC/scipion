@@ -60,6 +60,8 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
     addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
     addParamsLine("  [--useForValidation <numOrientationsPerParticle=10>] : Use the program for validation. This number defines the number of possible orientations per particle");
+    addParamsLine("  [--dontCheckMirrors]         : Don't check mirrors in the alignment process");
+
 }
 
 // Read arguments ==========================================================
@@ -86,6 +88,7 @@ void ProgReconstructSignificant::readParams()
     doReconstruct=!checkParam("--dontReconstruct");
     useForValidation=checkParam("--useForValidation");
     numOrientationsPerParticle = getIntParam("--useForValidation");
+    dontCheckMirrors = checkParam("--dontCheckMirrors");
 
     if (!doReconstruct)
     {
@@ -115,6 +118,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         std::cout << "useForValidation            : "  << useForValidation << std::endl;
+        std::cout << "dontCheckMirrors            : "  << dontCheckMirrors << std::endl;
+
 
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
@@ -205,19 +210,19 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					M=M.inv();
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
-//					if (corr>0.99)
-//					{
-//					std::cout << prm.mdGallery[nVolume][nDir].fnImg << " corr= " << corr << " imed= " << imed << std::endl;
-//					std::cout << "Matrix=" << M << std::endl;
-//					Image<double> save;
-//					save()=mGalleryProjection;
-//					save.write("PPPgallery.xmp");
-//					save()=mCurrentImage;
-//					save.write("PPPcurrentImage.xmp");
-//					save()=mCurrentImageAligned;
-//					save.write("PPPcurrentImageAligned.xmp");
-//					char c; std::cin >> c;
-//					}
+//					//if (corr>0.99)
+//					//{
+//					//std::cout << prm.mdGallery[nVolume][nDir].fnImg << " corr= " << corr << " imed= " << imed << std::endl;
+//					//std::cout << "Matrix=" << M << std::endl;
+//					//Image<double> save;
+//					//save()=mGalleryProjection;
+//					//save.write("PPPgallery.xmp");
+//					//save()=mCurrentImage;
+//					//save.write("PPPcurrentImage.xmp");
+//					//save()=mCurrentImageAligned;
+//					//save.write("PPPcurrentImageAligned.xmp");
+//					//char c; std::cin >> c;
+//					//}
 
 					DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir)=corr;
 					// For the paper plot: std::cout << corr << " " << imed << std::endl;
@@ -770,16 +775,16 @@ void ProgReconstructSignificant::produceSideinfo()
 						deleteFile(fnAngles);
 
 					// Symmetrize with many different possibilities to have a spherical volume
-					args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i1 --spline 1 -v 0",fnVolume.c_str());
 					cmd=(String)"xmipp_transform_symmetrize "+args;
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-					args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i3 --spline 1 -v 0",fnVolume.c_str());
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-					args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i2 --spline 1 -v 0",fnVolume.c_str());
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 					deleteFile(fnAngles);
