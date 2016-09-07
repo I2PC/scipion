@@ -968,8 +968,8 @@ private:
 
 public:
   size_t now();
-  void tic();
-  void toc(const char * msg=NULL);
+  size_t tic();
+  size_t toc(const char * msg=NULL, bool inSecs=true);
 };
 
 #if !defined _NO_TIME && !defined __MINGW32__

@@ -136,6 +136,8 @@ private:
      */
     bool clearMd();
 
+    size_t getObjId();
+
     /**Add a new row and return the objId(rowId).
      */
     size_t addRow();

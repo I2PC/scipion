@@ -644,22 +644,24 @@ public:
     bool	bindValue( size_t id) const;
 
     bool 	initGetRow(bool addWhereClause) const;
-    bool 	execGetRow(MDRow &row);
-    void 	finalizeGetRow(void);
+    bool 	execGetRow(MDRow &row) const;
+    void 	finalizeGetRow(void) const;
     bool 	getRow(MDRow &row, size_t id) const;
-    bool 	getRow2(MDRow &row, size_t id);
+    bool 	getRow2(MDRow &row, size_t id) const;
 
     /** Copy all the values in the input row in the current metadata*/
     bool 	initSetRow(const MDRow &row);
     bool 	execSetRow(const MDRow &row, size_t id);
-    void 	setRow(const MDRow &row, size_t id);
+    void 	finalizeSetRow(void);
+    bool 	setRow(const MDRow &row, size_t id);
     bool 	setRow2(const MDRow &row, size_t id);
 
     /** Add a new Row and set values, return the objId of newly added object */
     bool 	initAddRow(const MDRow &row);
     bool 	execAddRow(const MDRow &row);
+    void 	finalizeAddRow(void);
     size_t 	addRow(const MDRow &row);
-    bool  	addRow2(const MDRow &row);
+    size_t 	addRow2(const MDRow &row);
 
     /** Set label values from string representation.
      */
