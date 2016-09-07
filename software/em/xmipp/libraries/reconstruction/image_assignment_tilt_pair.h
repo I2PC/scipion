@@ -62,9 +62,13 @@ public:
     void search_affine_transform(float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
     		float t1y, float t2x, float t2y, float t3x, float t3y,
     		Matrix1D<double> ux, Matrix1D<double> uy, size_t Xdim, size_t Ydim, struct Delaunay_T &delaunay_tilt, int &bestInliers,
-    		Matrix2D<double> &A_coarse, Matrix1D<double> &T_coarse);
+    		Matrix2D<double> &A_coarse, Matrix1D<double> &T_coarse, bool contingency, int thrs);
 
+    void findMaximumMinimum(const float u1, const float u2, const float u3, double &u_max, double &u_min);
+    bool checkwindow(const float t1, const float t2, const float t3,
+    				const double u_max, const double u_min);
     void run();
+
 
 };
 #endif
