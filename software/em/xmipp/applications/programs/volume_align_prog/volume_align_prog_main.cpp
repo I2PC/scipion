@@ -125,6 +125,7 @@ public:
     bool     usePowell, onlyShift, useFRM, copyGeo;
     double   maxFreq;
     int      maxShift;
+    bool     dontScale;
 public:
 
     void defineParams()
@@ -154,6 +155,7 @@ public:
         addParamsLine("                    : Maximum shift is in pixels");
         addParamsLine("                    :+ See Y. Chen, et al. Fast and accurate reference-free alignment of subtomograms. JSB, 182: 235-245 (2013)");
         addParamsLine("  [--onlyShift]     : Only shift");
+        addParamsLine("  [--dontScale]     : Do not look for scale changes");
         addParamsLine("  [--copyGeo]       : copy transformation matrix in 'transformation-matrix.txt' file. ('A' matrix elements)");
         addParamsLine(" == Mask Options == ");
         mask.defineParams(this,INT_MASK,NULL,NULL,true);
@@ -242,6 +244,7 @@ public:
         apply = checkParam("--apply");
         copyGeo = checkParam("--copyGeo");
         fnOut = getParam("--apply");
+        dontScale = checkParam("--dontScale");
 
         if (checkParam("--covariance"))
         {
@@ -371,6 +374,8 @@ public:
                 steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=steps(5)=0;
             if (params.alignment_method == COVARIANCE)
                 steps(0)=steps(1)=0;
+            if (dontScale)
+            	steps(5)=0;
             x(0)=grey_scale0;
             x(1)=grey_shift0;
             x(2)=rot0;
