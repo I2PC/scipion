@@ -24,21 +24,10 @@
 # *
 # **************************************************************************
 
-
-
-
 from pyworkflow.em.protocol import ProtProcessParticles
 import pyworkflow.protocol.params as params
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
-
-#import pyworkflow.em as em
-#import pyworkflow.em.metadata as md
-
-
-
-#from pyworkflow.em.convert import ImageHandler
-#from pyworkflow.utils.properties import Message
-#from convert import (xmippToLocation, writeSetOfParticles)
+import numpy as np
 
         
 class XmippProtApplyTransformationMatrix(ProtProcessParticles):
@@ -51,8 +40,8 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
     """
     
     _label = 'apply transformation matrix'
-
     #--------------------------- DEFINE param functions --------------------------------------------
+    
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputParticles', params.PointerParam, 
@@ -60,50 +49,79 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
                       pointerCondition='hasAlignmentProj',
                       label="Input particles",  
                       help="Aligned particles that their  "
-                           "angular assignment needs to be modified.")
-        
-      
-        
-        
+                           "angular assignment needs to be modified.")        
+        form.addParam('inputTransformMat', params.PathParam, 
+                      label="Tranfsormation matrix",  
+                      help="This is a txt file named 'transformation-matrix'.\n"
+                           "Note:\n "
+                           "Use param --copyGeo in xmipp_volume_align to create "
+                           "this file.")       
         
         form.addParallelSection(threads=1, mpi=4)    
     #--------------------------- INSERT steps functions --------------------------------------------
     
     def _insertAllSteps(self):        
-        fnInputParticles = self._getExtraPath('input_particles.xmd')
-        self._insertFunctionStep('convertInputStep', fnInputParticles)
-        #self._insertFunctionStep('applyAlignmentStep', fnInputParticles)
-        #self._insertFunctionStep('createOutputStep')
+        fnOutputParts = self._getExtraPath('output_particles.xmd')
+        inputSet = self.inputParticles.get()
+        self._insertFunctionStep('applyTransformMatStep', fnOutputParts, inputSet)        
     #--------------------------- STEPS functions --------------------------------------------        
     
-    def convertInputStep(self, fnInputParticles):
-        """ Create a metadata with the images and geometrical information. """
-        writeSetOfParticles(self.inputParticles.get(), fnInputParticles)
-        for part in self.inputParticles.get().iterItems():        
-            Mpart = part.getTransform().getMatrix()
-        print "Mpart = ", Mpart
+    def applyTransformMatStep(self, fnOutputParts, inputSet):        
+        data = []
+        fhTransformMat = open(self.inputTransformMat.get(), "r")        
+        for line in fhTransformMat:
+            fields = line.split()
+            rowdata = map(float, fields)
+            data.extend(rowdata)
+            
+        count = 0
+        TransformMat = [[0 for i in range(4)] for i in range(4)]
+        for i in range(4):
+            for j in range(4):
+                TransformMat[i][j] = data[count]
+                count += 1
+        TransformMat = np.array (TransformMat)
+        TransformMatrix = np.matrix(TransformMat)
+        print "Transformation matrix (volume_align output) =\n", TransformMatrix
+        #inverseTransform = np.linalg.inv(TransformMatrix)
+        #print "Inverse transformation matrix (volume_align output) =\n", inverseTransform
+               
        
-    
-    
+        outputSet = self._createSetOfParticles()
+        for part in inputSet.iterItems():        
+            partTransformMat = part.getTransform().getMatrix()            
+            partTransformMatrix = np.matrix(partTransformMat)            
+            applyMatrix = TransformMatrix * partTransformMatrix
+            #applyMatrix = inverseTransform * partTransformMatrix
+                      
+            part.getTransform().setMatrix(applyMatrix)
+            outputSet.append(part)       
+        outputSet.copyInfo(inputSet)        
+        self._defineOutputs(outputParticles=outputSet)        
+        writeSetOfParticles(outputSet, fnOutputParts)
     #--------------------------- INFO functions --------------------------------------------
-    #def _validate(self):############  check shavad file alignment e volume hast ya na...
-    #    errors = []
-    #    return errors
+    def _validate(self):
+        errors = []
+        if not self.inputTransformMat.get():
+            errors.append("We need transformation matrix "
+                          "to process input particles!!!")
+        return errors
         
-    #def _summary(self):
-    #    summary = []
-    #    if not hasattr(self, 'outputParticles'):
-    #        summary.append("Output particles not ready yet.")
-    #    else:
-    #        summary.append("Applied alignment to %s particles." % self.inputParticles.get().getSize())
-    #    return summary
+    def _summary(self):
+        summary = []
+        if not hasattr(self, 'outputParticles'):
+            summary.append("Output particles not ready yet.")
+        else:
+            summary.append("Applied alignment to %s particles." % 
+                           self.inputParticles.get().getSize())
+        return summary
 
-    #def _methods(self):
-    #    if not hasattr(self, 'outputParticles'):
-    #        return ["Output particles not ready yet."]
-    #    else:
-    #        return ["We applied alignment to %s particles from %s and produced %s."
-    #                % (self.inputParticles.get().getSize(), self.getObjectTag('inputParticles'), self.getObjectTag('outputParticles'))]
-    
-    #--------------------------- UTILS functions --------------------------------------------
+    def _methods(self):
+        if not hasattr(self, 'outputParticles'):
+            return ["Output particles not ready yet."]
+        else:
+            return ["We applied alignment to %s particles from %s and produced %s."
+                    %(self.inputParticles.get().getSize(), 
+                      self.getObjectTag('inputParticles'), 
+                      self.getObjectTag('outputParticles'))]
     
