@@ -126,30 +126,35 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
             fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
             alignArgsLocal = " --local --rot 0 0 1 --tilt 0 0 1"
             alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-            alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005"  
+            alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo"  
             XmippProtAlignVolume._insertFunctionStep('alignVolumeStep', 
                                                      referenceVol, 
                                                      fnAlignedVolFf,fnAlnVolFfLcl,
                                                      maskArgs, alignArgsLocal)
+            
+            
+            
             #projection matching step to modify input particles angles
-            fnAlignedVolGallery = self._getExtraPath("alignedVolume_gallery.stk")
-            self.runJob("xmipp_angular_project_library", 
-                        "-i %s -o %s --sym %s --sampling_rate %f" % (
-                        fnAlnVolFfLcl, fnAlignedVolGallery, 
-                        symmetry, samplingRate))
-            fnInParsNewAng = self._getExtraPath("inputParticles_anglesModified.xmd")
-            self.runJob("xmipp_angular_projection_matching", 
-                       "-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append " % (
-                        inputParticlesMd, fnInParsNewAng, fnAlignedVolGallery),
-                        numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())            
+            #fnAlignedVolGallery = self._getExtraPath("alignedVolume_gallery.stk")
+            #self.runJob("xmipp_angular_project_library", 
+            #            "-i %s -o %s --sym %s --sampling_rate %f" % (
+            #            fnAlnVolFfLcl, fnAlignedVolGallery, 
+            #            symmetry, samplingRate))
+            #fnInPartsNewAng = self._getExtraPath("inputParticles_anglesModified.xmd")
+            #self.runJob("xmipp_angular_projection_matching", 
+            #           "-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append " % (
+            #            inputParticlesMd, fnInPartsNewAng, fnAlignedVolGallery),
+            #            numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())            
             #self.runJob("xmipp_angular_continuous_assign2",
             #            "-i %s --ref %s -o %s --sampling %f --optimizeAngles --applyTo"%(
             #            inputParticlesMd, fnAlnVolFfLcl, 
-            #            fnInParsNewAng, samplingRate),
+            #            fnInPartsNewAng, samplingRate),
             #            numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
             
+            
+            
             self._insertFunctionStep('opticalFlowAlignmentStep', 
-                                     fnAlnVolFfLcl, referenceVol, fnInParsNewAng)
+                                     fnAlnVolFfLcl, referenceVol, fnInPartsNewAng)
                         
         self._insertFunctionStep('createOutputStep')        
     #--------------------------- STEPS functions --------------------------------------------
@@ -168,7 +173,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                     fnOutput, winSize, cutFreq), 
                     numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())        
     
-    def createOutputStep(self):        
+    def createOutputStep(self):   ########################################################## pak kardane file haye ezafi mesle transform.txt     
         refernceParticlesMd = self._getExtraPath('reference_particles.xmd')
         referenceParticles = self.referenceParticles.get()
         writeSetOfParticles(referenceParticles, refernceParticlesMd)
@@ -195,17 +200,31 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
+        inputSize = self.inputParticles.get().getSize()
+        referenceSize = self.referenceParticles.get().getSize()        
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
+        else:
+            summary.append("Applied OF to reform %d particles.\n" % inputSize)
+            summary.append("Output has %d particles as it is "
+                           "the result of merging reformed input "
+                           "particles and reference ones." %
+                           (inputSize+referenceSize))
         return summary
     
     def _methods(self):
         messages = []
-        messages.append('********************')
+        if not hasattr(self, 'outputParticles'):
+            messages.append("Output particles not ready yet.")
+        else:
+            messages.append("We reformed %s particles from %s and produced %s."
+                    %(self.inputParticles.get().getSize(), 
+                      self.getObjectTag('inputParticles'), 
+                      self.getObjectTag('outputParticles')))
         return messages
     
     def _citations(self):
-        return ['********']
+        return ['**********????????????????????************']
     
     def _validate(self):
         errors=[]
