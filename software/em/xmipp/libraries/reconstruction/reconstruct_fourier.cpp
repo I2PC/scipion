@@ -487,9 +487,9 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 bool assigned;
 
                 // Get the inverse of the sampling rate
-                double iTs=parent->padding_factor_proj/parent->Ts; 
-                //double iTs=1.0/parent->Ts; // The padding factor is not considered here, but later when the indexes
-                //                           // are converted to digital frequencies
+                // double iTs=parent->padding_factor_proj/parent->Ts;
+                double iTs=1.0/parent->Ts; // The padding factor is not considered here, but later when the indexes
+                //                         // are converted to digital frequencies
                 do
                 {
                     minAssignedRow = -1;
