@@ -259,6 +259,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 			double scale, shiftX, shiftY, anglePsi;
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
+			if (useForValidation && dontCheckMirrors)
+				flip = false;
 
 			if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
 			{
@@ -312,6 +314,9 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
+						if (useForValidation && dontCheckMirrors)
+							flip = false;
+
 						if (maxShift>0)
 							if (fabs(shiftX)>maxShift || fabs(shiftY)>maxShift)
 								continue;
