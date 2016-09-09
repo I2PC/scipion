@@ -125,7 +125,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       'the FSC drops below this value. Typical values are 0.143 and 0.5')
         form.addParam('nextResolutionOffset', FloatParam, label="Resolution offset (A)", default=2, expertLevel=LEVEL_ADVANCED, condition='nextLowPass')
         form.addParam('nextSpherical', BooleanParam, label="Spherical mask?", default=True,
-                      help='Apply a spherical mask of the size of the particle')
+                      help='Apply a spherical mask of the size of the particle. If the postprocessing indicates that it has helical symmetry,'
+                           'then a cylindrical mask is applied')
         form.addParam('nextPositivity', BooleanParam, label="Positivity?", default=True,
                       help='Remove from the next reference all negative values')
         form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
@@ -150,6 +151,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMinTilt', FloatParam, label="Min.", default=0, expertLevel=LEVEL_ADVANCED)
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED)
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
+        form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False,
+                      help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
+                         "you may want to use projections very close to 90 degrees")
+        line=form.addLine('Tilt angle restriction:', help='0 degrees represent top views, 90 degrees represent side views', 
+                          condition="restrictReconstructionAngles")
+        line.addParam('angularMinTiltReconstruct', FloatParam, label="Min.", default=88, condition="restrictReconstructionAngles")
+        line.addParam('angularMaxTiltReconstruct', FloatParam, label="Max.", default=92, condition="restrictReconstructionAngles")
 
         form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
@@ -209,7 +217,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
         groupSymmetry.addParam('postSymmetryHelical', BooleanParam, label="Apply helical symmetry?", default=False)
         groupSymmetry.addParam('postSymmetryHelicalRadius', IntParam, label="Radius", default=-1, condition='postSymmetryHelical',
-                               help="In voxels")
+                               help="In Angstroms")
         groupSymmetry.addParam('postSymmetryHelicalDihedral', BooleanParam, label="Dihedral symmetry", default=False,
                                condition='postSymmetryHelical')
         groupSymmetry.addParam('postSymmetryHelicalMinRot', FloatParam, label="Min. Rotation", default=0, condition='postSymmetryHelical',
@@ -609,11 +617,18 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 self.runJob('xmipp_transform_filter','-i %s --fourier low_pass %f --sampling %f'%\
                             (fnReferenceVol,targetResolution+self.nextResolutionOffset.get(),TsCurrent),numberOfMpi=1)
             if self.nextSpherical:
-                R=self.particleRadius.get()
-                if R<=0:
-                    R=self.inputParticles.get().getDimensions()[0]/2
-                self.runJob('xmipp_transform_mask','-i %s --mask circular -%d'%\
-                            (fnReferenceVol,round(R*self.TsOrig/TsCurrent)),numberOfMpi=1)
+                if self.postSymmetryHelical:
+                    R=self.postSymmetryHelicalRadius.get()
+                    if R<=0:
+                        R=self.inputParticles.get().getDimensions()[0]/2*self.TsOrig
+                    self.runJob('xmipp_transform_mask','-i %s --mask cylinder -%d -%d'%\
+                                (fnReferenceVol,round(R/TsCurrent),newXdim),numberOfMpi=1)
+                else:
+                    R=self.particleRadius.get()
+                    if R<=0:
+                        R=self.inputParticles.get().getDimensions()[0]/2
+                    self.runJob('xmipp_transform_mask','-i %s --mask circular -%d'%\
+                                (fnReferenceVol,round(R*self.TsOrig/TsCurrent)),numberOfMpi=1)
             if self.nextPositivity:
                 self.runJob('xmipp_transform_threshold','-i %s --select below 0 --substitute value 0'%fnReferenceVol,numberOfMpi=1)
             if fnMask!='':
@@ -1127,6 +1142,14 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesToUse = fnCorrectedImagesRoot+".xmd"
                     deleteStack = True
                 
+                # Restrict the angles
+                if self.restrictReconstructionAngles:
+                    fnRestricted = join(fnDirCurrent,"images_restricted%02d.xmd"%i)
+                    args = '-i %s --query select "angleRot > %f AND anglePsi < %f" -o %s'%\
+                           (fnAnglesToUse,self.angularMinTiltReconstruct.get(),self.angularMaxTiltReconstruct.get(),fnRestricted)
+                    self.runJob("xmipp_metadata_utilities",args,numberOfMpi=1)
+                    fnAnglesToUse = fnRestricted
+                
                 # Reconstruct Fourier
                 args="-i %s -o %s --sym %s --weight --thr %d"%(fnAnglesToUse,fnVol,self.symmetryGroup,self.numberOfThreads.get())
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()+1)
@@ -1176,7 +1199,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 rotStep=(rotF-rot0)/10
                 fnCoarse=join(fnDirCurrent,"coarseHelical%02d.xmd"%i)
                 fnFine=join(fnDirCurrent,"fineHelical%02d.xmd"%i)
-                radius=int(self.postSymmetryHelicalRadius.get())
+                radius=int(self.postSymmetryHelicalRadius.get()/TsCurrent)
                 height=int(volXdim)
                 self.runCoarseSearch(fnVol, self.postSymmetryHelicalDihedral, 0.9, z0, zF, zStep, rot0, rotF, rotStep, 1, fnCoarse, 0, radius, height, TsCurrent)
                 self.runFineSearch(fnVol, self.postSymmetryHelicalDihedral, fnCoarse, fnFine, 0.9, z0, zF, rot0, rotF, 0, radius, height, TsCurrent)
