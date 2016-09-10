@@ -43,16 +43,23 @@ public:
     FileName fnV1, fnV2, fnRoot;
     /** Number of iterations of real space denoising */
     int NiterReal;
+    /** Number of iterations of Fourier space deconvolution */
+    int NiterFourier;
+    /** Initial sigma */
+    double sigma0;
+    /** Laplacian regularization */
+    double lambda;
 public:
     Image<double> V1, V2, V1r, V2r, S, N;
     Mask mask;
     MultidimArray<int> *pMask;
     size_t pMaskSize;
     FourierTransformer transformer;
-    MultidimArray< std::complex<double> > fVol;
+    MultidimArray< std::complex<double> > fVol, fV1r, fV2r;
     MultidimArray<double> R2;
 
     CDF cdfS;
+    double sigmaConv; // Sigma for the convolution
 public:
     /// Read argument from command line
     void readParams();
@@ -71,6 +78,8 @@ public:
 
     /// Different estimates
     void estimateS();
+    void deconvolveS();
+    void optimizeSigma();
     void significanceRealSpace(const MultidimArray<double> &V1, MultidimArray<double> &V1r);
 };
 //@}

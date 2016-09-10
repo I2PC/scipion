@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "volume_halves_restoration.h"
+#include <data/numerical_tools.h>
 
 // Read arguments ==========================================================
 void ProgVolumeHalvesRestoration::readParams()
@@ -32,6 +33,9 @@ void ProgVolumeHalvesRestoration::readParams()
     fnV2 = getParam("--i2");
     fnRoot = getParam("--oroot");
     NiterReal = getIntParam("--denoising");
+    NiterFourier = getIntParam("--deconvolution");
+    sigma0 = getDoubleParam("--deconvolution",1);
+    lambda = getDoubleParam("--deconvolution",2);
     mask.readParams(this);
 }
 
@@ -45,6 +49,9 @@ void ProgVolumeHalvesRestoration::show()
 	<< "Volume2:  " << fnV2 << std::endl
 	<< "Rootname: " << fnRoot << std::endl
 	<< "Denoising Iterations: " << NiterReal << std::endl
+	<< "Deconvolution Iterations: " << NiterFourier << std::endl
+	<< "Sigma0:   " << sigma0 << std::endl
+	<< "Lambda:   " << lambda << std::endl
 	;
     mask.show();
 }
@@ -57,6 +64,7 @@ void ProgVolumeHalvesRestoration::defineParams()
     addParamsLine("   --i2 <volume2>              : Second half");
     addParamsLine("  [--oroot <root=\"volumeRestored\">] : Output rootname");
     addParamsLine("  [--denoising <N=0>]          : Number of iterations of denoising in real space");
+    addParamsLine("  [--deconvolution <N=0> <sigma0=0.2> <lambda=0.001>]   : Number of iterations of deconvolution in Fourier space, initial sigma and lambda");
     Mask::defineParams(this,INT_MASK);
 }
 
@@ -108,6 +116,22 @@ void ProgVolumeHalvesRestoration::run()
 			significanceRealSpace(V2r(),V2r());
 		}
 
+	if (NiterFourier>0)
+	{
+		sigmaConv=sigma0;
+		for (int iter=0; iter<NiterFourier; iter++)
+		{
+			std::cout << "Deconvolution iteration " << iter << std::endl;
+			estimateS();
+
+			transformer.FourierTransform(V1r(),fV1r);
+			transformer.FourierTransform(V2r(),fV2r);
+			transformer.FourierTransform(S(),fVol);
+			optimizeSigma();
+
+			deconvolveS();
+		}
+	}
 
 	V1r.write(fnRoot+"_restored1.vol");
 	V2r.write(fnRoot+"_restored2.vol");
@@ -189,4 +213,62 @@ void ProgVolumeHalvesRestoration::significanceRealSpace(const MultidimArray<doub
 		else
 			DIRECT_MULTIDIM_ELEM(Vir,n)=DIRECT_MULTIDIM_ELEM(Vi,n);
 	}
+}
+
+void ProgVolumeHalvesRestoration::deconvolveS()
+{
+    double K=-0.5/(sigmaConv*sigmaConv);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
+    {
+		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
+		if (R2n<=0.25)
+		{
+			double H1=exp(K*R2n);
+			double H2=H1;
+			DIRECT_MULTIDIM_ELEM(fVol,n)=(H1*DIRECT_MULTIDIM_ELEM(fV1r,n)+H2*DIRECT_MULTIDIM_ELEM(fV2r,n))/(H1*H1+H2*H2+lambda*R2n);
+		}
+    }
+
+    MultidimArray<double> &mS=S();
+    transformer.inverseFourierTransform(fVol,mS);
+    S.write("PPPS.vol");
+}
+
+double restorationSigmaCost(double *x, void *_prm)
+{
+	ProgVolumeHalvesRestoration *prm=(ProgVolumeHalvesRestoration *) _prm;
+	double sigma=x[1];
+	if (sigma<0)
+		return 1e38;
+    double K=-0.5/(sigma*sigma);
+    double error=0;
+    double N=0;
+    const MultidimArray< std::complex<double> > &fV=prm->fVol;
+    const MultidimArray< std::complex<double> > &fV1r=prm->fV1r;
+    const MultidimArray< std::complex<double> > &fV2r=prm->fV2r;
+    const MultidimArray<double> &R2=prm->R2;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fV)
+	{
+		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
+		if (R2n<=0.25)
+		{
+			double H1=exp(K*R2n);
+			error+=abs(DIRECT_MULTIDIM_ELEM(fV,n)*H1-DIRECT_MULTIDIM_ELEM(fV1r,n))+
+				   abs(DIRECT_MULTIDIM_ELEM(fV,n)*H1-DIRECT_MULTIDIM_ELEM(fV2r,n));
+			N++;
+		}
+	}
+    std::cout << sigma << " "  << error << std::endl;
+    return error;
+}
+
+void ProgVolumeHalvesRestoration::optimizeSigma()
+{
+
+    Matrix1D<double> p(1), steps(1);
+    p(0)=sigmaConv;
+    steps.initConstant(1);
+    double cost;
+    int iter;
+	powellOptimizer(p, 1, 1, &restorationSigmaCost, this, 0.01, cost, iter, steps, verbose>=2);
 }
