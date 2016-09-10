@@ -54,7 +54,7 @@ public:
     Mask mask;
     MultidimArray<int> *pMask;
     size_t pMaskSize;
-    FourierTransformer transformer;
+    FourierTransformer transformer, transformer1, transformer2;
     MultidimArray< std::complex<double> > fVol, fV1r, fV2r;
     MultidimArray<double> R2;
 

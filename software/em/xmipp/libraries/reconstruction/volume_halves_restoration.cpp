@@ -124,8 +124,8 @@ void ProgVolumeHalvesRestoration::run()
 			std::cout << "Deconvolution iteration " << iter << std::endl;
 			estimateS();
 
-			transformer.FourierTransform(V1r(),fV1r);
-			transformer.FourierTransform(V2r(),fV2r);
+			transformer1.FourierTransform(V1r(),fV1r, false);
+			transformer2.FourierTransform(V2r(),fV2r, false);
 			transformer.FourierTransform(S(),fVol);
 			optimizeSigma();
 
@@ -217,6 +217,8 @@ void ProgVolumeHalvesRestoration::significanceRealSpace(const MultidimArray<doub
 
 void ProgVolumeHalvesRestoration::deconvolveS()
 {
+	if (verbose>0)
+		std::cout << "   Deconvolving with sigma=" << sigmaConv << std::endl;
     double K=-0.5/(sigmaConv*sigmaConv);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
     {
@@ -226,12 +228,17 @@ void ProgVolumeHalvesRestoration::deconvolveS()
 			double H1=exp(K*R2n);
 			double H2=H1;
 			DIRECT_MULTIDIM_ELEM(fVol,n)=(H1*DIRECT_MULTIDIM_ELEM(fV1r,n)+H2*DIRECT_MULTIDIM_ELEM(fV2r,n))/(H1*H1+H2*H2+lambda*R2n);
+
+			DIRECT_MULTIDIM_ELEM(fV1r,n)/=H1;
+			DIRECT_MULTIDIM_ELEM(fV2r,n)/=H2;
 		}
     }
+    transformer1.inverseFourierTransform();
+    transformer2.inverseFourierTransform();
 
-    MultidimArray<double> &mS=S();
-    transformer.inverseFourierTransform(fVol,mS);
-    S.write("PPPS.vol");
+//    MultidimArray<double> &mS=S();
+//    transformer.inverseFourierTransform();
+//    S.write("PPPS.vol");
 }
 
 double restorationSigmaCost(double *x, void *_prm)
@@ -258,7 +265,6 @@ double restorationSigmaCost(double *x, void *_prm)
 			N++;
 		}
 	}
-    std::cout << sigma << " "  << error << std::endl;
     return error;
 }
 
@@ -271,4 +277,5 @@ void ProgVolumeHalvesRestoration::optimizeSigma()
     double cost;
     int iter;
 	powellOptimizer(p, 1, 1, &restorationSigmaCost, this, 0.01, cost, iter, steps, verbose>=2);
+	sigmaConv=p(0);
 }
