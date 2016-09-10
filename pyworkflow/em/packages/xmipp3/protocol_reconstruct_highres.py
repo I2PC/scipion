@@ -460,7 +460,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Remove untrusted background voxels
         if iteration>0 and self.postSignificantDenoise:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")
-            args='--i1 %s --i2 %s --applyPositivity --oroot %s --denoising %d'%(fnVol1,fnVol2,fnRootRestored,self.postSignificantDenoiseIter.get())
+            args='--i1 %s --i2 %s --oroot %s --denoising %d'%(fnVol1,fnVol2,fnRootRestored,self.postSignificantDenoiseIter.get())
             if fnMask!="":
                 args+=" --mask binary_file %s"%fnMask
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
@@ -481,7 +481,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Blind deconvolution
         if iteration>0 and self.postDeconvolve:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")
-            args='--i1 %s --i2 %s --applyPositivity --oroot %s --deconvolution %d'%(fnVol1,fnVol2,fnRootRestored,self.postDeconvolveIter.get())
+            args='--i1 %s --i2 % --oroot %s --deconvolution %d'%(fnVol1,fnVol2,fnRootRestored,self.postDeconvolveIter.get())
             if fnMask!="":
                 args+=" --mask binary_file %s"%fnMask
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
