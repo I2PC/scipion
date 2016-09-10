@@ -95,7 +95,8 @@ void ProgVolumeHalvesRestoration::readParams()
     fnRoot = getParam("--oroot");
     applyPos = checkParam("--applyPositivity");
     Niter = getIntParam("--Niter");
-    mask.readParams(this);
+    if (checkParam("--mask"))
+        mask.readParams(this);
 }
 
 // Show ====================================================================
