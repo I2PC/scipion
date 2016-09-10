@@ -228,6 +228,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                help="In angstroms")
         groupSymmetry.addParam('postSymmetryHelicalMaxZ', FloatParam, label="Max. Z shift", default=40, condition='postSymmetryHelical',
                                help="In angstroms")
+        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising", default=True)
+        form.addParam('postSignificantDenoiseIter', IntParam, label="Number of iterations", default=2, condition="postSignificantDenoise",
+                      expertLevel=LEVEL_ADVANCED)
         form.addParam('postScript', StringParam, label="Post-processing command", default="", expertLevel=LEVEL_ADVANCED, 
                       help='A command template that is used to post-process the reconstruction. The following variables can be used ' 
                            '%(sampling)s %(dim)s %(volume)s %(iterDir)s. The command should read Spider volumes and modify the input volume.'
@@ -442,13 +445,47 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.runJob('xmipp_volume_align','--i1 %s --i2 %s --local --apply'%(fnVolAvg,fnVol1),numberOfMpi=1)
         self.runJob('xmipp_volume_align','--i1 %s --i2 %s --local --apply'%(fnVolAvg,fnVol2),numberOfMpi=1)
         
-        # Recalculate the average after alignment
-        self.runJob('xmipp_image_operate','-i %s --plus %s -o %s'%(fnVol1,fnVol2,fnVolAvg),numberOfMpi=1)
+        # Generate mask if available
+        if self.postAdHocMask.hasValue():
+            fnMask=join(fnDirCurrent,"mask.vol")
+            if not exists(fnMask):
+                volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
+                self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
+        else:
+            fnMask=""
+
+        # Remove untrusted background voxels
+        if iteration>0 and self.postSignificantDenoise:
+            fnRootRestored=join(fnDirCurrent,"volumeRestored")
+            args='--i1 %s --i2 %s --applyPositivity --oroot %s --denoising %d'%(fnVol1,fnVol2,fnRootRestored,self.postSignificantDenoiseIter.get())
+            if fnMask!="":
+                args+=" --mask binary_file %s"%fnMask
+            self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
+            moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
+            moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
+            self.runJob('xmipp_transform_threshold','-i %s -o %s_thresholded1.vol --select below 0 --substitute value 0 '\
+                        %(fnVol1,fnRootRestored),numberOfMpi=1)
+            self.runJob('xmipp_transform_threshold','-i %s -o %s_thresholded2.vol --select below 0 --substitute value 0 '\
+                        %(fnVol2,fnRootRestored),numberOfMpi=1)
+            fnVol1ToUseInFSC = fnRootRestored+"_thresholded1.vol"
+            fnVol2ToUseInFSC = fnRootRestored+"_thresholded2.vol"
+            removeTemp = True
+        else:
+            fnVol1ToUseInFSC = fnVol1
+            fnVol2ToUseInFSC = fnVol2
+            removeTemp = False
+     
+        # Recalculate the average after alignment and denoising
+        self.runJob('xmipp_image_operate','-i %s --plus %s -o %s'%(fnVol1ToUseInFSC,fnVol2ToUseInFSC,fnVolAvg),numberOfMpi=1)
         self.runJob('xmipp_image_operate','-i %s --mult 0.5'%fnVolAvg,numberOfMpi=1)
      
         # Estimate resolution
         fnFsc=join(fnDirCurrent,"fsc.xmd")
-        self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'%(fnVol1,fnVol2,fnFsc,TsCurrent),numberOfMpi=1)
+        self.runJob('xmipp_resolution_fsc','--ref %s -i %s -o %s --sampling_rate %f'\
+                    %(fnVol1ToUseInFSC,fnVol2ToUseInFSC,fnFsc,TsCurrent),numberOfMpi=1)
+        if removeTemp:
+            cleanPath(fnVol1ToUseInFSC)
+            cleanPath(fnVol2ToUseInFSC)
         fnBeforeVol1=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%1)
         fnBeforeVol2=join(fnDirCurrent,"volumeBeforePostProcessing%02d.vol"%2)
         if exists(fnBeforeVol1) and exists(fnBeforeVol2):
@@ -470,12 +507,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         self.runJob('xmipp_image_header','-i %s --sampling_rate %f'%(fnVolAvg,TsCurrent),numberOfMpi=1)
         
         if self.postAdHocMask.hasValue():
-            fnMask=join(fnDirCurrent,"mask.vol")
-            if not exists(fnMask):
-                volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
-                self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
             self.runJob("xmipp_image_operate","-i %s --mult %s"%(fnVolAvg,fnMask),numberOfMpi=1)
-            cleanPath(fnMask)
+            # cleanPath(fnMask)
 
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:

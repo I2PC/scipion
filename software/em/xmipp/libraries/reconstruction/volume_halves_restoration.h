@@ -34,15 +34,6 @@
    @ingroup ReconsLibrary */
 //@{
 
-class CDF
-{
-public:
-	MultidimArray<double> x;
-	MultidimArray<double> probXLessThanx;
-	double minVal, maxVal;
-	void calculateCDF(MultidimArray<double> &V, double probStep=0.005);
-	double getProbability(double x);
-};
 
 /** Volume restoration Parameters. */
 class ProgVolumeHalvesRestoration: public XmippProgram
@@ -50,21 +41,18 @@ class ProgVolumeHalvesRestoration: public XmippProgram
 public:
     /** Filename of the two halves and the output root */
     FileName fnV1, fnV2, fnRoot;
-    /** Apply positivity */
-    bool applyPos;
-    /** Number of iterations */
-    int Niter;
+    /** Number of iterations of real space denoising */
+    int NiterReal;
 public:
-    Image<double> V1, V2, V1r, V2r, S, HS, N;
+    Image<double> V1, V2, V1r, V2r, S, N;
     Mask mask;
     MultidimArray<int> *pMask;
     size_t pMaskSize;
     FourierTransformer transformer;
     MultidimArray< std::complex<double> > fVol;
-    MultidimArray<double> H;
-    MultidimArray<int> Ridx;
+    MultidimArray<double> R2;
 
-    CDF cdfHS;
+    CDF cdfS;
 public:
     /// Read argument from command line
     void readParams();
@@ -82,10 +70,7 @@ public:
     void produceSideInfo();
 
     /// Different estimates
-    void applyMask(MultidimArray<double> &V);
     void estimateS();
-    void estimateHS();
-    void estimatePSDn();
     void significanceRealSpace(const MultidimArray<double> &V1, MultidimArray<double> &V1r);
 };
 //@}
