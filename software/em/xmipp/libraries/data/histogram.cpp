@@ -253,6 +253,66 @@ double Histogram1D::entropy() const
     return entropy;
 }
 
+void CDF::calculateCDF(MultidimArray<double> &V, double probStep)
+{
+	double *ptr=&DIRECT_MULTIDIM_ELEM(V,0);
+	size_t N=MULTIDIM_SIZE(V);
+	std::sort(ptr,ptr+N);
+	minVal = ptr[0];
+	maxVal = ptr[N-1];
+
+	int Nsteps=(int)round(1.0/probStep);
+	x.resizeNoCopy(Nsteps);
+	probXLessThanx.resizeNoCopy(Nsteps);
+	int i=0;
+	for (double p=probStep/2; p<1; p+=probStep, i++)
+	{
+		size_t idx=(size_t)round(p*N);
+		A1D_ELEM(probXLessThanx,i)=p;
+		A1D_ELEM(x,i)=ptr[idx];
+	}
+}
+
+#define INTERP(x,x0,y0,xF,yF) (y0+(x-x0)*(yF-y0)/(xF-x0))
+
+double CDF::getProbability(double xi)
+{
+	if (xi>maxVal)
+		return 1;
+	else if (xi<minVal)
+		return 0;
+	else
+	{
+		size_t N=XSIZE(x);
+		if (xi<DIRECT_A1D_ELEM(x,0))
+			return INTERP(xi,minVal,0.0,DIRECT_A1D_ELEM(x,0),DIRECT_A1D_ELEM(probXLessThanx,0));
+		else if (xi>DIRECT_A1D_ELEM(x,N-1))
+			return INTERP(xi,DIRECT_A1D_ELEM(x,N-1),DIRECT_A1D_ELEM(probXLessThanx,N-1),maxVal,1.0);
+		else
+		{
+			int iLeft=0;
+			int iRight=N-1;
+			while (iLeft<=iRight)
+			{
+				int iMiddle = iLeft+(iRight-iLeft)/2;
+				if (xi>=DIRECT_A1D_ELEM(x,iMiddle) && xi<=DIRECT_A1D_ELEM(x,iMiddle+1))
+				{
+					if (DIRECT_A1D_ELEM(x,iMiddle)==DIRECT_A1D_ELEM(x,iMiddle+1))
+						return 0.5*(DIRECT_A1D_ELEM(probXLessThanx,iMiddle)+DIRECT_A1D_ELEM(probXLessThanx,iMiddle+1));
+					else
+						return INTERP(xi,DIRECT_A1D_ELEM(x,iMiddle),  DIRECT_A1D_ELEM(probXLessThanx,iMiddle),
+										 DIRECT_A1D_ELEM(x,iMiddle+1),DIRECT_A1D_ELEM(probXLessThanx,iMiddle+1));
+				}
+				else if (xi<DIRECT_A1D_ELEM(x,iMiddle))
+					iRight=iMiddle;
+				else
+					iLeft=iMiddle;
+			}
+			std::cout << "It should never reach here" << std::endl;
+		}
+	}
+}
+
 /* Detectability error ----------------------------------------------------- */
 // Given two histograms (probability density functions) this function returns
 // the detection error for using both, ie, the probability that given a sample

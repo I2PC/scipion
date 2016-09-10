@@ -24,68 +24,7 @@
  ***************************************************************************/
 
 #include "volume_halves_restoration.h"
-
-void CDF::calculateCDF(MultidimArray<double> &V, double probStep)
-{
-	double *ptr=&DIRECT_MULTIDIM_ELEM(V,0);
-	size_t N=MULTIDIM_SIZE(V);
-	std::sort(ptr,ptr+N);
-	minVal = ptr[0];
-	maxVal = ptr[N-1];
-
-	int Nsteps=(int)round(1.0/probStep);
-	x.resizeNoCopy(Nsteps);
-	probXLessThanx.resizeNoCopy(Nsteps);
-	int i=0;
-	for (double p=probStep/2; p<1; p+=probStep, i++)
-	{
-		size_t idx=(size_t)round(p*N);
-		A1D_ELEM(probXLessThanx,i)=p;
-		A1D_ELEM(x,i)=ptr[idx];
-//		std::cout << "i=" << i << " x=" << A1D_ELEM(x,i) << " p=" << A1D_ELEM(probXLessThanx,i) << std::endl;
-	}
-}
-
-#define INTERP(x,x0,y0,xF,yF) (y0+(x-x0)*(yF-y0)/(xF-x0))
-
-double CDF::getProbability(double xi)
-{
-	if (xi>maxVal)
-		return 1;
-	else if (xi<minVal)
-		return 0;
-	else
-	{
-		size_t N=XSIZE(x);
-		if (xi<DIRECT_A1D_ELEM(x,0))
-			return INTERP(xi,minVal,0.0,DIRECT_A1D_ELEM(x,0),DIRECT_A1D_ELEM(probXLessThanx,0));
-		else if (xi>DIRECT_A1D_ELEM(x,N-1))
-			return INTERP(xi,DIRECT_A1D_ELEM(x,N-1),DIRECT_A1D_ELEM(probXLessThanx,N-1),maxVal,1.0);
-		else
-		{
-			int iLeft=0;
-			int iRight=N-1;
-			while (iLeft<=iRight)
-			{
-				int iMiddle = iLeft+(iRight-iLeft)/2;
-				if (xi>=DIRECT_A1D_ELEM(x,iMiddle) && xi<=DIRECT_A1D_ELEM(x,iMiddle+1))
-				{
-//					std::cout << "iMiddle = " << iMiddle << " " << DIRECT_A1D_ELEM(x,iMiddle) << " "  << DIRECT_A1D_ELEM(x,iMiddle+1) << std::endl;
-					if (DIRECT_A1D_ELEM(x,iMiddle)==DIRECT_A1D_ELEM(x,iMiddle+1))
-						return 0.5*(DIRECT_A1D_ELEM(probXLessThanx,iMiddle)+DIRECT_A1D_ELEM(probXLessThanx,iMiddle+1));
-					else
-						return INTERP(xi,DIRECT_A1D_ELEM(x,iMiddle),  DIRECT_A1D_ELEM(probXLessThanx,iMiddle),
-										 DIRECT_A1D_ELEM(x,iMiddle+1),DIRECT_A1D_ELEM(probXLessThanx,iMiddle+1));
-				}
-				else if (xi<DIRECT_A1D_ELEM(x,iMiddle))
-					iRight=iMiddle;
-				else
-					iLeft=iMiddle;
-			}
-			std::cout << "It should never reach here" << std::endl;
-		}
-	}
-}
+#include <data/numerical_tools.h>
 
 // Read arguments ==========================================================
 void ProgVolumeHalvesRestoration::readParams()
@@ -93,8 +32,10 @@ void ProgVolumeHalvesRestoration::readParams()
     fnV1 = getParam("--i1");
     fnV2 = getParam("--i2");
     fnRoot = getParam("--oroot");
-    applyPos = checkParam("--applyPositivity");
-    Niter = getIntParam("--Niter");
+    NiterReal = getIntParam("--denoising");
+    NiterFourier = getIntParam("--deconvolution");
+    sigma0 = getDoubleParam("--deconvolution",1);
+    lambda = getDoubleParam("--deconvolution",2);
     if (checkParam("--mask"))
         mask.readParams(this);
 }
@@ -108,7 +49,10 @@ void ProgVolumeHalvesRestoration::show()
 	<< "Volume1:  " << fnV1 << std::endl
 	<< "Volume2:  " << fnV2 << std::endl
 	<< "Rootname: " << fnRoot << std::endl
-	<< "Niter:    " << Niter << std::endl
+	<< "Denoising Iterations: " << NiterReal << std::endl
+	<< "Deconvolution Iterations: " << NiterFourier << std::endl
+	<< "Sigma0:   " << sigma0 << std::endl
+	<< "Lambda:   " << lambda << std::endl
 	;
     mask.show();
 }
@@ -120,8 +64,8 @@ void ProgVolumeHalvesRestoration::defineParams()
     addParamsLine("   --i1 <volume1>              : First half");
     addParamsLine("   --i2 <volume2>              : Second half");
     addParamsLine("  [--oroot <root=\"volumeRestored\">] : Output rootname");
-    addParamsLine("  [--applyPositivity]          : Remove negative values");
-    addParamsLine("  [--Niter <N=5>]              : Number of iterations");
+    addParamsLine("  [--denoising <N=0>]          : Number of iterations of denoising in real space");
+    addParamsLine("  [--deconvolution <N=0> <sigma0=0.2> <lambda=0.001>]   : Number of iterations of deconvolution in Fourier space, initial sigma and lambda");
     Mask::defineParams(this,INT_MASK);
 }
 
@@ -146,10 +90,8 @@ void ProgVolumeHalvesRestoration::produceSideInfo()
 
 	// Initialize filter and calculate frequencies
 	transformer.FourierTransform(V1(),fVol,false);
-	H.resizeNoCopy(XSIZE(fVol));
-	H.initConstant(1.0);
-	Ridx.resizeNoCopy(fVol);
-	Ridx.initConstant(-1);
+	R2.resizeNoCopy(fVol);
+	R2.initConstant(-1);
 	const MultidimArray<double> &mV1=V1();
 	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(fVol)
 	{
@@ -157,9 +99,7 @@ void ProgVolumeHalvesRestoration::produceSideInfo()
 		FFT_IDX2DIGFREQ(k,ZSIZE(mV1),fz);
 		FFT_IDX2DIGFREQ(i,YSIZE(mV1),fy);
 		FFT_IDX2DIGFREQ(j,XSIZE(mV1),fx);
-		double R=sqrt(fx*fx+fy*fy+fz*fz);
-		if (R<0.5)
-			A3D_ELEM(Ridx,k,i,j) = (int)round(R*XSIZE(mV1));
+		A3D_ELEM(R2,k,i,j) = fx*fx+fy*fy+fz*fz;
 	}
 }
 
@@ -168,14 +108,32 @@ void ProgVolumeHalvesRestoration::run()
 	show();
 	produceSideInfo();
 
-	for (int iter=0; iter<Niter; iter++)
+	if (NiterReal>0)
+		for (int iter=0; iter<NiterReal; iter++)
+		{
+			std::cout << "Denoising iteration " << iter << std::endl;
+			estimateS();
+			significanceRealSpace(V1r(),V1r());
+			significanceRealSpace(V2r(),V2r());
+		}
+
+	if (NiterFourier>0)
 	{
-		std::cout << "Iteration " << iter << std::endl;
-		estimateS();
-		estimateHS();
-		significanceRealSpace(V1r(),V1r());
-		significanceRealSpace(V2r(),V2r());
+		sigmaConv=sigma0;
+		for (int iter=0; iter<NiterFourier; iter++)
+		{
+			std::cout << "Deconvolution iteration " << iter << std::endl;
+			estimateS();
+
+			transformer1.FourierTransform(V1r(),fV1r, false);
+			transformer2.FourierTransform(V2r(),fV2r, false);
+			transformer.FourierTransform(S(),fVol);
+			optimizeSigma();
+
+			deconvolveS();
+		}
 	}
+
 	V1r.write(fnRoot+"_restored1.vol");
 	V2r.write(fnRoot+"_restored2.vol");
 }
@@ -186,54 +144,45 @@ void ProgVolumeHalvesRestoration::estimateS()
 	MultidimArray<double> &mS=S();
 	const MultidimArray<double> &mV1r=V1r();
 	const MultidimArray<double> &mV2r=V2r();
+
+	// Compute average
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mV1r)
 	DIRECT_MULTIDIM_ELEM(mS,n)=0.5*(DIRECT_MULTIDIM_ELEM(mV1r,n)+DIRECT_MULTIDIM_ELEM(mV2r,n));
-	applyMask(mS);
-}
 
-void ProgVolumeHalvesRestoration::applyMask(MultidimArray<double> &V)
-{
-	if (pMask==NULL)
-		return;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
-	if (DIRECT_MULTIDIM_ELEM(*pMask,n)==0)
-		DIRECT_MULTIDIM_ELEM(V,n)=0;
-	if (applyPos)
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
-		if (DIRECT_MULTIDIM_ELEM(V,n)<0)
-			DIRECT_MULTIDIM_ELEM(V,n)=0;
-}
+	// Apply mask
+	if (pMask!=NULL)
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mS)
+		if (DIRECT_MULTIDIM_ELEM(*pMask,n)==0)
+			DIRECT_MULTIDIM_ELEM(mS,n)=0;
 
-void ProgVolumeHalvesRestoration::estimateHS()
-{
+	// Apply positivity
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mS)
+	if (DIRECT_MULTIDIM_ELEM(mS,n)<0)
+		DIRECT_MULTIDIM_ELEM(mS,n)=0;
+
 	// Filter S
-	HS()=S();
-	transformer.FourierTransform(HS(),fVol,false);
+	transformer.FourierTransform(mS,fVol,false);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
-	{
-		int fIdx = DIRECT_MULTIDIM_ELEM(Ridx,n);
-		if (fIdx>=0)
-			DIRECT_MULTIDIM_ELEM(Ridx,n)*=DIRECT_MULTIDIM_ELEM(H,fIdx);
-	}
+		if (DIRECT_MULTIDIM_ELEM(R2,n)>0.25)
+			DIRECT_MULTIDIM_ELEM(fVol,n)=0.0;
 	transformer.inverseFourierTransform();
 
 	// Calculate HS CDF in real space
 	MultidimArray<double> aux;
 	if (pMask==NULL)
 	{
-		aux=HS();
+		aux=S();
 		aux*=aux;
 	}
 	else
 	{
 		aux.resizeNoCopy(pMaskSize);
 		size_t idx=0;
-		const MultidimArray<double> mHS=HS();
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mHS)
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mS)
 		if (DIRECT_MULTIDIM_ELEM(*pMask,n)!=0)
-			DIRECT_MULTIDIM_ELEM(aux,idx++)=DIRECT_MULTIDIM_ELEM(mHS,n)*DIRECT_MULTIDIM_ELEM(mHS,n);
+			DIRECT_MULTIDIM_ELEM(aux,idx++)=DIRECT_MULTIDIM_ELEM(mS,n)*DIRECT_MULTIDIM_ELEM(mS,n);
 	}
-	cdfHS.calculateCDF(aux);
+	cdfS.calculateCDF(aux);
 }
 
 void ProgVolumeHalvesRestoration::significanceRealSpace(const MultidimArray<double> &Vi, MultidimArray<double> &Vir)
@@ -241,10 +190,10 @@ void ProgVolumeHalvesRestoration::significanceRealSpace(const MultidimArray<doub
 	// Calculate N=Vi-H*S and its energy CDF
 	N().resizeNoCopy(Vi);
 	MultidimArray<double> &mN=N();
-	const MultidimArray<double> &mHS=HS();
+	const MultidimArray<double> &mS=S();
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mN)
 	{
-		double diff=DIRECT_MULTIDIM_ELEM(Vi,n)-DIRECT_MULTIDIM_ELEM(mHS,n);
+		double diff=DIRECT_MULTIDIM_ELEM(Vi,n)-DIRECT_MULTIDIM_ELEM(mS,n);
 		DIRECT_MULTIDIM_ELEM(mN,n)=diff*diff;
 	}
 	CDF cdfN;
@@ -255,17 +204,79 @@ void ProgVolumeHalvesRestoration::significanceRealSpace(const MultidimArray<doub
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mN)
 	{
 		double e=DIRECT_MULTIDIM_ELEM(Vi,n)*DIRECT_MULTIDIM_ELEM(Vi,n);
-//		std::cout << "n=" << n << " e=" << e;
 		double pN=cdfN.getProbability(e);
-//		std::cout << " pN=" << pN;
 		if (pN<1)
 		{
-			double pHS=cdfHS.getProbability(e);
-//			std::cout << " pHS=" << pHS << std::endl;
-			double pp=pHS*pN;
+			double pS=cdfS.getProbability(e);
+			double pp=pS*pN;
 			DIRECT_MULTIDIM_ELEM(Vir,n)=pp*DIRECT_MULTIDIM_ELEM(Vi,n);
 		}
 		else
 			DIRECT_MULTIDIM_ELEM(Vir,n)=DIRECT_MULTIDIM_ELEM(Vi,n);
 	}
+}
+
+void ProgVolumeHalvesRestoration::deconvolveS()
+{
+	if (verbose>0)
+		std::cout << "   Deconvolving with sigma=" << sigmaConv << std::endl;
+    double K=-0.5/(sigmaConv*sigmaConv);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
+    {
+		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
+		if (R2n<=0.25)
+		{
+			double H1=exp(K*R2n);
+			double H2=H1;
+			DIRECT_MULTIDIM_ELEM(fVol,n)=(H1*DIRECT_MULTIDIM_ELEM(fV1r,n)+H2*DIRECT_MULTIDIM_ELEM(fV2r,n))/(H1*H1+H2*H2+lambda*R2n);
+
+			DIRECT_MULTIDIM_ELEM(fV1r,n)/=H1;
+			DIRECT_MULTIDIM_ELEM(fV2r,n)/=H2;
+		}
+    }
+    transformer1.inverseFourierTransform();
+    transformer2.inverseFourierTransform();
+
+//    MultidimArray<double> &mS=S();
+//    transformer.inverseFourierTransform();
+//    S.write("PPPS.vol");
+}
+
+double restorationSigmaCost(double *x, void *_prm)
+{
+	ProgVolumeHalvesRestoration *prm=(ProgVolumeHalvesRestoration *) _prm;
+	double sigma=x[1];
+	if (sigma<0)
+		return 1e38;
+    double K=-0.5/(sigma*sigma);
+    double error=0;
+    double N=0;
+    const MultidimArray< std::complex<double> > &fV=prm->fVol;
+    const MultidimArray< std::complex<double> > &fV1r=prm->fV1r;
+    const MultidimArray< std::complex<double> > &fV2r=prm->fV2r;
+    const MultidimArray<double> &R2=prm->R2;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fV)
+	{
+		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
+		if (R2n<=0.25)
+		{
+			double H1=exp(K*R2n);
+			error+=abs(DIRECT_MULTIDIM_ELEM(fV,n)*H1-DIRECT_MULTIDIM_ELEM(fV1r,n))+
+				   abs(DIRECT_MULTIDIM_ELEM(fV,n)*H1-DIRECT_MULTIDIM_ELEM(fV2r,n));
+			N++;
+		}
+	}
+    return error;
+}
+
+void ProgVolumeHalvesRestoration::optimizeSigma()
+{
+
+    Matrix1D<double> p(1), steps(1);
+    p(0)=sigmaConv;
+    steps.initConstant(1);
+    double cost;
+    int iter;
+	powellOptimizer(p, 1, 1, &restorationSigmaCost, this, 0.01, cost, iter, steps, verbose>=2);
+	sigmaConv=p(0);
 }
