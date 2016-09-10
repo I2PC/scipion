@@ -231,6 +231,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising", default=True)
         form.addParam('postSignificantDenoiseIter', IntParam, label="Number of iterations", default=2, condition="postSignificantDenoise",
                       expertLevel=LEVEL_ADVANCED)
+        form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", default=True)
+        form.addParam('postDeconvolveIter', IntParam, label="Number of iterations", default=1, condition="postDeconvolve",
+                      expertLevel=LEVEL_ADVANCED)
         form.addParam('postScript', StringParam, label="Post-processing command", default="", expertLevel=LEVEL_ADVANCED, 
                       help='A command template that is used to post-process the reconstruction. The following variables can be used ' 
                            '%(sampling)s %(dim)s %(volume)s %(iterDir)s. The command should read Spider volumes and modify the input volume.'
@@ -475,6 +478,27 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fnVol2ToUseInFSC = fnVol2
             removeTemp = False
      
+        # Blind deconvolution
+        if iteration>0 and self.postDeconvolve:
+            fnRootRestored=join(fnDirCurrent,"volumeRestored")
+            args='--i1 %s --i2 %s --applyPositivity --oroot %s --deconvolution %d'%(fnVol1,fnVol2,fnRootRestored,self.postDeconvolveIter.get())
+            if fnMask!="":
+                args+=" --mask binary_file %s"%fnMask
+            self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
+            moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
+            moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
+            self.runJob('xmipp_transform_threshold','-i %s -o %s_thresholded1.vol --select below 0 --substitute value 0 '\
+                        %(fnVol1,fnRootRestored),numberOfMpi=1)
+            self.runJob('xmipp_transform_threshold','-i %s -o %s_thresholded2.vol --select below 0 --substitute value 0 '\
+                        %(fnVol2,fnRootRestored),numberOfMpi=1)
+            fnVol1ToUseInFSC = fnRootRestored+"_thresholded1.vol"
+            fnVol2ToUseInFSC = fnRootRestored+"_thresholded2.vol"
+            removeTemp = True
+        else:
+            fnVol1ToUseInFSC = fnVol1
+            fnVol2ToUseInFSC = fnVol2
+            removeTemp = False
+
         # Recalculate the average after alignment and denoising
         self.runJob('xmipp_image_operate','-i %s --plus %s -o %s'%(fnVol1ToUseInFSC,fnVol2ToUseInFSC,fnVolAvg),numberOfMpi=1)
         self.runJob('xmipp_image_operate','-i %s --mult 0.5'%fnVolAvg,numberOfMpi=1)
