@@ -192,6 +192,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                  help="In Angstroms")
         form.addParam('contPadding', IntParam, label="Fourier padding factor", default=2, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                       help='The volume is zero padded by this factor to produce projections')
+        form.addParam('contSimultaneous', IntParam, label="Number of simultaneous processes", default=4, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
+                      help='At the beginning of the process, each process requires more memory, this is the number of simultaneous processes that can do this part')
         
         form.addSection(label='Weights')
         form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False,
@@ -970,8 +972,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 if R<=0:
                     R=self.inputParticles.get().getDimensions()[0]/2
                 R=round(R*self.TsOrig/TsCurrent)
-                args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1"%\
-                   (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
+                args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1 --Nsimultaneous %d"%\
+                   (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution,self.contSimultaneous.get())
                 if self.contShift:
                     args+=" --optimizeShift --max_shift %f"%(self.contMaxShiftVariation.get()*newXdim*0.01)
                 if self.contScale:

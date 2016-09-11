@@ -31,15 +31,19 @@
 class MpiProgAngularContinuousAssign2: public ProgAngularContinuousAssign2, public MpiMetadataProgram
 {
 public:
+	int Nsimul;
+
     void defineParams()
     {
         ProgAngularContinuousAssign2::defineParams();
         MpiMetadataProgram::defineParams();
+        addParamsLine("  [--Nsimultaneous <N=1>]     : Number of simultaneous processes that can enter in preprocessing");
     }
     void readParams()
     {
         MpiMetadataProgram::readParams();
         ProgAngularContinuousAssign2::readParams();
+        Nsimul = getIntParam("--Nsimultaneous");
     }
     void read(int argc, char **argv, bool reportErrors = true)
     {
@@ -47,16 +51,14 @@ public:
     }
     void preProcess()
     {
-    	// Only one node initializes at a time to avoid collapsing memory
-    	// Each node receives a token from its precessor
-    	char token='a';
-        MPI_Status status;
-    	if (node->rank>0)
-    		MPI_Recv(&token, 1, MPI_CHAR, node->rank-1, TAG_WORK_RESPONSE, MPI_COMM_WORLD, &status);
-		ProgAngularContinuousAssign2::preProcess();
-		if (node->rank < (node->size-1))
-			MPI_Send(&token, 1, MPI_CHAR, node->rank+1, TAG_WORK_RESPONSE, MPI_COMM_WORLD);
-	node->barrierWait();
+        int Nturns = (int)ceil(node->size/Nsimul);
+        int myTurn = (int)floor(node->rank/Nsimul);
+        for (int turn=0; turn<=Nturns; turn++)
+        {
+        	if (turn==myTurn)
+        		ProgAngularContinuousAssign2::preProcess();
+    		node->barrierWait();
+        }
         MetaData &mdIn = *getInputMd();
         mdIn.addLabel(MDL_GATHER_ID);
         mdIn.fillLinear(MDL_GATHER_ID,1,1);
