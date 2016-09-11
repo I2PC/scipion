@@ -500,7 +500,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             removeTemp = False
 
         # Recalculate the average after alignment and denoising
-        self.runJob('xmipp_image_operate','-i %s --plus %s -o %s'%(fnVol1ToUseInFSC,fnVol2ToUseInFSC,fnVolAvg),numberOfMpi=1)
+        self.runJob('xmipp_image_operate','-i %s --plus %s -o %s'%(fnVol1,fnVol2,fnVolAvg),numberOfMpi=1)
         self.runJob('xmipp_image_operate','-i %s --mult 0.5'%fnVolAvg,numberOfMpi=1)
      
         # Estimate resolution
