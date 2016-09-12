@@ -230,12 +230,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                help="In angstroms")
         groupSymmetry.addParam('postSymmetryHelicalMaxZ', FloatParam, label="Max. Z shift", default=40, condition='postSymmetryHelical',
                                help="In angstroms")
-        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising", default=True)
-        form.addParam('postSignificantDenoiseIter', IntParam, label="Number of iterations", default=2, condition="postSignificantDenoise",
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", default=True)
-        form.addParam('postDeconvolveIter', IntParam, label="Number of iterations", default=1, condition="postDeconvolve",
-                      expertLevel=LEVEL_ADVANCED)
         form.addParam('postScript', StringParam, label="Post-processing command", default="", expertLevel=LEVEL_ADVANCED, 
                       help='A command template that is used to post-process the reconstruction. The following variables can be used ' 
                            '%(sampling)s %(dim)s %(volume)s %(iterDir)s. The command should read Spider volumes and modify the input volume.'
@@ -243,6 +237,12 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                            'Examples: \n'
                            'xmipp_transform_filter -i %(volume)s --fourier low_pass 15 --sampling %(sampling)s\n' 
                            '/home/joe/myScript %(volume)s sampling=%(sampling)s dim=%(dim)s')
+        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising", default=True)
+        form.addParam('postSignificantDenoiseIter', IntParam, label="Number of iterations", default=2, condition="postSignificantDenoise",
+                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", default=True)
+        form.addParam('postDeconvolveIter', IntParam, label="Number of iterations", default=1, condition="postDeconvolve",
+                      expertLevel=LEVEL_ADVANCED)
 
         form.addParallelSection(threads=1, mpi=8)
     
