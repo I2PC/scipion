@@ -40,7 +40,7 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
     """
     
     _label = 'apply transformation matrix'
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------------------
     
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -57,18 +57,20 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
                            "Use param --copyGeo in xmipp_volume_align to create "
                            "this file.")       
         
-        form.addParallelSection(threads=1, mpi=4)    
-    #--------------------------- INSERT steps functions --------------------------------------------
+        form.addParallelSection(threads=1, mpi=2)    
+    #--------------------------- INSERT steps functions ------------------------------------
     
     def _insertAllSteps(self):        
         fnOutputParts = self._getExtraPath('output_particles.xmd')
         inputSet = self.inputParticles.get()
-        self._insertFunctionStep('applyTransformMatStep', fnOutputParts, inputSet)        
+        inputTranMat = self.inputTransformMat.get()
+        self._insertFunctionStep('applyTransformMatStep', 
+                                 fnOutputParts, inputSet, inputTranMat)        
     #--------------------------- STEPS functions --------------------------------------------        
     
-    def applyTransformMatStep(self, fnOutputParts, inputSet):        
+    def applyTransformMatStep(self, fnOutputParts, inputSet, inputTranMat):        
         data = []
-        fhTransformMat = open(self.inputTransformMat.get(), "r")        
+        fhTransformMat = open(inputTranMat, "r")        
         for line in fhTransformMat:
             fields = line.split()
             rowdata = map(float, fields)
@@ -86,7 +88,6 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
         #inverseTransform = np.linalg.inv(TransformMatrix)
         #print "Inverse transformation matrix (volume_align output) =\n", inverseTransform
                
-       
         outputSet = self._createSetOfParticles()
         for part in inputSet.iterItems():        
             partTransformMat = part.getTransform().getMatrix()            
@@ -100,6 +101,7 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
         self._defineOutputs(outputParticles=outputSet)        
         writeSetOfParticles(outputSet, fnOutputParts)
     #--------------------------- INFO functions --------------------------------------------
+    
     def _validate(self):
         errors = []
         if not self.inputTransformMat.get():
