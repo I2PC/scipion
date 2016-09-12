@@ -1,8 +1,9 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -20,17 +21,34 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'coss@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+Bibtex string file for Gautomatch package.
+"""
 
-from bibtex import _bibtex # Load bibtex dict with references
-#_logo = "resmap_logo.png"
-_references = ['lix2013']
+_bibtexStr = """
 
-#from protocol_dosefgpu import ProtDosefGpu
-#from protocol_import import ProtDosefGpuImport
+@Article{Zhang2016b,
+  Title      = {},
+  Author     = {Zhang K.},
+  Journal    = {unpublished},
+  Year       = {},
+  Pages      = {},
+  Volume     = {},
+  Number     = {},
+  Abstract   = {},
+  Doi        = {},
+  Language   = {},
+  Note	     = {unpublished},
+  PubMedID   = {},
+  ISSN       = {},
+  Url        = {http://www.mrc-lmb.cam.ac.uk/kzhang/Gautomatch}
+}
 
-from convert import getEnviron
+"""
 
-_environ = getEnviron()
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

@@ -4,44 +4,86 @@ Created on May 20, 2013
 @author: laura
 '''
 
-from glob import glob, iglob
-import unittest
-import os, traceback
-from itertools import izip
+from glob import iglob
 from pyworkflow.tests import *
-from pyworkflow.em.data import *
-from pyworkflow.utils.path import makePath
 from pyworkflow.em.packages.xmipp3.convert import *
-import pyworkflow.em.packages.eman2.convert as e2convert
-from pyworkflow.em.protocol import EMProtocol
-
 import pyworkflow.em.metadata as md
 from pyworkflow.em.convert import ImageHandler
 
 
 
-class TestImage(unittest.TestCase):
+class TestFSC(unittest.TestCase):
+    
+    _labels = [SMALL, WEEKLY]
         
+    def testIO(self):
+        """Test basic FSC object"""
+        xList=[0.00,0.05,0.10,0.15,0.2]
+        yList=[1.00,0.95,0.90,0.85,0.2]
+        fsc = FSC()
+        fsc.setData(xList,yList)
+        #fsc.printAll()
+        x,y = fsc.getData()
+        self.assertEqual(xList,x)
+        self.assertEqual(yList,y)
+
+    def testMd(self):
+        """test create FSC from metdata"""
+        import xmipp
+        xList=[0.00,0.05,0.10,0.15,0.2]
+        yList=[1.00,0.95,0.90,0.85,0.2]
+        md1 =xmipp.MetaData()
+        for freq,fscValue in izip(xList, yList):
+            id = md1.addObject()
+            md1.setValue(xmipp.MDL_RESOLUTION_FREQ, freq, id)
+            md1.setValue(xmipp.MDL_RESOLUTION_FRC, fscValue, id)
+        fsc = FSC()
+        fsc.loadFromMd(md1,xmipp.MDL_RESOLUTION_FREQ,
+                       xmipp.MDL_RESOLUTION_FRC)
+        x,y = fsc.getData()
+        self.assertEqual(xList,x)
+        self.assertEqual(yList,y)
+
+
+class TestImage(unittest.TestCase):
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
-        cls.dataset = DataSet.getDataSet('xmipp_tutorial')  
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
         cls.mic1 = cls.dataset.getFile( 'mic1')
-    
+
     def testLocation(self):
         fn = self.mic1
         mic = Micrograph()
         mic.setFileName(fn)
 
-        # Check that setFileName-getFileName is working properly        
+        # Check that setFileName-getFileName is working properly
         self.assertEqual(fn, mic.getFileName())
+
+        # Check the location is accepted from constructor
+        mic2 = Micrograph(fn)
+        self.assertEqual(fn, mic2.getFileName())
+
+        volStk = '/data/current/volumes/all_volumes.stk'
+        vol1 = Volume((1, volStk))
+        self.assertEqual(1, vol1.getIndex())
+        self.assertEqual(volStk, vol1.getFileName())
+
+        self.assertEqual('all_volumes.stk', vol1.getBaseName())
 
 
 class TestImageHandler(unittest.TestCase):
+
+    _labels = [SMALL, WEEKLY]
+    
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
         cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.dsFormat = DataSet.getDataSet('movies')
 
     def testExistLocation(self):
         volFn = self.dataset.getFile('volumes/volume_1_iter_002.mrc')
@@ -57,9 +99,83 @@ class TestImageHandler(unittest.TestCase):
         # Test that the new filename still exists even with the :mrc suffix
         self.assertTrue(ih.existsLocation(newFn))
 
-        
+    def test_convertMicrographs(self):
+        """ Convert micrograhs to different formats.
+         EMAN2 required for .img
+        """
+        micFn = self.dataset.getFile('micrographs/BPV_1386.mrc')
+        outSuffix = pwutils.replaceBaseExt(micFn, 'img')
+        ih = ImageHandler()
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % (micFn, outFn)
+
+        ih.convert(micFn, outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+
+        pwutils.cleanPath(outFn)
+        pwutils.cleanPath(outFn.replace('.img', '.hed'))
+
+    def test_readDM4(self):
+        """ Check we can read dm4 files (using EMAN)
+        """
+        micFn = self.dsFormat.getFile('SuperRef_c3-adp-se-xyz-0228_001.dm4')
+
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (7676, 7420, 1, 1)
+        self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
+
+        # We could even convert to an mrc file:
+        outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % (micFn, outFn)
+
+        ih.convert(micFn, outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        # Check dimensions are still the same:
+        self.assertEqual(ih.getDimensions(outFn), EXPECTED_SIZE)
+
+        # Clean up tmp files
+        pwutils.cleanPath(outFn)
+
+
+    def test_readCompressedTIF(self):
+        """ Check we can read tif files
+        """
+        micFn = self.dsFormat.getFile('c3-adp-se-xyz-0228_200.tif')
+
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (7676, 7420, 1, 38)
+        self.assertEqual(ih.getDimensions(micFn), EXPECTED_SIZE)
+
+        # We could even convert to an mrc file:
+        outSuffix = pwutils.replaceBaseExt(micFn, 'mrc')
+
+        outFn = join('/tmp', outSuffix)
+        print "Converting: \n%s -> %s" % ((1, micFn), outFn)
+
+        ih.convert((1, micFn), outFn)
+
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), (7676, 7420, 1, 1))
+
+        # Clean up tmp files
+        pwutils.cleanPath(outFn)
+
+
+
 class TestSetOfMicrographs(BaseTest):
-    
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -147,8 +263,11 @@ class TestSetOfMicrographs(BaseTest):
 
 
 class TestSetOfParticles(BaseTest):
-    """ Check if the information of the images is copied to another image when a new SetOfParticles is created"""
-    
+    """ Check if the information of the images is copied to another image when
+    a new SetOfParticles is created"""
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -293,7 +412,9 @@ class TestSetOfParticles(BaseTest):
 
 
 class TestSetOfClasses2D(BaseTest):
-    
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -314,19 +435,30 @@ class TestSetOfClasses2D(BaseTest):
         img1 = cls1.getFirstItem()
         self.assertEqual(img1.getObjId(), 1) # First image of first class is 1 in this test
         
-        images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30, 35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74], 
-                  [2, 8, 10, 12, 13, 15, 19, 20, 23, 25, 27, 33, 34, 41, 43, 44, 46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 61, 63, 64, 68, 72, 73, 75, 76], 
+        images = [[1, 3, 4, 5, 7, 9, 11, 14, 16, 17, 21, 22, 24, 26, 28, 29, 30,
+                   35, 37, 38, 39, 40, 42, 45, 54, 57, 62, 65, 67, 69, 70, 71, 74],
+                  [2, 8, 10, 12, 13, 15, 19, 20, 23, 25, 27, 33, 34, 41, 43, 44,
+                   46, 47, 48, 49, 50, 51, 52, 53, 55, 56, 58, 59, 60, 61, 63,
+                   64, 68, 72, 73, 75, 76],
                   [18, 31, 32], 
                   [6, 36, 66]]
         
         classes2DSet.close()
         # Check iteration is working properly even after 
         # a close operation, it should open automatically
-        for i, cls in enumerate(classes2DSet):   
-            l = images[i]         
+        for i, cls in enumerate(classes2DSet):
+            l = images[i]
             for j, img in enumerate(cls):
                 self.assertEquals(img.getObjId(), l[j])
-                        
+
+        for i, rep in enumerate(classes2DSet.iterRepresentatives()):
+            self.assertIsNotNone(rep.getLocation())
+
+        # Check the SetOfClasses.iterClassItems method
+        allImages = [img for imgList in images for img in imgList]
+        idsImages = [img.getObjId()
+                     for img in classes2DSet.iterClassItems(iterDisabled=True)]
+        self.assertEqual(allImages, idsImages)
 
     def test_subsetsFromSelection(self):
         """ From a sqlite file of a SetOfClasses2D, with some
@@ -411,7 +543,9 @@ class TestTransform(BaseTest):
         
     
 class TestCopyItems(BaseTest):
-    
+
+    _labels = [SMALL, WEEKLY]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -455,14 +589,8 @@ class TestCopyItems(BaseTest):
         for i1, i2 in izip(inputSet, checkSet):
             self.assertTrue(i2.equalAttributes(i1, ignore=['_list']))
         
-        
     def _updateItem(self, item, row):
         item._list = CsvList()
         item._list.set([1.0, 2.0])
 
 
-if __name__ == '__main__':
-#    suite = unittest.TestLoader().loadTestsFromName('test_data_xmipp.TestXmippCTFModel.testConvertXmippCtf')
-#    unittest.TextTestRunner(verbosity=2).run(suite)
-    
-    unittest.main()

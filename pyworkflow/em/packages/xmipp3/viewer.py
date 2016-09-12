@@ -60,9 +60,14 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
-from protocol_movie_alignment import ProtMovieAlignment
+from protocol_movie_opticalflow import (XmippProtOFAlignment,
+                                        OBJCMD_MOVIE_ALIGNCARTESIAN)
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
+
+
+
+
 
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
@@ -91,7 +96,7 @@ class XmippViewer(Viewer):
                 XmippProtRotSpectra, 
                 XmippProtScreenParticles,
                 XmippProtCTFMicrographs, 
-                ProtMovieAlignment,
+                XmippProtOFAlignment,
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair
                 ]
@@ -128,7 +133,7 @@ class XmippViewer(Viewer):
 
         return ctfSet
 
-    def _visualize(self, obj, **args):
+    def _visualize(self, obj, **kwargs):
         cls = type(obj)
 
         if issubclass(cls, Volume):
@@ -144,10 +149,12 @@ class XmippViewer(Viewer):
             
         elif issubclass(cls, SetOfNormalModes):
             fn = obj.getFileName()
+            from nma.viewer_nma import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD
             objCommands = "'%s' '%s'" % (OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD)
-            self._views.append(ObjectView(self._project,  self.protocol.strId(),
+            self._views.append(ObjectView(self._project, self.protocol.strId(),
                                           fn, obj.strId(),
-                                          viewParams={OBJCMDS: objCommands}, **args))
+                                          viewParams={OBJCMDS: objCommands},
+                                          **kwargs))
 
         elif issubclass(cls, SetOfMovies):
             fn = obj.getFileName()
@@ -160,7 +167,7 @@ class XmippViewer(Viewer):
 
         elif issubclass(cls, SetOfMicrographs):            
             fn = obj.getFileName()
-            self._views.append(ObjectView(self._project, obj.strId(), fn, **args))
+            self._views.append(ObjectView(self._project, obj.strId(), fn, **kwargs))
             
 
         elif issubclass(cls, MicrographsTiltPair):          
@@ -201,7 +208,9 @@ class XmippViewer(Viewer):
             # written during modification of tmpDir or create a new Xmipp picking
             # protocol to continue picking later without loosing the coordinates.
             writeSetOfCoordinates(tmpDir, obj)
-            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir, self.protocol, inTmpFolder=True))
+            self._views.append(CoordinatesObjectView(self._project, fn, tmpDir,
+                                                     self.protocol,
+                                                     inTmpFolder=True))
 
         elif issubclass(cls, SetOfParticles):
             fn = obj.getFileName()
@@ -224,7 +233,7 @@ class XmippViewer(Viewer):
         
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
-            self._views.append(ClassesView(self._project, obj.strId(), fn, **args))
+            self._views.append(ClassesView(self._project, obj.strId(), fn, **kwargs))
             
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
@@ -330,7 +339,7 @@ class XmippViewer(Viewer):
                 coordsSet = obj.getCoords()
                 self._visualize(coordsSet)
             
-        elif issubclass(cls, ProtMovieAlignment):
+        elif issubclass(cls, XmippProtOFAlignment):
             outputMics = obj.outputMicrographs
             plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
             labels = plotLabels + ' _filename '

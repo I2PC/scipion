@@ -28,15 +28,18 @@ Visualization of the results of the Frealign protocol.
 """
 import os
 from os.path import exists, relpath
-from pyworkflow.utils.path import cleanPath, removeBaseExt
+from pyworkflow.utils.path import cleanPath, removeBaseExt, removeExt
 from pyworkflow.viewer import (ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO, Viewer)
-from pyworkflow.em.viewer import CtfView
+from pyworkflow.em.viewer import CtfView, DataView
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
+
+from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,IntParam,
                                         EnumParam, HiddenBooleanParam, FloatParam)
+from protocol_magdist_estimate import ProtMagDistEst
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_ctffind import ProtCTFFind
@@ -595,7 +598,6 @@ class ProtCTFFindViewer(Viewer):
         return ctfSet
     
 def createCtfPlot(ctfSet, ctfId):
-    from pyworkflow.utils.path import removeExt
     ctfModel = ctfSet[ctfId]
     psdFn = ctfModel.getPsdFile()
     fn = removeExt(psdFn) + "_avrot.txt"
@@ -615,6 +617,9 @@ def createCtfPlot(ctfSet, ctfId):
     a.grid(True)
     xplotter.show()
 
+OBJCMD_CTFFIND4 = "Display Ctf Fitting"
+ProjectWindow.registerObjectCommand(OBJCMD_CTFFIND4, createCtfPlot)
+
 def _plotCurve(a, i, fn):
     freqs = _getValues(fn, 0)
     curv = _getValues(fn, i)
@@ -632,3 +637,41 @@ def _getValues(fn, row):
             i += 1
     f.close()
     return values
+
+
+class MagDistEstViewer(ProtocolViewer):
+    """ Visualization of mag_distortion_estimate program results. """
+
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtMagDistEst]
+    _label = 'magnification distortion estimation'
+
+    def _defineParams(self, form):
+        form.addSection(label='Visualization')
+        form.addParam('doShowAmp', LabelParam,
+                      label="Show amplitudes file?", default=True)
+        form.addParam('doShowAmpRot', LabelParam,
+                      label="Show rotationally averaged amplitudes file?", default=True)
+        form.addParam('doShowAmpCorr', LabelParam,
+                      label="Show corrected amplitudes file?", default=True)
+        form.addParam('doShowLog', LabelParam,
+                      label="Show output log file?", default=True)
+
+    def _getVisualizeDict(self):
+        return {'doShowAmp': self._viewParam,
+                'doShowAmpRot': self._viewParam,
+                'doShowAmpCorr': self._viewParam,
+                'doShowLog': self._viewParam
+                }
+
+    def _viewParam(self, param=None):
+        if param == 'doShowLog':
+            view = self.textView([self.protocol.getOutputLog()], "Output log file")
+        elif param == 'doShowAmp':
+            view = DataView(self.protocol.getOutputAmplitudes())
+        elif param == 'doShowAmpRot':
+            view = DataView(self.protocol.getOutputAmplitudesRot())
+        elif param == 'doShowAmpCorr':
+            view = DataView(self.protocol.getOutputAmplitudesCorr())
+
+        return [view]

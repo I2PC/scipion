@@ -38,6 +38,7 @@ from multiprocessing.connection import Client
 from numpy import flipud
 import socket
 
+import pyworkflow as pw
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.utils import getFreePort
@@ -49,6 +50,9 @@ import metadata as md
 import xmipp
 from data import PdbFile
 
+from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
 
 #------------------------ Some common Views ------------------
 
@@ -182,8 +186,12 @@ class CtfView(ObjectView):
         if psdLabels:
             viewParams[showj.RENDER] = psdLabels
 
+        if ctfSet.isStreamOpen():
+            viewParams['dont_recalc_ctf'] = ''
+
         if first.hasAttribute('_ctffind4_ctfResolution'):
-            viewParams[showj.OBJCMDS] = "'%s'" % showj.OBJCMD_CTFFIND4
+            import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
+            viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
@@ -322,6 +330,7 @@ class ChimeraViewer(Viewer):
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s'
                             % obj.getClassName())
 
+
 class ChimeraClient:
     
     def __init__(self, volfile, sendEnd=True,**kwargs):
@@ -348,8 +357,7 @@ class ChimeraClient:
         self.address = ''
         self.port = getFreePort()
 
-        serverfile = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow', 'em', 'chimera_server.py')
+        serverfile = pw.join('em', 'chimera_server.py')
         command = CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port,serverName),
                              env=getChimeraEnviron(),).show()
@@ -704,11 +712,10 @@ class VmdViewer(Viewer):
         
         if issubclass(cls, PdbFile):
             VmdView(obj.getFileName()).show()
-            #FIXME: there is an asymetry between ProtocolViewer and Viewer
-            # for the first, the visualize method return a list of View's (that are shown)
-            # for the second, the visualize directly shows the objects. 
-            # the first approach is better 
+            #FIXME: there is an asymetry between ProtocolViewer and Viewer.
+            # For the first, the visualize method return a list of View's,
+            # while for the second, the visualize method directly shows
+            # the objects. (the first approach is preferable)
         else:
             raise Exception('VmdViewer.visualize: can not visualize class: %s'
                             % obj.getClassName())
-        

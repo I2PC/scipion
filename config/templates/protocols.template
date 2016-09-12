@@ -24,6 +24,7 @@ Protocols SPA = [
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
         {"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtCTFFind",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGctf",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtCTFMicrographs",   "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
@@ -41,6 +42,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "BsoftProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "DogPickerProtPicking",   "text": "default"},
             {"tag": "protocol", "value": "ProtGemPicker",   "text": "default"},
+            {"tag": "protocol", "value": "ProtGautomatch",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtConsensusPicking",   "text": "default"},
             {"tag": "protocol", "value": "ProtExtractCoords",   "text": "default"}
          ]},
@@ -113,7 +115,8 @@ Protocols SPA = [
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "XmippProtAlignVolume", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCLTomo", "text": "default"},
-                {"tag": "protocol", "value": "XmippProtHelicalParameters", "text": "default"}
+                {"tag": "protocol", "value": "XmippProtHelicalParameters", "text": "default"},
+                {"tag": "protocol", "value": "XmippProtRotationalSymmetry", "text": "default"}
             ]}
          ]},
         {"tag": "protocol_group", "text": "Refine", "openItem": "False", "children": [
@@ -137,13 +140,17 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtResMap",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
             {"tag": "protocol", "value": "XmippProtValidateNonTilt",    "text": "default"},
+            {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
+            {"tag": "protocol", "value": "XmippProtCreateGallery", "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
+	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
                 {"tag": "protocol", "value": "XmippProtConvertToPseudoAtoms", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "default"},
                 {"tag": "protocol", "value": "AtsasProtConvertPdbToSAXS", "text": "default"},
-				{"tag": "protocol", "value": "XmippProtVolumeStrain", "text": "default"}
+				{"tag": "protocol", "value": "XmippProtVolumeStrain", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtNormalizeStrain", "text": "default"}
             ]}
          ]},     
         {"tag": "protocol_group", "text": "Reconstruct", "openItem": "False", "children": [
@@ -159,7 +166,8 @@ Protocols SPA = [
               {"tag": "protocol", "value": "ProtSplitSet", "text": "default"}
           ]}, 
           {"tag": "protocol", "value": "XmippProtImageOperateParticles", "text": "default"},
-          {"tag": "protocol", "value": "XmippProtImageOperateVolumes", "text": "default"}           
+          {"tag": "protocol", "value": "XmippProtImageOperateVolumes", "text": "default"},
+          {"tag": "protocol", "value": "ProtPDFReport", "text": "default"}           
       ]}      
     ]
 
@@ -194,3 +202,8 @@ HEMNMA = [
         {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "Image analysis with selected modes"}]},
     {"tag": "section", "text": "6. 3D reconstructions & animations", "children": [
         {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}]}]
+
+Localized Reconstruction = [
+	{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "1. Compute sub-particles"},
+	{"tag": "protocol", "value": "ProtRelionSubtract",  "text": "2. (Optional) Relion projection subtraction"},
+	{"tag": "protocol", "value": "ProtLocalizedExtraction",  "text": "3. Sub-particles extraction"}]

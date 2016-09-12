@@ -203,14 +203,6 @@ class ProtImportParticles(ProtImportImages):
             summary += '\n_WARNING_: Binary files copied into project (extra disk space)'
             
         self.summaryVar.set(summary)
-        
-    def loadAcquisitionInfo(self):
-        ci = self.getImportClass()
-        
-        if exists(self.importFilePath):
-            return ci.loadAcquisitionInfo()
-        else:
-            return None
 
     def _validateFileExtension(self):
         """ Simple check about the expected file extension. """

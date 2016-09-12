@@ -27,6 +27,7 @@
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
+from django.template.defaultfilters import default
 
 
 ALIGN_MASK_CIRCULAR = 0
@@ -142,8 +143,10 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         line.addParam('initialShiftX', params.FloatParam, default=0, label='X')        
         line.addParam('initialShiftY', params.FloatParam, default=0, label='Y')
         line.addParam('initialShiftZ', params.FloatParam, default=0, label='Z')    
-             
-        group.addParam('initialScale', params.FloatParam, default=1, expertLevel=params.LEVEL_ADVANCED,
+        
+        group.addParam('optimizeScale', params.BooleanParam, default=False, expertLevel=params.LEVEL_ADVANCED,
+                      label='Optimize scale')
+        group.addParam('initialScale', params.FloatParam, default=1, expertLevel=params.LEVEL_ADVANCED, condition='optimizeScale',
                       label='Initial scale')  
         
         form.addParallelSection(threads=8, mpi=1)
@@ -292,14 +295,17 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
             alignArgs += " --frm"
             
         elif self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL:
-            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --scale %f %f 0.005" %\
+            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1" %\
                (self.initialRotAngle, self.initialRotAngle,
                 self.initialTiltAngle, self.initialTiltAngle,
                 self.initialInplaneAngle, self.initialInplaneAngle,
                 self.initialShiftX, self.initialShiftX,
                 self.initialShiftY, self.initialShiftY,
-                self.initialShiftZ,self.initialShiftZ,
-                self.initialScale, self.initialScale)
+                self.initialShiftZ,self.initialShiftZ)
+            if self.optimizeScale:
+                alignArgs += " --scale %f %f 0.005" %(self.initialScale, self.initialScale)
+            else:
+                alignArgs += " --dontScale"
         else: # Exhaustive or Exhaustive+Local
             alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f" %\
                (self.minRotationalAngle, self.maxRotationalAngle, self.stepRotationalAngle,

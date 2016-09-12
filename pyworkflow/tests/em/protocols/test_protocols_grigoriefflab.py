@@ -299,9 +299,9 @@ class TestFrealignClassify(TestBrandeisBase):
 
     def testFrealignClassify(self):
         frealign = self.newProtocol(ProtFrealignClassify,
-                                    inputParticles = self.protImportPart.outputParticles,
+                                    inputParticles=self.protImportPart.outputParticles,
                                     doInvert=False,
-                                    input3DReference = self.protImportVol.outputVolume,
+                                    input3DReference=self.protImportVol.outputVolume,
                                     numberOfIterations=3,
                                     itRefineAngles = 2,
                                     itRefineShifts = 3,

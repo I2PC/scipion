@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -35,32 +35,39 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
-from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
+import subprocess
+import uuid
+import SocketServer
+
+import pyworkflow as pw
+import pyworkflow.utils as pwutils
 from pyworkflow.manager import Manager
 from pyworkflow.config import MenuConfig, ProjectSettings
 from pyworkflow.project import Project
-from pyworkflow.gui import Message
+from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.gui.text import _open_cmd
-import SocketServer
+from pyworkflow.gui.text import _open_cmd, openTextFileEditor
+
+from labels import LabelsDialog
 
 # Import possible Object commands to be handled
-from pyworkflow.em.showj import OBJCMD_NMA_PLOTDIST, OBJCMD_NMA_VMD, OBJCMD_MOVIE_ALIGNCARTESIAN, OBJCMD_CTFFIND4
 from base import ProjectBaseWindow, VIEW_PROTOCOLS, VIEW_PROJECTS
 
 
 
 class ProjectWindow(ProjectBaseWindow):
     """ Main window for working in a Project. """
+    _OBJECT_COMMANDS = {}
+
     def __init__(self, path, master=None):
         # Load global configuration
         self.projName = Message.LABEL_PROJECT + os.path.basename(path)
         try:
             projTitle = '%s (%s on %s)' % (self.projName, 
-                                           getLocalUserName(), 
-                                           getLocalHostName())
+                                           pwutils.getLocalUserName(),
+                                           pwutils.getLocalHostName())
         except Exception:
             projTitle = self.projName 
             
@@ -71,17 +78,32 @@ class ProjectWindow(ProjectBaseWindow):
         menu = MenuConfig()
 
         projMenu = menu.addSubMenu('Project')
-        projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
-        projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('Browse files', 'browse',
+                            icon='fa-folder-open.png')
+        projMenu.addSubMenu('Remove temporary files', 'delete',
+                            icon='fa-trash-o.png')
+        projMenu.addSubMenu('Manage project labels', 'labels',
+                            icon=Icon.TAGS)
+        projMenu.addSubMenu('Toogle color mode', 'color_mode',
+                            shortCut="Ctrl+t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all',
+                            shortCut="Ctrl+a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol',
+                            shortCut="Ctrl+f")
         projMenu.addSubMenu('', '') # add separator
-        projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
+        projMenu.addSubMenu('Import workflow', 'load_workflow',
+                            icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
+        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
-        helpMenu.addSubMenu('Online help', 'online_help', icon='fa-external-link.png')
-        helpMenu.addSubMenu('About', 'about', icon='fa-question-circle.png')
+        helpMenu.addSubMenu('Online help', 'online_help',
+                            icon='fa-external-link.png')
+        helpMenu.addSubMenu('About', 'about',
+                            icon='fa-question-circle.png')
 
         self.menuCfg = menu
         # TODO: up to here
@@ -90,11 +112,11 @@ class ProjectWindow(ProjectBaseWindow):
         self.selectedProtocol = None
         self.showGraph = False
         Plotter.setBackend('TkAgg')
-        ProjectBaseWindow.__init__(self, projTitle, master, icon=self.icon, minsize=(900,500))
+        ProjectBaseWindow.__init__(self, projTitle, master,
+                                   icon=self.icon, minsize=(900,500))
         self.switchView(VIEW_PROTOCOLS)
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
-
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
@@ -133,6 +155,28 @@ class ProjectWindow(ProjectBaseWindow):
                           selectButton=None  # we will select nothing
                           ).show()
 
+    def onNotes(self):
+        if not all(var in os.environ for var in ['SCIPION_NOTES_PROGRAM',
+                                                 'SCIPION_NOTES_FILE',
+                                                 'SCIPION_NOTES_ARGS']):
+            return self.showError("Missing variables SCIPION_NOTES_* under\n"
+                                  "[VARIABLES] section in the configuration file\n"
+                                  "~/.config/scipion/scipion.conf")
+        args = []
+        # Program name
+        program = os.environ.get('SCIPION_NOTES_PROGRAM', None)
+        notesFile = self.project.getPath('Logs', os.environ['SCIPION_NOTES_FILE'])
+
+        if program:
+            args.append(program)
+            # Custom arguments
+            if os.environ.get('SCIPION_NOTES_ARGS', None):
+                args.append(os.environ['SCIPION_NOTES_ARGS'])
+            args.append(notesFile)
+            subprocess.Popen(args) #nonblocking
+        else:
+            openTextFileEditor(notesFile)
+
     def onRemoveTemporaryFiles(self):
         # Project -> Remove temporary files
         tmpPath = os.path.join(self.project.path, self.project.tmpPath)
@@ -164,15 +208,33 @@ class ProjectWindow(ProjectBaseWindow):
 
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)
-        useId = not envVarOn('SCIPION_TREE_NAME')
+        useId = not pwutils.envVarOn('SCIPION_TREE_NAME')
         runsGraph.printDot(useId=useId)
         if useId:
             print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
 
+    def onManageProjectLabels(self):
+        self.manageLabels()
+
+    def onToogleColorMode(self):
+        self.getViewWidget()._toggleColorScheme(None)
+
+    def onSelectAllProtocols(self):
+        self.getViewWidget()._selectAllProtocols(None)
+
+    def onFindProtocolToAdd(self):
+        self.getViewWidget()._findProtocol(None)
+
+    def manageLabels(self):
+        return LabelsDialog(self.root,
+                            self.project.settings.getLabels(),
+                            allowSelect=True)
+
     def initProjectTCPServer(self):
-        server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
+        server = ProjectTCPServer((self.project.address, self.project.port),
+                                  ProjectTCPRequestHandler)
         server.project = self.project
         server.window = self
         server_thread = threading.Thread(target=server.serve_forever)
@@ -183,41 +245,34 @@ class ProjectWindow(ProjectBaseWindow):
     def schedulePlot(self, path, *args):
         self.enqueue(lambda: plotFile(path, *args).show())    
 
+    @classmethod
+    def registerObjectCommand(cls, cmd, func):
+        """ Register an object command to be handled when receiving the
+        action from showj. """
+        cls._OBJECT_COMMANDS[cmd] = func
+
     def runObjectCommand(self, cmd, inputStrId, objStrId):
         try:
-            
-            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createDistanceProfilePlot
-            from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots 
-            from pyworkflow.em.protocol.protocol_movies import PLOT_CART
-            from pyworkflow.em.packages.xmipp3.nma.viewer_nma import createVmdView
             objId = int(objStrId)
             project = self.project
+
             if os.path.isfile(inputStrId) and os.path.exists(inputStrId):
                 from pyworkflow.em import loadSetFromDb
                 inputObj = loadSetFromDb(inputStrId)
             else:
                 inputId = int(inputStrId)
                 inputObj = project.mapper.selectById(inputId)
-            #Plotter.setBackend('TkAgg')
-            if cmd == OBJCMD_NMA_PLOTDIST:
-                self.enqueue(lambda: createDistanceProfilePlot(inputObj, modeNumber=objId).show())
-    
-            elif cmd == OBJCMD_NMA_VMD:
-                vmd = createVmdView(inputObj, modeNumber=objId)
-                vmd.show()
-    
-    #         elif cmd == OBJCMD_MOVIE_ALIGNPOLAR:
-    #             self.enqueue(lambda: createPlots(PLOT_POLAR, inputObj, objId))
-    
-            elif cmd == OBJCMD_MOVIE_ALIGNCARTESIAN:
-                self.enqueue(lambda: createPlots(PLOT_CART, inputObj, objId))
-    
-            #elif cmd == OBJCMD_MOVIE_ALIGNPOLARCARTESIAN:
-            #    self.enqueue(lambda: createPlots(PLOT_POLARCART, inputObj, objId))
-            
-            elif cmd == OBJCMD_CTFFIND4:
-                from pyworkflow.em.packages.grigoriefflab.viewer import createCtfPlot
-                self.enqueue(lambda: createCtfPlot(inputObj, objId))
+
+            func = self._OBJECT_COMMANDS.get(cmd, None)
+
+            if func is None:
+                print "Error, command '%s' not found. " % cmd
+            else:
+                def myfunc():
+                    func(inputObj, objId)
+                    inputObj.close()
+                self.enqueue(myfunc)
+
         except Exception, ex:
             print "There was an error executing object command !!!:"
             print  ex
@@ -248,7 +303,7 @@ class ProjectWindow(ProjectBaseWindow):
 
 class ProjectManagerWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
-    def __init__(self, **args):
+    def __init__(self, **kwargs):
         # Load global configuration
         settings = ProjectSettings()
 
@@ -274,12 +329,12 @@ class ProjectManagerWindow(ProjectBaseWindow):
 
         try:
             title = '%s (%s on %s)' % (Message.LABEL_PROJECTS, 
-                                       getLocalUserName(), 
-                                       getLocalHostName())
+                                       pwutils.getLocalUserName(),
+                                       pwutils.getLocalHostName())
         except Exception:
             title = Message.LABEL_PROJECTS
         
-        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **args)
+        ProjectBaseWindow.__init__(self, title, minsize=(750, 500), **kwargs)
         self.manager = Manager()
         
         self.switchView(VIEW_PROJECTS)
@@ -291,27 +346,34 @@ class ProjectManagerWindow(ProjectBaseWindow):
     def onBrowseFiles(self):
         # File -> Browse files
         FileBrowserWindow("Browse files", self,
-                          os.environ['SCIPION_USER_DATA'], selectButton=None).show()
+                          os.environ['SCIPION_USER_DATA'],
+                          selectButton=None).show()
 
     def onGeneral(self):
         # Config -> General
-        _open_cmd('%s/config/scipion.conf' % os.environ['SCIPION_HOME'])
+        _open_cmd(pw.getConfigPath('scipion.conf'))
+
+    def _openConfigFile(self, configFile, userOnly=False):
+        """ Open an Scipion configuration file, if the user have one defined,
+        also open that one with the defined text editor.
+        """
+        if not userOnly:
+            _open_cmd(pw.getConfigPath(configFile))
+
+        userHostConf = os.path.join(pwutils.getHomePath(),
+                                    '.config', 'scipion', configFile)
+        if os.path.exists(userHostConf):
+            _open_cmd(userHostConf)
 
     def onHosts(self):
         # Config -> Hosts
-        _open_cmd('%s/config//hosts.conf' % os.environ['SCIPION_HOME'])
-        if os.path.exists('%s/.config/scipion/hosts.conf' % os.environ['HOME']):
-            _open_cmd('%s/.config/scipion/hosts.conf' % os.environ['HOME'])
+        self._openConfigFile('hosts.conf')
 
     def onProtocols(self):
-        # Config -> Protocols
-        _open_cmd('%s/config/protocols.conf' % os.environ['SCIPION_HOME'])
-        if os.path.exists('%s/.config/scipion/protocols.conf' % os.environ['HOME']):
-            _open_cmd('%s/.config/scipion/protocols.conf' % os.environ['HOME'])
+        self._openConfigFile('protocols.conf')
 
     def onUser(self):
-        # Config -> User
-        _open_cmd('%s/.config/scipion/scipion.conf' % os.environ['HOME'])
+        self._openConfigFile('scipion.conf', userOnly=True)
 
 
 class ProjectTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):

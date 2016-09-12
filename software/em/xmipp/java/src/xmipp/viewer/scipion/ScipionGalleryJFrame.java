@@ -49,6 +49,8 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
     private InputFieldsMessageDialog dlg;
     private JButton createvolbt;
     private String setType;
+    private boolean recalculateCTF;
+
     private static final String runProtCreateSubset = "run protocol ProtUserSubSet inputObject=%s sqliteFile='%s','%s' outputClassName=%s other='%s' label='%s'";
     
    
@@ -71,6 +73,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             msgfields = new HashMap<String, String>();
             msgfields.put(runNameKey, "create subset");
             other = parameters.other;
+            recalculateCTF = parameters.recalculateCTF;
             initComponents();
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -136,23 +139,25 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
             
             if(data.isCTFMd())
             {
-                icon = XmippResource.getIcon("fa-cogs.png");
-                JButton recalculatectfbt = XmippWindowUtil.getScipionIconButton("Recalculate CTFs");
-                recalculatectfbt.addActionListener(new ActionListener() {
+                if (recalculateCTF) {
+                    icon = XmippResource.getIcon("fa-cogs.png");
+                    JButton recalculatectfbt = XmippWindowUtil.getScipionIconButton("Recalculate CTFs");
+                    recalculatectfbt.addActionListener(new ActionListener() {
 
-                    @Override
-                    public void actionPerformed(ActionEvent ae) {
-                        if(!data.hasRecalculateCTF())
-                        {
-                            XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
-                            return;
+                        @Override
+                        public void actionPerformed(ActionEvent ae) {
+                            if (!data.hasRecalculateCTF()) {
+                                XmippDialog.showError(ScipionGalleryJFrame.this, "There are no ctfs to recalculate");
+                                return;
+                            }
+                            String command = String.format("run function recalculateCTF %s %s", inputid, sqlitefile);
+                            runCommand(command, "Recalculating CTF", false);
                         }
-                        String command = String.format("run function recalculateCTF %s %s", inputid, sqlitefile);
-                        runCommand(command, "Recalculating CTF", false);
-                    }
-                });
-                recalculatectfbt.setIcon(icon);
-                
+                    });
+                    recalculatectfbt.setIcon(icon);
+                    buttonspn.add(recalculatectfbt);
+                }
+
                 JButton ctfsubsetbt = XmippWindowUtil.getScipionIconButton("Create Micrographs");
                 ctfsubsetbt.addActionListener(new ActionListener() {
 
@@ -167,7 +172,7 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
                     }
                 });
                 buttonspn.add(ctfsubsetbt);
-                buttonspn.add(recalculatectfbt);
+
             }
             if(setType.equals("SetOfVolumes") || setType.equals("SetOfClasses3D"))
             {
@@ -344,9 +349,10 @@ public class ScipionGalleryJFrame extends GalleryJFrame {
         if(setType.equals("SetOfVolumes") || setType.equals("SetOfClasses3D"))
         {
 
+            // It will be null when invoked as a stand alone viewer.
         	if (cmdbutton != null){
         		cmdbutton.setVisible(data.isTableMode());
-        		createvolbt.setVisible(!data.isTableMode());
+            	createvolbt.setVisible(!data.isTableMode());
         	}
         }
     }

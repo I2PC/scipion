@@ -3,10 +3,17 @@
 #include <stdio.h>
 #include <data/metadata_extension.h>
 #include <data/xmipp_image_convert.h>
+#include <data/xmipp_funcs.h>
 #include <iostream>
 #include <gtest/gtest.h>
 #include <string.h>
 #include <fstream>
+#include <sys/time.h>
+
+#define N_ROWS_TEST		2
+#define N_ROWS_PERFORMANCE_TEST		8000
+
+
 /*
  * Define a "Fixture so we may reuse the metadatas
  */
@@ -111,7 +118,7 @@ TEST_F( MetadataTest, AddIndex)
 
 TEST_F( MetadataTest, AddRow)
 {
-    MetaData md;
+	MetaData md, md2;
 
     MDRow row;
     row.setValue(MDL_X, 1.);
@@ -121,7 +128,126 @@ TEST_F( MetadataTest, AddRow)
     row.setValue(MDL_Y, 4.);
     md.addRow(row);
 
+    row.setValue(MDL_X, 1.);
+    row.setValue(MDL_Y, 2.);
+    md2.addRow2(row);
+    row.setValue(MDL_X, 3.);
+    row.setValue(MDL_Y, 4.);
+    md2.addRow2(row);
+
     EXPECT_EQ(md, mDsource);
+    EXPECT_EQ(md2, mDsource);
+}
+
+TEST_F( MetadataTest, AddRows)
+{
+    int 	i;					// Loop counter.
+    bool	inserted;			// Insertion return value.
+    MetaData md;
+    MDRow row[N_ROWS_TEST];		// Rows array.
+
+    // Initialize rows.
+    row[0].setValue(MDL_X, 1.);
+    row[0].setValue(MDL_Y, 2.);
+    row[1].setValue(MDL_X, 3.);
+    row[1].setValue(MDL_Y, 4.);
+
+    // Initialize insertion.
+    if (md.initAddRow( row[0]))
+    {
+        // Add rows loop.
+    	i=0;
+    	do
+    	{
+    		// Insert row and increase number of insertions.
+    		inserted = md.execAddRow(row[i]);
+        	i++;
+    	}
+    	while ((i<N_ROWS_TEST) && (inserted));
+
+        // Finalize statement.
+        md.finalizeAddRow();
+    }
+
+    // Check result.
+    EXPECT_EQ(md, mDsource);
+}
+
+TEST_F( MetadataTest, AddRowsPerformance)
+{
+    int 	i,j;				// Loop counters.
+    bool	inserted;			// Insertion return value.
+    MetaData md, md2, md3;
+    MDRow 	row;	// Sample row
+
+    printf("N_ROWS_PERFORMANCE_TEST = %d\n", N_ROWS_PERFORMANCE_TEST);
+
+    // Initialize row.
+    row.setValue(MDL_X,1.);
+    row.setValue(MDL_Y,2.);
+    row.setValue(MDL_ZSCORE,3.);
+    row.setValue(MDL_ZSCORE_HISTOGRAM,4.);
+    row.setValue(MDL_ZSCORE_RESMEAN,5.);
+    row.setValue(MDL_ZSCORE_RESVAR,6.);
+    row.setValue(MDL_ZSCORE_RESCOV,7.);
+    row.setValue(MDL_ZSCORE_SHAPE1,8.);
+    row.setValue(MDL_ZSCORE_SHAPE2,9.);
+    row.setValue(MDL_ZSCORE_SNR1,10.);
+    row.setValue(MDL_ZSCORE_SNR2,11.);
+    row.setValue(MDL_IMAGE, String("particles.stk"));
+    row.setValue(MDL_SHIFT_X_DIFF, 1.5);
+    row.setValue(MDL_SHIFT_Y_DIFF, 2.5);
+    row.setValue(MDL_CONTINUOUS_X, 1.5);
+    row.setValue(MDL_CONTINUOUS_Y, 2.5);
+    row.setValue(MDL_SHIFT_X, 1.5);
+    row.setValue(MDL_SHIFT_Y, 2.5);
+    row.setValue(MDL_SHIFT_Z, 3.5);
+
+    Timer t;
+    size_t s1, s2, s3;
+    float r;
+
+
+    t.tic();
+
+    for (i=0; i<N_ROWS_PERFORMANCE_TEST; i++)
+    {
+    	md.addRow(row);
+    }
+    s1 = t.toc("Time original:", false);
+
+    t.tic();
+    for (i=0; i<N_ROWS_PERFORMANCE_TEST; i++)
+    {
+    	md2.addRow2(row);
+    }
+
+    s2 = t.toc("Time by row: ", false);
+    printf("    Speed up from original: %f\n", ((float) s1 / (float) s2));
+
+    // Initialize insertion.
+    t.tic();
+    if (md3.initAddRow(row))
+    {
+        // Add rows loop.
+    	i=0;
+    	do
+    	{
+    		// Insert row and increase number of insertions.
+    		md3.execAddRow(row);
+        	i++;
+    	}
+    	while (i<N_ROWS_PERFORMANCE_TEST);
+
+        // Finalize statement.
+    	md3.finalizeAddRow();
+    }
+    s3 = t.toc("Time by set:", false);
+    printf("    Speed up from original: %f\n", ((float) s1 / (float) s3));
+    printf("    Speed up from row: %f\n", ((float) s2 / (float) s3));
+    // Check result.
+    EXPECT_EQ(md, md2);
+    EXPECT_EQ(md2, md3);
 }
 
 TEST_F( MetadataTest, addLabelAlias)
@@ -1480,6 +1606,10 @@ TEST_F( MetadataTest, getValueDefault)
     rowIn.getValueOrDefault(MDL_ANGLE_PSI,psi2,3.);
     EXPECT_EQ(psi,psi2);
 
+    auxMD1.getRow2(rowIn, id);
+    rowIn.getValueOrDefault(MDL_ANGLE_PSI,psi2,3.);
+    EXPECT_EQ(psi,psi2);
+
     XMIPP_CATCH
 }
 TEST_F( MetadataTest, getValueAbort)
@@ -1720,6 +1850,63 @@ TEST_F( MetadataTest, copyImages)
     }
     out.deleteFile();
     XMIPP_CATCH
+}
+
+TEST_F( MetadataTest, updateRow)
+{
+    ASSERT_EQ(mDsource,mDsource);
+    ASSERT_FALSE(mDsource==mDanotherSource);
+    //attribute order should not be important
+    MetaData auxMetadata ;
+    id1 = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,0.,id);
+    auxMetadata.setValue(MDL_X,0.,id);
+    id2 = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,0.,id);
+    auxMetadata.setValue(MDL_X,0.,id);
+    ASSERT_FALSE(auxMetadata==mDsource);
+
+    MDRow row;
+    row.setValue(MDL_X, 1.);
+    row.setValue(MDL_Y, 2.);
+    auxMetadata.setRow( row, id1);
+    row.setValue(MDL_X, 3.);
+    row.setValue(MDL_Y, 4.);
+    auxMetadata.setRow( row, id2);
+    ASSERT_EQ(auxMetadata,mDsource);
+
+    row.setValue(MDL_X, 1.);
+    row.setValue(MDL_Y, 2.);
+    auxMetadata.setRow2( row, id1);
+    row.setValue(MDL_X, 3.);
+    row.setValue(MDL_Y, 4.);
+    auxMetadata.setRow2( row, id2);
+    ASSERT_EQ(auxMetadata,mDsource);
+
+    //Test form double with a given precission.
+/*    auxMetadata.clear();
+    auxMetadata.setPrecission(2);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,2.001,id);
+    auxMetadata.setValue(MDL_X,1.,id);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,4.,id);
+    auxMetadata.setValue(MDL_X,3.,id);
+    ASSERT_TRUE(auxMetadata==mDsource);
+    auxMetadata.setPrecission(4);
+    ASSERT_FALSE(auxMetadata==mDsource);
+
+    auxMetadata.setValue(MDL_Y,2.,id);
+    auxMetadata.setValue(MDL_X,1.,id);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,4.,id);
+    auxMetadata.setValue(MDL_X,3.,id);
+
+    MDRow row;
+    row.setValue(MDL_X, 1.);
+    row.setValue(MDL_Y, 2.);
+    md.addRow(row);
+    */
 }
 
 GTEST_API_ int main(int argc, char **argv)

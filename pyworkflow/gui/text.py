@@ -36,6 +36,7 @@ import ttk
 
 import gui
 from widgets import Scrollable, IconButton
+import pyworkflow as pw
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn, expandPattern)
@@ -221,8 +222,7 @@ class Text(tk.Text, Scrollable):
         if os.path.isdir(path):
             dpath = (path if os.path.isabs(path)
                      else os.path.join(os.getcwd(), path))
-            subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                              'browser', 'dir', dpath])
+            subprocess.Popen(pw.getScipionScript(), ['browser', 'dir', dpath])
             return
 
         # If it is a file, interpret it correctly and open it with DataView
@@ -301,7 +301,7 @@ class TaggedText(Text):
     Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
-    some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
+    some_link or [[some_link][some_label]] will display some_link as hyperlink or some_label as hyperlink to some_link
     also colors are recognized if set option colors=True
     """           
     def __init__(self, master, colors=True, **opts):  

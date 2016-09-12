@@ -31,6 +31,8 @@ basic classes.
 
 from itertools import izip
 from collections import OrderedDict
+import datetime as dt
+
 
 # Binary relations always involve two objects, we 
 # call them parent-child objects, the following
@@ -92,8 +94,11 @@ class Object(object):
         """
         attrList = attrName.split('.')
         obj = self
-        for attrName in attrList:
-            obj = getattr(obj, attrName)
+        for partName in attrList:
+            obj = getattr(obj, partName)
+            if obj is None:
+                raise Exception("Object.setAttributeValue: obj is None! attrName: "
+                                "%s, part: %s" % (attrName, partName))
         obj.set(value)
         
     def getAttributes(self):
@@ -207,7 +212,10 @@ class Object(object):
     def getObjCreation(self):
         """ Return the stored creation time of the object. """
         return self._objCreation
-    
+
+    def getObjectCreationAsDate(self):
+        """ Return the stored creation time of the object as date """
+
     def strId(self):
         """String representation of id"""
         return str(self._objId)
@@ -316,15 +324,43 @@ class Object(object):
                 if not isinstance(v, Scalar):
                     v.__getObjDict(kPrefix, objDict, includeClass)
             
-    def getObjDict(self, includeClass=False):
+    def getObjDict(self, includeClass=False, includeBasic=False):
         """ Return all attributes and values in a dictionary.
         Nested attributes will be separated with a dot in the dict key.
+        Params:
+            includeClass: if True, the values will be a tuple (ClassName, value)
+                otherwise only the values of the attributes
+            includeBasic: if True include the id, label and comment.
+                object.id: objId
+                object.label: objLabel
+                object.comment: objComment
         """
         d = OrderedDict()
+
         if includeClass:
             d['self'] = (self.getClassName(),)
+
+        if includeBasic:
+            d['object.id'] = self.getObjId()
+            d['object.label'] = self.getObjLabel()
+            d['object.comment'] = self.getObjComment()
+
         self.__getObjDict('', d, includeClass)
+
         return d
+
+    def setAttributesFromDict(self, attrDict, setBasic=True):
+        """ Set object attributes from the dict obtained from getObjDict.
+         WARNING: this function is yet experimental and not fully tested.
+        """
+        if setBasic:
+            self.setObjId(attrDict.get('object.id', None))
+            self.setObjLabel(attrDict.get('object.label', ''))
+            self.setObjComment(attrDict.get('object.comment', ''))
+
+        for attrName, value in attrDict.iteritems():
+            if not attrName.startswith('object.'):
+                self.setAttributeValue(attrName, value)
             
     def __getMappedDict(self, prefix, objDict):
         if prefix:
@@ -434,7 +470,7 @@ class Object(object):
         # Split in possible tokens
         import re
         tokens = re.split('\W+', condition)
-        condStr = condition 
+        condStr = condition
         
         for t in tokens:
             if self.hasAttribute(t):
@@ -582,7 +618,10 @@ class Integer(Scalar):
     
         
 class String(Scalar):
-    """String object"""
+    """String object. """
+    DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+    FS = ".%f" # Fento seconds
+
     def _convertValue(self, value):
         return str(value)
     
@@ -591,8 +630,21 @@ class String(Scalar):
         if not self.hasValue():
             return True
         return len(self.get().strip()) == 0
-    
-        
+
+    def datetime(self, formatStr=None, fs=True):
+        """ Get the datetime from the string value.
+        Params:
+            formatStr: if is None, use the default DATETIME_FORMAT.
+            fs: Use femto seconds or not, only when format=None
+        """
+        if formatStr is None:
+            formatStr = self.DATETIME_FORMAT
+            if fs:
+                formatStr += self.FS
+
+        return dt.datetime.strptime(self._objValue, formatStr)
+
+
 class Float(Scalar):
     """Float object"""
     EQUAL_PRECISION = 0.001
@@ -808,7 +860,7 @@ class List(Object, list):
     
     def _stringToIndex(self, strIndex):
         """ From the string index representation obtain the index.
-        For simetry the number in the index string will be 
+        For symetry the number in the index string will be
         decreased in 1.
         """
         return int(strIndex.split(self.ITEM_PREFIX)[1]) - 1
@@ -910,13 +962,20 @@ class Set(OrderedObject):
     """
     ITEM_TYPE = None # This property should be defined to know the item type
     
+    # This will be used for stream Set where data is populated on the fly
+    STREAM_OPEN = 1
+    STREAM_CLOSED = 2
+    
     def __init__(self, filename=None, prefix='', 
                  mapperClass=None, classesDict=None, **kwargs):
         # Use the object value to store the filename
         OrderedObject.__init__(self, **kwargs)
         self._mapper = None
         self._idCount = 0
-        self._size = Integer(0) # cached value of the number of images  
+        self._size = Integer(0) # cached value of the number of images
+        # It is a bit contradictory that initially a set is Closed
+        # but this is the default behaviour of the Set before Streamming extension
+        self._streamState = Integer(self.STREAM_CLOSED)  
         self.setMapperClass(mapperClass)
         self._mapperPath = CsvList() # sqlite filename
         self._representative = None
@@ -925,7 +984,7 @@ class Set(OrderedObject):
         # we want to create a new object, so we need to delete it if
         # the file exists
         if filename:
-            self._mapperPath.set('%s, %s' % (filename, prefix)) 
+            self._mapperPath.set('%s, %s' % (filename, prefix))
             self.load()
             
     def _getMapper(self):
@@ -1122,6 +1181,26 @@ class Set(OrderedObject):
         if self.getFileName():
             files.add(self.getFileName())
         return files
+    
+    def getStreamState(self):
+        return self._streamState.get()
+    
+    def setStreamState(self, newState):
+        self._streamState.set(newState)
+    
+    def isStreamOpen(self):
+        return self.getStreamState() == self.STREAM_OPEN
+    
+    def isStreamClosed(self):
+        return self.getStreamState() == self.STREAM_CLOSED 
+    
+    def enableAppend(self):
+        """ By default, when a Set is loaded, it is opened
+        in read-only mode, so no new insertions are allowed.
+        This function will allow to apppend more items
+        to an existing set.
+        """
+        self._getMapper().enableAppend()
 
 
 def ObjectWrap(value):

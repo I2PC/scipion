@@ -127,6 +127,7 @@ class ScipionImport():
         """
         acq = OrderedDict()
         inputSet = SetOfParticles(filename=self._sqliteFile)
+
         def _get(key):
             return inputSet.getProperty(key)
         acq['samplingRate'] = _get('_samplingRate')
