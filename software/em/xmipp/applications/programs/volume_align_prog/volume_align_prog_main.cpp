@@ -120,7 +120,7 @@ public:
     double   grey_shift0, grey_shiftF, step_grey_shift;
     int      tell;
     bool     apply;
-    FileName fnOut;
+    FileName fnOut, fnGeo;
     bool     mask_enabled;
     bool     usePowell, onlyShift, useFRM, copyGeo;
     double   maxFreq;
@@ -156,7 +156,7 @@ public:
         addParamsLine("                    :+ See Y. Chen, et al. Fast and accurate reference-free alignment of subtomograms. JSB, 182: 235-245 (2013)");
         addParamsLine("  [--onlyShift]     : Only shift");
         addParamsLine("  [--dontScale]     : Do not look for scale changes");
-        addParamsLine("  [--copyGeo]       : copy transformation matrix in 'transformation-matrix.txt' file. ('A' matrix elements)");
+        addParamsLine("  [--copyGeo <file=\"\">] : copy transformation matrix in a txt file. ('A' matrix elements)");
         addParamsLine(" == Mask Options == ");
         mask.defineParams(this,INT_MASK,NULL,NULL,true);
         addExampleLine("Typically you first look for a rough approximation of the alignment using exhaustive search. For instance, for a global rotational alignment use",false);
@@ -242,8 +242,9 @@ public:
 
         tell = checkParam("--show_fit");
         apply = checkParam("--apply");
-        copyGeo = checkParam("--copyGeo");
         fnOut = getParam("--apply");
+        copyGeo = checkParam("--copyGeo");
+        fnGeo = getParam("--copyGeo");
         dontScale = checkParam("--dontScale");
 
         if (checkParam("--covariance"))
@@ -443,7 +444,7 @@ public:
 					  << std::endl;
         if (copyGeo)
         {
-        	std::ofstream outputGeo ("transformation-matrix.txt");
+        	std::ofstream outputGeo (fnGeo.c_str());
         	outputGeo << A(0,0) << "\n" << A(0,1) << "\n" << A(0,2) << "\n" << A(0,3) << "\n"
         			  << A(1,0) << "\n" << A(1,1) << "\n" << A(1,2) << "\n" << A(1,3) << "\n"
 					  << A(2,0) << "\n" << A(2,1) << "\n" << A(2,2) << "\n" << A(2,3) << "\n"

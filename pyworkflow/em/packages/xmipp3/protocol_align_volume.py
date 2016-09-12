@@ -295,7 +295,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
             alignArgs += " --frm"
             
         elif self.alignmentAlgorithm == ALIGN_ALGORITHM_LOCAL:
-            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1 --copyGeo" %\
+            alignArgs += " --local --rot %f %f 1 --tilt %f %f 1 --psi %f %f 1 -x %f %f 1 -y %f %f 1 -z %f %f 1" %\
                (self.initialRotAngle, self.initialRotAngle,
                 self.initialTiltAngle, self.initialTiltAngle,
                 self.initialInplaneAngle, self.initialInplaneAngle,
@@ -307,7 +307,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
             else:
                 alignArgs += " --dontScale"
         else: # Exhaustive or Exhaustive+Local
-            alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f --copyGeo" %\
+            alignArgs += " --rot %f %f %f --tilt %f %f %f --psi %f %f %f -x %f %f %f -y %f %f %f -z %f %f %f --scale %f %f %f" %\
                (self.minRotationalAngle, self.maxRotationalAngle, self.stepRotationalAngle,
                 self.minTiltAngle, self.maxTiltAngle, self.stepTiltAngle,
                 self.minInplaneAngle, self.maxInplaneAngle, self.stepInplaneAngle,
