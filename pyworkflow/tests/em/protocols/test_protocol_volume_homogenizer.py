@@ -79,6 +79,8 @@ class TestVolumeHomogenizer(BaseTest):
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer')
         protVolumeHomogenizer.referenceVolume.set(protImportVols.outputVolume)
+        protVolumeHomogenizer.referenceParticles.set(protImportParts.outputParticles)
         protVolumeHomogenizer.inputVolume.set(protImportVols.outputVolume)
-        protVolumeHomogenizer.inputParticles.set(protImportParts.outputParticles)  
+        protVolumeHomogenizer.inputParticles.set(protImportParts.outputParticles)
+        protVolumeHomogenizer.doAlignment.set(True)  
         self.launchProtocol(protVolumeHomogenizer)

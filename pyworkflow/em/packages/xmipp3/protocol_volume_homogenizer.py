@@ -29,10 +29,11 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
 from pyworkflow.em.data import SetOfParticles
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
+import numpy as np
 
 
 class XmippProtVolumeHomogenizer(ProtProcessParticles):
+    
     """    
     Method to get two volume from different classes (with different conformation)
     and correcting (reforming) all images of one of the volumes (input volume) 
@@ -40,6 +41,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     The output is a setOfParticles contaied reformed particles merged with 
     reference particles.
     """
+    
     _label = 'volume homogenizer'    
     #--------------------------- DEFINE param functions --------------------------------------------   
    
@@ -76,12 +78,6 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                       help="Input and reference volumes must be aligned. "
                            "If you have not aligned them before choose this "
                            "option, so protocol will handle it internally.")
-        form.addParam('symmetryGroup', params.StringParam, default='c1',
-                      condition="doAlignment",
-                      label="Symmetry group", 
-                      help="See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] "
-                           "for a description of the symmetry format "
-                           "accepted by Xmipp")
         form.addParam('cutOffFrequency', params.FloatParam, default = -1,
                       label="Cut-off frequency",
                       help="This digital frequency is used to filter both "
@@ -105,60 +101,77 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def _insertAllSteps(self):            
         inputParticlesMd = self._getExtraPath('input_particles.xmd')
         inputParticles = self.inputParticles.get()
-        writeSetOfParticles(inputParticles, inputParticlesMd)
-        
+        writeSetOfParticles(inputParticles, inputParticlesMd)        
         inputVol = self.inputVolume.get().getFileName()
         referenceVol = self.referenceVolume.get().getFileName()
-        samplingRate = self.inputVolume.get().getSamplingRate()
-        symmetry = self.symmetryGroup.get()
         
         if not self.doAlignment.get():
             self._insertFunctionStep('opticalFlowAlignmentStep', 
                                      inputVol, referenceVol, inputParticlesMd)
         else:
-            #Alignment step (first FF and then local)
-            maskArgs = ''
-            alignArgsFf = " --frm"
             fnAlignedVolFf = self._getExtraPath('aligned_inputVol_to_refVol_FF.vol')
-            self._insertFunctionStep('alignVolumeStep', 
-                                     referenceVol, inputVol, fnAlignedVolFf,
-                                     maskArgs, alignArgsFf)
             fnAlnVolFfLcl = self._getExtraPath('aligned_FfAlnVol_to_refVol_lcl.vol')
-            alignArgsLocal = " --local --rot 0 0 1 --tilt 0 0 1"
-            alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-            alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo"  
-            XmippProtAlignVolume._insertFunctionStep('alignVolumeStep', 
-                                                     referenceVol, 
-                                                     fnAlignedVolFf,fnAlnVolFfLcl,
-                                                     maskArgs, alignArgsLocal)
-            
-            
-            
-            #projection matching step to modify input particles angles
-            #fnAlignedVolGallery = self._getExtraPath("alignedVolume_gallery.stk")
-            #self.runJob("xmipp_angular_project_library", 
-            #            "-i %s -o %s --sym %s --sampling_rate %f" % (
-            #            fnAlnVolFfLcl, fnAlignedVolGallery, 
-            #            symmetry, samplingRate))
-            #fnInPartsNewAng = self._getExtraPath("inputParticles_anglesModified.xmd")
-            #self.runJob("xmipp_angular_projection_matching", 
-            #           "-i %s -o %s -r %s --Ri 0 --Ro -1 --mem 2 --append " % (
-            #            inputParticlesMd, fnInPartsNewAng, fnAlignedVolGallery),
-            #            numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())            
-            #self.runJob("xmipp_angular_continuous_assign2",
-            #            "-i %s --ref %s -o %s --sampling %f --optimizeAngles --applyTo"%(
-            #            inputParticlesMd, fnAlnVolFfLcl, 
-            #            fnInPartsNewAng, samplingRate),
-            #            numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
-            
-            
-            
+            fnInPartsNewAng = self._getExtraPath("inputParts_anglesModified.xmd")
+            self._insertFunctionStep('volumeAlignmentStep', 
+                                     referenceVol, inputVol, fnAlignedVolFf, 
+                                     fnAlnVolFfLcl, fnInPartsNewAng)
             self._insertFunctionStep('opticalFlowAlignmentStep', 
                                      fnAlnVolFfLcl, referenceVol, fnInPartsNewAng)
                         
         self._insertFunctionStep('createOutputStep')        
     #--------------------------- STEPS functions --------------------------------------------
     
+    def volumeAlignmentStep (self, referenceVol, inputVol, fnAlignedVolFf, 
+                                   fnAlnVolFfLcl, fnInPartsNewAng):
+        alignArgsFf = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
+                                                      inputVol, 
+                                                      fnAlignedVolFf)
+        alignArgsFf += " --frm"
+        self.runJob('xmipp_volume_align', alignArgsFf, numberOfMpi = 1)        
+        
+        fnTranMat = self._getExtraPath('transformation-Mmatrix.txt')
+        alignArgsLocal = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
+                                                         fnAlignedVolFf, 
+                                                         fnAlnVolFfLcl)
+        alignArgsLocal += " --local --rot 0 0 1 --tilt 0 0 1"
+        alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
+        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTranMat        
+        self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi = 1)
+                
+        #apply transformation matrix to input ratricles
+        inputParts = self.inputParticles.get()
+        data = []
+        fhTransformMat = open(fnTranMat, "r")        
+        for line in fhTransformMat:
+            fields = line.split()
+            rowdata = map(float, fields)
+            data.extend(rowdata)
+            
+        count = 0
+        TransformMat = [[0 for i in range(4)] for i in range(4)]
+        for i in range(4):
+            for j in range(4):
+                TransformMat[i][j] = data[count]
+                count += 1
+        TransformMat = np.array (TransformMat)
+        TransformMatrix = np.matrix(TransformMat)
+        print "Transformation matrix (volume_align output) =\n", TransformMatrix
+        
+               
+        outputSet = self._createSetOfParticles()
+        for part in inputParts.iterItems():        
+            partTransformMat = part.getTransform().getMatrix()            
+            partTransformMatrix = np.matrix(partTransformMat)            
+            applyMatrix = TransformMatrix * partTransformMatrix
+            
+                      
+            part.getTransform().setMatrix(applyMatrix)
+            outputSet.append(part)       
+        outputSet.copyInfo(inputParts)        
+                
+        writeSetOfParticles(outputSet, fnInPartsNewAng)   
+            
+        
     def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd):
         winSize = self.winSize.get()
         if self.cutOffFrequency.get() == -1:
@@ -173,7 +186,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                     fnOutput, winSize, cutFreq), 
                     numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())        
     
-    def createOutputStep(self):   ########################################################## pak kardane file haye ezafi mesle transform.txt     
+    def createOutputStep(self):        
         refernceParticlesMd = self._getExtraPath('reference_particles.xmd')
         referenceParticles = self.referenceParticles.get()
         writeSetOfParticles(referenceParticles, refernceParticlesMd)
