@@ -512,6 +512,7 @@ void addLabels(PyObject * dict)
     ADD_CONST(RLN_CTF_Q0); ///< Amplitude contrast
     ADD_CONST(RLN_CTF_K); ///< CTF gain
     ADD_CONST(RLN_CTF_VALUE); ///< CTF value
+    ADD_CONST(RLN_CTF_PHASESHIFT); ///< Phase-shift from a phase-plate (in degrees)
 
     ADD_CONST(RLN_IMAGE_NAME);
     ADD_CONST(RLN_IMAGE_RECONSTRUCT_NAME);
@@ -555,6 +556,7 @@ void addLabels(PyObject * dict)
     ADD_CONST(RLN_MATRIX_3_3);
 
     ADD_CONST(RLN_MICROGRAPH_ID);
+    ADD_CONST(RLN_MICROGRAPH_MOVIE_NAME);
     ADD_CONST(RLN_MICROGRAPH_NAME);
     ADD_CONST(RLN_MICROGRAPH_TILT_ANGLE);
     ADD_CONST(RLN_MICROGRAPH_TILT_AXIS_DIRECTION);

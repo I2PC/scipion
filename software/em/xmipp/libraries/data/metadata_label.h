@@ -461,6 +461,7 @@ enum MDLabel
     RLN_CTF_Q0, ///< Amplitude contrast
     RLN_CTF_K, ///< CTF gain
     RLN_CTF_VALUE, ///< CTF value
+    RLN_CTF_PHASESHIFT, ///< Phase-shift from a phase-plate (in degrees)
 
     RLN_IMAGE_NAME,
     RLN_IMAGE_RECONSTRUCT_NAME,
@@ -505,6 +506,7 @@ enum MDLabel
     RLN_MATRIX_3_3,
 
     RLN_MICROGRAPH_ID,
+    RLN_MICROGRAPH_MOVIE_NAME,
     RLN_MICROGRAPH_NAME,
     RLN_MICROGRAPH_TILT_ANGLE,
     RLN_MICROGRAPH_TILT_AXIS_DIRECTION,
@@ -1849,6 +1851,7 @@ private:
         MDL::addLabel(RLN_CTF_TRANSVERSAL_DISPLACEMENT, LABEL_DOUBLE, "rlnTransversalDisplacement");
         MDL::addLabel(RLN_CTF_Q0, LABEL_DOUBLE, "rlnAmplitudeContrast");
         MDL::addLabel(RLN_CTF_VALUE, LABEL_DOUBLE, "rlnCtfValue");
+        MDL::addLabel(RLN_CTF_PHASESHIFT, LABEL_DOUBLE, "rlnPhaseShift");
 
         MDL::addLabel(RLN_IMAGE_NAME, LABEL_STRING, "rlnImageName", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_IMAGE_RECONSTRUCT_NAME, LABEL_STRING, "rlnReconstructImageName", TAGLABEL_IMAGE);
@@ -1895,6 +1898,7 @@ private:
         MDL::addLabel(RLN_MATRIX_3_3, LABEL_DOUBLE, "rlnMatrix_3_3");
 
         MDL::addLabel(RLN_MICROGRAPH_ID, LABEL_SIZET, "rlnMicrographId");
+        MDL::addLabel(RLN_MICROGRAPH_MOVIE_NAME, LABEL_STRING, "rlnMicrographMovieName", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_MICROGRAPH_NAME, LABEL_STRING, "rlnMicrographName", TAGLABEL_IMAGE);
         MDL::addLabel(RLN_MICROGRAPH_TILT_ANGLE, LABEL_DOUBLE, "rlnMicrographTiltAngle");
         MDL::addLabel(RLN_MICROGRAPH_TILT_AXIS_DIRECTION, LABEL_DOUBLE, "rlnMicrographTiltAxisDirection");
