@@ -148,16 +148,20 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10,
                       help='Maximum shift as a percentage of the image size')
         line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views', expertLevel=LEVEL_ADVANCED)
-        line.addParam('angularMinTilt', FloatParam, label="Min.", default=0, expertLevel=LEVEL_ADVANCED)
-        line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED)
+        line.addParam('angularMinTilt', FloatParam, label="Min.", default=0, expertLevel=LEVEL_ADVANCED,
+                      help="Side views are around 90 degrees, top views around 0")
+        line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED,
+                      help="You may generate redudant galleries by setting this angle to 180, this may help if c1 symmetry is considered")
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
         form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False,
                       help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
                          "you may want to use projections very close to 90 degrees")
         line=form.addLine('Tilt angle restriction:', help='0 degrees represent top views, 90 degrees represent side views', 
                           condition="restrictReconstructionAngles")
-        line.addParam('angularMinTiltReconstruct', FloatParam, label="Min.", default=88, condition="restrictReconstructionAngles")
-        line.addParam('angularMaxTiltReconstruct', FloatParam, label="Max.", default=92, condition="restrictReconstructionAngles")
+        line.addParam('angularMinTiltReconstruct', FloatParam, label="Min.", default=88, condition="restrictReconstructionAngles",
+                      help = "Perform an angular assignment and only use those images whose angles are within these limits")
+        line.addParam('angularMaxTiltReconstruct', FloatParam, label="Max.", default=92, condition="restrictReconstructionAngles",
+                      help = "Perform an angular assignment and only use those images whose angles are within these limits")
 
         form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
