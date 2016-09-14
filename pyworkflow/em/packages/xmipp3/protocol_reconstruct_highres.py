@@ -720,14 +720,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
                 # Generate projections
                 fnReferenceVol=join(fnGlobal,"volumeRef%02d.vol"%i)
-                symmetryGroup=self.symmetryGroup.get()
-                if (symmetryGroup.startswith('c') or symmetryGroup.startswith('d')) and not symmetryGroup.endswith('h'):
-                    symmetryGroup+="h"  
                 for subset in perturbationList:
                     fnGallery=join(fnDirSignificant,"gallery%02d%s.stk"%(i,subset))
                     fnGalleryMd=join(fnDirSignificant,"gallery%02d%s.xmd"%(i,subset))
                     args="-i %s -o %s --sampling_rate %f --perturb %f --sym %s --min_tilt_angle %f --max_tilt_angle %f"%\
-                         (fnReferenceVol,fnGallery,angleStep,math.sin(angleStep*math.pi/180.0)/4,symmetryGroup,self.angularMinTilt.get(),self.angularMaxTilt.get())
+                         (fnReferenceVol,fnGallery,angleStep,math.sin(angleStep*math.pi/180.0)/4,self.symmetryGroup,self.angularMinTilt.get(),self.angularMaxTilt.get())
                     args+=" --compute_neighbors --angular_distance -1 --experimental_images %s"%self._getExtraPath("images.xmd")
                     self.runJob("xmipp_angular_project_library",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                     cleanPath(join(fnDirSignificant,"gallery_angles%02d%s.doc"%(i,subset)))
