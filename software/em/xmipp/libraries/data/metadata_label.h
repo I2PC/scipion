@@ -1832,7 +1832,7 @@ private:
         MDL::addLabel(RLN_AREA_ID, LABEL_SIZET, "rlnAreaId");
         MDL::addLabel(RLN_AREA_NAME, LABEL_STRING, "rlnAreaName");
 
-        MDL::addLabel(RLN_CTF_BFACTOR, LABEL_DOUBLE, "rlnBfactor");
+        MDL::addLabel(RLN_CTF_BFACTOR, LABEL_DOUBLE, "rlnCtfBfactor");
         MDL::addLabel(RLN_CTF_SCALEFACTOR, LABEL_DOUBLE, "rlnCtfScalefactor");
         MDL::addLabel(RLN_CTF_VOLTAGE, LABEL_DOUBLE, "rlnVoltage");
         MDL::addLabel(RLN_CTF_DEFOCUSU, LABEL_DOUBLE, "rlnDefocusU");
