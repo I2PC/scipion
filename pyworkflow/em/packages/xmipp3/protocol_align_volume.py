@@ -27,7 +27,7 @@
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
-from django.template.defaultfilters import default
+import numpy as np
 
 
 ALIGN_MASK_CIRCULAR = 0
@@ -162,34 +162,45 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         
         for vol in self._iterInputVolumes():
             volFn = getImageLocation(vol)
-            stepId = self._insertFunctionStep('alignVolumeStep', refFn, volFn, vol.outputName, 
-                                              maskArgs, alignArgs, prerequisites=[])
-            alignSteps.append(stepId)
-            
+            volId = vol.getObjId()
+            stepId = self._insertFunctionStep('alignVolumeStep', refFn, volFn,
+                                              vol.outputName, maskArgs, 
+                                              alignArgs, volId, prerequisites=[])
+            alignSteps.append(stepId)            
         self._insertFunctionStep('createOutputStep', prerequisites=alignSteps)
         
     #--------------------------- STEPS functions --------------------------------------------
-    def alignVolumeStep(self, refFn, inVolFn, outVolFn, maskArgs, alignArgs):
-        
+    def alignVolumeStep(self, refFn, inVolFn, outVolFn, maskArgs, alignArgs, volId):        
         args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
         args += maskArgs
         args += alignArgs
-        
+        args += " --copyGeo %s" % (
+                self._getExtraPath('transformation-matrix_vol%06d.txt'%volId))        
         self.runJob("xmipp_volume_align", args)
-        
+
         if self.alignmentAlgorithm == ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL:
             args = "--i1 %s --i2 %s --apply --local" % (refFn, outVolFn)
+            args += " --copyGeo %s" % (
+                    self._getExtraPath('transformation-matrix_vol%06d.txt'%volId))
             self.runJob("xmipp_volume_align", args)
-      
-    def createOutputStep(self):
+    
+    def createOutputStep(self):        
         vols = []
         for vol in self._iterInputVolumes():
             outVol = em.Volume()
             outVol.setLocation(vol.outputName)
             outVol.setObjLabel(vol.getObjLabel())
             outVol.setObjComment(vol.getObjComment())
-            vols.append(outVol) 
-            
+            #set transformation matrix             
+            volId = vol.getObjId()
+            fhInputTranMat = self._getExtraPath('transformation-matrix_vol%06d.txt'%volId)
+            transMatFromFile = np.loadtxt(fhInputTranMat)
+            transformationMat = np.reshape(transMatFromFile,(4,4))
+            transform = em.Transform()
+            transform.setMatrix(transformationMat)
+            outVol.setTransform(transform)            
+            vols.append(outVol)
+                        
         if len(vols) > 1:
             volSet = self._createSetOfVolumes()
             volSet.setSamplingRate(self.inputReference.get().getSamplingRate())
@@ -203,8 +214,6 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         self._defineOutputs(**outputArgs)
         for pointer in self.inputVolumes:
             self._defineSourceRelation(pointer, outputArgs.values()[0])
-
-    
     #--------------------------- INFO functions --------------------------------------------
     
     def _validate(self):
@@ -301,7 +310,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
                 self.initialInplaneAngle, self.initialInplaneAngle,
                 self.initialShiftX, self.initialShiftX,
                 self.initialShiftY, self.initialShiftY,
-                self.initialShiftZ,self.initialShiftZ)
+                self.initialShiftZ,self.initialShiftZ)   
             if self.optimizeScale:
                 alignArgs += " --scale %f %f 0.005" %(self.initialScale, self.initialScale)
             else:
@@ -317,8 +326,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
                 self.minimumScale, self.maximumScale, self.stepScale)
                
         return alignArgs
-     
-     
+          
 class XmippProtAlignVolumeForWeb(XmippProtAlignVolume):
     """ Aligns a set of volumes using cross correlation.
     Based on Xmipp protocol for aligning volumes, but

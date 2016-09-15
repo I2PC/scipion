@@ -411,6 +411,7 @@ public:
     		best_align(7)=y;
     		best_align(8)=x;
     		best_fit=-score;
+    		first=false;
         }
 
         if (!first)
