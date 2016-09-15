@@ -50,12 +50,14 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
                       label="Input particles",  
                       help="Aligned particles that their  "
                            "angular assignment needs to be modified.")        
-        form.addParam('inputTransformMat', params.PathParam, 
-                      label="Tranfsormation matrix",  
-                      help="This is a txt file named 'transformation-matrix'.\n"
-                           "Note:\n "
-                           "Use param --copyGeo in xmipp_volume_align to create "
-                           "this file.")       
+        form.addParam('inputVolume', params.PointerParam,
+                 pointerClass='Volume',
+                 pointerCondition='hasTransform',
+                 label='Input volume', 
+                 help="Volume that we want to use its transformation matrix "
+                      "to modify angular assignment of input particles. "
+                      "(This is normally the output volume of protocol_"
+                      "align_volume)")
         
         form.addParallelSection(threads=1, mpi=2)    
     #--------------------------- INSERT steps functions ------------------------------------
@@ -63,52 +65,27 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
     def _insertAllSteps(self):        
         fnOutputParts = self._getExtraPath('output_particles.xmd')
         inputSet = self.inputParticles.get()
-        inputTranMat = self.inputTransformMat.get()
+        inputVol = self.inputVolume.get()        
         self._insertFunctionStep('applyTransformMatStep', 
-                                 fnOutputParts, inputSet, inputTranMat)        
+                                 fnOutputParts, inputSet, inputVol)        
     #--------------------------- STEPS functions --------------------------------------------        
     
-    def applyTransformMatStep(self, fnOutputParts, inputSet, inputTranMat):        
-        data = []
-        fhTransformMat = open(inputTranMat, "r")        
-        for line in fhTransformMat:
-            fields = line.split()
-            rowdata = map(float, fields)
-            data.extend(rowdata)
-            
-        count = 0
-        TransformMat = [[0 for i in range(4)] for i in range(4)]
-        for i in range(4):
-            for j in range(4):
-                TransformMat[i][j] = data[count]
-                count += 1
-        TransformMat = np.array (TransformMat)
-        TransformMatrix = np.matrix(TransformMat)
-        print "Transformation matrix (volume_align output) =\n", TransformMatrix
-        #inverseTransform = np.linalg.inv(TransformMatrix)
-        #print "Inverse transformation matrix (volume_align output) =\n", inverseTransform
-               
+    def applyTransformMatStep(self, fnOutputParts, inputSet, inputVol):        
+        volTransformMatrix = np.matrix(inputVol.getTransform().getMatrix())
+        
         outputSet = self._createSetOfParticles()
-        for part in inputSet.iterItems():        
-            partTransformMat = part.getTransform().getMatrix()            
+        for part in inputSet.iterItems():
+            partTransformMat = part.getTransform().getMatrix()       
             partTransformMatrix = np.matrix(partTransformMat)            
-            applyMatrix = TransformMatrix * partTransformMatrix
-            #applyMatrix = inverseTransform * partTransformMatrix
-                      
-            part.getTransform().setMatrix(applyMatrix)
+            newTransformMatrix = volTransformMatrix * partTransformMatrix
+            part.getTransform().setMatrix(newTransformMatrix)
             outputSet.append(part)       
+        
         outputSet.copyInfo(inputSet)        
         self._defineOutputs(outputParticles=outputSet)        
         writeSetOfParticles(outputSet, fnOutputParts)
     #--------------------------- INFO functions --------------------------------------------
     
-    def _validate(self):
-        errors = []
-        if not self.inputTransformMat.get():
-            errors.append("We need transformation matrix "
-                          "to process input particles!!!")
-        return errors
-        
     def _summary(self):
         summary = []
         if not hasattr(self, 'outputParticles'):
