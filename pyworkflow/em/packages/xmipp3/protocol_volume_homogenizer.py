@@ -27,8 +27,8 @@
 
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtProcessParticles
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOfParticles
-from pyworkflow.em.data import SetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, 
+                                                   readSetOfParticles)
 import numpy as np
 
 
@@ -129,48 +129,30 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         alignArgsFf += " --frm"
         self.runJob('xmipp_volume_align', alignArgsFf, numberOfMpi = 1)        
         
-        fnTranMat = self._getExtraPath('transformation-Mmatrix.txt')
+        fnTransformMat = self._getExtraPath('transformation-Mmatrix.txt')
         alignArgsLocal = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
                                                          fnAlignedVolFf, 
                                                          fnAlnVolFfLcl)
         alignArgsLocal += " --local --rot 0 0 1 --tilt 0 0 1"
         alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTranMat        
+        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTransformMat        
         self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi = 1)
                 
         #apply transformation matrix to input ratricles
         inputParts = self.inputParticles.get()
-        data = []
-        fhTransformMat = open(fnTranMat, "r")        
-        for line in fhTransformMat:
-            fields = line.split()
-            rowdata = map(float, fields)
-            data.extend(rowdata)
-            
-        count = 0
-        TransformMat = [[0 for i in range(4)] for i in range(4)]
-        for i in range(4):
-            for j in range(4):
-                TransformMat[i][j] = data[count]
-                count += 1
-        TransformMat = np.array (TransformMat)
-        TransformMatrix = np.matrix(TransformMat)
-        print "Transformation matrix (volume_align output) =\n", TransformMatrix
-        
-               
+        transMatFromFile = np.loadtxt(fnTransformMat)
+        transformationArray = np.reshape(transMatFromFile,(4,4))
+        transformMatrix = np.matrix(transformationArray)
+        print "Transformation matrix (volume_align output) =\n", transformMatrix
         outputSet = self._createSetOfParticles()
         for part in inputParts.iterItems():        
             partTransformMat = part.getTransform().getMatrix()            
             partTransformMatrix = np.matrix(partTransformMat)            
-            applyMatrix = TransformMatrix * partTransformMatrix
-            
-                      
-            part.getTransform().setMatrix(applyMatrix)
+            newTransformMatrix = transformMatrix * partTransformMatrix                      
+            part.getTransform().setMatrix(newTransformMatrix)
             outputSet.append(part)       
-        outputSet.copyInfo(inputParts)        
-                
-        writeSetOfParticles(outputSet, fnInPartsNewAng)   
-            
+        outputSet.copyInfo(inputParts)                
+        writeSetOfParticles(outputSet, fnInPartsNewAng)             
         
     def opticalFlowAlignmentStep(self, inputVol, referenceVol, inputParticlesMd):
         winSize = self.winSize.get()
