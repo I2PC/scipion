@@ -46,13 +46,13 @@ void ProgVolumeHomogenizer::defineParams()
 {
     addUsageLine("Correcting the set of input images of the input volume with ");
     addUsageLine("respect to the reference map and using optical flow algorithm");
-    addParamsLine("  -i <selfile>             : Selfile with input volume. This is the volume that we aimed to reform its related particles.");
-    addParamsLine("                           : Then we will use its reformed (corrected) images to merge with reference map images.");
+    addParamsLine("  -i <selfile>             : Selfile with input volume. This is the volume that we aimed to deform its related particles.");
+    addParamsLine("                           : Then we will use its deformed (corrected) images to merge with reference map images.");
     addParamsLine("  -ref <selfile>           : Selfile with reference volume. This is the volume that we use as the reference in OF algorithm.");
-    addParamsLine("                           : This is the volume that we will be reformed");
+    addParamsLine("                           : This is the volume that we will be deformed");
     addParamsLine("  -img <selfile>           : Selfile with input aligned images. These images are related to the input map");
     addParamsLine(" [-o <rootname=\"\">]      : Output fileName");
-    addParamsLine("                           : Output contains the list of corrected (reformed) images and their angles with respect to the reference map");
+    addParamsLine("                           : Output contains the list of corrected (deformed) images and their angles with respect to the reference map");
     addParamsLine("                           : NOTE: you do not need to define any extension for the output root name. ");
     addParamsLine("                           : This program will automatically create one .stk and one .xmd");
     addParamsLine(" [--winSize <winSize=50>]  : window size for optical flow algorithm");
