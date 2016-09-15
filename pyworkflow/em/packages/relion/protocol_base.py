@@ -32,7 +32,8 @@ from glob import glob
 from os.path import exists
 
 from pyworkflow.protocol.params import (BooleanParam, PointerParam, FloatParam, 
-                                        IntParam, EnumParam, StringParam, LabelParam)
+                                        IntParam, EnumParam, StringParam, 
+                                        LabelParam, PathParam)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPath
 
@@ -413,17 +414,116 @@ class ProtRelionBase(EMProtocol):
                               help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
-        form.addParam('memoryPreThreads', IntParam, default=2,
-                      label='Memory per Threads',
-                      help='Computer memory in Gigabytes that is available for each thread. This will only '
-                           'affect some of the warnings about required computer memory.')
+        if getVersion() == "2.0":
+            form.addParam('useParallelDisk', BooleanParam, default=True,
+                          label='Use parallel disc I/O?',
+                          help='If set to Yes, all MPI slaves will read '
+                               'their own images from disc. Otherwise, only '
+                               'the master will read images and send them '
+                               'through the network to the slaves. Parallel '
+                               'file systems like gluster of fhgfs are good '
+                               'at parallel disc I/O. NFS may break with many '
+                               'slaves reading in parallel.')
+            form.addParam('pooledParticles', IntParam, default=3,
+                          label='Number of pooled particles:',
+                          help='Particles are processed in individual batches '
+                               'by MPI slaves. During each batch, a stack of '
+                               'particle images is only opened and closed '
+                               'once to improve disk access times. All '
+                               'particle images of a single batch are read '
+                               'into memory together. The size of these '
+                               'batches is at least one particle per thread '
+                               'used. The nr_pooled_particles parameter '
+                               'controls how many particles are read together '
+                               'for each thread. If it is set to 3 and one '
+                               'uses 8 threads, batches of 3x8=24 particles '
+                               'will be read together. This may improve '
+                               'performance on systems where disk access, and '
+                               'particularly metadata handling of disk '
+                               'access, is a problem. It has a modest cost of '
+                               'increased RAM usage.')
+            form.addParam('allParticlesRam', BooleanParam, default=False,
+                          label='Pre-read all particles into RAM?',
+                          help='If set to Yes, all particle images will be '
+                               'read into computer memory, which will greatly '
+                               'speed up calculations on systems with slow '
+                               'disk access. However, one should of course be '
+                               'careful with the amount of RAM available. '
+                               'Because particles are read in '
+                               'float-precision, it will take \n'
+                               '( N * (box_size)^2 * 4 / (1024 * 1024 '
+                               '* 1024) ) Giga-bytes to read N particles into '
+                               'RAM. For 100 thousand 200x200 images, that '
+                               'becomes 15Gb, or 60 Gb for the same number of '
+                               '400x400 particles. Remember that running a '
+                               'single MPI slave on each node that runs as '
+                               'many threads as available cores will have '
+                               'access to all available RAM.\n\n'
+                               'If parallel disc I/O is set to No, then only '
+                               'the master reads all particles into RAM and '
+                               'sends those particles through the network to '
+                               'the MPI slaves during the refinement '
+                               'iterations.')
+            form.addParam('dirPath', PathParam, condition='allParticlesRam',
+                          label='Copy particles to scratch directory: ',
+                          help='If a directory is provided here, then the job '
+                               'will create a sub-directory in it called '
+                               'relion_volatile. If that relion_volatile '
+                               'directory already exists, it will be wiped. '
+                               'Then, the program will copy all input '
+                               'particles into a large stack inside the '
+                               'relion_volatile subdirectory. Provided this '
+                               'directory is on a fast local drive (e.g. an '
+                               'SSD drive), processing in all the iterations '
+                               'will be faster. If the job finishes '
+                               'correctly, the relion_volatile directory will '
+                               'be wiped. If the job crashes, you may want to '
+                               'remove it yourself.')
+            form.addParam('combineItersDisc', BooleanParam, default=False,
+                          label='Combine iterations through disc?',
+                          help='If set to Yes, at the end of every iteration '
+                               'all MPI slaves will write out a large file '
+                               'with their accumulated results. The MPI '
+                               'master will read in all these files, combine '
+                               'them all, and write out a new file with the '
+                               'combined results. All MPI salves will then '
+                               'read in the combined results. This reduces '
+                               'heavy load on the network, but increases load '
+                               'on the disc I/O. This will affect the time it '
+                               'takes between the progress-bar in the '
+                               'expectation step reaching its end (the mouse '
+                               'gets to the cheese) and the start of the '
+                               'ensuing maximisation step. It will depend on '
+                               'your system setup which is most efficient.')
+            form.addParam('doGpu', BooleanParam, default=True,
+                          label='Use GPU acceleration?',
+                          help='If set to Yes, the job will try to use GPU '
+                               'acceleration.')
+            form.addParam('gpusToUse', StringParam, default='',
+                          label='Which GPUs to use:', condition='doGpu', 
+                          help='This argument is not necessary. If left empty, '
+                               'the job itself will try to allocate available GPU '
+                               'resources. You can override the default '
+                               'allocation by providing a list of which GPUs '
+                               '(0,1,2,3, etc) to use. MPI-processes are '
+                               'separated by ":", threads by ",". '
+                               'For example: "0,0:1,1:0,0:1,1"')
+        else:
+            form.addParam('memoryPreThreads', IntParam, default=2,
+                          label='Memory per Threads',
+                          help='Computer memory in Gigabytes that is '
+                               'available for each thread. This will only '
+                               'affect some of the warnings about required '
+                               'computer memory.')
         
-        joinHalves = "--low_resol_join_halves 40 (only not continue mode)" if not self.IS_CLASSIFY else ""
+        joinHalves = ("--low_resol_join_halves 40 (only not continue mode)"
+                      if not self.IS_CLASSIFY else "")
         form.addParam('extraParams', StringParam, default='',
                       label='Additional parameters',
-                      help="In this box command-line arguments may be provided that "
-                           "are not generated by the GUI. This may be useful for testing "
-                           "developmental options and/or expert use of the program, e.g: \n"
+                      help="In this box command-line arguments may be "
+                           "provided that are not generated by the GUI. This "
+                           "may be useful for testing developmental options "
+                           "and/or expert use of the program, e.g: \n"
                            "--dont_combine_weights_via_disc\n"
                            "--verb 1\n"
                            "--pad 2\n" + joinHalves)
@@ -460,7 +560,10 @@ class ProtRelionBase(EMProtocol):
         
         if self.extraParams.hasValue():
             params += ' ' + self.extraParams.get()
-
+        
+        if getVersion() == "2.0":
+            self._setComputeArgs(args)
+        
         self._insertFunctionStep('runRelionStep', params)
         
     def _setNormalArgs(self, args):
@@ -504,6 +607,25 @@ class ProtRelionBase(EMProtocol):
         self._setBasicArgs(args)
         
         args['--continue'] = continueRun._getFileName('optimiser', iter=self._getContinueIter())
+    
+    def _setComputeArgs(self, args):
+        
+        if not self.combineItersDisc:
+            args['--dont_combine_weights_via_disc'] = ''
+        
+        if not self.useParallelDisk:
+            args['--no_parallel_disc_io'] = ''
+        
+        if self.allParticlesRam:
+            args['--preread_images'] = ''
+        else:
+            if self.dirPath.hasValue():
+                args['--scratch_dir'] = ''
+            
+        args['--pool'] = self.pooledParticles.get()
+        
+        if self.doGpu:
+            args['--gpu'] = self.gpusToUse.get()
     
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
