@@ -464,7 +464,7 @@ class ProtRelionBase(EMProtocol):
                                'sends those particles through the network to '
                                'the MPI slaves during the refinement '
                                'iterations.')
-            form.addParam('dirPath', PathParam, condition='allParticlesRam',
+            form.addParam('dirPath', PathParam, condition='not allParticlesRam',
                           label='Copy particles to scratch directory: ',
                           help='If a directory is provided here, then the job '
                                'will create a sub-directory in it called '
@@ -595,7 +595,9 @@ class ProtRelionBase(EMProtocol):
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
         
-        args['--memory_per_thread'] = self.memoryPreThreads.get()
+        if not getVersion() == "2.0":
+            args['--memory_per_thread'] = self.memoryPreThreads.get()
+        
         self._setBasicArgs(args)
         
     def _setContinueArgs(self, args):
