@@ -68,7 +68,7 @@ void ProgassignmentTiltPair::defineParams()
 void ProgassignmentTiltPair::search_affine_transform(float u1x, float u1y, float u2x, float u2y, float u3x, float u3y, float t1x,
 		float t1y, float t2x, float t2y, float t3x, float t3y,
 		Matrix1D<double> ux, Matrix1D<double> uy, size_t Xdim, size_t Ydim, struct Delaunay_T &delaunay_tilt,
-		int &bestInliers, Matrix2D<double> &A_coarse, Matrix1D<double> &T_coarse)
+		int &bestInliers, Matrix2D<double> &A_coarse, Matrix1D<double> &T_coarse, bool contingency, int thrs)
 {
 	double estimator, dist;
 	struct Point_T t_dist, t_closest;
@@ -166,6 +166,10 @@ void ProgassignmentTiltPair::search_affine_transform(float u1x, float u1y, float
 		{
 			estimator = dist2/inliers2;
 			bestInliers = inliers2;
+			if (contingency)
+				if (bestInliers>0.3*thrs)
+					break;
+
 			A_coarse = A_matrix;
 			T_coarse = T;
 			std::cout << bestInliers << std::endl;
@@ -178,6 +182,50 @@ void ProgassignmentTiltPair::search_affine_transform(float u1x, float u1y, float
 		}
 	}
 }
+
+void ProgassignmentTiltPair::findMaximumMinimum(const float u1, const float u2, const float u3, double &u_max, double &u_min)
+{
+if (u1 > u2)
+{
+	if (u1 > u3)
+		u_max = u1;
+	else
+		u_max = u3;
+
+	if (u2 > u3)
+		u_min = u3;
+	else
+		u_min = u2;
+}
+else
+{
+	if (u2 > u3)
+		u_max = u2;
+	else
+		u_max = u3;
+
+	if (u1 > u3)
+		u_min = u3;
+	else
+		u_min = u1;
+}
+}
+
+bool ProgassignmentTiltPair::checkwindow(const float t1, const float t2, const float t3,
+		const double u_max, const double u_min)
+{
+	double window_p, window_m;
+	window_p = u_max + 1.2*mshift;
+	window_m = u_min - 1.2*mshift;
+
+
+	if (((t1<window_p) && (t2<window_p) && (t3<window_p)) && ((t1>window_m) && (t2>window_m) && (t3>window_m)))
+		return true;
+	else
+		return false;
+
+}
+
 
 void ProgassignmentTiltPair::run()
 {
@@ -339,10 +387,23 @@ void ProgassignmentTiltPair::run()
 			get_Face_Points(&delaunay_untilt, k, &u1, &u2, &u3);
 			get_Face_Points(&delaunay_tilt, j, &t1, &t2, &t3);
 
+
+			//New Idea
+			double ux_max, uy_max, ux_min, uy_min;
+			findMaximumMinimum(u1.x, u2.x, u3.x, ux_max, ux_min);
+			findMaximumMinimum(u1.y, u2.y, u3.y, uy_max, uy_min);
+
+			if (!checkwindow(t1.x, t2.x, t3.x, ux_max, ux_min))
+				continue;
+			if (!checkwindow(t1.y, t2.y, t3.y, uy_max, uy_min))
+				continue;
+
+			//End New Idea
+
 			search_affine_transform(u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
 					t1.y, t2.x, t2.y, t3.x, t3.y,
 					ux, uy, Xdim, Ydim, delaunay_tilt, bestInliers,
-					A_coarse, T_coarse);
+					A_coarse, T_coarse, false, thrs);
 		}
 		if (verbose==1 && k%100==0)
 			progress_bar(k);
@@ -446,6 +507,7 @@ void ProgassignmentTiltPair::run()
 			double window_t=window *(1-0.34);  //0.34 (approx 0.3) is cos(70), tilts higher than 70 degrees are not considered
 			std::vector<Matrix1D<double> > allTrianglesU;
 			Matrix1D<double> triangleu(7);
+			bool contingency = true;
 			for (int k = 0; k< len_u; k++)
 			{
 				VEC_ELEM(triangleu,0)=VEC_ELEM(ux,k);
@@ -518,7 +580,7 @@ void ProgassignmentTiltPair::run()
 											VEC_ELEM(triangleU,4), VEC_ELEM(triangleU,5), VEC_ELEM(triangleT,0), VEC_ELEM(triangleT,1),
 											VEC_ELEM(triangleT,2), VEC_ELEM(triangleT,3), VEC_ELEM(triangleT,4), VEC_ELEM(triangleT,5),
 											ux, uy, Xdim, Ydim, delaunay_tilt, bestInliers_con,
-											A_con, T_con);
+											A_con, T_con, true, thrs);
 				}
 			}
 			std::cout << "Contingency Inliers = " << bestInliers_con << std::endl;

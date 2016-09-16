@@ -34,7 +34,7 @@ from os.path import basename
 from glob import glob
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import copyFile, createLink, expandPattern, cleanPath
+from pyworkflow.utils.path import copyFile, createLink, expandPattern, cleanPath, commonPath
 from pyworkflow.protocol.params import PathParam, FloatParam, BooleanParam, EnumParam, IntParam
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
@@ -135,6 +135,8 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
             else:
                 img.cleanObjId()
                 img.setFileName(dst)
+                # Fill the micName if img is a Micrograph.
+                self._fillMicName(img, fn, pattern)
                 imgSet.append(img)
             outFiles.append(dst)
             
@@ -220,4 +222,10 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
             
-    
+    def _fillMicName(self, img, filename, pattern):
+        from pyworkflow.em import Micrograph
+        if isinstance(img, Micrograph):
+            filePaths = self.getMatchFiles(pattern=pattern)
+            commPath = commonPath(filePaths)
+            micName = filename.replace(commPath + "/", "").replace("/", "_")
+            img.setMicName(micName)

@@ -19,6 +19,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *******
+import os
 
 from pyworkflow.tests import BaseTest, setupTestProject
 import xmipp
@@ -521,7 +522,7 @@ class TestSubProj(BaseTest):
         protCTFposProj  = self.importData(self.setPartSqliteCTfPosName, "pos ctf projection",
                                           ProtImportParticles,
                                           ProtImportParticles.IMPORT_FROM_SCIPION)
-        _protImportVol   = self.importData(self.proj.getTmpPath(volName), "3D reference",
+        _protImportVol   = self.importData(os.path.abspath(self.proj.getTmpPath(volName)), "3D reference",
                                            ProtImportVolumes,
                                            ProtImportParticles.IMPORT_FROM_FILES)
         _protImportMask  = self.importData(self.proj.getTmpPath(maskName), "3D mask",

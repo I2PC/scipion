@@ -188,7 +188,13 @@ class SqliteMapper(Mapper):
         return self.selectById(obj._objParentId)
         
     def fillObjectWithRow(self, obj, objRow):
-        """Fill the object with row data"""
+        """ Fill the object with row data. """
+        if not hasattr(obj, '_objId'):
+            raise Exception("Entry '%s' (id=%s) in the database, stored as '%s'"
+                            ", is being mapped to %s object. " %
+                            (self._getStrValue(objRow['name']), objRow['id'],
+                             objRow['classname'], type(obj)))
+
         obj._objId = objRow['id']
         self.objDict[obj._objId] = obj
         obj._objName = self._getStrValue(objRow['name'])
@@ -228,13 +234,14 @@ class SqliteMapper(Mapper):
                 if childObj is None:
                     continue
                 setattr(parentObj, childName, childObj)
+
             self.fillObjectWithRow(childObj, childRow)  
             #childsDict[childObj._objId] = childObj  
               
     def __objFromRow(self, objRow):
         objClassName = objRow['classname']
-        
         obj = self._buildObject(objClassName)
+
         if obj is not None:
             self.fillObject(obj, objRow)
         
