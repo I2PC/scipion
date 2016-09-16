@@ -933,8 +933,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
                 if self.contAngles:
                     args+=" --optimizeAngles --max_angular_change %f"%maxAngle
-                if self.contGrayValues:
-                    args+=" --optimizeGray --max_gray_scale %f --max_gray_shift %f"%(self.contMaxGrayScale.get(),self.contMaxGrayShift.get())
                 if self.contDefocus:
                     args+=" --optimizeDefocus --max_defocus_change %f"%self.contMaxDefocus.get()
                 if self.inputParticles.get().isPhaseFlipped():
@@ -1154,6 +1152,19 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesToUse = fnCorrectedImagesRoot+".xmd"
                     deleteStack = True
                 
+                if self.contGrayValues:
+                    R=self.particleRadius.get()
+                    if R<=0:
+                        R=self.inputParticles.get().getDimensions()[0]/2
+                    fnGrayCorrected = join(fnDirCurrent,"images_gray%02d.stk"%i)
+                    fnVol=join(fnDirCurrent,"localAssignment","volumeRef%02d.vol"%i)
+                    fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
+                    previousResolution=self.readInfoField(fnDirPrevious,"resolution",xmipp.MDL_RESOLUTION_FREQREAL)
+                    args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f"%\
+                         (fnAnglesToUse,fnGrayCorrected,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution)
+                    args+=" --max_gray_scale %f --max_gray_shift %f"%(self.contMaxGrayScale.get(),self.contMaxGrayShift.get())
+                    self.runJob("xmipp_transform_adjust_image_grey_levels",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
+
                 # Restrict the angles
                 if self.restrictReconstructionAngles:
                     fnRestricted = join(fnDirCurrent,"images_restricted%02d.xmd"%i)
