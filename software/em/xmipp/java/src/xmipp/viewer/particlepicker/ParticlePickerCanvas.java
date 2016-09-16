@@ -441,7 +441,11 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
     {
         // Get the eraser size and coordinates and apply zoom
         int size = getFrame().getEraserSize()/2;
-        double distance = (size/getMagnification());
+        double distance = (size);
+
+        // Add the radio of the particles: we want to eras particle if eraser touches the circle of the particle
+        distance = distance + (getParticlePicker().getSize()/2);
+
 
         int cursorX = offScreenX(e.getX());
         int cursorY = offScreenY (e.getY());
@@ -538,6 +542,10 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
         // Draw a circle from the center
         g.setColor(Color.CYAN);
         int r = getFrame().getEraserSize();
+
+        // Apply magnification
+        r = (int) Math.round((getMagnification()*r));
+
         int ovalX = x-(r/2);
         int ovalY = y-(r/2);
 
@@ -552,7 +560,7 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
         if (!e.isShiftDown()){
             // if erase mode
             if (getFrame().isEraserMode()){
-                getFrame().setEraserSize(getFrame().getEraserSize()+(e.getWheelRotation()*4));
+                getFrame().setEraserSize(getFrame().getEraserSize()+(e.getWheelRotation()*50));
                 paintEraser(e);
             }
 
