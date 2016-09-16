@@ -79,6 +79,7 @@ public:
     /// Different estimates
     void estimateS();
     void deconvolveS();
+    void convolveS();
     void optimizeSigma();
     void significanceRealSpace(const MultidimArray<double> &V1, MultidimArray<double> &V1r);
 };

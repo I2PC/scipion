@@ -132,6 +132,9 @@ void ProgVolumeHalvesRestoration::run()
 
 			deconvolveS();
 		}
+
+		convolveS();
+		S.write(fnRoot+"_convolved.vol");
 	}
 
 	V1r.write(fnRoot+"_restored1.vol");
@@ -240,6 +243,21 @@ void ProgVolumeHalvesRestoration::deconvolveS()
 //    MultidimArray<double> &mS=S();
 //    transformer.inverseFourierTransform();
 //    S.write("PPPS.vol");
+}
+
+void ProgVolumeHalvesRestoration::convolveS()
+{
+    double K=-0.5/(sigmaConv*sigmaConv);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
+    {
+		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
+		if (R2n<=0.25)
+		{
+			double H1=exp(K*R2n);
+			DIRECT_MULTIDIM_ELEM(fVol,n)*=H1;
+		}
+    }
+    transformer.inverseFourierTransform();
 }
 
 double restorationSigmaCost(double *x, void *_prm)
