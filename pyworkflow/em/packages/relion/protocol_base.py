@@ -556,13 +556,13 @@ class ProtRelionBase(EMProtocol):
             self._setContinueArgs(args)
         else:
             self._setNormalArgs(args)
+        if getVersion() == "2.0":
+            self._setComputeArgs(args)
+        
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
         
         if self.extraParams.hasValue():
             params += ' ' + self.extraParams.get()
-        
-        if getVersion() == "2.0":
-            self._setComputeArgs(args)
         
         self._insertFunctionStep('runRelionStep', params)
         
