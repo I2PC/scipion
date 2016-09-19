@@ -120,7 +120,7 @@ class TestMotioncorrAlignMovies(BaseTest):
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='qbeta - motioncorr test2',
-                                alignFrame0=2, alignFrameN=2,
+                                alignFrame0=3, alignFrameN=5,
                                 cropOffsetX=10, cropOffsetY=10)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
