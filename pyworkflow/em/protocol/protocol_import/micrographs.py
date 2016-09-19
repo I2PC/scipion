@@ -395,7 +395,11 @@ class ProtImportMovies(ProtImportMicBase):
 
             for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
                 frameFn = frame[1] # Frame name stored previously
-                ih.convert(frameFn, (i+1, movieFn))
+                pwutils.cleanPath(movieFn) # Remove the output file if exists
+                ih.convert(frameFn, (i+1, movieOut))
 
                 if self.deleteFrames:
                     pwutils.cleanPath(frameFn)
+
+            # Now return the newly created movie file as imported file
+            yield movieFn, None
