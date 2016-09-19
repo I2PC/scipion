@@ -52,10 +52,7 @@ class ProtImportImages(ProtImportFiles):
     _checkStacks = True
         
     #--------------------------- DEFINE param functions ------------------------
-    def _defineParams(self, form):
-        ProtImportFiles._defineParams(self, form)
-        self._defineAcquisitionParams(form)
-        
+
     def _defineAcquisitionParams(self, form):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
@@ -225,14 +222,8 @@ class ProtImportImages(ProtImportFiles):
                     continue
 
                 someNew = True
-                self.debug('Checking file: %s' % fileName)
-                mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
-                delta = datetime.now() - mTime
-                self.debug('   Modification time: %s' % pwutils.prettyTime(mTime))
-                self.debug('   Delta: %s' % pwutils.prettyDelta(delta))
 
-                if delta < fileTimeout: # Skip if the file is still changing
-                    self.debug('   delta < fileTimeout, skipping...')
+                if self.fileModified(fileName, fileTimeout):
                     continue
 
                 self.info('Importing file: %s' % fileName)
