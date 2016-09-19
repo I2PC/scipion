@@ -117,11 +117,8 @@ void ProgTransformImageGreyLevels::preProcess()
     filter.raised_w=0.02;
 }
 
-double transformImageGrayCost(double *x, void *_prm)
+double transformImageGrayCost(double a, double b, ProgTransformImageGreyLevels *prm)
 {
-	double a=x[1];
-	double b=x[2];
-	ProgTransformImageGreyLevels *prm=(ProgTransformImageGreyLevels *)_prm;
 	if (fabs(a-1)>prm->maxA)
 		return 1e38;
 	if (fabs(b)>prm->maxB*prm->Istddev)
@@ -141,6 +138,16 @@ double transformImageGrayCost(double *x, void *_prm)
 	}
 	cost*=prm->iMask2Dsum;
 	return cost;
+}
+
+double transformImageGrayCostAB(double *x, void *_prm)
+{
+	return transformImageGrayCost(x[1],x[2],(ProgTransformImageGreyLevels *)_prm);
+}
+
+double transformImageGrayCostBA(double *x, void *_prm)
+{
+	return transformImageGrayCost(x[2],x[1],(ProgTransformImageGreyLevels *)_prm);
 }
 
 // Predict =================================================================
@@ -167,29 +174,55 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 #ifdef DEBUG
     Image<double> save;
     save()=P();
+    std::cout << "P: "; P().printStats(); std::cout << std::endl;
     save.write("PPPprojection.xmp");
     save()=I();
+    std::cout << "I: "; I().printStats(); std::cout << std::endl;
     save.write("PPPexperimental.xmp");
+    save()=P()-I();
+    std::cout << "P-I init: "; save().printStats(); std::cout << std::endl;
+    save.write("PPPdiffInit.xmp");
 #endif
 
-    Matrix1D<double> p(2), steps(2);
-    p(0)=1; // a in I'=a*I+b
-    p(1)=0; // b in I'=a*I+b
+    Matrix1D<double> pAB(2), steps(2), pBA(2), p(2);
     steps.initConstant(1);
 
     // Optimize
-	double cost=-1;
+	double costAB=-1, costBA=-1;
+	int iter;
 	try
 	{
-		cost=1e38;
-		int iter;
-		powellOptimizer(p, 1, 2, &transformImageGrayCost, this, 0.01, cost, iter, steps, verbose>=2);
-		if (cost>1e30)
+		costAB=1e38;
+	    pAB(0)=1; // a in I'=a*I+b
+	    pAB(1)=0; // b in I'=a*I+b
+		powellOptimizer(pAB, 1, 2, &transformImageGrayCostAB, this, 0.01, costAB, iter, steps, verbose>=2);
+		if (costAB>1e30)
 		{
 			rowOut.setValue(MDL_ENABLED,-1);
-			p.initZeros();
-			p(0)=1; // a in I'=a*I+b
-			p(1)=0; // b in I'=a*I+b
+			pAB.initZeros();
+			pAB(0)=1; // a in I'=a*I+b
+			pAB(1)=0; // b in I'=a*I+b
+		}
+
+		costBA=1e38;
+	    pBA(0)=0; // a in I'=a*I+b
+	    pBA(1)=1; // b in I'=a*I+b
+		powellOptimizer(pBA, 1, 2, &transformImageGrayCostBA, this, 0.01, costBA, iter, steps, verbose>=2);
+		if (costBA>1e30)
+		{
+			rowOut.setValue(MDL_ENABLED,-1);
+			pBA.initZeros();
+			pBA(0)=0; // a in I'=a*I+b
+			pBA(1)=1; // b in I'=a*I+b
+		}
+
+		// Decide
+		if (costAB<costBA)
+			p=pAB;
+		else
+		{
+			p(0)=pBA(1);
+			p(1)=pBA(0);
 		}
 
 		// Apply
@@ -198,7 +231,7 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 		double b=p(1);
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mI)
 		{
-			if (DIRECT_MULTIDIM_ELEM(mask2D,n))
+			if (DIRECT_MULTIDIM_ELEM(mask2D,n) || true)
 				DIRECT_MULTIDIM_ELEM(mI,n)=ia*(DIRECT_MULTIDIM_ELEM(mI,n)-b);
 			else
 				DIRECT_MULTIDIM_ELEM(mI,n)=0.0;
@@ -217,7 +250,9 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 #ifdef DEBUG
     save()=I();
     save.write("PPPexperimentalCorrected.xmp");
+    std::cout << "I corrected: "; I().printStats(); std::cout << std::endl;
     save()=P()-I();
+    std::cout << "P-I final: "; save().printStats(); std::cout << std::endl;
     save.write("PPPdiff.xmp");
     std::cout << fnImgOut << " rewritten\n";
     std::cout << "Press any key" << std::endl;
