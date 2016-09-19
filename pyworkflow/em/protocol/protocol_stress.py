@@ -109,7 +109,7 @@ allocated memory. It will use 100% per worker ")
             pass
         else:
             if find_executable(self._program) is None:
-                message = ["Canot find executable %s",self._program]
+                message = ["Canot find executable %s" % self._program]
         return message
 
     def _summary(self):

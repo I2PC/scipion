@@ -1,6 +1,6 @@
 # ***************************************************************************
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -21,22 +21,25 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
-#create stream data
-#call ctffind -> check output not null
-
-from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 import time
+import os
+
+from pyworkflow.tests import BaseTest, setupTestProject
+from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.protocol import ProtMonitorCTF
+
+
+# Load the number of movies for the simulation, by default equal 5, but
+# can be modified in the environement
+MICS = os.environ.get('SCIPION_TEST_MICS', 3)
+
 
 class TestCtfStream(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        #cls.dataset = tests.DataSet.getDataSet('emx')
-        #cls.dsRelion = tests.DataSet.getDataSet('relion_tutorial')
 
     def _updateProtocol(self, prot):
         prot2 = getProtocolFromDb(prot.getProject().path,
@@ -46,24 +49,17 @@ class TestCtfStream(BaseTest):
         prot2.getProject().closeMapper()
         prot2.closeMappers()
         return prot2
+
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
-#        kwargs = {'xDim': 512,
-#                  'yDim': 512,
-#                  'nDim': 3,
-#                  'samplingRate':1.25,
-#                  'creationInterval':20,
-#                  'delay':0,
-#                  'setof':0#setofmicrographs
-#                }
         kwargs = {'xDim': 4096,
                   'yDim': 4096,
-                  'nDim': 500,
-                  'samplingRate':1.25,
-                  'creationInterval':5,
+                  'nDim': MICS,
+                  'samplingRate': 1.25,
+                  'creationInterval': 5,
                   'delay':0,
-                  'setof':0#setofmicrographs
+                  'setof': 0 # SetOfMicrographs
                 }
         
         #put some stress on the system
@@ -110,6 +106,4 @@ class TestCtfStream(BaseTest):
         self.launchProtocol(protMonitor)
 
         baseFn = protMonitor._getPath(protMonitor.dataBase)
-        import os.path
-        #not sure what to test here
-        self.assertTrue(os.path.isfile(baseFn))        #check defocus  values in range
+        self.assertTrue(os.path.isfile(baseFn))
