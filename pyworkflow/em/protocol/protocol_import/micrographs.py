@@ -310,10 +310,10 @@ class ProtImportMovies(ProtImportMicBase):
         form.addParam('movieSuffix', params.StringParam,
                       default='_frames.mrcs',
                       condition="inputIndividualFrames and stackFrames",
-                      label="Create movie stacks?",
-                      help="When creating the movie stack file, this suffix "
-                           "will be added to the prefix (common to all frames "
-                           "of the same movie) of matched frame files. ")
+                      label="Movie suffix",
+                      help="Suffix added to the output movie filename."
+                           "Use the extension to select the format ("
+                           "e.g., .mrcs, .stk)")
 
         form.addParam('deleteFrames', params.BooleanParam,
                       default=False,
@@ -377,7 +377,12 @@ class ProtImportMovies(ProtImportMicBase):
         ih = ImageHandler()
 
         for k, v in frameDict.iteritems():
+
             if len(v) != self.numberOfIndividualFrames:
+                print("Number of frames found: ", len(v))
+                print("Number of frame provided by user: ",
+                      self.numberOfIndividualFrames.get())
+                pwutils.prettyDict(frameDict)
                 raise Exception("Incorrect number of frames!")
 
             movieFn = k + suffix
