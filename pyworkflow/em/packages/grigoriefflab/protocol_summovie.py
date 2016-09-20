@@ -50,15 +50,20 @@ class ProtSummovie(ProtAlignMovies):
         form.addHidden('binFactor', params.FloatParam, default=1.)
 
         group = form.addGroup('Average')
-        line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of '
-                                  'each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0,
-                      label='beginning')
+        line = group.addLine('Frames to SUM',
+                    help='Frames range to SUM on each movie. The '
+                         'first frame is 1. If you set 0 in the final '
+                         'frame to sum, it means that you will sum '
+                         'until the last frame of the movie.')
+        line = group.addLine('Frames to SUM',
+                            help='Frames range to SUM on each movie. The '
+                                 'first frame is 1. If you set 0 in the final '
+                                 'frame to sum, it means that you will sum '
+                                 'until the last frame of the movie.')
+        line.addParam('sumFrame0', params.IntParam, default=1,
+                      label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
-                      label='end')
-        
+                      label='to')
         group.addParam('useAlignment', params.BooleanParam, default=True,
               label="Use movie alignment to Sum frames?")
 
