@@ -183,6 +183,15 @@ class ProtImportImages(ProtImportFiles):
             imgSet.setDim(dim)
         imgSet.append(img)
 
+    def iterNewInputFiles(self):
+        """ Iterate over input files that have not been imported.
+        This function uses the self.importedFiles dict.
+        """
+        for fileName, fileId in self.iterFiles():
+            # If file already imported, skip it
+            if fileName not in self.importedFiles:
+                yield fileName, fileId
+
     def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
                          amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
@@ -205,7 +214,10 @@ class ProtImportImages(ProtImportFiles):
         outputName = self._getOutputName()
 
         finished = False
-        importedFiles = set()
+        self.importedFiles = set()
+        # this is only used when creating stacks from frame files
+        self.createdStacks = set()
+
         i = 0
         lastDetectedChange = datetime.now()
         timeout = timedelta(seconds=self.timeout.get())
@@ -216,18 +228,14 @@ class ProtImportImages(ProtImportFiles):
             someNew = False
             someAdded = False
 
-            for fileName, fileId in self.iterFiles():
-                # If file already imported, skip it
-                if fileName in importedFiles:
-                    continue
-
+            for fileName, fileId in self.iterNewInputFiles():
                 someNew = True
 
                 if self.fileModified(fileName, fileTimeout):
                     continue
 
                 self.info('Importing file: %s' % fileName)
-                importedFiles.add(fileName)
+                self.importedFiles.add(fileName)
                 dst = self._getExtraPath(basename(fileName))
                 copyOrLink(fileName, dst)
 
@@ -236,7 +244,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if importedFiles: # enable append after first append
+                if self.importedFiles: # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:

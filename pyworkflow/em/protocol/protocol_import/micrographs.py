@@ -327,7 +327,7 @@ class ProtImportMovies(ProtImportMicBase):
         movieSet.setGain(self.gainFile.get())
         movieSet.setDark(self.darkFile.get())
 
-    def iterFiles(self):
+    def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
         for the case when input are individual frames and we want to create
         movie stacks before importing.
@@ -336,7 +336,7 @@ class ProtImportMovies(ProtImportMicBase):
         """
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
-            for fileName, fileId in  ProtImportMicBase.iterFiles(self):
+            for fileName, fileId in  ProtImportMicBase.iterNewInputFiles(self):
                 yield fileName, fileId
 
             return
@@ -376,30 +376,31 @@ class ProtImportMovies(ProtImportMicBase):
         suffix = self.movieSuffix.get()
         ih = ImageHandler()
 
+        for movieFn in self.createdStacks:
+            if movieFn not in self.importedFiles:
+                yield movieFn, None
+
         for k, v in frameDict.iteritems():
-
-            if len(v) != self.numberOfIndividualFrames:
-                print("Number of frames found: ", len(v))
-                print("Number of frame provided by user: ",
-                      self.numberOfIndividualFrames.get())
-                pwutils.prettyDict(frameDict)
-                raise Exception("Incorrect number of frames!")
-
             movieFn = k + suffix
-            movieOut = movieFn
 
-            if movieOut.endswith("mrc"):
-                movieOut += ":mrcs"
+            if (movieFn not in self.importedFiles and
+                movieFn not in self.createdStacks and
+                len(v) == self.numberOfIndividualFrames):
+                movieOut = movieFn
 
-            print "Writing movie stack: ", movieFn
+                if movieOut.endswith("mrc"):
+                    movieOut += ":mrcs"
 
-            for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
-                frameFn = frame[1] # Frame name stored previously
-                pwutils.cleanPath(movieFn) # Remove the output file if exists
-                ih.convert(frameFn, (i+1, movieOut))
+                print "Writing movie stack: ", movieFn
+                pwutils.cleanPath(movieFn)  # Remove the output file if exists
 
-                if self.deleteFrames:
-                    pwutils.cleanPath(frameFn)
+                for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
+                    frameFn = frame[1] # Frame name stored previously
+                    ih.convert(frameFn, (i+1, movieOut))
 
-            # Now return the newly created movie file as imported file
-            yield movieFn, None
+                    if self.deleteFrames:
+                        pwutils.cleanPath(frameFn)
+
+                # Now return the newly created movie file as imported file
+                self.createdStacks.add(movieFn)
+                yield movieFn, None
