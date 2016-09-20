@@ -16,6 +16,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
             {"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
             {"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
+		    {"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "Import micrograph pairs"},
             {"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}]}]},
     {"tag": "section", "text": "Micrographs", "children": [
         {"tag": "protocol", "value": "ProtMovieAlignment",             "text": "default"},
@@ -36,6 +37,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "SparxGaussianProtPicking",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtParticlePicking",   "text": "default"},
             {"tag": "protocol", "value": "XmippParticlePickingAutomatic",   "text": "default"},
+		    {"tag": "protocol", "value": "XmippProtParticlePickingPairs",  "text": "default"},
             {"tag": "protocol", "value": "XmippProtAssignmentTiltPair",   "text": "default"},
             {"tag": "protocol", "value": "ProtRelionAutopickFom",   "text": "default"},
             {"tag": "protocol", "value": "ProtRelionAutopick",   "text": "default"},
@@ -186,6 +188,8 @@ Random Conical Tilt = [
     {"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "Import micrograph pairs", "icon": "bookmark.png"},
     {"tag": "protocol", "value": "XmippProtParticlePickingPairs",  "text": "Picking micrograph pairs"},
     {"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "Extract particle pairs"},
+    {"tag": "protocol", "value": "XmippProtCL2D",   "text": "default"},
+    {"tag": "protocol", "value": "ProtRelionClassify2D",   "text": "default"},
     {"tag": "protocol", "value": "XmippProtRCT",                   "text": "Random Conical Tilt"}]
 
 HEMNMA = [
