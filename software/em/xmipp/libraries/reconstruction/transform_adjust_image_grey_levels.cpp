@@ -236,6 +236,7 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 			else
 				DIRECT_MULTIDIM_ELEM(mI,n)=0.0;
 		}
+		rowOut.setValue(MDL_IMAGE,fnImgOut);
 		I.write(fnImgOut);
 	}
 	catch (XmippError XE)
