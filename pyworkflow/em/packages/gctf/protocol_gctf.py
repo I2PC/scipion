@@ -223,6 +223,11 @@ class ProtGctf(em.ProtCTFMicrographs):
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
+
+        # Let's notify that this micrograph have been processed
+        # just creating an empty file at the end (after success or failure)
+        open(os.path.join(micDir, 'done.txt'), 'w')
+        # Let's clean the temporary mrc micrographs
         pwutils.cleanPath(micFnMrc)
  
     def _restimateCTF(self, ctfId):

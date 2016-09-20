@@ -271,7 +271,8 @@ class BoxWizardView(tk.Frame):
 
         for i in range(12):
             gridFolder = os.path.join(projPath, 'GRID_%02d' % (i+1))
-            _createPath(gridFolder)
+            _createPath(os.path.join(gridFolder, 'ATLAS'))
+            _createPath(os.path.join(gridFolder, 'DATA'))
 
         _createPath(scipionProjPath)
 
