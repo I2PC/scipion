@@ -349,7 +349,7 @@ class BoxWizardView(tk.Frame):
         if useSM:
             # If OF write the movie, then we need to reset frames count
             if frames and useOF:
-                kwargs['alignFrame0'] = kwargs['sumFrame0'] = 0
+                kwargs['alignFrame0'] = kwargs['sumFrame0'] = 1
                 kwargs['alignFrameN'] = kwargs['sumFrameN'] = 0
 
             from pyworkflow.em.packages.grigoriefflab import ProtSummovie
