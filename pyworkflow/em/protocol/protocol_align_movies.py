@@ -246,7 +246,12 @@ class ProtAlignMovies(ProtProcessMovies):
         if frames is not None:
             def _validateRange(prefix):
                 f0, fN = self._getFrameRange(frames, prefix)
-                if fN < f0:
+                if fN > frames:
+                    errors.append("Check the selected last frame to *%s*. "
+                                  "Last frame (%d) could not be greater than "
+                                  "the total number of frames. (%d)"
+                                  % (prefix.upper(), fN, frames))
+                if fN <= f0:
                     errors.append("Check the selected frames range to *%s*. "
                                   "Last frame should be greater than initial "
                                   "frame. " % prefix.upper())
