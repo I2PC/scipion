@@ -1152,7 +1152,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesToUse = fnCorrectedImagesRoot+".xmd"
                     deleteStack = True
                 
-                if self.contGrayValues and False:
+                if self.contGrayValues:
                     R=self.particleRadius.get()
                     if R<=0:
                         R=self.inputParticles.get().getDimensions()[0]/2
