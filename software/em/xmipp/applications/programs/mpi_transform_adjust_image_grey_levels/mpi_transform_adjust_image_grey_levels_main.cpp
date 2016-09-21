@@ -90,6 +90,17 @@ public:
         return getTaskToProcess(objId, objIndex);
     }
 
+    void finishProcessing()
+    {
+        node->gatherMetadatas(*getOutputMd(), fn_out);
+    	MetaData MDaux;
+    	MDaux.sort(*getOutputMd(), MDL_GATHER_ID);
+        MDaux.removeLabel(MDL_GATHER_ID);
+        *getOutputMd()=MDaux;
+        if (node->isMaster())
+        	ProgTransformImageGreyLevels::finishProcessing();
+    }
+
     void wait()
     {
 		distributor->wait();
