@@ -1152,7 +1152,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     fnAnglesToUse = fnCorrectedImagesRoot+".xmd"
                     deleteStack = True
                 
-                if self.contGrayValues:
+                if self.contGrayValues and False:
                     R=self.particleRadius.get()
                     if R<=0:
                         R=self.inputParticles.get().getDimensions()[0]/2
@@ -1163,7 +1163,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     previousResolution=self.readInfoField(fnDirPrevious,"resolution",xmipp.MDL_RESOLUTION_FREQREAL)
                     args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --save_metadata_stack %s"%\
                          (fnAnglesToUse,fnGrayCorrected,TsCurrent,R,self.contPadding.get(),fnRefVol,previousResolution,fnGrayCorrectedXmd)
-                    args+=" --max_gray_scale %f --max_gray_shift %f"%(self.contMaxGrayScale.get(),self.contMaxGrayShift.get())
+                    args+=" --max_gray_scale %f --max_gray_shift %f --Nsimultaneous %d"%\
+                         (self.contMaxGrayScale.get(),self.contMaxGrayShift.get(),self.contSimultaneous.get())
                     self.runJob("xmipp_transform_adjust_image_grey_levels",args,numberOfMpi=self.contSimultaneous.get())
                     fnAnglesToUse = fnGrayCorrectedXmd
 
