@@ -115,7 +115,8 @@ class ReportHtml:
         runLines += ']}'
 
         # Ctf monitor chart data
-        data = self.ctfMonitor.getData()
+        data = [] if self.ctfMonitor is None else self.ctfMonitor.getData()
+
         ctfData = json.dumps(data)
 
         # system monitor chart data
