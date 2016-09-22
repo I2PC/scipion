@@ -36,6 +36,10 @@ void ProgVolumeHalvesRestoration::readParams()
     NiterFourier = getIntParam("--deconvolution");
     sigma0 = getDoubleParam("--deconvolution",1);
     lambda = getDoubleParam("--deconvolution",2);
+    bankStep = getDoubleParam("--filterBank",0);
+    bankOverlap = getDoubleParam("--filterBank",1);
+    weightFun = getIntParam("--filterBank",2);
+    weightPower = getDoubleParam("--filterBank",3);
     if (checkParam("--mask"))
         mask.readParams(this);
 }
@@ -53,6 +57,10 @@ void ProgVolumeHalvesRestoration::show()
 	<< "Deconvolution Iterations: " << NiterFourier << std::endl
 	<< "Sigma0:   " << sigma0 << std::endl
 	<< "Lambda:   " << lambda << std::endl
+	<< "Bank step:" << bankStep << std::endl
+	<< "Bank overlap:" << bankOverlap << std::endl
+	<< "Weight fun:" << weightFun << std::endl
+	<< "Weight power:" << weightPower << std::endl
 	;
     mask.show();
 }
@@ -66,6 +74,9 @@ void ProgVolumeHalvesRestoration::defineParams()
     addParamsLine("  [--oroot <root=\"volumeRestored\">] : Output rootname");
     addParamsLine("  [--denoising <N=0>]          : Number of iterations of denoising in real space");
     addParamsLine("  [--deconvolution <N=0> <sigma0=0.2> <lambda=0.001>]   : Number of iterations of deconvolution in Fourier space, initial sigma and lambda");
+    addParamsLine("  [--filterBank <step=0> <overlap=0.5> <weightFun=1> <weightPower=3>] : Frequency step for the filter bank (typically, 0.01; between 0 and 0.5)");
+    addParamsLine("                                        : filter overlap is between 0 (no overlap) and 1 (full overlap)");
+    addParamsLine("                               : Weight function (0=mean, 1=min, 2=mean*diff");
     Mask::defineParams(this,INT_MASK);
 }
 
@@ -119,7 +130,7 @@ void ProgVolumeHalvesRestoration::run()
 
 	if (NiterFourier>0)
 	{
-		sigmaConv=sigma0;
+		sigmaConv1=sigmaConv2=sigma0;
 		for (int iter=0; iter<NiterFourier; iter++)
 		{
 			std::cout << "Deconvolution iteration " << iter << std::endl;
@@ -133,9 +144,13 @@ void ProgVolumeHalvesRestoration::run()
 			deconvolveS();
 		}
 
+		S.write(fnRoot+"_deconvolved.vol");
 		convolveS();
 		S.write(fnRoot+"_convolved.vol");
 	}
+
+	if (bankStep>0)
+		filterBank();
 
 	V1r.write(fnRoot+"_restored1.vol");
 	V2r.write(fnRoot+"_restored2.vol");
@@ -222,15 +237,16 @@ void ProgVolumeHalvesRestoration::significanceRealSpace(const MultidimArray<doub
 void ProgVolumeHalvesRestoration::deconvolveS()
 {
 	if (verbose>0)
-		std::cout << "   Deconvolving with sigma=" << sigmaConv << std::endl;
-    double K=-0.5/(sigmaConv*sigmaConv);
+		std::cout << "   Deconvolving with sigma=" << sigmaConv1  << " " << sigmaConv2 << std::endl;
+    double K1=-0.5/(sigmaConv1*sigmaConv1);
+    double K2=-0.5/(sigmaConv2*sigmaConv2);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
     {
 		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
 		if (R2n<=0.25)
 		{
-			double H1=exp(K*R2n);
-			double H2=H1;
+			double H1=exp(K1*R2n);
+			double H2=exp(K2*R2n);
 			DIRECT_MULTIDIM_ELEM(fVol,n)=(H1*DIRECT_MULTIDIM_ELEM(fV1r,n)+H2*DIRECT_MULTIDIM_ELEM(fV2r,n))/(H1*H1+H2*H2+lambda*R2n);
 
 			DIRECT_MULTIDIM_ELEM(fV1r,n)/=H1;
@@ -247,6 +263,7 @@ void ProgVolumeHalvesRestoration::deconvolveS()
 
 void ProgVolumeHalvesRestoration::convolveS()
 {
+	double sigmaConv=(sigmaConv1+sigmaConv2)/2;
     double K=-0.5/(sigmaConv*sigmaConv);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fVol)
     {
@@ -263,10 +280,12 @@ void ProgVolumeHalvesRestoration::convolveS()
 double restorationSigmaCost(double *x, void *_prm)
 {
 	ProgVolumeHalvesRestoration *prm=(ProgVolumeHalvesRestoration *) _prm;
-	double sigma=x[1];
-	if (sigma<0)
+	double sigma1=x[1];
+	double sigma2=x[2];
+	if (sigma1<0 || sigma2<0)
 		return 1e38;
-    double K=-0.5/(sigma*sigma);
+    double K1=-0.5/(sigma1*sigma1);
+    double K2=-0.5/(sigma2*sigma2);
     double error=0;
     double N=0;
     const MultidimArray< std::complex<double> > &fV=prm->fVol;
@@ -278,9 +297,10 @@ double restorationSigmaCost(double *x, void *_prm)
 		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
 		if (R2n<=0.25)
 		{
-			double H1=exp(K*R2n);
+			double H1=exp(K1*R2n);
+			double H2=exp(K2*R2n);
 			error+=abs(DIRECT_MULTIDIM_ELEM(fV,n)*H1-DIRECT_MULTIDIM_ELEM(fV1r,n))+
-				   abs(DIRECT_MULTIDIM_ELEM(fV,n)*H1-DIRECT_MULTIDIM_ELEM(fV2r,n));
+				   abs(DIRECT_MULTIDIM_ELEM(fV,n)*H2-DIRECT_MULTIDIM_ELEM(fV2r,n));
 			N++;
 		}
 	}
@@ -290,11 +310,124 @@ double restorationSigmaCost(double *x, void *_prm)
 void ProgVolumeHalvesRestoration::optimizeSigma()
 {
 
-    Matrix1D<double> p(1), steps(1);
-    p(0)=sigmaConv;
+    Matrix1D<double> p(2), steps(2);
+    p(0)=sigmaConv1;
+    p(1)=sigmaConv2;
     steps.initConstant(1);
     double cost;
     int iter;
-	powellOptimizer(p, 1, 1, &restorationSigmaCost, this, 0.01, cost, iter, steps, verbose>=2);
-	sigmaConv=p(0);
+	powellOptimizer(p, 1, 2, &restorationSigmaCost, this, 0.01, cost, iter, steps, verbose>=2);
+	sigmaConv1=p(0);
+	sigmaConv2=p(1);
+}
+
+void ProgVolumeHalvesRestoration::filterBand(const MultidimArray< std::complex<double> > &fV, FourierTransformer &transformer, double w)
+{
+	// Apply band pass filter
+	double w2=w*w;
+	double w2Step=(w+bankStep)*(w+bankStep);
+	MultidimArray< std::complex<double> >&fVout=transformer.fFourier;
+	fVout.initZeros();
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fV)
+	{
+		double R2n=DIRECT_MULTIDIM_ELEM(R2,n);
+		if (R2n>=w2 && R2n<w2Step)
+			DIRECT_MULTIDIM_ELEM(fVout,n)=DIRECT_MULTIDIM_ELEM(fV,n);
+	}
+	transformer.inverseFourierTransform();
+}
+
+//#define DEBUG
+void ProgVolumeHalvesRestoration::filterBank()
+{
+	MultidimArray<double> sumWeight, weight, Vfiltered1, Vfiltered2;
+	Vfiltered1.initZeros(V1r());
+	Vfiltered2.initZeros(V2r());
+
+	transformer1.FourierTransform(V1r(),fV1r, false);
+	transformer2.FourierTransform(V2r(),fV2r, false);
+
+	FourierTransformer bank1, bank2;
+	bank1.setReal(Vfiltered1);
+	bank2.setReal(Vfiltered2);
+	sumWeight.initZeros(Vfiltered2);
+	double filterStep = bankStep*(1-bankOverlap);
+	MultidimArray<double> &mV1r=V1r();
+	MultidimArray<double> &mV2r=V2r();
+	MultidimArray<double> &mS=S();
+	mV1r.initZeros(Vfiltered2);
+	mV2r.initZeros(Vfiltered2);
+	mS.initZeros(Vfiltered2);
+	int i=0;
+	int imax=ceil(0.5/filterStep);
+	std::cerr << "Calculating filter bank ..." << std::endl;
+	init_progress_bar(imax);
+	for (double w=0; w<0.5; w+=filterStep)
+	{
+		filterBand(fV1r,bank1,w);
+		filterBand(fV2r,bank2,w);
+
+		// Compute energy of the noise
+		N().resizeNoCopy(Vfiltered1);
+		MultidimArray<double> &mN=N();
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mN)
+		{
+			double diff=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)-DIRECT_MULTIDIM_ELEM(Vfiltered2,n);
+			DIRECT_MULTIDIM_ELEM(mN,n)=0.5*diff*diff;
+		}
+
+		CDF cdfN;
+		cdfN.calculateCDF(mN);
+
+		// Compute weights
+		weight.initZeros(mN);
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mN)
+		{
+			double e1=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*DIRECT_MULTIDIM_ELEM(Vfiltered1,n);
+			double w1=cdfN.getProbability(e1);
+
+			double e2=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*DIRECT_MULTIDIM_ELEM(Vfiltered2,n);
+			double w2=cdfN.getProbability(e2);
+
+			switch (weightFun)
+			{
+			case 0: DIRECT_MULTIDIM_ELEM(weight,n)=0.5*(w1+w2); break;
+			case 1: DIRECT_MULTIDIM_ELEM(weight,n)=std::min(w1,w2); break;
+			case 2: DIRECT_MULTIDIM_ELEM(weight,n)=0.5*(w1+w2)*(1-fabs(w1-w2)/(w1+w2)); break;
+			}
+			DIRECT_MULTIDIM_ELEM(weight,n)=pow(DIRECT_MULTIDIM_ELEM(weight,n),weightPower);
+			DIRECT_MULTIDIM_ELEM(sumWeight,n)+=DIRECT_MULTIDIM_ELEM(weight,n);
+
+			DIRECT_MULTIDIM_ELEM(mV1r,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+			DIRECT_MULTIDIM_ELEM(mV2r,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+			if (e1>e2)
+				DIRECT_MULTIDIM_ELEM(mS,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered1,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+			else
+				DIRECT_MULTIDIM_ELEM(mS,n)+=DIRECT_MULTIDIM_ELEM(Vfiltered2,n)*DIRECT_MULTIDIM_ELEM(weight,n);
+		}
+		progress_bar(++i);
+
+#ifdef DEBUG
+		Image<double> save;
+		save()=Vfiltered1;
+		save.write("PPP1.vol");
+		save()=mV1r;
+		save.write("PPP1r.vol");
+		save()=Vfiltered2;
+		save.write("PPP2.vol");
+		save()=mS;
+		save.write("PPPS.vol");
+		save()=Vfiltered2-Vfiltered1;
+		save.write("PPPdiff.vol");
+		save()=weight;
+		save.write("PPPweight.vol");
+		save()=sumWeight;
+		save.write("PPPsumWeight.vol");
+		std::cout << "w=" << w << " Press";
+		char c; std::cin >> c;
+#endif
+	}
+	progress_bar(imax);
+	S()/=sumWeight;
+	S.write(fnRoot+"_filterBank.vol");
 }
