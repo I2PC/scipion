@@ -45,10 +45,16 @@ public:
     int NiterReal;
     /** Number of iterations of Fourier space deconvolution */
     int NiterFourier;
+    /** FilterBank */
+    double bankStep, bankOverlap;
     /** Initial sigma */
     double sigma0;
     /** Laplacian regularization */
     double lambda;
+    /** Weight function */
+    int weightFun;
+    /** Weight power */
+    double weightPower;
 public:
     Image<double> V1, V2, V1r, V2r, S, N;
     Mask mask;
@@ -59,7 +65,7 @@ public:
     MultidimArray<double> R2;
 
     CDF cdfS;
-    double sigmaConv; // Sigma for the convolution
+    double sigmaConv1, sigmaConv2; // Sigma for the convolution
 public:
     /// Read argument from command line
     void readParams();
@@ -82,6 +88,8 @@ public:
     void convolveS();
     void optimizeSigma();
     void significanceRealSpace(const MultidimArray<double> &V1, MultidimArray<double> &V1r);
+    void filterBank();
+    void filterBand(const MultidimArray< std::complex<double> > &Vin, FourierTransformer &transformer, double w);
 };
 //@}
 #endif
