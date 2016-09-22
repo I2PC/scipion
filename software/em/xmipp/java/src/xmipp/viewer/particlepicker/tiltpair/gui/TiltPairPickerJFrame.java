@@ -147,6 +147,11 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		viewmn.add(ijmi);
 	}
 
+    @Override
+    protected void setCanvasCursor(){
+        super.setCanvasCursor();
+        tiltedcanvas.setCustomCursor();
+    }
 	protected void showImportFromFilesDialog() {
 		if (importffilesjd == null)
 			importffilesjd = new ImportParticlesFromFilesTiltPairJDialog(this);
@@ -176,6 +181,7 @@ public class TiltPairPickerJFrame extends ParticlePickerJFrame {
 		JPanel buttonspn = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
 		buttonspn.add(resetbt);
+        buttonspn.add(usezoombt);
 		micrographpn.add(buttonspn,
 				XmippWindowUtil.getConstraints(constraints, 0, 2, 2));
 
