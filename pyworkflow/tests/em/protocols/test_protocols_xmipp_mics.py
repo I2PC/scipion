@@ -493,7 +493,7 @@ class TestXmippExtractParticles(TestXmippBase):
             
         protImportDW = self.proj.copyProtocol(self.protImport)
         protImportDW.setObjLabel('import -mics DW')
-        protImportDW.filesPath.set(micsPath)
+        protImportDW.filesPath.set(os.path.abspath(micsPath))
         protImportDW.filesPattern.set('*_DW.mrc')
         self.launchProtocol(protImportDW)
         

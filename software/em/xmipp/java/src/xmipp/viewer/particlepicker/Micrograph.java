@@ -17,6 +17,7 @@ import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 
 public abstract class Micrograph {
@@ -268,6 +269,8 @@ public abstract class Micrograph {
 		imp = null;
 		
 	}
-        
 
+    public List<? extends PickerParticle> getParticleList(){
+        return null;
+    };
 }

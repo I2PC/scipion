@@ -148,6 +148,16 @@ bool MDSql::clearMd()
     return result;
 }
 
+size_t MDSql::getObjId()
+{
+	size_t id;		// Return value.
+
+	// Get last inserted row id.
+	id = sqlite3_last_insert_rowid(db);
+
+	return(id);
+}
+
 size_t MDSql::addRow()
 {
     //Fixme: this can be done in the constructor of MDCache only once
