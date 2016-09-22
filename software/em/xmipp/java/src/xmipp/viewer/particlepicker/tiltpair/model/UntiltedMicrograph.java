@@ -6,6 +6,7 @@ import xmipp.jni.Particle;
 import xmipp.jni.TiltPairAligner;
 import xmipp.utils.XmippMessage;
 import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.PickerParticle;
 
 public class UntiltedMicrograph extends Micrograph
 {
@@ -51,7 +52,13 @@ public class UntiltedMicrograph extends Micrograph
 		return !particles.isEmpty();
 	}
 
-	public void reset(TiltPairPicker picker)
+    @Override
+    public List<? extends PickerParticle> getParticleList() {
+        return getParticles();
+    }
+
+
+    public void reset(TiltPairPicker picker)
 	{
 		angles = null;
 		for(UntiltedParticle p: particles)
@@ -133,7 +140,7 @@ public class UntiltedMicrograph extends Micrograph
 		return angles[2];
 	}
 
-	public Particle getAlignerTiltedParticle(int x, int y)
+	public Particle getAlignedTiltedParticle(int x, int y)
 	{
 		if (getAddedCount() < getAlignmentMin())
 			return null;
@@ -141,7 +148,7 @@ public class UntiltedMicrograph extends Micrograph
 		return p;
 	}
 	
-	public Particle getAlignerUntiltedParticle(int x, int y)
+	public Particle getAlignedUntiltedParticle(int x, int y)
 	{
 		if (getAddedCount() < getAlignmentMin())
 			return null;
@@ -149,10 +156,10 @@ public class UntiltedMicrograph extends Micrograph
 		return p;
 	}
 
-	public void setAlignerTiltedParticle(UntiltedParticle up)
+	public void setAlignedTiltedParticle(UntiltedParticle up)
 	{
         tiltedmicrograph.removeParticle(up.getTiltedParticle());
-		Particle p = getAlignerTiltedParticle(up.getX(), up.getY());
+		Particle p = getAlignedTiltedParticle(up.getX(), up.getY());
         if(!tiltedmicrograph.fits(p.getX(), p.getY(), up.getParticlePicker().getSize()))
                 p = null;
 		if (p != null)
