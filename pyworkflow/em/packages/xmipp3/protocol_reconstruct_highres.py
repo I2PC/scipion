@@ -241,12 +241,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                            'Examples: \n'
                            'xmipp_transform_filter -i %(volume)s --fourier low_pass 15 --sampling %(sampling)s\n' 
                            '/home/joe/myScript %(volume)s sampling=%(sampling)s dim=%(dim)s')
-        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising", default=True)
-        form.addParam('postSignificantDenoiseIter', IntParam, label="Number of iterations", default=2, condition="postSignificantDenoise",
-                      expertLevel=LEVEL_ADVANCED)
+        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising Real space", default=True)
+        form.addParam('postFilterBank', BooleanParam, label="Significant denoising Fourier space", default=True)
         form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", default=True)
-        form.addParam('postDeconvolveIter', IntParam, label="Number of iterations", default=1, condition="postDeconvolve",
-                      expertLevel=LEVEL_ADVANCED)
 
         form.addParallelSection(threads=1, mpi=8)
     
@@ -1143,6 +1140,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 row=getFirstRow(fnAngles)
                 hasCTF = row.containsLabel(xmipp.MDL_CTF_DEFOCUSU) or row.containsLabel(xmipp.MDL_CTF_MODEL)
                 fnCorrectedImagesRoot=join(fnDirCurrent,"images_corrected%02d"%i)
+                deleteStack = False
                 if hasCTF:
                     args="-i %s -o %s.stk --save_metadata_stack %s.xmd --keep_input_columns"%(fnAngles,fnCorrectedImagesRoot,fnCorrectedImagesRoot)
                     args+=" --sampling_rate %f --correct_envelope"%TsCurrent
@@ -1151,22 +1149,26 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     self.runJob("xmipp_ctf_correct_wiener2d",args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                     fnAnglesToUse = fnCorrectedImagesRoot+".xmd"
                     deleteStack = True
+                    deletePattern = fnCorrectedImagesRoot+".*"
                 
                 if self.contGrayValues:
                     R=self.particleRadius.get()
                     if R<=0:
                         R=self.inputParticles.get().getDimensions()[0]/2
-                    fnGrayCorrected = join(fnDirCurrent,"images_gray%02d.stk"%i)
-                    fnGrayCorrectedXmd = join(fnDirCurrent,"images_gray%02d.xmd"%i)
+                    fnGrayRoot = join(fnDirCurrent,"images_gray%02d"%i)
                     fnRefVol=join(fnDirCurrent,"localAssignment","volumeRef%02d.vol"%i)
                     fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
                     previousResolution=self.readInfoField(fnDirPrevious,"resolution",xmipp.MDL_RESOLUTION_FREQREAL)
-                    args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --save_metadata_stack %s"%\
-                         (fnAnglesToUse,fnGrayCorrected,TsCurrent,R,self.contPadding.get(),fnRefVol,previousResolution,fnGrayCorrectedXmd)
+                    args="-i %s -o %s.stk --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --save_metadata_stack %s.xmd"%\
+                         (fnAnglesToUse,fnGrayRoot,TsCurrent,R,self.contPadding.get(),fnRefVol,previousResolution,fnGrayRoot)
                     args+=" --max_gray_scale %f --max_gray_shift %f --Nsimultaneous %d"%\
                          (self.contMaxGrayScale.get(),self.contMaxGrayShift.get(),self.contSimultaneous.get())
                     self.runJob("xmipp_transform_adjust_image_grey_levels",args,numberOfMpi=self.contSimultaneous.get())
-                    fnAnglesToUse = fnGrayCorrectedXmd
+                    fnAnglesToUse = fnGrayRoot+".xmd"
+                    if deleteStack:
+                        cleanPath(deletePattern)
+                    deleteStack = True
+                    deletePattern = fnGrayRoot+".*"
 
                 # Restrict the angles
                 if self.restrictReconstructionAngles:
@@ -1180,16 +1182,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 args="-i %s -o %s --sym %s --weight --thr %d"%(fnAnglesToUse,fnVol,self.symmetryGroup,self.numberOfThreads.get())
                 self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()+1)
                 
-            # Reconstruct ADMM
-#            args="-i %s -o %s --sym %s"%(fnAngles,fnVol,self.symmetryGroup)
-#            row=getFirstRow(fnAngles)
-#            if row.containsLabel(xmipp.MDL_CTF_DEFOCUSU) or row.containsLabel(xmipp.MDL_CTF_MODEL):
-#                if not self.inputParticles.get().isPhaseFlipped():
-#                    args+=" --dontUseCTF"
-#            self.runJob("xmipp_reconstruct_admm",args)
-
-#                 if hasCTF:
-#                     cleanPath(fnCorrectedImagesRoot+".*")
+                if deleteStack:
+                    cleanPath(deletePattern)
     
     def postProcessing(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
@@ -1255,7 +1249,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Remove untrusted background voxels
         if self.postSignificantDenoise:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")
-            args='--i1 %s --i2 %s --oroot %s --denoising %d'%(fnVol1,fnVol2,fnRootRestored,self.postSignificantDenoiseIter.get())
+            args='--i1 %s --i2 %s --oroot %s --denoising 1'%(fnVol1,fnVol2,fnRootRestored)
+            if fnMask!="":
+                args+=" --mask binary_file %s"%fnMask
+            self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
+            moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
+            moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
+     
+        # Filter bank denoising
+        if self.postFilterBank:
+            fnRootRestored=join(fnDirCurrent,"volumeRestored")
+            args='--i1 %s --i2 %s --oroot %s --filterBank'%(fnVol1,fnVol2,fnRootRestored)
             if fnMask!="":
                 args+=" --mask binary_file %s"%fnMask
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
@@ -1265,7 +1269,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Blind deconvolution
         if self.postDeconvolve:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")
-            args='--i1 %s --i2 %s --oroot %s --deconvolution %d'%(fnVol1,fnVol2,fnRootRestored,self.postDeconvolveIter.get())
+            args='--i1 %s --i2 %s --oroot %s --deconvolution 1'%(fnVol1,fnVol2,fnRootRestored)
             if fnMask!="":
                 args+=" --mask binary_file %s"%fnMask
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
