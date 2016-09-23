@@ -198,6 +198,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         newCTFs = []
         ctfDict = {}
         ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
+        ctfSet.setMicrographs(self.inputMicrographs.get())
 
         for ctf in ctfSet:
             ctfDict[ctf.getObjId()] = True
