@@ -24,10 +24,13 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import join
 from glob import glob
 import re
+from datetime import timedelta, datetime
 
+import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.utils.path import expandPattern, copyFile, createAbsLink
 from pyworkflow.em.protocol import EMProtocol
@@ -93,12 +96,14 @@ class ProtImportFiles(ProtImport):
                            "created pointing to original files. This approach\n"
                            "has the drawback that if the project is moved to\n"
                            "another computer, the links need to be restored.\n")
+
+        self._defineImportParams(form)
+
+        self._defineAcquisitionParams(form)
+
+        form.addSection('Streaming')
         
-        group = form.addGroup('Process Streaming Data',
-                              expertLevel=params.LEVEL_ADVANCED)
-        
-        group.addParam('dataStreaming', params.BooleanParam, default=False, 
-              expertLevel=params.LEVEL_ADVANCED, 
+        form.addParam('dataStreaming', params.BooleanParam, default=False,
               label="Process data in streammig?",
               help="Select this option if you want import data as it is\n"
                    "generated and process on the fly by next protocols."
@@ -106,8 +111,7 @@ class ProtImportFiles(ProtImport):
                    "new files and will update the output Set, which can \n"
                    "be used right away by next steps.\n")
         
-        group.addParam('timeout', params.IntParam, default=7200,
-              expertLevel=params.LEVEL_ADVANCED, 
+        form.addParam('timeout', params.IntParam, default=7200,
               condition='dataStreaming',
               label="Timeout (secs)",
               help="Interval of time (in seconds) after which, if no new \n"
@@ -115,25 +119,26 @@ class ProtImportFiles(ProtImport):
                    "When finished, the output Set will be closed and\n"
                    "not more data will be added to it. \n")
 
-        group.addParam('fileTimeout', params.IntParam, default=30,
-              expertLevel=params.LEVEL_ADVANCED,
+        form.addParam('fileTimeout', params.IntParam, default=30,
               condition='dataStreaming',
               label="File timeout (secs)",
               help="Interval of time (in seconds) after which, if a file \n"
                    "have not changed, we consider as a new file. \n")
         
-        group.addParam('endTokenFile', params.StringParam, default=None, 
-              expertLevel=params.LEVEL_ADVANCED, 
+        form.addParam('endTokenFile', params.StringParam, default=None,
               condition='dataStreaming',
               label="End token file",
               help="Specify an ending file if you want to have more control\n"
                    "about when to stop the import of files.")
-        
-        self._defineImportParams(form)
-        
+
     def _defineImportParams(self, form):
         """ Override to add options related to the different types
         of import that are allowed by each protocol.
+        """
+        pass
+
+    def _defineAcquisitionParams(self, form):
+        """ Override to add options related to acquisition info.
         """
         pass
 
@@ -183,8 +188,9 @@ class ProtImportFiles(ProtImport):
             fullPattern = join(filesPath, filesPattern)
         else:
             fullPattern = filesPath
-            
-        pattern = expandPattern(fullPattern)
+
+
+        pattern = expandPattern(fullPattern.replace("$", ""))
         match = re.match('[^#]*(#+)[^#]*', pattern)
         
         if match is not None:
@@ -214,7 +220,21 @@ class ProtImportFiles(ProtImport):
             return copyFile
         else:
             return createAbsLink
-        
+
+    def fileModified(self, fileName, fileTimeout):
+        """ Check if the fileName modification time is less
+        than a given timeout.
+        Params:
+            fileName: input filename that will be checked.
+            fileTimeout: timeout """
+        self.debug('Checking file: %s' % fileName)
+        mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
+        delta = datetime.now() - mTime
+        self.debug('   Modification time: %s' % pwutils.prettyTime(mTime))
+        self.debug('   Delta: %s' % pwutils.prettyDelta(delta))
+
+        return delta < fileTimeout
+
     def iterFiles(self):
         """ Iterate through the files matched with the pattern.
         Provide the fileName and fileId.

@@ -52,10 +52,7 @@ class ProtImportImages(ProtImportFiles):
     _checkStacks = True
         
     #--------------------------- DEFINE param functions ------------------------
-    def _defineParams(self, form):
-        ProtImportFiles._defineParams(self, form)
-        self._defineAcquisitionParams(form)
-        
+
     def _defineAcquisitionParams(self, form):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
@@ -186,6 +183,15 @@ class ProtImportImages(ProtImportFiles):
             imgSet.setDim(dim)
         imgSet.append(img)
 
+    def iterNewInputFiles(self):
+        """ Iterate over input files that have not been imported.
+        This function uses the self.importedFiles dict.
+        """
+        for fileName, fileId in self.iterFiles():
+            # If file already imported, skip it
+            if fileName not in self.importedFiles:
+                yield fileName, fileId
+
     def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
                          amplitudeContrast, magnification):
         """ Copy images matching the filename pattern
@@ -208,7 +214,10 @@ class ProtImportImages(ProtImportFiles):
         outputName = self._getOutputName()
 
         finished = False
-        importedFiles = set()
+        self.importedFiles = set()
+        # this is only used when creating stacks from frame files
+        self.createdStacks = set()
+
         i = 0
         lastDetectedChange = datetime.now()
         timeout = timedelta(seconds=self.timeout.get())
@@ -219,24 +228,14 @@ class ProtImportImages(ProtImportFiles):
             someNew = False
             someAdded = False
 
-            for fileName, fileId in self.iterFiles():
-                # If file already imported, skip it
-                if fileName in importedFiles:
-                    continue
-
+            for fileName, fileId in self.iterNewInputFiles():
                 someNew = True
-                self.debug('Checking file: %s' % fileName)
-                mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
-                delta = datetime.now() - mTime
-                self.debug('   Modification time: %s' % pwutils.prettyTime(mTime))
-                self.debug('   Delta: %s' % pwutils.prettyDelta(delta))
 
-                if delta < fileTimeout: # Skip if the file is still changing
-                    self.debug('   delta < fileTimeout, skipping...')
+                if self.fileModified(fileName, fileTimeout):
                     continue
 
                 self.info('Importing file: %s' % fileName)
-                importedFiles.add(fileName)
+                self.importedFiles.add(fileName)
                 dst = self._getExtraPath(basename(fileName))
                 copyOrLink(fileName, dst)
 
@@ -245,7 +244,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if importedFiles: # enable append after first append
+                if self.importedFiles: # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
