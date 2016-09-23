@@ -171,9 +171,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0 and globalMethod==1', 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=2, condition='alignmentMethod==0',
+        form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=1, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="The gallery of reprojections is randomly perturbed this number of times")
-        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=3, condition='alignmentMethod==0',
+        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant alignment is allowed to replicate each image up to this number of times")
 
         form.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True, condition='alignmentMethod==1',
@@ -1259,7 +1259,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Filter bank denoising
         if self.postFilterBank:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")
-            args='--i1 %s --i2 %s --oroot %s --filterBank'%(fnVol1,fnVol2,fnRootRestored)
+            args='--i1 %s --i2 %s --oroot %s --filterBank 0.01'%(fnVol1,fnVol2,fnRootRestored)
             if fnMask!="":
                 args+=" --mask binary_file %s"%fnMask
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
