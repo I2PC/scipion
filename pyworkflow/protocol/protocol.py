@@ -34,6 +34,8 @@ import datetime as dt
 import pickle
 import json
 from collections import OrderedDict
+import traceback
+import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
@@ -389,10 +391,23 @@ class Protocol(Step):
                          state=Set.STREAM_OPEN):
         """ Use this function when updating an Stream output set.
         """
-        outputSet.setStreamState(state)
-        self._defineOutputs(**{outputName: outputSet})
-        self._store(outputSet)
-        outputSet.close()
+        self.__tryUpdateOuputSet(outputName, outputSet, state)
+
+    def __tryUpdateOuputSet(self, outputName, outputSet,
+                         state=Set.STREAM_OPEN, tries=1):
+        try:
+            outputSet.setStreamState(state)
+            self._defineOutputs(**{outputName: outputSet})
+            self._store(outputSet)
+            outputSet.close()
+        except Exception as ex:
+            print("Error trying to update output of protocol, tries=%d" % tries)
+
+            if tries > 3:
+                raise ex
+            else:
+                time.sleep(tries)
+                self.__tryUpdateOuputSet(outputName, outputSet, state, tries+1)
         
     def getProject(self):
         return self.__project

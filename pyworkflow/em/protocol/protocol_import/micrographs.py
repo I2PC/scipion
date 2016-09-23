@@ -25,10 +25,13 @@
 # **************************************************************************
 
 import os
+import re
+from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
+import pyworkflow.protocol.params as params
 from pyworkflow.utils.properties import Message
-from pyworkflow.protocol.params import FileParam, FloatParam, EnumParam
+from pyworkflow.em import ImageHandler
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 
 from images import ProtImportImages
@@ -40,22 +43,23 @@ class ProtImportMicBase(ProtImportImages):
     ProtImportMicrographs and ProtImportMovies
     """
     _checkStacks = False
-    
-    def _defineParams(self, form):
-        ProtImportImages._defineParams(self, form)
-        
+
     def _defineAcquisitionParams(self, form):
         group = ProtImportImages._defineAcquisitionParams(self, form)
-        group.addParam('samplingRateMode', EnumParam, 
-                       choices=[Message.LABEL_SAMP_MODE_1, Message.LABEL_SAMP_MODE_2],
+
+        group.addParam('samplingRateMode', params.EnumParam,
+                       choices=[Message.LABEL_SAMP_MODE_1,
+                                Message.LABEL_SAMP_MODE_2],
                        default=SAMPLING_FROM_IMAGE,
                        label=Message.LABEL_SAMP_MODE,
                        help=Message.TEXT_SAMP_MODE)
-        group.addParam('samplingRate', FloatParam,  default=1.0,
+
+        group.addParam('samplingRate', params.FloatParam,  default=1.0,
                        condition='samplingRateMode==%d' % SAMPLING_FROM_IMAGE, 
                        label=Message.LABEL_SAMP_RATE,
                        help=Message.TEXT_SAMP_RATE)
-        group.addParam('scannedPixelSize', FloatParam, default=7.0,
+
+        group.addParam('scannedPixelSize', params.FloatParam, default=7.0,
                        condition='samplingRateMode==%d' % SAMPLING_FROM_SCANNER,
                        label=Message.LABEL_SCANNED,
                        help='')
@@ -161,20 +165,20 @@ class ProtImportMicrographs(ProtImportMicBase):
         """ Just redefine to put some import parameters
         before the acquisition related parameters.
         """
-        form.addParam('emxFile', FileParam,
+        form.addParam('emxFile', params.FileParam,
               condition = '(importFrom == %d)' % self.IMPORT_FROM_EMX,
               label='Input EMX file',
               help="Select the EMX file containing micrographs information.\n"
                    "See more about [[http://i2pc.cnb.csic.es/emx][EMX format]]")
         
-        form.addParam('mdFile', FileParam,
+        form.addParam('mdFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_XMIPP3,
                       label='Micrographs metadata file',
                       help="Select the micrographs Xmipp metadata file.\n"
                            "It is usually a _micrograph.xmd_ file result\n"
                            "from import, preprocess or downsample protocols.")
         
-        form.addParam('sqliteFile', FileParam,
+        form.addParam('sqliteFile', params.FileParam,
                       condition = '(importFrom == %d)' % self.IMPORT_FROM_SCIPION,
                       label='Micrographs sqlite file',
                       help="Select the micrographs sqlite file.\n")
@@ -244,7 +248,7 @@ class ProtImportMicrographs(ProtImportMicBase):
         else:
             return [self.summaryVar.get('No summary information.')]
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getImportClass(self):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
@@ -265,21 +269,138 @@ class ProtImportMicrographs(ProtImportMicBase):
 
 
 class ProtImportMovies(ProtImportMicBase):
-    """Protocol to import a set of movies (from direct detector cameras) to the project"""
+    """ Protocol to import a set of movies (from direct detector cameras)
+    to the project.
+    """
     _label = 'import movies'
     _outputClassName = 'SetOfMovies'
         
-    def _defineParams(self, form):
-        ProtImportMicBase._defineParams(self, form)    
-        form.addParam('gainFile', FileParam,  
+    def _defineAcquisitionParams(self, form):
+        ProtImportMicBase._defineAcquisitionParams(self, form)
+        form.addParam('gainFile', params.FileParam,
                       label='Gain image', 
                       help='A gain reference related to a set of movies'
                            ' for gain correction')
-        form.addParam('darkFile', FileParam,  
+        form.addParam('darkFile', params.FileParam,
                       label='Dark image', 
                       help='A dark image related to a set of movies')
+
+    def _defineParams(self, form):
+        ProtImportMicBase._defineParams(self, form)
+
+        form.addSection('Frames')
+
+        form.addParam('inputIndividualFrames', params.BooleanParam,
+                      default=False,
+                      label="Input individual frames?",
+                      help="Select Yes if movies are acquired in individual "
+                           "frame files. ")
+
+        form.addParam('numberOfIndividualFrames', params.IntParam,
+                      condition="inputIndividualFrames",
+                      label='Number of frames',
+                      help='Provide how many frames are per movie. ')
+
+        form.addParam('stackFrames', params.BooleanParam,
+                      default=False, condition="inputIndividualFrames",
+                      label="Create movie stacks?",
+                      help="Select Yes if you want to create a new stack for "
+                           "each movies with its frames. ")
+
+        form.addParam('movieSuffix', params.StringParam,
+                      default='_frames.mrcs',
+                      condition="inputIndividualFrames and stackFrames",
+                      label="Movie suffix",
+                      help="Suffix added to the output movie filename."
+                           "Use the extension to select the format ("
+                           "e.g., .mrcs, .stk)")
+
+        form.addParam('deleteFrames', params.BooleanParam,
+                      default=False,
+                      condition="inputIndividualFrames and stackFrames",
+                      label="Delete frame files?",
+                      help="Select Yes if you want to remove the individual "
+                           "frame files after creating the movie stack. ")
 
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
         movieSet.setDark(self.darkFile.get())
+
+    def iterNewInputFiles(self):
+        """ In the case of importing movies, we want to override this method
+        for the case when input are individual frames and we want to create
+        movie stacks before importing.
+        The frames pattern should contains a part delimited by $.
+        The id expression with # is not supported for simplicity.
+        """
+        if not (self.inputIndividualFrames and self.stackFrames):
+            # In this case behave just as
+            for fileName, fileId in  ProtImportMicBase.iterNewInputFiles(self):
+                yield fileName, fileId
+
+            return
+
+        if self.dataStreaming:
+            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+            # Consider only the files that are not changed in the fileTime delta
+            # if processing data in streaming
+            filePaths = [f for f in self.getMatchFiles()
+                         if not self.fileModified(f, fileTimeout)]
+        else:
+            filePaths = self.getMatchFiles()
+
+        frameRegex = re.compile("(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
+        #  Group all frames for each movie
+        # Key of the dictionary will be the common prefix and the value
+        # will be a list with all frames in that movie
+        frameDict = {}
+
+        for fileName in filePaths:
+            fnNoExt = pwutils.removeExt(fileName)
+
+            match = frameRegex.match(fnNoExt)
+
+            if match is None:
+                raise Exception("Incorrect match of frame files pattern!")
+
+            d = match.groupdict()
+            prefix = d['prefix']
+            frameid = int(d['frameid'])
+
+            if prefix not in frameDict:
+                frameDict[prefix] = []
+
+            frameDict[prefix].append((frameid, fileName))
+
+        suffix = self.movieSuffix.get()
+        ih = ImageHandler()
+
+        for movieFn in self.createdStacks:
+            if movieFn not in self.importedFiles:
+                yield movieFn, None
+
+        for k, v in frameDict.iteritems():
+            movieFn = k + suffix
+
+            if (movieFn not in self.importedFiles and
+                movieFn not in self.createdStacks and
+                len(v) == self.numberOfIndividualFrames):
+                movieOut = movieFn
+
+                if movieOut.endswith("mrc"):
+                    movieOut += ":mrcs"
+
+                print "Writing movie stack: ", movieFn
+                pwutils.cleanPath(movieFn)  # Remove the output file if exists
+
+                for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
+                    frameFn = frame[1] # Frame name stored previously
+                    ih.convert(frameFn, (i+1, movieOut))
+
+                    if self.deleteFrames:
+                        pwutils.cleanPath(frameFn)
+
+                # Now return the newly created movie file as imported file
+                self.createdStacks.add(movieFn)
+                yield movieFn, None

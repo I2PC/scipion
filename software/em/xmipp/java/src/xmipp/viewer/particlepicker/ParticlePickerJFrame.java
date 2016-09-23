@@ -885,7 +885,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
     public int getEraserSize(){
         if (isEraserMode()){
-            return (int) eSize.getValue();
+            return (Integer) eSize.getValue();
         } else {
             return 1;
         }

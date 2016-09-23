@@ -166,14 +166,6 @@ class ProtCTFFind(em.ProtCTFMicrographs):
 
         return ctfModel
 
-    def _updateOutput(self, ctfSet):
-        firstTime = not self.hasAttribute('outputCTF')
-        ctfSet.setMicrographs(self.inputMics)
-        self._computeDefocusRange(ctfSet)
-        self._defineOutputs(outputCTF=ctfSet)
-        if firstTime: # define relation just once
-            self._defineCtfRelation(self.inputMics, ctfSet)
-    
     def _createOutputStep(self):
         pass
 

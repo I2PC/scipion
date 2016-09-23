@@ -198,7 +198,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         if hasAlignment:
             movie.setAlignment(MovieAlignment())
 
-        movie.setAttributesFromDict(movieDict, setBasic=True)
+        movie.setAttributesFromDict(movieDict, setBasic=True,
+                                    ignoreMissing=True)
 
         movieFolder = self._getOutputMovieFolder(movie)
         movieFn = movie.getFileName()

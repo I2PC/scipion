@@ -450,7 +450,7 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
         int cursorX = offScreenX(e.getX());
         int cursorY = offScreenY (e.getY());
 
-        List<PickerParticle> particlesToDelete = new ArrayList<>();
+        List<PickerParticle> particlesToDelete = new ArrayList<PickerParticle>();
         // Go through the list of particles
         for (PickerParticle particle : getMicrograph().getParticleList()) {
 
