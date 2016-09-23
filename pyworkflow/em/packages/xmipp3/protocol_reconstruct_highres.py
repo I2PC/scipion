@@ -1265,6 +1265,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
             moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
+            cleanPath("%s_filterbank.vol"%fnRootRestored)
      
         # Blind deconvolution
         if self.postDeconvolve:
@@ -1275,7 +1276,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
             moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
-            moveFile("%s_convolved.vol"%fnRootRestored,fnVolAvg)
+            self.runJob("xmipp_image_convert","-i %s_convolved.vol -o %s"%(fnRootRestored,fnVolAvg),numberOfMpi=1)
 
         # Recalculate the average after alignment and denoising
         if not exists(fnVolAvg):
