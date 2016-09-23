@@ -31,7 +31,10 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/video/video.hpp"
+
+#ifdef GPU
 #include "opencv2/gpu/gpu.hpp"
+#endif
 
 #include <data/multidim_array.h>
 #include <data/xmipp_image.h>
@@ -50,6 +53,7 @@ class ProgOpticalAligment: public XmippProgram
 public:
     FileName fnMovie, fnOut, fnGain, fnDark;
     FileName fnMovieOut, fnMicOut;
+    FileName fnMicInitial; // Filename if writing the initial average micrograph
     Image<double> gain, dark;
     ImageGeneric movieStack;
     std::vector< Matrix1D<double> > shiftVector;
@@ -76,6 +80,8 @@ public:
         addParamsLine("    -i <inMoviewFnName>           : input movie File Name");
         addParamsLine("   [-o <fn=\"out.xmd\">]           : Metadata with the shifts of each frame.");
         addParamsLine("   [--oavg <fn=\"\">]              : Give the name of a micrograph to generate an aligned micrograph");
+        addParamsLine("   [--oavgInitial <fn=\"\">]       : Use this option to save the initial average micrograph ");
+        addParamsLine("                                   : before applying any alignment. ");
         addParamsLine("   [--cropULCorner <x=0> <y=0>]    : crop up left corner (unit=px, index starts at 0)");
         addParamsLine("   [--cropDRCorner <x=-1> <y=-1>]  : crop down right corner (unit=px, index starts at 0), -1 -> no crop");
         addParamsLine("   [--frameRange <n0=-1> <nF=-1>]  : First and last frame to align, frame numbers start at 0");
@@ -98,6 +104,7 @@ public:
         fnGain = getParam("--gain");
         fnDark = getParam("--dark");
         fnMicOut = getParam("--oavg");
+        fnMicInitial = getParam("--oavgInitial");
         fnMovieOut = getParam("--outMovie");
         groupSize = getIntParam("--groupSize");
         nfirst = getIntParam("--frameRange",0);
@@ -222,7 +229,7 @@ public:
         int w = opencvMat.cols;
         xmippArray.initZeros(h, w);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xmippArray)
-        DIRECT_A2D_ELEM(xmippArray,i,j) = opencvMat.at<float>(i,j);
+            DIRECT_A2D_ELEM(xmippArray,i,j) = opencvMat.at<float>(i,j);
     }
 
     // Converts an OpenCV float matrix to an OpenCV Uint8 matrix
@@ -242,6 +249,13 @@ public:
             croppedFrame()*=gain();
     }
 
+    /* Apply the window operation if crop option was used */
+    void applyWindow(MultidimArray<double> &data)
+    {
+        if (yDRcorner!=-1)
+            data.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+    }
+
     // Computes the average of a number of frames in movies
     void computeAvg(int begin, int end, MultidimArray<double> &avgImg)
     {
@@ -258,8 +272,7 @@ public:
             frame.read(fnFrame);
             if (!globalShiftCorr)
             {
-                if (yDRcorner!=-1)
-                    frame().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                applyWindow(frame());
                 correctDarkGainImage(frame);
             }
             if (i==begin)
@@ -301,11 +314,8 @@ public:
 
     int main2()
     {
-
-        MultidimArray<double> mappedImg;
-        MultidimArray<double> outputMovie;
         Matrix1D<double> meanStdev;
-        Image<double> II, preImg, avgCurr;
+        Image<double> outputMovieFrame, preImg, avgCurr;
         MetaData MD; // To save plot information
         FileName flowFileName;
         FileName flowXFileName, flowYFileName;
@@ -367,21 +377,22 @@ public:
         if (Zdim!=1)
             REPORT_ERROR(ERR_ARG_INCORRECT,"This program is meant to align 2D frames, not 3D");
         imagenum=Ndim;
+
         if (fnDark!="")
         {
             dark.read(fnDark);
-            if (yDRcorner!=-1)
-                dark().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+            applyWindow(dark());
         }
+
         if (fnGain!="")
         {
             gain.read(fnGain);
-            if (yDRcorner!=-1)
-                gain().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
-            gain()=1.0/gain();
-            double avg=gain().computeAvg();
+            applyWindow(gain());
+            gain() = 1.0/gain();
+            double avg = gain().computeAvg();
             if (isinf(avg) || isnan(avg))
-                REPORT_ERROR(ERR_ARG_INCORRECT,"The input gain image is incorrect, its inverse produces infinite or nan");
+                REPORT_ERROR(ERR_ARG_INCORRECT,
+                             "The input gain image is incorrect, its inverse produces infinite or nan");
         }
         meanStdev.initZeros(4);
         //avgCurr.initZeros(Ydim, Xdim);
@@ -418,8 +429,7 @@ public:
                 shiftMD.getValue(MDL_SHIFT_Y, YY(shiftMatrix), __iter.objId);
                 shiftVector.push_back(shiftMatrix);
                 frameImage.read(fnFrame);
-                if (yDRcorner!=-1)
-                    frameImage().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                applyWindow(frameImage());
                 correctDarkGainImage(frameImage);
                 translate(LINEAR, preImg(), frameImage(), shiftMatrix, WRAP);
                 preImg.write(tmpFileName, ALL_IMAGES, true, WRITE_APPEND);
@@ -440,38 +450,48 @@ public:
         else
             nlast++;
         imagenum=nlast-nfirst+1;
+
         // Initialize the stack for the output movie
-        if (fnMovieOut!="")
-            outputMovie.initZeros(imagenum, 1, Ydim, Xdim);
+        if (!fnMovieOut.isEmpty())
+            createEmptyFile(fnMovieOut, Xdim, Ydim, 1, imagenum, true, WRITE_REPLACE);
+
         levelNum=sqrt(double(imagenum));
         computeAvg(nfirst, nlast, avgCurr());
+
+        if (!fnMicInitial.isEmpty())
+            avgCurr.write(fnMicInitial);
+
         xmipp2Opencv(avgCurr(), avgcurr);
+
         cout<<"Frames "<<nfirst<<" to "<<nlast<<" under processing ..."<<std::endl;
+
         while (div!=groupSize)
         {
             div=int(imagenum/cnt);
+            bool lastLevel = (div == groupSize);
             // avgStep to hold the sum of aligned frames of each group at each step
             avgstep=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
 
-            cout<<"Level "<<levelCounter<<"/"<<levelNum<<" of the pyramid is under processing"<<std::endl;
+            cout << "Level " << levelCounter << "/" << levelNum
+                 << " of the pyramid is under processing" << std::endl;
             // Compute time for each level
             tStart = clock();
 
             // Check if we are in the final step
-            if (div==1)
+            if (lastLevel)
                 cnt=imagenum;
+
             flowCounter=1;
             for (int i=0;i<cnt;i++)
             {
                 //Just compute the average in the last step
-                if (div==1)
+                if (lastLevel)
                 {
                     movie.getValue(MDL_IMAGE, fnFrame, nfirst+i);
                     preImg.read(fnFrame);
                     if (!globalShiftCorr)
                     {
-                        if (yDRcorner!=-1)
-                            preImg().selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
+                        applyWindow(preImg());
                         correctDarkGainImage(preImg);
                     }
                 }
@@ -565,7 +585,7 @@ public:
                 for( int row = 0; row < planes[0].rows; row++ )
                     for( int col = 0; col < planes[0].cols; col++ )
                     {
-                        if (div==1 && globalShiftCorr)
+                        if (lastLevel && globalShiftCorr)
                         {
                             planes[0].at<float>(row,col) += (-1.0*XX(shiftVector[i]))+(float)col;
                             planes[1].at<float>(row,col) += (-1.0*YY(shiftVector[i]))+(float)row;
@@ -576,7 +596,7 @@ public:
                             planes[1].at<float>(row,col) += (float)row;
                         }
                     }
-                if (div==1 && globalShiftCorr)
+                if (lastLevel && globalShiftCorr)
                 {
                     //movieStack.readMapped(tmpFileName,nfirst+i);
                     //movieStack().getImage(preImg);
@@ -584,11 +604,13 @@ public:
                     preImg.read(fnFrame);
                     xmipp2Opencv(preImg(), preimg);
                 }
+
                 cv::remap(preimg, dest, planes[0], planes[1], cv::INTER_CUBIC);
-                if (div==1 &&  fnMovieOut!="")
+
+                if (lastLevel &&  !fnMovieOut.isEmpty())
                 {
-                    mappedImg.aliasImageInStack(outputMovie, i);
-                    opencv2Xmipp(dest, mappedImg);
+                    opencv2Xmipp(dest, outputMovieFrame());
+                    outputMovieFrame.write(fnMovieOut, i+1, true, WRITE_REPLACE);
                 }
                 avgstep+=dest;
             }
@@ -599,13 +621,11 @@ public:
             levelCounter++;
         }
         opencv2Xmipp(avgcurr, avgCurr());
-        avgCurr.write(fnMicOut);
+
         printf("Total Processing time: %.2fs\n", (double)(clock() - tStart2)/CLOCKS_PER_SEC);
-        if (fnMovieOut!="")
-        {
-            II()=outputMovie;
-            II.write(fnMovieOut);
-        }
+
+        if (!fnMicOut.isEmpty())
+            avgCurr.write(fnMicOut);
 
         // Release the memory
         avgstep.release();
@@ -620,7 +640,6 @@ public:
         movieStack.clear();
         preImg.clear();
         avgCurr.clear();
-        II.clear();
         return 0;
     }
 };

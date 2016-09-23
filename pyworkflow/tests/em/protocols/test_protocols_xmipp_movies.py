@@ -221,8 +221,8 @@ class TestCorrelationAlignment(BaseTest):
 
     def test_qbeta_SkipCrop(self):
         prot = self.newProtocol(XmippProtMovieCorr,
-                                alignFrame0=2, alignFrameN=2,
-                                sumFrame0=2, sumFrameN=2,
+                                alignFrame0=3, alignFrameN=5,
+                                sumFrame0=3, sumFrameN=5,
                                 cropOffsetX=10, cropOffsetY=10)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
@@ -292,7 +292,7 @@ class TestAverageMovie(BaseTest):
     
     def test_qbeta(self):
         prot = self.newProtocol(XmippProtMovieCorr,
-                                alignFrame0=2, alignFrameN=2,
+                                alignFrame0=3, alignFrameN=5,
                                 cropOffsetX=10, cropOffsetY=10,
                                 doSaveAveMic=False)
         prot.inputMovies.set(self.protImport1.outputMovies)

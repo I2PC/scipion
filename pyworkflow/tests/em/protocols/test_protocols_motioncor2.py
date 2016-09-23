@@ -127,10 +127,10 @@ class TestMotioncor2AlignMovies(BaseTest):
                                 objLabel='qbeta - motioncor2 test3 (frame range)',
                                 useMotioncor2=True,
                                 patch='2 2',
-                                alignFrame0=1,
-                                alignFrameN=1,
-                                sumFrame0=1,
-                                sumFrameN=1)
+                                alignFrame0=2,
+                                alignFrameN=6,
+                                sumFrame0=2,
+                                sumFrameN=6)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
