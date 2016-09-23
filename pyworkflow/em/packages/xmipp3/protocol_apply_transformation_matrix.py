@@ -66,11 +66,11 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
         fnOutputParts = self._getExtraPath('output_particles.xmd')
         inputSet = self.inputParticles.get()
         inputVol = self.inputVolume.get()        
-        self._insertFunctionStep('applyTransformMatStep', 
-                                 fnOutputParts, inputSet, inputVol)        
+        self._insertFunctionStep('createOutputStep', 
+                                 fnOutputParts, inputSet, inputVol)
     #--------------------------- STEPS functions --------------------------------------------        
     
-    def applyTransformMatStep(self, fnOutputParts, inputSet, inputVol):        
+    def createOutputStep(self, fnOutputParts, inputSet, inputVol):        
         volTransformMatrix = np.matrix(inputVol.getTransform().getMatrix())
         
         outputSet = self._createSetOfParticles()

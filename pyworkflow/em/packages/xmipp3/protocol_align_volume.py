@@ -145,7 +145,8 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         line.addParam('initialShiftZ', params.FloatParam, default=0, label='Z')    
         
         group.addParam('optimizeScale', params.BooleanParam, default=False, expertLevel=params.LEVEL_ADVANCED,
-                      label='Optimize scale')
+                      label='Optimize scale',
+                      help='Choose YES if you want to optimize the scale of input volume/s based on the reference')
         group.addParam('initialScale', params.FloatParam, default=1, expertLevel=params.LEVEL_ADVANCED, condition='optimizeScale',
                       label='Initial scale')  
         
