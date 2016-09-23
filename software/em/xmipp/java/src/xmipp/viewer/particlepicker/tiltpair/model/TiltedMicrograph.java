@@ -3,7 +3,9 @@ package xmipp.viewer.particlepicker.tiltpair.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
+import xmipp.viewer.particlepicker.PickerParticle;
 
 public class TiltedMicrograph extends Micrograph
 {
@@ -23,8 +25,13 @@ public class TiltedMicrograph extends Micrograph
 		return !particles.isEmpty();
 	}
 
+    @Override
+    public List<? extends PickerParticle> getParticleList() {
+        return getParticles();
+    }
 
-	public List<TiltedParticle> getParticles()
+
+    public List<TiltedParticle> getParticles()
 	{
 		return particles;
 	}
