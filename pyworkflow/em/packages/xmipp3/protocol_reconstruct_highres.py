@@ -1277,6 +1277,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
             self.runJob("xmipp_image_convert","-i %s_convolved.vol -o %s -t vol"%(fnRootRestored,fnVolAvg),numberOfMpi=1)
+            cleanPath("%s_convolved.vol"%fnRootRestored)
 
         # Recalculate the average after alignment and denoising
         if not exists(fnVolAvg):
