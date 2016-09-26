@@ -24,11 +24,14 @@
 # *
 # **************************************************************************
 
-import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol import ProtMonitor, Monitor, MonitorCTF
-from pyworkflow.em.protocol import ProtCTFMicrographs
+import sys
+import os
+from os.path import abspath, dirname
 
-from report_ispyb import MonitorISPyB
+import pyworkflow.utils as pwutils
+import pyworkflow.protocol.params as params
+from pyworkflow.em.protocol import ProtMonitor, Monitor
+from pyworkflow.em.protocol import ProtImportMovies
 
 
 class ProtMonitorISPyB(ProtMonitor):
@@ -67,11 +70,68 @@ class ProtMonitorISPyB(ProtMonitor):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
-        monitor = MonitorISPyB(self, refreshSecs=self.samplingInterval.get(),
-                               workingDir=self._getPath(),
+        monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),
-                               monitorTime=100
+                               monitorTime=100,
+                               stdout=True,
                                )
-        monitor.initLoop()
+        #monitor.initLoop()
+        print "just created the monitor and loop"
         monitor.loop()
 
+
+class MonitorISPyB(Monitor):
+    """ This will will be monitoring a CTF estimation protocol.
+    It will internally handle a database to store produced
+    CTF values.
+    """
+    def __init__(self, protocol, **kwargs):
+        Monitor.__init__(self, **kwargs)
+        self.protocol = protocol
+
+    def step(self):
+        print "MonitorISPyB: only one step"
+
+        prot = self.protocol
+        db = ISPyBdb(prot.db.get(), prot.groupid.get(), prot.visit.get(),
+                     prot.sampleid.get(), prot.detectorid.get())
+
+        try:
+            for p in prot.inputProtocols:
+                obj = p.get()
+                print "protocol: ", obj.getRunName()
+
+                if isinstance(obj, ProtImportMovies):
+                    outSet = obj.outputMovies
+                    outSet.load()
+                    for movie in outSet:
+                        print "movieId: ", movie.getObjId()
+                        db.put_movie(movie)
+                    outSet.close()
+        except Exception as ex:
+            print "ERROR: ", ex
+
+        return False
+
+
+class ISPyBdb():
+    def __init__(self, db, parentid, visit, sampleid, detectorid):
+        self.params =  {}
+        self.params['parentid'] = parentid
+        self.params['visitid'] = visit
+        self.params['sampleid'] = sampleid
+        self.params['detectorid'] = detectorid
+
+    def put_movie(self, movie):
+        movieFn = movie.getFileName()
+        self.params['imgdir'] = dirname(movieFn)
+        self.params['imgprefix'] = pwutils.removeBaseExt(movieFn)
+        self.params['imgsuffix'] = pwutils.getExt(movieFn)
+        self.params['file_template'] = movieFn
+
+        # TODO: Use ispyb-api some day
+        cmd = 'module load python/ana; python --version' # em_put_movie.py'
+        for k, v in self.params.iteritems():
+            cmd += ' --%s %s' % (k, v)
+        print cmd
+        #os.system(cmd)
