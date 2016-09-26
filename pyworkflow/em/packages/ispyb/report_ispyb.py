@@ -26,71 +26,67 @@
 # *
 # **************************************************************************
 
-from os.path import abspath
+import sys
+import os
+from os.path import abspath, dirname
 
 import pyworkflow.utils as pwutils
-from pyworkflow.em.protocol.monitors import SummaryProvider
+from pyworkflow.em.protocol.monitors import SummaryProvider, Monitor
+from pyworkflow.em.protocol import ProtImportMovies
 
 
-class ReportISPyB:
-    """ Create an
+
+
+class MonitorISPyB(Monitor):
+    """ This will will be monitoring a CTF estimation protocol.
+    It will internally handle a database to store produced
+    CTF values.
     """
-    def __init__(self, protocol, ctfMonitor, publishCmd=None,
-                 **kwargs):
+    def __init__(self, protocol, **kwargs):
+        Monitor.__init__(self, **kwargs)
         # The CTF protocol to monitor
         self.protocol = protocol
-        self.provider = SummaryProvider(protocol)
-        self.ctfMonitor = ctfMonitor
 
-        # Get the html template to be used, by default use the one
-        # in scipion/config/templates
-        self.publishCmd = publishCmd
+    def initLoop(self):
+        pass
 
-    def info(self, msg):
-        if self.protocol._log is not None:
-            self.protocol.info(msg)
-        else:
-            print msg
+    def step(self):
+        print "running one step"
+        prot = self.protocol
+        db = ISPyBdb(prot.db.get(), prot.groupid.get(), prot.visit.get(),
+                     prot.sampleid.get(), prot.detectorid.get())
 
-    def generate(self, finished):
-        project = self.protocol.getProject()
+        for p in prot.inputProtocols:
+            obj = p.get()
+            if isinstance(obj, ProtImportMovies):
+                outSet = obj.outputMovies
+                #outSet.load()
+                #outSet.loadAllProperties()
+                #for movie in outSet:
+                #    db.put_movie(movie)
+                #outSet.close()
+                print "movie"
 
-        projName = project.getShortName()
-        reportDir = abspath(self.protocol._getExtraPath(projName))
 
-        self.info("Creating report directory: %s" % reportDir)
-        pwutils.cleanPath(reportDir)
-        pwutils.makePath(reportDir)
 
-        acquisitionLines = ''
-        self.provider.refreshObjects()
+class ISPyBdb():
+    def __init__(self, db, parentid, visit, sampleid, detectorid):
+        self.params =  {}
+        self.params['parentid'] = parentid
+        self.params['visitid'] = visit
+        self.params['sampleid'] = sampleid
+        self.params['detectorid'] = detectorid
 
-        for item in self.provider.acquisition:
-            if not acquisitionLines == '':
-                acquisitionLines += ','
+    def put_movie(self, movie):
+        movieFn = movie.getFileName()
+        self.params['imgdir'] = dirname(movieFn)
+        self.params['imgprefix'] = pwutils.removeBaseExt(movieFn)
+        self.params['imgsuffix'] = pwutils.getExt(movieFn)
+        self.params['file_template'] = movieFn
 
-            acquisitionLines += '{propertyName:"%s", propertyValue:"%s"}' % item
-
-        runLines = ''
-        wasProtocol = None
-
-        for obj in self.provider.getObjects():
-
-            # If it's a protocol
-            isProtocol = True if obj.name else False
-
-            if isProtocol:
-                if runLines != '': runLines += ']},'
-                runLines += '{protocolName: "%s", output:[' % obj.name
-            else:
-                if not wasProtocol: runLines += ','
-                runLines += '{name: "%s",  size:"%s"}' % (obj.output,
-                                                          obj.outSize)
-
-            wasProtocol = isProtocol
-
-        print "\n\n====================================="
-        print runLines
-
-        # Ctf monitor chart data
-        data = [] if self.ctfMonitor is None else self.ctfMonitor.getData()
+        # TODO: Use ispyb-api some day
+        cmd = 'module load python/ana; python --version' # em_put_movie.py'
+        #for k, v in self.params.iteritems():
+        #    cmd += ' --%s %s' % (k, v)
+        print cmd
+        #os.system(cmd)
