@@ -1,6 +1,6 @@
 
 
-from protocol_monitor import ProtMonitor
+from protocol_monitor import ProtMonitor, Monitor
 
 from protocol_monitor_summary import ProtMonitorSummary
 from summary_provider import SummaryProvider
