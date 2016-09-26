@@ -25,9 +25,10 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol import ProtMonitor, Monitor
-from protocol_monitor_ctf import MonitorCTF
+from pyworkflow.em.protocol import ProtMonitor, Monitor, MonitorCTF
 from pyworkflow.em.protocol import ProtCTFMicrographs
+
+from report_ispyb import ReportISPyB
 
 
 class ProtMonitorISPyB(ProtMonitor):
@@ -95,9 +96,12 @@ class ProtMonitorISPyB(ProtMonitor):
                           samplingInterval=self.samplingInterval.get(),
                           monitorTime=self.monitorTime.get())
 
+        reportISPyB = self.createISPyBReport(ctfMonitor)
+
         def initAll():
             if ctfMonitor is not None:
                 ctfMonitor.initLoop()
+
 
         def stepAll():
             finished = False
@@ -106,6 +110,8 @@ class ProtMonitorISPyB(ProtMonitor):
                     # FIXME: finished should be True if all monitored protocols
                     # are finished, failed or aborted
                     finished = ctfMonitor.step()
+                    reportISPyB.generate(finished)
+
             except Exception as ex:
                 print "An error happened: %s" % ex
             # Stop when the CTF monitor is done
@@ -142,3 +148,6 @@ class ProtMonitorISPyB(ProtMonitor):
                                 astigmatism=self.astigmatism.get())
         return ctfMonitor
 
+    def createISPyBReport(self, ctfMonitor):
+        return ReportISPyB(self, ctfMonitor, self.publishCmd.get(),
+                           refreshSecs=self.samplingInterval.get())
