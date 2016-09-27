@@ -55,8 +55,7 @@ class ProtUserSubSet(BatchProtocol):
     from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
     file that will be read to create the new subset.
     """
-    _label = 'create subset'
-     
+
     def __init__(self, **args):
         BatchProtocol.__init__(self, **args)
         
@@ -439,8 +438,6 @@ class ProtUserSubSet(BatchProtocol):
         
 
 class ProtCreateMask(BatchProtocol):
-    
-    _label='create mask'
 
     def _defineParams(self, form):
         form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
@@ -482,10 +479,7 @@ class ProtCreateMask(BatchProtocol):
         return self._summary()
 
 
-
 class ProtCreateFSC(BatchProtocol):
-
-    _label='create fsc'
 
     def _defineParams(self, form):
         pass
