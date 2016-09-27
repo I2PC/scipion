@@ -204,8 +204,8 @@ try:
                        XMIPP_LIB, os.environ.get('PYTHONPATH', '')]
 
     if 'SCIPION_NOGUI' in os.environ:
-        PYTHONPATH_LIST.append(join(SCIPION_HOME,
-                                    'pyworkflow', 'gui', 'no-tkinter'))
+        PYTHONPATH_LIST.insert(0, join(SCIPION_HOME,
+                                       'pyworkflow', 'gui', 'no-tkinter'))
 
     PYTHONPATH = os.pathsep.join(PYTHONPATH_LIST)
 

@@ -27,7 +27,12 @@
 This module implement the classes to create plots on xmipp.
 """
 
-import matplotlib.pyplot as plt
+import matplotlib
+try:
+    import matplotlib.pyplot as plt
+except:
+    plt = None
+
 from pyworkflow.viewer import View
 
 figureCounter = 0
