@@ -73,10 +73,8 @@ class ProtMonitorISPyB(ProtMonitor):
         monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),
                                monitorTime=100,
-                               stdout=True,
+                               stdout=True
                                )
-        #monitor.initLoop()
-        print "just created the monitor and loop"
         monitor.loop()
 
 
@@ -90,7 +88,7 @@ class MonitorISPyB(Monitor):
         self.protocol = protocol
 
     def step(self):
-        print "MonitorISPyB: only one step"
+        self.info("MonitorISPyB: only one step")
 
         prot = self.protocol
         db = ISPyBdb(prot.db.get(), prot.groupid.get(), prot.visit.get(),
@@ -99,13 +97,13 @@ class MonitorISPyB(Monitor):
         try:
             for p in prot.inputProtocols:
                 obj = p.get()
-                print "protocol: ", obj.getRunName()
+                self.info("protocol: %s" % obj.getRunName())
 
                 if isinstance(obj, ProtImportMovies):
                     outSet = obj.outputMovies
                     outSet.load()
                     for movie in outSet:
-                        print "movieId: ", movie.getObjId()
+                        self.info("movieId: %s" % movie.getObjId())
                         db.put_movie(movie)
                     outSet.close()
         except Exception as ex:
@@ -135,3 +133,12 @@ class ISPyBdb():
             cmd += ' --%s %s' % (k, v)
         print cmd
         #os.system(cmd)
+
+
+class FileNotifier():
+    def __init__(self, filename):
+        self.f = open(filename, 'w')
+
+    def notify(self, title, message):
+        print >> self.f, title, message
+        self.f.flush()
