@@ -28,6 +28,7 @@ import sys
 import os
 from os.path import abspath, dirname
 
+import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtMonitor, Monitor
@@ -116,23 +117,24 @@ class ISPyBdb():
     def __init__(self, db, parentid, visit, sampleid, detectorid):
         self.params =  {}
         self.params['parentid'] = parentid
-        self.params['visitid'] = visit
+        self.params['visit'] = visit
         self.params['sampleid'] = sampleid
         self.params['detectorid'] = detectorid
 
     def put_movie(self, movie):
         movieFn = movie.getFileName()
-        self.params['imgdir'] = dirname(movieFn)
-        self.params['imgprefix'] = pwutils.removeBaseExt(movieFn)
-        self.params['imgsuffix'] = pwutils.getExt(movieFn)
-        self.params['file_template'] = movieFn
+        self.params['mfile'] = movieFn
 
         # TODO: Use ispyb-api some day
-        cmd = 'module load python/ana; python --version' # em_put_movie.py'
+        script = pw.join('em', 'packages', 'ispyb', 'em_put_movie.py')
+        cmd = 'python ' + script
         for k, v in self.params.iteritems():
-            cmd += ' --%s %s' % (k, v)
-        print cmd
-        #os.system(cmd)
+           cmd += ' --%s %s' % (k, v)
+        pwutils.runJob(None,
+                       'source /etc/profile.d/modules.sh; '
+                       'module load python/ana; '
+                       'module load ispyb-api/ana; ',
+                       cmd)
 
 
 class FileNotifier():

@@ -19,6 +19,7 @@ import time
 import os
 import sys
 import datetime
+import argparse
 
 from ispyb_api.dbconnection import dbconnection
 from ispyb_api.core import core
@@ -34,72 +35,70 @@ if __name__ == '__main__' :
             print(message)
         sys.exit(code)
     
-    logging.info("test")
-    
-    import optparse
-    parser = optparse.OptionParser()
-    parser.add_option("--movieid", dest="movieid", help="Id for movie", metavar="INTEGER")
-    parser.add_option("--mfile", dest="filename", help="Path to movie file", metavar="FILE")
-    parser.add_option("--visit", dest="visit", help="Visit name", metavar="STRING")
-    parser.add_option("--groupid", dest="groupid", help="Id for group", metavar="INTEGER")
-    parser.add_option("--sampleid", dest="sampleid", help="Id for sample", metavar="INTEGER")
-    parser.add_option("--microscopeid", dest="microscopeid", help="Id for microscope", metavar="INTEGER")
-    # parser.add_option("--micrograph", dest="micrograph", help="Path to micrograph image", metavar="FILE")
-    # parser.add_option("--powerspectrum1", dest="powerspectrum1", help="Path to 1st power spectrum image", metavar="FILE")
-    # parser.add_option("--powerspectrum2", dest="powerspectrum2", help="Path to 2nd power spectrum image", metavar="FILE")
-    # parser.add_option("--drift", dest="drift", help="Path to drift .dat file", metavar="FILE")
-    # parser.add_option("--nimages", dest="n_images", help="Number of images in .mrc file", metavar="INTEGER")
-    # #parser.add_option("--framelen", dest="frame_len", help="Frame length (s)", metavar="FLOAT")
-    # parser.add_option("--totexp", dest="tot_exp", help="Total exposure (s)", metavar="FLOAT")
-    # parser.add_option("--magnification", dest="magnification", help="(X)", metavar="FLOAT")
-    # #parser.add_option("--samplepixsize", dest="sample_pix_size", help="Sample pix size (A/pix)", metavar="FLOAT")
-    # #parser.add_option("--doseperframe", dest="dose_per_frame", help="Dose per frame (e-/A^2)", metavar="FLOAT")
-    # parser.add_option("--totdose", dest="tot_dose", help="Total dose (e-/A^2)", metavar="FLOAT")
-    # parser.add_option("--runstatus", dest="run_status", help="Status of movie", metavar="STRING")
-    # parser.add_option("--comments", dest="comments", help="User comments", metavar="STRING")
-    # #parser.add_option("--rundir", dest="run_dir", help="Directory for raw data collected", metavar="STRING")
-    # parser.add_option("--binning", dest="binning", help="Binning: 1 or 2 (X)", metavar="INTEGER")
-    # parser.add_option("--particlediameter", dest="particle_diameter", help="Particle diameter (nm)", metavar="FLOAT")
-    # #parser.add_option("--pixelsize", dest="pixel_size", help="Pixel size (nm)", metavar="FLOAT")
-    # parser.add_option("--boxsize", dest="box_size", help="Box size (nm)", metavar="FLOAT")
-    # parser.add_option("--minresol", dest="min_resol", help="Min resolution (A)", metavar="FLOAT")
-    # parser.add_option("--maxresol", dest="max_resol", help="Max resolution (A)", metavar="FLOAT")
-    # parser.add_option("--mindefocus", dest="min_defocus", help="Min defocus (A)", metavar="FLOAT")
-    # parser.add_option("--maxdefocus", dest="max_defocus", help="Max defocus (A)", metavar="FLOAT")
-    # parser.add_option("--defocusstepsize", dest="defocus_step_size", help="Defocus step size (A)", metavar="FLOAT")
-    # parser.add_option("--astigmatism", dest="astigmatism", help="Amount of astigmatism (A)", metavar="FLOAT")
-    # parser.add_option("--extractsize", dest="extract_size", help="Extract size (nm)", metavar="FLOAT")
-    # parser.add_option("--bgradius", dest="bg_radius", help="Background radius (nm)", metavar="FLOAT")
-    # parser.add_option("--stime", dest="stime", help="Start time (yyyy-mm-dd hh24:mi:ss)", metavar="TIME")
-    # parser.add_option("--etime", dest="etime", help="End time (yyyy-mm-dd hh24:mi:ss)", metavar="TIME")
-    parser.add_option("--db", dest="db", help="Database to use: dev, test or prod (default)", metavar="STRING")
+    parser = argparse.ArgumentParser()
+    add = parser.add_argument
 
-    (opts, args) = parser.parse_args()
+    add("--movieid", help="Id for movie", type=int)
+    add("--mfile", help="Path to movie file")
+    add("--visit", help="Visit name")
+    add("--parentid", help="Id for group", type=int)
+    add("--sampleid", help="Id for sample", type=int)
+    add("--detectorid", help="Id for microscope", type=int)
+    # add("--micrograph", help="Path to micrograph image")
+    # add("--powerspectrum1", help="Path to 1st power spectrum image")
+    # add("--powerspectrum2", help="Path to 2nd power spectrum image")
+    # add("--drift", help="Path to drift .dat file")
+    # add("--nimages", help="Number of images in .mrc file", type=int)
+    # #add("--framelen", help="Frame length (s)", type=float)
+    # add("--totexp", help="Total exposure (s)", type=float)
+    # add("--magnification", help="(X)", type=float)
+    # #add("--samplepixsize", help="Sample pix size (A/pix)", type=float)
+    # #add("--doseperframe", help="Dose per frame (e-/A^2)", type=float)
+    # add("--totdose", help="Total dose (e-/A^2)", type=float)
+    # add("--runstatus", help="Status of movie")
+    # add("--comments", help="User comments")
+    # #add("--rundir", help="Directory for raw data collected")
+    # add("--binning", help="Binning: 1 or 2 (X)", type=int)
+    # add("--particlediameter", help="Particle diameter (nm)", type=float)
+    # #add("--pixelsize", help="Pixel size (nm)", type=float)
+    # add("--boxsize", help="Box size (nm)", type=float)
+    # add("--minresol", help="Min resolution (A)", type=float)
+    # add("--maxresol", help="Max resolution (A)", type=float)
+    # add("--mindefocus", help="Min defocus (A)", type=float)
+    # add("--maxdefocus", help="Max defocus (A)", type=float)
+    # add("--defocusstepsize", help="Defocus step size (A)", type=float)
+    # add("--astigmatism", help="Amount of astigmatism (A)", type=float)
+    # add("--extractsize", help="Extract size (nm)", type=float)
+    # add("--bgradius", help="Background radius (nm)", type=float)
+    # add("--stime", help="Start time (yyyy-mm-dd hh24:mi:ss)")
+    # add("--etime", help="End time (yyyy-mm-dd hh24:mi:ss)")
+    add("--db", help="Database to use: dev, test or prod (default)")
 
-    cursor = None
-    if opts.db is None or opts.db == "prod": 
-        cursor = dbconnection.connect_to_prod()
-    elif opts.db == "dev":
-        cursor = dbconnection.connect_to_dev()
-    elif opts.db == "test":
-        cursor = dbconnection.connect_to_test()
-    else:
-        exit(1, "ERROR: Invalid database")
+    args = parser.parse_args()
+
+    try:
+        connect_func = getattr(dbconnection, 'connect_to_' + args.db)
+        cursor = connect_func()
+    except Exception as ex:
+        exit(1, "ERROR: Could not connect to database")
 
     # Find the id for the visit
-    visitid = core.retrieve_visit_id(cursor, opts.visit)
+    visitid = core.retrieve_visit_id(cursor, args.visit)
     
     result = None
-    if visitid is not None or opts.movieid is not None:
-	# EMMovieId, blsessionId,blsampleId,movieFile,p_NOImages,frameLength,totalExposure,magnification,samplePixSize,dosePerFrame,totalDose,runStatus,comments,runDirectory,binning,particleDiameter,pixelSize,boxSize,minResolution,maxResolution, minDefocus, maxDefocus, defocusStepSize, amountAstigmatism, extractSize, starttime, endtime
-        
+    if visitid is not None or args.movieid is not None:
+
         # Store a movie data collection ...
         params = mxacquisition.get_data_collection_params()
-        params['parentid'] = opts.groupid
+
+        # Update the data collection dictionary with all arguments
+        # passed from the command line
+        for k, v in vars(args).iteritems():
+            if k in params:
+                params[k] = v
+
         params['visitid'] = visitid
-        params['sampleid'] = opts.sampleid
-        params['detectorid'] = opts.microscopeid
-        
+
         if not opts.filename is None:
             imgdir = opts.filename[:opts.filename.rfind('/')]
         
@@ -117,9 +116,9 @@ if __name__ == '__main__' :
         # start_time = None
         # end_time = None
         # if not opts.stime is None:
-        #    params['starttime'] = datetime.datetime.strptime(opts.stime, '%Y-%m-%d %H:%M:%S')
+        #    params['starttime'] = opts.stime
         # if not opts.etime is None:
-        #    params['endtime'] = datetime.datetime.strptime(opts.etime, '%Y-%m-%d %H:%M:%S')
+        #    params['endtime'] = opts.etime
         #
         # params['n_images'] = opts.n_images
         # params['exp_time'] = opts.tot_exp
