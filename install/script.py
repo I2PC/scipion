@@ -184,13 +184,14 @@ if get('CUDA'):
     opencvFlags = ['-DWITH_CUDA:BOOL=ON']
 else:
     opencvFlags = ['-DWITH_CUDA:BOOL=OFF']
-opencv = env.addLibrary(
-    'opencv',
-    tar='opencv-2.4.9.tgz',
-    targets=[env.getLib('opencv_core')],
-    flags=opencvFlags,
-    cmake=True,
-    default=not noOpencv)
+
+# opencv = env.addLibrary(
+#     'opencv',
+#     tar='opencv-2.4.9.tgz',
+#     targets=[env.getLib('opencv_core')],
+#     flags=opencvFlags,
+#     cmake=True,
+#     default=not noOpencv)
 
 # ---------- Libraries required by PyTom 
 

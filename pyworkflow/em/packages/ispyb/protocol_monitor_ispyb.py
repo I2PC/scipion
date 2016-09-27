@@ -31,8 +31,10 @@ from os.path import abspath, dirname
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
-from pyworkflow.em.protocol import ProtMonitor, Monitor
+from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies
+
+from ispyb_proxy import ISPyBProxy
 
 
 class ProtMonitorISPyB(ProtMonitor):
@@ -73,9 +75,9 @@ class ProtMonitorISPyB(ProtMonitor):
     def monitorStep(self):
         monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),
-                               monitorTime=100,
-                               stdout=True
-                               )
+                               monitorTime=100)
+
+        monitor.addNotifier(PrintNotifier())
         monitor.loop()
 
 
@@ -92,9 +94,13 @@ class MonitorISPyB(Monitor):
         self.info("MonitorISPyB: only one step")
 
         prot = self.protocol
-        db = ISPyBdb(prot.db.get(), prot.groupid.get(), prot.visit.get(),
-                     prot.sampleid.get(), prot.detectorid.get())
-
+        proxy = ISPyBProxy(prot.db.get(),
+                           experimentParams={'parentid': prot.groupid.get(),
+                                             'visit': prot.visit.get(),
+                                             'sampleid': prot.sampleid.get(),
+                                             'detectorid': prot.detectorid.get()
+                                             }
+                           )
         try:
             for p in prot.inputProtocols:
                 obj = p.get()
@@ -105,36 +111,23 @@ class MonitorISPyB(Monitor):
                     outSet.load()
                     for movie in outSet:
                         self.info("movieId: %s" % movie.getObjId())
-                        db.put_movie(movie)
+                        self.put_movie(proxy, movie)
                     outSet.close()
         except Exception as ex:
             print "ERROR: ", ex
 
+        self.info("Closing proxy")
+        proxy.close()
+
         return False
 
-
-class ISPyBdb():
-    def __init__(self, db, parentid, visit, sampleid, detectorid):
-        self.params =  {}
-        self.params['parentid'] = parentid
-        self.params['visit'] = visit
-        self.params['sampleid'] = sampleid
-        self.params['detectorid'] = detectorid
-
-    def put_movie(self, movie):
+    def put_movie(self, proxy, movie):
         movieFn = movie.getFileName()
-        self.params['mfile'] = movieFn
-
-        # TODO: Use ispyb-api some day
-        script = pw.join('em', 'packages', 'ispyb', 'em_put_movie.py')
-        cmd = 'python ' + script
-        for k, v in self.params.iteritems():
-           cmd += ' --%s %s' % (k, v)
-        pwutils.runJob(None,
-                       'source /etc/profile.d/modules.sh; '
-                       'module load python/ana; '
-                       'module load ispyb-api/ana; ',
-                       cmd)
+        proxy.sendMovieParams({'imgdir': dirname(movieFn),
+                               'imgprefix': pwutils.removeBaseExt(movieFn),
+                               'imgsuffix': pwutils.getExt(movieFn),
+                               'file_template': movieFn
+                               })
 
 
 class FileNotifier():
