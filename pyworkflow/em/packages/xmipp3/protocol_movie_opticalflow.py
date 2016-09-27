@@ -82,7 +82,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "last step")
         
         form.addParam('useAlignment', params.BooleanParam, default=True,
-                      label="Use movie alignment to Sum frames?",
+                      label="Use previous movie alignment to Sum frames?",
                       help="If set Yes, the alignment information (if"
                       " it exists) will take into account to align"
                       " your movies.")
