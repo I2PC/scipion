@@ -31,7 +31,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 from pyworkflow.utils.properties import Message
 
-from convert import readSetOfCoordinates, runGautomatch, getProgram
+from convert import readSetOfCoordinates, writeSetOfCoordinates, runGautomatch, getProgram
 
 
 
@@ -186,12 +186,12 @@ class ProtGautomatch(em.ProtParticlePicking):
                            'your templates were severely biased and mainly picked the '
                            'preferred views, then it might be nice to exclude the preferred '
                            'views and focused on rare views.')
-        form.addParam('exclCoord', params.PointerParam,
+        form.addParam('exclCoord', params.PointerParam, allowsNull=True,
                       pointerClass='SetOfCoordinates', condition='exclusive',
                       label='Coordinates to be excluded',
                       help='Coordinates can be imported beforehand or generated from '
                            'particles using scipion - extract coordinates protocol.')
-        form.addParam('exclGlobal', params.PointerParam,
+        form.addParam('exclGlobal', params.PointerParam, allowsNull=True,
                       pointerClass='SetOfCoordinates', condition='exclusive',
                       label='Detector defects coordinates',
                       help='Occasionally you might have detector defects, e.g. a '
@@ -248,6 +248,8 @@ class ProtGautomatch(em.ProtParticlePicking):
         pwutils.makePath(micDir)
         # We will always convert the templates to mrcs stack
         self.convertReferences(self._getExtraPath('references.mrcs'))
+        # Convert input coords for exclusive picking
+        self.convertCoordinates(micDir)
 
     def runGautomatchStep(self, micName, refStack, args):
         # We convert the input micrograph on demand if not in .mrc
@@ -362,9 +364,9 @@ class ProtGautomatch(em.ProtParticlePicking):
         if not self.invertTemplatesContrast:
             args += ' --dont_invertT'
         if self.exclusive:
-            args += ' --exclusive_picking --exclusive_suffix _rubbish.box'
+            args += ' --exclusive_picking --exclusive_suffix _rubbish.star'
             if self.exclGlobal:
-                args += ' --global_excluded_box %s' % self._getExtraPath('defects.box')
+                args += ' --global_excluded_box %s' % self._getExtraPath('micrographs/defects.box')
 
         if self.writeCC:
             args += ' --write_ccmax_mic'
@@ -384,6 +386,19 @@ class ProtGautomatch(em.ProtParticlePicking):
     def convertReferences(self, refStack):
         """ Write input references as an .mrc stack. """
         self.inputReferences.get().writeStack(refStack)
+
+    def convertCoordinates(self, workingDir):
+        if self.exclusive:
+            coordSetEx = self.exclCoord.get()
+            coordSetGlob = self.exclGlobal.get()
+
+            if coordSetEx is not None:
+                writeSetOfCoordinates(workingDir, self.getInputMicrographs(),
+                                      coordSetEx, isGlobal=False)
+            if coordSetGlob is not None:
+                writeSetOfCoordinates(workingDir, None,
+                                      coordSetGlob, isGlobal=True)
+
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
