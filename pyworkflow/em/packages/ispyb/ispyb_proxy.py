@@ -156,7 +156,7 @@ class ISPyBProccess():
         # from an input line in json format.
         # expected values: parentid, visit, sampleid, detectorid
         experimentParams = self.readDict()
-        for key in ['parentid', 'visit', 'sampleid', 'detectorid']:
+        for key in ['visit', 'sampleid', 'detectorid']:
             if key not in experimentParams:
                 self.error("Missing key '%s' in experiment params" % key)
         self.ok()
@@ -195,6 +195,7 @@ class ISPyBdb():
     """
     def __init__(self, db, experimentParams):
         self.f = open("/tmp/ispybdb.txt", 'a')
+        self.experimentParams = experimentParams
         print >> self.f, "ENV : %s" % os.environ
 
         try:
@@ -211,6 +212,7 @@ class ISPyBdb():
             print >> self.f, "\n%s: >>> OPENING DB" % timeStamp()
 
         self._loadCursor(db)
+        self._create_group()
 
     def _loadCursor(self, db):
         # db should be one of: 'prod', 'dev' or 'test'
@@ -221,15 +223,25 @@ class ISPyBdb():
             connect = getattr(self.dbconnection, 'connect_to_' + db)
             self.cursor = connect()
 
+    def _create_group(self):
+        if self.mxacquisition:
+            self.visit_id = self.core.retrieve_visit_id(self.cursor, self.experimentParams['visit'])
+            params = self.mxacquisition.get_data_collection_group_params()
+            params['parentid'] = self.visit_id
+            self.group_id = self.mxacquisition.insert_data_collection_group(self.cursor, params.values())
+
     def get_data_collection_params(self):
         if self.mxacquisition:
-            return self.mxacquisition.get_data_collection_params()
+            params = self.mxacquisition.get_data_collection_params()
+            params['parentid'] = self.group_id
+            params['visitid'] = self.visit_id
+            return params
         else:
             return OrderedDict()
 
     def update_data_collection(self, params):
         if self.mxacquisition:
-            dc_id = self.mxacquisition.update_data_collection(self.cursor,
+            dc_id = self.mxacquisition.insert_data_collection(self.cursor,
                                                               params.values())
         else:
             s = "params = {"
@@ -251,5 +263,3 @@ class ISPyBdb():
 if __name__ == "__main__":
     db = sys.argv[1]
     ISPyBProccess(db)
-
-

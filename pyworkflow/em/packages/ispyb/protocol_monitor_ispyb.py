@@ -49,9 +49,6 @@ class ProtMonitorISPyB(ProtMonitor):
         ProtMonitor._defineParams(self, form)
 
         group = form.addGroup('Experiment')
-        group.addParam('groupid', params.StringParam,
-                      label="Group Id",
-                      help="Group Id")
         group.addParam('visit', params.StringParam,
                       label="Visit",
                       help="Visit")
@@ -96,7 +93,7 @@ class MonitorISPyB(Monitor):
         prot = self.protocol
 
         proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
-                           experimentParams={'parentid': prot.groupid.get(),
+                           experimentParams={
                                              'visit': prot.visit.get(),
                                              'sampleid': prot.sampleid.get(),
                                              'detectorid': prot.detectorid.get()
