@@ -24,12 +24,9 @@
 # *
 # **************************************************************************
 
-import sys
-import os
 from os.path import abspath, dirname
 from collections import OrderedDict
 
-import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
@@ -82,6 +79,7 @@ class MonitorISPyB(Monitor):
         Monitor.__init__(self, **kwargs)
         self.protocol = protocol
         self.allIds = OrderedDict()
+        self.numberOfFrames = None
 
     def step(self):
         self.info("MonitorISPyB: only one step")
@@ -90,8 +88,7 @@ class MonitorISPyB(Monitor):
 
         proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
                            experimentParams={'visit': prot.visit.get()})
-        #try:
-        self.numberOfFrames = None
+
 
         runs = [p.get() for p in self.protocol.inputProtocols]
         g = self.protocol.getProject().getGraphFromRuns(runs)
@@ -114,9 +111,6 @@ class MonitorISPyB(Monitor):
         for itemId, params in allParams.iteritems():
             ispybId = proxy.sendMovieParams(params)
             self.allIds[itemId] = ispybId
-
-        #except Exception as ex:
-        #    print "ERROR: ", ex
 
         self.info("Closing proxy")
         proxy.close()

@@ -26,7 +26,6 @@
 
 import sys
 import os
-from os.path import abspath, dirname
 from collections import OrderedDict
 import json
 import subprocess
@@ -62,7 +61,6 @@ class ISPyBProxy():
 
         cmd += 'python %s %s' % (SCRIPT, db)
 
-        #    gcmd = greenStr(cmd)
         print "** Running: '%s'" % cmd
         self.proc = subprocess.Popen(cmd, shell=True,
                                      stdin=subprocess.PIPE,
