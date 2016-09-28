@@ -53,30 +53,6 @@ class ISPyBProxy():
         self._createISPyBProcess(db)
         self._sendDict(experimentParams)
 
-    # <<<<<<< Updated upstream
-    # class ISPyBdb():
-    #     def __init__(self, db, parentid, visit, sampleid, detectorid):
-    #         self.params =  {}
-    #         self.params['parentid'] = parentid
-    #         self.params['visit'] = visit
-    #         self.params['sampleid'] = sampleid
-    #         self.params['detectorid'] = detectorid
-    #
-    #     def put_movie(self, movie):
-    #         movieFn = movie.getFileName()
-    #         self.params['mfile'] = movieFn
-    #
-    #         # TODO: Use ispyb-api some day
-    #         script = pw.join('em', 'packages', 'ispyb', 'em_put_movie.py')
-    #         cmd = 'python ' + script
-    #         for k, v in self.params.iteritems():
-    #            cmd += ' --%s %s' % (k, v)
-    #        pwutils.runJob(None,
-    #                        'source /etc/profile.d/modules.sh; '
-    #                        'module load python/ana; '
-    #                        'module load ispyb-api/ana; ',
-    #                        cmd)
-    # =======
     def _createISPyBProcess(self, db):
         cmd = ('source /etc/profile.d/modules.sh;'
             'module unload python/ana;'
@@ -104,7 +80,9 @@ class ISPyBProxy():
         return self._sendLine(json.dumps(paramsDict))
 
     def sendMovieParams(self, movieParams):
-        return self._sendDict(movieParams)
+        r = self._sendDict(movieParams)
+        movieId = int(r.split()[1].strip())
+        return movieId
 
     def close(self):
         self._sendLine(INPUT_END)
@@ -140,14 +118,15 @@ class ISPyBProccess():
         self.writeLine("ERROR: %s" % msg)
         sys.exit(1)
 
-    def ok(self):
-        self.writeLine(OUTPUT_OK)
+    def ok(self, message=''):
+        self.writeLine(OUTPUT_OK + " %s" % message)
 
     def _loadDb(self, db, experimentParams):
         # db should be one of: 'prod', 'dev' or 'test'
         # let's try to connect to db and get a cursor
         try:
             self.db = ISPyBdb(db, experimentParams)
+            self.ok(str((self.db.visit_id, self.db.group_id)))
         except Exception as ex:
             self.error(str(ex))
 
@@ -156,10 +135,9 @@ class ISPyBProccess():
         # from an input line in json format.
         # expected values: parentid, visit, sampleid, detectorid
         experimentParams = self.readDict()
-        for key in ['visit', 'sampleid', 'detectorid']:
+        for key in ['visit']:
             if key not in experimentParams:
                 self.error("Missing key '%s' in experiment params" % key)
-        self.ok()
         return experimentParams
 
     def processInputMovies(self):
@@ -173,8 +151,8 @@ class ISPyBProccess():
                 params = self.db.get_data_collection_params()
                 params.update(movieParams)
 
-                self.db.update_data_collection(params)
-                self.ok()
+                data_collection_id = self.db.update_data_collection(params)
+                self.ok(data_collection_id)
 
                 line = self.readLine()
 
@@ -241,7 +219,7 @@ class ISPyBdb():
 
     def update_data_collection(self, params):
         if self.mxacquisition:
-            dc_id = self.mxacquisition.insert_data_collection(self.cursor,
+            return self.mxacquisition.insert_data_collection(self.cursor,
                                                               params.values())
         else:
             s = "params = {"

@@ -27,12 +27,13 @@
 import sys
 import os
 from os.path import abspath, dirname
+from collections import OrderedDict
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
-from pyworkflow.em.protocol import ProtImportMovies
+from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 
 from ispyb_proxy import ISPyBProxy
 
@@ -52,12 +53,6 @@ class ProtMonitorISPyB(ProtMonitor):
         group.addParam('visit', params.StringParam,
                       label="Visit",
                       help="Visit")
-        group.addParam('sampleid', params.StringParam,
-                      label="Sample Id",
-                      help="Sample Id")
-        group.addParam('detectorid', params.StringParam,
-                      label="Detector Id",
-                      help="Detector Id")
 
         form.addParam('db', params.EnumParam,
                       choices=["production", "devel", "test"],
@@ -86,6 +81,7 @@ class MonitorISPyB(Monitor):
     def __init__(self, protocol, **kwargs):
         Monitor.__init__(self, **kwargs)
         self.protocol = protocol
+        self.allIds = OrderedDict()
 
     def step(self):
         self.info("MonitorISPyB: only one step")
@@ -93,39 +89,77 @@ class MonitorISPyB(Monitor):
         prot = self.protocol
 
         proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
-                           experimentParams={
-                                             'visit': prot.visit.get(),
-                                             'sampleid': prot.sampleid.get(),
-                                             'detectorid': prot.detectorid.get()
-                                             }
-                           )
-        try:
-            for p in prot.inputProtocols:
-                obj = p.get()
-                self.info("protocol: %s" % obj.getRunName())
+                           experimentParams={'visit': prot.visit.get()})
+        #try:
+        self.numberOfFrames = None
 
-                if isinstance(obj, ProtImportMovies):
-                    outSet = obj.outputMovies
-                    outSet.load()
-                    for movie in outSet:
-                        self.info("movieId: %s" % movie.getObjId())
-                        self.put_movie(proxy, movie)
-                    outSet.close()
-        except Exception as ex:
-            print "ERROR: ", ex
+        runs = [p.get() for p in self.protocol.inputProtocols]
+        g = self.protocol.getProject().getGraphFromRuns(runs)
+
+        nodes = g.getRoot().iterChildsBreadth()
+
+        allParams = OrderedDict()
+
+        for n in nodes:
+            prot = n.run
+            self.info("protocol: %s" % prot.getRunName())
+
+            if isinstance(prot, ProtImportMovies):
+                self.create_movie_params(prot, allParams)
+            elif isinstance(prot, ProtAlignMovies) and hasattr(prot, 'outputMicrographs'):
+                self.update_align_params(prot, allParams)
+            elif isinstance(prot, ProtCTFMicrographs):
+                self.update_ctf_params(prot, allParams)
+
+        for itemId, params in allParams.iteritems():
+            ispybId = proxy.sendMovieParams(params)
+            self.allIds[itemId] = ispybId
+
+        #except Exception as ex:
+        #    print "ERROR: ", ex
 
         self.info("Closing proxy")
         proxy.close()
 
         return False
 
-    def put_movie(self, proxy, movie):
-        movieFn = movie.getFileName()
-        proxy.sendMovieParams({'imgdir': dirname(movieFn),
-                               'imgprefix': pwutils.removeBaseExt(movieFn),
-                               'imgsuffix': pwutils.getExt(movieFn),
-                               'file_template': movieFn
-                               })
+    def iter_updated_set(self, objSet):
+        objSet.load()
+        objSet.loadAllProperties()
+        for obj in objSet:
+            yield obj
+        objSet.close()
+
+    def create_movie_params(self, prot, allParams):
+
+        for movie in self.iter_updated_set(prot.outputMovies):
+            if self.numberOfFrames is None:
+                self.numberOfFrames = movie.getNumberOfFrames()
+            movieFn = movie.getFileName()
+            movieId = movie.getObjId()
+
+            allParams[movieId] = {
+                'id': self.allIds.get(movieId, None),
+                'imgdir': dirname(movieFn),
+                'imgprefix': pwutils.removeBaseExt(movieFn),
+                'imgsuffix': pwutils.getExt(movieFn),
+                'file_template': movieFn,
+                'n_images': self.numberOfFrames
+             }
+
+    def update_align_params(self, prot, allParams):
+        for mic in self.iter_updated_set(prot.outputMicrographs):
+            allParams[mic.getObjId()].update({
+                'comments': 'aligned'
+            })
+
+    def update_ctf_params(self, prot, allParams):
+        for ctf in self.iter_updated_set(prot.outputCTF):
+            allParams[ctf.getObjId()].update({
+            'min_defocus': ctf.getDefocusU(),
+            'max_defocus': ctf.getDefocusV(),
+            'amount_astigmatism': ctf.getDefocusRatio()
+            })
 
 
 class FileNotifier():
