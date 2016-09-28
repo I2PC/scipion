@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -37,18 +37,8 @@ from convert import readSetOfCoordinates, runGautomatch, getProgram
 
 class ProtGautomatch(em.ProtParticlePicking):
     """
-    Gautomatch is a GPU accelerated program for fully automatic particle picking.
-
-    Note about CTF: It is perfectly fine to use raw micrograph(before CTF correction)
-    for particle picking since 30~50A is sufficient to auto-pick the particles.
-    Usually for the micrograph with defocus around 2-5um, the first CTF zero is
-    around 20~30A, so it is not useful to do CTF correction in general. However,
-    you can determine CTF and flip the phases before picking. Full CTF
-    correction on micrographs or applying full CTF on templates is not suggested,
-    because these operation is normally targeting for high resolution. Since
-    particle picking is basically a low-resolution operation, higher resolution
-    will only introduce more false picking and template-bias, known as the
-    so-called Einstein noise.
+    Gautomatch is a GPU accelerated program for accurate, fast, flexible and fully
+    automatic particle picking from cryo-EM micrographs with templates.
     """
     _label = 'auto-picking'
 
@@ -74,9 +64,11 @@ class ProtGautomatch(em.ProtParticlePicking):
         form.addParam('particleSize', params.IntParam, default=250,
                       label='Particle radius (A)',
                       help="Particle radius in Angstrom")
+        form.addParam('GPUId', params.IntParam, default=0,
+                      label='GPU ID', expertLevel=params.LEVEL_ADVANCED,
+                      help='GPU ID, normally it is 0')
 
         form.addSection(label='Advanced')
-
         form.addParam('advanced', params.BooleanParam, default=True,
                       label='Guess advanced parameters?',
                       help="By default, the program will optimize advanced "
@@ -87,17 +79,12 @@ class ProtGautomatch(em.ProtParticlePicking):
                       help="Box size, in pixels; a suggested value will be "
                            "automatically calculated using pixel size and "
                            "particle size")
-        form.addParam('maxDist', params.IntParam, default=300,
-                      label='Max search distance (A)', condition='not advanced',
-                      help='Maximum search distance in Angstrom\n '
+        form.addParam('minDist', params.IntParam, default=300,
+                      label='Min inter-particle distance (A)',
+                      condition='not advanced',
+                      help='Minimum distance between particles in Angstrom\n '
                            'Use value of 0.9~1.1X diameter; '
-                           'can be 0.3~0.5X for filament-like particle\n'
-                           'For each particle Pi we try to search a local area '
-                           'using this distance option: '
-                           'once program finds a better candidate Pj, the '
-                           'particle Pi is rejected. If all peaks <= max_dist '
-                           'have been checked and no better candidates were found, '
-                           'then Pi is considered as a successfully picked particle.')
+                           'can be 0.3~0.5X for filament-like particle')
         form.addParam('speed', params.IntParam, default=2,
                       label='Speed', condition='not advanced',
                       help='Speed level {0,1,2,3,4}. The bigger the faster, but '
@@ -110,6 +97,11 @@ class ProtGautomatch(em.ProtParticlePicking):
                            'Probably do not use 4 at all, it is not accurate '
                            'in general.')
 
+        form.addSection(label='Sigma & avg')
+        form.addParam('advLabel', params.LabelParam,
+                      important=True,
+                      label='To adjust these parameters, select "No" for the '
+                            '"Guess advanced parameters?" on the Advanced tab.')
         group = form.addGroup('Local sigma parameters',
                               condition='not advanced')
         group.addParam('localSigmaCutoff', params.FloatParam, default=1.2,
@@ -117,17 +109,30 @@ class ProtGautomatch(em.ProtParticlePicking):
                        help='Local sigma cut-off (relative value), 1.2~1.5 '
                             'should be a good range\n'
                             'Normally a value >1.2 will be ice, protein '
-                            'aggregation or contamination')
+                            'aggregation or contamination.\n'
+                            'This option is designed to get rid of sharp carbon/ice '
+                            'edges or sharp metal particles.')
         group.addParam('localSigmaDiam', params.IntParam, default=100,
                        label='Local sigma diameter (A)',
-                       help='Diameter for estimation of local sigma, in Angstrom')
+                       help='Diameter for estimation of local sigma, in Angstrom.\n'
+                            'Usually this diameter could be 0.5-2x of your particle '
+                            'diameter according to several factors. When using bigger values, '
+                            'normally you should decrease *Local sigma cut-off*. '
+                            'For smaller and sharper high density contamination/ice/metal particles '
+                            'you could use a smaller diameter and larger *Local sigma cut-off*')
 
         group = form.addGroup('Local average parameters',
                               condition='not advanced')
         line = group.addLine('Local average range',
                              help="Local average cut-off (relative value), "
                                   "any pixel values outside the range will be "
-                                  "considered as ice/aggregation/carbon etc.")
+                                  "considered as ice/aggregation/carbon etc.\n"
+                                  "Min parameter is used to reject the central parts of ice, "
+                                  "carbon etc. which normally have lower density than the particles.\n"
+                                  "Max parameter is usually not useful for cryo-EM micrograph with black "
+                                  "particles, but might be helpfull to get rid of 'hot' area. "
+                                  "For negative stain micrograph, if it rejects most of the true particles, "
+                                  "just set Max to very big value like 10.0.")
         line.addParam('localAvgMin', params.FloatParam, default=-1.0,
                       label='Min')
         line.addParam('localAvgMax', params.FloatParam, default=1.0,
@@ -140,22 +145,89 @@ class ProtGautomatch(em.ProtParticlePicking):
                             'dark/bright dots, using a smaller value will be '
                             'much better to get rid of these areas')
 
+        form.addSection(label='Filter')
         line = form.addLine('Micrograph band-pass filter range (A)',
-                            condition='not advanced',
+                            expertLevel=params.LEVEL_ADVANCED,
                             help="Apply band-pass filter on the micrographs:\n"
                                  "low-pass filter to increase the contrast of "
                                  "raw micrographs, suggested range 20~50 A\n"
                                  "high-pass filter to get rid of the global "
                                  "background of raw micrographs, suggested "
-                                 "range 200~2000 A")
+                                 "range 200~2000 A. This filter is applied after ice/carbon/"
+                                 "contamination detection, but before true particle detection")
         line.addParam('lowPass', params.IntParam, default=30,
                       label='Min')
         line.addParam('highPass', params.IntParam, default=1000,
                       label='Max')
 
-        form.addParam('GPUId', params.IntParam, default=0,
-                      label='GPU ID', condition='not advanced',
-                      help='GPU ID, normally it is 0')
+        form.addParam('preFilt', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Pre-filter micrographs?',
+                      help="This band-pass pre-filter is normally not suggested, "
+                      "because it can affect ice/carbon detection. "
+                      "Use it only if you have a severe ice gradient.")
+        line = form.addLine('Pre-filter range(A)', condition='preFilt')
+        line.addParam('prelowPass', params.IntParam, default=8,
+                      label='Min')
+        line.addParam('prehighPass', params.IntParam, default=1000,
+                      label='Max')
+
+        form.addSection(label='Exclusive picking')
+        form.addParam('exclusive', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Exclusive picking?',
+                      help='Exclude user-provided areas. This can be useful in the '
+                           'following cases:\n\n(a) Another cycle of auto-picking '
+                           'after 2D classification: in this case, usually you are '
+                           'pretty sure that some of the particles are completely rubbish, '
+                           'it will be much better to exclude them during picking.\n'
+                           '(b) Picking for partial structure: sometimes, you might have '
+                           'two/multiple domain complex, one is severely dominant and affect '
+                           'picking of the other (the rest). If you want to focus on another '
+                           'domain, it might be quite helpful to exclude such good particles '
+                           'from 2D classification.\n(c) Strong orientation preference: if '
+                           'your templates were severely biased and mainly picked the '
+                           'preferred views, then it might be nice to exclude the preferred '
+                           'views and focused on rare views.')
+        form.addParam('exclCoord', params.PointerParam,
+                      pointerClass='SetOfCoordinates', condition='exclusive',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Coordinates to be excluded',
+                      help='Coordinates can be imported beforehand or generated from '
+                           'particles using scipion - extract coordinates protocol.')
+        form.addParam('exclGlobal', params.PointerParam,
+                      pointerClass='SetOfCoordinates', condition='exclusive',
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Detector defects coordinates',
+                      help='Occasionally you might have detector defects, e.g. a '
+                           'black/white stripe. This will help to get rid of these bad areas')
+
+        form.addSection(label='Debug')
+        form.addParam('writeCC', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Write CC files?',
+                      help='Specify to write out cross-correlation files in MRC stack')
+        form.addParam('writeFilt', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED, condition='preFilt',
+                      label='Write pre-filtered micrographs?',
+                      help='Specify to write out pre-filted micrographs')
+        form.addParam('writeBg', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Write estimated background?',
+                      help='Specify to write out estimated background of the micrographs')
+        form.addParam('writeBgSub', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Write background-subtracted micrographs?',
+                      help='Specify to write out background-subtracted micrographs')
+        form.addParam('writeSigma', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Write local sigma?',
+                      help='Specify to write out local sigma micrographs')
+        form.addParam('writeMsk', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Write detected mask?',
+                      help='Specify to write out the auto-detected mask (ice, '
+                           'contamination, aggregation, carbon edges etc.)')
 
         # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -272,11 +344,13 @@ class ProtGautomatch(em.ProtParticlePicking):
             micFn: micrograph filename
             refStack: filename with the references stack (.mrcs)
         """
-        #args = ' --T %s' % refStack #self._getTmpPath('references.mrcs')
         args = ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
         args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
         args += ' --ang_step %d' % self.angStep
         args += ' --diameter %d' % (2 * self.particleSize.get())
+        args += ' --lp %d' % self.lowPass
+        args += ' --hp %d' % self.highPass
+        args += ' --gid %d' % self.GPUId
 
         if threshold:
             args += ' --cc_cutoff %0.2f' % self.threshold
@@ -285,18 +359,35 @@ class ProtGautomatch(em.ProtParticlePicking):
             args += ' --speed %d' % self.speed
             args += ' --boxsize %d' % self.boxSize
             if mindist:
-                args += ' --min_dist %d' % self.maxDist
-            args += ' --gid %d' % self.GPUId
+                args += ' --min_dist %d' % self.minDist
             args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
             args += ' --lsigma_D %d' % self.localSigmaDiam
             args += ' --lave_max %0.2f' % self.localAvgMax
             args += ' --lave_min %0.2f' % self.localAvgMin
             args += ' --lave_D %d' % self.localAvgDiam
-            args += ' --lp %d' % self.lowPass
-            args += ' --hp %d' % self.highPass
 
+        if self.preFilt:
+            args += ' --do_pre_filter --pre_lp %d' % self.prelowPass
+            args += ' --pre_hp %d' % self.prehighPass
         if not self.invertTemplatesContrast:
             args += ' --dont_invertT'
+        if self.exclusive:
+            args += ' --exclusive_picking --exclusive_suffix _rubbish.box'
+            if self.exclGlobal:
+                args += ' --global_excluded_box %s' % self._getExtraPath('defects.box')
+
+        if self.writeCC:
+            args += ' --write_ccmax_mic'
+        if self.writeFilt:
+            args += ' --write_pref_mic'
+        if self.writeBg:
+            args += ' --write_bg_mic'
+        if self.writeBgSub:
+            args += ' --write_bgfree_mic'
+        if self.writeSigma:
+            args += ' --write_lsigma_mic'
+        if self.writeMsk:
+            args += ' --write_mic_mask'
 
         return args
 
