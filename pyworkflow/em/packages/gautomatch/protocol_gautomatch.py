@@ -65,7 +65,7 @@ class ProtGautomatch(em.ProtParticlePicking):
                       label='Particle radius (A)',
                       help="Particle radius in Angstrom")
         form.addParam('GPUId', params.IntParam, default=0,
-                      label='GPU ID', expertLevel=params.LEVEL_ADVANCED,
+                      label='GPU ID',
                       help='GPU ID, normally it is 0')
 
         form.addSection(label='Advanced')
@@ -147,7 +147,6 @@ class ProtGautomatch(em.ProtParticlePicking):
 
         form.addSection(label='Filter')
         line = form.addLine('Micrograph band-pass filter range (A)',
-                            expertLevel=params.LEVEL_ADVANCED,
                             help="Apply band-pass filter on the micrographs:\n"
                                  "low-pass filter to increase the contrast of "
                                  "raw micrographs, suggested range 20~50 A\n"
@@ -161,12 +160,11 @@ class ProtGautomatch(em.ProtParticlePicking):
                       label='Max')
 
         form.addParam('preFilt', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Pre-filter micrographs?',
                       help="This band-pass pre-filter is normally not suggested, "
                       "because it can affect ice/carbon detection. "
                       "Use it only if you have a severe ice gradient.")
-        line = form.addLine('Pre-filter range(A)', condition='preFilt')
+        line = form.addLine('Pre-filter range (A)', condition='preFilt')
         line.addParam('prelowPass', params.IntParam, default=8,
                       label='Min')
         line.addParam('prehighPass', params.IntParam, default=1000,
@@ -174,7 +172,6 @@ class ProtGautomatch(em.ProtParticlePicking):
 
         form.addSection(label='Exclusive picking')
         form.addParam('exclusive', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Exclusive picking?',
                       help='Exclude user-provided areas. This can be useful in the '
                            'following cases:\n\n(a) Another cycle of auto-picking '
@@ -191,40 +188,33 @@ class ProtGautomatch(em.ProtParticlePicking):
                            'views and focused on rare views.')
         form.addParam('exclCoord', params.PointerParam,
                       pointerClass='SetOfCoordinates', condition='exclusive',
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Coordinates to be excluded',
                       help='Coordinates can be imported beforehand or generated from '
                            'particles using scipion - extract coordinates protocol.')
         form.addParam('exclGlobal', params.PointerParam,
                       pointerClass='SetOfCoordinates', condition='exclusive',
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Detector defects coordinates',
                       help='Occasionally you might have detector defects, e.g. a '
                            'black/white stripe. This will help to get rid of these bad areas')
 
         form.addSection(label='Debug')
         form.addParam('writeCC', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Write CC files?',
                       help='Specify to write out cross-correlation files in MRC stack')
         form.addParam('writeFilt', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED, condition='preFilt',
+                      condition='preFilt',
                       label='Write pre-filtered micrographs?',
                       help='Specify to write out pre-filted micrographs')
         form.addParam('writeBg', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Write estimated background?',
                       help='Specify to write out estimated background of the micrographs')
         form.addParam('writeBgSub', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Write background-subtracted micrographs?',
                       help='Specify to write out background-subtracted micrographs')
         form.addParam('writeSigma', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Write local sigma?',
                       help='Specify to write out local sigma micrographs')
         form.addParam('writeMsk', params.BooleanParam, default=False,
-                      expertLevel=params.LEVEL_ADVANCED,
                       label='Write detected mask?',
                       help='Specify to write out the auto-detected mask (ice, '
                            'contamination, aggregation, carbon edges etc.)')
