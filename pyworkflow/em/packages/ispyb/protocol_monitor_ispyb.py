@@ -94,7 +94,8 @@ class MonitorISPyB(Monitor):
         self.info("MonitorISPyB: only one step")
 
         prot = self.protocol
-        proxy = ISPyBProxy(prot.db.get(),
+
+        proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
                            experimentParams={'parentid': prot.groupid.get(),
                                              'visit': prot.visit.get(),
                                              'sampleid': prot.sampleid.get(),

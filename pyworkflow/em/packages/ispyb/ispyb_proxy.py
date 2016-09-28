@@ -71,14 +71,19 @@ class ISPyBProxy():
     #         cmd = 'python ' + script
     #         for k, v in self.params.iteritems():
     #            cmd += ' --%s %s' % (k, v)
-    #         pwutils.runJob(None,
+    #        pwutils.runJob(None,
     #                        'source /etc/profile.d/modules.sh; '
     #                        'module load python/ana; '
     #                        'module load ispyb-api/ana; ',
     #                        cmd)
     # =======
     def _createISPyBProcess(self, db):
-        cmd = ''
+        cmd = ('source /etc/profile.d/modules.sh;'
+            'module unload python/ana;'
+            'module load python/ana;'
+            'module unload ispyb-api/ana;'
+            'module load ispyb-api/ana;')
+
         cmd += 'python %s %s' % (SCRIPT, db)
 
         #    gcmd = greenStr(cmd)
@@ -189,6 +194,9 @@ class ISPyBdb():
     Python with the required modules for ispyb_api to work.
     """
     def __init__(self, db, experimentParams):
+        self.f = open("/tmp/ispybdb.txt", 'a')
+        print >> self.f, "ENV : %s" % os.environ
+
         try:
             from ispyb_api.dbconnection import dbconnection
             from ispyb_api.core import core
@@ -200,7 +208,6 @@ class ISPyBdb():
             self.dbconnection = None
             self.core = None
             self.mxacquisition = None
-            self.f = open("/tmp/ispybdb.txt", 'a')
             print >> self.f, "\n%s: >>> OPENING DB" % timeStamp()
 
         self._loadCursor(db)
