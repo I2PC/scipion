@@ -118,13 +118,11 @@ def readCoordinates(mic, fileName, coordsSet):
             coord = rowToCoordinate(row)
             coord.setX(coord.getX())
             coord.setY(coord.getY())
-            #coord = em.Coordinate(x=row.getValue("rlnCoordinateX"),
-            #                      y=row.getValue("rlnCoordinateY"))
             coord.setMicrograph(mic)
             coordsSet.append(coord)
 
 
-def writeSetOfCoordinates(workDir, micSet, coordSet, isGlobal=False):
+def writeSetOfCoordinates(workDir, coordSet, isGlobal=False):
     """ Write set of coordinates from md to file: box or star.
     Used only for exclusive picking. Creates .star files with
     bad coordinates (for each mic) and/or a single .box file with
@@ -132,16 +130,41 @@ def writeSetOfCoordinates(workDir, micSet, coordSet, isGlobal=False):
     """
     if isGlobal:
         fnOut = os.path.join(workDir, 'defects.box')
-        writeCoordinates(None, fnOut, coordSet)
+        boxSize = coordSet.getBoxSize() or 0
+        f = open(fnOut, 'w')
+
+        for coord in coordSet:
+            f.write("%0.6f %0.6f %d %d\n"
+                    % (coord.getX(), coord.getY(), boxSize, boxSize))
+        f.close()
+
     else:
-        for mic in micSet:
+        for mic in coordSet.iterMicrographs():
+            micId = mic.getObjId()
             micBase = pwutils.removeBaseExt(mic.getFileName())
             fnCoords = os.path.join(workDir, micBase + '_rubbish.star')
-            writeCoordinates(mic, fnCoords, coordSet)
+            # Gautomatch cannot read default star header (with # XMIPP_STAR_1 *),
+            # so we write directly to file
+            f = open(fnCoords, 'w')
+            header = """
+data_
 
-
-def writeCoordinates(mic, fileName, coordsSet):
-    pass #TODO
+loop_
+_rlnCoordinateX #1
+_rlnCoordinateY #2
+_rlnAnglePsi #3
+_rlnClassNumber #4
+_rlnAutopickFigureOfMerit #5
+"""
+            f.write(header)
+            for coord in coordSet:
+                if coord.getMicId() == micId:
+                    f.write("%0.6f %0.6f %0.6f %d %0.6f\n"
+                            % (coord.getX(), coord.getY(),
+                               coord.getAttributeValue('_rlnAnglePsi', 0.0),
+                               coord.getAttributeValue('_rlnClassNumber', 0),
+                               coord.getAttributeValue('_rlnAutopickFigureOfMerit', 0.0)))
+            f.close()
 
 
 def getProgram():
@@ -166,5 +189,3 @@ def runGautomatch(micName, refStack, workDir, args):
     pwutils.runJob(None, getProgram(), args)
     # After picking we can remove the temporary file.
     pwutils.cleanPath(outMic)
-
-

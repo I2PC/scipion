@@ -186,12 +186,12 @@ class ProtGautomatch(em.ProtParticlePicking):
                            'your templates were severely biased and mainly picked the '
                            'preferred views, then it might be nice to exclude the preferred '
                            'views and focused on rare views.')
-        form.addParam('exclCoord', params.PointerParam, allowsNull=True,
+        form.addParam('inputBadCoords', params.PointerParam, allowsNull=True,
                       pointerClass='SetOfCoordinates', condition='exclusive',
                       label='Coordinates to be excluded',
                       help='Coordinates can be imported beforehand or generated from '
                            'particles using scipion - extract coordinates protocol.')
-        form.addParam('exclGlobal', params.PointerParam, allowsNull=True,
+        form.addParam('inputDefects', params.PointerParam, allowsNull=True,
                       pointerClass='SetOfCoordinates', condition='exclusive',
                       label='Detector defects coordinates',
                       help='Occasionally you might have detector defects, e.g. a '
@@ -290,6 +290,11 @@ class ProtGautomatch(em.ProtParticlePicking):
 
         if not self.localAvgMin < self.localAvgMax:
             errors.append('Wrong values of local average cut-off!')
+        if self.exclusive:
+            if not self.inputBadCoords.get() and not self.inputDefects.get():
+                errors.append("You have to provide at least one set of coordinates ")
+                errors.append("for exclusive picking!")
+
         return errors
 
     def _summary(self):
@@ -344,6 +349,9 @@ class ProtGautomatch(em.ProtParticlePicking):
         args += ' --hp %d' % self.highPass
         args += ' --gid %d' % self.GPUId
 
+        if not self.invertTemplatesContrast:
+            args += ' --dont_invertT'
+
         if threshold:
             args += ' --cc_cutoff %0.2f' % self.threshold
 
@@ -361,11 +369,11 @@ class ProtGautomatch(em.ProtParticlePicking):
         if self.preFilt:
             args += ' --do_pre_filter --pre_lp %d' % self.prelowPass
             args += ' --pre_hp %d' % self.prehighPass
-        if not self.invertTemplatesContrast:
-            args += ' --dont_invertT'
+
         if self.exclusive:
-            args += ' --exclusive_picking --exclusive_suffix _rubbish.star'
-            if self.exclGlobal:
+            if self.inputBadCoords.get():
+                args += ' --exclusive_picking --excluded_suffix _rubbish.star'
+            if self.inputDefects.get():
                 args += ' --global_excluded_box %s' % self._getExtraPath('micrographs/defects.box')
 
         if self.writeCC:
@@ -389,15 +397,10 @@ class ProtGautomatch(em.ProtParticlePicking):
 
     def convertCoordinates(self, workingDir):
         if self.exclusive:
-            coordSetEx = self.exclCoord.get()
-            coordSetGlob = self.exclGlobal.get()
-
-            if coordSetEx is not None:
-                writeSetOfCoordinates(workingDir, self.getInputMicrographs(),
-                                      coordSetEx, isGlobal=False)
-            if coordSetGlob is not None:
-                writeSetOfCoordinates(workingDir, None,
-                                      coordSetGlob, isGlobal=True)
+            if self.inputBadCoords.get():
+                writeSetOfCoordinates(workingDir, self.inputBadCoords.get(), isGlobal=False)
+            if self.inputDefects.get():
+                writeSetOfCoordinates(workingDir, self.inputDefects.get(), isGlobal=True)
 
 
     def readSetOfCoordinates(self, workingDir, coordSet):
