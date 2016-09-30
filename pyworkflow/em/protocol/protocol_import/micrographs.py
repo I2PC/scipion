@@ -307,6 +307,13 @@ class ProtImportMovies(ProtImportMicBase):
                       help="Select Yes if you want to create a new stack for "
                            "each movies with its frames. ")
 
+        form.addParam('writeMoviesInProject', params.BooleanParam,
+                      default=False, condition="inputIndividualFrames and stackFrames",
+                      label="Write stacks in the project folder?",
+                      help="If Yes, the created stack files will be written "
+                           "in the project folder. By default the movies will "
+                           "be written in the same place where input frames are.")
+
         form.addParam('movieSuffix', params.StringParam,
                       default='_frames.mrcs',
                       condition="inputIndividualFrames and stackFrames",
@@ -334,6 +341,7 @@ class ProtImportMovies(ProtImportMicBase):
         The frames pattern should contains a part delimited by $.
         The id expression with # is not supported for simplicity.
         """
+
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
             for fileName, fileId in  ProtImportMicBase.iterNewInputFiles(self):
@@ -383,6 +391,9 @@ class ProtImportMovies(ProtImportMicBase):
         for k, v in frameDict.iteritems():
             movieFn = k + suffix
 
+            if self.writeMoviesInProject:
+                movieFn = self._getExtraPath(os.path.basename(movieFn))
+
             if (movieFn not in self.importedFiles and
                 movieFn not in self.createdStacks and
                 len(v) == self.numberOfIndividualFrames):
@@ -391,7 +402,7 @@ class ProtImportMovies(ProtImportMicBase):
                 if movieOut.endswith("mrc"):
                     movieOut += ":mrcs"
 
-                print "Writing movie stack: ", movieFn
+                self.info("Writing movie stack: %s" % movieFn)
                 pwutils.cleanPath(movieFn)  # Remove the output file if exists
 
                 for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
@@ -404,3 +415,14 @@ class ProtImportMovies(ProtImportMicBase):
                 # Now return the newly created movie file as imported file
                 self.createdStacks.add(movieFn)
                 yield movieFn, None
+
+
+    def ignoreCopy(self, source, dest):
+        pass
+
+    def getCopyOrLink(self):
+        if (self.inputIndividualFrames and self.stackFrames and
+            self.writeMoviesInProject):
+            return self.ignoreCopy
+        else:
+            return ProtImportMicBase.getCopyOrLink()
