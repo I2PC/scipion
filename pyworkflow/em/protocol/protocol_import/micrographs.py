@@ -412,9 +412,9 @@ class ProtImportMovies(ProtImportMicBase):
                     if self.deleteFrames:
                         pwutils.cleanPath(frameFn)
 
-                # Now return the newly created movie file as imported file
-                self.createdStacks.add(movieFn)
-                yield movieFn, None
+                    # Now return the newly created movie file as imported file
+                    self.createdStacks.add(movieFn)
+                    yield movieFn, None
 
 
     def ignoreCopy(self, source, dest):
