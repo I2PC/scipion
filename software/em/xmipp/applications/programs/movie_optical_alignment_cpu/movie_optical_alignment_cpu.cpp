@@ -171,10 +171,9 @@ public:
     }
 
     // Computes the average of a number of frames in movies
-    void computeAvg(size_t begin, size_t end, cv::Mat &cvAvgImg, bool originalData=false)
+    int computeAvg(size_t begin, size_t end, cv::Mat &cvAvgImg, bool originalData=false)
     {
         Image<float> frame;
-        double N=0;
         end=std::min(end,movie.size());
 
         if (originalData)
@@ -225,6 +224,7 @@ public:
         }
         tempAvg()/=float(end-begin+1);
         xmipp2Opencv(tempAvg(), cvAvgImg);
+        return end-begin+1;
     }
 
     void evaluateDisplacements(const cv::Mat *flowCurrentGroup, const cv::Mat *flowPreviousGroup, Matrix1D<double> &meanStdDev)
