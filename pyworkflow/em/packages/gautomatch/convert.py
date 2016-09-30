@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -97,7 +98,7 @@ def rowToCoordinate(coordRow):
     return coord
 
 
-def readSetOfCoordinates(workDir, micSet, coordSet):
+def readSetOfCoordinates(workDir, micSet, coordSet, **kwargs):
     """ Read from coordinates from Gautomatch .star files.
     For a micrograph: mic1.mrc, the expected coordinate file is:
     mic1_automatch.star
@@ -105,10 +106,16 @@ def readSetOfCoordinates(workDir, micSet, coordSet):
         workDir: where the Gautomatch output files are located.
         micSet: the SetOfMicrographs.
         coordSet: the SetOfCoordinates that will be populated.
+        suffix: input coord file suffix
     """
+    if kwargs.get('suffix', True):
+        suffix = kwargs['suffix']
+    else:
+        suffix = '_automatch.star'
+
     for mic in micSet:
         micBase = pwutils.removeBaseExt(mic.getFileName())
-        fnCoords = os.path.join(workDir, micBase + '_automatch.star')
+        fnCoords = os.path.join(workDir, micBase + suffix)
         readCoordinates(mic, fnCoords, coordSet)
 
 

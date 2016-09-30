@@ -157,7 +157,7 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                 'coordsDir': coordsDir,
                 'micsSqlite': micSet.getFileName(),
                 'threshold': prot.threshold.get(),
-                "mindist": prot.maxDist.get(),
+                "mindist": prot.minDist.get(),
                 "refStack": refStack
           }
 
@@ -195,6 +195,6 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         #form.setVar('diameter', myprops['diameter.value'])
         form.setVar('threshold', myprops['threshold.value'])
         if not prot.advanced:
-            form.setVar('maxDist', myprops['mindist.value'])
+            form.setVar('minDist', myprops['mindist.value'])
         else:
             pass # TODO: We could even in future parse the 'guessed' params

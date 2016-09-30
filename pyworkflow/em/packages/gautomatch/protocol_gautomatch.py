@@ -264,7 +264,16 @@ class ProtGautomatch(em.ProtParticlePicking):
         else:
             coordSet.setBoxSize(self.inputReferences.get().getXDim)
 
-        self.readSetOfCoordinates(self.getMicrographsDir(), coordSet)
+        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet)
+
+        coordSetAux = self._createSetOfCoordinates(micSet, suffix='_nonunique')
+        coordSetAux2 = self._createSetOfCoordinates(micSet, suffix='_rejected')
+
+        coordSetAux.setBoxSize(coordSet.getBoxSize())
+        coordSetAux2.setBoxSize(coordSet.getBoxSize())
+
+        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet, suffix='_nonunique.box')
+        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet, suffix='_rejected.star')
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
@@ -401,8 +410,3 @@ class ProtGautomatch(em.ProtParticlePicking):
                 writeSetOfCoordinates(workingDir, self.inputBadCoords.get(), isGlobal=False)
             if self.inputDefects.get():
                 writeSetOfCoordinates(workingDir, self.inputDefects.get(), isGlobal=True)
-
-
-    def readSetOfCoordinates(self, workingDir, coordSet):
-        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
-

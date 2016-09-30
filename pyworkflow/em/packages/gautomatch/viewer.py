@@ -31,6 +31,8 @@ import pyworkflow.utils as pwutils
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.viewer import CoordinatesObjectView
+from pyworkflow.em.data import SetOfCoordinates
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates, writeSetOfMicrographs
 from protocol_gautomatch import ProtGautomatch
 
 
@@ -43,10 +45,11 @@ class GautomatchViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         form.addSection(label='Visualization')
-        form.addParam('doShowAutopick', LabelParam, label="Show auto-picked particles?", default=True)
-        form.addParam('doShowNonunique', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowAutopick', LabelParam,
+                      label="Show auto-picked particles?", default=True)
+        form.addParam('doShowNonunique', LabelParam,
                       label="Show non-unique particles?", default=True)
-        form.addParam('doShowRejected', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowRejected', LabelParam,
                       label="Show rejected particles?", default=True)
 
         form.addSection(label='Debug output')
@@ -75,30 +78,23 @@ class GautomatchViewer(ProtocolViewer):
     def _viewParam(self, param=None):
         project = self.protocol.getProject()
         micSet = self.protocol.getInputMicrographs()
-        micfn = micSet.getFileName()
         coordsDir = project.getTmpPath(micSet.getName())
-        pwutils.cleanPath(coordsDir)
-        pwutils.makePath(coordsDir)
-        pickerConfig = pwutils.join(coordsDir, 'picker.conf')
-        f = open(pickerConfig, "w")
-        convertCmd = pwutils.join('apps', 'pw_convert.py')
 
-        args = {'convertCmd': convertCmd,
-                'coordsDir': coordsDir,
-                'micsSqlite': micSet.getFileName()
-                }
+        if micSet is None:
+            raise Exception('visualize: SetOfCoordinates has no micrographs set.')
 
-        f.write("""
-        convertCommand = %(convertCmd)s --coordinates --from gautomatch --to xmipp --input  %(micsSqlite)s --output %(coordsDir)s
-        """ % args)
-        f.close()
+        micfn = project.getTmpPath(micSet.getName() + '_micrographs.xmd')
+        writeSetOfMicrographs(micSet, micfn)
 
         if param == 'doShowAutopick':
-            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol).show()
+            self._convertCoords(micSet, coordsDir, coordsType='autopick')
+            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
         elif param == 'doShowNonunique':
-            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol).show()
+            self._convertCoords(micSet, coordsDir, coordsType='nonunique')
+            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
         elif param == 'doShowRejected':
-            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol).show()
+            self._convertCoords(micSet, coordsDir, coordsType='rejected')
+            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
         elif param == 'doShowCC':
             pass
             #view = DataView(self.protocol._getFileName('mic_CC'))
@@ -116,3 +112,20 @@ class GautomatchViewer(ProtocolViewer):
             #view = DataView(self.protocol._getFileName('mic_Mask'))
 
         return [view]
+
+
+    def _convertCoords(self, micSet, coordsDir, coordsType):
+        """ Link specified coord set to Tmp folder and convert it to .pos files"""
+        pwutils.cleanPath(coordsDir)
+        pwutils.makePath(coordsDir)
+        coordTypes = {'autopick': 'coordinates.sqlite',
+                      'nonunique': 'coordinates_nonunique.sqlite',
+                      'rejected': 'coordinates_rejected.sqlite'
+                      }
+
+        coordsFnIn = self.protocol._getPath(coordTypes[coordsType])
+        coordsFnOut = pwutils.join(coordsDir, 'coordinates.sqlite')
+        pwutils.createLink(coordsFnIn, coordsFnOut)
+        coordSet = SetOfCoordinates(filename=coordsFnOut)
+        coordSet.setMicrographs(micSet)
+        writeSetOfCoordinates(coordsDir, coordSet, ismanual=False)
