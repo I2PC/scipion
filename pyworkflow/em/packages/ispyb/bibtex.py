@@ -26,18 +26,37 @@
 # **************************************************************************
 
 _bibtexStr = """
-
-@Article{Serban2015,
-  Title                    = {Localized reconstruction of subunits from electron cryomicroscopy images.},
-  Author                   = {Ilca, Serban L. and Kotecha, A. Sun, Xiaoyu and Poranen, Minna M. and Stuart, David I. and Huiskonen, Juha T.},
-  Journal                  = {Nat Commun},
-  Year                     = {2015},
-  Month                    = {November},
-  Volume                   = {6},
-  Doi                      = {http://dx.doi.org/10.1038/ncomms9843},
-  Url                      = {http://www.nature.com/ncomms/2015/151104/ncomms9843/full/ncomms9843.html}
+@article{DBLP:journals/bioinformatics/DelageniereBLALVGGJLMMNSSWL11,
+  author    = {Solange Delageni{\`{e}}re and
+               Patrice Brenchereau and
+               Ludovic Launer and
+               Alun W. Ashton and
+               Ricardo Leal and
+               St{\'{e}}phanie Veyrier and
+               Jos{\'{e}} Gabadinho and
+               Elspeth J. Gordon and
+               Samuel D. Jones and
+               Karl Erik Levik and
+               Se{\'{a}}n M. McSweeney and
+               St{\'{e}}phanie Monaco and
+               Max Nanao and
+               Darren Spruce and
+               Olof Svensson and
+               Martin A. Walsh and
+               Gordon A. Leonard},
+  title     = {ISPyB: an information management system for synchrotron macromolecular
+               crystallography},
+  journal   = {Bioinformatics},
+  volume    = {27},
+  number    = {22},
+  pages     = {3186--3192},
+  year      = {2011},
+  url       = {http://dx.doi.org/10.1093/bioinformatics/btr535},
+  doi       = {10.1093/bioinformatics/btr535},
+  timestamp = {Mon, 14 Nov 2011 15:11:21 +0100},
+  biburl    = {http://dblp.uni-trier.de/rec/bib/journals/bioinformatics/DelageniereBLALVGGJLMMNSSWL11},
+  bibsource = {dblp computer science bibliography, http://dblp.org}
 }
-
 """
 
 from pyworkflow.utils import parseBibTex
