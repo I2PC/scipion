@@ -24,13 +24,15 @@
 # *
 # **************************************************************************
 
-from os.path import abspath, dirname
+from os.path import realpath, join, dirname, exists
 from collections import OrderedDict
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
+from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
+from pyworkflow.gui import getPILImage
 
 from ispyb_proxy import ISPyBProxy
 
@@ -80,6 +82,9 @@ class MonitorISPyB(Monitor):
         self.protocol = protocol
         self.allIds = OrderedDict()
         self.numberOfFrames = None
+        self.imageGenerator = None
+        self.visit = self.protocol.visit.get()
+        self.project = self.protocol.getProject()
 
     def step(self):
         self.info("MonitorISPyB: only one step")
@@ -91,7 +96,7 @@ class MonitorISPyB(Monitor):
 
 
         runs = [p.get() for p in self.protocol.inputProtocols]
-        g = self.protocol.getProject().getGraphFromRuns(runs)
+        g = self.project.getGraphFromRuns(runs)
 
         nodes = g.getRoot().iterChildsBreadth()
 
@@ -127,9 +132,12 @@ class MonitorISPyB(Monitor):
     def create_movie_params(self, prot, allParams):
 
         for movie in self.iter_updated_set(prot.outputMovies):
+            movieFn = movie.getFileName()
             if self.numberOfFrames is None:
                 self.numberOfFrames = movie.getNumberOfFrames()
-            movieFn = movie.getFileName()
+                self.imageGenerator = IspybImageGenerator(self.project.path,
+                                                          self.visit, movieFn)
+
             movieId = movie.getObjId()
 
             allParams[movieId] = {
@@ -141,10 +149,15 @@ class MonitorISPyB(Monitor):
                 'n_images': self.numberOfFrames
              }
 
+
     def update_align_params(self, prot, allParams):
         for mic in self.iter_updated_set(prot.outputMicrographs):
+            micFn = mic.getFileName()
+            renderable_image = self.imageGenerator.generate_image(micFn)
+
             allParams[mic.getObjId()].update({
-                'comments': 'aligned'
+                'comments': 'aligned',
+                'xtal_snapshot1':renderable_image
             })
 
     def update_ctf_params(self, prot, allParams):
@@ -154,6 +167,90 @@ class MonitorISPyB(Monitor):
             'max_defocus': ctf.getDefocusV(),
             'amount_astigmatism': ctf.getDefocusRatio()
             })
+
+
+class IspybImageGenerator:
+    def __init__(self, project_path, visit, input_file):
+        self.project_path = project_path
+        self.visit = visit
+        self.ispyb_path = self.find_ispyb_path(input_file, visit)
+        self.ih = ImageHandler()
+        self.img = self.ih.createImage()
+
+    def find_ispyb_path(self, input_file, visit):
+        p = realpath(join(self.project_path, input_file))
+        while p and not p.endswith(visit):
+            p = dirname(p)
+        return join(p, '.ispyb')
+
+    def get_ispyb_path(self, input_file, suffix='.png'):
+        return join(self.ispyb_path, input_file + suffix)
+
+    def generate_image(self, input_file):
+        output_file = self.get_ispyb_path(input_file)
+
+        if not exists(output_file):
+            from PIL import Image
+            self.img.read(join(self.project_path, input_file))
+            pimg = getPILImage(self.img)
+
+            pwutils.makeFilePath(output_file)
+            pimg.save(output_file, "PNG")
+            pimg.thumbnail((200, 200), Image.ANTIALIAS)
+            pimg.save(self.get_ispyb_path(input_file, 't.png'), "PNG")
+
+        return output_file
+
+
+def _loadMeanShifts(self, movie):
+    alignMd = md.MetaData(self._getOutputShifts(movie))
+    meanX = alignMd.getColumnValues(md.MDL_OPTICALFLOW_MEANX)
+    meanY = alignMd.getColumnValues(md.MDL_OPTICALFLOW_MEANY)
+
+    return meanX, meanY
+
+
+def _saveAlignmentPlots(self, movie):
+    """ Compute alignment shifts plot and save to file as a png image. """
+    meanX, meanY = self._loadMeanShifts(movie)
+    plotter = createAlignmentPlot(meanX, meanY)
+    plotter.savefig(self._getPlotCart(movie))
+
+
+def createAlignmentPlot(meanX, meanY):
+    """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    figureSize = (8, 6)
+    plotter = Plotter(*figureSize)
+    figure = plotter.getFigure()
+
+    preX = 0.0
+    preY = 0.0
+    sumMeanX.append(0.0)
+    sumMeanY.append(0.0)
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Cartesian representation')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.plot(0, 0, 'yo-')
+    i = 1
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        #ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.02, str(i))
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
+    return plotter
 
 
 class FileNotifier():
