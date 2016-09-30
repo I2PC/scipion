@@ -63,6 +63,7 @@ from pyworkflow.em.showj import *
 from protocol_movie_opticalflow import (XmippProtOFAlignment,
                                         OBJCMD_MOVIE_ALIGNCARTESIAN)
 from protocol_validate_nontilt import XmippProtValidateNonTilt
+from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 
 
@@ -98,7 +99,8 @@ class XmippViewer(Viewer):
                 XmippProtCTFMicrographs, 
                 XmippProtOFAlignment,
                 XmippProtValidateNonTilt,
-                XmippProtAssignmentTiltPair
+                XmippProtAssignmentTiltPair,
+                XmippProtMultiRefAlignability
                 ]
     
     def __init__(self, **args):
@@ -356,6 +358,33 @@ class XmippViewer(Viewer):
             self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(),
                                           viewParams={MODE: MODE_MD, VISIBLE:labels, ORDER: labels,
                                                       SORT_BY: 'weight desc', RENDER: '_filename'}))
+        
+        elif issubclass(cls, XmippProtMultiRefAlignability):
+            outputVols = obj.outputVolumes
+            labels = 'id enabled comment _filename weightAlignabilityPrecision weightAlignabilityAccuracy'
+            self._views.append(ObjectView(self._project, outputVols.strId(), outputVols.getFileName(),
+                                          viewParams={MODE: MODE_MD, VISIBLE:labels, ORDER: labels,
+                                                      SORT_BY: 'weightAlignabilityAccuracy desc', RENDER: '_filename'}))
+            
+            fn = obj.outputParticles.getFileName()
+            labels = 'id enabled _index _filename _xmipp_scoreAlignabilityAccuracy _xmipp_scoreAlignabilityPrecision'
+            labelRender = "_filename"
+            self._views.append(ObjectView(self._project, obj.outputParticles.strId(), fn,
+                                            viewParams={ORDER: labels, 
+                                                      VISIBLE: labels, 
+                                                      SORT_BY: '_xmipp_scoreAlignabilityAccuracy desc', RENDER:labelRender,
+                                                      MODE: MODE_MD}))
+            
+            fn = obj._getExtraPath('vol001_pruned_particles_alignability.xmd')
+            md = xmipp.MetaData(fn)
+            from plotter import XmippPlotter
+            from pyworkflow.em.plotter import EmPlotter
+            plotter = XmippPlotter()
+            plotter.createSubPlot('Soft-alignment validation plot','Angular Precision', 'Angular Precision')
+            plotter.plotMdFile(md, xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION, xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY,
+                               marker='.', markersize=.55, color='red', linestyle='')
+            self._views.append(plotter)
+
 
         elif issubclass(cls, XmippProtExtractParticlesPairs):
             self._visualize(obj.outputParticlesTiltPair)
