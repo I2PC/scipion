@@ -30,7 +30,7 @@ This module implements the viewer for Gautomatch program
 import pyworkflow.utils as pwutils
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import CoordinatesObjectView
+from pyworkflow.em.viewer import CoordinatesObjectView, DataView
 from pyworkflow.em.data import SetOfCoordinates
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates, writeSetOfMicrographs
 from protocol_gautomatch import ProtGautomatch
@@ -47,14 +47,14 @@ class GautomatchViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         form.addParam('doShowAutopick', LabelParam,
                       label="Show auto-picked particles?", default=True)
-        form.addParam('doShowNonunique', LabelParam,
-                      label="Show non-unique particles?", default=True)
         form.addParam('doShowRejected', LabelParam,
                       label="Show rejected particles?", default=True)
 
         form.addSection(label='Debug output')
         form.addParam('doShowCC', LabelParam, expertLevel=LEVEL_ADVANCED,
                       label="Show cross-correlation files?", default=True)
+        form.addParam('doShowFilt', LabelParam, expertLevel=LEVEL_ADVANCED,
+                      label="Show pre-filtered micrographs?", default=True)
         form.addParam('doShowBgEst', LabelParam, expertLevel=LEVEL_ADVANCED,
                       label="Show background estimation?", default=True)
         form.addParam('doShowBgSub', LabelParam, expertLevel=LEVEL_ADVANCED,
@@ -66,9 +66,9 @@ class GautomatchViewer(ProtocolViewer):
 
     def _getVisualizeDict(self):
         return {'doShowAutopick': self._viewParam,
-                'doShowNonunique': self._viewParam,
                 'doShowRejected': self._viewParam,
                 'doShowCC': self._viewParam,
+                'doShowFilt': self._viewParam,
                 'doShowBgEst': self._viewParam,
                 'doShowBgSub': self._viewParam,
                 'doShowSigma': self._viewParam,
@@ -89,37 +89,29 @@ class GautomatchViewer(ProtocolViewer):
         if param == 'doShowAutopick':
             self._convertCoords(micSet, coordsDir, coordsType='autopick')
             view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
-        elif param == 'doShowNonunique':
-            self._convertCoords(micSet, coordsDir, coordsType='nonunique')
-            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
         elif param == 'doShowRejected':
             self._convertCoords(micSet, coordsDir, coordsType='rejected')
             view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
         elif param == 'doShowCC':
-            pass
-            #view = DataView(self.protocol._getFileName('mic_CC'))
+            view = DataView(self.protocol.getFileName('ccmax'))
+        elif param == 'doShowFilt':
+            view = DataView(self.protocol.getFileName('pref'))
         elif param == 'doShowBgEst':
-            pass
-            #view = DataView(self.protocol._getFileName('mic_BgEst'))
+            view = DataView(self.protocol.getFileName('bg'))
         elif param == 'doShowBgSub':
-            pass
-            #view = DataView(self.protocol._getFileName('mic_BgSub'))
+            view = DataView(self.protocol.getFileName('bgfree'))
         elif param == 'doShowSigma':
-            pass
-            #view = DataView(self.protocol._getFileName('mic_Sigma'))
+            view = DataView(self.protocol.getFileName('lsigma'))
         elif param == 'doShowMask':
-            pass
-            #view = DataView(self.protocol._getFileName('mic_Mask'))
+            view = DataView(self.protocol.getFileName('mask'))
 
         return [view]
-
 
     def _convertCoords(self, micSet, coordsDir, coordsType):
         """ Link specified coord set to Tmp folder and convert it to .pos files"""
         pwutils.cleanPath(coordsDir)
         pwutils.makePath(coordsDir)
         coordTypes = {'autopick': 'coordinates.sqlite',
-                      'nonunique': 'coordinates_nonunique.sqlite',
                       'rejected': 'coordinates_rejected.sqlite'
                       }
 

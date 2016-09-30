@@ -265,15 +265,9 @@ class ProtGautomatch(em.ProtParticlePicking):
             coordSet.setBoxSize(self.inputReferences.get().getXDim)
 
         readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet)
-
-        coordSetAux = self._createSetOfCoordinates(micSet, suffix='_nonunique')
-        coordSetAux2 = self._createSetOfCoordinates(micSet, suffix='_rejected')
-
+        coordSetAux = self._createSetOfCoordinates(micSet, suffix='_rejected')
         coordSetAux.setBoxSize(coordSet.getBoxSize())
-        coordSetAux2.setBoxSize(coordSet.getBoxSize())
-
-        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet, suffix='_nonunique.box')
-        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet, suffix='_rejected.star')
+        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSetAux, suffix='_rejected.star')
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
@@ -410,3 +404,12 @@ class ProtGautomatch(em.ProtParticlePicking):
                 writeSetOfCoordinates(workingDir, self.inputBadCoords.get(), isGlobal=False)
             if self.inputDefects.get():
                 writeSetOfCoordinates(workingDir, self.inputDefects.get(), isGlobal=True)
+
+    def getFileName(self, key):
+        """ Give a key, append the mrc extension
+        and prefix the protocol working dir.
+        """
+        template = '_' + key + '.mrc'
+
+        return pwutils.join(self.getMicrographsDir(), template)
+        #TODO: for each template create a setofmics for the viewer
