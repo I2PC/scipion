@@ -388,33 +388,35 @@ class ProtImportMovies(ProtImportMicBase):
             if movieFn not in self.importedFiles:
                 yield movieFn, None
 
-        for k, v in frameDict.iteritems():
-            movieFn = k + suffix
+        def checkMovie():
+            for k, v in frameDict.iteritems():
+                movieFn = k + suffix
 
-            if self.writeMoviesInProject:
-                movieFn = self._getExtraPath(os.path.basename(movieFn))
+                if self.writeMoviesInProject:
+                    movieFn = self._getExtraPath(os.path.basename(movieFn))
 
-            if (movieFn not in self.importedFiles and
-                movieFn not in self.createdStacks and
-                len(v) == self.numberOfIndividualFrames):
-                movieOut = movieFn
+                if (movieFn not in self.importedFiles and
+                    movieFn not in self.createdStacks and
+                    len(v) == self.numberOfIndividualFrames):
+                    movieOut = movieFn
 
-                if movieOut.endswith("mrc"):
-                    movieOut += ":mrcs"
+                    if movieOut.endswith("mrc"):
+                        movieOut += ":mrcs"
 
-                self.info("Writing movie stack: %s" % movieFn)
-                pwutils.cleanPath(movieFn)  # Remove the output file if exists
+                    self.info("Writing movie stack: %s" % movieFn)
+                    pwutils.cleanPath(movieFn)  # Remove the output file if exists
 
-                for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
-                    frameFn = frame[1] # Frame name stored previously
-                    ih.convert(frameFn, (i+1, movieOut))
+                    for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
+                        frameFn = frame[1] # Frame name stored previously
+                        ih.convert(frameFn, (i+1, movieOut))
 
-                    if self.deleteFrames:
-                        pwutils.cleanPath(frameFn)
+                        if self.deleteFrames:
+                            pwutils.cleanPath(frameFn)
 
-                    # Now return the newly created movie file as imported file
-                    self.createdStacks.add(movieFn)
-                    yield movieFn, None
+                        # Now return the newly created movie file as imported file
+                        self.createdStacks.add(movieFn)
+                        return
+        checkMovie()
 
 
     def ignoreCopy(self, source, dest):
