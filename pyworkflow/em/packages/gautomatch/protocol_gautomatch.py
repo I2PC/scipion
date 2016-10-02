@@ -405,11 +405,26 @@ class ProtGautomatch(em.ProtParticlePicking):
             if self.inputDefects.get():
                 writeSetOfCoordinates(workingDir, self.inputDefects.get(), isGlobal=True)
 
-    def getFileName(self, key):
+    def getOutputName(self, fn, key):
         """ Give a key, append the mrc extension
         and prefix the protocol working dir.
         """
-        template = '_' + key + '.mrc'
+        template = pwutils.removeBaseExt(fn) + key + '.mrc'
 
         return pwutils.join(self.getMicrographsDir(), template)
-        #TODO: for each template create a setofmics for the viewer
+
+    def createDebugOutput(self, suffix):
+        micSet = self.getInputMicrographs()
+        micTest = micSet.getFirstItem().getFileName()
+        debugMic = self.getOutputName(micTest, suffix)
+        if not pwutils.exists(debugMic):
+            raise Exception ("Error: This type of debug output was not produced!")
+
+        outputDebugMics = self._createSetOfMicrographs(suffix=suffix)
+        outputDebugMics.copyInfo(micSet)
+        for mic in micSet:
+            micFn = self.getOutputName(mic.getFileName(), suffix)
+            mic.setFileName(micFn)
+            outputDebugMics.append(mic)
+
+        return outputDebugMics.getFileName()

@@ -30,9 +30,10 @@ This module implements the viewer for Gautomatch program
 import pyworkflow.utils as pwutils
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import CoordinatesObjectView, DataView
+from pyworkflow.em.viewer import CoordinatesObjectView, ObjectView
 from pyworkflow.em.data import SetOfCoordinates
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates, writeSetOfMicrographs
+import pyworkflow.em.showj as showj
 from protocol_gautomatch import ProtGautomatch
 
 
@@ -85,25 +86,34 @@ class GautomatchViewer(ProtocolViewer):
 
         micfn = project.getTmpPath(micSet.getName() + '_micrographs.xmd')
         writeSetOfMicrographs(micSet, micfn)
-
+        labels = 'enabled id _size _filename'
+        viewParams = {showj.ORDER: labels,
+                      showj.VISIBLE: labels, showj.RENDER: '_filename',
+                      'labels': 'id',
+                      }
+        fn = ''
         if param == 'doShowAutopick':
             self._convertCoords(micSet, coordsDir, coordsType='autopick')
             view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
+            return [view]
         elif param == 'doShowRejected':
             self._convertCoords(micSet, coordsDir, coordsType='rejected')
             view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
+            return [view]
         elif param == 'doShowCC':
-            view = DataView(self.protocol.getFileName('ccmax'))
+            fn = self.protocol.createDebugOutput(suffix='_ccmax')
         elif param == 'doShowFilt':
-            view = DataView(self.protocol.getFileName('pref'))
+            fn = self.protocol.createDebugOutput(suffix='_pref')
         elif param == 'doShowBgEst':
-            view = DataView(self.protocol.getFileName('bg'))
+            fn = self.protocol.createDebugOutput(suffix='_bg')
         elif param == 'doShowBgSub':
-            view = DataView(self.protocol.getFileName('bgfree'))
+            fn = self.protocol.createDebugOutput(suffix='_bgfree')
         elif param == 'doShowSigma':
-            view = DataView(self.protocol.getFileName('lsigma'))
+            fn = self.protocol.createDebugOutput(suffix='_lsigma')
         elif param == 'doShowMask':
-            view = DataView(self.protocol.getFileName('mask'))
+            fn = self.protocol.createDebugOutput(suffix='_mask')
+
+        view = ObjectView(project, self.protocol.strId(), fn, viewParams=viewParams)
 
         return [view]
 
@@ -114,7 +124,6 @@ class GautomatchViewer(ProtocolViewer):
         coordTypes = {'autopick': 'coordinates.sqlite',
                       'rejected': 'coordinates_rejected.sqlite'
                       }
-
         coordsFnIn = self.protocol._getPath(coordTypes[coordsType])
         coordsFnOut = pwutils.join(coordsDir, 'coordinates.sqlite')
         pwutils.createLink(coordsFnIn, coordsFnOut)

@@ -98,7 +98,7 @@ def rowToCoordinate(coordRow):
     return coord
 
 
-def readSetOfCoordinates(workDir, micSet, coordSet, **kwargs):
+def readSetOfCoordinates(workDir, micSet, coordSet, suffix=None):
     """ Read from coordinates from Gautomatch .star files.
     For a micrograph: mic1.mrc, the expected coordinate file is:
     mic1_automatch.star
@@ -108,9 +108,7 @@ def readSetOfCoordinates(workDir, micSet, coordSet, **kwargs):
         coordSet: the SetOfCoordinates that will be populated.
         suffix: input coord file suffix
     """
-    if kwargs.get('suffix', True):
-        suffix = kwargs['suffix']
-    else:
+    if suffix == None:
         suffix = '_automatch.star'
 
     for mic in micSet:
