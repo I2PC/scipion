@@ -98,6 +98,12 @@ class ProtMotionCorr(ProtAlignMovies):
                       help='Frame dose in e/A^2. If set to *0.0*, dose '
                            'weighting will be skipped.')
 
+        form.addParam('initDose', params.FloatParam, default='0.0',
+                      expertLevel = cons.LEVEL_ADVANCED,
+                      label='Pre-exposure (e/A^2)',
+                      condition='useMotioncor2 and frameDose',
+                      help='Initial dose received before stack is acquired, in e/A^2.')
+
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
                       help='Group every specified number of frames by adding '
@@ -113,8 +119,8 @@ class ProtMotionCorr(ProtAlignMovies):
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
                       help="""
-- Bft       100       BFactor for alignment, in px^2.
-- Iter      5         Maximum iterations for iterative alignment.
+-Bft       100        BFactor for alignment, in px^2.
+-Iter      5          Maximum iterations for iterative alignment.
 -MaskCent  0 0        Center of subarea that will be used for alignment,
                       default *0 0* corresponding to the frame center.
 -MaskSize  1.0 1.0    The size of subarea that will be used for alignment,
@@ -124,6 +130,10 @@ class ProtMotionCorr(ProtAlignMovies):
                       all other frames are aligned, by default *0* all aligned
                       to the first frame,
                       other value aligns to the central frame.
+-RotGain   0          Rotate gain reference counter-clockwise: 0 - no rotation,
+                      1 - 90 degrees, 2 - 180 degrees, 3 - 270 degrees.
+-FlipGain  0          Flip gain reference after gain rotation: 0 - no flipping,
+                      1 - flip upside down, 2 - flip left right.
 -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
                       tilt series, e.g. *-60 60*
                       """)
@@ -205,6 +215,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
                         '-FmDose': self.frameDose.get(),
+                        '-InitDose': self.initDose.get(),
                         '-Throw': '%d' % (a0 - 1),
                         '-Trunc': '%d' % (abs(aN - numberOfFrames)),
                         '-PixSize': inputMovies.getSamplingRate(),
