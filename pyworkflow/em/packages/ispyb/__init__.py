@@ -29,5 +29,6 @@
 from bibtex import _bibtex # Load bibtex dict with references
 
 _logo = None
+_references = ['Delageniere2011']
 
 from protocol_monitor_ispyb import ProtMonitorISPyB

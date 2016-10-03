@@ -28,24 +28,25 @@
 # **************************************************************************
 
 _bibtexStr = """
-@article{DBLP:journals/bioinformatics/DelageniereBLALVGGJLMMNSSWL11,
-  author    = {Solange Delageni{\`{e}}re and
-               Patrice Brenchereau and
-               Ludovic Launer and
-               Alun W. Ashton and
-               Ricardo Leal and
-               St{\'{e}}phanie Veyrier and
-               Jos{\'{e}} Gabadinho and
-               Elspeth J. Gordon and
-               Samuel D. Jones and
-               Karl Erik Levik and
-               Se{\'{a}}n M. McSweeney and
-               St{\'{e}}phanie Monaco and
-               Max Nanao and
-               Darren Spruce and
-               Olof Svensson and
-               Martin A. Walsh and
-               Gordon A. Leonard},
+
+@article{Delageniere2011,
+  author    = {Delageniere, Solange and
+               Brenchereau, Patrice  and
+               Launer, Ludovic  and
+               Ashton, Alun W.  and
+               Leal, Ricardo  and
+               Veyrier, Stephanie  and
+               Gabadinho, Jose  and
+               Gordon, Elspeth J.  and
+               Jones, Samuel D.  and
+               Levik, Karl Erik  and
+               McSweeney, Sean M.  and
+               Monaco, Stephanie  and
+               Nanao, Max  and
+               Spruce, Darren  and
+               Svensson, Olof  and
+               Walsh, Martin A.  and
+               Leonard, Gordon A.},
   title     = {ISPyB: an information management system for synchrotron macromolecular
                crystallography},
   journal   = {Bioinformatics},
@@ -54,13 +55,15 @@ _bibtexStr = """
   pages     = {3186--3192},
   year      = {2011},
   url       = {http://dx.doi.org/10.1093/bioinformatics/btr535},
-  doi       = {10.1093/bioinformatics/btr535},
-  timestamp = {Mon, 14 Nov 2011 15:11:21 +0100},
-  biburl    = {http://dblp.uni-trier.de/rec/bib/journals/bioinformatics/DelageniereBLALVGGJLMMNSSWL11},
-  bibsource = {dblp computer science bibliography, http://dblp.org}
+  doi       = {http://dx.doi.org/10.1093/bioinformatics/btr535},
+  timestamp = {Mon, 14 Nov 2011 15:11:21 +0100}
 }
 """
 
 from pyworkflow.utils import parseBibTex
 
 _bibtex = parseBibTex(_bibtexStr)  
+
+'''
+
+'''

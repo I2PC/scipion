@@ -40,10 +40,7 @@ from ispyb_proxy import ISPyBProxy
 
 
 class ProtMonitorISPyB(ProtMonitor):
-    """ Provide some summary of the basic steps of the Scipion-Box:
-    - Import movies
-    - Align movies (global and/or local)
-    - CTF estimation.
+    """ Monitor to communicated with ISPyB system at Diamond.
     """
     _label = 'monitor to ISPyB'
 
