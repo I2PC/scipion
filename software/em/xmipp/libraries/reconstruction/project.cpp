@@ -117,6 +117,7 @@ void ProgProject::defineParams()
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
+    addParamsLine("                                         : tilt angle should be in the range [0-180]");
     addParamsLine("  [--sym <sym_file>]                     : It is used for computing the asymmetric unit");
     addParamsLine("  [--only_create_angles]                 : Do not create projections");
     addParamsLine("== Generating a single projection == ");

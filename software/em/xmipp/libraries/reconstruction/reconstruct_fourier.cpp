@@ -31,7 +31,7 @@
 // Define params
 void ProgRecFourier::defineParams()
 {
-    //usage
+	//usage
     addUsageLine("Generate 3D reconstructions from projections using direct Fourier interpolation with arbitrary geometry.");
     addUsageLine("Kaisser-windows are used for interpolation in Fourier space.");
     //params
