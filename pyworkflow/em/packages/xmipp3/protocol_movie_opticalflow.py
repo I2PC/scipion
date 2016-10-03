@@ -178,7 +178,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
             print ("ERROR: %s failed for movie %s.\n  Exception: %s"
                    % (program, inputFn, e))
         
-        pwutils.cleanPattern(self._getExtraPath("*.txt")) # remove this when .txt tmp files are not produced
+        # remove this when .txt tmp files are not produced
+        pwutils.cleanPattern(self._getExtraPath("*.txt"))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
