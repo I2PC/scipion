@@ -22,23 +22,22 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM Micrographs
-"""
 
 from os.path import join, exists
-import sys
-import numpy as np
+from glob import glob
+from itertools import izip
 
+import pyworkflow.object as pwobj
+import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
-from pyworkflow.utils.path import moveFile
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
+import pyworkflow.em.metadata as md
 from convert import writeShiftsMovieAlignment, getMovieFileName
 
 
@@ -53,11 +52,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
     """
     _label = 'optical alignment'
     CONVERT_TO_MRC = 'mrcs'
-    
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
+        form.addSection("Aditional Parameters")
         # GROUP GPU PARAMETERS
         group = form.addGroup('GPU')
         group.addParam('doGPU', params.BooleanParam, default=False,
@@ -72,97 +71,121 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "index is 0, second 1 and so on.")
         
         # GROUP OPTICAL FLOW PARAMETERS
-        group = form.addGroup('Additional Parameters',
-                              expertLevel=params.LEVEL_ADVANCED)
-        group.addParam('winSize', params.IntParam, default=150,
+        form.addParam('winSize', params.IntParam, default=150,
                        label="Window size",
                        help="Window size (shifts are assumed to be constant "
                             "within this window).")
-        group.addParam('groupSize', params.IntParam, default=1,
+        form.addParam('groupSize', params.IntParam, default=1,
                        label="Group Size",
-                       help="The number of frames in each group at the last step")
+                       help="The number of frames in each group at the "
+                            "last step")
         
         form.addParam('useAlignment', params.BooleanParam, default=True,
-              label="Use movie alignment to Sum frames?",
-              help="If set Yes, the alignment information (if"
-                   " it exists) will take into account to align"
-                   " your movies.")
+                      label="Use previous movie alignment to Sum frames?",
+                      help="If set Yes, the alignment information (if"
+                      " it exists) will take into account to align"
+                      " your movies.")
+
+        form.addParam('doComputePSD', params.BooleanParam, default=True,
+                      label="Compute PSD (before/after)?",
+                      help="If Yes, the protocol will compute for each movie "
+                           "the PSD of the average micrograph (without OF "
+                           "alignement) and after that, to compare each PSDs")
+
         form.addParallelSection(threads=8, mpi=0)
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
 
         inputFn = self._getMovieOrMd(movie)
-        outputMicFn = self._getFnInMovieFolder(movie, self._getOutputMicName(movie))
-        outMovieName = self._getExtraPath(self._getOutputMovieName(movie))
-        #outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
-        metadataName = self._getNameExt(movie, '_aligned_mic', 'xmd')
+        outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
+        outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+        aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
         dark = self.inputMovies.get().getDark()
         gain = self.inputMovies.get().getGain()
-        # Get the number of frames and the range to be used for alignment and sum
+        # Get the number of frames and the range
+        # to be used for alignment and sum
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
-        psdCorrName = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
         gpuId = self.GPUCore.get()
 
-        command = '-i %s ' % inputFn
-        command += '-o %s ' % self._getExtraPath(metadataName)
-        command += '--frameRange %d %d ' % (a0-1, aN-1)
+        args = '-i %s ' % inputFn
+        args += '-o %s ' % self._getOutputShifts(movie)
+        args += '--frameRange %d %d ' % (a0-1, aN-1)
 
         if dark:
-            command += '--dark %s ' % dark
+            args += '--dark %s ' % dark
         if gain:
-            command += '--gain %s ' % gain
+            args += '--gain %s ' % gain
         winSize = self.winSize.get()
         doSaveMovie = self.doSaveMovie.get()
         groupSize = self.groupSize.get()
-        command += ' --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+        args += ' --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
+        
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'
-            command += '--gpu %d ' % gpuId
+            args += '--gpu %d ' % gpuId
         else:
             program = 'xmipp_movie_optical_alignment_cpu'
-        command += '--oavg %s ' % outputMicFn
+
+        # We should save the movie either if the user selected it (default)
+        # or if the PSD is going to be computed
+        if self.doSaveAveMic or self.doComputePSD:
+            args += '--oavg %s ' % outMicFn
+
+        if self.doComputePSD:
+            args  += '--oavgInitial %s ' % aveMic
+
         if doSaveMovie:
-            command += '--outMovie %s ' % outMovieName
+            args += '--outMovie %s ' % outMovieFn
         
         roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
                self.cropDimX.get(), self.cropDimY.get()]
         
-        command += '--cropULCorner %d %d ' % (roi[0], roi[1])
-        command += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1,
-                                              roi[1] + roi[3] -1)
+        args += '--cropULCorner %d %d ' % (roi[0], roi[1])
+        args += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1,
+                                           roi[1] + roi[3] -1)
         try:
-            self.runJob(program, command)
-            if not exists(outputMicFn):
-                raise Exception("Micrograph %s not produced after running %s " %(outputMicFn, program))
-            if self.doSaveMovie:
-                if not exists(outMovieName):
-                    raise Exception("Movie %s not produced after running %s " %(outMovieName, program))
+            self.runJob(program, args)
             
-            aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
-            self.averageMovie(movie, inputFn, aveMic, self.binFactor.get(),
-                              roi, dark, gain)
-            uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
-            correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-            
-            self.computePSD(aveMic, uncorrectedPSD)
-            self.computePSD(outputMicFn, correctedPSD)
-            self.composePSD(uncorrectedPSD + ".psd",
-                            correctedPSD + ".psd", psdCorrName)
             if self.doSaveAveMic:
-                moveFile(outputMicFn, self._getExtraPath(self._getOutputMicName(movie)))
-        except:
-            print >> sys.stderr, program, " failed for movie %s" % inputFn
+                if not exists(outMicFn):
+                    raise Exception("Micrograph %s not produced after "
+                                    "running %s " % (outMicFn, program))
 
+            if self.doSaveMovie:
+                if not exists(outMovieFn):
+                    raise Exception("Movie %s not produced after running %s "
+                                    % (outMovieFn, program))
+
+            if self.doComputePSD:
+                uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
+                correctedPSD = self._getFnInMovieFolder(movie, "corrected")
+                # TODO: Compute the PSD inside the OF program?
+                self.computePSD(aveMic, uncorrectedPSD)
+                self.computePSD(outMicFn, correctedPSD)
+                self.composePSD(uncorrectedPSD + ".psd",
+                                correctedPSD + ".psd",
+                                self._getPsdCorr(movie))
+                # If the micrograph was only saved for computing the PSD
+                # we can remove it
+                if not self.doSaveAveMic:
+                    pwutils.cleanPath(outMicFn)
+            
+            self._saveAlignmentPlots(movie)
+
+        except Exception as e:
+            print ("ERROR: %s failed for movie %s.\n  Exception: %s"
+                   % (program, inputFn, e))
+        
+        # remove this when .txt tmp files are not produced
+        pwutils.cleanPattern(self._getExtraPath("*.txt"))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
-        numThreads = self.numberOfThreads
-        if numThreads>1:
-            if self.doGPU:
-                errors.append("GPU and Parallelization can not be used together")
+        if self.numberOfThreads > 1 and self.doGPU:
+            errors.append("GPU and Parallelization can not be used together")
         return errors
 
     def _citations(self):
@@ -181,35 +204,50 @@ class XmippProtOFAlignment(ProtAlignMovies):
         return methods
     
     def _summary(self):
-        firstFrame = self.alignFrame0.get()
-        lastFrame = self.alignFrameN.get()
         summary = []
         if self.inputMovies.get():
             summary.append('Number of input movies: '
                            '*%d*' % self.inputMovies.get().getSize())
-        summary.append('The number of frames to cut from the front: '
-                       '*%d* to *%s* (first frame is 0)' % (firstFrame, 'Last Frame'))
+            _, _, n = self.inputMovies.get().getFirstItem().getDim()
+            a0, aN = self._getFrameRange(n, 'align')
+            summary.append("Frames from *%d* to *%d* were aligned" % (a0, aN))
 
         return summary
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
+    def _setAlignmentInfo(self, movie, obj):
+        """ Set alignment info such as plot and psd filename, and
+        the cumulative shifts values.
+        Params:
+            movie: Pass the reference movie
+            obj: should pass either the created micrograph or movie
+        """
+        obj.plotCart = em.Image()
+        obj.plotCart.setFileName(self._getPlotCart(movie))
+        if self.doComputePSD:
+            obj.psdCorr = em.Image()
+            obj.psdCorr.setFileName(self._getPsdCorr(movie))
+
+        meanX, meanY = self._loadMeanShifts(movie)
+        obj._xmipp_OFMeanX = pwobj.CsvList()
+        obj._xmipp_OFMeanX.set(meanX)
+        obj._xmipp_OFMeanY = pwobj.CsvList()
+        obj._xmipp_OFMeanY.set(meanY)
+
     def _preprocessOutputMicrograph(self, mic, movie):
+        self._setAlignmentInfo(movie, mic)
 
-        plotCartName = self._getNameExt(movie, '_plot_cart', 'png')
-        psdCorrName = self._getExtraPath(self._getNameExt(movie,'_aligned_corrected', 'psd'))
-        metadataName = self._getNameExt(movie, '_aligned_mic', 'xmd')
+    def _createOutputMovie(self, movie):
+        alignedMovie = ProtAlignMovies._createOutputMovie(self, movie)
+        self._setAlignmentInfo(movie, alignedMovie)
+        return alignedMovie
 
-        mic.alignMetaData = self._getExtraPath(metadataName)
-        mic.plotCart = self._getExtraPath(plotCartName)
-        # Create plot
-        movieCreatePlot(mic, True)
-        mic.plotCart = em.Image()
-        mic.plotCart.setFileName(self._getExtraPath(plotCartName))
-        mic.psdCorr = em.Image()
-        mic.psdCorr.setFileName(psdCorrName)
-    
-    def _getNameExt(self, movie, postFix, ext):
-        return self._getMovieRoot(movie) + postFix + '.' + ext
+    def _getNameExt(self, movie, postFix, ext, extra=False):
+        fn = self._getMovieRoot(movie) + postFix + '.' + ext
+        if extra:
+            return self._getExtraPath(fn)
+        else:
+            return fn
     
     def _doGenerateOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
@@ -217,11 +255,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
         either with alignment only or the binary aligned movie files.
         Subclasses can override this function to change this behavior.
         """
-        if self.doSaveMovie:
-            return True
-        else:
-            return False
-    
+        return self.doSaveMovie.get()
+
     def _getFnInMovieFolder(self, movie, filename):
         movieFolder = self._getOutputMovieFolder(movie)
         return join(movieFolder, filename)
@@ -237,54 +272,78 @@ class XmippProtOFAlignment(ProtAlignMovies):
             return getMovieFileName(movie)
 
     def _getShiftsFile(self, movie):
-        movieFolder = self._getOutputMovieFolder(movie)
-        return join(movieFolder, self._getMovieRoot(movie) + '_shifts.xmd')
+        return self._getNameExt(movie, '_shifts', '.xmd', extra=True)
+
+    def _getOutputShifts(self, movie):
+        return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)
+
+    def _getPlotCart(self, movie):
+        return self._getNameExt(movie, '_plot_cart', 'png', extra=True)
+
+    def _getPsdCorr(self, movie):
+        return self._getNameExt(movie, '_aligned_corrected', 'psd', extra=True)
+
+    def _loadMeanShifts(self, movie):
+        alignMd = md.MetaData(self._getOutputShifts(movie))
+        meanX = alignMd.getColumnValues(md.MDL_OPTICALFLOW_MEANX)
+        meanY = alignMd.getColumnValues(md.MDL_OPTICALFLOW_MEANY)
+
+        return meanX, meanY
+
+    def _saveAlignmentPlots(self, movie):
+        """ Compute alignment shifts plot and save to file as a png image. """
+        meanX, meanY = self._loadMeanShifts(movie)
+        plotter = createAlignmentPlot(meanX, meanY)
+        plotter.savefig(self._getPlotCart(movie))
 
 
-def createPlots(plotType, protocol, micId):
-    print "output Micrographs to create Plot %s" % protocol.outputMicrographs
-    mic = protocol.outputMicrographs[micId]
-    return movieCreatePlot(mic, False).show()
-
-
-def showCartesianShiftsPlot(protocol, movieId):
-    createPlots(PLOT_CART, protocol, movieId)
+def showCartesianShiftsPlot(inputSet, itemId):
+    item = inputSet[itemId]
+    if item.hasAttribute('_xmipp_OFMeanX'):
+        meanX = [float(x) for x in item._xmipp_OFMeanX]
+        meanY = [float(y) for y in item._xmipp_OFMeanY]
+        plotter = createAlignmentPlot(meanX, meanY)
+        plotter.show()
+    else:
+        print "This items does not have OF alignment set. "
 
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,
                                     showCartesianShiftsPlot)
 
-def movieCreatePlot(mic, saveFig):
-    import pyworkflow.em.metadata as md
-
-    meanX = []
-    meanY = []
+def createAlignmentPlot(meanX, meanY):
+    """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
     figureSize = (8, 6)
-
-    mdAlign = md.MetaData(mic.alignMetaData)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
     preX = 0.0
     preY = 0.0
-    meanX.append(0.0)
-    meanY.append(0.0)
+    sumMeanX.append(0.0)
+    sumMeanY.append(0.0)
     ax = figure.add_subplot(111)
     ax.grid()
     ax.set_title('Cartesian representation')
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
     ax.plot(0, 0, 'yo-')
-    for objId in mdAlign:
-        preX += mdAlign.getValue(md.MDL_OPTICALFLOW_MEANX, objId)
-        preY += mdAlign.getValue(md.MDL_OPTICALFLOW_MEANY, objId)
-        meanX.append(preX)
-        meanY.append(preY)
-        ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.01, str(objId+1))
-    ax.plot(np.asarray(meanX), np.asarray(meanY))
-    if saveFig:
-        plotter.savefig(mic.plotCart)
+    i = 1
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        #ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.02, str(i))
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
     return plotter
 
 # Just for backwards compatibility

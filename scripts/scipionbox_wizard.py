@@ -271,7 +271,8 @@ class BoxWizardView(tk.Frame):
 
         for i in range(12):
             gridFolder = os.path.join(projPath, 'GRID_%02d' % (i+1))
-            _createPath(gridFolder)
+            _createPath(os.path.join(gridFolder, 'ATLAS'))
+            _createPath(os.path.join(gridFolder, 'DATA'))
 
         _createPath(scipionProjPath)
 
@@ -348,7 +349,7 @@ class BoxWizardView(tk.Frame):
         if useSM:
             # If OF write the movie, then we need to reset frames count
             if frames and useOF:
-                kwargs['alignFrame0'] = kwargs['sumFrame0'] = 0
+                kwargs['alignFrame0'] = kwargs['sumFrame0'] = 1
                 kwargs['alignFrameN'] = kwargs['sumFrameN'] = 0
 
             from pyworkflow.em.packages.grigoriefflab import ProtSummovie

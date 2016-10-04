@@ -20,13 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement the wrappers around xmipp_showj
-visualization program.
-"""
 
 import os
 
@@ -60,8 +56,6 @@ from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_screen_particles import XmippProtScreenParticles
 from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from pyworkflow.em.showj import *
-from protocol_movie_opticalflow import (XmippProtOFAlignment,
-                                        OBJCMD_MOVIE_ALIGNCARTESIAN)
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_multireference_alignability import XmippProtMultiRefAlignability
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
@@ -97,18 +91,18 @@ class XmippViewer(Viewer):
                 XmippProtRotSpectra, 
                 XmippProtScreenParticles,
                 XmippProtCTFMicrographs, 
-                XmippProtOFAlignment,
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair,
                 XmippProtMultiRefAlignability
                 ]
     
-    def __init__(self, **args):
-        Viewer.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Viewer.__init__(self, **kwargs)
         self._views = []   
-        
-    def visualize(self, obj, **args):
-        self._visualize(obj, **args)
+
+    # FIXME: JMRT: I think this function is not necessary, we should remove it
+    def visualize(self, obj, **kwargs):
+        self._visualize(obj, **kwargs)
         
         for v in self._views:
             v.show()
@@ -298,10 +292,11 @@ class XmippViewer(Viewer):
                                         SORT_BY: 'id'})
         
         elif issubclass(cls, XmippProtKerdensom):
-            self._visualize(obj.outputClasses, viewParams={'columns': obj.SomXdim.get(),
-                                                           'render': 'average._filename _representative._filename',
-                                                           'labels': '_size',
-                                                           'sortby': 'id'})
+            self._visualize(obj.outputClasses,
+                            viewParams={'columns': obj.SomXdim.get(),
+                                       'render': 'average._filename _representative._filename',
+                                       'labels': '_size',
+                                       'sortby': 'id'})
         
 
         
@@ -341,17 +336,6 @@ class XmippViewer(Viewer):
                 coordsSet = obj.getCoords()
                 self._visualize(coordsSet)
             
-        elif issubclass(cls, XmippProtOFAlignment):
-            outputMics = obj.outputMicrographs
-            plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
-            labels = plotLabels + ' _filename '
-            objCommands = "'%s'" % (OBJCMD_MOVIE_ALIGNCARTESIAN)
-            
-            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(),
-                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels,
-                                                      RENDER: plotLabels, ZOOM: 50,
-                                                      OBJCMDS: objCommands}))
-        
         elif issubclass(cls, XmippProtValidateNonTilt):
             outputVols = obj.outputVolumes
             labels = 'id enabled comment _filename weight'
