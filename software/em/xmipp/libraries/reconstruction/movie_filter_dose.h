@@ -123,6 +123,7 @@ public:
     ProgMovieFilterDose(double accelerationVoltage);
     ProgMovieFilterDose(void);
     void init(void);
+    void initVoltage(double accelerationVoltage);
 
     ///Compute the dose filter, which is the signal attenuation
     // factor due to radiation damage (as used by summovie)
