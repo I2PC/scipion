@@ -179,7 +179,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                    % (program, inputFn, e))
         
         # remove this when .txt tmp files are not produced
-        pwutils.cleanPattern(self._getExtraPath("*.txt"))
+#         pwutils.cleanPattern(self._getExtraPath("*.txt"))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
@@ -272,7 +272,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             return getMovieFileName(movie)
 
     def _getShiftsFile(self, movie):
-        return self._getNameExt(movie, '_shifts', '.xmd', extra=True)
+        return self._getNameExt(movie, '_shifts', '.xmd', extra=False)
 
     def _getOutputShifts(self, movie):
         return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)
