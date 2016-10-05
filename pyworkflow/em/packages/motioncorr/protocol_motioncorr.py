@@ -26,6 +26,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
 import os, sys
 
 import pyworkflow.protocol.params as params
@@ -39,8 +40,10 @@ from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH,
 class ProtMotionCorr(ProtAlignMovies):
     """
     Wrapper protocol to movie alignment programs developed at UCSF:
-    motioncorr: Flat fielding and Drift correction (written by Xueming Li @ Yifan Cheng Lab)
-    motioncor2: anisotropic drift correction and dose weighting (written by Shawn Zheng @ David Agard lab)
+    motioncorr: Flat fielding and Drift correction
+        (written by Xueming Li @ Yifan Cheng Lab)
+    motioncor2: anisotropic drift correction and dose weighting
+        (written by Shawn Zheng @ David Agard lab)
     """
 
     _label = 'motioncorr alignment'
@@ -121,8 +124,8 @@ class ProtMotionCorr(ProtAlignMovies):
                       all other frames are aligned, by default *0* all aligned
                       to the first frame,
                       other value aligns to the central frame.
--Tilt      0 0        Tilt angle range for a dose fractionated tomographic tilt series,
-                      e.g. *-60 60*
+-Tilt      0 0        Tilt angle range for a dose fractionated tomographic
+                      tilt series, e.g. *-60 60*
                       """)
 
         # Since only runs on GPU, do not allow neither threads nor mpi
@@ -194,8 +197,10 @@ class ProtMotionCorr(ProtAlignMovies):
 
             argsDict = {'-OutMrc': outputMicFn,
                         '-Patch': self.patch.get() or '5 5',
-                        '-MaskCent': '%f %f' % (self.cropOffsetX.get(), self.cropOffsetY.get()),
-                        '-MaskSize': '%f %f' % (self.cropDimX.get(), self.cropDimY.get()),
+                        '-MaskCent': '%f %f' % (self.cropOffsetX.get(),
+                                                self.cropOffsetY.get()),
+                        '-MaskSize': '%f %f' % (self.cropDimX.get(),
+                                                self.cropDimY.get()),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
@@ -228,8 +233,11 @@ class ProtMotionCorr(ProtAlignMovies):
         return summary
 
     def _validate(self):
-        errors = []
+        # Check base validation before the specific ones for Motioncorr
+        errors = ProtAlignMovies._validate(self)
+
         program = MOTIONCOR2_PATH if self.useMotioncor2 else MOTIONCORR_PATH
+
         if not os.path.exists(program):
             errors.append('Missing %s' % program)
 
@@ -237,8 +245,10 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if not self.useMotioncor2:
             bin = self.binFactor.get()
+
             if not (bin == 1.0 or bin == 2.0):
                 errors.append("Binning factor can only be 1 or 2")
+
             if len(gpu) > 1:
                 errors.append("Old motioncorr2.1 does not support multiple "
                               "GPUs, use motioncor2.")
@@ -259,7 +269,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
             if (self.alignFrame0.get() != self.sumFrame0.get() or 
                 self.alignFrameN.get() != self.sumFrameN.get()):
-                errors.append('Frame range for align and sum must be '
+                errors.append('Frame range for ALIGN and SUM must be '
                               'equivalent in case of motioncor2.')
 
         return errors

@@ -20,19 +20,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module is mainly for the Viewer class, which 
-serve as base for implementing visualization tools(Viewer sub-classes).
-"""
 
-from os.path import join
-from itertools import izip
-from protocol import Protocol
 import os
+from os.path import join
+
+from protocol import Protocol
+from object import Object
 from pyworkflow.utils.path import cleanPath
+
 
 DESKTOP_TKINTER = 'tkinter'
 WEB_DJANGO = 'django'
@@ -80,7 +78,8 @@ MSG_DICT = {MSG_INFO: 'showInfo',
 
 class MessageView(View):
     """ View for some message. """
-    def __init__(self, msg, title='', msgType=MSG_INFO, tkParent=None, **kwargs):
+    def __init__(self, msg, title='', msgType=MSG_INFO, tkParent=None,
+                 **kwargs):
         View.__init__(self)
         self._msg = msg
         self._title = title
@@ -196,8 +195,46 @@ class Viewer(object):
         kwargs['masterWindow'] = self.formWindow
         return windowClass(**kwargs)  
 
-    def objectView(self, path, inputType):
-        pass
+    def objectView(self, filenameOrObject, **kwargs):
+        """ This is a wrapper around the ObjectView constructor, just to
+        avoid passing the project and protocol, since both are know
+        here in the ProtocolViewer.
+        Params:
+            filenameOrObject: This parameter can be either a filename or an
+                object that has 'getFileName' method.
+            **kwargs: Can receive extra keyword-arguments that will be passeed
+                to the ObjectView constructor
+        """
+        # We can not import em globally
+        from pyworkflow.em import ObjectView
+        fn = None
+
+        if isinstance(filenameOrObject, basestring):
+            # If the input is a string filename, we should take the object id
+            # from the protocol. This assumes that self.protocol have been
+            # previously set
+            fn = filenameOrObject
+            if not hasattr(self, 'protocol'):
+                raise Exception("self.protocol is not defined for this Viewer.")
+            strId = self.protocol.strId()
+
+        elif isinstance(filenameOrObject, Object):
+            strId = filenameOrObject.strId()
+
+            if hasattr(filenameOrObject, 'getLocation'):
+                # In this case fn will be a location tuple that will be
+                # correctly handled by the showj DataView
+                fn = filenameOrObject.getLocation()
+            elif hasattr(filenameOrObject, 'getFileName'):
+                # If the input is an object, we can take the id from it
+                fn = filenameOrObject.getFileName()
+
+        if fn is None:
+            raise Exception("Incorrect input object, it should be 'string' or "
+                            "'Object' (with 'getLocation' or 'getFileName' "
+                            "methods).")
+
+        return ObjectView(self._project, strId, fn, **kwargs)
         
         
 class ProtocolViewer(Protocol, Viewer):
@@ -206,7 +243,7 @@ class ProtocolViewer(Protocol, Viewer):
     If should provide a mapping between form params and the corresponding
     functions that will return the corresponding Views.
     """
-    def __init__(self, **args):
+    def __init__(self, **kwargs):
         # Here we are going to intercept the original _defineParams function
         # and replace by an empty one, this is to postpone the definition of 
         # params until the protocol is set and then self.protocol can be used
@@ -214,10 +251,11 @@ class ProtocolViewer(Protocol, Viewer):
         object.__setattr__(self, '_defineParamsBackup', self._defineParams)
         object.__setattr__(self, '_defineParams', self._defineParamsEmpty)
     
-        Protocol.__init__(self, **args)
-        Viewer.__init__(self, **args)
+        Protocol.__init__(self, **kwargs)
+        Viewer.__init__(self, **kwargs)
         self.allowHeader.set(False)
-        self.showPlot = True # This flag will be used to display a plot or return the plotter
+        # This flag will be used to display a plot or return the plotter
+        self.showPlot = True
         self._tkRoot = None
         self.formWindow = None
         self.setWorkingDir(self.getProject().getTmpPath())
@@ -245,10 +283,10 @@ class ProtocolViewer(Protocol, Viewer):
         from gui.form import FormWindow
         self.setProtocol(obj)
         self.windows = args.get('windows', None)
-        self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(), self, 
-                       self._viewAll, self.windows,
-                       visualizeDict=self.__getVisualizeWrapperDict(),
-                       visualizeMode=True)
+        self.formWindow = FormWindow("Protocol Viewer: " + self.getClassName(),
+                                     self, self._viewAll, self.windows,
+                                     visualizeDict=self.__getVisualizeWrapperDict(),
+                                     visualizeMode=True)
         self.formWindow.visualizeMode = True
         self.showInfo = self.formWindow.showInfo
         self.showError = self.formWindow.showError
@@ -289,17 +327,9 @@ class ProtocolViewer(Protocol, Viewer):
                 
     def _citations(self):
         return self.protocol._citations()
-    
-    def getObjectView(self, filename, **kwargs):
-        """ This is a wrapper around the ObjectView constructor, just to 
-        avoid passing the project and protocol, since both are know
-        here in the ProtocolViewer.
-        """
-        # We can not import em globally
-        from pyworkflow.em import ObjectView
-        return ObjectView(self._project, self.protocol.strId(), filename, **kwargs)
-    
-    #TODO: This method should not be necessary, instead NumericListParam should return a list and not a String 
+
+    #TODO: This method should not be necessary, instead NumericListParam should
+    # return a list and not a String
     def _getListFromRangeString(self, rangeStr):
         ''' Create a list of integer from a string with range definitions
         Examples:
@@ -333,24 +363,26 @@ class ProtocolViewer(Protocol, Viewer):
         
         return volSet
     
-    def createAngDistributionSqlite(self, sqliteFn, numberOfParticles, itemDataIterator):
+    def createAngDistributionSqlite(self, sqliteFn, numberOfParticles,
+                                    itemDataIterator):
         import pyworkflow.em.metadata as md
         if not os.path.exists(sqliteFn):
-            projectionList = [] # List of list of 3 elements containing angleTilt, anglePsi, weight
+            # List of list of 3 elements containing angleTilt, anglePsi, weight
+            projectionList = []
             
             def getCloseProjection(angleRot, angleTilt):
                 """ Get an existing projection close to angleRot, angleTilt.
                 Return None if not found close enough.
                 """
                 for projection in projectionList:
-                    if abs(projection[0] - angleRot) <= 0.01 and abs(projection[1] - angleTilt) <= 0.01:
+                    if (abs(projection[0] - angleRot) <= 0.01 and
+                        abs(projection[1] - angleTilt) <= 0.01):
                         return projection
                 return None            
             
             weight = 1./numberOfParticles
             
             for angleRot, angleTilt in itemDataIterator:
-    #             print "angleTilt, anglePsi, parts", angleTilt, anglePsi, parts
                 projection = getCloseProjection(angleRot, angleTilt)
                 if projection is None:
                     projectionList.append([angleRot, angleTilt, weight])
@@ -366,4 +398,3 @@ class ProtocolViewer(Protocol, Viewer):
                 mdRow.setValue(md.MDL_WEIGHT, projection[2])
                 mdRow.writeToMd(mdProj, mdProj.addObject())
             mdProj.write(sqliteFn)
-        
