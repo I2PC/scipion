@@ -54,22 +54,24 @@ class ProtAlignMovies(ProtProcessMovies):
 
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')
-        line = group.addLine('Remove frames to ALIGN from',
-                            help='How many frames you want to remove to ALIGN '
-                                 'from the beginning and/or from the end of '
-                                 'each movie. ')
-        line.addParam('alignFrame0', params.IntParam, default=0,
-                      label='beginning')
+        line = group.addLine('Frames to ALIGN',
+                            help='Frames range to ALIGN on each movie. The '
+                                 'first frame is 1. If you set 0 in the final '
+                                 'frame to align, it means that you will '
+                                 'align until the last frame of the movie.')
+        line.addParam('alignFrame0', params.IntParam, default=1,
+                      label='from')
         line.addParam('alignFrameN', params.IntParam, default=0,
-                      label='end')
-        line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to SUM '
-                                  'from beginning and/or from the end of each '
-                                  'movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0,
-                      label='beginning')
+                      label='to')
+        line = group.addLine('Frames to SUM',
+                            help='Frames range to SUM on each movie. The '
+                                 'first frame is 1. If you set 0 in the final '
+                                 'frame to sum, it means that you will sum '
+                                 'until the last frame of the movie.')
+        line.addParam('sumFrame0', params.IntParam, default=1,
+                      label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
-                      label='end')
+                      label='to')
         group.addParam('binFactor', params.FloatParam, default=1.,
                        label='Binning factor',
                        help='1x or 2x. Bin stack before processing.')
@@ -244,7 +246,12 @@ class ProtAlignMovies(ProtProcessMovies):
         if frames is not None:
             def _validateRange(prefix):
                 f0, fN = self._getFrameRange(frames, prefix)
-                if fN < f0:
+                if fN > frames:
+                    errors.append("Check the selected last frame to *%s*. "
+                                  "Last frame (%d) could not be greater than "
+                                  "the total number of frames. (%d)"
+                                  % (prefix.upper(), fN, frames))
+                if fN <= f0:
                     errors.append("Check the selected frames range to *%s*. "
                                   "Last frame should be greater than initial "
                                   "frame. " % prefix.upper())
@@ -267,9 +274,15 @@ class ProtAlignMovies(ProtProcessMovies):
         :param prefix: what range we want to consider, either 'align' or 'sum'
         :return: (i, f) initial and last frame range
         """
-        first = 1 + self.getAttributeValue('%sFrame0' % prefix)
-        last = n - self.getAttributeValue('%sFrameN' % prefix)
-
+        first = self.getAttributeValue('%sFrame0' % prefix)
+        last = self.getAttributeValue('%sFrameN' % prefix)
+        
+        if first <= 1:
+            first = 1
+        
+        if last <= 0:
+            last = n
+        
         return first, last
 
     def _createOutputMovie(self, movie):

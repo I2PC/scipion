@@ -29,6 +29,7 @@
 #include <data/mask.h>
 #include <data/xmipp_program.h>
 #include <interface/frm.h>
+#include <fstream>
 
 // Alignment parameters needed by fitness ----------------------------------
 class AlignParams
@@ -119,11 +120,12 @@ public:
     double   grey_shift0, grey_shiftF, step_grey_shift;
     int      tell;
     bool     apply;
-    FileName fnOut;
+    FileName fnOut, fnGeo;
     bool     mask_enabled;
-    bool     usePowell, onlyShift, useFRM;
+    bool     usePowell, onlyShift, useFRM, copyGeo;
     double   maxFreq;
     int      maxShift;
+    bool     dontScale;
 public:
 
     void defineParams()
@@ -153,6 +155,8 @@ public:
         addParamsLine("                    : Maximum shift is in pixels");
         addParamsLine("                    :+ See Y. Chen, et al. Fast and accurate reference-free alignment of subtomograms. JSB, 182: 235-245 (2013)");
         addParamsLine("  [--onlyShift]     : Only shift");
+        addParamsLine("  [--dontScale]     : Do not look for scale changes");
+        addParamsLine("  [--copyGeo <file=\"\">] : copy transformation matrix in a txt file. ('A' matrix elements)");
         addParamsLine(" == Mask Options == ");
         mask.defineParams(this,INT_MASK,NULL,NULL,true);
         addExampleLine("Typically you first look for a rough approximation of the alignment using exhaustive search. For instance, for a global rotational alignment use",false);
@@ -239,6 +243,9 @@ public:
         tell = checkParam("--show_fit");
         apply = checkParam("--apply");
         fnOut = getParam("--apply");
+        copyGeo = checkParam("--copyGeo");
+        fnGeo = getParam("--copyGeo");
+        dontScale = checkParam("--dontScale");
 
         if (checkParam("--covariance"))
         {
@@ -368,6 +375,8 @@ public:
                 steps(0)=steps(1)=steps(2)=steps(3)=steps(4)=steps(5)=0;
             if (params.alignment_method == COVARIANCE)
                 steps(0)=steps(1)=0;
+            if (dontScale)
+            	steps(5)=0;
             x(0)=grey_scale0;
             x(1)=grey_shift0;
             x(2)=rot0;
@@ -402,6 +411,7 @@ public:
     		best_align(7)=y;
     		best_align(8)=x;
     		best_fit=-score;
+    		first=false;
         }
 
         if (!first)
@@ -433,6 +443,16 @@ public:
 					  << best_align(3) << " " << best_align(4)
 					  << "\n   Shifts: " << A(0,3) << " " << A(1,3) << " " << A(2,3)
 					  << std::endl;
+        if (copyGeo)
+        {
+        	std::ofstream outputGeo (fnGeo.c_str());
+        	outputGeo << A(0,0) << "\n" << A(0,1) << "\n" << A(0,2) << "\n" << A(0,3) << "\n"
+        			  << A(1,0) << "\n" << A(1,1) << "\n" << A(1,2) << "\n" << A(1,3) << "\n"
+					  << A(2,0) << "\n" << A(2,1) << "\n" << A(2,2) << "\n" << A(2,3) << "\n"
+					  << A(3,0) << "\n" << A(3,1) << "\n" << A(3,2) << "\n" << A(3,3) << "\n"
+					  << std::endl;
+        	outputGeo.close();
+        }
         if (apply)
         {
             applyTransformation(params.V2(),params.Vaux(),MATRIX1D_ARRAY(best_align));

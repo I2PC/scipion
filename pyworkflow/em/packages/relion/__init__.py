@@ -43,6 +43,8 @@ from protocol_sort import ProtRelionSortParticles
 from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
 from protocol_subtract import ProtRelionSubtract
 
+from protocol_export_ctf import ProtRelionExportCtf
+
 # Wizards
 from wizard import *
 
