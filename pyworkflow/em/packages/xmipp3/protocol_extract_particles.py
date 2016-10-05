@@ -416,8 +416,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             factor /= self.downFactor.get()
 
         # For each particle retrieve micId from SetOfCoordinates and set it on the CTFModel
-        coordSet = self.getCoords()
-        for img, coord in izip(auxSet, coordSet):
+        for img in auxSet:
+            coord = self.getCoords()[img.getObjId()]
             if self.micsSource == OTHER or self.doDownsample:
                 coord.scale(factor)
             ctfModel = img.getCTF()
