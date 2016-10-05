@@ -118,7 +118,7 @@ void ProgMovieFilterDose::initVoltage(double accelerationVoltage) {
 			voltage_scaling_factor = 0.8;
 		} else
 			REPORT_ERROR(ERR_ARG_INCORRECT,
-					"Bad acceleration voltage (must be 200 or 300 kv");
+					"Bad acceleration voltage (must be 200 or 300 kV");
 
 	}
 
@@ -217,13 +217,13 @@ void ProgMovieFilterDose::run() {
 	FileName fnOutFrame;
 	Image<double> frame;
 
+	MultidimArray<std::complex<double> > FFT1;
 	FOR_ALL_OBJECTS_IN_METADATA(movie)
 	{
 		if (n >= user_supplied_first_frame && n <= user_supplied_last_frame) {
 			movie.getValue(MDL_IMAGE, fnFrame, __iter.objId);
 			frame.read(fnFrame);
 			// Now do the Fourier transform and filter
-			MultidimArray<std::complex<double> > FFT1;
 			transformer.FourierTransform(frame(), FFT1, false);
 
 #undef DEBUG
