@@ -93,7 +93,7 @@ public:
         addParamsLine("   [--outMovie <fn=\"\">]       : save corrected stack");
         addParamsLine("   [--dark <fn=\"\">]           : Dark correction image");
         addParamsLine("   [--gain <fn=\"\">]           : Gain correction image");
-        addParamsLine("   [--in-memory]                : Do not write a temporary file with the ");
+        addParamsLine("   [--inmemory]                 : Do not write a temporary file with the ");
 
 #ifdef GPU
         addParamsLine("   [--gpu <int=0>]              : GPU device to be used");
@@ -117,7 +117,7 @@ public:
         yLTcorner= getIntParam("--cropULCorner",1);
         xDRcorner = getIntParam("--cropDRCorner",0);
         yDRcorner = getIntParam("--cropDRCorner",1);
-        inMemory = checkParam("--in-memory");
+        inMemory = checkParam("--inmemory");
 #ifdef GPU
         gpuDevice = getIntParam("--gpu");
 #endif
@@ -174,11 +174,12 @@ public:
     int computeAvg(size_t begin, size_t end, cv::Mat &cvAvgImg, bool originalData=false)
     {
         Image<float> frame;
-        end=std::min(end,movie.size());
+        end=std::min(end,movie.size()-1);
+    	std::cout << "Computing average: " << begin << " " << end << std::endl;
 
         if (originalData)
         {
-            int currentFrameInIdx=1,currentFrameOutIdx=0;
+            int currentFrameInIdx=0,currentFrameOutIdx=0;
             FileName fnFrame;
             Image<float> translatedImage;
             Matrix1D<double> shift(2);
@@ -210,7 +211,7 @@ public:
         {
 			for (size_t i=begin;i<=end;i++)
 			{
-				int actualIdx=begin-nfirst;
+				int actualIdx=i-nfirst;
 				if (inMemory)
 					frame().aliasImageInStack(tempStack,actualIdx);
 				else
@@ -315,13 +316,9 @@ public:
         // Count the number of frames to process
         numberOfFrames=Ndim;
         if (nfirst<0)
-            nfirst=1;
-        else
-            nfirst++;
+            nfirst=0;
         if (nlast<0)
-            nlast=numberOfFrames;
-        else
-            nlast++;
+            nlast=numberOfFrames-1;
         numberOfFrames=nlast-nfirst+1;
 
         // Initialize the stack for the output movie
@@ -337,7 +334,7 @@ public:
             createEmptyFile(fnTempStack,Xdim,Ydim,1,numberOfFrames,true);
         }
 
-        int currentFrameInIdx=1,currentFrameOutIdx=0;
+        int currentFrameInIdx=0,currentFrameOutIdx=0;
         FileName fnFrame;
         Image<float> frameImage, translatedImage;
         Matrix1D<double> shift(2);
@@ -363,7 +360,7 @@ public:
                 if (inMemory)
                 	memcpy(&DIRECT_NZYX_ELEM(tempStack,currentFrameOutIdx,0,0,0),&frameImage(0,0),MULTIDIM_SIZE(frameImage())*sizeof(float));
                 else
-                	frameImage.write(fnTempStack, currentFrameOutIdx+1, true);
+                	frameImage.write(fnTempStack, currentFrameOutIdx+1, true, WRITE_REPLACE);
                 currentFrameOutIdx++;
         	}
         	currentFrameInIdx++;
@@ -372,8 +369,10 @@ public:
 
     void run()
     {
+    	produceSideInfo();
+
         Matrix1D<double> meanStdev;
-        Image<float> preImg;
+    	Image<float> undeformedGroupAverage;
 
 #ifdef GPU
         // Matrices required in GPU part
@@ -411,22 +410,22 @@ public:
 
         cout << "Frames " << nfirst << " to " << nlast << " under processing ..." << std::endl;
 
-        int numberOfGroups=2, currentGroupSize=0;
-        int levelNum=sqrt(double(numberOfFrames)), levelCounter=0;
+        int numberOfGroups=2;
+        int levelNum=int(ceil(log(double(numberOfFrames))/log(2.0))), levelCounter=0;
         MetaData MDout; // To save plot information
-        while (currentGroupSize!=finalGroupSize)
+        while (levelCounter<levelNum)
         {
             convert2Uint8(cvCurrentReference,cvCurrentReference8);
     #ifdef GPU
     		d_currentReference8.upload(cvCurrentReference8);
     #endif
+    		int currentGroupSize=int(ceil((float)numberOfFrames/numberOfGroups));
 
-    		currentGroupSize=int(numberOfFrames/numberOfGroups);
-            bool lastLevel = (currentGroupSize == finalGroupSize);
+            bool lastLevel = levelCounter==levelNum;
             // avgStep to hold the sum of aligned frames of each group at each step
             cvNewReference=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
 
-            cout << "Level " << levelCounter << "/" << levelNum
+            cout << "Level " << levelCounter << "/" << levelNum-1
                  << " of the pyramid is under processing" << std::endl;
 
             // Compute time for each level
@@ -515,13 +514,16 @@ public:
 					computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage, true);
                 cv::remap(cvCurrentGroupAverage, cvUndeformedGroupAverage, flowCurrentGroup[0], flowCurrentGroup[1], cv::INTER_CUBIC);
                 if (lastLevel && !fnMovieOut.isEmpty())
-                    preImg.write(fnMovieOut, currentGroup+1, true, WRITE_REPLACE);
+                {
+                	opencv2Xmipp(cvUndeformedGroupAverage,undeformedGroupAverage());
+                	undeformedGroupAverage.write(fnMovieOut, currentGroup+1, true, WRITE_REPLACE);
+                }
                 cvNewReference+=cvUndeformedGroupAverage;
             }
 
             cvCurrentReference=cvNewReference;
             cvCurrentReference*=1.0/numberOfGroups;
-            cout<<"Processing level "<<levelCounter<<"/"<<levelNum<<" has finished"<<std::endl;
+            cout<<"Processing level "<<levelCounter<<"/"<<levelNum-1<<" has finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
             numberOfGroups=std::min(2*numberOfGroups,numberOfFrames);
             levelCounter++;
