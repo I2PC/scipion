@@ -429,4 +429,4 @@ class ProtImportMovies(ProtImportMicBase):
             self.writeMoviesInProject):
             return self.ignoreCopy
         else:
-            return ProtImportMicBase.getCopyOrLink()
+            return ProtImportMicBase.getCopyOrLink(self)
