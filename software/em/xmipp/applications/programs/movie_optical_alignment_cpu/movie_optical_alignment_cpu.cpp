@@ -193,64 +193,29 @@ public:
     }
 
     // Computes the average of a number of frames in movies
-    int computeAvg(size_t begin, size_t end, cv::Mat &cvAvgImg, bool originalData=false)
+    int computeAvg(size_t begin, size_t end, cv::Mat &cvAvgImg)
     {
         Image<float> frame;
         end=std::min(end,movie.size()-1);
         end=std::min(end,(size_t)nlast);
 //    	std::cout << "Computing average: " << begin << " " << end << std::endl;
 
-        if (originalData)
-        {
-//        	std::cout << "From original" << std::endl;
-            int currentFrameInIdx=0,currentFrameOutIdx=0;
-            FileName fnFrame;
-            Image<float> translatedImage;
-            Matrix1D<double> shift(2);
-            FOR_ALL_OBJECTS_IN_METADATA(movie)
-            {
-            	if (currentFrameInIdx>=begin && currentFrameInIdx<=end)
-            	{
-                    movie.getValue(MDL_IMAGE, fnFrame, __iter.objId);
-//                    std::cout << "Reading " << fnFrame << std::endl;
-                    frame.read(fnFrame);
-                    applyWindow(frame());
-
-                    if (movie.containsLabel(MDL_SHIFT_X))
-                    {
-                    	movie.getValue(MDL_SHIFT_X, XX(shift), __iter.objId);
-                    	movie.getValue(MDL_SHIFT_Y, YY(shift), __iter.objId);
-                        translate(LINEAR, translatedImage(), frame(), shift, WRAP);
-                        frame()=translatedImage();
-                    }
-
-                    if (currentFrameInIdx==begin)
-    					tempAvg()=frame();
-    				else
-    					tempAvg()+=frame();
-            	}
-            	currentFrameInIdx++;
-            }
-        }
-        else
-        {
-			for (size_t i=begin;i<=end;i++)
+		for (size_t i=begin;i<=end;i++)
+		{
+			int actualIdx=i-nfirst;
+			if (inMemory)
+				frame().aliasImageInStack(tempStack,actualIdx);
+			else
 			{
-				int actualIdx=i-nfirst;
-				if (inMemory)
-					frame().aliasImageInStack(tempStack,actualIdx);
-				else
-				{
 //                    std::cout << "Reading " << fnTempStack << " " << actualIdx+1 << std::endl;
-					frame.read(fnTempStack,DATA,actualIdx+1);
-				}
-
-				if (i==begin)
-					tempAvg()=frame();
-				else
-					tempAvg()+=frame();
+				frame.read(fnTempStack,DATA,actualIdx+1);
 			}
-        }
+
+			if (i==begin)
+				tempAvg()=frame();
+			else
+				tempAvg()+=frame();
+		}
         tempAvg()/=float(end-begin+1);
         xmipp2Opencv(tempAvg(), cvAvgImg);
         return end-begin+1;
@@ -478,7 +443,7 @@ public:
 
             for (int currentGroup=0; currentGroup<numberOfGroups; currentGroup++)
             {
-				computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage);
+				int NimgsInAvg=computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage);
                 convert2Uint8(cvCurrentGroupAverage,cvCurrentGroupAverage8);
 
                 if (numberOfGroups>2)
@@ -556,16 +521,15 @@ public:
 						flowCurrentGroup[0].at<float>(row,col) += col;
 						flowCurrentGroup[1].at<float>(row,col) += row;
                     }
-                if (lastLevel)
+                if (lastLevel && doseStep>0)
                 {
-//                	std::cout << "Preparing data for output\n";
-					int Nimgs=computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage, true);
-					if (doseStep>0)
-					{
-//						transformer.FourierTransform(tempAvg(), FFTI, false);
-//						filterDose.applyDoseFilterToImage(YSIZE(tempAvg()), XSIZE(tempAvg()), FFTI, dose0+(currentGroup*currentGroupSize+nfirst)*doseStep,
-//								   dose0+(currentGroup*currentGroupSize+nfirst+Nimgs)*doseStep);
-					}
+                	MultidimArray<double> I;
+                	typeCast(tempAvg(),I);
+					transformer.FourierTransform(I, FFTI, false);
+					filterDose.applyDoseFilterToImage(YSIZE(I), XSIZE(I), FFTI, dose0+(currentGroup*currentGroupSize+nfirst)*doseStep,
+							   dose0+(currentGroup*currentGroupSize+nfirst+NimgsInAvg)*doseStep);
+					transformer.inverseFourierTransform();
+					typeCast(I,tempAvg());
                 }
                 cv::remap(cvCurrentGroupAverage, cvUndeformedGroupAverage, flowCurrentGroup[0], flowCurrentGroup[1], cv::INTER_CUBIC);
                 if (lastLevel && !fnMovieOut.isEmpty())
