@@ -147,6 +147,9 @@ class Monitor():
             if n: 
                 n.notify(title, message)
 
+    def info(self, message):
+        self.notify("INFO", message)
+
     def initLoop(self):
         """ To be defined in subclasses. """
         pass
@@ -164,6 +167,9 @@ class Monitor():
     def step(self):
         """ To be defined in subclasses. """
         pass
+
+    def addNotifier(self, notifier):
+        self._notifiers.append(notifier)
 
 
 class EmailNotifier():
@@ -191,7 +197,7 @@ class EmailNotifier():
         s.quit()
 
 
-def PrintNotifier():
-    def notify(title, message):
+class PrintNotifier():
+    def notify(self, title, message):
         print title, message
         sys.stdout.flush()

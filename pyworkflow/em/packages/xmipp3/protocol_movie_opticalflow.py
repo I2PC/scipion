@@ -27,7 +27,7 @@
 # **************************************************************************
 
 from os.path import join, exists
-import sys
+from glob import glob
 from itertools import izip
 
 import pyworkflow.object as pwobj
@@ -35,7 +35,6 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
-from pyworkflow.utils.path import moveFile
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
@@ -82,7 +81,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "last step")
         
         form.addParam('useAlignment', params.BooleanParam, default=True,
-                      label="Use movie alignment to Sum frames?",
+                      label="Use previous movie alignment to Sum frames?",
                       help="If set Yes, the alignment information (if"
                       " it exists) will take into account to align"
                       " your movies.")
@@ -122,7 +121,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         doSaveMovie = self.doSaveMovie.get()
         groupSize = self.groupSize.get()
         args += ' --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
-
+        
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'
             args += '--gpu %d ' % gpuId
@@ -148,7 +147,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                            roi[1] + roi[3] -1)
         try:
             self.runJob(program, args)
-
+            
             if self.doSaveAveMic:
                 if not exists(outMicFn):
                     raise Exception("Micrograph %s not produced after "
@@ -172,13 +171,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 # we can remove it
                 if not self.doSaveAveMic:
                     pwutils.cleanPath(outMicFn)
-
+            
             self._saveAlignmentPlots(movie)
 
         except Exception as e:
             print ("ERROR: %s failed for movie %s.\n  Exception: %s"
                    % (program, inputFn, e))
-
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
@@ -271,7 +269,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             return getMovieFileName(movie)
 
     def _getShiftsFile(self, movie):
-        return self._getNameExt(movie, '_shifts', '.xmd', extra=True)
+        return self._getNameExt(movie, '_shifts', '.xmd', extra=False)
 
     def _getOutputShifts(self, movie):
         return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)
