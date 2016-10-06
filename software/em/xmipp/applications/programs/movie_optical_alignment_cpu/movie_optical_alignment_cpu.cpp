@@ -41,6 +41,7 @@
 #include <data/normalize.h>
 #include <data/xmipp_fftw.h>
 
+#include <reconstruction/movie_filter_dose.h>
 
 using namespace std;
 #ifdef GPU
@@ -57,6 +58,7 @@ public:
     int winSize, gpuDevice, nfirst, nlast, numberOfFrames;
     int finalGroupSize;
     bool globalShiftCorr, inMemory;
+    double dose0, doseStep, accelerationVoltage;
 
     /*****************************/
     /** crop corner **/
@@ -94,6 +96,7 @@ public:
         addParamsLine("   [--dark <fn=\"\">]           : Dark correction image");
         addParamsLine("   [--gain <fn=\"\">]           : Gain correction image");
         addParamsLine("   [--inmemory]                 : Do not write a temporary file with the ");
+        addParamsLine("   [--doseCorrection <dosePerFrame=0> <kV=200> <previousDose=0>] : Set dosePerFrame to 0 if you do not want to correct by the dose");
 
 #ifdef GPU
         addParamsLine("   [--gpu <int=0>]              : GPU device to be used");
@@ -118,6 +121,9 @@ public:
         xDRcorner = getIntParam("--cropDRCorner",0);
         yDRcorner = getIntParam("--cropDRCorner",1);
         inMemory = checkParam("--inmemory");
+        doseStep = getDoubleParam("--doseCorrection",0);
+        accelerationVoltage = getDoubleParam("--doseCorrection",1);
+        dose0 = getDoubleParam("--doseCorrection",2);
 #ifdef GPU
         gpuDevice = getIntParam("--gpu");
 #endif
@@ -191,6 +197,7 @@ public:
     {
         Image<float> frame;
         end=std::min(end,movie.size()-1);
+        end=std::min(end,(size_t)nlast);
 //    	std::cout << "Computing average: " << begin << " " << end << std::endl;
 
         if (originalData)
@@ -408,6 +415,9 @@ public:
 
         Matrix1D<double> meanStdev;
     	Image<float> undeformedGroupAverage;
+    	FourierTransformer transformer;
+    	MultidimArray< std::complex<double> > FFTI;
+    	ProgMovieFilterDose filterDose(accelerationVoltage);
 
 #ifdef GPU
         // Matrices required in GPU part
@@ -446,7 +456,7 @@ public:
         cout << "Frames " << nfirst << " to " << nlast << " under processing ..." << std::endl;
 
         int numberOfGroups=2;
-        int levelNum=int(ceil(log(double(numberOfFrames))/log(2.0))), levelCounter=0;
+        int levelNum=int(ceil(log(double(numberOfFrames)/finalGroupSize)/log(2.0))), levelCounter=0;
         MetaData MDout; // To save plot information
         while (levelCounter<levelNum)
         {
@@ -549,7 +559,13 @@ public:
                 if (lastLevel)
                 {
 //                	std::cout << "Preparing data for output\n";
-					computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage, true);
+					int Nimgs=computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage, true);
+					if (doseStep>0)
+					{
+//						transformer.FourierTransform(tempAvg(), FFTI, false);
+//						filterDose.applyDoseFilterToImage(YSIZE(tempAvg()), XSIZE(tempAvg()), FFTI, dose0+(currentGroup*currentGroupSize+nfirst)*doseStep,
+//								   dose0+(currentGroup*currentGroupSize+nfirst+Nimgs)*doseStep);
+					}
                 }
                 cv::remap(cvCurrentGroupAverage, cvUndeformedGroupAverage, flowCurrentGroup[0], flowCurrentGroup[1], cv::INTER_CUBIC);
                 if (lastLevel && !fnMovieOut.isEmpty())
@@ -563,7 +579,6 @@ public:
 
             cvCurrentReference=cvNewReference;
             cvCurrentReference*=1.0/numberOfGroups;
-            cout<<"Processing level "<<levelCounter<<"/"<<levelNum-1<<" has finished"<<std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
             numberOfGroups=std::min(2*numberOfGroups,numberOfFrames);
             levelCounter++;
