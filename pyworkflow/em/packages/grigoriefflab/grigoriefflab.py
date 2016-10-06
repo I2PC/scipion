@@ -35,7 +35,7 @@ MAGDISTEST = 'mag_distortion_estimate_openmp_1_12_16.exe'
 MAGDISTCORR = 'mag_distortion_correct_openmp_8_18_15.exe'
 CALC_OCC = 'calc_occ.exe'
 RSAMPLE = 'rsample.exe'
-UNBLUR = 'unblur'
+UNBLUR = 'unblur_openmp_7_17_15.exe'
 SUMMOVIE = 'sum_movie_openmp_7_17_15.exe'
 
 def _getCtffind4():

@@ -52,9 +52,15 @@ class ProtUnblur(ProtAlignMovies):
                       help='Apply a dose-dependent filter to frames before '
                            'summing them')
         form.addParam('exposurePerFrame', FloatParam,
+                      default=1.,
                       label='Exposure per frame (e/A^2)',
                       help='Exposure per frame, in electrons per square '
                            'Angstrom')
+        form.addParam('preExposureAmount', FloatParam,
+                      default=0.,
+                      label='Pre-exposure amount(e/A^2)',
+                      help='Amount of pre-exposure prior to the first frame, '
+                           'in electrons per square Angstrom')
 
         #group = form.addGroup('Expert Options')
         form.addParam('minShiftInitSearch', FloatParam,
@@ -120,6 +126,8 @@ class ProtUnblur(ProtAlignMovies):
     #Apply Dose filter?                            [NO] : YES
     #Exposure per frame (e/A^2)                   [1.0] :
     #Acceleration voltage (kV)                  [300.0] :
+    #Pre-exposure amount(e/A^2)                   [0.0] :
+    #Save Aligned Frames?                          [NO] : NO
     #Set Expert Options?                           [NO] : YES
     #Output FRC file                       [my_frc.txt] :
     #Minimum shift for initial search (Angstroms)
@@ -168,7 +176,7 @@ class ProtUnblur(ProtAlignMovies):
         args['shiftFnName'] = self._getShiftsFn(movie)
         args['samplingRate'] = self.samplingRate
         args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
-        args['fscFn'] = self._getFrcFn(movie)
+        args['frcFn'] = self._getFrcFn(movie)
         args['Bfactor'] = self.Bfactor.get()
         args['minShiftInitSearch'] = self.minShiftInitSearch.get()
         args['OutRadShiftLimit'] = self.OutRadShiftLimit.get()
@@ -180,6 +188,7 @@ class ProtUnblur(ProtAlignMovies):
         args['doRestoreNoisePower'] = 'YES' if self.doRestoreNoisePower else 'NO'
         args['doVerboseOutput'] = 'YES' if self.doVerboseOutput else 'NO'
         args['exposurePerFrame'] = self.exposurePerFrame.get()
+        args['preExposureAmount'] = self.preExposureAmount.get()
 
         self._program = 'export OMP_NUM_THREADS=1; ' + UNBLUR_PATH
         self._args = """ << eof
@@ -191,8 +200,10 @@ class ProtUnblur(ProtAlignMovies):
 %(doApplyDoseFilter)s
 %(exposurePerFrame)f
 %(voltage)f
+%(preExposureAmount)f
+NO
 YES
-%(fscFn)s
+%(frcFn)s
 %(minShiftInitSearch)f
 %(OutRadShiftLimit)f
 %(Bfactor)f
