@@ -704,7 +704,6 @@ addProg('mpi_classify_CLTomo_prog',
 
 # Optical Alignment program, that depends on opencv (cpu version)
 if opencv:
-
     addProg('movie_optical_alignment_cpu',
             libs=opencvLibs,
             deps=['opencv'])

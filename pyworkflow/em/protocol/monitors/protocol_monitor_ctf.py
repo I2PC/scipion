@@ -31,7 +31,7 @@ import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
 import sqlite3 as lite
 import time, sys
-from matplotlib import pyplot
+from pyworkflow.gui.plotter import plt
 import tkMessageBox
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
@@ -289,7 +289,7 @@ class CtfMonitorPlotter(EmPlotter):
 
     def has_been_closed(self,ax):
         fig = ax.figure.canvas.manager
-        active_fig_managers = pyplot._pylab_helpers.Gcf.figs.values()
+        active_fig_managers = plt._pylab_helpers.Gcf.figs.values()
         return fig not in active_fig_managers
 
     def animate(self, i=0): #do NOT remove i
