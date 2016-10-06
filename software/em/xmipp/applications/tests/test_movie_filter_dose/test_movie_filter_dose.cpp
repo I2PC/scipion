@@ -71,14 +71,14 @@ TEST_F( MovieFilterDoseTest, criticalDose)
 	EXPECT_NE(criticalDose2,criticalDose);
 }
 
-TEST_F( MovieFilterDoseTest, OptimalDoseGivenCriticalDose)
+TEST_F( MovieFilterDoseTest, optimalDoseGivenCriticalDose)
 {
 	double acceleration_voltage = 300;
 	double current_critical_dose = 38.49693;
 	double current_optimal_dose = 96.73663;
 	double current_optimal_dose2 = 0.;
 	ProgMovieFilterDose pmfdProg(acceleration_voltage);
-	current_optimal_dose2 =  pmfdProg.OptimalDoseGivenCriticalDose(current_critical_dose);
+	current_optimal_dose2 =  pmfdProg.optimalDoseGivenCriticalDose(current_critical_dose);
 	EXPECT_FLOAT_EQ(current_optimal_dose2,current_optimal_dose);
 
 	current_optimal_dose=  200000;

@@ -92,7 +92,7 @@ double ProgMovieFilterDose::criticalDose(double spatial_frequency) {
 	return ((critical_dose_a * pow(spatial_frequency, critical_dose_b))
 			+ critical_dose_c) * voltage_scaling_factor;
 }
-double ProgMovieFilterDose::OptimalDoseGivenCriticalDose(double critical_dose) {
+double ProgMovieFilterDose::optimalDoseGivenCriticalDose(double critical_dose) {
 	return 2.51284 * critical_dose;
 }
 
@@ -127,8 +127,8 @@ ProgMovieFilterDose::ProgMovieFilterDose(double accelerationVoltage) {
 	initVoltage(accelerationVoltage);
 }
 
-void ProgMovieFilterDose::ApplyDoseFilterToImage(
-		const MultidimArray<double> &frame,
+void ProgMovieFilterDose::applyDoseFilterToImage(
+		size_t Ydim, size_t Xdim,
 		const MultidimArray<std::complex<double> > &FFT1,
 		const double dose_start, const double dose_finish) {
 	double * ptrv = (double *) MULTIDIM_ARRAY(FFT1);
@@ -136,17 +136,15 @@ void ProgMovieFilterDose::ApplyDoseFilterToImage(
 	double x, y;
 	double xx, yy;
 	double current_critical_dose, current_optimal_dose;
-	int m1sizeX = XSIZE(frame);
-	int m1sizeY = YSIZE(frame);
-	int sizeX_2 = m1sizeX / 2;
-	double ixsize = 1.0 / m1sizeX;
-	int sizeY_2 = m1sizeY / 2;
-	double iysize = 1.0 / m1sizeY;
+	int sizeX_2 = Xdim / 2;
+	double ixsize = 1.0 / Xdim;
+	int sizeY_2 = Ydim / 2;
+	double iysize = 1.0 / Ydim;
 	for (long int i = 0; i < YSIZE(FFT1); i++) { //i->y,j->x xmipp convention is oposite summove
-		FFT_IDX2DIGFREQ_FAST(i, m1sizeY, sizeY_2, iysize, y);
+		FFT_IDX2DIGFREQ_FAST(i, Ydim, sizeY_2, iysize, y);
 		yy = y * y;
 		for (long int j = 0; j < XSIZE(FFT1); j++) {
-			FFT_IDX2DIGFREQ_FAST(j, m1sizeX, sizeX_2, ixsize, x);
+			FFT_IDX2DIGFREQ_FAST(j, Xdim, sizeX_2, ixsize, x);
 //			std::cerr << "(x,y)=" << j +1 << "," << i + 1<< " = "
 //					  << DIRECT_A2D_ELEM(FFT1, i, j) << std::endl;
 			if (i == 0 && j == 0)
@@ -159,7 +157,7 @@ void ProgMovieFilterDose::ApplyDoseFilterToImage(
 						sqrt(x * x + yy) / pixel_size);
 //            std::cerr << "current_critical_dose(B): "
 //            		  << current_critical_dose <<  std::endl;
-		    current_optimal_dose = OptimalDoseGivenCriticalDose(
+		    current_optimal_dose = optimalDoseGivenCriticalDose(
 					current_critical_dose);
 			if (abs(dose_finish - current_optimal_dose)
 					< abs(dose_start - current_optimal_dose)) {
@@ -264,7 +262,7 @@ void ProgMovieFilterDose::run() {
 #endif
 #undef DEBUG
 			// apply dose
-			ApplyDoseFilterToImage(frame(), FFT1,
+			applyDoseFilterToImage(YSIZE(frame()), XSIZE(frame()), FFT1,
 					(n * dose_per_frame) + pre_exposure_amount,    //dose_star
 					((n + 1) * dose_per_frame) + pre_exposure_amount //dose_end
 							);

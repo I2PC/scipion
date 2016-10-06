@@ -134,10 +134,11 @@ public:
 
 
    /// Given the critical dose, return an estimate of the optimal dose (at which the SNR is maximised)
-   double OptimalDoseGivenCriticalDose(double critical_dose);
+   double optimalDoseGivenCriticalDose(double critical_dose);
+
    /// Apply a dose filter to the image Fourier transform
-   void ApplyDoseFilterToImage(
-		const MultidimArray<double> &frame,
+   void applyDoseFilterToImage(
+		size_t Ydim, size_t Xdim,
    		const MultidimArray< std::complex<double> > &FFT1,
 		const double dose_start, const double dose_finish
    		);
