@@ -186,7 +186,7 @@ public:
     }
 
     /* Apply the window operation if crop option was used */
-    void applyWindow(MultidimArray<float> &data)
+    void applyWindow(MultidimArray<double> &data)
     {
         if (yDRcorner!=-1)
             data.selfWindow(yLTcorner, xLTcorner, yDRcorner, xDRcorner);
@@ -302,7 +302,7 @@ public:
             REPORT_ERROR(ERR_ARG_INCORRECT,"This program is meant to align 2D frames, not 3D");
 
         // Dark and gain images
-        Image<float> dark, gain;
+        Image<double> dark, gain;
         if (fnDark!="")
         {
             dark.read(fnDark);
@@ -343,8 +343,12 @@ public:
 
         int currentFrameInIdx=0,currentFrameOutIdx=0;
         FileName fnFrame;
-        Image<float> frameImage, translatedImage;
+        Image<double> frameImage, translatedImage;
+    	MultidimArray<float> Ifloat;
         Matrix1D<double> shift(2);
+    	ProgMovieFilterDose filterDose(accelerationVoltage);
+    	FourierTransformer transformer;
+    	MultidimArray< std::complex<double> > FFTI;
         FOR_ALL_OBJECTS_IN_METADATA(movie)
         {
         	if (currentFrameInIdx>=nfirst && currentFrameInIdx<=nlast)
@@ -364,8 +368,18 @@ public:
                     translate(LINEAR, translatedImage(), frameImage(), shift, WRAP);
                     frameImage()=translatedImage();
                 }
+                if (doseStep>0)
+                {
+					transformer.FourierTransform(frameImage(), FFTI, false);
+					filterDose.applyDoseFilterToImage(YSIZE(frameImage()), XSIZE(frameImage()), FFTI,
+													  dose0+currentFrameInIdx*doseStep, dose0+(currentFrameInIdx+1)*doseStep);
+					transformer.inverseFourierTransform();
+                }
                 if (inMemory)
-                	memcpy(&DIRECT_NZYX_ELEM(tempStack,currentFrameOutIdx,0,0,0),&frameImage(0,0),MULTIDIM_SIZE(frameImage())*sizeof(float));
+                {
+                	typeCast(frameImage(),Ifloat);
+                	memcpy(&DIRECT_NZYX_ELEM(tempStack,currentFrameOutIdx,0,0,0),&Ifloat(0,0),MULTIDIM_SIZE(Ifloat)*sizeof(float));
+                }
                 else
                 	frameImage.write(fnTempStack, currentFrameOutIdx+1, true, WRITE_REPLACE);
                 currentFrameOutIdx++;
@@ -380,9 +394,6 @@ public:
 
         Matrix1D<double> meanStdev;
     	Image<float> undeformedGroupAverage;
-    	FourierTransformer transformer;
-    	MultidimArray< std::complex<double> > FFTI;
-    	ProgMovieFilterDose filterDose(accelerationVoltage);
 
 #ifdef GPU
         // Matrices required in GPU part
@@ -521,16 +532,6 @@ public:
 						flowCurrentGroup[0].at<float>(row,col) += col;
 						flowCurrentGroup[1].at<float>(row,col) += row;
                     }
-                if (lastLevel && doseStep>0)
-                {
-                	MultidimArray<double> I;
-                	typeCast(tempAvg(),I);
-					transformer.FourierTransform(I, FFTI, false);
-					filterDose.applyDoseFilterToImage(YSIZE(I), XSIZE(I), FFTI, dose0+(currentGroup*currentGroupSize+nfirst)*doseStep,
-							   dose0+(currentGroup*currentGroupSize+nfirst+NimgsInAvg)*doseStep);
-					transformer.inverseFourierTransform();
-					typeCast(I,tempAvg());
-                }
                 cv::remap(cvCurrentGroupAverage, cvUndeformedGroupAverage, flowCurrentGroup[0], flowCurrentGroup[1], cv::INTER_CUBIC);
                 if (lastLevel && !fnMovieOut.isEmpty())
                 {
