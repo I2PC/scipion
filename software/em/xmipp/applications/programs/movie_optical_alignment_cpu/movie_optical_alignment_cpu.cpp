@@ -58,7 +58,7 @@ public:
     int winSize, gpuDevice, nfirst, nlast, numberOfFrames;
     int finalGroupSize;
     bool globalShiftCorr, inMemory;
-    double dose0, doseStep, accelerationVoltage;
+    double dose0, doseStep, accelerationVoltage, sampling;
 
     /*****************************/
     /** crop corner **/
@@ -96,7 +96,8 @@ public:
         addParamsLine("   [--dark <fn=\"\">]           : Dark correction image");
         addParamsLine("   [--gain <fn=\"\">]           : Gain correction image");
         addParamsLine("   [--inmemory]                 : Do not write a temporary file with the ");
-        addParamsLine("   [--doseCorrection <dosePerFrame=0> <kV=200> <previousDose=0>] : Set dosePerFrame to 0 if you do not want to correct by the dose");
+        addParamsLine("   [--doseCorrection <dosePerFrame=0> <Ts=1> <kV=200> <previousDose=0>] : Set dosePerFrame to 0 if you do not want to correct by the dose");
+        addParamsLine("                                : Dose in e/A^2, Sampling rate (Ts) in A");
 
 #ifdef GPU
         addParamsLine("   [--gpu <int=0>]              : GPU device to be used");
@@ -122,8 +123,9 @@ public:
         yDRcorner = getIntParam("--cropDRCorner",1);
         inMemory = checkParam("--inmemory");
         doseStep = getDoubleParam("--doseCorrection",0);
-        accelerationVoltage = getDoubleParam("--doseCorrection",1);
-        dose0 = getDoubleParam("--doseCorrection",2);
+        sampling = getDoubleParam("--doseCorrection",1);
+        accelerationVoltage = getDoubleParam("--doseCorrection",2);
+        dose0 = getDoubleParam("--doseCorrection",3);
 #ifdef GPU
         gpuDevice = getIntParam("--gpu");
 #endif
@@ -347,6 +349,7 @@ public:
     	MultidimArray<float> Ifloat;
         Matrix1D<double> shift(2);
     	ProgMovieFilterDose filterDose(accelerationVoltage);
+    	filterDose.pixel_size=sampling;
     	FourierTransformer transformer;
     	MultidimArray< std::complex<double> > FFTI;
         FOR_ALL_OBJECTS_IN_METADATA(movie)
@@ -370,10 +373,15 @@ public:
                 }
                 if (doseStep>0)
                 {
+                	frameImage.write("PPP0.xmp");
 					transformer.FourierTransform(frameImage(), FFTI, false);
 					filterDose.applyDoseFilterToImage(YSIZE(frameImage()), XSIZE(frameImage()), FFTI,
 													  dose0+currentFrameInIdx*doseStep, dose0+(currentFrameInIdx+1)*doseStep);
 					transformer.inverseFourierTransform();
+                	frameImage.write("PPPF.xmp");
+                	std::cout << "dose: " << dose0+currentFrameInIdx*doseStep << " to " << dose0+(currentFrameInIdx+1)*doseStep << std::endl;
+                	std::cout << "Press any key" << std::endl;
+                	char c; std::cin >> c;
                 }
                 if (inMemory)
                 {
@@ -492,6 +500,7 @@ public:
                 {
                     flowxCurrentGroup=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
                     flowyCurrentGroup=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
+                    flow=cv::Mat::zeros(Ydim, Xdim, CV_32FC1);
                 }
                 else
                     ofFlags=cv::OPTFLOW_USE_INITIAL_FLOW;
