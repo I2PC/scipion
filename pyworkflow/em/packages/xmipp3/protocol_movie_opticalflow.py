@@ -97,7 +97,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         
         group = form.addGroup('Dose Compensation')
         group.addParam('doDoseCorrection', params.BooleanParam, default=False,
-                       label="D dose correction?",
+                       label="Do dose correction?",
                        help="If Yes, the protocol will compensate your movies "
                        "taking into account the acumulated dose.")
         group.addParam('exposurePerFrame', params.FloatParam, default=0,
