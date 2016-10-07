@@ -267,8 +267,8 @@ void ProgMovieFilterDose::run() {
 					((n + 1) * dose_per_frame) + pre_exposure_amount //dose_end
 							);
 			transformer.inverseFourierTransform();
-			fnOutFrame.compose(n + FIRST_IMAGE, user_supplied_output_filename);
-			frame.write(user_supplied_output_filename);
+
+			frame.write(user_supplied_output_filename,n+FIRST_IMAGE,true,WRITE_APPEND);
 		}
 		++n;
 		if (verbose)
