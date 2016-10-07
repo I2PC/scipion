@@ -31,12 +31,12 @@ CTFFIND3 = 'ctffind3.exe'
 CTFFIND4 = 'ctffind'
 FREALIGN = 'frealign_v9.exe'
 FREALIGNMP = 'frealign_v9_mp.exe'
-MAGDISTEST = 'mag_distortion_estimate_openmp_1_12_16.exe'
-MAGDISTCORR = 'mag_distortion_correct_openmp_8_18_15.exe'
+MAGDISTEST = 'mag_distortion_estimate_openmp.exe'
+MAGDISTCORR = 'mag_distortion_correct_openmp.exe'
 CALC_OCC = 'calc_occ.exe'
 RSAMPLE = 'rsample.exe'
-UNBLUR = 'unblur_openmp_7_17_15.exe'
-SUMMOVIE = 'sum_movie_openmp_7_17_15.exe'
+UNBLUR = 'unblur_openmp.exe'
+SUMMOVIE = 'sum_movie_openmp.exe'
 
 def _getCtffind4():
     ctffind4 = join(os.environ['CTFFIND4_HOME'], 'bin', CTFFIND4)

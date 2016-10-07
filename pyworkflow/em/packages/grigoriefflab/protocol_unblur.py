@@ -31,7 +31,7 @@ from pyworkflow.protocol.params import  (IntParam,
                                          BooleanParam, FloatParam,
                                          LEVEL_ADVANCED)
 from grigoriefflab import UNBLUR_PATH
-from convert import readShiftsMovieAlignment
+from convert import getVersion, readShiftsMovieAlignment
 
 
 
@@ -57,8 +57,8 @@ class ProtUnblur(ProtAlignMovies):
                       help='Exposure per frame, in electrons per square '
                            'Angstrom')
         form.addParam('preExposureAmount', FloatParam,
-                      default=0.,
-                      label='Pre-exposure amount(e/A^2)',
+                      default=0., condition='_isNewUnblur',
+                      label='Pre-exposure amount (e/A^2)',
                       help='Amount of pre-exposure prior to the first frame, '
                            'in electrons per square Angstrom')
 
@@ -126,8 +126,10 @@ class ProtUnblur(ProtAlignMovies):
     #Apply Dose filter?                            [NO] : YES
     #Exposure per frame (e/A^2)                   [1.0] :
     #Acceleration voltage (kV)                  [300.0] :
+
     #Pre-exposure amount(e/A^2)                   [0.0] :
     #Save Aligned Frames?                          [NO] : NO
+
     #Set Expert Options?                           [NO] : YES
     #Output FRC file                       [my_frc.txt] :
     #Minimum shift for initial search (Angstroms)
@@ -188,10 +190,11 @@ class ProtUnblur(ProtAlignMovies):
         args['doRestoreNoisePower'] = 'YES' if self.doRestoreNoisePower else 'NO'
         args['doVerboseOutput'] = 'YES' if self.doVerboseOutput else 'NO'
         args['exposurePerFrame'] = self.exposurePerFrame.get()
-        args['preExposureAmount'] = self.preExposureAmount.get()
-
         self._program = 'export OMP_NUM_THREADS=1; ' + UNBLUR_PATH
-        self._args = """ << eof
+
+        if getVersion('UNBLUR') == '1.0.2':
+            args['preExposureAmount'] = self.preExposureAmount.get()
+            self._args = """ << eof
 %(movieName)s
 %(numberOfFramesPerMovie)s
 %(micFnName)s
@@ -202,6 +205,29 @@ class ProtUnblur(ProtAlignMovies):
 %(voltage)f
 %(preExposureAmount)f
 NO
+YES
+%(frcFn)s
+%(minShiftInitSearch)f
+%(OutRadShiftLimit)f
+%(Bfactor)f
+%(HWVertFourMask)d
+%(HWHoriFourMask)d
+%(terminationShiftThreshold)f
+%(maximumNumberIterations)d
+%(doRestoreNoisePower)s
+%(doVerboseOutput)s
+eof
+""" % args
+        else:
+            self._args = """ << eof
+%(movieName)s
+%(numberOfFramesPerMovie)s
+%(micFnName)s
+%(shiftFnName)s
+%(samplingRate)f
+%(doApplyDoseFilter)s
+%(exposurePerFrame)f
+%(voltage)f
 YES
 %(frcFn)s
 %(minShiftInitSearch)f
@@ -279,3 +305,6 @@ eof
         last = self.alignFrameRange.get() if self.alignFrameRange > 0 else n
 
         return 1, min(last, n)
+
+    def _isNewUnblur(self):
+        return True if getVersion('UNBLUR') == '1.0.2' else False

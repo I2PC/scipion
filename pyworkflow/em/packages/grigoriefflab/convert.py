@@ -48,6 +48,20 @@ HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
                   '-LogP', 'SIGMA', 'SCORE', 'CHANGE']
 
 
+def getVersion(var):
+    varHome = var + '_HOME'
+    path = os.environ[varHome]
+    for v in getSupportedVersions(var):
+        if v in path or v in os.path.realpath(path):
+            return v
+    return ''
+
+
+def getSupportedVersions(var):
+    if var == 'UNBLUR':
+        return ['1.0.150529', '1.0.2']
+
+
 class FrealignParFile(object):
     """ Handler class to read/write frealign metadata."""
     def __init__(self, filename, mode='r'):
