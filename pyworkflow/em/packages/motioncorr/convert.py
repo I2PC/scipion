@@ -63,6 +63,22 @@ def getEnviron():
     return environ
 
 
+def getVersion(var):
+    varHome = var + '_HOME'
+    path = os.environ[varHome]
+    for v in getSupportedVersions(var):
+        if v in path or v in os.path.realpath(path):
+            return v
+    return ''
+
+
+def getSupportedVersions(var):
+    if var == 'MOTIONCORR':
+        return ['2.1']
+    elif var == 'MOTIONCOR2':
+        return ['03162016', '08222016']
+
+
 def parseMovieAlignment(logFile):
     """ Get the first and last frames together with the shifts
     between frames aligned. Motioncorr old version

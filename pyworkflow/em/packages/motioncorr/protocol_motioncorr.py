@@ -33,7 +33,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
 
-from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH,
+from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2)
 
 
@@ -101,7 +101,7 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('initDose', params.FloatParam, default='0.0',
                       expertLevel = cons.LEVEL_ADVANCED,
                       label='Pre-exposure (e/A^2)',
-                      condition='useMotioncor2 and frameDose',
+                      condition='useMotioncor2 and frameDose and _isNewMotioncor2',
                       help='Initial dose received before stack is acquired, in e/A^2.')
 
         form.addParam('group', params.IntParam, default='1',
@@ -215,7 +215,6 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
                         '-FmDose': self.frameDose.get(),
-                        '-InitDose': self.initDose.get(),
                         '-Throw': '%d' % (a0 - 1),
                         '-Trunc': '%d' % (abs(aN - numberOfFrames)),
                         '-PixSize': inputMovies.getSamplingRate(),
@@ -223,6 +222,8 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Gpu': self.GPUIDs.get(),
                         '-LogFile': logFileBase,
                         }
+            if getVersion('MOTIONCOR2') == '08222016':
+                argsDict['-InitDose'] = self.initDose.get()
 
             args = ' -InMrc %s ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
@@ -312,3 +313,6 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
+
+    def _isNewMotioncor2(self):
+        return True if getVersion('MOTIONCOR2') == '08222016' else False
