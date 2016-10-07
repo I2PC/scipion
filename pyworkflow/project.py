@@ -1008,7 +1008,6 @@ class Project(object):
                             cp.setExtended(cExt)
                     else:
                         cp = pwobj.Pointer(cObj, extended=cExt)
-
                     child = g.getNode(cp.getUniqueId())
 
                     if not child:
