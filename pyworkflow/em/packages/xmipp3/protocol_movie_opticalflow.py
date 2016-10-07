@@ -28,7 +28,7 @@
 # **************************************************************************
 
 from os.path import join, exists
-import sys
+from glob import glob
 from itertools import izip
 
 import pyworkflow.object as pwobj
@@ -81,7 +81,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                         help="The number of frames in each group at the "
                              "last step")
         group.addParam('useAlignment', params.BooleanParam, default=True,
-                       label="Use previous alignment to Sum frames?",
+                       label="Use previous movie alignment to Sum frames?",
                        help="If set Yes, the alignment information (if"
                        " it exists) will take into account to align"
                        " your movies.")
@@ -107,7 +107,6 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             'Angstrom')
         group.addParam('previousDose', params.FloatParam, default=0,
                        label='Previous dose',condition="doDoseCorrection",)
-        
         form.addParallelSection(threads=8, mpi=0)
     
     #--------------------------- STEPS functions -------------------------------
@@ -172,7 +171,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                                    self.previousDose.get(),)
         try:
             self.runJob(program, args)
-
+            
             if self.doSaveAveMic:
                 if not exists(outMicFn):
                     raise Exception("Micrograph %s not produced after "
@@ -196,13 +195,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 # we can remove it
                 if not self.doSaveAveMic:
                     pwutils.cleanPath(outMicFn)
-
+            
             self._saveAlignmentPlots(movie)
 
         except Exception as e:
             print ("ERROR: %s failed for movie %s.\n  Exception: %s"
                    % (program, inputFn, e))
-
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
@@ -295,7 +293,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             return getMovieFileName(movie)
 
     def _getShiftsFile(self, movie):
-        return self._getNameExt(movie, '_shifts', '.xmd', extra=True)
+        return self._getNameExt(movie, '_shifts', '.xmd', extra=False)
 
     def _getOutputShifts(self, movie):
         return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)
