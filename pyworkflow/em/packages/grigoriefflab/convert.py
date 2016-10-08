@@ -36,7 +36,7 @@ import os, re
 from itertools import izip
 import numpy
 from collections import OrderedDict
-from numpy import rad2deg
+from numpy import rad2deg, deg2rad
 from numpy.linalg import inv
 
 from pyworkflow.object import Float
@@ -364,3 +364,34 @@ def parseMagCorrInput(filename):
         f.close()
 
     return result
+
+
+def unDistortCoord(*params):
+    # http://grigoriefflab.janelia.org/node/5140#comment-1238
+
+    if len(params) != 7:
+        raise Exception("Not enough params for undistorting!")
+    x_original, y_original, mic_x, mic_y, ang, major_scale, minor_scale = params
+    angle_rad = rad2deg(ang)
+
+    # pixel location relative to center of micrograph
+    x = float(x_original) - float(mic_x) / 2.0
+    y = float(y_original) - float(mic_y) / 2.0
+
+    # rotate
+    r = numpy.sqrt(x ** 2 + y ** 2)
+    phi = numpy.arctan2(y, x) + angle_rad
+
+    # scale
+    x = r * numpy.cos(phi) * major_scale
+    y = r * numpy.sin(phi) * minor_scale
+
+    # rotate back
+    r = numpy.sqrt(x ** 2 + y ** 2)
+    phi = numpy.arctan2(y, x) - angle_rad
+
+    # pixel location relative to edge of micrograph
+    x_correct = r * numpy.cos(phi) + float(mic_x) / 2.0
+    y_correct = r * numpy.sin(phi) + float(mic_y) / 2.0
+
+    return x_correct, y_correct
