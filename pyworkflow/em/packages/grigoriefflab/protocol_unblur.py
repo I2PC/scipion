@@ -27,9 +27,8 @@ import os
 
 import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtAlignMovies
-from pyworkflow.protocol.params import  (IntParam,
-                                         BooleanParam, FloatParam,
-                                         LEVEL_ADVANCED)
+from pyworkflow.protocol.params import (IntParam, BooleanParam,
+                                        FloatParam, LEVEL_ADVANCED)
 from grigoriefflab import UNBLUR_PATH
 from convert import getVersion, readShiftsMovieAlignment
 
@@ -85,14 +84,14 @@ class ProtUnblur(ProtAlignMovies):
                       label='Half-width vertical Fourier mask',
                       help='The vertical line mask will be twice this size. '
                            'The central cross mask helps reduce problems by '
-                           'line artefacts from the detector',
+                           'line artifacts from the detector',
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('HWHoriFourMask', IntParam,
                       default=1,
                       label='Half-width horizontal Fourier mask',
                       help='The horizontal line mask will be twice this size. '
                            'The central cross mask helps reduce problems by '
-                           'line artefacts from the detector',
+                           'line artifacts from the detector',
                       expertLevel=LEVEL_ADVANCED)
         form.addParam('terminationShiftThreshold', FloatParam,
                       default=0.1,
@@ -150,9 +149,6 @@ class ProtUnblur(ProtAlignMovies):
     def _processMovie(self, movie):
         self._createLink(movie)
         numberOfFrames = movie.getNumberOfFrames()
-        #FIXME: Figure out how to properly write shifts for unblur
-        #self._writeMovieAlignment(movie, numberOfFrames)
-
         if self.alignFrameRange != -1:
 
             if self.alignFrameRange > numberOfFrames:
@@ -190,9 +186,10 @@ class ProtUnblur(ProtAlignMovies):
         args['doRestoreNoisePower'] = 'YES' if self.doRestoreNoisePower else 'NO'
         args['doVerboseOutput'] = 'YES' if self.doVerboseOutput else 'NO'
         args['exposurePerFrame'] = self.exposurePerFrame.get()
-        self._program = 'export OMP_NUM_THREADS=1; ' + UNBLUR_PATH
+        args['nthr'] = self.numberOfThreads.get()
+        self._program = 'export OMP_NUM_THREADS=%(nthr)d; ' + UNBLUR_PATH
 
-        if getVersion('UNBLUR') == '1.0.2':
+        if getVersion('UNBLUR') != '1.0.150529':
             args['preExposureAmount'] = self.preExposureAmount.get()
             self._args = """ << eof
 %(movieName)s
@@ -307,4 +304,4 @@ eof
         return 1, min(last, n)
 
     def _isNewUnblur(self):
-        return True if getVersion('UNBLUR') == '1.0.2' else False
+        return True if getVersion('UNBLUR') != '1.0.150529' else False

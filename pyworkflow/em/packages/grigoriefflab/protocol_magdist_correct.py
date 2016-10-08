@@ -2,6 +2,7 @@
 # *
 # * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -71,6 +72,10 @@ class ProtMagDistCorr(ProtProcessMovies):
                       condition='not useEst',
                       label='Distortion angle (deg)',
                       help='Distortion angle, in degrees.')
+        form.addParam('newPix', params.FloatParam,
+                      condition='not useEst',
+                      label='New pixel size (A)',
+                      help='Assign a new corrected pixel size, in Angstrom.')
         form.addParam('doGain', params.BooleanParam, default=False,
                       expertLevel=params.LEVEL_ADVANCED,
                       label='Do gain correction before undistorting?',
@@ -119,13 +124,11 @@ class ProtMagDistCorr(ProtProcessMovies):
             params['angDist'] = input_params[0]
             params['scaleMaj'] = input_params[1]
             params['scaleMin'] = input_params[2]
-            params['corrPix'] = input_params[3]
 
         else:
             params['angDist'] = self.angDist.get()
             params['scaleMaj'] = self.scaleMaj.get()
             params['scaleMin'] = self.scaleMin.get()
-            params['corrPix'] = inputMovies.getSamplingRate()
 
         if self.doGain:
             params['gainFile'] = inputMovies.getGain()
@@ -245,6 +248,11 @@ class ProtMagDistCorr(ProtProcessMovies):
         txt = []
         txt.append("Anisotropic magnification distortion was corrected using "
                    "Grigorieff's program *mag_distortion_correct*")
+        if self.doGain:
+            txt.append("Gain reference was applied before undistorting")
+        if self.doResample:
+            txt.append("Output was resampled to %d x %d pixels" % (self.newX.get(),
+                                                                   self.newY.get()))
 
         return txt
 
@@ -344,8 +352,8 @@ eof
         if self.getAttributeValue('useEst', False):
             inputFn = self.getAttributeValue('inputEst', None).getOutputLog()
             input_params = parseMagCorrInput(inputFn)
-            self.summaryVar.set("Input magnification distortion parameters that"
-                                " were used for correction:\n\n"
+            self.summaryVar.set("The following magnification distortion parameters "
+                                "were used for correction:\n\n"
                                 "Distortion Angle: *%0.2f* degrees\n"
                                 "Major Scale: *%0.3f*\n"
                                 "Minor Scale: *%0.3f*\n"
@@ -353,9 +361,8 @@ eof
                                 % (input_params[0], input_params[1],
                                    input_params[2], input_params[3]))
         else:
-            defPix = movie.getSamplingRate()
-            self.summaryVar.set("Input magnification distortion parameters "
-                                "that were used for correction:\n\n"
+            self.summaryVar.set("The following magnification distortion parameters "
+                                "were used for correction:\n\n"
                                 "Distortion Angle: *%0.2f* degrees\n"
                                 "Major Scale: *%0.3f*\n"
                                 "Minor Scale: *%0.3f*\n"
@@ -363,16 +370,13 @@ eof
                                 % (self.getAttributeValue('angDist', 1.0),
                                    self.getAttributeValue('scaleMaj', 1.0),
                                    self.getAttributeValue('scaleMin', 1.0),
-                                   self.getAttributeValue('corrPix', defPix)))
+                                   self.newPix.get()))
 
     def calcPixSize(self):
-        origPix = self.inputMovies.get().getSamplingRate()
-
-        #TODO: recalculate pixel size if rescaling images is set
         if self.useEst:
             inputEst = self.inputEst.get().getOutputLog()
             input_params = parseMagCorrInput(inputEst)
             newPix = input_params[3]
             return newPix
         else:
-            return origPix
+            return self.newPix.get()

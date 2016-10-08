@@ -51,26 +51,21 @@ class ProtSummovie(ProtAlignMovies):
 
         group = form.addGroup('Average')
         line = group.addLine('Frames to SUM',
-                    help='Frames range to SUM on each movie. The '
-                         'first frame is 1. If you set 0 in the final '
-                         'frame to sum, it means that you will sum '
-                         'until the last frame of the movie.')
-        line = group.addLine('Frames to SUM',
-                            help='Frames range to SUM on each movie. The '
-                                 'first frame is 1. If you set 0 in the final '
-                                 'frame to sum, it means that you will sum '
-                                 'until the last frame of the movie.')
+                             help='Frames range to SUM on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to sum, it means that you will sum '
+                                  'until the last frame of the movie.')
         line.addParam('sumFrame0', params.IntParam, default=1,
                       label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
                       label='to')
         group.addParam('useAlignment', params.BooleanParam, default=True,
-              label="Use movie alignment to Sum frames?")
+                       label="Use movie alignment to Sum frames?")
 
         group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
-                      label='Apply Dose filter',
-                      help='Apply a dose-dependent filter to frames '
-                           'before summing them')
+                       label='Apply Dose filter',
+                       help='Apply a dose-dependent filter to frames '
+                            'before summing them')
 
         form.addParam('exposurePerFrame', params.FloatParam,
                       label='Exposure per frame (e/A^2)',
@@ -111,18 +106,19 @@ class ProtSummovie(ProtAlignMovies):
             self._writeMovieAlignment(movie, s0, sN)
             self._argsSummovie()
 
-            params = {'movieFn' : self._getMovieFn(movie),
-                      'numberOfFrames' : numberOfFrames,
-                      'micFn' : self._getMicFn(movie),
-                      'initFrame' : s0,
-                      'finalFrame' : sN,
-                      'shiftsFn' : self._getShiftsFn(movie),
-                      'samplingRate' : movie.getSamplingRate(),
-                      'voltage' : movie.getAcquisition().getVoltage(),
-                      'frcFn' : self._getFrcFn(movie),
-                      'exposurePerFrame' : self.exposurePerFrame.get(),
+            params = {'movieFn': self._getMovieFn(movie),
+                      'numberOfFrames': numberOfFrames,
+                      'micFn': self._getMicFn(movie),
+                      'initFrame': s0,
+                      'finalFrame': sN,
+                      'shiftsFn': self._getShiftsFn(movie),
+                      'samplingRate': movie.getSamplingRate(),
+                      'voltage': movie.getAcquisition().getVoltage(),
+                      'frcFn': self._getFrcFn(movie),
+                      'exposurePerFrame': self.exposurePerFrame.get(),
                       'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
-                      'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
+                      'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO',
+                      'nthr': self.numberOfThreads.get()
                       }
 
             self.runJob(self._program, self._args % params)
@@ -168,7 +164,7 @@ class ProtSummovie(ProtAlignMovies):
     
     #--------------------------- UTILS functions -------------------------------
     def _argsSummovie(self):
-        self._program = 'export OMP_NUM_THREADS=1; ' + SUMMOVIE_PATH
+        self._program = 'export OMP_NUM_THREADS=%(nthr)d; ' + SUMMOVIE_PATH
         self._args = """ << eof
 %(movieFn)s
 %(numberOfFrames)s
@@ -213,9 +209,9 @@ eof
         if movie.hasAlignment() and self.useAlignment:
             writeShiftsMovieAlignment(movie, shiftsFn, s0, sN)
         else:
-            f = open(shiftsFn,'w')
+            f = open(shiftsFn, 'w')
             frames = sN - s0 + 1
-            shift= ("0 " * frames + "\n" ) *2
+            shift = ("0 " * frames + "\n") * 2
             f.write(shift)
             f.close()
     
