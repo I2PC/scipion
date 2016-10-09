@@ -44,7 +44,7 @@ void ProgMovieFilterDose::readParams() {
 	acceleration_voltage = getDoubleParam("--accVoltage");
 	initVoltage(acceleration_voltage);
 	pre_exposure_amount = getDoubleParam("--preExposure");
-	restore_power = checkParam("--restoreNoiPow");
+	//restore_power = checkParam("--restoreNoiPow");
 
 }
 
@@ -77,8 +77,8 @@ void ProgMovieFilterDose::defineParams() {
 	addParamsLine(
 			"  [--accVoltage <voltage=300>] : Acceleration voltage (kV) min_value=200.0e0,max_value=300.0e0)");
 	addParamsLine("  [--preExposure <preExp=0>]   : P (e/A^2)");
-	addParamsLine(
-			"  [--restoreNoiPow]            : Restore noise power after filtering? (default=false)");
+//	addParamsLine(
+//			"  [--restoreNoiPow]            : Restore noise power after filtering? (default=false)");
 	addExampleLine("A typical example", false);
 	addExampleLine("xmipp_cxzczxczccxztobedone");
 }
@@ -97,7 +97,7 @@ double ProgMovieFilterDose::optimalDoseGivenCriticalDose(double critical_dose) {
 }
 
 void ProgMovieFilterDose::init(void) {
-	/**  Set up the critical curve function (summovie */
+	/**  Set up the critical curve function (summovie) */
 	critical_dose_a = 0.24499;
 	critical_dose_b = -1.6649;
 	critical_dose_c = 2.8141;
@@ -127,8 +127,9 @@ ProgMovieFilterDose::ProgMovieFilterDose(double accelerationVoltage) {
 	initVoltage(accelerationVoltage);
 }
 
+
 void ProgMovieFilterDose::applyDoseFilterToImage(
-		size_t Ydim, size_t Xdim,
+		int Ydim, int Xdim,
 		const MultidimArray<std::complex<double> > &FFT1,
 		const double dose_start, const double dose_finish) {
 	double * ptrv = (double *) MULTIDIM_ARRAY(FFT1);
@@ -145,8 +146,11 @@ void ProgMovieFilterDose::applyDoseFilterToImage(
 		yy = y * y;
 		for (long int j = 0; j < XSIZE(FFT1); j++) {
 			FFT_IDX2DIGFREQ_FAST(j, Xdim, sizeX_2, ixsize, x);
-//			std::cerr << "(x,y)=" << j +1 << "," << i + 1<< " = "
-//					  << DIRECT_A2D_ELEM(FFT1, i, j) << std::endl;
+#ifdef DEBUG_FFT_FREQ
+			std::cerr << "(j+1,i+1)(x,y)=" << j +1 << "," << i + 1<< " "
+					                       << x    << " " << y << " = "
+										   << DIRECT_A2D_ELEM(FFT1, i, j) << std::endl;
+#endif
 			if (i == 0 && j == 0)
 				//ROB: I do not understand this step
 				//It forces the origin to 0
@@ -155,20 +159,14 @@ void ProgMovieFilterDose::applyDoseFilterToImage(
 			else
 				current_critical_dose = criticalDose(
 						sqrt(x * x + yy) / pixel_size);
-//            std::cerr << "current_critical_dose(B): "
-//            		  << current_critical_dose <<  std::endl;
 		    current_optimal_dose = optimalDoseGivenCriticalDose(
 					current_critical_dose);
 			if (abs(dose_finish - current_optimal_dose)
 					< abs(dose_start - current_optimal_dose)) {
-//	            std::cerr << "dose start finish): "
-//	            		  << dose_start << " " << dose_finish <<  std::endl;
 				DIRECT_A2D_ELEM(FFT1, i, j ) *= doseFilter(dose_finish,
 						current_critical_dose);
 			} else
 				DIRECT_A2D_ELEM(FFT1, i, j ) = complex_zero;
-//			std::cerr << "(x2,y2)=" << j +1 << "," << i + 1<< " = "
-//					  << DIRECT_A2D_ELEM(FFT1, i, j) << std::endl;
 
 		}
 	}
@@ -214,6 +212,7 @@ void ProgMovieFilterDose::run() {
 	FileName fnFrame;
 	FileName fnOutFrame;
 	Image<double> frame;
+	int mode = WRITE_OVERWRITE;
 
 	MultidimArray<std::complex<double> > FFT1;
 	FOR_ALL_OBJECTS_IN_METADATA(movie)
@@ -223,7 +222,9 @@ void ProgMovieFilterDose::run() {
 			frame.read(fnFrame);
 			// Now do the Fourier transform and filter
 			transformer.FourierTransform(frame(), FFT1, false);
-
+#ifdef PRINT_ORIGINAL_IMAGE
+			std::cerr << "n= (original image)" << n << std::endl << frame() << std::endl;
+#endif
 #undef DEBUG
 //#define DEBUG
 #ifdef DEBUG
@@ -261,14 +262,26 @@ void ProgMovieFilterDose::run() {
 			frame.write("/tmp/frame_1.mrc");
 #endif
 #undef DEBUG
-			// apply dose
-			applyDoseFilterToImage(YSIZE(frame()), XSIZE(frame()), FFT1,
+#ifdef PRINTFFT
+			std::cerr << "fourier before filter " << n << std::endl
+					<< FFT1 << std::endl;
+#endif
+			applyDoseFilterToImage((int)YSIZE(frame()), (int)XSIZE(frame()), FFT1,
 					(n * dose_per_frame) + pre_exposure_amount,    //dose_star
 					((n + 1) * dose_per_frame) + pre_exposure_amount //dose_end
-							);
+			);
+#ifdef PRINTFFTAFTERFILTER
+			std::cerr << "Fourier  after filter"<< std::endl << FFT1 << std::endl;
+#endif
 			transformer.inverseFourierTransform();
-
-			frame.write(user_supplied_output_filename,n+FIRST_IMAGE,true,WRITE_APPEND);
+#ifdef PRINTREALIMAGEAFTERDOEFILTERING
+			std::cerr << "fourier matrix after inverse (very likely garbage)" << std::endl
+					<< FFT1 << std::endl;
+			std::cerr << "image after filter "  << std::endl
+					<< frame() << std::endl;
+#endif
+			frame.write(user_supplied_output_filename,n+FIRST_IMAGE,true,mode);
+			mode = WRITE_APPEND;
 		}
 		++n;
 		if (verbose)
