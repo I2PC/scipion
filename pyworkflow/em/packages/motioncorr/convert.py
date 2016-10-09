@@ -121,3 +121,7 @@ def parseMovieAlignment2(logFile):
             yshifts.append(float(parts[2]))
     f.close()
     return xshifts, yshifts
+
+
+def parseMovieAlignmentLocal(logFile):
+    pass

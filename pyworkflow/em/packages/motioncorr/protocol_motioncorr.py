@@ -28,13 +28,20 @@
 # **************************************************************************
 
 import os, sys
+from itertools import izip
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
+import pyworkflow.utils as pwutils
+import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtAlignMovies
-
+from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
-                     parseMovieAlignment, parseMovieAlignment2)
+                     parseMovieAlignment, parseMovieAlignment2,
+                     parseMovieAlignmentLocal)
+
+
+OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -115,6 +122,11 @@ class ProtMotionCorr(ProtAlignMovies):
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
 
+        form.addParam('doComputePSD', params.BooleanParam, default=False,
+                      label="Compute PSD (before/after)?",
+                      help="If Yes, the protocol will compute for each movie "
+                           "the PSD before and after alignment, for comparison")
+
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
@@ -144,6 +156,7 @@ class ProtMotionCorr(ProtAlignMovies):
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
+        aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
 
         if not self.useMotioncor2:
             movieFolder = self._getOutputMovieFolder(movie)
@@ -222,7 +235,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Gpu': self.GPUIDs.get(),
                         '-LogFile': logFileBase,
                         }
-            if getVersion('MOTIONCOR2') == '08222016':
+            if getVersion('MOTIONCOR2') != '03162016':
                 argsDict['-InitDose'] = self.initDose.get()
 
             args = ' -InMrc %s ' % movie.getBaseName()
@@ -236,6 +249,20 @@ class ProtMotionCorr(ProtAlignMovies):
 
         try:
             self.runJob(program, args, cwd=movieFolder)
+
+            if self.doComputePSD:
+                uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
+                correctedPSD = self._getFnInMovieFolder(movie, "corrected")
+                self.computePSD(aveMic, uncorrectedPSD)
+                self.computePSD(outputMicFn, correctedPSD)
+                self.composePSD(uncorrectedPSD + ".psd",
+                                correctedPSD + ".psd",
+                                self._getPsdCorr(movie))
+                # Remove the avg mic that was only saved for computing PSD
+                pwutils.cleanPath(aveMic)
+
+            self._saveAlignmentPlots(movie)
+
         except:
             print >> sys.stderr, program, " failed for movie %s" % movie.getName()
 
@@ -311,8 +338,100 @@ class ProtMotionCorr(ProtAlignMovies):
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
 
+    def _getMovieLocalShifts(self, movie):
+        """ Returns x and y shifts for each patch of the movie.
+        Only possible for motioncor2 with local alignment"""
+        logPath = self._getExtraPath(self._getMovieLogFile(movie))
+        binning = self.binFactor.get()
+        if self.useMotioncor2 and self.patch.get() != '0 0':
+            xShifts, yShifts = parseMovieAlignmentLocal(logPath)
+            xSfhtsCorr = [x * binning for x in xShifts]
+            ySfhtsCorr = [y * binning for y in yShifts]
+            return xSfhtsCorr, ySfhtsCorr
+        else:
+            return None
+
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
 
+    def _preprocessOutputMicrograph(self, mic, movie):
+        self._setPlotInfo(movie, mic)
+
+    def _getFnInMovieFolder(self, movie, filename):
+        movieFolder = self._getOutputMovieFolder(movie)
+        return pwutils.join(movieFolder, filename)
+
+    def _getNameExt(self, movie, postFix, ext, extra=False):
+        fn = self._getMovieRoot(movie) + postFix + '.' + ext
+        if extra:
+            return self._getExtraPath(fn)
+        else:
+            return fn
+
+    def _setPlotInfo(self, movie, obj):
+        obj.plotGlobal = em.Image()
+        obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
+
+        obj.plotLocal = em.Image()
+        obj.plotLocal.setFileName(self._getPlotLocal(movie))
+
+    def _getPlotGlobal(self, movie):
+        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
+
+    def _getPlotLocal(self, movie):
+        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
+
+    def _saveAlignmentPlots(self, movie):
+        """ Compute alignment shifts plots and save to file as a png images. """
+        shiftsX, shiftsY = self._getMovieShifts(movie)
+        plotter = createGlobalAlignmentPlot(shiftsX, shiftsY)
+        plotter.savefig(self._getPlotGlobal(movie))
+
+        localShifts = self._getMovieLocalShifts(movie)
+        plotter2 = createLocalAlignmentPlot(localShifts)
+        plotter2.savefig(self._getPlotLocal(movie))
+
+    def _getPsdCorr(self, movie):
+        return self._getNameExt(movie, '_aligned_corrected', 'psd')
+
     def _isNewMotioncor2(self):
-        return True if getVersion('MOTIONCOR2') == '08222016' else False
+        return True if getVersion('MOTIONCOR2') != '03162016' else False
+
+
+def createGlobalAlignmentPlot(meanX, meanY):
+    """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    figureSize = (8, 6)
+    plotter = Plotter(*figureSize)
+    figure = plotter.getFigure()
+
+    preX = 0.0
+    preY = 0.0
+    sumMeanX.append(0.0)
+    sumMeanY.append(0.0)
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Cartesian representation')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.plot(0, 0, 'yo-')
+    i = 1
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        #ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.02, str(i))
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
+    return plotter
+
+def createLocalAlignmentPlot(localShifts):
+    pass
