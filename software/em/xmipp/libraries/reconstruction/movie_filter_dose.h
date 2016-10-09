@@ -138,7 +138,7 @@ public:
 
    /// Apply a dose filter to the image Fourier transform
    void applyDoseFilterToImage(
-		size_t Ydim, size_t Xdim,
+		int Ydim, int Xdim,
    		const MultidimArray< std::complex<double> > &FFT1,
 		const double dose_start, const double dose_finish
    		);
