@@ -28,13 +28,11 @@
 This module implements the viewer for Gautomatch program
 """
 
-import pyworkflow.utils as pwutils
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.viewer import CoordinatesObjectView, ObjectView
 from pyworkflow.em.data import SetOfCoordinates
-from pyworkflow.em.packages.xmipp3.convert import writeSetOfCoordinates, writeSetOfMicrographs
-import pyworkflow.em.showj as showj
+from pyworkflow.em.packages.xmipp3.convert import *
+from pyworkflow.em.packages.xmipp3.viewer import launchSupervisedPickerGUI
 from protocol_gautomatch import ProtGautomatch
 
 
@@ -84,56 +82,67 @@ class GautomatchViewer(ProtocolViewer):
                 }
 
     def _viewParam(self, param=None):
-        project = self.protocol.getProject()
         micSet = self.protocol.getInputMicrographs()
-        coordsDir = project.getTmpPath(micSet.getName())
+        tmpDir = self.protocol._getTmpPath()
+        pwutils.cleanPath(tmpDir)
+        pwutils.makePath(tmpDir)
+        # FIXME: (JMRT) We are always writing the SetOfCoordinates and removing
+        # the tmpDir, we need to take into account if the user has picked
+        # some particles in the tmpDir and has not saved them, that now he
+        # will lose all picked particles.
+        # A possible solution could be to alert that changes have not been
+        # written during modification of tmpDir or create a new Xmipp picking
+        # protocol to continue picking later without losing the coordinates.
 
         if micSet is None:
             raise Exception('visualize: SetOfCoordinates has no micrographs set.')
 
-        micfn = project.getTmpPath(micSet.getName() + '_micrographs.xmd')
-        writeSetOfMicrographs(micSet, micfn)
-        labels = 'enabled id _size _filename'
-        viewParams = {showj.ORDER: labels,
-                      showj.VISIBLE: labels, showj.RENDER: '_filename',
-                      'labels': 'id',
-                      }
-        fn = ''
+        micsFn = pwutils.join(tmpDir, micSet.getName() + '_micrographs.xmd')
+        writeSetOfMicrographs(micSet, micsFn)
+        inTmpFolder = True
+        view = []
+
         if param == 'doShowAutopick':
-            self._convertCoords(micSet, coordsDir, coordsType='autopick')
-            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
-            return [view]
+            self._convertCoords(micSet, tmpDir, coordsType='autopick')
+            launchSupervisedPickerGUI(micsFn, tmpDir, self.protocol, mode='review',
+                                      inTmpFolder=inTmpFolder)
         elif param == 'doShowRejected':
-            self._convertCoords(micSet, coordsDir, coordsType='rejected')
-            view = CoordinatesObjectView(project, micfn, coordsDir, self.protocol)
-            return [view]
+            self._convertCoords(micSet, tmpDir, coordsType='rejected')
+            launchSupervisedPickerGUI(micsFn, tmpDir, self.protocol, mode='review',
+                                      inTmpFolder=inTmpFolder)
         elif param == 'doShowCC':
             fn = self.protocol.createDebugOutput(suffix='_ccmax')
+            view.append(ObjectView(self._project, self.protocol.strId(), fn))
+            return view
         elif param == 'doShowFilt':
             fn = self.protocol.createDebugOutput(suffix='_pref')
+            view.append(ObjectView(self._project, self.protocol.strId(), fn))
+            return view
         elif param == 'doShowBgEst':
             fn = self.protocol.createDebugOutput(suffix='_bg')
+            view.append(ObjectView(self._project, self.protocol.strId(), fn))
+            return view
         elif param == 'doShowBgSub':
             fn = self.protocol.createDebugOutput(suffix='_bgfree')
+            view.append(ObjectView(self._project, self.protocol.strId(), fn))
+            return view
         elif param == 'doShowSigma':
             fn = self.protocol.createDebugOutput(suffix='_lsigma')
+            view.append(ObjectView(self._project, self.protocol.strId(), fn))
+            return view
         elif param == 'doShowMask':
             fn = self.protocol.createDebugOutput(suffix='_mask')
+            view.append(ObjectView(self._project, self.protocol.strId(), fn))
+            return view
 
-        view = ObjectView(project, self.protocol.strId(), fn, viewParams=viewParams)
-
-        return [view]
-
-    def _convertCoords(self, micSet, coordsDir, coordsType):
-        """ Link specified coord set to Tmp folder and convert it to .pos files"""
-        pwutils.cleanPath(coordsDir)
-        pwutils.makePath(coordsDir)
+    def _convertCoords(self, micSet, tmpDir, coordsType):
+        """ Link specified coord set to tmpDir folder and convert it to .pos files"""
         coordTypes = {'autopick': 'coordinates.sqlite',
                       'rejected': 'coordinates_rejected.sqlite'
                       }
         coordsFnIn = self.protocol._getPath(coordTypes[coordsType])
-        coordsFnOut = pwutils.join(coordsDir, 'coordinates.sqlite')
+        coordsFnOut = pwutils.join(tmpDir, 'coordinates.sqlite')
         pwutils.createLink(coordsFnIn, coordsFnOut)
         coordSet = SetOfCoordinates(filename=coordsFnOut)
         coordSet.setMicrographs(micSet)
-        writeSetOfCoordinates(coordsDir, coordSet, ismanual=False)
+        writeSetOfCoordinates(tmpDir, coordSet, ismanual=False)

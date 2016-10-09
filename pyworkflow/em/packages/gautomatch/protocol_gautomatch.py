@@ -439,4 +439,9 @@ class ProtGautomatch(em.ProtParticlePicking):
             mic.setFileName(micFn)
             outputDebugMics.append(mic)
 
+        label = 'debug_output' + suffix
+        outputDebugMics.setObjLabel(label)
+        self._defineOutputs(outputMicrographs=outputDebugMics)
+        self._defineSourceRelation(micSet, outputDebugMics)
+
         return outputDebugMics.getFileName()
