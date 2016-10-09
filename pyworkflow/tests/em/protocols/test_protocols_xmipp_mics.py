@@ -529,4 +529,4 @@ class TestXmippExtractParticles(TestXmippBase):
         compare(229)
 
         self.assertAlmostEqual(outputParts.getSamplingRate() / samplingMics,
-                               downFactor, 1, "There was a problem generating the output.")
+                               downFactor, 1)
