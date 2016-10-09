@@ -99,10 +99,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'you want to associate CTF information to the particles.')
 
         # downFactor should always be 1.0 or greater
-        gtOne = params.GT(1.0, error='Value should be greater than 1.0')
+        geOne = params.GE(1.0,
+                          error='Value should be greater or equal than 1.0')
 
         form.addParam('downFactor', params.FloatParam, default=1.0,
-                      validators=[gtOne],
+                      validators=[geOne],
                       label='Downsampling factor',
                       help='Select a value greater than 1.0 to reduce the size '
                            'of micrographs before extracting the particles. '
@@ -254,7 +255,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     args = " -i %s -o %s --ctf %s --sampling %f"
                     micOps.append(('xmipp_ctf_phase_flip',
                                    args % (fnLast, fnFlipped, fnCTF,
-                                           self.samplingMics)))
+                                           self._getNewSampling())))
                     fnLast = fnFlipped
             else:
                 fnCTF = None
@@ -420,10 +421,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         boxScale = self.getBoxScale()
         doScale = self.notOne(boxScale)
-        if self._doDownsample():
-            # Set new sampling, it should be the input sampling of the used
-            # micrographs multiplied by the downFactor
-            imgSet.setSamplingRate(self.samplingMics * self.downFactor.get())
+
+        imgSet.setSamplingRate(self._getNewSampling())
 
         # Create a temporary set to read from the metadata file
         # and later create the good one with the coordinates 
@@ -526,6 +525,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     def notOne(self, value):
         return abs(value - 1) > 0.0001
+
+    def _getNewSampling(self):
+        newSampling = self.samplingMics
+
+        if self._doDownsample():
+            # Set new sampling, it should be the input sampling of the used
+            # micrographs multiplied by the downFactor
+            newSampling *= self.downFactor.get()
+
+        return newSampling
 
     def _setupBasicProperties(self):
         # Set sampling rate (before and after doDownsample) and inputMics
