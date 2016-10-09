@@ -637,7 +637,7 @@ loop_
     f.write(s)
     return f
 
-def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
+def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
     Params:
@@ -675,8 +675,14 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
         c += 1
+        if scale != 1:
+            x = coord.getX() * scale
+            y = coord.getY() * scale
+        else:
+            x = coord.getX()
+            y = coord.getY()
         f.write(" %06d   1   %d  %d  %d   %06d\n"
-                % (coord.getObjId(), coord.getX(), coord.getY(), 1, micId))
+                % (coord.getObjId(), x, y, 1, micId))
     
     if f:
         f.close()
