@@ -29,6 +29,7 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
+import pyworkflow.gui.dialog as dialog
 from pyworkflow.utils.properties import Message
 
 from convert import (readSetOfCoordinates, writeSetOfCoordinates,
@@ -276,6 +277,7 @@ class ProtGautomatch(em.ProtParticlePicking):
         coordSetAux = self._createSetOfCoordinates(micSet, suffix='_rejected')
         coordSetAux.setBoxSize(coordSet.getBoxSize())
         readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSetAux, suffix='_rejected.star')
+        coordSetAux.write()
 
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
@@ -430,7 +432,7 @@ class ProtGautomatch(em.ProtParticlePicking):
         micTest = micSet.getFirstItem().getFileName()
         debugMic = self.getOutputName(micTest, suffix)
         if not pwutils.exists(debugMic):
-            raise Exception("Error: This type of debug output was not produced!")
+            dialog.showError("Files not found", "This type of debug output was not produced!", self)
 
         outputDebugMics = self._createSetOfMicrographs(suffix=suffix)
         outputDebugMics.copyInfo(micSet)
@@ -439,9 +441,5 @@ class ProtGautomatch(em.ProtParticlePicking):
             mic.setFileName(micFn)
             outputDebugMics.append(mic)
 
-        label = 'debug_output' + suffix
-        outputDebugMics.setObjLabel(label)
-        self._defineOutputs(outputMicrographs=outputDebugMics)
-        self._defineSourceRelation(micSet, outputDebugMics)
-
+        outputDebugMics.write()
         return outputDebugMics.getFileName()
