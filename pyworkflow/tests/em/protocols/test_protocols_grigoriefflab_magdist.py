@@ -25,12 +25,15 @@
 # **************************************************************************
 
 from pyworkflow.tests import *
-from pyworkflow.em.protocol import ProtImportMovies, ProtImportMicrographs
+from pyworkflow.em.protocol import (ProtImportMovies,
+                                    ProtImportMicrographs,
+                                    ProtImportCoordinates)
 from pyworkflow.em.packages.grigoriefflab import (ProtMagDistEst,
-                                                  ProtMagDistCorr)
+                                                  ProtMagDistCorr,
+                                                  ProtMagDistCorrCoord)
 
 
-# Some utility functions to import movies that are used in several tests.
+# Some utility functions to import files that are used in several tests.
 class TestMagDistBase(BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -40,6 +43,7 @@ class TestMagDistBase(BaseTest):
         cls.movies = cls.dataset.getFile('ribo/*.mrcs')
         cls.dataset2 = DataSet.getDataSet('grigorieff')
         cls.mics = cls.dataset2.getFile('gold/*.mrc')
+        cls.coords = cls.dataset2.getFile('gold/')
     
     @classmethod
     def runImportMovie(cls, pattern, objLabel, samplingRate, voltage,
@@ -135,8 +139,6 @@ class TestMagDistBase(BaseTest):
                                        magnification=59000)
 
     def runBasicTests(self):
-        # Run some basic tests for mag. distortion
-
         # Expected dimensions of movies and mics
         dims = [(4096, 4096, 7), (1950, 1950, 16), (4096, 4096, 1)]
 
@@ -154,6 +156,17 @@ class TestMagDistBase(BaseTest):
         for index, item in enumerate(inputSets):
             self.assertIsNotNone(item)
             self.assertEqual(dims[index], item.getDim())
+
+        # Also import coords
+        protImport4 = self.newProtocol(ProtImportCoordinates,
+                                       importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                       filesPath=self.coords,
+                                       filesPattern='*.pos',
+                                       boxSize=150)
+        protImport4.inputMicrographs.set(inputMics)
+        protImport4.setObjLabel('import coords from xmipp')
+        self.launchProtocol(protImport4)
+        inputCoords = getattr(protImport4, 'outputCoordinates')
 
         # Run estimation on mics
         protEst = self.newProtocol(ProtMagDistEst,
@@ -203,6 +216,20 @@ class TestMagDistBase(BaseTest):
         for movie in outputMovies2:
             movieFn = movie.getFileName()
             self.assertTrue(os.path.exists(self.proj.getPath(movieFn)))
+
+        # Run correction on input coords
+        protCorr3 = self.newProtocol(ProtMagDistCorrCoord,
+                                     objLabel=ProtMagDistCorr._label + str(3),
+                                     useEst=True)
+        protCorr3.inputCoords.set(inputCoords)
+        protCorr3.inputEst.set(protEst)
+        self.launchProtocol(protCorr3)
+
+        # Check output coords
+        outputCoords = getattr(protCorr3, 'outputCoordinates', None)
+        self.assertIsNotNone(outputCoords)
+        self.assertEqual(protImport4.outputCoordinates.getSize(),
+                         outputCoords.getSize())
 
 
 class TestMagDist(TestMagDistBase):

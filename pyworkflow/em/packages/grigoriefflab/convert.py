@@ -366,8 +366,10 @@ def parseMagCorrInput(filename):
     return result
 
 
-def unDistortCoord(*params):
+def unDistortCoord(params):
     # http://grigoriefflab.janelia.org/node/5140#comment-1238
+    # no need to invert Y-axis since we calculate relative to
+    # the center of mic
 
     if len(params) != 7:
         raise Exception("Not enough params for undistorting!")
