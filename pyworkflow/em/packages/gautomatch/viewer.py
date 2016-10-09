@@ -27,6 +27,7 @@
 """
 This module implements the viewer for Gautomatch program
 """
+
 import pyworkflow.utils as pwutils
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
@@ -49,21 +50,27 @@ class GautomatchViewer(ProtocolViewer):
         form.addParam('doShowAutopick', LabelParam,
                       label="Show auto-picked particles?", default=True)
         form.addParam('doShowRejected', LabelParam,
-                      label="Show rejected particles?", default=True)
+                      label="Show rejected particles?", default=True,
+                      help="Rejected particles may be useful for adjusting "
+                           "picking parameters.")
 
         form.addSection(label='Debug output')
-        form.addParam('doShowCC', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowCC', LabelParam,
                       label="Show cross-correlation files?", default=True)
-        form.addParam('doShowFilt', LabelParam, expertLevel=LEVEL_ADVANCED,
-                      label="Show pre-filtered micrographs?", default=True)
-        form.addParam('doShowBgEst', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowFilt', LabelParam,
+                      label="Show pre-filtered micrographs?", default=True,
+                      condition='_doPrefilt')
+        form.addParam('doShowBgEst', LabelParam,
                       label="Show background estimation?", default=True)
-        form.addParam('doShowBgSub', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowBgSub', LabelParam,
                       label="Show background-subtracted micrographs?", default=True)
-        form.addParam('doShowSigma', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowSigma', LabelParam,
                       label="Show local sigma micrographs?", default=True)
-        form.addParam('doShowMask', LabelParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('doShowMask', LabelParam,
                       label="Show auto-detected mask?", default=True)
+
+    def _doPrefilt(self):
+        return True if self.protocol.preFilt.get() else False
 
     def _getVisualizeDict(self):
         return {'doShowAutopick': self._viewParam,

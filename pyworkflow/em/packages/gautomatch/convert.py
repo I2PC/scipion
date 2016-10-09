@@ -128,30 +128,15 @@ def readCoordinates(mic, fileName, coordsSet):
 
 
 def writeSetOfCoordinates(workDir, coordSet, isGlobal=False):
-    """ Write set of coordinates from md to file: box or star.
+    """ Write set of coordinates from md to star file.
     Used only for exclusive picking. Creates .star files with
-    bad coordinates (for each mic) and/or a single .box file with
+    bad coordinates (for each mic) and/or a single .star file with
     global detector defects.
     """
-    if isGlobal:
-        fnOut = os.path.join(workDir, 'defects.box')
-        boxSize = coordSet.getBoxSize() or 0
-        f = open(fnOut, 'w')
+    # Gautomatch cannot read default star header (with # XMIPP_STAR_1 *),
+    # so we write directly to file
 
-        for coord in coordSet:
-            f.write("%0.6f %0.6f %d %d\n"
-                    % (coord.getX(), coord.getY(), boxSize, boxSize))
-        f.close()
-
-    else:
-        for mic in coordSet.iterMicrographs():
-            micId = mic.getObjId()
-            micBase = pwutils.removeBaseExt(mic.getFileName())
-            fnCoords = os.path.join(workDir, micBase + '_rubbish.star')
-            # Gautomatch cannot read default star header (with # XMIPP_STAR_1 *),
-            # so we write directly to file
-            f = open(fnCoords, 'w')
-            header = """
+    header = """
 data_
 
 loop_
@@ -161,6 +146,22 @@ _rlnAnglePsi #3
 _rlnClassNumber #4
 _rlnAutopickFigureOfMerit #5
 """
+
+    if isGlobal:
+        fnOut = os.path.join(workDir, 'defects.star')
+        f = open(fnOut, 'w')
+        f.write(header)
+        for coord in coordSet:
+            f.write("%0.6f %0.6f %0.6f %d %0.6f\n" %
+                    (coord.getX(), coord.getY(), 0, 0, 0))
+        f.close()
+
+    else:
+        for mic in coordSet.iterMicrographs():
+            micId = mic.getObjId()
+            micBase = pwutils.removeBaseExt(mic.getFileName())
+            fnCoords = os.path.join(workDir, micBase + '_rubbish.star')
+            f = open(fnCoords, 'w')
             f.write(header)
             for coord in coordSet:
                 if coord.getMicId() == micId:
@@ -189,7 +190,10 @@ def runGautomatch(micName, refStack, workDir, args):
         pwutils.createLink(micName, outMic)
     else:
         em.ImageHandler().convert(micName, outMic)
-    args = ' %s --T %s %s' % (outMic, refStack, args)
+    if refStack is not None:
+        args = ' %s --T %s %s' % (outMic, refStack, args)
+    else:
+        args = ' %s %s' % (outMic, args)
     # Run Gautomatch:
     pwutils.runJob(None, getProgram(), args)
     # After picking we can remove the temporary file.
