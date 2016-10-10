@@ -65,23 +65,28 @@ class TestMixedBPV(TestWorkflow):
                                  filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+        self.assertIsNotNone(protPP.outputCoordinates,
+                             "There was a problem with the Eman import coordinates")
 
 
         # Extract the SetOfParticles.
         print "Run extract particles with other downsampling factor"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=64, micsSource=OTHER,
+        protExtract = self.newProtocol(XmippProtExtractParticles,
+                                       boxSize=64,
+                                       downsampleType=OTHER,
                                        doFlip=False, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protExtract)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles,
+                             "There was a problem with the extract particles")
 #         self.validateFiles('protExtract', protExtract)
         
         # Refine the SetOfParticles and reconstruct a refined volume.
         print "Running Frealign..."
-        protFrealign = self.newProtocol(ProtFrealign, doInvert=False, angStepSize=15,
+        protFrealign = self.newProtocol(ProtFrealign, doInvert=False,
+                                        angStepSize=15,
                                         numberOfIterations=2, mode=1,
                                         doExtraRealSpaceSym=True,
                                     innerRadius=130, outerRadius=300,
@@ -145,31 +150,38 @@ class TestMixedBPV2(TestWorkflow):
                                  filesPattern='*_info.json', boxSize=110)
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Eman import coordinates")
+        self.assertIsNotNone(protPP.outputCoordinates,
+                             "There was a problem with the Eman import coordinates")
 
 
         print "<Run extract particles with Same as picking>"
-        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110, micsSource=SAME_AS_PICKING,
+        protExtract = self.newProtocol(XmippProtExtractParticles, boxSize=110,
+                                       downsampleType=SAME_AS_PICKING,
                                        doFlip=True, doInvert=True, runMode=1)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         self.launchProtocol(protExtract)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles,
+                             "There was a problem with the extract particles")
         #self.validateFiles('protExtract', protExtract)
         
         print "Run Preprocess particles"
-        protCropResize = self.newProtocol(XmippProtCropResizeParticles, doResize=True, resizeOption=1, resizeDim=110)
+        protCropResize = self.newProtocol(XmippProtCropResizeParticles,
+                                          doResize=True, resizeOption=1,
+                                          resizeDim=110)
         protCropResize.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protCropResize)
         
-        self.assertIsNotNone(protCropResize.outputParticles, "There was a problem with resize/crop the particles")
+        self.assertIsNotNone(protCropResize.outputParticles,
+                             "There was a problem with resize/crop the particles")
         
         print "Run ML2D"
         protML2D = self.newProtocol(XmippProtML2D, numberOfClasses=8, maxIters=2,
                                  numberOfMpi=2, numberOfThreads=2)
         protML2D.inputParticles.set(protCropResize.outputParticles)
         self.launchProtocol(protML2D)        
-        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D")  
+        self.assertIsNotNone(protML2D.outputClasses,
+                             "There was a problem with ML2D")
         #self.validateFiles('protML2D', protML2D)
         
 #         #FIXME: Check the initial model with EMAn and restore the next step

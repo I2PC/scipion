@@ -68,8 +68,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       important=True,
                       label="Input coordinates",
                       help='Select the SetOfCoordinates ')
-        
-        form.addParam('micsSource', params.EnumParam,
+
+        # The name for the followig param is because historical reasons
+        # now it should be named better 'micsSource' rather than
+        # 'downsampleType', but this could make inconsistent previous executions
+        # of this protocols, we will keep the name
+        form.addParam('downsampleType', params.EnumParam,
                       choices=['same as picking', 'other'],
                       default=0, important=True,
                       display=params.EnumParam.DISPLAY_HLIST,
@@ -86,7 +90,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
-                      condition='micsSource != %s' % SAME_AS_PICKING,
+                      condition='downsampleType != %s' % SAME_AS_PICKING,
                       important=True, label='Input micrographs',
                       help='Select the SetOfMicrographs from which to extract.')
 
@@ -165,18 +169,20 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'For high-contrast negative stain, the signal itself may be affected so '
                            'that a higher value may be preferable.')
 
-        form.addParam('doInvert', params.BooleanParam, default=False,
+        form.addParam('doInvert', params.BooleanParam, default=None,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black over a white background.\n'
                            'Xmipp, Spider, Relion and Eman require white particles over a black background\n'
                            'Frealign (up to v9.07) requires black particles over a white background')
         
         form.addParam('doFlip', params.BooleanParam, default=None,
-                      label='Phase flipping (Recommended)', 
-                      help='Use the information from the CTF to compensate for phase reversals.\n'
+                      label='Phase flipping',
+                      help='Use the information from the CTF to compensate for '
+                           'phase reversals.\n'
                            'Phase flip is recommended in Xmipp or Eman\n'
-                           '(even Wiener filtering and bandpass filter are recommended for obtaining '
-                           'better 2D classes)\nOtherwise (Frealign, Relion, Spider, ...), '
+                           '(even Wiener filtering and bandpass filter are '
+                           'recommended for obtaining better 2D classes)\n'
+                           'Otherwise (Frealign, Relion, Spider, ...), '
                            'phase flip is not recommended.')
 
         form.addParam('doNormalize', params.BooleanParam, default=True,
@@ -289,7 +295,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # We need to find the mapping (either by micName (without ext) or micId)
         # between the micrographs in the SetOfCoordinates and
         # the Other micrographs if necessary
-        if self.micsSource == OTHER:
+        if self._micsOther():
             micDict = {}
             coordMics = self.inputCoords.getMicrographs()
             for mic in coordMics:
@@ -477,11 +483,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return ['Vargas2013b']
         
     def _summary(self):
-        micsSourceText = {SAME_AS_PICKING:'Same as picking',
-                          OTHER: 'Other set'}
         summary = []
         summary.append("Micrographs source: %s"
-                       % micsSourceText.get(self.micsSource.get()))
+                       % self.getEnumText("downsampleType"))
         summary.append("Particle box size: %d" % self.boxSize)
         
         if not hasattr(self, 'outputParticles'):
@@ -498,7 +502,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         if self.getStatus() == STATUS_FINISHED:
             msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(),
                                                                          self.boxSize)
-            if self.micsSource == OTHER:
+            if self._micsOther():
                 msg += " from another set of micrographs: %s" % self.getObjectTag('inputMicrographs')
 
             msg += " using coordinates %s" % self.getObjectTag('inputCoordinates')
@@ -520,6 +524,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return methodsMsgs
 
     #--------------------------- UTILS functions -------------------------------
+    def _micsOther(self):
+        """ Return True if other micrographs are used for extract. """
+        return self.downsampleType == OTHER
+
     def _doDownsample(self):
         return self.downFactor > 1.0
 
@@ -569,7 +577,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
         Other micrographs. """
-        if self.micsSource == SAME_AS_PICKING:
+        if not self._micsOther():
             return self.inputCoordinates.get().getMicrographs()
         else:
             return self.inputMicrographs.get()
@@ -602,14 +610,20 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         else:
             return None
 
+    def getCoordSampling(self):
+        return self.getCoords().getMicrographs().getSamplingRate()
+
+    def getMicSampling(self):
+        return self.getInputMicrographs().getSamplingRate()
+
     def getBoxScale(self):
         """ Computing the sampling factor between input and output.
         We should take into account the differences in sampling rate between
         micrographs used for picking and the ones used for extraction.
         The downsampling factor could also affect the resulting scale.
         """
-        samplingPicking = self.getCoords().getMicrographs().getSamplingRate()
-        samplingExtract = self.getInputMicrographs().getSamplingRate()
+        samplingPicking = self.getCoordSampling()
+        samplingExtract = self.getMicSampling()
         f = samplingPicking / samplingExtract
         return f / self.downFactor.get() if self._doDownsample() else f
 

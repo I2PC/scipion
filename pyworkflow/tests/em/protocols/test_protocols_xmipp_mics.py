@@ -318,7 +318,8 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles from same micrographs as picking"
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=110, 
-                                       micsSource=SAME_AS_PICKING,
+                                       downsampleType=SAME_AS_PICKING,
+                                       doInvert=False,
                                        doFlip=False)
         protExtract.setObjLabel("extract-same as picking")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -346,7 +347,8 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles from the original micrographs"
         protExtract = self.newProtocol(XmippProtExtractParticles, 
                                        boxSize=550, 
-                                       micsSource=OTHER,
+                                       downsampleType=OTHER,
+                                       doInvert=False,
                                        doFlip=False)
         protExtract.setObjLabel("extract-original")
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
@@ -378,9 +380,11 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles from original micrographs, with downsampling"
         downFactor = 3.0
         protExtract = self.newProtocol(XmippProtExtractParticles, 
-                                       boxSize=183, micsSource=OTHER,
+                                       boxSize=183, downsampleType=OTHER,
                                        doDownsample=True,
-                                       downFactor=downFactor, doFlip=False)
+                                       downFactor=downFactor,
+                                       doInvert=False,
+                                       doFlip=False)
         # Get all the micrographs ids to validate that all particles
         # has the micId properly set
         micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
@@ -416,7 +420,8 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with CTF"
         protExtract = self.newProtocol(XmippProtExtractParticles, 
                                        boxSize=110, 
-                                       micsSource=SAME_AS_PICKING,
+                                       downsampleType=SAME_AS_PICKING,
+                                       doInvert=False,
                                        doFlip=True)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
@@ -451,8 +456,9 @@ class TestXmippExtractParticles(TestXmippBase):
         print "Run extract particles with sort by statistics"
         protExtract = self.newProtocol(XmippProtExtractParticles, 
                                        boxSize=110, 
-                                       micsSource=SAME_AS_PICKING,
+                                       downsampleType=SAME_AS_PICKING,
                                        doFlip=True, doSort=True,
+                                       doInvert=False,
                                        rejectionMethod=1, maxZscore=2)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.ctfRelations.set(self.protCTF.outputCTF)
@@ -502,9 +508,11 @@ class TestXmippExtractParticles(TestXmippBase):
         downFactor = 3.0
         
         protExtract = self.newProtocol(XmippProtExtractParticles, 
-                                       boxSize=183, micsSource=OTHER,
+                                       boxSize=183, downsampleType=OTHER,
                                        doDownsample=True,
-                                       downFactor=downFactor, doFlip=False)
+                                       downFactor=downFactor,
+                                       doInvert=False,
+                                       doFlip=False)
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(protAssignCTF.outputMicrographs)
         protExtract.ctfRelations.set(self.protCTF.outputCTF)

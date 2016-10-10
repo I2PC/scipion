@@ -88,9 +88,10 @@ class TestEmxWeb(tests.BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=128,
-                                       micsSource=0,
+                                       downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
@@ -138,9 +139,10 @@ class TestEmxWeb(tests.BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=129,
-                                       micsSource=0,
+                                       downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False,
                                        doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
@@ -178,9 +180,10 @@ class TestEmxWeb(tests.BaseTest):
 
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=128,
-                                       micsSource=0,
+                                       downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False,
                                        doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
