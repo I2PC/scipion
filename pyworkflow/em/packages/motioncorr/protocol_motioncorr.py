@@ -34,6 +34,8 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
+from pyworkflow.em.data import MovieAlignment
+from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
@@ -253,12 +255,21 @@ class ProtMotionCorr(ProtAlignMovies):
             if self.doComputePSD:
                 uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
                 correctedPSD = self._getFnInMovieFolder(movie, "corrected")
+                # Compute uncorrected avg mic
+                roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
+                       self.cropDimX.get(), self.cropDimY.get()]
+                fakeShiftsFn = self.writeZeroShifts(movie)
+                self.averageMovie(movie, fakeShiftsFn, aveMic,
+                                  binFactor=self.binFactor.get(),
+                                  roi=roi, dark=None,
+                                  gain=inputMovies.getGain())
+                # Compute PSDs
                 self.computePSD(aveMic, uncorrectedPSD)
                 self.computePSD(outputMicFn, correctedPSD)
                 self.composePSD(uncorrectedPSD + ".psd",
                                 correctedPSD + ".psd",
                                 self._getPsdCorr(movie))
-                # Remove the avg mic that was only saved for computing PSD
+                # Remove avg that was used only for computing PSD
                 pwutils.cleanPath(aveMic)
 
             self._saveAlignmentPlots(movie)
@@ -388,14 +399,30 @@ class ProtMotionCorr(ProtAlignMovies):
         plotter.savefig(self._getPlotGlobal(movie))
 
         localShifts = self._getMovieLocalShifts(movie)
-        plotter2 = createLocalAlignmentPlot(localShifts)
-        plotter2.savefig(self._getPlotLocal(movie))
+        if localShifts is not None:
+            plotter2 = createLocalAlignmentPlot(localShifts)
+            plotter2.savefig(self._getPlotLocal(movie))
 
     def _getPsdCorr(self, movie):
         return self._getNameExt(movie, '_aligned_corrected', 'psd')
 
     def _isNewMotioncor2(self):
         return True if getVersion('MOTIONCOR2') != '03162016' else False
+
+    def writeZeroShifts(self, movie):
+        #TODO: find another way to do this
+        shiftsMd = self._getTmpPath('zero_shifts.xmd')
+        pwutils.cleanPath(shiftsMd)
+        xshifts = [0] * movie.getNumberOfFrames()
+        yshifts = xshifts
+        alignment = MovieAlignment(first=1, last=movie.getNumberOfFrames(),
+                                   xshifts=xshifts, yshifts=yshifts)
+        roiList = [0, 0, 0, 0]
+        alignment.setRoi(roiList)
+        movie.setAlignment(alignment)
+        writeShiftsMovieAlignment(movie, shiftsMd,
+                                  1, movie.getNumberOfFrames())
+        return shiftsMd
 
 
 def createGlobalAlignmentPlot(meanX, meanY):

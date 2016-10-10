@@ -124,4 +124,4 @@ def parseMovieAlignment2(logFile):
 
 
 def parseMovieAlignmentLocal(logFile):
-    pass
+    return [0, 0]
