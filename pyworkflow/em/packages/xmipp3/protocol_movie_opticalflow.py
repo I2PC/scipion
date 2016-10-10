@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Vahid Abrishami (vabrisahmi@cnb.csic.es)
 # *
@@ -27,7 +28,7 @@
 # **************************************************************************
 
 from os.path import join, exists
-import sys
+from glob import glob
 from itertools import izip
 
 import pyworkflow.object as pwobj
@@ -35,7 +36,6 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
-from pyworkflow.utils.path import moveFile
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
@@ -71,28 +71,42 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "do not know what we are talking about. First core "
                             "index is 0, second 1 and so on.")
         
-        # GROUP OPTICAL FLOW PARAMETERS
-        form.addParam('winSize', params.IntParam, default=150,
-                       label="Window size",
-                       help="Window size (shifts are assumed to be constant "
-                            "within this window).")
-        form.addParam('groupSize', params.IntParam, default=1,
-                       label="Group Size",
-                       help="The number of frames in each group at the "
-                            "last step")
+        group = form.addGroup('OF Parameters')
+        group.addParam('winSize', params.IntParam, default=150,
+                        label="Window size",
+                        help="Window size (shifts are assumed to be constant "
+                             "within this window).")
+        group.addParam('groupSize', params.IntParam, default=1,
+                        label="Group Size",
+                        help="The number of frames in each group at the "
+                             "last step")
+        group.addParam('useAlignment', params.BooleanParam, default=True,
+                       label="Use previous movie alignment to Sum frames?",
+                       help="If set Yes, the alignment information (if"
+                       " it exists) will take into account to align"
+                       " your movies.")
+        group.addParam('doComputePSD', params.BooleanParam, default=True,
+                       label="Compute PSD (before/after)?",
+                       help="If Yes, the protocol will compute for each movie "
+                            "the PSD of the average micrograph (without OF "
+                            "alignement) and after that, to compare each PSDs")
+        group.addParam('memory', params.BooleanParam, default=False,
+                       label="Keep images in RAM ?",
+                       help="If True, the protocol will increase the demand of "
+                            "RAM, decreasing disc access")
         
-        form.addParam('useAlignment', params.BooleanParam, default=True,
-                      label="Use movie alignment to Sum frames?",
-                      help="If set Yes, the alignment information (if"
-                      " it exists) will take into account to align"
-                      " your movies.")
-
-        form.addParam('doComputePSD', params.BooleanParam, default=True,
-                      label="Compute PSD (before/after)?",
-                      help="If Yes, the protocol will compute for each movie "
-                           "the PSD of the average micrograph (without OF "
-                           "alignement) and after that, to compare each PSDs")
-
+        group = form.addGroup('Dose Compensation')
+        group.addParam('doDoseCorrection', params.BooleanParam, default=False,
+                       label="Do dose correction?",
+                       help="If Yes, the protocol will compensate your movies "
+                       "taking into account the acumulated dose.")
+        group.addParam('exposurePerFrame', params.FloatParam, default=0,
+                       label='Exposure per frame (e/A^2)',
+                       condition="doDoseCorrection",
+                       help='Exposure per frame, in electrons per square '
+                            'Angstrom')
+        group.addParam('previousDose', params.FloatParam, default=0,
+                       label='Previous dose',condition="doDoseCorrection",)
         form.addParallelSection(threads=8, mpi=0)
     
     #--------------------------- STEPS functions -------------------------------
@@ -122,7 +136,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         doSaveMovie = self.doSaveMovie.get()
         groupSize = self.groupSize.get()
         args += ' --winSize %(winSize)d --groupSize %(groupSize)d ' % locals()
-
+        
         if self.doGPU:
             program = 'xmipp_movie_optical_alignment_gpu'
             args += '--gpu %d ' % gpuId
@@ -146,9 +160,18 @@ class XmippProtOFAlignment(ProtAlignMovies):
         args += '--cropULCorner %d %d ' % (roi[0], roi[1])
         args += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1,
                                            roi[1] + roi[3] -1)
+        
+        if self.memory:
+            args += ' --inmemory'
+        
+        if self.doDoseCorrection:
+            mag = movie.getAcquisition().getMagnification()
+            args += ' --doseCorrection %f %f %f' %(self.exposurePerFrame.get(),
+                                                   mag,
+                                                   self.previousDose.get(),)
         try:
             self.runJob(program, args)
-
+            
             if self.doSaveAveMic:
                 if not exists(outMicFn):
                     raise Exception("Micrograph %s not produced after "
@@ -172,13 +195,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 # we can remove it
                 if not self.doSaveAveMic:
                     pwutils.cleanPath(outMicFn)
-
+            
             self._saveAlignmentPlots(movie)
 
         except Exception as e:
             print ("ERROR: %s failed for movie %s.\n  Exception: %s"
                    % (program, inputFn, e))
-
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
@@ -271,7 +293,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             return getMovieFileName(movie)
 
     def _getShiftsFile(self, movie):
-        return self._getNameExt(movie, '_shifts', '.xmd', extra=True)
+        return self._getNameExt(movie, '_shifts', '.xmd', extra=False)
 
     def _getOutputShifts(self, movie):
         return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)

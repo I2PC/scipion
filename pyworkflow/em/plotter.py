@@ -28,9 +28,8 @@ This module implement the classes to create plots on xmipp.
 """
 from math import radians
 from itertools import izip
-import matplotlib.pyplot as plt
 
-from pyworkflow.gui.plotter import Plotter
+from pyworkflow.gui.plotter import Plotter, plt
 import metadata as md
 
 

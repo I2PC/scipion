@@ -87,7 +87,7 @@ class SparxGaussianProtPicking(ProtParticlePicking):
     #--------------------------- STEPS functions ---------------------------------------------------
     def executeSparxGaussianPickerStep(self, micFile):
         print micFile
-        params = '--gauss_autoboxer=demoparms --write_dbbox %s'%micFile
+        params = '--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s' % (self.boxSize.get(), micFile)
         self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
         
     def createOutputStep(self):

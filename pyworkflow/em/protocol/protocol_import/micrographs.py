@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es) [1]
+# *              Kevin Savage (kevin.savage@diamond.ac.uk) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [2] Diamond Light Source, Ltd
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -307,6 +309,13 @@ class ProtImportMovies(ProtImportMicBase):
                       help="Select Yes if you want to create a new stack for "
                            "each movies with its frames. ")
 
+        form.addParam('writeMoviesInProject', params.BooleanParam,
+                      default=False, condition="inputIndividualFrames and stackFrames",
+                      label="Write stacks in the project folder?",
+                      help="If Yes, the created stack files will be written "
+                           "in the project folder. By default the movies will "
+                           "be written in the same place where input frames are.")
+
         form.addParam('movieSuffix', params.StringParam,
                       default='_frames.mrcs',
                       condition="inputIndividualFrames and stackFrames",
@@ -334,6 +343,7 @@ class ProtImportMovies(ProtImportMicBase):
         The frames pattern should contains a part delimited by $.
         The id expression with # is not supported for simplicity.
         """
+
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
             for fileName, fileId in  ProtImportMicBase.iterNewInputFiles(self):
@@ -380,27 +390,43 @@ class ProtImportMovies(ProtImportMicBase):
             if movieFn not in self.importedFiles:
                 yield movieFn, None
 
-        for k, v in frameDict.iteritems():
-            movieFn = k + suffix
+        def checkMovie():
+            for k, v in frameDict.iteritems():
+                movieFn = k + suffix
 
-            if (movieFn not in self.importedFiles and
-                movieFn not in self.createdStacks and
-                len(v) == self.numberOfIndividualFrames):
-                movieOut = movieFn
+                if self.writeMoviesInProject:
+                    movieFn = self._getExtraPath(os.path.basename(movieFn))
 
-                if movieOut.endswith("mrc"):
-                    movieOut += ":mrcs"
+                if (movieFn not in self.importedFiles and
+                    movieFn not in self.createdStacks and
+                    len(v) == self.numberOfIndividualFrames):
+                    movieOut = movieFn
 
-                print "Writing movie stack: ", movieFn
-                pwutils.cleanPath(movieFn)  # Remove the output file if exists
+                    if movieOut.endswith("mrc"):
+                        movieOut += ":mrcs"
 
-                for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
-                    frameFn = frame[1] # Frame name stored previously
-                    ih.convert(frameFn, (i+1, movieOut))
+                    self.info("Writing movie stack: %s" % movieFn)
+                    pwutils.cleanPath(movieFn)  # Remove the output file if exists
 
-                    if self.deleteFrames:
-                        pwutils.cleanPath(frameFn)
+                    for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
+                        frameFn = frame[1] # Frame name stored previously
+                        ih.convert(frameFn, (i+1, movieOut))
 
-                # Now return the newly created movie file as imported file
-                self.createdStacks.add(movieFn)
-                yield movieFn, None
+                        if self.deleteFrames:
+                            pwutils.cleanPath(frameFn)
+
+                    # Now return the newly created movie file as imported file
+                    self.createdStacks.add(movieFn)
+                    return
+        checkMovie()
+
+
+    def ignoreCopy(self, source, dest):
+        pass
+
+    def getCopyOrLink(self):
+        if (self.inputIndividualFrames and self.stackFrames and
+            self.writeMoviesInProject):
+            return self.ignoreCopy
+        else:
+            return ProtImportMicBase.getCopyOrLink(self)

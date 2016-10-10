@@ -25,8 +25,10 @@
 # **************************************************************************
 
 import os
+from os.path import join
 
 import pyworkflow.protocol.params as params
+import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfMicrographs
 
@@ -65,21 +67,32 @@ class ProtRelionExportCtf(EMProtocol):
         ctfMicSet = inputCTF.getMicrographs()
         micSet = SetOfMicrographs(filename=':memory:')
 
+        psd = inputCTF.getFirstItem().getPsdFile()
+        hasPsd = psd and os.path.exists(psd)
+
+        if hasPsd:
+            psdPath = self._getPath('PSD')
+            pwutils.makePath(psdPath)
+            print "Writing PSD files to %s" % psdPath
+
         for ctf in inputCTF:
             # Get the corresponding micrograph
             mic = ctfMicSet[ctf.getObjId()]
             mic2 = mic.clone()
             mic2.setCTF(ctf)
+            if hasPsd:
+                psdFile = ctf.getPsdFile()
+                newPsdFile = join('PSD', '%s_psd.mrc' % mic.getMicName())
+                pwutils.copyFile(psdFile, self._getPath(newPsdFile))
+                ctf.setPsdFile(newPsdFile)
             micSet.append(mic2)
 
-        writeSetOfMicrographs(micSet, self._getPath(self.CTF_STAR_FILE))
+        writeSetOfMicrographs(micSet, self._getPath(self.CTF_STAR_FILE),
+                              preprocessImageRow=self.preprocessMicrograph)
 
     #--------------------------- INFO functions --------------------------------
 
     def _summary(self):
-        """ Should be overriden in subclasses to 
-        return summary message for NORMAL EXECUTION. 
-        """
         summary = []
         ctfStarFn = self._getPath(self.CTF_STAR_FILE)
 
@@ -91,4 +104,5 @@ class ProtRelionExportCtf(EMProtocol):
         return summary
     
     #--------------------------- UTILS functions -------------------------------
-
+    def preprocessMicrograph(self, mic, micRow):
+        micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
