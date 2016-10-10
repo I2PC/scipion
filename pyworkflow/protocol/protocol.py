@@ -871,7 +871,7 @@ class Protocol(Step):
             self._stepsExecutor.runSteps(self._steps, 
                                          self._stepStarted, 
                                          self._stepFinished,
-                                         stepsCheckCallback=self._stepsCheck)
+                                         self._stepsCheck)
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
