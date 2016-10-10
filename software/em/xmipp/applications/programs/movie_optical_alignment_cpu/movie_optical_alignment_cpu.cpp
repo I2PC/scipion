@@ -373,15 +373,10 @@ public:
                 }
                 if (doseStep>0)
                 {
-                	frameImage.write("PPP0.xmp");
 					transformer.FourierTransform(frameImage(), FFTI, false);
 					filterDose.applyDoseFilterToImage(YSIZE(frameImage()), XSIZE(frameImage()), FFTI,
 													  dose0+currentFrameInIdx*doseStep, dose0+(currentFrameInIdx+1)*doseStep);
 					transformer.inverseFourierTransform();
-                	frameImage.write("PPPF.xmp");
-                	std::cout << "dose: " << dose0+currentFrameInIdx*doseStep << " to " << dose0+(currentFrameInIdx+1)*doseStep << std::endl;
-                	std::cout << "Press any key" << std::endl;
-                	char c; std::cin >> c;
                 }
                 if (inMemory)
                 {
