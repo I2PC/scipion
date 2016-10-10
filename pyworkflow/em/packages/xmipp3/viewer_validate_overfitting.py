@@ -28,12 +28,11 @@
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 import pyworkflow.em.metadata as md
 from protocol_validate_overfitting import XmippProtValidateOverfitting
+from pyworkflow.gui.plotter import plt
 from plotter import XmippPlotter
 import xmipp
 import os
-import matplotlib.pyplot as plt
 import math
-import pylab
 
 class XmippValidateOverfittingViewer(Viewer):
     """ Wrapper to visualize different type of data objects

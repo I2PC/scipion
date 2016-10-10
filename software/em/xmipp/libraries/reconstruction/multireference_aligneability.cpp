@@ -403,27 +403,34 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 	const double trials = 500;
     double xRan,yRan,zRan;
     size_t indx;
+    size_t * indxArray = new size_t[numGallery];
     double sumWRan;
     double * rotArray = new double[num];
     double * tiltArray = new double[num];
     double * psiArray  = new double[num];
-    std::vector<double> weightV;
     double a;
     double rot,tilt,psi,w;
     bool mirror;
     sumWRan = 0;
 
     if (numGallery < num)
-        REPORT_ERROR(ERR_ARG_INCORRECT, "The gallery size is smaller than the number of oientations per particle. Increase the angular sampling of the gallery");
+        REPORT_ERROR(ERR_ARG_INCORRECT, "The gallery size is smaller than the number of orientations per particle. Increase the angular sampling of the gallery");
 
     for (size_t n=0; n<trials; n++)
     {
     	size_t currentIndx = 0;
+
+        for (size_t i=1; i<numGallery; i++)
+        	indxArray[i]=i;
+
     	while ( currentIndx < num )
     	{
-			indx = (size_t) (double( std::rand())*(numGallery+1))/RAND_MAX;
-			while ( (indx == 0)  )
-				indx = (size_t) (double( std::rand())*(numGallery+1) )/RAND_MAX;
+			indx = (size_t) (double( std::rand())*(numGallery-1))/RAND_MAX+1;
+
+			while ( (indx == 0) || (indxArray[indx] == -1) )
+				indx = (size_t) (double( std::rand())*(numGallery-1))/RAND_MAX;
+
+			indxArray[indx] = -1;
 
 			mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
         	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
@@ -454,7 +461,9 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         for (size_t nS1=0; nS1<num; nS1++)
         {
             for (size_t nS2=0; nS2<num; nS2++)
+            {
     			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], true, check_mirror, false);
+            }
 
         }
 
@@ -462,6 +471,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     }
 
     sumw = ( sumWRan / (trials*(num-1)*(num-1)) );
+
 
 #ifdef DEBUG
         std::cout << "   " << std::endl;
@@ -474,6 +484,8 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     delete tiltArray;
     delete rotArray;
     delete psiArray;
+    delete indxArray;
+
 
 }
 
@@ -513,13 +525,20 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
         psiAux = psi;
 
         sumOfW += w;
+
+
+
+//        tempAccuracy = SL.computeDistance(rotRef, tiltRef, psiRef,
+//        		                   rotAux, tiltAux, psiAux, false,true, false);
+
+
         tempAccuracy = SL.computeDistance(rotRef, tiltRef, psiRef,
-        		                   rotAux, tiltAux, psiAux, false,true, false);
+        		rotAux, tiltAux, psiAux, true, check_mirror, false);
 
         tempAccuracyMirror = SL.computeDistance(rotRef, tiltRef, psiRef,
         		                   rot, tilt, psi, true,true, false);
 
-       	accuracyMirror += std::abs(tempAccuracy-tempAccuracyMirror)*w;
+       	accuracyMirror += tempAccuracyMirror*w;
     	accuracy += tempAccuracy*w;
 
 

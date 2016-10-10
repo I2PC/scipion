@@ -1,7 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:         Jose Luis Vilas (jvilas@cnb.csic.es)
-#                    Javier Vargas (jvargas@cnb.csic.es)
+# * Authors:         Javier Vargas (jvargas@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -58,7 +57,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputVolumes', PointerParam, pointerClass='SetOfVolumes,Volume',
+        form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
                       label="Input volume(s)",  
                       help='Select the input volume(s).')     
                 
@@ -89,6 +88,12 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Do not use the weights",
                       help='Do not use the weights in the clustering calculation')
         
+        form.addParam('pseudoSymmetryGroup', StringParam, default='', expertLevel=LEVEL_ADVANCED,
+                      label="Pseudo symmetry group", 
+                      help='Add only in case the map is close to a symmetry different and more restrict than the one reported in the parameter Symmetry group.'
+                      'See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
+                           'for a description of the symmetry format accepted by Xmipp')
+                
         form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -102,7 +107,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         commonParamsRef = self._getCommonParamsRef()
 
         sym = self.symmetryGroup.get()
-
+        
         for i, vol in enumerate(self._iterInputVols()):
             
             volName = getImageLocation(vol)
@@ -128,7 +133,9 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  commonParamsRef, 
                                                  prerequisites=[phanProjStepId])
 
-
+            if ( not (self.pseudoSymmetryGroup.get() == '') ):
+                sym = self.pseudoSymmetryGroup.get()
+                
             volStepId = self._insertFunctionStep('alignabilityStep', 
                                                  volName, volDir,
                                                  sym,
@@ -282,6 +289,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
 
     def createOutputStep(self):
         
+        outputVols = self._createSetOfVolumes()
+
         for i, vol in enumerate(self._iterInputVols()):        
         
             volDir = self._getVolDir(i+1)
@@ -298,7 +307,6 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
             validationMd = self._getExtraPath(volPrefix + 'validation_alignability.xmd')
             moveFile(join(volDir, 'validationAlignability.xmd'), validationMd)
             
-            outputVols = self._createSetOfVolumes()
             imgSet = self.inputParticles.get()                  
 
             outImgSet = self._createSetOfParticles(volPrefix)            
@@ -417,7 +425,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         item._xmipp_scoreAlignabilityPrecision    = Float(row.getValue(md.MDL_SCORE_BY_ALIGNABILITY_PRECISION))
         item._xmipp_scoreAlignabilityAccuracy = Float(row.getValue(md.MDL_SCORE_BY_ALIGNABILITY_ACCURACY))
         item._xmipp_scoreMirror = Float(row.getValue(md.MDL_SCORE_BY_MIRROR))
-        item._xmipp_weight = Float( float(item._xmipp_scoreMirror)*float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
+        item._xmipp_weight = Float( float(item._xmipp_scoreAlignabilityAccuracy)*float(item._xmipp_scoreAlignabilityPrecision))
         
     def createPlot2D(self,volPrefix,md):
         
