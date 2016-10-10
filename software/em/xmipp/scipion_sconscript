@@ -608,7 +608,6 @@ for p in ['angular_break_symmetry',
           'volume_enhance_contrast',
           'volume_find_symmetry',
           'volume_from_pdb',
-	  #'volume_homogenizer',
           'volume_initial_simulated_annealing',
           'volume_validate_pca',
           'volume_pca',
@@ -708,9 +707,6 @@ addProg('mpi_classify_CLTomo_prog',
 # Optical Alignment program, that depends on opencv (cpu version)
 if opencv:
     addProg('movie_optical_alignment_cpu',
-            libs=opencvLibs,
-            deps=['opencv'])
-    addProg('volume_homogenizer',
             libs=opencvLibs,
             deps=['opencv'])
     addProg('mpi_volume_homogenizer',
