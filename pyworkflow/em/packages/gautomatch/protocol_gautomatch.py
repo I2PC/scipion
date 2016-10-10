@@ -29,7 +29,6 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
-import pyworkflow.gui.dialog as dialog
 from pyworkflow.utils.properties import Message
 
 from convert import (readSetOfCoordinates, writeSetOfCoordinates,
@@ -279,8 +278,34 @@ class ProtGautomatch(em.ProtParticlePicking):
         readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSetAux, suffix='_rejected.star')
         coordSetAux.write()
 
+        # debug output
+        if self.writeCC:
+            self.createDebugOutput(suffix='_ccmax')
+        if self.writeFilt:
+            self.createDebugOutput(suffix='_pref')
+        if self.writeBg:
+            self.createDebugOutput(suffix='_bg')
+        if self.writeBgSub:
+            self.createDebugOutput(suffix='_bgfree')
+        if self.writeSigma:
+            self.createDebugOutput(suffix='_lsigma')
+        if self.writeMsk:
+            self.createDebugOutput(suffix='_mask')
+
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(micSet, coordSet)
+
+    def createDebugOutput(self, suffix):
+        micSet = self.getInputMicrographs()
+        pixSize = micSet.getSamplingRate()
+        outputDebugMics = self._createSetOfMicrographs(suffix=suffix)
+        # debug output images are downsampled by a factor of 4
+        outputDebugMics.setSamplingRate(float(pixSize * 4))
+        for mic in micSet:
+            micFn = self.getOutputName(mic.getFileName(), suffix)
+            mic.setFileName(micFn)
+            outputDebugMics.append(mic)
+        outputDebugMics.write()
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -426,20 +451,3 @@ class ProtGautomatch(em.ProtParticlePicking):
         template = pwutils.removeBaseExt(fn) + key + '.mrc'
 
         return pwutils.join(self.getMicrographsDir(), template)
-
-    def createDebugOutput(self, suffix):
-        micSet = self.getInputMicrographs()
-        micTest = micSet.getFirstItem().getFileName()
-        debugMic = self.getOutputName(micTest, suffix)
-        if not pwutils.exists(debugMic):
-            dialog.showError("Files not found", "This type of debug output was not produced!", self)
-
-        outputDebugMics = self._createSetOfMicrographs(suffix=suffix)
-        outputDebugMics.copyInfo(micSet)
-        for mic in micSet:
-            micFn = self.getOutputName(mic.getFileName(), suffix)
-            mic.setFileName(micFn)
-            outputDebugMics.append(mic)
-
-        outputDebugMics.write()
-        return outputDebugMics.getFileName()

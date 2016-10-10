@@ -30,7 +30,6 @@ This module implements the viewer for Gautomatch program
 
 from pyworkflow.protocol.params import *
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em.data import SetOfCoordinates
 from pyworkflow.em.packages.xmipp3.convert import *
 from pyworkflow.em.packages.xmipp3.viewer import launchSupervisedPickerGUI
 from protocol_gautomatch import ProtGautomatch
@@ -46,7 +45,8 @@ class GautomatchViewer(ProtocolViewer):
     def _defineParams(self, form):
         form.addSection(label='Visualization')
         form.addParam('doShowAutopick', LabelParam,
-                      label="Show auto-picked particles?", default=True)
+                      label="Show auto-picked particles?", default=True,
+                      help="Show the auto-picked particles")
         form.addParam('doShowRejected', LabelParam,
                       label="Show rejected particles?", default=True,
                       help="Rejected particles may be useful for adjusting "
@@ -54,21 +54,41 @@ class GautomatchViewer(ProtocolViewer):
 
         form.addSection(label='Debug output')
         form.addParam('doShowCC', LabelParam,
-                      label="Show cross-correlation files?", default=True)
+                      label="Show cross-correlation files?", default=True,
+                      condition='_writeCC')
         form.addParam('doShowFilt', LabelParam,
                       label="Show pre-filtered micrographs?", default=True,
-                      condition='_doPrefilt')
+                      condition='_writeFilt')
         form.addParam('doShowBgEst', LabelParam,
-                      label="Show background estimation?", default=True)
+                      label="Show background estimation?", default=True,
+                      condition='_writeBg')
         form.addParam('doShowBgSub', LabelParam,
-                      label="Show background-subtracted micrographs?", default=True)
+                      label="Show background-subtracted micrographs?", default=True,
+                      condition='_writeBgSub')
         form.addParam('doShowSigma', LabelParam,
-                      label="Show local sigma micrographs?", default=True)
+                      label="Show local sigma micrographs?", default=True,
+                      condition='_writeSigma')
         form.addParam('doShowMask', LabelParam,
-                      label="Show auto-detected mask?", default=True)
+                      label="Show auto-detected mask?", default=True,
+                      condition='_writeMsk')
 
-    def _doPrefilt(self):
-        return True if self.protocol.preFilt.get() else False
+    def _writeCC(self):
+        return True if self.protocol.writeCC.get() else False
+
+    def _writeFilt(self):
+        return True if self.protocol.writeFilt.get() else False
+
+    def _writeBg(self):
+        return True if self.protocol.writeBg.get() else False
+
+    def _writeBgSub(self):
+        return True if self.protocol.writeBgSub.get() else False
+
+    def _writeSigma(self):
+        return True if self.protocol.writeSigma.get() else False
+
+    def _writeMsk(self):
+        return True if self.protocol.writeMsk.get() else False
 
     def _getVisualizeDict(self):
         return {'doShowAutopick': self._viewParam,
@@ -111,35 +131,34 @@ class GautomatchViewer(ProtocolViewer):
             launchSupervisedPickerGUI(micsFn, tmpDir, self.protocol, mode='review',
                                       inTmpFolder=inTmpFolder)
         elif param == 'doShowCC':
-            fn = self.protocol.createDebugOutput(suffix='_ccmax')
+            fn = self.protocol._getPath('micrographs_ccmax.sqlite')
             view.append(ObjectView(self._project, self.protocol.strId(), fn))
             return view
         elif param == 'doShowFilt':
-            fn = self.protocol.createDebugOutput(suffix='_pref')
+            fn = self.protocol._getPath('micrographs_pref.sqlite')
             view.append(ObjectView(self._project, self.protocol.strId(), fn))
             return view
         elif param == 'doShowBgEst':
-            fn = self.protocol.createDebugOutput(suffix='_bg')
+            fn = self.protocol._getPath('micrographs_bg.sqlite')
             view.append(ObjectView(self._project, self.protocol.strId(), fn))
             return view
         elif param == 'doShowBgSub':
-            fn = self.protocol.createDebugOutput(suffix='_bgfree')
+            fn = self.protocol._getPath('micrographs_bgfree.sqlite')
             view.append(ObjectView(self._project, self.protocol.strId(), fn))
             return view
         elif param == 'doShowSigma':
-            fn = self.protocol.createDebugOutput(suffix='_lsigma')
+            fn = self.protocol._getPath('micrographs_lsigma.sqlite')
             view.append(ObjectView(self._project, self.protocol.strId(), fn))
             return view
         elif param == 'doShowMask':
-            fn = self.protocol.createDebugOutput(suffix='_mask')
+            fn = self.protocol._getPath('micrographs_mask.sqlite')
             view.append(ObjectView(self._project, self.protocol.strId(), fn))
             return view
 
     def _convertCoords(self, micSet, tmpDir, coordsType):
         """ Link specified coord set to tmpDir folder and convert it to .pos files"""
         coordTypes = {'autopick': 'coordinates.sqlite',
-                      'rejected': 'coordinates_rejected.sqlite'
-                      }
+                      'rejected': 'coordinates_rejected.sqlite'}
         coordsFnIn = self.protocol._getPath(coordTypes[coordsType])
         coordsFnOut = pwutils.join(tmpDir, 'coordinates.sqlite')
         pwutils.createLink(coordsFnIn, coordsFnOut)
