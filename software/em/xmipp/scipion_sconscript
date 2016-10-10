@@ -61,7 +61,11 @@ if opencv:
     opencvLibs = ['opencv_core',
                   'opencv_legacy',
                   'opencv_imgproc',
-                  'opencv_video']
+                  'opencv_video',
+                  'libopencv_calib3d']
+                  
+else:
+    opencvLibs = []
 
 
 
@@ -191,7 +195,7 @@ addLib('XmippRecons',
        patterns=['reconstruction/*.cpp'],
        incs=bilib_incs,
        libs=['hdf5', 'hdf5_cpp', 'pthread',
-             'fftw3_threads', 'libopencv_calib3d', 
+             'fftw3_threads',  
              'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'] + opencvLibs)
 
 # Interface
