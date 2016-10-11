@@ -134,12 +134,15 @@ class ProtMotionCorr(ProtAlignMovies):
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
+        movieFolder = self._getOutputMovieFolder(movie)
+        outputMicFn = self._getRelPath(self._getOutputMicName(movie),
+                                       movieFolder)
 
         if not self.useMotioncor2:
-            movieFolder = self._getOutputMovieFolder(movie)
-            outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
-            outputMovieFn = self._getAbsPath(self._getOutputMovieName(movie))
-            logFile = self._getAbsPath(self._getMovieLogFile(movie))
+            outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
+                                             movieFolder)
+            logFile = self._getRelPath(self._getMovieLogFile(movie),
+                                       movieFolder)
 
             # Get the number of frames and the range to be used
             # for alignment and sum
@@ -179,9 +182,8 @@ class ProtMotionCorr(ProtAlignMovies):
             program = MOTIONCORR_PATH
 
         else:
-            movieFolder = self._getOutputMovieFolder(movie)
-            outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
-            logFileFn = self._getAbsPath(self._getMovieLogFile(movie))
+            logFileFn = self._getRelPath(self._getMovieLogFile(movie),
+                                         movieFolder)
             logFileBase = logFileFn.replace('0-Full.log', '').replace('0-Patch-Full.log', '')
 
             # Get the number of frames and the range to be used
@@ -300,3 +302,6 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
+
+    def _getRelPath(self, baseName, refPath):
+        return os.path.relpath(self._getExtraPath(baseName), refPath)
