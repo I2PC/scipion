@@ -28,6 +28,8 @@
 # **************************************************************************
 
 import os, sys
+import numpy as np
+from pyworkflow.gui.plotter import plt
 from itertools import izip
 
 import pyworkflow.protocol.params as params
@@ -42,8 +44,6 @@ from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2,
                      parseMovieAlignmentLocal)
 
-
-OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -164,9 +164,7 @@ class ProtMotionCorr(ProtAlignMovies):
         movieFolder = self._getOutputMovieFolder(movie)
         outputMicFn = self._getRelPath(self._getOutputMicName(movie),
                                        movieFolder)
-        aveMicFn = self._getRelPath(self._getMovieRoot(movie) + '_uncorrected_mic.mrc',
-                                    movieFolder)
-        print "aveMicFn = ", aveMicFn
+        aveMicFn = pwutils.removeExt(movie.getFileName()) + '_uncorrected_avg.mrc'
 
         if not self.useMotioncor2:
             outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
@@ -259,8 +257,8 @@ class ProtMotionCorr(ProtAlignMovies):
             self.runJob(program, args, cwd=movieFolder)
 
             if self.doComputePSD:
-                uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
-                correctedPSD = self._getFnInMovieFolder(movie, "corrected")
+                uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
+                correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
                 # Compute uncorrected avg mic
                 roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
                        self.cropDimX.get(), self.cropDimY.get()]
@@ -340,6 +338,22 @@ class ProtMotionCorr(ProtAlignMovies):
             else:
                 return 'micrograph_%06d_0-Patch-Full.log' % movie.getObjId()
 
+    def _getAbsPath(self, baseName):
+        return os.path.abspath(self._getExtraPath(baseName))
+
+    def _getRelPath(self, baseName, refPath):
+        return os.path.relpath(self._getExtraPath(baseName), refPath)
+
+    def _getNameExt(self, movie, postFix, ext, extra=False):
+        fn = self._getMovieRoot(movie) + postFix + '.' + ext
+        if extra:
+            return self._getExtraPath(fn)
+        else:
+            return fn
+
+    def _preprocessOutputMicrograph(self, mic, movie):
+        self._setPlotInfo(movie, mic)
+
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
         The shifts should refer to the original micrograph without any binning.
@@ -368,38 +382,22 @@ class ProtMotionCorr(ProtAlignMovies):
         else:
             return None
 
-    def _getAbsPath(self, baseName):
-        return os.path.abspath(self._getExtraPath(baseName))
-
-    def _getRelPath(self, baseName, refPath):
-        return os.path.relpath(self._getExtraPath(baseName), refPath)
-
-    def _preprocessOutputMicrograph(self, mic, movie):
-        self._setPlotInfo(movie, mic)
-
-    def _getFnInMovieFolder(self, movie, filename):
-        movieFolder = self._getOutputMovieFolder(movie)
-        return pwutils.join(movieFolder, filename)
-
-    def _getNameExt(self, movie, postFix, ext, extra=False):
-        fn = self._getMovieRoot(movie) + postFix + '.' + ext
-        if extra:
-            return self._getExtraPath(fn)
-        else:
-            return fn
-
     def _setPlotInfo(self, movie, obj):
         obj.plotGlobal = em.Image()
         obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
 
-        obj.plotLocal = em.Image()
-        obj.plotLocal.setFileName(self._getPlotLocal(movie))
+        if os.path.exists(self._getPlotLocal(movie)):
+            obj.plotLocal = em.Image()
+            obj.plotLocal.setFileName(self._getPlotLocal(movie))
 
     def _getPlotGlobal(self, movie):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
 
     def _getPlotLocal(self, movie):
-        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
+        return self._getNameExt(movie, '_local_shifts', 'png', extra=True)
+
+    def _getPsdCorr(self, movie):
+        return self._getNameExt(movie, '_aligned_corrected', 'psd')
 
     def _saveAlignmentPlots(self, movie):
         """ Compute alignment shifts plots and save to file as a png images. """
@@ -407,13 +405,13 @@ class ProtMotionCorr(ProtAlignMovies):
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY)
         plotter.savefig(self._getPlotGlobal(movie))
 
-        localShifts = self._getMovieLocalShifts(movie)
-        if localShifts is not None:
-            plotter2 = createLocalAlignmentPlot(localShifts)
+        localShiftsX, localShiftsY = self._getMovieShifts(movie)
+        if localShiftsX is not None:
+            patchNum = self.patch.get().strip(' ').split(' ')
+            plotter2 = createLocalAlignmentPlot(localShiftsX,
+                                                localShiftsY,
+                                                patchNum=patchNum)
             plotter2.savefig(self._getPlotLocal(movie))
-
-    def _getPsdCorr(self, movie):
-        return self._getNameExt(movie, '_aligned_corrected', 'psd')
 
     def _isNewMotioncor2(self):
         return True if getVersion('MOTIONCOR2') != '03162016' else False
@@ -438,7 +436,7 @@ def createGlobalAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
     sumMeanX = []
     sumMeanY = []
-    figureSize = (8, 6)
+    figureSize = (6, 4)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
 
@@ -448,7 +446,7 @@ def createGlobalAlignmentPlot(meanX, meanY):
     sumMeanY.append(0.0)
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.set_title('Cartesian representation')
+    ax.set_title('Global frame motion')
     ax.set_xlabel('Drift x (pixels)')
     ax.set_ylabel('Drift y (pixels)')
     ax.plot(0, 0, 'yo-')
@@ -458,7 +456,6 @@ def createGlobalAlignmentPlot(meanX, meanY):
         preY += y
         sumMeanX.append(preX)
         sumMeanY.append(preY)
-        #ax.plot(preX, preY, 'yo-')
         ax.text(preX-0.02, preY+0.02, str(i))
         i += 1
 
@@ -469,5 +466,104 @@ def createGlobalAlignmentPlot(meanX, meanY):
 
     return plotter
 
-def createLocalAlignmentPlot(localShifts):
-    pass
+
+def highResPoints(x, y, factor=10):
+    """
+    Take points listed in two vectors and return them at a higher
+    resolution. Create at least factor*len(x) new points that include the
+    original points and those spaced in between.
+    Returns new x and y arrays as a tuple (x,y).
+    """
+    # r is the distance spanned between pairs of points
+    r = [0]
+    for i in range(1, len(x)):
+        dx = x[i] - x[i - 1]
+        dy = y[i] - y[i - 1]
+        r.append(np.sqrt(dx * dx + dy * dy))
+    r = np.array(r)
+
+    # rtot is a cumulative sum of r, it's used to save time
+    rtot = []
+    for i in range(len(r)):
+        rtot.append(r[0:i].sum())
+    rtot.append(r.sum())
+
+    dr = rtot[-1] / (len(x) * factor - 1)
+    xmod = [x[0]]
+    ymod = [y[0]]
+    rPos = 0  # current point on walk along data
+    rcount = 1
+    while rPos < r.sum():
+        x1, x2 = x[rcount - 1], x[rcount]
+        y1, y2 = y[rcount - 1], y[rcount]
+        dpos = rPos - rtot[rcount]
+        theta = np.arctan2((x2 - x1), (y2 - y1))
+        rx = np.sin(theta) * dpos + x1
+        ry = np.cos(theta) * dpos + y1
+        xmod.append(rx)
+        ymod.append(ry)
+        rPos += dr
+        while rPos > rtot[rcount + 1]:
+            rPos = rtot[rcount + 1]
+            rcount += 1
+            if rcount > rtot[-1]:
+                break
+
+    return xmod, ymod
+
+def createLocalAlignmentPlot(meanX, meanY, patchNum):
+    sumMeanX = []
+    sumMeanY = []
+    preX = 0.0
+    preY = 0.0
+    figureSize = (8, 6)
+    plotter = Plotter(*figureSize)
+    fig = plotter.getFigure()
+
+    # create big plot
+    #f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row')
+    ax = fig.add_subplot(111)
+    ax.set_title('Local patch motion')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.spines['top'].set_color('none')
+    ax.spines['bottom'].set_color('none')
+    ax.spines['left'].set_color('none')
+    ax.spines['right'].set_color('none')
+    ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+
+    # creating subplots
+    pltNum = 1
+    pltTotal = patchNum[0] * patchNum[1]
+
+    ax1 = fig.add_subplot(221)
+    ax2 = fig.add_subplot(222)
+    ax3 = fig.add_subplot(223)
+    ax4 = fig.add_subplot(224)
+
+    # compute cumulative shifts
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+
+    # Choose a color map, loop through the colors, and assign them to the color
+    # cycle. You need len(x)-1 colors, because you'll plot that many lines
+    # between pairs. In other words, your line is not cyclic, so there's
+    # no line from end to beginning
+    xHiRes, yHiRes = highResPoints(sumMeanX, sumMeanY, factor=10)
+    xHiRes.insert(0, 0.0)
+    yHiRes.insert(0, 0.0)
+    cm = plt.get_cmap('winter')
+
+    for axN in [ax1, ax2, ax3, ax4]:
+        axN.grid()
+        axN.set_color_cycle([cm(1. * i / (len(xHiRes) - 1))
+                            for i in range(len(xHiRes) - 1)])
+        for i in range(len(xHiRes) - 1):
+            axN.plot(xHiRes[i:i + 2], yHiRes[i:i + 2])
+
+    plotter.tightLayout()
+
+    return plotter
