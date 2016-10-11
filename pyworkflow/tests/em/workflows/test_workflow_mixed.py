@@ -22,39 +22,49 @@ class TestMixedBPV(TestWorkflow):
     def test_workflow(self):
         from itertools import izip
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, 
+        protImport = self.newProtocol(ProtImportMicrographs,
+                                      filesPath=self.micsFn,
                                       samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        self.assertIsNotNone(protImport.outputMicrographs,
+                             "There was a problem with the import")
 #         self.validateFiles('protImport', protImport) 
         
         #Import a set of volumes        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1,
+                                         samplingRate=9.896)
         self.launchProtocol(protImportVol)
-        self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
+        self.assertIsNotNone(protImportVol.getFiles(),
+                             "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)
         
         # Perform a downsampling on the micrographs
         print "Downsampling..."
-        protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs, doDownsample=True, downFactor=5, doCrop=False, runMode=1)
+        protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs,
+                                            doDownsample=True, downFactor=5,
+                                            doCrop=False, runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protDownsampling)
-        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
+        self.assertIsNotNone(protDownsampling.outputMicrographs,
+                             "There was a problem with the downsampling")
 #         self.validateFiles('protDownsampling', protDownsampling)
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
+        protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
+                                   minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
         self.launchProtocol(protCTF)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem with the CTF estimation")
         
         valuesList = [[24000, 24000], [22548, 22518], [23058, 23029]]
         for ctfModel, values in izip(protCTF.outputCTF, valuesList):
             self.assertAlmostEquals(ctfModel.getDefocusU(),values[0], delta=1000)
             self.assertAlmostEquals(ctfModel.getDefocusV(),values[1], delta=1000)
-            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(), 6.185, delta=0.001)
+            self.assertAlmostEquals(ctfModel.getMicrograph().getSamplingRate(),
+                                    6.185, delta=0.001)
 
 #         self.validateFiles('protCTF', protCTF)
 
@@ -74,6 +84,7 @@ class TestMixedBPV(TestWorkflow):
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=64,
                                        downsampleType=OTHER,
+                                       downFactor=8.0,
                                        doFlip=False, runMode=1, doInvert=False)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
@@ -93,11 +104,12 @@ class TestMixedBPV(TestWorkflow):
                                     symmetry='I1', PhaseResidual=30,
                                     molMass=19400,
                                     score=5, resolution=20,
-                                    runMode=1, numberOfMpi=5)
+                                    runMode=1, numberOfThreads=4)
         protFrealign.inputParticles.set(protExtract.outputParticles)
         protFrealign.input3DReference.set(protImportVol.outputVolume)
         self.launchProtocol(protFrealign)
-        self.assertIsNotNone(protFrealign.outputVolume, "There was a problem with Frealign")
+        self.assertIsNotNone(protFrealign.outputVolume,
+                             "There was a problem with Frealign")
 #         self.validateFiles('protFrealign', protFrealign)
 
 
@@ -115,32 +127,42 @@ class TestMixedBPV2(TestWorkflow):
         
     def test_workflow(self):
         #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.micsFn, samplingRate=1.237, voltage=300)
+        protImport = self.newProtocol(ProtImportMicrographs,
+                                      filesPath=self.micsFn,
+                                      samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs, "There was a problem with the import")
+        self.assertIsNotNone(protImport.outputMicrographs,
+                             "There was a problem with the import")
 #         self.validateFiles('protImport', protImport) 
         
         #Import a set of volumes        
         print "Import Volume"
-        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1, samplingRate=9.896)
+        protImportVol = self.newProtocol(ProtImportVolumes, filesPath=self.vol1,
+                                         samplingRate=9.896)
         self.launchProtocol(protImportVol)
-        self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
+        self.assertIsNotNone(protImportVol.getFiles(),
+                             "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)
         
         # Perform a downsampling on the micrographs
         print "Downsampling..."
-        protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs, doDownsample=True, downFactor=5, doCrop=False, runMode=1)
+        protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs,
+                                            doDownsample=True, downFactor=5,
+                                            doCrop=False, runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protDownsampling)
-        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
+        self.assertIsNotNone(protDownsampling.outputMicrographs,
+                             "There was a problem with the downsampling")
 #         self.validateFiles('protDownsampling', protDownsampling)
         
         # Estimate CTF on the downsampled micrographs
         print "Performing CTFfind..."   
-        protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
+        protCTF = self.newProtocol(ProtCTFFind, numberOfThreads=4,
+                                   minDefocus=2.2, maxDefocus=2.5)
         protCTF.inputMicrographs.set(protImport.outputMicrographs)        
         self.launchProtocol(protCTF)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem with the CTF estimation")
 #         self.validateFiles('protCTF', protCTF)
 
         print "Running Eman import coordinates..."
@@ -188,10 +210,13 @@ class TestMixedBPV2(TestWorkflow):
 #         return
         
         print "Run Initial Model"
-        protIniModel = self.newProtocol(EmanProtInitModel, numberOfIterations=1, numberOfModels=2,
-                                 shrink=5, symmetry='icos', numberOfThreads=3)
+        protIniModel = self.newProtocol(EmanProtInitModel, numberOfIterations=1,
+                                        numberOfModels=2,
+                                        shrink=5, symmetry='icos',
+                                        numberOfThreads=3)
         protIniModel.inputSet.set(protML2D.outputClasses)
         self.launchProtocol(protIniModel)        
-        self.assertIsNotNone(protIniModel.outputVolumes, "There was a problem with Initial Model")  
+        self.assertIsNotNone(protIniModel.outputVolumes,
+                             "There was a problem with Initial Model")
 
 
