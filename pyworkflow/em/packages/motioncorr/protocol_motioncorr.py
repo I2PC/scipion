@@ -160,20 +160,20 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-flg': logFile,
                         }
 
-            args = '%s ' % movie.getBaseName()
+            args = '"%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
-                args += " -fgr " + inputMovies.getGain()
+                args += ' -fgr "%s"' % inputMovies.getGain()
 
             if inputMovies.getDark():
-                args += " -fdr " + inputMovies.getDark()
+                args += ' -fdr "%s"' % inputMovies.getDark()
 
             if self.doSaveAveMic:
-                args += " -fcs %s " % outputMicFn
+                args += ' -fcs "%s" ' % outputMicFn
 
             if self.doSaveMovie:
-                args += " -fct %s -ssc 1" % outputMovieFn
+                args += ' -fct "%s" -ssc 1' % outputMovieFn
 
             args += ' ' + self.extraParams.get()
             program = MOTIONCORR_PATH
@@ -190,17 +190,16 @@ class ProtMotionCorr(ProtAlignMovies):
             a0, aN = self._getFrameRange(numberOfFrames, 'align')
 
             # default values for motioncor2 are (1.0, 1.0)
-            if self.cropDimX.get() == 0:
+            if self.cropDimX == 0:
                 self.cropDim = 1.0
-            elif self.cropDimY.get() == 0:
+            elif self.cropDimY == 0:
                 self.cropDimY = 1.0
 
-            argsDict = {'-OutMrc': outputMicFn,
+            argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': self.patch.get() or '5 5',
-                        '-MaskCent': '%f %f' % (self.cropOffsetX.get(),
-                                                self.cropOffsetY.get()),
-                        '-MaskSize': '%f %f' % (self.cropDimX.get(),
-                                                self.cropDimY.get()),
+                        '-MaskCent': '%f %f' % (self.cropOffsetX,
+                                                self.cropOffsetY),
+                        '-MaskSize': '%f %f' % (self.cropDimX, self.cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
@@ -213,11 +212,11 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-LogFile': logFileBase,
                         }
 
-            args = ' -InMrc %s ' % movie.getBaseName()
+            args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
-                args += " -Gain " + inputMovies.getGain()
+                args += ' -Gain "%s" ' % inputMovies.getGain()
 
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
