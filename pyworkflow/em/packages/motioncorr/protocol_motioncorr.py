@@ -567,3 +567,4 @@ def createLocalAlignmentPlot(meanX, meanY, patchNum):
     plotter.tightLayout()
 
     return plotter
+
