@@ -192,16 +192,14 @@ class ProtMotionCorr(ProtAlignMovies):
             a0, aN = self._getFrameRange(numberOfFrames, 'align')
 
             # default values for motioncor2 are (1.0, 1.0)
-            if self.cropDimX == 0:
-                self.cropDim = 1.0
-            elif self.cropDimY == 0:
-                self.cropDimY = 1.0
+            cropDimX = self.cropDimX.get() or 1.0
+            cropDimY = self.cropDimY.get() or 1.0
 
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': self.patch.get() or '5 5',
                         '-MaskCent': '%f %f' % (self.cropOffsetX,
                                                 self.cropOffsetY),
-                        '-MaskSize': '%f %f' % (self.cropDimX, self.cropDimY),
+                        '-MaskSize': '%f %f' % (cropDimX, cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
