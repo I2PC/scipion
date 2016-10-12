@@ -219,17 +219,15 @@ class ProtMotionCorr(ProtAlignMovies):
             numberOfFrames = movie.getNumberOfFrames()
             a0, aN = self._getFrameRange(numberOfFrames, 'align')
 
-            # default values for motioncor2 are (1.0, 1.0)
-            if self.cropDimX == 0:
-                self.cropDim = 1.0
-            elif self.cropDimY == 0:
-                self.cropDimY = 1.0
+            # default values for motioncor2 are (1, 1)
+            cropDimX = self.cropDimX.get() or 1
+            cropDimY = self.cropDimY.get() or 1
 
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': self.patch.get() or '5 5',
-                        '-MaskCent': '%f %f' % (self.cropOffsetX,
+                        '-MaskCent': '%d %d' % (self.cropOffsetX,
                                                 self.cropOffsetY),
-                        '-MaskSize': '%f %f' % (self.cropDimX, self.cropDimY),
+                        '-MaskSize': '%d %d' % (cropDimX, cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
@@ -256,30 +254,32 @@ class ProtMotionCorr(ProtAlignMovies):
         try:
             self.runJob(program, args, cwd=movieFolder)
 
-            if self.doComputePSD:
-                uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
-                correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
-                # Compute uncorrected avg mic
-                roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
-                       self.cropDimX.get(), self.cropDimY.get()]
-                fakeShiftsFn = self.writeZeroShifts(movie)
-                self.averageMovie(movie, fakeShiftsFn, aveMicFn,
-                                  binFactor=self.binFactor.get(),
-                                  roi=roi, dark=None,
-                                  gain=inputMovies.getGain())
-                # Compute PSDs
-                self.computePSD(aveMicFn, uncorrectedPSD)
-                self.computePSD(outputMicFn, correctedPSD)
-                self.composePSD(uncorrectedPSD + ".psd",
-                                correctedPSD + ".psd",
-                                self._getPsdCorr(movie))
-                # Remove avg that was used only for computing PSD
-                pwutils.cleanPath(aveMicFn)
+            #if self.doComputePSD:
+            #    uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
+            #    correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
+            #    # Compute uncorrected avg mic
+            #    roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
+            #           self.cropDimX.get(), self.cropDimY.get()]
+            #    fakeShiftsFn = self.writeZeroShifts(movie)
+            #    self.averageMovie(movie, fakeShiftsFn, aveMicFn,
+            #                      binFactor=self.binFactor.get(),
+            #                      roi=roi, dark=None,
+            #                      gain=inputMovies.getGain())
+            #    # Compute PSDs
+            #    self.computePSD(aveMicFn, uncorrectedPSD)
+            #    self.computePSD(outputMicFn, correctedPSD)
+            #    self.composePSD(uncorrectedPSD + ".psd",
+            #                    correctedPSD + ".psd",
+            #                    self._getPsdCorr(movie))
+            #    # Remove avg that was used only for computing PSD
+            #    pwutils.cleanPath(aveMicFn)
 
-            self._saveAlignmentPlots(movie)
+            #self._saveAlignmentPlots(movie)
 
         except:
             print >> sys.stderr, program, " failed for movie %s" % movie.getName()
+
+        self._saveAlignmentPlots(movie)
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -374,13 +374,10 @@ class ProtMotionCorr(ProtAlignMovies):
         Only possible for motioncor2 with local alignment"""
         logPath = self._getExtraPath(self._getMovieLogFile(movie))
         binning = self.binFactor.get()
-        if self.useMotioncor2 and self.patch.get() != '0 0':
-            xShifts, yShifts = parseMovieAlignmentLocal(logPath)
-            xSfhtsCorr = [x * binning for x in xShifts]
-            ySfhtsCorr = [y * binning for y in yShifts]
-            return xSfhtsCorr, ySfhtsCorr
-        else:
-            return None
+        xShifts, yShifts = parseMovieAlignment2(logPath)
+        xSfhtsCorr = [x * binning for x in xShifts]
+        ySfhtsCorr = [y * binning for y in yShifts]
+        return xSfhtsCorr, ySfhtsCorr
 
     def _setPlotInfo(self, movie, obj):
         obj.plotGlobal = em.Image()
@@ -400,17 +397,17 @@ class ProtMotionCorr(ProtAlignMovies):
         return self._getNameExt(movie, '_aligned_corrected', 'psd')
 
     def _saveAlignmentPlots(self, movie):
-        """ Compute alignment shifts plots and save to file as a png images. """
+        """ Compute alignment shift plots and save to file as png images. """
         shiftsX, shiftsY = self._getMovieShifts(movie)
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY)
         plotter.savefig(self._getPlotGlobal(movie))
 
-        localShiftsX, localShiftsY = self._getMovieShifts(movie)
-        if localShiftsX is not None:
+        if self.useMotioncor2 and self.patch.get() != '0 0':
+            localShiftsX, localShiftsY = self._getMovieLocalShifts(movie)
             patchNum = self.patch.get().strip(' ').split(' ')
             plotter2 = createLocalAlignmentPlot(localShiftsX,
                                                 localShiftsY,
-                                                patchNum=patchNum)
+                                                patchNum)
             plotter2.savefig(self._getPlotLocal(movie))
 
     def _isNewMotioncor2(self):
@@ -467,49 +464,50 @@ def createGlobalAlignmentPlot(meanX, meanY):
     return plotter
 
 
-def highResPoints(x, y, factor=10):
-    """
-    Take points listed in two vectors and return them at a higher
-    resolution. Create at least factor*len(x) new points that include the
-    original points and those spaced in between.
-    Returns new x and y arrays as a tuple (x,y).
-    """
-    # r is the distance spanned between pairs of points
-    r = [0]
-    for i in range(1, len(x)):
-        dx = x[i] - x[i - 1]
-        dy = y[i] - y[i - 1]
-        r.append(np.sqrt(dx * dx + dy * dy))
-    r = np.array(r)
+#def highResPoints(x, y, factor=10):
+#    """
+#    Take points listed in two vectors and return them at a higher
+#    resolution. Create at least factor*len(x) new points that include the
+#    original points and those spaced in between.
+#    Returns new x and y arrays as a tuple (x,y).
+#    """
+#    # r is the distance spanned between pairs of points
+#    r = [0]
+#    for i in range(1, len(x)):
+#        dx = x[i] - x[i - 1]
+#        dy = y[i] - y[i - 1]
+#        r.append(np.sqrt(dx * dx + dy * dy))
+#    r = np.array(r)
+#
+#    # rtot is a cumulative sum of r, it's used to save time
+#    rtot = []
+#    for i in range(len(r)):
+#        rtot.append(r[0:i].sum())
+#    rtot.append(r.sum())
+#
+#    dr = rtot[-1] / (len(x) * factor - 1)
+#    xmod = [x[0]]
+#    ymod = [y[0]]
+#    rPos = 0  # current point on walk along data
+#    rcount = 1
+#    while rPos < r.sum():
+#        x1, x2 = x[rcount - 1], x[rcount]
+#        y1, y2 = y[rcount - 1], y[rcount]
+#        dpos = rPos - rtot[rcount]
+#        theta = np.arctan2((x2 - x1), (y2 - y1))
+#        rx = np.sin(theta) * dpos + x1
+#        ry = np.cos(theta) * dpos + y1
+#        xmod.append(rx)
+#        ymod.append(ry)
+#        rPos += dr
+#        while rPos > rtot[rcount + 1]:
+#            rPos = rtot[rcount + 1]
+#            rcount += 1
+#            if rcount > rtot[-1]:
+#                break
+#
+#    return xmod, ymod
 
-    # rtot is a cumulative sum of r, it's used to save time
-    rtot = []
-    for i in range(len(r)):
-        rtot.append(r[0:i].sum())
-    rtot.append(r.sum())
-
-    dr = rtot[-1] / (len(x) * factor - 1)
-    xmod = [x[0]]
-    ymod = [y[0]]
-    rPos = 0  # current point on walk along data
-    rcount = 1
-    while rPos < r.sum():
-        x1, x2 = x[rcount - 1], x[rcount]
-        y1, y2 = y[rcount - 1], y[rcount]
-        dpos = rPos - rtot[rcount]
-        theta = np.arctan2((x2 - x1), (y2 - y1))
-        rx = np.sin(theta) * dpos + x1
-        ry = np.cos(theta) * dpos + y1
-        xmod.append(rx)
-        ymod.append(ry)
-        rPos += dr
-        while rPos > rtot[rcount + 1]:
-            rPos = rtot[rcount + 1]
-            rcount += 1
-            if rcount > rtot[-1]:
-                break
-
-    return xmod, ymod
 
 def createLocalAlignmentPlot(meanX, meanY, patchNum):
     sumMeanX = []
@@ -533,9 +531,6 @@ def createLocalAlignmentPlot(meanX, meanY, patchNum):
     ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
 
     # creating subplots
-    pltNum = 1
-    pltTotal = patchNum[0] * patchNum[1]
-
     ax1 = fig.add_subplot(221)
     ax2 = fig.add_subplot(222)
     ax3 = fig.add_subplot(223)
@@ -552,7 +547,8 @@ def createLocalAlignmentPlot(meanX, meanY, patchNum):
     # cycle. You need len(x)-1 colors, because you'll plot that many lines
     # between pairs. In other words, your line is not cyclic, so there's
     # no line from end to beginning
-    xHiRes, yHiRes = highResPoints(sumMeanX, sumMeanY, factor=10)
+    #xHiRes, yHiRes = highResPoints(sumMeanX, sumMeanY, factor=10)
+    xHiRes, yHiRes = sumMeanX, sumMeanY
     xHiRes.insert(0, 0.0)
     yHiRes.insert(0, 0.0)
     cm = plt.get_cmap('winter')
@@ -567,4 +563,3 @@ def createLocalAlignmentPlot(meanX, meanY, patchNum):
     plotter.tightLayout()
 
     return plotter
-

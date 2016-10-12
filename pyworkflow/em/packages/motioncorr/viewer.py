@@ -27,8 +27,7 @@
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 import pyworkflow.em.showj as showj
 
-from protocol_motioncorr import (ProtMotionCorr,
-                                 OBJCMD_MOVIE_ALIGNCARTESIAN)
+from protocol_motioncorr import ProtMotionCorr
 
 
 class ProtMotioncorrViewer(Viewer):
@@ -47,8 +46,7 @@ class ProtMotioncorrViewer(Viewer):
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
                       showj.RENDER: plotLabels,
-                      showj.ZOOM: 50,
-                      showj.OBJCMDS: "'%s'" % OBJCMD_MOVIE_ALIGNCARTESIAN
+                      showj.ZOOM: 10
                       }
 
         if obj.hasAttribute('outputMicrographs'):
@@ -56,6 +54,9 @@ class ProtMotioncorrViewer(Viewer):
                                          viewParams=viewParams))
         elif obj.hasAttribute('outputMicrographsDoseWt'):
             views.append(self.objectView(obj.outputMicrographsDoseWt,
+                                         viewParams=viewParams))
+        elif obj.hasAttribute('outputMovies'):
+            views.append(self.objectView(obj.outputMovies,
                                          viewParams=viewParams))
         else:
             views.append(self.infoMessage("Output micrographs have "
