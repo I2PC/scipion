@@ -294,7 +294,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
             return getMovieFileName(movie)
 
     def _getShiftsFile(self, movie):
-        return self._getNameExt(movie, '_shifts', '.xmd', extra=False)
+        shiftFile = self._getNameExt(movie, '_shifts', 'xmd', extra=False)
+        return self._getFnInMovieFolder(movie, shiftFile)
 
     def _getOutputShifts(self, movie):
         return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)
