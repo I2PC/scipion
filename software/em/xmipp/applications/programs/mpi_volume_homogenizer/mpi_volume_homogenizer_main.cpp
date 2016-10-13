@@ -24,5 +24,5 @@
  ***************************************************************************/
 
 
-#include <parallel/mpi_volume_homogenizer.h>
+#include "mpi_volume_homogenizer.h"
 RUN_XMIPP_PROGRAM(MpiProgVolumeHomogenizer)

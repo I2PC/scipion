@@ -32,7 +32,7 @@ from pyworkflow.gui.plotter import plt
 from plotter import XmippPlotter
 import xmipp
 import os
-import math
+
 
 class XmippValidateOverfittingViewer(Viewer):
     """ Wrapper to visualize different type of data objects
@@ -98,7 +98,7 @@ class XmippValidateOverfittingViewer(Viewer):
         yValue = md.getColumnValues(xmipp.MDL_AVG)
         plt.errorbar(xValue, yValue, yErr, fmt='o')        
             
-        pylab.legend(loc='upper right' , fontsize = 11)
+        plt.legend(loc='upper right' , fontsize = 11)
         
         return xplotter
     
