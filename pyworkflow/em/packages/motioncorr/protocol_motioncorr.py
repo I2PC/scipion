@@ -197,9 +197,9 @@ class ProtMotionCorr(ProtAlignMovies):
 
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': self.patch.get() or '5 5',
-                        '-MaskCent': '%f %f' % (self.cropOffsetX,
+                        '-MaskCent': '%d %d' % (self.cropOffsetX,
                                                 self.cropOffsetY),
-                        '-MaskSize': '%f %f' % (cropDimX, cropDimY),
+                        '-MaskSize': '%d %d' % (cropDimX, cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
