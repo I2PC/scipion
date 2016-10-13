@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/volume_homogenizer.h>
 #include "parallel/xmipp_mpi.h"
+#include "volume_homogenizer.h"
 
 /**@defgroup MpiProgVolumeHomogenizer (MPI)
    @ingroup ParallelLibrary */
