@@ -34,12 +34,10 @@ from pyworkflow.em.protocol import ProtReconstruct3D
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
 from pyworkflow.utils import getFloatListFromValues
 from pyworkflow.utils.path import cleanPattern, cleanPath, copyFile
-import os
 import xmipp
 import glob
 from pyworkflow.object import Float, String
 from math import sqrt
-from plotter import XmippPlotter
 
 
 class XmippProtValidateOverfitting(ProtReconstruct3D):

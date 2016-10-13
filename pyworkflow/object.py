@@ -1054,7 +1054,7 @@ class Set(OrderedObject):
     
     def write(self, properties=True):
         """
-        Commit the changes made to the Set underlyin database.
+        Commit the changes made to the Set underlying database.
         Params:
             properties: this flag controls when to write Set attributes to 
                 special table 'Properties' in the database. False value is 

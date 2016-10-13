@@ -123,27 +123,35 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     
     def volumeAlignmentStep (self, referenceVol, inputVol, fnAlignedVolFf, 
                                    fnAlnVolFfLcl, fnInPartsNewAng):
+        fnTransformMatFF = self._getExtraPath('transformation-matrix-FF.txt')
         alignArgsFf = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
                                                       inputVol, 
                                                       fnAlignedVolFf)
-        alignArgsFf += " --frm"
+        alignArgsFf += " --frm --copyGeo %s" % fnTransformMatFF
         self.runJob('xmipp_volume_align', alignArgsFf, numberOfMpi = 1)        
         
-        fnTransformMat = self._getExtraPath('transformation-Mmatrix.txt')
+        fnTransformMatLocal = self._getExtraPath('transformation-matrix-local.txt')
         alignArgsLocal = "--i1 %s --i2 %s --apply %s" % (referenceVol, 
                                                          fnAlignedVolFf, 
                                                          fnAlnVolFfLcl)
         alignArgsLocal += " --local --rot 0 0 1 --tilt 0 0 1"
         alignArgsLocal += " --psi 0 0 1 -x 0 0 1 -y 0 0 1"
-        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTransformMat        
+        alignArgsLocal += " -z 0 0 1 --scale 1 1 0.005 --copyGeo %s" % fnTransformMatLocal        
         self.runJob('xmipp_volume_align', alignArgsLocal, numberOfMpi = 1)
-                
+                 
         #apply transformation matrix to input ratricles
+        transMatFromFileFF = np.loadtxt(fnTransformMatFF)
+        transformationArrayFF = np.reshape(transMatFromFileFF,(4,4))
+        transformMatrixFF = np.matrix(transformationArrayFF)
+        
+        transMatFromFileLocal = np.loadtxt(fnTransformMatLocal)
+        transformationArrayLocal = np.reshape(transMatFromFileLocal,(4,4))
+        transformMatrixLocal = np.matrix(transformationArrayLocal)
+        
+        transformMatrix = transformMatrixFF * transformMatrixLocal
+        print "Transformation matrix used to apply to the input particles =\n"
+        print transformMatrix
         inputParts = self.inputParticles.get()
-        transMatFromFile = np.loadtxt(fnTransformMat)
-        transformationArray = np.reshape(transMatFromFile,(4,4))
-        transformMatrix = np.matrix(transformationArray)
-        print "Transformation matrix (volume_align output) =\n", transformMatrix
         outputSet = self._createSetOfParticles()
         for part in inputParts.iterItems():        
             partTransformMat = part.getTransform().getMatrix()            
