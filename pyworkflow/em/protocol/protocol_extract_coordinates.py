@@ -25,9 +25,8 @@
 # **************************************************************************
 
 
-from pyworkflow.protocol.params import PointerParam, FloatParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.data import Coordinate
-from collections import OrderedDict
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 
 
@@ -49,27 +48,21 @@ class ProtExtractCoords(ProtParticlePicking):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+        form.addParam('inputParticles', PointerParam,
+                      pointerClass='SetOfParticles',
                       label='Input particles', important=True,
                       help='Select the particles from which you want\n'
                            'to extract the coordinates and micrographs.')
         
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
+        form.addParam('inputMicrographs', PointerParam,
+                      pointerClass='SetOfMicrographs',
                       label='Input micrographs', important=True,
                       help='Select the micrographs to which you want to\n'
                            'associate the coordinates from the particles.')
         
-        form.addParam('correction', FloatParam, level=LEVEL_ADVANCED,
-                      label='Scale correction', default=0,
-                      help='This parameter should not be used. '
-                           'It is only now to correct for a wrong '
-                           'tracking of the coordinates according to'
-                           'the particles pixel size.\n'
-                           'For now, 0 means no correction.')
-
         form.addParallelSection(threads=0, mpi=0)
 
-#--------------------------- INSERT steps functions --------------------------------------------
+#--------------------------- INSERT steps functions ----------------------------
 
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -81,12 +74,7 @@ class ProtExtractCoords(ProtParticlePicking):
 
         scale = inputParticles.getSamplingRate() / inputMics.getSamplingRate()
         
-        #FIXME: the 'correction' as a temporarly hack for fixing the 
-        # coordinates scale according to the particles pixel size
-        if self.correction > 0:
-            scale = scale * self.correction.get()
-            
-        print "Scaling coordinates by a factor *%0.2f*" % scale        
+        print "Scaling coordinates by a factor *%0.2f*" % scale
         newCoord = Coordinate()
         
         firstCoord = inputParticles.getFirstItem().getCoordinate()
@@ -114,8 +102,6 @@ class ProtExtractCoords(ProtParticlePicking):
                 print "Skipping particle, key %s not found" % micKey
             else:
                 newCoord.copyObjId(particle)
-                #FIXME: the 'correction' as a temporarly hack for fixing the 
-                # coordinates scale according to the particles pixel size
                 x, y = coord.getPosition()
                 newCoord.setPosition(x*scale, y*scale)                
                 newCoord.setMicrograph(mic)
@@ -137,7 +123,8 @@ class ProtExtractCoords(ProtParticlePicking):
         summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
         
         if hasattr(self, 'outputCoordinates'):
-            summary.append('Output coordinates: *%d*' % self.outputCoordinates.getSize())
+            summary.append('Output coordinates: *%d*'
+                           % self.outputCoordinates.getSize())
             
         return summary 
 
@@ -146,9 +133,9 @@ class ProtExtractCoords(ProtParticlePicking):
         return self._summary()
 
     def _validate(self):
-        """ The function of this hook is to add some validation before the protocol
-        is launched to be executed. It should return a list of errors. If the list is
-        empty the protocol can be executed.
+        """ The function of this hook is to add some validation before the
+        protocol is launched to be executed. It should return a list of errors.
+        If the list is empty the protocol can be executed.
         """
         #check that input set of aligned particles do have 2D alignment
         errors = [ ]
