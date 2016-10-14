@@ -31,6 +31,7 @@ import pyworkflow.em.metadata as md
 import pyworkflow.utils.path as path
 
 from pyworkflow.em.protocol import ProtClassify2D
+from pyworkflow.em.constants import ALIGN_2D
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam,
                                         FloatParam)
@@ -140,14 +141,13 @@ class XmippProtML2D(ProtClassify2D):
         form.addParam('stdNoise', FloatParam, default=1.0, expertLevel=LEVEL_ADVANCED,
                       label='Std for pixel noise',
                       help='Expected standard deviation for pixel noise.')               
-        form.addParam('stdOffset', FloatParam, default=3.0, expertLevel=LEVEL_ADVANCED,
-                      label='Std for origin offset',
+        form.addParam('stdOffset', FloatParam, default=3.0,
+                      expertLevel=LEVEL_ADVANCED, label='Std for origin offset',
                       help='Expected standard deviation for origin offset (pixels).') 
         
         form.addParallelSection(threads=2, mpi=4)
            
     #--------------------------- INSERT steps functions -----------------------
-    
     def _insertAllSteps(self):
         self._defineFileNames()
         partSetObjId = self.inputParticles.get().getObjId()
@@ -156,15 +156,17 @@ class XmippProtML2D(ProtClassify2D):
         params = self._getMLParams()
         self._insertRunJobStep(program, params)
         self._insertFunctionStep('createOutputStep')
-    
-    #--------------------------- STEPS functions --------------------------------------------       
+
+    #--------------------------- STEPS functions --------------------------------------------
     def convertInputStep(self, inputId):
         """ Write the input images as a Xmipp metadata file. """
-        writeSetOfParticles(self.inputParticles.get(), self._getFileName('input_particles'))
+        writeSetOfParticles(self.inputParticles.get(),
+                            self._getFileName('input_particles'))
         # If input references, also convert to xmipp metadata
         if not self.doGenerateReferences:
-            writeSetOfParticles(self.inputReferences.get(), self._getFileName('input_references'))
-        
+            writeSetOfParticles(self.inputReferences.get(),
+                                self._getFileName('input_references'))
+
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         
@@ -321,7 +323,6 @@ class XmippProtML2D(ProtClassify2D):
         return self._getPath('%s2d_' % self._getMLId())
     
     def _updateParticle(self, item, row):
-        from pyworkflow.em.constants import ALIGN_2D
         item.setClassId(row.getValue(md.MDL_REF))
         item.setTransform(rowToAlignment(row, ALIGN_2D))
         
@@ -353,7 +354,8 @@ class XmippProtML2D(ProtClassify2D):
         dataXmd = self._getIterMdImages(iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataXmd, sortByLabel=md.MDL_ITEM_ID))
+                             itemDataIterator=md.iterRows(dataXmd,
+                                                          sortByLabel=md.MDL_ITEM_ID))
     
     def _getIterClasses(self, it, clean=False):
         """ Return a classes .sqlite file for this iteration.
