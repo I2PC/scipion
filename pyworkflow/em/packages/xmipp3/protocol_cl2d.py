@@ -1,4 +1,4 @@
-# **************************************************************************
+# ******************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
@@ -22,21 +22,19 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
-# **************************************************************************
+# ******************************************************************************
 
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 from os.path import join, dirname, exists
 from glob import glob
 
-from pyworkflow.utils.process import runJob
-from pyworkflow.protocol.params import (PointerParam, IntParam, EnumParam,
-                                        StringParam, FloatParam,
-                                        LEVEL_ADVANCED, LEVEL_ADVANCED,
-                                        BooleanParam)
+import pyworkflow.protocol.params as param
+import pyworkflow.protocol.constants as const
 from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
 from pyworkflow.utils.path import cleanPath, makePath
-import pyworkflow.em as em
-from convert import writeSetOfParticles, readSetOfClasses2D, writeSetOfClasses2D
-import xmipp
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, \
+    createItemMatrix, writeSetOfClasses2D, xmippToLocation, rowToAlignment
 
 # Comparison methods enum
 CMP_CORRELATION = 0
@@ -66,79 +64,109 @@ class XmippProtCL2D(ProtClassify2D):
         if self.numberOfMpi.get() < 2:
             self.numberOfMpi.set(2)       
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputParticles', PointerParam, label="Input images", important=True, 
-                      pointerClass='SetOfParticles',
+        form.addParam('inputParticles', param.PointerParam,
+                      label="Input images",
+                      important=True, pointerClass='SetOfParticles',
                       help='Select the input images to be classified.')        
-        form.addParam('numberOfClasses', IntParam, default=64,
+        form.addParam('numberOfClasses', param.IntParam, default=64,
                       label='Number of classes:',
                       help='Number of classes (or references) to be generated.')
-        form.addParam('randomInitialization', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+        form.addParam('randomInitialization', param.BooleanParam, default=True,
+                      expertLevel=const.LEVEL_ADVANCED,
                       label='Random initialization of classes:',
-                      help="Initialize randomly the first classes. If you don't initialize randomly, you must supply a set of initial classes")
-        form.addParam('initialClasses', PointerParam, label="Initial classes", condition="not randomInitialization",
+                      help="Initialize randomly the first classes. If you "
+                           "don't initialize randomly, you must supply a set "
+                           "of initial classes")
+        form.addParam('initialClasses', param.PointerParam,
+                      label="Initial classes",
+                      condition="not randomInitialization",
                       pointerClass='SetOfClasses2D, SetOfAverages',
                       help='Set of initial classes to start the classification')
-        form.addParam('numberOfInitialClasses', IntParam, default=4, expertLevel=LEVEL_ADVANCED,
-                      label='Number of initial classes:', condition="randomInitialization",
+        form.addParam('numberOfInitialClasses', param.IntParam, default=4,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='Number of initial classes:',
+                      condition="randomInitialization",
                       help='Initial number of classes used in the first level.')
-        form.addParam('numberOfIterations', IntParam, default=10, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numberOfIterations', param.IntParam, default=10,
+                      expertLevel=const.LEVEL_ADVANCED,
                       label='Number of iterations:',
                       help='Maximum number of iterations within each level.')
-        form.addParam('comparisonMethod', EnumParam, choices=['correlation', 'correntropy'],
-                      label="Comparison method", default=CMP_CORRELATION, expertLevel=LEVEL_ADVANCED,
-                      display=EnumParam.DISPLAY_COMBO,
+        form.addParam('comparisonMethod', param.EnumParam,
+                      choices=['correlation', 'correntropy'],
+                      label="Comparison method", default=CMP_CORRELATION,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      display=param.EnumParam.DISPLAY_COMBO,
                       help='Use correlation or correntropy')
-        form.addParam('clusteringMethod', EnumParam, choices=['classical', 'robust'],
-                      label="Clustering method", default=CL_CLASSICAL, expertLevel=LEVEL_ADVANCED,
-                      display=EnumParam.DISPLAY_COMBO,
-                      help='Use the classical clustering criterion or the robust')
-        form.addParam('extraParams', StringParam, expertLevel=LEVEL_ADVANCED,
-              label='Additional parameters',
-              help='Additional parameters for classify_CL2D: \n  --verbose, --corrSplit, ...')
+        form.addParam('clusteringMethod', param.EnumParam,
+                      choices=['classical', 'robust'],
+                      label="Clustering method", default=CL_CLASSICAL,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      display=param.EnumParam.DISPLAY_COMBO,
+                      help='Use the classical clustering criterion or the '
+                           'robust')
+        form.addParam('extraParams', param.StringParam,
+                      expertLevel=const.LEVEL_ADVANCED,
+                      label='Additional parameters',
+                      help='Additional parameters for classify_CL2D: \n'
+                           ' --verbose, --corrSplit, ...')
 
         form.addSection(label='Core analysis')
-        form.addParam('doCore', BooleanParam, default=True,
+        form.addParam('doCore', param.BooleanParam, default=True,
                       label='Perform core analysis',
-                      help='An image belongs to the core if it is close (see Junk Zscore and PCA Zscore) to the class center')
-        form.addParam('thZscore', FloatParam, default=3, expertLevel=LEVEL_ADVANCED,
-                      label='Junk Zscore',
-                      help='Which is the average Z-score to be considered as junk. Typical values'
-                           'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
-                           'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
-                           'accept more images.', condition='doCore')
-        form.addParam('thPCAZscore', FloatParam, default=3, expertLevel=LEVEL_ADVANCED,
+                      help='An image belongs to the core if it is close (see '
+                           'Junk Zscore and PCA Zscore) to the class center')
+        form.addParam('thZscore', param.FloatParam, default=3,
+                      label='Junk Zscore', expertLevel=const.LEVEL_ADVANCED,
+                      condition='doCore',
+                      help='Which is the average Z-score to be considered as '
+                           'junk. Typical values go from 1.5 to 3. For the '
+                           'Gaussian distribution 99.5% of the data is '
+                           'within a Z-score of 3. Lower Z-scores reject more '
+                           'images. Higher Z-scores accept more images.')
+        form.addParam('thPCAZscore', param.FloatParam, default=3,
+                      condition='doCore', expertLevel=const.LEVEL_ADVANCED,
                       label='PCA Zscore',
-                      help='Which is the PCA Z-score to be considered as junk. Typical values'
-                           'go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is'
-                           'within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores'
-                           'accept more images.', condition='doCore')
-        form.addParam('doStableCore', BooleanParam, default=True,
-                      label='Perform stable core analysis',
-                      help='Two images belong to the stable core if they have been essentially together along the classification process',
-                      condition='doCore')
-        form.addParam('tolerance', IntParam, default=1,
-                      label='Tolerance',
-                      help='An image belongs to the stable core if it has been with other images in the same class'
-                           'in all the previous levels except possibly a few of them. Tolerance defines how few is few.'
-                           'Tolerance=0 means that an image must be in all previous levels with the rest of images in'
-                           'the core.', expertLevel=LEVEL_ADVANCED, condition='doCore and doStableCore')
-        form.addParam("computeHierarchy",BooleanParam, default=False, label="Compute class hierarchy", expertLevel=LEVEL_ADVANCED)
-        form.addParam("analyzeRejected",BooleanParam, default=False, label="Analyze rejected particles", expertLevel=LEVEL_ADVANCED,
-                      help="To see the analysis you need to browse the execution directory and go into the different levels")
-
+                      help='Which is the PCA Z-score to be considered as junk. '
+                           'Typical values go from 1.5 to 3. For the Gaussian '
+                           'distribution 99.5% of the data is within a '
+                           'Z-score of 3. Lower Z-scores reject more images. '
+                           'Higher Z-scores accept more images.')
+        form.addParam('doStableCore', param.BooleanParam, default=True,
+                      condition='doCore', label='Perform stable core analysis',
+                      help='Two images belong to the stable core if they have '
+                           'been essentially together along the classification '
+                           'process')
+        form.addParam('tolerance', param.IntParam, default=1, label='Tolerance',
+                      expertLevel=const.LEVEL_ADVANCED,
+                      condition='doCore and doStableCore',
+                      help='An image belongs to the stable core if it has been '
+                           'with other images in the same class in all the '
+                           'previous levels except possibly a few of them. '
+                           'Tolerance defines how few is few. Tolerance=0 '
+                           'means that an image must be in all previous levels '
+                           'with the rest of images in the core.',)
+        form.addParam("computeHierarchy", param.BooleanParam, default=False,
+                      label="Compute class hierarchy",
+                      expertLevel=const.LEVEL_ADVANCED)
+        form.addParam("analyzeRejected", param.BooleanParam, default=False,
+                      label="Analyze rejected particles",
+                      expertLevel=const.LEVEL_ADVANCED,
+                      help='To see the analysis you need to browse the '
+                           'execution directory and go into the different '
+                           'levels')
         form.addParallelSection(threads=0, mpi=4)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         """ Mainly prepare the command line for call cl2d program"""
 
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('images.xmd')
         self.initialClassesFn = self._getExtraPath('initialClasses.xmd')
-        self._insertFunctionStep('convertInputStep', 
+        self._insertFunctionStep('convertInputStep',
                                  self.inputParticles.get().getObjId(), 
                                  self.initialClasses.get().getObjId() if self.initialClasses.get() else None)
 
@@ -154,7 +182,8 @@ class XmippProtCL2D(ProtClassify2D):
                         'tolerance': self.tolerance.get(),
                         'initialClassesFn': self.initialClassesFn
         }
-        args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref %(nref)d --iter %(iter)d %(extraParams)s'
+        args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref ' \
+               '%(nref)d --iter %(iter)d %(extraParams)s'
         if self.comparisonMethod == CMP_CORRELATION:
             args += ' --distance correlation'
         if self.clusteringMethod == CL_CLASSICAL:
@@ -167,7 +196,9 @@ class XmippProtCL2D(ProtClassify2D):
         self._insertClassifySteps("xmipp_classify_CL2D", args, subset=CLASSES)
 
         #TODO: Added this If. Check with COSS error if makes sense.
-        #Also, if conditions below are enough to validate that classes core and stable core are not empty
+        #Also, if conditions below are enough to validate that classes core
+        # and stable core are not empty
+
         if not self.randomInitialization:
             self.numberOfInitialClasses.set(self.initialClasses.get().getSize())
 
@@ -198,7 +229,8 @@ class XmippProtCL2D(ProtClassify2D):
         self._insertFunctionStep('sortClassesStep', subset)
         self._insertFunctionStep('createOutputStep', subset)
 
-    #--------------------------- STEPS functions --------------------------------------------
+
+    #--------------------------- STEPS functions -------------------------------
     def convertInputStep(self, particlesId, classesId):
         writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=em.ALIGN_NONE)
         if not self.randomInitialization:
@@ -218,10 +250,10 @@ class XmippProtCL2D(ProtClassify2D):
             params = "-i classes@%s --oroot %s" % (mdFn, fnRoot)
             self.runJob("xmipp_image_sort", params, numberOfMpi=nproc)
             mdFnOut = fnRoot + ".xmd"
-            md = xmipp.MetaData(mdFnOut)
+            mdOut = md.MetaData(mdFnOut)
             for objId in md:
-                md.setValue(xmipp.MDL_ITEM_ID,long(md.getValue(xmipp.MDL_REF,objId)),objId)
-            md.write("classes_sorted@" + mdFn, xmipp.MD_APPEND)
+                mdOut.setValue(md.MDL_ITEM_ID,long(md.getValue(md.MDL_REF,objId)),objId)
+            mdOut.write("classes_sorted@" + mdFn, md.MD_APPEND)
 
     def evaluateClassesStep(self, subset=''):
         """ Calculate the FRC and output the hierarchy for
@@ -245,9 +277,17 @@ class XmippProtCL2D(ProtClassify2D):
         """
         levelMdFiles = self._getLevelMdFiles(subset)
         lastMdFn = levelMdFiles[-1]
+
+
         inputParticles = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
-        readSetOfClasses2D(classes2DSet, lastMdFn, 'classes')
+
+        classes2DSet.copyItems(inputParticles,
+                               updateItemCallback=self._createItemMatrix,
+                               itemDataIterator=md.iterRows(self.imgsFn,
+                                                            sortByLabel=md.MDL_ITEM_ID))
+
+
         result = {'outputClasses' + subset: classes2DSet}
         self._defineOutputs(**result)
         self._defineSourceRelation(self.inputParticles, classes2DSet)
@@ -256,13 +296,13 @@ class XmippProtCL2D(ProtClassify2D):
         """ Analyze which images are out of cores """
         levelMdFiles = self._getLevelMdFiles(subset)
         for fn in levelMdFiles:
-            mdAll=xmipp.MetaData()
-            blocks = xmipp.getBlocksInMetaDataFile(fn)
+            mdAll=md.MetaData()
+            blocks = md.getBlocksInMetaDataFile(fn)
             fnDir=dirname(fn)
             # Gather all images in block
             for block in blocks:
                 if block.startswith('class0'):
-                    mdClass=xmipp.MetaData(block+"@"+fn)
+                    mdClass=md.MetaData(block+"@"+fn)
                     mdAll.unionAll(mdClass)
             if mdAll.size()>0:
                 # Compute difference to images
@@ -273,10 +313,10 @@ class XmippProtCL2D(ProtClassify2D):
                             numberOfMpi=1,numberOfThreads=1)
                 
                 # Remove disabled and intermediate files
-                mdClass=xmipp.MetaData(fnOutOfSubset)
+                mdClass=md.MetaData(fnOutOfSubset)
                 mdClass.removeDisabled()
                 fnRejected="images_rejected@"+fn
-                mdClass.write(fnRejected,xmipp.MD_APPEND)
+                mdClass.write(fnRejected,md.MD_APPEND)
                 cleanPath(fnOutOfSubset)
                 cleanPath(fnSubset)
                 
@@ -352,7 +392,7 @@ class XmippProtCL2D(ProtClassify2D):
                 strline+=' [Sorzano2014].'
         return [strline]
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getLevelMdFiles(self, subset=''):
         """ Grab the metadata class files for each level. """
         levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
@@ -366,5 +406,41 @@ class XmippProtCL2D(ProtClassify2D):
         # so we split by '_' and take the last part as int
         return int(folder.split('_')[-1])
     
-    
-    
+    def _createItemMatrix(self, item, row):
+        createItemMatrix(item, row, align=em.ALIGN_2D)
+
+    def _updateParticle(self, item, row):
+        item.setClassId(row.getValue(md.MDL_REF))
+        item.setTransform(rowToAlignment(row, em.ALIGN_2D))
+
+    def _updateClass(self, item):
+        classId = item.getObjId()
+
+        if classId in self._classesInfo:
+            index, fn, _ = self._classesInfo[classId]
+            item.setAlignment2D()
+            item.getRepresentative().setLocation(index, fn)
+
+    def _loadClassesInfo(self, filename):
+        """ Read some information about the produced 2D classes
+        from the metadata file.
+        """
+        self._classesInfo = {}  # store classes info, indexed by class id
+
+        mdClasses = md.MetaData(filename)
+
+        for classNumber, row in enumerate(md.iterRows(mdClasses)):
+            index, fn = xmippToLocation(row.getValue(md.MDL_IMAGE))
+            # Store info indexed by id, we need to store the row.clone() since
+            # the same reference is used for iteration
+            self._classesInfo[classNumber + 1] = (index, fn, row.clone())
+
+    def _fillClassesFromLevel(self, clsSet, level):
+        """ Create the SetOfClasses2D from a given iteration. """
+        self._loadClassesInfo(self._getIterMdClasses(level))
+        dataXmd = self._getIterMdImages(level)
+        clsSet.classifyItems(updateItemCallback=self._updateParticle,
+                             updateClassCallback=self._updateClass,
+                             itemDataIterator=md.iterRows(dataXmd,
+                                                          sortByLabel=md.MDL_ITEM_ID))
+
