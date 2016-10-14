@@ -28,7 +28,6 @@
 # **************************************************************************
 
 import os, sys
-import numpy as np
 from pyworkflow.gui.plotter import plt
 from itertools import izip
 
@@ -42,7 +41,7 @@ from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2,
-                     parseMovieAlignmentLocal)
+                     parseMovieAlignmentLocal, convertShifts)
 
 
 
@@ -104,11 +103,12 @@ class ProtMotionCorr(ProtAlignMovies):
                       help='Use new *motioncor2* program with local '
                            'patch-based motion correction and dose weighting.')
 
-        form.addParam('patch', params.StringParam, default='5 5',
-                      label='Number of patches', condition='useMotioncor2',
-                      help='Number of patches to be used for patch based '
-                            'alignment. Set to *0 0* to do only global motion '
-                            'correction.')
+        line = form.addLine('Number of patches', condition='useMotioncor2',
+                            help='Number of patches to be used for patch based '
+                                 'alignment. Set to *0 0* to do only global motion '
+                                 'correction.')
+        line.addParam('patchX', params.IntParam, default=5, label='X')
+        line.addParam('patchY', params.IntParam, default=5, label='Y')
 
         form.addParam('frameDose', params.FloatParam, default='0.0',
                       label='Frame dose (e/A^2)', condition='useMotioncor2',
@@ -224,7 +224,7 @@ class ProtMotionCorr(ProtAlignMovies):
             cropDimY = self.cropDimY.get() or 1
 
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
-                        '-Patch': self.patch.get() or '5 5',
+                        '-Patch': '%d %d' % (self.patchX, self.patchY),
                         '-MaskCent': '%d %d' % (self.cropOffsetX,
                                                 self.cropOffsetY),
                         '-MaskSize': '%d %d' % (cropDimX, cropDimY),
@@ -333,7 +333,7 @@ class ProtMotionCorr(ProtAlignMovies):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
         else:
-            if self.patch.get() == '0 0':
+            if not self.patchX and not self.patchY:
                 return 'micrograph_%06d_0-Full.log' % movie.getObjId()
             else:
                 return 'micrograph_%06d_0-Patch-Full.log' % movie.getObjId()
@@ -369,12 +369,13 @@ class ProtMotionCorr(ProtAlignMovies):
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
 
-    def _getMovieLocalShifts(self, movie):
-        """ Returns x and y shifts for each patch of the movie.
-        Only possible for motioncor2 with local alignment"""
-        logPath = self._getExtraPath(self._getMovieLogFile(movie))
+    def _getLocalShifts(self, movie):
+        """ Returns local shifts per patch for each frame.
+        First shift is (0,0)."""
+        patchFn = 'micrograph_%06d_0-Patch-Patch.log' % movie.getObjId()
+        logPath = self._getExtraPath(patchFn)
         binning = self.binFactor.get()
-        xShifts, yShifts = parseMovieAlignment2(logPath)
+        xShifts, yShifts = parseMovieAlignmentLocal(logPath)
         xSfhtsCorr = [x * binning for x in xShifts]
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
@@ -402,12 +403,12 @@ class ProtMotionCorr(ProtAlignMovies):
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY)
         plotter.savefig(self._getPlotGlobal(movie))
 
-        if self.useMotioncor2 and self.patch.get() != '0 0':
-            localShiftsX, localShiftsY = self._getMovieLocalShifts(movie)
-            patchNum = self.patch.get().strip(' ').split(' ')
+        if self.useMotioncor2 and self.patchX and self.patchY:
+            localShiftsX, localShiftsY = self._getLocalShifts(movie)
             plotter2 = createLocalAlignmentPlot(localShiftsX,
                                                 localShiftsY,
-                                                patchNum)
+                                                self.patchX,
+                                                self.patchY)
             plotter2.savefig(self._getPlotLocal(movie))
 
     def _isNewMotioncor2(self):
@@ -431,135 +432,74 @@ class ProtMotionCorr(ProtAlignMovies):
 
 def createGlobalAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
-    sumMeanX = []
-    sumMeanY = []
     figureSize = (6, 4)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
-
-    preX = 0.0
-    preY = 0.0
-    sumMeanX.append(0.0)
-    sumMeanY.append(0.0)
     ax = figure.add_subplot(111)
     ax.grid()
     ax.set_title('Global frame motion')
-    ax.set_xlabel('Drift x (pixels)')
-    ax.set_ylabel('Drift y (pixels)')
-    ax.plot(0, 0, 'yo-')
+    ax.set_xlabel('Shift x (pixels)')
+    ax.set_ylabel('Shift y (pixels)')
+    if meanX[0] != 0 or meanY[0] != 0:
+        raise Exception("First frame shift must be (0,0)!")
+
     i = 1
     for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
-        sumMeanX.append(preX)
-        sumMeanY.append(preY)
-        ax.text(preX-0.02, preY+0.02, str(i))
+        ax.text(x-0.02, y+0.02, str(i))
         i += 1
 
-    ax.plot(sumMeanX, sumMeanY, color='b')
-    ax.plot(sumMeanX, sumMeanY, 'yo')
+    ax.plot(meanX, meanY, color='b')
+    ax.plot(meanX, meanY, 'yo')
 
     plotter.tightLayout()
 
     return plotter
 
 
-#def highResPoints(x, y, factor=10):
-#    """
-#    Take points listed in two vectors and return them at a higher
-#    resolution. Create at least factor*len(x) new points that include the
-#    original points and those spaced in between.
-#    Returns new x and y arrays as a tuple (x,y).
-#    """
-#    # r is the distance spanned between pairs of points
-#    r = [0]
-#    for i in range(1, len(x)):
-#        dx = x[i] - x[i - 1]
-#        dy = y[i] - y[i - 1]
-#        r.append(np.sqrt(dx * dx + dy * dy))
-#    r = np.array(r)
-#
-#    # rtot is a cumulative sum of r, it's used to save time
-#    rtot = []
-#    for i in range(len(r)):
-#        rtot.append(r[0:i].sum())
-#    rtot.append(r.sum())
-#
-#    dr = rtot[-1] / (len(x) * factor - 1)
-#    xmod = [x[0]]
-#    ymod = [y[0]]
-#    rPos = 0  # current point on walk along data
-#    rcount = 1
-#    while rPos < r.sum():
-#        x1, x2 = x[rcount - 1], x[rcount]
-#        y1, y2 = y[rcount - 1], y[rcount]
-#        dpos = rPos - rtot[rcount]
-#        theta = np.arctan2((x2 - x1), (y2 - y1))
-#        rx = np.sin(theta) * dpos + x1
-#        ry = np.cos(theta) * dpos + y1
-#        xmod.append(rx)
-#        ymod.append(ry)
-#        rPos += dr
-#        while rPos > rtot[rcount + 1]:
-#            rPos = rtot[rcount + 1]
-#            rcount += 1
-#            if rcount > rtot[-1]:
-#                break
-#
-#    return xmod, ymod
+def createLocalAlignmentPlot(meanX, meanY, patchX, patchY):
+    patchX = patchX.get()
+    patchY = patchY.get()
 
-
-def createLocalAlignmentPlot(meanX, meanY, patchNum):
-    sumMeanX = []
-    sumMeanY = []
-    preX = 0.0
-    preY = 0.0
     figureSize = (8, 6)
     plotter = Plotter(*figureSize)
-    fig = plotter.getFigure()
-
-    # create big plot
-    #f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex='col', sharey='row')
-    ax = fig.add_subplot(111)
-    ax.set_title('Local patch motion')
-    ax.set_xlabel('Drift x (pixels)')
-    ax.set_ylabel('Drift y (pixels)')
-    ax.spines['top'].set_color('none')
-    ax.spines['bottom'].set_color('none')
-    ax.spines['left'].set_color('none')
-    ax.spines['right'].set_color('none')
-    ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
-
-    # creating subplots
-    ax1 = fig.add_subplot(221)
-    ax2 = fig.add_subplot(222)
-    ax3 = fig.add_subplot(223)
-    ax4 = fig.add_subplot(224)
-
-    # compute cumulative shifts
-    for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
-        sumMeanX.append(preX)
-        sumMeanY.append(preY)
-
-    # Choose a color map, loop through the colors, and assign them to the color
-    # cycle. You need len(x)-1 colors, because you'll plot that many lines
-    # between pairs. In other words, your line is not cyclic, so there's
-    # no line from end to beginning
-    #xHiRes, yHiRes = highResPoints(sumMeanX, sumMeanY, factor=10)
-    xHiRes, yHiRes = sumMeanX, sumMeanY
-    xHiRes.insert(0, 0.0)
-    yHiRes.insert(0, 0.0)
     cm = plt.get_cmap('winter')
+    shiftsX, shiftsY = convertShifts(meanX, meanY, patchX, patchY)
+    frames = 0
+    fig, aN = plt.subplots(nrows=patchY, ncols=patchX, sharex=True, sharey=True)
 
-    for axN in [ax1, ax2, ax3, ax4]:
-        axN.grid()
-        axN.set_color_cycle([cm(1. * i / (len(xHiRes) - 1))
-                            for i in range(len(xHiRes) - 1)])
-        for i in range(len(xHiRes) - 1):
-            axN.plot(xHiRes[i:i + 2], yHiRes[i:i + 2])
+    for rows in range(patchY):
+        for cols in range(patchX):
+            plotdataX = shiftsX[rows][cols].tolist()
+            plotdataY = shiftsY[rows][cols].tolist()
+            frames = len(plotdataX)
+            # Choose a color map, loop through the colors, and assign them to the color
+            # cycle. You need len(plotX)-1 colors, because you'll plot that many lines
+            # between pairs. In other words, your line is not cyclic, so there's
+            # no line from end to beginning
+            ax = aN[rows][cols]
+            ax.grid()
+            ax.tick_params(axis='x', labelsize=8)
+            ax.tick_params(axis='y', labelsize=8)
+            ax.set_color_cycle([cm(1. * i / (frames - 1))
+                                for i in range(frames - 1)])
+            for i in range(frames - 1):
+                ax.plot(plotdataX[i:i + 2], plotdataY[i:i + 2])
 
+    ax1 = fig.add_subplot(111, frameon=False)
+    ax1.set_title('Local patch motion (' + str(patchX) + 'x' + str(patchY) + ' patches)')
+    ax1.set_xlabel('Shift x (pixels)')
+    ax1.set_ylabel('Shift y (pixels)')
+    ax1.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
+    #fig.subplots_adjust(bottom=0.2)
+
+    # Add colorbar
+    Z = [[0, 0], [0, 0]]
+    CS3 = plt.contourf(Z, range(1, frames + 1), cmap=cm)
+    plt.clabel(CS3, fontsize=18)
+    fig.colorbar(CS3, orientation='horizontal')
+    plt.tight_layout()
+
+    plotter.figure = fig
     plotter.tightLayout()
 
     return plotter

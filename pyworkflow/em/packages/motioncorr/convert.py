@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import os
+import numpy as np
 from os.path import join, exists
 
 from pyworkflow.utils import Environ
@@ -90,11 +91,11 @@ def parseMovieAlignment(logFile):
 
     for line in f:
         l = line.strip()
-        if 'Add Frame #' in l:
+        if 'Shift of Frame #' in l:
             parts = l.split()
-            if first is None: # read the first frame number
-                first = int(parts[2][1:]) # take the id from #000 format
-            # take the id from the last two colums of the line
+            if first is None:  # read the first frame number
+                first = int(parts[3][1:])  # take the id from #000 format
+            # take the id from the last two columns of the line
             xshifts.append(float(parts[-2]))
             yshifts.append(float(parts[-1]))
     f.close()
@@ -103,7 +104,7 @@ def parseMovieAlignment(logFile):
 
 def parseMovieAlignment2(logFile):
     """ Get the first and last frames together with the shifts
-    between frames aligned. Motioncor2 new version
+    between frames aligned. Motioncor2 new version.
     """
     f = open(logFile)
     first = None
@@ -114,8 +115,8 @@ def parseMovieAlignment2(logFile):
         l = line.strip()
         if not '#' in l and len(l) > 0:
             parts = l.split()
-            if first is None: # read the first frame number
-                first = int(parts[0]) # take the id from first column
+            if first is None:  # read the first frame number
+                first = int(parts[0])  # take the id from first column
             # take the shifts from the last two columns of the line
             xshifts.append(float(parts[1]))
             yshifts.append(float(parts[2]))
@@ -124,4 +125,34 @@ def parseMovieAlignment2(logFile):
 
 
 def parseMovieAlignmentLocal(logFile):
-    pass
+    """ Get patch shifts relative to the first frame (for the plots).
+    Motioncor2
+    """
+    f = open(logFile)
+    xshifts = []
+    yshifts = []
+
+    for line in f:
+        l = line.strip()
+        if not '#' in l and len(l) > 0:
+            parts = l.split()
+            # take the raw shifts from the columns 4-5 of the line
+            xshifts.append(float(parts[3]))
+            yshifts.append(float(parts[4]))
+    f.close()
+    return xshifts, yshifts
+
+
+def convertShifts(meanX, meanY, patchX, patchY):
+    # split shift lists by patches
+    npatch = patchX * patchY
+    shiftsX = np.array_split(np.array(meanX), npatch)
+    shiftsY = np.array_split(np.array(meanY), npatch)
+
+    # convert to 3D array
+    arrX = np.array(shiftsX).reshape((patchY, patchX, len(shiftsX[0])))
+    arrY = np.array(shiftsY).reshape((patchY, patchX, len(shiftsY[0])))
+    arrXFlip = np.flipud(arrX)
+    arrYFlip = np.flipud(arrY)
+
+    return arrXFlip, arrYFlip
