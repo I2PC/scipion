@@ -63,9 +63,13 @@ class Acquisition(EMObject):
         # Spherical aberration in mm
         self._sphericalAberration = Float(kwargs.get('sphericalAberration', None))
         self._amplitudeContrast = Float(kwargs.get('amplitudeContrast', None))
+        self._doseInitial = Float(kwargs.get('doseInitial', 0))
+        self._dosePerFrame = Float(kwargs.get('dosePerFrame', None))
         
     def copyInfo(self, other):
-        self.copyAttributes(other, '_magnification', '_voltage', '_sphericalAberration', '_amplitudeContrast')
+        self.copyAttributes(other, '_magnification', '_voltage',
+                            '_sphericalAberration', '_amplitudeContrast',
+                            '_doseInitial', '_dosePerFrame')
         
     def getMagnification(self):
         return self._magnification.get()
@@ -89,7 +93,19 @@ class Acquisition(EMObject):
         return self._amplitudeContrast.get()
     
     def setAmplitudeContrast(self, value):
-        self._amplitudeContrast.set(value)        
+        self._amplitudeContrast.set(value)
+
+    def getDoseInitial(self):
+        return self._doseInitial.get()
+
+    def setDoseInitial(self, value):
+        self._doseInitial.set(value)
+
+    def getDosePerFrame(self):
+        return self._dosePerFrame.get()
+
+    def setDosePerFrame(self, value):
+        self._dosePerFrame.set(value)
 
     def __str__(self):
         return "\n    mag=%s\n    volt= %s\n    Cs=%s\n    Q0=%s\n\n"%(self._magnification.get(),
@@ -476,7 +492,8 @@ class Image(EMObject):
             dimStr = str(ImageDim(*dim))
         else:
             dimStr = 'No-Dim'
-        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate() or 99999.)
+        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr,
+                                        self.getSamplingRate() or 99999.)
     
     def getFiles(self):
         filePaths = set()
@@ -754,21 +771,31 @@ class SetOfImages(EMSet):
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         # Copy the acquistion from the set to images
-        if self.hasAcquisition(): # only override image acquisition if setofImages acquisition is not none
+        # only override image acquisition if setofImages acquisition is not none
+        if self.hasAcquisition():
             #TODO: image acquisition should not be overwritten
             if not image.hasAcquisition():
                 image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
-        if self.getSize() == 0: # only check this for first time append is called
-            if self._firstDim.isEmpty():
-                self._firstDim.set(image.getDim())
+        # only check this for first time append is called
+        if self.isEmpty():
+            self._setFirstDim(image)
+
         EMSet.append(self, image)
+
+    def _setFirstDim(self, image):
+        """ Store dimensions when the first image is found.
+        This function should be called only once, to avoid reading
+        dimension from image file. """
+        if self._firstDim.isEmpty():
+            self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
+        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                            '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)
         
     def getFiles(self):
@@ -847,8 +874,12 @@ class SetOfImages(EMSet):
 
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(),
                                                self.getSize(),
-                                               self._firstDim, sampling)
+                                               self._dimStr(), sampling)
         return s
+
+    def _dimStr(self):
+        """ Return the string representing the dimensions. """
+        return str(self._firstDim)
 
     def iterItems(self, orderBy='id', direction='ASC'):
         """ Redefine iteration to set the acquisition to images. """
@@ -1567,15 +1598,64 @@ class SetOfNormalModes(EMSet):
         self._pdbPointer.copy(other._pdbPointer, copyId=False)
 
 
+class FramesRange(CsvList):
+    """ Store first and last frames in a movie. The last element will be
+     the index in the stack of the first frame.
+    """
+    def __init__(self, firstFrame=1, lastFrame=0, firstFrameIndex=1):
+        """
+        Frames numbering always refer to the initial movies imported into
+        the project. Counting goes from 1 to the number of frames.
+
+        The underlying stack file could have all original frames or just
+        a subset of them, so we need to keep which is the index of the
+        first frame in the stack, again, the first image in a stack is 1
+        """
+        CsvList.__init__(self, pType=int)
+        self.set([firstFrame, lastFrame, firstFrameIndex])
+
+    def getFirstFrame(self):
+        return self[0]
+
+    def setFirstFrame(self, value):
+        self[0] = value
+
+    def getLastFrame(self):
+        return self[1]
+
+    def setLastFrame(self, value):
+        self[1] = value
+
+    def getRange(self):
+        """ Return the frames range. """
+        return self[0], self[1]
+
+    def getFirstFrameIndex(self):
+        return self[2]
+
+    def setFirstFrameIndex(self, value):
+        self[2] = value
+
+    def rangeStr(self):
+        return '[%d-%d]' % (self[0], self[1])
+
+    def __str__(self):
+        return '%s starts: %d' % (self.rangeStr(), self[2])
+
+
 class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
     def __init__(self, location=None, **kwargs):
         Micrograph.__init__(self, location, **kwargs)
+
+        # A movie could could have alignment information after some protocol
         self._alignment = None
+        self._framesRange = FramesRange()
 
     def isCompressed(self):
-        return self.getFileName().endswith('bz2') or self.getFileName().endswith('tbz')
+        fn = self.getFileName()
+        return fn.endswith('bz2') or fn.endswith('tbz')
         
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
@@ -1589,6 +1669,10 @@ class Movie(Micrograph):
     def getNumberOfFrames(self):
         """ Return the number of frames of this movie
         """
+        first, last, _ = self._framesRange
+        if last > 0:
+            return last - first + 1
+
         if not self.isCompressed():
             x, y, z, n = ImageHandler().getDimensions(self)
             if x is not None:
@@ -1608,8 +1692,14 @@ class Movie(Micrograph):
         and (3,4)
         """
         self._alignment = alignment
-    
-    
+
+    def getFramesRange(self):
+        return self._framesRange
+
+    def setFramesRange(self, value):
+        self._framesRange.set(value)
+
+
 class MovieAlignment(EMObject):
     """ Store the alignment between the different Movie frames.
     Also store the first and last frames used for alignment.
@@ -1622,8 +1712,10 @@ class MovieAlignment(EMObject):
         self._yshifts = CsvList(pType=float)
         self._xshifts.set(kwargs.get('xshifts', []))
         self._yshifts.set(kwargs.get('yshifts', []))
-        # This list contain the coordinate where you begin the crop (x, y), the width and height of the frames.
-        # The order is: x,y, width and height. For width and height, 0 means the entire frame.
+        # This list contain the coordinate where you begin the crop (x, y),
+        # the width and height of the frames.
+        # The order is: x,y, width and height.
+        # For width and height, 0 means the entire frame.
         self._roi = CsvList(pType=int) 
 
     def getRange(self):
@@ -1656,6 +1748,8 @@ class SetOfMovies(SetOfMicrographsBase):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
         self._darkFile = String()
+        # Store the frames range to avoid loading the items
+        self._firstFramesRange = FramesRange()
 
     def setGain(self, gain):
         self._gainFile.set(gain)
@@ -1668,6 +1762,30 @@ class SetOfMovies(SetOfMicrographsBase):
         
     def getDark(self):
         return self._darkFile.get()
+
+    def getFramesRange(self):
+        return self._firstFramesRange
+
+    def setFramesRange(self, value):
+        self._firstFramesRange.set(value)
+
+    def _setFirstDim(self, image):
+        if self._firstDim.isEmpty():
+            self._firstDim.set(image.getDim())
+            self._firstFramesRange.set(image.getFramesRange())
+            print "setting framesRange: ", self.getFramesRange()
+
+    def _dimStr(self):
+        """ Return the string representing the dimensions. """
+        if self._firstDim.isEmpty():
+            dimStr = 'No-Dim'
+        else:
+            x, y, z = self._firstDim
+            first, last, i = self._firstFramesRange
+            if last == 0:
+                last = z
+            dimStr = str(ImageDim(x, y, last - first + 1))
+        return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
 
 
 class MovieParticle(Particle):
