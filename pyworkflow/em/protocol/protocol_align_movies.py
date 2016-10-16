@@ -165,11 +165,8 @@ class ProtAlignMovies(ProtProcessMovies):
         self.debug('   streamMode: %s' % streamMode)
 
         if self._doGenerateOutputMovies():
-            # FIXME: Even if we save the movie or not, both are aligned
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            suffix = '_aligned' if saveMovie else '_original'
-            movieSet = self._loadOutputSet(SetOfMovies,
-                                           'movies_%s.sqlite' % suffix,
+            movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
             for movie in newDone:
@@ -204,7 +201,8 @@ class ProtAlignMovies(ProtProcessMovies):
 
             if (self.getAttributeValue('useMotioncor2', False) == True and
                 self.getAttributeValue('frameDose', 0.0) != 0.0):
-                micSet2 = self._loadOutputSet(SetOfMicrographs, 'micrographs_dose-weighted.sqlite')
+                micSet2 = self._loadOutputSet(SetOfMicrographs,
+                                              'micrographs_dose-weighted.sqlite')
 
                 for movie in newDone:
                     mic2 = micSet2.ITEM_TYPE()
@@ -292,7 +290,9 @@ class ProtAlignMovies(ProtProcessMovies):
         alignedMovie = movie.clone()
         n = movie.getNumberOfFrames()
         first, last = self._getFrameRange(n, 'align')
-
+        framesRange = alignedMovie.getFramesRange()
+        framesRange.setFirstFrame(first)
+        framesRange.setLastFrame(last)
         # Check if user selected to save movie, use the getAttributeValue
         # function for allow the protocol to not define this flag
         # and use False as default
@@ -306,22 +306,21 @@ class ProtAlignMovies(ProtProcessMovies):
             totalFrames = last - first + 1
             xshifts = [0] * totalFrames
             yshifts = xshifts
-            # If we save the movies, we need to modify which are
-            # first and last frames if only a subset of frames have
-            # been used to align
-            first = 1
-            last = totalFrames
+            # If we save the movies, we need to modify which are the index
+            # of the first frame in the stack, now is 1 since the stack is
+            # written only with the given frames
+            firstFrameIndex = 1
         else:
             xshifts, yshifts = self._getMovieShifts(movie)
+            firstFrameIndex = first
 
+        framesRange.setFirstFrameIndex(firstFrameIndex)
 
         alignment = MovieAlignment(first=first, last=last,
                                    xshifts=xshifts, yshifts=yshifts)
-
         roiList = [self.getAttributeValue(s, 0) for s in
                    ['cropOffsetX', 'cropOffsetY', 'cropDimX', 'cropDimY']]
         alignment.setRoi(roiList)
-
         alignedMovie.setAlignment(alignment)
 
         return alignedMovie
