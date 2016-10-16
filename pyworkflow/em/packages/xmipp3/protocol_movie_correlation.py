@@ -22,12 +22,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Protocol wrapper around the xmipp correlation alignment for movie alignment
-"""
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -44,26 +41,34 @@ class XmippProtMovieCorr(ProtAlignMovies):
     OUTSIDE_WRAP = 0
     OUTSIDE_AVG = 1
     OUTSIDE_VALUE = 2
-    
+
+    INTERP_LINEAR = 0
+    INTERP_CUBIC = 1
+
+    # Map to xmipp interpolation values in command line
+    INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
+
     _label = 'correlation alignment'
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
 
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
 
-        form.addParam('splineOrder', params.IntParam, default=3,
+        form.addParam('splineOrder', params.EnumParam,
+                      default=self.INTERP_CUBIC, choices=['linear', 'cubic'],
                       expertLevel=cons.LEVEL_ADVANCED,
-                      label='B-spline order',
-                      help="1 for linear interpolation (faster but lower quality), "
-                           "3 for cubic interpolation (slower but more accurate).")
+                      label='Interpolation',
+                      help="linear interpolation (faster but lower quality), "
+                           "cubic interpolation (slower but more accurate).")
 
         form.addParam('maxFreq', params.FloatParam, default=4,
                        label='Filter at (A)',
-                       help="For the calculation of the shifts with Xmipp, micrographs are "
-                            "filtered (and downsized accordingly) to this resolution. "
-                            "Then shifts are calculated, and they are applied to the "
-                            "original frames without any filtering and downsampling.")
+                       help="For the calculation of the shifts with Xmipp, "
+                            "micrographs are filtered (and downsized accordingly)"
+                            " to this resolution. Then shifts are calculated, "
+                            "and they are applied to the original frames"
+                            " without any filtering and downsampling.")
 
         form.addParam('maxShift', params.IntParam, default=30,
                       expertLevel=cons.LEVEL_ADVANCED,
@@ -98,6 +103,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
         args += '-o %s ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--max_freq %f ' % self.maxFreq
+        args += '--Bspline %d ' % self.INTERP_MAP[self.splineOrder.get()]
 
         if self.binFactor > 1:
             args += '--bin %f ' % self.binFactor
