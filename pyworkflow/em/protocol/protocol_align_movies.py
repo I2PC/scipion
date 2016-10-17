@@ -235,24 +235,37 @@ class ProtAlignMovies(ProtProcessMovies):
             errors.append("If you give cropDimX, you should also give cropDimY"
                           " and viceversa")
 
-        movie = self.inputMovies.get().getFirstItem()
-        # Close movies db because the getFirstItem open it
-        # we do not want to leave the file open
-        self.inputMovies.get().close()
-        frames = movie.getNumberOfFrames()
+        # movie = self.inputMovies.get().getFirstItem()
+        # # Close movies db because the getFirstItem open it
+        # # we do not want to leave the file open
+        # self.inputMovies.get().close()
+        # frames = movie.getNumberOfFrames()
+
+        firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
+        frames = lastFrame - firstFrame + 1
 
         if frames is not None:
             def _validateRange(prefix):
+                # Avoid validation when the range is not defined
+                if not hasattr(self, '%sFrame0' % prefix):
+                    return
+
                 f0, fN = self._getFrameRange(frames, prefix)
-                if fN > frames:
+                if fN < firstFrame or fN > lastFrame:
                     errors.append("Check the selected last frame to *%s*. "
-                                  "Last frame (%d) could not be greater than "
-                                  "the total number of frames. (%d)"
-                                  % (prefix.upper(), fN, frames))
-                if fN <= f0:
+                                  "Last frame (%d) should be in range: %s "
+                                  % (prefix.upper(), fN, (firstFrame,
+                                                          lastFrame)))
+                if f0 < firstFrame or f0 > lastFrame:
+                    errors.append("Check the selected first frame to *%s*. "
+                                  "First frame (%d) should be in range: %s "
+                                  % (prefix.upper(), f0, (firstFrame,
+                                                          lastFrame)))
+                if fN < f0:
                     errors.append("Check the selected frames range to *%s*. "
-                                  "Last frame should be greater than initial "
-                                  "frame. " % prefix.upper())
+                                  "Last frame (%d) should be greater or equal "
+                                  "than first frame (%d)"
+                                  % (prefix.upper(), fN, f0))
 
             _validateRange("align")
             _validateRange("sum")
