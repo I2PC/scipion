@@ -81,10 +81,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
                         help="The number of frames in each group at the "
                              "last step")
         group.addParam('useAlignment', params.BooleanParam, default=True,
-                       label="Use previous movie alignment to Sum frames?",
-                       help="If set Yes, the alignment information (if"
-                       " it exists) will take into account to align"
-                       " your movies.")
+                       label="Use previous movie alignment to SUM frames?",
+                       help="Input movies could have alignment information from"
+                            "a previous protocol. If you select *Yes*, the "
+                            "previous alignment will be taken into account.")
         group.addParam('doComputePSD', params.BooleanParam, default=True,
                        label="Compute PSD (before/after)?",
                        help="If Yes, the protocol will compute for each movie "
