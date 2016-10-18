@@ -85,7 +85,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                       label='Downsampling factor',
                       help='Select a value greater than 1.0 to reduce the size '
                            'of micrographs before extracting the particles. '
-                           'If 1.0 es used, not downsample is applied. '
+                           'If 1.0 is used, no downsample is applied. '
                            'Non-integer downsample factors are possible. ')
 
         form.addParam('boxSize', IntParam, default=0,
