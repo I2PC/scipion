@@ -35,6 +35,7 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
+from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
@@ -43,6 +44,8 @@ from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2,
                      parseMovieAlignmentLocal, convertShifts)
 
+
+OBJCMD_MOVIE_ALIGNLOCAL = "Display local alignment plot"
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -274,12 +277,10 @@ class ProtMotionCorr(ProtAlignMovies):
             #    # Remove avg that was used only for computing PSD
             #    pwutils.cleanPath(aveMicFn)
 
-            #self._saveAlignmentPlots(movie)
+            self._saveAlignmentPlots(movie)
 
         except:
             print >> sys.stderr, program, " failed for movie %s" % movie.getName()
-
-        self._saveAlignmentPlots(movie)
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -333,7 +334,7 @@ class ProtMotionCorr(ProtAlignMovies):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
         else:
-            if not self.patchX and not self.patchY:
+            if self.patchX == 0 and self.patchY == 0:
                 return 'micrograph_%06d_0-Full.log' % movie.getObjId()
             else:
                 return 'micrograph_%06d_0-Patch-Full.log' % movie.getObjId()
@@ -384,15 +385,11 @@ class ProtMotionCorr(ProtAlignMovies):
         obj.plotGlobal = em.Image()
         obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
 
-        if os.path.exists(self._getPlotLocal(movie)):
-            obj.plotLocal = em.Image()
-            obj.plotLocal.setFileName(self._getPlotLocal(movie))
+        if self.useMotioncor2 and self.patchX != 0 and self.patchY != 0:
+            obj.plotLocal = em.Image(location=None)
 
     def _getPlotGlobal(self, movie):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
-
-    def _getPlotLocal(self, movie):
-        return self._getNameExt(movie, '_local_shifts', 'png', extra=True)
 
     def _getPsdCorr(self, movie):
         return self._getNameExt(movie, '_aligned_corrected', 'psd')
@@ -402,14 +399,6 @@ class ProtMotionCorr(ProtAlignMovies):
         shiftsX, shiftsY = self._getMovieShifts(movie)
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY)
         plotter.savefig(self._getPlotGlobal(movie))
-
-        if self.useMotioncor2 and self.patchX and self.patchY:
-            localShiftsX, localShiftsY = self._getLocalShifts(movie)
-            plotter2 = createLocalAlignmentPlot(localShiftsX,
-                                                localShiftsY,
-                                                self.patchX,
-                                                self.patchY)
-            plotter2.savefig(self._getPlotLocal(movie))
 
     def _isNewMotioncor2(self):
         return True if getVersion('MOTIONCOR2') != '03162016' else False
@@ -456,7 +445,29 @@ def createGlobalAlignmentPlot(meanX, meanY):
     return plotter
 
 
+def showLocalShiftsPlot(inputSet, itemId):
+    item = inputSet[itemId]
+    if item.hasAttribute('plotLocal'):  # FIXME: use ProtMotionCorr._getLocalShifts() function
+        # if self.useMotioncor2 and self.patchX != 0 and self.patchY != 0:
+        # localShiftsX, localShiftsY = self._getLocalShifts(movie)
+        # the values below are for testing
+        meanX, meanY = range(42), range(42)
+        from pyworkflow.object import Integer
+        patchX, patchY = Integer(2), Integer(3)
+
+        plotter = createLocalAlignmentPlot(meanX, meanY, patchX, patchY)
+        plotter.show()
+    else:
+        print "This movie does not have local alignment. "
+
+
+ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNLOCAL,
+                                    showLocalShiftsPlot)
+#FIXME: this opens two figures for some reason... First is empty
+
+
 def createLocalAlignmentPlot(meanX, meanY, patchX, patchY):
+
     patchX = patchX.get()
     patchY = patchY.get()
 
@@ -472,14 +483,14 @@ def createLocalAlignmentPlot(meanX, meanY, patchX, patchY):
             plotdataX = shiftsX[rows][cols].tolist()
             plotdataY = shiftsY[rows][cols].tolist()
             frames = len(plotdataX)
-            # Choose a color map, loop through the colors, and assign them to the color
-            # cycle. You need len(plotX)-1 colors, because you'll plot that many lines
-            # between pairs. In other words, your line is not cyclic, so there's
-            # no line from end to beginning
             ax = aN[rows][cols]
             ax.grid()
             ax.tick_params(axis='x', labelsize=8)
             ax.tick_params(axis='y', labelsize=8)
+            # Choose a color map, loop through the colors, and assign them to the color
+            # cycle. You need len(plotX)-1 colors, because you'll plot that many lines
+            # between pairs. In other words, your line is not cyclic, so there's
+            # no line from end to beginning
             ax.set_color_cycle([cm(1. * i / (frames - 1))
                                 for i in range(frames - 1)])
             for i in range(frames - 1):
@@ -490,16 +501,17 @@ def createLocalAlignmentPlot(meanX, meanY, patchX, patchY):
     ax1.set_xlabel('Shift x (pixels)')
     ax1.set_ylabel('Shift y (pixels)')
     ax1.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
-    #fig.subplots_adjust(bottom=0.2)
+    fig.subplots_adjust(right=0.85)  # FIXME: does not work!!!
 
-    # Add colorbar
-    Z = [[0, 0], [0, 0]]
-    CS3 = plt.contourf(Z, range(1, frames + 1), cmap=cm)
-    plt.clabel(CS3, fontsize=18)
-    fig.colorbar(CS3, orientation='horizontal')
-    plt.tight_layout()
+    # Add colorbar with frame numbers
+    ax99 = fig.add_axes([0.9, 0.15, 0.03, 0.7])
+    import matplotlib as mpl
+    norm = mpl.colors.Normalize(vmin=1, vmax=frames)
+    cb = mpl.colorbar.ColorbarBase(ax99, cmap=cm,
+                                   boundaries=range(1, frames + 1),
+                                   norm=norm,
+                                   orientation='vertical')
+    cb.set_label('Frame number')
 
     plotter.figure = fig
-    plotter.tightLayout()
-
     return plotter

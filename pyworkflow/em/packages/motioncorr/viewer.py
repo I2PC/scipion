@@ -27,7 +27,8 @@
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 import pyworkflow.em.showj as showj
 
-from protocol_motioncorr import ProtMotionCorr
+from protocol_motioncorr import (ProtMotionCorr,
+                                 OBJCMD_MOVIE_ALIGNLOCAL)
 
 
 class ProtMotioncorrViewer(Viewer):
@@ -39,14 +40,14 @@ class ProtMotioncorrViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         views = []
 
-        plotLabels = ('psdCorr._filename plotGlobal._filename '
-                      'plotLocal._filename')
+        plotLabels = 'psdCorr._filename plotGlobal._filename'
         labels = plotLabels + ' _filename '
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
                       showj.RENDER: plotLabels,
-                      showj.ZOOM: 10
+                      showj.ZOOM: 10,
+                      showj.OBJCMDS: "'%s'" % OBJCMD_MOVIE_ALIGNLOCAL
                       }
 
         if obj.hasAttribute('outputMicrographs'):
