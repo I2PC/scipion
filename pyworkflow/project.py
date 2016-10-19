@@ -999,9 +999,15 @@ class Project(object):
                       "is None: ", pid)
             else:
                 cObj = self.getObject(rel['object_child_id'])
-                if cObj:
-                    cExt = rel['object_child_extended']
-                    cp = pwobj.Pointer(cObj, extended=cExt)
+                cExt = rel['object_child_extended']
+
+                if cObj is not None:
+                    if cObj.isPointer():
+                        cp = cObj
+                        if cExt:
+                            cp.setExtended(cExt)
+                    else:
+                        cp = pwobj.Pointer(cObj, extended=cExt)
                     child = g.getNode(cp.getUniqueId())
 
                     if not child:

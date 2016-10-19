@@ -28,8 +28,7 @@
 import os
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from protocol_structure_mapping import XmippProtStructureMapping
-import pylab
-import matplotlib.pyplot as plt
+from pyworkflow.gui.plotter import plt
 import numpy as np
 from mpl_toolkits.mplot3d import proj3d
 import pyworkflow.protocol.params as params
@@ -173,7 +172,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                
         else: 
                         
-            fig = pylab.figure()
+            fig = plt.figure()
             ax = fig.add_subplot(111, projection = '3d')
            
             ax.scatter(data3N[:, 0], data3N[:, 1], data3N[:, 2], marker = 'o', c='g')
@@ -207,7 +206,7 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                     label.update_positions(fig.canvas.renderer)
                 fig.canvas.draw()
             fig.canvas.mpl_connect('button_release_event', update_position)
-            pylab.show()
+            plt.show()
         
         return plot
         
