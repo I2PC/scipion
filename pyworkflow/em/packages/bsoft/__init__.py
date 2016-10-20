@@ -42,4 +42,6 @@ from wizard import BsoftFilterParticlesWizard
 from convert import getEnviron, getVersion
 _environ = getEnviron()
 
-from viewer import BsoftViewer
+# Since bsoft is not installed by default,
+# remove for now the viewer
+#from viewer import BsoftViewer

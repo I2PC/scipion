@@ -67,15 +67,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
-        form.addParam('cleanMovieData', BooleanParam, default=True,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Clean movie data?',
-                      help='Movies take a lot of disk space.\n'
-                           'So, by default, all protocols that work on\n'
-                           'movies will erase the each movie folder after\n'
-                           'finishing. Results files should be copied in \n'
-                           'the "createOutputStep" function.\n'
-                           'If set to *No*, the folder will not be deleted.')
 
     #--------------------------- INSERT steps functions ---------------------
     def _insertAllSteps(self):
@@ -198,7 +189,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         if hasAlignment:
             movie.setAlignment(MovieAlignment())
 
-        movie.setAttributesFromDict(movieDict, setBasic=True)
+        movie.setAttributesFromDict(movieDict, setBasic=True,
+                                    ignoreMissing=True)
 
         movieFolder = self._getOutputMovieFolder(movie)
         movieFn = movie.getFileName()
@@ -269,13 +261,13 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
             self._processMovie(movie)
 
-            if self.cleanMovieData:
+            if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+                self.info('Clean movie data DISABLED. '
+                          'Movie folder will remain in disk!!!')
+            else:
                 self.info("Erasing.....movieFolder: %s" % movieFolder)
                 os.system('rm -rf %s' % movieFolder)
                 # cleanPath(movieFolder)
-            else:
-                self.info('Clean movie data DISABLED. '
-                          'Movie folder will remain in disk!!!')
 
         # Mark this movie as finished
         open(self._getMovieDone(movie), 'w').close()

@@ -198,6 +198,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         newCTFs = []
         ctfDict = {}
         ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
+        ctfSet.setMicrographs(self.inputMicrographs.get())
 
         for ctf in ctfSet:
             ctfDict[ctf.getObjId()] = True
@@ -238,8 +239,15 @@ class ProtCTFMicrographs(ProtMicrographs):
 
         endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
         if newCTFs:
+            # Check if it is the first time we are registering CTF to
+            # create the CTF_RELATION only once
+            firstTime = not self.hasAttribute('outputCTF')
+            ctfSet.setMicrographs(self.inputMics)
+            self._computeDefocusRange(ctfSet)
             streamMode = ctfSet.STREAM_CLOSED if endCTFs else ctfSet.STREAM_OPEN
             self._updateOutputSet('outputCTF', ctfSet, streamMode)
+            if firstTime:  # define relation just once
+                self._defineCtfRelation(self.inputMics, ctfSet)
         else:
             ctfSet.close()
 

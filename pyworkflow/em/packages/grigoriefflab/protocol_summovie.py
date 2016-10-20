@@ -50,15 +50,20 @@ class ProtSummovie(ProtAlignMovies):
         form.addHidden('binFactor', params.FloatParam, default=1.)
 
         group = form.addGroup('Average')
-        line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of '
-                                  'each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0,
-                      label='beginning')
+        line = group.addLine('Frames to SUM',
+                    help='Frames range to SUM on each movie. The '
+                         'first frame is 1. If you set 0 in the final '
+                         'frame to sum, it means that you will sum '
+                         'until the last frame of the movie.')
+        line = group.addLine('Frames to SUM',
+                            help='Frames range to SUM on each movie. The '
+                                 'first frame is 1. If you set 0 in the final '
+                                 'frame to sum, it means that you will sum '
+                                 'until the last frame of the movie.')
+        line.addParam('sumFrame0', params.IntParam, default=1,
+                      label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
-                      label='end')
-        
+                      label='to')
         group.addParam('useAlignment', params.BooleanParam, default=True,
               label="Use movie alignment to Sum frames?")
 
@@ -94,36 +99,41 @@ class ProtSummovie(ProtAlignMovies):
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
-        self._createLink(movie)
-        numberOfFrames = movie.getNumberOfFrames()
-        s0, sN = self._getFrameRange(numberOfFrames, 'sum')
-
-        self._writeMovieAlignment(movie, s0, sN)
-        self._argsSummovie()
-
-        params = {'movieFn' : self._getMovieFn(movie),
-                  'numberOfFrames' : numberOfFrames,
-                  'micFn' : self._getMicFn(movie),
-                  'initFrame' : s0,
-                  'finalFrame' : sN,
-                  'shiftsFn' : self._getShiftsFn(movie),
-                  'samplingRate' : movie.getSamplingRate(),
-                  'voltage' : movie.getAcquisition().getVoltage(),
-                  'frcFn' : self._getFrcFn(movie),
-                  'exposurePerFrame' : self.exposurePerFrame.get(),
-                  'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
-                  'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
-                  }
-
         try:
+            self._createLink(movie)
+            numberOfFrames = movie.getNumberOfFrames()
+
+            if numberOfFrames is None:
+                raise Exception("Could not read number of frames.")
+
+            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
+
+            self._writeMovieAlignment(movie, s0, sN)
+            self._argsSummovie()
+
+            params = {'movieFn' : self._getMovieFn(movie),
+                      'numberOfFrames' : numberOfFrames,
+                      'micFn' : self._getMicFn(movie),
+                      'initFrame' : s0,
+                      'finalFrame' : sN,
+                      'shiftsFn' : self._getShiftsFn(movie),
+                      'samplingRate' : movie.getSamplingRate(),
+                      'voltage' : movie.getAcquisition().getVoltage(),
+                      'frcFn' : self._getFrcFn(movie),
+                      'exposurePerFrame' : self.exposurePerFrame.get(),
+                      'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
+                      'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
+                      }
+
             self.runJob(self._program, self._args % params)
             self._storeSummary(movie)
             if self.cleanInputMovies:
                 pwutils.cleanPath(movie._originalFileName.get())
                 print ("Movie %s erased" % movie._originalFileName.get())
                 
-        except:
-            print("ERROR: Movie %s failed\n" % movie.getFileName())
+        except Exception as e:
+            print("ERROR: Movie %s failed.\n"
+                  "       Message: %s\n" % (movie.getFileName(), e))
     
     #--------------------------- INFO functions --------------------------------
     def _citations(self):

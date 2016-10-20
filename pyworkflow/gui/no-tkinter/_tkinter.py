@@ -1,4 +1,3 @@
-# coding: latin-1
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -21,32 +20,21 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-List of related references in Bibtex format for dosefgpu programs
-developed by Xueming Li at Yifan Cheng lab.
-"""
-
-_bibtexStr = """
-
-@article{Li2013,
-  title="Electron counting and beam-induced motion correction enable near-atomic-resolution single-particle cryo-EM",
-  author="Li, Xueming and Mooney, Paul and Zheng, Shawn and Booth, Christopher R and Braunfeld, Michael B and Gubbens, Sander and Agard, David A and Cheng, Yifan",
-  journal="Nature methods",
-  volume="10",
-  number="6",
-  pages="584-590",
-  year="2013",
-  publisher="Nature Publishing Group",
-  doi = "http://dx.doi.org/10.1038/nmeth.2727"
-}
 
 """
+ This file is just a minimum mockup to avoid _tkinter.so import problems
+ when there is not access to graphical libraries.
+"""
 
+class TclError():
+    pass
 
+TK_VERSION = 0
+TCL_VERSION = 0
+READABLE = 0
+WRITABLE = 0
 
-from pyworkflow.utils import parseBibTex
-
-_bibtex = parseBibTex(_bibtexStr)  
+EXCEPTION = 0

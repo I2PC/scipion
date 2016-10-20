@@ -37,6 +37,7 @@ import datetime as dt
 
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
+import pyworkflow.hosts as pwhosts
 import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
@@ -173,6 +174,8 @@ class Project(object):
         """
         classesDict = pwobj.Dict(default=pwprot.LegacyProtocol)
         classesDict.update(pwobj.__dict__)
+        classesDict.update(pwconfig.__dict__)
+        classesDict.update(pwhosts.__dict__)
         classesDict.update(em.getProtocols())
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
@@ -996,9 +999,15 @@ class Project(object):
                       "is None: ", pid)
             else:
                 cObj = self.getObject(rel['object_child_id'])
-                if cObj:
-                    cExt = rel['object_child_extended']
-                    cp = pwobj.Pointer(cObj, extended=cExt)
+                cExt = rel['object_child_extended']
+
+                if cObj is not None:
+                    if cObj.isPointer():
+                        cp = cObj
+                        if cExt:
+                            cp.setExtended(cExt)
+                    else:
+                        cp = pwobj.Pointer(cObj, extended=cExt)
                     child = g.getNode(cp.getUniqueId())
 
                     if not child:

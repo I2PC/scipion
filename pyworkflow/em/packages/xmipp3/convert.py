@@ -246,19 +246,17 @@ def _rowToObjectFunc(obj):
     """ From a given object, return the function rowTo{OBJECT_CLASS_NAME}. """
     return globals()['rowTo' + obj.getClassName()]
 
+
 def _readSetFunc(obj):
     """ From a given object, return the function read{OBJECT_CLASS_NAME}. """
     return globals()['read' + obj.getClassName()]
-    
+
+
 def locationToXmipp(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Xmipp.
     """
-    #TODO: Maybe we need to add more logic dependent of the format
-    if index != NO_INDEX:
-        return "%06d@%s" % (index, filename)
-    
-    return filename
+    return ImageHandler.locationToXmipp((index, filename))
 
 
 def fixVolumeFileName(image):
@@ -266,12 +264,8 @@ def fixVolumeFileName(image):
     because for mrc format is not possible to distinguish 
     between 3D volumes and 2D stacks. 
     """
-    fn = image.getFileName()
-    if isinstance(image, Volume):
-        if fn.endswith('.mrc') or fn.endswith('.map'):
-            fn += ':mrc'
-        
-    return fn
+    return ImageHandler.fixXmippVolumeFileName(image)
+
 
 def getMovieFileName(movie):
     """ Add the :mrcs or :ems extensions to movie files to be
@@ -285,11 +279,9 @@ def getMovieFileName(movie):
 
     return fn
 
+
 def getImageLocation(image):
-    xmippFn = locationToXmipp(image.getIndex(),
-                              fixVolumeFileName(image))
-        
-    return xmippFn
+    return ImageHandler.locationToXmipp(image)
 
 
 def xmippToLocation(xmippFilename):

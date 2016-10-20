@@ -30,13 +30,11 @@
 #define MAX_NEIGHBORS		50
 #define EXTERNAL_FACE       0
 
-
 /*****************************************************************************
 * Variables declaration
 *****************************************************************************/
 struct Node_T 					root_Node;
 struct Graph_T  				graph;
-
 
 /*****************************************************************************
 * Private functions declaration
@@ -295,7 +293,6 @@ void 	finalize_Delaunay(struct Delaunay_T *delaunay)
 void	incremental_Delaunay(struct Delaunay_T *delaunay)
 {
     int     point_Index=0;                  // Points loop counter.
-
 
 #ifdef DELAUNAY_STATISTICS
     // Initialize graph statistics (first 2 points are located in first triangle).
@@ -2181,32 +2178,3 @@ void	check_Edge( struct DCEL_T *dcel, struct Graph_T *graph, int edge_ID)
 		flip_Edges_Dcel( dcel, graph, edge_ID);
 	}
 }
-
-
-/***************************************************************************
-* Name: 	print_Graph_Statistics
-* IN:		fileName		output file name.
-* OUT:		N/A
-* IN/OUT	N/A
-* RETURN:	N/A
-* Description: print number of flipped edges
-***************************************************************************/
-void print_Delaunay_Statistics( char *fileName)
-{
-	FILE 			*fd=NULL;						// File descriptor.
-
-	// Open output file.
-	if ((fd = fopen( fileName, "w")) == NULL)
-	{
-		printf("Function print_Graph_Statistics.\nError opening output file: %s\n", fileName);
-	}
-	else
-	{
-		// Print # flipped edges.
-		// fprintf( fd,"Flipped %llu of %llu\n", delaunay_Stat.nFlipped, delaunay_Stat.nEdges/2);
-
-		// Close file.
-		fclose(fd);
-	}
-}
-

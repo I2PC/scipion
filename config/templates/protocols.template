@@ -19,10 +19,14 @@ Protocols SPA = [
 		    {"tag": "protocol", "value": "ProtImportMicrographsTiltPairs", "text": "Import micrograph pairs"},
             {"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}]}]},
     {"tag": "section", "text": "Micrographs", "children": [
-        {"tag": "protocol", "value": "ProtMovieAlignment",             "text": "default"},
-        {"tag": "protocol", "value": "ProtUnblur", "text": "default"},
-        {"tag": "protocol", "value": "ProtSummovie", "text": "default"},
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
+        {"tag": "protocol_group", "text": "Movie Alignment", "openItem": "False", "children": [
+            {"tag": "protocol", "value": "ProtMotionCorr",   "text": "default"},
+            {"tag": "protocol", "value": "XmippProtMovieCorr",   "text": "default"},
+            {"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
+            {"tag": "protocol", "value": "ProtUnblur",   "text": "default"},
+            {"tag": "protocol", "value": "ProtSummovie", "text": "default"}
+            ]},
         {"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtCTFFind",   "text": "default"},
             {"tag": "protocol", "value": "ProtGctf",   "text": "default"},
@@ -30,7 +34,8 @@ Protocols SPA = [
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"}
-            ]}]}]},
+            ]}]}
+    ]},
     {"tag": "section", "text": "Particles", "children": [
         {"tag": "protocol_group", "text": "Picking", "openItem": "False", "children": [
             {"tag": "protocol", "value": "EmanProtBoxing",   "text": "default"},

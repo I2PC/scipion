@@ -26,7 +26,9 @@ TEST_F( FileNameTest, getBlockName)
     String empty = "";
     String a = "a";
     FileName fn;
+    ASSERT_TRUE(fn.isEmpty());
     fn = "abc.xmd";
+    ASSERT_FALSE(fn.isEmpty());
     ASSERT_EQ(fn.getBlockName(), empty);
     fn = "@abc.xmd";
     ASSERT_EQ(fn.getBlockName(), empty);

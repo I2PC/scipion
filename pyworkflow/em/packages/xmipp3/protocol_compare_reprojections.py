@@ -25,7 +25,7 @@
 # **************************************************************************
 
 from math import floor
-from os.path import exists
+import os
 
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -134,7 +134,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
-        self.newAssignmentPerformed = exists(self._getExtraPath("angles.xmd"))
+        self.newAssignmentPerformed = os.path.exists(self._getExtraPath("angles.xmd"))
         self.samplingRate = self.inputSet.get().getSamplingRate()
         if isinstance(imgSet, SetOfClasses2D):
             outputSet = self._createSetOfClasses2D(imgSet)

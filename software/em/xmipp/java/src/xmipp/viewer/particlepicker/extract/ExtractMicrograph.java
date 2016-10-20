@@ -3,6 +3,7 @@ package xmipp.viewer.particlepicker.extract;
 import java.util.ArrayList;
 import java.util.List;
 
+import xmipp.jni.Particle;
 import xmipp.viewer.particlepicker.Micrograph;
 import xmipp.viewer.particlepicker.ParticlePicker;
 import xmipp.viewer.particlepicker.PickerParticle;
@@ -24,9 +25,13 @@ public class ExtractMicrograph extends Micrograph
 		return !particles.isEmpty();
 	}
 
-	
+    @Override
+    public List<? extends PickerParticle> getParticleList() {
+        return getParticles();
+    }
 
-	public void addParticle(ExtractParticle p)
+
+    public void addParticle(ExtractParticle p)
 	{
 		particles.add(p);
 
