@@ -91,10 +91,6 @@ class XmippViewer(Viewer):
                 XmippProtRotSpectra, 
                 XmippProtScreenParticles,
                 XmippProtCTFMicrographs, 
-<<<<<<< HEAD
-                XmippProtOFAlignment,
-=======
->>>>>>> devel-fixes
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair,
                 XmippProtMultiRefAlignability
