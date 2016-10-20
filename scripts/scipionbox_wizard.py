@@ -31,6 +31,7 @@ import re
 import Tkinter as tk
 import tkFont
 import ttk
+import argparse
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
@@ -55,14 +56,17 @@ SKIP_FRAMES = "Skip frames"
 
 # Protocol's contants
 MOTIONCORR = "MotionCorr"
+MOTIONCORR2 = "Use MotionCor2"
 OPTICAL_FLOW = "Optical Flow"
 SUMMOVIE = "Summovie (dose compensation)"
 CTFFIND4 = "Ctffind4"
+GCTF = "GCtf"
 EMAIL_NOTIFICATION = "Email notification"
 HTML_REPORT = "HTML Report"
 
 # Some related environment variables
 SCIPIONBOX_DATA_FOLDER = 'SCIPIONBOX_DATA_FOLDER'
+SCIPIONBOX_USER_NAME = 'SCIPIONBOX_USER_NAME'
 SCIPIONBOX_MICROSCOPE = 'SCIPIONBOX_MICROSCOPE'
 SCIPIONBOX_PATTERN = 'SCIPIONBOX_PATTERN'
 SCIPIONBOX_PUBLISH = 'SCIPIONBOX_PUBLISH'
@@ -70,11 +74,27 @@ SCIPIONBOX_SMTP_SERVER = 'SCIPIONBOX_SMTP_SERVER'
 SCIPIONBOX_SMTP_FROM = 'SCIPIONBOX_SMTP_FROM'
 SCIPIONBOX_SMTP_TO = 'SCIPIONBOX_SMTP_TO'
 
+# More variables to switch on/off default values
+SCIPIONBOX_EMAIL_ON = pwutils.envVarOn("SCIPIONBOX_EMAIL_ON")
+SCIPIONBOX_HTML_ON = pwutils.envVarOn("SCIPIONBOX_HTML_ON")
+
+SCIPIONBOX_MOTIONCORR_ON = pwutils.envVarOn("SCIPIONBOX_MOTIONCORR_ON")
+SCIPIONBOX_MOTIONCORR2_ON = pwutils.envVarOn("SCIPIONBOX_MOTIONCORR2_ON")
+SCIPIONBOX_OF_ON = pwutils.envVarOn("SCIPIONBOX_OF_ON")
+SCIPIONBOX_SUMMOVIE_ON = pwutils.envVarOn("SCIPIONBOX_SUMMOVIE_ON")
+SCIPIONBOX_CTFFIND4_ON = pwutils.envVarOn("SCIPIONBOX_CTFFIND4_ON")
+SCIPIONBOX_GCTF_ON = pwutils.envVarOn("SCIPIONBOX_GCTF_ON")
+
+# Create grids folders?
+SCIPIONBOX_GRIDS_ON = pwutils.envVarOn("SCIPIONBOX_GRIDS_ON")
+
 
 class BoxWizardWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
 
-    def __init__(self, **kwargs):
+    def __init__(self, args, **kwargs):
+        pwutils.prettyDict(args)
+
         try:
             title = '%s (%s on %s)' % (Message.LABEL_PROJECTS,
                                        pwutils.getLocalUserName(),
@@ -85,6 +105,7 @@ class BoxWizardWindow(ProjectBaseWindow):
         settings = ProjectSettings()
         self.generalCfg = settings.getConfig()
 
+        self.args = args
         ProjectBaseWindow.__init__(self, title, minsize=(400, 550), **kwargs)
         self.viewFuncs = {VIEW_WIZARD: BoxWizardView}
         self.manager = Manager()
@@ -119,8 +140,10 @@ class BoxWizardView(tk.Frame):
         headerFrame = tk.Frame(self, bg='white')
         headerFrame.grid(row=0, column=0, sticky='new')
         headerText = "Create New Session"
-        if SCIPIONBOX_MICROSCOPE in os.environ:
-            headerText += "  %s" % os.environ[SCIPIONBOX_MICROSCOPE]
+        microscope = self._getInput(SCIPIONBOX_MICROSCOPE)
+
+        if microscope:
+            headerText += "  %s" % microscope
         headerText += "  %s" % pwutils.prettyTime(dateFormat='%Y-%m-%d')
 
         label = tk.Label(headerFrame, text=headerText,
@@ -173,19 +196,19 @@ class BoxWizardView(tk.Frame):
                 self.vars[t] = var
                 entry.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
 
-
-        def _addCheckPair(t, r, lf):
+        def _addCheckPair(t, r, lf, col=1, on=True):
             var = tk.IntVar()
-            var.set(1)
+            var.set(1 if on else 0)
             cb = tk.Checkbutton(lf, text=t, font=self.bigFont, bg='white',
                                 variable=var)
             self.vars[t] = var
-            cb.grid(row=r, column=1, padx=5, sticky='nw')
+            cb.grid(row=r, column=col, padx=5, sticky='nw')
 
         _addPair(DATA_FOLDER, 0, labelFrame)
-        defaultDataFolder = os.environ.get('SCIPIONBOX_DATA_FOLDER', '')
+        defaultDataFolder = self._getInput(SCIPIONBOX_DATA_FOLDER)
         self._setValue(DATA_FOLDER, defaultDataFolder)
         _addPair(USER_NAME, 1, labelFrame, traceCallback=self._onInputChange)
+        self._setValue(USER_NAME, self._getInput(SCIPIONBOX_USER_NAME))
         _addPair(SAMPLE_NAME, 2, labelFrame, traceCallback=self._onInputChange)
         _addPair(PROJECT_NAME, 3, labelFrame)
 
@@ -201,17 +224,31 @@ class BoxWizardView(tk.Frame):
 
         _addPair(SKIP_FRAMES, 0, labelFrame2)
         _addPair("Protocols", 1, labelFrame2, entry=False)
-        _addCheckPair(MOTIONCORR, 1, labelFrame2)
-        _addCheckPair(OPTICAL_FLOW, 2, labelFrame2)
-        _addCheckPair(SUMMOVIE, 3, labelFrame2)
-        _addCheckPair(CTFFIND4, 4, labelFrame2)
+        _addCheckPair(MOTIONCORR, 1, labelFrame2,
+                      on=SCIPIONBOX_MOTIONCORR_ON)
+        _addCheckPair(MOTIONCORR2, 1, labelFrame2, col=2,
+                      on=SCIPIONBOX_MOTIONCORR2_ON)
+        _addCheckPair(OPTICAL_FLOW, 2, labelFrame2,
+                      on=SCIPIONBOX_OF_ON)
+        _addCheckPair(SUMMOVIE, 3, labelFrame2,
+                      on=SCIPIONBOX_SUMMOVIE_ON)
+        _addCheckPair(CTFFIND4, 4, labelFrame2,
+                      on=SCIPIONBOX_CTFFIND4_ON)
+        _addCheckPair(GCTF, 4, labelFrame2, col=2,
+                      on=SCIPIONBOX_GCTF_ON)
         _addPair("Monitors", 5, labelFrame2, entry=False)
-        _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2)
-        _addCheckPair(HTML_REPORT, 6, labelFrame2)
+        _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2,
+                      on=SCIPIONBOX_EMAIL_ON)
+        _addCheckPair(HTML_REPORT, 5, labelFrame2, col=2,
+                      on=SCIPIONBOX_HTML_ON)
 
         frame.columnconfigure(0, weight=1)
         #frame.rowconfigure(0, weight=1)
         #frame.rowconfigure(1, weight=1)
+
+    def _getInput(self, key, default=''):
+        # args are stored in parent, i.e., the parent windows
+        return self.windows.args.get(key, os.environ.get(key, default))
 
     def _getVar(self, varKey):
         return self.vars[varKey]
@@ -226,7 +263,7 @@ class BoxWizardView(tk.Frame):
         errors = []
 
         # Check the Data folder exists
-        dataFolder = self._getValue(DATA_FOLDER)
+        dataFolder = pwutils.expandPattern(self._getValue(DATA_FOLDER))
         if not os.path.exists(pwutils.expandPattern(dataFolder)):
             errors.append("Folder '%s' does not exists" % dataFolder)
 
@@ -248,7 +285,8 @@ class BoxWizardView(tk.Frame):
                 errors.append("Project path '%s' already exists." % projPath)
 
         if not errors:
-            if not (self._getValue(MOTIONCORR) or self._getValue(OPTICAL_FLOW)):
+            if not (self._getValue(MOTIONCORR) or self._getValue(MOTIONCORR2)
+                    or self._getValue(OPTICAL_FLOW)):
                 errors.append("You should use at least one alignment method."
                               "(%s or %s)" % (MOTIONCORR, OPTICAL_FLOW))
 
@@ -269,10 +307,11 @@ class BoxWizardView(tk.Frame):
 
         _createPath(projPath)
 
-        for i in range(12):
-            gridFolder = os.path.join(projPath, 'GRID_%02d' % (i+1))
-            _createPath(os.path.join(gridFolder, 'ATLAS'))
-            _createPath(os.path.join(gridFolder, 'DATA'))
+        if SCIPIONBOX_GRIDS_ON:
+            for i in range(12):
+                gridFolder = os.path.join(projPath, 'GRID_%02d' % (i+1))
+                _createPath(os.path.join(gridFolder, 'ATLAS'))
+                _createPath(os.path.join(gridFolder, 'DATA'))
 
         _createPath(scipionProjPath)
 
@@ -316,10 +355,12 @@ class BoxWizardView(tk.Frame):
 
         _saveProtocol(protImport, movies=False)
 
-        useMC = self._getValue(MOTIONCORR)
+        useMC2 = self._getValue(MOTIONCORR2)
+        useMC = self._getValue(MOTIONCORR) or useMC2
         useOF = self._getValue(OPTICAL_FLOW)
         useSM = self._getValue(SUMMOVIE)
         useCTF = self._getValue(CTFFIND4)
+        useGCTF = self._getValue(GCTF)
 
         kwargs = {}
         frames = self._getValue(SKIP_FRAMES).split()
@@ -332,6 +373,7 @@ class BoxWizardView(tk.Frame):
             from pyworkflow.em.packages.motioncorr import ProtMotionCorr
             protMC = project.newProtocol(ProtMotionCorr,
                                          objLabel='Motioncorr',
+                                         useMotioncor2=useMC2,
                                          **kwargs)
             _saveProtocol(protMC)
 
@@ -360,14 +402,25 @@ class BoxWizardView(tk.Frame):
                                          **kwargs)
             _saveProtocol(protSM)
 
+        lastBeforeCTF = self.lastProt
+
         if useCTF:
             from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
             protCTF = project.newProtocol(ProtCTFFind,
                                           objLabel='Ctffind',
                                           numberOfThreads=1)
-            protCTF.inputMicrographs.set(self.lastProt)
+            protCTF.inputMicrographs.set(lastBeforeCTF)
             protCTF.inputMicrographs.setExtended('outputMicrographs')
             _saveProtocol(protCTF, movies=False)
+
+        if useGCTF:
+            from pyworkflow.em.packages.gctf import ProtGctf
+            protGCTF = project.newProtocol(ProtGctf,
+                                          objLabel='Gctf')
+            protGCTF.inputMicrographs.set(lastBeforeCTF)
+            protGCTF.inputMicrographs.setExtended('outputMicrographs')
+            _saveProtocol(protGCTF, movies=False)
+
 
         project.saveProtocol(protMonitor)
 
@@ -384,11 +437,31 @@ class BoxWizardView(tk.Frame):
         value = self._getValue(varKey)
 
     def _onInputChange(self, *args):
+        # Quick and dirty trick to skip this function first time
+        if SAMPLE_NAME not in self.vars:
+            return
+
         self._setValue(PROJECT_NAME, self._getProjectName())
 
 
 
 
 if __name__ == "__main__":
-    wizWindow = BoxWizardWindow()
+    parser = argparse.ArgumentParser(
+        description="Setup a session ")
+    add = parser.add_argument  # shortcut
+
+    add('--data_folder', default='',
+        help="Set a data folder where the new session data will be stored. ")
+    add('--user', default='',
+        help="Provide a user for the session.")
+    add('--microscope', default='',
+        help="Provide a microscope name for the session.")
+
+    inputArgs = parser.parse_args()
+    wizWindow = BoxWizardWindow(
+        args={SCIPIONBOX_DATA_FOLDER: inputArgs.data_folder,
+              SCIPIONBOX_USER_NAME: inputArgs.user,
+              SCIPIONBOX_MICROSCOPE: inputArgs.microscope
+              })
     wizWindow.show()
