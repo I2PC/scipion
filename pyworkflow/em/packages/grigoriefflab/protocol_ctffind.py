@@ -210,7 +210,10 @@ class ProtCTFFind(em.ProtCTFMicrographs):
 
     #--------------------------- UTILS functions ---------------------------------------------------
     def _isNewCtffind4(self):
-        return True if getVersion('CTFFIND4') != '4.0.15' and self.useCtffind4 else False
+        if self.useCtffind4 and getVersion('CTFFIND4') != '4.0.15':
+            return True
+        else:
+            return False
 
     def _prepareCommand(self):
         sampling = self.inputMics.getSamplingRate() * self.ctfDownFactor.get()
@@ -249,7 +252,6 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         size, _, _, _ = imgh.getDimensions(imgPsd)
 
         mic = ctfModel.getMicrograph()
-        micDir = self._getMicrographDir(mic)
 
         # Convert digital frequencies to spatial frequencies
         sampling = mic.getSamplingRate()
@@ -305,23 +307,7 @@ eof
 %(maxDefocus)f
 %(step_focus)f"""
 
-        if not self._isNewCtffind4:  # ctffind v4.0.15
-            if self.findPhaseShift:
-                self._args += """
-%(astigmatism)f
-%(phaseShift)s
-%(minPhaseShift)f
-%(maxPhaseShift)f
-%(stepPhaseShift)f
-eof
-"""
-            else:
-                self._args += """
-%(astigmatism)f
-%(phaseShift)s
-eof
-"""
-        else:  # ctffind v4.1.5
+        if getVersion('CTFFIND4') == '4.1.5':
             if self.findPhaseShift:
                 self._args += """
 no
@@ -345,6 +331,22 @@ yes
 %(phaseShift)s
 yes
 %(resamplePix)s
+eof
+"""
+        elif getVersion('CTFFIND4') == '4.0.15':
+            if self.findPhaseShift:
+                self._args += """
+%(astigmatism)f
+%(phaseShift)s
+%(minPhaseShift)f
+%(maxPhaseShift)f
+%(stepPhaseShift)f
+eof
+"""
+            else:
+                self._args += """
+%(astigmatism)f
+%(phaseShift)s
 eof
 """
 
