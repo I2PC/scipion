@@ -93,7 +93,8 @@ class BoxWizardWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
 
     def __init__(self, args, **kwargs):
-        pwutils.prettyDict(args)
+        if pwutils.envVarOn('SCIPION_DEBUG'):
+            pwutils.prettyDict(args)
 
         try:
             title = '%s (%s on %s)' % (Message.LABEL_PROJECTS,
@@ -459,9 +460,16 @@ if __name__ == "__main__":
         help="Provide a microscope name for the session.")
 
     inputArgs = parser.parse_args()
-    wizWindow = BoxWizardWindow(
-        args={SCIPIONBOX_DATA_FOLDER: inputArgs.data_folder,
-              SCIPIONBOX_USER_NAME: inputArgs.user,
-              SCIPIONBOX_MICROSCOPE: inputArgs.microscope
-              })
+    args = {}
+
+    if inputArgs.data_folder:
+        args[SCIPIONBOX_DATA_FOLDER] = inputArgs.data_folder
+
+    if inputArgs.user:
+        args[SCIPIONBOX_USER_NAME] = inputArgs.user
+
+    if inputArgs.microscope:
+        args[SCIPIONBOX_MICROSCOPE] = inputArgs.microscope
+
+    wizWindow = BoxWizardWindow(args=args)
     wizWindow.show()
