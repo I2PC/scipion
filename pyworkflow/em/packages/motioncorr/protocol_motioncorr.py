@@ -311,9 +311,10 @@ class ProtMotionCorr(ProtAlignMovies):
 
 	def _getNumberOfFrames(self, movie):
 		_, lstFrame, _ = movie.getFramesRange()
-		_, lastFrmAligned = movie.getAlignment().getRange()
 
-		if movie.hasAlignment() and lastFrmAligned != lstFrame:
-			return lastFrmAligned
+		if movie.hasAlignment():
+			_, lastFrmAligned = movie.getAlignment().getRange()
+			if lastFrmAligned != lstFrame:
+				return lastFrmAligned
 		else:
 			return movie.getNumberOfFrames()
