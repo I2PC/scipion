@@ -198,7 +198,7 @@ class ProtMotionCorr(ProtAlignMovies):
 						'-Group': self.group.get(),
 						'-FmDose': self.frameDose.get(),
 						'-Throw': '%d' % a0,
-						'-Trunc': '%d' % (abs(aN - numbOfFrames)),
+						'-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
 						'-PixSize': inputMovies.getSamplingRate(),
 						'-kV': inputMovies.getAcquisition().getVoltage(),
 						'-Gpu': self.GPUIDs.get(),
