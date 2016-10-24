@@ -29,8 +29,10 @@ import os
 import sys
 import re
 import Tkinter as tk
-import tkFont
 import ttk
+import tkFont
+from collections import OrderedDict
+from ConfigParser import ConfigParser
 import argparse
 
 import pyworkflow as pw
@@ -47,55 +49,63 @@ from pyworkflow.gui.widgets import HotButton, Button
 
 VIEW_WIZARD = 'wizardview'
 
-# Define some string constants
-DATA_FOLDER = "Data folder"
+
 USER_NAME = "User name"
 SAMPLE_NAME = "Sample name"
 PROJECT_NAME = "Project name"
-SKIP_FRAMES = "Skip frames"
+FRAMES_RANGE = "FRAMES_RANGE"
 
 # Protocol's contants
-MOTIONCORR = "MotionCorr"
-MOTIONCORR2 = "Use MotionCor2"
-OPTICAL_FLOW = "Optical Flow"
-SUMMOVIE = "Summovie (dose compensation)"
-CTFFIND4 = "Ctffind4"
-GCTF = "GCtf"
-EMAIL_NOTIFICATION = "Email notification"
-HTML_REPORT = "HTML Report"
+MOTIONCORR = "MOTIONCORR"
+MOTIONCOR2 = "MOTIONCOR2"
+OPTICAL_FLOW = "OPTICAL_FLOW"
+SUMMOVIE = "SUMMOVIE"
+CTFFIND4 = "CTFFIND4"
+GCTF = "GCTF"
+EMAIL_NOTIFICATION = "EMAIL_NOTIFICATION"
+HTML_REPORT = "HTML_REPORT"
+GRIDS = "GRIDS"
+CS = "CS"
+MAG = "MAG"
 
 # Some related environment variables
-SCIPIONBOX_DATA_FOLDER = 'SCIPIONBOX_DATA_FOLDER'
-SCIPIONBOX_USER_NAME = 'SCIPIONBOX_USER_NAME'
-SCIPIONBOX_MICROSCOPE = 'SCIPIONBOX_MICROSCOPE'
-SCIPIONBOX_PATTERN = 'SCIPIONBOX_PATTERN'
-SCIPIONBOX_PUBLISH = 'SCIPIONBOX_PUBLISH'
-SCIPIONBOX_SMTP_SERVER = 'SCIPIONBOX_SMTP_SERVER'
-SCIPIONBOX_SMTP_FROM = 'SCIPIONBOX_SMTP_FROM'
-SCIPIONBOX_SMTP_TO = 'SCIPIONBOX_SMTP_TO'
+DATA_FOLDER = 'DATA_FOLDER'
+USER_NAME = 'USER_NAME'
+MICROSCOPE = 'MICROSCOPE'
+PATTERN = 'PATTERN'
+PUBLISH = 'PUBLISH'
+SMTP_SERVER = 'SMTP_SERVER'
+SMTP_FROM = 'SMTP_FROM'
+SMTP_TO = 'SMTP_TO'
 
-# More variables to switch on/off default values
-SCIPIONBOX_EMAIL_ON = pwutils.envVarOn("SCIPIONBOX_EMAIL_ON")
-SCIPIONBOX_HTML_ON = pwutils.envVarOn("SCIPIONBOX_HTML_ON")
+PROTOCOLS = "Protocols"
+MONITORS = "Monitors"
+MICROSCOPE = "Microscope"
 
-SCIPIONBOX_MOTIONCORR_ON = pwutils.envVarOn("SCIPIONBOX_MOTIONCORR_ON")
-SCIPIONBOX_MOTIONCORR2_ON = pwutils.envVarOn("SCIPIONBOX_MOTIONCORR2_ON")
-SCIPIONBOX_OF_ON = pwutils.envVarOn("SCIPIONBOX_OF_ON")
-SCIPIONBOX_SUMMOVIE_ON = pwutils.envVarOn("SCIPIONBOX_SUMMOVIE_ON")
-SCIPIONBOX_CTFFIND4_ON = pwutils.envVarOn("SCIPIONBOX_CTFFIND4_ON")
-SCIPIONBOX_GCTF_ON = pwutils.envVarOn("SCIPIONBOX_GCTF_ON")
+# Define some string constants
+LABELS = {
+    DATA_FOLDER: "Data folder",
+    USER_NAME: "User name",
+    SAMPLE_NAME: "Sample name",
+    PROJECT_NAME: "Project name",
+    FRAMES_RANGE: "Frames range",
 
-# Create grids folders?
-SCIPIONBOX_GRIDS_ON = pwutils.envVarOn("SCIPIONBOX_GRIDS_ON")
+    # Protocol's contants
+    MOTIONCORR: "MotionCorr",
+    MOTIONCOR2: "Use MotionCor2",
+    OPTICAL_FLOW: "Optical Flow",
+    SUMMOVIE: "Summovie (dose compensation)",
+    CTFFIND4: "Ctffind4",
+    GCTF: "GCtf",
+    EMAIL_NOTIFICATION: "Email notification",
+    HTML_REPORT: "HTML Report"
+}
 
 
 class BoxWizardWindow(ProjectBaseWindow):
     """ Windows to manage all projects. """
 
-    def __init__(self, args, **kwargs):
-        if pwutils.envVarOn('SCIPION_DEBUG'):
-            pwutils.prettyDict(args)
-
+    def __init__(self, config, **kwargs):
         try:
             title = '%s (%s on %s)' % (Message.LABEL_PROJECTS,
                                        pwutils.getLocalUserName(),
@@ -106,7 +116,7 @@ class BoxWizardWindow(ProjectBaseWindow):
         settings = ProjectSettings()
         self.generalCfg = settings.getConfig()
 
-        self.args = args
+        self.config = config
         ProjectBaseWindow.__init__(self, title, minsize=(400, 550), **kwargs)
         self.viewFuncs = {VIEW_WIZARD: BoxWizardView}
         self.manager = Manager()
@@ -120,7 +130,9 @@ class BoxWizardView(tk.Frame):
         self.manager = windows.manager
         self.root = windows.root
         self.vars = {}
-        # Regular expresion to validate username and sample name
+        self.checkvars = []
+        self.microscope = None
+        # Regular expression to validate username and sample name
         self.re = re.compile('\A[a-zA-Z][a-zA-Z0-9_-]+\Z')
 
         # tkFont.Font(size=12, family='verdana', weight='bold')
@@ -141,10 +153,7 @@ class BoxWizardView(tk.Frame):
         headerFrame = tk.Frame(self, bg='white')
         headerFrame.grid(row=0, column=0, sticky='new')
         headerText = "Create New Session"
-        microscope = self._getInput(SCIPIONBOX_MICROSCOPE)
 
-        if microscope:
-            headerText += "  %s" % microscope
         headerText += "  %s" % pwutils.prettyTime(dateFormat='%Y-%m-%d')
 
         label = tk.Label(headerFrame, text=headerText,
@@ -183,7 +192,8 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        def _addPair(t, r, lf, entry=True, traceCallback=None):
+        def _addPair(key, r, lf, entry=True, traceCallback=None):
+            t = LABELS.get(key, key)
             label = tk.Label(lf, text=t, bg='white',
                              font=self.bigFont)
             label.grid(row=r, column=0, padx=(10, 5), pady=2, sticky='ne')
@@ -194,24 +204,43 @@ class BoxWizardView(tk.Frame):
                                  textvariable=var)
                 if traceCallback:
                     var.trace('w', traceCallback)
-                self.vars[t] = var
+                self.vars[key] = var
                 entry.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
 
-        def _addCheckPair(t, r, lf, col=1, on=True):
+        def _addCheckPair(key, r, lf, col=1):
+            t = LABELS.get(key, key)
             var = tk.IntVar()
-            var.set(1 if on else 0)
+
             cb = tk.Checkbutton(lf, text=t, font=self.bigFont, bg='white',
                                 variable=var)
-            self.vars[t] = var
+            self.vars[key] = var
+            self.checkvars.append(key)
             cb.grid(row=r, column=col, padx=5, sticky='nw')
 
-        _addPair(DATA_FOLDER, 0, labelFrame)
-        defaultDataFolder = self._getInput(SCIPIONBOX_DATA_FOLDER)
-        self._setValue(DATA_FOLDER, defaultDataFolder)
-        _addPair(USER_NAME, 1, labelFrame, traceCallback=self._onInputChange)
-        self._setValue(USER_NAME, self._getInput(SCIPIONBOX_USER_NAME))
-        _addPair(SAMPLE_NAME, 2, labelFrame, traceCallback=self._onInputChange)
-        _addPair(PROJECT_NAME, 3, labelFrame)
+        def _addComboPair(key, r, lf, traceCallback=None):
+            t = LABELS.get(key, key)
+            label = tk.Label(lf, text=t, bg='white',
+                             font=self.bigFont)
+            label.grid(row=r, column=0, padx=(10, 5), pady=2, sticky='ne')
+
+            var = tk.StringVar()
+            combo = ttk.Combobox(lf, textvariable=var, state='readonly')
+            combo['values'] = self._getConfig().keys()
+
+            if traceCallback:
+                combo.bind('<<ComboboxSelected>>', traceCallback)
+            self.vars[key] = var
+            combo.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
+
+            return combo
+
+        self.micCombo = _addComboPair(MICROSCOPE, 0, labelFrame,
+                                      traceCallback=self._onMicroscopeChanged)
+        _addPair(DATA_FOLDER, 1, labelFrame)
+
+        _addPair(USER_NAME, 2, labelFrame, traceCallback=self._onInputChange)
+        _addPair(SAMPLE_NAME, 3, labelFrame, traceCallback=self._onInputChange)
+        _addPair(PROJECT_NAME, 4, labelFrame)
 
         labelFrame.columnconfigure(0, weight=1)
         labelFrame.columnconfigure(0, minsize=120)
@@ -223,33 +252,25 @@ class BoxWizardView(tk.Frame):
         labelFrame2.grid(row=1, column=0, sticky='nw', padx=20, pady=10)
         labelFrame2.columnconfigure(0, minsize=120)
 
-        _addPair(SKIP_FRAMES, 0, labelFrame2)
-        _addPair("Protocols", 1, labelFrame2, entry=False)
-        _addCheckPair(MOTIONCORR, 1, labelFrame2,
-                      on=SCIPIONBOX_MOTIONCORR_ON)
-        _addCheckPair(MOTIONCORR2, 1, labelFrame2, col=2,
-                      on=SCIPIONBOX_MOTIONCORR2_ON)
-        _addCheckPair(OPTICAL_FLOW, 2, labelFrame2,
-                      on=SCIPIONBOX_OF_ON)
-        _addCheckPair(SUMMOVIE, 3, labelFrame2,
-                      on=SCIPIONBOX_SUMMOVIE_ON)
-        _addCheckPair(CTFFIND4, 4, labelFrame2,
-                      on=SCIPIONBOX_CTFFIND4_ON)
-        _addCheckPair(GCTF, 4, labelFrame2, col=2,
-                      on=SCIPIONBOX_GCTF_ON)
+        _addPair(FRAMES_RANGE, 0, labelFrame2)
+        _addPair(PROTOCOLS, 1, labelFrame2, entry=False)
+        _addCheckPair(MOTIONCORR, 1, labelFrame2)
+        _addCheckPair(MOTIONCOR2, 1, labelFrame2, col=2)
+        _addCheckPair(OPTICAL_FLOW, 2, labelFrame2)
+        _addCheckPair(SUMMOVIE, 3, labelFrame2)
+        _addCheckPair(CTFFIND4, 4, labelFrame2)
+        _addCheckPair(GCTF, 4, labelFrame2, col=2)
         _addPair("Monitors", 5, labelFrame2, entry=False)
-        _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2,
-                      on=SCIPIONBOX_EMAIL_ON)
-        _addCheckPair(HTML_REPORT, 5, labelFrame2, col=2,
-                      on=SCIPIONBOX_HTML_ON)
+        _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2)
+        _addCheckPair(HTML_REPORT, 5, labelFrame2, col=2)
 
         frame.columnconfigure(0, weight=1)
-        #frame.rowconfigure(0, weight=1)
-        #frame.rowconfigure(1, weight=1)
 
-    def _getInput(self, key, default=''):
-        # args are stored in parent, i.e., the parent windows
-        return self.windows.args.get(key, os.environ.get(key, default))
+    def _getConfValue(self, key, default=''):
+        return self.windows.config[self.microscope].get(key, default)
+
+    def _getConfig(self):
+        return self.windows.config
 
     def _getVar(self, varKey):
         return self.vars[varKey]
@@ -264,7 +285,7 @@ class BoxWizardView(tk.Frame):
         errors = []
 
         # Check the Data folder exists
-        dataFolder = pwutils.expandPattern(self._getValue(DATA_FOLDER))
+        dataFolder = pwutils.expandPattern(self._getConfValue(DATA_FOLDER))
         if not os.path.exists(pwutils.expandPattern(dataFolder)):
             errors.append("Folder '%s' does not exists" % dataFolder)
 
@@ -278,15 +299,16 @@ class BoxWizardView(tk.Frame):
 
         projName = self._getProjectName()
         projPath = os.path.join(dataFolder, projName)
-        scipionProjPath = os.path.join(projPath, 'ScipionUserData',
-                                       'projects', projName)
+        scipionProj = self._getConfValue('SCIPION_PROJECT').replace(
+            '${PROJECT_NAME}', projName)
+        scipionProjPath = os.path.join(projPath, scipionProj)
         # Do more checks only if there are not previous errors
         if not errors:
             if os.path.exists(projPath):
                 errors.append("Project path '%s' already exists." % projPath)
 
         if not errors:
-            if not (self._getValue(MOTIONCORR) or self._getValue(MOTIONCORR2)
+            if not (self._getValue(MOTIONCORR) or self._getValue(MOTIONCOR2)
                     or self._getValue(OPTICAL_FLOW)):
                 errors.append("You should use at least one alignment method."
                               "(%s or %s)" % (MOTIONCORR, OPTICAL_FLOW))
@@ -308,7 +330,7 @@ class BoxWizardView(tk.Frame):
 
         _createPath(projPath)
 
-        if SCIPIONBOX_GRIDS_ON:
+        if self._getConfValue(GRIDS) == '1':
             for i in range(12):
                 gridFolder = os.path.join(projPath, 'GRID_%02d' % (i+1))
                 _createPath(os.path.join(gridFolder, 'ATLAS'))
@@ -321,22 +343,20 @@ class BoxWizardView(tk.Frame):
         manager = Manager()
         project = manager.createProject(projName, location=scipionProjPath)
         self.lastProt = None
-        pattern = os.environ.get(SCIPIONBOX_PATTERN,
-                                 os.path.join('GRID_??', 'DATA', 'Images-Disc?',
-                                              'GridSquare_*', 'Data',
-                                              'FoilHole_*frames.mrc'))
+        pattern = self._getConfValue(PATTERN)
 
-        smtpServer = os.environ.get(SCIPIONBOX_SMTP_SERVER, '')
-        smtpFrom = os.environ.get(SCIPIONBOX_SMTP_FROM, '')
-        smtpTo = os.environ.get(SCIPIONBOX_SMTP_TO, '')
+        smtpServer = self._getConfValue(SMTP_SERVER, '')
+        smtpFrom = self._getConfValue(SMTP_FROM, '')
+        smtpTo = self._getConfValue(SMTP_TO, '')
         doMail = (self._getValue(EMAIL_NOTIFICATION) and 
                   smtpServer and smtpFrom and smtpTo)
-        publish = os.environ.get(SCIPIONBOX_PUBLISH, '')
+        publish = self._getConfValue(PUBLISH, '')
 
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
                                          filesPath=projPath,
                                          filesPattern=pattern,
+                                         sphericalAberration=self._getConfValue(CS),
                                          dataStreaming=True)
 
         # Create import movies
@@ -356,7 +376,7 @@ class BoxWizardView(tk.Frame):
 
         _saveProtocol(protImport, movies=False)
 
-        useMC2 = self._getValue(MOTIONCORR2)
+        useMC2 = self._getValue(MOTIONCOR2)
         useMC = self._getValue(MOTIONCORR) or useMC2
         useOF = self._getValue(OPTICAL_FLOW)
         useSM = self._getValue(SUMMOVIE)
@@ -364,7 +384,7 @@ class BoxWizardView(tk.Frame):
         useGCTF = self._getValue(GCTF)
 
         kwargs = {}
-        frames = self._getValue(SKIP_FRAMES).split()
+        frames = self._getValue(FRAMES_RANGE).split()
         if frames:
             kwargs['alignFrame0'] = kwargs['sumFrame0'] = frames[0]
             kwargs['alignFrameN'] = kwargs['sumFrameN'] = frames[1]
@@ -444,32 +464,57 @@ class BoxWizardView(tk.Frame):
 
         self._setValue(PROJECT_NAME, self._getProjectName())
 
+    def _onMicroscopeChanged(self, *args):
+        self.microscope = self._getValue(MICROSCOPE)
+        self.micCombo.selection_clear()
+
+        # Update the values of other field according to the selected microscope
+        self._setValue(DATA_FOLDER, self._getConfValue(DATA_FOLDER))
+        # Check/uncheck different options
+        for key in self.checkvars:
+            self.vars[key].set(int(self._getConfValue(key, 0)))
+
+        self._onInputChange()
 
 
+def createDictFromConfig():
+    """ Read the configuration from scipion/config/scipionbox.conf.
+     A dictionary will be created where each key will be a section starting
+     by MICROSCOPE:, all variables that are in the GLOBAL section will be
+     inherited by default.
+    """
+    # Read from users' config file.
+    confGlobalDict = OrderedDict()
+    confDict = OrderedDict()
+
+    cp = ConfigParser()
+    cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
+
+    confFile = pw.getConfigPath("scipionbox.conf")
+
+    print "Reading conf file: ", confFile
+    cp.read(confFile)
+
+    GLOBAL = "GLOBAL"
+    MICROSCOPE = "MICROSCOPE:"
+
+    if not GLOBAL in cp.sections():
+        raise Exception("Missing section %s in %s" % (GLOBAL, confFile))
+    else:
+        for opt in cp.options(GLOBAL):
+            confGlobalDict[opt] = cp.get(GLOBAL, opt)
+
+    for section in cp.sections():
+        if section != GLOBAL and section.startswith(MICROSCOPE):
+            sectionDict = OrderedDict(confGlobalDict)
+            for opt in cp.options(section):
+                sectionDict[opt] = cp.get(section, opt)
+            confDict[section.replace(MICROSCOPE, '')] = sectionDict
+
+    return confDict
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Setup a session ")
-    add = parser.add_argument  # shortcut
+    confDict = createDictFromConfig()
 
-    add('--data_folder', default='',
-        help="Set a data folder where the new session data will be stored. ")
-    add('--user', default='',
-        help="Provide a user for the session.")
-    add('--microscope', default='',
-        help="Provide a microscope name for the session.")
-
-    inputArgs = parser.parse_args()
-    args = {}
-
-    if inputArgs.data_folder:
-        args[SCIPIONBOX_DATA_FOLDER] = inputArgs.data_folder
-
-    if inputArgs.user:
-        args[SCIPIONBOX_USER_NAME] = inputArgs.user
-
-    if inputArgs.microscope:
-        args[SCIPIONBOX_MICROSCOPE] = inputArgs.microscope
-
-    wizWindow = BoxWizardWindow(args=args)
+    wizWindow = BoxWizardWindow(confDict)
     wizWindow.show()
