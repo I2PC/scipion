@@ -301,7 +301,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
 		n = self._getNumberOfFrames(movie)
 		iniFrame, _, indxFrame = movie.getFramesRange()
-		first, last = ProtAlignMovies._getFrameRange(n, prefix)
+		first, last = self._getFrameRange(n, prefix)
 
 		if iniFrame != indxFrame:
 			first -= iniFrame
