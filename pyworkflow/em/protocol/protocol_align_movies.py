@@ -46,7 +46,7 @@ class ProtAlignMovies(ProtProcessMovies):
     the frames range used for alignment and final sum, the binning factor
     or the cropping options (region of interest)
     """
-    
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
@@ -55,19 +55,19 @@ class ProtAlignMovies(ProtProcessMovies):
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')
         line = group.addLine('Frames to ALIGN',
-                            help='Frames range to ALIGN on each movie. The '
-                                 'first frame is 1. If you set 0 in the final '
-                                 'frame to align, it means that you will '
-                                 'align until the last frame of the movie.')
+                             help='Frames range to ALIGN on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to align, it means that you will '
+                                  'align until the last frame of the movie.')
         line.addParam('alignFrame0', params.IntParam, default=1,
                       label='from')
         line.addParam('alignFrameN', params.IntParam, default=0,
                       label='to')
         line = group.addLine('Frames to SUM',
-                            help='Frames range to SUM on each movie. The '
-                                 'first frame is 1. If you set 0 in the final '
-                                 'frame to sum, it means that you will sum '
-                                 'until the last frame of the movie.')
+                             help='Frames range to SUM on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to sum, it means that you will sum '
+                                  'until the last frame of the movie.')
         line.addParam('sumFrame0', params.IntParam, default=1,
                       label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
@@ -89,7 +89,7 @@ class ProtAlignMovies(ProtProcessMovies):
         form.addParam('doSaveAveMic', params.BooleanParam, default=True,
                       label="Save aligned micrograph",
                       expertLevel=cons.LEVEL_ADVANCED)
-        
+
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
                       help="Save Aligned movie")
@@ -231,7 +231,7 @@ class ProtAlignMovies(ProtProcessMovies):
         errors = []
 
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
-            self.cropDimY > 0 and self.cropDimX <= 0):
+                        self.cropDimY > 0 and self.cropDimX <= 0):
             errors.append("If you give cropDimX, you should also give cropDimY"
                           " and viceversa")
 
@@ -274,13 +274,13 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         first = self.getAttributeValue('%sFrame0' % prefix)
         last = self.getAttributeValue('%sFrameN' % prefix)
-        
+
         if first <= 1:
             first = 1
-        
+
         if last <= 0:
             last = n
-        
+
         return first, last
 
     def _createOutputMovie(self, movie):
@@ -288,7 +288,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
-        n = movie.getNumberOfFrames()
+        n = movie.getFramesRange()
         first, last = self._getFrameRange(n, 'align')
         framesRange = alignedMovie.getFramesRange()
         framesRange.setFirstFrame(first)

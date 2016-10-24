@@ -1,4 +1,4 @@
-# **************************************************************************
+# ******************************************************************************
 # *
 # * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *              Roberto Marabini (roberto@cnb.csic.es)
@@ -25,7 +25,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
-# **************************************************************************
+# ******************************************************************************
 
 from os.path import join, exists
 from glob import glob
