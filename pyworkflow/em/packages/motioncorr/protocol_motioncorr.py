@@ -134,7 +134,7 @@ class ProtMotionCorr(ProtAlignMovies):
 		outputMicFn = self._getRelPath(self._getOutputMicName(movie),
 									   movieFolder)
 
-		a0, aN = self._getFrameRange(movie, 'align')
+		a0, aN = self._getRange(movie, 'align')
 
 		if not self.useMotioncor2:
 			outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
@@ -144,7 +144,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
 			# Get the number of frames and the range to be used
 			# for alignment and sum
-			s0, sN = self._getFrameRange(movie, 'sum')
+			s0, sN = self._getRange(movie, 'sum')
 
 			argsDict = {'-crx': self.cropOffsetX.get(),
 						'-cry': self.cropOffsetY.get(),
@@ -297,7 +297,7 @@ class ProtMotionCorr(ProtAlignMovies):
 	def _getRelPath(self, baseName, refPath):
 		return os.path.relpath(self._getExtraPath(baseName), refPath)
 
-	def _getFrameRange(self, movie, prefix):
+	def _getRange(self, movie, prefix):
 
 		n = self._getNumberOfFrames(self, movie)
 		iniFrame, _, indxFrame = movie.getFramesRange()
