@@ -187,7 +187,7 @@ class ProtMotionCorr(ProtAlignMovies):
 			cropDimX = self.cropDimX.get() or 1.0
 			cropDimY = self.cropDimY.get() or 1.0
 
-			numbOfFrames = self._getNumberOfFrames(self, movie)
+			numbOfFrames = self._getNumberOfFrames(movie)
 			argsDict = {'-OutMrc': '"%s"' % outputMicFn,
 						'-Patch': self.patch.get() or '5 5',
 						'-MaskCent': '%d %d' % (self.cropOffsetX,
