@@ -300,6 +300,7 @@ class ProtMotionCorr(ProtAlignMovies):
 	def _getRange(self, movie, prefix):
 
 		n = self._getNumberOfFrames(movie)
+		print "NNNN: ", n
 		iniFrame, _, indxFrame = movie.getFramesRange()
 		first, last = self._getFrameRange(n, prefix)
 
