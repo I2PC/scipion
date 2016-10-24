@@ -197,7 +197,7 @@ class ProtMotionCorr(ProtAlignMovies):
 						'-Tol': self.tol.get(),
 						'-Group': self.group.get(),
 						'-FmDose': self.frameDose.get(),
-						'-Throw': '%d' % (a0 - 1),
+						'-Throw': '%d' % a0,
 						'-Trunc': '%d' % (abs(aN - numbOfFrames)),
 						'-PixSize': inputMovies.getSamplingRate(),
 						'-kV': inputMovies.getAcquisition().getVoltage(),
@@ -300,14 +300,13 @@ class ProtMotionCorr(ProtAlignMovies):
 	def _getRange(self, movie, prefix):
 
 		n = self._getNumberOfFrames(movie)
-		print "NNNN: ", n
 		iniFrame, _, indxFrame = movie.getFramesRange()
 		first, last = self._getFrameRange(n, prefix)
 
 		if iniFrame != indxFrame:
 			first -= iniFrame
 			last -= iniFrame
-
+		print "Align From %d to %d" % (first, last)
 		return first, last
 
 	def _getNumberOfFrames(self, movie):
