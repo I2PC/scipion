@@ -288,7 +288,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         # Parse the alignment parameters and store the log files
         alignedMovie = movie.clone()
-        n = movie.getFramesRange()
+        n = movie.getNumberOfFrames()
         first, last = self._getFrameRange(n, 'align')
         framesRange = alignedMovie.getFramesRange()
         framesRange.setFirstFrame(first)
