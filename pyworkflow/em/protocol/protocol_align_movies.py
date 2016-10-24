@@ -316,6 +316,8 @@ class ProtAlignMovies(ProtProcessMovies):
 
         framesRange.setFirstFrameIndex(firstFrameIndex)
 
+
+        print "FIrst, Last: ", first, last
         alignment = MovieAlignment(first=first, last=last, xshifts=xshifts, yshifts=yshifts)
 
         roiList = [self.getAttributeValue(s, 0) for s in
