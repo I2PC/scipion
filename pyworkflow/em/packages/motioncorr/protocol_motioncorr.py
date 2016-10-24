@@ -306,6 +306,10 @@ class ProtMotionCorr(ProtAlignMovies):
 		if iniFrame != indxFrame:
 			first -= iniFrame
 			last -= iniFrame
+		else:
+			first -= 1
+			last -= 1
+
 		print "Align From %d to %d" % (first, last)
 		return first, last
 
