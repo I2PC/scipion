@@ -316,8 +316,8 @@ class ProtAlignMovies(ProtProcessMovies):
 
         framesRange.setFirstFrameIndex(firstFrameIndex)
 
-        alignment = (MovieAlignment(first=first, last=last, xshifts=xshifts,
-                                    yshifts=yshifts))
+        alignment = MovieAlignment(first=first, last=last, xshifts=xshifts, yshifts=yshifts)
+
         roiList = [self.getAttributeValue(s, 0) for s in
                    ['cropOffsetX', 'cropOffsetY', 'cropDimX', 'cropDimY']]
         alignment.setRoi(roiList)
