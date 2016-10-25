@@ -26,11 +26,12 @@
 # *
 # **************************************************************************
 
+import os
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.em.metadata as md
-from convert import getMovieFileName
+from convert import writeMovieMd
 
 
 
@@ -65,16 +66,16 @@ class XmippProtMovieCorr(ProtAlignMovies):
         form.addParam('maxFreq', params.FloatParam, default=4,
                        label='Filter at (A)',
                        help="For the calculation of the shifts with Xmipp, "
-                            "micrographs are filtered (and downsized accordingly)"
-                            " to this resolution. Then shifts are calculated, "
-                            "and they are applied to the original frames"
-                            " without any filtering and downsampling.")
+                            "micrographs are filtered (and downsized "
+                            "accordingly) to this resolution. Then shifts are "
+                            "calculated, and they are applied to the original "
+                            "frames without any filtering and downsampling.")
 
         form.addParam('maxShift', params.IntParam, default=30,
                       expertLevel=cons.LEVEL_ADVANCED,
                       label="Maximum shift (pixels)",
-                      help='Maximum allowed distance (in pixels) that each frame '
-                           'can be shifted with respect to the next.')
+                      help='Maximum allowed distance (in pixels) that each '
+                           'frame can be shifted with respect to the next.')
         
         form.addParam('outsideMode', params.EnumParam,
                       choices=['Wrapping','Average','Value'],
@@ -91,13 +92,17 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
         form.addParallelSection(threads=1, mpi=1)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
 
     def _processMovie(self, movie):
-        inputMd = getMovieFileName(movie)
+        movieFolder = self._getOutputMovieFolder(movie)
+
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
         s0, sN = self._getFrameRange(n, 'sum')
+
+        inputMd = os.path.join(movieFolder, 'input_movie.xmd')
+        writeMovieMd(movie, inputMd, a0, aN, useAlignment=False)
 
         args  = '-i %s ' % inputMd
         args += '-o %s ' % self._getShiftsFile(movie)
@@ -135,8 +140,8 @@ class XmippProtMovieCorr(ProtAlignMovies):
         elif self.outsideMode == self.OUTSIDE_AVG:
             args += "--outside value %f" % self.outsideValue
         
-        args += ' --frameRange %d %d ' % (a0-1, aN-1)
-        args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
+        args += ' --frameRange %d %d ' % (0, aN-a0)
+        args += ' --frameRangeSum %d %d ' % (s0-a0, sN-s0)
         args += ' --max_shift %d ' % self.maxShift
 
         if self.doSaveAveMic:
@@ -155,10 +160,6 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
 
     #--------------------------- UTILS functions ------------------------------
-    def _getNumberOfFrames(self, movie):
-        _, _, n = movie.getDim()
-        return n
-    
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
 

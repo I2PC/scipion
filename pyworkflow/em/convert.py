@@ -55,11 +55,16 @@ class ImageHandler(object):
         """
         # We can not import Volume from top level since
         # data depends on this module
-        from data import Volume
+        from data import Volume, Movie
         fn = image.getFileName()
         if isinstance(image, Volume):
             if fn.endswith('.mrc') or fn.endswith('.map'):
                 fn += ':mrc'
+        elif isinstance(image, Movie):
+            if fn.endswith('.mrc'):
+                fn += ':mrcs'
+            elif fn.endswith('.em'):
+                fn += ':ems'
 
         return fn
 
