@@ -63,7 +63,12 @@ class ProtAlignMovies(ProtProcessMovies):
                       label='from')
         line.addParam('alignFrameN', params.IntParam, default=0,
                       label='to')
-        line = group.addLine('Frames to SUM',
+        group.addParam('useAlignToSum', params.BooleanParam, default=True,
+                       label='Use ALIGN frames range to SUM?',
+                       help="If *Yes*, the same frame range will be used to "
+                            "ALIGN and to SUM. If *No*, you can selected a "
+                            "different range for SUM (must be a subset).")
+        line = group.addLine('Frames to SUM', condition="not useAlignToSum",
                              help='Frames range to SUM on each movie. The '
                                   'first frame is 1. If you set 0 in the final '
                                   'frame to sum, it means that you will sum '
@@ -278,6 +283,9 @@ class ProtAlignMovies(ProtProcessMovies):
         return [self.summaryVar.get('')]
 
     # --------------------------- UTILS functions ----------------------------
+    def _useAlignToSum(self):
+        return self.getAttributeValue('useAlignToSum', False)
+
     def _getFrameRange(self, n, prefix):
         """
         Params:
@@ -285,6 +293,11 @@ class ProtAlignMovies(ProtProcessMovies):
         :param prefix: what range we want to consider, either 'align' or 'sum'
         :return: (i, f) initial and last frame range
         """
+        # In case that the user select the same range for ALIGN and SUM
+        # we also use the 'align' prefix
+        if self._useAlignToSum():
+            prefix = 'align'
+
         first = self.getAttributeValue('%sFrame0' % prefix)
         last = self.getAttributeValue('%sFrameN' % prefix)
 
