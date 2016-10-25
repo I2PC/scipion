@@ -111,11 +111,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('numberOfIterations', IntParam, default=6, label='Number of iterations')
+        form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations')
         form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediate files", expertLevel=LEVEL_ADVANCED)
         
         form.addSection(label='Next Reference')
-        form.addParam('nextLowPass', BooleanParam, label="Low pass filter?", default=True, 
+        form.addParam('nextLowPass', BooleanParam, label="Low pass filter?", default=True, expertLevel=LEVEL_ADVANCED,
                       help='Apply a low pass filter to the previous iteration whose maximum frequency is '\
                            'the current resolution(A) + resolutionOffset(A). If resolutionOffset>0, then fewer information' \
                            'is used (meant to avoid overfitting). If resolutionOffset<0, then more information is allowed '\
@@ -124,10 +124,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='The resolution of the reconstruction is defined as the inverse of the frequency at which '\
                       'the FSC drops below this value. Typical values are 0.143 and 0.5')
         form.addParam('nextResolutionOffset', FloatParam, label="Resolution offset (A)", default=2, expertLevel=LEVEL_ADVANCED, condition='nextLowPass')
-        form.addParam('nextSpherical', BooleanParam, label="Spherical mask?", default=True,
+        form.addParam('nextSpherical', BooleanParam, label="Spherical mask?", default=True, expertLevel=LEVEL_ADVANCED,
                       help='Apply a spherical mask of the size of the particle. If the postprocessing indicates that it has helical symmetry,'
                            'then a cylindrical mask is applied')
-        form.addParam('nextPositivity', BooleanParam, label="Positivity?", default=True,
+        form.addParam('nextPositivity', BooleanParam, label="Positivity?", default=True, expertLevel=LEVEL_ADVANCED,
                       help='Remove from the next reference all negative values')
         form.addParam('nextMask', PointerParam, label="Mask", pointerClass='VolumeMask', allowsNull=True,
                       help='The mask values must be between 0 (remove these pixels) and 1 (let them pass). Smooth masks are recommended.')
@@ -142,10 +142,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='Remove reference volumes once they are not needed any more.')
 
         form.addSection(label='Angular assignment')
-        form.addParam('splitMethod', EnumParam, label='Image split method', choices=['Stochastic','Fixed'], default=self.SPLIT_FIXED, expertLevel=LEVEL_ADVANCED)
+        form.addHidden('splitMethod', EnumParam, label='Image split method', choices=['Stochastic','Fixed'], default=self.SPLIT_FIXED, 
+                      expertLevel=LEVEL_ADVANCED)
         form.addParam('multiresolution', BooleanParam, label='Multiresolution approach', default=True, expertLevel=LEVEL_ADVANCED,
                       help="In the multiresolution approach the sampling rate of the images is adapted to the current resolution")
-        form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10,
+        form.addParam('angularMaxShift', FloatParam, label="Max. shift (%)", default=10, expertLevel=LEVEL_ADVANCED,
                       help='Maximum shift as a percentage of the image size')
         line=form.addLine('Tilt angle:', help='0 degrees represent top views, 90 degrees represent side views', expertLevel=LEVEL_ADVANCED)
         line.addParam('angularMinTilt', FloatParam, label="Min.", default=0, expertLevel=LEVEL_ADVANCED,
@@ -153,7 +154,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED,
                       help="You may generate redudant galleries by setting this angle to 180, this may help if c1 symmetry is considered")
         form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
-        form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False,
+        form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False, expertLevel=LEVEL_ADVANCED,
                       help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
                          "you may want to use projections very close to 90 degrees")
         line=form.addLine('Tilt angle restriction:', help='0 degrees represent top views, 90 degrees represent side views', 
@@ -165,8 +166,10 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
         form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
-        form.addParam('maximumTargetResolution', FloatParam, label="Max. Target Resolution", default=7.0, condition='alignmentMethod==0 and multiresolution',
-                  expertLevel=LEVEL_ADVANCED, help="In Angstroms")
+        form.addParam('maximumTargetResolution', NumericListParam, label="Max. Target Resolution", default="15 8 4",
+                      condition='alignmentMethod==0 and multiresolution',
+                      help="In Angstroms. The actual maximum resolution will be the maximum between this number of 0.5 * previousResolution, meaning that"
+                      "in a single step you cannot increase the resolution more than 1/2")
         form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod==0 and globalMethod==1',
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
         form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0 and globalMethod==1', 
@@ -200,13 +203,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help='At the beginning of the process, each process requires more memory, this is the number of simultaneous processes that can do this part')
         
         form.addSection(label='Weights')
-        form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False,
+        form.addParam('weightSSNR', BooleanParam, label="Weight by SSNR?", default=False, expertLevel=LEVEL_ADVANCED,
                       help='Weight input images by SSNR')
-        form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=False, condition='alignmentMethod==1',
-                      help='Weight input images by angular assignment cost')
-        form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=False,
+        form.addParam('weightContinuous', BooleanParam, label="Weight by Continuous cost?", default=False, expertLevel=LEVEL_ADVANCED,
+                      condition='alignmentMethod==1', help='Weight input images by angular assignment cost')
+        form.addParam('weightJumper', BooleanParam, label="Weight by angular stability?", default=False, expertLevel=LEVEL_ADVANCED,
                       help='Weight input images by angular stability between iterations')
-        form.addParam('weightCC', BooleanParam, label="Weight by CC percentile?", default=True,
+        form.addParam('weightCC', BooleanParam, label="Weight by CC percentile?", default=True, expertLevel=LEVEL_ADVANCED,
                       help='Weight input images by their fitness (cross correlation) percentile in their defocus group')
         form.addParam('weightCCmin', FloatParam, label="Minimum CC weight", default=0.1, expertLevel=LEVEL_ADVANCED,
                       help='Weights are between this value and 1')
@@ -241,9 +244,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                            'Examples: \n'
                            'xmipp_transform_filter -i %(volume)s --fourier low_pass 15 --sampling %(sampling)s\n' 
                            '/home/joe/myScript %(volume)s sampling=%(sampling)s dim=%(dim)s')
-        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising Real space", default=True)
-        form.addParam('postFilterBank', BooleanParam, label="Significant denoising Fourier space", default=True)
-        form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", default=True)
+        form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising Real space", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postFilterBank', BooleanParam, label="Significant denoising Fourier space", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", expertLevel=LEVEL_ADVANCED, default=True)
 
         form.addParallelSection(threads=1, mpi=8)
     
@@ -266,6 +269,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self._insertFunctionStep('doIteration000', self.inputVolumes.getObjId())
             self.firstIteration=1
         self.TsOrig=self.inputParticles.get().getSamplingRate()
+        self._maximumTargetResolution = getFloatListFromValues(self.maximumTargetResolution.get(),self.firstIteration+self.numberOfIterations.get()-1)
         for self.iteration in range(self.firstIteration,self.firstIteration+self.numberOfIterations.get()):
             self.insertIteration(self.iteration)
         self._insertFunctionStep("createOutput")
@@ -676,7 +680,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             makePath(fnGlobal)
     
-            targetResolution=max(previousResolution*0.8,self.maximumTargetResolution.get())
+            targetResolution=max(previousResolution*0.5,self._maximumTargetResolution[iteration-1])
             if self.multiresolution:
                 TsCurrent=max(self.TsOrig,targetResolution/3)
             else:
