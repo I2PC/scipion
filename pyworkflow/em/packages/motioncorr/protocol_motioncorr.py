@@ -310,7 +310,6 @@ class ProtMotionCorr(ProtAlignMovies):
 			first -= 1
 			last -= 1
 
-		print "Align From %d to %d" % (first, last)
 		return first, last
 
 	def _getNumberOfFrames(self, movie):
@@ -320,5 +319,7 @@ class ProtMotionCorr(ProtAlignMovies):
 			_, lastFrmAligned = movie.getAlignment().getRange()
 			if lastFrmAligned != lstFrame:
 				return lastFrmAligned
+			else:
+				return movie.getNumberOfFrames()
 		else:
 			return movie.getNumberOfFrames()
