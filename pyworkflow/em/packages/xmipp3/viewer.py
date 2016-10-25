@@ -91,10 +91,6 @@ class XmippViewer(Viewer):
                 XmippProtRotSpectra, 
                 XmippProtScreenParticles,
                 XmippProtCTFMicrographs, 
-<<<<<<< HEAD
-                XmippProtOFAlignment,
-=======
->>>>>>> devel-fixes
                 XmippProtValidateNonTilt,
                 XmippProtAssignmentTiltPair,
                 XmippProtMultiRefAlignability
@@ -340,20 +336,6 @@ class XmippViewer(Viewer):
                 coordsSet = obj.getCoords()
                 self._visualize(coordsSet)
             
-<<<<<<< HEAD
-        elif issubclass(cls, XmippProtOFAlignment):
-            outputMics = obj.outputMicrographs
-            plotLabels = 'psdCorr._filename plotPolar._filename plotCart._filename'
-            labels = plotLabels + ' _filename '
-            objCommands = "'%s'" % (OBJCMD_MOVIE_ALIGNCARTESIAN)
-            
-            self._views.append(ObjectView(self._project, self.protocol.strId(), outputMics.getFileName(),
-                                          viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels,
-                                                      RENDER: plotLabels, ZOOM: 50,
-                                                      OBJCMDS: objCommands}))
-        
-=======
->>>>>>> devel-fixes
         elif issubclass(cls, XmippProtValidateNonTilt):
             outputVols = obj.outputVolumes
             labels = 'id enabled comment _filename weight'
