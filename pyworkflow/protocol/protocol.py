@@ -402,6 +402,7 @@ class Protocol(Step):
         try:
             # Update the set with the streamState value (either OPEN or CLOSED)
             outputSet.setStreamState(state)
+
             if self.hasAttribute(outputName):
                 outputSet.write() # Write to commit changes
                 outputAttr = getattr(self, outputName)
@@ -412,6 +413,7 @@ class Protocol(Step):
             else:
                 # Here the defineOutputs function will call the write() method
                 self._defineOutputs(**{outputName: outputSet})
+                self._store(outputSet)
             # Close set databaset to avoid locking it
             outputSet.close()
 
