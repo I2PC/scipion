@@ -502,9 +502,15 @@ class SqliteObjectsDb(SqliteDb):
     def selectObjectsBy(self, iterate=False, **args):     
         """More flexible select where the constrains can be passed
         as a dictionary, the concatenation is done by an AND"""
-        whereList = ['%s=?' % k for k in args.keys()]
-        whereStr = ' AND '.join(whereList)
-        whereTuple = tuple(args.values())
+
+        if len(args) == 0:
+            whereStr = '1=?'
+            whereTuple = (1,)
+        else:
+            whereList = ['%s=?' % k for k in args.keys()]
+            whereStr = ' AND '.join(whereList)
+            whereTuple = tuple(args.values())
+
         self.executeCommand(self.selectCmd(whereStr), whereTuple)
         return self._results(iterate)
     

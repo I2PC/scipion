@@ -1680,8 +1680,6 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
 def isProtocolUpToDate(protocol):
     """ Check timestamps between protocol lastModificationDate and the
     corresponding runs.db timestamp"""
-    return False
-
     if protocol.lastUpdateTimeStamp.get(None) is None: return False
 
     protTS = protocol.lastUpdateTimeStamp.datetime()

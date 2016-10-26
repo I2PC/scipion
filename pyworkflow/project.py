@@ -886,6 +886,8 @@ class Project(object):
                     if not r.isChild():
                         self._updateProtocol(r, checkPid=checkPids)
 
+            # cursor = self.mapper.db.executeCommand('SELECT * FROM Objects WHERE parent_Id IS NOT NULL ORDER BY parent_id, name')
+
             self.mapper.commit()
 
         return self.runs
