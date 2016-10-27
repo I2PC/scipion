@@ -169,7 +169,24 @@ class TestImageHandler(unittest.TestCase):
 
         # Clean up tmp files
         pwutils.cleanPath(outFn)
-
+    
+    def test_convertMovie(self):
+        """Check movie conversion"""
+        movFn = self.dsFormat.getFile('qbeta/qbeta.mrc') + ":mrcs"
+        
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (4096, 4096, 1, 7)
+        self.assertEqual(ih.getDimensions(movFn), EXPECTED_SIZE)
+        
+        outFn = join('/tmp/qbeta_converted.mrcs')
+        print "Converting: \n%s -> %s" % ((movFn), outFn)
+        
+        ih.convertMovie(movFn, outFn, 2, 6)
+        
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), (4096, 4096, 1, 5))
 
 
 class TestSetOfMicrographs(BaseTest):
