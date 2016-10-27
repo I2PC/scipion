@@ -171,11 +171,14 @@ xmipp_createEmptyFile(PyObject *obj, PyObject *args, PyObject *kwargs)
     size_t Ndim;
     Zdim=1;
     Ndim=1;
+    DataType dataType = DT_Float;
+
     PyObject * input;
-    if (PyArg_ParseTuple(args, "Oii|ii", &input, &Xdim, &Ydim, &Zdim,
-                         &Ndim))
+    if (PyArg_ParseTuple(args, "Oii|iii", &input, &Xdim, &Ydim, &Zdim,
+                         &Ndim, &dataType))
     {
-        createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,Ndim,true,WRITE_REPLACE);
+    String dtString = datatype2Str(dataType);
+        createEmptyFile(PyString_AsString(input)+'%'+dtString,Xdim,Ydim,Zdim,Ndim,true, WRITE_REPLACE);
 //        createEmptyFile(PyString_AsString(input),Xdim,Ydim,Zdim,APPEND_IMAGE,true,WRITE_REPLACE);
         Py_RETURN_NONE;
     }
