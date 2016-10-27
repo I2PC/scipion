@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *
+# *              Josue Gomez Blanco (jgomez@cnb,csic.es)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,7 @@ import os
 
 import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtAlignMovies
-from pyworkflow.protocol.params import  (IntParam,
-                                         BooleanParam, FloatParam,
-                                         LEVEL_ADVANCED)
+import pyworkflow.protocol.params as params
 from grigoriefflab import UNBLUR_PATH
 from convert import readShiftsMovieAlignment
 
@@ -43,73 +41,79 @@ class ProtUnblur(ProtAlignMovies):
     CONVERT_TO_MRC = 'mrc'
 
     def _defineAlignmentParams(self, form):
-        form.addParam('alignFrameRange', IntParam,
-                      default=-1,
-                      label='Number frames per movie ',
-                      help='How many frames per movie. -1 -> all frames ')
-        form.addParam('doApplyDoseFilter', BooleanParam, default=True,
+        group = form.addGroup('Alignment')
+        line = group.addLine('Frames to ALIGN',
+                             help='Frames range to ALIGN on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to align, it means that you will '
+                                  'align until the last frame of the movie.')
+        line.addParam('alignFrame0', params.IntParam, default=1,
+                      label='from')
+        line.addParam('alignFrameN', params.IntParam, default=0,
+                      label='to')
+        form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                       label='Apply Dose filter',
                       help='Apply a dose-dependent filter to frames before '
                            'summing them')
-        form.addParam('exposurePerFrame', FloatParam,
+        form.addParam('exposurePerFrame', params.FloatParam,
                       label='Exposure per frame (e/A^2)',
                       help='Exposure per frame, in electrons per square '
                            'Angstrom')
 
         #group = form.addGroup('Expert Options')
-        form.addParam('minShiftInitSearch', FloatParam,
+        form.addParam('minShiftInitSearch', params.FloatParam,
                       default=2.,
                       label='Min. Shift Initial search (A)',
                       help='Initial search will be limited to between the '
                            'inner and outer radii',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('OutRadShiftLimit', FloatParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('OutRadShiftLimit', params.FloatParam,
                       default=200.,
                       label='Outer radius shift limit (A)',
                       help='The maximum shift of each alignment step will be '
                            'limited to this value',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('Bfactor', FloatParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('bfactor', params.FloatParam,
                       default=1500.,
                       label='B-factor (A^2)',
                       help='B-factor to apply to images (A^2)',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('HWVertFourMask', IntParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('HWVertFourMask', params.IntParam,
                       default=1,
                       label='Half-width vertical Fourier mask',
                       help='The vertical line mask will be twice this size. '
                            'The central cross mask helps reduce problems by '
                            'line artefacts from the detector',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('HWHoriFourMask', IntParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('HWHoriFourMask', params.IntParam,
                       default=1,
                       label='Half-width horizontal Fourier mask',
                       help='The horizontal line mask will be twice this size. '
                            'The central cross mask helps reduce problems by '
                            'line artefacts from the detector',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('terminationShiftThreshold', FloatParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('terminShiftThreshold', params.FloatParam,
                       default=0.1,
                       label='Termination shift threshold',
                       help='Alignment will stop at this number, even if the '
                            'threshold shift is not reached',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('maximumNumberIterations', IntParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('maximumNumberIterations', params.IntParam,
                       default=10,
                       label='Maximum number of iterations',
                       help='Maximum number of iterations',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('doRestoreNoisePower', BooleanParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('doRestoreNoisePwr', params.BooleanParam,
                       default=True,
                       label='Restore Noise Power? ',
                       help='Restore Noise Power? ',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParam('doVerboseOutput', BooleanParam,
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParam('doVerboseOutput', params.BooleanParam,
                       default=False,
                       label='Verbose Output?',
                       help='Verbose Output?',
-                      expertLevel=LEVEL_ADVANCED)
-        form.addParallelSection(threads=1, mpi=1)
+                      expertLevel=params.LEVEL_ADVANCED)
+        form.addParallelSection(threads=1, mpi=0)
 
     #
     #Input stack filename                [my_movie.mrc] : kk.mrc
@@ -135,51 +139,79 @@ class ProtUnblur(ProtAlignMovies):
     #Restore Noise Power?                         [YES] :
     #Verbose Output?                               [NO] : YES
 
-    #--------------------------- STEPS functions ------------------------------
+    #--------------------------- STEPS functions -------------------------------
 
     def _processMovie(self, movie):
-        self._createLink(movie)
-        numberOfFrames = movie.getNumberOfFrames()
+        numberOfFrames = self._getNumberOfFrames(movie)
         #FIXME: Figure out how to properly write shifts for unblur
         #self._writeMovieAlignment(movie, numberOfFrames)
+        
+        a0, aN = self._getRange(movie, 'align')
+        _, lstFrame, _ = movie.getFramesRange()
+        
+        if a0 > 1 or aN < lstFrame:
+            from pyworkflow.em import ImageHandler
+            ih = ImageHandler()
+            movieInputFn = movie.getFileName()
+            
+            if movieInputFn.endswith("mrc"):
+                movieInputFn += ":mrcs"
+            
+            movieConverted = pwutils.removeExt(movieInputFn) + "_tmp.mrcs"
+            print "PASO POR AQUI"
+            ih.convertMovie(movieInputFn, movieConverted, a0, aN)
+            print  "Y PO AQUI TAMBIEN"
+            os.remove(movie.getFileName())
+            pwutils.moveFile(movieConverted,movieInputFn)
 
-        if self.alignFrameRange != -1:
-
-            if self.alignFrameRange > numberOfFrames:
-                raise Exception('Frame number (%d) is greater than '
-                                'the total frames of the movie (%d)' %
-                                (numberOfFrames, self.alignFrameRange))
-            numberOfFrames = self.alignFrameRange.get()
-
-        self._argsUnblur(movie, numberOfFrames)
-
+        self._createLink(movie)
+        range = aN - a0 + 1
+        self._argsUnblur(movie, range)
+        
         try:
             self.runJob(self._program, self._args)
         except:
-            print("ERROR: Movie %s failed\n" % movie.getName())
+            print("ERROR: Movie %s failed\n" % movie.getFileName())
 
+    # --------------------------- INFO functions -------------------------------
+    def _citations(self):
+        return []
+
+    def _summary(self):
+        return []
+
+    def _methods(self):
+        return []
+
+    def _validate(self):
+        errors = []
+        if not os.path.exists(UNBLUR_PATH):
+            errors.append(
+                "Cannot find the Unblur program at: " + UNBLUR_PATH)
+        return errors
+
+    #--------------------------- UTILS functions -------------------------------
     def _argsUnblur(self, movie, numberOfFrames):
         """ Format argument for call unblur program. """
-        args = {}
-
-        args['movieName'] = self._getMovieFn(movie)
-        args['numberOfFramesPerMovie'] = numberOfFrames
-        args['micFnName'] = self._getMicFn(movie)
-        args['shiftFnName'] = self._getShiftsFn(movie)
-        args['samplingRate'] = self.samplingRate
-        args['voltage'] = self.inputMovies.get().getAcquisition().getVoltage()
-        args['fscFn'] = self._getFrcFn(movie)
-        args['Bfactor'] = self.Bfactor.get()
-        args['minShiftInitSearch'] = self.minShiftInitSearch.get()
-        args['OutRadShiftLimit'] = self.OutRadShiftLimit.get()
-        args['HWVertFourMask'] = self.HWVertFourMask.get()
-        args['HWHoriFourMask'] = self.HWHoriFourMask.get()
-        args['terminationShiftThreshold'] = self.terminationShiftThreshold.get()
-        args['maximumNumberIterations'] = self.maximumNumberIterations.get()
-        args['doApplyDoseFilter'] = 'YES' if self.doApplyDoseFilter else 'NO'
-        args['doRestoreNoisePower'] = 'YES' if self.doRestoreNoisePower else 'NO'
-        args['doVerboseOutput'] = 'YES' if self.doVerboseOutput else 'NO'
-        args['exposurePerFrame'] = self.exposurePerFrame.get()
+        args = {'movieName' : self._getMovieFn(movie),
+                'numberOfFramesPerMovie' : numberOfFrames,
+                'micFnName' : self._getMicFn(movie),
+                'shiftFnName' : self._getShiftsFn(movie),
+                'samplingRate' : self.samplingRate,
+                'voltage' : movie.getAcquisition().getVoltage(),
+                'fscFn' : self._getFrcFn(movie),
+                'bfactor' : self.bfactor.get(),
+                'minShiftInitSearch' : self.minShiftInitSearch.get(),
+                'OutRadShiftLimit' : self.OutRadShiftLimit.get(),
+                'HWVertFourMask' : self.HWVertFourMask.get(),
+                'HWHoriFourMask' : self.HWHoriFourMask.get(),
+                'terminShiftThreshold' : self.terminShiftThreshold.get(),
+                'maximumNumberIterations' : self.maximumNumberIterations.get(),
+                'doApplyDoseFilter' : 'YES' if self.doApplyDoseFilter else 'NO',
+                'doRestoreNoisePwr' : 'YES' if self.doRestoreNoisePwr else 'NO',
+                'doVerboseOutput' : 'YES' if self.doVerboseOutput else 'NO',
+                'exposurePerFrame' : self.exposurePerFrame.get()
+                }
 
         self._program = 'export OMP_NUM_THREADS=1; ' + UNBLUR_PATH
         self._args = """ << eof
@@ -195,31 +227,16 @@ YES
 %(fscFn)s
 %(minShiftInitSearch)f
 %(OutRadShiftLimit)f
-%(Bfactor)f
+%(bfactor)f
 %(HWVertFourMask)d
 %(HWHoriFourMask)d
-%(terminationShiftThreshold)f
+%(terminShiftThreshold)f
 %(maximumNumberIterations)d
-%(doRestoreNoisePower)s
+%(doRestoreNoisePwr)s
 %(doVerboseOutput)s
 eof
 """ % args
-
-    def _citations(self):
-        return []
-
-    def _summary(self):
-        return []
-
-    def _methods(self):
-        return []
-
-    def _validate(self):
-        errors = []
-        if not os.path.exists(UNBLUR_PATH):
-            errors.append("Cannot find the Unblur program at: " + UNBLUR_PATH)
-        return errors
-
+    
     def _getMicName(self, movieName):
         """ Return the name for the output micrograph given the movie name.
         """
@@ -252,19 +269,32 @@ eof
         pixSize = movie.getSamplingRate()
         shiftFn = self._getShiftsFn(movie)
         xShifts, yShifts = readShiftsMovieAlignment(shiftFn)
-        # convert shifts from Angstroms to px (e.g. Summovie requires shifts in px)
+        # convert shifts from Angstroms to px (e.g. Summovie
+        # requires shifts in px)
         xShiftsCorr = [x / pixSize for x in xShifts]
         yShiftsCorr = [y / pixSize for y in yShifts]
 
         return xShiftsCorr, yShiftsCorr
+    
+    def _getNumberOfFrames(self, movie):
+        _, lstFrame, _ = movie.getFramesRange()
+        
+        if movie.hasAlignment():
+            _, lastFrmAligned = movie.getAlignment().getRange()
+            if lastFrmAligned != lstFrame:
+                return lastFrmAligned
+            else:
+                return movie.getNumberOfFrames()
+        else:
+            return movie.getNumberOfFrames()
 
-    def _getFrameRange(self, n, prefix=''):
-        """
-        Params:
-        :param n: Number of frames of the movies
-        :param prefix: what range we want to consider, either 'align' or 'sum'
-        :return: (i, f) initial and last frame range
-        """
-        last = self.alignFrameRange.get() if self.alignFrameRange > 0 else n
-
-        return 1, min(last, n)
+    def _getRange(self, movie, prefix):
+        n = self._getNumberOfFrames(movie)
+        iniFrame, _, indxFrame = movie.getFramesRange()
+        first, last = self._getFrameRange(n, prefix)
+        
+        if iniFrame != indxFrame:
+            first -= (iniFrame - 1)
+            last -= (iniFrame - 1)
+        
+        return first, last

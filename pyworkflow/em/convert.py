@@ -177,7 +177,27 @@ class ImageHandler(object):
             # handle image formats
             for i in range(1, n+1):
                 self.convert((i, inputFn), (i, outputFn))
-        
+
+    def convertMovie(self, inputFn, outputFn, fstFrame, lstFrame, inFormat=None,
+                     outFormat=None):
+        """ convert format of movie file. Output/input format is
+        specified by outFormat/inFormat. If outFormat/inFomat=None then
+        there will be inferred from extension. fstFrame/lstFrame are the
+        range to apply the conversion.
+        """
+        print "CONVERT: ", inputFn, outputFn, fstFrame, lstFrame
+        (x, y, _, _) = xmipp.getImageSize(inputFn)
+        n = lstFrame - fstFrame + 1
+        # Create empty output stack for efficiency
+        self._img.read(self._convertToLocation(inputFn))
+        dataType = self._img.getDataType()
+        print "dataType: ", dataType
+        xmipp.createEmptyFile(outputFn,x,y,1,n, dataType)
+        print "CREO IMAGEN NEW"
+        from itertools import izip
+        for i,j in izip (range(fstFrame, lstFrame + 1), range(1, n+1)):
+            self.convert((i, inputFn), (j, outputFn))
+
     def getDimensions(self, locationObj):
         """ It will return a tuple with the images dimensions.
         The tuple will contains:
