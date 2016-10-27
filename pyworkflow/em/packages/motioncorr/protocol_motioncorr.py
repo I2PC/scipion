@@ -259,10 +259,11 @@ class ProtMotionCorr(ProtAlignMovies):
                               'outputMovies equivalent to the input ')
                 errors.append('however containing alignment information.')
 
-            if (self.alignFrame0.get() != self.sumFrame0.get() or
-                        self.alignFrameN.get() != self.sumFrameN.get()):
+            if not self.useAlignToSum:
                 errors.append('Frame range for ALIGN and SUM must be '
-                              'equivalent in case of motioncor2.')
+                              'equivalent in case of motioncor2. \n Please, '
+                              'set *YES* _Use ALIGN frames range to SUM?_ '
+                              'flag or use motioncorr')
 
         return errors
 
