@@ -39,7 +39,7 @@ from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
-from convert import writeShiftsMovieAlignment, getMovieFileName
+from convert import writeMovieMd, getMovieFileName
 
 
 PLOT_CART = 0
@@ -112,7 +112,6 @@ class XmippProtOFAlignment(ProtAlignMovies):
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
 
-        inputFn = self._getMovieOrMd(movie)
         outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         outMicFn = self._getExtraPath(self._getOutputMicName(movie))
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
@@ -123,10 +122,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
         gpuId = self.GPUCore.get()
+        inputMd = self._getFnInMovieFolder(movie, 'input_movie.xmd')
+        writeMovieMd(movie, inputMd, a0, aN, useAlignment=True)
 
-        args = '-i %s ' % inputFn
+        args = '-i %s ' % inputMd
         args += '-o %s ' % self._getOutputShifts(movie)
-        args += '--frameRange %d %d ' % (a0-1, aN-1)
+        args += ' --frameRange %d %d ' % (0, aN - a0)
 
         if dark:
             args += '--dark %s ' % dark
@@ -200,7 +201,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
 
         except Exception as e:
             print ("ERROR: %s failed for movie %s.\n  Exception: %s"
-                   % (program, inputFn, e))
+                   % (program, movie.getFileName(), e))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
@@ -280,18 +281,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         return self.doSaveMovie.get()
 
     def _getFnInMovieFolder(self, movie, filename):
-        movieFolder = self._getOutputMovieFolder(movie)
-        return join(movieFolder, filename)
-
-    def _getMovieOrMd(self, movie):
-        if movie.hasAlignment() and self.useAlignment:
-            shiftsMd = self._getShiftsFile(movie)
-            numberOfFrames = movie.getNumberOfFrames()
-            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
-            writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
-            return shiftsMd
-        else:
-            return getMovieFileName(movie)
+        return join(self._getOutputMovieFolder(movie), filename)
 
     def _getShiftsFile(self, movie):
         shiftFile = self._getNameExt(movie, '_shifts', 'xmd', extra=False)
