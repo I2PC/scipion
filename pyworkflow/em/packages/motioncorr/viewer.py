@@ -35,32 +35,41 @@ class ProtMotioncorrViewer(Viewer):
     _targets = [ProtMotionCorr]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
-    _label = 'viewer motioncorr movie alignment'
+    _label = 'viewer motioncorr'
 
     def _visualize(self, obj, **kwargs):
         views = []
 
         plotLabels = 'psdCorr._filename plotGlobal._filename'
-        labels = plotLabels + ' _filename '
+        labels = 'enabled id ' + plotLabels + ' _filename '
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
                       showj.RENDER: plotLabels,
-                      showj.ZOOM: 10,
-                      showj.OBJCMDS: "'%s'" % OBJCMD_MOVIE_ALIGNLOCAL
+                      showj.ZOOM: 10
                       }
+        if self.protocol.checkPatchALign():
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_MOVIE_ALIGNLOCAL
+
+        labelsDef = 'enabled id _filename'
+        viewParamsDef = {showj.MODE: showj.MODE_MD,
+                         showj.ORDER: labelsDef,
+                         showj.VISIBLE: labelsDef,
+                         showj.RENDER: None
+                         }
 
         if obj.hasAttribute('outputMicrographs'):
             views.append(self.objectView(obj.outputMicrographs,
                                          viewParams=viewParams))
-        elif obj.hasAttribute('outputMicrographsDoseWt'):
-            views.append(self.objectView(obj.outputMicrographsDoseWt,
-                                         viewParams=viewParams))
-        elif obj.hasAttribute('outputMovies'):
-            views.append(self.objectView(obj.outputMovies,
-                                         viewParams=viewParams))
         else:
             views.append(self.infoMessage("Output micrographs have "
                                           "not been produced yet."))
+
+        if obj.hasAttribute('outputMicrographsDoseWt'):
+            views.append(self.objectView(obj.outputMicrographsDoseWt,
+                                         viewParams=viewParams))
+        if obj.hasAttribute('outputMovies'):
+            views.append(self.objectView(obj.outputMovies,
+                                         viewParams=viewParamsDef))
 
         return views

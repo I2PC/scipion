@@ -45,7 +45,7 @@ from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignmentLocal, convertShifts)
 
 
-OBJCMD_MOVIE_ALIGNLOCAL = "Display local alignment plot"
+OBJCMD_MOVIE_ALIGNLOCAL = "Display patch alignment plot"
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -372,21 +372,28 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getLocalShifts(self, movie):
         """ Returns local shifts per patch for each frame.
-        First shift is (0,0)."""
+        First shift is (0,0). """
         patchFn = 'micrograph_%06d_0-Patch-Patch.log' % movie.getObjId()
         logPath = self._getExtraPath(patchFn)
         binning = self.binFactor.get()
+        patchX = self.patchX.get()
+        patchY = self.patchY.get()
+
+        # parse log files, multiply by bin factor
         xShifts, yShifts = parseMovieAlignmentLocal(logPath)
         xSfhtsCorr = [x * binning for x in xShifts]
         ySfhtsCorr = [y * binning for y in yShifts]
-        return xSfhtsCorr, ySfhtsCorr
+
+        # convert shifts for plot format
+        xSfhtsFinal, ySfhtsFinal = convertShifts(xSfhtsCorr, ySfhtsCorr, patchX, patchY)
+        return xSfhtsFinal, ySfhtsFinal, patchX, patchY
 
     def _setPlotInfo(self, movie, obj):
         obj.plotGlobal = em.Image()
         obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
 
-        if self.useMotioncor2 and self.patchX != 0 and self.patchY != 0:
-            obj.plotLocal = em.Image(location=None)
+        #if self.checkPatchALign():
+        #    obj.plotLocal = em.Image(location=None)
 
     def _getPlotGlobal(self, movie):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
@@ -418,15 +425,27 @@ class ProtMotionCorr(ProtAlignMovies):
                                   1, movie.getNumberOfFrames())
         return shiftsMd
 
+    def checkPatchALign(self):
+        """ Check if we used motioncor2 with patch-based alignment. """
+        if self.useMotioncor2 and self.patchX != 0 and self.patchY != 0:
+            return True
+        else:
+            return False
+
 
 def createGlobalAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    preX = 0.0
+    preY = 0.0
+
     figureSize = (6, 4)
     plotter = Plotter(*figureSize)
     figure = plotter.getFigure()
     ax = figure.add_subplot(111)
     ax.grid()
-    ax.set_title('Global frame motion')
+    ax.set_title('Global frame shift (cumulative)')
     ax.set_xlabel('Shift x (pixels)')
     ax.set_ylabel('Shift y (pixels)')
     if meanX[0] != 0 or meanY[0] != 0:
@@ -434,11 +453,15 @@ def createGlobalAlignmentPlot(meanX, meanY):
 
     i = 1
     for x, y in izip(meanX, meanY):
-        ax.text(x-0.02, y+0.02, str(i))
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        ax.text(preX-0.02, preY+0.02, str(i))
         i += 1
 
-    ax.plot(meanX, meanY, color='b')
-    ax.plot(meanX, meanY, 'yo')
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
 
     plotter.tightLayout()
 
@@ -447,18 +470,15 @@ def createGlobalAlignmentPlot(meanX, meanY):
 
 def showLocalShiftsPlot(inputSet, itemId):
     item = inputSet[itemId]
-    if item.hasAttribute('plotLocal'):  # FIXME: use ProtMotionCorr._getLocalShifts() function
-        # if self.useMotioncor2 and self.patchX != 0 and self.patchY != 0:
-        # localShiftsX, localShiftsY = self._getLocalShifts(movie)
-        # the values below are for testing
-        meanX, meanY = range(42), range(42)
-        from pyworkflow.object import Integer
-        patchX, patchY = Integer(2), Integer(3)
+    shiftsX, shiftsY, patchX, patchY = ProtMotionCorr._getLocalShifts(item)
 
-        plotter = createLocalAlignmentPlot(meanX, meanY, patchX, patchY)
-        plotter.show()
-    else:
-        print "This movie does not have local alignment. "
+    # the values below are for testing
+    #meanX, meanY = range(42), range(42)
+    #from pyworkflow.object import Integer
+    #patchX, patchY = Integer(2), Integer(3)
+
+    plotter = createLocalAlignmentPlot(shiftsX, shiftsY, patchX, patchY)
+    plotter.show()
 
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNLOCAL,
@@ -466,15 +486,10 @@ ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNLOCAL,
 #FIXME: this opens two figures for some reason... First is empty
 
 
-def createLocalAlignmentPlot(meanX, meanY, patchX, patchY):
-
-    patchX = patchX.get()
-    patchY = patchY.get()
-
+def createLocalAlignmentPlot(shiftsX, shiftsY, patchX, patchY):
     figureSize = (8, 6)
     plotter = Plotter(*figureSize)
     cm = plt.get_cmap('winter')
-    shiftsX, shiftsY = convertShifts(meanX, meanY, patchX, patchY)
     frames = 0
     fig, aN = plt.subplots(nrows=patchY, ncols=patchX, sharex=True, sharey=True)
 

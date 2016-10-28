@@ -81,8 +81,8 @@ def getSupportedVersions(var):
 
 
 def parseMovieAlignment(logFile):
-    """ Get the first and last frames together with the shifts
-    between frames aligned. Motioncorr old version
+    """ Get global frame shifts relative to the first frame
+    (for the plots). Motioncorr old version
     """
     f = open(logFile)
     first = None
@@ -103,8 +103,8 @@ def parseMovieAlignment(logFile):
 
 
 def parseMovieAlignment2(logFile):
-    """ Get the first and last frames together with the shifts
-    between frames aligned. Motioncor2 new version.
+    """ Get global frame shifts relative to the first frame
+    (for the plots). Motioncor2.
     """
     f = open(logFile)
     first = None
@@ -113,7 +113,7 @@ def parseMovieAlignment2(logFile):
 
     for line in f:
         l = line.strip()
-        if not '#' in l and len(l) > 0:
+        if '#' not in l and len(l) > 0:
             parts = l.split()
             if first is None:  # read the first frame number
                 first = int(parts[0])  # take the id from first column
@@ -125,8 +125,8 @@ def parseMovieAlignment2(logFile):
 
 
 def parseMovieAlignmentLocal(logFile):
-    """ Get patch shifts relative to the first frame (for the plots).
-    Motioncor2
+    """ Get patch shifts relative to the first frame
+    (for the plots). Motioncor2
     """
     f = open(logFile)
     xshifts = []
@@ -134,7 +134,7 @@ def parseMovieAlignmentLocal(logFile):
 
     for line in f:
         l = line.strip()
-        if not '#' in l and len(l) > 0:
+        if '#' not in l and len(l) > 0:
             parts = l.split()
             # take the raw shifts from the columns 4-5 of the line
             xshifts.append(float(parts[3]))
