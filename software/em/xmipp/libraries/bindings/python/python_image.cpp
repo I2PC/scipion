@@ -956,9 +956,7 @@ Image_getDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             ImageGeneric & image = Image_Value(self);
             DataType dt = image.getDatatype();
-
-            int type = datatype2NpyType(dt);
-            return  Py_BuildValue("i",type);
+            return  Py_BuildValue("i", dt);
         }
         catch (XmippError &xe)
         {
