@@ -202,10 +202,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
     
     def _summary(self):
         summary = []
-        if self.inputMovies.get():
-            summary.append('Number of input movies: '
-                           '*%d*' % self.inputMovies.get().getSize())
-            _, _, n = self.inputMovies.get().getFirstItem().getDim()
+        inputSet = self.inputMovies.get()
+
+        if inputSet:
+            summary.append('Number of input movies: *%d*' % inputSet.getSize())
+            _, _, n = inputSet.getDim()
             a0, aN = self._getFrameRange(n, 'align')
             summary.append("Frames from *%d* to *%d* were aligned" % (a0, aN))
 

@@ -61,7 +61,11 @@ if opencv:
     opencvLibs = ['opencv_core',
                   'opencv_legacy',
                   'opencv_imgproc',
-                  'opencv_video']
+                  'opencv_video',
+                  'libopencv_calib3d']
+                  
+else:
+    opencvLibs = []
 
 
 
@@ -191,8 +195,8 @@ addLib('XmippRecons',
        patterns=['reconstruction/*.cpp'],
        incs=bilib_incs,
        libs=['hdf5', 'hdf5_cpp', 'pthread',
-             'fftw3_threads', 'libopencv_calib3d', 
-             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'] + opencvLibs)
+             'fftw3_threads',  
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
 
 # Interface
 python_incs = ['#software/include/python2.7',
@@ -219,7 +223,7 @@ addLib('xmipp.so',
        dirs=['libraries/bindings'],
        patterns=['python/*.cpp'],
        incs=python_incs,
-       libs=['python2.7', 'XmippData', 'XmippRecons', 'XmippBilib']+opencvLibs,
+       libs=['python2.7', 'XmippData', 'XmippRecons', 'XmippBilib'],
        prefix='', target='xmipp')
 
 # Java binding
@@ -457,7 +461,7 @@ def addProg(progName, **kwargs):
 
     if progName.startswith('mpi_'):
         kwargs['mpi'] = True
-        kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel'] +  opencvLibs
+        kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel']
 
     xmippProgName = 'xmipp_%s' % progName
 
@@ -604,7 +608,6 @@ for p in ['angular_break_symmetry',
           'volume_enhance_contrast',
           'volume_find_symmetry',
           'volume_from_pdb',
-	  #'volume_homogenizer',
           'volume_initial_simulated_annealing',
           'volume_validate_pca',
           'volume_pca',
@@ -658,8 +661,7 @@ for p in ['angular_break_symmetry',
           'mpi_transform_normalize',
           'mpi_transform_threshold',
           'mpi_xray_project',
-	  'mpi_validation_nontilt',
-	  'mpi_volume_homogenizer',
+	      'mpi_validation_nontilt',	  
           'mpi_write_test',
 
           # Unittest for Xmipp libraries
@@ -707,9 +709,9 @@ if opencv:
     addProg('movie_optical_alignment_cpu',
             libs=opencvLibs,
             deps=['opencv'])
-    addProg('volume_homogenizer',
-                libs=opencvLibs,
-                deps=['opencv'])
+    addProg('mpi_volume_homogenizer',
+            libs=opencvLibs,
+            deps=['opencv'])
     if cuda: # also the gpu version
         opencvLibs.append('opencv_gpu')
         addProg('movie_optical_alignment_gpu',
