@@ -40,10 +40,11 @@ from convert import parseMagCorrInput
 
 class ProtMagDistCorr(ProtProcessMovies):
     """ This program automatically corrects anisotropic magnification
-    distortion using previously estimated parameters
+    distortion using previously estimated parameters.
+    It works on a set of movies.
     """
     CONVERT_TO_MRC = 'mrc'
-    _label = 'magnification distortion correction'
+    _label = 'mag. distortion correction'
     doSaveAveMic = False
     doSaveMovie = True
 

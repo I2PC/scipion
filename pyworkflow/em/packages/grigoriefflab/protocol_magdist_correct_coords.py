@@ -32,9 +32,10 @@ from convert import parseMagCorrInput, unDistortCoord
 
 class ProtMagDistCorrCoord(EMProtocol):
     """ This program automatically corrects anisotropic magnification
-    distortion using previously estimated parameters
+    distortion using previously estimated parameters.
+    It works on a set of coordinates.
     """
-    _label = 'magnification distortion correction'
+    _label = 'mag. distortion correction (coords)'
 
     # --------------------------- DEFINE params functions ----------------------
 
@@ -44,7 +45,7 @@ class ProtMagDistCorrCoord(EMProtocol):
         form.addParam('inputCoords', params.PointerParam,
                       pointerClass='SetOfCoordinates',
                       important=True,
-                      label='Input coordinates)',
+                      label='Input coordinates',
                       help='Select a set of coordinates.')
         form.addParam('useEst', params.BooleanParam, default=False,
                       label='Use previous estimation?',
