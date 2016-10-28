@@ -254,8 +254,8 @@ class ProtMotionCorr(ProtAlignMovies):
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
 
-        try:
-            self.runJob(program, args, cwd=movieFolder)
+        #try:
+        self.runJob(program, args, cwd=movieFolder)
 
             #if self.doComputePSD:
             #    uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
@@ -277,10 +277,11 @@ class ProtMotionCorr(ProtAlignMovies):
             #    # Remove avg that was used only for computing PSD
             #    pwutils.cleanPath(aveMicFn)
 
-            self._saveAlignmentPlots(movie)
+        self._saveAlignmentPlots(movie)
+        self._getLocalShifts(movie)
 
-        except:
-            print >> sys.stderr, program, " failed for movie %s" % movie.getName()
+        #except:
+        #    print >> sys.stderr, program, " failed for movie %s" % movie.getName()
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -376,24 +377,16 @@ class ProtMotionCorr(ProtAlignMovies):
         patchFn = 'micrograph_%06d_0-Patch-Patch.log' % movie.getObjId()
         logPath = self._getExtraPath(patchFn)
         binning = self.binFactor.get()
-        patchX = self.patchX.get()
-        patchY = self.patchY.get()
-
         # parse log files, multiply by bin factor
         xShifts, yShifts = parseMovieAlignmentLocal(logPath)
         xSfhtsCorr = [x * binning for x in xShifts]
         ySfhtsCorr = [y * binning for y in yShifts]
 
-        # convert shifts for plot format
-        xSfhtsFinal, ySfhtsFinal = convertShifts(xSfhtsCorr, ySfhtsCorr, patchX, patchY)
-        return xSfhtsFinal, ySfhtsFinal, patchX, patchY
+        return xSfhtsCorr, ySfhtsCorr
 
     def _setPlotInfo(self, movie, obj):
         obj.plotGlobal = em.Image()
         obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
-
-        #if self.checkPatchALign():
-        #    obj.plotLocal = em.Image(location=None)
 
     def _getPlotGlobal(self, movie):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
@@ -470,23 +463,25 @@ def createGlobalAlignmentPlot(meanX, meanY):
 
 def showLocalShiftsPlot(inputSet, itemId):
     item = inputSet[itemId]
-    shiftsX, shiftsY, patchX, patchY = ProtMotionCorr._getLocalShifts(item)
+    prot = ProtMotionCorr()
+    os.chdir('Runs/006493_ProtMotionCorr')
+    #prot._enterWorkingDir()
+    shiftsX, shiftsY = prot._getLocalShifts(item)
+    patchX, patchY = 2, 3
+    prot.getAttributeValue('patchX', 5)
 
-    # the values below are for testing
-    #meanX, meanY = range(42), range(42)
-    #from pyworkflow.object import Integer
-    #patchX, patchY = Integer(2), Integer(3)
-
+    print "debug: ", len(shiftsX), len(shiftsY), patchX, patchY
     plotter = createLocalAlignmentPlot(shiftsX, shiftsY, patchX, patchY)
     plotter.show()
 
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNLOCAL,
                                     showLocalShiftsPlot)
-#FIXME: this opens two figures for some reason... First is empty
+# FIXME: this opens two figures for some reason... First is empty
 
 
-def createLocalAlignmentPlot(shiftsX, shiftsY, patchX, patchY):
+def createLocalAlignmentPlot(shX, shY, patchX, patchY):
+    shiftsX, shiftsY = convertShifts(shX, shY, patchX, patchY)
     figureSize = (8, 6)
     plotter = Plotter(*figureSize)
     cm = plt.get_cmap('winter')
