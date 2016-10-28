@@ -44,7 +44,7 @@ class ProtMagDistCorr(ProtProcessMovies):
     It works on a set of movies.
     """
     CONVERT_TO_MRC = 'mrc'
-    _label = 'mag. distortion correction'
+    _label = 'mag distortion correction'
     doSaveAveMic = False
     doSaveMovie = True
 

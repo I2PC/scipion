@@ -221,6 +221,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 self._updateOutputSet('outputMicrographsDoseWt', micSet2, streamMode)
                 if firstTime:
                     self._defineSourceRelation(self.inputMovies, micSet2)
+                    self._defineTransformRelation(micSet, micSet2)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()

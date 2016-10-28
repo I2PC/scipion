@@ -49,9 +49,9 @@ class GautomatchParticleWizard(emwiz.ParticleMaskRadiusWizard):
         label, value = self._getInputProtocol(self._targets, protocol)
         
         protParams = {}
-        protParams['input']= protocol.inputReferences
-        protParams['label']= label
-        protParams['value']= value
+        protParams['input'] = protocol.inputReferences
+        protParams['label'] = label
+        protParams['value'] = value
         return protParams
     
     def _getProvider(self, protocol):
@@ -117,7 +117,7 @@ class GautomatchBandpassWizard(emwiz.FilterParticlesWizard):
 #===============================================================================
 
 class GautomatchPickerWizard(emwiz.EmWizard):
-    _targets = [(ProtGautomatch, ['diameter', 'threshold'])]
+    _targets = [(ProtGautomatch, ['threshold'])]
 
     def show(self, form):
         prot = form.protocol
@@ -192,9 +192,8 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                                         pickerProps=pickerConfig).show()
         process.wait()
         myprops = pwutils.readProperties(pickerConfig)
-        #form.setVar('diameter', myprops['diameter.value'])
         form.setVar('threshold', myprops['threshold.value'])
         if not prot.advanced:
             form.setVar('minDist', myprops['mindist.value'])
         else:
-            pass # TODO: We could even in future parse the 'guessed' params
+            pass  # TODO: We could even in future parse the 'guessed' params
