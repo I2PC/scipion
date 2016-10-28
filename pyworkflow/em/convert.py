@@ -26,6 +26,7 @@
 
 import os
 import sys
+from itertools import izip
 import PIL
 
 import xmipp
@@ -33,12 +34,29 @@ import pyworkflow.utils as pwutils
 
 from constants import *
 
-# TODO: remove dependency from Xmipp
-DT_FLOAT = xmipp.DT_FLOAT
 
 
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
+    # TODO: remove dependency from Xmipp
+    DT_DEFAULT = xmipp.DT_DEFAULT
+    DT_UNKNOWN = xmipp.DT_UNKNOWN
+    DT_UCHAR = xmipp.DT_UCHAR
+    DT_SCHAR = xmipp.DT_SCHAR
+    DT_USHORT = xmipp.DT_USHORT
+    DT_SHORT = xmipp.DT_SHORT
+    DT_UINT = xmipp.DT_UINT
+    DT_INT = xmipp.DT_INT
+    DT_LONG = xmipp.DT_LONG
+    DT_FLOAT = xmipp.DT_FLOAT
+    DT_DOUBLE = xmipp.DT_DOUBLE
+    DT_COMPLEXSHORT = xmipp.DT_COMPLEXSHORT
+    DT_COMPLEXINT = xmipp.DT_COMPLEXINT
+    DT_COMPLEXFLOAT = xmipp.DT_COMPLEXFLOAT
+    DT_COMPLEXDOUBLE = xmipp.DT_COMPLEXDOUBLE
+    DT_BOOL = xmipp.DT_BOOL
+    DT_LASTENTRY = xmipp.DT_LASTENTRY
+
     def __init__(self):
         # Now it will use Xmipp image library
         # to read and write most of formats, in the future
@@ -178,25 +196,34 @@ class ImageHandler(object):
             for i in range(1, n+1):
                 self.convert((i, inputFn), (i, outputFn))
 
-    def convertMovie(self, inputFn, outputFn, fstFrame, lstFrame, inFormat=None,
-                     outFormat=None):
+    def convertMovie(self, inputMovie, outputFn, firstFrame, lastFrame,
+                     inFormat=None, outFormat=None):
         """ convert format of movie file. Output/input format is
         specified by outFormat/inFormat. If outFormat/inFomat=None then
         there will be inferred from extension. fstFrame/lstFrame are the
         range to apply the conversion.
         """
-        print "CONVERT: ", inputFn, outputFn, fstFrame, lstFrame
-        (x, y, _, _) = xmipp.getImageSize(inputFn)
-        n = lstFrame - fstFrame + 1
+        if firstFrame > lastFrame:
+            raise Exception("lastFrame should be greater or equal than first.")
+
+        f0, fN, ffi = inputMovie.getFramesRange()
+
+        if firstFrame < f0 or lastFrame > fN:
+            raise Exception("Wrong frames range given input movie.")
+
+        x, y, _, _ = self.getDimensions(inputMovie)
+        n = lastFrame - firstFrame + 1
         # Create empty output stack for efficiency
-        self._img.read(self._convertToLocation(inputFn))
-        dataType = self._img.getDataType()
-        print "dataType: ", dataType
-        xmipp.createEmptyFile(outputFn,x,y,1,n, dataType)
-        print "CREO IMAGEN NEW"
-        from itertools import izip
-        for i,j in izip (range(fstFrame, lstFrame + 1), range(1, n+1)):
-            self.convert((i, inputFn), (j, outputFn))
+        pwutils.cleanPath(outputFn)
+        xmipp.createEmptyFile(outputFn, x, y, 1, n,
+                              self.getDataType(inputMovie))
+
+        inputFn = self.fixXmippVolumeFileName(inputMovie)
+        for i, j in izip(range(firstFrame, lastFrame + 1), range(1, n+1)):
+            # Correct index depending in the input movie start index of the
+            # first frame
+            inputIndex = firstFrame - ffi + 1
+            self.convert((inputIndex, inputFn), (j, outputFn))
 
     def getDimensions(self, locationObj):
         """ It will return a tuple with the images dimensions.
@@ -224,6 +251,14 @@ class ImageHandler(object):
                 return self._img.getDimensions()
         else:
             return None, None, None, None
+
+    def getDataType(self, locationObj):
+        if self.existsLocation(locationObj):
+            location = self._convertToLocation(locationObj)
+            self._img.read(location, xmipp.HEADER)
+            return self._img.getDataType()
+        else:
+            return None
         
     def read(self, inputObj):
         """ Create a new Image class from inputObj 
@@ -357,6 +392,9 @@ class ImageHandler(object):
             fn += ':mrc'
 
         return fn
+
+
+DT_FLOAT = ImageHandler.DT_FLOAT
 
 
 def downloadPdb(pdbId, pdbFile, log=None):
