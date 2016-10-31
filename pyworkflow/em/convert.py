@@ -176,8 +176,10 @@ class ImageHandler(object):
     
     def convertStack(self, inputFn, outputFn, firstImg=None, lastImg=None,
                      inFormat=None, outFormat=None):
-        """ convert format of stack file. Output/input format is specified by
-        outFormat/inFormat. If outFormat/inFomat=None then there will be
+        """ Convert an input stack file into another.
+        It is possible to only use a subset of frames to be written in the
+            output stack.
+        If outFormat/inFomat=None then there will be
         inferred from extension.If firstFrame/lastFrame are not None, the output
         stack will be a subset of input stack. If it are none, the conversion is
         over the whole stack. If the input format is ".dm4" or  ".img" only is
@@ -210,8 +212,7 @@ class ImageHandler(object):
             else:
                 n = lastImg - firstImg + 1
             
-            #Create empty output stack for efficiency
-            # handle image formats
+            # Create empty output stack file to reserve desired space
             xmipp.createEmptyFile(outputFn,x,y,1,n, dataType)
             for i, j in izip(range(firstImg, lastImg + 1), range(1, n+1)):
                 self.convert((i, inputFn), (j, outputFn))
