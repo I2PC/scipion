@@ -206,7 +206,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
-        if (not self.inputMovies.get().hasAlignment()) and self.useAlignment:
+        # Although getFirstItem is not remonended in general, here it is
+        # used olny once, for validation purposes, so performance
+        # problems not should be apprear.
+        movie = self.inputMovies.get().getFirstItem()
+        if (not movie.hasAlignment()) and self.useAlignment:
             errors.append("Your movies has not alignment. Please, set *No* "
                           "the parameter _Use previous movie alignment to SUM"
                           " frames?_")
