@@ -43,6 +43,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
     _label = 'movie average'
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
+
+    INTERP_LINEAR = 0
+    INTERP_CUBIC = 1
+
+    # Map to xmipp interpolation values in command line
+    INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
@@ -98,6 +104,13 @@ class XmippProtMovieAverage(ProtAlignMovies):
                             "a previous protocol. If you select *Yes*, the "
                             "previous alignment will be taken into account.")
 
+        form.addParam('splineOrder', params.EnumParam,
+                      default=self.INTERP_CUBIC, choices=['linear', 'cubic'],
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Interpolation',
+                      help="linear (faster but lower quality), "
+                           "cubic (slower but more accurate).")
+
         form.addParallelSection(threads=1, mpi=0)
     
     #--------------------------- STEPS functions -------------------------------
@@ -120,10 +133,12 @@ class XmippProtMovieAverage(ProtAlignMovies):
                    self.cropDimX.get(), self.cropDimY.get()]
         else:
             roi = None
-        
+
         self.averageMovie(movie, inputMd, outputMicFn, self.binFactor.get(),
                           roi, self.inputMovies.get().getDark(),
-                          self.inputMovies.get().getGain())
+                          self.inputMovies.get().getGain(),
+                          splineOrder=self.INTERP_MAP[self.splineOrder.get()])
+
         self._storeSummary(movie)
     
     #--------------------------- INFO functions --------------------------------

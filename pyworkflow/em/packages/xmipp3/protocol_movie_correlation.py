@@ -60,8 +60,8 @@ class XmippProtMovieCorr(ProtAlignMovies):
                       default=self.INTERP_CUBIC, choices=['linear', 'cubic'],
                       expertLevel=cons.LEVEL_ADVANCED,
                       label='Interpolation',
-                      help="linear interpolation (faster but lower quality), "
-                           "cubic interpolation (slower but more accurate).")
+                      help="linear (faster but lower quality), "
+                           "cubic (slower but more accurate).")
 
         form.addParam('maxFreq', params.FloatParam, default=4,
                        label='Filter at (A)',

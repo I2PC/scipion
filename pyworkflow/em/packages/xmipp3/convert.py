@@ -1511,7 +1511,7 @@ def writeMovieMd(movie, outXmd, f1, fN, useAlignment=False):
     row = md.Row()
     stackIndex = frameIndex + (f1 - firstFrame)
 
-    for i in range(firstFrame, lastFrame+1):
+    for i in range(f1, fN+1):
         frame.setIndex(stackIndex)
         row.setValue(md.MDL_IMAGE, ih.locationToXmipp(frame))
 

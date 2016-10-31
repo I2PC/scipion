@@ -408,7 +408,7 @@ class ProtAlignMovies(ProtProcessMovies):
         xmipp3.runXmippProgram(program, args)
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
-                     dark=None, gain=None):
+                     dark=None, gain=None, splineOrder=None):
         """ Average a movie (using xmipp) taking into account the
          possible shifts and other alignment parameters.
          Params:
@@ -450,6 +450,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if gain is not None:
             args += ' --gain ' + gain
+
+        if splineOrder is not None:
+            args += '--Bspline %d ' % splineOrder
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
