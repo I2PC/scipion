@@ -20,25 +20,24 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM.
-Them should be sub-classes in the different sub-packages from
-each EM-software packages.
-"""
 
 from itertools import izip
 
 from pyworkflow.protocol import Protocol
 from pyworkflow.object import Set
-from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates, SetOfParticles, SetOfImages, 
+from pyworkflow.em.data import (SetOfMicrographs, SetOfCoordinates,
+                                SetOfParticles, SetOfImages,
                                 SetOfClasses2D, SetOfClasses3D, SetOfClassesVol,
                                 SetOfVolumes, SetOfCTF, SetOfMovies, SetOfFSCs,
-                                SetOfMovieParticles, SetOfAverages, SetOfNormalModes)
-from pyworkflow.em.constants import RELATION_SOURCE, RELATION_TRANSFORM, RELATION_CTF
-from pyworkflow.em.data_tiltpairs import SetOfAngles, CoordinatesTiltPair, TiltPair
+                                SetOfMovieParticles, SetOfAverages,
+                                SetOfNormalModes)
+from pyworkflow.em.constants import (RELATION_SOURCE, RELATION_TRANSFORM,
+                                     RELATION_CTF)
+from pyworkflow.em.data_tiltpairs import (SetOfAngles, CoordinatesTiltPair,
+                                          TiltPair)
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.mapper.sqlite_db import SqliteDb
 
@@ -66,10 +65,12 @@ class EMProtocol(Protocol):
         return setObj
     
     def _createSetOfMicrographs(self, suffix=''):
-        return self.__createSet(SetOfMicrographs, 'micrographs%s.sqlite', suffix)
+        return self.__createSet(SetOfMicrographs,
+                                'micrographs%s.sqlite', suffix)
     
     def _createSetOfCoordinates(self, micSet, suffix=''):
-        coordSet = self.__createSet(SetOfCoordinates, 'coordinates%s.sqlite', suffix)
+        coordSet = self.__createSet(SetOfCoordinates,
+                                    'coordinates%s.sqlite', suffix)
         coordSet.setMicrographs(micSet)       
         return coordSet
 
@@ -102,15 +103,18 @@ class EMProtocol(Protocol):
         return self.__createSet(SetOfAverages, 'averages%s.sqlite', suffix)
         
     def _createSetOfMovieParticles(self, suffix=''):
-        return self.__createSet(SetOfMovieParticles, 'movie_particles%s.sqlite', suffix)
+        return self.__createSet(SetOfMovieParticles,
+                                'movie_particles%s.sqlite', suffix)
     
     def _createSetOfClasses2D(self, imgSet, suffix=''):
-        classes = self.__createSet(SetOfClasses2D, 'classes2D%s.sqlite', suffix)
+        classes = self.__createSet(SetOfClasses2D,
+                                   'classes2D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
     
     def _createSetOfClasses3D(self, imgSet, suffix=''):
-        classes =  self.__createSet(SetOfClasses3D, 'classes3D%s.sqlite', suffix)
+        classes =  self.__createSet(SetOfClasses3D,
+                                    'classes3D%s.sqlite', suffix)
         classes.setImages(imgSet)
         return classes
     
@@ -130,7 +134,8 @@ class EMProtocol(Protocol):
         return self.__createSet(SetOfMovies, 'movies%s.sqlite', suffix)
     
     def _createSetOfAngles(self, suffix=''):
-        return self.__createSet(SetOfAngles, 'tiltpairs_angles%s.sqlite', suffix)
+        return self.__createSet(SetOfAngles,
+                                'tiltpairs_angles%s.sqlite', suffix)
 
     def _createSetOfFSCs(self, suffix=''):
         return self.__createSet(SetOfFSCs, 'fscs%s.sqlite', suffix)
@@ -154,7 +159,8 @@ class EMProtocol(Protocol):
             child.write()
         Protocol._insertChild(self, key, child)
         
-    def _validateDim(self, obj1, obj2, errors, label1='Input 1', label2='Input 2'):
+    def _validateDim(self, obj1, obj2, errors,
+                     label1='Input 1', label2='Input 2'):
         """ Validate that obj1 and obj2 has the same dimensions.
         Params:
             obj1, obj2: input objects that can be Images or SetOfImages subclasses.
