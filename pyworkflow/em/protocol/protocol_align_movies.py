@@ -248,7 +248,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
         if lastFrame == 0:
-            # Although getFirstItem is not remonended in general, hereit is
+            # Although getFirstItem is not remonended in general, here it is
             # used olny once, for validation purposes, so performance
             # problems not should be apprear.
             frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
