@@ -80,7 +80,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                         label="Group Size",
                         help="The number of frames in each group at the "
                              "last step")
-        group.addParam('useAlignment', params.BooleanParam, default=True,
+        group.addParam('useAlignment', params.BooleanParam, default=None,
                        label="Use previous movie alignment to SUM frames?",
                        help="Input movies could have alignment information from"
                             "a previous protocol. If you select *Yes*, the "
@@ -123,7 +123,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         a0, aN = self._getFrameRange(n, 'align')
         gpuId = self.GPUCore.get()
         inputMd = self._getFnInMovieFolder(movie, 'input_movie.xmd')
-        writeMovieMd(movie, inputMd, a0, aN, useAlignment=True)
+        writeMovieMd(movie, inputMd, a0, aN, useAlignment=self.useAlignment)
 
         args = '-i %s ' % inputMd
         args += '-o %s ' % self._getOutputShifts(movie)
@@ -206,6 +206,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
+        if (not self.inputMovies.get().hasAlignment()) and self.useAlignment:
+            errors.append("Your movies has not alignment. Please, set *No* "
+                          "the parameter _Use previous movie alignment to SUM"
+                          " frames?_")
         if self.numberOfThreads > 1 and self.doGPU:
             errors.append("GPU and Parallelization can not be used together")
         return errors
