@@ -80,6 +80,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     
     GLOBAL_ALIGNMENT = 0
     LOCAL_ALIGNMENT = 1
+    AUTOMATIC_ALIGNMENT = 2
     
     GLOBAL_SIGNIFICANT = 0
     GLOBAL_PROJMATCH = 1
@@ -111,7 +112,6 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       label='Symmetry group', 
                       help='See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry for a description of the symmetry groups format'
                         'If no symmetry is present, give c1')
-        form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations')
         form.addParam("saveSpace", BooleanParam, default=True, label="Remove intermediate files", expertLevel=LEVEL_ADVANCED)
         
         form.addSection(label='Next Reference')
@@ -153,7 +153,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       help="Side views are around 90 degrees, top views around 0")
         line.addParam('angularMaxTilt', FloatParam, label="Max.", default=90, expertLevel=LEVEL_ADVANCED,
                       help="You may generate redudant galleries by setting this angle to 180, this may help if c1 symmetry is considered")
-        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local'], default=self.GLOBAL_ALIGNMENT)
+        form.addParam('alignmentMethod', EnumParam, label='Image alignment', choices=['Global','Local','Automatic'], default=self.GLOBAL_ALIGNMENT)
+        form.addParam('numberOfIterations', IntParam, default=3, label='Number of iterations', condition='alignmentMethod!=2')
         form.addParam("restrictReconstructionAngles", BooleanParam, label="Restrict reconstruction angles", default=False, expertLevel=LEVEL_ADVANCED,
                       help="You may reconstruct only with those images falling on a certain range. This is particularly useful for helices where "\
                          "you may want to use projections very close to 90 degrees")
