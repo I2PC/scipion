@@ -27,8 +27,7 @@
 from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
 import pyworkflow.em.showj as showj
 
-from protocol_motioncorr import (ProtMotionCorr,
-                                 OBJCMD_MOVIE_ALIGNLOCAL)
+from protocol_motioncorr import ProtMotionCorr
 
 
 class ProtMotioncorrViewer(Viewer):
@@ -48,9 +47,6 @@ class ProtMotioncorrViewer(Viewer):
                       showj.RENDER: plotLabels,
                       showj.ZOOM: 10
                       }
-        if self.protocol.checkPatchALign():
-            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_MOVIE_ALIGNLOCAL
-
         labelsDef = 'enabled id _filename'
         viewParamsDef = {showj.MODE: showj.MODE_MD,
                          showj.ORDER: labelsDef,

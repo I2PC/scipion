@@ -28,24 +28,19 @@
 # **************************************************************************
 
 import os, sys
-from pyworkflow.gui.plotter import plt
 from itertools import izip
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
-from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
-                     parseMovieAlignment, parseMovieAlignment2,
-                     parseMovieAlignmentLocal, convertShifts)
+                     parseMovieAlignment, parseMovieAlignment2)
 
-
-OBJCMD_MOVIE_ALIGNLOCAL = "Display patch alignment plot"
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -257,29 +252,27 @@ class ProtMotionCorr(ProtAlignMovies):
         #try:
         self.runJob(program, args, cwd=movieFolder)
 
-            #if self.doComputePSD:
-            #    uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
-            #    correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
-            #    # Compute uncorrected avg mic
-            #    roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
-            #           self.cropDimX.get(), self.cropDimY.get()]
-            #    fakeShiftsFn = self.writeZeroShifts(movie)
-            #    self.averageMovie(movie, fakeShiftsFn, aveMicFn,
-            #                      binFactor=self.binFactor.get(),
-            #                      roi=roi, dark=None,
-            #                      gain=inputMovies.getGain())
-            #    # Compute PSDs
-            #    self.computePSD(aveMicFn, uncorrectedPSD)
-            #    self.computePSD(outputMicFn, correctedPSD)
-            #    self.composePSD(uncorrectedPSD + ".psd",
-            #                    correctedPSD + ".psd",
-            #                    self._getPsdCorr(movie))
-            #    # Remove avg that was used only for computing PSD
-            #    pwutils.cleanPath(aveMicFn)
+        if self.doComputePSD:
+            uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
+            correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
+            # Compute uncorrected avg mic
+            roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
+                   self.cropDimX.get(), self.cropDimY.get()]
+            fakeShiftsFn = self.writeZeroShifts(movie)
+            self.averageMovie(movie, fakeShiftsFn, aveMicFn,
+                              binFactor=self.binFactor.get(),
+                              roi=roi, dark=None,
+                              gain=inputMovies.getGain())
+            # Compute PSDs
+            self.computePSD(aveMicFn, uncorrectedPSD)
+            self.computePSD(outputMicFn, correctedPSD)
+            self.composePSD(uncorrectedPSD + ".psd",
+                            correctedPSD + ".psd",
+                            self._getPsdCorr(movie))
+            # Remove avg that was used only for computing PSD
+            pwutils.cleanPath(aveMicFn)
 
         self._saveAlignmentPlots(movie)
-        self._getLocalShifts(movie)
-
         #except:
         #    print >> sys.stderr, program, " failed for movie %s" % movie.getName()
 
@@ -353,6 +346,12 @@ class ProtMotionCorr(ProtAlignMovies):
         else:
             return fn
 
+    def _getPlotGlobal(self, movie):
+        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
+
+    def _getPsdCorr(self, movie):
+        return self._getNameExt(movie, '_aligned_corrected', 'psd')
+
     def _preprocessOutputMicrograph(self, mic, movie):
         self._setPlotInfo(movie, mic)
 
@@ -371,33 +370,18 @@ class ProtMotionCorr(ProtAlignMovies):
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
 
-    def _getLocalShifts(self, movie):
-        """ Returns local shifts per patch for each frame.
-        First shift is (0,0). """
-        patchFn = 'micrograph_%06d_0-Patch-Patch.log' % movie.getObjId()
-        logPath = self._getExtraPath(patchFn)
-        binning = self.binFactor.get()
-        # parse log files, multiply by bin factor
-        xShifts, yShifts = parseMovieAlignmentLocal(logPath)
-        xSfhtsCorr = [x * binning for x in xShifts]
-        ySfhtsCorr = [y * binning for y in yShifts]
-
-        return xSfhtsCorr, ySfhtsCorr
-
     def _setPlotInfo(self, movie, obj):
         obj.plotGlobal = em.Image()
         obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
-
-    def _getPlotGlobal(self, movie):
-        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
-
-    def _getPsdCorr(self, movie):
-        return self._getNameExt(movie, '_aligned_corrected', 'psd')
+        if self.doComputePSD:
+            obj.psdCorr = em.Image()
+            obj.psdCorr.setFileName(self._getPsdCorr(movie))
 
     def _saveAlignmentPlots(self, movie):
         """ Compute alignment shift plots and save to file as png images. """
         shiftsX, shiftsY = self._getMovieShifts(movie)
-        plotter = createGlobalAlignmentPlot(shiftsX, shiftsY)
+        first, _ = self._getFrameRange(movie.getNumberOfFrames(), 'align')
+        plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
         plotter.savefig(self._getPlotGlobal(movie))
 
     def _isNewMotioncor2(self):
@@ -418,15 +402,8 @@ class ProtMotionCorr(ProtAlignMovies):
                                   1, movie.getNumberOfFrames())
         return shiftsMd
 
-    def checkPatchALign(self):
-        """ Check if we used motioncor2 with patch-based alignment. """
-        if self.useMotioncor2 and self.patchX != 0 and self.patchY != 0:
-            return True
-        else:
-            return False
 
-
-def createGlobalAlignmentPlot(meanX, meanY):
+def createGlobalAlignmentPlot(meanX, meanY, first):
     """ Create a plotter with the cumulative shift per frame. """
     sumMeanX = []
     sumMeanY = []
@@ -444,7 +421,7 @@ def createGlobalAlignmentPlot(meanX, meanY):
     if meanX[0] != 0 or meanY[0] != 0:
         raise Exception("First frame shift must be (0,0)!")
 
-    i = 1
+    i = first
     for x, y in izip(meanX, meanY):
         preX += x
         preY += y
@@ -458,70 +435,4 @@ def createGlobalAlignmentPlot(meanX, meanY):
 
     plotter.tightLayout()
 
-    return plotter
-
-
-def showLocalShiftsPlot(inputSet, itemId):
-    item = inputSet[itemId]
-    prot = ProtMotionCorr()
-    os.chdir('Runs/006493_ProtMotionCorr')
-    #prot._enterWorkingDir()
-    shiftsX, shiftsY = prot._getLocalShifts(item)
-    patchX, patchY = 2, 3
-    prot.getAttributeValue('patchX', 5)
-
-    print "debug: ", len(shiftsX), len(shiftsY), patchX, patchY
-    plotter = createLocalAlignmentPlot(shiftsX, shiftsY, patchX, patchY)
-    plotter.show()
-
-
-ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNLOCAL,
-                                    showLocalShiftsPlot)
-# FIXME: this opens two figures for some reason... First is empty
-
-
-def createLocalAlignmentPlot(shX, shY, patchX, patchY):
-    shiftsX, shiftsY = convertShifts(shX, shY, patchX, patchY)
-    figureSize = (8, 6)
-    plotter = Plotter(*figureSize)
-    cm = plt.get_cmap('winter')
-    frames = 0
-    fig, aN = plt.subplots(nrows=patchY, ncols=patchX, sharex=True, sharey=True)
-
-    for rows in range(patchY):
-        for cols in range(patchX):
-            plotdataX = shiftsX[rows][cols].tolist()
-            plotdataY = shiftsY[rows][cols].tolist()
-            frames = len(plotdataX)
-            ax = aN[rows][cols]
-            ax.grid()
-            ax.tick_params(axis='x', labelsize=8)
-            ax.tick_params(axis='y', labelsize=8)
-            # Choose a color map, loop through the colors, and assign them to the color
-            # cycle. You need len(plotX)-1 colors, because you'll plot that many lines
-            # between pairs. In other words, your line is not cyclic, so there's
-            # no line from end to beginning
-            ax.set_color_cycle([cm(1. * i / (frames - 1))
-                                for i in range(frames - 1)])
-            for i in range(frames - 1):
-                ax.plot(plotdataX[i:i + 2], plotdataY[i:i + 2])
-
-    ax1 = fig.add_subplot(111, frameon=False)
-    ax1.set_title('Local patch motion (' + str(patchX) + 'x' + str(patchY) + ' patches)')
-    ax1.set_xlabel('Shift x (pixels)')
-    ax1.set_ylabel('Shift y (pixels)')
-    ax1.tick_params(labelcolor='none', top='off', bottom='off', left='off', right='off')
-    fig.subplots_adjust(right=0.85)  # FIXME: does not work!!!
-
-    # Add colorbar with frame numbers
-    ax99 = fig.add_axes([0.9, 0.15, 0.03, 0.7])
-    import matplotlib as mpl
-    norm = mpl.colors.Normalize(vmin=1, vmax=frames)
-    cb = mpl.colorbar.ColorbarBase(ax99, cmap=cm,
-                                   boundaries=range(1, frames + 1),
-                                   norm=norm,
-                                   orientation='vertical')
-    cb.set_label('Frame number')
-
-    plotter.figure = fig
     return plotter

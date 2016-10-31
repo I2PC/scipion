@@ -141,18 +141,3 @@ def parseMovieAlignmentLocal(logFile):
             yshifts.append(float(parts[4]))
     f.close()
     return xshifts, yshifts
-
-
-def convertShifts(meanX, meanY, patchX, patchY):
-    # split shift lists by patches
-    npatch = patchX * patchY
-    shiftsX = np.array_split(np.array(meanX), npatch)
-    shiftsY = np.array_split(np.array(meanY), npatch)
-
-    # convert to 3D array
-    arrX = np.array(shiftsX).reshape((patchY, patchX, len(shiftsX[0])))
-    arrY = np.array(shiftsY).reshape((patchY, patchX, len(shiftsY[0])))
-    arrXFlip = np.flipud(arrX)
-    arrYFlip = np.flipud(arrY)
-
-    return arrXFlip, arrYFlip
