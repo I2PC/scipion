@@ -352,7 +352,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def createMetadataImageStep(self):
         #Create images.xmd metadata
         fnImages = self._getOutputImgMd()
-        imgsXmd = md.MetaData() 
+        imgsXmd = md.MetaData()
         posFiles = glob(self._getExtraPath('*.pos')) 
         for posFn in posFiles:
             xmdFn = self._getExtraPath(replaceBaseExt(posFn, "xmd"))

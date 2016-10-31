@@ -34,6 +34,8 @@ import datetime as dt
 import pickle
 import json
 from collections import OrderedDict
+import traceback
+import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
@@ -53,7 +55,6 @@ class Step(OrderedObject):
     It should defines its Input, Output
     and define a run method.
     """
-    
     def __init__(self, **kwargs):
         OrderedObject.__init__(self, **kwargs)
         self._prerequisites = CsvList() # which steps needs to be done first
@@ -67,6 +68,16 @@ class Step(OrderedObject):
 
     def getIndex(self):
         return self._index
+    
+    def setIndex(self, newIndex):
+        self._index = newIndex
+        
+    def getPrerequisites(self):
+        return self._prerequisites
+    
+    def addPrerequisites(self, *newPrerequisites):
+        for p in newPrerequisites:
+            self._prerequisites.append(p)
 
     def _preconditions(self):
         """ Check if the necessary conditions to
@@ -113,19 +124,20 @@ class Step(OrderedObject):
     def getStatus(self):
         return self.status.get(STATUS_NEW)
     
-    def getElapsedTime(self):
+    def getElapsedTime(self, default=dt.timedelta()):
         """ Return the time that took to run 
         (or the actual running time if still is running )
         """
-        elapsed = None
+        elapsed = default
+
         if self.initTime.hasValue():
-            f = "%Y-%m-%d %H:%M:%S.%f"
-            t1 = dt.datetime.strptime(self.initTime.get(), f)
-            endTimeStr = self.endTime.get()
-            if endTimeStr:
-                t2 = dt.datetime.strptime(endTimeStr, f)
+            t1 = self.initTime.datetime()
+
+            if self.endTime.hasValue():
+                t2 = self.endTime.datetime()
             else:
                 t2 = dt.datetime.now()
+
             elapsed = t2 - t1
         
         return elapsed
@@ -159,6 +171,9 @@ class Step(OrderedObject):
 
     def isInteractive(self):
         return self.interactive.get()
+    
+    def isWaiting(self):
+        return self.getStatus() == STATUS_WAITING
 
     def run(self):
         """ Do the job of this step"""
@@ -201,6 +216,8 @@ class FunctionStep(Step):
         self.funcName = String(funcName)
         self.argsStr = String(pickle.dumps(funcArgs))
         self.setInteractive(kwargs.get('interactive', False))
+        if kwargs.get('wait', False):
+            self.setStatus(STATUS_WAITING)
         
     def _runFunc(self):
         """ Return the possible result files after running the function. """
@@ -355,19 +372,55 @@ class Protocol(Step):
         
     def _defineInputs(self, **kwargs):
         """ This function should be used to define
-        those attributes considered as Input""" 
+        those attributes considered as Input.
+        """ 
         self._storeAttributes(self._inputs, kwargs)
         
     def _defineOutputs(self, **kwargs):
         """ This function should be used to specify
-        expected outputs""" 
-        
+        expected outputs.
+        """ 
         for k, v in kwargs.iteritems():
             if hasattr(self, k):
                 self._deleteChild(k, v)
             self._insertChild(k, v)
             
         self._storeAttributes(self._outputs, kwargs)
+        
+    def _updateOutputSet(self, outputName, outputSet, 
+                         state=Set.STREAM_OPEN):
+        """ Use this function when updating an Stream output set.
+        """
+        self.__tryUpdateOuputSet(outputName, outputSet, state)
+
+    def __tryUpdateOuputSet(self, outputName, outputSet,
+                         state=Set.STREAM_OPEN, tries=1):
+        try:
+            # Update the set with the streamState value (either OPEN or CLOSED)
+            outputSet.setStreamState(state)
+
+            if self.hasAttribute(outputName):
+                outputSet.write() # Write to commit changes
+                outputAttr = getattr(self, outputName)
+                # Copy the properties to the object contained in the protcol
+                outputAttr.copy(outputSet, copyId=False)
+                # Persist changes
+                self._store(outputAttr)
+            else:
+                # Here the defineOutputs function will call the write() method
+                self._defineOutputs(**{outputName: outputSet})
+                self._store(outputSet)
+            # Close set databaset to avoid locking it
+            outputSet.close()
+
+        except Exception as ex:
+            print("Error trying to update output of protocol, tries=%d" % tries)
+
+            if tries > 3:
+                raise ex
+            else:
+                time.sleep(tries)
+                self.__tryUpdateOuputSet(outputName, outputSet, state, tries+1)
         
     def getProject(self):
         return self.__project
@@ -574,16 +627,15 @@ class Protocol(Step):
         
         if prerequisites is None:
             if len(self._steps):
-                step._prerequisites.append(len(self._steps)) # By default add the previous step as prerequisite
+                step.addPrerequisites(len(self._steps)) # By default add the previous step as prerequisite
         else:
-            for i in prerequisites:
-                step._prerequisites.append(i)
+            step.addPrerequisites(*prerequisites)
                 
         self._steps.append(step)
         # Setup and return step index
-        step._index = len(self._steps)
+        step.setIndex(len(self._steps))
                 
-        return step._index
+        return step.getIndex()
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
@@ -743,7 +795,7 @@ class Protocol(Step):
             
         return n
     
-    def __storeSteps(self):
+    def _storeSteps(self):
         """ Store the new steps list that can be retrieved 
         in further execution of this protocol.
         """
@@ -771,8 +823,7 @@ class Protocol(Step):
         """
         self.info(magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-        self.info("  %s" % dt.datetime.strptime(step.initTime.get(),
-                                                "%Y-%m-%d %H:%M:%S.%f"))
+        self.info("  %s" % step.initTime.datetime())
         self.__updateStep(step)
         
     def _stepFinished(self, step):
@@ -795,13 +846,15 @@ class Protocol(Step):
         
         self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
                   (step.funcName.get(), step._index))
-        self.info("  %s" % dt.datetime.strptime(step.endTime.get(),
-                                                "%Y-%m-%d %H:%M:%S.%f"))
+        self.info("  %s" % step.endTime.datetime())
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
             # all working threads, so we need to close
             self._endRun()
         return doContinue
+    
+    def _stepsCheck(self):
+        pass
 
     def _runSteps(self, startIndex):
         """ Run all steps defined in self._steps. """
@@ -817,8 +870,10 @@ class Protocol(Step):
             self.info("All steps seems to be FINISHED, nothing to be done.")
         else:
             self.lastStatus = self.status.get()
-            self._stepsExecutor.runSteps(self._steps, self._stepStarted, self._stepFinished)
-        
+            self._stepsExecutor.runSteps(self._steps, 
+                                         self._stepStarted, 
+                                         self._stepFinished,
+                                         stepsCheckCallback=self._stepsCheck)
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
@@ -859,7 +914,7 @@ class Protocol(Step):
         copyDict = Object.copy(self, other, copyId)
         self._store()
         self.mapper.deleteRelations(self)
-        
+
         for r in other.getRelations():
             rName = r['name']
             rCreator = r['parent_id']
@@ -867,13 +922,13 @@ class Protocol(Step):
             rChild = r['object_child_id']
             rParentExt = r['object_parent_extended']
             rChildExt = r['object_child_extended']
-            
+
             if rParent in copyDict:
                 rParent = copyDict.get(rParent).getObjId()
-                            
+
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
-            
+
             self.mapper.insertRelationData(rName, rCreator, rParent, rChild,
                                            rParentExt, rChildExt)
         
@@ -931,7 +986,7 @@ class Protocol(Step):
         #self._makePathsAndClean() This is done now in project
         startIndex = self.__findStartingStep() # Find at which step we need to start
         self.info(" Starting at step: %d" % (startIndex + 1))
-        self.__storeSteps() 
+        self._storeSteps() 
         self.info(" Running steps ")
         self._runSteps(startIndex)
     
@@ -967,6 +1022,7 @@ class Protocol(Step):
         
         self.info(greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
+        self.info('          PID: %s' % self._pid)
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
         self.info('   workingDir: %s' % self.workingDir)
@@ -989,7 +1045,7 @@ class Protocol(Step):
 
         if envVarOn('SCIPION_DEBUG_NOCLEAN'):
             self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
-        else:
+        elif not self.isFailed():
             self.info('Cleaning temporarly files....')
             self.cleanTmp()
             
@@ -1090,7 +1146,11 @@ class Protocol(Step):
         
     def error(self, message, redirectStandard=True):
         self._log.error(message, redirectStandard)
-        
+
+    def debug(self, message):
+        if envVarOn('SCIPION_DEBUG'):
+            self.info(message)
+
     def getWorkingDir(self):
         return self.workingDir.get()
     
@@ -1256,6 +1316,14 @@ class Protocol(Step):
     def stepsDone(self):
         """ Return the number of steps executed. """
         return self._stepsDone.get(0)
+
+    def updateSteps(self):
+        """ After the steps list is modified, this methods will update steps information.
+        It will save the steps list and also the number of steps.
+        """
+        self._storeSteps()
+        self._numberOfSteps.set(len(self._steps))
+        self._store(self._numberOfSteps)
 
     def getStatusMessage(self):
         """ Return the status string and if running the steps done. 
@@ -1524,6 +1592,7 @@ class LegacyProtocol(Protocol):
     def __str__(self):
         return self.getObjLabel()
                 
+
 #---------- Helper functions related to Protocols --------------------
 
 def runProtocolMain(projectPath, protDbPath, protId):
@@ -1548,10 +1617,11 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # We run "scipion run pyworkflow/...mpirun.py blah" instead of
             # calling directly "$SCIPION_PYTHON ...mpirun.py blah", so that
             # when it runs on a MPI node, it *always* has the scipion env.
-            prog = join(os.environ['SCIPION_HOME'], 'scipion')
-            params = ['runprotocol', 'pw_protocol_mpirun.py', projectPath, protDbPath, protId]
-            retcode = runJob(None, prog, params,
-                             numberOfMpi=protocol.numberOfMpi.get(), hostConfig=hostConfig)
+            params = ['runprotocol', 'pw_protocol_mpirun.py',
+                      projectPath, protDbPath, protId]
+            retcode = runJob(None, pw.getScipionScript(), params,
+                             numberOfMpi=protocol.numberOfMpi.get(),
+                             hostConfig=hostConfig)
             sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,

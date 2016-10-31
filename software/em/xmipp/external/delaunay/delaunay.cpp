@@ -1,3 +1,4 @@
+#include "dcel.h"
 #include "defines.h"
 #include "delaunay.h"
 #include <float.h>
@@ -535,6 +536,9 @@ void    purge_Delaunay( struct Delaunay_T *delaunay)
 
     // Invalid current face.
     update_Face( delaunay->dcel, INVALID, delaunay->dcel->edges[edge_Index].face);
+
+    // Invalid zero face.
+    update_Face( delaunay->dcel, INVALID, 0);
 }
 
 
@@ -703,6 +707,111 @@ int    get_Face_Points( struct Delaunay_T *delaunay, int face_ID, struct Point_T
 
 	return(found);
 }
+
+
+//#define DEBUG_NEXT_FACE_ITERATOR
+/***************************************************************************
+* Name: next_Face_Iterator
+* IN:	delaunay		delaunay data
+* OUT:	p1				first point of the face
+* 		p2				second point of the face
+* 		p3				third point of the face
+* Description: 	gets the three points that form a triangle associated to a
+* 				triangle. First call returns the first triangle and successive
+* 				calls return the next triangle (the function remembers last
+* 				triangle returned). The function returns FALSE if the end
+* 				of the list of triangles was reached and a real triangle
+* 				was not found.
+***************************************************************************/
+bool 	next_Face_Iterator(struct Delaunay_T *delaunay, struct Point_T *p1,
+														struct Point_T *p2,
+														struct Point_T *p3)
+{
+	bool 	validFace;				// Return value.
+	int		edgeIndex;				// Edge index.
+	bool	finished;				// Loop control flag.
+	struct Dcel_Face_T  *face=NULL;	// Current face.
+	struct Dcel_Edge_T  *edge=NULL;	// Current edge.
+	int		nFaces;					// # faces in DCEL.
+
+	// Get # faces in DCEL.
+	nFaces = get_Number_Faces( delaunay->dcel);
+
+	// Check if face index is out of bounds.
+	if (delaunay->faceIndex < nFaces)
+	{
+		// Search next face.
+		finished = false;
+		while (!finished)
+		{
+			// Get i-face.
+			face = get_Face( delaunay->dcel, delaunay->faceIndex);
+
+#ifdef DEBUG_NEXT_FACE_ITERATOR
+			printf("\nNew face %d of %d\n", delaunay->faceIndex, nFaces);
+#endif
+
+			delaunay->faceIndex++;
+
+			// Check if current face is imaginary.
+			if (face->imaginaryFace != INVALID)
+			{
+				// Update return value and loop control flag to exit.
+				finished = true;
+				validFace = true;
+
+				// Get edge index and edge data.
+				edgeIndex = face->edge - 1;
+				edge = get_Edge( delaunay->dcel, edgeIndex);
+
+#ifdef DEBUG_NEXT_FACE_ITERATOR
+				printf("\t1st point index %d \n", delaunay->dcel->edges[edgeIndex].origin_Vertex-1);
+				printf("\t2nd point index %d \n", delaunay->dcel->edges[edge->next_Edge-1].origin_Vertex-1);
+				printf("\t3rd point index %d \n", delaunay->dcel->edges[edge->previous_Edge-1].origin_Vertex-1);
+#endif
+
+				// Update output points.
+				p1->x = delaunay->dcel->vertex[delaunay->dcel->edges[edgeIndex].origin_Vertex-1].vertex.x;
+				p1->y = delaunay->dcel->vertex[delaunay->dcel->edges[edgeIndex].origin_Vertex-1].vertex.y;
+				p2->x = delaunay->dcel->vertex[delaunay->dcel->edges[edge->next_Edge-1].origin_Vertex-1].vertex.x;
+				p2->y = delaunay->dcel->vertex[delaunay->dcel->edges[edge->next_Edge-1].origin_Vertex-1].vertex.y;
+				p3->x = delaunay->dcel->vertex[delaunay->dcel->edges[edge->previous_Edge-1].origin_Vertex-1].vertex.x;
+				p3->y = delaunay->dcel->vertex[delaunay->dcel->edges[edge->previous_Edge-1].origin_Vertex-1].vertex.y;
+			}
+			else
+			{
+#ifdef DEBUG_NEXT_FACE_ITERATOR
+				// Get edge index and edge data.
+				edgeIndex = face->edge - 1;
+				edge = get_Edge( delaunay->dcel, edgeIndex);
+				printf("Skipping imaginary face %d\n", delaunay->faceIndex-1);
+				printf("\t1st point index %d \n", delaunay->dcel->edges[edgeIndex].origin_Vertex-1);
+				printf("\t2nd point index %d \n", delaunay->dcel->edges[edge->next_Edge-1].origin_Vertex-1);
+				printf("\t3rd point index %d \n", delaunay->dcel->edges[edge->previous_Edge-1].origin_Vertex-1);
+#endif
+				// Check if all faces searched.
+				if (delaunay->faceIndex >= nFaces)
+				{
+					finished = true;
+					validFace = false;
+#ifdef DEBUG_NEXT_FACE_ITERATOR
+					printf("\t\t\tLast face %d found. Resetting index.\n", delaunay->faceIndex);
+#endif
+					delaunay->faceIndex = 1;
+				}
+			}
+		}
+	}
+	// Reset face index.
+	else
+	{
+		delaunay->faceIndex = 1;
+		validFace = false;
+	}
+
+	return(validFace);
+}
+
 
 
 
@@ -1072,7 +1181,7 @@ bool select_Closest_Point( struct Delaunay_T *delaunay, struct Point_T *p,
     return(found);
 }
 
-#define DEBUG_SELECT_CLOSEST_DCEL
+//#define DEBUG_SELECT_CLOSEST_DCEL
 /***************************************************************************
 * Name: select_Closest_Point_DCEL
 * IN:	dcel			triangulation DCEL
@@ -1113,7 +1222,7 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
     if (!is_Interior_To_Convex_Hull( dcel, p, &error))
     {
 #ifdef DEBUG_SELECT_CLOSEST_DCEL
-    	printf("Point (%f,%f) is exterior to convex hull\n");
+    	printf("Point (%f,%f) is exterior to convex hull\n", p->x, p->y);
 #endif
     	// Get points in convex hull.
     	get_Convex_Hull( dcel, &nPoints, points);
@@ -1124,7 +1233,7 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
 			// Check if current anchor is closest point.
 			newDistance = distance( p, &dcel->vertex[index].vertex);
 #ifdef DEBUG_SELECT_CLOSEST_DCEL
-			printf("Point %d is (%f,%f). Distance %lf\n", index+1,
+			printf("Point %d is (%f,%f). Distance %f\n", index+1,
 										dcel->vertex[index].vertex.x,
 										dcel->vertex[index].vertex.y,
 										newDistance);
@@ -1157,7 +1266,7 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
 			// Check if current anchor is closest point.
 			newDistance = distance( p, &dcel->vertex[index].vertex);
 #ifdef DEBUG_SELECT_CLOSEST_DCEL
-			printf("Point %d is (%f,%f). Distance %lf\n", index+1,
+			printf("Point %d is (%f,%f). Distance %f\n", index+1,
 										dcel->vertex[index].vertex.x,
 										dcel->vertex[index].vertex.y,
 										newDistance);
@@ -1187,7 +1296,7 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
 			if (is_Interior_To_Face( dcel, p, faceID))
 			{
 #ifdef DEBUG_SELECT_CLOSEST_DCEL
-				printf("Is interior\n", faceID);
+				printf("Point (%f,%f) is interior to face %d\n", p->x, p->y, faceID);
 #endif
 				// Initialize output value.
 				(*lowest_Distance) = DBL_MAX;
@@ -1204,7 +1313,7 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
 					// Check if current vertex is closer.
 					newDistance = distance( p, &dcel->vertex[index].vertex);
 #ifdef DEBUG_SELECT_CLOSEST_DCEL
-					printf("Point %d is (%f,%f). Distance %lf\n", index+1,
+					printf("Point %d is (%f,%f). Distance %f\n", index+1,
 												dcel->vertex[index].vertex.x,
 												dcel->vertex[index].vertex.y,
 												newDistance);
@@ -1229,7 +1338,7 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors, struct Point
 				foundClosest = true;
 
 #ifdef DEBUG_SELECT_CLOSEST_DCEL
-				printf("Closest point index %d is (%lf,%lf)\n", selectedVertex+1);
+				printf("Closest point index %d is (%f,%f)\n", selectedVertex+1, q->x, q->y);
 #endif
 			}
 			else

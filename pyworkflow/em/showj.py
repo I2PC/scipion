@@ -69,13 +69,6 @@ CHIMERA_PORT = 'chimera_port'
 INVERTY = 'inverty'
 
 OBJCMDS = 'object_commands'
-OBJCMD_NMA_PLOTDIST = "Plot distance profile"
-OBJCMD_NMA_VMD = "Display VMD animation"
-#OBJCMD_MOVIE_ALIGNPOLAR = "Display Polar Presentation"
-OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
-#OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "Display Polar + Cartesian Presentations"
-OBJCMD_CTFFIND4 = "Display Ctf Fitting"
-OBJCMD_GCTF = "Display Ctf Analysis"
 
 GOTO = 'goto'
 ROWS = 'rows'

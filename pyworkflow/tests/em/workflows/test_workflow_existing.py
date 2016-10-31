@@ -12,6 +12,8 @@ from pyworkflow.mapper.sqlite import SqliteFlatMapper
     
 class TestXmippWorkflow(unittest.TestCase):
     
+    _labels = [WEEKLY]
+    
     def loadProject(self, projName):
         """ Try to load an existing project. """
         manager = Manager()

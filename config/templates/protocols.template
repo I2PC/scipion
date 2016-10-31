@@ -18,12 +18,16 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
             {"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}]}]},
     {"tag": "section", "text": "Micrographs", "children": [
-        {"tag": "protocol", "value": "ProtMovieAlignment",             "text": "default"},
-        {"tag": "protocol", "value": "ProtUnblur", "text": "default"},
-        {"tag": "protocol", "value": "ProtSummovie", "text": "default"},
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
         {"tag": "protocol", "value": "XmippProtMovieGain", "text": "default"},
         {"tag": "protocol", "value": "ProtMovieAssignGain", "text": "default"},
+        {"tag": "protocol_group", "text": "Movie Alignment", "openItem": "False", "children": [
+            {"tag": "protocol", "value": "ProtMotionCorr",   "text": "default"},
+            {"tag": "protocol", "value": "XmippProtMovieCorr",   "text": "default"},
+            {"tag": "protocol", "value": "XmippProtOFAlignment", "text": "default"},
+            {"tag": "protocol", "value": "ProtUnblur",   "text": "default"},
+            {"tag": "protocol", "value": "ProtSummovie", "text": "default"}
+            ]},
         {"tag": "protocol_group", "text": "CTF estimation", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtCTFFind",   "text": "default"},
             {"tag": "protocol", "value": "ProtGctf",   "text": "default"},
@@ -31,7 +35,8 @@ Protocols SPA = [
             {"tag": "section", "text": "more", "openItem": "False", "children": [
                 {"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
                 {"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"}
-            ]}]}]},
+            ]}]}
+    ]},
     {"tag": "section", "text": "Particles", "children": [
         {"tag": "protocol_group", "text": "Picking", "openItem": "False", "children": [
             {"tag": "protocol", "value": "EmanProtBoxing",   "text": "default"},
@@ -204,3 +209,8 @@ HEMNMA = [
         {"tag": "protocol", "value": "XmippProtAlignmentNMA", "text": "Image analysis with selected modes"}]},
     {"tag": "section", "text": "6. 3D reconstructions & animations", "children": [
         {"tag": "protocol", "value": "XmippProtDimredNMA", "text": "Clustering and trajectories"}]}]
+
+Localized Reconstruction = [
+	{"tag": "protocol", "value": "ProtLocalizedRecons", "text": "1. Compute sub-particles"},
+	{"tag": "protocol", "value": "ProtRelionSubtract",  "text": "2. (Optional) Relion projection subtraction"},
+	{"tag": "protocol", "value": "ProtLocalizedExtraction",  "text": "3. Sub-particles extraction"}]

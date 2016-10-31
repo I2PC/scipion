@@ -44,7 +44,6 @@ from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
 from pyworkflow.utils.properties import Message, Icon, Color
 
-
 from constants import STATUS_COLORS
 
 DEFAULT_BOX_COLOR = '#f8f8f8'
@@ -149,6 +148,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
 
 class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
     """Provide runs info to populate tree"""
+
     def __init__(self, project, actionFunc):
         pwgui.tree.ProjectRunsTreeProvider.__init__(self, project)
         self.actionFunc = actionFunc
@@ -512,6 +512,7 @@ class ProtocolsView(tk.Frame):
     This extended tk.Frame is what will appear when Protocols is on.
     """
 
+    RUNS_CANVAS_NAME = "runs_canvas"
     def __init__(self, parent, windows, **args):
         tk.Frame.__init__(self, parent, **args)
         # Load global configuration
@@ -541,7 +542,7 @@ class ProtocolsView(tk.Frame):
         self.keybinds = dict()
 
         # Register key binds
-        self._bindKeyPress('Delete', self._deleteProtocol)
+        self._bindKeyPress('Delete', self._onDelPressed)
 
         self.__autoRefresh = None
         self.__autoRefreshCounter = 3 # start by 3 secs  
@@ -933,7 +934,7 @@ class ProtocolsView(tk.Frame):
     def createRunsGraph(self, parent):
         self.runsGraphCanvas = pwgui.Canvas(parent, width=400, height=400, 
                                 tooltipCallback=self._runItemTooltip,
-                                tooltipDelay=1000)
+                                tooltipDelay=1000, name=ProtocolsView.RUNS_CANVAS_NAME, takefocus=True, highlightthickness=0)
 
         self.runsGraphCanvas.onClickCallback = self._runItemClick
         self.runsGraphCanvas.onDoubleClickCallback = self._runItemDoubleClick
@@ -1016,18 +1017,13 @@ class ProtocolsView(tk.Frame):
             if node.run:
 
                 # Get the latest activity timestamp
-                ts = node.run.getObjCreation()
-
-                # This format comes from the database....tricky
-                ts = dt.datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+                ts = node.run.getObjCreation().datetime(fs=False)
 
                 if node.run.initTime.hasValue():
-                    f = "%Y-%m-%d %H:%M:%S.%f"
-                    ts = dt.datetime.strptime(node.run.initTime.get(), f)
+                    ts = node.run.initTime.datetime()
 
                 if node.run.endTime.hasValue():
-                    f = "%Y-%m-%d %H:%M:%S.%f"
-                    ts = dt.datetime.strptime(node.run.endTime.get(), f)
+                    ts = node.run.endTime.datetime()
 
                 age = dt.datetime.now() - ts
 
@@ -1273,6 +1269,8 @@ class ProtocolsView(tk.Frame):
         item.setSelected(True)
         
     def _runItemClick(self, item=None):
+
+        self.runsGraphCanvas.focus_set()
 
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
@@ -1574,7 +1572,19 @@ class ProtocolsView(tk.Frame):
     def _continueProtocol(self, prot):
         self.project.continueProtocol(prot)
         self._scheduleRunsUpdate()
-        
+
+    def _onDelPressed(self):
+        # This function will be connected to the key 'Del' press event
+        # We need to check if the canvas have the focus and then
+        # proceed with the delete action
+
+        # get the widget with the focus
+        widget = self.focus_get()
+
+        # Call the delete action only if the widget is the canvas
+        if str(widget).endswith(ProtocolsView.RUNS_CANVAS_NAME):
+            self._deleteProtocol()
+
     def _deleteProtocol(self):
         protocols = self._getSelectedProtocols()
 

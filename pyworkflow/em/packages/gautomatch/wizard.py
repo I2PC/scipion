@@ -26,6 +26,7 @@
 
 import os
 
+import pyworkflow as pw
 import pyworkflow.em.wizard as emwiz
 import pyworkflow.utils as pwutils
 from pyworkflow.em.viewer import CoordinatesObjectView
@@ -95,13 +96,11 @@ class GautomatchPickerWizard(emwiz.EmWizard):
         pickerConfig = os.path.join(coordsDir, 'picker.conf')
         f = open(pickerConfig, "w")
 
-        pickScript = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow','em', 'packages',
-                                  'gautomatch', 'run_gautomatch.py')
+        pickScript = pw.join('em', 'packages', 'gautomatch',
+                             'run_gautomatch.py')
 
         pickCmd = prot.getArgs(threshold=False, mindist=False)
-        convertCmd = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow','apps', 'pw_convert.py')
+        convertCmd = pw.join('apps', 'pw_convert.py')
 
         args = {
                 "pickScript": pickScript,

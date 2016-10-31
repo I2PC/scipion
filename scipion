@@ -103,9 +103,10 @@ if __version__ == 'devel':
     # Find out if the is a .git directory
     if exists(join(SCIPION_HOME, '.git')):
         def call(cmd):
-            subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
-        call('git branch | grep \* > .devel_version')
-        call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
+            return subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
+        if call('which git > /dev/null') == 0: # Means git command is found
+            call('git branch | grep \* > .devel_version')
+            call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
 
     # If in a future we release a nightly build, we could add the .devel_version
     versionFile = join(SCIPION_HOME, '.devel_version')
@@ -196,12 +197,17 @@ try:
          BUILD['CUDA'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
-    PYTHONPATH = os.pathsep.join(
-        [SCIPION_HOME,
-         join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'),
-         XMIPP_LIB,
-         os.environ.get('PYTHONPATH', '')]
-    )
+
+    PYTHONPATH_LIST = [SCIPION_HOME,
+                       join(SCIPION_SOFTWARE,
+                            'lib', 'python2.7', 'site-packages'),
+                       XMIPP_LIB, os.environ.get('PYTHONPATH', '')]
+
+    if 'SCIPION_NOGUI' in os.environ:
+        PYTHONPATH_LIST.insert(0, join(SCIPION_HOME,
+                                       'pyworkflow', 'gui', 'no-tkinter'))
+
+    PYTHONPATH = os.pathsep.join(PYTHONPATH_LIST)
 
     VARS.update({
         'PATH': PATH,
@@ -495,8 +501,8 @@ Arguments:
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        for k, v in VARS.items():
-            sys.stdout.write('export %s="%s"\n' % (k, v))
+        for key in sorted(VARS):
+            sys.stdout.write('export %s="%s"\n' % (key, VARS[key]))
 
         sys.exit(0)
 
@@ -588,7 +594,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv run
+  help install manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 

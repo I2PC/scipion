@@ -20,21 +20,18 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains several conversion utilities
-"""
 
 import os
 import sys
 import PIL
 
-from constants import NO_INDEX
 import xmipp
+import pyworkflow.utils as pwutils
+
 from constants import *
-from pyworkflow.utils import runJob, getExt
 
 # TODO: remove dependency from Xmipp
 DT_FLOAT = xmipp.DT_FLOAT
@@ -45,15 +42,39 @@ class ImageHandler(object):
     def __init__(self):
         # Now it will use Xmipp image library
         # to read and write most of formats, in the future
-        # if we want to be indepent of Xmipp, we should have
+        # if we want to be independent of Xmipp, we should have
         # our own image library
-        from packages.xmipp3 import fixVolumeFileName
-        
         self._img = xmipp.Image()
         self._imgClass = xmipp.Image
-        self._fixVolumeFileName = fixVolumeFileName
 
-    def _convertToLocation(self, location):
+    @classmethod
+    def fixXmippVolumeFileName(cls, image):
+        """ This method will add :mrc to .mrc volumes
+        because for mrc format is not possible to distinguish
+        between 3D volumes and 2D stacks.
+        """
+        # We can not import Volume from top level since
+        # data depends on this module
+        from data import Volume
+        fn = image.getFileName()
+        if isinstance(image, Volume):
+            if fn.endswith('.mrc') or fn.endswith('.map'):
+                fn += ':mrc'
+
+        return fn
+
+    @classmethod
+    def locationToXmipp(cls, location):
+        """ Convert an index and filename location
+        to a string with @ as expected in Xmipp.
+        """
+        index, filename = cls._convertToLocation(location)
+        if index != NO_INDEX:
+            return "%06d@%s" % (index, filename)
+        return filename
+
+    @classmethod
+    def _convertToLocation(cls, location):
         """ Get a location in a tuple format (index, filename).
         location could be:
             tuple -> (index, filename)
@@ -66,28 +87,37 @@ class ImageHandler(object):
         elif isinstance(location, basestring):
             outLocation = (NO_INDEX, location)
             
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
-            outLocation = (location.getIndex(), self._fixVolumeFileName(location))
-            
+        elif hasattr(location, 'getLocation'):
+            # This case includes Image and its subclasses
+            outLocation = (location.getIndex(),
+                           cls.fixXmippVolumeFileName(location))
         else:
-            raise Exception('Can not convert object %s to (index, location)' % type(location))
+            raise Exception('Can not convert object %s to (index, location)'
+                            % type(location))
         
         return outLocation
-    
-    def existsLocation(self, location):
+
+    @classmethod
+    def existsLocation(cls, locationObj):
         """ Return True if a given location exists. 
         Location have the same meaning than in _convertToLocation.
         """
-        if isinstance(location, tuple):
-            fn = location[1]
-        elif isinstance(location, basestring):
-            fn = location
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
-            fn = location.getLocation()[1]
+        if locationObj is None:
+            fn = None
+        elif isinstance(locationObj, tuple):
+            fn = locationObj[1]
+        elif isinstance(locationObj, basestring):
+            fn = locationObj
+        elif hasattr(locationObj, 'getLocation'):
+            # This case includes Image and its subclasses
+            fn = locationObj.getLocation()[1]
         else:
-            raise Exception('Can not match object %s to (index, location)' % type(location))
+            raise Exception('Can not match object %s to '
+                            '(index, location)' % type(locationObj))
+
+        # If either the location is None or location
+        if fn is None:
+            return False
 
         # Remove filename format specification such as :mrc, :mrcs or :ems
         if ':' in fn:
@@ -116,7 +146,6 @@ class ImageHandler(object):
 
             if dataType is not None:
                 self._img.convert2DataType(dataType)
-
             if transform is not None:
                 self._img.applyTransforMatScipion(transform.getMatrixAsList())
             # Write to output
@@ -153,7 +182,7 @@ class ImageHandler(object):
         if self.existsLocation(locationObj):
             location = self._convertToLocation(locationObj)
             fn = location[1]
-            ext = getExt(fn).lower()
+            ext = pwutils.getExt(fn).lower()
 
             if ext == '.png' or ext == '.jpg':
                 im = PIL.Image.open(fn)
@@ -260,26 +289,31 @@ class ImageHandler(object):
         The radius should be less or equal dim(refImage)/2
         The mask will be stored in 'outputFile'
         """
-        #TODO: right now we need to call an xmipp program to create 
-        # the spherical mask, it would be nicer to have such utility in the binding
+        #TODO: right now we need to call a Xmipp program to create
+        # the spherical mask, it would be nicer to have such utility
+        # in the binding
         import pyworkflow.em.packages.xmipp3 as xmipp3
         inputRef = xmipp3.getImageLocation(refImage)
         self.__runXmippProgram('xmipp_transform_mask', 
-                               '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius))
+                               '-i %s --create_mask  %s --mask circular -%d'
+                               % (inputRef, outputFile, radius))
         
     def addNoise(self, inputFile, outputFile, std=1., avg=0.):
-        """ Add Gaussian noise to an input image (or stack) and produce noisy images.
+        """ Add Gaussian noise to an input image (or stack)
+        to produce noisy images.
         Params:
             inputFile: the filename of the input images
             outputFile: the filename of the output noisy images
             noiseStd: standard deviation for the Gaussian noise.
         """
         self.__runXmippProgram('xmipp_transform_add_noise', 
-                               '-i %s -o %s --type gaussian %f %f' % (inputFile, outputFile, std, avg))
+                               '-i %s -o %s --type gaussian %f %f'
+                               % (inputFile, outputFile, std, avg))
         
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function
-        is implemented in the xmipp binding."""
+        is implemented in the Xmipp binding.
+        """
         return xmipp.FileName(imgFn).isImage()
 
     @classmethod
@@ -288,11 +322,11 @@ class ImageHandler(object):
             fn = location[1]
         elif isinstance(location, basestring):
             fn = location
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
+        elif hasattr(location, 'getLocation'):
             fn = location.getLocation()[1]
         else:
-            raise Exception('Can not match object %s to (index, location)' % type(location))
+            raise Exception('Can not match object %s to (index, location)'
+                            % type(location))
 
         if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'

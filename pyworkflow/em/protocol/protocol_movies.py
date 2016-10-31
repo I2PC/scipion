@@ -29,17 +29,20 @@
 
 import os
 from os.path import join, basename, exists
+from datetime import datetime
 
+import pyworkflow.object as pwobj
 from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
-from pyworkflow.protocol.constants import STEPS_PARALLEL
-from pyworkflow.utils.path import createLink, removeBaseExt, makePath
+
+from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
+from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment, Acquisition
+from pyworkflow.em import ImageHandler
 
 from protocol_micrographs import ProtPreprocessMicrographs
 from protocol_particles import ProtExtractParticles
 
-PLOT_CART = 0
-PLOT_POLAR = 1
 
 
 class ProtProcessMovies(ProtPreprocessMicrographs):
@@ -48,12 +51,15 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
     This base class will iterate through the movies (extract them if compressed)
     and call a _processMovie method for each one.
     """
-    
+    # Redefine this in subclasses if want to convert the movies to mrc
+    # the value should be either 'mrc' or 'mrcs'
+    CONVERT_TO_MRC = None
+
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         
@@ -61,111 +67,278 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
-        form.addParam('cleanMovieData', BooleanParam, default=True,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Clean movie data?',
-                      help='Movies take a lot of disk space.\n'
-                           'So, by default, all protocols that work on\n'
-                           'movies will erase the each movie folder after\n'
-                           'finishing. Results files should be copied in \n'
-                           'the "createOutputStep" function.\n'
-                           'If set to *No*, the folder will not be deleted.')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ---------------------
     def _insertAllSteps(self):
         # Build the list of all processMovieStep ids by 
         # inserting each of the steps for each movie
+        self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
-        allMovies = [self._insertMovieStep(movie) for movie in self.inputMovies.get()]
-        self._insertFunctionStep('createOutputStep', prerequisites=allMovies)
+        # FIXME: Not working in scipion-box
+        #self.convertStepId = self._insertFunctionStep('convertInputStep')
 
+        movieSteps = self._insertNewMoviesSteps(self.insertedDict,
+                                                self.inputMovies.get())
+        finalSteps = self._insertFinalSteps(movieSteps)
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=finalSteps, wait=True)
+
+    def _insertFinalSteps(self, deps):
+        """ This should be implemented in subclasses"""
+        return deps
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overwritten in subclasses
+        # (eg in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _loadInputList(self):
+        """ Load the input set of movies and create a list. """
+        moviesFile = self.inputMovies.get().getFileName()
+        self.debug("Loading input db: %s" % moviesFile)
+        movieSet = SetOfMovies(filename=moviesFile)
+        movieSet.loadAllProperties()
+        self.listOfMovies = [m.clone() for m in movieSet]
+        self.streamClosed = movieSet.isStreamClosed()
+        movieSet.close()
+        self.debug("Closed db.")
+
+    def _checkNewInput(self):
+        # Check if there are new movies to process from the input set
+        localFile = self.inputMovies.get().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
+        self.debug('Last check: %s, modification: %s'
+                  % (pwutils.prettyTime(self.lastCheck),
+                     pwutils.prettyTime(mTime)))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfMovies'):
+            return None
+
+        self.lastCheck = now
+        # Open input movies.sqlite and close it as soon as possible
+        self._loadInputList()
+        newMovies = any(m.getObjId() not in self.insertedDict
+                        for m in self.listOfMovies)
+        outputStep = self._getFirstJoinStep()
+
+        if newMovies:
+            fDeps = self._insertNewMoviesSteps(self.insertedDict,
+                                               self.listOfMovies)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+    def _checkNewOutput(self):
+        pass # To be implemented in sub-classes
+
+    def _stepsCheck(self):
+        # Input movie set can be loaded or None when checked for new inputs
+        # If None, we load it
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _insertNewMoviesSteps(self, insertedDict, inputMovies):
+        """ Insert steps to process new movies (from streaming)
+        Params:
+            insertedDict: contains already processed movies
+            inputMovies: input movies set to be check
+        """
+        deps = []
+        # For each movie insert the step to process it
+        for movie in inputMovies:
+            if movie.getObjId() not in insertedDict:
+                stepId = self._insertMovieStep(movie)
+                deps.append(stepId)
+                insertedDict[movie.getObjId()] = stepId
+        return deps
+        
     def _insertMovieStep(self, movie):
         """ Insert the processMovieStep for a given movie. """
-        # Note that at this point is safe to pass the movie, since this
+        # Note1: At this point is safe to pass the movie, since this
         # is not executed in parallel, here we get the params
         # to pass to the actual step that is gone to be executed later on
+        # Note2: We are serializing the Movie as a dict that can be passed
+        # as parameter for a functionStep
+        movieDict = movie.getObjDict(includeBasic=True)
         movieStepId = self._insertFunctionStep('processMovieStep',
-                                               movie.getObjId(), movie.getFileName(),
-                                               prerequisites=[])  
+                                               movieDict,
+                                               movie.hasAlignment(),
+                                               prerequisites=[])
         return movieStepId
 
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def processMovieStep(self, movieId, movieFn, *args):
-        movieFolder = self._getMovieFolder(movieId)
+    #--------------------------- STEPS functions -----------------------------
+    def convertInputStep(self):
+        """ Should be implemented in sub-classes if needed. """
+        pass
+
+    def processMovieStep(self, movieDict, hasAlignment):
+        movie = Movie()
+        movie.setAcquisition(Acquisition())
+
+        if hasAlignment:
+            movie.setAlignment(MovieAlignment())
+
+        movie.setAttributesFromDict(movieDict, setBasic=True,
+                                    ignoreMissing=True)
+
+        movieFolder = self._getOutputMovieFolder(movie)
+        movieFn = movie.getFileName()
         movieName = basename(movieFn)
 
-        if self._filterMovie(movieId, movieFn):
-            makePath(movieFolder)
-            createLink(movieFn, join(movieFolder, movieName))
-            toDelete = [movieName]
-    
+        # Clean old finished files
+        pwutils.cleanPath(self._getMovieDone(movie))
+
+        if self._filterMovie(movie):
+            pwutils.makePath(movieFolder)
+            pwutils.createLink(movieFn, join(movieFolder, movieName))
+
             if movieName.endswith('bz2'):
+                newMovieName = movieName.replace('.bz2', '')
                 # We assume that if compressed the name ends with .mrc.bz2
-                movieMrc = movieName.replace('.bz2', '')
-                toDelete.append(movieMrc)
-                if not exists(movieMrc):
+                if not exists(newMovieName):
                     self.runJob('bzip2', '-d -f %s' % movieName, cwd=movieFolder)
 
             elif movieName.endswith('tbz'):
+                newMovieName = movieName.replace('.tbz', '.mrc')
                 # We assume that if compressed the name ends with .tbz
-                movieMrc = movieName.replace('.tbz', '.mrc')
-                toDelete.append(movieMrc)
-                if not exists(movieMrc):
+                if not exists(newMovieName):
                     self.runJob('tar', 'jxf %s' % movieName, cwd=movieFolder)
+
+            elif movieName.endswith('.tif'):
+                #FIXME: It seems that we have some flip problem with compressed
+                # tif files, we need to check that
+                newMovieName = movieName.replace('.tif', '.mrc')
+                # we assume that if compressed the name ends with .tbz
+                if not exists(newMovieName):
+                    self.runJob('tif2mrc', '%s %s' % (movieName, newMovieName),
+                                                      cwd=movieFolder)
+            elif movieName.endswith('.txt'):
+                # Support a list of frame as a simple .txt file containing
+                # all the frames in a raw list, we could use a xmd as well,
+                # but a plain text was choose to simply its generation
+                movieTxt = os.path.join(movieFolder, movieName)
+                with open(movieTxt) as f:
+                    movieOrigin = os.path.basename(os.readlink(movieFn))
+                    newMovieName = movieName.replace('.txt', '.mrcs')
+                    ih = ImageHandler()
+                    for i, line in enumerate(f):
+                        if line.strip():
+                            inputFrame = os.path.join(movieOrigin, line.strip())
+                            ih.convert(inputFrame,
+                                       (i+1, os.path.join(movieFolder, newMovieName)))
             else:
-                movieMrc = movieName
+                newMovieName = movieName
             
-            self.info("Processing movie: %s" % movieMrc)
-            
-            self._processMovie(movieId, movieMrc, movieFolder, *args)
-            
-            if self.cleanMovieData:
-                print "erasing.....movieFolder: ", movieFolder
+            if (self.CONVERT_TO_MRC and not (newMovieName.endswith("mrc") or
+                                             newMovieName.endswith("mrcs"))):
+                inputMovieFn = os.path.join(movieFolder, newMovieName)
+                if inputMovieFn.endswith('.em'):
+                    inputMovieFn += ":ems"
+                newMovieName = pwutils.replaceExt(newMovieName,
+                                                  self.CONVERT_TO_MRC)
+                outputMovieFn = os.path.join(movieFolder, newMovieName)
+                self.info("Converting movie '%s' -> '%s'" % (inputMovieFn,
+                                                             outputMovieFn))
+                ImageHandler().convertStack(inputMovieFn, outputMovieFn)
+
+            # Just store the original name in case it is needed in _processMovie
+            movie._originalFileName = pwobj.String(objDoStore=False)
+            movie._originalFileName.set(movie.getFileName())
+            # Now set the new filename (either linked or converted)
+            movie.setFileName(os.path.join(movieFolder, newMovieName))
+            self.info("Processing movie: %s" % movie.getFileName())
+
+            self._processMovie(movie)
+
+            if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+                self.info('Clean movie data DISABLED. '
+                          'Movie folder will remain in disk!!!')
+            else:
+                self.info("Erasing.....movieFolder: %s" % movieFolder)
                 os.system('rm -rf %s' % movieFolder)
-#                 cleanPath(movieFolder)
-            else:
-                self.info('Clean movie data DISABLED. Movie folder will remain in disk!!!')
+                # cleanPath(movieFolder)
+
+        # Mark this movie as finished
+        open(self._getMovieDone(movie), 'w').close()
         
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _filterMovie(self, movieId, movieFn):
+    #--------------------------- UTILS functions ----------------------------
+    def _getOutputMovieFolder(self, movie):
+        """ Create a Movie folder where to work with it. """
+        return self._getTmpPath('movie_%06d' % movie.getObjId())
+
+    def _getMovieName(self, movie, ext='.mrc'):
+        return self._getExtraPath('movie_%06d%s' % (movie.getObjId(), ext))
+
+    def _getMovieDone(self, movie):
+        return self._getExtraPath('DONE_movie_%06d.TXT' % movie.getObjId())
+
+    def _isMovieDone(self, movie):
+        """ A movie is done if the marker file exists. """
+        return os.path.exists(self._getMovieDone(movie))
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE_all.TXT')
+
+    def _readDoneList(self):
+        """ Read from a text file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if os.path.exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+
+        return doneList
+
+    def _writeDoneList(self, movieList):
+        """ Write to a text file the items that have been done. """
+        doneFile = self._getAllDone()
+        with open(self._getAllDone(), 'a') as f:
+            for movie in movieList:
+                f.write('%d\n' % movie.getObjId())
+
+    #--------------------------- OVERRIDE functions --------------------------
+    def _filterMovie(self, movie):
         """ Check if process or not this movie.
         """
         return True
-    
-    def _getMovieFolder(self, movieId):
-        """ Create a Movie folder where to work with it. """
-        return self._getTmpPath('movie_%06d' % movieId)  
-                
-    def _getMovieName(self, movieId, ext='.mrc'):
-        return self._getExtraPath('movie_%06d%s' % (movieId, ext)) 
-    
+
+    def _processMovie(self, movie):
+        """ Process the movie actions, remember to:
+        1) Generate all output files inside movieFolder
+           (usually with cwd in runJob)
+        2) Copy the important result files after processing
+           (movieFolder will be deleted!!!)
+        """
+        pass
+
+    # FIXME: check if the following functions could be removed
+
     def _getNameExt(self, movieName, postFix, ext):
         if movieName.endswith("bz2"):
             # removeBaseExt function only eliminate the last extension,
             # but if files are compressed, we need to eliminate two extensions:
             # bz2 and its own image extension (e.g: mrcs, em, etc)
-            return removeBaseExt(removeBaseExt(movieName)) + postFix + '.' + ext
+            return pwutils.removeBaseExt(pwutils.removeBaseExt(movieName)) + postFix + '.' + ext
         else:
-            return removeBaseExt(movieName) + postFix + '.' + ext
+            return pwutils.removeBaseExt(movieName) + postFix + '.' + ext
     
-    def _getPlotName(self, movieName, plotType):
-        if plotType == PLOT_CART:
-            return removeBaseExt(movieName) + '_plot_cart.png'
-        else:
-            return removeBaseExt(movieName) + '_plot_polar.png'
-
     def _getCorrMovieName(self, movieId, ext='.mrcs'):
         return 'movie_%06d%s' % (movieId, ext)
 
     def _getLogFile(self, movieId):
         return 'micrograph_%06d_Log.txt' % movieId
-
-    def _processMovie(self, movieId, movieName, movieFolder,shifts):
-        """ Process the movie actions, remember to:
-        1) Generate all output files inside movieFolder (usually with cwd in runJob)
-        2) Copy the important result files after processing (movieFolder will be deleted!!!)
-        """
-        pass
 
 
 class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):

@@ -152,6 +152,7 @@ class MultiPointerTreeProvider(TreeProvider):
     storage from MultiPointerVar. 
     """
     def __init__(self, mapper):
+        TreeProvider.__init__(self)
         self._objectDict = OrderedDict()
         self._mapper = mapper
         
@@ -255,6 +256,7 @@ class ProtocolClassTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
     def __init__(self, protocolClassName):
+        TreeProvider.__init__(self)
         self.protocolClassName = protocolClassName
      
     def getObjects(self):
@@ -312,14 +314,21 @@ def getObjectLabel(pobj, mapper):
 class SubclassesTreeProvider(TreeProvider):
     """Will implement the methods to provide the object info
     of subclasses objects(of className) found by mapper"""
+    CREATION_COLUMN = 'Creation'
+    INFO_COLUMN = 'Info'
+
     def __init__(self, protocol, pointerParam, selected=None):
+
+        TreeProvider.__init__(self, sortingColumnName=self.CREATION_COLUMN,
+                              sortingAscending=False)
+
         self.param = pointerParam
         self.selected = selected # FIXME
         self.selectedDict = {}
         self.protocol = protocol
         self.mapper = protocol.mapper
         self.maxNum = 200
-            
+
     def getObjects(self):
         import pyworkflow.em as em 
         # Retrieve all objects of type className
@@ -360,7 +369,8 @@ class SubclassesTreeProvider(TreeProvider):
                         if isinstance(attr, em.EMSet):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
-                            if any(issubclass(attr.ITEM_TYPE, c) for c in classes):
+                            if (attr.ITEM_TYPE is not None and
+                                any(issubclass(attr.ITEM_TYPE, c) for c in classes)):
                                 if p is None: # This means the set have not be added
                                     p = pwobj.Pointer(prot, extended=paramName)
                                     p._allowsSelection = False
@@ -387,12 +397,29 @@ class SubclassesTreeProvider(TreeProvider):
                         if hasattr(attr, subParam):
                             _checkParam('%s.%s' % (paramName, subParam), 
                                         getattr(attr, subParam))
-                                
+
+        # Sort objects before returning them
+        self._sortObjects(objects)
 
         return objects
-        
+
+    def _sortObjects(self, objects):
+        objects.sort(key=self.objectKey, reverse=not self.isSortingAscending())
+
+    def objectKey(self, pobj):
+
+        obj = self._getParentObject(pobj,pobj)
+
+        if self._sortingColumnName == SubclassesTreeProvider.CREATION_COLUMN:
+            return self._getObjectCreation(obj.get())
+        elif self._sortingColumnName == SubclassesTreeProvider.INFO_COLUMN:
+            return self._getObjectInfoValue(obj.get())
+        else:
+            return self._getPointerLabel(obj)
+
     def getColumns(self):
-        return [('Object', 300), ('Info', 250), ('Creation', 150)]
+        return [('Object', 300), (SubclassesTreeProvider.INFO_COLUMN, 250),
+                (SubclassesTreeProvider.CREATION_COLUMN, 150)]
     
     def isSelected(self, obj):
         """ Check if an object is selected or not. """
@@ -401,24 +428,48 @@ class SubclassesTreeProvider(TreeProvider):
                 if s and s.getObjId() == obj.getObjId():
                     return True
         return False
-    
+
+    @staticmethod
+    def _getParentObject(pobj, default=None):
+        return getattr(pobj, '_parentObject', default)
+
     def getObjectInfo(self, pobj):
-        parent = getattr(pobj, '_parentObject', None)
-        if parent is None:
-            label = getObjectLabel(pobj, self.mapper)
-        else: # This is an item coming from a set
-            label = 'item %s' % pobj.get().strId()
+        parent = self._getParentObject(pobj)
+
+        # Get the label
+        label = self._getPointerLabel(pobj, parent)
             
         obj = pobj.get()
         objId = pobj.getUniqueId()
         
         isSelected = objId in self.selectedDict
         self.selectedDict[objId] = True
-        info = str(obj).replace(obj.getClassName(), '')
             
         return {'key': objId, 'text': label,
-                'values': (info, obj.getObjCreation()), 
+                'values': (self._getObjectInfoValue(obj),
+                           self._getObjectCreation(obj)),
                 'selected': isSelected, 'parent': parent}
+
+    @staticmethod
+    def _getObjectCreation(obj):
+
+        return obj.getObjCreation()
+
+    @staticmethod
+    def _getObjectInfoValue(obj):
+
+        return str(obj).replace(obj.getClassName(), '')
+
+    def _getPointerLabel(self, pobj, parent=None):
+
+        # If parent is not provided, try to get it, it might have none.
+        if parent is None: parent = self._getParentObject(pobj)
+
+        # If there is no parent
+        if parent is None:
+            return getObjectLabel(pobj, self.mapper)
+        else:  # This is an item coming from a set
+            return 'item %s' % pobj.get().strId()
 
     def getObjectActions(self, pobj):
         obj = pobj.get()
@@ -449,7 +500,10 @@ class RelationsTreeProvider(SubclassesTreeProvider):
             for pobj in project.getRelatedObjects(self.relationParam.getName(), 
                                                  self.item, self.direction):
                 objects.append(pobj.clone())
-        
+
+        # Sort objects
+        self._sortObjects(objects)
+
         return objects
     
 #---------------------- Other widgets ----------------------------------------
@@ -520,21 +574,24 @@ class SectionFrame(tk.Frame):
         configureWeigths(self.headerFrame)
         self.headerFrame.columnconfigure(1, weight=1)
         #self.headerFrame.columnconfigure(2, weight=1)
-        self.headerLabel = tk.Label(self.headerFrame, text=label, fg='white', bg=bgColor)
+        self.headerLabel = tk.Label(self.headerFrame, text=label, fg='white',
+                                    bg=bgColor)
         self.headerLabel.grid(row=0, column=0, sticky='nw')
         
     def _createContent(self):
         canvasFrame = tk.Frame(self, bg='white')
         configureWeigths(self, row=1)
         configureWeigths(canvasFrame)
-        self.canvas = Canvas(canvasFrame, width=625, height=self.height, bg='white') 
+        self.canvas = Canvas(canvasFrame, width=625, height=self.height,
+                             bg='white')
         self.canvas.grid(row=0, column=0, sticky='news')
         canvasFrame.grid(row=1, column=0, sticky='news')
         
         configureWeigths(self.canvas)
                 
         self.contentFrame = tk.Frame(self.canvas, bg='white', bd=0)
-        self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW, window=self.contentFrame)
+        self.contentId = self.canvas.create_window(0, 0, anchor=tk.NW,
+                                                   window=self.contentFrame)
         
         self.contentFrame.bind('<Configure>', self._configure_interior)
         self.canvas.bind('<Configure>', self._configure_canvas)
@@ -584,7 +641,8 @@ class SectionWidget(SectionFrame):
         self.form = form
         self.section = section
         self.callback = callback
-        SectionFrame.__init__(self, master, self.section.label.get(), height=height, **args)
+        SectionFrame.__init__(self, master, self.section.label.get(),
+                              height=height, **args)
         
     def _createHeader(self, label, bgColor):
         SectionFrame._createHeader(self, label, bgColor)        
@@ -596,11 +654,13 @@ class SectionWidget(SectionFrame):
             self.var.set(question.get())
             self.var.trace('w', self._onVarChanged)
             
-            self.chbLabel = tk.Label(self.headerFrame, text=question.label.get(), fg='white', bg=bgColor)
+            self.chbLabel = tk.Label(self.headerFrame, text=question.label.get(),
+                                     fg='white', bg=bgColor)
             self.chbLabel.grid(row=0, column=1, sticky='e', padx=2)
             
             self.chb = tk.Checkbutton(self.headerFrame, variable=self.var.tkVar, 
-                                      bg=bgColor, activebackground=gui.cfgButtonActiveBgColor)
+                                      bg=bgColor,
+                                      activebackground=gui.cfgButtonActiveBgColor)
             self.chb.grid(row=0, column=2, sticky='e')
         
     def show(self):
@@ -637,11 +697,13 @@ class ParamWidget():
     It will also have a Variable that should be set when creating 
       the specific components"""
     def __init__(self, row, paramName, param, window, parent, value, 
-                 callback=None, visualizeCallback=None, column=0, showButtons=True):
+                 callback=None, visualizeCallback=None, column=0,
+                 showButtons=True):
         self.window = window
         self._protocol = self.window.protocol
         if self._protocol.getProject() is None:
-            print ">>> ERROR: Project is None for protocol: %s, start winpdb to debug it" % self._protocol
+            print(">>> ERROR: Project is None for protocol: %s, "
+                  "start winpdb to debug it" % self._protocol)
             startDebugger()
         self.row = row
         self.column = column
@@ -674,7 +736,7 @@ class ParamWidget():
                 self._labelFont = self.window.fontBold
             self.parent.columnconfigure(0, minsize=250)
             self.parent.columnconfigure(1, minsize=250)
-            self.btnFrame = tk.Frame(self.parent, bg='white') # self.btnFrame should be set after this
+            self.btnFrame = tk.Frame(self.parent, bg='white')
         else:
             self.btnFrame = None
             self._labelSticky = 'nw'
@@ -697,12 +759,14 @@ class ParamWidget():
                
     def _createContent(self):
         self.content = tk.Frame(self.parent, bg='white')
-        gui.configureWeigths(self.content) 
-        self._createContentWidgets(self.param, self.content) # self.var should be set after this
+        gui.configureWeigths(self.content)
+        # self.var should be set after this
+        self._createContentWidgets(self.param, self.content)
         
     def _addButton(self, text, imgPath, cmd):
         if self.btnFrame:
-            btn = IconButton(self.btnFrame, text, imgPath, command=cmd)
+            btn = IconButton(self.btnFrame, text, imgPath,
+                             highlightthickness=0, command=cmd)
             btn.grid(row=0, column=self._btnCol, sticky='e', padx=2, pady=2)
             self.btnFrame.columnconfigure(self._btnCol, weight=1)
             self._btnCol += 1
@@ -737,16 +801,19 @@ class ParamWidget():
     @staticmethod
     def createBoolWidget(parent, **args):
         """ Return a BoolVar associated with a yes/no selection. 
-        **args: extra arguments passed to tk.Radiobutton and tk.Frame constructors.
+        **args: extra arguments passed to tk.Radiobutton and tk.Frame
+            constructors.
         """
         var = BoolVar()
         frameArgs = dict(args)
         if 'font' in frameArgs:
             del frameArgs['font']
         frame = tk.Frame(parent, **frameArgs)
-        rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar, value=1, **args)
+        rb1 = tk.Radiobutton(frame, text='Yes', variable=var.tkVar,
+                             highlightthickness=0, value=1, **args)
         rb1.grid(row=0, column=0, padx=2, sticky='w')
-        rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar, value=0, **args)
+        rb2 = tk.Radiobutton(frame, text='No', variable=var.tkVar,
+                             highlightthickness=0, value=0, **args)
         rb2.grid(row=0, column=1, padx=2, sticky='w') 
         
         return (var, frame)
@@ -775,17 +842,20 @@ class ParamWidget():
             elif param.display == params.EnumParam.DISPLAY_LIST:
                 for i, opt in enumerate(param.choices):
                     rb = tk.Radiobutton(content, text=opt, variable=var.tkVar, 
-                                        value=opt, font=self.window.font, bg='white')
+                                        value=opt, font=self.window.font,
+                                        bg='white', highlightthickness=0)
                     rb.grid(row=i, column=0, sticky='w')
             elif param.display == params.EnumParam.DISPLAY_HLIST:
                 rbFrame = tk.Frame(content, bg='white')
                 rbFrame.grid(row=0, column=0, sticky='w')
                 for i, opt in enumerate(param.choices):                    
                     rb = tk.Radiobutton(rbFrame, text=opt, variable=var.tkVar, 
-                                        value=opt, font=self.window.font, bg='white')
+                                        value=opt, font=self.window.font,
+                                        bg='white')
                     rb.grid(row=0, column=i, sticky='w', padx=(0, 5))                
             else:
-                raise Exception("Invalid display value '%s' for EnumParam" % str(param.display))
+                raise Exception("Invalid display value '%s' for EnumParam"
+                                % str(param.display))
         
         elif t is params.MultiPointerParam:
             tp = MultiPointerTreeProvider(self._protocol.mapper)
@@ -831,7 +901,8 @@ class ParamWidget():
                 classes = [protClassName]
             
             if len(classes) > 1:
-                self._addButton("Select", Icon.ACTION_SEARCH, self._browseProtocolClass)
+                self._addButton("Select", Icon.ACTION_SEARCH,
+                                self._browseProtocolClass)
             else:
                 var.set(classes[0])
             
@@ -848,7 +919,8 @@ class ParamWidget():
             #v = self.setVarValue(paramName)
             var = tk.StringVar()
             if issubclass(t, params.FloatParam) or issubclass(t, params.IntParam):
-                entryWidth = self._entryWidth # Reduce the entry width for numbers entries
+                # Reduce the entry width for numbers entries
+                entryWidth = self._entryWidth
             entry = tk.Entry(content, width=entryWidth, textvariable=var, 
                              font=self.window.font)
             entry.grid(row=0, column=0, sticky='w')
@@ -858,13 +930,16 @@ class ParamWidget():
                 self._addButton('Browse', Icon.ACTION_BROWSE, self._browsePath)
 
         if self.visualizeCallback is not None:
-            self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE, self._visualizeVar)    
+            self._addButton(Message.LABEL_BUTTON_VIS, Icon.ACTION_VISUALIZE,
+                            self._visualizeVar)
         
         if self._findParamWizard():
-            self._addButton(Message.LABEL_BUTTON_WIZ, Icon.ACTION_WIZ, self._showWizard)
+            self._addButton(Message.LABEL_BUTTON_WIZ, Icon.ACTION_WIZ,
+                            self._showWizard)
         
         if param.help.hasValue():
-            self._addButton(Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP, self._showHelpMessage)
+            self._addButton(Message.LABEL_BUTTON_HELP, Icon.ACTION_HELP,
+                            self._showHelpMessage)
         
         self.var = var
         
@@ -889,7 +964,8 @@ class ParamWidget():
                                      parent=self.window)
                 viewer.visualize(obj)
             else:
-                self._showInfo("There is not viewer registered for *%s* object class." % obj.getClassName())
+                self._showInfo("There is not viewer registered for "
+                               "*%s* object class." % obj.getClassName())
     
     def _visualizePointerParam(self, paramName):
         pointer = self.var.get()
@@ -912,7 +988,8 @@ class ParamWidget():
             selected = value
         elif selected is not None:
             selected = [value]
-        tp = SubclassesTreeProvider(self._protocol, self.param, selected=selected)
+        tp = SubclassesTreeProvider(self._protocol, self.param,
+                                    selected=selected)
         
         def validateSelected(selectedItems):
             for item in selectedItems:
@@ -944,7 +1021,8 @@ class ParamWidget():
     def _browseRelation(self, e=None):
         """Select a relation from DB
         This function is suppose to be used only for RelationParam. """
-        tp = RelationsTreeProvider(self._protocol, self.param, selected=self.get())
+        tp = RelationsTreeProvider(self._protocol, self.param,
+                                   selected=self.get())
         dlg = ListDialog(self.parent, "Select object", tp,
                          selectmoded=self._selectmode)
         if dlg.values:
@@ -972,7 +1050,8 @@ class ParamWidget():
                 path = v        
         if not path:
             path = getHomePath()
-        browser = FileBrowserWindow("Browsing", self.window, path=path, onSelect=onSelect)
+        browser = FileBrowserWindow("Browsing", self.window, path=path,
+                                    onSelect=onSelect)
         browser.show()
             
     def _openProtocolForm(self, e=None):
@@ -990,7 +1069,9 @@ class ParamWidget():
             prot = getattr(protocol, instanceName)
                 
             prot.allowHeader.set(False)
-            f = FormWindow("Sub-Protocol: " + instanceName, prot, self._protocolFormCallback, self.window, childMode=True)
+            f = FormWindow("Sub-Protocol: " + instanceName, prot,
+                           self._protocolFormCallback, self.window,
+                           childMode=True)
             f.show()
         else:
             self._showInfo("Select the protocol class first")
@@ -1010,11 +1091,13 @@ class ParamWidget():
             self.label.grid(row=self.row, column=c, sticky=self._labelSticky, 
                             padx=self._padx, pady=self._pady, columnspan=2)
         else:
-            self.label.grid(row=self.row, column=c, sticky=self._labelSticky, padx=self._padx, pady=self._pady)
+            self.label.grid(row=self.row, column=c, sticky=self._labelSticky,
+                            padx=self._padx, pady=self._pady)
             self.content.grid(row=self.row, column=c+1, sticky='news', 
                               padx=self._padx, pady=self._pady)
         if self.btnFrame:
-            self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx, sticky='new')
+            self.btnFrame.grid(row=self.row, column=c+2, padx=self._padx,
+                               sticky='new')
         
     def hide(self):
         self.label.grid_remove()
@@ -1042,13 +1125,15 @@ class ParamWidget():
 
 class LineWidget(ParamWidget):
     def __init__(self, row, paramName, param, window, parent, value, 
-                 callback=None, visualizeCallback=None, column=0, showButtons=True):
+                 callback=None, visualizeCallback=None, column=0,
+                 showButtons=True):
         ParamWidget.__init__(self, row, paramName, param, window, parent, None)
         self.show()
         
     def show(self):
         self.label.grid(row=self.row, column=0, sticky=self._labelSticky)
-        self.content.grid(row=self.row, column=1, sticky='nw', columnspan=6, padx=5)
+        self.content.grid(row=self.row, column=1, sticky='nw', columnspan=6,
+                          padx=5)
         if self.btnFrame:
             self.btnFrame.grid(row=self.row, column=2, padx=2, sticky='new')
        
@@ -1064,11 +1149,13 @@ class GroupWidget(ParamWidget):
         pass
                
     def _createContent(self):
-        self.content = tk.LabelFrame(self.parent, text=self.param.getLabel(), bg='white')
+        self.content = tk.LabelFrame(self.parent, text=self.param.getLabel(),
+                                     bg='white')
         gui.configureWeigths(self.content) 
         
     def show(self):
-        self.content.grid(row=self.row, column=0, sticky='news', columnspan=6, padx=5, pady=5)
+        self.content.grid(row=self.row, column=0, sticky='news', columnspan=6,
+                          padx=5, pady=5)
         
     def hide(self):
         self.content.grid_remove()  
@@ -1117,11 +1204,13 @@ class FormWindow(Window):
         self.bindings = []
         self.hostList = hostList
         self.protocol = protocol
-        self.visualizeMode = kwargs.get('visualizeMode', False)  # This control when to close or not after execute
+        # This control when to close or not after execute
+        self.visualizeMode = kwargs.get('visualizeMode', False)
         self.headerBgColor = Color.RED_COLOR
         if self.visualizeMode:
             self.headerBgColor = Color.DARK_GREY_COLOR
-        self.childMode = kwargs.get('childMode', False) # Allow to open child protocols form (for workflows)
+        # Allow to open child protocols form (for workflows)
+        self.childMode = kwargs.get('childMode', False)
         self.updateProtocolCallback = kwargs.get('updateProtocolCallback', None)
         from pyworkflow.em import findWizards
         self.wizards = findWizards(protocol, DESKTOP_TKINTER)
@@ -1155,7 +1244,7 @@ class FormWindow(Window):
         
         
     def _createHeader(self, parent):
-        """ Fill the header frame with the logo, title and cite-help buttons. """
+        """ Fill the header frame with the logo, title and cite-help buttons."""
         headerFrame = tk.Frame(parent)
         #headerFrame.grid(row=0, column=0, sticky='new')
         headerFrame.columnconfigure(0, weight=1)
@@ -1165,10 +1254,11 @@ class FormWindow(Window):
         
         if logoPath:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig, 
-                                   image=self.getImage(logoPath, maxheight=40), compound=tk.LEFT)
+                                   image=self.getImage(logoPath, maxheight=40),
+                                   compound=tk.LEFT)
         else:
             headerLabel = tk.Label(headerFrame, text=t, font=self.fontBig)
-        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), sticky='nw')#, columnspan=5)
+        headerLabel.grid(row=0, column=0, padx=5, pady=(5,0), sticky='nw')
         
         def _addButton(text, icon, command, col):
             btn = tk.Label(headerFrame, text=text, image=self.getImage(icon), 
@@ -1176,7 +1266,8 @@ class FormWindow(Window):
             btn.bind('<Button-1>', command)
             btn.grid(row=0, column=col, padx=5, sticky='e')
         
-        _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES, self._showReferences, 1)
+        _addButton(Message.LABEL_CITE, Icon.ACTION_REFERENCES,
+                   self._showReferences, 1)
         _addButton(Message.LABEL_HELP ,Icon.ACTION_HELP, self._showHelp, 2)
         
         return headerFrame
@@ -1195,42 +1286,50 @@ class FormWindow(Window):
         commonFrame = tk.Frame(parent)
         
         ############# Create the run part ###############
-        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN, height=100,
-                                  headerBgColor=self.headerBgColor)
+        runSection = SectionFrame(commonFrame, label=Message.TITLE_RUN,
+                                  height=100, headerBgColor=self.headerBgColor)
         runFrame = tk.Frame(runSection.contentFrame, bg='white')
         runFrame.grid(row=0, column=0, sticky='nw', padx=(0, 15))
         #runFrame.columnconfigure(1, weight=1)
         
         r = 0 # Run name
-        self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True, sticky='ne')
+        self._createHeaderLabel(runFrame, Message.LABEL_RUNNAME, bold=True,
+                                sticky='ne')
         self.runNameVar = tk.StringVar()
-        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.runNameVar, 
+        entry = tk.Entry(runFrame, font=self.font, width=25,
+                         textvariable=self.runNameVar,
                          state='readonly')
-        entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
-        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
+        entry.grid(row=r, column=1, padx=(0, 5), pady=5, sticky='new')
+        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT,
+                         highlightthickness=0,command=self._editObjParams)
         btn.grid(row=r, column=2, padx=(10,0), pady=5, sticky='nw')
         
         c = 3 # Comment
-        self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne', column=c)
+        self._createHeaderLabel(runFrame, Message.TITLE_COMMENT, sticky='ne',
+                                column=c)
         self.commentVar = tk.StringVar()
-        entry = tk.Entry(runFrame, font=self.font, width=25, textvariable=self.commentVar, 
-                         state='readonly')
-        entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')#, columnspan=5)
-        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT, command=self._editObjParams)
+        entry = tk.Entry(runFrame, font=self.font, width=25,
+                         textvariable=self.commentVar, state='readonly')
+        entry.grid(row=r, column=c+1, padx=(0, 5), pady=5, sticky='new')
+        btn = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_EDIT,
+                         highlightthickness=0,command=self._editObjParams)
         btn.grid(row=r, column=c+2, padx=(10,0), pady=5, sticky='nw')
         
         self.updateLabelAndCommentVars()
                 
         r = 1 # Execution
-        self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True, sticky='ne', row=r, pady=0)
+        self._createHeaderLabel(runFrame, Message.LABEL_EXECUTION, bold=True,
+                                sticky='ne', row=r, pady=0)
         modeFrame = tk.Frame(runFrame, bg='white')
-        #self._createHeaderLabel(modeFrame, "Mode", sticky='ne', row=0, pady=0, column=0)
-        runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE, 
-                                           params.MODE_CHOICES, self.protocol.runMode.get(),
+
+        runMode = self._createBoundOptions(modeFrame, Message.VAR_RUN_MODE,
+                                           params.MODE_CHOICES,
+                                           self.protocol.runMode.get(),
                                            self._onRunModeChanged, 
                                            bg='white', font=self.font)   
         runMode.grid(row=0, column=0, sticky='new', padx=(0, 5), pady=5)
-        btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
+        btnHelp = IconButton(modeFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0,
                              command=self._createHelpCommand(Message.HELP_RUNMODE))
         btnHelp.grid(row=0, column=2, padx=(5, 0), pady=2, sticky='ne')
         #modeFrame.columnconfigure(0, minsize=60)
@@ -1238,7 +1337,8 @@ class FormWindow(Window):
         modeFrame.grid(row=r, column=1, sticky='new', columnspan=2)
         
         # ---- Host---- 
-        self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c, pady=0, padx=(15,5), sticky='ne')
+        self._createHeaderLabel(runFrame, Message.LABEL_HOST, row=r, column=c,
+                                pady=0, padx=(15,5), sticky='ne')
         # Keep track of hostname selection
         self.hostVar = tk.StringVar()
         protHost = self.protocol.getHostName()
@@ -1260,7 +1360,8 @@ class FormWindow(Window):
         mode = self.protocol.stepsExecutionMode
         
         if allowThreads or allowMpi:
-            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True, sticky='ne', row=r, pady=0)
+            self._createHeaderLabel(runFrame, Message.LABEL_PARALLEL, bold=True,
+                                    sticky='ne', row=r, pady=0)
             procFrame = tk.Frame(runFrame, bg='white')
             r2 = 0
             c2 = 0
@@ -1289,12 +1390,15 @@ class FormWindow(Window):
                     for i, opt in enumerate([THREADS, MPI]):
                         rb = tk.Radiobutton(procCombo, text=opt, 
                                             variable=self.procTypeVar, 
-                                            value=opt, bg='white')
+                                            value=opt, bg='white',
+                                            highlightthickness=0)
                         rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
                         
                     procCombo.grid(row=0, column=0, sticky='nw', pady=5)
-                    procEntry = self._createBoundEntry(procFrame, Message.VAR_THREADS, 
-                                                       func=self._setThreadsOrMpi, value=procs)
+                    procEntry = self._createBoundEntry(procFrame,
+                                                       Message.VAR_THREADS,
+                                                       func=self._setThreadsOrMpi,
+                                                       value=procs)
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
                     
             else:
@@ -1314,7 +1418,8 @@ class FormWindow(Window):
                     entry = self._createBoundEntry(procFrame, Message.VAR_MPI)
                     entry.grid(row=r2, column=c2+1, padx=(0, 5), sticky='nw')
                 
-            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
+            btnHelp = IconButton(procFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                                 highlightthickness=0,
                                  command=self._createHelpCommand(Message.HELP_MPI_THREADS))
             btnHelp.grid(row=0, column=4, padx=(5, 0), pady=2, sticky='ne')
             procFrame.columnconfigure(0, minsize=60)
@@ -1332,8 +1437,8 @@ class FormWindow(Window):
         #btnEditQueue = IconButton(runFrame, 'Edit queue', Icon.ACTION_EDIT, 
         #                          command=self._editQueueParams)
         #btnEditQueue.grid(row=2, column=c+2, padx=(10,0), pady=5, sticky='nw')
-        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP, 
-                             command=self._createHelpCommand(Message.HELP_USEQUEUE))
+        btnHelp = IconButton(runFrame, Message.TITLE_COMMENT, Icon.ACTION_HELP,
+                             highlightthickness=0, command=self._createHelpCommand(Message.HELP_USEQUEUE))
         btnHelp.grid(row=2, column=c+3, padx=(5, 0), pady=2, sticky='ne')
         
         # Run Name not editable
@@ -1510,7 +1615,7 @@ class FormWindow(Window):
             
         frame = tk.Frame(parent, **frameArgs)
         for i, opt in enumerate(param.choices):
-            rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt, **rbArgs)
+            rb = tk.Radiobutton(frame, text=opt, variable=var.tkVar, value=opt, highlightthickness=0, **rbArgs)
             rb.grid(row=0, column=i, sticky='nw', padx=(0, 5))  
         
         return frame

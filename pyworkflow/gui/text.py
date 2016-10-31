@@ -36,6 +36,7 @@ import ttk
 
 import gui
 from widgets import Scrollable, IconButton
+import pyworkflow as pw
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn, expandPattern)
@@ -221,8 +222,7 @@ class Text(tk.Text, Scrollable):
         if os.path.isdir(path):
             dpath = (path if os.path.isabs(path)
                      else os.path.join(os.getcwd(), path))
-            subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                              'browser', 'dir', dpath])
+            subprocess.Popen(pw.getScipionScript(), ['browser', 'dir', dpath])
             return
 
         # If it is a file, interpret it correctly and open it with DataView
