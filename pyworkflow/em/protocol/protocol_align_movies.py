@@ -247,7 +247,14 @@ class ProtAlignMovies(ProtProcessMovies):
         # frames = movie.getNumberOfFrames()
 
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
-        frames = lastFrame - firstFrame + 1
+        if lastFrame == 0:
+            # Although getFirstItem is not remonended in general, hereit is
+            # used olny once, for validation purposes, so performance
+            # problems not should be apprear.
+            frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
+            lastFrame = frames
+        else:
+            frames = lastFrame - firstFrame + 1
 
         if frames is not None:
             def _validateRange(prefix):
