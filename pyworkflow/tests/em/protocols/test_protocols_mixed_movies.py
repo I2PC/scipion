@@ -156,7 +156,7 @@ class TestMixedMovies(BaseTest):
         of1 = self.newProtocol(XmippProtOFAlignment,
                                objLabel='OF (1)',
                                alignFrame0=2, alignFrameN=10,
-                               useAlignToSum=True,
+                               useAlignment=True,
                                numberOfThreads=4)
         of1.inputMovies.set(mc1.outputMovies)
         self.launchProtocol(of1)
@@ -164,8 +164,9 @@ class TestMixedMovies(BaseTest):
         of2 = self.newProtocol(XmippProtOFAlignment,
                                objLabel='OF (2)',
                                alignFrame0=2, alignFrameN=10,
+                               useAlignment=True,
                                useAlignToSum=True,
-                               numberOfThreads=4)
+                               numberOfThreads=4,)
         of2.inputMovies.set(mc2.outputMovies)
         self.launchProtocol(of2)
 
