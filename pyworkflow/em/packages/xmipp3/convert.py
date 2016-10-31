@@ -1493,6 +1493,12 @@ def writeMovieMd(movie, outXmd, f1, fN, useAlignment=False):
     frame = movie.clone()
     firstFrame, lastFrame, frameIndex = movie.getFramesRange()
 
+    if lastFrame == 0:
+        # this condition is for old SetOfMovies, that has lastFrame = 0.
+        frames = movie.getNumberOfFrames()
+        if frames is not None:
+            lastFrame = frames
+
     if f1 < firstFrame or fN > lastFrame:
         raise Exception("Frame range could not be greater than the movie one. ")
 
