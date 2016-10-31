@@ -158,11 +158,13 @@ class ProtUnblur(ProtAlignMovies):
                 movieInputFn += ":mrcs"
             
             movieConverted = pwutils.removeExt(movieInputFn) + "_tmp.mrcs"
-            print "PASO POR AQUI"
-            ih.convertMovie(movieInputFn, movieConverted, a0, aN)
-            print  "Y PO AQUI TAMBIEN"
+            ih.convertStack(movieInputFn, movieConverted, a0, aN)
+            # Here, only temporal movie file (or link) stored in
+            # tmp/movie_?????? is removed before move the converted file. It
+            #  is necessary 'cause if it is overwritten you may lost your
+            # original data.
             os.remove(movie.getFileName())
-            pwutils.moveFile(movieConverted,movieInputFn)
+            pwutils.moveFile(movieConverted, movie.getFileName())
 
         self._createLink(movie)
         range = aN - a0 + 1
