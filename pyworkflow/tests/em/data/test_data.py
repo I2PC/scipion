@@ -184,7 +184,7 @@ class TestImageHandler(unittest.TestCase):
         
         outFn = join('/tmp/qbeta_converted.mrcs')
 
-        ih.convertMovie(movFn, outFn, 2, 6)
+        ih.convertStack(movFn, outFn, 2, 6)
         
         self.assertTrue(os.path.exists(outFn))
         self.assertTrue(pwutils.getFileSize(outFn) > 0)
