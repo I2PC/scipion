@@ -54,17 +54,8 @@ class ProtUnblur(ProtAlignMovies):
         form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                       label='Apply Dose filter',
                       help='Apply a dose-dependent filter to frames before '
-                           'summing them')
-        form.addParam('exposurePerFrame', params.FloatParam,
-                      label='Exposure per frame (e/A^2)',
-                      help='Exposure per frame, in electrons per square '
-                           'Angstrom')
-        form.addParam('preExposureAmount', params.FloatParam,
-                      default=0., condition='_isNewUnblur',
-                      label='Pre-exposure amount (e/A^2)',
-                      help='Amount of pre-exposure prior to the first frame, '
-                           'in electrons per square Angstrom')
-
+                           'summing them. Pre-exposure and dose per frame were '
+                           'specified during movies import.')
         #group = form.addGroup('Expert Options')
         form.addParam('minShiftInitSearch', params.FloatParam,
                       default=2.,
@@ -210,7 +201,7 @@ class ProtUnblur(ProtAlignMovies):
                 'shiftFnName': self._getShiftsFn(movie),
                 'samplingRate': self.samplingRate,
                 'voltage': movie.getAcquisition().getVoltage(),
-                'fscFn': self._getFrcFn(movie),
+                'frcFn': self._getFrcFn(movie),
                 'bfactor': self.bfactor.get(),
                 'minShiftInitSearch': self.minShiftInitSearch.get(),
                 'OutRadShiftLimit': self.OutRadShiftLimit.get(),
@@ -221,13 +212,13 @@ class ProtUnblur(ProtAlignMovies):
                 'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
                 'doRestoreNoisePwr': 'YES' if self.doRestoreNoisePwr else 'NO',
                 'doVerboseOutput': 'YES' if self.doVerboseOutput else 'NO',
-                'exposurePerFrame': self.exposurePerFrame.get()
+                'exposurePerFrame': movie.getAcquisition().getDosePerFrame()
                 }
         self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
         self._program += UNBLUR_PATH
 
-        if getVersion('UNBLUR') != '1.0.150529':
-            args['preExposureAmount'] = self.preExposureAmount.get()
+        if getVersion('UNBLUR') != '1.0_150529':
+            args['preExposureAmount'] = movie.getAcquisition().getDoseInitial()
             self._args = """ << eof
 %(movieName)s
 %(numberOfFramesPerMovie)s
@@ -243,15 +234,16 @@ YES
 %(frcFn)s
 %(minShiftInitSearch)f
 %(OutRadShiftLimit)f
-%(Bfactor)f
+%(bfactor)f
 %(HWVertFourMask)d
 %(HWHoriFourMask)d
-%(terminationShiftThreshold)f
+%(terminShiftThreshold)f
 %(maximumNumberIterations)d
-%(doRestoreNoisePower)s
+%(doRestoreNoisePwr)s
 %(doVerboseOutput)s
 eof
 """ % args
+
         else:
             self._args = """ << eof
 %(movieName)s
@@ -340,4 +332,3 @@ eof
 
     def _isNewUnblur(self):
         return True if getVersion('UNBLUR') != '1.0.150529' else False
-

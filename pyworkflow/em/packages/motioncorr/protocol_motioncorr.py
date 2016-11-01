@@ -27,7 +27,7 @@
 # *
 # ******************************************************************************
 
-import os
+import os, sys
 from itertools import izip
 
 import pyworkflow.protocol.params as params
@@ -107,17 +107,6 @@ class ProtMotionCorr(ProtAlignMovies):
                                  'correction.')
         line.addParam('patchX', params.IntParam, default=5, label='X')
         line.addParam('patchY', params.IntParam, default=5, label='Y')
-
-        form.addParam('frameDose', params.FloatParam, default='0.0',
-                      label='Frame dose (e/A^2)', condition='useMotioncor2',
-                      help='Frame dose in e/A^2. If set to *0.0*, dose '
-                            'weighting will be skipped.')
-
-        form.addParam('initDose', params.FloatParam, default='0.0',
-                      expertLevel=cons.LEVEL_ADVANCED,
-                      label='Pre-exposure (e/A^2)',
-                      condition='useMotioncor2 and frameDose and _isNewMotioncor2',
-                      help='Initial dose received before stack is acquired, in e/A^2.')
 
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
@@ -219,14 +208,14 @@ class ProtMotionCorr(ProtAlignMovies):
 
             numbOfFrames = self._getNumberOfFrames(movie)
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
-                        '-Patch': self.patch.get() or '5 5',
+                        '-Patch': '%d %d' % (self.patchX, self.patchY),
                         '-MaskCent': '%d %d' % (self.cropOffsetX,
                                                 self.cropOffsetY),
                         '-MaskSize': '%d %d' % (cropDimX, cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
-                        '-FmDose': self.frameDose.get(),
+                        '-FmDose': inputMovies.getAcquisition().getDosePerFrame(),
                         '-Throw': '%d' % a0,
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
@@ -235,7 +224,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
-                argsDict['-InitDose'] = self.initDose.get()
+                argsDict['-InitDose'] = inputMovies.getAcquisition().getDoseInitial()
 
             args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
@@ -246,32 +235,32 @@ class ProtMotionCorr(ProtAlignMovies):
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
 
-        #try:
-        self.runJob(program, args, cwd=movieFolder)
+        try:
+            self.runJob(program, args, cwd=movieFolder)
 
-        if self.doComputePSD:
-            uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
-            correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
-            # Compute uncorrected avg mic
-            roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
-                   self.cropDimX.get(), self.cropDimY.get()]
-            fakeShiftsFn = self.writeZeroShifts(movie)
-            self.averageMovie(movie, fakeShiftsFn, aveMicFn,
-                              binFactor=self.binFactor.get(),
-                              roi=roi, dark=None,
-                              gain=inputMovies.getGain())
-            # Compute PSDs
-            self.computePSD(aveMicFn, uncorrectedPSD)
-            self.computePSD(outputMicFn, correctedPSD)
-            self.composePSD(uncorrectedPSD + ".psd",
-                            correctedPSD + ".psd",
-                            self._getPsdCorr(movie))
-            # Remove avg that was used only for computing PSD
-            pwutils.cleanPath(aveMicFn)
+            if self.doComputePSD:
+                uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
+                correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
+                # Compute uncorrected avg mic
+                roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
+                       self.cropDimX.get(), self.cropDimY.get()]
+                fakeShiftsFn = self.writeZeroShifts(movie)
+                self.averageMovie(movie, fakeShiftsFn, aveMicFn,
+                                  binFactor=self.binFactor.get(),
+                                  roi=roi, dark=None,
+                                  gain=inputMovies.getGain())
+                # Compute PSDs
+                self.computePSD(aveMicFn, uncorrectedPSD)
+                self.computePSD(outputMicFn, correctedPSD)
+                self.composePSD(uncorrectedPSD + ".psd",
+                                correctedPSD + ".psd",
+                                self._getPsdCorr(movie))
+                # Remove avg that was used only for computing PSD
+                pwutils.cleanPath(aveMicFn)
 
-        self._saveAlignmentPlots(movie)
-        #except:
-        #    print >> sys.stderr, program, " failed for movie %s" % movie.getName()
+            self._saveAlignmentPlots(movie)
+        except:
+            print("ERROR: Movie %s failed\n" % movie.getName())
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):

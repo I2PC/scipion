@@ -59,7 +59,7 @@ def getVersion(var):
 
 def getSupportedVersions(var):
     if var == 'UNBLUR':
-        return ['1.0.150529', '1.0.2']
+        return ['1.0_150529', '1.0.2']
     elif var == 'CTFFIND4':
         return ['4.0.15', '4.1.5']
 

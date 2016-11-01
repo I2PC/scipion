@@ -62,15 +62,11 @@ class ProtSummovie(ProtAlignMovies):
         group.addParam('useAlignment', params.BooleanParam, default=True,
                        label="Use movie alignment to Sum frames?")
 
-        group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
-                       label='Apply Dose filter',
-                       help='Apply a dose-dependent filter to frames '
-                            'before summing them')
-
-        form.addParam('exposurePerFrame', params.FloatParam,
-                      label='Exposure per frame (e/A^2)',
-                      help='Exposure per frame, in electrons per square '
-                           'Angstrom')
+        form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+                      label='Apply Dose filter',
+                      help='Apply a dose-dependent filter to frames before '
+                           'summing them. Pre-exposure and dose per frame were '
+                           'specified during movies import.')
 
         form.addParam('doRestoreNoisePower', params.BooleanParam,
                       default=True,
@@ -115,7 +111,7 @@ class ProtSummovie(ProtAlignMovies):
                       'samplingRate': movie.getSamplingRate(),
                       'voltage': movie.getAcquisition().getVoltage(),
                       'frcFn': self._getFrcFn(movie),
-                      'exposurePerFrame': self.exposurePerFrame.get(),
+                      'exposurePerFrame': movie.getAcquisition().getDosePerFrame(),
                       'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
                       'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
                       }
