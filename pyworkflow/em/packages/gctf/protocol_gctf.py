@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -34,7 +34,12 @@ import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.utils.properties import Message
-from convert import (readCtfModel, parseGctfOutput)
+from convert import (readCtfModel, parseGctfOutput,
+                     getVersion)
+
+
+CCC = 0
+MAXRES = 1
 
 
 class ProtGctf(em.ProtCTFMicrographs):
@@ -183,8 +188,44 @@ class ProtGctf(em.ProtCTFMicrographs):
               label="Do validation",
               help='Whether to validate the CTF determination.')
 
-#        form.addParallelSection(threads=1, mpi=1)
-
+        form.addSection(label='Phase shift')
+        form.addParam('doPhShEst', params.BooleanParam, default=False,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label="Estimate phase shift?",
+                      help='For micrographs collected with phase-plate. '
+                           'It is suggested to import such micrographs with '
+                           'amplitude contrast = 0. Also, using smaller '
+                           '_lowest resolution_ (e.g. 15A) and smaller '
+                           '_boxsize for smoothing_ (e.g. 50 for 1024 '
+                           'window size) might be better.')
+        line = form.addLine('Phase shift range range (deg)',
+                            expertLevel=params.LEVEL_ADVANCED,
+                            condition='doPhShEst',
+                            help='Select _lowest_ and _highest_ phase shift '
+                                 '(in degrees).')
+        line.addParam('phaseShiftL', params.FloatParam, default=0.0,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      condition='doPhShEst',
+                      label="Min")
+        line.addParam('phaseShiftH', params.FloatParam, default=180.0,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      condition='doPhShEst',
+                      label="Max")
+        group.addParam('phaseShiftS', params.FloatParam, default=10.0,
+                       expertLevel=params.LEVEL_ADVANCED,
+                       condition='doPhShEst',
+                       label="Step",
+                       help='Phase shift search step. Do not worry about '
+                            'the accuracy; this is just the search step, '
+                            'Gctf will refine the phase shift anyway.')
+        form.addParam('phaseShiftT', params.EnumParam, default=CCC,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      condition='doPhShEst',
+                      label='Target',
+                      choices=['CCC', 'Resolution limit'],
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      help='Phase shift target in the search: CCC or '
+                           'resolution limit')
 
     #--------------------------- STEPS functions -------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
@@ -362,6 +403,13 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._args += "--overlap %f " % self.overlap.get()
         self._args += "--convsize %d " % self.convsize.get()
         self._args += "--do_Hres_ref %d " % (1 if self.doHighRes else 0)
+
+        if getVersion() != '0.50':
+            if self.doPhShEst:
+                self._args += "--phase_shift_L %f " % self.phaseShiftL.get()
+                self._args += "--phase_shift_H %f " % self.phaseShiftH.get()
+                self._args += "--phase_shift_S %f " % self.phaseShiftS.get()
+                self._args += "--phase_shift_T %d " % (1 + self.phaseShiftT.get())
 
         if self.doHighRes:
             self._args += "--Href_resL %d " % self.HighResL.get()
