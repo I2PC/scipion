@@ -1,8 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Vahid Abrishami (vabrisahmi@cnb.csic.es)
+# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -22,24 +20,21 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM Micrographs
-"""
-
-import sys
-from os.path import join
 
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.protocol.params import MultiPointerParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import MultiPointerParam
 from pyworkflow.em.protocol import ProtPreprocessMicrographs, EMProtocol
 import pyworkflow.em as em
 
+
+
 class XmippProtMovieGain(ProtPreprocessMicrographs):
-    """ Estimate the gain image of a camera, directly analyzing one of its movies.
+    """
+    Estimate the gain image of a camera, directly analyzing one of its movies.
     """
     _label = 'movie gain'
 
@@ -47,17 +42,18 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = em.STEPS_PARALLEL
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
  
         form.addParam('inputMovies', MultiPointerParam, pointerClass='Movie', 
                       label=Message.LABEL_INPUT_MOVS,
-                      help='Select one or several movies. A gain image will be calculated for each one of them')
+                      help='Select one or several movies. A gain image will '
+                           'be calculated for each one of them')
         form.addParallelSection(threads=1, mpi=1)
 
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _insertAllSteps(self):
         gainSteps = []
         for pointer in self.inputMovies:
@@ -65,7 +61,8 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
             movieId = movie.getObjId()
             fnMovie = movie.getFileName()
  
-            stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie, prerequisites=[])
+            stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie,
+                                              prerequisites=[])
             gainSteps.append(stepId)
              
         self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
@@ -75,7 +72,8 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
         if len(self.inputMovies)==1:
             imgOut = em.data.Image()
             imgOut.setSamplingRate(movie.getSamplingRate())
-            imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"%movie.getObjId()))
+            imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
+                                             % movie.getObjId()))
     
             self._defineOutputs(outputGainImage=imgOut)
             self._defineSourceRelation(self.inputMovies, imgOut)
@@ -86,21 +84,17 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
                 movie = pointer.get()
                 imgOut = em.data.Image()
                 imgOut.setSamplingRate(movie.getSamplingRate())
-                imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"%movie.getObjId()))
+                imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
+                                                 % movie.getObjId()))
                 imgSetOut.append(imgOut)
     
             self._defineOutputs(outputSetOfGainImages=imgSetOut)
             self._defineSourceRelation(self.inputMovies, imgSetOut)
     
     def estimateGain(self, movieId, fnMovie):
-        self.runJob("xmipp_movie_estimate_gain","-i %s --oroot %s --iter 1 --singleRef"%(fnMovie,self._getPath("movie_%06d"%movieId)),
+        self.runJob("xmipp_movie_estimate_gain",
+                    "-i %s --oroot %s --iter 1 --singleRef"
+                    % (fnMovie, self._getPath("movie_%06d" % movieId)),
                     numberOfMpi=1)
-        cleanPath(self._getPath("movie_%06d_correction.xmp"%movieId))
+        cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
     
-    #--------------------------- INFO functions --------------------------------------------
-    def _citations(self):
-        return []
-
-    def _methods(self):
-        methods = []
-        return methods
