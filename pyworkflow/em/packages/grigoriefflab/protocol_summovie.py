@@ -40,10 +40,10 @@ class ProtSummovie(ProtAlignMovies):
     in subsequent image processing steps and optionally
     applies an exposure-dependent filter to maximize
     the signal at all resolutions in the frame averages.
-    """    
+    """
     _label = 'summovie'
     CONVERT_TO_MRC = 'mrc'
-    doSaveAveMic = True    
+    doSaveAveMic = True
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
@@ -204,7 +204,7 @@ eof
         movieFn = movie.getFileName()
         if movieFn.endswith("mrcs"):
             return pwutils.replaceExt(movieFn, self.CONVERT_TO_MRC)
-        else: 
+        else:
             return movieFn
     
     def _createLink(self, movie):
@@ -276,3 +276,4 @@ eof
             last -= (iniFrame - 1)
 
         return first, last
+

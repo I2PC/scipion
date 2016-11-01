@@ -65,7 +65,7 @@ class ProtUnblur(ProtAlignMovies):
                       help='Amount of pre-exposure prior to the first frame, '
                            'in electrons per square Angstrom')
 
-        # group = form.addGroup('Expert Options')
+        #group = form.addGroup('Expert Options')
         form.addParam('minShiftInitSearch', params.FloatParam,
                       default=2.,
                       label='Min. Shift Initial search (A)',
@@ -154,18 +154,18 @@ class ProtUnblur(ProtAlignMovies):
         numberOfFrames = self._getNumberOfFrames(movie)
         #FIXME: Figure out how to properly write shifts for unblur
         #self._writeMovieAlignment(movie, numberOfFrames)
-
+        
         a0, aN = self._getRange(movie, 'align')
         _, lstFrame, _ = movie.getFramesRange()
-
+        
         if a0 > 1 or aN < lstFrame:
             from pyworkflow.em import ImageHandler
             ih = ImageHandler()
             movieInputFn = movie.getFileName()
-
+            
             if movieInputFn.endswith("mrc"):
                 movieInputFn += ":mrcs"
-
+            
             movieConverted = pwutils.removeExt(movieInputFn) + "_tmp.mrcs"
             ih.convertStack(movieInputFn, movieConverted, a0, aN)
             # Here, only temporal movie file (or link) stored in
@@ -178,7 +178,7 @@ class ProtUnblur(ProtAlignMovies):
         self._createLink(movie)
         range = aN - a0 + 1
         self._argsUnblur(movie, range)
-
+        
         try:
             self.runJob(self._program, self._args)
         except:
@@ -266,16 +266,16 @@ YES
 %(frcFn)s
 %(minShiftInitSearch)f
 %(OutRadShiftLimit)f
-%(Bfactor)f
+%(bfactor)f
 %(HWVertFourMask)d
 %(HWHoriFourMask)d
-%(terminationShiftThreshold)f
+%(terminShiftThreshold)f
 %(maximumNumberIterations)d
-%(doRestoreNoisePower)s
+%(doRestoreNoisePwr)s
 %(doVerboseOutput)s
 eof
 """ % args
-
+    
     def _getMicName(self, movieName):
         """ Return the name for the output micrograph given the movie name.
         """
@@ -314,10 +314,10 @@ eof
         yShiftsCorr = [y / pixSize for y in yShifts]
 
         return xShiftsCorr, yShiftsCorr
-
+    
     def _getNumberOfFrames(self, movie):
         _, lstFrame, _ = movie.getFramesRange()
-
+        
         if movie.hasAlignment():
             _, lastFrmAligned = movie.getAlignment().getRange()
             if lastFrmAligned != lstFrame:
@@ -340,3 +340,4 @@ eof
 
     def _isNewUnblur(self):
         return True if getVersion('UNBLUR') != '1.0.150529' else False
+
