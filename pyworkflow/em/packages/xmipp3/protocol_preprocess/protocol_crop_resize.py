@@ -215,6 +215,7 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         XmippResizeHelper._defineProcessParams(self, form)
+        form.addParallelSection(threads=0, mpi=8)
         
     def _insertProcessStep(self):
         XmippResizeHelper._insertProcessStep(self)
