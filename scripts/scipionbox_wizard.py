@@ -285,7 +285,7 @@ class BoxWizardView(tk.Frame):
         errors = []
 
         # Check the Data folder exists
-        dataFolder = pwutils.expandPattern(self._getConfValue(DATA_FOLDER))
+        dataFolder = pwutils.expandPattern(self._getValue(DATA_FOLDER))
         if not os.path.exists(pwutils.expandPattern(dataFolder)):
             errors.append("Folder '%s' does not exists" % dataFolder)
 
