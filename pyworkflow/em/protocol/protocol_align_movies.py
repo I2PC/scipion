@@ -46,7 +46,7 @@ class ProtAlignMovies(ProtProcessMovies):
     the frames range used for alignment and final sum, the binning factor
     or the cropping options (region of interest)
     """
-    
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
@@ -94,7 +94,7 @@ class ProtAlignMovies(ProtProcessMovies):
         form.addParam('doSaveAveMic', params.BooleanParam, default=True,
                       label="Save aligned micrograph",
                       expertLevel=cons.LEVEL_ADVANCED)
-        
+
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
                       help="Save Aligned movie")
@@ -237,7 +237,7 @@ class ProtAlignMovies(ProtProcessMovies):
         errors = []
 
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
-            self.cropDimY > 0 and self.cropDimX <= 0):
+                        self.cropDimY > 0 and self.cropDimX <= 0):
             errors.append("If you give cropDimX, you should also give cropDimY"
                           " and vice versa")
 

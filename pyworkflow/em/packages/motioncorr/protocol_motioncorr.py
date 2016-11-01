@@ -125,11 +125,9 @@ class ProtMotionCorr(ProtAlignMovies):
                            'them together. The alignment is then performed on '
                            'the summed frames. By default, no grouping is '
                            'performed.')
-
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
@@ -163,6 +161,8 @@ class ProtMotionCorr(ProtAlignMovies):
         outputMicFn = self._getRelPath(self._getOutputMicName(movie),
                                        movieFolder)
         aveMicFn = pwutils.removeExt(movie.getFileName()) + '_uncorrected_avg.mrc'
+
+        a0, aN = self._getRange(movie, 'align')
 
         a0, aN = self._getRange(movie, 'align')
 
@@ -461,3 +461,4 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     plotter.tightLayout()
 
     return plotter
+

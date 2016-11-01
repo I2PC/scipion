@@ -917,7 +917,7 @@ class PointerList(List):
 class CsvList(Scalar, list):
     """This class will store a list of objects
     in a single DB row separated by comma.
-    pType: the type of the list elememnts, int, bool, str"""
+    pType: the type of the list elements, int, bool, str"""
     def __init__(self, pType=str, **kwargs):
         Scalar.__init__(self, **kwargs)
         list.__init__(self)

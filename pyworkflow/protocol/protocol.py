@@ -1196,6 +1196,9 @@ class Protocol(Step):
     
     def setHostConfig(self, config):
         self.hostConfig = config
+        # Never store the host config as part of the protocol, it is kept
+        # in the configuration information, the hostname is enough
+        self.hostConfig.setStore(False)
         
     def getJobId(self):
         """ Return the jobId associated to a running protocol. """
