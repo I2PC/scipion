@@ -958,25 +958,28 @@ class ProtocolsView(tk.Frame):
 
         self.runsGraph = self.project.getRunsGraph(refresh=refresh,
                                                    checkPids=checkPids)
+        self.drawRunsGraph(reorganize)
+
+    def drawRunsGraph(self, reorganize=False):
+
         self.runsGraphCanvas.clear()
-        
+
         # Check if there are positions stored
         if reorganize or len(self.settings.getNodes()) == 0:
             # Create layout to arrange nodes as a level tree
             layout = pwgui.graph.LevelTreeLayout()
         else:
             layout = pwgui.graph.BasicLayout()
-            
+
         # Create empty nodeInfo for new runs
         for node in self.runsGraph.getNodes():
             nodeId = node.run.getObjId() if node.run else 0
             nodeInfo = self.settings.getNodeById(nodeId)
             if nodeInfo is None:
-                self.settings.addNode(nodeId, x=0, y=0, expanded=True) 
-            
+                self.settings.addNode(nodeId, x=0, y=0, expanded=True)
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout,
                                        drawNode=self.createRunItem)
-        
+
     def createRunItem(self, canvas, node):
 
         nodeId = node.run.getObjId() if node.run else 0
@@ -1210,24 +1213,33 @@ class ProtocolsView(tk.Frame):
 
         self.settings.setColorMode(nextColorMode)
         self._updateActionToolbar()
-        self.updateRunsGraph()
+        # self.updateRunsGraph()
+        self.drawRunsGraph()
 
     def _selectAllProtocols(self, e=None):
         self._selection.clear()
-        for prot in self.project.getRuns():
+
+        # WHY GOING TO THE db?
+        #  Let's try using in memory data.
+        # for prot in self.project.getRuns():
+        for prot in self.project.runs:
             self._selection.append(prot.getObjId())
         self._updateSelection()
-        self.updateRunsGraph()
 
-    def _deleteSelectedProtocols(self, e=None):
-
-        for selection in self._selection:
-            self.project.getProtocol(self._selection[0])
+        # self.updateRunsGraph()
+        self.drawRunsGraph()
 
 
-        self._updateSelection()
-        self.updateRunsGraph()
-
+    # NOt used!: pconesa 02/11/2016.
+    # def _deleteSelectedProtocols(self, e=None):
+    #
+    #     for selection in self._selection:
+    #         self.project.getProtocol(self._selection[0])
+    #
+    #
+    #     self._updateSelection()
+    #     self.updateRunsGraph()
+    #
 
     def _updateSelection(self):
         self._fillSummary()
@@ -1627,7 +1639,8 @@ class ProtocolsView(tk.Frame):
                 for node in selectedNodes:
                     node.setLabels([label.getName() for label in dlg.values])
 
-                self.updateRunsGraph()
+                # self.updateRunsGraph()
+                self.drawRunsGraph()
 
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
