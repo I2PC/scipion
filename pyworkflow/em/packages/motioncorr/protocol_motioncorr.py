@@ -153,8 +153,6 @@ class ProtMotionCorr(ProtAlignMovies):
 
         a0, aN = self._getRange(movie, 'align')
 
-        a0, aN = self._getRange(movie, 'align')
-
         if not self.useMotioncor2:
             outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
                                              movieFolder)
