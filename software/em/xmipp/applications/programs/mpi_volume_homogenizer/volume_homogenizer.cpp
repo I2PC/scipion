@@ -132,7 +132,7 @@ void ProgVolumeHomogenizer::run()
 	if (rank == 0)
 		init_progress_bar(maxNImg);
 
-	for (size_t i = 0; i <= maxNImg; i++)
+	for (size_t i = 0; i < maxNImg; i++)
 	{
 		if ((i+1) % Nprocessors == rank)
 		{
@@ -183,10 +183,9 @@ void ProgVolumeHomogenizer::run()
 			opencv2Xmipp(ProjCorr, projCorr());
 
 			//filling output metaData
-			fn_proj.compose(projIdx, stackName);
+			fn_proj.compose(i+1, stackName);
 			rowInput.setValue(MDL_IMAGE, fn_proj);
-			projCorr.write(fn_proj, projIdx, true, WRITE_OVERWRITE);
-			projIdx++;
+			projCorr.write(fn_proj, i+1,true, WRITE_OVERWRITE);
 
 			mdPartialParticles.addRow(rowInput);
 			rowInput.clear();
