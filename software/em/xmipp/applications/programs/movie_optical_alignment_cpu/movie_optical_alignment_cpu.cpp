@@ -47,9 +47,13 @@ using namespace std;
 #ifdef GPU
 using namespace cv::gpu;
 #endif
+
+#define NOCOMPENSATION   0
+#define PRECOMPENSATION  1
+#define POSTCOMPENSATION 2
+
 class ProgOpticalAligment: public XmippProgram
 {
-
 public:
     FileName fnMovie, fnOut, fnGain, fnDark;
     FileName fnMovieOut, fnMicOut, fnMovieUncOut, fnMicUncOut;
@@ -59,6 +63,7 @@ public:
     int finalGroupSize;
     bool globalShiftCorr, inMemory;
     double dose0, doseStep, accelerationVoltage, sampling;
+    int compensationMode;
 
     /*****************************/
     /** crop corner **/
@@ -77,6 +82,8 @@ public:
     size_t Xdim, Ydim, Zdim, Ndim;
     MultidimArray<float> tempStack;
     Image<float> tempAvg;
+	FourierTransformer transformer;
+	ProgMovieFilterDose *filterDose;
 
     void defineParams()
     {
@@ -97,8 +104,9 @@ public:
         addParamsLine("   [--dark <fn=\"\">]           : Dark correction image");
         addParamsLine("   [--gain <fn=\"\">]           : Gain correction image");
         addParamsLine("   [--inmemory]                 : Do not write a temporary file with the ");
-        addParamsLine("   [--doseCorrection <dosePerFrame=0> <Ts=1> <kV=200> <previousDose=0>] : Set dosePerFrame to 0 if you do not want to correct by the dose");
-        addParamsLine("                                : Dose in e/A^2, Sampling rate (Ts) in A");
+        addParamsLine("   [--doseCorrection <dosePerFrame=0> <Ts=1> <kV=200> <previousDose=0> <mode=\"pre\">] : Set dosePerFrame to 0 if you do not want to correct by the dose");
+        addParamsLine("                                : Dose in e/A^2, Sampling rate (Ts) in A. Valid modes are pre and post");
+        addParamsLine("                                : Pre compensates before aligning and post after aligning");
 
 #ifdef GPU
         addParamsLine("   [--gpu <int=0>]              : GPU device to be used");
@@ -132,6 +140,17 @@ public:
         sampling = getDoubleParam("--doseCorrection",1);
         accelerationVoltage = getDoubleParam("--doseCorrection",2);
         dose0 = getDoubleParam("--doseCorrection",3);
+        String aux;
+        aux=getParam("--doseCorrection",4);
+        if (doseStep==0)
+        	compensationMode=NOCOMPENSATION;
+        else
+        {
+        	if (aux=="pre")
+        		compensationMode=PRECOMPENSATION;
+        	else
+        		compensationMode=POSTCOMPENSATION;
+        }
 #ifdef GPU
         gpuDevice = getIntParam("--gpu");
 #endif
@@ -356,9 +375,8 @@ public:
         Image<double> frameImage, translatedImage;
     	MultidimArray<float> Ifloat;
         Matrix1D<double> shift(2);
-    	ProgMovieFilterDose filterDose(accelerationVoltage);
-    	filterDose.pixel_size=sampling;
-    	FourierTransformer transformer;
+    	filterDose=new ProgMovieFilterDose(accelerationVoltage);
+    	filterDose->pixel_size=sampling;
     	MultidimArray< std::complex<double> > FFTI;
         FOR_ALL_OBJECTS_IN_METADATA(movie)
         {
@@ -384,10 +402,10 @@ public:
                 if (fnMovieUncOut!="")
                 	frameImage.write(fnMovieUncOut, currentFrameOutIdx+1, true, WRITE_REPLACE);
 
-                if (doseStep>0)
+                if (compensationMode==PRECOMPENSATION)
                 {
 					transformer.FourierTransform(frameImage(), FFTI, false);
-					filterDose.applyDoseFilterToImage(YSIZE(frameImage()), XSIZE(frameImage()), FFTI,
+					filterDose->applyDoseFilterToImage(YSIZE(frameImage()), XSIZE(frameImage()), FFTI,
 													  dose0+currentFrameInIdx*doseStep, dose0+(currentFrameInIdx+1)*doseStep);
 					transformer.inverseFourierTransform();
                 }
@@ -552,6 +570,20 @@ public:
                 cv::remap(cvCurrentGroupAverage, cvUndeformedGroupAverage, flowCurrentGroup[0], flowCurrentGroup[1], cv::INTER_CUBIC);
                 if (lastLevel)
                 {
+                    if (compensationMode==POSTCOMPENSATION)
+                    {
+                    	MultidimArray<float> If;
+                    	MultidimArray<double> Id;
+                    	MultidimArray<std::complex<double> > fId;
+						opencv2Xmipp(cvUndeformedGroupAverage,If);
+						typeCast(If,Id);
+    					transformer.FourierTransform(Id, fId, false);
+    					filterDose->applyDoseFilterToImage(YSIZE(Id), XSIZE(Id), fId,
+    													  dose0+currentGroup*doseStep, dose0+(currentGroup+1)*doseStep);
+    					transformer.inverseFourierTransform();
+    					typeCast(Id,If);
+    					xmipp2Opencv(If,cvUndeformedGroupAverage);
+                    }
                 	if (!fnMovieOut.isEmpty())
 					{
 						opencv2Xmipp(cvUndeformedGroupAverage,undeformedGroupAverage());
