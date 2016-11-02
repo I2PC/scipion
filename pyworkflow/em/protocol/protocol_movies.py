@@ -346,5 +346,39 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """
     pass
 
-    
 
+class ProtMovieAssignGain(ProtPreprocessMicrographs):
+    """ Assign a gain image to a set of movies
+    """
+    _label = 'assign gain to movies'
+
+    def __init__(self, **kwargs):
+        ProtPreprocessMicrographs.__init__(self, **kwargs)
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_INPUT)
+        
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
+                      important=True,
+                      label=Message.LABEL_INPUT_MOVS,
+                      help='Select a set of previously imported movies.')
+        form.addParam('gainImage', PointerParam, pointerClass='Image',
+                      label="Gain image", help="Select a gain image. The movie will be corrected as newMovie=Movie/gain")
+
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def createOutputStep(self):
+        moviesIn = self.inputMovies.get()
+        moviesOut = self._createSetOfMovies()
+        moviesOut.copyInfo(moviesIn)        
+        moviesOut.setGain(self.gainImage.get().getFileName())        
+        moviesOut.copyItems(moviesIn)
+        
+        self._defineOutputs(outputMovies=moviesOut)
+        self._defineSourceRelation(self.inputMovies, moviesOut)
+        
+        
