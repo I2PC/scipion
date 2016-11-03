@@ -39,6 +39,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
+from pyworkflow import monitor
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
@@ -755,6 +756,9 @@ class ProtocolsView(tk.Frame):
         
     def _automaticRefreshRuns(self, e=None):
         """ Schedule automatic refresh increasing the time between refreshes. """
+        if pwutils.envVarOn('DO_NOT_AUTO_REFRESH'):
+            return
+
         self.refreshRuns(initRefreshCounter=False)
         secs = self.__autoRefreshCounter
         # double the number of seconds up to 30 min
@@ -968,8 +972,8 @@ class ProtocolsView(tk.Frame):
             nodeId = node.run.getObjId() if node.run else 0
             nodeInfo = self.settings.getNodeById(nodeId)
             if nodeInfo is None:
-                self.settings.addNode(nodeId, x=0, y=0, expanded=True) 
-            
+                self.settings.addNode(nodeId, x=0, y=0, expanded=True)
+
         self.runsGraphCanvas.drawGraph(self.runsGraph, layout,
                                        drawNode=self.createRunItem)
         
@@ -1737,7 +1741,8 @@ class ProtocolsView(tk.Frame):
         if action == ACTION_TREE:
             self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
-            self.refreshRuns(checkPids=True)
+            with monitor.Timer("ACTION_REFRESH"):
+                self.refreshRuns(checkPids=True)
         elif action == ACTION_SWITCH_VIEW:
             self.switchRunsView()
     

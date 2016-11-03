@@ -26,7 +26,7 @@ class Timer(object):
 
     indentation = 0
     blackList = []
-    whiteList = ['project.getRuns']
+    whiteList = []
     minms = 1
 
     def __init__(self, name=None, verbose=True):
@@ -53,4 +53,4 @@ class Timer(object):
             toPrint = True
 
         if self.verbose and toPrint and self.msecs > Timer.minms:
-            print '{0} {1:10.0f} ms : {2}'.format(' ' * Timer.indentation, self.msecs, self.name)
+            print '{0}{1:10.0f}\tms\t{2}'.format('\t' * Timer.indentation, self.msecs, self.name)

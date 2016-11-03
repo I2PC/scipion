@@ -858,8 +858,11 @@ class Project(object):
                 for r in self.runs:
                     r.closeMappers()
 
-            self.runs = self.mapper.selectAll(iterate=False,
-                          objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+            # Use new selectAll Batch
+            # self.runs = self.mapper.selectAll(iterate=False,
+            #               objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+            self.runs = self.mapper.selectAllBatch(objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+
             for r in self.runs:
                 self._setProtocolMapper(r)
 

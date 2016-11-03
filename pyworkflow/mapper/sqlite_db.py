@@ -76,11 +76,11 @@ class SqliteDb():
         
     def _debugExecute(self, *args):
         try:
+            print "COMMAND: ", args[0]
+            print "ARGUMENTS: ", args[1:]
             return self.cursor.execute(*args)
         except Exception, ex:
             print ">>>> FAILED cursor.execute on db: '%s'" % self._dbName
-            print "COMMAND: ", args[0]
-            print "ARGUMENTS: ", args[1:]
             raise ex
             
         
@@ -94,7 +94,7 @@ class SqliteDb():
         
     def _results(self, iterate=False):
         """ Return the results to which cursor, point to. 
-        If iterates=True, iterate yielding each result independenly"""
+        If iterates=True, iterate yielding each result independently"""
         if not iterate:
             return self.cursor.fetchall()
         else:
