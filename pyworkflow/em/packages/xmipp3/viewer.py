@@ -140,7 +140,6 @@ class XmippViewer(Viewer):
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
-            
             self._views.append(ObjectView(self._project, obj.strId(), fn))
             
         elif issubclass(cls, SetOfNormalModes):
@@ -165,8 +164,7 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project, obj.strId(), fn, **kwargs))
             
-
-        elif issubclass(cls, MicrographsTiltPair):          
+        elif issubclass(cls, MicrographsTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'
             self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
                                           viewParams={ORDER: labels, 
@@ -267,7 +265,11 @@ class XmippViewer(Viewer):
             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
             launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
-         
+
+        elif issubclass(cls, SetOfImages):
+            fn = obj.getFileName()
+            self._views.append(ObjectView(self._project, obj.strId(), fn, **kwargs))
+
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
             self._visualize(particles)
