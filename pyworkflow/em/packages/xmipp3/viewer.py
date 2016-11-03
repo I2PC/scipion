@@ -234,7 +234,6 @@ class XmippViewer(Viewer):
             self._views.append(Classes3DView(self._project, obj.strId(), fn))
 
         elif issubclass(cls, SetOfImages):
-            print "SetOfImages..."
             fn = obj.getFileName()
             self._views.append(
                 ObjectView(self._project, obj.strId(), fn, **kwargs))
