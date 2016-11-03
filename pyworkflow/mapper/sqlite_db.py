@@ -82,10 +82,10 @@ class SqliteDb():
         except Exception, ex:
             print ">>>> FAILED cursor.execute on db: '%s'" % self._dbName
             raise ex
-            
+
         
         #return self.cursor.fetchone()
-    
+
     def _iterResults(self):
         row = self.cursor.fetchone()
         while row is not None:
@@ -125,4 +125,4 @@ class SqliteDb():
     def setVersion(self, version):
         self.executeCommand('PRAGMA user_version=%d' % version)
         self.commit()
-        
+

@@ -39,7 +39,7 @@ import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, getFileLastModificationDate
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -316,6 +316,10 @@ class Protocol(Step):
         self.__project = kwargs.get('project', None)
         # Filename templates dict that will be used by _getFileName
         self.__filenamesDict = {}
+
+        # This will be used at project load time to check if
+        # we need to update the protocol with the data from run.db
+        self.lastUpdateTimeStamp = String()
         
         # For non-parallel protocols mpi=1 and threads=1
         self.allowMpi = hasattr(self, 'numberOfMpi')
@@ -1671,4 +1675,22 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
                  loadAllConfig=False)     
     protocol = project.getProtocol(protId)
     return protocol
+
+
+def isProtocolUpToDate(protocol):
+    """ Check timestamps between protocol lastModificationDate and the
+    corresponding runs.db timestamp"""
+    if protocol.lastUpdateTimeStamp.get(None) is None: return False
+
+    protTS = protocol.lastUpdateTimeStamp.datetime()
+
+    if protTS is None: return False
+
+    dbTS = getFileLastModificationDate(protocol.getDbPath())
+
+    if protTS < dbTS:
+        return False
+    else:
+        return True
+
 

@@ -296,8 +296,9 @@ class SqliteMapper(Mapper):
         
     def __iterObjectsFromRows(self, objRows, objectFilter=None):
         for objRow in objRows:
-            obj = self.__objFromRow(objRow)
-            if (obj is not None and 
+            obj = self.objDict.get(objRow['id'], None) or self.__objFromRow(objRow)
+
+            if (obj is not None and
                 objectFilter is None or objectFilter(obj)):
                 yield obj
         
