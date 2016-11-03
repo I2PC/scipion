@@ -1,6 +1,7 @@
-# **************************************************************************
+# ******************************************************************************
 # *
-# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Vahid Abrishami (vabrisahmi@cnb.csic.es)
 # *
@@ -24,7 +25,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
-# **************************************************************************
+# ******************************************************************************
 
 from os.path import join, exists
 from glob import glob
@@ -38,7 +39,7 @@ from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
 from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
-from convert import writeShiftsMovieAlignment, getMovieFileName
+from convert import writeMovieMd, getMovieFileName
 
 
 PLOT_CART = 0
@@ -70,34 +71,47 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "do not know what we are talking about. First core "
                             "index is 0, second 1 and so on.")
         
-        # GROUP OPTICAL FLOW PARAMETERS
-        form.addParam('winSize', params.IntParam, default=150,
-                       label="Window size",
-                       help="Window size (shifts are assumed to be constant "
-                            "within this window).")
-        form.addParam('groupSize', params.IntParam, default=1,
-                       label="Group Size",
-                       help="The number of frames in each group at the "
-                            "last step")
+        group = form.addGroup('OF Parameters')
+        group.addParam('winSize', params.IntParam, default=150,
+                        label="Window size",
+                        help="Window size (shifts are assumed to be constant "
+                             "within this window).")
+        group.addParam('groupSize', params.IntParam, default=1,
+                        label="Group Size",
+                        help="The number of frames in each group at the "
+                             "last step")
+        group.addParam('useAlignment', params.BooleanParam, default=None,
+                       label="Use previous movie alignment to SUM frames?",
+                       help="Input movies could have alignment information from"
+                            "a previous protocol. If you select *Yes*, the "
+                            "previous alignment will be taken into account.")
+        group.addParam('doComputePSD', params.BooleanParam, default=True,
+                       label="Compute PSD (before/after)?",
+                       help="If Yes, the protocol will compute for each movie "
+                            "the PSD of the average micrograph (without OF "
+                            "alignement) and after that, to compare each PSDs")
+        group.addParam('memory', params.BooleanParam, default=False,
+                       label="Keep images in RAM ?",
+                       help="If True, the protocol will increase the demand of "
+                            "RAM, decreasing disc access")
         
-        form.addParam('useAlignment', params.BooleanParam, default=True,
-                      label="Use previous movie alignment to Sum frames?",
-                      help="If set Yes, the alignment information (if"
-                      " it exists) will take into account to align"
-                      " your movies.")
-
-        form.addParam('doComputePSD', params.BooleanParam, default=True,
-                      label="Compute PSD (before/after)?",
-                      help="If Yes, the protocol will compute for each movie "
-                           "the PSD of the average micrograph (without OF "
-                           "alignement) and after that, to compare each PSDs")
-
+        group = form.addGroup('Dose Compensation')
+        group.addParam('doDoseCorrection', params.BooleanParam, default=False,
+                       label="Do dose correction?",
+                       help="If Yes, the protocol will compensate your movies "
+                       "taking into account the acumulated dose.")
+        group.addParam('exposurePerFrame', params.FloatParam, default=0,
+                       label='Exposure per frame (e/A^2)',
+                       condition="doDoseCorrection",
+                       help='Exposure per frame, in electrons per square '
+                            'Angstrom')
+        group.addParam('previousDose', params.FloatParam, default=0,
+                       label='Previous dose',condition="doDoseCorrection",)
         form.addParallelSection(threads=8, mpi=0)
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
 
-        inputFn = self._getMovieOrMd(movie)
         outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         outMicFn = self._getExtraPath(self._getOutputMicName(movie))
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
@@ -108,10 +122,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
         gpuId = self.GPUCore.get()
+        inputMd = self._getFnInMovieFolder(movie, 'input_movie.xmd')
+        writeMovieMd(movie, inputMd, a0, aN, useAlignment=self.useAlignment)
 
-        args = '-i %s ' % inputFn
+        args = '-i %s ' % inputMd
         args += '-o %s ' % self._getOutputShifts(movie)
-        args += '--frameRange %d %d ' % (a0-1, aN-1)
+        args += ' --frameRange %d %d ' % (0, aN - a0)
 
         if dark:
             args += '--dark %s ' % dark
@@ -145,6 +161,15 @@ class XmippProtOFAlignment(ProtAlignMovies):
         args += '--cropULCorner %d %d ' % (roi[0], roi[1])
         args += '--cropDRCorner %d %d ' % (roi[0] + roi[2] -1,
                                            roi[1] + roi[3] -1)
+        
+        if self.memory:
+            args += ' --inmemory'
+        
+        if self.doDoseCorrection:
+            mag = movie.getAcquisition().getMagnification()
+            args += ' --doseCorrection %f %f %f' %(self.exposurePerFrame.get(),
+                                                   mag,
+                                                   self.previousDose.get(),)
         try:
             self.runJob(program, args)
             
@@ -176,11 +201,19 @@ class XmippProtOFAlignment(ProtAlignMovies):
 
         except Exception as e:
             print ("ERROR: %s failed for movie %s.\n  Exception: %s"
-                   % (program, inputFn, e))
+                   % (program, movie.getFileName(), e))
     
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
+        # Although getFirstItem is not remonended in general, here it is
+        # used olny once, for validation purposes, so performance
+        # problems not should be apprear.
+        movie = self.inputMovies.get().getFirstItem()
+        if (not movie.hasAlignment()) and self.useAlignment:
+            errors.append("Your movies has not alignment. Please, set *No* "
+                          "the parameter _Use previous movie alignment to SUM"
+                          " frames?_")
         if self.numberOfThreads > 1 and self.doGPU:
             errors.append("GPU and Parallelization can not be used together")
         return errors
@@ -256,21 +289,11 @@ class XmippProtOFAlignment(ProtAlignMovies):
         return self.doSaveMovie.get()
 
     def _getFnInMovieFolder(self, movie, filename):
-        movieFolder = self._getOutputMovieFolder(movie)
-        return join(movieFolder, filename)
-
-    def _getMovieOrMd(self, movie):
-        if movie.hasAlignment() and self.useAlignment:
-            shiftsMd = self._getShiftsFile(movie)
-            numberOfFrames = movie.getNumberOfFrames()
-            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
-            writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
-            return shiftsMd
-        else:
-            return getMovieFileName(movie)
+        return join(self._getOutputMovieFolder(movie), filename)
 
     def _getShiftsFile(self, movie):
-        return self._getNameExt(movie, '_shifts', '.xmd', extra=False)
+        shiftFile = self._getNameExt(movie, '_shifts', 'xmd', extra=False)
+        return self._getFnInMovieFolder(movie, shiftFile)
 
     def _getOutputShifts(self, movie):
         return self._getNameExt(movie, '_aligned_mic', 'xmd', extra=True)

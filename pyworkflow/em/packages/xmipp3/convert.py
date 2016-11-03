@@ -41,6 +41,7 @@ from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
 from pyworkflow.utils.path import replaceBaseExt, removeExt, findRootFrom
+import pyworkflow.em.metadata as md
 
 
 # This dictionary will be used to map
@@ -1485,6 +1486,50 @@ def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
             globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)
     
     globalShiftsMD.write(xmdFn)
+
+
+def writeMovieMd(movie, outXmd, f1, fN, useAlignment=False):
+    movieMd = md.MetaData()
+    frame = movie.clone()
+    firstFrame, lastFrame, frameIndex = movie.getFramesRange()
+
+    if lastFrame == 0:
+        # this condition is for old SetOfMovies, that has lastFrame = 0.
+        frames = movie.getNumberOfFrames()
+        if frames is not None:
+            lastFrame = frames
+
+    if f1 < firstFrame or fN > lastFrame:
+        raise Exception("Frame range could not be greater than the movie one. ")
+
+    ih = ImageHandler()
+
+    if useAlignment:
+        alignment = movie.getAlignment()
+        if alignment is None:
+            raise Exception("Can not write alignment for movie. ")
+        a0, aN = alignment.getRange()
+        if (firstFrame, lastFrame) != (a0, aN):
+            raise Exception("Mismatch between alignment frames range and "
+                            "movie frames range. ")
+        shiftListX, shiftListY = alignment.getShifts()
+
+    row = md.Row()
+    stackIndex = frameIndex + (f1 - firstFrame)
+
+    for i in range(f1, fN+1):
+        frame.setIndex(stackIndex)
+        row.setValue(md.MDL_IMAGE, ih.locationToXmipp(frame))
+
+        if useAlignment:
+            shiftIndex = i - firstFrame
+            row.setValue(xmipp.MDL_SHIFT_X, shiftListX[shiftIndex])
+            row.setValue(xmipp.MDL_SHIFT_Y, shiftListY[shiftIndex])
+
+        row.addToMd(movieMd)
+        stackIndex += 1
+
+    movieMd.write(outXmd)
 
 
 def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):

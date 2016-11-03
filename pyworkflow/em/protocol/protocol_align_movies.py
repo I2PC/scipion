@@ -46,7 +46,7 @@ class ProtAlignMovies(ProtProcessMovies):
     the frames range used for alignment and final sum, the binning factor
     or the cropping options (region of interest)
     """
-    
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
@@ -55,19 +55,24 @@ class ProtAlignMovies(ProtProcessMovies):
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Alignment')
         line = group.addLine('Frames to ALIGN',
-                            help='Frames range to ALIGN on each movie. The '
-                                 'first frame is 1. If you set 0 in the final '
-                                 'frame to align, it means that you will '
-                                 'align until the last frame of the movie.')
+                             help='Frames range to ALIGN on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to align, it means that you will '
+                                  'align until the last frame of the movie.')
         line.addParam('alignFrame0', params.IntParam, default=1,
                       label='from')
         line.addParam('alignFrameN', params.IntParam, default=0,
                       label='to')
-        line = group.addLine('Frames to SUM',
-                            help='Frames range to SUM on each movie. The '
-                                 'first frame is 1. If you set 0 in the final '
-                                 'frame to sum, it means that you will sum '
-                                 'until the last frame of the movie.')
+        group.addParam('useAlignToSum', params.BooleanParam, default=True,
+                       label='Use ALIGN frames range to SUM?',
+                       help="If *Yes*, the same frame range will be used to "
+                            "ALIGN and to SUM. If *No*, you can selected a "
+                            "different range for SUM (must be a subset).")
+        line = group.addLine('Frames to SUM', condition="not useAlignToSum",
+                             help='Frames range to SUM on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to sum, it means that you will sum '
+                                  'until the last frame of the movie.')
         line.addParam('sumFrame0', params.IntParam, default=1,
                       label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
@@ -89,7 +94,7 @@ class ProtAlignMovies(ProtProcessMovies):
         form.addParam('doSaveAveMic', params.BooleanParam, default=True,
                       label="Save aligned micrograph",
                       expertLevel=cons.LEVEL_ADVANCED)
-        
+
         form.addParam('doSaveMovie', params.BooleanParam, default=False,
                       label="Save movie", expertLevel=cons.LEVEL_ADVANCED,
                       help="Save Aligned movie")
@@ -165,11 +170,8 @@ class ProtAlignMovies(ProtProcessMovies):
         self.debug('   streamMode: %s' % streamMode)
 
         if self._doGenerateOutputMovies():
-            # FIXME: Even if we save the movie or not, both are aligned
             saveMovie = self.getAttributeValue('doSaveMovie', False)
-            suffix = '_aligned' if saveMovie else '_original'
-            movieSet = self._loadOutputSet(SetOfMovies,
-                                           'movies_%s.sqlite' % suffix,
+            movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
             for movie in newDone:
@@ -204,7 +206,8 @@ class ProtAlignMovies(ProtProcessMovies):
 
             if (self.getAttributeValue('useMotioncor2', False) == True and
                 self.getAttributeValue('frameDose', 0.0) != 0.0):
-                micSet2 = self._loadOutputSet(SetOfMicrographs, 'micrographs_dose-weighted.sqlite')
+                micSet2 = self._loadOutputSet(SetOfMicrographs,
+                                              'micrographs_dose-weighted.sqlite')
 
                 for movie in newDone:
                     mic2 = micSet2.ITEM_TYPE()
@@ -233,28 +236,48 @@ class ProtAlignMovies(ProtProcessMovies):
         errors = []
 
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
-            self.cropDimY > 0 and self.cropDimX <= 0):
+                        self.cropDimY > 0 and self.cropDimX <= 0):
             errors.append("If you give cropDimX, you should also give cropDimY"
                           " and viceversa")
 
-        movie = self.inputMovies.get().getFirstItem()
-        # Close movies db because the getFirstItem open it
-        # we do not want to leave the file open
-        self.inputMovies.get().close()
-        frames = movie.getNumberOfFrames()
+        # movie = self.inputMovies.get().getFirstItem()
+        # # Close movies db because the getFirstItem open it
+        # # we do not want to leave the file open
+        # self.inputMovies.get().close()
+        # frames = movie.getNumberOfFrames()
+
+        firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
+        if lastFrame == 0:
+            # Although getFirstItem is not remonended in general, here it is
+            # used olny once, for validation purposes, so performance
+            # problems not should be apprear.
+            frames = self.inputMovies.get().getFirstItem().getNumberOfFrames()
+            lastFrame = frames
+        else:
+            frames = lastFrame - firstFrame + 1
 
         if frames is not None:
             def _validateRange(prefix):
+                # Avoid validation when the range is not defined
+                if not hasattr(self, '%sFrame0' % prefix):
+                    return
+
                 f0, fN = self._getFrameRange(frames, prefix)
-                if fN > frames:
+                if fN < firstFrame or fN > lastFrame:
                     errors.append("Check the selected last frame to *%s*. "
-                                  "Last frame (%d) could not be greater than "
-                                  "the total number of frames. (%d)"
-                                  % (prefix.upper(), fN, frames))
-                if fN <= f0:
+                                  "Last frame (%d) should be in range: %s "
+                                  % (prefix.upper(), fN, (firstFrame,
+                                                          lastFrame)))
+                if f0 < firstFrame or f0 > lastFrame:
+                    errors.append("Check the selected first frame to *%s*. "
+                                  "First frame (%d) should be in range: %s "
+                                  % (prefix.upper(), f0, (firstFrame,
+                                                          lastFrame)))
+                if fN < f0:
                     errors.append("Check the selected frames range to *%s*. "
-                                  "Last frame should be greater than initial "
-                                  "frame. " % prefix.upper())
+                                  "Last frame (%d) should be greater or equal "
+                                  "than first frame (%d)"
+                                  % (prefix.upper(), fN, f0))
 
             _validateRange("align")
             _validateRange("sum")
@@ -267,6 +290,9 @@ class ProtAlignMovies(ProtProcessMovies):
         return [self.summaryVar.get('')]
 
     # --------------------------- UTILS functions ----------------------------
+    def _useAlignToSum(self):
+        return self.getAttributeValue('useAlignToSum', False)
+
     def _getFrameRange(self, n, prefix):
         """
         Params:
@@ -274,15 +300,20 @@ class ProtAlignMovies(ProtProcessMovies):
         :param prefix: what range we want to consider, either 'align' or 'sum'
         :return: (i, f) initial and last frame range
         """
+        # In case that the user select the same range for ALIGN and SUM
+        # we also use the 'align' prefix
+        if self._useAlignToSum():
+            prefix = 'align'
+
         first = self.getAttributeValue('%sFrame0' % prefix)
         last = self.getAttributeValue('%sFrameN' % prefix)
-        
+
         if first <= 1:
             first = 1
-        
+
         if last <= 0:
             last = n
-        
+
         return first, last
 
     def _createOutputMovie(self, movie):
@@ -292,7 +323,9 @@ class ProtAlignMovies(ProtProcessMovies):
         alignedMovie = movie.clone()
         n = movie.getNumberOfFrames()
         first, last = self._getFrameRange(n, 'align')
-
+        framesRange = alignedMovie.getFramesRange()
+        framesRange.setFirstFrame(first)
+        framesRange.setLastFrame(last)
         # Check if user selected to save movie, use the getAttributeValue
         # function for allow the protocol to not define this flag
         # and use False as default
@@ -306,22 +339,21 @@ class ProtAlignMovies(ProtProcessMovies):
             totalFrames = last - first + 1
             xshifts = [0] * totalFrames
             yshifts = xshifts
-            # If we save the movies, we need to modify which are
-            # first and last frames if only a subset of frames have
-            # been used to align
-            first = 1
-            last = totalFrames
+            # If we save the movies, we need to modify which are the index
+            # of the first frame in the stack, now is 1 since the stack is
+            # written only with the given frames
+            firstFrameIndex = 1
         else:
             xshifts, yshifts = self._getMovieShifts(movie)
+            firstFrameIndex = first
 
-
-        alignment = MovieAlignment(first=first, last=last,
-                                   xshifts=xshifts, yshifts=yshifts)
+        framesRange.setFirstFrameIndex(firstFrameIndex)
+        alignment = MovieAlignment(first=first, last=last, xshifts=xshifts,
+                                   yshifts=yshifts)
 
         roiList = [self.getAttributeValue(s, 0) for s in
                    ['cropOffsetX', 'cropOffsetY', 'cropDimX', 'cropDimY']]
         alignment.setRoi(roiList)
-
         alignedMovie.setAlignment(alignment)
 
         return alignedMovie
@@ -383,7 +415,7 @@ class ProtAlignMovies(ProtProcessMovies):
         xmipp3.runXmippProgram(program, args)
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
-                     dark=None, gain=None):
+                     dark=None, gain=None, splineOrder=None):
         """ Average a movie (using xmipp) taking into account the
          possible shifts and other alignment parameters.
          Params:
@@ -425,6 +457,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if gain is not None:
             args += ' --gain ' + gain
+
+        if splineOrder is not None:
+            args += '--Bspline %d ' % splineOrder
 
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
