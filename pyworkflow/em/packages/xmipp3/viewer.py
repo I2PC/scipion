@@ -224,7 +224,7 @@ class XmippViewer(Viewer):
                                                       ORDER: labels,
                                                       VISIBLE: labels,
                                                       RENDER: '_filename'}))
-        
+
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
             self._views.append(ClassesView(self._project, obj.strId(), fn, **kwargs))
@@ -232,6 +232,11 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
             self._views.append(Classes3DView(self._project, obj.strId(), fn))
+
+        elif issubclass(cls, SetOfImages):
+            fn = obj.getFileName()
+            self._views.append(
+                ObjectView(self._project, obj.strId(), fn, **kwargs))
         
         if issubclass(cls, XmippProtCTFMicrographs):
             if obj.hasAttribute('outputCTF'):
@@ -266,9 +271,6 @@ class XmippViewer(Viewer):
             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
             launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
 
-        elif issubclass(cls, SetOfImages):
-            fn = obj.getFileName()
-            self._views.append(ObjectView(self._project, obj.strId(), fn, **kwargs))
 
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
