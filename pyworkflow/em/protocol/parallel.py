@@ -40,7 +40,7 @@ class ProtTestParallel(Protocol):
         Protocol.__init__(self, **args)        
         self.stepsExecutionMode = STEPS_PARALLEL
         
-    #--------------------------- DEFINE param functions --------------------------------------------        
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('numberOfIterations', IntParam, default=2, 
@@ -58,7 +58,7 @@ class ProtTestParallel(Protocol):
         form.addParallelSection(threads=4, mpi=1)
             
          
-    #--------------------------- INSERT steps functions --------------------------------------------    
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         n = self.numberOfIterations.get()
         m = self.numberOfParallelSleeps.get()
@@ -72,24 +72,27 @@ class ProtTestParallel(Protocol):
             deps = []
             for j in range(m):
                 fail = deps[-1] == failAfter if deps else False
-                sleepId = self._insertFunctionStep('sleepStep', secs, fail,
+                tag = 'iter %d, n: %d' % (i, j)
+                sleepId = self._insertFunctionStep('sleepStep', secs, fail, tag,
                                                    prerequisites=[initId])
                 deps.append(sleepId)
             endId = self._insertFunctionStep('endStep', i, prerequisites=deps)
             deps = [endId]
             
             
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
 
     def initStep(self, iterN):
         """ All subsequent sleep steps should depend on this. """
         self._log.info("Starting iteration: %d" % iterN)
     
-    def sleepStep(self, secs=5, forceFail=False):
+    def sleepStep(self, secs=5, forceFail=False, tag=''):
         if forceFail:
             self.runJob('echo', " 'Failing for testing purposes...'; exit 1")
         else:
-            self.runJob('echo', " 'Sleeping %(secs)d seconds.'; sleep %(secs)d" % locals())
+            from pyworkflow.em.packages.xmipp3 import getEnviron
+            self.runJob('xmipp_work_test',
+                        "--time %d --tag '%s'" % (secs, tag), env=getEnviron())
             
     def awakeStep(self):
         print "Awaked after an sleep step"
