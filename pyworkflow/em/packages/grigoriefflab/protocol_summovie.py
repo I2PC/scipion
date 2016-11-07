@@ -40,10 +40,10 @@ class ProtSummovie(ProtAlignMovies):
     in subsequent image processing steps and optionally
     applies an exposure-dependent filter to maximize
     the signal at all resolutions in the frame averages.
-    """    
+    """
     _label = 'summovie'
     CONVERT_TO_MRC = 'mrc'
-    doSaveAveMic = True    
+    doSaveAveMic = True
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
@@ -101,12 +101,12 @@ class ProtSummovie(ProtAlignMovies):
     def _processMovie(self, movie):
         try:
             self._createLink(movie)
-            numberOfFrames = movie.getNumberOfFrames()
+            numberOfFrames = self._getNumberOfFrames(movie)
 
             if numberOfFrames is None:
                 raise Exception("Could not read number of frames.")
 
-            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
+            s0, sN = self._getRange(movie, 'sum')
 
             self._writeMovieAlignment(movie, s0, sN)
             self._argsSummovie()
@@ -144,6 +144,25 @@ class ProtSummovie(ProtAlignMovies):
 
     def _validate(self):
         errors = []
+        inputMovies = self.inputMovies.get()
+        firstFrame, lastFrame, _ = inputMovies.getFramesRange()
+        frames = lastFrame - firstFrame + 1
+
+        if frames is not None:
+            s0, sN = self._getFrameRange(frames, "sum")
+            if sN < firstFrame or sN > lastFrame:
+                errors.append("Check the selected last frame to *SUM*. "
+                              "Last frame (%d) should be in range: %s "
+                              % (sN, (firstFrame, lastFrame)))
+            if s0 < firstFrame or s0 > lastFrame:
+                errors.append("Check the selected first frame to *SUM*. "
+                              "First frame (%d) should be in range: %s "
+                              % (s0, (firstFrame, lastFrame)))
+            if sN < s0:
+                errors.append("Check the selected frames range to *SUM*. "
+                              "Last frame (%d) should be greater or equal "
+                              "than first frame (%d)"
+                              % (sN, s0))
 
         if not exists(SUMMOVIE_PATH):
             errors.append("Cannot find the Summovie program at: %s"
@@ -153,7 +172,6 @@ class ProtSummovie(ProtAlignMovies):
         # check that they has been produced by the previous protocol and
         # are not the original input movies data, what can be a serious problem
         if self.cleanInputMovies:
-            inputMovies = self.inputMovies.get()
             firstMovie = inputMovies.getFirstItem()
             fullPath = realpath(firstMovie.getFileName())
             prevProt = self.getMapper().getParent(inputMovies)
@@ -190,7 +208,7 @@ eof
         movieFn = movie.getFileName()
         if movieFn.endswith("mrcs"):
             return pwutils.replaceExt(movieFn, self.CONVERT_TO_MRC)
-        else: 
+        else:
             return movieFn
     
     def _createLink(self, movie):
@@ -229,11 +247,36 @@ eof
     
     def _storeSummary(self, movie):
         if movie.hasAlignment():
-            s0, sN = self._getFrameRange(movie.getNumberOfFrames(), 'sum')
-            fstFrame, lstFrame = movie.getAlignment().getRange()
+            numOfFrames = self._getNumberOfFrames(movie)
+            s0, sN = self._getFrameRange(numOfFrames, 'sum')
+            fstFrame, lstFrame, _ = movie.getFramesRange()
+            
             if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
                 self.summaryVar.set("Warning!!! You have selected a frame range "
                                     "wider than the range selected to align. All "
                                     "the frames selected without alignment "
                                     "information, will be aligned by setting "
                                     "alignment to 0")
+    
+    def _getNumberOfFrames(self, movie):
+        _, lstFrame, _ = movie.getFramesRange()
+        
+        if movie.hasAlignment():
+            _, lastFrmAligned = movie.getAlignment().getRange()
+            if lastFrmAligned != lstFrame:
+                return lastFrmAligned
+            else:
+                return movie.getNumberOfFrames()
+        else:
+            return movie.getNumberOfFrames()
+
+    def _getRange(self, movie, prefix):
+        n = self._getNumberOfFrames(movie)
+        iniFrame, _, indxFrame = movie.getFramesRange()
+        first, last = self._getFrameRange(n, prefix)
+        
+        if iniFrame != indxFrame:
+            first -= (iniFrame - 1)
+            last -= (iniFrame - 1)
+        
+        return first, last
