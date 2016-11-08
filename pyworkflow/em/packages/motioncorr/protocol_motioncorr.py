@@ -149,16 +149,15 @@ class ProtMotionCorr(ProtAlignMovies):
         movieFolder = self._getOutputMovieFolder(movie)
         outputMicFn = self._getRelPath(self._getOutputMicName(movie),
                                        movieFolder)
+        outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
+                                         movieFolder)
         aveMicFn = pwutils.removeExt(movie.getFileName()) + '_uncorrected_avg.mrc'
+        logFile = self._getRelPath(self._getMovieLogFile(movie),
+                                   movieFolder)
 
         a0, aN = self._getRange(movie, 'align')
 
         if not self.useMotioncor2:
-            outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
-                                             movieFolder)
-            logFile = self._getRelPath(self._getMovieLogFile(movie),
-                                       movieFolder)
-
             # Get the number of frames and the range to be used
             # for alignment and sum
             s0, sN = self._getRange(movie, 'sum')
@@ -195,11 +194,8 @@ class ProtMotionCorr(ProtAlignMovies):
             program = MOTIONCORR_PATH
 
         else:
-            logFileFn = self._getRelPath(self._getMovieLogFile(movie),
-                                         movieFolder)
-            logFileBase = (logFileFn.replace('0-Full.log', '').replace(
+            logFileBase = (logFile.replace('0-Full.log', '').replace(
                            '0-Patch-Full.log', ''))
-
             # default values for motioncor2 are (1, 1)
             cropDimX = self.cropDimX.get() or 1
             cropDimY = self.cropDimY.get() or 1
@@ -223,6 +219,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         }
             if getVersion('MOTIONCOR2') != '03162016':
                 argsDict['-InitDose'] = inputMovies.getAcquisition().getDoseInitial()
+                argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
             args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
@@ -235,6 +232,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         try:
             self.runJob(program, args, cwd=movieFolder)
+            self._renameMovie(movie)
 
             if self.doComputePSD:
                 uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
@@ -248,13 +246,12 @@ class ProtMotionCorr(ProtAlignMovies):
                                   roi=roi, dark=None,
                                   gain=inputMovies.getGain())
                 # Compute PSDs
+                outMicFn = self._getExtraPath(self._getOutputMicName(movie))
                 self.computePSD(aveMicFn, uncorrectedPSD)
-                self.computePSD(outputMicFn, correctedPSD)
+                self.computePSD(outMicFn, correctedPSD)
                 self.composePSD(uncorrectedPSD + ".psd",
                                 correctedPSD + ".psd",
                                 self._getPsdCorr(movie))
-                # Remove avg that was used only for computing PSD
-                pwutils.cleanPath(aveMicFn)
 
             self._saveAlignmentPlots(movie)
         except:
@@ -293,7 +290,7 @@ class ProtMotionCorr(ProtAlignMovies):
                               ' parameters so that protocol ')
                 errors.append('produces simple movie sum.')
 
-            if self.doSaveMovie:
+            if self.doSaveMovie and not self._isNewMotioncor2:
                 errors.append('Saving aligned movies is not supported by '
                               'motioncor2. ')
                 errors.append('By default, the protocol will produce '
@@ -335,7 +332,7 @@ class ProtMotionCorr(ProtAlignMovies):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
 
     def _getPsdCorr(self, movie):
-        return self._getNameExt(movie, '_aligned_corrected', 'psd')
+        return self._getNameExt(movie, '_psd_comparison', 'psd')
 
     def _preprocessOutputMicrograph(self, mic, movie):
         self._setPlotInfo(movie, mic)
@@ -372,8 +369,15 @@ class ProtMotionCorr(ProtAlignMovies):
     def _isNewMotioncor2(self):
         return True if getVersion('MOTIONCOR2') != '03162016' else False
 
+    def _renameMovie(self, movie):
+        if self.doSaveMovie and self.useMotioncor2 and self._isNewMotioncor2():
+            outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            outputMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
+            movieFn = outputMicFn.replace('_aligned_mic.mrc', '_aligned_mic_Stk.mrc')
+            pwutils.moveFile(movieFn, outputMovieFn)
+
     def writeZeroShifts(self, movie):
-        #TODO: find another way to do this
+        # TODO: find another way to do this
         shiftsMd = self._getTmpPath('zero_shifts.xmd')
         pwutils.cleanPath(shiftsMd)
         xshifts = [0] * movie.getNumberOfFrames()
@@ -448,4 +452,3 @@ def createGlobalAlignmentPlot(meanX, meanY, first):
     plotter.tightLayout()
 
     return plotter
-

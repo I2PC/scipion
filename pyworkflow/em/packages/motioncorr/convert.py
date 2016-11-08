@@ -77,7 +77,7 @@ def getSupportedVersions(var):
     if var == 'MOTIONCORR':
         return ['2.1']
     elif var == 'MOTIONCOR2':
-        return ['03162016', '08222016']
+        return ['03162016', '10192016']
 
 
 def parseMovieAlignment(logFile):

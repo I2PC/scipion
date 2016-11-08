@@ -204,8 +204,9 @@ class ProtAlignMovies(ProtProcessMovies):
             if firstTime:
                 self._defineSourceRelation(self.inputMovies, micSet)
 
-            if (self.getAttributeValue('useMotioncor2', False) == True and
-                self.getAttributeValue('frameDose', 0.0) != 0.0):
+            inputMovies = self.inputMovies.get()
+            if (self.getAttributeValue('useMotioncor2', False) and
+                        inputMovies.getAcquisition().getDosePerFrame() != 0.0):
                 micSet2 = self._loadOutputSet(SetOfMicrographs,
                                               'micrographs_dose-weighted.sqlite')
 

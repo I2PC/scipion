@@ -45,7 +45,7 @@ class ProtMotioncorrViewer(Viewer):
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
                       showj.RENDER: plotLabels,
-                      showj.ZOOM: 10
+                      showj.ZOOM: 50
                       }
         labelsDef = 'enabled id _filename'
         viewParamsDef = {showj.MODE: showj.MODE_MD,
