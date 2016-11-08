@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors: Mohsen Kazemi (mkazemi@cnb.csic.es)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -23,11 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "volume_homogenizer.h"
+#include <reconstruction/movie_estimate_gain.h>
 
-int main(int argc, char **argv)
-{
-    ProgVolumeHomogenizer prm;
-    prm.read(argc,argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgMovieEstimateGain)

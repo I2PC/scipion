@@ -398,6 +398,7 @@ class Protocol(Step):
         try:
             # Update the set with the streamState value (either OPEN or CLOSED)
             outputSet.setStreamState(state)
+
             if self.hasAttribute(outputName):
                 outputSet.write() # Write to commit changes
                 outputAttr = getattr(self, outputName)
@@ -408,6 +409,7 @@ class Protocol(Step):
             else:
                 # Here the defineOutputs function will call the write() method
                 self._defineOutputs(**{outputName: outputSet})
+                self._store(outputSet)
             # Close set databaset to avoid locking it
             outputSet.close()
 
@@ -871,7 +873,7 @@ class Protocol(Step):
             self._stepsExecutor.runSteps(self._steps, 
                                          self._stepStarted, 
                                          self._stepFinished,
-                                         stepsCheckCallback=self._stepsCheck)
+                                         self._stepsCheck)
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
@@ -1194,6 +1196,9 @@ class Protocol(Step):
     
     def setHostConfig(self, config):
         self.hostConfig = config
+        # Never store the host config as part of the protocol, it is kept
+        # in the configuration information, the hostname is enough
+        self.hostConfig.setStore(False)
         
     def getJobId(self):
         """ Return the jobId associated to a running protocol. """

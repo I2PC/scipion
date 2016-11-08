@@ -55,13 +55,19 @@ class ISPyBProxy():
         self._sendDict(experimentParams)
 
     def _createISPyBProcess(self, db):
-        cmd = ('source /etc/profile.d/modules.sh;'
-            'module unload python/ana;'
-            'module load python/ana;'
-            'module unload ispyb-api/ana;'
-            'module load ispyb-api/ana;')
+        import pyworkflow.utils as pwutils
+
+        if pwutils.envVarOn('SCIPIONBOX_ISPYB_ON'):
+            cmd = ('source /etc/profile.d/modules.sh;'
+                'module unload python/ana;'
+                'module load python/ana;'
+                'module unload ispyb-api/ana;'
+                'module load ispyb-api/ana;')
+        else:
+            cmd = ''
 
         cmd += 'python %s %s' % (SCRIPT, db)
+
 
         print "** Running: '%s'" % cmd
         self.proc = subprocess.Popen(cmd, shell=True,
@@ -207,6 +213,9 @@ class ISPyBdb():
             params = self.mxacquisition.get_data_collection_group_params()
             params['parentid'] = self.visit_id
             self.group_id = self.mxacquisition.insert_data_collection_group(self.cursor, params.values())
+        else:
+            self.visit_id = 'no-visit'
+            self.group_id = 'no-group'
 
     def get_data_collection_params(self):
         if self.mxacquisition:
@@ -228,6 +237,7 @@ class ISPyBdb():
             s += "}"
             print >> self.f, s
             self.f.flush()
+            return -1 # Fake id
 
     def disconnect(self):
         if self.dbconnection:

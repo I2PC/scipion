@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "volume_homogenizer.h"
+#include "../mpi_volume_homogenizer/volume_homogenizer.h"
 
 
 ProgVolumeHomogenizer::ProgVolumeHomogenizer()
