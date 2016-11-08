@@ -107,7 +107,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             'Angstrom')
         group.addParam('previousDose', params.FloatParam, default=0,
                        label='Previous dose',condition="doDoseCorrection",)
-        form.addParallelSection(threads=8, mpi=0)
+
+        form.addParallelSection(threads=8, mpi=1)
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
