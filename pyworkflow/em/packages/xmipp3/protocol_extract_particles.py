@@ -435,23 +435,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # properly set. We need this because the .update is not
         # working in the mapper when new attributes are added.
         imgSet.setHasCTF(self.ctfRelations.hasValue())
-        auxSet = SetOfParticles(filename=':memory:')
-        auxSet.copyInfo(imgSet)
-        readSetOfParticles(fnImages, auxSet)
-
-        # For each particle retrieve micId from SetOfCoordinates
-        # and set it on the CTFModel
-        for img in auxSet:
-            coord = self.getCoords()[img.getObjId()]
-            if doScale:
-                coord.scale(boxScale)
-            ctfModel = img.getCTF()
-            if ctfModel is not None:
-                ctfModel.setObjId(coord.getMicId())
-            img.setMicId(coord.getMicId())
-            img.setCoordinate(coord)
-            imgSet.append(img)
-
+        readSetOfParticles(fnImages, imgSet)
+        
+        # Since the coordinates are properly get in readSetOfParticles (
+        # scaled if
+        # necessary), is not necessary iterate again over the whole
+        # setOfParticles.
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=imgSet)
         self._defineSourceRelation(self.inputCoordinates, imgSet)

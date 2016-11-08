@@ -450,7 +450,7 @@ def rowToCoordinate(coordRow):
             
         # Setup the micId if is integer value
         try:
-            coord.setMicId(int(coordRow.getValue(xmipp.MDL_MICROGRAPH)))
+            coord.setMicId(int(coordRow.getValue(xmipp.MDL_MICROGRAPH_ID)))
         except Exception:
             pass
     else:
