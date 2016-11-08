@@ -55,10 +55,10 @@ class ProtUserSubSet(BatchProtocol):
     from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
     file that will be read to create the new subset.
     """
-     
+
     def __init__(self, **args):
         BatchProtocol.__init__(self, **args)
-        
+
     def _defineParams(self, form):
         form.addHidden('inputObject', PointerParam, pointerClass='Object')
         form.addHidden('other', StringParam, allowsNull=True)
@@ -110,15 +110,15 @@ class ProtUserSubSet(BatchProtocol):
                 self._createSubSetFromClasses(setObj)
 
             elif isinstance(setObj, SetOfImages):
-                setObj.copyInfo(otherObj) # copy info from original images
+                setObj.copyInfo(otherObj)  # copy info from original images
                 self._createSubSetFromImages(setObj)
 
             elif isinstance(setObj, SetOfNormalModes):
                 self._createSimpleSubset(otherObj)
-            
+
         else:
             output = self._createSimpleSubset(inputObj)
-    
+
     def _createSimpleSubset(self, inputObj):
         className = inputObj.getClassName()
         createFunc = getattr(self, '_create' + className)
@@ -176,7 +176,7 @@ class ProtUserSubSet(BatchProtocol):
 
     def _createSubSetFromClasses(self, inputClasses):
         outputClassName = self.outputClassName.get()
-        
+
         if (outputClassName.startswith('SetOfAverages') or
             outputClassName.startswith('SetOfVolumes') or
             outputClassName.startswith('SetOfParticles')):
@@ -244,7 +244,7 @@ class ProtUserSubSet(BatchProtocol):
         inputImages = inputClasses.getImages()
         createFunc = getattr(self, '_create' + outputClassName)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating REPRESENTATIVES of images from classes,  sqlite file: %s" % self._dbName)
+        self.info("Creating REPRESENTATIVES of images from classes, sqlite file: %s" % self._dbName)
 
         count = 0
         output = createFunc()
@@ -261,12 +261,12 @@ class ProtUserSubSet(BatchProtocol):
             self._defineSourceRelation(inputClasses, output)
         else:
             self._defineSourceRelation(inputImages, output)
-        
+
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), 
-                                                                 inputClasses.getSize(), 
-                                                                 selectmsg, 
-                                                                 output.getClassName())
+        msg = 'From input %s of size %s %s to create output %s' % (inputClasses.getClassName(),
+                                                                   inputClasses.getSize(),
+                                                                   selectmsg,
+                                                                   output.getClassName())
         self.summaryVar.set(msg)
         return output
 
@@ -291,8 +291,8 @@ class ProtUserSubSet(BatchProtocol):
         className = inputImages.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating subset of images from classes,  sqlite file: %s" % self._dbName)
-        
+        self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
+
         output = createFunc()
         self._copyInfoAndSetAlignment(inputClasses, output)
         output.appendFromClasses(modifiedSet)
@@ -303,14 +303,14 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(inputImages, output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.getClassName(), 
-                                                                            inputClasses.getSize(),  
-                                                                            selectmsg, 
-                                                                            output.getClassName(), 
-                                                                            output.getSize())
+        msg = 'From input %s of size %s %s to create output %s of size %s' % (inputClasses.getClassName(),
+                                                                              inputClasses.getSize(),
+                                                                              selectmsg,
+                                                                              output.getClassName(),
+                                                                              output.getSize())
         self.summaryVar.set(msg)
         return output
- 
+
     def _createClassesFromClasses(self, inputClasses):
         """ Create a new set of images joining all images
         assigned to each class.
@@ -319,8 +319,8 @@ class ProtUserSubSet(BatchProtocol):
         className = inputClasses.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating subset of classes from classes,  sqlite file: %s" % self._dbName)
-        
+        self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
+
         output = createFunc(inputClasses.getImages())
         output.appendFromClasses(modifiedSet)
         # Register outputs
@@ -331,10 +331,13 @@ class ProtUserSubSet(BatchProtocol):
             self._defineSourceRelation(inputClasses.getImages(), output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), inputClasses.getSize(),  selectmsg, output.getClassName())
+        msg = 'From input %s of size %s %s to create output %s' % (inputClasses.getClassName(),
+                                                                   inputClasses.getSize(),
+                                                                   selectmsg,
+                                                                   output.getClassName())
         self.summaryVar.set(msg)
         return output
-        
+
     def _createSubSetFromMicrographsTiltPair(self, micrographsTiltPair):
         """ Create a subset of Micrographs Tilt Pair. """
         output = MicrographsTiltPair(filename=self._getPath('micrographs_pairs.sqlite'))
@@ -363,7 +366,7 @@ class ProtUserSubSet(BatchProtocol):
     def _createSubSetFromParticlesTiltPair(self, particlesTiltPair):
         """ Create a subset of Particles Tilt Pair. """
         output = ParticlesTiltPair(filename=self._getPath('particles_pairs.sqlite'))
-        
+
         inputU = particlesTiltPair.getUntilted()
         inputT = particlesTiltPair.getTilted()
         outputU = SetOfParticles(filename=self._getPath('particles_untilted.sqlite'))
@@ -434,8 +437,8 @@ class ProtUserSubSet(BatchProtocol):
 
     def _defineOutput(self, className, output):
         outputDict = {'output' + className.replace('SetOf', ''): output}
-        self._defineOutputs(**outputDict) 
-        
+        self._defineOutputs(**outputDict)
+
 
 class ProtCreateMask(BatchProtocol):
 
@@ -453,15 +456,15 @@ class ProtCreateMask(BatchProtocol):
         maskDst = self._getPath(basename)
         moveFile(maskSrc, maskDst)
         samplingRate = None
-        if(hasattr(inputObj, "getSamplingRate")):
+        if hasattr(inputObj, "getSamplingRate"):
             samplingRate = inputObj.getSamplingRate()
         else:
             for key, attr in inputObj.iterInputAttributes():
                 if hasattr(attr.get(), "getSamplingRate"):
                     samplingRate = attr.get().getSamplingRate()
-        if  not samplingRate:
+        if not samplingRate:
             raise Exception("sampling rate required")
-        
+
         mask = Mask()
         mask.setFileName(maskDst)
         mask.setSamplingRate(samplingRate)
@@ -474,7 +477,7 @@ class ProtCreateMask(BatchProtocol):
                        % (self.getObjectTag("inputObj"),
                           self.getObjectTag("outputMask")))
         return summary
-        
+
     def _methods(self):
         return self._summary()
 
@@ -498,6 +501,3 @@ class ProtCreateFSC(BatchProtocol):
 
     def _methods(self):
         return self._summary()
-
-
-
