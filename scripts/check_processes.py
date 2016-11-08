@@ -39,7 +39,7 @@ print "Check during %s seconds" % wait
 for i in range(wait):
     c = 0
     for proc in psutil.process_iter():
-        if proc.name().startswith('xmipp'):
+        if proc.name().startswith(prefix):
             c += 1
     print "count: ", c
     time.sleep(1)
