@@ -129,9 +129,6 @@ bool	is_Interior_To_Face( struct DCEL_T *dcel, struct Point_T *p, int face);
 bool	get_Convex_Hull( struct DCEL_T *dcel, int *length, int *edges);
 bool 	is_Interior_To_Convex_Hull( struct DCEL_T *dcel, struct Point_T *p, bool *error);
 
-// Figures interface.
-bool	get_Convex_Hull( struct DCEL_T *dcel, int *length, int *edges);
-
 // I/O DCEL interface.
 int 	read_DCEL( struct DCEL_T *dcel, char *fileName);
 int     read_Points_Flat_File( struct DCEL_T *dcel, const char *fileName);

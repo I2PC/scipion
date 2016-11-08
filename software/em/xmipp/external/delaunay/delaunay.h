@@ -53,7 +53,5 @@ bool 	select_Closest_Point_DCEL( struct DCEL_T *dcel, int nAnchors,
 												   	   	struct Point_T *q,
 														double *lowest_Distance);
 
-void print_Delaunay_Statistics( char *fileName);
-
 #endif
 
