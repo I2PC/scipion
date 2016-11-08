@@ -8,7 +8,7 @@ from glob import iglob
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3.convert import *
 import pyworkflow.em.metadata as md
-from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em.convert import ImageHandler, DT_FLOAT
 
 
 
@@ -169,7 +169,32 @@ class TestImageHandler(unittest.TestCase):
 
         # Clean up tmp files
         pwutils.cleanPath(outFn)
+    
+    def test_convertMovie(self):
+        """Check movie conversion"""
+        movFn = self.dsFormat.getFile('qbeta/qbeta.mrc') + ":mrcs"
+        
+        ih = ImageHandler()
+        # Check that we can read the dimensions of the dm4 file:
+        EXPECTED_SIZE = (4096, 4096, 1, 7)
+        EXPECTED_DT = ImageHandler.DT_USHORT
 
+        self.assertEqual(ih.getDimensions(movFn), EXPECTED_SIZE)
+        self.assertEqual(ih.getDataType(movFn), EXPECTED_DT)
+        
+        outFn = join('/tmp/qbeta_converted.mrcs')
+
+        ih.convertStack(movFn, outFn, 2, 6)
+        
+        self.assertTrue(os.path.exists(outFn))
+        self.assertTrue(pwutils.getFileSize(outFn) > 0)
+        self.assertEqual(ih.getDimensions(outFn), (4096, 4096, 1, 5))
+        self.assertEqual(ih.getDataType(outFn), EXPECTED_DT)
+
+        if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+            print "Not cleaning output movie: ", outFn
+        else:
+            pwutils.cleanPath(outFn)
 
 
 class TestSetOfMicrographs(BaseTest):
