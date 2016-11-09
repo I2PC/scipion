@@ -122,22 +122,3 @@ def parseMovieAlignment2(logFile):
             yshifts.append(float(parts[2]))
     f.close()
     return xshifts, yshifts
-
-
-def parseMovieAlignmentLocal(logFile):
-    """ Get patch shifts relative to the first frame
-    (for the plots). Motioncor2
-    """
-    f = open(logFile)
-    xshifts = []
-    yshifts = []
-
-    for line in f:
-        l = line.strip()
-        if '#' not in l and len(l) > 0:
-            parts = l.split()
-            # take the raw shifts from the columns 4-5 of the line
-            xshifts.append(float(parts[3]))
-            yshifts.append(float(parts[4]))
-    f.close()
-    return xshifts, yshifts
