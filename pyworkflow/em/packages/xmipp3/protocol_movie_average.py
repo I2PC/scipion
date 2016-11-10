@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
-# *
+# *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -22,16 +22,14 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Protocol wrapper around the xmipp correlation alignment only for movie average.
-"""
 
+import os
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAlignMovies
-from convert import getMovieFileName, writeShiftsMovieAlignment
+from convert import writeMovieMd
 
 CROP_NONE = 0
 CROP_ALIGNMENT = 1
@@ -45,36 +43,48 @@ class XmippProtMovieAverage(ProtAlignMovies):
     _label = 'movie average'
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
+
+    INTERP_LINEAR = 0
+    INTERP_CUBIC = 1
+
+    # Map to xmipp interpolation values in command line
+    INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         group = form.addGroup('Average')
-        line = group.addLine('Remove frames to SUM from',
-                             help='How many frames you want remove to sum\n'
-                                  'from beginning and/or from the end of each movie.')
-        line.addParam('sumFrame0', params.IntParam, default=0, label='beginning')
-        line.addParam('sumFrameN', params.IntParam, default=0, label='end')
+
+        line = group.addLine('Frames to SUM',
+                             help='Frames range to SUM on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to sum, it means that you will sum '
+                                  'until the last frame of the movie.')
+        line.addParam('sumFrame0', params.IntParam, label='from')
+        line.addParam('sumFrameN', params.IntParam, label='to')
+
         group.addParam('binFactor', params.FloatParam, default=1,
                        label='Binning factor',
                        help='Binning factor, it may be any floating number '
-                            'Binning in Fourier is the first operation, so that ' 
-                            'crop parameters are referred to the binned images. ')
+                            'Binning in Fourier is the first operation, so '
+                            'that crop parameters are referred to the binned '
+                            'images. ')
         
         group.addParam('cropRegion', params.EnumParam, 
                        choices=['None', 'From Alignment', 'New'],
                        label="Define crop region", default=CROP_NONE,
-                       help="""Select if you want to crop the final micrograph.
-                               If select:
-                                     *None*, the final micrographs will have the same dimensions as
-                                     the input movies. The region of interest, if the input movies 
-                                     have alignment, is ignored.
-                                     *from Alignment*, if the movies has alignment, the region of
-                                     interest is defined and will be apply; else, micrographs
-                                     will have the same dimensions as the input movies.
-                                     *New*, All crop parameters should be defined below.
-                                     The region of interest, if the input movies have alignment,
-                                     is ignored.
-                            """)
+                       help="Select if you want to crop the final micrograph. "
+                            "If you select: \n"
+                            "*None*, the final micrographs will have the same "
+                            "dimensions as the input movies. The region of "
+                            "interest, if the input movies have alignment, is "
+                            "ignored. \n"
+                            "*from Alignment*, if the movies has alignment, "
+                            "the region of interest is defined and will be "
+                            "apply; else, micrographs will have the same "
+                            "dimensions as the input movies. \n"
+                            "*New*, All crop parameters should be defined below."
+                            "The region of interest, if the input movies have "
+                            "alignment, is ignored. ")
         
         line = group.addLine('Crop offsets (px)',
                              condition='cropRegion==%d' % CROP_NEW)
@@ -87,17 +97,33 @@ class XmippProtMovieAverage(ProtAlignMovies):
                                   'If equal to 0, use maximum size.')
         line.addParam('cropDimX', params.IntParam, default=0, label='X')
         line.addParam('cropDimY', params.IntParam, default=0, label='Y')
-        
-        form.addParam('useAlignment', params.BooleanParam, default=True,
-                      label="Use movie alignment to Sum frames?",
-                      help="If set Yes, the alignment information (if"
-                           " it exists) will take into account to align"
-                           " your movies.")
+
+        group.addParam('useAlignment', params.BooleanParam, default=True,
+                       label="Use previous movie alignment to SUM frames?",
+                       help="Input movies could have alignment information from"
+                            "a previous protocol. If you select *Yes*, the "
+                            "previous alignment will be taken into account.")
+
+        form.addParam('splineOrder', params.EnumParam,
+                      default=self.INTERP_CUBIC, choices=['linear', 'cubic'],
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='Interpolation',
+                      help="linear (faster but lower quality), "
+                           "cubic (slower but more accurate).")
+
         form.addParallelSection(threads=1, mpi=0)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
-        inputMd = self._getMovieOrMd(movie)
+        movieFolder = self._getOutputMovieFolder(movie)
+
+        x, y, n = movie.getDim()
+        s0, sN = self._getFrameRange(n, 'sum')
+
+        inputMd = os.path.join(movieFolder, 'input_movie.xmd')
+        writeMovieMd(movie, inputMd, s0, sN,
+                     useAlignment=(movie.hasAlignment() and self.useAlignment))
+
         outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
         
         if self.cropRegion == CROP_ALIGNMENT and movie.hasAlignment():
@@ -107,37 +133,26 @@ class XmippProtMovieAverage(ProtAlignMovies):
                    self.cropDimX.get(), self.cropDimY.get()]
         else:
             roi = None
-        
-        self.averageMovie(movie, inputMd, outputMicFn, self.binFactor.get(), roi,
-                     self.inputMovies.get().getDark(),
-                     self.inputMovies.get().getGain())
+
+        self.averageMovie(movie, inputMd, outputMicFn, self.binFactor.get(),
+                          roi, self.inputMovies.get().getDark(),
+                          self.inputMovies.get().getGain(),
+                          splineOrder=self.INTERP_MAP[self.splineOrder.get()])
+
         self._storeSummary(movie)
     
-    #--------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-        errors = []
-        if (self.cropDimX > 0 and self.cropDimY <= 0 or
-            self.cropDimY > 0 and self.cropDimX <= 0):
-            errors.append("If you give cropDimX, you should also give cropDimY "
-                          "and viceversa")
-        return errors
+    #--------------------------- INFO functions --------------------------------
+    # def _validate(self):
+    #     errors = []
+    #     if (self.cropDimX > 0 and self.cropDimY <= 0 or
+    #         self.cropDimY > 0 and self.cropDimX <= 0):
+    #         errors.append("If you give cropDimX, you should also give cropDimY "
+    #                       "and viceversa")
+    #     return errors
     
-    #--------------------------- UTILS functions ---------------------------------------------------
-    def _getNumberOfFrames(self, movie):
-        _, _, n = movie.getDim()
-        return n
-    
+    #--------------------------- UTILS functions -------------------------------
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
-    
-    def _getMovieOrMd(self, movie):
-        if movie.hasAlignment() and self.useAlignment:
-            shiftsMd = self._getShiftsFile(movie)
-            s0, sN = self._getFrameRange(self._getNumberOfFrames(movie), 'sum')
-            writeShiftsMovieAlignment(movie, shiftsMd, s0, sN)
-            return shiftsMd
-        else:
-            return getMovieFileName(movie)
     
     def _doGenerateOutputMovies(self):
         """ Returns True if an output set of movies will be generated.

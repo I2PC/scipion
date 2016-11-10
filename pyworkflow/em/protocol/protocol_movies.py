@@ -67,15 +67,6 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                       important=True,
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
-        form.addParam('cleanMovieData', BooleanParam, default=True,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Clean movie data?',
-                      help='Movies take a lot of disk space.\n'
-                           'So, by default, all protocols that work on\n'
-                           'movies will erase the each movie folder after\n'
-                           'finishing. Results files should be copied in \n'
-                           'the "createOutputStep" function.\n'
-                           'If set to *No*, the folder will not be deleted.')
 
     #--------------------------- INSERT steps functions ---------------------
     def _insertAllSteps(self):
@@ -270,13 +261,13 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
             self._processMovie(movie)
 
-            if self.cleanMovieData:
+            if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+                self.info('Clean movie data DISABLED. '
+                          'Movie folder will remain in disk!!!')
+            else:
                 self.info("Erasing.....movieFolder: %s" % movieFolder)
                 os.system('rm -rf %s' % movieFolder)
                 # cleanPath(movieFolder)
-            else:
-                self.info('Clean movie data DISABLED. '
-                          'Movie folder will remain in disk!!!')
 
         # Mark this movie as finished
         open(self._getMovieDone(movie), 'w').close()
@@ -355,5 +346,39 @@ class ProtExtractMovieParticles(ProtExtractParticles, ProtProcessMovies):
     """
     pass
 
-    
 
+class ProtMovieAssignGain(ProtPreprocessMicrographs):
+    """ Assign a gain image to a set of movies
+    """
+    _label = 'assign gain to movies'
+
+    def __init__(self, **kwargs):
+        ProtPreprocessMicrographs.__init__(self, **kwargs)
+    
+    #--------------------------- DEFINE param functions --------------------------------------------
+    def _defineParams(self, form):
+        form.addSection(label=Message.LABEL_INPUT)
+        
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies', 
+                      important=True,
+                      label=Message.LABEL_INPUT_MOVS,
+                      help='Select a set of previously imported movies.')
+        form.addParam('gainImage', PointerParam, pointerClass='Image',
+                      label="Gain image", help="Select a gain image. The movie will be corrected as newMovie=Movie/gain")
+
+    #--------------------------- INSERT steps functions --------------------------------------------
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    #--------------------------- STEPS functions ---------------------------------------------------
+    def createOutputStep(self):
+        moviesIn = self.inputMovies.get()
+        moviesOut = self._createSetOfMovies()
+        moviesOut.copyInfo(moviesIn)        
+        moviesOut.setGain(self.gainImage.get().getFileName())        
+        moviesOut.copyItems(moviesIn)
+        
+        self._defineOutputs(outputMovies=moviesOut)
+        self._defineSourceRelation(self.inputMovies, moviesOut)
+        
+        

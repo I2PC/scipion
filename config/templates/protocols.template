@@ -19,6 +19,8 @@ Protocols SPA = [
             {"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}]}]},
     {"tag": "section", "text": "Micrographs", "children": [
         {"tag": "protocol", "value": "XmippProtPreprocessMicrographs", "text": "default"},
+        {"tag": "protocol", "value": "XmippProtMovieGain", "text": "default"},
+        {"tag": "protocol", "value": "ProtMovieAssignGain", "text": "default"},
         {"tag": "protocol_group", "text": "Movie Alignment", "openItem": "False", "children": [
             {"tag": "protocol", "value": "ProtMotionCorr",   "text": "default"},
             {"tag": "protocol", "value": "XmippProtMovieCorr",   "text": "default"},

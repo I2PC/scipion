@@ -26,7 +26,7 @@
 # *
 # **************************************************************************
 
-from os.path import realpath, join, dirname, exists
+from os.path import realpath, join, dirname, exists, basename
 from collections import OrderedDict
 
 import pyworkflow.utils as pwutils
@@ -114,7 +114,8 @@ class MonitorISPyB(Monitor):
 
         for itemId, params in allParams.iteritems():
             ispybId = proxy.sendMovieParams(params)
-            self.allIds[itemId] = ispybId
+            # Use -1 as a trick when ispyb is not really used and id is None
+            self.allIds[itemId] = ispybId or -1
 
         self.info("Closing proxy")
         proxy.close()
@@ -128,14 +129,26 @@ class MonitorISPyB(Monitor):
             yield obj
         objSet.close()
 
+    def find_ispyb_path(self, input_file):
+        """ Given a visit, find the path where png images should be stored. """
+        if pwutils.envVarOn('SCIPIONBOX_ISPYB_ON'):
+            p = realpath(join(self.project_path, input_file))
+            while p and not p.endswith(self.visit):
+                p = dirname(p)
+            return join(p, '.ispyb')
+        else:
+            return self.protocol._getExtraPath()
+
     def create_movie_params(self, prot, allParams):
 
         for movie in self.iter_updated_set(prot.outputMovies):
             movieFn = movie.getFileName()
             if self.numberOfFrames is None:
                 self.numberOfFrames = movie.getNumberOfFrames()
-                self.imageGenerator = IspybImageGenerator(self.project.path,
-                                                          self.visit, movieFn)
+                images_path = self.find_ispyb_path(movieFn)
+                self.imageGenerator = ImageGenerator(self.project.path,
+                                                     images_path,
+                                                     smallThumb=512)
 
             movieId = movie.getObjId()
 
@@ -152,7 +165,7 @@ class MonitorISPyB(Monitor):
     def update_align_params(self, prot, allParams):
         for mic in self.iter_updated_set(prot.outputMicrographs):
             micFn = mic.getFileName()
-            renderable_image = self.imageGenerator.generate_image(micFn)
+            renderable_image = self.imageGenerator.generate_image(micFn, micFn)
 
             allParams[mic.getObjId()].update({
                 'comments': 'aligned',
@@ -161,6 +174,10 @@ class MonitorISPyB(Monitor):
 
     def update_ctf_params(self, prot, allParams):
         for ctf in self.iter_updated_set(prot.outputCTF):
+            micFn = ctf.getMicrograph().getFileName()
+            psdName = pwutils.replaceBaseExt(micFn, 'psd.png')
+            psdFn = ctf.getPsdFile()
+            psdPng = self.imageGenerator.generate_image(psdFn, psdName)
             allParams[ctf.getObjId()].update({
             'min_defocus': ctf.getDefocusU(),
             'max_defocus': ctf.getDefocusV(),
@@ -168,25 +185,21 @@ class MonitorISPyB(Monitor):
             })
 
 
-class IspybImageGenerator:
-    def __init__(self, project_path, visit, input_file):
+class ImageGenerator:
+    def __init__(self, project_path, images_path,
+                 bigThumb=None, smallThumb=None):
         self.project_path = project_path
-        self.visit = visit
-        self.ispyb_path = self.find_ispyb_path(input_file, visit)
+        self.images_path = images_path
         self.ih = ImageHandler()
         self.img = self.ih.createImage()
+        self.bigThumb = bigThumb
+        self.smallThumb = smallThumb
 
-    def find_ispyb_path(self, input_file, visit):
-        p = realpath(join(self.project_path, input_file))
-        while p and not p.endswith(visit):
-            p = dirname(p)
-        return join(p, '.ispyb')
+    def generate_image(self, input_file, outputName=None):
+        output_root = join(self.images_path, basename(outputName))
+        output_file = output_root + '.png'
 
-    def get_ispyb_path(self, input_file, suffix='.png'):
-        return join(self.ispyb_path, input_file + suffix)
-
-    def generate_image(self, input_file):
-        output_file = self.get_ispyb_path(input_file)
+        print "Generating image: ", output_file
 
         if not exists(output_file):
             from PIL import Image
@@ -194,9 +207,12 @@ class IspybImageGenerator:
             pimg = getPILImage(self.img)
 
             pwutils.makeFilePath(output_file)
-            pimg.save(output_file, "PNG")
-            pimg.thumbnail((200, 200), Image.ANTIALIAS)
-            pimg.save(self.get_ispyb_path(input_file, 't.png'), "PNG")
+            if self.bigThumb:
+                pimg.save(output_file, "PNG")
+
+            if self.smallThumb:
+                pimg.thumbnail((self.smallThumb, self.smallThumb), Image.ANTIALIAS)
+                pimg.save(output_root + 't.png', "PNG")
 
         return output_file
 

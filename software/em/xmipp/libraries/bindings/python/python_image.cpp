@@ -135,6 +135,8 @@ PyMethodDef Image_methods[] =
             "Change the slices order in a volume" },
         { "patch", (PyCFunction) Image_patch, METH_VARARGS,
           "Make a patch with other image" },
+        { "getDataType", (PyCFunction) Image_getDataType, METH_VARARGS,
+          "get DataType for Image" },
         { "setDataType", (PyCFunction) Image_setDataType, METH_VARARGS,
           "set DataType for Image" },
         { "convert2DataType", (PyCFunction) Image_convert2DataType, METH_VARARGS,
@@ -942,6 +944,27 @@ Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }//function Image_patch
 
+/* Get Data Type */
+PyObject *
+Image_getDataType(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        try
+        {
+            ImageGeneric & image = Image_Value(self);
+            DataType dt = image.getDatatype();
+            return  Py_BuildValue("i", dt);
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}//function Image_getDataType
 
 /* Set Data Type */
 PyObject *
