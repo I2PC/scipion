@@ -202,7 +202,7 @@ class PostgresqlMapper(mapper.Mapper):
         """Restore the object from objectData, and restore all of its attributes (children objects)
            from the database."""
         if obj == None:
-            obj = self._buildObject(objectData[FIELD_CLASSNAME])
+            obj = self._buildObjectFromClass(objectData[FIELD_CLASSNAME])
 
         self.restoreObject(obj, objectData)
 
