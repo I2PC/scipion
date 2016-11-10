@@ -104,9 +104,10 @@ class XmippProtRCT(ProtInitialVolume):
                       label='Resolution of the low-pass filter (dig.freq)',
                       help='Resolution of the low-pass filter (dig.freq)')        
 
-        form.addParallelSection(mpi=1, threads=2)
+        form.addParallelSection(threads=4, mpi=1)
 
     #--------------------------- STEPS functions -------------------------------
+
     def _insertAllSteps(self):
         self.inputSet = self.inputParticles.get()
         self.rctClassesFn = self._getExtraPath('rct_classes.xmd')
