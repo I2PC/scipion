@@ -26,6 +26,10 @@
 # **************************************************************************
 from __future__ import print_function
 
+import time
+
+INIT_REFRESH_SECONDS = 3
+
 """
 View with the protocols inside the main project window.
 """
@@ -41,7 +45,6 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
-from pyworkflow import monitor
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
@@ -393,7 +396,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                                       obj, self.mapper)
 
     def _deleteObject(self, obj):
-        """ Remove unnecesary output, specially for Coordinates. """
+        """ Remove unnecessary output, specially for Coordinates. """
         prot = self.protocol
         try:
             objLabel = self.getObjectLabel(obj, prot)
@@ -404,7 +407,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 self.parent._fillSummary()
                 self.parent.windows.showInfo("Object *%s* successfuly deleted."
                                              % objLabel)
-        except Exception, ex:
+        except Exception as ex:
             self.parent.windows.showError(str(ex))
 
     @staticmethod
@@ -556,7 +559,7 @@ class ProtocolsView(tk.Frame):
         self._bindKeyPress('Delete', self._onDelPressed)
 
         self.__autoRefresh = None
-        self.__autoRefreshCounter = 3  # start by 3 secs
+        self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
 
         c = self.createContent()
         pwgui.configureWeigths(self)
@@ -745,16 +748,16 @@ class ProtocolsView(tk.Frame):
             mem = psutil.virtual_memory()
             print("------------- refreshing ---------- ")
             files = proc.get_open_files()
-            print ("  open files: ", len(files))
+            print("  open files: ", len(files))
             for f in files:
-                print ("    - %s, %s" % (f.path, f.fd))
-            print ("  memory percent: ", proc.get_memory_percent())
+                print("    - %s, %s" % (f.path, f.fd))
+            print("  memory percent: ", proc.get_memory_percent())
 
         self.updateRunsGraph(True, checkPids=checkPids)
         self.updateRunsTree(False)
 
         if initRefreshCounter:
-            self.__autoRefreshCounter = 3  # start by 3 secs
+            self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
             if self.__autoRefresh:
                 self.runsTree.after_cancel(self.__autoRefresh)
                 self.__autoRefresh = self.runsTree.after(self.__autoRefreshCounter * 1000,
@@ -766,8 +769,14 @@ class ProtocolsView(tk.Frame):
         if pwutils.envVarOn('DO_NOT_AUTO_REFRESH'):
             return
 
-        self.refreshRuns(initRefreshCounter=False)
-        secs = self.__autoRefreshCounter
+        if self.project.needRefresh():
+
+            self.refreshRuns(initRefreshCounter=False)
+            secs = self.__autoRefreshCounter
+
+        else:
+            secs = INIT_REFRESH_SECONDS / 2
+
         # double the number of seconds up to 30 min
         self.__autoRefreshCounter = min(2 * secs, 1800)
         self.__autoRefresh = self.runsTree.after(secs * 1000,
@@ -836,16 +845,16 @@ class ProtocolsView(tk.Frame):
     def _updateActionToolbar(self):
         """ Update which action buttons should be visible. """
 
-        def displayAction(action, i, cond=True):
+        def displayAction(actionToDisplay, column, condition=True):
             """ Show/hide the action button if the condition is met. """
 
             # If action present (set color is not in the toolbar but in the context menu)
-            if self.actionButtons.has_key(action):
-                if cond:
-                    self.actionButtons[action].grid(row=0, column=i, sticky='sw',
-                                                    padx=(0, 5), ipadx=0)
+            if self.actionButtons.has_key(actionToDisplay):
+                if condition:
+                    self.actionButtons[actionToDisplay].grid(row=0, column=column, sticky='sw',
+                                                             padx=(0, 5), ipadx=0)
                 else:
-                    self.actionButtons[action].grid_remove()
+                    self.actionButtons[actionToDisplay].grid_remove()
             else:
                 # print action + " not in toolbar."
                 pass
@@ -932,7 +941,7 @@ class ProtocolsView(tk.Frame):
         t.itemClick = self._runTreeItemClick
 
         return t
-
+   
     def updateRunsTree(self, refresh=False):
         self.provider.setRefresh(refresh)
         self.runsTree.update()
@@ -1323,6 +1332,7 @@ class ProtocolsView(tk.Frame):
     def _runItemControlClick(self, item=None):
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
+            # TODO: Prot is not used!!
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         else:
             prot = item.node.run
@@ -1376,7 +1386,8 @@ class ProtocolsView(tk.Frame):
             else:
                 pwgui.dialog.fillMessageText(tw.tooltipText, tm)
 
-    def _selectItemsWithinArea(self, x1, y1, x2, y2, enclosed=False):
+    @staticmethod
+    def _selectItemsWithinArea(x1, y1, x2, y2, enclosed=False):
         """
         Parameters
         ----------
@@ -1392,26 +1403,25 @@ class ProtocolsView(tk.Frame):
 
         """
 
-        # NOT working properly: Commented for the moment.
         return
-
-        if enclosed:
-            items = self.runsGraphCanvas.find_enclosed(x1, y1, x2, y2)
-        else:
-            items = self.runsGraphCanvas.find_overlapping(x1, y1, x2, y2)
-
-        update = False
-
-        for itemId in items:
-            if itemId in self.runsGraphCanvas.items:
-
-                item = self.runsGraphCanvas.items[itemId]
-                if not item.node.isRoot():
-                    item.setSelected(True)
-                    self._selection.append(itemId)
-                    update = True
-
-        if update is not None: self._updateSelection()
+        # NOT working properly: Commented for the moment.
+        # if enclosed:
+        #     items = self.runsGraphCanvas.find_enclosed(x1, y1, x2, y2)
+        # else:
+        #     items = self.runsGraphCanvas.find_overlapping(x1, y1, x2, y2)
+        #
+        # update = False
+        #
+        # for itemId in items:
+        #     if itemId in self.runsGraphCanvas.items:
+        #
+        #         item = self.runsGraphCanvas.items[itemId]
+        #         if not item.node.isRoot():
+        #             item.setSelected(True)
+        #             self._selection.append(itemId)
+        #             update = True
+        #
+        # if update is not None: self._updateSelection()
 
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -1566,7 +1576,7 @@ class ProtocolsView(tk.Frame):
         if onlySave:
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
-        #            msg = "Protocol successfully saved."
+            # msg = "Protocol successfully saved."
         else:
             self.project.launchProtocol(prot)
             # Select the launched protocol to display its summary, methods..etc
@@ -1655,7 +1665,7 @@ class ProtocolsView(tk.Frame):
                 self.project.exportProtocols(protocols, filename)
                 self.windows.showInfo("Workflow successfully saved to '%s' "
                                       % filename)
-            except Exception, ex:
+            except Exception as ex:
                 self.windows.showError(str(ex))
 
         browser = pwgui.browser.FileBrowserWindow("Choose .json file to save workflow",
@@ -1747,7 +1757,7 @@ class ProtocolsView(tk.Frame):
                 elif action == ACTION_LABELS:
                     self._selectLabels()
 
-            except Exception, ex:
+            except Exception as ex:
                 self.windows.showError(str(ex))
                 if pwutils.envVarOn('SCIPION_DEBUG'):
                     import traceback
@@ -1757,8 +1767,8 @@ class ProtocolsView(tk.Frame):
         if action == ACTION_TREE:
             self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
-            with monitor.Timer("ACTION_REFRESH"):
-                self.refreshRuns(checkPids=True)
+            self.refreshRuns(checkPids=True)
+
         elif action == ACTION_SWITCH_VIEW:
             self.switchRunsView()
 
