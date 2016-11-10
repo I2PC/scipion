@@ -155,6 +155,10 @@ Image_reslice(PyObject *obj, PyObject *args, PyObject *kwargs);
 PyObject *
 Image_patch(PyObject *obj, PyObject *args, PyObject *kwargs);
 
+/* Get Data Type */
+PyObject *
+Image_getDataType(PyObject *obj, PyObject *args, PyObject *kwargs);
+
 /* Set Data Type */
 PyObject *
 Image_setDataType(PyObject *obj, PyObject *args, PyObject *kwargs);

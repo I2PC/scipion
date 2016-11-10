@@ -22,18 +22,16 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-Protocol wrapper around the xmipp correlation alignment for movie alignment
-"""
 
+import os
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.em.metadata as md
-from convert import getMovieFileName
+from convert import writeMovieMd
 
 
 
@@ -44,32 +42,40 @@ class XmippProtMovieCorr(ProtAlignMovies):
     OUTSIDE_WRAP = 0
     OUTSIDE_AVG = 1
     OUTSIDE_VALUE = 2
-    
+
+    INTERP_LINEAR = 0
+    INTERP_CUBIC = 1
+
+    # Map to xmipp interpolation values in command line
+    INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
+
     _label = 'correlation alignment'
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
 
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
 
-        form.addParam('splineOrder', params.IntParam, default=3,
+        form.addParam('splineOrder', params.EnumParam,
+                      default=self.INTERP_CUBIC, choices=['linear', 'cubic'],
                       expertLevel=cons.LEVEL_ADVANCED,
-                      label='B-spline order',
-                      help="1 for linear interpolation (faster but lower quality), "
-                           "3 for cubic interpolation (slower but more accurate).")
+                      label='Interpolation',
+                      help="linear (faster but lower quality), "
+                           "cubic (slower but more accurate).")
 
         form.addParam('maxFreq', params.FloatParam, default=4,
                        label='Filter at (A)',
-                       help="For the calculation of the shifts with Xmipp, micrographs are "
-                            "filtered (and downsized accordingly) to this resolution. "
-                            "Then shifts are calculated, and they are applied to the "
-                            "original frames without any filtering and downsampling.")
+                       help="For the calculation of the shifts with Xmipp, "
+                            "micrographs are filtered (and downsized "
+                            "accordingly) to this resolution. Then shifts are "
+                            "calculated, and they are applied to the original "
+                            "frames without any filtering and downsampling.")
 
         form.addParam('maxShift', params.IntParam, default=30,
                       expertLevel=cons.LEVEL_ADVANCED,
                       label="Maximum shift (pixels)",
-                      help='Maximum allowed distance (in pixels) that each frame '
-                           'can be shifted with respect to the next.')
+                      help='Maximum allowed distance (in pixels) that each '
+                           'frame can be shifted with respect to the next.')
         
         form.addParam('outsideMode', params.EnumParam,
                       choices=['Wrapping','Average','Value'],
@@ -86,18 +92,23 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
         form.addParallelSection(threads=1, mpi=1)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
 
     def _processMovie(self, movie):
-        inputMd = getMovieFileName(movie)
+        movieFolder = self._getOutputMovieFolder(movie)
+
         x, y, n = movie.getDim()
         a0, aN = self._getFrameRange(n, 'align')
         s0, sN = self._getFrameRange(n, 'sum')
+
+        inputMd = os.path.join(movieFolder, 'input_movie.xmd')
+        writeMovieMd(movie, inputMd, a0, aN, useAlignment=False)
 
         args  = '-i %s ' % inputMd
         args += '-o %s ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--max_freq %f ' % self.maxFreq
+        args += '--Bspline %d ' % self.INTERP_MAP[self.splineOrder.get()]
 
         if self.binFactor > 1:
             args += '--bin %f ' % self.binFactor
@@ -129,8 +140,8 @@ class XmippProtMovieCorr(ProtAlignMovies):
         elif self.outsideMode == self.OUTSIDE_AVG:
             args += "--outside value %f" % self.outsideValue
         
-        args += ' --frameRange %d %d ' % (a0-1, aN-1)
-        args += ' --frameRangeSum %d %d ' % (s0-1, sN-1)
+        args += ' --frameRange %d %d ' % (0, aN-a0)
+        args += ' --frameRangeSum %d %d ' % (s0-a0, sN-s0)
         args += ' --max_shift %d ' % self.maxShift
 
         if self.doSaveAveMic:
@@ -149,10 +160,6 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
 
     #--------------------------- UTILS functions ------------------------------
-    def _getNumberOfFrames(self, movie):
-        _, _, n = movie.getDim()
-        return n
-    
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
 

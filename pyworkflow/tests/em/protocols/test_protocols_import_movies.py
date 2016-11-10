@@ -35,42 +35,69 @@ class TestImportBase(BaseTest):
         setupTestProject(cls)
         cls.dsMovies = DataSet.getDataSet('movies')
 
+
 class TestImportMovies(TestImportBase):
-    
-    def test_pattern(self):
-        """ Import several micrographs from a given pattern.
-        """
-        args = {'importFrom': ProtImportMovies.IMPORT_FROM_FILES,
-                'filesPath': self.dsMovies.getFile('ribo/'),
-                'filesPattern': '*.mrcs',
+
+    def getArgs(self, filesPath, pattern=''):
+        return {'importFrom': ProtImportMovies.IMPORT_FROM_FILES,
+                'filesPath': self.dsMovies.getFile(filesPath),
+                'filesPattern': pattern,
                 'amplitudConstrast': 0.1,
                 'sphericalAberration': 2.,
                 'voltage': 300,
                 'samplingRate': 3.54
                 }
-        
-        def _checkOutput(prot, moviesId=[], size=None):
-            movies = getattr(prot, 'outputMovies', None)
-            self.assertIsNotNone(movies)
-            self.assertEqual(movies.getSize(), size)
-            for i, m in enumerate(movies):
-                if moviesId:
-                    self.assertEqual(m.getObjId(), moviesId[i])
-                self.assertAlmostEqual(m.getSamplingRate(), args['samplingRate'])
-                a = m.getAcquisition()
-                self.assertAlmostEqual(a.getVoltage(), args['voltage'])
 
-        # Id's should be set increasing from 1 if ### is not in the 
-        # pattern
+    def _checkOutput(self, prot, args, moviesId=[], size=None, dim=None):
+        movies = getattr(prot, 'outputMovies', None)
+        self.assertIsNotNone(movies)
+        self.assertEqual(movies.getSize(), size)
+
+        for i, m in enumerate(movies):
+            if moviesId:
+                self.assertEqual(m.getObjId(), moviesId[i])
+            self.assertAlmostEqual(m.getSamplingRate(),
+                                   args['samplingRate'])
+            a = m.getAcquisition()
+            self.assertAlmostEqual(a.getVoltage(), args['voltage'])
+
+            if dim is not None: # Check if dimensions are the expected ones
+                x, y, n = m.getDim()
+                self.assertEqual(dim, (x, y, n))
+
+    def test_pattern(self):
+        args = self.getArgs('ribo/', pattern='*.mrcs')
+
+        # Id's should be set increasing from 1 if ### is not in the pattern
         protMovieImport = self.newProtocol(ProtImportMovies, **args)
         protMovieImport.setObjLabel('from files')
         self.launchProtocol(protMovieImport)
-        _checkOutput(protMovieImport, [1, 2, 3], size=3)
+        self._checkOutput(protMovieImport, args, [1, 2, 3], size=3,
+                          dim=(1950, 1950, 16))
         
-        # Id's should be taken from filename    
-        # args['filesPattern'] = 'BPV_####.mrc'
-        # protMovieImport = self.newProtocol(ProtImportMovies, **args)
-        # protMovieImport.setObjLabel('from files (with id)')
-        # self.launchProtocol(protMovieImport)
-        # _checkOutput(protMovieImport, [1386, 1387, 1388], size=3)
+    def test_em(self):
+        args = self.getArgs('cct/cct_1.em')
+        args['objLabel'] = 'movie em'
 
+        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        self.launchProtocol(protMovieImport)
+
+        self._checkOutput(protMovieImport, args, size=1, dim=(4096, 4096, 7))
+
+    def test_tif(self):
+        args = self.getArgs('c3-adp-se-xyz-0228_200.tif')
+        args['objLabel'] = 'movie tif'
+
+        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        self.launchProtocol(protMovieImport)
+
+        self._checkOutput(protMovieImport, args, size=1, dim=(7676, 7420, 38))
+
+    def test_bz2(self):
+        args = self.getArgs('Falcon_2012_06_12-14_33_35_0_movie.mrcs.bz2')
+        args['objLabel'] = 'movie bz2'
+
+        protMovieImport = self.newProtocol(ProtImportMovies, **args)
+        self.launchProtocol(protMovieImport)
+
+        self._checkOutput(protMovieImport, args, size=1)

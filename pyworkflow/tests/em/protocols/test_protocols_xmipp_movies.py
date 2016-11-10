@@ -101,9 +101,10 @@ class TestOFAlignment(TestXmippBase):
         cls.protImport2 = cls.runImportMovie2(cls.movie2)
     
     def runOFProtocol(self, movies, label="Default", saveMic=True,
-                      saveMovie=False):
+                      saveMovie=False, useAlign=False):
         protOF = XmippProtOFAlignment(doSaveAveMic=saveMic,
-                                      doSaveMovie=saveMovie)
+                                      doSaveMovie=saveMovie,
+                                      useAlignment=useAlign)
         protOF.setObjLabel(label)
         protOF.inputMovies.set(movies)
         self.launchProtocol(protOF)
