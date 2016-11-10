@@ -104,7 +104,7 @@ class ProtImportFiles(ProtImport):
         form.addSection('Streaming')
         
         form.addParam('dataStreaming', params.BooleanParam, default=False,
-              label="Process data in streammig?",
+              label="Process data in streaming?",
               help="Select this option if you want import data as it is\n"
                    "generated and process on the fly by next protocols."
                    "In this case the protocol will keep running to check \n"
