@@ -55,7 +55,6 @@ class ProtUserSubSet(BatchProtocol):
     from the ShowJ gui. The enabled/disabled changes will be stored in a temporary sqlite
     file that will be read to create the new subset.
     """
-
     def __init__(self, **args):
         BatchProtocol.__init__(self, **args)
 
