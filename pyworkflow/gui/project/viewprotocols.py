@@ -764,7 +764,7 @@ class ProtocolsView(tk.Frame):
         if pwutils.envVarOn('DO_NOT_AUTO_REFRESH'):
             return
 
-        if self._thereAreChanges():
+        if self.project.needRefresh():
             print ('Refreshing!!')
             self.refreshRuns(initRefreshCounter=False)
             secs = self.__autoRefreshCounter
@@ -776,16 +776,6 @@ class ProtocolsView(tk.Frame):
         self.__autoRefreshCounter = min(2 * secs, 1800)
         self.__autoRefresh = self.runsTree.after(secs * 1000,
                                                  self._automaticRefreshRuns)
-
-    def _thereAreChanges(self):
-
-        # Loop through the runs
-        for node in self.runsGraph.getNodes():
-
-            if not pwprot.isProtocolUpToDate(node.run):
-                 return True
-
-        return False
 
     def _findProtocol(self, e=None):
         """ Find a desired protocol by typing some keyword. """

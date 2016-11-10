@@ -892,6 +892,18 @@ class Project(object):
 
         return self.runs
 
+    def needRefresh(self):
+        """ True if any run is active and its timestamp is older than its corresponding runs.db
+        NOTE: If an external script changes the DB this will fail. It uses only in memory objects."""
+        # Loop through the runs
+        for run in self.runs:
+
+            if run.isActive():
+                if not pwprot.isProtocolUpToDate(run):
+                    return True
+
+        return False
+
     def checkPid(self, protocol):
         """ Check if a running protocol is still alive or not.
         The check will only be done for protocols that have not been sent
