@@ -201,8 +201,13 @@ class ProtAlignMovies(ProtProcessMovies):
                 micSet.append(mic)
 
             self._updateOutputSet('outputMicrographs', micSet, streamMode)
+
             if firstTime:
-                self._defineSourceRelation(self.inputMovies, micSet)
+                # We consider that Movies are 'transformed' into the Micrographs
+                # This will allow to extend the CTF associated to a set of
+                # micrographs to another set of micrographs generated from a
+                # different movie alignment
+                self._defineTransformRelation(self.inputMovies, micSet)
 
             if (self.getAttributeValue('useMotioncor2', False) == True and
                 self.getAttributeValue('frameDose', 0.0) != 0.0):
@@ -221,9 +226,11 @@ class ProtAlignMovies(ProtProcessMovies):
                     # FIXME The micSet is not setting properly dimensions (No-Dim)
                     micSet2.append(mic2)
 
-                self._updateOutputSet('outputMicrographsDoseWt', micSet2, streamMode)
+                self._updateOutputSet('outputMicrographsDoseWt',
+                                      micSet2, streamMode)
+
                 if firstTime:
-                    self._defineSourceRelation(self.inputMovies, micSet2)
+                    self._defineTransformRelation(self.inputMovies, micSet2)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
