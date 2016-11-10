@@ -91,7 +91,7 @@ class XmippProtRCT(ProtInitialVolume):
                       label='Resolution of the low-pass filter (dig.freq)',
                       help='Resolution of the low-pass filter (dig.freq)')        
 
-        form.addParallelSection(mpi=2)
+        form.addParallelSection(threads=4, mpi=0)
             
          
     #--------------------------- INSERT steps functions --------------------------------------------    
