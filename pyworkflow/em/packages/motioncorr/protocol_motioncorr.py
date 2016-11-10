@@ -100,6 +100,12 @@ class ProtMotionCorr(ProtAlignMovies):
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local '
                            'patch-based motion correction and dose weighting.')
+        form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+                      condition='useMotioncor2',
+                      label='Apply Dose filter',
+                      help='Apply a dose-dependent filter to frames before '
+                           'summing them. Pre-exposure and dose per frame were '
+                           'specified during movies import.')
 
         line = form.addLine('Number of patches', condition='useMotioncor2',
                             help='Number of patches to be used for patch based '
@@ -139,6 +145,10 @@ class ProtMotionCorr(ProtAlignMovies):
         -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
                               tilt series, e.g. *-60 60*
                               """)
+        form.addParam('doSaveUnwtMic', params.BooleanParam, default=False,
+                      label="Save unweighted mics", condition='doApplyDoseFilter',
+                      help="Save dose-unweighted mics. They are usually used for "
+                           "CTF estimation.")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
         form.addParallelSection(threads=0, mpi=0)
@@ -201,6 +211,8 @@ class ProtMotionCorr(ProtAlignMovies):
             cropDimY = self.cropDimY.get() or 1
 
             numbOfFrames = self._getNumberOfFrames(movie)
+            dose = inputMovies.getAcquisition().getDosePerFrame()
+            preExp = inputMovies.getAcquisition().getDoseInitial()
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': '%d %d' % (self.patchX, self.patchY),
                         '-MaskCent': '%d %d' % (self.cropOffsetX,
@@ -209,7 +221,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
-                        '-FmDose': inputMovies.getAcquisition().getDosePerFrame(),
+                        '-FmDose': dose if self.doApplyDoseFilter else 0.0,
                         '-Throw': '%d' % a0,
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
@@ -218,7 +230,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
-                argsDict['-InitDose'] = inputMovies.getAcquisition().getDoseInitial()
+                argsDict['-InitDose'] = preExp if self.doApplyDoseFilter else 0.0
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
             args = ' -InMrc "%s" ' % movie.getBaseName()
@@ -232,7 +244,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         try:
             self.runJob(program, args, cwd=movieFolder)
-            self._renameMovie(movie)
+            self._fixMovie(movie)
 
             if self.doComputePSD:
                 uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
@@ -292,7 +304,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
             if self.doSaveMovie and not self._isNewMotioncor2:
                 errors.append('Saving aligned movies is not supported by '
-                              'motioncor2. ')
+                              'this version of motioncor2. ')
                 errors.append('By default, the protocol will produce '
                               'outputMovies equivalent to the input ')
                 errors.append('however containing alignment information.')
@@ -302,6 +314,12 @@ class ProtMotionCorr(ProtAlignMovies):
                               'equivalent in case of motioncor2. \n Please, '
                               'set *YES* _Use ALIGN frames range to SUM?_ '
                               'flag or use motioncorr')
+
+            if self.doApplyDoseFilter:
+                inputMovies = self.inputMovies.get()
+                if inputMovies.getAcquisition().getDosePerFrame() == 0.0 or None:
+                    errors.append('Dose per frame for input movies is 0 or not set. '
+                                  'You cannot apply dose filter.')
 
         return errors
 
@@ -369,12 +387,16 @@ class ProtMotionCorr(ProtAlignMovies):
     def _isNewMotioncor2(self):
         return True if getVersion('MOTIONCOR2') != '03162016' else False
 
-    def _renameMovie(self, movie):
+    def _fixMovie(self, movie):
         if self.doSaveMovie and self.useMotioncor2 and self._isNewMotioncor2():
             outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
             outputMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
             movieFn = outputMicFn.replace('_aligned_mic.mrc', '_aligned_mic_Stk.mrc')
             pwutils.moveFile(movieFn, outputMovieFn)
+
+        if self.useMotioncor2 and not self.doSaveUnwtMic:
+            fnToDelete = self._getExtraPath(self._getOutputMicWtName(movie))
+            pwutils.cleanPath(fnToDelete)
 
     def writeZeroShifts(self, movie):
         # TODO: find another way to do this
