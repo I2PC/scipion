@@ -109,7 +109,7 @@ class ProtUserSubSet(BatchProtocol):
                 self._createSubSetFromClasses(setObj)
 
             elif isinstance(setObj, SetOfImages):
-                setObj.copyInfo(otherObj) # copy info from original images
+                setObj.copyInfo(otherObj)  # copy info from original images
                 self._createSubSetFromImages(setObj)
 
             elif isinstance(setObj, SetOfNormalModes):
@@ -243,7 +243,7 @@ class ProtUserSubSet(BatchProtocol):
         inputImages = inputClasses.getImages()
         createFunc = getattr(self, '_create' + outputClassName)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating REPRESENTATIVES of images from classes,  sqlite file: %s" % self._dbName)
+        self.info("Creating REPRESENTATIVES of images from classes, sqlite file: %s" % self._dbName)
 
         count = 0
         output = createFunc()
@@ -262,10 +262,10 @@ class ProtUserSubSet(BatchProtocol):
             self._defineSourceRelation(inputImages, output)
 
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(),
-                                                                 inputClasses.getSize(),
-                                                                 selectmsg,
-                                                                 output.getClassName())
+        msg = 'From input %s of size %s %s to create output %s' % (inputClasses.getClassName(),
+                                                                   inputClasses.getSize(),
+                                                                   selectmsg,
+                                                                   output.getClassName())
         self.summaryVar.set(msg)
         return output
 
@@ -290,7 +290,7 @@ class ProtUserSubSet(BatchProtocol):
         className = inputImages.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating subset of images from classes,  sqlite file: %s" % self._dbName)
+        self.info("Creating subset of images from classes, sqlite file: %s" % self._dbName)
 
         output = createFunc()
         self._copyInfoAndSetAlignment(inputClasses, output)
@@ -302,11 +302,11 @@ class ProtUserSubSet(BatchProtocol):
         self._defineTransformRelation(inputImages, output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s of size %s'%(inputClasses.getClassName(),
-                                                                            inputClasses.getSize(),
-                                                                            selectmsg,
-                                                                            output.getClassName(),
-                                                                            output.getSize())
+        msg = 'From input %s of size %s %s to create output %s of size %s' % (inputClasses.getClassName(),
+                                                                              inputClasses.getSize(),
+                                                                              selectmsg,
+                                                                              output.getClassName(),
+                                                                              output.getSize())
         self.summaryVar.set(msg)
         return output
 
@@ -318,7 +318,7 @@ class ProtUserSubSet(BatchProtocol):
         className = inputClasses.getClassName()
         createFunc = getattr(self, '_create' + className)
         modifiedSet = inputClasses.getClass()(filename=self._dbName, prefix=self._dbPrefix)
-        self.info("Creating subset of classes from classes,  sqlite file: %s" % self._dbName)
+        self.info("Creating subset of classes from classes, sqlite file: %s" % self._dbName)
 
         output = createFunc(inputClasses.getImages())
         output.appendFromClasses(modifiedSet)
@@ -330,7 +330,10 @@ class ProtUserSubSet(BatchProtocol):
             self._defineSourceRelation(inputClasses.getImages(), output)
         count = len([cls for cls in modifiedSet if cls.isEnabled()])
         selectmsg = 'we selected %s items' % count if count > 1 else 'was selected 1 item'
-        msg = 'From input %s of size %s %s to create output %s'%(inputClasses.getClassName(), inputClasses.getSize(),  selectmsg, output.getClassName())
+        msg = 'From input %s of size %s %s to create output %s' % (inputClasses.getClassName(),
+                                                                   inputClasses.getSize(),
+                                                                   selectmsg,
+                                                                   output.getClassName())
         self.summaryVar.set(msg)
         return output
 
@@ -381,6 +384,8 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         output.setUntilted(outputU)
         output.setTilted(outputT)
+        # Link output to the same coordinates pairs than input
+        output.setCoordsPair(particlesTiltPair.getCoordsPair())
 
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
@@ -452,13 +457,13 @@ class ProtCreateMask(BatchProtocol):
         maskDst = self._getPath(basename)
         moveFile(maskSrc, maskDst)
         samplingRate = None
-        if(hasattr(inputObj, "getSamplingRate")):
+        if hasattr(inputObj, "getSamplingRate"):
             samplingRate = inputObj.getSamplingRate()
         else:
             for key, attr in inputObj.iterInputAttributes():
                 if hasattr(attr.get(), "getSamplingRate"):
                     samplingRate = attr.get().getSamplingRate()
-        if  not samplingRate:
+        if not samplingRate:
             raise Exception("sampling rate required")
 
         mask = Mask()
@@ -497,6 +502,3 @@ class ProtCreateFSC(BatchProtocol):
 
     def _methods(self):
         return self._summary()
-
-
-

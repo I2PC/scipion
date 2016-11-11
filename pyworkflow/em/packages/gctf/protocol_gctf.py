@@ -23,9 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol for CTF estimation with gctf
-"""
 
 import os
 from os.path import join, exists, basename

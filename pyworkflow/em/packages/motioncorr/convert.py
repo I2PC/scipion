@@ -84,7 +84,7 @@ def parseMovieAlignment(logFile):
     """ Get global frame shifts relative to the first frame
     (for the plots). Motioncorr old version
     """
-    f = open(logFile)
+    f = open(logFile, 'a+')
     first = None
     xshifts = []
     yshifts = []
@@ -106,7 +106,7 @@ def parseMovieAlignment2(logFile):
     """ Get global frame shifts relative to the first frame
     (for the plots). Motioncor2.
     """
-    f = open(logFile)
+    f = open(logFile, 'a+')
     first = None
     xshifts = []
     yshifts = []
