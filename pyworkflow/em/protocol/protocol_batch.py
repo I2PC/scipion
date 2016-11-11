@@ -385,6 +385,8 @@ class ProtUserSubSet(BatchProtocol):
         # Register outputs
         output.setUntilted(outputU)
         output.setTilted(outputT)
+        # Link output to the same coordinates pairs than input
+        output.setCoordsPair(particlesTiltPair.getCoordsPair())
 
         outputDict = {'outputParticlesTiltPair': output}
         self._defineOutputs(**outputDict)
