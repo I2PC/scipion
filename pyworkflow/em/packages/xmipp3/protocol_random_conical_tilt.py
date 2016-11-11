@@ -138,13 +138,15 @@ class XmippProtRCT(ProtInitialVolume):
         blockMd = "class%06d_images@%s" % (particles.getObjId(),
                                            self.rctClassesFn)
         classMd = xmipp.MetaData()
-        
-        uImages = self.inputParticlesTiltPair.get().getUntilted()
-        tImages = self.inputParticlesTiltPair.get().getTilted()
-        sangles = self.inputParticlesTiltPair.get().getCoordsPair().getAngles()
 
-        uMics = self.inputParticlesTiltPair.get().getCoordsPair().getMicsPair().getUntilted()
-        tMics = tImages.getCoordinates().getMicrographs()
+        partPairs = self.inputParticlesTiltPair.get()
+        uImages = partPairs.getUntilted()
+        tImages = partPairs.getTilted()
+        sangles = partPairs.getCoordsPair().getAngles()
+
+        micPairs = partPairs.getCoordsPair().getMicsPair()
+        uMics = micPairs.getUntilted()
+        tMics = micPairs.getTilted()
         
         scaleFactor = uImages.getSamplingRate() / particles.getSamplingRate()
         
