@@ -368,7 +368,7 @@ class XmippViewer(Viewer):
             from plotter import XmippPlotter
             from pyworkflow.em.plotter import EmPlotter
             plotter = XmippPlotter()
-            plotter.createSubPlot('Soft-alignment validation plot','Angular Precision', 'Angular Precision')
+            plotter.createSubPlot('Soft-alignment validation plot','Angular Precision', 'Angular Accuracy')
             plotter.plotMdFile(md, xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION, xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY,
                                marker='.', markersize=.55, color='red', linestyle='')
             self._views.append(plotter)
