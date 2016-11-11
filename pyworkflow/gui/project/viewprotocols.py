@@ -1767,7 +1767,7 @@ class ProtocolsView(tk.Frame):
         if action == ACTION_TREE:
             self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
-            self.refreshRuns(checkPids=True)
+                self.refreshRuns(checkPids=True)
 
         elif action == ACTION_SWITCH_VIEW:
             self.switchRunsView()
