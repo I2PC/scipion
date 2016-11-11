@@ -20,15 +20,16 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 
-from pyworkflow.protocol.params import PointerParam
+import numpy
+from pyworkflow.protocol.params import PointerParam, BooleanParam
+from pyworkflow.em.constants import ALIGN_2D, ALIGN_3D, ALIGN_PROJ, ALIGN_NONE
 from pyworkflow.em.data import Coordinate
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
-
 
 
 class ProtExtractCoords(ProtParticlePicking):
@@ -45,6 +46,7 @@ class ProtExtractCoords(ProtParticlePicking):
     
     _label = 'extract coordinates'
 
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
@@ -59,10 +61,16 @@ class ProtExtractCoords(ProtParticlePicking):
                       label='Input micrographs', important=True,
                       help='Select the micrographs to which you want to\n'
                            'associate the coordinates from the particles.')
+
+        form.addParam('applyShifts', BooleanParam, default=False,
+                      label='Apply particle shifts?',
+                      help='Apply particle shifts from 2D alignment to'
+                           'recalculate new coordinates. This can be useful '
+                           'for re-centering of particle coordinates.')
         
         form.addParallelSection(threads=0, mpi=0)
 
-#--------------------------- INSERT steps functions ----------------------------
+    #--------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
@@ -71,18 +79,17 @@ class ProtExtractCoords(ProtParticlePicking):
         inputParticles = self.inputParticles.get()
         inputMics = self.inputMicrographs.get()
         outputCoords = self._createSetOfCoordinates(inputMics)
+        alignType = inputParticles.getAlignment()
 
         scale = inputParticles.getSamplingRate() / inputMics.getSamplingRate()
-        
         print "Scaling coordinates by a factor *%0.2f*" % scale
         newCoord = Coordinate()
-        
         firstCoord = inputParticles.getFirstItem().getCoordinate()
         hasMicName = firstCoord.getMicName() is not None
-            
+
         # Create the micrographs dict using either micName or micId
         micDict = {}
-        
+
         for mic in inputMics:
             micKey = mic.getMicName() if hasMicName else mic.getObjId()
             if micKey in micDict:
@@ -92,7 +99,7 @@ class ProtExtractCoords(ProtParticlePicking):
                 print "           - %s" % mic.getLocation()
                 raise Exception("Micrograph key %s is duplicated!!!" % micKey)
             micDict[micKey] = mic.clone()
-            
+
         for particle in inputParticles:
             coord = particle.getCoordinate()
             micKey = coord.getMicName() if hasMicName else coord.getMicId()
@@ -103,7 +110,13 @@ class ProtExtractCoords(ProtParticlePicking):
             else:
                 newCoord.copyObjId(particle)
                 x, y = coord.getPosition()
-                newCoord.setPosition(x*scale, y*scale)                
+                if self.applyShifts:
+                    shifts = self.getShifts(particle.getTransform(), alignType)
+                    xCoor, yCoor = x - int(shifts[0]), y - int(shifts[1])
+                    newCoord.setPosition(xCoor*scale, yCoor*scale)
+                else:
+                    newCoord.setPosition(x*scale, y*scale)
+
                 newCoord.setMicrograph(mic)
                 outputCoords.append(newCoord)
         
@@ -113,7 +126,8 @@ class ProtExtractCoords(ProtParticlePicking):
         self._defineOutputs(outputCoordinates=outputCoords)
         self._defineSourceRelation(self.inputParticles, outputCoords)
         self._defineSourceRelation(self.inputMicrographs, outputCoords)
-                
+
+    #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
         ps1 = self.inputParticles.get().getSamplingRate()
@@ -121,6 +135,8 @@ class ProtExtractCoords(ProtParticlePicking):
         summary.append('Input particles pixel size: *%0.3f* (A/px)' % ps1)
         summary.append('Input micrographs pixel size: *%0.3f* (A/px)' % ps2)
         summary.append('Scaling coordinates by a factor of *%0.3f*' % (ps1/ps2))
+        if self.applyShifts:
+            summary.append('Applied 2D shifts from particles')
         
         if hasattr(self, 'outputCoordinates'):
             summary.append('Output coordinates: *%d*'
@@ -137,12 +153,64 @@ class ProtExtractCoords(ProtParticlePicking):
         protocol is launched to be executed. It should return a list of errors.
         If the list is empty the protocol can be executed.
         """
-        #check that input set of aligned particles do have 2D alignment
         errors = [ ]
         inputParticles = self.inputParticles.get()
         first = inputParticles.getFirstItem()
         if first.getCoordinate() is None:
-            errors.append('The input particles does not have coordinates!!!')
+            errors.append('The input particles do not have coordinates!!!')
+
+        if self.applyShifts and not inputParticles.hasAlignment():
+            errors.append('Input particles do not have alignment information!')
         
         return errors
-    
+
+    #--------------------------- UTILS functions ------------------------------
+    def getShifts(self, transform, alignType):
+        """
+        is2D == True-> matrix is 2D (2D images alignment)
+                otherwise matrix is 3D (3D volume alignment or projection)
+        invTransform == True  -> for xmipp implies projection
+                              -> for xmipp implies alignment
+        """
+        if alignType == ALIGN_NONE:
+            return None
+
+        inverseTransform = alignType == ALIGN_PROJ
+        # only flip is meaningful if 2D case
+        # in that case the 2x2 determinant is negative
+        flip = False
+        matrix = transform.getMatrix()
+        if alignType == ALIGN_2D:
+            # get 2x2 matrix and check if negative
+            flip = bool(numpy.linalg.det(matrix[0:2, 0:2]) < 0)
+            if flip:
+                matrix[0, :2] *= -1.  # invert only the first two columns keep x
+                matrix[2, 2] = 1.  # set 3D rot
+            else:
+                pass
+
+        elif alignType == ALIGN_3D:
+            flip = bool(numpy.linalg.det(matrix[0:3, 0:3]) < 0)
+            if flip:
+                matrix[0, :4] *= -1.  # now, invert first line including x
+                matrix[3, 3] = 1.  # set 3D rot
+            else:
+                pass
+
+        else:
+            pass
+            # flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+            # if flip:
+            #    matrix[0,:4] *= -1.#now, invert first line including x
+        shifts = self.geometryFromMatrix(matrix, inverseTransform)
+
+        return shifts
+
+    def geometryFromMatrix(self, matrix, inverseTransform):
+        from pyworkflow.em.transformations import translation_from_matrix
+        if inverseTransform:
+            matrix = numpy.linalg.inv(matrix)
+            shifts = -translation_from_matrix(matrix)
+        else:
+            shifts = translation_from_matrix(matrix)
+        return shifts
