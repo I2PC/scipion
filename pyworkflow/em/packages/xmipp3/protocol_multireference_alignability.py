@@ -93,6 +93,15 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       help='Add only in case the map is close to a symmetry different and more restrict than the one reported in the parameter Symmetry group.'
                       'See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp')
+        
+        form.addParam('minTilt', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
+                      label="Minimum allowed tilt angle",  
+                      help='Tilts below this value will not be considered for the alignment')
+        
+        form.addParam('maxTilt', FloatParam, default=180, expertLevel=LEVEL_ADVANCED,
+                      label="Maximum allowed tilt angle without mirror check",  
+                      help='Tilts above this value will not be considered for the alignment without mirror check')
+
                 
         form.addParallelSection(threads=1, mpi=1)
 
@@ -216,8 +225,8 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         
         makePath(volDir)
         fnGallery= (volDir+'/gallery.stk')
-        params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle 180'\
-                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'))
+        params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle %f --min_tilt_angle %f'\
+                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'), self.maxTilt.get(), self.minTilt.get())
         
         self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
         
