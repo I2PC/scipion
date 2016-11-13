@@ -226,7 +226,7 @@ class Environment:
         # We need a targetList which has the targetDict.keys() in order
         # (OrderedDict is not available in python < 2.7)
 
-        self._packages = []  # list of available packages (to show in --help)
+        self._packages = {}  # dict of available packages (to show in --help)
 
         self._args = kwargs.get('args', [])
         self.showOnly = '--show' in self._args
@@ -511,7 +511,18 @@ class Environment:
             commands: a list with actions to be executed to install the package
         """
         # Add to the list of available packages, for reference (used in --help).
-        self._packages.append(name)
+        if name not in self._packages:
+            self._packages[name] = []
+
+        # Get the version from the kwargs
+        if 'version' in kwargs:
+            version = kwargs['version']
+            extName = self._getExtName(name, version)
+        else:
+            version = ''
+            extName = name
+
+        self._packages[name].append((name, version))
 
         # Special case: our "package" is a python module that we want to use
         # from elsewhere.
@@ -520,7 +531,7 @@ class Environment:
 
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
-        tar = kwargs.get('tar', '%s.tgz' % name)
+        tar = kwargs.get('tar', '%s.tgz' % extName)
         buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
@@ -530,7 +541,7 @@ class Environment:
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
 
-        target = self._addDownloadUntar(name, **libArgs)
+        target = self._addDownloadUntar(extName, **libArgs)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
             if isinstance(tgt, basestring):
@@ -539,13 +550,12 @@ class Environment:
             target.addCommand(
                 cmd, targets=[join(target.targetPath, t) for t in tgt],
                 cwd=target.buildPath, final=True)
-        target.addCommand(Command(self, Link(name, targetDir),
-                                targets=[self.getEm(name),
-                                         self.getEm(targetDir)],
-                                  cwd=self.getEm('')),
-                          final=True)
- 
-            
+
+        target.addCommand(Command(self, Link(extName, targetDir),
+                                  targets=[self.getEm(extName),
+                                           self.getEm(targetDir)],
+                                  cwd=self.getEm('')), final=True)
+
         return target
 
     def _showTargetGraph(self, targetList):
@@ -597,22 +607,38 @@ class Environment:
                 executed.add(tgt.getName())
                 exploring.discard(tgt.getName())
 
+    def _getExtName(self, name, version):
+        """ Return folder name for a given package-version """
+        return '%s-%s' % (name, version)
+
+    def _isInstalled(self, name, version):
+        """ Return true if the package-version seems to be installed. """
+        pydir = join('software', 'lib', 'python2.7', 'site-packages')
+        extName = self._getExtName(name, version)
+        return (exists(join('software', 'em', extName)) or
+                extName in [x[:len(extName)] for x in os.listdir(pydir)])
+
     def execute(self):
         if '--help' in self._args[2:]:
             if self._packages:
-                print("Available packages (*: seems already installed)")
-                pydir = join('software', 'lib', 'python2.7', 'site-packages')
-                for p in sorted(self._packages):
-                    if (exists(join('software', 'em', p)) or
-                        p in [x[:len(p)] for x in os.listdir(pydir)]):
-                        print("  %s (*)" % p)
-                    else:
-                        print("  %s" % p)
+                print("Available packages: "
+                      "([ ] not installed, [X] seems already installed)")
+
+                keys = sorted(self._packages.keys())
+                for k in keys:
+                    pVersions = self._packages[k]
+                    sys.stdout.write("%15s " % k)
+                    for name, version in pVersions:
+                        installed = self._isInstalled(name, version)
+                        vInfo = '%s [%s]' % (version, 'X' if installed else ' ')
+                        sys.stdout.write('%13s' % vInfo)
+                    sys.stdout.write("\n")
             sys.exit()
 
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
-        cmdTargets = [a for a in self._args[2:] if a[0].isalpha() and not a.startswith('xmipp')]
+        cmdTargets = [a for a in self._args[2:]
+                      if a[0].isalpha() and not a.startswith('xmipp')]
 
         if cmdTargets:
             # Check that they are all command targets
