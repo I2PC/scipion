@@ -463,6 +463,9 @@ env.addPackage('gEMpicker', version='1.1',
 env.addPackage('Gctf', version='0.50',
                tar='Gctf_v0.50.tgz')
 
+env.addPackage('Gctf', version='1.06',
+               tar='Gctf_v1.06.tgz')
+
 env.addPackage('Gautomatch', version='0.53',
                tar='Gautomatch_v0.53.tgz')
 
