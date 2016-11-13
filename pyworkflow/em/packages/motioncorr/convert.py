@@ -67,7 +67,7 @@ def parseMovieAlignment(logFile):
     """ Get the first and last frames together with the shifts
     between frames aligned. Motioncorr old version
     """
-    f = open(logFile)
+    f = open(logFile, 'a+')
     first = None
     xshifts = []
     yshifts = []
@@ -89,7 +89,7 @@ def parseMovieAlignment2(logFile):
     """ Get the first and last frames together with the shifts
     between frames aligned. Motioncor2 new version
     """
-    f = open(logFile)
+    f = open(logFile, 'a+')
     first = None
     xshifts = []
     yshifts = []
