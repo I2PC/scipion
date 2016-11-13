@@ -272,6 +272,17 @@ class Environment:
         self._targetDict[name] = t
 
         return t
+
+    def addTargetAlias(self, name, alias):
+        """ Add an alias to an existing target.
+        This function will be used for installing the last version of each
+        package.
+        """
+        if name not in self._targetDict:
+            raise Exception("Can't add alias, target name '%s' not found. "
+                            % name)
+
+        self._targetDict[alias] = self._targetDict[name]
     
     def getTarget(self, name):
         return self._targetDict[name]
@@ -555,6 +566,12 @@ class Environment:
                                   targets=[self.getEm(extName),
                                            self.getEm(targetDir)],
                                   cwd=self.getEm('')), final=True)
+
+        # Create an alias with the name for that version
+        # this imply that the last package version added will be
+        # the one installed by default, so the last versions should
+        # be the last ones to be inserted
+        self.addTargetAlias(extName, name)
 
         return target
 
