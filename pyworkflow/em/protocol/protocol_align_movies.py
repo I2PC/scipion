@@ -169,7 +169,7 @@ class ProtAlignMovies(ProtProcessMovies):
                    % (allDone, len(self.listOfMovies)))
         self.debug('   streamMode: %s' % streamMode)
 
-        if self._doGenerateOutputMovies():
+        if self._createOutputMovies():
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
@@ -186,7 +186,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
-        if self.getAttributeValue('doSaveAveMic', True):
+        if self._createOutputMicrographs():
             micSet = self._loadOutputSet(SetOfMicrographs, 'micrographs.sqlite')
 
             for movie in newDone:
@@ -209,28 +209,28 @@ class ProtAlignMovies(ProtProcessMovies):
                 # different movie alignment
                 self._defineTransformRelation(self.inputMovies, micSet)
 
-            if (self.getAttributeValue('useMotioncor2', False) and
-                    self.getAttributeValue('doSaveUnwtMic', False)):
-                micSet2 = self._loadOutputSet(SetOfMicrographs,
-                                              'micrographs_dose-weighted.sqlite')
+        if self._createOutputWeightedMicrographs():
 
-                for movie in newDone:
-                    mic2 = micSet2.ITEM_TYPE()
-                    mic2.copyObjId(movie)
-                    mic2.setMicName(movie.getMicName())
-                    # The subclass protocol is responsible of generating the output
-                    # micrograph file in the extra path with the required name
-                    extraMicFn2 = self._getExtraPath(self._getOutputMicWtName(movie))
-                    mic2.setFileName(extraMicFn2)
-                    self._preprocessOutputMicrograph(mic2, movie)
-                    # FIXME The micSet is not setting properly dimensions (No-Dim)
-                    micSet2.append(mic2)
+            micSet2 = self._loadOutputSet(SetOfMicrographs,
+                                          'micrographs_dose-weighted.sqlite')
 
-                self._updateOutputSet('outputMicrographsDoseWt',
-                                      micSet2, streamMode)
+            for movie in newDone:
+                mic2 = micSet2.ITEM_TYPE()
+                mic2.copyObjId(movie)
+                mic2.setMicName(movie.getMicName())
+                # The subclass protocol is responsible of generating the output
+                # micrograph file in the extra path with the required name
+                extraMicFn2 = self._getExtraPath(self._getOutputMicWtName(movie))
+                mic2.setFileName(extraMicFn2)
+                self._preprocessOutputMicrograph(mic2, movie)
+                # FIXME The micSet is not setting properly dimensions (No-Dim)
+                micSet2.append(mic2)
 
-                if firstTime:
-                    self._defineTransformRelation(self.inputMovies, micSet2)
+            self._updateOutputSet('outputMicrographsDoseWt',
+                                  micSet2, streamMode)
+
+            if firstTime:
+                self._defineTransformRelation(self.inputMovies, micSet2)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -398,13 +398,23 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         return [], []
 
-    def _doGenerateOutputMovies(self):
+    def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
         either with alignment only or the binary aligned movie files.
         Subclasses can override this function to change this behavior.
         """
         return True
+
+    def _createOutputMicrographs(self):
+        """ By default check if the user have selected 'doSaveAveMic'
+        property. Subclasses can override this method to implement different
+        behaviour.
+        """
+        return self.getAttributeValue('doSaveAveMic', True)
+
+    def _createOutputWeightedMicrographs(self):
+        return False
 
     def _preprocessOutputMicrograph(self, mic, movie):
         """ Hook function that will be call before adding the micrograph

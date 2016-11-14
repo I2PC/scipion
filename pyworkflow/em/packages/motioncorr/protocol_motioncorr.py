@@ -76,7 +76,8 @@ class ProtMotionCorr(ProtAlignMovies):
                       expertLevel=cons.LEVEL_ADVANCED,
                       label="Compute PSD (before/after)?",
                       help="If Yes, the protocol will compute for each movie "
-                           "the average PSD before and after alignment, for comparison")
+                           "the average PSD before and after alignment, "
+                           "for comparison")
 
         form.addParam('extraParams', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED,
@@ -104,8 +105,8 @@ class ProtMotionCorr(ProtAlignMovies):
                       condition='useMotioncor2',
                       label='Apply Dose filter',
                       help='Apply a dose-dependent filter to frames before '
-                           'summing them. Pre-exposure and dose per frame were '
-                           'specified during movies import.')
+                           'summing them. Pre-exposure and dose per frame '
+                           'should  be specified during movies import.')
 
         line = form.addLine('Number of patches', condition='useMotioncor2',
                             help='Number of patches to be used for patch based '
@@ -145,10 +146,11 @@ class ProtMotionCorr(ProtAlignMovies):
         -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
                               tilt series, e.g. *-60 60*
                               """)
-        form.addParam('doSaveUnwtMic', params.BooleanParam, default=False,
-                      label="Save unweighted mics", condition='doApplyDoseFilter',
-                      help="Save dose-unweighted mics. They are usually used for "
-                           "CTF estimation.")
+        form.addParam('doSaveUnweightedMic', params.BooleanParam, default=False,
+                      condition='useMotioncor2 and doApplyDoseFilter',
+                      label="Save unweighted micrographs?",
+                      help="By default, if you have selected to apply a "
+                           "dose-dependent filter to the frames, only ")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
         form.addParallelSection(threads=0, mpi=0)
@@ -161,7 +163,8 @@ class ProtMotionCorr(ProtAlignMovies):
                                        movieFolder)
         outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
                                          movieFolder)
-        aveMicFn = pwutils.removeExt(movie.getFileName()) + '_uncorrected_avg.mrc'
+        movieBaseName = pwutils.removeExt(movie.getFileName())
+        aveMicFn =  movieBaseName + '_uncorrected_avg.mrc'
         logFile = self._getRelPath(self._getMovieLogFile(movie),
                                    movieFolder)
 
@@ -247,8 +250,8 @@ class ProtMotionCorr(ProtAlignMovies):
             self._fixMovie(movie)
 
             if self.doComputePSD:
-                uncorrectedPSD = pwutils.removeExt(movie.getFileName()) + '_uncorrected'
-                correctedPSD = pwutils.removeExt(movie.getFileName()) + '_corrected'
+                uncorrectedPSD = movieBaseName + '_uncorrected'
+                correctedPSD = movieBaseName + '_corrected'
                 # Compute uncorrected avg mic
                 roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
                        self.cropDimX.get(), self.cropDimY.get()]
@@ -391,10 +394,11 @@ class ProtMotionCorr(ProtAlignMovies):
         if self.doSaveMovie and self.useMotioncor2 and self._isNewMotioncor2():
             outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
             outputMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
-            movieFn = outputMicFn.replace('_aligned_mic.mrc', '_aligned_mic_Stk.mrc')
+            movieFn = outputMicFn.replace('_aligned_mic.mrc',
+                                          '_aligned_mic_Stk.mrc')
             pwutils.moveFile(movieFn, outputMovieFn)
 
-        if self.useMotioncor2 and not self.doSaveUnwtMic:
+        if self.useMotioncor2 and not self.doSaveUnweightedMic:
             fnToDelete = self._getExtraPath(self._getOutputMicWtName(movie))
             pwutils.cleanPath(fnToDelete)
 
@@ -439,6 +443,20 @@ class ProtMotionCorr(ProtAlignMovies):
                 return movie.getNumberOfFrames()
         else:
             return movie.getNumberOfFrames()
+
+    def _createOutputMicrographs(self):
+        createWeighted = self._createOutputWeightedMicrographs()
+        # To create the un-weighted average micrographs
+        # we only consider the 'doSaveUnweightedMic' flag if the
+        # weighted ones should be created.
+        return (self.doSaveAveMic and
+                (not createWeighted or self.doSaveUnweightedMic))
+
+    def _createOutputWeightedMicrographs(self):
+        return (self.doSaveAveMic and self.useMotioncor2 and
+                self.doApplyDoseFilter)
+
+
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
