@@ -186,8 +186,9 @@ class ProtAlignMovies(ProtProcessMovies):
                 self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
-        if self._createOutputMicrographs():
-            micSet = self._loadOutputSet(SetOfMicrographs, 'micrographs.sqlite')
+        def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
+            """ Updated the output micrographs set with new items found. """
+            micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -195,12 +196,12 @@ class ProtAlignMovies(ProtProcessMovies):
                 mic.setMicName(movie.getMicName())
                 # The subclass protocol is responsible of generating the output
                 # micrograph file in the extra path with the required name
-                extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
-            self._updateOutputSet('outputMicrographs', micSet, streamMode)
+            self._updateOutputSet(outputName, micSet, streamMode)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -209,28 +210,15 @@ class ProtAlignMovies(ProtProcessMovies):
                 # different movie alignment
                 self._defineTransformRelation(self.inputMovies, micSet)
 
+        if self._createOutputMicrographs():
+            _updateOutputMicSet('micrographs.sqlite',
+                                self._getOutputMicName,
+                                'outputMicrographs')
+
         if self._createOutputWeightedMicrographs():
-
-            micSet2 = self._loadOutputSet(SetOfMicrographs,
-                                          'micrographs_dose-weighted.sqlite')
-
-            for movie in newDone:
-                mic2 = micSet2.ITEM_TYPE()
-                mic2.copyObjId(movie)
-                mic2.setMicName(movie.getMicName())
-                # The subclass protocol is responsible of generating the output
-                # micrograph file in the extra path with the required name
-                extraMicFn2 = self._getExtraPath(self._getOutputMicWtName(movie))
-                mic2.setFileName(extraMicFn2)
-                self._preprocessOutputMicrograph(mic2, movie)
-                # FIXME The micSet is not setting properly dimensions (No-Dim)
-                micSet2.append(mic2)
-
-            self._updateOutputSet('outputMicrographsDoseWt',
-                                  micSet2, streamMode)
-
-            if firstTime:
-                self._defineTransformRelation(self.inputMovies, micSet2)
+            _updateOutputMicSet('micrographs_dose-weighted.sqlite',
+                                self._getOutputMicWtName,
+                                'outputMicrographsDoseWeighted')
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
