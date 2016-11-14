@@ -147,7 +147,7 @@ class ProtMotionCorr(ProtAlignMovies):
                               tilt series, e.g. *-60 60*
                               """)
         form.addParam('doSaveUnweightedMic', params.BooleanParam, default=False,
-                      condition='useMotioncor2 and doApplyDoseFilter',
+                      condition='doSaveAveMic and useMotioncor2 and doApplyDoseFilter',
                       label="Save unweighted micrographs?",
                       help="By default, if you have selected to apply a "
                            "dose-dependent filter to the frames, only ")
