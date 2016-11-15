@@ -54,7 +54,7 @@ class XmippProtAddNoise(ProtRefine3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
        
-        form.addParam('input', PointerParam, pointerClass='SetOfVolumes, SetOfParticles',
+        form.addParam('input', PointerParam, pointerClass='SetOfParticles, Volume',
                       label="Input", 
                       help='Select a volume or image.')
         
