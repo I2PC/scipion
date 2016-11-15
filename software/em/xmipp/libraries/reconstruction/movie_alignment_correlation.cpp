@@ -307,6 +307,8 @@ void ProgMovieAlignmentCorrelation::run()
 					double wlpf=DIRECT_MULTIDIM_ELEM(filter,nn);
 					if (wlpf!=0)
 						DIRECT_MULTIDIM_ELEM(*reducedFrameFourier,nn) *= wlpf;
+					else
+						DIRECT_MULTIDIM_ELEM(*reducedFrameFourier,nn) = zero;
 				}
 
 				frameFourier.push_back(reducedFrameFourier);

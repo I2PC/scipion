@@ -26,10 +26,9 @@
 # **************************************************************************
 
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, Viewer
-from plotter import EmPlotter
+from plotter import EmPlotter, plt
 from data import FSC, SetOfFSCs
 from matplotlib.ticker import FuncFormatter
-import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
 from pyworkflow.em.protocol import ProtCreateFSC
 from pyworkflow.utils.properties import Icon, Color

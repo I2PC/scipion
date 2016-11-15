@@ -1,4 +1,4 @@
-# **************************************************************************
+# ******************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *              Vahid Abrishami (vabrishami@cnb.csic.es)
@@ -25,7 +25,7 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
-# **************************************************************************
+# ******************************************************************************
 
 import os, sys
 
@@ -65,7 +65,6 @@ class ProtMotionCorr(ProtAlignMovies):
                             " First core index is 0, second 1 and so on."
                             " Motioncor2 can use multiple GPUs - in that case"
                             " set to i.e. *0 1 2*.")
-
         form.addParam('useMotioncor2', params.BooleanParam, default=False,
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local '
@@ -87,28 +86,25 @@ class ProtMotionCorr(ProtAlignMovies):
 -dsp       1                 1: Save quick results. 0: Not.
 -fsc       0                 1: Calculate and log FSC. 0: Not.
                             """)
+
         form.addParam('patch', params.StringParam, default='5 5',
                       label='Number of patches', condition='useMotioncor2',
                       help='Number of patches to be used for patch based '
                            'alignment. Set to *0 0* to do only global motion '
                            'correction.')
-
         form.addParam('frameDose', params.FloatParam, default='0.0',
                       label='Frame dose (e/A^2)', condition='useMotioncor2',
                       help='Frame dose in e/A^2. If set to *0.0*, dose '
                            'weighting will be skipped.')
-
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
                       help='Group every specified number of frames by adding '
                            'them together. The alignment is then performed on '
                            'the summed frames. By default, no grouping is '
                            'performed.')
-
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
@@ -116,16 +112,16 @@ class ProtMotionCorr(ProtAlignMovies):
 - Bft       100       BFactor for alignment, in px^2.
 - Iter      5         Maximum iterations for iterative alignment.
 -MaskCent  0 0        Center of subarea that will be used for alignment,
-                      default *0 0* corresponding to the frame center.
+              default *0 0* corresponding to the frame center.
 -MaskSize  1.0 1.0    The size of subarea that will be used for alignment,
-                      default *1.0 1.0* corresponding full size.
+              default *1.0 1.0* corresponding full size.
 -Align     1          Generate aligned sum (1) or simple sum (0).
 -FmRef     0          Specify which frame to be the reference to which
-                      all other frames are aligned, by default *0* all aligned
-                      to the first frame,
-                      other value aligns to the central frame.
+              all other frames are aligned, by default *0* all aligned
+              to the first frame,
+              other value aligns to the central frame.
 -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
-                      tilt series, e.g. *-60 60*
+              tilt series, e.g. *-60 60*
                       """)
 
         # Since only runs on GPU, do not allow neither threads nor mpi
@@ -134,90 +130,86 @@ class ProtMotionCorr(ProtAlignMovies):
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
+        movieFolder = self._getOutputMovieFolder(movie)
+        outputMicFn = self._getRelPath(self._getOutputMicName(movie),
+                                       movieFolder)
+
+        a0, aN = self._getRange(movie, 'align')
 
         if not self.useMotioncor2:
-            movieFolder = self._getOutputMovieFolder(movie)
-            outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
-            outputMovieFn = self._getAbsPath(self._getOutputMovieName(movie))
-            logFile = self._getAbsPath(self._getMovieLogFile(movie))
+            outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
+                                             movieFolder)
+            logFile = self._getRelPath(self._getMovieLogFile(movie),
+                                       movieFolder)
 
             # Get the number of frames and the range to be used
             # for alignment and sum
-            numberOfFrames = movie.getNumberOfFrames()
-            a0, aN = self._getFrameRange(numberOfFrames, 'align')
-            s0, sN = self._getFrameRange(numberOfFrames, 'sum')
+            s0, sN = self._getRange(movie, 'sum')
 
             argsDict = {'-crx': self.cropOffsetX.get(),
                         '-cry': self.cropOffsetY.get(),
                         '-cdx': self.cropDimX.get(),
                         '-cdy': self.cropDimY.get(),
                         '-bin': self.binFactor.get(),
-                        '-nst': '%d' % (a0-1),
-                        '-ned': '%d' % (aN-1),
-                        '-nss': '%d' % (s0-1),
-                        '-nes': '%d' % (sN-1),
+                        '-nst': '%d' % a0,
+                        '-ned': '%d' % aN,
+                        '-nss': '%d' % s0,
+                        '-nes': '%d' % sN,
                         '-gpu': self.GPUIDs.get(),
                         '-flg': logFile,
                         }
 
-            args = '%s ' % movie.getBaseName()
+            args = '"%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
-                args += " -fgr " + inputMovies.getGain()
+                args += ' -fgr "%s"' % inputMovies.getGain()
 
             if inputMovies.getDark():
-                args += " -fdr " + inputMovies.getDark()
+                args += ' -fdr "%s"' % inputMovies.getDark()
 
             if self.doSaveAveMic:
-                args += " -fcs %s " % outputMicFn
+                args += ' -fcs "%s" ' % outputMicFn
 
             if self.doSaveMovie:
-                args += " -fct %s -ssc 1" % outputMovieFn
+                args += ' -fct "%s" -ssc 1' % outputMovieFn
 
             args += ' ' + self.extraParams.get()
             program = MOTIONCORR_PATH
 
         else:
-            movieFolder = self._getOutputMovieFolder(movie)
-            outputMicFn = self._getAbsPath(self._getOutputMicName(movie))
-            logFileFn = self._getAbsPath(self._getMovieLogFile(movie))
-            logFileBase = logFileFn.replace('0-Full.log', '').replace('0-Patch-Full.log', '')
-
-            # Get the number of frames and the range to be used
-            # for alignment and sum
-            numberOfFrames = movie.getNumberOfFrames()
-            a0, aN = self._getFrameRange(numberOfFrames, 'align')
+            logFileFn = self._getRelPath(self._getMovieLogFile(movie),
+                                         movieFolder)
+            logFileBase = (logFileFn.replace('0-Full.log', '').replace(
+                           '0-Patch-Full.log', ''))
 
             # default values for motioncor2 are (1.0, 1.0)
-            if self.cropDimX.get() == 0:
-                self.cropDim = 1.0
-            elif self.cropDimY.get() == 0:
-                self.cropDimY = 1.0
+            cropDimX = self.cropDimX.get() or 1.0
+            cropDimY = self.cropDimY.get() or 1.0
 
-            argsDict = {'-OutMrc': outputMicFn,
+            numbOfFrames = self._getNumberOfFrames(movie)
+            argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': self.patch.get() or '5 5',
-                        '-MaskCent': '%f %f' % (self.cropOffsetX.get(),
-                                                self.cropOffsetY.get()),
-                        '-MaskSize': '%f %f' % (self.cropDimX.get(),
-                                                self.cropDimY.get()),
+                        '-MaskCent': '%d %d' % (self.cropOffsetX,
+                                                self.cropOffsetY),
+                        '-MaskSize': '%d %d' % (cropDimX, cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
                         '-FmDose': self.frameDose.get(),
-                        '-Throw': '%d' % (a0 - 1),
-                        '-Trunc': '%d' % (abs(aN - numberOfFrames)),
+                        '-Throw': '%d' % a0,
+                        '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
                         '-kV': inputMovies.getAcquisition().getVoltage(),
                         '-Gpu': self.GPUIDs.get(),
                         '-LogFile': logFileBase,
                         }
 
-            args = ' -InMrc %s ' % movie.getBaseName()
+            args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
 
             if inputMovies.getGain():
-                args += " -Gain " + inputMovies.getGain()
+                args += ' -Gain "%s" ' % inputMovies.getGain()
 
             args += ' ' + self.extraParams2.get()
             program = MOTIONCOR2_PATH
@@ -267,10 +259,11 @@ class ProtMotionCorr(ProtAlignMovies):
                               'outputMovies equivalent to the input ')
                 errors.append('however containing alignment information.')
 
-            if (self.alignFrame0.get() != self.sumFrame0.get() or 
-                self.alignFrameN.get() != self.sumFrameN.get()):
+            if not self.useAlignToSum:
                 errors.append('Frame range for ALIGN and SUM must be '
-                              'equivalent in case of motioncor2.')
+                              'equivalent in case of motioncor2. \n Please, '
+                              'set *YES* _Use ALIGN frames range to SUM?_ '
+                              'flag or use motioncorr')
 
         return errors
 
@@ -301,3 +294,33 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getAbsPath(self, baseName):
         return os.path.abspath(self._getExtraPath(baseName))
+
+    def _getRelPath(self, baseName, refPath):
+        return os.path.relpath(self._getExtraPath(baseName), refPath)
+
+    def _getRange(self, movie, prefix):
+
+        n = self._getNumberOfFrames(movie)
+        iniFrame, _, indxFrame = movie.getFramesRange()
+        first, last = self._getFrameRange(n, prefix)
+
+        if iniFrame != indxFrame:
+            first -= iniFrame
+            last -= iniFrame
+        else:
+            first -= 1
+            last -= 1
+
+        return first, last
+
+    def _getNumberOfFrames(self, movie):
+        _, lstFrame, _ = movie.getFramesRange()
+
+        if movie.hasAlignment():
+            _, lastFrmAligned = movie.getAlignment().getRange()
+            if lastFrmAligned != lstFrame:
+                return lastFrmAligned
+            else:
+                return movie.getNumberOfFrames()
+        else:
+            return movie.getNumberOfFrames()

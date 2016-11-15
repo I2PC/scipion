@@ -103,8 +103,11 @@ class TestMoviesBase(BaseTest):
     def runBasicTests(self, ProtocolClass):
         # Run some basic tests for both Unblur and Summovie
 
-        # Expected dimensions
+        # Expected dimensions of imported movies
         dims = [(4096, 4096, 7), (4096, 4096, 7), (1950, 1950, 16)]
+
+        # Expected dimensions of imported movies
+        dims2 = [(4096, 4096, 5), (4096, 4096, 5), (1950, 1950, 16)]
 
         # Launch unblur for 3 different set of movies
         for i, protImport in enumerate([self.runImportMovie1(),
@@ -116,7 +119,10 @@ class TestMoviesBase(BaseTest):
 
             prot = self.newProtocol(ProtocolClass,
                                     objLabel=ProtocolClass._label + str(i),
-                                    alignFrameRange=-1,
+                                    alignFrame0=2,
+                                    alignFrameN=6,
+                                    sumFrame0=2,
+                                    sumFrameN=6,
                                     doApplyDoseFilter=True,
                                     exposurePerFrame=1.3)
             prot.inputMovies.set(inputMovies)

@@ -236,6 +236,9 @@ class TestObject(BaseTest):
         """
          Test retrieving an object dictionary with its attribute values.
         """
+
+        # time.sleep(10)
+
         xs = range(1, 6)
         ys = [x*x for x in xs]
         ma1 = MovieAlignment(first=1, last=5, xshifts=xs, yshifts=ys)
@@ -247,7 +250,6 @@ class TestObject(BaseTest):
         m1.setObjId(1)
         m1.setAlignment(ma1)
         m1Dict = m1.getObjDict(includeBasic=True)
-
         goldDict1 = OrderedDict([('object.id', 1),
                                   ('object.label', 'test micrograph'),
                                   ('object.comment', 'Testing store and retrieve from dict.'),
@@ -255,13 +257,15 @@ class TestObject(BaseTest):
                                   ('_filename',  'my_movie.mrc'),
                                   ('_samplingRate',  1.6),
                                   ('_micName',  None),
+                                  ('_framesRange', '1,0,1'),
                                   ('_alignment',  None),
                                   ('_alignment._first',  1),
                                   ('_alignment._last',  5),
                                   ('_alignment._xshifts', '1.0,2.0,3.0,4.0,5.0'),
                                   ('_alignment._yshifts', '1.0,4.0,9.0,16.0,25.0'),
-                                  ('_alignment._roi', '100,100,1000,1000')
+                                  ('_alignment._roi', '100,100,1000,1000'),
                                   ])
+
 
         self.assertEqual(goldDict1, m1Dict)
 
@@ -276,6 +280,7 @@ class TestObject(BaseTest):
                                   ('_filename',  None),
                                   ('_samplingRate',  None),
                                   ('_micName',  None),
+                                  ('_framesRange', '1,0,1'),
                                   ('_alignment',  None),
                                   ('_alignment._first',  -1),
                                   ('_alignment._last',  -1),

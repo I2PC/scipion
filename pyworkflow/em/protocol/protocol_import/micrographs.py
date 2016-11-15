@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es) [1]
+# *              Kevin Savage (kevin.savage@diamond.ac.uk) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [2] Diamond Light Source, Ltd
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -25,6 +27,7 @@
 # **************************************************************************
 
 import os
+from os.path import exists, join, basename
 import re
 from datetime import timedelta, datetime
 
@@ -276,11 +279,24 @@ class ProtImportMovies(ProtImportMicBase):
     _outputClassName = 'SetOfMovies'
         
     def _defineAcquisitionParams(self, form):
-        ProtImportMicBase._defineAcquisitionParams(self, form)
+        group = ProtImportMicBase._defineAcquisitionParams(self, form)
+
+        line = group.addLine('Dose (e/A^2)',
+                             help="Initial accumulated dose (usually 0) and "
+                                  "dose per frame. ")
+
+        line.addParam('doseInitial', params.FloatParam, default=0,
+                      label='Initial')
+
+        line.addParam('dosePerFrame', params.FloatParam, default=None,
+                      allowsNull=True,
+                      label='Per frame')
+
         form.addParam('gainFile', params.FileParam,
                       label='Gain image', 
                       help='A gain reference related to a set of movies'
                            ' for gain correction')
+
         form.addParam('darkFile', params.FileParam,
                       label='Dark image', 
                       help='A dark image related to a set of movies')
@@ -333,6 +349,36 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
         movieSet.setDark(self.darkFile.get())
+        acq = movieSet.getAcquisition()
+        acq.setDoseInitial(self.doseInitial.get())
+        acq.setDosePerFrame(self.dosePerFrame.get())
+
+    def _setupFirstImage(self, movie, imgSet):
+        # Create a movie object to read dimensions
+        dimMovie = movie.clone()
+        movieFn = movie.getFileName()
+
+        def decompress(program, args, ext, nExt):
+            movieFolder = self._getTmpPath()
+            movieName = basename(movie.getFileName())
+            movieTmpLink = join(movieFolder, movieName)
+            pwutils.cleanPath(movieTmpLink)
+            pwutils.createAbsLink(os.path.abspath(movieFn), movieTmpLink)
+            self.runJob(program, args % movieName, cwd=movieFolder)
+            dimMovie.setFileName(movieTmpLink.replace(ext, nExt))
+
+        if movieFn.endswith('bz2'):
+            decompress('bzip2', '-d -f %s', '.bz2', '')
+
+        elif movieFn.endswith('tbz'):
+            decompress('tar', 'jxf %s', '.tbz', '.mrc')
+
+        dim = dimMovie.getDim()
+        range = [1, dim[2], 1]
+
+        movie.setFramesRange(range)
+        imgSet.setDim(dim)
+        imgSet.setFramesRange(range)
 
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
@@ -427,4 +473,4 @@ class ProtImportMovies(ProtImportMicBase):
             self.writeMoviesInProject):
             return self.ignoreCopy
         else:
-            return ProtImportMicBase.getCopyOrLink()
+            return ProtImportMicBase.getCopyOrLink(self)
