@@ -56,8 +56,7 @@ from viewer_split_volume import XmippViewerSplitVolume
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 
-#from viewer_reconstruct_significant import XmippReconstructSignificantViewer
-# TODO(coss): add viewer_reconstruct_significant.py pretty please
+from viewer_solid_angles import SolidAnglesViewer
 
 from plotter import XmippPlotter
 
@@ -77,6 +76,7 @@ from protocol_ctf_micrographs import XmippProtCTFMicrographs
 from protocol_ctf_correct_wiener2d import XmippProtCTFCorrectWiener2D
 from protocol_subtract_projection import XmippProtSubtractProjection
 from protocol_denoise_particles import XmippProtDenoiseParticles
+from protocol_directional_classes import XmippProtDirectionalClasses
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
@@ -104,6 +104,7 @@ from protocol_resolution3d import XmippProtResolution3D
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_rotational_symmetry import XmippProtRotationalSymmetry 
 from protocol_screen_particles import XmippProtScreenParticles
+from protocol_solid_angles import XmippProtSolidAngles
 from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting

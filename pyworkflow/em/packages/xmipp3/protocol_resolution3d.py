@@ -31,6 +31,7 @@ from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 import pyworkflow.em.metadata as md
+from os.path import exists 
 
 
 class XmippProtResolution3D(ProtAnalysis3D):
@@ -78,7 +79,8 @@ class XmippProtResolution3D(ProtAnalysis3D):
         self._insertFunctionStep('createSummaryStep')
 
     def createOutputStep(self):
-        if self.doFSC:
+        fnFSC = self._defineFscName()
+        if exists(fnFSC):
             mData = md.MetaData(self._defineFscName())
             # Create the FSC object and set the same protocol label
             fsc = FSC(objLabel=self.getRunName())

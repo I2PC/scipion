@@ -109,6 +109,7 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
             {"tag": "protocol", "value": "XmippProtConvertPdb",  "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
+	            {"tag": "protocol", "value": "XmippProtSplitvolume", "text": "default"},
                 {"tag": "protocol", "value": "ProtPrime", "text": "default"},
                 {"tag": "protocol", "value": "ProtCryoem", "text": "default"},
                 {"tag": "protocol", "value": "XmippProtRCT", "text": "default"}
@@ -149,6 +150,8 @@ Protocols SPA = [
             {"tag": "protocol", "value": "XmippProtValidateNonTilt",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtValidateOverfitting",    "text": "default"},
             {"tag": "protocol", "value": "XmippProtCompareReprojections", "text": "default"},
+            {"tag": "protocol", "value": "XmippProtSolidAngles", "text": "default"},
+            {"tag": "protocol", "value": "XmippProtDirectionalClasses", "text": "default"},
             {"tag": "protocol", "value": "XmippProtCreateGallery", "text": "default"},
             {"tag": "section", "text": "more", "openItem": "False", "children": [
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},

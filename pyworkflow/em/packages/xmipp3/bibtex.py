@@ -77,6 +77,17 @@ keywords = "Subtomogram averaging",
 keywords = "Spherical harmonics "
 }
 
+@article{Cherian2013,
+title = "Jensen-Bregman LogDet divergence with application to efficient similarity search for covariance matrices ",
+journal = "IEEE Trans Pattern Anal Mach Intell ",
+volume = "35",
+pages = "2161-2174",
+year = "2013",
+doi = "http://dx.doi.org/10.1109/TPAMI.2012.259",
+url = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6378374",
+author = "Cherian, A. and Sra, S. and Banerjee, A. and Papanikolopoulos, N."
+}
+
 @article{delaRosaTrevin2013,
 title = "Xmipp 3.0: An improved software suite for image processing in electron microscopy ",
 journal = "JSB",
