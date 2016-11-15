@@ -28,7 +28,7 @@ from os.path import join, isfile
 from shutil import copyfile
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL,
-                                        StringParam, BooleanParam, LEVEL_ADVANCED)
+                                        StringParam, BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
 from pyworkflow.em import Viewer
 import pyworkflow.em.metadata as md
@@ -55,8 +55,8 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
-        form.addSection(label='Input')
 
+        form.addSection(label='Input')
         form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
                       label="Input volume(s)",  
                       help='Select the input volume(s).')     
@@ -102,14 +102,32 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       label="Maximum allowed tilt angle without mirror check",  
                       help='Tilts above this value will not be considered for the alignment without mirror check')
 
-                
+        form.addSection(label='Preprocess')
+        form.addParam('doWiener', BooleanParam, default='True',
+                      label="CTF correction",
+                      help='Perform CTF correction by Wiener filtering.') 
+        form.addParam('isIsotropic', BooleanParam, default='True',
+                      label="Isotropic Correction",condition='doWiener',
+                      help='If true, Consider that there is not astigmatism and then it is performed an isotropic correction.') 
+        form.addParam('padding_factor', IntParam, default=2,expertLevel=LEVEL_ADVANCED,
+                      label="Padding factor",condition='doWiener',
+                      help='Padding factor for Wiener correction ')
+        form.addParam('wiener_constant', FloatParam, default=-1,expertLevel=LEVEL_ADVANCED,
+                      label="Wiener constant",condition='doWiener',
+                      help=' Wiener-filter constant (if < 0: use FREALIGN default)')
+        form.addParam('correctEnvelope', BooleanParam, default='False',expertLevel=LEVEL_ADVANCED,
+                      label="Correct for CTF envelope",condition='doWiener',
+                      help=' Only in cases where the envelope is well estimated correct for it')
+        form.addParam('targetResolution', FloatParam, default=8, label='Target resolution (A)',
+                      help='Low pass filter the particles to this resolution. This usually helps a lot obtaining good alignment. You should have a good' 
+                      'reason to modify this value from a range between  [8-10] A')
+        
         form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):                
         convertId = self._insertFunctionStep('convertInputStep', 
-
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
         commonParams    = self._getCommonParams()
@@ -161,11 +179,46 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         particlesId: is only need to detect changes in
         input particles and cause restart from here.
         """
-        a = self.inputParticles.get() 
-        print a.printAll() 
+
         writeSetOfParticles(self.inputParticles.get(), 
                             self._getPath('input_particles.xmd'))
-                    
+        
+        if (self.doWiener == True):
+            params  =  '  -i %s' % self._getPath('input_particles.xmd')
+            params +=  '  -o %s' % self._getExtraPath('corrected_ctf_particles.stk')
+            params +=  '  --save_metadata_stack %s' % self._getExtraPath('corrected_ctf_particles.xmd')
+            params +=  '  --pad %s' % self.padding_factor.get()
+            params +=  '  --wc %s' % self.wiener_constant.get()
+            params +=  '  --sampling_rate %s' % self.inputParticles.get().getSamplingRate()
+
+            if (self.inputParticles.get().isPhaseFlipped()):
+                params +=  '  --phase_flipped '
+            
+            if (self.correctEnvelope):
+                params +=  '  --correct_envelope '
+                
+            nproc = self.numberOfMpi.get()
+            nT=self.numberOfThreads.get() 
+    
+            self.runJob('xmipp_ctf_correct_wiener2d',
+                        params)
+        
+        Xdim = self.inputParticles.get().getDimensions()[0]
+        Ts = self.inputParticles.get().getSamplingRate()
+        newTs = self.targetResolution.get()*0.4
+        newTs = max(Ts,newTs)
+        newXdim = Xdim*Ts/newTs
+        
+        if (self.doWiener == True):
+            params =  '  -i %s' % self._getExtraPath('corrected_ctf_particles.xmd')
+        else :
+            params =  '  -i %s' % self._getPath('input_particles.xmd')
+        params +=  '  -o %s' % self._getExtraPath('scaled_particles.stk')
+        params +=  '  --save_metadata_stack %s' % self._getExtraPath('scaled_particles.xmd')
+        params +=  '  --dim %d' % newXdim
+        
+        self.runJob('xmipp_image_resize',params)
+
     def _getCommonParams(self):
         params =  '  -i %s' % self._getPath('input_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
