@@ -58,7 +58,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
 
         form.addSection(label='Input')
         form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
-                      label="Input volume(s)",  
+                      label="Input volume",  
                       help='Select the input volume(s).')     
                 
         form.addParam('inputParticles', PointerParam,
@@ -72,7 +72,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                            'for a description of the symmetry format accepted by Xmipp') 
 
         form.addParam('isCTFCorrected', BooleanParam, default=False,
-                      label="Has been the CTF corrected previously using Wiener filter?",  
+                      label="Has been the volume CTF corrected previously?",  
                       help='Select true if the CTF has been previously corrected through Wiener filtering')
                 
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
@@ -183,7 +183,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         writeSetOfParticles(self.inputParticles.get(), 
                             self._getPath('input_particles.xmd'))
         
-        if (self.doWiener == True):
+        if (self.doWiener.get() == True):
             params  =  '  -i %s' % self._getPath('input_particles.xmd')
             params +=  '  -o %s' % self._getExtraPath('corrected_ctf_particles.stk')
             params +=  '  --save_metadata_stack %s' % self._getExtraPath('corrected_ctf_particles.xmd')
@@ -206,21 +206,31 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         Xdim = self.inputParticles.get().getDimensions()[0]
         Ts = self.inputParticles.get().getSamplingRate()
         newTs = self.targetResolution.get()*0.4
-        newTs = max(Ts,newTs)
-        newXdim = Xdim*Ts/newTs
+        self.newTs = max(Ts,newTs)
+        self.newXdim = Xdim*Ts/self.newTs
         
-        if (self.doWiener == True):
+        if (self.doWiener.get() == True):
             params =  '  -i %s' % self._getExtraPath('corrected_ctf_particles.xmd')
         else :
             params =  '  -i %s' % self._getPath('input_particles.xmd')
+            
         params +=  '  -o %s' % self._getExtraPath('scaled_particles.stk')
         params +=  '  --save_metadata_stack %s' % self._getExtraPath('scaled_particles.xmd')
-        params +=  '  --dim %d' % newXdim
+        params +=  '  --dim %d' % self.newXdim
         
         self.runJob('xmipp_image_resize',params)
+        
+        from pyworkflow.em.convert import ImageHandler
+        img = ImageHandler()
+        img.convert(self.inputVolumes.get(), self._getExtraPath("volume.vol"))
+        Xdim = self.inputVolumes.get().getDim()[0]
+        if Xdim!=self.newXdim:
+            self.runJob("xmipp_image_resize","-i %s --dim %d"%\
+                        (self._getExtraPath("volume.vol"),
+                        self.newXdim), numberOfMpi=1)
 
     def _getCommonParams(self):
-        params =  '  -i %s' % self._getPath('input_particles.xmd')        
+        params =  '  -i %s' % self._getExtraPath('scaled_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --dontReconstruct'
         params += ' --useForValidation %0.3f' % (self.numOrientations.get()-1)
@@ -239,12 +249,9 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     def phantomProject(self,volName):
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get()         
-        pathParticles = self._getPath('input_particles.xmd')
-        Nx,Ny,Nz = self.inputParticles.get().getDim()
-        R = -int(Nx/2)
-
+        pathParticles = self._getExtraPath('scaled_particles.xmd')
+        R = -int(self.newXdim /2)
         f = open(self._getExtraPath('params'),'w')          
-        print self.isCTFCorrected.get()
         f.write("""# XMIPP_STAR_1 *
 #
 data_block1
@@ -253,12 +260,12 @@ _projAngleFile %s
 _ctfPhaseFlipped %d
 _ctfCorrected %d
 _applyShift 0
-_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.isCTFCorrected.get()))
+_noisePixelLevel   '0 0'""" % (self.newXdim , self.newXdim, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.doWiener.get()))
         f.close()
         param =  ' -i %s' % volName
         param += ' --params %s' % self._getExtraPath('params')
         param += ' -o %s' % self._getPath('reference_particles.xmd')
-        param += ' --sampling_rate % 0.3f' % self.inputParticles.get().getSamplingRate()
+        param += ' --sampling_rate % 0.3f' % self.newTs
                 
         #while (~isfile(self._getExtraPath('params'))):
         #    print 'No created'
@@ -275,11 +282,11 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         # Generate projections from this reconstruction        
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
-        
+        volName = self._getExtraPath("volume.vol")
         makePath(volDir)
         fnGallery= (volDir+'/gallery.stk')
         params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle %f --min_tilt_angle %f'\
-                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'), self.maxTilt.get(), self.minTilt.get())
+                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getExtraPath('scaled_particles.xmd'), self.maxTilt.get(), self.minTilt.get())
         
         self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
         
