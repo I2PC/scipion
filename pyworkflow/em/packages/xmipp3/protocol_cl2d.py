@@ -24,11 +24,11 @@
 # *
 # ******************************************************************************
 
-import pyworkflow.em as em
-import pyworkflow.em.metadata as md
+import re
 from os.path import join, dirname, exists
 from glob import glob
-
+import pyworkflow.em as em
+import pyworkflow.em.metadata as md
 import pyworkflow.protocol.params as param
 import pyworkflow.protocol.constants as const
 from pyworkflow.em.protocol import ProtClassify2D, SetOfClasses2D
@@ -60,9 +60,26 @@ class XmippProtCL2D(ProtClassify2D):
     _label = 'cl2d'
     
     def __init__(self, **args):
-        ProtClassify2D.__init__(self, **args) 
+        ProtClassify2D.__init__(self, **args)
         if self.numberOfMpi.get() < 2:
-            self.numberOfMpi.set(2)       
+            self.numberOfMpi.set(2)
+
+    def _defineFileNames(self):
+        """ Centralize how files are called within the protocol. """
+        self.levelPath = self._getExtraPath('level_%(level)02d/')
+        myDict = {
+                  'input_particles': self._getTmpPath('input_particles.xmd'),
+                  'input_references': self._getTmpPath('input_references.xmd'),
+                  'final_classes': self._getPath('classes2D%(sub)s.sqlite'),
+                  'output_particles': self._getExtraPath('images.xmd'),
+                  'level_classes' : self.levelPath + 'level_classes%(sub)s.xmd',
+                  'level_images' : self.levelPath + 'level_images%(sub)s.xmd',
+                  'classes_scipion': (self.levelPath + 'classes_scipion_level_'
+                                                   '%(level)02d%(sub)s.sqlite'),
+                  'classes_hierarchy': self._getExtraPath("classes%(sub)s"
+                                                          "_hierarchy.txt")
+                  }
+        self._updateFilenamesDict(myDict)
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -70,7 +87,7 @@ class XmippProtCL2D(ProtClassify2D):
         form.addParam('inputParticles', param.PointerParam,
                       label="Input images",
                       important=True, pointerClass='SetOfParticles',
-                      help='Select the input images to be classified.')        
+                      help='Select the input images to be classified.')
         form.addParam('numberOfClasses', param.IntParam, default=64,
                       label='Number of classes:',
                       help='Number of classes (or references) to be generated.')
@@ -164,14 +181,18 @@ class XmippProtCL2D(ProtClassify2D):
         """ Mainly prepare the command line for call cl2d program"""
 
         # Convert input images if necessary
-        self.imgsFn = self._getExtraPath('images.xmd')
-        self.initialClassesFn = self._getExtraPath('initialClasses.xmd')
-        self._insertFunctionStep('convertInputStep',
-                                 self.inputParticles.get().getObjId(), 
-                                 self.initialClasses.get().getObjId() if self.initialClasses.get() else None)
+        self._defineFileNames()
 
-        # Prepare arguments to call program: xmipp_classify_CL2D
-        self._params = {'imgsFn': self.imgsFn,
+        if self.initialClasses.get():
+            initialClassesId = self.initialClasses.get().getObjId()
+        else:
+            initialClassesId = None
+        
+        self._insertFunctionStep('convertInputStep',
+                                 self.inputParticles.get().getObjId(),
+                                 initialClassesId)
+
+        self._params = {'imgsFn': self._getFileName('input_particles'),
                         'extraDir': self._getExtraPath(),
                         'nref': self.numberOfClasses.get(),
                         'nref0': self.numberOfInitialClasses.get(),
@@ -180,18 +201,10 @@ class XmippProtCL2D(ProtClassify2D):
                         'thZscore': self.thZscore.get(),
                         'thPCAZscore': self.thPCAZscore.get(),
                         'tolerance': self.tolerance.get(),
-                        'initialClassesFn': self.initialClassesFn
-        }
-        args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref ' \
-               '%(nref)d --iter %(iter)d %(extraParams)s'
-        if self.comparisonMethod == CMP_CORRELATION:
-            args += ' --distance correlation'
-        if self.clusteringMethod == CL_CLASSICAL:
-            args += ' --classicalMultiref'
-        if self.randomInitialization:
-            args += ' --nref0 %(nref0)d'
-        else:
-            args += ' --ref0 %(initialClassesFn)s'
+                        'initClassesFn': self._getFileName('input_references')
+                        }
+        
+        args = self._defArgsClassify()
 
         self._insertClassifySteps("xmipp_classify_CL2D", args, subset=CLASSES)
 
@@ -205,15 +218,18 @@ class XmippProtCL2D(ProtClassify2D):
         # Analyze cores and stable cores
         if self.numberOfClasses > self.numberOfInitialClasses and self.doCore:
             program = "xmipp_classify_CL2D_core_analysis"
-            args = "--dir %(extraDir)s --root level "
             # core analysis
-            self._insertClassifySteps(program, args + "--computeCore %(thZscore)f %(thPCAZscore)f", subset=CLASSES_CORE)
+            args = self._defArgsCoreAnalisys()
+            self._insertClassifySteps(program, args, subset=CLASSES_CORE)
             if self.analyzeRejected:
                 self._insertFunctionStep('analyzeOutOfCores', CLASSES_CORE)
 
-            if self.numberOfClasses > (2 * self.numberOfInitialClasses.get()) and self.doStableCore: # Number of levels should be > 2
+            if (self.numberOfClasses > (2 * self.numberOfInitialClasses.get())
+                and self.doStableCore): # Number of levels should be > 2
+                
                 # stable core analysis
-                self._insertClassifySteps(program, args + "--computeStableCore %(tolerance)d", subset=CLASSES_STABLE_CORE)
+                args = self._defArgsCoreAnalisys("stable")
+                self._insertClassifySteps(program, args, subset=CLASSES_STABLE_CORE)
                 if self.analyzeRejected:
                     self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
 
@@ -228,38 +244,43 @@ class XmippProtCL2D(ProtClassify2D):
         self._insertFunctionStep('evaluateClassesStep', subset)
         self._insertFunctionStep('sortClassesStep', subset)
         self._insertFunctionStep('createOutputStep', subset)
-
-
+    
     #--------------------------- STEPS functions -------------------------------
     def convertInputStep(self, particlesId, classesId):
-        writeSetOfParticles(self.inputParticles.get(),self.imgsFn,alignType=em.ALIGN_NONE)
+        writeSetOfParticles(self.inputParticles.get(),
+                            self._getFileName('input_particles'),
+                            alignType=em.ALIGN_NONE)
+        
         if not self.randomInitialization:
+            
             if isinstance(self.initialClasses.get(), SetOfClasses2D):
-                writeSetOfClasses2D(self.initialClasses.get(),self.initialClassesFn, writeParticles=False)
+                writeSetOfClasses2D(self.initialClasses.get(),
+                                    self._getFileName('input_references'),
+                                    writeParticles=False)
             else:
-                writeSetOfParticles(self.initialClasses.get(),self.initialClassesFn)
+                writeSetOfParticles(self.initialClasses.get(),
+                                    self._getFileName('input_references'))
 
     def sortClassesStep(self, subset=''):
         """ Sort the classes and provided a quality criterion. """
-        nproc = self.numberOfMpi.get()
-        if nproc < 2:
-            nproc = 2 # Force at leat two processor because only MPI version is available
-        levelMdFiles = self._getLevelMdFiles(subset)
+        levelMdFiles = self._getAllLevelMdFiles(subset)
         for mdFn in levelMdFiles:
             fnRoot = join(dirname(mdFn), "classes%s_sorted" % subset)
             params = "-i classes@%s --oroot %s" % (mdFn, fnRoot)
-            self.runJob("xmipp_image_sort", params, numberOfMpi=nproc)
+            self.runJob("xmipp_image_sort", params)
             mdFnOut = fnRoot + ".xmd"
             mdOut = md.MetaData(mdFnOut)
-            for objId in md:
-                mdOut.setValue(md.MDL_ITEM_ID,long(md.getValue(md.MDL_REF,objId)),objId)
+            
+            
+            for objId in mdOut:
+                mdOut.setValue(md.MDL_ITEM_ID,long(mdOut.getValue(md.MDL_REF,objId)),objId)
             mdOut.write("classes_sorted@" + mdFn, md.MD_APPEND)
 
     def evaluateClassesStep(self, subset=''):
         """ Calculate the FRC and output the hierarchy for
         each level of classes.
         """
-        levelMdFiles = self._getLevelMdFiles(subset)
+        levelMdFiles = self._getAllLevelMdFiles(subset)
         hierarchyFnOut = self._getExtraPath("classes%s_hierarchy.txt" % subset)
         prevMdFn = None
         for mdFn in levelMdFiles:
@@ -275,26 +296,24 @@ class XmippProtCL2D(ProtClassify2D):
         """ Store the SetOfClasses2D object
         resulting from the protocol execution.
         """
-        levelMdFiles = self._getLevelMdFiles(subset)
-        lastMdFn = levelMdFiles[-1]
-
-
+       
         inputParticles = self.inputParticles.get()
-        classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
-
-        classes2DSet.copyItems(inputParticles,
-                               updateItemCallback=self._createItemMatrix,
-                               itemDataIterator=md.iterRows(self.imgsFn,
-                                                            sortByLabel=md.MDL_ITEM_ID))
-
-
-        result = {'outputClasses' + subset: classes2DSet}
-        self._defineOutputs(**result)
-        self._defineSourceRelation(self.inputParticles, classes2DSet)
+        level = self._lastLevel()
+        
+        subsetFn = self._getFileName("level_classes", level=level, sub=subset)
+        
+        if exists(subsetFn):
+            classes2DSet = self._createSetOfClasses2D(inputParticles, subset)
+            self._fillClassesFromLevel(classes2DSet, "last", subset)
+    
+            result = {'outputClasses' + subset: classes2DSet}
+            self._defineOutputs(**result)
+            self._defineSourceRelation(self.inputParticles, classes2DSet)
     
     def analyzeOutOfCores(self,subset):
         """ Analyze which images are out of cores """
-        levelMdFiles = self._getLevelMdFiles(subset)
+        levelMdFiles = self._getAllLevelMdFiles(subset)
+        
         for fn in levelMdFiles:
             mdAll=md.MetaData()
             blocks = md.getBlocksInMetaDataFile(fn)
@@ -309,8 +328,15 @@ class XmippProtCL2D(ProtClassify2D):
                 fnSubset=join(fnDir,"images%s.xmd"%subset)
                 mdAll.write(fnSubset)
                 fnOutOfSubset=join(fnDir,"imagesOut.xmd")
-                self.runJob("xmipp_metadata_utilities","-i %s --set subtraction %s -o %s"%(self.imgsFn,fnSubset,fnOutOfSubset),
-                            numberOfMpi=1,numberOfThreads=1)
+                
+                inputMd = self._getFileName('input_particles')
+                
+                args = "-i %s --set subtraction %s -o %s" % (inputMd,
+                                                            fnSubset,
+                                                            fnOutOfSubset)
+                
+                self.runJob("xmipp_metadata_utilities", args, numberOfMpi=1,
+                            numberOfThreads=1)
                 
                 # Remove disabled and intermediate files
                 mdClass=md.MetaData(fnOutOfSubset)
@@ -327,8 +353,10 @@ class XmippProtCL2D(ProtClassify2D):
                     makePath(fnRejectedDir)
                     Nclasses=int(ceil(mdClass.size()/300))
                     self.runJob("xmipp_classify_CL2D",
-                                "-i %s --nref0 1 --nref %d --iter 5 --distance correlation --classicalMultiref --classifyAllImages --odir %s"\
-                                %(fnRejected,Nclasses,fnRejectedDir))
+                                "-i %s --nref0 1 --nref %d --iter 5 --distance "
+                                "correlation --classicalMultiref "
+                                "--classifyAllImages --odir %s"
+                                %( fnRejected, Nclasses, fnRejectedDir))
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -345,9 +373,11 @@ class XmippProtCL2D(ProtClassify2D):
     def _warnings(self):
         validateMsgs = []
         if self.inputParticles.get().getSamplingRate() < 3:
-            validateMsgs.append("The sampling rate is smaller than 3 A/pix, consider downsampling the input images to speed-up the process. "\
-                         "Probably you don't want such a precise 2D classification.")
-        return validateMsgs       
+            validateMsgs.append("The sampling rate is smaller than 3 A/pix, "
+                                "consider downsampling the input images to "
+                                "speed-up the process. Probably you don't want"
+                                " such a precise 2D classification.")
+        return validateMsgs
 
     def _citations(self):
         citations=['Sorzano2010a']
@@ -357,20 +387,21 @@ class XmippProtCL2D(ProtClassify2D):
 
     def _summaryLevelFiles(self, summary, levelFiles, subset):
         if levelFiles:
-            levels = [self._getLevelFromFile(fn) for fn in levelFiles]
+            levels = [i for i in range(self._lastLevel()+1)]
             summary.append('Computed classes%s, levels: %s' % (subset, levels))
 
     def _summary(self):
+        self._defineFileNames()
         summary = []
         summary.append("Input Particles: *%d*\nClassified into *%d* classes\n" % (self.inputParticles.get().getSize(),
                                                                               self.numberOfClasses.get()))
         #summary.append('- Used a _clustering_ algorithm to subdivide the original dataset into the given number of classes')
 
-        levelFiles = self._getLevelMdFiles()
+        levelFiles = self._getAllLevelMdFiles()
         if levelFiles:
             self._summaryLevelFiles(summary, levelFiles, CLASSES)
-            self._summaryLevelFiles(summary, self._getLevelMdFiles(CLASSES_CORE), CLASSES_CORE)
-            self._summaryLevelFiles(summary, self._getLevelMdFiles(CLASSES_STABLE_CORE), CLASSES_STABLE_CORE)
+            self._summaryLevelFiles(summary, self._getAllLevelMdFiles(CLASSES_CORE), CLASSES_CORE)
+            self._summaryLevelFiles(summary, self._getAllLevelMdFiles(CLASSES_STABLE_CORE), CLASSES_STABLE_CORE)
         else:
             summary.append("Output classes not ready yet.")
 
@@ -379,9 +410,9 @@ class XmippProtCL2D(ProtClassify2D):
     def _methods(self):
         strline = ''
         if hasattr(self, 'outputClasses'):
-            strline += 'We classified %d particles from %s ' % (self.inputParticles.get().getSize(), 
+            strline += 'We classified %d particles from %s ' % (self.inputParticles.get().getSize(),
                                                                 self.getObjectTag('inputParticles'))
-            strline += 'into %d classes %s using CL2D [Sorzano2010a]. ' % (self.numberOfClasses, 
+            strline += 'into %d classes %s using CL2D [Sorzano2010a]. ' % (self.numberOfClasses,
                                                                            self.getObjectTag('outputClasses'))
             strline += '%s method was used to compare images and %s clustering criterion. '%\
                            (self.getEnumText('comparisonMethod'), self.getEnumText('clusteringMethod'))
@@ -393,18 +424,37 @@ class XmippProtCL2D(ProtClassify2D):
         return [strline]
     
     #--------------------------- UTILS functions -------------------------------
-    def _getLevelMdFiles(self, subset=''):
-        """ Grab the metadata class files for each level. """
-        levelMdFiles = glob(self._getExtraPath("level_??/level_classes%s.xmd" % subset))
-        levelMdFiles.sort()
-        return levelMdFiles
+    def _defArgsClassify(self):
+        # Prepare arguments to call program: xmipp_classify_CL2D
+        args = '-i %(imgsFn)s --odir %(extraDir)s --oroot level --nref ' \
+               '%(nref)d --iter %(iter)d %(extraParams)s'
+        if self.comparisonMethod == CMP_CORRELATION:
+            args += ' --distance correlation'
+        if self.clusteringMethod == CL_CLASSICAL:
+            args += ' --classicalMultiref'
+        if self.randomInitialization:
+            args += ' --nref0 %(nref0)d'
+        else:
+            args += ' --ref0 %(initClassesFn)s'
+        
+        return args
     
-    def _getLevelFromFile(self, filename):
-        """ Return the level number from the filename. """
-        folder = dirname(filename) 
-        # Folder should ends in level_?? where ?? is level number
-        # so we split by '_' and take the last part as int
-        return int(folder.split('_')[-1])
+    def _defArgsCoreAnalisys(self,coreType="core"):
+        args = " --dir %(extraDir)s --root level "
+        if coreType =="core":
+            args += "--computeCore %(thZscore)f %(thPCAZscore)f"
+        else:
+            args += "--computeStableCore %(tolerance)d"
+        return args
+
+    def _getAllLevelMdFiles(self, subset=''):
+        """ Grab the metadata class files for each level. """
+        levelMdFiles = []
+        lastLevel = self._lastLevel()
+        for i in range(lastLevel):
+            classFn = self._getLevelMdClasses(lev=i, block="", subset=subset)
+            levelMdFiles.append(classFn)
+        return levelMdFiles
     
     def _createItemMatrix(self, item, row):
         createItemMatrix(item, row, align=em.ALIGN_2D)
@@ -435,12 +485,75 @@ class XmippProtCL2D(ProtClassify2D):
             # the same reference is used for iteration
             self._classesInfo[classNumber + 1] = (index, fn, row.clone())
 
-    def _fillClassesFromLevel(self, clsSet, level):
+    def _fillClassesFromLevel(self, clsSet, level, subset):
         """ Create the SetOfClasses2D from a given iteration. """
-        self._loadClassesInfo(self._getIterMdClasses(level))
-        dataXmd = self._getIterMdImages(level)
-        clsSet.classifyItems(updateItemCallback=self._updateParticle,
-                             updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataXmd,
-                                                          sortByLabel=md.MDL_ITEM_ID))
+        self._loadClassesInfo(self._getLevelMdClasses(lev=level, subset=subset))
+        
+        if subset == '' and level == "last":
+            xmpMd = self._getFileName('output_particles')
+            if not exists(xmpMd):
+                xmpMd = self._getLevelMdImages(level, subset)
+        else:
+            xmpMd = self._getLevelMdImages(level, subset)
+            
+        iterator = md.SetMdIterator(xmpMd, sortByLabel=md.MDL_ITEM_ID,
+                                    updateItemCallback=self._updateParticle)
+        
+        # itemDataIterator is not neccesary because, the class SetMdIterator
+        # contain all the information about the metadata
+        clsSet.classifyItems(updateItemCallback=iterator.updateItem,
+                             updateClassCallback=self._updateClass)
 
+    def _getLevelMdClasses(self, lev=0, block="classes", subset=""):
+        """ Return the classes metadata for this iteration.
+        block parameter can be 'info' or 'classes'."""
+        if lev == "last":
+            lev = self._lastLevel()
+        mdFile = self._getFileName('level_classes', level=lev, sub=subset)
+        if block:
+            mdFile = block + '@' + mdFile
+    
+        return mdFile
+
+    def _getLevelMdImages(self, level, subset):
+        if level == "last":
+            level = self._lastLevel()
+    
+        xmpMd = self._getFileName('level_images', level=level, sub=subset)
+        if not exists(xmpMd):
+            self._createLevelMdImages(level, subset)
+            
+        return xmpMd
+        
+    def _createLevelMdImages(self, level, sub):
+        if level == "last":
+            level = self._lastLevel()
+        mdClassesFn = self._getLevelMdClasses(lev=level, block="", subset=sub)
+        mdImgs = md.getAllMdBlocks(mdClassesFn, "class0")
+        mdImgs.write(self._getFileName('level_images',level=level, sub=sub))
+        
+    def _lastLevel(self):
+        """ Find the last Level number """
+        clsFn = self._getFileName('level_classes', level=0, sub="")
+        levelTemplate = clsFn.replace('level_00','level_??')
+        lev = len(glob(levelTemplate)) - 1
+        return lev
+
+    def _getLevelClasses(self, lev, suffix, clean=False):
+        """ Return a classes .sqlite file for this level.
+        If the file doesn't exists, it will be created by
+        converting from this level level_images.xmd file.
+        """
+        dataClasses = self._getFileName('classes_scipion', level=lev,
+                                         sub=suffix)
+        if clean:
+            cleanPath(dataClasses)
+        
+        if not exists(dataClasses):
+            clsSet = em.SetOfClasses2D(filename=dataClasses)
+            clsSet.setImages(self.inputParticles.get())
+            self._fillClassesFromLevel(clsSet, level=lev, subset=suffix)
+            clsSet.write()
+            clsSet.close()
+        
+        return dataClasses
