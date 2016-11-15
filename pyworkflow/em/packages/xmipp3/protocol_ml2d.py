@@ -362,16 +362,16 @@ class XmippProtML2D(ProtClassify2D):
         If the file doesn't exists, it will be created by 
         converting from this iteration iter_images.xmd file.
         """
-        data_classes = self._getFileName('classes_scipion', iter=it)
+        dataClasses = self._getFileName('classes_scipion', iter=it)
          
         if clean:
-            path.cleanPath(data_classes)
+            path.cleanPath(dataClasses)
         
-        if not exists(data_classes):
-            clsSet = data.SetOfClasses2D(filename=data_classes)
+        if not exists(dataClasses):
+            clsSet = data.SetOfClasses2D(filename=dataClasses)
             clsSet.setImages(self.inputParticles.get())
             self._fillClassesFromIter(clsSet, it)
             clsSet.write()
             clsSet.close()
         
-        return data_classes
+        return dataClasses
