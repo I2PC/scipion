@@ -18,7 +18,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
 import os
@@ -28,64 +28,68 @@ from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtImportCTF, ProtImportMicrographs
 
 
-class TestImportBase(BaseTest):
+
+class TestImportCTFs(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsXmipp = DataSet.getDataSet('xmipp_tutorial')
         cls.dsGrigorieff = DataSet.getDataSet('grigorieff')
 
-    
-class TestImportCTFs(TestImportBase):
+        # First, import a set of micrographs that will be used
+        # from all ctf test cases
+        cls.protImport = cls.newProtocol(ProtImportMicrographs,
+                                      filesPath=cls.dsXmipp.getFile('allMics'),
+                                      samplingRate=1.237, voltage=300)
+        cls.launchProtocol(cls.protImport)
 
     def testImportCTFFromXmipp(self):
-        #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.dsXmipp.getFile('allMics'), samplingRate=1.237, voltage=300)
-        self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
-
         protCTF = self.newProtocol(ProtImportCTF,
                                  importFrom=ProtImportCTF.IMPORT_FROM_XMIPP3,
                                  filesPath=self.dsXmipp.getFile('ctfsDir'),
                                  filesPattern='*.ctfparam')
-        protCTF.inputMicrographs.set(protImport.outputMicrographs)
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import ctfs from xmipp ')
         self.launchProtocol(protCTF)
 
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem when importing ctfs.")
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem when importing ctfs.")
 
     def testImportCtffind3(self):
-        #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, filesPath=self.dsXmipp.getFile('allMics'), samplingRate=1.237, voltage=300)
-        self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
-
         protCTF = self.newProtocol(ProtImportCTF,
                                  importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
                                  filesPath=self.dsGrigorieff.getFile('ctffind3'),
                                  filesPattern='BPV*/*txt')
-        protCTF.inputMicrographs.set(protImport.outputMicrographs)
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import from ctffind3')
         self.launchProtocol(protCTF)
 
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem when importing ctfs.")
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem when importing ctfs.")
         
     def testImportCtffind4(self):
-        #First, import a set of micrographs
-        protImport = self.newProtocol(ProtImportMicrographs, 
-                                      filesPath=self.dsXmipp.getFile('allMics'), 
-                                      samplingRate=1.237, 
-                                      voltage=300)
-        self.launchProtocol(protImport)
-        self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
-
         protCTF = self.newProtocol(ProtImportCTF,
                                  importFrom=ProtImportCTF.IMPORT_FROM_GRIGORIEFF,
                                  filesPath=self.dsGrigorieff.getFile('ctffind4'),
                                  filesPattern='BPV*/*txt')
-        protCTF.inputMicrographs.set(protImport.outputMicrographs)
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
         protCTF.setObjLabel('import from ctffind4')
         self.launchProtocol(protCTF)
 
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem when importing ctfs.")
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem when importing ctfs.")
 
+
+    def testImportFromScipion(self):
+        ctfSqlite =  self.dsGrigorieff.getFile('ctffind3/ctfs.sqlite')
+
+        protCTF = self.newProtocol(ProtImportCTF,
+                                   objLabel='import from scipion',
+                                   importFrom=ProtImportCTF.IMPORT_FROM_SCIPION,
+                                   filesPath=ctfSqlite)
+
+        protCTF.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.launchProtocol(protCTF)
+
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem when importing ctfs.")
