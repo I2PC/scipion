@@ -32,5 +32,5 @@ from bibtex import _bibtex # Load bibtex dict with references
 _logo = "igbmc_logo.png"
 
 from protocol_gempicker import ProtGemPicker
-from wizard import GemPickerMaskWizard
+from wizard import GemPickerMaskWizard, GemPickerWizard
 

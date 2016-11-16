@@ -70,6 +70,69 @@ SymList_readSymmetryFile(PyObject * obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* getTrueSymsNo */
+PyObject *
+SymList_getTrueSymsNo(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+    SymListObject *self = (SymListObject*) obj;
+    return PyInt_FromLong(self->symlist->true_symNo);
+}
+
+/* getSymmetryMatrices, return list with symmetry matrices */
+PyObject *
+SymList_getSymmetryMatrices(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+    Matrix2D<double>  L(4, 4), R(4, 4);
+    SymListObject *self = (SymListObject*) obj;
+    PyObject * symMatrices;
+    PyObject * symMatrix;
+    PyObject * row;
+    char * str = NULL;
+    double d;
+
+    if (PyArg_ParseTuple(args, "s", &str))
+    {
+        try
+        {
+            SymListObject *self = (SymListObject*) obj;
+            
+            //create symmetry object
+            self->symlist->readSymmetryFile(str);
+            symMatrices = PyList_New(self->symlist->symsNo()+1);
+            symMatrix   = PyList_New(3);
+            
+            //add identity matrix to results
+            row = Py_BuildValue("[fff]", 1., 0., 0.);
+            PyList_SetItem(symMatrix,0,row);
+            row = Py_BuildValue("[fff]", 0., 1., 0.);
+            PyList_SetItem(symMatrix,1,row);
+            row = Py_BuildValue("[fff]", 0., 0., 1.);
+            PyList_SetItem(symMatrix,2,row);
+            PyList_SetItem(symMatrices,0,symMatrix);
+            
+            //copy each symmetry matrix to a python list
+            for (int i=0; i < self->symlist->true_symNo; ++i)
+            {
+                symMatrix   = PyList_New(3);
+                self->symlist->getMatrices(i, L, R);
+                for (int j=0; j < 3; ++j)
+                    {
+                    row = Py_BuildValue("[fff]", R(j,0), R(j,1), R(j,2));
+                    PyList_SetItem(symMatrix,j,row);
+	                }
+                PyList_SetItem(symMatrices,i+1,symMatrix);
+            }
+            return symMatrices;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* computeDistance */
 PyObject *
 SymList_computeDistance(PyObject * obj, PyObject *args, PyObject *kwargs)
@@ -151,6 +214,53 @@ SymList_computeDistanceAngles(PyObject * obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* computeDistance */
+PyObject *
+SymList_symmetricAngles(PyObject * obj, PyObject *args, PyObject *kwargs)
+{
+	double rot, tilt, psi;
+    if (PyArg_ParseTuple(args, "ddd", &rot, &tilt, &psi))
+    {
+        try
+        {
+            SymListObject *self = (SymListObject*) obj;
+            SymList symlist=*(self->symlist);
+
+            PyObject * retval = PyList_New(symlist.symsNo()+1);
+            PyObject * angles = PyTuple_New(3);
+            PyTuple_SetItem(angles, 0, PyFloat_FromDouble(rot));
+            PyTuple_SetItem(angles, 1, PyFloat_FromDouble(tilt));
+            PyTuple_SetItem(angles, 2, PyFloat_FromDouble(psi));
+            PyList_SetItem(retval,0,angles);
+
+            Matrix2D<double>  L(4, 4), R(4, 4), E, Ep;
+            Euler_angles2matrix(rot,tilt,psi,E,false);
+            for (int isym = 0; isym < symlist.symsNo(); isym++)
+            {
+                symlist.getMatrices(isym, L, R);
+                R.resize(3, 3);
+                L.resize(3, 3);
+
+                Ep=L*E*R;
+                Euler_matrix2angles(Ep,rot,tilt,psi);
+
+                angles = PyTuple_New(3);
+                PyTuple_SetItem(angles, 0, PyFloat_FromDouble(rot));
+                PyTuple_SetItem(angles, 1, PyFloat_FromDouble(tilt));
+                PyTuple_SetItem(angles, 2, PyFloat_FromDouble(psi));
+                PyList_SetItem(retval,isym+1,angles);
+            }
+
+            return retval;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* SymList methods */
 PyMethodDef SymList_methods[] =
 {
@@ -160,6 +270,12 @@ PyMethodDef SymList_methods[] =
        METH_VARARGS, "compute angular distance in a metadata" },
    { "computeDistanceAngles", (PyCFunction) SymList_computeDistanceAngles,
 	   METH_VARARGS, "compute angular distance between two sets of angles" },
+   { "symmetricAngles", (PyCFunction) SymList_symmetricAngles,
+	   METH_VARARGS, "Returns the list of equivalent angles" },
+   { "getTrueSymsNo", (PyCFunction) SymList_getTrueSymsNo,
+	   METH_VARARGS, "Get the number os symmetries" },
+   { "getSymmetryMatrices", (PyCFunction) SymList_getSymmetryMatrices,
+	   METH_VARARGS, "Return all the symmetry matrices for a given symmetry string" },
    { NULL } /* Sentinel */
 };//SymList_methods
 

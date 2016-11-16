@@ -88,6 +88,8 @@ public:
 
     size_t numOrientationsPerParticle;
 
+    bool dontCheckMirrors;
+
 
 public: // Internal members
     size_t rank, Nprocessors;

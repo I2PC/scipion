@@ -152,6 +152,13 @@ public:
         return (String)(*this);
     }
 
+    /** True if the FileName has an empty value ""
+    */
+    inline bool isEmpty() const
+    {
+        return *this == "";
+    }
+
     /** Compose from root, number and extension
      *
      * @code

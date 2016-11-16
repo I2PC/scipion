@@ -95,7 +95,7 @@ def loadHostsConf(hostsConf):
                 
                 return od
 
-            host.setScipionHome(get('SCIPION_HOME', os.environ['SCIPION_HOME']))
+            host.setScipionHome(get('SCIPION_HOME', pw.SCIPION_HOME))
             host.setScipionConfig(get('SCIPION_CONFIG'))
             # Read the address of the remote hosts, 
             # using 'localhost' as default for backward compatibility
@@ -200,15 +200,24 @@ def loadWebConf():
 
 class ProjectSettings(pwobj.OrderedObject):
     """ Store settings related to a project. """
+
+    COLOR_MODE_STATUS = 0
+    COLOR_MODE_LABELS = 1
+    COLOR_MODE_AGE = 2
+    COLOR_MODES = (COLOR_MODE_STATUS, COLOR_MODE_LABELS)
+
     def __init__(self, confs={}, **kwargs):
         pwobj.OrderedObject.__init__(self, **kwargs)
         self.config = ProjectConfig()
-        self.currentProtocolsView = pwobj.String() # Store the current view selected by the user
-        self.nodeList = NodeConfigList() # Store graph nodes positions and other info
-        self.mapper = None # This should be set when load, or write
+        self.currentProtocolsView = pwobj.String()  # Store the current view selected by the user
+        self.colorMode = pwobj.Integer(ProjectSettings.COLOR_MODE_STATUS)  # Store the color mode: 0= Status, 1=Labels, ...
+        self.nodeList = NodeConfigList()  # Store graph nodes positions and other info
+        self.labelsList = LabelsList()  # Label list
+        self.mapper = None  # This should be set when load, or write
         self.runsView = pwobj.Integer(1) # by default the graph view
         self.readOnly = pwobj.Boolean(False)
         self.runSelection = pwobj.CsvList(int) # Store selected runs
+        self.dataSelection = pwobj.CsvList(int)  # Store selected runs
         # Some extra settings stored, now mainly used
         # from the webtools
         self.creationTime = pwobj.String(dt.datetime.now()) # Time when the project was created
@@ -238,11 +247,8 @@ class ProjectSettings(pwobj.OrderedObject):
         self.readOnly.set(value)
         
     def getCreationTime(self):
-        f = "%Y-%m-%d %H:%M:%S.%f"
-        creationTime = self.creationTime.get()
+        return self.creationTime.datetime()
 
-        return dt.datetime.strptime(creationTime, f)
-    
     def setCreationTime(self, value):
         self.creationTime.set(value)
         
@@ -264,6 +270,22 @@ class ProjectSettings(pwobj.OrderedObject):
         """
         self.currentProtocolsView.set(protocolView)
 
+    def getColorMode(self):
+        return self.colorMode.get()
+
+    def setColorMode(self, colorMode):
+        """ Set the color mode to use when drawing the graph.
+        """
+        self.colorMode.set(colorMode)
+
+    def statusColorMode(self):
+        return self.getColorMode() == self.COLOR_MODE_STATUS
+
+    def labelsColorMode(self):
+        return self.getColorMode() == self.COLOR_MODE_LABELS
+
+    def ageColorMode(self):
+        return self.getColorMode() == self.COLOR_MODE_AGE
     def write(self, dbPath=None):
         self.setName('ProjectSettings')
         if dbPath is not None:
@@ -284,6 +306,9 @@ class ProjectSettings(pwobj.OrderedObject):
     
     def addNode(self, nodeId, **kwargs):
         return self.nodeList.addNode(nodeId, **kwargs)
+
+    def getLabels(self):
+        return self.labelsList
     
 
 class ProjectConfig(pwobj.OrderedObject):
@@ -312,6 +337,7 @@ class MenuConfig(object):
         self.value = pwobj.String(value)
         self.icon = pwobj.String(icon)
         self.tag = pwobj.String(tag)
+        self.shortCut = pwobj.String(kwargs.get('shortCut', None))
         self.childs = pwobj.List()
         self.openItem = pwobj.Boolean(kwargs.get('openItem', False))
 
@@ -338,13 +364,15 @@ class ProtocolConfig(MenuConfig):
         if 'openItem' not in args:
             self.openItem.set(self.tag.get() != 'protocol_base')
 
-    def addSubMenu(self, text, value=None, **args):
+    def addSubMenu(self, text, value=None, shortCut=None, **args):
         if 'icon' not in args:
             tag = args.get('tag', None)
             if tag == 'protocol':
                 args['icon'] = 'python_file.gif'
             elif tag == 'protocol_base':
                 args['icon'] = 'class_obj.gif'
+
+        args['shortCut'] = shortCut
         return MenuConfig.addSubMenu(self, text, value, **args)
 
 
@@ -358,10 +386,11 @@ class NodeConfig(pwobj.Scalar):
                         'x': pwobj.Integer(x).get(0), 
                         'y': pwobj.Integer(y).get(0), 
                         'selected': selected, 
-                        'expanded': expanded}
+                        'expanded': expanded,
+                        'labels': []}
         
     def _convertValue(self, value):
-        """Value should be a str with comman separated values
+        """Value should be a str with comma separated values
         or a list.
         """
         self._values = json.loads(value)
@@ -406,6 +435,12 @@ class NodeConfig(pwobj.Scalar):
         
     def isExpanded(self):
         return self._values['expanded']
+
+    def setLabels(self, labels):
+        self._values['labels'] = labels
+
+    def getLabels(self):
+        return self._values.get('labels', None)
     
     def __str__(self):
         return 'NodeConfig: %s' % self._values
@@ -451,4 +486,76 @@ class DownloadRecord(pwobj.OrderedObject):
         self.country = pwobj.String(kwargs.get('country', None))
         self.version = pwobj.String(kwargs.get('version', None))
         self.platform = pwobj.String(kwargs.get('platform', None))
-    
+
+
+class Label(pwobj.Scalar):
+    """ Store Label information """
+
+    def __init__(self, labelId=None, name='', color=None):
+        pwobj.Scalar.__init__(self)
+        # Special node id 0 for project node
+        self._values = {'id': labelId,
+                        'name': name,
+                        'color': color}
+
+    def _convertValue(self, value):
+        """Value should be a str with comma separated values
+        or a list.
+        """
+        self._values = json.loads(value)
+
+    def getObjValue(self):
+        self._objValue = json.dumps(self._values)
+        return self._objValue
+
+    def get(self):
+        return self.getObjValue()
+
+    def getId(self):
+        return self._values['id']
+
+    def getName(self):
+        return self._values['name']
+
+    def setName(self, newName):
+        self._values['name'] = newName
+
+    def setColor(self, color):
+        self._values['color'] = color
+
+    def getColor(self):
+        return self._values.get('color', None)
+
+    def __str__(self):
+        return 'Label: %s' % self._values
+
+    def __eq__(self, other):
+        return self.getName() == other.getName()
+
+
+class LabelsList(pwobj.List):
+    """ Store all labels information"""
+    def __init__(self):
+        self._labelsDict = {}
+        pwobj.List.__init__(self)
+
+    def getLabel(self, name):
+        return self._labelsDict.get(name, None)
+
+    def addLabel(self, label):
+        self._labelsDict[label.getName()] = label
+        self.append(label)
+        return label
+
+    def updateDict(self):
+        self._labelsDict.clear()
+        for label in self:
+            self._labelsDict[label.getName()] = label
+
+    def deleteLabel(self, label):
+        self._labelsDict.pop(label.getName())
+        self.remove(label)
+
+    def clear(self):
+        pwobj.List.clear(self)
+        self._labelDict.clear()

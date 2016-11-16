@@ -103,6 +103,7 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         imgFn = self._getPath('corrected_ctf_particles.xmd')
         
         partSet.copyInfo(imgSet)
+        partSet.setIsPhaseFlipped(True)
         partSet.copyItems(imgSet,
                             updateItemCallback=self._updateLocation,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))

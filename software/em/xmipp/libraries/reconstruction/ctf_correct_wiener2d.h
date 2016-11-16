@@ -58,7 +58,6 @@ public:
     /// Sampling rate
     double sampling_rate;
 
-
 public:
 
     void readParams();
@@ -80,6 +79,8 @@ public:
 	size_t Ydim, Xdim;
 
 	MultidimArray<double> Mwien;
+	MultidimArray<std::complex<double> > Faux;
+    FourierTransformer transformer;
 };
 
 

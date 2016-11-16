@@ -96,7 +96,6 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
         if fnMask:
             params += " --mask binary_file %(fnMask)s"
-        print params%locals()
         self.runJob("xmipp_volume_to_pseudoatoms", params % locals())
         for suffix in ["_approximation.vol", "_distance.hist"]:
             moveFile(self._getPath(pseudoatoms+suffix), self._getExtraPath(pseudoatoms+suffix))

@@ -36,7 +36,7 @@ from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3 import (XmippFilterHelper as xfh,
                                            XmippResizeHelper as xrh)
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import ALIGN_ALGORITHM_EXHAUSTIVE,\
-    ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL
+    ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL, ALIGN_ALGORITHM_LOCAL
 
 
 class TestXmippBase(BaseTest):
@@ -672,16 +672,15 @@ class TestXmippProtAlignVolume(TestXmippBase):
     def testLocal(self):
         protAlign = self.newProtocol(XmippProtAlignVolume,
                                      inputReference=self.protImport1.outputVolume,
-                                     alignmentAlgorithm=ALIGN_ALGORITHM_EXHAUSTIVE,
-                                     minRotationalAngle=95,
-                                     maxRotationalAngle=95,
-                                     stepRotationalAngle=1,
-                                     minTiltAngle=95,
-                                     maxTiltAngle=95,
-                                     stepTiltAngle=1,
-                                     minInplaneAngle=0,
-                                     maxInplaneAngle=0,
-                                     stepInplaneAngle=0,
+                                     alignmentAlgorithm=ALIGN_ALGORITHM_LOCAL,
+                                     initialRotAngle=0,
+                                     initialTiltAngle=0,
+                                     initialInplaneAngle=0,
+                                     initialShiftX=0,
+                                     initialShiftY=0,
+                                     initialShiftZ=0,
+                                     initialScale=1,
+                                     optimizeScale=True,
                                      numberOfMpi=1, numberOfThreads=1                               
                                      )
         protAlign.inputVolumes.append(self.protImport2.outputVolume)
@@ -797,6 +796,35 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.dimRed = True
         cls.numVolumes = 2
         cls.maxFreq = 12
+
+
+class TestXmippRotationalSymmetry(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('xmipp_tutorial')
+        cls.vol = cls.dataset.getFile('vol110')
+
+    def test_rotsym(self):
+        print "Import Volume"
+        protImportVol = self.newProtocol(ProtImportVolumes,
+                                         objLabel='Volume',
+                                         filesPath=self.vol,
+                                         samplingRate=7.08)
+        self.launchProtocol(protImportVol)
+        self.assertIsNotNone(protImportVol.getFiles(),
+                             "There was a problem with the import")
+        
+        print "Run find rotational symmetry axis"
+        protRotSym = self.newProtocol(XmippProtRotationalSymmetry,
+                                         symOrder=2,
+                                         searchMode=2,
+                                         tilt0=70,
+                                         tiltF=110)
+        protRotSym.inputVolume.set(protImportVol.outputVolume)
+        self.launchProtocol(protRotSym)
+        self.assertIsNotNone(protRotSym.outputVolume,
+                             "There was a problem with Rotational Symmetry")
 
 
 class TestXmippProjMatching(TestXmippBase):

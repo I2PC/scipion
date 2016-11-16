@@ -448,7 +448,7 @@ class TestXmippCropResizeParticles(TestXmippBase):
         # And for its individual particles too:
         self.assertTrue(outP.equalItemAttributes(
             inP, ignore=['_filename', '_index', '_samplingRate'], verbose=True))
-
+    
     def test_pyramid(self):
         inP = self.protImport.outputParticles  # short notation
         outP = self.launch(doResize=True, resizeOption=xrh.RESIZE_PYRAMID,
@@ -925,6 +925,34 @@ class TestXmippCompareReprojections(TestXmippBase):
         self.assertIsNotNone(prot.outputParticles, "There was a problem with Compare Reprojections from projections with angles")
 
 
+class TestXmippCreateGallery(TestXmippBase):
+    """This class check if the protocol create gallery in Xmipp works properly."""
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        TestXmippBase.setData('mda')
+        cls.protImportVol = cls.runImportVolume(cls.volumesFn, 3.5)
+    
+    def _createGallery(self, step, projections):
+        prot = self.newProtocol(XmippProtCreateGallery,
+                                symmetryGroup="d6",
+                                rotStep=step, tiltStep=step)
+        prot.inputVolume.set(self.protImportVol.outputVolume)
+        self.launchProtocol(prot)
+        outSet = getattr(prot, 'outputReprojections', None)
+        self.assertIsNotNone(outSet, "There was a problem with create gallery")
+        self.assertEqual(projections, outSet.getSize())
+
+        return prot
+
+    def test_step5(self):
+        prot = self._createGallery(step=5, projections=131)
+
+    def test_step10(self):
+        prot = self._createGallery(step=10, projections=32)
+
+
+
 class TestXmippBreakSym(TestXmippBase):
     @classmethod
     def setUpClass(cls):
@@ -997,7 +1025,35 @@ class TestXmippCorrectWiener2D(TestXmippBase):
         self.assertIsNotNone(protCorrect.outputParticles, "There was a problem with Wiener Correction")
 
         
+class TestXmippSubtractProjection(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+    
+    def test_subtract(self):
+        protParts = self.newProtocol(ProtImportParticles,
+                                     objLabel='from relion auto-refine',
+                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                     starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
+                                     magnification=10000,
+                                     samplingRate=7.08,
+                                     haveDataBeenPhaseFlipped=True
+                                     )
+        self.launchProtocol(protParts)
+        self.assertEqual(60, protParts.outputParticles.getXDim())
         
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   filesPath=self.dsRelion.getFile('volumes/reference.mrc'),
+                                   samplingRate=7.08)
+        self.launchProtocol(protVol)
+        self.assertEqual(60, protVol.outputVolume.getDim()[0])
+        
+        protSubtract = self.newProtocol(XmippProtSubtractProjection)
+        protSubtract.inputParticles.set(protParts.outputParticles)
+        protSubtract.inputVolume.set(protVol.outputVolume)
+        self.launchProtocol(protSubtract)
+        self.assertIsNotNone(protSubtract.outputParticles, "There was a problem with subtract projection")
         
 
 if __name__ == "__main__":

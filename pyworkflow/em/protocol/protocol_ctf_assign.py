@@ -50,30 +50,35 @@ class ProtCTFAssign(ProtCTFMicrographs):
         # Now keep track of changes and update
         self.inputType.trace(onChangeInputType)
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputType', params.EnumParam, choices=self._unionTypes, default=0, # Micrographs
+        form.addParam('inputType', params.EnumParam, choices=self._unionTypes,
+                      default=0, # Micrographs
                       label='Input type:',
-                      help='Select the type of objects that you want to assign the CTF.')
-        self.inputSetsParam = form.addParam('inputSet', params.PointerParam, pointerClass='EMSet',
-                              label='Input set',
-                              help='Select the images (micrographs or particles) '
-                                   'that you want to update the CTF parameters.')        
+                      help='Select the type of objects that you want to assign'
+                           ' the CTF.')
+        self.inputSetsParam = form.addParam('inputSet', params.PointerParam,
+                                            pointerClass='EMSet',
+                                            label='Input set',
+                                            help='Select the images '
+                                                 '(micrographs or particles) '
+                                                 'that you want to update the '
+                                                 'CTF parameters.')        
         form.addParam('inputCTF', params.PointerParam, pointerClass='SetOfCTF',
                       label="Input CTF",
-                      help='Select the CTF that will be used to update particles.')  
-
+                      help='Select the CTF that will be used to update '
+                           'particles.')  
         form.addParallelSection(threads=0, mpi=0) 
-        
-#--------------------------- INSERT steps functions --------------------------------------------  
+    
+    #--------------------------- INSERT steps functions -----------------------
                                 
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
         self._insertFunctionStep('createOutputStep')
     
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions ------------------------------
     def createOutputStep(self):
         inputSet = self.inputSet.get()
         inputCTF = self.inputCTF.get()
@@ -112,7 +117,8 @@ class ProtCTFAssign(ProtCTFMicrographs):
                 ctf = ctfDict.get(micKey, None)
                 
                 if ctf is None:
-                    self.warning("Discarding particles from micrograph with micName: %s, CTF not found. " % micKey)
+                    self.warning("Discarding particles from micrograph with"
+                                 " micName: %s, CTF not found. " % micKey)
                     missingSet.add(micKey)
                 else:
                     newParticle = particle.clone()
@@ -156,7 +162,7 @@ class ProtCTFAssign(ProtCTFMicrographs):
         self._defineSourceRelation(self.inputSet, outputMics)
         self._defineCtfRelation(outputMics, self.inputCTF)
     
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
         return summary    
@@ -165,9 +171,9 @@ class ProtCTFAssign(ProtCTFMicrographs):
         return []
     
     def _validate(self):
-        """ The function of this hook is to add some validation before the protocol
-        is launched to be executed. It should return a list of errors. If the list is
-        empty the protocol can be executed.
+        """ The function of this hook is to add some validation before the
+        protocol is launched to be executed. It should return a list of errors.
+        If the list is empty the protocol can be executed.
         """
         errors = []
         # Add some errors if input is not valid
@@ -175,7 +181,12 @@ class ProtCTFAssign(ProtCTFMicrographs):
         if isinstance(inputSet, SetOfParticles):
             part = inputSet.getFirstItem()
             if not part.hasMicId():
-                errors.append("The input particles doesn't have any micrograph assigned.")
+                errors.append("The input particles doesn't have any micrograph"
+                              " assigned.")
         #same micrographs in both CTF??
         return errors
+    
+    #--------------------------- UTILS functions ------------------------------
+    def _stepsCheck(self):
+        pass
     
