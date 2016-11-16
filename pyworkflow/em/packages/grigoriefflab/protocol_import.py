@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -34,7 +34,7 @@ class ProtImportCTF(ProtImportFiles, ProtCTFMicrographs):
     """ Protocol to import results from CTFfind.
     Select the micrographs to associate the computed CTFs and
     the path pattern where to find the CTF files, that should
-    contains the micrograh id in the name. """
+    contains the micrograph id in the name. """
     _label = 'import ctf'
     
     #--------------------------- DEFINE param functions --------------------------------------------

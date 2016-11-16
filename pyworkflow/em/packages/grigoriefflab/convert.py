@@ -2,8 +2,6 @@
 # *
 # * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
-# *
-# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -46,22 +44,6 @@ import pyworkflow.em as em
 HEADER_COLUMNS = ['INDEX', 'PSI', 'THETA', 'PHI', 'SHX', 'SHY', 'MAG',
                   'FILM', 'DF1', 'DF2', 'ANGAST', 'OCC',
                   '-LogP', 'SIGMA', 'SCORE', 'CHANGE']
-
-
-def getVersion(var):
-    varHome = var + '_HOME'
-    path = os.environ[varHome]
-    for v in getSupportedVersions(var):
-        if v in path or v in os.path.realpath(path):
-            return v
-    return ''
-
-
-def getSupportedVersions(var):
-    if var == 'UNBLUR':
-        return ['1.0_150529', '1.0.2']
-    elif var == 'CTFFIND4':
-        return ['4.0.15', '4.1.5']
 
 
 class FrealignParFile(object):
@@ -177,7 +159,7 @@ def parseCtffindOutput(filename):
 
 def parseCtffind4Output(filename):
     """ Retrieve defocus U, V and angle from the
-    output file of the ctffind3 execution.
+    output file of the ctffind4 execution.
     """
     result = None
     if os.path.exists(filename):
@@ -227,9 +209,8 @@ def readCtfModel(ctfModel, filename, ctf4=False):
         ctfModel._ctffind4_ctfPhaseShift = Float(ctfPhaseShift)
 
 
-def geometryFromMatrix(matrix):
+def geometryFromMatrix(matrix, inverseTransform=True):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    inverseTransform = True
 
     if inverseTransform:
         matrix = inv(matrix)
@@ -241,7 +222,7 @@ def geometryFromMatrix(matrix):
 
 
 def geometryFromAligment(alignment):
-    shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(), True)
 
     return shifts, angles
 

@@ -30,9 +30,10 @@ import sys
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
-from grigoriefflab import CTFFIND_PATH, CTFFIND4_PATH
+from grigoriefflab import (CTFFIND_PATH, CTFFINDMP_PATH,
+                           CTFFIND4_PATH, getVersion)
 from convert import (readCtfModel, parseCtffindOutput,
-                     parseCtffind4Output, getVersion)
+                     parseCtffind4Output)
 
 
 
@@ -181,7 +182,10 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     #--------------------------- INFO functions ----------------------------------------------------
     def _validate(self):
         errors = []
+        thr = self.numberOfThreads.get()
         ctffind = CTFFIND4_PATH if self.useCtffind4 else CTFFIND_PATH
+        if thr > 1 and not self.useCtffind4:
+            ctffind = CTFFINDMP_PATH
         if not os.path.exists(ctffind):
             errors.append('Missing %s' % ctffind)
 
@@ -202,7 +206,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     def _methods(self):
         if self.inputMicrographs.get() is None:
             return ['Input micrographs not available yet.']
-        methods = "We calculated the CTF of %s using CtfFind [Midell2003]. " % self.getObjectTag('inputMicrographs')
+        methods = "We calculated the CTF of %s using CTFFind [Midell2003]. " % self.getObjectTag('inputMicrographs')
         methods += self.methodsVar.get('')
         methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
 
@@ -281,7 +285,11 @@ class ProtCTFFind(em.ProtCTFMicrographs):
             self._argsCtffind4()
 
     def _argsCtffind3(self):
-        self._program = 'export NATIVEMTZ=kk ; ' + CTFFIND_PATH
+        self._program = 'export NATIVEMTZ=kk ; '
+        if self.numberOfThreads.get() > 1:
+            self._program += 'export NCPUS=%d ;' % self.numberOfThreads.get() + CTFFINDMP_PATH
+        else:
+            self._program += CTFFIND_PATH
         self._args = """   << eof > %(ctffindOut)s
 %(micFn)s
 %(ctffindPSD)s

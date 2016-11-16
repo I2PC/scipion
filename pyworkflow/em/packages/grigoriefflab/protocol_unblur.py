@@ -28,8 +28,8 @@ import os
 import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
-from grigoriefflab import UNBLUR_PATH
-from convert import getVersion, readShiftsMovieAlignment
+from grigoriefflab import UNBLUR_PATH, getVersion
+from convert import readShiftsMovieAlignment
 
 
 
@@ -300,8 +300,8 @@ eof
         pixSize = movie.getSamplingRate()
         shiftFn = self._getShiftsFn(movie)
         xShifts, yShifts = readShiftsMovieAlignment(shiftFn)
-        # convert shifts from Angstroms to px (e.g. Summovie
-        # requires shifts in px)
+        # convert shifts from Angstroms to px
+        # (e.g. Summovie requires shifts in px)
         xShiftsCorr = [x / pixSize for x in xShifts]
         yShiftsCorr = [y / pixSize for y in yShifts]
 

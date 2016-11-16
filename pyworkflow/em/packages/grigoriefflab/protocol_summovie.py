@@ -272,4 +272,3 @@ eof
             last -= (iniFrame - 1)
 
         return first, last
-
