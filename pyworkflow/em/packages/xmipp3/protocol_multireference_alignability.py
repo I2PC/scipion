@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:         Javier Vargas (jvargas@cnb.csic.es)
+# * Authors:         Javier Vargas (jvargas@cnb.csic.es) (2016)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -60,48 +60,36 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
                       label="Input volume",  
                       help='Select the input volume(s).')     
-                
         form.addParam('inputParticles', PointerParam,
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       label="Input particles", important=True,
                       help='Select the input projection images.')
-            
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
-
-        form.addParam('isCTFCorrected', BooleanParam, default=False,
-                      label="Has been the volume CTF corrected previously?",  
-                      help='Select true if the CTF has been previously corrected through Wiener filtering')
-                
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
-
-        form.addParam('numOrientations', FloatParam, default=6, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numOrientations', FloatParam, default=7, expertLevel=LEVEL_ADVANCED,
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
-
         form.addParam('doNotUseWeights', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Do not use the weights",
                       help='Do not use the weights in the clustering calculation')
-        
         form.addParam('pseudoSymmetryGroup', StringParam, default='', expertLevel=LEVEL_ADVANCED,
                       label="Pseudo symmetry group", 
                       help='Add only in case the map is close to a symmetry different and more restrict than the one reported in the parameter Symmetry group.'
                       'See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp')
-        
         form.addParam('minTilt', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
                       label="Minimum allowed tilt angle",  
                       help='Tilts below this value will not be considered for the alignment')
-        
         form.addParam('maxTilt', FloatParam, default=180, expertLevel=LEVEL_ADVANCED,
                       label="Maximum allowed tilt angle without mirror check",  
                       help='Tilts above this value will not be considered for the alignment without mirror check')
-
+        
         form.addSection(label='Preprocess')
         form.addParam('doWiener', BooleanParam, default='True',
                       label="CTF correction",
@@ -120,7 +108,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                       help=' Only in cases where the envelope is well estimated correct for it')
         form.addParam('targetResolution', FloatParam, default=8, label='Target resolution (A)',
                       help='Low pass filter the particles to this resolution. This usually helps a lot obtaining good alignment. You should have a good' 
-                      'reason to modify this value from a range between  [8-10] A')
+                      ' reason to modify this value outside the range  [8-10] A')
         
         form.addParallelSection(threads=1, mpi=1)
 
