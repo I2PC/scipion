@@ -68,6 +68,8 @@ class XmippCL2DViewer(ProtocolViewer):
                       label='Levels selection',
                       condition='doShowLastLevel==%d' % LEVEL_SEL,
                       help='Specify a  list of levels like: 0,1,3 or 0-3 ')
+        # TO-DO; All commented code is for revision with @cossorzano
+        
         # Sorted or not
         # form.addParam('doSorted', BooleanParam, default=False,
         #               label="Display sorted classes",
@@ -111,6 +113,8 @@ class XmippCL2DViewer(ProtocolViewer):
         views = []
         fnSubset = self._getSubset()
         viewFinalClasses = False
+        
+        # TO-DO; All commented code is for revision with @cossorzano
         viewParams = {}
     
         # if self.doSorted:
@@ -190,6 +194,8 @@ class XmippCL2DViewer(ProtocolViewer):
             fnSubset = "_stable_core"
         return fnSubset
 
+    # TO-DO; All commented code is for revision with @cossorzano
+    
     # def _setClassOrder(self, classItem, classRow):
     #     """ Set the class order for display the classes sorted. """
     #     lastOrder = getattr(self, 'lastOrder', 0) + 1
