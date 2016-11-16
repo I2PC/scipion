@@ -23,7 +23,9 @@
 
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportParticles, ProtImportVolumes
+from pyworkflow.em.protocol import (ProtImportParticles, ProtImportVolumes,
+                                    ProtSubSet)
+
 
 from pyworkflow.em.packages.xmipp3 import XmippProtSolidAngles
 
@@ -47,10 +49,9 @@ class TestDirectionalClasses(BaseTest):
     def runImportParticles(self):
         """ Import an EMX file with Particles and defocus
         """
-        partStar = self.ds.getFile('import/refine3d/extra/'
-                                   'relion_it001_data.star')
+        partStar = self.ds.getFile('import/case2/relion_it015_data.star')
         prot = self.newProtocol(ProtImportParticles,
-                                 objLabel='from relion (auto-refine 3d)',
+                                 objLabel='from relion (data.star)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
                                  starFile=partStar,
                                  magnification=10000,
@@ -65,7 +66,7 @@ class TestDirectionalClasses(BaseTest):
         return prot
 
     def runImportVolume(self):
-        volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
+        volFn = self.ds.getFile('import/case2/volume.mrc')
         prot = self.newProtocol(ProtImportVolumes,
                                 filesPath=volFn, filesPattern='',
                                 samplingRate=7.08)
@@ -77,15 +78,25 @@ class TestDirectionalClasses(BaseTest):
         protImportParts = self.runImportParticles()
         protImportVol = self.runImportVolume()
 
+        # Let's keep a smaller subset of particles to speed-up computations
+        protSubset = self.newProtocol(ProtSubSet,
+                                      objLabel='subset 1K',
+                                      chooseAtRandom=True,
+                                      nElements=1000)
+
+        protSubset.inputFullSet.set(protImportParts.outputParticles)
+        self.launchProtocol(protSubset)
+
+        # We use a coarse angular sampling of 20 to speed-up test
         prot = self.newProtocol(XmippProtSolidAngles,
                                 objLabel='directional classes',
-                                angularSampling=10,
-                                angularDistance=15,
+                                angularSampling=20,
+                                angularDistance=25,
                                 numberOfMpi=4
                                 )
 
         prot.inputVolume.set(protImportVol.outputVolume)
-        prot.inputParticles.set(protImportParts.outputParticles)
+        prot.inputParticles.set(protSubset.outputParticles)
 
         self.launchProtocol(prot)
 
