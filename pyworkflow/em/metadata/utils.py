@@ -94,14 +94,18 @@ def iterRows(md, sortByLabel=None):
         yield row
 
 
-def getAllMdBlocks(md, block):
+def joinBlocks(inputMd, blockPrefix=None):
     mdImages = MetaData()
     mdAll = MetaData()
-    mdBlocks = getBlocksInMetaDataFile(md)
-
+    mdBlocks = getBlocksInMetaDataFile(inputMd)
+    
     for mdBlock in mdBlocks:
-        if mdBlock.startswith(block):
-            mdImages.read(mdBlock + "@" + md)
+        if blockPrefix is not None:
+            if mdBlock.startswith(blockPrefix):
+                mdImages.read(mdBlock + "@" + inputMd)
+                mdAll.unionAll(mdImages)
+        else:
+            mdImages.read(mdBlock + "@" + inputMd)
             mdAll.unionAll(mdImages)
     return mdAll
 
