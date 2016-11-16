@@ -168,7 +168,7 @@ def loadProtocolsConf(protocolsConf):
                  'To solve it, delete %s and run again.' % (e, protocolsConf))
 
 
-def includeInAllProtocols(v, k):
+def isAFinalProtocol(v, k):
     from pyworkflow.viewer import ProtocolViewer
     if issubclass(v, ProtocolViewer):
         return False
@@ -195,7 +195,7 @@ def addAllProtocols(protocols):
     # Group protocols by package name
     for k, v in allProtsSorted.iteritems():
 
-        if includeInAllProtocols(v, k):
+        if isAFinalProtocol(v, k):
 
             packageName = v.getClassPackageName()
 
