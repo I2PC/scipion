@@ -184,8 +184,8 @@ void MultireferenceAligneability::run()
 			rowInput.setValue(MDL_IMAGE,imagePath);
 			rowInput.setValue(MDL_IMAGE_IDX,i);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rankPrec);
-			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAccNoMirror);
-			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankAccMirror);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAccMirror);
+			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankAccNoMirror);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
@@ -216,13 +216,13 @@ void MultireferenceAligneability::run()
 		FOR_ALL_OBJECTS_IN_METADATA(mdPartialParticles)
 		{
 			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION,rankPrec,__iter.objId);
-			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAccNoMirror,__iter.objId);
-			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankAccMirror,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAccMirror,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankAccNoMirror,__iter.objId);
 
 			validationAlignabilityPrecision += (rankPrec>0.5);
-			validationAlignabilityAccuracy += (rankAccNoMirror > 0.5);
-			validationAlignability += ( (rankAccNoMirror > 0.5) && (rankPrec>0.5));
-			validationMirror += (rankAccMirror> 0.5);
+			validationAlignabilityAccuracy += (rankAccMirror > 0.5);
+			validationAlignability += ( (rankAccMirror > 0.5) && (rankPrec>0.5));
+			validationMirror += (rankAccNoMirror> 0.5);
 
 		}
 
@@ -538,8 +538,8 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
         tempAccuracyMirror = SL.computeDistance(rotRef, tiltRef, psiRef,
         		                   rot, tilt, psi, true,true, false);
 
-       	accuracyMirror += tempAccuracyMirror*w;
     	accuracy += tempAccuracy*w;
+        accuracyMirror += tempAccuracyMirror*w;
 
 
 #ifdef DEBUG
