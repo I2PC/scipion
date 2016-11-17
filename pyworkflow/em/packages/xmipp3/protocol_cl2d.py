@@ -529,7 +529,7 @@ class XmippProtCL2D(ProtClassify2D):
         if level == "last":
             level = self._lastLevel()
         mdClassesFn = self._getLevelMdClasses(lev=level, block="", subset=sub)
-        mdImgs = md.getAllMdBlocks(mdClassesFn, "class0")
+        mdImgs = md.joinBlocks(mdClassesFn, "class0")
         mdImgs.write(self._getFileName('level_images',level=level, sub=sub))
         
     def _lastLevel(self):
