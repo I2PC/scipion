@@ -171,7 +171,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         writeSetOfParticles(self.inputParticles.get(), 
                             self._getPath('input_particles.xmd'))
         
-        if (self.doWiener.get() == True):
+        if self.doWiener.get():
             params  =  '  -i %s' % self._getPath('input_particles.xmd')
             params +=  '  -o %s' % self._getExtraPath('corrected_ctf_particles.stk')
             params +=  '  --save_metadata_stack %s' % self._getExtraPath('corrected_ctf_particles.xmd')
@@ -179,10 +179,10 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             params +=  '  --wc %s' % self.wiener_constant.get()
             params +=  '  --sampling_rate %s' % self.inputParticles.get().getSamplingRate()
 
-            if (self.inputParticles.get().isPhaseFlipped()):
+            if self.inputParticles.get().isPhaseFlipped():
                 params +=  '  --phase_flipped '
             
-            if (self.correctEnvelope):
+            if self.correctEnvelope:
                 params +=  '  --correct_envelope '
                 
             nproc = self.numberOfMpi.get()
@@ -197,7 +197,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         self.newTs = max(Ts,newTs)
         self.newXdim = Xdim*Ts/self.newTs
         
-        if (self.doWiener.get() == True):
+        if self.doWiener.get():
             params =  '  -i %s' % self._getExtraPath('corrected_ctf_particles.xmd')
         else :
             params =  '  -i %s' % self._getPath('input_particles.xmd')
@@ -310,6 +310,7 @@ _noisePixelLevel   '0 0'""" % (self.newXdim , self.newXdim, pathParticles, self.
         params += '  --gallery %s' % aFileGallery
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
+        params += ' --check_mirrors'
         
         if self.doNotUseWeights:
             params += ' --dontUseWeights'
