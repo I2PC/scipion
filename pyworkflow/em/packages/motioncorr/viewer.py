@@ -61,7 +61,7 @@ class ProtMotioncorrViewer(Viewer):
             views.append(self.infoMessage("Output micrographs have "
                                           "not been produced yet."))
 
-        if obj.hasAttribute('outputMicrographsDoseWt'):
+        if obj.hasAttribute('outputMicrographsDoseWeighted'):
             views.append(self.objectView(obj.outputMicrographsDoseWt,
                                          viewParams=viewParams))
         if obj.hasAttribute('outputMovies'):

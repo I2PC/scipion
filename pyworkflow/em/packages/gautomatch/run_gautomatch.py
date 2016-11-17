@@ -37,6 +37,3 @@ if __name__ == '__main__':
     args = " ".join(sys.argv[4:])
 
     runGautomatch(micName, refStack, workDir, args)
-
-
-

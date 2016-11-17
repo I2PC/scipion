@@ -264,7 +264,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
 
-        # Let's notify that this micrograph have been processed
+        # Let's notify that this micrograph has been processed
         # just creating an empty file at the end (after success or failure)
         open(os.path.join(micDir, 'done.txt'), 'w')
         # Let's clean the temporary mrc micrographs

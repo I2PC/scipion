@@ -146,11 +146,11 @@ class ProtMotionCorr(ProtAlignMovies):
         -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
                               tilt series, e.g. *-60 60*
                               """)
-        form.addParam('doSaveUnweightedMic', params.BooleanParam, default=False,
+        form.addParam('doSaveUnweightedMic', params.BooleanParam, default=True,
                       condition='doSaveAveMic and useMotioncor2 and doApplyDoseFilter',
                       label="Save unweighted micrographs?",
-                      help="By default, if you have selected to apply a "
-                           "dose-dependent filter to the frames, only ")
+                      help="Yes by default, if you have selected to apply a "
+                           "dose-dependent filter to the frames")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
         form.addParallelSection(threads=0, mpi=0)
@@ -446,7 +446,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _createOutputMicrographs(self):
         createWeighted = self._createOutputWeightedMicrographs()
-        # To create the un-weighted average micrographs
+        # To create the unweighted average micrographs
         # we only consider the 'doSaveUnweightedMic' flag if the
         # weighted ones should be created.
         return (self.doSaveAveMic and
@@ -455,8 +455,6 @@ class ProtMotionCorr(ProtAlignMovies):
     def _createOutputWeightedMicrographs(self):
         return (self.doSaveAveMic and self.useMotioncor2 and
                 self.doApplyDoseFilter)
-
-
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):

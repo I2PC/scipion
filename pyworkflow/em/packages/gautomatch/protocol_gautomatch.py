@@ -248,7 +248,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     # --------------------------- STEPS functions ---------------------------------------------------
 
     def convertInputStep(self):
-        """ This step will take of the convertions from the inputs.
+        """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrcs' format
         """

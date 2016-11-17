@@ -25,10 +25,10 @@
 # **************************************************************************
 
 import os
-import numpy as np
 from os.path import join, exists
 
 from pyworkflow.utils import Environ
+
 
 def _getHome(key, default):
     """ Get the required home path, if not present..
