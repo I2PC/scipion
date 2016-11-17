@@ -160,6 +160,9 @@ class Project(object):
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)
 
+    def getLogPath(self, *paths):
+        return self.getPath(PROJECT_LOGS, *paths)
+
     def getSettings(self):
         return self.settings
 
