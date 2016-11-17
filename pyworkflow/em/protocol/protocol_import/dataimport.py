@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -28,7 +28,7 @@ from os.path import join, basename, exists
 from collections import OrderedDict
 
 from pyworkflow.utils.path import findRootFrom
-from pyworkflow.em.data import SetOfParticles, SetOfMicrographs
+from pyworkflow.em.data import SetOfParticles, SetOfMicrographs, SetOfCTF
 from pyworkflow.em.constants import ALIGN_NONE
 
 
@@ -136,3 +136,15 @@ class ScipionImport():
         acq['sphericalAberration'] = float(_get('_acquisition._sphericalAberration'))
 
         return acq
+
+    def getMicCTF(self, mic):
+        """ Retrieve the CTF associated to this micrograph. """
+        # The first time this function is called, the set of micrographs
+        # will be loaded from the given sqlite file
+        if not hasattr(self, 'ctfSet'):
+            self.ctfSet = SetOfCTF(filename=self._sqliteFile)
+
+        return self.ctfSet[mic.getObjId()]
+
+
+

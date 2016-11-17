@@ -64,6 +64,7 @@ from plotter import XmippPlotter
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from protocol_apply_alignment import XmippProtApplyAlignment
+from protocol_apply_transformation_matrix import XmippProtApplyTransformationMatrix
 from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
@@ -82,6 +83,7 @@ from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
+from protocol_movie_gain import XmippProtMovieGain
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
@@ -107,6 +109,7 @@ from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
 from protocol_validate_tilt import XmippProtValidateTilt
 from protocol_volume_strain import XmippProtVolumeStrain
+from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC
 from protocol_write_testP import XmippProtWriteTestP
 # Wizards

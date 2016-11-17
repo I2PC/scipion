@@ -29,12 +29,20 @@ Several Image tools using Matplotlib.
 
 import Tkinter as tk
 import matplotlib
-matplotlib.use('TkAgg')
 import numpy as np
+
+try:
+    matplotlib.use('TkAgg')
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    import matplotlib.pyplot as plt
+except:
+    #matplotlib.use('Agg')
+    plt = None
+
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.cm as cm
 from matplotlib.patches import Wedge
+
 
 import xmipp
 import pyworkflow.gui as pwgui
@@ -225,11 +233,3 @@ def createBgImage(dim):
     return np.ones((dim, dim, 3))
 
 
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    import sys
-    
-    
-    
-    

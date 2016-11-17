@@ -223,6 +223,11 @@ class ProtGctf(em.ProtCTFMicrographs):
         ctffitFile = self._getCtfFitOutPath(micDir)
         pwutils.moveFile(micFnCtf, psdFile)
         pwutils.moveFile(micFnCtfFit, ctffitFile)
+
+        # Let's notify that this micrograph have been processed
+        # just creating an empty file at the end (after success or failure)
+        open(os.path.join(micDir, 'done.txt'), 'w')
+        # Let's clean the temporary mrc micrographs
         pwutils.cleanPath(micFnMrc)
  
     def _restimateCTF(self, ctfId):
@@ -258,14 +263,23 @@ class ProtGctf(em.ProtCTFMicrographs):
         pwutils.moveFile(micFnCtfFit, ctffitFile)
         pwutils.cleanPattern(micFnMrc)
     
-    def _createCtfModel(self, mic):
+    def _createCtfModel(self, mic, updateSampling=True):
+        #  When downsample option is used, we need to update the
+        # sampling rate of the micrograph associeted with the CTF
+        # since it could be downsampled
+        if updateSampling:
+            newSampling = mic.getSamplingRate() * self.ctfDownFactor.get()
+            mic.setSamplingRate(newSampling)
+
         micDir = self._getMicrographDir(mic)
         out = self._getCtfOutPath(micDir)
         psdFile = self._getPsdPath(micDir)
+
         ctfModel2 = em.CTFModel()
         readCtfModel(ctfModel2, out)
         ctfModel2.setPsdFile(psdFile)
         ctfModel2.setMicrograph(mic)
+
         return ctfModel2
 
     def _createOutputStep(self):

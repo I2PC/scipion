@@ -304,10 +304,12 @@ class Object(object):
         There are two patchs for Pointer and PointerList.
         """
         for name in attrNames:
-            attr = getattr(self, name)
+            attr = getattr(self, name, None)
             otherAttr = getattr(other, name)
-            
-            if isinstance(attr, Pointer):
+
+            if attr is None:
+                setattr(self, name, otherAttr.clone())
+            elif isinstance(attr, Pointer):
                 attr.copy(otherAttr)
             elif isinstance(attr, PointerList):
                 for pointer in otherAttr:
@@ -917,7 +919,7 @@ class PointerList(List):
 class CsvList(Scalar, list):
     """This class will store a list of objects
     in a single DB row separated by comma.
-    pType: the type of the list elememnts, int, bool, str"""
+    pType: the type of the list elements, int, bool, str"""
     def __init__(self, pType=str, **kwargs):
         Scalar.__init__(self, **kwargs)
         list.__init__(self)
@@ -1054,7 +1056,7 @@ class Set(OrderedObject):
     
     def write(self, properties=True):
         """
-        Commit the changes made to the Set underlyin database.
+        Commit the changes made to the Set underlying database.
         Params:
             properties: this flag controls when to write Set attributes to 
                 special table 'Properties' in the database. False value is 

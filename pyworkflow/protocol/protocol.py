@@ -34,6 +34,8 @@ import datetime as dt
 import pickle
 import json
 from collections import OrderedDict
+import traceback
+import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
@@ -389,10 +391,36 @@ class Protocol(Step):
                          state=Set.STREAM_OPEN):
         """ Use this function when updating an Stream output set.
         """
-        outputSet.setStreamState(state)
-        self._defineOutputs(**{outputName: outputSet})
-        self._store(outputSet)
-        outputSet.close()
+        self.__tryUpdateOuputSet(outputName, outputSet, state)
+
+    def __tryUpdateOuputSet(self, outputName, outputSet,
+                         state=Set.STREAM_OPEN, tries=1):
+        try:
+            # Update the set with the streamState value (either OPEN or CLOSED)
+            outputSet.setStreamState(state)
+
+            if self.hasAttribute(outputName):
+                outputSet.write() # Write to commit changes
+                outputAttr = getattr(self, outputName)
+                # Copy the properties to the object contained in the protcol
+                outputAttr.copy(outputSet, copyId=False)
+                # Persist changes
+                self._store(outputAttr)
+            else:
+                # Here the defineOutputs function will call the write() method
+                self._defineOutputs(**{outputName: outputSet})
+                self._store(outputSet)
+            # Close set databaset to avoid locking it
+            outputSet.close()
+
+        except Exception as ex:
+            print("Error trying to update output of protocol, tries=%d" % tries)
+
+            if tries > 3:
+                raise ex
+            else:
+                time.sleep(tries)
+                self.__tryUpdateOuputSet(outputName, outputSet, state, tries+1)
         
     def getProject(self):
         return self.__project
@@ -845,7 +873,7 @@ class Protocol(Step):
             self._stepsExecutor.runSteps(self._steps, 
                                          self._stepStarted, 
                                          self._stepFinished,
-                                         stepsCheckCallback=self._stepsCheck)
+                                         self._stepsCheck)
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
@@ -886,7 +914,7 @@ class Protocol(Step):
         copyDict = Object.copy(self, other, copyId)
         self._store()
         self.mapper.deleteRelations(self)
-        
+
         for r in other.getRelations():
             rName = r['name']
             rCreator = r['parent_id']
@@ -894,13 +922,13 @@ class Protocol(Step):
             rChild = r['object_child_id']
             rParentExt = r['object_parent_extended']
             rChildExt = r['object_child_extended']
-            
+
             if rParent in copyDict:
                 rParent = copyDict.get(rParent).getObjId()
-                            
+
             if rChild in copyDict:
                 rChild = copyDict.get(rChild).getObjId()
-            
+
             self.mapper.insertRelationData(rName, rCreator, rParent, rChild,
                                            rParentExt, rChildExt)
         
@@ -1168,6 +1196,9 @@ class Protocol(Step):
     
     def setHostConfig(self, config):
         self.hostConfig = config
+        # Never store the host config as part of the protocol, it is kept
+        # in the configuration information, the hostname is enough
+        self.hostConfig.setStore(False)
         
     def getJobId(self):
         """ Return the jobId associated to a running protocol. """

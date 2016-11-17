@@ -50,16 +50,14 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		super.paint(g);
 		g.setColor(Color.white);
 		g.drawRect(0, 0, side - 1, side - 1);
-                if(particle instanceof UntiltedParticle)
-                {
-                    String type = "U";
-                    g.drawString(type, 5, side - 2);
-                }
-                else if(particle instanceof TiltedParticle)
-                {
-                    String type = "T";
-                    g.drawString(type, 5, side - 2);
-                }
+
+        if(particle instanceof UntiltedParticle){
+            String type = "U";
+            g.drawString(type, 5, side - 2);
+        } else if(particle instanceof TiltedParticle) {
+            String type = "T";
+            g.drawString(type, 5, side - 2);
+        }
 	}
 
 	@Override

@@ -91,8 +91,8 @@ class TestEmxWeb(tests.BaseTest):
                                        downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
-                                       doFlip=False,
-                                       downFactor=1)
+                                       doInvert=False,
+                                       doFlip=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -142,9 +142,9 @@ class TestEmxWeb(tests.BaseTest):
                                        downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False,
-                                       doSort=False,
-                                       downFactor=1)
+                                       doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -183,9 +183,9 @@ class TestEmxWeb(tests.BaseTest):
                                        downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False,
-                                       doSort=False,
-                                       downFactor=1)
+                                       doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
