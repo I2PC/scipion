@@ -443,14 +443,19 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 		public String getToolTipText(MouseEvent e) {
 			java.awt.Point p = e.getPoint();
 			int index = columnModel.getColumnIndexAtX(p.x);
-			if (index > -1)
-				return visibleLabels.get(index).comment;
+			if (index > -1){
+                int col =  table.convertColumnIndexToModel(index);
+                return visibleLabels.get(col).comment;
+            }
+
 			return null;
 		}
 	}
 
 	public class MetadataColumnListener extends MouseAdapter {
-		protected JTable table;
+        public static final String ASCENDING_PREFIX = "\u25B2 ";
+        public static final String DESCENDING_PREFIX = "\u25BC ";
+        protected JTable table;
 
 		public MetadataColumnListener(JTable t) {
 			table = t;
@@ -489,7 +494,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 public void run() {
 
                     data.sortMd(data.labels.get(sortColumnIndex), ascending);
-                    column.setHeaderValue((ascending? "\u25B2 ": "\u25BC ")+columnName);
+                    column.setHeaderValue((ascending? ASCENDING_PREFIX : DESCENDING_PREFIX)+columnName);
                     table.getTableHeader().repaint();
                     clearSelection();
                     updateTableSelection(table);
@@ -510,10 +515,22 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 // Get the column model
                 TableColumnModel colModel = table.getColumnModel();
 
-                // Get the column
-                TableColumn previousSortedColumn = colModel.getColumn(sortColumnIndex);
-                previousSortedColumn.setHeaderValue(data.labels.get(sortColumnIndex).labelName);
+                // For each column
+                for (int i=0; i<colModel.getColumnCount();i++){
+                    TableColumn col = colModel.getColumn(i);
+                    String header = col.getHeaderValue().toString();
 
+                    // If it has the ascending prefix
+                    if (header.startsWith(ASCENDING_PREFIX) ){
+                        // remove it
+                        col.setHeaderValue(header.replaceFirst(ASCENDING_PREFIX, ""));
+                        return;
+                    } else if (header.startsWith(DESCENDING_PREFIX)) {
+                        // remove it
+                        col.setHeaderValue(header.replaceFirst(DESCENDING_PREFIX, ""));
+                        return;
+                    }
+                }
             }
         }
     }
