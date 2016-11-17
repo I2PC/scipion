@@ -304,10 +304,12 @@ class Object(object):
         There are two patchs for Pointer and PointerList.
         """
         for name in attrNames:
-            attr = getattr(self, name)
+            attr = getattr(self, name, None)
             otherAttr = getattr(other, name)
-            
-            if isinstance(attr, Pointer):
+
+            if attr is None:
+                setattr(self, name, otherAttr.clone())
+            elif isinstance(attr, Pointer):
                 attr.copy(otherAttr)
             elif isinstance(attr, PointerList):
                 for pointer in otherAttr:
