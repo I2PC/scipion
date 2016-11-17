@@ -55,7 +55,7 @@ class ProjectNotifier(object):
 
         return uuidValue
 
-    def _sendData(self, url, dataDict):
+    def _sendData(self, url, dataDict=None):
         #then connect to webserver a send json
         opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
         data = urllib.urlencode(dataDict)
@@ -75,3 +75,12 @@ class ProjectNotifier(object):
         urlName = os.environ.get('SCIPION_NOTIFY_URL').strip()
         t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
         t.start() # will execute function in a separate thread
+
+    def getEntryFromWebservice(self,uuid):
+        if not pwutils.envVarOn('SCIPION_NOTIFY'):
+            return
+        urlName = os.environ.get('SCIPION_NOTIFY_URL').strip()
+        #remove last directory
+        urlName = os.path.split(urlName)[0]
+        url = urlName + "/?project_uuid=" + uuid
+        resultDict = self._sendData(url)
