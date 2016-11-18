@@ -1,6 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
- * 							(jlvilas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es) (2016)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -133,8 +132,8 @@ void MultireferenceAligneability::run()
 	calc_sumw2(numProjs, sum_noise, mdGallery);
 
 	double rankPrec = 0.;
-	double rankAcc = 0.;
-	double rankMirror = 0.;
+	double rankAccNoMirror = 0.;
+	double rankAccMirror = 0.;
 
 	double accuracy = 0.;
 	double accuracyRef = 0.;
@@ -177,15 +176,15 @@ void MultireferenceAligneability::run()
 #undef DEBUG
 
 			rankPrec = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
-			rankAcc = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
-			rankMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
+			rankAccMirror = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
+			rankAccNoMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
 
 			tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 			rowInput.setValue(MDL_IMAGE,imagePath);
 			rowInput.setValue(MDL_IMAGE_IDX,i);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rankPrec);
-			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
-			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAccMirror);
+			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankAccNoMirror);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
@@ -216,13 +215,13 @@ void MultireferenceAligneability::run()
 		FOR_ALL_OBJECTS_IN_METADATA(mdPartialParticles)
 		{
 			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION,rankPrec,__iter.objId);
-			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAcc,__iter.objId);
-			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankMirror,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAccMirror,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankAccNoMirror,__iter.objId);
 
 			validationAlignabilityPrecision += (rankPrec>0.5);
-			validationAlignabilityAccuracy += (rankAcc > 0.5);
-			validationAlignability += ( (rankAcc > 0.5) && (rankPrec>0.5));
-			validationMirror += (rankMirror> 0.5);
+			validationAlignabilityAccuracy += (rankAccMirror > 0.5);
+			validationAlignability += ( (rankAccMirror > 0.5) && (rankPrec>0.5));
+			validationMirror += (rankAccNoMirror> 0.5);
 
 		}
 
@@ -538,8 +537,8 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
         tempAccuracyMirror = SL.computeDistance(rotRef, tiltRef, psiRef,
         		                   rot, tilt, psi, true,true, false);
 
-       	accuracyMirror += tempAccuracyMirror*w;
     	accuracy += tempAccuracy*w;
+        accuracyMirror += tempAccuracyMirror*w;
 
 
 #ifdef DEBUG

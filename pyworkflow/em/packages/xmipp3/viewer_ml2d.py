@@ -30,7 +30,6 @@ visualization program.
 
 import os
 
-
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.protocol.params import LabelParam
 from protocol_ml2d import XmippProtML2D
@@ -51,7 +50,7 @@ class XmippML2DViewer(ProtocolViewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _label = 'viewer ml2d'
-    _plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror'] 
+    _plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror']
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
@@ -63,7 +62,7 @@ class XmippML2DViewer(ProtocolViewer):
                       help="Select from which iteration do you want to visualize classes")
         group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
                       label="Iter selection",
-                      help="Select several iterations such as: 1,3,4 or 3-5 ")        
+                      help="Select several iterations such as: 1,3,4 or 3-5 ")
         group.addParam('doShowPlots', LabelParam,
                        label="Show all plots per iteration?",
                       help='Visualize several plots.')
@@ -71,16 +70,16 @@ class XmippML2DViewer(ProtocolViewer):
         group = form.addGroup('Iteration plots')
         group.addParam('doShowLL', LabelParam,
                        label="Show Log-Likehood over iterations?",
-                       help='The Log-Likelihood value should increase.')      
+                       help='The Log-Likelihood value should increase.')
         group.addParam('doShowPmax', LabelParam,
-                       label="Show maximum model probability?", 
+                       label="Show maximum model probability?",
                        help='Show the maximum probability for a model, \n'
-                            'this should tend to be a deltha function.')      
+                            'this should tend to be a deltha function.')
         group.addParam('doShowSignalChange', LabelParam,
-                       label="Show plot for signal change?", 
-                       help='Should approach to zero when convergence.')      
+                       label="Show plot for signal change?",
+                       help='Should approach to zero when convergence.')
         group.addParam('doShowMirror', LabelParam,
-                       label="Show mirror fraction for last iteration?", 
+                       label="Show mirror fraction for last iteration?",
                        help='he the mirror fraction of each class in last iteration.')
         
     
@@ -115,9 +114,11 @@ class XmippML2DViewer(ProtocolViewer):
             if viewFinalClasses:
                 fn = self.protocol._getFileName("final_classes")
             else:
-                fn = self.protocol._getIterClasses(it)
+                if it <= self.protocol._lastIteration():
+                    fn = self.protocol._getIterClasses(it)
+            
             views.append(em.ClassesView(self.getProject(),
-                                    self.protocol.strId(), fn, 
+                                    self.protocol.strId(), fn,
                                     self.protocol.inputParticles.get().strId()))
         return views
 
