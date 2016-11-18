@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # ******************************************************************************
 
@@ -51,11 +51,11 @@ CLASSES_STABLE_CORE = '_stable_core'
 
 # Suggested number of images per class
 IMAGES_PER_CLASS = 200
-        
+
+
 class XmippProtCL2D(ProtClassify2D):
-    """ Classifies a set of images using a clustering algorithm 
-            to subdivide the original dataset
-             into a given number of classes """
+    """ Classifies a set of images using a clustering algorithm to subdivide
+    the original dataset into a given number of classes. """
     
     _label = 'cl2d'
     
@@ -229,9 +229,11 @@ class XmippProtCL2D(ProtClassify2D):
                 
                 # stable core analysis
                 args = self._defArgsCoreAnalisys("stable")
-                self._insertClassifySteps(program, args, subset=CLASSES_STABLE_CORE)
+                self._insertClassifySteps(program, args,
+                                          subset=CLASSES_STABLE_CORE)
                 if self.analyzeRejected:
-                    self._insertFunctionStep('analyzeOutOfCores', CLASSES_STABLE_CORE)
+                    self._insertFunctionStep('analyzeOutOfCores',
+                                             CLASSES_STABLE_CORE)
 
     def _insertClassifySteps(self, program, args, subset=CLASSES):
         """ Defines four steps for the subset:
@@ -273,7 +275,8 @@ class XmippProtCL2D(ProtClassify2D):
             
             
             for objId in mdOut:
-                mdOut.setValue(md.MDL_ITEM_ID,long(mdOut.getValue(md.MDL_REF,objId)),objId)
+                mdOut.setValue(md.MDL_ITEM_ID,
+                               long(mdOut.getValue(md.MDL_REF,objId)),objId)
             mdOut.write("classes_sorted@" + mdFn, md.MD_APPEND)
 
     def evaluateClassesStep(self, subset=''):
@@ -284,12 +287,14 @@ class XmippProtCL2D(ProtClassify2D):
         hierarchyFnOut = self._getExtraPath("classes%s_hierarchy.txt" % subset)
         prevMdFn = None
         for mdFn in levelMdFiles:
-            self.runJob("xmipp_classify_evaluate_classes", "-i " + mdFn, numberOfMpi=1)
+            self.runJob("xmipp_classify_evaluate_classes",
+                        "-i " + mdFn, numberOfMpi=1)
             if self.computeHierarchy and prevMdFn is not None:
                 args = "--i1 %s --i2 %s -o %s" % (prevMdFn, mdFn, hierarchyFnOut)
                 if exists(hierarchyFnOut):
                     args += " --append"
-                self.runJob("xmipp_classify_compare_classes",args, numberOfMpi=1)
+                self.runJob("xmipp_classify_compare_classes",
+                            args, numberOfMpi=1)
             prevMdFn = mdFn
 
     def createOutputStep(self, subset=''):
@@ -358,16 +363,18 @@ class XmippProtCL2D(ProtClassify2D):
                                 "--classifyAllImages --odir %s"
                                 %( fnRejected, Nclasses, fnRejectedDir))
 
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         validateMsgs = []
         if self.numberOfMpi <= 1:
             validateMsgs.append('Mpi needs to be greater than 1.')
         if self.numberOfInitialClasses > self.numberOfClasses:
-            validateMsgs.append('The number of final classes cannot be smaller than the number of initial classes')
+            validateMsgs.append('The number of final classes cannot be smaller'
+                                ' than the number of initial classes')
         if isinstance(self.initialClasses.get(), SetOfClasses2D):
             if not self.initialClasses.get().hasRepresentatives():
-                validateMsgs.append("The input classes should have representatives.")
+                validateMsgs.append("The input classes should have "
+                                    "representatives.")
         return validateMsgs
     
     def _warnings(self):
@@ -393,8 +400,9 @@ class XmippProtCL2D(ProtClassify2D):
     def _summary(self):
         self._defineFileNames()
         summary = []
-        summary.append("Input Particles: *%d*\nClassified into *%d* classes\n" % (self.inputParticles.get().getSize(),
-                                                                              self.numberOfClasses.get()))
+        summary.append("Input Particles: *%d*\nClassified into *%d* classes\n"
+                       % (self.inputParticles.get().getSize(),
+                          self.numberOfClasses.get()))
         #summary.append('- Used a _clustering_ algorithm to subdivide the original dataset into the given number of classes')
 
         levelFiles = self._getAllLevelMdFiles()
@@ -469,7 +477,9 @@ class XmippProtCL2D(ProtClassify2D):
         if classId in self._classesInfo:
             index, fn, _ = self._classesInfo[classId]
             item.setAlignment2D()
-            item.getRepresentative().setLocation(index, fn)
+            rep = item.getRepresentative()
+            rep.setLocation(index, fn)
+            rep.setSamplingRate(self.inputParticles.get().getSamplingRate())
 
     def _loadClassesInfo(self, filename):
         """ Read some information about the produced 2D classes
