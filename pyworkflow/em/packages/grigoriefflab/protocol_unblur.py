@@ -190,6 +190,15 @@ class ProtUnblur(ProtAlignMovies):
         if not os.path.exists(UNBLUR_PATH):
             errors.append(
                 "Cannot find the Unblur program at: " + UNBLUR_PATH)
+
+        if self.doApplyDoseFilter:
+            inputMovies = self.inputMovies.get()
+            doseFrame = inputMovies.getAcquisition().getDosePerFrame()
+
+            if doseFrame == 0.0 or doseFrame is None:
+                errors.append('Dose per frame for input movies is 0 or not '
+                              'set. You cannot apply dose filter.')
+
         return errors
 
     #--------------------------- UTILS functions -------------------------------
@@ -218,7 +227,7 @@ class ProtUnblur(ProtAlignMovies):
         self._program += UNBLUR_PATH
 
         if getVersion('UNBLUR') != '1.0_150529':
-            args['preExposureAmount'] = movie.getAcquisition().getDoseInitial()
+            args['preExposureAmount'] = movie.getAcquisition().getDoseInitial() or 0.0
             self._args = """ << eof
 %(movieName)s
 %(numberOfFramesPerMovie)s

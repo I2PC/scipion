@@ -111,7 +111,7 @@ class ProtSummovie(ProtAlignMovies):
                       'samplingRate': movie.getSamplingRate(),
                       'voltage': movie.getAcquisition().getVoltage(),
                       'frcFn': self._getFrcFn(movie),
-                      'exposurePerFrame': movie.getAcquisition().getDosePerFrame(),
+                      'exposurePerFrame': movie.getAcquisition().getDosePerFrame() or 0.0,
                       'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
                       'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
                       }
@@ -172,6 +172,14 @@ class ProtSummovie(ProtAlignMovies):
                               "and they are not produced by the previous "
                               "protocol. This is not allowed because you could "
                               "lost your original data.")
+
+        if self.doApplyDoseFilter:
+            inputMovies = self.inputMovies.get()
+            doseFrame = inputMovies.getAcquisition().getDosePerFrame()
+
+            if doseFrame == 0.0 or doseFrame is None:
+                errors.append('Dose per frame for input movies is 0 or not '
+                              'set. You cannot apply dose filter.')
 
         return errors
     
