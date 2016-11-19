@@ -29,6 +29,8 @@ import threading
 import uuid
 import urllib, urllib2
 import os
+import time
+from datetime import timedelta, datetime
 
 import pyworkflow.utils as pwutils
 
@@ -40,11 +42,14 @@ class ProjectNotifier(object):
     def __init__(self, project):
         self.project = project
 
+    def _getUuidFileName(self):
+        return self.project.getLogPath("uuid.log")
+
     def _getUuid(self):
         # Load (or create if not exits) a file
         # in the project Logs folder to store an unique
         # project identifier
-        uuidFn = self.project.getLogPath("uuid.log")
+        uuidFn = self._getUuidFileName()
         try:
             with open(uuidFn) as f:
                 uuidValue = f.readline()
@@ -55,15 +60,37 @@ class ProjectNotifier(object):
 
         return uuidValue
 
+    def _modifiedBefore(self, seconds):
+        """ Return True if the uuid.log file has been modified within a given
+        number of seconds. """
+        uuidFn = self._getUuidFileName()
+        if not os.path.exists(uuidFn):
+            return False
+        mTime = datetime.fromtimestamp(os.path.getmtime(uuidFn))
+        delta = datetime.now() - mTime
+
+        return delta < timedelta(seconds=seconds)
+
     def _sendData(self, url, dataDict=None):
         #then connect to webserver a send json
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
-        data = urllib.urlencode(dataDict)
-        content = opener.open(url, data=data).read()
+        #opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
+        #data = urllib.urlencode(dataDict)
+        #content = opener.open(url, data=data).read()
+        now = time.time()
+        print "Notifying...."
+        pwutils.prettyDate(now)
+        print "dataDict: ", dataDict
+        os.utime(self._getUuidFileName(), (now, now))
 
     def notifyWorkflow(self):
         #check if enviroment exists otherwise abort
         if not pwutils.envVarOn('SCIPION_NOTIFY'):
+            return
+
+        # Check the seconds range of the notify, by default one day
+        seconds = int(os.environ.get('SCIPION_NOTIFY_SECONDS', '86400'))
+
+        if self._modifiedBefore(seconds): # notify not more than once a day
             return
 
         # TODO: Check send frequency
@@ -72,7 +99,7 @@ class ProjectNotifier(object):
         #INFO: you may use getProtocolsJson instead of getProtocolsNameJson
         #if you want to store all the project
 
-        urlName = os.environ.get('SCIPION_NOTIFY_URL').strip()
+        urlName = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
         t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
         t.start() # will execute function in a separate thread
 
