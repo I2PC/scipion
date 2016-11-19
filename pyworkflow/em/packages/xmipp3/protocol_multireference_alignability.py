@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:         Javier Vargas (jvargas@cnb.csic.es)
+# * Authors:         Javier Vargas (jvargas@cnb.csic.es) (2016)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -28,7 +28,7 @@ from os.path import join, isfile
 from shutil import copyfile
 from pyworkflow.object import Float, String
 from pyworkflow.protocol.params import (PointerParam, FloatParam, STEPS_PARALLEL,
-                                        StringParam, BooleanParam, LEVEL_ADVANCED)
+                                        StringParam, BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
 from pyworkflow.em import Viewer
 import pyworkflow.em.metadata as md
@@ -55,61 +55,67 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
-        form.addSection(label='Input')
 
+        form.addSection(label='Input')
         form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
-                      label="Input volume(s)",  
+                      label="Input volume",  
                       help='Select the input volume(s).')     
-                
         form.addParam('inputParticles', PointerParam,
                       pointerClass='SetOfParticles', pointerCondition='hasAlignment',
                       label="Input particles", important=True,
                       help='Select the input projection images.')
-            
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 
                       help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp') 
-
-        form.addParam('isCTFCorrected', BooleanParam, default=False,
-                      label="Has been the CTF corrected previously using Wiener filter?",  
-                      help='Select true if the CTF has been previously corrected through Wiener filtering')
-                
         form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling (degrees)",  
                       help='Angular distance (in degrees) between neighboring projection points ')
-
-        form.addParam('numOrientations', FloatParam, default=6, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numOrientations', FloatParam, default=7, expertLevel=LEVEL_ADVANCED,
                       label="Number of Orientations for particle",  
                       help='Parameter to define the number of most similar volume \n' 
                       '    projected images for each projection image')
-
         form.addParam('doNotUseWeights', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Do not use the weights",
                       help='Do not use the weights in the clustering calculation')
-        
         form.addParam('pseudoSymmetryGroup', StringParam, default='', expertLevel=LEVEL_ADVANCED,
                       label="Pseudo symmetry group", 
                       help='Add only in case the map is close to a symmetry different and more restrict than the one reported in the parameter Symmetry group.'
                       'See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
                            'for a description of the symmetry format accepted by Xmipp')
-        
         form.addParam('minTilt', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
                       label="Minimum allowed tilt angle",  
                       help='Tilts below this value will not be considered for the alignment')
-        
         form.addParam('maxTilt', FloatParam, default=180, expertLevel=LEVEL_ADVANCED,
                       label="Maximum allowed tilt angle without mirror check",  
                       help='Tilts above this value will not be considered for the alignment without mirror check')
-
-                
+        
+        form.addSection(label='Preprocess')
+        form.addParam('doWiener', BooleanParam, default='True',
+                      label="CTF correction",
+                      help='Perform CTF correction by Wiener filtering.') 
+        form.addParam('isIsotropic', BooleanParam, default='True',
+                      label="Isotropic Correction",condition='doWiener',
+                      help='If true, Consider that there is not astigmatism and then it is performed an isotropic correction.') 
+        form.addParam('padding_factor', IntParam, default=2,expertLevel=LEVEL_ADVANCED,
+                      label="Padding factor",condition='doWiener',
+                      help='Padding factor for Wiener correction ')
+        form.addParam('wiener_constant', FloatParam, default=-1,expertLevel=LEVEL_ADVANCED,
+                      label="Wiener constant",condition='doWiener',
+                      help=' Wiener-filter constant (if < 0: use FREALIGN default)')
+        form.addParam('correctEnvelope', BooleanParam, default='False',expertLevel=LEVEL_ADVANCED,
+                      label="Correct for CTF envelope",condition='doWiener',
+                      help=' Only in cases where the envelope is well estimated correct for it')
+        form.addParam('targetResolution', FloatParam, default=8, label='Target resolution (A)',
+                      help='Low pass filter the particles to this resolution. This usually helps a lot obtaining good alignment. You should have a good' 
+                      ' reason to modify this value outside the range  [8-10] A')
+        
         form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):                
         convertId = self._insertFunctionStep('convertInputStep', 
-
                                              self.inputParticles.get().getObjId())
         deps = [] # store volumes steps id to use as dependencies for last step
         commonParams    = self._getCommonParams()
@@ -161,13 +167,58 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         particlesId: is only need to detect changes in
         input particles and cause restart from here.
         """
-        a = self.inputParticles.get() 
-        print a.printAll() 
+
         writeSetOfParticles(self.inputParticles.get(), 
                             self._getPath('input_particles.xmd'))
-                    
+        
+        if self.doWiener.get():
+            params  =  '  -i %s' % self._getPath('input_particles.xmd')
+            params +=  '  -o %s' % self._getExtraPath('corrected_ctf_particles.stk')
+            params +=  '  --save_metadata_stack %s' % self._getExtraPath('corrected_ctf_particles.xmd')
+            params +=  '  --pad %s' % self.padding_factor.get()
+            params +=  '  --wc %s' % self.wiener_constant.get()
+            params +=  '  --sampling_rate %s' % self.inputParticles.get().getSamplingRate()
+
+            if self.inputParticles.get().isPhaseFlipped():
+                params +=  '  --phase_flipped '
+            
+            if self.correctEnvelope:
+                params +=  '  --correct_envelope '
+                
+            nproc = self.numberOfMpi.get()
+            nT=self.numberOfThreads.get() 
+    
+            self.runJob('xmipp_ctf_correct_wiener2d',
+                        params)
+        
+        Xdim = self.inputParticles.get().getDimensions()[0]
+        Ts = self.inputParticles.get().getSamplingRate()
+        newTs = self.targetResolution.get()*0.4
+        self.newTs = max(Ts,newTs)
+        self.newXdim = Xdim*Ts/self.newTs
+        
+        if self.doWiener.get():
+            params =  '  -i %s' % self._getExtraPath('corrected_ctf_particles.xmd')
+        else :
+            params =  '  -i %s' % self._getPath('input_particles.xmd')
+            
+        params +=  '  -o %s' % self._getExtraPath('scaled_particles.stk')
+        params +=  '  --save_metadata_stack %s' % self._getExtraPath('scaled_particles.xmd')
+        params +=  '  --dim %d' % self.newXdim
+        
+        self.runJob('xmipp_image_resize',params)
+        
+        from pyworkflow.em.convert import ImageHandler
+        img = ImageHandler()
+        img.convert(self.inputVolumes.get(), self._getExtraPath("volume.vol"))
+        Xdim = self.inputVolumes.get().getDim()[0]
+        if Xdim!=self.newXdim:
+            self.runJob("xmipp_image_resize","-i %s --dim %d"%\
+                        (self._getExtraPath("volume.vol"),
+                        self.newXdim), numberOfMpi=1)
+
     def _getCommonParams(self):
-        params =  '  -i %s' % self._getPath('input_particles.xmd')        
+        params =  '  -i %s' % self._getExtraPath('scaled_particles.xmd')        
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --dontReconstruct'
         params += ' --useForValidation %0.3f' % (self.numOrientations.get()-1)
@@ -186,12 +237,9 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     def phantomProject(self,volName):
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get()         
-        pathParticles = self._getPath('input_particles.xmd')
-        Nx,Ny,Nz = self.inputParticles.get().getDim()
-        R = -int(Nx/2)
-
+        pathParticles = self._getExtraPath('scaled_particles.xmd')
+        R = -int(self.newXdim /2)
         f = open(self._getExtraPath('params'),'w')          
-        print self.isCTFCorrected.get()
         f.write("""# XMIPP_STAR_1 *
 #
 data_block1
@@ -200,12 +248,12 @@ _projAngleFile %s
 _ctfPhaseFlipped %d
 _ctfCorrected %d
 _applyShift 0
-_noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.isCTFCorrected.get()))
+_noisePixelLevel   '0 0'""" % (self.newXdim , self.newXdim, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.doWiener.get()))
         f.close()
         param =  ' -i %s' % volName
         param += ' --params %s' % self._getExtraPath('params')
         param += ' -o %s' % self._getPath('reference_particles.xmd')
-        param += ' --sampling_rate % 0.3f' % self.inputParticles.get().getSamplingRate()
+        param += ' --sampling_rate % 0.3f' % self.newTs
                 
         #while (~isfile(self._getExtraPath('params'))):
         #    print 'No created'
@@ -222,11 +270,11 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         # Generate projections from this reconstruction        
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get() 
-        
+        volName = self._getExtraPath("volume.vol")
         makePath(volDir)
         fnGallery= (volDir+'/gallery.stk')
         params = '-i %s -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance %f --experimental_images %s --max_tilt_angle %f --min_tilt_angle %f'\
-                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getPath('input_particles.xmd'), self.maxTilt.get(), self.minTilt.get())
+                    %(volName,fnGallery, angularSampling, self.symmetryGroup.get(), -1, self._getExtraPath('scaled_particles.xmd'), self.maxTilt.get(), self.minTilt.get())
         
         self.runJob("xmipp_angular_project_library", params, numberOfMpi=nproc, numberOfThreads=nT)                    
         
@@ -262,6 +310,7 @@ _noisePixelLevel   '0 0'""" % (Nx, Ny, pathParticles, self.inputParticles.get().
         params += '  --gallery %s' % aFileGallery
         params += ' --odir %s' % volDir
         params += ' --sym %s' % sym
+        params += ' --check_mirrors'
         
         if self.doNotUseWeights:
             params += ' --dontUseWeights'
