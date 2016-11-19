@@ -28,14 +28,15 @@ from pyworkflow.em.packages.xmipp3.convert import readSetOfClasses
 This module implement the wrappers aroung Xmipp CL2D protocol
 visualization program.
 """
-import pyworkflow.utils as pwutils
-from pyworkflow.viewer import ProtocolViewer, WEB_DJANGO
-from pyworkflow.em import *
-from protocol_cl2d import XmippProtCL2D
-from pyworkflow.gui.text import *
-from pyworkflow.gui.dialog import showError, showWarning
+
+import os
+import pyworkflow.em as em
+from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.protocol.params import LabelParam, BooleanParam, LEVEL_ADVANCED
-import glob
+from protocol_cl2d import XmippProtCL2D
+import pyworkflow.em.showj as showj
+from pyworkflow.protocol.params import EnumParam, StringParam
+
 
 CLASSES = 0
 CLASS_CORES = 1
@@ -64,15 +65,19 @@ class XmippCL2DViewer(ProtocolViewer):
                       display=EnumParam.DISPLAY_HLIST,
                       label="Level to visualize")     
         form.addParam('showSeveralLevels', StringParam, default='',
-              label='Levels selection', condition='doShowLastLevel==%d' % LEVEL_SEL,
-              help='Specify a  list of levels like: 0,1,3 or 0-3 ') 
-
+                      label='Levels selection',
+                      condition='doShowLastLevel==%d' % LEVEL_SEL,
+                      help='Specify a  list of levels like: 0,1,3 or 0-3 ')
+        # TO-DO; All commented code is for revision with @cossorzano
+        
         # Sorted or not
-        form.addParam('doSorted', BooleanParam, default=False, 
-                      label="Display sorted classes",
-                      help="Note that the average of the images assigned to the sorted class are not, in general, aligned with the sorted class, "
-                           "because the sorted class representatives have been realigned to be shown all in the same orientation")     
-         
+        # form.addParam('doSorted', BooleanParam, default=False,
+        #               label="Display sorted classes",
+        #               help="Note that the average of the images assigned to "
+        #                    "the sorted class are not, in general, aligned with "
+        #                    "the sorted class, because the sorted class "
+        #                    "representatives have been realigned to be shown "
+        #                    "all in the same orientation")
         # Classes
         CLASS_CHOICES = ['classes']
         if self.protocol.doCore:
@@ -81,23 +86,103 @@ class XmippCL2DViewer(ProtocolViewer):
                 CLASS_CHOICES.append('stable cores')
         form.addParam('classesToShow', EnumParam, choices=CLASS_CHOICES,
                       label="What to show", default=CLASSES,
-                      display=EnumParam.DISPLAY_LIST)
+                      display=EnumParam.DISPLAY_HLIST)
         # Convergence
         form.addParam('showConvergence', LabelParam,
                       label="Visualize convergence", 
-                      help="It shows per iteration the similarity (cl2dSimilarity) between "
-                           "experimental images and the references as well as the number "
-                           "experimental images changing class.")
+                      help="It shows per iteration the similarity "
+                           "(cl2dSimilarity) between experimental images and "
+                           "the references as well as the number experimental "
+                           "images changing class.")
         form.addParam('showClassHierarchy', LabelParam,  
-                      expertLevel=LEVEL_ADVANCED, hidden=not self.protocol.computeHierarchy,
-                      label="Visualize class hierarchy.")      
-    
+                      expertLevel=LEVEL_ADVANCED,
+                      hidden=not self.protocol.computeHierarchy,
+                      label="Visualize class hierarchy.")
+
     def _getVisualizeDict(self):
+        self.protocol._defineFileNames()  # Load filename templates
         return {'classesToShow': self._viewLevelFiles,
                 'showConvergence': self._viewConvergence,
                 'showClassHierarchy': self._viewClassHierarchy,
-                }        
+                }
 
+# ==============================================================================
+# showClasses
+# ==============================================================================
+    def _viewLevelFiles(self, e=None):
+        views = []
+        fnSubset = self._getSubset()
+        viewFinalClasses = False
+        
+        # TO-DO; All commented code is for revision with @cossorzano
+        viewParams = {}
+    
+        # if self.doSorted:
+        #     suffix = '_sorted'
+        #     viewParams[showj.SORT_BY] = '_xmipp_cl2dOrder'
+        
+        if self.doShowLastLevel == LEVEL_LAST:
+            fn = self.protocol._getFileName("final_classes", sub=fnSubset)
+            if os.path.exists(fn):
+                print "Esto es cierto, ", fn
+                viewFinalClasses = True
+            levList = [self.protocol._lastLevel()]
+        else:
+            levList = self._getListFromRangeString(self.showSeveralLevels.get())
+
+        for level in levList:
+            if viewFinalClasses:
+                fn = self.protocol._getFileName("final_classes", sub=fnSubset)
+            else:
+                fn = self.protocol._getFileName("level_classes", level=level,
+                                                                 sub=fnSubset)
+                if level <= self.protocol._lastLevel() and os.path.exists(fn):
+                    fn = self.protocol._getLevelClasses(level, fnSubset)
+            
+            if os.path.exists(fn):
+                inputParts = self.protocol.inputParticles.get()
+                views.append(em.ClassesView(self.getProject(),
+                                            self.protocol.strId(), fn,
+                                            inputParts.strId()))
+        return  views
+
+# ==============================================================================
+# showConvergence
+# ==============================================================================
+    def _viewConvergence(self, e=None):
+        views = []
+        if self.doShowLastLevel == LEVEL_LAST:
+            fn = self.protocol._getFileName('level_classes',
+                                            level=self.protocol._lastLevel(),
+                                            sub='')
+            views.append(self._viewInfo(fn))
+        else:
+            levList = self._getListFromRangeString(self.showSeveralLevels.get())
+            if len(levList) > 0:
+                for level in levList:
+                    if level <= self.protocol._lastLevel():
+                        fn = self.protocol._getFileName('level_classes',
+                                                        level=level, sub='')
+                        views.append(self._viewInfo(fn))
+        return views
+
+    def _viewInfo(self, fn):
+        """ Display the info block in the metadata for a level convergence. """
+        return em.DataView('info@' + fn)
+        
+# ==============================================================================
+# showClassHierarchy
+# ==============================================================================
+    def _viewClassHierarchy(self, e=None):
+        fnSubset = self._getSubset()
+        fnHierarchy = self.protocol._getFileName('classes_hierarchy',
+                                                 sub=fnSubset)
+        if os.path.exists(fnHierarchy):
+            return [self.textView([fnHierarchy])]
+
+#===============================================================================
+# Utils Functions
+#===============================================================================
     def _getSubset(self):
         fnSubset = ""
         classesToShow = self.classesToShow.get()
@@ -106,130 +191,14 @@ class XmippCL2DViewer(ProtocolViewer):
         elif classesToShow == CLASS_CORES:
             fnSubset = "_core"
         elif classesToShow == CLASS_STABLE_CORES:
-            fnSubset = "_stable_core" 
+            fnSubset = "_stable_core"
         return fnSubset
 
-    def _viewInfo(self, fn):
-        """ Display the info block in the metadata for a level convergence. """
-        return DataView('info@' + fn)
+    # TO-DO; All commented code is for revision with @cossorzano
     
-    def _viewConvergence(self, e=None):
-        levelFiles = self.protocol._getLevelMdFiles()
-        views = []
-        errors = []
-        
-        if levelFiles:
-            if self.doShowLastLevel == LEVEL_LAST:
-                views.append(self._viewInfo(levelFiles[-1]))
-            else:
-                if self.showSeveralLevels.empty():
-                    errors.append('Please select the levels that you want to visualize.')
-                else:
-                    listOfLevels = []
-                    try:
-                        listOfLevels = self._getListFromRangeString(self.showSeveralLevels.get())
-                    except Exception, ex:
-                        errors.append('Invalid levels range.')
-                        
-                    files = []
-                    for level in listOfLevels:
-                        fn = self.protocol._getExtraPath("level_%02d/level_classes.xmd" % level)
-                        if os.path.exists(fn):
-                            files.append(fn)
-                        else:
-                            errors.append('Level %s does not exist.' % level)
-                    
-                    for fn in files:                        
-                        views.append(self._viewInfo(fn))
-        else:
-            errors.append('Classes have not been produced.')
-                        
-        self.errorList(errors, views)
-        
-        return views                     
-                    
-    def _viewClassHierarchy(self, e=None):
-        fnSubset = self._getSubset()
-        fnHierarchy = self.protocol._getExtraPath("classes%s_hierarchy.txt" % fnSubset)
-        if os.path.exists(fnHierarchy):
-            return [self.textView([fnHierarchy])] 
-            
-    def _getInputParticles(self):
-        return self.protocol.inputParticles.get()
-    
-    def _setClassOrder(self, classItem, classRow):
-        """ Set the class order for display the classes sorted. """
-        lastOrder = getattr(self, 'lastOrder', 0) + 1
-        classItem._xmipp_cl2dOrder = Integer(lastOrder)
-        setattr(self, 'lastOrder', lastOrder)
-        
-    def _getClassesSqlite(self, blockName, fn):
-        """ Read the classes from Xmipp metadata and write as sqlite file. """
-        fnSqlite = fn + '_'+blockName+'.sqlite'
-
-        # Generate the sqlite file from classes xmd if either
-        # 1) Sqlite files has not been generated or
-        # 2) Xmd file is newer than sqlite (using modification time)
-        if os.path.exists(fnSqlite):
-            if os.path.getmtime(fn) > os.path.getmtime(fnSqlite)-10:
-                pwutils.cleanPath(fnSqlite) # Clean to load from scratch
-
-        if not os.path.exists(fnSqlite):
-            classesSet = SetOfClasses2D(filename=fnSqlite)
-            classesSet.setImages(self._getInputParticles())
-            readSetOfClasses(classesSet, fn, blockName, 
-                             preprocessClass=self._setClassOrder)
-            classesSet.write()
-            
-        return fnSqlite
-    
-    def _viewClasses(self, blockName, fn, viewParams=None):
-        fnSqlite = self._getClassesSqlite(blockName, fn)
-        return ClassesView(self._project, self.protocol.strId(), fnSqlite,
-                           other=self._getInputParticles().strId(),
-                           viewParams=viewParams or {})
-    
-    def _viewLevelFiles(self, e=None):
-        fnSubset = self._getSubset()
-        views = []
-        errors = []
-        #obj = getattr(self.protocol, "outputClasses" + fnSubset)
-        levelFiles = self.protocol._getLevelMdFiles(fnSubset)
-
-        if levelFiles:
-            suffix = ''
-            viewParams = {}
-            
-            if self.doSorted:
-                suffix = '_sorted'
-                viewParams[showj.SORT_BY] = '_xmipp_cl2dOrder'
-                
-            if self.doShowLastLevel == LEVEL_LAST:
-                views.append(self._viewClasses("classes"+suffix, levelFiles[-1], viewParams))
-            else:
-                if self.showSeveralLevels.empty():
-                    errors.append('Please select the levels that you want to visualize.')
-                else:
-                    listOfLevels = []
-                    try:
-                        listOfLevels = self._getListFromRangeString(self.showSeveralLevels.get())
-                    except Exception, ex:
-                        errors.append('Invalid levels range.')
-                        
-                    files = []
-                    for level in listOfLevels:
-                        fn = self.protocol._getExtraPath("level_%02d/level_classes%s.xmd"%(level,fnSubset))
-                        if os.path.exists(fn):
-                            files.append(("classes"+suffix, fn))
-                        else:
-                            errors.append('Level %s does not exist.' % level)
-                    
-                    for block, fn in files:                        
-                        views.append(self._viewClasses(block, fn, viewParams))
-        else:
-            errors.append('Classes %s have not been produced.' % fnSubset.replace("_", " "))
-        
-        self.errorList(errors, views)
-            
-        return views        
+    # def _setClassOrder(self, classItem, classRow):
+    #     """ Set the class order for display the classes sorted. """
+    #     lastOrder = getattr(self, 'lastOrder', 0) + 1
+    #     classItem._xmipp_cl2dOrder = Integer(lastOrder)
+    #     setattr(self, 'lastOrder', lastOrder)
 
