@@ -52,10 +52,7 @@ class ProtImportImages(ProtImportFiles):
     _checkStacks = True
         
     #--------------------------- DEFINE param functions ------------------------
-    def _defineParams(self, form):
-        ProtImportFiles._defineParams(self, form)
-        self._defineAcquisitionParams(form)
-        
+
     def _defineAcquisitionParams(self, form):
         """ Define acquisition parameters, it can be overriden
         by subclasses to change what parameters to include.
@@ -130,6 +127,7 @@ class ProtImportImages(ProtImportFiles):
         img.setAcquisition(acquisition)
         n = 1
         copyOrLink = self.getCopyOrLink()
+
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
             copyOrLink(fileName, dst)
@@ -145,13 +143,14 @@ class ProtImportImages(ProtImportFiles):
                     img.setMicId(fileId)
                     img.setFileName(dst)
                     img.setIndex(index)
-                    imgSet.append(img)
+                    self._addImageToSet(img, imgSet)
             else:
                 img.setObjId(fileId)
                 img.setFileName(dst)
                 # Fill the micName if img is a Micrograph.
                 self._fillMicName(img, fileName)
-                imgSet.append(img)
+                self._addImageToSet(img, imgSet)
+
             outFiles.append(dst)
             
             sys.stdout.write("\rImported %d/%d" % (i+1, self.numberOfFiles))
@@ -166,25 +165,26 @@ class ProtImportImages(ProtImportFiles):
         
         return outFiles
 
-    def __addImageToSet(self, img, imgSet, fileName):
+    def _addImageToSet(self, img, imgSet):
         """ Add an image to a set, check if the first image to handle
          some special condition to read dimensions such as .txt or compressed
          movie files.
         """
-        if imgSet.getSize() == 0:
-            ih = ImageHandler()
-            fn = img.getFileName()
-            if fn.lower().endswith('.txt'):
-                origin = dirname(fileName)
-                with open(fn) as f:
-                    lines = [l.strip() for l in f.readlines() if l.strip()]
-                    fn = join(origin, lines[0].strip())
-                    x, y, _, _ = ih.getDimensions(fn)
-                    dim = (x, y, len(lines))
-            else:
-                dim = img.getDim()
-            imgSet.setDim(dim)
+        if imgSet.isEmpty():
+            self._setupFirstImage(img, imgSet)
         imgSet.append(img)
+
+    def _setupFirstImage(self, img, imgSet):
+        pass
+
+    def iterNewInputFiles(self):
+        """ Iterate over input files that have not been imported.
+        This function uses the self.importedFiles dict.
+        """
+        for fileName, fileId in self.iterFiles():
+            # If file already imported, skip it
+            if fileName not in self.importedFiles:
+                yield fileName, fileId
 
     def importImagesStreamStep(self, pattern, voltage, sphericalAberration, 
                          amplitudeContrast, magnification):
@@ -208,7 +208,10 @@ class ProtImportImages(ProtImportFiles):
         outputName = self._getOutputName()
 
         finished = False
-        importedFiles = set()
+        self.importedFiles = set()
+        # this is only used when creating stacks from frame files
+        self.createdStacks = set()
+
         i = 0
         lastDetectedChange = datetime.now()
         timeout = timedelta(seconds=self.timeout.get())
@@ -219,24 +222,14 @@ class ProtImportImages(ProtImportFiles):
             someNew = False
             someAdded = False
 
-            for fileName, fileId in self.iterFiles():
-                # If file already imported, skip it
-                if fileName in importedFiles:
-                    continue
-
+            for fileName, fileId in self.iterNewInputFiles():
                 someNew = True
-                self.debug('Checking file: %s' % fileName)
-                mTime = datetime.fromtimestamp(os.path.getmtime(fileName))
-                delta = datetime.now() - mTime
-                self.debug('   Modification time: %s' % pwutils.prettyTime(mTime))
-                self.debug('   Delta: %s' % pwutils.prettyDelta(delta))
 
-                if delta < fileTimeout: # Skip if the file is still changing
-                    self.debug('   delta < fileTimeout, skipping...')
+                if self.fileModified(fileName, fileTimeout):
                     continue
 
                 self.info('Importing file: %s' % fileName)
-                importedFiles.add(fileName)
+                self.importedFiles.add(fileName)
                 dst = self._getExtraPath(basename(fileName))
                 copyOrLink(fileName, dst)
 
@@ -245,7 +238,7 @@ class ProtImportImages(ProtImportFiles):
 
                 someAdded = True
                 self.debug('Appending file to DB...')
-                if importedFiles: # enable append after first append
+                if self.importedFiles: # enable append after first append
                     imgSet.enableAppend()
 
                 if n > 1:
@@ -254,13 +247,13 @@ class ProtImportImages(ProtImportFiles):
                         img.setMicId(fileId)
                         img.setFileName(dst)
                         img.setIndex(index)
-                        self.__addImageToSet(img, imgSet, fileName)
+                        self._addImageToSet(img, imgSet)
                 else:
                     img.setObjId(fileId)
                     img.setFileName(dst)
                     # Fill the micName if img is a Micrograph.
                     self._fillMicName(img, fileName)
-                    self.__addImageToSet(img, imgSet, fileName)
+                    self._addImageToSet(img, imgSet)
 
                 outFiles.append(dst)
                 self.debug('After append. Files: %d' % len(outFiles))

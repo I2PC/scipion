@@ -88,7 +88,6 @@ FILL_AVG = 2
 RECONSTRUCT_FOURIER = 0
 RECONSTRUCT_WSLART = 1
 
-# Normalization type constants
+# Micrograph type constants for particle extraction
 SAME_AS_PICKING = 0
 OTHER = 1
-ORIGINAL = 2

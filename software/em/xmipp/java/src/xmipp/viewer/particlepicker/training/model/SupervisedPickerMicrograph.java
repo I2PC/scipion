@@ -229,7 +229,6 @@ public class SupervisedPickerMicrograph extends Micrograph
 		return count;
 	}
 
-	
 
 	public List<ManualParticle> getParticles()
 	{
@@ -272,7 +271,12 @@ public class SupervisedPickerMicrograph extends Micrograph
 		return !isEmpty();
 	}
 
-	public int getAutopickpercent()
+    @Override
+    public List<? extends PickerParticle> getParticleList() {
+        return getParticles();
+    }
+
+    public int getAutopickpercent()
 	{
 		return autopickpercent;
 	}

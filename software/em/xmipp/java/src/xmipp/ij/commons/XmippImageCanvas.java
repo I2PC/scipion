@@ -39,11 +39,9 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener,
 			super.mousePressed(e);
 			return;
 		}
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
 		if (isDragImage(e))
 		{
-			setupScroll(x, y);
+			customScrollSetup(e);
 			return;
 		}
 		if(e.isControlDown())
@@ -54,6 +52,14 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener,
 				 zoomOut(e.getX(), e.getY());
 		}
 	}
+    public void customScrollSetup(MouseEvent e){
+
+        int x = super.offScreenX(e.getX());
+        int y = super.offScreenY(e.getY());
+
+        setupScroll(x, y);
+
+    }
 
 	protected boolean isDragImage(MouseEvent e)
 	{
@@ -105,7 +111,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener,
 	{
 		if (!e.isShiftDown())
 			return;
-        //System.out.println("mouse wheel moved");  // sorry Airen :)
+
 		int x = e.getX();
 		int y = e.getY();
 		int rotation = e.getWheelRotation();
@@ -130,7 +136,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener,
 		}
 		if (getTool() == Tool.IMAGEJ)
 			super.mouseMoved(e);
-		
+
 		imp.mouseMoved(x, y);
 		imp.updateStatusbarValue();
 		

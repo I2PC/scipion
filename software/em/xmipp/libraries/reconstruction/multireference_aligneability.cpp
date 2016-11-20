@@ -1,6 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
- * 							(jlvilas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es) (2016)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -133,8 +132,8 @@ void MultireferenceAligneability::run()
 	calc_sumw2(numProjs, sum_noise, mdGallery);
 
 	double rankPrec = 0.;
-	double rankAcc = 0.;
-	double rankMirror = 0.;
+	double rankAccNoMirror = 0.;
+	double rankAccMirror = 0.;
 
 	double accuracy = 0.;
 	double accuracyRef = 0.;
@@ -177,15 +176,15 @@ void MultireferenceAligneability::run()
 #undef DEBUG
 
 			rankPrec = 1/(sum_w_proj-sum_noise)*(sum_w_exp-sum_noise);
-			rankAcc = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
-			rankMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
+			rankAccMirror = 1/(accuracyRef-sum_noise)*(accuracy-sum_noise);
+			rankAccNoMirror = 1/(accuracyMirrorRef-sum_noise)*(accuracyMirror-sum_noise);
 
 			tempMdExp.getValue(MDL_IMAGE,imagePath,1);
 			rowInput.setValue(MDL_IMAGE,imagePath);
 			rowInput.setValue(MDL_IMAGE_IDX,i);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION, rankPrec);
-			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAcc);
-			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankMirror);
+			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY, rankAccMirror);
+			rowInput.setValue(MDL_SCORE_BY_MIRROR, rankAccNoMirror);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_EXP,sum_w_exp);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION_REF,sum_w_proj);
 			rowInput.setValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY_EXP,accuracy);
@@ -216,13 +215,13 @@ void MultireferenceAligneability::run()
 		FOR_ALL_OBJECTS_IN_METADATA(mdPartialParticles)
 		{
 			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_PRECISION,rankPrec,__iter.objId);
-			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAcc,__iter.objId);
-			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankMirror,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_ALIGNABILITY_ACCURACY,rankAccMirror,__iter.objId);
+			mdPartialParticles.getValue(MDL_SCORE_BY_MIRROR,rankAccNoMirror,__iter.objId);
 
 			validationAlignabilityPrecision += (rankPrec>0.5);
-			validationAlignabilityAccuracy += (rankAcc > 0.5);
-			validationAlignability += ( (rankAcc > 0.5) && (rankPrec>0.5));
-			validationMirror += (rankMirror> 0.5);
+			validationAlignabilityAccuracy += (rankAccMirror > 0.5);
+			validationAlignability += ( (rankAccMirror > 0.5) && (rankPrec>0.5));
+			validationMirror += (rankAccNoMirror> 0.5);
 
 		}
 
@@ -403,27 +402,34 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
 	const double trials = 500;
     double xRan,yRan,zRan;
     size_t indx;
+    size_t * indxArray = new size_t[numGallery];
     double sumWRan;
     double * rotArray = new double[num];
     double * tiltArray = new double[num];
     double * psiArray  = new double[num];
-    std::vector<double> weightV;
     double a;
     double rot,tilt,psi,w;
     bool mirror;
     sumWRan = 0;
 
     if (numGallery < num)
-        REPORT_ERROR(ERR_ARG_INCORRECT, "The gallery size is smaller than the number of oientations per particle. Increase the angular sampling of the gallery");
+        REPORT_ERROR(ERR_ARG_INCORRECT, "The gallery size is smaller than the number of orientations per particle. Increase the angular sampling of the gallery");
 
     for (size_t n=0; n<trials; n++)
     {
     	size_t currentIndx = 0;
+
+        for (size_t i=1; i<numGallery; i++)
+        	indxArray[i]=i;
+
     	while ( currentIndx < num )
     	{
-			indx = (size_t) (double( std::rand())*(numGallery+1))/RAND_MAX;
-			while ( (indx == 0)  )
-				indx = (size_t) (double( std::rand())*(numGallery+1) )/RAND_MAX;
+			indx = (size_t) (double( std::rand())*(numGallery-1))/RAND_MAX+1;
+
+			while ( (indx == 0) || (indxArray[indx] == -1) )
+				indx = (size_t) (double( std::rand())*(numGallery-1))/RAND_MAX;
+
+			indxArray[indx] = -1;
 
 			mdGallery.getValue(MDL_ANGLE_ROT,rot,indx);
         	mdGallery.getValue(MDL_ANGLE_TILT,tilt,indx);
@@ -454,7 +460,9 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
         for (size_t nS1=0; nS1<num; nS1++)
         {
             for (size_t nS2=0; nS2<num; nS2++)
+            {
     			a += SL.computeDistance(rotArray[nS1],tiltArray[nS1],psiArray[nS1],rotArray[nS2],tiltArray[nS2],psiArray[nS2], true, check_mirror, false);
+            }
 
         }
 
@@ -462,6 +470,7 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     }
 
     sumw = ( sumWRan / (trials*(num-1)*(num-1)) );
+
 
 #ifdef DEBUG
         std::cout << "   " << std::endl;
@@ -474,6 +483,8 @@ void MultireferenceAligneability::calc_sumw2(const size_t num, double & sumw, co
     delete tiltArray;
     delete rotArray;
     delete psiArray;
+    delete indxArray;
+
 
 }
 
@@ -513,14 +524,21 @@ void MultireferenceAligneability::obtainAngularAccuracy(const MetaData & tempMd,
         psiAux = psi;
 
         sumOfW += w;
+
+
+
+//        tempAccuracy = SL.computeDistance(rotRef, tiltRef, psiRef,
+//        		                   rotAux, tiltAux, psiAux, false,true, false);
+
+
         tempAccuracy = SL.computeDistance(rotRef, tiltRef, psiRef,
-        		                   rotAux, tiltAux, psiAux, false,true, false);
+        		rotAux, tiltAux, psiAux, true, check_mirror, false);
 
         tempAccuracyMirror = SL.computeDistance(rotRef, tiltRef, psiRef,
         		                   rot, tilt, psi, true,true, false);
 
-       	accuracyMirror += std::abs(tempAccuracy-tempAccuracyMirror)*w;
     	accuracy += tempAccuracy*w;
+        accuracyMirror += tempAccuracyMirror*w;
 
 
 #ifdef DEBUG

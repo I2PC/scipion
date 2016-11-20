@@ -86,17 +86,21 @@ class Object(object):
             value = attr # behave well for non-Object attributes
         return value
     
-    def setAttributeValue(self, attrName, value):
+    def setAttributeValue(self, attrName, value, ignoreMissing=False):
         """ Set the attribute value given its name.
         Equivalent to setattr(self, name).set(value) 
         If the attrName contains dot: x.y
         it will be equivalent to getattr(getattr(self, 'x'), 'y').set(value)
+        If ignoreMissing is True, unexisting attrName will not raise an
+        exception.
         """
         attrList = attrName.split('.')
         obj = self
         for partName in attrList:
-            obj = getattr(obj, partName)
+            obj = getattr(obj, partName, None)
             if obj is None:
+                if ignoreMissing:
+                    return
                 raise Exception("Object.setAttributeValue: obj is None! attrName: "
                                 "%s, part: %s" % (attrName, partName))
         obj.set(value)
@@ -300,10 +304,12 @@ class Object(object):
         There are two patchs for Pointer and PointerList.
         """
         for name in attrNames:
-            attr = getattr(self, name)
+            attr = getattr(self, name, None)
             otherAttr = getattr(other, name)
-            
-            if isinstance(attr, Pointer):
+
+            if attr is None:
+                setattr(self, name, otherAttr.clone())
+            elif isinstance(attr, Pointer):
                 attr.copy(otherAttr)
             elif isinstance(attr, PointerList):
                 for pointer in otherAttr:
@@ -349,7 +355,8 @@ class Object(object):
 
         return d
 
-    def setAttributesFromDict(self, attrDict, setBasic=True):
+    def setAttributesFromDict(self, attrDict, setBasic=True,
+                              ignoreMissing=False):
         """ Set object attributes from the dict obtained from getObjDict.
          WARNING: this function is yet experimental and not fully tested.
         """
@@ -360,7 +367,7 @@ class Object(object):
 
         for attrName, value in attrDict.iteritems():
             if not attrName.startswith('object.'):
-                self.setAttributeValue(attrName, value)
+                self.setAttributeValue(attrName, value, ignoreMissing)
             
     def __getMappedDict(self, prefix, objDict):
         if prefix:
@@ -912,7 +919,7 @@ class PointerList(List):
 class CsvList(Scalar, list):
     """This class will store a list of objects
     in a single DB row separated by comma.
-    pType: the type of the list elememnts, int, bool, str"""
+    pType: the type of the list elements, int, bool, str"""
     def __init__(self, pType=str, **kwargs):
         Scalar.__init__(self, **kwargs)
         list.__init__(self)
@@ -1049,7 +1056,7 @@ class Set(OrderedObject):
     
     def write(self, properties=True):
         """
-        Commit the changes made to the Set underlyin database.
+        Commit the changes made to the Set underlying database.
         Params:
             properties: this flag controls when to write Set attributes to 
                 special table 'Properties' in the database. False value is 

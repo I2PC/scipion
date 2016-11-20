@@ -91,7 +91,6 @@ class ProtMonitorSummary(ProtMonitor):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
-
         ctfMonitor = self.createCtfMonitor()
         sysMonitor = self.createSystemMonitor()
         reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor)
@@ -101,13 +100,17 @@ class ProtMonitorSummary(ProtMonitor):
                           monitorTime=self.monitorTime.get())
 
         def initAll():
-            ctfMonitor.initLoop()
+            if ctfMonitor is not None:
+                ctfMonitor.initLoop()
             sysMonitor.initLoop()
 
         def stepAll():
             finished = False
             try:
-                finished = ctfMonitor.step()
+                if ctfMonitor is not None:
+                    # FIXME: finished should be True if all monitored protocols
+                    # are finished, failed or aborted
+                    finished = ctfMonitor.step()
                 sysMonitor.step()
                 reportHtml.generate(finished)
             except Exception as ex:
@@ -129,6 +132,10 @@ class ProtMonitorSummary(ProtMonitor):
 
     def createCtfMonitor(self):
         ctfProt = self._getCtfProtocol()
+
+        if ctfProt is None:
+            return None
+
         ctfProt.setProject(self.getProject())
 
         ctfMonitor = MonitorCTF(ctfProt,

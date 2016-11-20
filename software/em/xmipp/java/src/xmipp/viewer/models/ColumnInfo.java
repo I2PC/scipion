@@ -76,7 +76,7 @@ public class ColumnInfo {
 	 * return true if some field has changed
 	 */
 	public boolean updateInfo(ColumnInfo ci){
-		boolean result = labelName != ci.labelName || visible != ci.visible 
+		boolean result = labelName != ci.labelName || visible != ci.visible
 				|| render != ci.render || allowEdit != ci.allowEdit;
 		visible = ci.visible;
 		render = ci.render;
@@ -102,7 +102,11 @@ public class ColumnInfo {
 	
 	@Override
 	public boolean equals(Object o){
-		ColumnInfo col = (ColumnInfo)o;
+
+        if (o == null) return false;
+        if (!getClass().equals(o.getClass())) return false;
+
+        ColumnInfo col = (ColumnInfo)o;
 		return label == col.label && 
 				visible == col.visible && 
 				render == col.render;
@@ -130,6 +134,6 @@ public class ColumnInfo {
 	{
 		return labelName;
 	}
-        
+
         
 }//class ColumnInfo
