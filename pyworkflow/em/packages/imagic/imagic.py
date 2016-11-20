@@ -197,7 +197,8 @@ class ImagicLisFile(object):
                 read = True
                 # read file starting from this line
             else:
-                if read and '#' not in line and ':' not in line:
+                patterns = ['#', ':', 'classes']
+                if read and not any(x in line for x in patterns):
                     fields = line.split()
                     if len(fields) == 5:
                         # we have 5 columns in line
