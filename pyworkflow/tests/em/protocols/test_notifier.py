@@ -37,28 +37,36 @@ class TestNotifier(BaseTest):
     def test_projectNotifier(self):
         """ Execute a protocol and then report on it
         """
-        #run any protocol
+        #connect to heroku and retrieve protocol list
+        #then store number of times protstress has been executed
+        url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        url = url.replace("workflow/workflow/","workflow/protocol/?name=ProtStress")
+        print url
+        results = json.loads(urllib2.urlopen(url).read())
+        times_protocolRemote = results["objects"][0]["timesUsed"]
+
+        #run a project that executes one time protStress
         kwargs = {'noCpu': 2,
                   'noMem': 0,
                   'amountMem': 8,
                   'timeout':3,
                   'delay':1
                   }
-
+        #create and execute protocol stress
         prot1 = self.newProtocol(ProtStress, **kwargs)
         prot1.setObjLabel('stress')
         self.proj.launchProtocol(prot1,wait=True)
 
-        # remove uuid file
+        # remove uuid file (so we start always in the same conditions)
         uuidFn=self.proj.getLogPath("uuid.log")
         os.remove(uuidFn) if os.path.exists(uuidFn) else None
 
         #we want to test this class: ProjectNotifier
         projectNotifier = ProjectNotifier(self.proj)
-        #stores uuid enry in database
+        #store workflow  in database
         projectNotifier.notifyWorkflow()
-        #wait 15 second so heroku can wake up
-        time.sleep(30)
+        #wait until protocol gui has connected to heroku and sent the information
+        time.sleep(5)
         #get uuid from local file
         uuid = projectNotifier._getUuid()
         #get protocol list from database
@@ -66,14 +74,19 @@ class TestNotifier(BaseTest):
         #url = "http://secret-reaches-65198.herokuapp.com/report_protocols/api/workflow/workflow/?project_uuid="
         url += "?project_uuid=" + uuid
         results = json.loads(urllib2.urlopen(url).read())
-        print "url",url
-        print "res", results
-        #print "resObj", results["objects"]
         project_workflowRemote = results["objects"][0]['project_workflow']
         #get protocol list local
         project_workflowLocal  = self.proj.getProtocolsNameJson()
         #print "project_workflowRemote", project_workflowRemote
         #print "project_workflowLocal", project_workflowLocal
 
-        #not sure what to test here
+        #test that stored protocol and local one are identical
         self.assertEqual(project_workflowLocal, project_workflowRemote)
+
+        #now check that the  number of times protstress has been executed
+        #has increased in 1
+        url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        url = url.replace("workflow/workflow/","workflow/protocol/?name=ProtStress")
+        results = json.loads(urllib2.urlopen(url).read())
+        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
