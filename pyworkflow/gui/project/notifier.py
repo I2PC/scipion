@@ -73,13 +73,13 @@ class ProjectNotifier(object):
 
     def _sendData(self, url, dataDict=None):
         #then connect to webserver a send json
-        #opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
-        #data = urllib.urlencode(dataDict)
-        #content = opener.open(url, data=data).read()
+        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=1))#no messages
+        data = urllib.urlencode(dataDict)
+        content = opener.open(url, data=data).read()
         now = time.time()
-        print "Notifying...."
-        pwutils.prettyDate(now)
-        print "dataDict: ", dataDict
+        #print "Notifying...."
+        #pwutils.prettyDate(now)
+        #print "dataDict: ", dataDict
         os.utime(self._getUuidFileName(), (now, now))
 
     def notifyWorkflow(self):
@@ -91,6 +91,7 @@ class ProjectNotifier(object):
         seconds = int(os.environ.get('SCIPION_NOTIFY_SECONDS', '86400'))
 
         if self._modifiedBefore(seconds): # notify not more than once a day
+            print "sec, no notification", seconds
             return
 
         # TODO: Check send frequency
@@ -100,6 +101,7 @@ class ProjectNotifier(object):
         #if you want to store all the project
 
         urlName = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        urlName += "addOrUpdateWorkflow/"
         t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
         t.start() # will execute function in a separate thread
 

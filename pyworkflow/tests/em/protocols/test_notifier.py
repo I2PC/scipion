@@ -62,9 +62,13 @@ class TestNotifier(BaseTest):
         #get uuid from local file
         uuid = projectNotifier._getUuid()
         #get protocol list from database
-        url = "http://secret-reaches-65198.herokuapp.com/report_protocols/api/workflow/workflow/?project_uuid="
-        url += uuid
+        url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        #url = "http://secret-reaches-65198.herokuapp.com/report_protocols/api/workflow/workflow/?project_uuid="
+        url += "?project_uuid=" + uuid
         results = json.loads(urllib2.urlopen(url).read())
+        print "url",url
+        print "res", results
+        #print "resObj", results["objects"]
         project_workflowRemote = results["objects"][0]['project_workflow']
         #get protocol list local
         project_workflowLocal  = self.proj.getProtocolsNameJson()
