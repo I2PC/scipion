@@ -73,7 +73,7 @@ class ProjectNotifier(object):
 
     def _sendData(self, url, dataDict=None):
         #then connect to webserver a send json
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=1))#no messages
+        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
         data = urllib.urlencode(dataDict)
         content = opener.open(url, data=data).read()
         now = time.time()
@@ -91,7 +91,7 @@ class ProjectNotifier(object):
         seconds = int(os.environ.get('SCIPION_NOTIFY_SECONDS', '86400'))
 
         if self._modifiedBefore(seconds): # notify not more than once a day
-            print "sec, no notification", seconds
+            #print "sec, no notification", seconds
             return
 
         # TODO: Check send frequency
