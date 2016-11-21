@@ -264,7 +264,6 @@ class XmippProtImageOperateParticles(ProtOperateParticles,
         args += " -o %s --save_metadata_stack %s" % (self.outputStk,
                                                      self.outputMd)
         args += " --keep_input_columns"
-        print "operationStep", self._program, args
         self.runJob(self._program, args)
     
     #--------------------------- INFO functions -------------------------------
