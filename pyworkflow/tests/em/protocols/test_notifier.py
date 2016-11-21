@@ -83,7 +83,7 @@ class TestNotifier(BaseTest):
         #test that stored protocol and local one are identical
         self.assertEqual(project_workflowLocal, project_workflowRemote)
 
-        #now check that the  number of times protstress has been executed
+        #now check that the  number of times postgress has been executed
         #has increased in 1
         url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
         url = url.replace("workflow/workflow/","workflow/protocol/?name=ProtStress")
