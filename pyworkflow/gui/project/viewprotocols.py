@@ -1269,6 +1269,8 @@ class ProtocolsView(tk.Frame):
         item.setSelected(True)
         
     def _runItemClick(self, item=None):
+        if item is None:
+            print "Click on empty area"
 
         self.runsGraphCanvas.focus_set()
 

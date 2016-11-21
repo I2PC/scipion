@@ -30,11 +30,15 @@ that can be interactively dragged and clicked.
 """
 import math
 import Tkinter as tk
+import tkFont
 
 import gui
 import operator
 from widgets import Scrollable
 
+DEFAULT_ZOOM = 100
+
+DEFAULT_FONT_SIZE = 10
 
 DEFAULT_CONNECTOR_FILL = "blue"
 DEFAULT_CONNECTOR_OUTLINE = "black"
@@ -68,16 +72,22 @@ class Canvas(tk.Canvas, Scrollable):
         self.bind("<Button-3>", self.onRightClick)
         self.bind("<Double-Button-1>", self.onDoubleClick)
         self.bind("<B1-Motion>", self.onDrag)
-                # Hide the right-click menu
+        # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
         self.bind("<Key>", self._unpostMenu)
         self.bind("<Control-1>", self.onControlClick)
         #self.bind("<MouseWheel>", self.onScroll)
+        # Scroll bindings in Linux
+        self.bind("<Button-4>", self.zoomerP)
+        self.bind("<Button-5>", self.zoomerM)
         
         self._tooltipId = None
-        self._tooltipOn = False # True if the tooltip is displayed
+        self._tooltipOn = False  # True if the tooltip is displayed
         self._tooltipCallback = tooltipCallback
         self._tooltipDelay = tooltipDelay
+
+        self._runsFont = tkFont.Font(family='helvetica', size=DEFAULT_FONT_SIZE)
+        self._zoomFactor = DEFAULT_ZOOM
         
         if tooltipCallback:
             self.bind('<Motion>', self.onMotion)
@@ -114,7 +124,8 @@ class Canvas(tk.Canvas, Scrollable):
             self._tooltipOn = False
             tw = self._tooltip # short notation
             tw.withdraw()
-        
+    def getRunsFont(self):
+        return self._runsFont
     def getImage(self, img):
         return gui.getImage(img, self._images)
     
@@ -145,20 +156,21 @@ class Canvas(tk.Canvas, Scrollable):
                 return self.items[i]
         return None
              
-    def _handleMouseEvent(self, event, callback):
+    def _handleMouseEvent(self, event, callback, callOnlyOnItemClick=True):
         xc, yc = self.getCoordinates(event)
         self.lastItem = self._findItem(xc, yc)
         self.callbackResults = None
         self.lastPos = (0, 0)
-        if self.lastItem is not None:
+
+        if self.lastItem is not None or callOnlyOnItemClick==False:
             if callback:
                 self.callbackResults = callback(self.lastItem)
-            self.lastPos = (xc, yc)
+        self.lastPos = (xc, yc)
 
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
-        self._handleMouseEvent(event, self.onClickCallback)
+        self._handleMouseEvent(event, self.onClickCallback, False)
         
     def onControlClick(self, event):
         self.cleanSelected = False
@@ -267,6 +279,52 @@ class Canvas(tk.Canvas, Scrollable):
         self.update_idletasks()
         self.config(scrollregion=self.bbox("all"))
         
+    #linux zoom
+    def __zoom(self, event, scale):
+
+        newZoomFactor = round(self._zoomFactor * scale)
+
+        if self._zoomFactor == newZoomFactor: return
+
+        self._zoomFactor = newZoomFactor
+
+        # x, y = self.getCoordinates(event)
+        self.scale("all", 0, 0, scale, scale)
+        self.__scaleFonts()
+        self.configure(scrollregion=self.bbox("all"))
+        
+    def __scaleFonts(self):
+
+        currentFontSize = self._runsFont['size']
+        newFontSize = currentFontSize
+
+        zoomPairs = [(32, 3),
+                     (44, 4),
+                     (53, 5),
+                     (66, 6),
+                     (73, 7),
+                     (82, 8),
+                     (90, 9),
+                     (105, 10),
+                     (120, 11),
+                     (137, 12),
+                     (999, 13),
+                     ]
+
+        for factor, size in zoomPairs:
+            if self._zoomFactor <= factor:
+                newFontSize = size
+                break
+
+        if currentFontSize != newFontSize:
+            self._runsFont['size'] = newFontSize
+
+    def zoomerP(self, event):
+        self.__zoom(event, 1.111111)
+        
+    def zoomerM(self,event):
+        self.__zoom(event, 0.9)
+        
     def drawGraph(self, graph, layout=None, drawNode=None):
         """ Draw a graph in the canvas.
         nodes in the graph should have x and y.
@@ -275,7 +333,13 @@ class Canvas(tk.Canvas, Scrollable):
         Provide drawNode if you want to customize how
         to create the boxes for each graph node.
         """
-        
+
+        # Reset the zoom and font
+        scale = self._zoomFactor/DEFAULT_ZOOM
+        self._zoomFactor = DEFAULT_ZOOM
+        self._runsFont['size'] = DEFAULT_FONT_SIZE
+
+
         if drawNode is None:
             self.drawNode = self._drawNode
         else:
@@ -289,6 +353,7 @@ class Canvas(tk.Canvas, Scrollable):
         # Update node positions
         self._updatePositions(graph.getRoot(), {})
         self.updateScrollRegion()
+        self.__zoom(None, scale)
         
     def _drawNode(self, canvas, node):
         """ Default implementation to draw nodes as textboxes. """
@@ -574,7 +639,7 @@ class TextItem(Item):
         """Paint the object in a specific position."""
 
         self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
-                                               justify=tk.CENTER, fill=self.textColor)
+                                               justify=tk.CENTER, fill=self.textColor, font=self.canvas.getRunsFont())
 
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
