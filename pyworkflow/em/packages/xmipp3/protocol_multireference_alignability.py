@@ -254,6 +254,7 @@ _noisePixelLevel   '0 0'""" % (self.newXdim , self.newXdim, pathParticles, self.
         param += ' --params %s' % self._getExtraPath('params')
         param += ' -o %s' % self._getPath('reference_particles.xmd')
         param += ' --sampling_rate % 0.3f' % self.newTs
+        param += ' --method fourier'
                 
         #while (~isfile(self._getExtraPath('params'))):
         #    print 'No created'
