@@ -52,24 +52,53 @@ OP_SQRT = 9
 OP_ABS = 10
 OP_POW = 11
 OP_SLICE = 12
+OP_COLUNM = 13
+OP_ROW = 14
+OP_RADIAL = 15
+OP_RESET = 16
 
-OP_RADIAL = 13
-OP_RESET = 14
+OP_CHOICES = [-1]*(OP_RESET+1)
 
-OP_CHOICES = ['plus', 'minus', 'multiply', 'divide', 'minimum', 'maximum',
-              'dot product', 'log', 'log10', 'sqrt', 'abs', 'pow', 'slice',
-              'column', 'row', 'radial average', 'reset']
+#OP_CHOICES = ['plus', 'minus', 'multiply', 'divide', 'minimum', 'maximum',
+#              'dot product', 'log', 'log10', 'sqrt', 'abs', 'pow', 'slice',
+#              'colunm', 'row', 'radial average', 'reset']
 
-binaryCondition = '(operation == 0 or operation == 1 or operation == 2 or '\
-                  'operation == 3 or operation == 4 or operation == 5) '\
+OP_CHOICES[OP_PLUS]  = 'plus'
+OP_CHOICES[OP_MINUS] = 'minus'
+OP_CHOICES[OP_MULTIPLY] = 'multiply'
+OP_CHOICES[OP_DIVIDE] = 'divide'
+OP_CHOICES[OP_MINIMUM] = 'minimum'
+OP_CHOICES[OP_MAXIMUM] = 'maximum'
+OP_CHOICES[OP_DOTPRODUCT]  = 'dot product'
+OP_CHOICES[OP_LOG] = 'log'
+OP_CHOICES[OP_LOG10] = 'log10'
+OP_CHOICES[OP_SQRT] = 'sqrt'
+OP_CHOICES[OP_ABS] = 'abs'
+OP_CHOICES[OP_POW] = 'pow'
+OP_CHOICES[OP_COLUNM] = 'colunm'
+OP_CHOICES[OP_ROW] = 'row'
+OP_CHOICES[OP_RADIAL] = 'radial average'
+OP_CHOICES[OP_RESET] = 'reset'
 
-noValueCondition = '(operation == 7 or operation == 8 or operation == 9 or '\
-                   'operation == 10 or operation == 15 or operation == 16) '
 
-intValueCondition = '(operation == 14)'
+#binaryCondition = '(operation == 0 or operation == 1 or operation == 2 or '\
+#                  'operation == 3 or operation == 4 or operation == 5) '\
+binaryCondition = '(operation == %d or operation == %d or operation == %d or '\
+                  'operation == %d or operation == %d or operation == %d) '%\
+                  (OP_PLUS, OP_MINUS, OP_MULTIPLY, \
+                   OP_DIVIDE, OP_MINIMUM, OP_MAXIMUM)
 
-dotCondition = 'operation == 6'
-powCondition = 'operation == 11'
+#noValueCondition = '(operation == 7 or operation == 8 or operation == 9 or '\
+#                   'operation == 10 or operation == 15 or operation == 16) '
+noValueCondition = '(operation == %d or operation == %d or operation == %d or '\
+                   'operation == %d or operation == %d or operation == %d) '%\
+                   (OP_LOG, OP_LOG10, OP_SQRT,\
+                    OP_ABS, OP_POW, OP_RESET)
+
+intValueCondition = '(operation == %d or operation == %d)'%(OP_COLUNM, OP_ROW)
+
+dotCondition = 'operation == %d'%OP_DOTPRODUCT
+powCondition = 'operation == %d'%OP_POW
 
 operationDict = {OP_PLUS : ' --plus ', OP_MINUS : ' --minus ',
                  OP_MULTIPLY : ' --mult ', OP_DIVIDE : ' --divide ',
@@ -77,8 +106,9 @@ operationDict = {OP_PLUS : ' --plus ', OP_MINUS : ' --minus ',
                  OP_DOTPRODUCT : ' --dot_product ', OP_LOG : ' --log ',
                  OP_LOG10 : ' --log10', OP_SQRT : ' --sqrt ',
                  OP_ABS : ' --abs ', OP_POW : ' --pow ',
-                 OP_SLICE : ' --slice ', OP_RADIAL : ' --radial_avg ',
-                 OP_RESET : ' --reset '}
+                 OP_SLICE : ' --slice ',  OP_RADIAL : ' --radial_avg ',
+                 OP_RESET : ' --reset ', OP_COLUNM: '--column',
+                 OP_ROW: '--row'}
 
 
 class XmippOperateHelper():
@@ -172,7 +202,8 @@ class XmippOperateHelper():
     
     def _isintValueCond(self):
         operation = self.operation.get()
-        return (operation == OP_SLICE)
+        return (operation == OP_SLICE or operation == OP_COLUNM
+                or operation == OP_ROW)
     
     def _getSecondSetFn(self):
         return self._getTmpPath("images_to_apply.xmd")
@@ -233,7 +264,7 @@ class XmippProtImageOperateParticles(ProtOperateParticles,
         args += " -o %s --save_metadata_stack %s" % (self.outputStk,
                                                      self.outputMd)
         args += " --keep_input_columns"
-        
+        print "operationStep", self._program, args
         self.runJob(self._program, args)
     
     #--------------------------- INFO functions -------------------------------
