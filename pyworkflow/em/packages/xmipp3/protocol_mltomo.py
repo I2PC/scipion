@@ -24,8 +24,7 @@
 # *
 # **************************************************************************
 
-#from constants import *
-from convert import writeSetOfVolumes, readSetOfVolumes, getImageLocation, rowFromMd, rowToClass
+from convert import readSetOfClassesVol, getImageLocation
 from pyworkflow.em import ProtClassify3D
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from xmipp3 import getEnviron, XmippMdRow
@@ -42,14 +41,14 @@ MISSING_CONE = 3
 
 class XmippProtMLTomo(ProtClassify3D):
     """ Align and classify 3D images with missing data regions in Fourier space,
-        e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement
-        based on a maximum-likelihood (ML) target function.
+    e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement
+    based on a maximum-likelihood (ML) target function.
 
-        See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ml_tomo_v3 for further documentation
+    See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Ml_tomo_v31 for further documentation
     """
     _label = 'mltomo'
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='General params')
         form.addParam('inputVols', params.PointerParam, pointerClass="SetOfVolumes",
@@ -58,7 +57,7 @@ class XmippProtMLTomo(ProtClassify3D):
         form.addParam('generateRefs', params.BooleanParam, default=True,
                       label='Automatically generate references',
                       help="If set to true, 3D classes will be generated automatically. "
-                           "Otherwise you can provide initial reference volumes youself.")
+                           "Otherwise you can provide initial reference volumes yourself.")
         form.addParam('numberOfReferences', params.IntParam,
                       label='Number of references', default=3, condition="generateRefs",
                       help="Number of references to generate automatically")
@@ -99,10 +98,12 @@ class XmippProtMLTomo(ProtClassify3D):
                       label='Angular search range (deg)',
                       help="Angular search range around orientations of input particles "
                            "(by default, exhaustive searches are performed)")
-        form.addParam('globalPsi', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('globalPsi', params.BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Exhaustive psi search',
                       help="Exhaustive psi searches (only for c1 symmetry)")
-        form.addParam('limitTrans', params.FloatParam, default=-1.0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('limitTrans', params.FloatParam, default=-1.0,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Max shift (px)',
                       help="Maximum allowed shifts (negative value means no restriction)")
 
@@ -110,7 +111,8 @@ class XmippProtMLTomo(ProtClassify3D):
                             help='Limits for tilt angle search (in degrees)')
         line.addParam('tiltMin', params.FloatParam, default=0.0, label='Min')
         line.addParam('tiltMax', params.FloatParam, default=180.0, label='Max')
-        form.addParam('psiSampling', params.FloatParam, default=-1.0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('psiSampling', params.FloatParam, default=-1.0,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Psi angle sampling (deg)',
                       help="Angular sampling rate for the in-plane rotations (in degrees)")
 
@@ -133,20 +135,25 @@ class XmippProtMLTomo(ProtClassify3D):
         form.addParam('onlyAvg', params.BooleanParam, default=False,
                       label='Only average',
                       help="Keep orientations and classes, only output weighted averages")
-        form.addParam('dontImpute', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('dontImpute', params.BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Do not impute',
                       help='Use weighted averaging, rather than imputation')
-        form.addParam('noImpThresh', params.FloatParam, default=1.0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('noImpThresh', params.FloatParam, default=1.0,
+                      expertLevel=LEVEL_ADVANCED,
                       condition='dontImpute',
                       label='Threshold for averaging',
                       help='Threshold to avoid division by zero for weighted averaging')
-        form.addParam('fixSigmaNoise', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('fixSigmaNoise', params.BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Fix sigma noise',
                       help='Do not re-estimate the standard deviation in the pixel noise')
-        form.addParam('fixSigmaOffset', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('fixSigmaOffset', params.BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Fix sigma offsets',
                       help='Do not re-estimate the standard deviation in the origin offsets')
-        form.addParam('fixFrac', params.BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+        form.addParam('fixFrac', params.BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Fix model fractions',
                       help='Do not re-estimate the model fractions')
 
@@ -159,43 +166,52 @@ class XmippProtMLTomo(ProtClassify3D):
         line.addParam('regFinal', params.FloatParam, default=0.0,
                   label='Final')
 
-        form.addParam('numberOfImpIterations', params.IntParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('numberOfImpIterations', params.IntParam,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Iterations in inner imputation loop', default=1,
                       help="Number of iterations for inner imputation loop")
-        form.addParam('iterStart', params.IntParam, expertLevel=LEVEL_ADVANCED,
+        form.addParam('iterStart', params.IntParam,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Initial iteration', default=1,
                       help="Number of initial iteration")
-        form.addParam('eps', params.FloatParam, default=5e-5, expertLevel=LEVEL_ADVANCED,
+        form.addParam('eps', params.FloatParam, default=5e-5,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Stopping criterium',
                       help="Stopping criterium")
-        form.addParam('stdNoise', params.FloatParam, default=1.0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('stdNoise', params.FloatParam, default=1.0,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Expected noise std',
                       help="Expected standard deviation for pixel noise")
-        form.addParam('stdOrig', params.FloatParam, default=3.0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('stdOrig', params.FloatParam, default=3.0,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Expected origin offset std (px)',
                       help="Expected standard deviation for origin offset (in pixels)")
-        #FIXME next param should be metadata file
-        #form.addParam('fracFile', params.PointerParam, pointerClass='FracFile', expertLevel=LEVEL_ADVANCED,
-        #              label='Model fractions file',
-        #              help='Metadata with expected model fractions (default: even distribution)')
-        form.addParam('maskFile', params.PointerParam, pointerClass='Mask', expertLevel=LEVEL_ADVANCED,
+        # TODO: add next param as metadata file
+        #form.addParam('fracFile', params.PointerParam,
+        # pointerClass='FracFile',
+        # expertLevel=LEVEL_ADVANCED,
+        # label='Model fractions file',
+        # help='Metadata with expected model fractions (default: even distribution)')
+        form.addParam('maskFile', params.PointerParam, pointerClass='Mask',
+                      expertLevel=LEVEL_ADVANCED,
                       label='Mask', condition='dontAlign',
                       help='Mask particles; only valid in combination with --dont_align')
 
         form.addParallelSection(threads=1, mpi=3)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions -----------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('convertInputs')
         self._insertFunctionStep('runMLTomo')
         self._insertFunctionStep('createOutput')
     
-    #--------------------------- STEPS functions --------------------------------------------
-
+    #--------------------------- STEPS functions ------------------------------
     def convertInputs(self):
-        inputVols = self.inputVols.get()
-        # writeSetOfVolumes(self.inputVols.get(), fnVols)
-        #TODO: convert input vols, refvols to xmipp format
+        # FIXME: do we need to convert inputs (vols, refvols, mask)?
+        if self.generateRefs:
+            inputVols = self.inputVols.get()
+        else:
+            inputVols = self.inputRefVols.get()
 
         self.createMetadata(inputVols)
 
@@ -204,7 +220,6 @@ class XmippProtMLTomo(ProtClassify3D):
         missType = ['wedge_x', 'wedge_y', 'pyramid', 'cone']
         missNum = self.missingDataType.get()
         missAng = self.missingAng.get()
-
 
         md = xmipp.MetaData()
         for vol in inputVols:
@@ -224,21 +239,35 @@ class XmippProtMLTomo(ProtClassify3D):
             row.setValue(xmipp.MDL_REF, 1)
             row.setValue(xmipp.MDL_LL, float(1))
             row.writeToMd(md, objId)
-
+        # TODO: write alignment if using RefVols
         md.write(fnVols, xmipp.MD_APPEND)
 
         missDataFn = self._getExtraPath('wedges.xmd')
         md = xmipp.MetaData()
+
+        # set missing angles
+        missAngValues = str(missAng).split()
+        if missNum == MISSING_WEDGE_X:
+            thetaX0, thetaXF = missAngValues
+            thetaY0, thetaYF = 0, 0
+        elif missNum == MISSING_WEDGE_Y:
+            thetaX0, thetaXF = 0, 0
+            thetaY0, thetaYF = missAngValues
+        elif missNum == MISSING_PYRAMID:
+            thetaX0, thetaXF, thetaY0, thetaYF = missAngValues
+        else:  # MISSING_CONE
+            thetaY0 = missAngValues
+            thetaX0, thetaXF, thetaYF = 0, 0, 0
 
         for i in range(1, inputVols.getSize() + 1):
             objId = md.addObject()
             row = XmippMdRow()
             row.setValue(xmipp.MDL_MISSINGREGION_NR, missNum + 1)
             row.setValue(xmipp.MDL_MISSINGREGION_TYPE, missType[missNum])
-            row.setValue(xmipp.MDL_MISSINGREGION_THX0, float(0))
-            row.setValue(xmipp.MDL_MISSINGREGION_THXF, float(0))
-            row.setValue(xmipp.MDL_MISSINGREGION_THY0, float(45))
-            row.setValue(xmipp.MDL_MISSINGREGION_THYF, float(0))
+            row.setValue(xmipp.MDL_MISSINGREGION_THX0, float(thetaX0))
+            row.setValue(xmipp.MDL_MISSINGREGION_THXF, float(thetaXF))
+            row.setValue(xmipp.MDL_MISSINGREGION_THY0, float(thetaY0))
+            row.setValue(xmipp.MDL_MISSINGREGION_THYF, float(thetaYF))
             row.writeToMd(md, objId)
 
         md.write(missDataFn, xmipp.MD_APPEND)
@@ -249,8 +278,7 @@ class XmippProtMLTomo(ProtClassify3D):
         outDir = self._getExtraPath("results")
         pwutils.makePath(outDir)
 
-        params = ' -i %s' % fnVols
-        params += ' --oroot %s' % (outDir + '/mltomo')
+        params = ' --oroot %s' % (outDir + '/mltomo')
         params += ' --iter %d' % self.numberOfIterations.get()
         params += ' --sym %s' % self.symmetry.get()
         params += ' --missing %s' % missDataFn
@@ -268,10 +296,12 @@ class XmippProtMLTomo(ProtClassify3D):
         params += ' --pixel_size %0.2f' % self.inputVols.get().getSamplingRate()
         params += ' --noise %0.1f --offset %0.1f' % (self.stdNoise.get(), self.stdOrig.get())
         params += ' --thr %d' % self.numberOfThreads.get()
+
         if self.generateRefs:
+            params += ' -i %s' % fnVols
             params += ' --nref %d' % self.numberOfReferences.get()
         else:
-            params += ' --ref %s' % self.inputRefVols.get().getFileName()  # FIXME get filename
+            params += ' --ref %s' % fnVols
         if self.doPerturb:
             params += ' --perturb'
         if self.dontRotate:
@@ -294,7 +324,7 @@ class XmippProtMLTomo(ProtClassify3D):
         if self.maxCC:
             params += ' --maxCC'
         if self.dontAlign and self.maskFile:
-            params += ' --mask %s' % self.maskFile.get().getFileName() #FIXME get filename
+            params += ' --mask %s' % self.maskFile.get().getFileName() # FIXME get filename
 
         self.runJob('xmipp_ml_tomo', '%s' % params,
                     env=self.getMLTomoEnviron(), numberOfMpi=self.numberOfMpi.get(),
@@ -302,49 +332,41 @@ class XmippProtMLTomo(ProtClassify3D):
     
     def createOutput(self):
         # output files:
-        #   mltomo_ref.xmd contains weight and signal change for output 3D classes
-        #   mltomo_refXXXXXX.vol output 3D classes
+        #   mltomo_ref.xmd contains all info for output 3D classes
+        #   mltomo_refXXXXXX.vol output info for each 3D class
         #   mltomo_img.xmd contains metadata for input vols
         #   mltomo.fsc
-        #   mltomo_refXXXXXX_img.xmd contains metadata for each 3D class
 
-        outputGlobalMdFn = self._getExtraPath('results/mltomo_img.xmd')
+        outputGlobalMdFn = self._getExtraPath('results/mltomo_ref.xmd')
         setOfClasses = self._createSetOfClassesVol()
         setOfClasses.setImages(self.inputVols.get())
-        self._readSetOfClassesVol(self.inputVols.get(), readSetOfVolumes, setOfClasses, outputGlobalMdFn)
+        readSetOfClassesVol(setOfClasses, outputGlobalMdFn)
         self._defineOutputs(outputClasses=setOfClasses)
         self._defineSourceRelation(self.inputVols, self.outputClasses)
 
-    
-    #--------------------------- INFO functions --------------------------------------------
+    #--------------------------- INFO functions -------------------------------
     def _summary(self):
         messages = []
         return messages
 
     def _validate(self):
-        errors=[]
+        errors = []
+        missNum = self.missingDataType.get()
+        angString = self.missingAng.get()
+        angs = str(angString).split()
+        if (missNum == 0 or missNum == 1) and len(angs) != 2:
+            errors.append('Wrong angles of missing data! Provide two values for a missing wedge')
+        elif missNum == 2 and len(angs) != 4:
+            errors.append('Wrong angles of missing data! Provide four values for a missing pyramid')
+        elif missNum == 3 and len(angs) != 1:
+            errors.append('Wrong angles of missing data! Provide one value for a missing cone')
+
         return errors
 
     def _citations(self):
         return ['Scheres2009c']
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions ------------------------------
     def getMLTomoEnviron(self):
         env = getEnviron()
         return env
-
-    def _readSetOfClassesVol(self, classBaseSet, readSetOfVolumes, classesSet, outputGlobalMdFn):
-        classesMd = xmipp.MetaData(outputGlobalMdFn)
-
-        for objId in classesMd:
-            classItem = classesSet.ITEM_TYPE()
-            classRow = rowFromMd(classesMd, objId)
-            # class id should be set in rowToClass function using MDL_REF
-            classItem = rowToClass(classRow, classItem)
-            classBaseSet.copyInfo(classesSet.getImages())
-            classesSet.append(classItem)
-            ref = classItem.getObjId()
-            readSetOfVolumes('noname@%s' % outputGlobalMdFn, classItem)
-
-            # Update with new properties of classItem such as _size
-            classesSet.update(classItem)
