@@ -165,6 +165,8 @@ class XmippProtMonoRes(ProtRefine3D):
             
         if self.provideMaskInHalves.get() is True:
             params +=  ' --mask %s' % self.Mask.get().getFileName()
+        else:
+            params +=  ' --mask %s' % ''
         
         params +=  ' -o %s' % self._getExtraPath('MGresolution.vol')
         params +=  ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()

@@ -152,6 +152,11 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		mask.read(fnMask);
 		mask().setXmippOrigin();
 	}
+	else
+	{
+		mask = pMask_int;
+		mask().setXmippOrigin();
+	}
 	MultidimArray<int> &pMask=mask();
 
 	////////////////////////
