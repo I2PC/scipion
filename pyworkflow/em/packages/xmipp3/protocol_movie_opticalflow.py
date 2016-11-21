@@ -176,10 +176,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
             args += ' --inmemory'
         
         if self.doApplyDoseFilter:
-            dose = inputMovies.getAcquisition().getDosePerFrame()
             pxSize = movie.getSamplingRate()
             vol = movie.getAcquisition().getVoltage()
-            preExp = inputMovies.getAcquisition().getDoseInitial()
+            preExp, dose = self._getCorrectedDose(inputMovies)
             args += ' --doseCorrection %f %f %f %f' %(dose, pxSize, vol, preExp)
             
             if self.applyDosePreAlign:
@@ -189,7 +188,14 @@ class XmippProtOFAlignment(ProtAlignMovies):
             
             if self.doSaveUnweightedMic:
                 outUnwtMicFn = self._getExtraPath(self._getOutputMicName(movie))
-                args += ' --oUnc %s' % outUnwtMicFn
+                
+                # To save the unweighted aligned micrograph, we must save the
+                # unweighted aligned movie. For now, we save it in tmp movie
+                # folder.
+                uncorrFnBase = self._getMovieRoot(movie) + '_unWt_movie.mrcs'
+                outUnwtMovieFn = self._getFnInMovieFolder(movie, uncorrFnBase)
+                
+                args += ' --oUnc %s %s' % (outUnwtMicFn, outUnwtMovieFn)
             
         try:
             self.runJob(program, args)
