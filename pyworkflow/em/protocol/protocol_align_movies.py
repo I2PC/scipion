@@ -420,7 +420,7 @@ class ProtAlignMovies(ProtProcessMovies):
         movie and sets of movies"""
         
         firstFrame, _, _ = movieSet.getFramesRange()
-        preExp = inputMovies.getAcquisition().getDoseInitial()
+        preExp = movieSet.getAcquisition().getDoseInitial()
         dose = movieSet.getAcquisition().getDosePerFrame()
         preExp += dose * (firstFrame - 1)
         
