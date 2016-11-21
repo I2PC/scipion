@@ -48,7 +48,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
     against a given 3DEM map. This protocol produces particle alignment
     precision and accuracy parameters.
     """
-    _label = 'multireference aligneability'
+    _label = 'multireference alignability'
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
