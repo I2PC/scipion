@@ -37,7 +37,9 @@ from pyworkflow.em.packages.xmipp3 import (XmippFilterHelper as xfh,
                                            XmippResizeHelper as xrh)
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import ALIGN_ALGORITHM_EXHAUSTIVE,\
     ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL, ALIGN_ALGORITHM_LOCAL
-
+import  pyworkflow.em.packages.xmipp3.protocol_preprocess as pp
+from pyworkflow.em.packages.xmipp3.protocol_preprocess import OP_COLUNM, OP_DOTPRODUCT,\
+OP_MULTIPLY, OP_SQRT, OP_RADIAL, OP_ROW
 
 class TestXmippBase(BaseTest):
     """ Some utility functions to import volumes that are used in several tests."""
@@ -557,25 +559,39 @@ class TestXmippOperateVolumes(TestXmippBase):
 
     def testMultiplyVolumes(self):
         vol2 = self.protImport2.outputVolume  # short notation
-        prot1 = self.launchSingle(operation=2,
+        prot1 = self.launchSingle(operation=OP_MULTIPLY,
                                   objLabel='Multiply two Volumes',
                                   volumes2=vol2)
 
     def testMultiplyValue(self):
-        prot2 = self.launchSingle(operation=2,
+        prot2 = self.launchSingle(operation=OP_MULTIPLY,
                                   isValue=True,
                                   objLabel='Multiply by a Value',
                                   value=2.5)
     
     def testDotProduct(self):
         vol2 = self.protImport2.outputVolume  # short notation
-        prot3 = self.launchSingle(operation=6,
+        prot3 = self.launchSingle(operation=OP_DOTPRODUCT,
                                   objLabel='Dot Product',
                                   volumes2=vol2)
 
     def testSqrt(self):
-        prot4 = self.launchSingle(operation=9,
+        prot4 = self.launchSingle(operation=OP_SQRT,
                                   objLabel='Sqrt')
+
+    def testRadial(self):
+        prot5 = self.launchSingle(operation=OP_RADIAL,
+                                  objLabel='Radial Average')
+
+    def testColumn(self):
+        prot6 = self.launchSingle(operation=OP_COLUNM,
+                                  objLabel='Column',
+                                  intValue  =7)
+
+    def testRow(self):
+        prot6 = self.launchSingle(operation=OP_ROW,
+                                  objLabel='Row',
+                                  intValue  =8)
 
 #     # Tests with multiple volumes as input.
     def launchSet(self, **kwargs):
@@ -597,24 +613,24 @@ class TestXmippOperateVolumes(TestXmippBase):
         
     def testMultiplyVolSets(self):
         vol2 = self.protImport3.outputVolumes  # short notation
-        prot6 = self.launchSet(operation=2,
+        prot6 = self.launchSet(operation=OP_MULTIPLY,
                                   objLabel='Multiply two SetOfVolumes',
                                   volumes2=vol2)
 
     def testMultiplyValue2(self):
-        prot7 = self.launchSet(operation=2,
+        prot7 = self.launchSet(operation=OP_MULTIPLY,
                                isValue=True,
                                objLabel='Multiply by a Value 2',
                                value=2.5)
     
     def testDotProduct2(self):
         vol2 = self.protImport3.outputVolumes  # short notation
-        prot8 = self.launchSet(operation=6,
+        prot8 = self.launchSet(operation=OP_DOTPRODUCT,
                                objLabel='Dot Product 2',
                                volumes2=vol2)
 
     def testSqrt2(self):
-        prot9 = self.launchSet(operation=9,
+        prot9 = self.launchSet(operation=OP_SQRT,
                                objLabel='Sqrt 2')
 
 
