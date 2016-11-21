@@ -1,5 +1,5 @@
 # ***************************************************************************
-# * Authors:     Javier Vargas (jvargas@cnb.csic.es)
+# * Authors:     Javier Vargas (jvargas@cnb.csic.es) (2016)
 #                J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # *
@@ -55,13 +55,13 @@ class TestMultireferenceAlignability(BaseTest):
         
         return prot
 
-    def importParticles(self, numberOfParticles):
+    def importParticles(self, numberOfParticles, path):
         """ Import an EMX file with Particles and defocus
         """
         prot = self.newProtocol(ProtImportParticles,
                                  objLabel='from relion (auto-refine 3d)',
                                  importFrom=ProtImportParticles.IMPORT_FROM_RELION,
-                                 starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
+                                 starFile=self.dsRelion.getFile(path),
                                  magnification=10000,
                                  samplingRate=7.08,
                                  haveDataBeenPhaseFlipped=True
@@ -86,20 +86,41 @@ class TestMultireferenceAlignability(BaseTest):
     
     def test_validate(self):
         protImportVols = self.importVolumes()
-        protImportPars = self.importParticles(20)        
-        protValidate = self.newProtocol(XmippProtMultiRefAlignability,
+        
+        pathNoCTF = 'import/refine3d/extra/relion_it001_data.star'
+        protImportPars = self.importParticles(20,pathNoCTF)
+        pathCTF = 'import/case2/relion_it015_data.star'
+        protImportParsCTF = self.importParticles(20,pathCTF)
+        
+        '''NO CTF'''
+        protValidateNoCTF = self.newProtocol(XmippProtMultiRefAlignability,
                                 objLabel='validate alignability',
                                 angularSampling=10,
+                                doWiener = 'False',
                                 numberOfMpi=4, numberOfThreads=1)
-        protValidate.inputParticles.set(protImportPars.outputParticles)
-        protValidate.inputVolumes.set(protImportVols.outputVolume)
+        protValidateNoCTF.inputParticles.set(protImportPars.outputParticles)
+        protValidateNoCTF.inputVolumes.set(protImportVols.outputVolume)
+
+        '''CTF'''
+        protValidateCTF = self.newProtocol(XmippProtMultiRefAlignability,
+                                objLabel='validate alignability',
+                                angularSampling=10,
+                                doWiener = 'True',
+                                numberOfMpi=4, numberOfThreads=1)
+        protValidateCTF.inputParticles.set(protImportParsCTF.outputParticles)
+        protValidateCTF.inputVolumes.set(protImportVols.outputVolume)
         
-        self.launchProtocol(protValidate)
-        
-        self.checkOutput(protValidate, 'outputParticles')
-        self.checkOutput(protValidate, 'outputVolumes')
-        
-        firstVol = protValidate.outputVolumes.getFirstItem()
-        self.assertTrue(firstVol.weightAlignabilityPrecision > 0.7)
-        self.assertTrue(firstVol.weightAlignabilityAccuracy > 0.1)
+        self.launchProtocol(protValidateNoCTF)      
+        self.checkOutput(protValidateNoCTF, 'outputParticles')
+        self.checkOutput(protValidateNoCTF, 'outputVolumes')        
+        firstVol = protValidateNoCTF.outputVolumes.getFirstItem()
+        self.assertTrue(firstVol.weightAlignabilityPrecision > 0.6)
+        self.assertTrue(firstVol.weightAlignabilityAccuracy > 0.2)
+
+        self.launchProtocol(protValidateCTF)      
+        self.checkOutput(protValidateCTF, 'outputParticles')
+        self.checkOutput(protValidateCTF, 'outputVolumes')        
+        firstVolCTF = protValidateCTF.outputVolumes.getFirstItem()
+        self.assertTrue(firstVolCTF.weightAlignabilityPrecision > 0.6)
+        self.assertTrue(firstVolCTF.weightAlignabilityAccuracy > 0.2)
 
