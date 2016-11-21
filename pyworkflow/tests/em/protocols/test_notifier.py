@@ -25,6 +25,7 @@ import  time
 import urllib2
 import json
 
+import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtStress, ProtMonitorSystem
 from pyworkflow.gui.project.notifier import ProjectNotifier
@@ -34,14 +35,29 @@ class TestNotifier(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
 
+    def _getUrl(self):
+        if not pwutils.envVarOn('SCIPION_NOTIFY'):
+            return ''
+
+        return os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+
     def test_projectNotifier(self):
         """ Execute a protocol and then report on it
         """
-        #connect to heroku and retrieve protocol list
-        #then store number of times protstress has been executed
-        url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
-        url = url.replace("workflow/workflow/","workflow/protocol/?name=ProtStress")
-        print url
+        # Connect to heroku and retrieve protocol list
+        # then store number of times protstress has been executed
+        url = self._getUrl()
+
+        if not url:
+            print "SCIPION_NOTIFY and SCIPION_NOTIFY_URL should be defined!"
+            print "A test server is at Heroku, you can setup as:"
+            print "export SCIPION_NOTIFY=1"
+            print "export SCIPION_NOTIFY_URL=http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/"
+            return
+
+        url = url.replace("workflow/workflow/",
+                          "workflow/protocol/?name=ProtStress")
+
         results = json.loads(urllib2.urlopen(url).read())
         times_protocolRemote = results["objects"][0]["timesUsed"]
 
@@ -55,7 +71,7 @@ class TestNotifier(BaseTest):
         #create and execute protocol stress
         prot1 = self.newProtocol(ProtStress, **kwargs)
         prot1.setObjLabel('stress')
-        self.proj.launchProtocol(prot1,wait=True)
+        self.proj.launchProtocol(prot1, wait=True)
 
         # remove uuid file (so we start always in the same conditions)
         uuidFn=self.proj.getLogPath("uuid.log")
@@ -70,23 +86,21 @@ class TestNotifier(BaseTest):
         #get uuid from local file
         uuid = projectNotifier._getUuid()
         #get protocol list from database
-        url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        url = self._getUrl()
         #url = "http://secret-reaches-65198.herokuapp.com/report_protocols/api/workflow/workflow/?project_uuid="
         url += "?project_uuid=" + uuid
         results = json.loads(urllib2.urlopen(url).read())
         project_workflowRemote = results["objects"][0]['project_workflow']
-        #get protocol list local
-        project_workflowLocal  = self.proj.getProtocolsNameJson()
-        #print "project_workflowRemote", project_workflowRemote
-        #print "project_workflowLocal", project_workflowLocal
-
+        # get protocol list local
+        project_workflowLocal  = self.proj.getProtocolsJson(namesOnly=True)
         #test that stored protocol and local one are identical
         self.assertEqual(project_workflowLocal, project_workflowRemote)
 
         #now check that the  number of times protstress has been executed
         #has increased in 1
-        url = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
-        url = url.replace("workflow/workflow/","workflow/protocol/?name=ProtStress")
+        url = self._getUrl()
+        url = url.replace("workflow/workflow/",
+                          "workflow/protocol/?name=ProtStress")
         results = json.loads(urllib2.urlopen(url).read())
         times_protocolRemote_2 = results["objects"][0]["timesUsed"]
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)

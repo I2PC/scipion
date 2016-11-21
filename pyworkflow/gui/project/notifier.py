@@ -94,11 +94,12 @@ class ProjectNotifier(object):
             #print "sec, no notification", seconds
             return
 
-        # TODO: Check send frequency
+        # INFO: now we are only sending the protocols names in the project.
+        # We could pass namesOnly=False to get the full workflow template
+        projectWorfklow = self.project.getProtocolsJson(namesOnly=True)
+
         dataDict = {'project_uuid': self._getUuid(),
-                    'project_workflow': self.project.getProtocolsNameJson()}
-        #INFO: you may use getProtocolsJson instead of getProtocolsNameJson
-        #if you want to store all the project
+                    'project_workflow': projectWorfklow}
 
         urlName = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
         urlName += "addOrUpdateWorkflow/"
