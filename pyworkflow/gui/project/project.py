@@ -118,6 +118,10 @@ class ProjectWindow(ProjectBaseWindow):
 
         self.initProjectTCPServer()#Socket thread to communicate with clients
 
+        # Notify about the workflow in this project
+        from notifier import ProjectNotifier
+        ProjectNotifier(self.project).notifyWorkflow()
+
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
         header = ProjectBaseWindow.createHeaderFrame(self, parent)
