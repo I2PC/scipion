@@ -414,6 +414,20 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Implement this method if you want to store the summary. """
         pass
 
+    def _getCorrectedDose(self, movieSet):
+        """get and correct the pre-exposure dose. It is important for cases
+        in which the first frame is different of one. The method support both
+        movie and sets of movies"""
+        
+        firstFrame, _, _ = movieSet.getFramesRange()
+        preExp = inputMovies.getAcquisition().getDoseInitial()
+        dose = movieSet.getAcquisition().getDosePerFrame()
+        preExp += dose * (firstFrame - 1)
+        
+        return preExp, dose
+        
+        
+    
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -489,3 +503,4 @@ class ProtAlignMovies(ProtProcessMovies):
         data1[:, m:] = data2[:, m:]
         psd.setData(data1)
         psd.write(outputFn)
+    
