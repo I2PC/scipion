@@ -671,26 +671,19 @@ class Project(object):
 
         return result
 
-    def getProtocolsNameJson(self, protocols=None):
-        """ Create a Json string with the information of the given
-        protocols. If protocols is None, all protocols from the
-        project will be included.
+    def getProtocolsJson(self, protocols=None, namesOnly=False):
+        """ Create a Json string with the information of the given protocols.
+         Params:
+            protocols: list of protocols or None to include all.
+            namesOnly: the output list will contain only the protocol names.
         """
         protocols = protocols or self.getRuns()
-        # Handle the copy of a list of protocols
-        # for this case we need to update the references of input/outputs
-        protocolList = []
 
-        for prot in protocols:
-            protocolList.append(prot.getClassName())
-        return json.dumps(protocolList)
+        # If the nameOnly, we will simply return a json list with their names
+        if namesOnly:
+            return json.dumps([prot.getClassName() for prot in protocols])
 
-    def getProtocolsJson(self, protocols=None):
-        """ Create a Json string with the information of the given
-        protocols. If protocols is None, all protocols from the
-        project will be included.
-        """
-        protocols = protocols or self.getRuns()
+
         # Handle the copy of a list of protocols
         # for this case we need to update the references of input/outputs
         newDict = OrderedDict()
