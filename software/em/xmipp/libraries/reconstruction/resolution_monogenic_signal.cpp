@@ -38,7 +38,7 @@ void ProgMonogenicSignalRes::readParams()
 	sampling = getDoubleParam("--sampling_rate");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
-	R = getIntParam("--circular_mask");
+	//R = getIntParam("--circular_mask");
 	N_freq = getDoubleParam("--number_frequencies");
 	trimBound = getDoubleParam("--trimmed");
 	linearchk = checkParam("--linear");
@@ -51,7 +51,7 @@ void ProgMonogenicSignalRes::readParams()
 void ProgMonogenicSignalRes::defineParams()
 {
 	addUsageLine("This function determines the local resolution of a map");
-	addParamsLine("  --vol <vol_file>   : Input volume");
+	addParamsLine("  --vol <vol_file=\"\">   : Input volume");
 	addParamsLine("  [--mask <vol_file=\"\">]  : Mask defining the macromolecule");
 	//addParamsLine("  [--vol1 <vol_file=\"\">]: Half volume 1");
 	addParamsLine("                          :+ If two half volume are given, the noise is estimated from them");
@@ -60,7 +60,7 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]   : Sampling rate (A/px)");
-	addParamsLine("  [--circular_mask <R=-1>]  : The volume has been masked to a sphere of this radius (in pixels)");
+	//addParamsLine("  [--circular_mask <R=-1>]  : The volume has been masked to a sphere of this radius (in pixels)");
 	addParamsLine("                            : Use -1 to disable this option");
 	addParamsLine("  [--number_frequencies <w=50>]       : The resolution is computed at a number of frequencies between mininum and");
 	addParamsLine("                            : maximum resolution px/A. This parameter determines that number");

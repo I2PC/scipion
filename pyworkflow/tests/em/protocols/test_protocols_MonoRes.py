@@ -26,16 +26,15 @@
 
 import unittest, sys
 # import numpy as np
-
-from pyworkflow.em import *
+from pyworkflow.em import exists 
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp import XmippProtMonoRes
+from pyworkflow.em.packages.xmipp3 import XmippProtMonoRes
 from pyworkflow.em.protocol import ProtImportVolumes, ProtImportMask
 
 
 class TestMonoResBase(BaseTest):
     @classmethod
-    def setData(cls, dataProject='monores'):
+    def setData(cls, dataProject='resmap'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.map3D = cls.dataset.getFile('betagal')
         cls.half1 = cls.dataset.getFile('betagal_half1')
@@ -94,6 +93,7 @@ class TestMonoRes(TestMonoResBase):
                                   halfVolumens=True,
                                   inputVolume = self.protImportHalf1.outputVolume,
                                   inputVolume2 = self.protImportHalf2.outputVolume,
+                                  provideMaskInHalves = True,
                                   Mask = self.protImportMask.outputVolume,
                                   symmetry = 'd2',
                                   minRes = 1,
@@ -110,7 +110,8 @@ class TestMonoRes(TestMonoResBase):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                   halfVolumens = True,
                                   inputVolume = self.protImportVol.outputVolume,
-                                  applyMask = False,
+                                  provideMaskInHalves = False,
+                                  Mask = '',
                                   symmetry = 'd2',
                                   minRes = 1,
                                   maxRes = 100,
@@ -122,7 +123,7 @@ class TestMonoRes(TestMonoResBase):
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), "MonoRes (no split and no mask) has failed")
 
-    def testResmap4(self):
+    def testMonoRes4(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    halfVolumens = False,
                                    inputVolume = self.protImportVol.outputVolume,

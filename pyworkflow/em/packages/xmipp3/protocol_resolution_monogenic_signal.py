@@ -28,7 +28,7 @@
 
 from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam,  FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
-from convert import readSetOfVolumes
+from convert import readSetOfVolumes, ImageHandler
 from shutil import copyfile
 
 
@@ -113,17 +113,21 @@ class XmippProtMonoRes(ProtRefine3D):
         self.micsFn = self._getPath()
         
         # Convert input into xmipp Metadata format
-        convertId = self._insertFunctionStep('convertInputStep')
+        volLocation1 = self.inputVolume.get().getFileName()
+        volLocation2 = self.inputVolume2.get().getFileName()
+        fnmask = self.Mask.get().getFileName()
+        
+        convertId = self._insertFunctionStep('convertInputStep', volLocation1, fnmask, volLocation2)
         deps = []
                  
-        fnVol = self._getExtraPath('input_volume.vol')
-        
-        if self.symmetry.get() not in ['c1', 'C1']:
-            self._insertFunctionStep('symmetrizeStep', 
-                                     self._getExtraPath('input_mask.vol'),
-                                     prerequisites=[convertId])
 
-        MS = self._insertFunctionStep('resolutionMonogenicSignalStep', fnVol, prerequisites=[convertId])
+        
+#         if self.symmetry.get() not in ['c1', 'C1']:
+#             self._insertFunctionStep('symmetrizeStep', 
+#                                      self._getExtraPath('input_mask.vol'),
+#                                      prerequisites=[convertId])
+
+        MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
         
         if self.symmetry.get() not in ['c1', 'C1']:
             self._insertFunctionStep('symmetrizeStep',
@@ -141,32 +145,40 @@ class XmippProtMonoRes(ProtRefine3D):
 
        
 
-    def convertInputStep(self):
+    def convertInputStep(self, volLocation1, fnmask, volLocation2=None):
         """ Read the input volume.
         """
         # Get the converted input micrographs in Xmipp format
+        ih = ImageHandler()
+        ih.convert(volLocation1, self._getExtraPath('input_volume.vol'))
+        
+        if volLocation2 is not None:
+            ih.convert(volLocation2, self._getExtraPath('input_volume2.vol'))
+            
+        if fnmask is not None:
+            ih.convert(fnmask, self._getExtraPath('input_mask.vol'))
 
-        path_vol = self._getExtraPath() + '/input_volume.vol'
-        vol_ = self.inputVolume.get().getFileName()
-        copyfile(vol_,path_vol)
-        path_vol = self._getExtraPath() + '/input_mask.vol'
-        vol_ = self.Mask.get().getFileName()
-        copyfile(vol_,path_vol)
+
+#         path_vol = self._getExtraPath() + '/input_volume.vol'
+#         vol_ = self.inputVolume.get().getFileName()
+#         copyfile(vol_,path_vol)
+#         path_vol = self._getExtraPath() + '/input_mask.vol'
+#         vol_ = self.Mask.get().getFileName()
+#         copyfile(vol_,path_vol)
    
    
-    def resolutionMonogenicSignalStep(self, fnVol):
+    def resolutionMonogenicSignalStep(self):
 
         if self.halfVolumens.get() is False:
-            params =  ' --vol %s' % self.inputVolume.get().getFileName()
-            params +=  ' --mask %s' % self.Mask.get().getFileName()
+            params =  ' --vol %s' % self._getExtraPath('input_volume.vol')
+            params +=  ' --mask %s' %  self._getExtraPath('input_mask.vol')
         else:
-            params =  ' --vol %s' % self.inputVolume.get().getFileName()
-            params +=  ' --vol2 %s' % self.inputVolume2.get().getFileName()
-            
-        if self.provideMaskInHalves.get() is True:
-            params +=  ' --mask %s' % self.Mask.get().getFileName()
-        else:
-            params +=  ' --mask %s' % ''
+            params =  ' --vol %s' %  self._getExtraPath('input_volume.vol')
+            params +=  ' --vol2 %s' %  self._getExtraPath('input_volume2.vol')
+            if self.provideMaskInHalves.get() is True:
+                params +=  ' --mask %s' % self._getExtraPath('input_mask.vol')
+            else:
+                params +=  ' --mask %s' % ''
         
         params +=  ' -o %s' % self._getExtraPath('MGresolution.vol')
         params +=  ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()

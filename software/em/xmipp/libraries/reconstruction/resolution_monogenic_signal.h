@@ -55,7 +55,7 @@ public:
 	double sampling, minRes, maxRes;
 
 	/** Is the volume previously masked?*/
-	int R;
+	//int R;
 
 	/** Step in digital frequency */
 	double N_freq, trimBound, significance;

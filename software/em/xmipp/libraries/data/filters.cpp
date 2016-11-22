@@ -482,6 +482,93 @@ void regionGrowing3D(const MultidimArray<double> &V_in,
     }
 }
 
+
+void regionGrowing3DEqualValue(const MultidimArray<double> &V_in, MultidimArray<int> &V_out, int filling_value=0)
+{
+    V_in.checkDimension(3);
+
+    std::list<Coordinate3D> iNeighbours; /* A list for neighbour voxels */
+    int iCurrentk, iCurrenti, iCurrentj; /* Coordinates of the current voxel considered */
+
+    /* First task is copying the input volume into the output one */
+    V_out.resizeNoCopy(V_in);
+    V_out.initConstant(1);
+
+    /**** Then the region growing is done in output volume ****/
+    /* Insert at the beginning of the list the seed coordinates */
+    Coordinate3D coord;
+    coord.ii = STARTINGY(V_in);
+    coord.jj = STARTINGX(V_in);
+    coord.kk = STARTINGZ(V_in);
+    iNeighbours.push_front(coord);
+
+    /* Fill the seed coordinates */
+    double bgColor = A3D_ELEM(V_in, STARTINGZ(V_in), STARTINGY(V_in), STARTINGX(V_in));
+    A3D_ELEM(V_out, STARTINGZ(V_out), STARTINGY(V_out), STARTINGX(V_out)) = 0;
+
+    while (!iNeighbours.empty())
+    {
+        /* Take the current pixel to explore */
+        coord = iNeighbours.front();
+        iNeighbours.pop_front();
+        iCurrenti = coord.ii;
+        iCurrentj = coord.jj;
+        iCurrentk = coord.kk;
+
+        /* a macro for doing exploration of a voxel. If the voxel has a value
+         lower than stop_colour, its filled with filling colour and added to the
+         list for exploring its neighbours */
+#undef CHECK_POINT_3D
+#define CHECK_POINT_3D(k,i,j) \
+ {\
+        int I=i; \
+        int J=j; \
+        int K=k; \
+  if (INSIDEXYZ(V_out,J,I,K))  { \
+   double voxel=A3D_ELEM(V_in,K,I,J); \
+   if (A3D_ELEM(V_in,K,I,J)==bgColor && A3D_ELEM(V_out,K,I,J)==1) { \
+     coord.ii=I; \
+     coord.jj=J; \
+     coord.kk=K; \
+     A3D_ELEM (V_out,coord.kk,coord.ii,coord.jj)=filling_value; \
+     iNeighbours.push_front(coord); \
+    } \
+  }\
+ }\
+  //if (voxel == stop_colour) { \
+
+
+        /* Make the exploration of the pixel neighbours */
+        CHECK_POINT_3D(iCurrentk, iCurrenti, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk, iCurrenti, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk, iCurrenti - 1, iCurrentj);
+        CHECK_POINT_3D(iCurrentk, iCurrenti - 1, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk, iCurrenti - 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk, iCurrenti + 1, iCurrentj);
+        CHECK_POINT_3D(iCurrentk, iCurrenti + 1, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk, iCurrenti + 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti, iCurrentj);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti - 1, iCurrentj);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti - 1, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti - 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti + 1, iCurrentj);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti + 1, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk - 1, iCurrenti + 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti, iCurrentj);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti - 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti - 1, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti - 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti + 1, iCurrentj + 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti + 1, iCurrentj - 1);
+        CHECK_POINT_3D(iCurrentk + 1, iCurrenti + 1, iCurrentj + 1);
+    }
+}
+
+
 void distanceTransform(const MultidimArray<int> &in, MultidimArray<int> &out,
                        bool wrap)
 {
