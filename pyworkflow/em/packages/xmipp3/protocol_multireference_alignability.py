@@ -186,17 +186,13 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                 params +=  '  --correct_envelope '
                 
             nproc = self.numberOfMpi.get()
-            nT=self.numberOfThreads.get() 
+            nT=self.numberOfThreads.get()
     
             self.runJob('xmipp_ctf_correct_wiener2d',
                         params)
         
-        Xdim = self.inputParticles.get().getDimensions()[0]
-        Ts = self.inputParticles.get().getSamplingRate()
-        newTs = self.targetResolution.get()*0.4
-        self.newTs = max(Ts,newTs)
-        self.newXdim = Xdim*Ts/self.newTs
-        
+        newTs, newXdim = self._getModifiedSizeAndSampling()
+                
         if self.doWiener.get():
             params =  '  -i %s' % self._getExtraPath('corrected_ctf_particles.xmd')
         else :
@@ -204,7 +200,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
             
         params +=  '  -o %s' % self._getExtraPath('scaled_particles.stk')
         params +=  '  --save_metadata_stack %s' % self._getExtraPath('scaled_particles.xmd')
-        params +=  '  --dim %d' % self.newXdim
+        params +=  '  --dim %d' % newXdim
         
         self.runJob('xmipp_image_resize',params)
         
@@ -212,10 +208,10 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         img = ImageHandler()
         img.convert(self.inputVolumes.get(), self._getExtraPath("volume.vol"))
         Xdim = self.inputVolumes.get().getDim()[0]
-        if Xdim!=self.newXdim:
+        if Xdim!=newXdim:
             self.runJob("xmipp_image_resize","-i %s --dim %d"%\
                         (self._getExtraPath("volume.vol"),
-                        self.newXdim), numberOfMpi=1)
+                        newXdim), numberOfMpi=1)
 
     def _getCommonParams(self):
         params =  '  -i %s' % self._getExtraPath('scaled_particles.xmd')        
@@ -234,11 +230,22 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         params += ' --dontCheckMirrors'
         return params
     
+    def _getModifiedSizeAndSampling(self):
+        Xdim = self.inputParticles.get().getDimensions()[0]
+        Ts = self.inputParticles.get().getSamplingRate()
+        newTs = self.targetResolution.get()*0.4
+        newTs = max(Ts,newTs)
+        newXdim = Xdim*Ts/newTs
+        return newTs, newXdim 
+    
     def phantomProject(self,volName):
         nproc = self.numberOfMpi.get()
-        nT=self.numberOfThreads.get()         
+        nT=self.numberOfThreads.get()
+        
+        newTs, newXdim = self._getModifiedSizeAndSampling()
+        
         pathParticles = self._getExtraPath('scaled_particles.xmd')
-        R = -int(self.newXdim /2)
+        R = -int(newXdim /2)
         f = open(self._getExtraPath('params'),'w')          
         f.write("""# XMIPP_STAR_1 *
 #
@@ -248,12 +255,12 @@ _projAngleFile %s
 _ctfPhaseFlipped %d
 _ctfCorrected %d
 _applyShift 0
-_noisePixelLevel   '0 0'""" % (self.newXdim , self.newXdim, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.doWiener.get()))
+_noisePixelLevel   '0 0'""" % (newXdim , newXdim, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.doWiener.get()))
         f.close()
         param =  ' -i %s' % volName
         param += ' --params %s' % self._getExtraPath('params')
         param += ' -o %s' % self._getPath('reference_particles.xmd')
-        param += ' --sampling_rate % 0.3f' % self.newTs
+        param += ' --sampling_rate % 0.3f' % newTs
         param += ' --method fourier'
                 
         #while (~isfile(self._getExtraPath('params'))):
@@ -394,6 +401,7 @@ _noisePixelLevel   '0 0'""" % (self.newXdim , self.newXdim, pathParticles, self.
        
         outputVols.setSamplingRate(volume.getSamplingRate())
         self._defineOutputs(outputVolumes=outputVols)
+    
         
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
