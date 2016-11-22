@@ -20,25 +20,20 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from pyworkflow.gui.plotter import Plotter
-from pyworkflow.protocol.params import LabelParam, FloatParam
+from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, ObjectView, DataView
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
-# from pyworkflow.utils import runJob, runCommand
-# from pyworkflow.protocol.protocol import runJob
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy import NaN
 
-# import os
-# import subprocess
 
 class XmippMonoResViewer(ProtocolViewer):
     """
@@ -112,11 +107,6 @@ class XmippMonoResViewer(ProtocolViewer):
         md.read(self.protocol._getPath('extra/hist.xmd'))
         x_axis = []
         y_axis = []
-#         y_axis_max = 0
-#         for idx in md:
-#             y_axis__aux_last = md.getValue(MDL_COUNT, idx)
-#             if (y_axis__aux_last>y_axis_max):
-#                 y_axis_max = y_axis__aux_last
 
         i = 0
         for idx in md:
@@ -126,8 +116,7 @@ class XmippMonoResViewer(ProtocolViewer):
             elif i==1:
                 x1 = x_axis_
             y_axis_ = md.getValue(MDL_COUNT, idx)
-#             if (y_axis_<0.1*y_axis_max):
-#                 continue
+
             i+=1
             if (y_axis_== 0):
                 continue
@@ -185,7 +174,6 @@ class XmippMonoResViewer(ProtocolViewer):
         return f, im 
 
     def _showChimera(self, param=None):
-        #os.system('chimera "%s" &' % self.protocol._getPath('volume1_resmap_chimera.cmd'))
         cmdFile = self.protocol._getPath('Chimera_resolution.cmd')
         view = ChimeraView(cmdFile)
         return [view]

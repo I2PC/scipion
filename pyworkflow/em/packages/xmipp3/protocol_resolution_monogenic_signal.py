@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -42,7 +42,6 @@ class XmippProtMonoRes(ProtRefine3D):
     
     def __init__(self, *args, **kwargs):
         ProtRefine3D.__init__(self, *args, **kwargs)
-        #self.stepsExecutionMode = STEPS_PARALLEL
         
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -119,13 +118,6 @@ class XmippProtMonoRes(ProtRefine3D):
         
         convertId = self._insertFunctionStep('convertInputStep', volLocation1, fnmask, volLocation2)
         deps = []
-                 
-
-        
-#         if self.symmetry.get() not in ['c1', 'C1']:
-#             self._insertFunctionStep('symmetrizeStep', 
-#                                      self._getExtraPath('input_mask.vol'),
-#                                      prerequisites=[convertId])
 
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
         
@@ -157,15 +149,6 @@ class XmippProtMonoRes(ProtRefine3D):
             
         if fnmask is not None:
             ih.convert(fnmask, self._getExtraPath('input_mask.vol'))
-
-
-#         path_vol = self._getExtraPath() + '/input_volume.vol'
-#         vol_ = self.inputVolume.get().getFileName()
-#         copyfile(vol_,path_vol)
-#         path_vol = self._getExtraPath() + '/input_mask.vol'
-#         vol_ = self.Mask.get().getFileName()
-#         copyfile(vol_,path_vol)
-   
    
     def resolutionMonogenicSignalStep(self):
 
@@ -207,7 +190,6 @@ class XmippProtMonoRes(ProtRefine3D):
         
         params =  ' -i %s' % fnVol2Sym
         params +=  ' --sym %s' % self.symmetry.get()
-#        params +=  ' -o %s' % self._getExtraPath('MGresolution2.vol')
 
         self.runJob('xmipp_transform_symmetrize', params)
 
@@ -264,17 +246,7 @@ class XmippProtMonoRes(ProtRefine3D):
             validateMsgs.append('Please provide input volume.')  
         return validateMsgs
 
-
-#     def _summary(self):
-#         summary = []
-# 
-#         if  (not hasattr(self,'outputParticles')):
-#             summary.append("Output tilpairs not ready yet.")
-#         else:
-#             summary.append("Three-uples of Tilt pairs angles assigned: %d" %self.outputParticles.__len__())
-#             #
-#         return summary
-    
+   
     def _methods(self):
         messages = []
         if (hasattr(self,'outputParticles')):
@@ -283,9 +255,3 @@ class XmippProtMonoRes(ProtRefine3D):
     
     def _citations(self):
         return ['Not yet']
-    
-#     def getSummary(self):
-#         summary = []
-#         summary.append("Particles analyzed:")
-#         #summary.append("Particles picked: %d" %coordsSet.getSize())
-#         return "\n"#.join(summary)
