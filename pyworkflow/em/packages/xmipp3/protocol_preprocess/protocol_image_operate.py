@@ -28,8 +28,8 @@
 # *
 # *****************************************************************************
 
-# import os
-# import xmipp
+from collections import OrderedDict
+
 from pyworkflow.em.constants import ALIGN_NONE
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtOperateParticles, ProtOperateVolumes
@@ -57,11 +57,7 @@ OP_ROW = 14
 OP_RADIAL = 15
 OP_RESET = 16
 
-OP_CHOICES = [-1]*(OP_RESET+1)
-
-#OP_CHOICES = ['plus', 'minus', 'multiply', 'divide', 'minimum', 'maximum',
-#              'dot product', 'log', 'log10', 'sqrt', 'abs', 'pow', 'slice',
-#              'colunm', 'row', 'radial average', 'reset']
+OP_CHOICES = OrderedDict() #[-1]*(OP_RESET+1)
 
 OP_CHOICES[OP_PLUS]  = 'plus'
 OP_CHOICES[OP_MINUS] = 'minus'
@@ -82,12 +78,10 @@ OP_CHOICES[OP_RADIAL] = 'radial average'
 OP_CHOICES[OP_RESET] = 'reset'
 
 
-#binaryCondition = '(operation == 0 or operation == 1 or operation == 2 or '\
-#                  'operation == 3 or operation == 4 or operation == 5) '\
-binaryCondition = '(operation == %d or operation == %d or operation == %d or '\
-                  'operation == %d or operation == %d or operation == %d) '%\
-                  (OP_PLUS, OP_MINUS, OP_MULTIPLY, \
-                   OP_DIVIDE, OP_MINIMUM, OP_MAXIMUM)
+binaryCondition = ('(operation == %d or operation == %d or operation == %d or '
+                   'operation == %d or operation == %d or operation == %d) ' %
+                   (OP_PLUS, OP_MINUS, OP_MULTIPLY,
+                    OP_DIVIDE, OP_MINIMUM, OP_MAXIMUM))
 
 #noValueCondition = '(operation == 7 or operation == 8 or operation == 9 or '\
 #                   'operation == 10 or operation == 15 or operation == 16) '
@@ -121,7 +115,7 @@ class XmippOperateHelper():
 
     #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):
-        form.addParam('operation', params.EnumParam, choices=OP_CHOICES,
+        form.addParam('operation', params.EnumParam, choices=OP_CHOICES.keys(),
                       default=OP_PLUS,
                       label="Operation",
                       help="Binary operations: \n"
