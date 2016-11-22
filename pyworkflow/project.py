@@ -160,6 +160,9 @@ class Project(object):
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)
 
+    def getLogPath(self, *paths):
+        return self.getPath(PROJECT_LOGS, *paths)
+
     def getSettings(self):
         return self.settings
 
@@ -668,15 +671,19 @@ class Project(object):
 
         return result
 
-    def exportProtocols(self, protocols, filename):
-        """ Create a text json file with the info
-        to import the workflow into another project.
-        This methods is very similar to copyProtocol
-        Params:
-            protocols: a list of protocols to export.
-            filename: the filename where to write the workflow.
-        
+    def getProtocolsJson(self, protocols=None, namesOnly=False):
+        """ Create a Json string with the information of the given protocols.
+         Params:
+            protocols: list of protocols or None to include all.
+            namesOnly: the output list will contain only the protocol names.
         """
+        protocols = protocols or self.getRuns()
+
+        # If the nameOnly, we will simply return a json list with their names
+        if namesOnly:
+            return json.dumps([prot.getClassName() for prot in protocols])
+
+
         # Handle the copy of a list of protocols
         # for this case we need to update the references of input/outputs
         newDict = OrderedDict()
@@ -708,10 +715,20 @@ class Project(object):
                             childDict[iKey] = '%s.%s' % (
                             protId, oKey)  # equivalent to pointer.getUniqueId
 
-        f = open(filename, 'w')
+        return json.dumps(list(newDict.values()),
+                          indent=4, separators=(',', ': '))
 
-        f.write(json.dumps(list(newDict.values()),
-                           indent=4, separators=(',', ': ')) + '\n')
+    def exportProtocols(self, protocols, filename):
+        """ Create a text json file with the info
+        to import the workflow into another project.
+        This methods is very similar to copyProtocol
+        Params:
+            protocols: a list of protocols to export.
+            filename: the filename where to write the workflow.
+        """
+        jsonStr = self.getProtocolsJson(protocols)
+        f = open(filename, 'w')
+        f.write(jsonStr)
         f.close()
 
     def loadProtocols(self, filename=None, jsonStr=None):
