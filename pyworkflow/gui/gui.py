@@ -20,25 +20,23 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains all configuration
-settings and gui general functions 
-"""
+
+
 import os
 import Tkinter as tk
 import tkFont
 import Queue
 from pyworkflow.object import OrderedObject
-from pyworkflow.utils.path import findResource
+from pyworkflow import findResource
 from pyworkflow.utils.properties import Message, Color, Icon
 from widgets import Button
 
-"""
-Some GUI CONFIGURATION parameters
-"""
+
+# --------------- GUI CONFIGURATION parameters -----------------------
+
 #TODO: read font size and name from config file
 cfgFontName = os.environ.get('SCIPION_FONT_NAME', "Helvetica")
 cfgFontSize = int(os.environ.get('SCIPION_FONT_SIZE', 10))  
@@ -90,9 +88,8 @@ def saveConfig(filename):
     mapper.commit()
             
    
-"""
-FONT related variables and functions 
-"""
+# --------------- FONT related variables and functions  -----------------------
+
 def setFont(fontKey, update=False, **opts):
     """Register a tkFont and store it in a globals of this module
     this method should be called only after a tk.Tk() windows has been
@@ -115,11 +112,14 @@ def setCommonFonts(windows=None):
     Same conditions of setFont applies here."""
     f = setFont('fontNormal', family=cfgFontName, size=cfgFontSize)
     aliasFont('fontButton', 'fontNormal')
-    fb = setFont('fontBold', family=cfgFontName, size=cfgFontSize, weight='bold')
-    fi = setFont('fontItalic', family=cfgFontName, size=cfgFontSize, slant='italic')
+    fb = setFont('fontBold', family=cfgFontName, size=cfgFontSize,
+                 weight='bold')
+    fi = setFont('fontItalic', family=cfgFontName, size=cfgFontSize,
+                 slant='italic')
     setFont('fontLabel', family=cfgFontName, size=cfgFontSize+1, weight='bold')
     if windows:
-        windows.fontBig = tkFont.Font(size=cfgFontSize+2, family=cfgFontName, weight='bold')
+        windows.fontBig = tkFont.Font(size=cfgFontSize+2, family=cfgFontName,
+                                      weight='bold')
         windows.font = f
         windows.fontBold = fb
         windows.fontItalic = fi 
@@ -136,11 +136,11 @@ def changeFontSize(font, event, minSize=-999, maxSize=999):
         deltha = -2
     changeFontSizeByDeltha(font, deltha, minSize, maxSize)
 
-"""
-IMAGE related variables and functions 
-"""
 
-def getImage(imageName, imgDict=None, tkImage=True, percent=100, maxheight=None):
+# --------------- IMAGE related variables and functions -----------------------
+
+def getImage(imageName, imgDict=None, tkImage=True, percent=100,
+             maxheight=None):
     """ Search for the image in the RESOURCES path list. """
     if imageName is None:
         return None
@@ -209,7 +209,8 @@ def getGeometry(win):
     ''' Return the geometry information of the windows
     It will be a tuple (width, height, x, y)
     '''
-    return win.winfo_reqwidth(), win.winfo_reqheight(), win.winfo_x(), win.winfo_y()
+    return (win.winfo_reqwidth(), win.winfo_reqheight(),
+            win.winfo_x(), win.winfo_y())
 
 def centerWindows(root, dim=None, refWindows=None):
     """Center a windows in the middle of the screen 
@@ -244,8 +245,8 @@ class Window():
     It will encapsulates some basic creation and 
     setup functions. """
     
-    def __init__(self, title='', masterWindow=None, weight=True, minsize=(500, 300),
-                 icon=None, **kwargs):
+    def __init__(self, title='', masterWindow=None, weight=True,
+                 minsize=(500, 300), icon=None, **kwargs):
         """Create a Tk window.
         title: string to use as title for the windows.
         master: if not provided, the windows create will be the principal one
@@ -362,7 +363,8 @@ class Window():
         self.close()
         
     def getImage(self, imgName, percent=100, maxheight=None):
-        return getImage(imgName, self._images, percent=percent, maxheight=maxheight)
+        return getImage(imgName, self._images, percent=percent,
+                        maxheight=maxheight)
     
     def createMainMenu(self, menuConfig):
         """Create Main menu from the given MenuConfig object."""
@@ -390,6 +392,10 @@ class Window():
                     """Return a callback function named "on<Name>"."""
                     f = "on%s" % "".join(x.capitalize() for x in name.split())
                     return lambda: getattr(self, f)()
+
+                if sub.shortCut.get() is not None:
+                    menuLabel += ' (' + sub.shortCut.get() + ')'
+
                 menu.add_command(label=menuLabel, compound=tk.LEFT,
                                  image=self.getImage(sub.icon.get()),
                                  command=callback(name=sub.text.get()))

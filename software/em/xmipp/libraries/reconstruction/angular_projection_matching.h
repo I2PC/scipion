@@ -134,13 +134,11 @@ public:
     /** Threads */
     int threads;
     //Numbre of possible orientations
-    int number_orientations;
+    int numOrientations;
     /** Number of translations in 5D search */
     size_t nr_trans;
     /** Thread barrier */
     barrier_t thread_barrier;
-
-    int numOrientations;
 
     /** scale params */
     bool do_scale;

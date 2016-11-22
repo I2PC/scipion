@@ -102,7 +102,35 @@ class Manager(object):
                                        self.getProjectPath(projectName))
 
         return project
-    
+
+    def importProject(self, fromLocation, copyFiles=True, projectName=None, searchLocation=None):
+        """Import a project that is somewhere else in the FS
+        Folder can be copied (default) or linked
+        Optionally a name can be specified, otherwise name will match location folder name
+        Project will always be created in the default project folder.
+        """
+        # If projectName is None...
+        if projectName is None:
+            # use same name as the import location
+            projectName = os.path.basename(fromLocation)
+
+        projectPath = self.getProjectPath(projectName)
+
+        # If need to copyFiles
+        if copyFiles:
+            # Copy the whole folder
+            pwutils.path.copyTree(os.path.abspath(fromLocation), os.path.abspath(projectPath))
+
+        else:
+            # Link the folder
+            pwutils.path.createAbsLink(os.path.abspath(fromLocation), projectPath)
+
+        project = self.loadProject(projectName)
+
+        if searchLocation: project.fixLinks(searchLocation)
+
+        return project
+
     def loadProject(self, projId, **kwargs):
         """ Retrieve a project object, given its id. """
         project = Project(self.getProjectPath(projId))

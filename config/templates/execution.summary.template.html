@@ -1,0 +1,404 @@
+<HTML>
+    <HEAD>
+        <TITLE>Scipion execution summary for %(projectName)s </TITLE>
+        %(refresh)s
+    </HEAD>
+    <STYLE>
+        /* Color scheme based on http://paletton.com/#uid=300150kpYmAh8uxlUqhtHisBJda */
+        BODY {
+          text-align: center;
+          margin: 0px;
+        }
+
+        #content {
+          text-align: left;
+          width: 800px;
+          margin: 0 auto;
+        }        
+        H1 {
+            border-bottom: 2px solid firebrick;
+            color: #6E6E6E;
+        }
+        
+        H2 {
+/*            background: grey;*/
+            color: firebrick;
+            border-bottom: 1px solid firebrick;
+            padding-left: 8px
+        }
+
+        SECTION {
+        }
+        LABEL {
+            font-weight: bold;
+            margin: 8px;
+        }
+        .propertyline {
+            margin-top: 3px;
+            margin-bottom: 4px;
+        }
+        FOOTER {
+            text-align: center;
+            font-style: italic;
+            font-size: small;
+            margin-top: 20px;
+                
+        }
+        .icon {
+            margin-left: 6px;
+            height: 16px;
+            width: 16px;
+        }
+        
+        .icon,
+        .valign {
+            vertical-align: middle;
+        }
+        TABLE {
+            border-collapse: collapse;
+            margin: auto;
+            width: 100%%;
+        }
+        TH {
+            background: #EAEBEC;
+            padding: 3px;
+        }
+        TD {
+            padding: 5px;
+        }
+        .protocolLine {
+            background: #F2F2F2;
+        }
+        .center {
+            text-align: center;
+        }
+        
+        /* Grid layout classes */
+        /* Taken from https://www.sitepoint.com/understanding-css-grid-systems/ */
+        .row, 
+        .column {
+            box-sizing: border-box;
+        }
+        
+        .row:before,
+        .row:after {
+            content: " ";
+            display: table;
+        }
+
+        .row:after {
+            clear: both;
+        }
+        
+        .column {
+            position: relative;
+            float: left;
+        }
+        .column + .column {
+            margin-left: 1.6%%;
+        }
+        .column-1 {
+            width: 6.86666666667%%;
+        }
+
+        .column-2 {
+            width: 15.3333333333%%;
+        }
+
+        .column-3 {
+            width: 23.8%%;
+        }
+
+        .column-4 {
+            width: 32.2666666667%%;
+        }
+
+        .column-5 {
+            width: 40.7333333333%%;
+        }
+
+        .column-6 {
+            width: 49.2%%;
+        }
+
+        .column-7 {
+            width: 57.6666666667%%;
+        }
+
+        .column-8 {
+            width: 66.1333333333%%;
+        }
+
+        .column-9 {
+            width: 74.6%%;
+        }
+
+        .column-10 {
+            width: 83.0666666667%%;
+        }
+
+        .column-11 {
+            width: 91.5333333333%%;
+        }
+
+        .column-12 {
+            width: 100%%;
+        }
+        @media only screen and (max-width: 550px) {
+            .column-1, 
+            .column-2, 
+            .column-3, 
+            .column-4, 
+            .column-5, 
+            .column-6, 
+            .column-7, 
+            .column-8, 
+            .column-9, 
+            .column-10, 
+            .column-11, 
+            .column-12 {
+                width: auto;
+                float: none;
+            }
+
+            .column + .column {
+                margin-left: 0;
+            }
+        }
+    </STYLE>
+    <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+    <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
+    <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
+    <BODY>
+        <DIV id="content">
+            <H1><img class="valign" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo_small.png">&nbsp;&nbsp; Project %(projectName)s </H1>
+            <DIV class="row">
+                <DIV class="column column-5">
+                    <H2>Project properties</H2>
+                    <P class="propertyline"><label>Start time:</label> %(startTime)s</P>
+                    <P class="propertyline"><label>Last update:</label> %(dateStr)s</P>
+                    <P class="propertyline"><label>Duration:</label> %(projectDuration)s</P>
+                    <P class="propertyline"><label>Status:</label> %(projectStatus)s</P>
+                    <P class="propertyline"><label>Scipion version:</label> %(scipionVersion)s</P>
+
+                    <DIV id="acquisition">
+                        <H2>Acquisition</H2>
+                    </DIV>
+                </DIV>
+
+                <DIV id="runs" class="column column-7">
+                    <H2>Runs summary</H2>
+                    <TABLE id="runsTable" class='center'>
+                        <TR>
+                            <TH>Name</TH>
+                            <TH>Output</TH>
+                            <TH>Number</TH>
+                        </TR>
+                    </TABLE>
+                </DIV>
+            </DIV>
+
+            <SECTION id="ctf">
+                <H2>CTF monitor</H2>
+                <DIV id="ctfChart"></DIV>
+            </SECTION>
+            <SECTION id="system">
+                <H2>System monitor</H2>
+                <DIV id="systemChart"></DIV>
+            </SECTION>
+        </DIV>
+        
+        <FOOTER>
+            Powered by <A href="http://scipion.cnb.csic.es">Scipion</A><img class="icon" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/favicon.png">
+        </FOOTER>
+    </BODY>
+    <SCRIPT>
+    
+        var report ={
+            date:"%(dateStr)s",
+            project:"%(projectName)s",
+            scipionVersion:"%(scipionVersion)s",
+            acquisition:[
+                %(acquisitionLines)s    
+            ],
+            runs:[
+                %(runLines)s
+            ],
+            ctfData: %(ctfData)s,
+            systemData: %(systemData)s
+        }
+        
+        function addAcquisition(){
+            // Get the acquisition section
+            var acquisitionSection = $('#acquisition');
+            
+            // For each acquisition property
+            $.each(report.acquisition, function(index, value){
+                var line = "<P class='propertyline'><label>" + value.propertyName + "</label> " + value.propertyValue + '</P>';
+                $(acquisitionSection).append(line);
+            });
+            
+        };
+        
+        function addRuns(){
+            // Get the runs table
+            var runsTable = $('#runsTable');
+            
+            
+            // For each protocol property
+            $.each(report.runs, function(index, value){
+                var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
+                $(runsTable).append(line);
+            
+                $.each(value.output, function(index, value){
+                    var outputLine = "<TR><TD></TD><TD>" + value.name + "</TD><TD class='center'>" + value.size + "</TD></TR>";
+                    $(runsTable).append(outputLine);
+                
+                });
+            });
+        };
+        
+        function addCTFChart () {
+            
+            $('#ctfChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
+                xAxis: {
+                    title: {
+                        text: 'Micrograph index'
+                    },
+                    allowDecimals: false,
+                    type:'linear',
+                    range:50
+                },
+                yAxis: {
+                    title: {
+                        text: 'Defocus(A)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: ' A'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Defocus U',
+                    data: report.ctfData.defocusU,
+                    color: '#24307B'
+                    
+                }, {
+                    name: 'Defocus V',
+                    data: report.ctfData.defocusV,
+                    color: '#B4AC22'
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'    
+                }                
+            });
+            
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var ctfChart = $('#ctfChart').highcharts()
+            ctfChart.showResetZoom();
+
+
+            
+        };
+
+        function addSystemChart () {
+            
+            $('#systemChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
+                xAxis: {
+                    title: {
+                        text: 'Time (hours)'
+                    },
+
+                    type:'linear',
+                    labels:{
+                        format:"{value:.2f}"
+                    },
+                    range:50
+                },
+                yAxis: {
+                    title: {
+                        text: 'Percentage (%%)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: '%%'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Memory',
+                    data: report.systemData.mem,
+                    color: '#24307B'
+                    
+                }, {
+                    name: 'Swap',
+                    data: report.systemData.swap,
+                    color: '#B4AC22'
+                }, {
+                    name: 'cpu',
+                    data: report.systemData.cpu,
+                    color: '#D14242'
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'
+                } 
+            });
+
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var systemChart = $('#systemChart').highcharts()
+            systemChart.showResetZoom();
+            
+            
+        };
+
+        function populateReport(){
+            addAcquisition();
+            addRuns();
+            addCTFChart();
+            addSystemChart();
+        };
+        
+        populateReport();
+        
+        
+    </SCRIPT>
+<HTML>

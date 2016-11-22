@@ -759,6 +759,33 @@ template<typename T>
             }
     }
 
+    /** flip image around Y axis
+     *
+     */
+    void
+    mirrorX(void)
+    {
+      T aux = 0;
+      size_t Z, Y, X, N, X2;
+
+      X = XSIZE(data);
+      Y = YSIZE(data);
+      Z = ZSIZE(data);
+      N = NSIZE(data);
+      X2 = X / 2;
+      X--;
+      for (size_t l = 0; l < N; ++l)
+        for (size_t k = 0; k < Z; ++k)
+          for (size_t i = 0; i < Y; ++i)
+            for (size_t j = 0; j < X2; ++j)
+            {
+              aux = DIRECT_NZYX_ELEM(data, l, k, i, j);
+              DIRECT_NZYX_ELEM(data, l, k, i, j) = DIRECT_NZYX_ELEM(data, l, k,
+                  i, X - j);
+              DIRECT_NZYX_ELEM(data, l, k, i, X - j) = aux;
+            }
+    }
+
     void
     selfApplyGeometry(int SplineDegree, bool wrap = WRAP,
         bool only_apply_shifts = false)

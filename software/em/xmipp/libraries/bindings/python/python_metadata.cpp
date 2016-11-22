@@ -1462,7 +1462,7 @@ MetaData_iternext(PyObject *obj)
 PyObject *
 MetaData_sort(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label   =  MDL_IMAGE;
+    int label = MDL_IMAGE;
     PyObject *ascPy = Py_True;
     bool asc=true;
     int limit   = -1;
@@ -1491,17 +1491,22 @@ MetaData_sort(PyObject *obj, PyObject *args, PyObject *kwargs)
 PyObject *
 MetaData_removeDuplicates(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    try
+    int label = MDL_UNDEFINED;
+
+    if (PyArg_ParseTuple(args, "|i", &label))
     {
-        MetaDataObject *self = (MetaDataObject*) obj;
-        MetaData MDaux = *(self->metadata);
-        self->metadata->clear();
-        self->metadata->removeDuplicates(MDaux);
-        Py_RETURN_NONE;
-    }
-    catch (XmippError &xe)
-    {
-        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*) obj;
+            MetaData MDaux = *(self->metadata);
+            self->metadata->clear();
+            self->metadata->removeDuplicates(MDaux, (MDLabel)label);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError &xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
     return NULL;
 }

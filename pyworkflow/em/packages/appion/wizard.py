@@ -28,13 +28,15 @@ This module implement some wizards
 """
 
 import os
+
+import pyworkflow as pw
 from pyworkflow.em.wizard import EmWizard
-from protocol_picking import DogPickerProtPicking
 from pyworkflow.em import CoordinatesObjectView
-from pyworkflow.em.showj import CLASSIFIER
-from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
-from pyworkflow.utils import makePath, cleanPath
-from pyworkflow.utils.utils import readProperties
+from pyworkflow.utils import makePath, cleanPath, readProperties
+
+from protocol_picking import DogPickerProtPicking
+
+
 #===============================================================================
 # PICKER
 #===============================================================================
@@ -62,8 +64,8 @@ class DogPickerWizard(EmWizard):
 
         args = {
           "dogpicker" : os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py"),
-          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
-          'coordsDir':coordsDir,
+          "convert" : pw.join('apps', 'pw_convert.py'),
+          'coordsDir': coordsDir,
           'micsSqlite': micSet.getFileName(),
           "diameter": autopickProt.diameter,
           "threshold": autopickProt.threshold,

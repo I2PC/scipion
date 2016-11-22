@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -30,6 +30,7 @@ from os.path import exists
 import pyworkflow.em as em
 import pyworkflow.em.showj as showj
 import pyworkflow.em.metadata as md
+from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
@@ -41,6 +42,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
+from protocol_sort import ProtRelionSortParticles
 
 
 ITER_LAST = 0
@@ -64,6 +66,7 @@ FSC_RANDOMIZED = 3
 FSC_ALL = 4
 
 
+
 class RelionPlotter(EmPlotter):
     ''' Class to create several plots with Xmipp utilities'''
     def __init__(self, x=1, y=1, mainTitle="", **kwargs):
@@ -81,19 +84,19 @@ class RelionPlotter(EmPlotter):
         
         self.plotAngularDistribution(title, rot, tilt, weight)
 
-    def plotMd(self, md, mdLabelX, mdLabelY, color='g',**args):
+    def plotMd(self, mdObj, mdLabelX, mdLabelY, color='g',**args):
         """ plot metadata columns mdLabelX and mdLabelY
             if nbins is in args then and histogram over y data is made
         """
         if mdLabelX:
             xx = []
         else:
-            xx = range(1, md.size() + 1)
+            xx = range(1, mdObj.size() + 1)
         yy = []
-        for objId in md:
+        for objId in mdObj:
             if mdLabelX:
-                xx.append(md.getValue(mdLabelX, objId))
-            yy.append(md.getValue(mdLabelY, objId))
+                xx.append(mdObj.getValue(mdLabelX, objId))
+            yy.append(mdObj.getValue(mdLabelY, objId))
         
         nbins = args.pop('nbins', None)
         if nbins is None:
@@ -105,8 +108,8 @@ class RelionPlotter(EmPlotter):
         """ plot metadataFile columns mdLabelX and mdLabelY
             if nbins is in args then and histogram over y data is made
         """
-        md = md.MetaData(mdFilename)
-        self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
+        mdObj = md.MetaData(mdFilename)
+        self.plotMd(mdObj, mdLabelX, mdLabelY, color='g',**args)
         
     
 class RelionViewer(ProtocolViewer):
@@ -195,7 +198,11 @@ Examples:
                           expertLevel=LEVEL_ADVANCED,
                           label='Spheres size',
                           help='')
+
             group = form.addGroup('Resolution')
+            group.addParam('figure', params.EnumParam, default=0,
+                           choices=['new', 'active'],
+                           label='Figure', display=params.EnumParam.DISPLAY_HLIST)
             group.addParam('resolutionPlotsSSNR', params.LabelParam, default=True,
                           label='Display SSNR plots',
                           help='Display signal to noise ratio plots (SSNR) ')
@@ -502,31 +509,33 @@ Examples:
 #===============================================================================
 # plotSSNR              
 #===============================================================================
+
+    def _getFigure(self):
+        return None if self.figure == 0 else 'active'
+
     def _showSSNR(self, paramName=None):
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
         gridsize = self._getGridSize(n)
         md.activateMathExtensions()
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1])
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], figure=self._getFigure())
         
         for prefix in prefixes:
             for ref3d in self._refsList:
                 plot_title = 'Resolution SSNR %s, for Class %s' % (prefix, ref3d)
                 a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'log(SSNR)', yformat=False)
                 blockName = 'model_class_%d@' % ref3d
-                legendName = []
                 for it in self._iterations:
                     fn = self._getModelStar(prefix, it)
                     if exists(fn):
-                        self._plotSSNR(a, blockName+fn)
-                    legendName.append('iter %d' % it)
-                xplotter.showLegend(legendName)
+                        self._plotSSNR(a, blockName+fn, 'iter %d' % it)
+                xplotter.legend()
                 a.grid(True)
         
         return [xplotter]
     
-    def _plotSSNR(self, a, fn):
+    def _plotSSNR(self, a, fn, label):
         mdOut = md.MetaData(fn)
         mdSSNR = md.MetaData()
         # only cross by 1 is important
@@ -534,52 +543,53 @@ Examples:
         mdSSNR.operate("rlnSsnrMap=log(rlnSsnrMap)")
         resolution_inv = [mdSSNR.getValue(md.RLN_RESOLUTION, id) for id in mdSSNR]
         frc = [mdSSNR.getValue(md.RLN_MLMODEL_DATA_VS_PRIOR_REF, id) for id in mdSSNR]
-        a.plot(resolution_inv, frc)
+        a.plot(resolution_inv, frc, label=label)
         a.xaxis.set_major_formatter(self._plotFormatter)               
  
 #===============================================================================
 # plotFSC            
 #===============================================================================
     def _showFSC(self, paramName=None):
+        #self._iterations = self._getListFromRangeString(self.iterSelection.get())
+        print("_showFSC_self._iterations",self._iterations)
         threshold = self.resolutionThresholdFSC.get()
         prefixes = self._getPrefixes()        
         nrefs = len(self._refsList)
         n = nrefs * len(prefixes)
-        gridsize = self._getGridSize(n)
+        #gridsize = self._getGridSize(n)
         
         md.activateMathExtensions()
         
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
-
+        fscViewer = em.FscViewer(project=self.protocol.getProject(),
+                                 threshold=threshold,
+                                 protocol=self.protocol,
+                                 figure=self._getFigure())
         for prefix in prefixes:
-            for ref3d in self._refsList:
-                plot_title = prefix + 'class %s' % ref3d
-                a = xplotter.createSubPlot(plot_title, 'Angstroms^-1', 'FSC', yformat=False)
-                legends = []
+            for ref3d in self._refsList:#ROB: I believe len(_refsList)==1
+                #plot_title = prefix + 'class %s' % ref3d
                 blockName = 'model_class_%d@' % ref3d
                 for it in self._iterations:
                     model_star = self._getModelStar(prefix, it)
-                    print "modelStar: ", model_star
+
                     if exists(model_star):
-                        self._plotFSC(a, blockName + model_star)
-                        legends.append('iter %d' % it)
-                xplotter.showLegend(legends)
-                if threshold < self.maxFrc:
-                    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
-                a.grid(True)
-        
-        return [xplotter]
+                        #fnFSC=\
+                        blockName + model_star
+                        fsc = self._plotFSC(None, blockName + model_star, 'iter %d' % it)
+                        fscViewer.plotFsc(fsc, label=('iter %d' % it))
+
+        return [fscViewer]
     
-    def _plotFSC(self, a, model_star):
+    def _plotFSC(self, a, model_star, label):
         mdStar = md.MetaData(model_star)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
         frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
-        self.maxFrc = max(frc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, frc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
+
+        fsc = em.data.FSC(objLabel=label)
+        fsc.setData(resolution_inv,frc)
+
+        return fsc
+
+
     
 #===============================================================================
 # Utils Functions
@@ -847,6 +857,7 @@ class PostprocessViewer(ProtocolViewer):
 #===============================================================================
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
+
         n = 1
         gridsize = [1, 1]
         
@@ -865,7 +876,8 @@ class PostprocessViewer(ProtocolViewer):
         if threshold < self.maxfsc:
             a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
         a.grid(True)
-        
+
+
         return [xplotter]
     
     def _plotFSC(self, a, model, label):
@@ -1388,3 +1400,43 @@ Examples:
             return 'Masked Maps'
         else:
             return 'Phase Randomized Masked Maps'
+
+
+class RelionSortViewer(Viewer):
+    """ Wrapper to visualize Relion sort protocol results
+    """
+    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _targets = [ProtRelionSortParticles]
+
+    def _visualize(self, obj, **kwargs):
+        views = []
+
+        if obj.hasAttribute('outputParticles'): # Protocol finished
+            particles = obj.outputParticles
+            labels = ('id enabled _index _filename _rlnSelectParticlesZscore '
+                      '_coordinate._rlnAutopickFigureOfMerit _sampling '
+                      '_ctfModel._defocusU _ctfModel._defocusV '
+                      '_ctfModel._defocusAngle _transform._matrix')
+            sortBy = '_rlnSelectParticlesZscore asc'
+            strId = particles.strId()
+            fn = particles.getFileName()
+            views.append(em.ObjectView(self._project, strId, fn,
+                                       viewParams={showj.ORDER: labels,
+                                                   showj.VISIBLE: labels,
+                                                   showj.SORT_BY: sortBy,
+                                                   showj.RENDER:'_filename'}))
+
+            fn = obj._getExtraPath('input_particles_sorted.star')
+            mdFn = md.MetaData(fn)
+            # If Zscore in output images plot Zscore particle sorting
+            if mdFn.containsLabel(md.RLN_SELECT_PARTICLES_ZSCORE):
+                # sort output by Z-score
+                mdFn.sort(md.RLN_SELECT_PARTICLES_ZSCORE)
+                xplotter = RelionPlotter(windowTitle="Zscore particles sorting")
+                xplotter.createSubPlot("Particle sorting", "Particle number",
+                                       "Zscore")
+                xplotter.plotMd(mdFn, False,
+                                mdLabelY=md.RLN_SELECT_PARTICLES_ZSCORE)
+                views.append(xplotter)
+
+        return views

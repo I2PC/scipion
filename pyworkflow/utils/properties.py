@@ -42,6 +42,7 @@ class Message():
     # Projects Template
     LABEL_PROJECTS = 'Projects'
     LABEL_CREATE_PROJECT = 'Create Project'
+    LABEL_IMPORT_PROJECT = 'Import project'
     TITLE_CREATE_PROJECT = 'Enter the project name'
     TITLE_CREATE_PROJECT_NAME = 'Project Name: '
     TITLE_EDIT_OBJECT = 'Edit Object properties'
@@ -322,7 +323,9 @@ Do you really want to continue?'
 
     TITLE_PICK_GAUSS = 'Automatic gaussian picking'
     LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
-    
+
+
+# To get font awesome icons into png use: http://fa2png.io/
 class Icon():
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
@@ -362,10 +365,12 @@ class Icon():
     
     ARROW_UP = 'fa-arrow-up.png'
     ARROW_LEFT = 'fa-arrow-left.png'
-    
+    BRUSH = 'fa-paint-brush.png'
+    TAGS = 'fa-tags.png'
     HOME = 'fa-home.png'
     LIGHTBULB = 'fa-lightbulb-o.png'
     PLUS_CIRCLE = 'fa-plus-circle.png'
+    LINK = 'fa-iconmoon-link.png'
 
 
 class Color():

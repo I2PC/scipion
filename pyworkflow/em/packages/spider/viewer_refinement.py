@@ -181,7 +181,7 @@ Examples:
         self.createVolumesSqlite(self.getVolumeNames(), 
                                  volSqlite, samplingRate)
         
-        return [self.getObjectView(volSqlite)]
+        return [self.objectView(volSqlite)]
         
     def getVolumeNames(self, it=None):
         """ If it is not none, return the volume of this iteration only. """

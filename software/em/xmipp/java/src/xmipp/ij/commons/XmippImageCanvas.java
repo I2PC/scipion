@@ -5,17 +5,16 @@ import ij.ImagePlus;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+import java.awt.event.*;
 import javax.swing.SwingUtilities;
 
 
-public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
+public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener, KeyListener
 {
 	
 	private boolean invertx;
 	private boolean inverty;
+    boolean[] keys = new boolean[1024];
 
 	public Tool getTool()
 	{
@@ -40,11 +39,9 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 			super.mousePressed(e);
 			return;
 		}
-		int x = super.offScreenX(e.getX());
-		int y = super.offScreenY(e.getY());
 		if (isDragImage(e))
 		{
-			setupScroll(x, y);
+			customScrollSetup(e);
 			return;
 		}
 		if(e.isControlDown())
@@ -55,6 +52,14 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 				 zoomOut(e.getX(), e.getY());
 		}
 	}
+    public void customScrollSetup(MouseEvent e){
+
+        int x = super.offScreenX(e.getX());
+        int y = super.offScreenY(e.getY());
+
+        setupScroll(x, y);
+
+    }
 
 	protected boolean isDragImage(MouseEvent e)
 	{
@@ -106,7 +111,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 	{
 		if (!e.isShiftDown())
 			return;
-        //System.out.println("mouse wheel moved");  // sorry Airen :)
+
 		int x = e.getX();
 		int y = e.getY();
 		int rotation = e.getWheelRotation();
@@ -131,7 +136,7 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		}
 		if (getTool() == Tool.IMAGEJ)
 			super.mouseMoved(e);
-		
+
 		imp.mouseMoved(x, y);
 		imp.updateStatusbarValue();
 		
@@ -214,6 +219,28 @@ public class XmippImageCanvas extends ImageCanvas implements MouseWheelListener
 		inverty = value;
 	}
 
+    @Override
+    public void keyTyped(KeyEvent keyEvent) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent keyEvent) {
+
+        keys[keyEvent.getKeyCode()] = true;
+    }
+
+    @Override
+    public void keyReleased(KeyEvent keyEvent) {
+        keys[keyEvent.getKeyCode()] = false;
+    }
+
+    protected boolean isKeyPressed(int keyCode){
+        if (keyCode < keys.length){
+            return keys[keyCode];
+        }
+        return false;
+    }
 
 
 }

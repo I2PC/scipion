@@ -31,11 +31,12 @@ from itertools import izip
 from pyworkflow.utils.path import cleanPath, removeBaseExt
 from pyworkflow.object import Set, Float, String, Object
 import pyworkflow.protocol.params as params
-
-from pyworkflow.em.metadata import Row, MetaData
 import pyworkflow.em as em
+from pyworkflow.em.metadata import Row, MetaData
+
 import convert 
 import xmipp
+
 
 
 class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
@@ -232,5 +233,10 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         """ Return the name of the analyze result files. """
         return (self._getExtraPath('ctf_set.sqlite'),
                 self._getExtraPath('ctf_set_pairs.sqlite'))
+        
+    def _stepsCheck(self):
+        # Just to avoid the stream checking inherited from ProtCTFMicrographs
+        pass
+    
         
         
