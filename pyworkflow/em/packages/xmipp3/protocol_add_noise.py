@@ -150,20 +150,12 @@ class XmippProtAddNoise(ProtRefine3D):
         # Get the converted input micrographs in Xmipp format
         inputSet = self.input.get()
         inputPath = self._getExtraPath('inputSet')
-        #if isinstance(inputSet, em.Volume):
-	#  print 'SetOfImages'
-	#  fnSet = inputPath+'.vol'
-	#  writeSetOfVolumes(inputSet, fnSet)
-	#else:
+
 	if isinstance(inputSet, em.SetOfParticles):
 	  fnSet = inputPath+'.xmd'
 	  writeSetOfParticles(inputSet, fnSet)
 	else:
 	  print 'The input set is not a Volume neither a SetOfParticles' 
-	      
-	    
-        #volume_init = self.input.get().getFileName()
-        #copyfile(volume_init,self._getExtraPath('init_vol.vol'))
 
 
     def createOutputStep(self):
