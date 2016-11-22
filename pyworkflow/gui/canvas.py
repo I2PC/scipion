@@ -156,13 +156,13 @@ class Canvas(tk.Canvas, Scrollable):
                 return self.items[i]
         return None
              
-    def _handleMouseEvent(self, event, callback, callOnlyOnItemClick=True):
+    def _handleMouseEvent(self, event, callback):
         xc, yc = self.getCoordinates(event)
         self.lastItem = self._findItem(xc, yc)
         self.callbackResults = None
         self.lastPos = (0, 0)
 
-        if self.lastItem is not None or callOnlyOnItemClick==False:
+        if self.lastItem is not None:
             if callback:
                 self.callbackResults = callback(self.lastItem)
         self.lastPos = (xc, yc)
@@ -170,8 +170,10 @@ class Canvas(tk.Canvas, Scrollable):
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
-        self._handleMouseEvent(event, self.onClickCallback, False)
-        
+        self._handleMouseEvent(event, self.onClickCallback)
+        if self.lastItem is None:
+            self.move_start(event)
+
     def onControlClick(self, event):
         self.cleanSelected = False
         self._unpostMenu()
@@ -205,16 +207,28 @@ class Canvas(tk.Canvas, Scrollable):
     def onDoubleClick(self, event):
         self._handleMouseEvent(event, self.onDoubleClickCallback)
 
+    # move
+    def move_start(self, event):
+        # If nothing was click on ButtonPress
+        if self.lastItem is None:
+            self.config(cursor='fleur')
+            self.scan_mark(event.x, event.y)
+
     def onDrag(self, event):
         try:
+
             if self.lastItem:
                 xc, yc = self.getCoordinates(event)
                 self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
                 self.lastPos = (xc, yc)
+            else:
+                if self.firstPos is None:
+                    self.firstPos = (event.x, event.y)
+                    # print "onDrag position captured."
+                (x, y) = self.getCoordinates(event)
+                self.scan_dragto(event.x, event.y, gain=1)
 
-            elif self.firstPos is None:
-                self.firstPos = (event.x, event.y)
-                # print "onDrag position captured."
+
         except Exception, ex:
             # JMRT: We are having a weird exception here.
             # Presumably because there is concurrency between the onDrag
@@ -225,9 +239,13 @@ class Canvas(tk.Canvas, Scrollable):
 
         if self.firstPos is not None:
 
-            self.onAreaSelected(self.firstPos[0], self.firstPos[1], event.x, event.y)
+            # Failing in "data" view.
+            # TODO: This is not fully implemented
+            # self.onAreaSelected(self.firstPos[0], self.firstPos[1], event.x, event.y)
 
             self.firstPos = None
+
+        self.config(cursor='arrow')
 
     def onMotion(self, event):
         self.onLeave(event) # Hide tooltip and cancel schedule
