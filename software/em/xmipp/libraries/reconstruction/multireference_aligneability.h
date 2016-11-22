@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es) (2016)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
