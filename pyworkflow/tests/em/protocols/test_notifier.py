@@ -62,7 +62,6 @@ class TestNotifier(BaseTest):
 
         results = json.loads(urllib2.urlopen(url).read())
         objects = results["objects"]
-        print "objects", objects, len(objects)
         if  (len(objects)!=0):
             objects = results["objects"][0]
             times_protocolRemote = objects["timesUsed"]
