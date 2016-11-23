@@ -74,7 +74,7 @@ class GrigorieffLabImportParticles():
     def importParticles(self):
         """ Import particles from Frealign.
         Params:
-            parFile: the filename of the parameter file with the alignment in Frealing.
+            parFile: the filename of the parameter file with the alignment in Frealign.
             stackFile: single stack file with the images.
         """
         partSet = self.protocol._createSetOfParticles()
@@ -83,7 +83,7 @@ class GrigorieffLabImportParticles():
         # Create a local link to the input stack file
         localStack = self.protocol._getExtraPath(os.path.basename(self.stackFile))
         pwutils.createLink(self.stackFile, localStack)
-        # Create a temporarly set only with location
+        # Create a temporary set only with location
         tmpSet = SetOfParticles(filename=':memory:')        
         tmpSet.readStack(localStack)
         self._setupSet(tmpSet)
@@ -98,10 +98,8 @@ class GrigorieffLabImportParticles():
         self.protocol._defineOutputs(outputParticles=partSet)
         
     def validateParticles(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
         return errors
-
-                
