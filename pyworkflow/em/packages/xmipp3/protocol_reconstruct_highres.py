@@ -171,13 +171,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                       condition='alignmentMethod==0 and multiresolution',
                       help="In Angstroms. The actual maximum resolution will be the maximum between this number of 0.5 * previousResolution, meaning that"
                       "in a single step you cannot increase the resolution more than 1/2")
-        form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod==0 and globalMethod==1',
+        form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod!=1 and globalMethod==1',
                   expertLevel=LEVEL_ADVANCED, help="In pixels. The next shift is searched from the previous shift plus/minus this amount.")
-        form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod==0 and globalMethod==1', 
+        form.addParam('shiftStep5d', FloatParam, label="Shift step", default=2.0, condition='alignmentMethod!=1 and globalMethod==1', 
 	              expertLevel=LEVEL_ADVANCED, help="In pixels")
-        form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=1, condition='alignmentMethod==0',
+        form.addParam('numberOfPerturbations', IntParam, label="Number of Perturbations", default=1, condition='alignmentMethod!=1',
                   expertLevel=LEVEL_ADVANCED, help="The gallery of reprojections is randomly perturbed this number of times")
-        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod==0',
+        form.addParam('numberOfReplicates', IntParam, label="Max. Number of Replicates", default=2, condition='alignmentMethod!=1',
                   expertLevel=LEVEL_ADVANCED, help="Significant alignment is allowed to replicate each image up to this number of times")
 
         form.addParam('contShift', BooleanParam, label="Optimize shifts?", default=True, condition='alignmentMethod==1',
@@ -270,13 +270,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self._insertFunctionStep('doIteration000', self.inputVolumes.getObjId())
             self.firstIteration=1
         self.TsOrig=self.inputParticles.get().getSamplingRate()
-        self._maximumTargetResolution = getFloatListFromValues(self.maximumTargetResolution.get(),self.firstIteration+self.numberOfIterations.get()-1)
-        for self.iteration in range(self.firstIteration,self.firstIteration+self.numberOfIterations.get()):
+        numberOfIterations = self.numberOfIterations.get() if self.alignmentMethod.get()!=self.AUTOMATIC_ALIGNMENT else 5
+        self._maximumTargetResolution = getFloatListFromValues(self.maximumTargetResolution.get(),self.firstIteration+numberOfIterations-1)
+        for self.iteration in range(self.firstIteration,self.firstIteration+numberOfIterations):
             self.insertIteration(self.iteration)
         self._insertFunctionStep("createOutput")
     
     def insertIteration(self,iteration):
-        if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+        if self.alignmentMethod==self.GLOBAL_ALIGNMENT or \
+           (self.alignmentMethod==self.AUTOMATIC_ALIGNMENT and iteration<=3):
             self._insertFunctionStep('globalAssignment',iteration)
         else:
             self._insertFunctionStep('localAssignment',iteration)
@@ -491,6 +493,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 break
         self.writeInfoField(fnDirCurrent,"resolution",xmipp.MDL_RESOLUTION_FREQREAL,resolution)
         
+        # Produce a filtered volume
+        if iteration>0:
+            self.runJob('xmipp_transform_filter','-i %s -o %s --fourier low_pass %f --sampling %f'%\
+                        (join(fnDirCurrent,"volumeAvg.mrc"),join(fnDirCurrent,"volumeAvgFiltered.mrc"),resolution,TsCurrent))
+        
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
             from xmipp import AGGR_MAX
@@ -677,7 +684,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         makePath(fnDirCurrent)
         previousResolution=self.readInfoField(fnDirPrevious,"resolution",xmipp.MDL_RESOLUTION_FREQREAL)
 
-        if self.alignmentMethod==self.GLOBAL_ALIGNMENT:
+        if self.alignmentMethod==self.GLOBAL_ALIGNMENT or self.alignmentMethod==self.AUTOMATIC_ALIGNMENT:
             fnGlobal=join(fnDirCurrent,"globalAssignment")
             makePath(fnGlobal)
     
@@ -853,7 +860,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
 
     def localAssignment(self,iteration):
         fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
-        if self.alignmentMethod==self.LOCAL_ALIGNMENT:
+        if self.alignmentMethod==self.LOCAL_ALIGNMENT or \
+           (self.alignmentMethod==self.AUTOMATIC_ALIGNMENT and iteration>=4):
             fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
             fnDirLocal=join(fnDirCurrent,"localAssignment")
             makePath(fnDirLocal)
@@ -929,13 +937,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 R=round(R*self.TsOrig/TsCurrent)
                 args="-i %s -o %s --sampling %f --Rmax %d --padding %d --ref %s --max_resolution %f --applyTo image1 --Nsimultaneous %d"%\
                    (fnLocalAssignment,fnLocalStk,TsCurrent,R,self.contPadding.get(),fnVol,previousResolution,self.contSimultaneous.get())
-                if self.contShift:
+                if self.contShift or self.alignmentMethod.get()==self.AUTOMATIC_ALIGNMENT:
                     args+=" --optimizeShift --max_shift %f"%(self.contMaxShiftVariation.get()*newXdim*0.01)
-                if self.contScale:
+                if self.contScale or (self.alignmentMethod.get()==self.AUTOMATIC_ALIGNMENT and iteration>=5):
                     args+=" --optimizeScale --max_scale %f"%self.contMaxScale.get() 
-                if self.contAngles:
+                if self.contAngles or self.alignmentMethod.get()==self.AUTOMATIC_ALIGNMENT:
                     args+=" --optimizeAngles --max_angular_change %f"%maxAngle
-                if self.contDefocus:
+                if self.contDefocus or (self.alignmentMethod.get()==self.AUTOMATIC_ALIGNMENT and iteration>=5):
                     args+=" --optimizeDefocus --max_defocus_change %f"%self.contMaxDefocus.get()
                 if self.inputParticles.get().isPhaseFlipped():
                     args+=" --phaseFlipped"
@@ -1156,7 +1164,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     deleteStack = True
                     deletePattern = fnCorrectedImagesRoot+".*"
                 
-                if self.contGrayValues:
+                if self.contGrayValues or (self.alignmentMethod.get()==self.AUTOMATIC_ALIGNMENT and iteration>=5):
                     R=self.particleRadius.get()
                     if R<=0:
                         R=self.inputParticles.get().getDimensions()[0]/2
