@@ -315,7 +315,7 @@ class Canvas(tk.Canvas, Scrollable):
 
         currentFontSize = self._runsFont['size']
         newFontSize = currentFontSize
-        print "Zoon value:" + str(self._zoomFactor)
+        
         zoomPairs = [(32, 7),
                      (44, 6),
                      (53, 5),
