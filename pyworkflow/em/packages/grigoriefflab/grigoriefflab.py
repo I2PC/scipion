@@ -28,15 +28,35 @@ import os
 from os.path import join, exists
 
 CTFFIND3 = 'ctffind3.exe'
+CTFFIND3MP = 'ctffind3_mp.exe'
 CTFFIND4 = 'ctffind'
 FREALIGN = 'frealign_v9.exe'
 FREALIGNMP = 'frealign_v9_mp.exe'
-MAGDISTEST = 'mag_distortion_estimate_openmp_1_12_16.exe'
-MAGDISTCORR = 'mag_distortion_correct_openmp_8_18_15.exe'
+MAGDISTEST = 'mag_distortion_estimate_openmp.exe'
+MAGDISTCORR = 'mag_distortion_correct_openmp.exe'
 CALC_OCC = 'calc_occ.exe'
 RSAMPLE = 'rsample.exe'
-UNBLUR = 'unblur'
-SUMMOVIE = 'sum_movie_openmp_7_17_15.exe'
+UNBLUR = 'unblur_openmp.exe'
+SUMMOVIE = 'sum_movie_openmp.exe'
+
+
+def getVersion(var='FREALIGN'):
+    varHome = var + '_HOME'
+    path = os.environ[varHome]
+    for v in getSupportedVersions(var):
+        if v in path or v in os.path.realpath(path):
+            return v
+    return ''
+
+
+def getSupportedVersions(var='FREALIGN'):
+    if var == 'UNBLUR':
+        return ['1.0_150529', '1.0.2']
+    elif var == 'CTFFIND4':
+        return ['4.0.15', '4.1.5']
+    else:  # FREALIGN
+        return ['9.07']
+
 
 def _getCtffind4():
     ctffind4 = join(os.environ['CTFFIND4_HOME'], 'bin', CTFFIND4)
@@ -44,7 +64,8 @@ def _getCtffind4():
         return ctffind4
     else:
         return join(os.environ['CTFFIND4_HOME'], CTFFIND4)
-    
+
+
 def _getHome(key, default):
     """ Get the required home path, if not present..
     the default value will be used from EM_ROOT.
@@ -52,13 +73,14 @@ def _getHome(key, default):
     return os.environ.get(key, join(os.environ['EM_ROOT'], default))
 
 CTFFIND_PATH = join(os.environ['CTFFIND_HOME'], CTFFIND3)
+CTFFINDMP_PATH = join(os.environ['CTFFIND_HOME'], CTFFIND3MP)
 CTFFIND4_PATH = _getCtffind4()
 
-FREALING_HOME = _getHome('FREALIGN_HOME', 'frealign')
-FREALIGN_PATH = join(FREALING_HOME, 'bin', FREALIGN)
-FREALIGNMP_PATH = join(FREALING_HOME, 'bin', FREALIGNMP)
-CALC_OCC_PATH = join(FREALING_HOME, 'bin', CALC_OCC)
-RSAMPLE_PATH = join(FREALING_HOME, 'bin', RSAMPLE)
+FREALIGN_HOME = _getHome('FREALIGN_HOME', 'frealign')
+FREALIGN_PATH = join(FREALIGN_HOME, 'bin', FREALIGN)
+FREALIGNMP_PATH = join(FREALIGN_HOME, 'bin', FREALIGNMP)
+CALC_OCC_PATH = join(FREALIGN_HOME, 'bin', CALC_OCC)
+RSAMPLE_PATH = join(FREALIGN_HOME, 'bin', RSAMPLE)
 
 MAGDIST_HOME = _getHome('MAGDIST_HOME', 'mag_distortion')
 MAGDISTEST_PATH = join(MAGDIST_HOME, 'bin', MAGDISTEST)
