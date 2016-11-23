@@ -94,7 +94,7 @@ Examples:
                       help='Number of bins in histograms')
 
         group = form.addGroup('Volumes')
-        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed'],
+        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
                        default=1, display=EnumParam.DISPLAY_COMBO,
                        label='Display volume',
                        help='Displays selected volume')
@@ -180,6 +180,8 @@ Examples:
                 fnVolume = join(fnDir,"volumeRef01.vol")
             elif choice == 1:
                 fnVolume = join(fnDir,"volumeAvg.mrc")
+            elif choice == 2:
+                fnVolume = join(fnDir,"volumeAvgFiltered.mrc")
             if exists(fnVolume):
                 samplingRate=self.protocol.readInfoField(fnDir,"sampling",MDL_SAMPLINGRATE)
                 views.append(ObjectView(self._project, None, fnVolume, viewParams={showj.RENDER: 'image', showj.SAMPLINGRATE: samplingRate}))
