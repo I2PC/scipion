@@ -25,6 +25,7 @@
 # *
 # **************************************************************************
 
+from os.path import basename, abspath
 
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
@@ -100,9 +101,10 @@ class TestOFAlignment(TestXmippBase):
         cls.protImport2 = cls.runImportMovie2(cls.movie2)
     
     def runOFProtocol(self, movies, label="Default", saveMic=True,
-                      saveMovie=False):
+                      saveMovie=False, useAlign=False):
         protOF = XmippProtOFAlignment(doSaveAveMic=saveMic,
-                                      doSaveMovie=saveMovie)
+                                      doSaveMovie=saveMovie,
+                                      useAlignment=useAlign)
         protOF.setObjLabel(label)
         protOF.inputMovies.set(movies)
         self.launchProtocol(protOF)
@@ -337,3 +339,49 @@ class TestAverageMovie(BaseTest):
 
         self._checkMicrographs(protAverage, (4096,4096))
 
+
+class TestEstimateGain(BaseTest):
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        ds = DataSet.getDataSet('movies')
+
+        # Reduce input movie size to speed-up gain computation
+        ih = ImageHandler()
+        inputFn = ds.getFile('ribo/Falcon_2012_06_12-14_33_35_0_movie.mrcs')
+        outputFn = cls.proj.getTmpPath(abspath(basename(inputFn)))
+
+        frameImg = ih.createImage()
+        xdim, ydim, zdim, ndim = ih.getDimensions(inputFn)
+        n = max(zdim, ndim) / 2 # also half of the frames
+        print "Scaling movie: %s -> %s" % (inputFn, outputFn)
+        pwutils.cleanPath(outputFn)
+        for i in range(1, n+1):
+            frameImg.read((i, inputFn))
+            frameImg.scale(xdim/2, ydim/2)
+            frameImg.write((i, outputFn))
+
+        args = cls.getArgs(outputFn)
+        cls.protImport = cls.newProtocol(ProtImportMovies, **args)
+        cls.launchProtocol(cls.protImport)
+
+    @classmethod
+    def getArgs(self, filesPath, pattern=''):
+        return {'importFrom': ProtImportMovies.IMPORT_FROM_FILES,
+                'filesPath': filesPath,
+                'filesPattern': pattern,
+                'amplitudConstrast': 0.1,
+                'sphericalAberration': 2.,
+                'voltage': 300,
+                'samplingRate': 3.54 * 2
+                }
+
+    def test_estimate(self):
+        protGain = self.newProtocol(XmippProtMovieGain,
+                                    objLabel='estimate gain')
+
+        p = Pointer(self.protImport.outputMovies, extended=1)
+        protGain.inputMovies.append(p)
+
+        self.launchProtocol(protGain)

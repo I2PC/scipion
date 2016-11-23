@@ -140,7 +140,6 @@ class XmippViewer(Viewer):
                  
         elif issubclass(cls, Image):
             fn = getImageLocation(obj)
-            
             self._views.append(ObjectView(self._project, obj.strId(), fn))
             
         elif issubclass(cls, SetOfNormalModes):
@@ -165,8 +164,7 @@ class XmippViewer(Viewer):
             fn = obj.getFileName()
             self._views.append(ObjectView(self._project, obj.strId(), fn, **kwargs))
             
-
-        elif issubclass(cls, MicrographsTiltPair):          
+        elif issubclass(cls, MicrographsTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'
             self._views.append(ObjectView(self._project, obj.strId(), obj.getFileName(),
                                           viewParams={ORDER: labels, 
@@ -226,7 +224,7 @@ class XmippViewer(Viewer):
                                                       ORDER: labels,
                                                       VISIBLE: labels,
                                                       RENDER: '_filename'}))
-        
+
         elif issubclass(cls, SetOfClasses2D):
             fn = obj.getFileName()
             self._views.append(ClassesView(self._project, obj.strId(), fn, **kwargs))
@@ -234,6 +232,11 @@ class XmippViewer(Viewer):
         elif issubclass(cls, SetOfClasses3D):
             fn = obj.getFileName()
             self._views.append(Classes3DView(self._project, obj.strId(), fn))
+
+        elif issubclass(cls, SetOfImages):
+            fn = obj.getFileName()
+            self._views.append(
+                ObjectView(self._project, obj.strId(), fn, **kwargs))
         
         if issubclass(cls, XmippProtCTFMicrographs):
             if obj.hasAttribute('outputCTF'):
@@ -267,7 +270,8 @@ class XmippViewer(Viewer):
             writeSetOfCoordinates(tmpDir, obj.getUntilted()) 
             writeSetOfCoordinates(tmpDir, obj.getTilted()) 
             launchTiltPairPickerGUI(mdFn, tmpDir, self.protocol)
-         
+
+
         elif issubclass(cls, XmippProtExtractParticles) or issubclass(cls, XmippProtScreenParticles):
             particles = obj.outputParticles
             self._visualize(particles)
@@ -364,7 +368,7 @@ class XmippViewer(Viewer):
             from plotter import XmippPlotter
             from pyworkflow.em.plotter import EmPlotter
             plotter = XmippPlotter()
-            plotter.createSubPlot('Soft-alignment validation plot','Angular Precision', 'Angular Precision')
+            plotter.createSubPlot('Soft-alignment validation plot','Angular Precision', 'Angular Accuracy')
             plotter.plotMdFile(md, xmipp.MDL_SCORE_BY_ALIGNABILITY_PRECISION, xmipp.MDL_SCORE_BY_ALIGNABILITY_ACCURACY,
                                marker='.', markersize=.55, color='red', linestyle='')
             self._views.append(plotter)

@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM imports of Micrographs, Particles, Volumes...
-"""
 
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.data import SetOfMicrographs
@@ -46,22 +43,25 @@ class ProtImportCTF(ProtImportFiles):
     IMPORT_FROM_XMIPP3 = 1
     IMPORT_FROM_GRIGORIEFF = 2
     IMPORT_FROM_GCTF = 3
+    IMPORT_FROM_SCIPION = 4
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
 
     def _defineImportParams(self, form):
         """ Just redefine to put some import parameters.
         """
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
-                          label='Input micrographs',
-                          help='Select the micrographs for which you want to update the CTF parameters.')
+        form.addParam('inputMicrographs', PointerParam,
+                      pointerClass='SetOfMicrographs',
+                      label='Input micrographs',
+                      help='Select the micrographs for which you want to '
+                           'update the CTF parameters.')
 
     def _getImportChoices(self):
         """ Return a list of possible choices
         from which the import can be done.
         (usually packages formats such as: xmipp3, eman2, relion...etc.
         """
-        return ['auto', 'xmipp', 'grigorieff', 'gctf']
+        return ['auto', 'xmipp', 'grigorieff', 'gctf', 'scipion']
 
     def _getDefaultChoice(self):
         return  self.IMPORT_FROM_AUTO
@@ -73,7 +73,7 @@ class ProtImportCTF(ProtImportFiles):
         """
         return True
 
-    #--------------------------- INSERT functions ---------------------------------------------------
+    #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
         importFrom = self.importFrom.get()
         self._insertFunctionStep('importCTFStep', importFrom)
@@ -95,10 +95,13 @@ class ProtImportCTF(ProtImportFiles):
         elif importFrom == self.IMPORT_FROM_GCTF:
             from pyworkflow.em.packages.gctf.dataimport import GctfImportCTF
             return GctfImportCTF(self)
+        elif importFrom == self.IMPORT_FROM_SCIPION:
+            from dataimport import ScipionImport
+            return ScipionImport(self, self.filesPath.get('').strip())
         else:
             return None
         
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def importCTFStep(self, importFrom):
         """ Copy ctfs matching the filename pattern. """
         ci = self.getImportClass()
@@ -116,33 +119,46 @@ class ProtImportCTF(ProtImportFiles):
         n = len(files)
         if n == 0:
             raise Exception("No files where found in path: '%s'\n"
-                            "matching the pattern: '%s'" % (self.filesPath, self.filesPattern))
+                            "matching the pattern: '%s'" %
+                            (self.filesPath, self.filesPattern))
         print "Matching files: ", len(files)
 
-        for mic in inputMics:
+        def _getMicCTF(mic):
             micName = mic.getMicName()
             micBase = removeBaseExt(mic.getFileName())
+
             for fileName, fileId in self.iterFiles():
                 if (fileId == mic.getObjId() or
-                    micBase in fileName or micName in fileName):
-                    ctf = ci.importCTF(mic, fileName)
-                    ctfSet.append(ctf)
-                    outputMics.append(mic)
-                    break
+                            micBase in fileName or micName in fileName):
+                    return ci.importCTF(mic, fileName)
+
+            return None
+        # Check if the CTF import class has a method to retrieve the CTF
+        # from a given micrograph. If not, we will try to associated based
+        # on matching the filename or id
+        getMicCTF = getattr(ci, 'getMicCTF', None) or _getMicCTF
+
+        for mic in inputMics:
+            ctf = getMicCTF(mic)
+            if ctf is not None:
+                ctfSet.append(ctf)
+                outputMics.append(mic)
             else:
-                # If not CTF is found for a micrograph remove it from output mics
-                self.warning("CTF for micrograph id %d was not found. Removed from set of micrographs." % mic.getObjId())
+                # If CTF is not found for a micrograph remove it from output mics
+                self.warning("CTF for micrograph id %d was not found. Removed "
+                             "from set of micrographs." % mic.getObjId())
                 createOutputMics = True
 
         self._defineOutputs(outputCTF=ctfSet)
-        # If some of the micrographs had not ctf a subset of micrographs have been produced
+        # If some of the micrographs had not ctf a subset of micrographs
+        # have been produced
         if createOutputMics:
             self._defineOutputs(outputMicrographs=outputMics)
             self._defineCtfRelation(outputMics, ctfSet)
         else:
             self._defineCtfRelation(inputMics, ctfSet)
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     
     def _summary(self):
         summary = []
@@ -171,7 +187,7 @@ class ProtImportCTF(ProtImportFiles):
                           "matching the pattern: '%s'" % (self.filesPath, self.filesPattern))
         return errors
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getFormat(self):
         for fileName, _ in self.iterFiles():
             if (fileName.endswith('.log') or 
@@ -181,6 +197,7 @@ class ProtImportCTF(ProtImportFiles):
             if fileName.endswith('.ctfparam'):
                 return self.IMPORT_FROM_XMIPP3
         return -1
+
 
 
 

@@ -873,7 +873,7 @@ class Protocol(Step):
             self._stepsExecutor.runSteps(self._steps, 
                                          self._stepStarted, 
                                          self._stepFinished,
-                                         stepsCheckCallback=self._stepsCheck)
+                                         self._stepsCheck)
         self.setStatus(self.lastStatus)
         self._store(self.status)
         
@@ -1196,6 +1196,9 @@ class Protocol(Step):
     
     def setHostConfig(self, config):
         self.hostConfig = config
+        # Never store the host config as part of the protocol, it is kept
+        # in the configuration information, the hostname is enough
+        self.hostConfig.setStore(False)
         
     def getJobId(self):
         """ Return the jobId associated to a running protocol. """
@@ -1262,10 +1265,11 @@ class Protocol(Step):
             errors.append("After fixed, you NEED TO RESTART THE PROJECT WINDOW")
         
     @classmethod
-    def getClassLabel(cls):
+    def getClassLabel(cls, prependPackageName=True):
         """ Return a more readable string representing the protocol class """
         label = cls.__dict__.get('_label', cls.__name__)
-        label = "%s - %s" % (cls.getClassPackageName(), label)
+        if prependPackageName:
+            label = "%s - %s" % (cls.getClassPackageName(), label)
         return label
     
     @classmethod

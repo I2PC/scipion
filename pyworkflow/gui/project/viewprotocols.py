@@ -39,6 +39,7 @@ import pyworkflow.utils as pwutils
 import pyworkflow.protocol as pwprot
 import pyworkflow.gui as pwgui
 import pyworkflow.em as em
+from pyworkflow.config import isAFinalProtocol
 from pyworkflow.em.wizard import ListTreeProvider
 from pyworkflow.gui.dialog import askColor, ListDialog
 from pyworkflow.viewer import DESKTOP_TKINTER, ProtocolViewer
@@ -321,7 +322,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList = []
         
         for key, prot in emProtocolsDict.iteritems():
-            if not issubclass(prot, ProtocolViewer) and not prot.isBase():
+            if isAFinalProtocol(prot,key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
                     protList.append((key, label))
