@@ -48,6 +48,8 @@ class TestNotifier(BaseTest):
         # then store number of times protstress has been executed
         url = self._getUrl()
 
+        #change periodicy in notification
+        os.environ["SCIPION_NOTIFY_SECONDS"] = "30"
         if not url:
             print "SCIPION_NOTIFY and SCIPION_NOTIFY_URL should be defined!"
             print "A test server is at Heroku, you can setup as:"
@@ -60,7 +62,6 @@ class TestNotifier(BaseTest):
 
         results = json.loads(urllib2.urlopen(url).read())
         times_protocolRemote = results["objects"][0]["timesUsed"]
-
         #run a project that executes one time protStress
         kwargs = {'noCpu': 2,
                   'noMem': 0,
@@ -73,12 +74,15 @@ class TestNotifier(BaseTest):
         prot1.setObjLabel('stress')
         self.proj.launchProtocol(prot1, wait=True)
 
-        # remove uuid file (so we start always in the same conditions)
-        uuidFn=self.proj.getLogPath("uuid.log")
-        os.remove(uuidFn) if os.path.exists(uuidFn) else None
 
         #we want to test this class: ProjectNotifier
         projectNotifier = ProjectNotifier(self.proj)
+        # remove uuid and data files (so we start always in the same conditions)
+        uuidFn=projectNotifier._getUuidFileName()
+        os.remove(uuidFn) if os.path.exists(uuidFn) else None
+        dataFn=projectNotifier._getDataFileName()
+        os.remove(dataFn) if os.path.exists(dataFn) else None
+
         #store workflow  in database
         projectNotifier.notifyWorkflow()
         #wait until protocol gui has connected to heroku and sent the information
@@ -98,9 +102,37 @@ class TestNotifier(BaseTest):
 
         #now check that the  number of times protstress has been executed
         #has increased in 1
-        url = self._getUrl()
-        url = url.replace("workflow/workflow/",
+        urlProt = self._getUrl()
+        urlProt = urlProt.replace("workflow/workflow/",
                           "workflow/protocol/?name=ProtStress")
-        results = json.loads(urllib2.urlopen(url).read())
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
         times_protocolRemote_2 = results["objects"][0]["timesUsed"]
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+
+        #try to resend the project, as we have a 30 sec time this should
+        #not go through number times should not change
+        projectNotifier.notifyWorkflow()
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
+        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+
+        #try to resend project, as no modification has been made number of
+        # times should not change
+        time.sleep(25)
+        projectNotifier.notifyWorkflow()
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
+        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+
+        #add new protocol and resend
+        prot2 = self.newProtocol(ProtStress, **kwargs)
+        prot2.setObjLabel('stress2')
+        self.proj.launchProtocol(prot2, wait=True)
+        projectNotifier.notifyWorkflow()
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
+        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote +2)
