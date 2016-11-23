@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from convert import readSetOfClassesVol, getImageLocation
+from convert import readSetOfClassesVol, getImageLocation, writeSetOfVolumes
 from pyworkflow.em import ProtClassify3D
 from pyworkflow.em.data import SetOfVolumes
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -175,10 +175,10 @@ class XmippProtMLTomo(ProtClassify3D):
                       help="Number of iterations for inner imputation loop")
         # FIXME: next param is to continue from iter X,
         # so it will not work
-        form.addParam('iterStart', params.IntParam,
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Initial iteration', default=1,
-                      help="Number of initial iteration")
+        #form.addParam('iterStart', params.IntParam,
+         #             expertLevel=LEVEL_ADVANCED,
+         #             label='Initial iteration', default=1,
+         #             help="Number of initial iteration")
         form.addParam('eps', params.FloatParam, default=5e-5,
                       expertLevel=LEVEL_ADVANCED,
                       label='Stopping criterium',
@@ -206,45 +206,33 @@ class XmippProtMLTomo(ProtClassify3D):
     
     #--------------------------- STEPS functions ------------------------------
     def convertInputs(self):
-        # FIXME: do we need to convert inputs (vols, refvols, mask)?
+        # FIXME: do we need to convert inputs (vols, refvols, mask) to mrc?
         inputVols = self.inputVols.get()
         self.createInputMd(inputVols)
-
         if not self.generateRefs:
             refVols = self.inputRefVols.get()
             self.createRefMd(refVols)
 
     def createInputMd(self, vols):
         fnVols = self._getExtraPath('input_volumes.xmd')
+        # If input vols do not have alignment, set it to 0
+        # in self._preprocessVolumeRow
+        if vols.hasAlignment():
+            preprocessImageRow = None
+        else:
+            preprocessImageRow = self._preprocessVolumeRow
+
+        writeSetOfVolumes(vols, fnVols,
+                          preprocessImageRow=preprocessImageRow,
+                          postprocessImageRow=self._postprocessVolumeRow)
+
+        # set missing angles
         missType = ['wedge_y', 'wedge_x', 'pyramid', 'cone']
         missNum = self.missingDataType.get()
         missAng = self.missingAng.get()
-        md = xmipp.MetaData()
-
-        for vol in vols:
-            imgId = vol.getObjId()
-            objId = md.addObject()
-            row = XmippMdRow()
-            row.setValue(xmipp.MDL_ITEM_ID, long(imgId))
-            row.setValue(xmipp.MDL_IMAGE, getImageLocation(vol))
-            row.setValue(xmipp.MDL_ENABLED, 1)
-            row.setValue(xmipp.MDL_MISSINGREGION_NR, missNum + 1)
-            row.setValue(xmipp.MDL_ANGLE_ROT, float(0))
-            row.setValue(xmipp.MDL_ANGLE_TILT, float(0))
-            row.setValue(xmipp.MDL_ANGLE_PSI, float(0))
-            row.setValue(xmipp.MDL_SHIFT_X, float(0))
-            row.setValue(xmipp.MDL_SHIFT_Y, float(0))
-            row.setValue(xmipp.MDL_SHIFT_Z, float(0))
-            row.setValue(xmipp.MDL_REF, 1)
-            row.setValue(xmipp.MDL_LL, float(1))
-            row.writeToMd(md, objId)
-        # TODO: write inputVols alignment
-        md.write(fnVols, xmipp.MD_APPEND)
-
-        # set missing angles
         missDataFn = self._getExtraPath('wedges.xmd')
         md = xmipp.MetaData()
-        missAngValues = str(missAng).split()
+        missAngValues = str(missAng).strip().split()
 
         if missNum == MISSING_WEDGE_X:
             thetaX0, thetaXF = missAngValues
@@ -255,7 +243,7 @@ class XmippProtMLTomo(ProtClassify3D):
         elif missNum == MISSING_PYRAMID:
             thetaY0, thetaYF, thetaX0, thetaXF = missAngValues
         else:  # MISSING_CONE
-            thetaY0 = missAngValues
+            thetaY0 = missAngValues[0]
             thetaX0, thetaXF, thetaYF = 0, 0, 0
 
         for i in range(1, vols.getSize() + 1):
@@ -316,7 +304,7 @@ class XmippProtMLTomo(ProtClassify3D):
         params += ' --psi_sampling %0.1f' % self.psiSampling.get()
         params += ' --reg0 %0.1f --regF %0.1f' % (self.regIni.get(), self.regFinal.get())
         params += ' --impute_iter %d' % self.numberOfImpIterations.get()
-        params += ' --istart %d' % self.iterStart.get()
+        #params += ' --istart %d' % self.iterStart.get()
         params += ' --eps %0.2f' % self.eps.get()
         params += ' --pixel_size %0.2f' % self.inputVols.get().getSamplingRate()
         params += ' --noise %0.1f --offset %0.1f' % (self.stdNoise.get(), self.stdOrig.get())
@@ -348,7 +336,7 @@ class XmippProtMLTomo(ProtClassify3D):
         if self.maxCC:
             params += ' --maxCC'
         if self.dontAlign and self.maskFile:
-            params += ' --mask %s' % self.maskFile.get().getFileName() # FIXME get filename
+            params += ' --mask %s' % self.maskFile.get().getFileName()
 
         self.runJob('xmipp_ml_tomo', '%s' % params,
                     env=self.getMLTomoEnviron(), numberOfMpi=self.numberOfMpi.get(),
@@ -360,7 +348,6 @@ class XmippProtMLTomo(ProtClassify3D):
         #   mltomo_refXXXXXX.vol output volume - 3D class
         #   mltomo_img.xmd contains alignment metadata for all vols
         #   mltomo.fsc
-
         outputGlobalMdFn = self._getExtraPath('results/mltomo_ref.xmd')
         setOfClasses = self._createSetOfClassesVol()
         setOfClasses.setImages(self.inputVols.get())
@@ -371,12 +358,15 @@ class XmippProtMLTomo(ProtClassify3D):
     #--------------------------- INFO functions -------------------------------
     def _summary(self):
         messages = []
-        messages.append('Number of input volumes: %d' % self.inputVols.get().getSize())
-        if self.generateRefs:
-            messages.append('References were auto-generated')
+        if not hasattr(self, 'outputClasses'):
+            messages.append('Output is not ready')
         else:
-            messages.append('References were provided by user')
-        messages.append('Number of output classes: %d' % self.outputClasses.getSize())
+            messages.append('Number of input volumes: %d' % self.inputVols.get().getSize())
+            if self.generateRefs:
+                messages.append('References were auto-generated')
+            else:
+                messages.append('References were provided by user')
+            messages.append('Number of output classes: %d' % self.outputClasses.getSize())
 
         return messages
 
@@ -404,3 +394,22 @@ class XmippProtMLTomo(ProtClassify3D):
 
     def isSetOfVolumes(self):
         return isinstance(self.inputRefVols.get(), SetOfVolumes)
+
+    def _preprocessVolumeRow(self, img, imgRow):
+        imgRow.setValue(xmipp.MDL_ANGLE_ROT, float(0))
+        imgRow.setValue(xmipp.MDL_ANGLE_TILT, float(0))
+        imgRow.setValue(xmipp.MDL_ANGLE_PSI, float(0))
+        imgRow.setValue(xmipp.MDL_SHIFT_X, float(0))
+        imgRow.setValue(xmipp.MDL_SHIFT_Y, float(0))
+        imgRow.setValue(xmipp.MDL_SHIFT_Z, float(0))
+
+    def _postprocessVolumeRow(self, img, imgRow):
+        # explicitly set this from protocol input
+        # to avoid conflict with input metadata
+        missNum = self.missingDataType.get()
+        imgRow.setValue(xmipp.MDL_MISSINGREGION_NR, missNum + 1)
+
+        if not imgRow.hasLabel(xmipp.MDL_REF):
+            imgRow.setValue(xmipp.MDL_REF, 1)
+        if not imgRow.hasLabel(xmipp.MDL_LL):
+            imgRow.setValue(xmipp.MDL_LL, float(1))
