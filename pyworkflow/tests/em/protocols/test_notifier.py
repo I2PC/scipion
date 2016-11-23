@@ -61,7 +61,12 @@ class TestNotifier(BaseTest):
                           "workflow/protocol/?name=ProtStress")
 
         results = json.loads(urllib2.urlopen(url).read())
-        times_protocolRemote = results["objects"][0]["timesUsed"]
+        objects = results["objects"]
+        if  (len(objects)!=0):
+            objects = results["objects"][0]
+            times_protocolRemote = objects["timesUsed"]
+        else:
+            times_protocolRemote = 0
         #run a project that executes one time protStress
         kwargs = {'noCpu': 2,
                   'noMem': 0,
@@ -90,11 +95,17 @@ class TestNotifier(BaseTest):
         #get uuid from local file
         uuid = projectNotifier._getUuid()
         #get protocol list from database
-        url = self._getUrl()
+        urlWork = self._getUrl()
         #url = "http://secret-reaches-65198.herokuapp.com/report_protocols/api/workflow/workflow/?project_uuid="
-        url += "?project_uuid=" + uuid
-        results = json.loads(urllib2.urlopen(url).read())
-        project_workflowRemote = results["objects"][0]['project_workflow']
+        urlWork += "?project_uuid=" + uuid
+        results = json.loads(urllib2.urlopen(urlWork).read())
+
+        objects = results["objects"]
+        if  (len(objects)!=0):
+            objects = results["objects"][0]
+            project_workflowRemote = objects["project_workflow"]
+        else:
+            project_workflowRemote = ""
         # get protocol list local
         project_workflowLocal  = self.proj.getProtocolsJson(namesOnly=True)
         #test that stored protocol and local one are identical
@@ -107,7 +118,12 @@ class TestNotifier(BaseTest):
                           "workflow/protocol/?name=ProtStress")
         time.sleep(5)# notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
-        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        objects = results["objects"]
+        if  (len(objects)!=0):
+            objects = results["objects"][0]
+            times_protocolRemote_2 = objects["timesUsed"]
+        else:
+            times_protocolRemote_2 = 0
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
 
         #try to resend the project, as we have a 30 sec time this should
@@ -115,7 +131,12 @@ class TestNotifier(BaseTest):
         projectNotifier.notifyWorkflow()
         time.sleep(5)# notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
-        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        objects = results["objects"]
+        if  (len(objects)!=0):
+            objects = results["objects"][0]
+            times_protocolRemote_2 = objects["timesUsed"]
+        else:
+            times_protocolRemote_2 = 0
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
 
         #try to resend project, as no modification has been made number of
@@ -124,7 +145,12 @@ class TestNotifier(BaseTest):
         projectNotifier.notifyWorkflow()
         time.sleep(5)# notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
-        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        objects = results["objects"]
+        if  (len(objects)!=0):
+            objects = results["objects"][0]
+            times_protocolRemote_2 = objects["timesUsed"]
+        else:
+            times_protocolRemote_2 = 0
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
 
         #add new protocol and resend
@@ -134,5 +160,10 @@ class TestNotifier(BaseTest):
         projectNotifier.notifyWorkflow()
         time.sleep(5)# notifier runs in a thread so wait a bit
         results = json.loads(urllib2.urlopen(urlProt).read())
-        times_protocolRemote_2 = results["objects"][0]["timesUsed"]
+        objects = results["objects"]
+        if  (len(objects)!=0):
+            objects = results["objects"][0]
+            times_protocolRemote_2 = objects["timesUsed"]
+        else:
+            times_protocolRemote_2 = 0
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +2)
