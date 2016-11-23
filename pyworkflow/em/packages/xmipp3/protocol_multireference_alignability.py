@@ -138,8 +138,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
                                                  commonParams, 
                                                  prerequisites=[pmStepId])
             
-            phanProjStepId = self._insertFunctionStep('phantomProject', 
-                                                 volName, 
+            phanProjStepId = self._insertFunctionStep('phantomProject',
                                                  prerequisites=[sigStepId1])
 
             sigStepId2 = self._insertFunctionStep('significantStep',
@@ -238,7 +237,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         newXdim = Xdim*Ts/newTs
         return newTs, newXdim 
     
-    def phantomProject(self,volName):
+    def phantomProject(self):
         nproc = self.numberOfMpi.get()
         nT=self.numberOfThreads.get()
         
@@ -246,7 +245,7 @@ class XmippProtMultiRefAlignability(ProtAnalysis3D):
         
         pathParticles = self._getExtraPath('scaled_particles.xmd')
         R = -int(newXdim /2)
-        f = open(self._getExtraPath('params'),'w')          
+        f = open(self._getExtraPath('params.txt'),'w')          
         f.write("""# XMIPP_STAR_1 *
 #
 data_block1
@@ -257,8 +256,8 @@ _ctfCorrected %d
 _applyShift 0
 _noisePixelLevel   '0 0'""" % (newXdim , newXdim, pathParticles, self.inputParticles.get().isPhaseFlipped(), self.doWiener.get()))
         f.close()
-        param =  ' -i %s' % volName
-        param += ' --params %s' % self._getExtraPath('params')
+        param =  ' -i %s' % self._getExtraPath("volume.vol")
+        param += ' --params %s' % self._getExtraPath('params.txt')
         param += ' -o %s' % self._getPath('reference_particles.xmd')
         param += ' --sampling_rate % 0.3f' % newTs
         param += ' --method fourier'
