@@ -48,6 +48,7 @@ from viewer_cl2d import XmippCL2DViewer
 from viewer_cltomo import XmippCLTomoViewer
 from viewer_ctf_discrepancy import XmippCTFDiscrepancyViewer
 from viewer_ml2d import XmippML2DViewer
+from viewer_mltomo import XmippMLTomoViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer

@@ -34,8 +34,8 @@ import pyworkflow.utils as pwutils
 import xmipp
 
 
-MISSING_WEDGE_X = 0
-MISSING_WEDGE_Y = 1
+MISSING_WEDGE_Y = 0
+MISSING_WEDGE_X = 1
 MISSING_PYRAMID = 2
 MISSING_CONE = 3
 
@@ -49,7 +49,7 @@ class XmippProtMLTomo(ProtClassify3D):
     for further documentation
     """
     _label = 'mltomo'
-    
+
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='General params')
@@ -74,19 +74,19 @@ class XmippProtMLTomo(ProtClassify3D):
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry for a description "
                            "of the symmetry groups format. If no symmetry is present, give c1")
         form.addParam('missingDataType', params.EnumParam,
-                      choices=['wedge_x', 'wedge_y', 'pyramid', 'cone'], default=0,
+                      choices=['wedge_y', 'wedge_x', 'pyramid', 'cone'], default=0,
                       display=params.EnumParam.DISPLAY_COMBO,
                       label='Missing data regions',
                       help="Provide missing data region type:\n\n"
-                           "a) wedge_x for a missing wedge where the tilt axis is along X\n"
-                           "b) wedge_y for a missing wedge where the tilt axis is along Y\n"
-                           "c) pyramid for a missing pyramid where the tilt axes are along X and Y\n"
+                           "a) wedge_y for a missing wedge where the tilt axis is along Y\n"
+                           "b) wedge_x for a missing wedge where the tilt axis is along X\n"
+                           "c) pyramid for a missing pyramid where the tilt axes are along Y and X\n"
                            "d) cone for a missing cone (pointing along Z)")
         form.addParam('missingAng', params.StringParam, default='-60 60',
                       label='Angles of missing data',
                       help='Provide angles for missing data area in the following format:\n\n'
-                           'for wedge_x or wedge_y: -60 60\n'
-                           'for pyramid: -60 60 -60 60 (for x and y, respectively)\n'
+                           'for wedge_y or wedge_x: -60 60\n'
+                           'for pyramid: -60 60 -60 60 (for y and x, respectively)\n'
                            'for cone: 45')
         form.addParam('maxCC', params.BooleanParam, default=False,
                       label='Use CC instead of ML',
@@ -216,7 +216,7 @@ class XmippProtMLTomo(ProtClassify3D):
 
     def createInputMd(self, vols):
         fnVols = self._getExtraPath('input_volumes.xmd')
-        missType = ['wedge_x', 'wedge_y', 'pyramid', 'cone']
+        missType = ['wedge_y', 'wedge_x', 'pyramid', 'cone']
         missNum = self.missingDataType.get()
         missAng = self.missingAng.get()
         md = xmipp.MetaData()
@@ -253,7 +253,7 @@ class XmippProtMLTomo(ProtClassify3D):
             thetaX0, thetaXF = 0, 0
             thetaY0, thetaYF = missAngValues
         elif missNum == MISSING_PYRAMID:
-            thetaX0, thetaXF, thetaY0, thetaYF = missAngValues
+            thetaY0, thetaYF, thetaX0, thetaXF = missAngValues
         else:  # MISSING_CONE
             thetaY0 = missAngValues
             thetaX0, thetaXF, thetaYF = 0, 0, 0
@@ -357,8 +357,8 @@ class XmippProtMLTomo(ProtClassify3D):
     def createOutput(self):
         # output files:
         #   mltomo_ref.xmd contains all info for output 3D classes
-        #   mltomo_refXXXXXX.vol output info for each 3D class
-        #   mltomo_img.xmd contains metadata for input vols
+        #   mltomo_refXXXXXX.vol output volume - 3D class
+        #   mltomo_img.xmd contains alignment metadata for all vols
         #   mltomo.fsc
 
         outputGlobalMdFn = self._getExtraPath('results/mltomo_ref.xmd')
@@ -371,6 +371,13 @@ class XmippProtMLTomo(ProtClassify3D):
     #--------------------------- INFO functions -------------------------------
     def _summary(self):
         messages = []
+        messages.append('Number of input volumes: %d' % self.inputVols.get().getSize())
+        if self.generateRefs:
+            messages.append('References were auto-generated')
+        else:
+            messages.append('References were provided by user')
+        messages.append('Number of output classes: %d' % self.outputClasses.getSize())
+
         return messages
 
     def _validate(self):

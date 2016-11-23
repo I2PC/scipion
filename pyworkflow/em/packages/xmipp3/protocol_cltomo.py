@@ -149,7 +149,7 @@ class XmippProtCLTomo(ProtClassify3D):
             messages.append('Number of initial references: %d'%self.numberOfReferences0.get())
             if self.randomizeOrientation.get():
                 messages.append('Input subvolume orientations were randomized')
-        if self.dontAlign.get():
+        if not self.align:
             messages.append('Input subvolumes were assumed to be already aligned')
         messages.append('Number of output references: %d'%self.numberOfReferences.get())
         return messages
