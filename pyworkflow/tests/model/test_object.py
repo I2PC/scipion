@@ -181,7 +181,15 @@ class TestObject(BaseTest):
         c2.copyAttributes(c1, 'imag', 'real')
         
         self.assertTrue(c1.equalAttributes(c2), 
-                        'Complex c1 and c2 have not equal attributes\nc1: %s\nc2: %s\n' % (c1, c2))
+                        'Complex c1 and c2 have not equal attributes'
+                        '\nc1: %s\nc2: %s\n' % (c1, c2))
+
+        c1.score = Float(1.)
+
+        # If we copyAttributes again, score dynamic attribute should
+        # be set in c2
+        c2.copyAttributes(c1, 'score')
+        self.assertTrue(hasattr(c2, 'score'))
         
     def test_equalAttributes(self):
         """ Check that equal attributes function behaves well
