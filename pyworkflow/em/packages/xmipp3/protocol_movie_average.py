@@ -154,7 +154,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
     
-    def _doGenerateOutputMovies(self):
+    def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
         either with alignment only or the binary aligned movie files.

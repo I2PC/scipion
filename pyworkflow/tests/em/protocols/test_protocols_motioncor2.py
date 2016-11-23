@@ -26,7 +26,6 @@
 # *
 # **************************************************************************
 
-import unittest, sys
 from pyworkflow.em import ProtImportMovies
 from pyworkflow.tests import *
 from pyworkflow.em.packages.motioncorr import ProtMotionCorr
@@ -48,7 +47,8 @@ class TestMotioncor2AlignMovies(BaseTest):
                   'sphericalAberration': 2.7,
                   'magnification': 50000,
                   'scannedPixelSize': None,
-                  'filesPattern': pattern
+                  'filesPattern': pattern,
+                  'dosePerFrame': 1.3
                   }
         if 'samplingRate' not in kwargs:
             del params['samplingRate']
@@ -98,8 +98,7 @@ class TestMotioncor2AlignMovies(BaseTest):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='cct - motioncor2 test1 (patch-based)',
                                 useMotioncor2=True,
-                                patch='2 2',
-                                frameDose=1.3)
+                                patchX=2, patchY=2)
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
 
@@ -112,7 +111,7 @@ class TestMotioncor2AlignMovies(BaseTest):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='qbeta - motioncor2 test2 (patch-based)',
                                 useMotioncor2=True,
-                                patch='2 2',
+                                patchX=2, patchY=2,
                                 group=2)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
@@ -126,7 +125,7 @@ class TestMotioncor2AlignMovies(BaseTest):
         prot = self.newProtocol(ProtMotionCorr,
                                 objLabel='qbeta - motioncor2 test3 (frame range)',
                                 useMotioncor2=True,
-                                patch='2 2',
+                                patchX=2, patchY=2,
                                 alignFrame0=2,
                                 alignFrameN=6,
                                 sumFrame0=2,

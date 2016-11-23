@@ -20,11 +20,11 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This EM module contains protocol developed at IGBMC, Strasbourg.
+This EM module contains gEMpicker protocol developed at IGBMC, Strasbourg.
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
@@ -33,4 +33,3 @@ _logo = "igbmc_logo.png"
 
 from protocol_gempicker import ProtGemPicker
 from wizard import GemPickerMaskWizard, GemPickerWizard
-

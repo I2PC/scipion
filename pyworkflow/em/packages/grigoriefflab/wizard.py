@@ -39,6 +39,8 @@ import pyworkflow.gui.dialog as dialog
 from pyworkflow.em.wizard import *
 from protocol_refinement import ProtFrealign
 from protocol_ml_classification import ProtFrealignClassify
+from protocol_magdist_estimate import ProtMagDistEst
+from protocol_magdist_correct import ProtMagDistCorr
 
 from pyworkflow import findResource
 
@@ -208,6 +210,64 @@ class FrealignVolBandpassWizard(FilterVolumesWizard):
                 form.setVar('resolution', d.samplingRate/d.getHighFreq())
                 
         else:
-            dialog.showWarning("Input volumes", "Select volumes first", form.root)  
+            dialog.showWarning("Input volumes", "Select volumes first", form.root)
 
-    
+
+# ===============================================================================
+# Gold diffraction ring
+# ===============================================================================
+
+class BrandeisDistWizard(CtfWizard):
+    _targets = [(ProtMagDistEst, ['lowRes', 'highRes'])]
+
+    def _getParameters(self, protocol):
+
+        label, value = self._getInputProtocol(self._targets, protocol)
+
+        protParams = {}
+        protParams['input'] = protocol.inputMicrographs
+        protParams['label'] = label
+        protParams['value'] = value
+        protParams['pix'] = protocol.inputMicrographs.get().getSamplingRate()
+        return protParams
+
+    def _getProvider(self, protocol):
+        _objs = self._getParameters(protocol)['input']
+        return CtfWizard._getListProvider(self, _objs)
+
+    def show(self, form):
+        protocol = form.protocol
+        params = self._getParameters(protocol)
+        _value = params['value']
+        _label = params['label']
+        pix = params['pix']
+
+        provider = self._getProvider(protocol)
+
+        if provider is not None:
+            args = {'unit': UNIT_ANGSTROM,
+                    'lf': "%0.2f" % (pix/_value[0]),
+                    'hf': "%0.2f" % (pix/_value[1])
+                    }
+            d = CtfDialog(form.root, provider, **args)
+
+            if d.resultYes():
+                form.setVar(_label[0], "%0.2f" % (pix/d.getLowFreq()))
+                form.setVar(_label[1], "%0.2f" % (pix/d.getHighFreq()))
+        else:
+            dialog.showWarning("Empty input", "Select elements first", form.root)
+
+    @classmethod
+    def getView(self):
+        return "wiz_ctf"
+
+
+#===============================================================================
+# Pixel size
+#===============================================================================
+
+class BrandeisPixSizeWizard(Wizard):
+    _targets = [(ProtMagDistCorr, ['newPix'])]
+
+    def show(self, form):
+        form.setVar('newPix', form.protocol.inputMovies.get().getSamplingRate())

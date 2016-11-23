@@ -35,6 +35,8 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3 import XmippFilterHelper as xfh
 from pyworkflow.em.packages.xmipp3 import XmippResizeHelper as xrh
+from pyworkflow.em.packages.xmipp3.protocol_preprocess import (
+    OP_COLUNM, OP_DOTPRODUCT, OP_MULTIPLY, OP_SQRT, OP_RADIAL, OP_ROW)
 
 
 # Some utility functions to import particles that are used
@@ -51,11 +53,14 @@ class TestXmippBase(BaseTest):
         cls.averagesDir = cls.dataset.getFile('averagesDir')
     
     @classmethod
-    def runImportParticles(cls, pattern, samplingRate, checkStack=False, phaseFlip=False):
+    def runImportParticles(cls, pattern, samplingRate, checkStack=False,
+                           phaseFlip=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles, 
-                                         filesPath=pattern, samplingRate=samplingRate, 
-                                         checkStack=checkStack, haveDataBeenPhaseFlipped=phaseFlip)
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate,
+                                         checkStack=checkStack,
+                                         haveDataBeenPhaseFlipped=phaseFlip)
         print '_label: ', cls.protImport._label
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
@@ -67,8 +72,9 @@ class TestXmippBase(BaseTest):
     def runImportAverages(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImportAvg = cls.newProtocol(ProtImportAverages,
-                                         filesPath=pattern, samplingRate=samplingRate, 
-                                         checkStack=checkStack)
+                                            filesPath=pattern,
+                                            samplingRate=samplingRate,
+                                            checkStack=checkStack)
         print '_label: ', cls.protImportAvg._label
         cls.launchProtocol(cls.protImportAvg)
         # check that input images have been imported (a better way to do this?)
@@ -80,7 +86,8 @@ class TestXmippBase(BaseTest):
     def runImportVolume(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes, 
-                                         filesPath=pattern, samplingRate=samplingRate, 
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate,
                                          checkStack=checkStack)
         print '_label: ', cls.protImport._label
         cls.launchProtocol(cls.protImport)
@@ -377,14 +384,19 @@ class TestXmippPreprocessParticles(TestXmippBase):
         
         if self.protImport.outputParticles.hasAlignment():
             from itertools import izip
-            for x, y in izip(self.protImport.outputParticles.get(), protPreproc.outputParticles.get()):
+            for x, y in izip(self.protImport.outputParticles.get(),
+                             protPreproc.outputParticles.get()):
                 print "compare ", x , " with ", y
-                self.assertEquals(x.getAlignment(), y.getAlignment(), "Alignment wrong")
+                self.assertEquals(x.getAlignment(), y.getAlignment(),
+                                  "Alignment wrong")
                 
         self.assertAlmostEquals(protPreproc.outputParticles.getSamplingRate(), 
-                          self.protImport.outputParticles.getSamplingRate(), "There was a problem with the sampling rate in the preprocess particles")
+                          self.protImport.outputParticles.getSamplingRate(),
+                                "There was a problem with the sampling rate "
+                                " in the preprocess particles")
 
-        self.assertIsNotNone(protPreproc.outputParticles, "There was a problem with preprocess particles")
+        self.assertIsNotNone(protPreproc.outputParticles,
+                             "There was a problem with preprocess particles")
 
 
 class TestXmippCropResizeParticles(TestXmippBase):
@@ -506,13 +518,15 @@ class TestXmippCropResizeWAngles(TestXmippBase):
                            doWindow=True, windowOperation=xrh.WINDOW_OP_CROP)
 
         self.assertEqual(newSize, outP.getDim()[0],
-                         "Output particles dimension should be equal to %d" % newSize)
+                         "Output particles dimension should be equal to %d"
+                         % newSize)
         self.assertAlmostEqual(outP.getSamplingRate(),
                                inP.getSamplingRate() * factor)
 
         # All other attributes remain the same. For the set:
         ignoreList = ['_mapperPath', '_samplingRate', '_firstDim']
-        self.assertTrue(outP.equalAttributes(inP, ignore=ignoreList, verbose=True))
+        self.assertTrue(outP.equalAttributes(inP, ignore=ignoreList,
+                                             verbose=True))
 
         # Check the scale factor is correctly applied to coordinates and
         # transform matrix
@@ -538,7 +552,8 @@ class TestXmippFilterParticles(TestXmippBase):
         print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True, True)
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237,
+                                                True, True)
 
     def test_filterParticles(self):
         print "\n", greenStr(" Filter Particles ".center(75, '-'))
@@ -578,7 +593,8 @@ class TestXmippOperateParticles(TestXmippBase):
         print "\n", greenStr(" Set Up - Collect data ".center(75, '-'))
         setupTestProject(cls)
         TestXmippBase.setData('xmipp_tutorial')
-        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237, True, True)
+        cls.protImport = cls.runImportParticles(cls.particlesFn, 1.237,
+                                                True, True)
 
     def launchSet(self, **kwargs):
         "Launch XmippProtImageOperateParticles and return output volumes."
@@ -600,29 +616,30 @@ class TestXmippOperateParticles(TestXmippBase):
         
     def testMultiplyVolSets(self):
         part2 = self.protImport.outputParticles  # short notation
-        prot1 = self.launchSet(operation=2,
-                                  objLabel='Multiply two SetOfParticles',
-                                  particles2=part2)
+        prot1 = self.launchSet(operation=OP_MULTIPLY,
+                               objLabel='Multiply two SetOfParticles',
+                               particles2=part2)
 
     def testMultiplyValue(self):
-        prot2 = self.launchSet(operation=2,
+        prot2 = self.launchSet(operation=OP_MULTIPLY,
                                isValue=True,
                                objLabel='Multiply by a Value',
                                value=2.5)
     
     def testDotProduct(self):
         part2 = self.protImport.outputParticles  # short notation
-        prot3 = self.launchSet(operation=6,
+        prot3 = self.launchSet(operation=OP_DOTPRODUCT,
                                objLabel='Dot Product',
                                particles2=part2)
 
     def testSqrt(self):
-        prot4 = self.launchSet(operation=9,
+        prot4 = self.launchSet(operation=OP_SQRT,
                                objLabel='Sqrt')
 
 
 class TestXmippML2D(TestXmippBase):
-    """This class check if the protocol to classify with ML2D in Xmipp works properly."""
+    """ This class check if the protocol to classify with ML2D in Xmipp works
+    properly."""
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
