@@ -37,6 +37,7 @@ from protocol_ctffind import ProtCTFFind
 from protocol_refinement import ProtFrealign
 from protocol_magdist_estimate import ProtMagDistEst
 from protocol_magdist_correct import ProtMagDistCorr
+from protocol_magdist_correct_coords import ProtMagDistCorrCoord
 from protocol_ml_classification import ProtFrealignClassify
 from protocol_unblur import ProtUnblur
 from protocol_summovie import ProtSummovie

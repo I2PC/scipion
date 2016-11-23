@@ -52,7 +52,8 @@ class TestMoviesBase(BaseTest):
             'magnification': magnification,
             'voltage': voltage,
             'sphericalAberration': sphericalAberration,
-            'amplitudeContrast': 0.1
+            'amplitudeContrast': 0.1,
+            'dosePerFrame': 1.3
         }
 
         if samplingRate is not None:
@@ -123,8 +124,7 @@ class TestMoviesBase(BaseTest):
                                     alignFrameN=6,
                                     sumFrame0=2,
                                     sumFrameN=6,
-                                    doApplyDoseFilter=True,
-                                    exposurePerFrame=1.3)
+                                    doApplyDoseFilter=True)
             prot.inputMovies.set(inputMovies)
             self.launchProtocol(prot)
             outputMics = getattr(prot, 'outputMicrographs', None)
