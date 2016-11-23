@@ -38,7 +38,7 @@ from widgets import Scrollable
 
 DEFAULT_ZOOM = 100
 
-DEFAULT_FONT_SIZE = 9
+DEFAULT_FONT_SIZE = -12
 
 DEFAULT_CONNECTOR_FILL = "blue"
 DEFAULT_CONNECTOR_OUTLINE = "black"
@@ -86,7 +86,7 @@ class Canvas(tk.Canvas, Scrollable):
         self._tooltipCallback = tooltipCallback
         self._tooltipDelay = tooltipDelay
 
-        self._runsFont = tkFont.Font(family='helvetica', size=DEFAULT_FONT_SIZE)
+        self._runsFont = tkFont.Font(family='sans-serif', size=DEFAULT_FONT_SIZE)
         self._zoomFactor = DEFAULT_ZOOM
         
         if tooltipCallback:
@@ -315,23 +315,23 @@ class Canvas(tk.Canvas, Scrollable):
 
         currentFontSize = self._runsFont['size']
         newFontSize = currentFontSize
-
-        zoomPairs = [(32, 3),
-                     (44, 4),
+        print "Zoon value:" + str(self._zoomFactor)
+        zoomPairs = [(32, 7),
+                     (44, 6),
                      (53, 5),
-                     (66, 6),
-                     (73, 7),
-                     (82, 8),
-                     (90, 9),
-                     (105, 10),
-                     (120, 11),
-                     (137, 12),
-                     (999, 13),
+                     (66, 4),
+                     (73, 3),
+                     (82, 2),
+                     (90, 1),
+                     (105, 0),
+                     (120, -1),
+                     (137, -2),
+                     (999, -3),
                      ]
 
-        for factor, size in zoomPairs:
+        for factor, sizeDecrement in zoomPairs:
             if self._zoomFactor <= factor:
-                newFontSize = size
+                newFontSize = DEFAULT_FONT_SIZE + sizeDecrement
                 break
 
         if currentFontSize != newFontSize:
@@ -656,8 +656,10 @@ class TextItem(Item):
     def paint(self):
         """Paint the object in a specific position."""
 
-        self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
+        self.id_text = self.canvas.create_text(self.x, self.y, text=self.text,
                                                justify=tk.CENTER, fill=self.textColor, font=self.canvas.getRunsFont())
+        # self.id_text = self.canvas.create_text(self.x, self.y, text=self.text,
+        #                 justify = tk.CENTER, fill = self.textColor)
 
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin
