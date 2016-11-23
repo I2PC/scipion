@@ -62,7 +62,6 @@ class TestNotifier(BaseTest):
 
         results = json.loads(urllib2.urlopen(url).read())
         times_protocolRemote = results["objects"][0]["timesUsed"]
-
         #run a project that executes one time protStress
         kwargs = {'noCpu': 2,
                   'noMem': 0,
@@ -103,16 +102,19 @@ class TestNotifier(BaseTest):
 
         #now check that the  number of times protstress has been executed
         #has increased in 1
-        url = self._getUrl()
-        url = url.replace("workflow/workflow/",
+        urlProt = self._getUrl()
+        urlProt = urlProt.replace("workflow/workflow/",
                           "workflow/protocol/?name=ProtStress")
-        results = json.loads(urllib2.urlopen(url).read())
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
         times_protocolRemote_2 = results["objects"][0]["timesUsed"]
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
 
         #try to resend the project, as we have a 30 sec time this should
         #not go through number times should not change
         projectNotifier.notifyWorkflow()
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
         times_protocolRemote_2 = results["objects"][0]["timesUsed"]
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
 
@@ -120,6 +122,8 @@ class TestNotifier(BaseTest):
         # times should not change
         time.sleep(25)
         projectNotifier.notifyWorkflow()
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
         times_protocolRemote_2 = results["objects"][0]["timesUsed"]
         self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
 
@@ -128,5 +132,7 @@ class TestNotifier(BaseTest):
         prot2.setObjLabel('stress2')
         self.proj.launchProtocol(prot2, wait=True)
         projectNotifier.notifyWorkflow()
+        time.sleep(5)# notifier runs in a thread so wait a bit
+        results = json.loads(urllib2.urlopen(urlProt).read())
         times_protocolRemote_2 = results["objects"][0]["timesUsed"]
-        self.assertEqual(times_protocolRemote_2, times_protocolRemote +1)
+        self.assertEqual(times_protocolRemote_2, times_protocolRemote +2)
