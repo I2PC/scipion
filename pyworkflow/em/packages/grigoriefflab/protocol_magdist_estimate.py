@@ -2,6 +2,7 @@
 # *
 # * Authors:     Grigory Sharov (sharov@igbmc.fr)
 # *
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -64,9 +65,10 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
                       label='Scale step',
                       help='Step size for the scale search.')
 
-        line = form.addLine('Resolution limit',
+        line = form.addLine('Resolution limits (A)',
                             expertLevel=params.LEVEL_ADVANCED,
-                            help='Resolution limits for the search. '
+                            help='Resolution limits for the search, '
+                                 'in Angstroms. '
                                  'Default values are optimized '
                                  'for the gold diffraction ring')
         line.addParam('lowRes', params.FloatParam, default=2.5, label='Low')
@@ -88,9 +90,9 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
                             help='Filter radius for the amplitude bandpass '
                                  'filter.')
 
-        line.addParam('lowp', params.FloatParam, default=0.2, label='Low-pass')
-        line.addParam('highp', params.FloatParam, default=0.01,
-                      label='High-pass')
+        line.addParam('lowp', params.FloatParam, default=0.01, label='Lowest')
+        line.addParam('highp', params.FloatParam, default=0.2,
+                      label='Highest')
 
         form.addParam('box', params.IntParam, default=512,
                       expertLevel=params.LEVEL_ADVANCED,
@@ -112,8 +114,8 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
                        'minAng': self.minAng.get(),
                        'maxAng': self.maxAng.get(),
                        'angStep': self.angStep.get(),
-                       'lowp': self.lowp.get(),
-                       'highp': self.highp.get(),
+                       'lowp': self.highp.get(),
+                       'highp': self.lowp.get(),
                        'box': self.box.get(),
                        'pixSize': pixSize,
                        'nthr': self.numberOfThreads.get()}
