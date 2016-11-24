@@ -359,133 +359,117 @@ sklearn = env.addModule(
 # 'commands' is a list of (command, [targets]) to run after installation.
 
 
-env.addPackage('bsoft-1.8.8',
-               tar='bsoft1_8_8_Fedora_12.tgz',
-               default=False)
+env.addPackage('bsoft', version='1.8.8',
+               tar='bsoft1_8_8_Fedora_12.tgz')
 
-env.addPackage('bsoft-1.9.0',
-               tar='bsoft1_9_0_Fedora_20.tgz',
-               default=False)
+env.addPackage('bsoft', version='1.9.0',
+               tar='bsoft1_9_0_Fedora_20.tgz')
 
-env.addPackage('ctffind',
-               tar='ctffind_V3.5.tgz',
-               default=False)
+env.addPackage('ctffind', version='3.6',
+               tar='ctffind_V3.5.tgz')
 
-env.addPackage('ctffind4',
-               tar='ctffind_V4.0.15.tgz',
-               default=False)
+env.addPackage('ctffind4', version='4.0.15',
+               tar='ctffind_V4.0.15.tgz')
 
-env.addPackage('summovie',
-               tar='summovie_1.0.2.tgz',
-               default=False)
+env.addPackage('ctffind4', version='4.1.5',
+               tar='ctffind_V4.1.5.tgz')
 
-env.addPackage('unblur',
-               tar='unblur_1.0_150529.tgz',
-               default=False)
+env.addPackage('summovie', version='1.0.2',
+               tar='summovie_1.0.2.tgz')
 
-env.addPackage('eman2.11',
+env.addPackage('unblur', version='1.0.15',
+               tar='unblur_1.0_150529.tgz')
+
+env.addPackage('unblur', version='1.0.2',
+               tar='unblur_1.0.2.tgz')
+
+eman2_commands = [('./eman2-installer',
+                   'eman2.bashrc')]
+
+env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
-               commands=[('./eman2-installer', 
-                          'eman2.bashrc')],
-               default=False)
+               commands=eman2_commands)
 
-env.addPackage('eman2.12',
+env.addPackage('eman', version='2.12',
                tar='eman2.12.linux64.tgz',
-               commands=[('./eman2-installer', 
-                          'eman2.*rc')],
-               default=False)
+               commands=eman2_commands)
 
-env.addPackage('frealign',
-               tar='frealign_v9.07.tgz',
-               default=False)
+env.addPackage('frealign', version='9.07',
+               tar='frealign_v9.07.tgz')
 
-env.addPackage('relion-1.4',
+relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
+                          ['relion_build.log',
+                           'bin/relion'])]
+
+env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
-               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
-                          ['relion_build.log',
-                           'bin/relion'])],
-               default=False)
+               commands=relion_commands)
 
-env.addPackage('relion-1.4_float',
+env.addPackage('relion', version='1.4f',
                tar='relion-1.4_float.tgz',
-               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
-                          ['relion_build.log',
-                           'bin/relion'])],
-               default=False)
+               commands=relion_commands)
 
-env.addPackage('relion-1.3',
+env.addPackage('relion', version='1.3',
                tar='relion-1.3.tgz',
-               commands=[('./INSTALL.sh -j %d' % env.getProcessors(),
-                          ['relion_build.log',
-                           'bin/relion'])],
-               default=False)
+               commands=relion_commands)
 
-env.addPackage('localrec',
-               tar='localrec-1.1.0.tgz',
-               default=False)
+env.addPackage('localrec', version='1.1.0',
+               tar='localrec-1.1.0.tgz')
 
-env.addPackage('resmap',
+env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
-               deps=['scipy'],
-               default=False)
+               deps=['scipy'])
 
-env.addPackage('spider',
+env.addPackage('spider', version='21.13',
                tar='spider-web-21.13.tgz',
-               neededProgs=['csh'],
-               default=False)
+               neededProgs=['csh'])
 
-env.addPackage('motioncorr',
-               tar='motioncorr_v2.1.tgz',
-               default=False)
+env.addPackage('motioncorr', version='2.1',
+               tar='motioncorr_v2.1.tgz')
 
-env.addPackage('motioncor2',
-               tar='motioncor2_03162016.tgz',
-               default=False)
+env.addPackage('motioncor2', version='16.03.16',
+               tar='motioncor2_03162016.tgz')
 
-env.addPackage('simple',
-               tar='simple2.tgz',
-               default=False)
+env.addPackage('motioncor2', version='16.10.19',
+               tar='motioncor2_10192016.tgz')
 
-env.addPackage('chimera',
+env.addPackage('simple', version='2.1',
+               tar='simple2.tgz')
+
+env.addPackage('chimera', version='1.10.1',
                tar='chimera-1.10.1-linux_x86_64.tgz',
                targetDir='chimera-1.10.1',
-               commands=[('./scipion_installer','bin/chimera')],
-               default=False)
+               commands=[('./scipion_installer','bin/chimera')])
 
-env.addPackage('dogpicker',
-               tar='dogpicker-0.2.1.tgz',
-               default=False)
+env.addPackage('dogpicker', version='0.2.1',
+               tar='dogpicker-0.2.1.tgz')
 
 env.addPackage('nma',
                tar='nma.tgz',
                commands=[('cd ElNemo; make; mv nma_* ..', 'nma_elnemo_pdbmat'),
                          ('cd NMA_cart; LDFLAGS=-L%s/lib make; mv nma_* ..' %
                           os.environ['SCIPION_SOFTWARE'], 'nma_diag_arpack')],
-               deps=['arpack'],
-               default=False)
+               deps=['arpack'])
 
-cryoem = env.addPackage(
-                'cryoem',
+env.addPackage('cryoem', version='1.0',
                 tar='cryoem-1.0.tgz',
-                default=False,
-                pythonMod=True,
+                pythonMod=True, default=False,
                 numpyIncludes=True,
                 deps=[numpy, scipy, matplotlib, cythongsl])
 
-env.addPackage('gEMpicker_v1.1',
-               tar='gEMpicker_v1.1.tgz',
-               default=False)
+env.addPackage('gEMpicker', version='1.1',
+               tar='gEMpicker_v1.1.tgz')
 
-env.addPackage('Gctf_v0.50',
-               tar='Gctf_v0.50.tgz',
-               default=False)
+env.addPackage('Gctf', version='0.50',
+               tar='Gctf_v0.50.tgz')
 
-env.addPackage('Gautomatch_v0.53',
-               tar='Gautomatch_v0.53.tgz',
-               default=False)
+env.addPackage('Gctf', version='1.06',
+               tar='Gctf_v1.06.tgz')
 
-env.addPackage('mag_distortion',
-               tar='mag_distortion_v1.0.1.tgz',
-               default=False)
+env.addPackage('Gautomatch', version='0.53',
+               tar='Gautomatch_v0.53.tgz')
+
+env.addPackage('mag_distortion', version='1.0.1',
+               tar='mag_distortion_v1.0.1.tgz')
 
 env.execute()

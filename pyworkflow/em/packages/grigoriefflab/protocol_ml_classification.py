@@ -24,8 +24,9 @@
 # *
 # **************************************************************************
 """
-This module contains the protocol to obtain a refined 3D reconstruction from a set of particles using Frealign
+This module contains the protocol to classify a set of particles using Frealign
 """
+
 import os
 from pyworkflow.utils import copyFile
 import pyworkflow.em as em
@@ -313,7 +314,7 @@ marginal likelihood.
         return blockCpus
     
     def _mergeAllParFiles(self, iterN, ref, numberOfBlocks):
-        """ This method merge all parameters files that has been created in a refineIterStep """
+        """ This method merge all parameters files that have been created in a refineIterStep """
         
         file2 = self._getFileName('output_par_class', iter=iterN, ref=ref)
         if numberOfBlocks != 1:
@@ -333,7 +334,7 @@ marginal likelihood.
             copyFile(file1, file2)
     
     def _splitParFile(self, iterN, ref, numberOfBlocks):
-        """ This method split the parameter files that has been previosuly merged """
+        """ This method split the parameter files that have been previously merged """
         
         prevIter = iterN -1
         file1 = self._getFileName('output_par_class', iter=prevIter, ref=ref)
