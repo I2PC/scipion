@@ -450,6 +450,8 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
 	}
 
 	public class MetadataColumnListener extends MouseAdapter {
+        public static final String ASCENDING_PREFIX = "\u25B2 ";
+        public static final String DESCENDING_PREFIX = "\u25BC ";
 		protected JTable table;
 
 		public MetadataColumnListener(JTable t) {
@@ -489,7 +491,7 @@ public class MetadataTableModel extends MetadataGalleryTableModel {
                 public void run() {
 
                     data.sortMd(data.labels.get(sortColumnIndex), ascending);
-                    column.setHeaderValue((ascending? "\u25B2 ": "\u25BC ")+columnName);
+                    column.setHeaderValue((ascending? ASCENDING_PREFIX : DESCENDING_PREFIX)+columnName);
                     table.getTableHeader().repaint();
                     clearSelection();
                     updateTableSelection(table);
