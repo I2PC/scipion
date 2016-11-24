@@ -170,4 +170,4 @@ class TestMixedMovies(BaseTest):
         of2.inputMovies.set(mc2.outputMovies)
         self.launchProtocol(of2)
 
-        #self._compareMovies(of1.outputMicrographs, of2.outputMicrographs)
+        self._compareMovies(of1.outputMicrographs, of2.outputMicrographs)
