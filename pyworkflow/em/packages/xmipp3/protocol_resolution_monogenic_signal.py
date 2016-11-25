@@ -26,101 +26,93 @@
 
 
 
-from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam,  FloatParam, LEVEL_ADVANCED)
+from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from convert import readSetOfVolumes, ImageHandler
 from shutil import copyfile
 
 
-
-
 class XmippProtMonoRes(ProtRefine3D):
     """    
-    Given a map the protocol assings local resolutions to each pixel of the map.
+    Given a map the protocol assigns local resolutions to each pixel of the map.
     """
-    _label = 'MonoRes - Monogenic Resolution'
-    
-    def __init__(self, *args, **kwargs):
-        ProtRefine3D.__init__(self, *args, **kwargs)
-        
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    _label = 'monogenic resolution'
+
+    # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-  
-        form.addParam('halfVolumens', BooleanParam, default=False, 
-                      label="Would you like to use half volumens?", 
-                      help='The noise estimation for determining the local resolution ' 
-                           'is performed via half volumnes.')
-       
-        form.addParam('inputVolume', PointerParam, pointerClass='Volume', 
-                      label="Input Volume", 
+
+        form.addParam('halfVolums', BooleanParam, default=False,
+                      label="Would you like to use half volums?",
+                      help='The noise estimation for determining the local resolution '
+                           'is performed via half volumes.')
+
+        form.addParam('inputVolume', PointerParam, pointerClass='Volume',
+                      label="Input Volume",
                       help='Select a volume for determining its local resolucion.')
-        
-        form.addParam('inputVolume2', PointerParam, pointerClass='Volume', 
-                      label="Second Half Volume",  condition = 'halfVolumens', 
+
+        form.addParam('inputVolume2', PointerParam, pointerClass='Volume',
+                      label="Second Half Volume", condition='halfVolums',
                       help='Select a second volume for determining a local resolucion.')
-        
+
         form.addParam('provideMaskInHalves', BooleanParam, default=False,
-		      condition = 'halfVolumens',
+                      condition='halfVolums',
                       label="Use mask with halves volumes?",
                       help='Sometimes the volume is in an sphere, then this option ought to be selected')
-        
-        form.addParam('Mask', PointerParam, pointerClass='VolumeMask', allowsNull=True, 
-		      condition = '(provideMaskInHalves and halfVolumens) or (not halfVolumens)',
-                      label="Mask", 
+
+        form.addParam('Mask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
+                      condition='(provideMaskInHalves and halfVolums) or (not halfVolums)',
+                      label="Mask",
                       help='The mask determines the those points where the macromolecle is')
 
-
-        form.addParam('symmetry', StringParam, default='c1', 
-                      label="Symmetry",  
+        form.addParam('symmetry', StringParam, default='c1',
+                      label="Symmetry",
                       help='Symmetry group. By default = c1')
-        
-        line = form.addLine('Resolution Range (A)', 
-                      help="If the user knows the range of resolutions or only a"
-                      " range of frequency needs to be analysed", expertLevel=LEVEL_ADVANCED)
+
+        line = form.addLine('Resolution Range (A)',
+                            help="If the user knows the range of resolutions or only a"
+                                 " range of frequency needs to be analysed", expertLevel=LEVEL_ADVANCED)
 
         line.addParam('minRes', FloatParam, default=1, label='Min')
         line.addParam('maxRes', FloatParam, default=100, label='Max')
-        
-        form.addParam('significance', FloatParam, label="Significance",  default=0.95, expertLevel=LEVEL_ADVANCED,
+
+        form.addParam('significance', FloatParam, label="Significance", default=0.95, expertLevel=LEVEL_ADVANCED,
                       help='The resolution is computed performing hypothesis tests. This parameter determines'
-                      ' the significance for that test.')
+                           ' the significance for that test.')
         form.addParam('exact', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Find exact resolution?",
                       help='The noise estimation can be performed exact (slow) or approximated (fast)'
-                      'ussually there has not difference between them')
+                           'ussually there has not difference between them')
         form.addParam('filterInput', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
         form.addParam('trimming', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Remove bad resolution values?",
                       help='In some situations bad voxels appear. This option allow to remove those voxels')
-        
-        form.addParam('kValue', FloatParam, label="Trimming Value",  condition = 'trimming', 
-                      default=5, 
+
+        form.addParam('kValue', FloatParam, label="Trimming Value", condition='trimming',
+                      default=5,
                       help='This value performs post-processing, smoothing the output resolutions.'
-                      'The resolutions in this percentile, will be changed by the mean value')
-        
-        
+                           'The resolutions in this percentile, will be changed by the mean value')
 
         form.addParallelSection(threads=1, mpi=1)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    # --------------------------- INSERT steps functions --------------------------------------------
 
 
-    def _insertAllSteps(self):        
+    def _insertAllSteps(self):
         self.micsFn = self._getPath()
-        
+
         # Convert input into xmipp Metadata format
         volLocation1 = self.inputVolume.get().getFileName()
         volLocation2 = self.inputVolume2.get().getFileName()
         fnmask = self.Mask.get().getFileName()
-        
+
         convertId = self._insertFunctionStep('convertInputStep', volLocation1, fnmask, volLocation2)
         deps = []
 
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
-        
+
         if self.symmetry.get() not in ['c1', 'C1']:
             self._insertFunctionStep('symmetrizeStep',
                                      self._getExtraPath('MGresolution.vol')
@@ -128,14 +120,12 @@ class XmippProtMonoRes(ProtRefine3D):
             self._insertFunctionStep('symmetrizeStep',
                                      self._getExtraPath('MG_Chimera_resolution.vol')
                                      , prerequisites=[convertId])
-       
-        self._insertFunctionStep('createOutputStep', prerequisites=[MS])
-        
-        self._insertFunctionStep("createChimeraScript")
-        
-        self._insertFunctionStep("createHistrogram")
 
-       
+        self._insertFunctionStep('createOutputStep', prerequisites=[MS])
+
+        self._insertFunctionStep("createChimeraScript")
+
+        self._insertFunctionStep("createHistrogram")
 
     def convertInputStep(self, volLocation1, fnmask, volLocation2=None):
         """ Read the input volume.
@@ -143,91 +133,86 @@ class XmippProtMonoRes(ProtRefine3D):
         # Get the converted input micrographs in Xmipp format
         ih = ImageHandler()
         ih.convert(volLocation1, self._getExtraPath('input_volume.vol'))
-        
+
         if volLocation2 is not None:
             ih.convert(volLocation2, self._getExtraPath('input_volume2.vol'))
-            
+
         if fnmask is not None:
             ih.convert(fnmask, self._getExtraPath('input_mask.vol'))
-   
+
     def resolutionMonogenicSignalStep(self):
 
-        if self.halfVolumens.get() is False:
-            params =  ' --vol %s' % self._getExtraPath('input_volume.vol')
-            params +=  ' --mask %s' %  self._getExtraPath('input_mask.vol')
+        if self.halfVolums.get() is False:
+            params = ' --vol %s' % self._getExtraPath('input_volume.vol')
+            params += ' --mask %s' % self._getExtraPath('input_mask.vol')
         else:
-            params =  ' --vol %s' %  self._getExtraPath('input_volume.vol')
-            params +=  ' --vol2 %s' %  self._getExtraPath('input_volume2.vol')
+            params = ' --vol %s' % self._getExtraPath('input_volume.vol')
+            params += ' --vol2 %s' % self._getExtraPath('input_volume2.vol')
             if self.provideMaskInHalves.get() is True:
-                params +=  ' --mask %s' % self._getExtraPath('input_mask.vol')
+                params += ' --mask %s' % self._getExtraPath('input_mask.vol')
             else:
-                params +=  ' --mask %s' % ''
-        
-        params +=  ' -o %s' % self._getExtraPath('MGresolution.vol')
-        params +=  ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
-        params +=  ' --number_frequencies %f' % 50
-        params +=  ' --minRes %f' % self.minRes.get()
-        params +=  ' --maxRes %f' % self.maxRes.get()
-        params +=  ' --chimera_volume %s' %self._getExtraPath('MG_Chimera_resolution.vol')
-        params +=  ' --linear '
-        params +=  ' --significance %s' %self.significance.get()
+                params += ' --mask %s' % ''
+
+        params += ' -o %s' % self._getExtraPath('MGresolution.vol')
+        params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
+        params += ' --number_frequencies %f' % 50
+        params += ' --minRes %f' % self.minRes.get()
+        params += ' --maxRes %f' % self.maxRes.get()
+        params += ' --chimera_volume %s' % self._getExtraPath('MG_Chimera_resolution.vol')
+        params += ' --linear '
+        params += ' --significance %s' % self.significance.get()
         if self.exact.get():
-            params +=  ' --exact'
+            params += ' --exact'
         if self.filterInput.get():
-            params +=  ' --filtered_volume %s' %self._getExtraPath('filteredMap.vol')
+            params += ' --filtered_volume %s' % self._getExtraPath('filteredMap.vol')
         else:
-            params +=  ' --filtered_volume %s' %''
+            params += ' --filtered_volume %s' % ''
 
         if self.trimming.get() is True:
-            params +=  ' --trimmed %f' % self.kValue.get()
+            params += ' --trimmed %f' % self.kValue.get()
         else:
-            params +=  ' --trimmed %f' % 0
-            
+            params += ' --trimmed %f' % 0
+
         self.runJob('xmipp_resolution_monogenic_signal', params)
-        
-        
+
     def symmetrizeStep(self, fnVol2Sym):
-        
-        params =  ' -i %s' % fnVol2Sym
-        params +=  ' --sym %s' % self.symmetry.get()
+
+        params = ' -i %s' % fnVol2Sym
+        params += ' --sym %s' % self.symmetry.get()
 
         self.runJob('xmipp_transform_symmetrize', params)
 
-
-                
     def createChimeraScript(self):
         fnRoot = "extra/"
-        scriptFile = self._getPath('Chimera_resolution.cmd') 
+        scriptFile = self._getPath('Chimera_resolution.cmd')
         fhCmd = open(scriptFile, 'w')
-        fhCmd.write("open %s\n" % (fnRoot+ "input_volume.vol"))
-        fhCmd.write("open %s\n" % (fnRoot+ "MG_Chimera_resolution.vol") )
+        fhCmd.write("open %s\n" % (fnRoot + "input_volume.vol"))
+        fhCmd.write("open %s\n" % (fnRoot + "MG_Chimera_resolution.vol"))
         fhCmd.write("vol #1 hide\n")
         fhCmd.write("scolor #0 volume #1 cmap rainbow reverseColors True\n")
         fhCmd.close()
-        
-        
+
     def createHistrogram(self):
 
-        params =  ' -i %s' % self._getExtraPath('MGresolution.vol')
-        params +=  ' --mask binary_file %s' % self.Mask.get().getFileName()
-        params +=  ' --steps %f' % 30
-        params +=  ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
-        params +=  ' -o %s' % self._getExtraPath('hist.xmd')
+        params = ' -i %s' % self._getExtraPath('MGresolution.vol')
+        params += ' --mask binary_file %s' % self.Mask.get().getFileName()
+        params += ' --steps %f' % 30
+        params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
+        params += ' -o %s' % self._getExtraPath('hist.xmd')
 
         self.runJob('xmipp_image_histogram', params)
 
-    
     def createOutputStep(self):
         volume_path = self._getExtraPath('MGresolution.vol')
-        
+
         volumesSet = self._createSetOfVolumes()
         volumesSet.setSamplingRate(self.inputVolume.get().getSamplingRate())
-                 
+
         readSetOfVolumes(volume_path, volumesSet)
-         
+
         self._defineOutputs(outputVolume=volumesSet)
         self._defineSourceRelation(self.inputVolume, volumesSet)
-        
+
         if self.filterInput.get():
             volume_filtered_path = self._getExtraPath('filteredMap.vol')
             volumesSet2 = self._createSetOfVolumes()
@@ -235,23 +220,21 @@ class XmippProtMonoRes(ProtRefine3D):
             readSetOfVolumes(volume_filtered_path, volumesSet2)
             self._defineOutputs(outputVolume=volumesSet2)
             self._defineSourceRelation(self.inputVolume, volumesSet2)
-        
 
-    
-    #--------------------------- INFO functions -------------------------------------------- 
+    # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
-        
+
         validateMsgs = []
         if not self.inputVolume.get().hasValue():
-            validateMsgs.append('Please provide input volume.')  
+            validateMsgs.append('Please provide input volume.')
         return validateMsgs
 
-   
     def _methods(self):
         messages = []
-        if (hasattr(self,'outputParticles')):
-            messages.append('An angular assignment of untilted and tilted particles is carried out [Publication: Not yet]')
+        if (hasattr(self, 'outputParticles')):
+            messages.append(
+                'An angular assignment of untilted and tilted particles is carried out [Publication: Not yet]')
         return messages
-    
+
     def _citations(self):
         return ['Not yet']

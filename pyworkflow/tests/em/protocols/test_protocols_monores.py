@@ -74,7 +74,7 @@ class TestMonoRes(TestMonoResBase):
 
     def testMonoRes1(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   halfVolumens = False,
+                                   halfVolums = False,
                                    inputVolume = self.protImportVol.outputVolume,
                                    Mask = self.protImportMask.outputVolume,
                                    symmetry = 'd2',
@@ -91,7 +91,7 @@ class TestMonoRes(TestMonoResBase):
 
     def testMonoRes2(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
-                                  halfVolumens=True,
+                                  halfVolums=True,
                                   inputVolume = self.protImportHalf1.outputVolume,
                                   inputVolume2 = self.protImportHalf2.outputVolume,
                                   provideMaskInHalves = True,
@@ -110,7 +110,7 @@ class TestMonoRes(TestMonoResBase):
 
     def testMonoRes3(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
-                                  halfVolumens = True,
+                                  halfVolums = True,
                                   inputVolume = self.protImportVol.outputVolume,
                                   provideMaskInHalves = False,
                                   Mask = '',
@@ -128,7 +128,7 @@ class TestMonoRes(TestMonoResBase):
 
     def testMonoRes4(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   halfVolumens = False,
+                                   halfVolums = False,
                                    inputVolume = self.protImportVol.outputVolume,
                                    Mask = self.protImportMask.outputVolume,
                                    symmetry = 'd2',
