@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -37,6 +37,3 @@ if __name__ == '__main__':
     args = " ".join(sys.argv[4:])
 
     runGautomatch(micName, refStack, workDir, args)
-
-
-

@@ -51,31 +51,22 @@ class ProtSummovie(ProtAlignMovies):
 
         group = form.addGroup('Average')
         line = group.addLine('Frames to SUM',
-                    help='Frames range to SUM on each movie. The '
-                         'first frame is 1. If you set 0 in the final '
-                         'frame to sum, it means that you will sum '
-                         'until the last frame of the movie.')
-        line = group.addLine('Frames to SUM',
-                            help='Frames range to SUM on each movie. The '
-                                 'first frame is 1. If you set 0 in the final '
-                                 'frame to sum, it means that you will sum '
-                                 'until the last frame of the movie.')
+                             help='Frames range to SUM on each movie. The '
+                                  'first frame is 1. If you set 0 in the final '
+                                  'frame to sum, it means that you will sum '
+                                  'until the last frame of the movie.')
         line.addParam('sumFrame0', params.IntParam, default=1,
                       label='from')
         line.addParam('sumFrameN', params.IntParam, default=0,
                       label='to')
         group.addParam('useAlignment', params.BooleanParam, default=True,
-              label="Use movie alignment to Sum frames?")
+                       label="Use movie alignment to Sum frames?")
 
-        group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+        form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                       label='Apply Dose filter',
-                      help='Apply a dose-dependent filter to frames '
-                           'before summing them')
-
-        form.addParam('exposurePerFrame', params.FloatParam,
-                      label='Exposure per frame (e/A^2)',
-                      help='Exposure per frame, in electrons per square '
-                           'Angstrom')
+                      help='Apply a dose-dependent filter to frames before '
+                           'summing them. Pre-exposure and dose per frame were '
+                           'specified during movies import.')
 
         form.addParam('doRestoreNoisePower', params.BooleanParam,
                       default=True,
@@ -111,16 +102,16 @@ class ProtSummovie(ProtAlignMovies):
             self._writeMovieAlignment(movie, s0, sN)
             self._argsSummovie()
 
-            params = {'movieFn' : self._getMovieFn(movie),
-                      'numberOfFrames' : numberOfFrames,
-                      'micFn' : self._getMicFn(movie),
-                      'initFrame' : s0,
-                      'finalFrame' : sN,
-                      'shiftsFn' : self._getShiftsFn(movie),
-                      'samplingRate' : movie.getSamplingRate(),
-                      'voltage' : movie.getAcquisition().getVoltage(),
-                      'frcFn' : self._getFrcFn(movie),
-                      'exposurePerFrame' : self.exposurePerFrame.get(),
+            params = {'movieFn': self._getMovieFn(movie),
+                      'numberOfFrames': numberOfFrames,
+                      'micFn': self._getMicFn(movie),
+                      'initFrame': s0,
+                      'finalFrame': sN,
+                      'shiftsFn': self._getShiftsFn(movie),
+                      'samplingRate': movie.getSamplingRate(),
+                      'voltage': movie.getAcquisition().getVoltage(),
+                      'frcFn': self._getFrcFn(movie),
+                      'exposurePerFrame': movie.getAcquisition().getDosePerFrame() or 0.0,
                       'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
                       'doRestoreNoisePower': 'YES' if self.doRestoreNoisePower else 'NO'
                       }
@@ -182,11 +173,20 @@ class ProtSummovie(ProtAlignMovies):
                               "protocol. This is not allowed because you could "
                               "lost your original data.")
 
+        if self.doApplyDoseFilter:
+            inputMovies = self.inputMovies.get()
+            doseFrame = inputMovies.getAcquisition().getDosePerFrame()
+
+            if doseFrame == 0.0 or doseFrame is None:
+                errors.append('Dose per frame for input movies is 0 or not '
+                              'set. You cannot apply dose filter.')
+
         return errors
     
     #--------------------------- UTILS functions -------------------------------
     def _argsSummovie(self):
-        self._program = 'export OMP_NUM_THREADS=1; ' + SUMMOVIE_PATH
+        self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program += SUMMOVIE_PATH
         self._args = """ << eof
 %(movieFn)s
 %(numberOfFrames)s
@@ -231,36 +231,36 @@ eof
         if movie.hasAlignment() and self.useAlignment:
             writeShiftsMovieAlignment(movie, shiftsFn, s0, sN)
         else:
-            f = open(shiftsFn,'w')
+            f = open(shiftsFn, 'w')
             frames = sN - s0 + 1
-            shift= ("0 " * frames + "\n" ) *2
+            shift = ("0 " * frames + "\n") * 2
             f.write(shift)
             f.close()
     
-    def _doGenerateOutputMovies(self):
+    def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
         either with alignment only or the binary aligned movie files.
         Subclasses can override this function to change this behavior.
         """
         return False
-    
+
     def _storeSummary(self, movie):
         if movie.hasAlignment():
             numOfFrames = self._getNumberOfFrames(movie)
             s0, sN = self._getFrameRange(numOfFrames, 'sum')
             fstFrame, lstFrame, _ = movie.getFramesRange()
-            
+
             if self.useAlignment and (fstFrame > s0 or lstFrame < sN):
                 self.summaryVar.set("Warning!!! You have selected a frame range "
                                     "wider than the range selected to align. All "
                                     "the frames selected without alignment "
                                     "information, will be aligned by setting "
                                     "alignment to 0")
-    
+
     def _getNumberOfFrames(self, movie):
         _, lstFrame, _ = movie.getFramesRange()
-        
+
         if movie.hasAlignment():
             _, lastFrmAligned = movie.getAlignment().getRange()
             if lastFrmAligned != lstFrame:
@@ -274,9 +274,9 @@ eof
         n = self._getNumberOfFrames(movie)
         iniFrame, _, indxFrame = movie.getFramesRange()
         first, last = self._getFrameRange(n, prefix)
-        
+
         if iniFrame != indxFrame:
             first -= (iniFrame - 1)
             last -= (iniFrame - 1)
-        
+
         return first, last
