@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Jose Luis Vilas (jlvilas@cnb.csic.es, pconesa@cnb.csic.es)
+# * Authors:     Jose Luis Vilas (jlvilas@cnb.csic.es)
+# *              Pablo Conesa (pconesa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -35,8 +36,6 @@ from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles
 
 
 
-
-
 class XmippProtAddNoise(ProtRefine3D):
     """    
     Given a sets of volumes or particles the protocol adds noise to them 
@@ -46,10 +45,11 @@ class XmippProtAddNoise(ProtRefine3D):
     STUDENT_NOISE = 1
     UNIFORM_NOISE = 2
         
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
-        form.addParam('noiseType', EnumParam, choices=['Gaussian', 'Student', 'Uniform'],
+        form.addParam('noiseType', EnumParam,
+                      choices=['Gaussian', 'Student', 'Uniform'],
                       default = 0,
                       label="Noise Type")
         
@@ -59,7 +59,8 @@ class XmippProtAddNoise(ProtRefine3D):
                       help='Please, introduce the standard deviation value.'
                       'Mean value can be changed in advanced mode.')
         
-        form.addParam('gaussianMean', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('gaussianMean', FloatParam, default=0,
+                      expertLevel=LEVEL_ADVANCED,
                       condition='noiseType == %d' % self.GAUSSIAN_NOISE,
                       label="Mean", 
                       help='Please, introduce the mean value (default = 0).')
@@ -76,7 +77,8 @@ class XmippProtAddNoise(ProtRefine3D):
                       help='Please, introduce the standard deviation value.'
                       'Mean value can be changed in advanced mode.')
         
-        form.addParam('studentMean', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
+        form.addParam('studentMean', FloatParam, default=0,
+                      expertLevel=LEVEL_ADVANCED,
                       condition='noiseType == %d' % self.STUDENT_NOISE,
                       label="Mean", 
                       help='Please, introduce the mean value (default = 0).')
@@ -94,21 +96,15 @@ class XmippProtAddNoise(ProtRefine3D):
         
         form.addParallelSection(threads=1, mpi=1)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
 
 
     def _insertAllSteps(self):        
         self.micsFn = self._getPath()
-        
         # Convert input into xmipp Metadata format
         convertId = self._insertFunctionStep('convertInputStep')
-        deps = []
-        
-         
         self._insertFunctionStep('addNoiseStep')
- 
         self._insertFunctionStep('createOutputStep')
-
 
     def _getTypeOfNoise(self):
         if self.noiseType == self.GAUSSIAN_NOISE:
@@ -123,7 +119,7 @@ class XmippProtAddNoise(ProtRefine3D):
             noiseParams = '%f %f' % (self.uniformMin, self.uniformMax)
         return kindNoise, noiseParams
 
-     #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions -------------------------------
     def _validate(self):
         
         validateMsgs = []
@@ -163,13 +159,14 @@ class XmippProtAddNoiseVolumes(XmippProtAddNoise):
     Given a set of volumes, or a volume the protocol will add noise to them 
     The types of noise are Uniform, Student and Gaussian.
     """
-    _label = 'Add noise to volume/s'
+    _label = 'add noise volume/s'
     
-        #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
        
-        form.addParam('input', PointerParam, pointerClass='SetOfVolumes, Volume',
+        form.addParam('input', PointerParam,
+                      pointerClass='SetOfVolumes, Volume',
                       label="Input Volume/s", 
                       help='Select a volume or Set of volumes.')
         
@@ -236,9 +233,9 @@ class XmippProtAddNoiseParticles(XmippProtAddNoise):
     Given a set of particles, the protocol will add noise to them 
     The types of noise are Uniform, Student and Gaussian.
     """
-    _label = 'Add noise to particles'
+    _label = 'add noise particles'
     
-        #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions --------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
        
@@ -270,10 +267,10 @@ class XmippProtAddNoiseParticles(XmippProtAddNoise):
         #Output Volume/SetOfVolumes
         particlesSet = self._createSetOfParticles()
         particlesSet.copyInfo(self.input.get())
-        particlesSet.copyItems(self.input.get(), updateItemCallback=self._updateParticle)
+        particlesSet.copyItems(self.input.get(),
+                               updateItemCallback=self._updateParticle)
         self._defineOutputs(outputParticles=particlesSet)
         self._defineSourceRelation(self.input.get(), particlesSet)      
-
 
     def getFileNameNoisyStk(self):
         return self._getExtraPath('Noisy.stk')
@@ -283,4 +280,3 @@ class XmippProtAddNoiseParticles(XmippProtAddNoise):
         fnOut = self.getFileNameNoisyStk()
         particle.setFileName(fnOut)
 
-        
