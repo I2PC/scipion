@@ -29,6 +29,7 @@ from os.path import join, exists
 
 from pyworkflow.utils import Environ
 
+
 def _getHome(key, default):
     """ Get the required home path, if not present..
     the default value will be used from EM_ROOT.
@@ -63,9 +64,25 @@ def getEnviron():
     return environ
 
 
+def getVersion(var):
+    varHome = var + '_HOME'
+    path = os.environ[varHome]
+    for v in getSupportedVersions(var):
+        if v in path or v in os.path.realpath(path):
+            return v
+    return ''
+
+
+def getSupportedVersions(var):
+    if var == 'MOTIONCORR':
+        return ['2.1']
+    elif var == 'MOTIONCOR2':
+        return ['03162016', '10192016']
+
+
 def parseMovieAlignment(logFile):
-    """ Get the first and last frames together with the shifts
-    between frames aligned. Motioncorr old version
+    """ Get global frame shifts relative to the first frame
+    (for the plots). Motioncorr old version
     """
     f = open(logFile, 'a+')
     first = None
@@ -74,11 +91,11 @@ def parseMovieAlignment(logFile):
 
     for line in f:
         l = line.strip()
-        if 'Add Frame #' in l:
+        if 'Shift of Frame #' in l:
             parts = l.split()
-            if first is None: # read the first frame number
-                first = int(parts[2][1:]) # take the id from #000 format
-            # take the id from the last two colums of the line
+            if first is None:  # read the first frame number
+                first = int(parts[3][1:])  # take the id from #000 format
+            # take the id from the last two columns of the line
             xshifts.append(float(parts[-2]))
             yshifts.append(float(parts[-1]))
     f.close()
@@ -86,8 +103,8 @@ def parseMovieAlignment(logFile):
 
 
 def parseMovieAlignment2(logFile):
-    """ Get the first and last frames together with the shifts
-    between frames aligned. Motioncor2 new version
+    """ Get global frame shifts relative to the first frame
+    (for the plots). Motioncor2.
     """
     f = open(logFile, 'a+')
     first = None
@@ -96,10 +113,10 @@ def parseMovieAlignment2(logFile):
 
     for line in f:
         l = line.strip()
-        if not '#' in l and len(l) > 0:
+        if '#' not in l and len(l) > 0:
             parts = l.split()
-            if first is None: # read the first frame number
-                first = int(parts[0]) # take the id from first column
+            if first is None:  # read the first frame number
+                first = int(parts[0])  # take the id from first column
             # take the shifts from the last two columns of the line
             xshifts.append(float(parts[1]))
             yshifts.append(float(parts[2]))
