@@ -168,7 +168,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
         form.addParam('maximumTargetResolution', NumericListParam, label="Max. Target Resolution", default="15 8 4",
-                      condition='alignmentMethod==0 and multiresolution',
+                      condition='alignmentMethod!=1 and multiresolution',
                       help="In Angstroms. The actual maximum resolution will be the maximum between this number of 0.5 * previousResolution, meaning that"
                       "in a single step you cannot increase the resolution more than 1/2")
         form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod!=1 and globalMethod==1',
