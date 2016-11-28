@@ -100,6 +100,17 @@ class ProtUnionSet(ProtSets):
                       label="Create new ids",
                       help='Make an automatic renumbering of the ids, so the new objects\n'
                            'are not associated to the old ones.')
+
+        form.addParam('ignoreExtraAttributes', pwprot.params.BooleanParam,
+                      default=False, expertLevel=pwprot.LEVEL_ADVANCED,
+                      label='Ignore extra attributes?',
+                      help='By default, it is only allowed to join sets where'
+                           'each item has the same number of attributes. Set '
+                           'this option to *Yes* if you want to join sets with'
+                           'different attribues. The items in the resulting '
+                           'set will only the common attributes to all input '
+                           'sets. ')
+
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam, default=False,
                       expertLevel=pwprot.LEVEL_ADVANCED,
                       label='Ignore duplicates?',
@@ -131,11 +142,20 @@ class ProtUnionSet(ProtSets):
         # or we find duplicated ids in the sets
         cleanIds = self.renumber.get() or self.duplicatedIds()
 
+        if self.ignoreExtraAttributes:
+            commonAttrs = list(self.commonAttributes())
+
         for itemSet in self.inputSets:
             for obj in itemSet.get():
+                if self.ignoreExtraAttributes:
+                    newObj = itemSet.get().ITEM_TYPE()
+                    newObj.copyAttributes(obj, *commonAttrs)
+                else:
+                    newObj = obj
+
                 if cleanIds:
-                    obj.cleanObjId()
-                outputSet.append(obj)
+                    newObj.cleanObjId()
+                outputSet.append(newObj)
 
         self._defineOutputs(outputSet=outputSet)
         for itemSet in self.inputSets:
@@ -156,6 +176,23 @@ class ProtUnionSet(ProtSets):
                 usedIds.add(objId)
         return False
 
+    def commonAttributes(self):
+        """ Compute the set of common attributes to all items withint
+        each input set. """
+        commonAttrs = None
+
+        for itemSet in self.inputSets:
+            obj = itemSet.get().getFirstItem()
+            attrSet = {a for a, _ in obj.getAttributesToStore()}
+
+            if commonAttrs is None: # first time
+                commonAttrs = attrSet
+            else:
+                commonAttrs = commonAttrs & attrSet
+
+        return commonAttrs
+
+
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         # Are all inputSets from the same class?
@@ -164,13 +201,14 @@ class ProtUnionSet(ProtSets):
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
 
-        # Do all inputSets contain elements with the same attributes defined?
-        def attrNames(s):  # get attribute names of the first element of set s
-            return sorted(iter(s.get()).next().getObjDict().keys())
-        attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
-        if len(attrs) > 1:
-            return ["All elements must have the same attributes.",
-                    "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+        if not self.ignoreExtraAttributes:
+            # Do all inputSets contain elements with the same attributes defined?
+            def attrNames(s):  # get attribute names of the first element of set s
+                return sorted(iter(s.get()).next().getObjDict().keys())
+            attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+            if len(attrs) > 1:
+                return ["All elements must have the same attributes.",
+                        "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
 
         return []  # no errors
 

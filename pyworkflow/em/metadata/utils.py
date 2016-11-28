@@ -30,7 +30,7 @@ This module contains utils functions to operate over xmipp metadata files.
 
 from classes import MetaData, Row
 from constants import LABEL_TYPES, MDL_ITEM_ID
-from functions import labelType
+from functions import labelType, getBlocksInMetaDataFile
 
 
 def label2Python(label):
@@ -92,7 +92,23 @@ def iterRows(md, sortByLabel=None):
     for objId in md:
         row.readFromMd(md, objId)
         yield row
-        
+
+
+def joinBlocks(inputMd, blockPrefix=None):
+    mdImages = MetaData()
+    mdAll = MetaData()
+    mdBlocks = getBlocksInMetaDataFile(inputMd)
+    
+    for mdBlock in mdBlocks:
+        if blockPrefix is not None:
+            if mdBlock.startswith(blockPrefix):
+                mdImages.read(mdBlock + "@" + inputMd)
+                mdAll.unionAll(mdImages)
+        else:
+            mdImages.read(mdBlock + "@" + inputMd)
+            mdAll.unionAll(mdImages)
+    return mdAll
+
 
 class SetMdIterator():
     """ Class to iterate over an input set and skip
@@ -124,8 +140,7 @@ class SetMdIterator():
         not present in the metadata.
         """
         row = self.lastRow
-        
-        if (row is None or 
+        if (row is None or
             item.getObjId() != row.getValue(self.keyLabel)):
             item._appendItem = False
         

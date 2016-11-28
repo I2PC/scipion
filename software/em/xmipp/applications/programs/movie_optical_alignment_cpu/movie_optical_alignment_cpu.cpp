@@ -126,6 +126,8 @@ public:
         {
             fnMicUncOut = getParam("--oUnc",0);
         	fnMovieUncOut = getParam("--oUnc",1);
+        	if (fnMicUncOut!="" && fnMovieUncOut=="")
+        		REPORT_ERROR(ERR_ARG_MISSING,"Writing the uncompensated images require both movie and micrograph");
         }
         finalGroupSize = getIntParam("--groupSize");
         nfirst = getIntParam("--frameRange",0);

@@ -96,28 +96,38 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "RAM, decreasing disc access")
         
         group = form.addGroup('Dose Compensation')
-        group.addParam('doDoseCorrection', params.BooleanParam, default=False,
-                       label="Do dose correction?",
-                       help="If Yes, the protocol will compensate your movies "
-                       "taking into account the acumulated dose.")
-        group.addParam('exposurePerFrame', params.FloatParam, default=0,
-                       label='Exposure per frame (e/A^2)',
-                       condition="doDoseCorrection",
-                       help='Exposure per frame, in electrons per square '
-                            'Angstrom')
-        group.addParam('previousDose', params.FloatParam, default=0,
-                       label='Previous dose',condition="doDoseCorrection",)
 
-        form.addParallelSection(threads=8, mpi=1)
-    
+        group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+                       label='Apply Dose filter',
+                       help='Apply a dose-dependent filter to frames before '
+                            'summing them. Pre-exposure and dose per frame '
+                            'should  be specified during movies import.')
+        group.addParam('doSaveUnweightedMic', params.BooleanParam, default=True,
+                       condition='doSaveAveMic and doApplyDoseFilter',
+                       label="Save unweighted micrographs?",
+                       help="Yes by default, if you have selected to apply a "
+                            "dose-dependent filter to the frames")
+        group.addParam('applyDosePreAlign', params.BooleanParam, default=False,
+                       condition='doApplyDoseFilter',
+                       label="Apply Dose filter before alignment?",
+                       help="if *True*, you apply dose filter before perform "
+                            "the alignment; else will apply after alignment.")
+
+        form.addParallelSection(threads=8, mpi=0)
+
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
-
+        inputMovies = self.inputMovies.get()
+        
         outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
-        outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+        if self.doApplyDoseFilter:
+            outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+        else:
+            outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+        
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
-        dark = self.inputMovies.get().getDark()
-        gain = self.inputMovies.get().getGain()
+        dark = inputMovies.getDark()
+        gain = inputMovies.getGain()
         # Get the number of frames and the range
         # to be used for alignment and sum
         x, y, n = movie.getDim()
@@ -125,7 +135,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         gpuId = self.GPUCore.get()
         inputMd = self._getFnInMovieFolder(movie, 'input_movie.xmd')
         writeMovieMd(movie, inputMd, a0, aN, useAlignment=self.useAlignment)
-
+        
         args = '-i %s ' % inputMd
         args += '-o %s ' % self._getOutputShifts(movie)
         args += ' --frameRange %d %d ' % (0, aN - a0)
@@ -166,11 +176,28 @@ class XmippProtOFAlignment(ProtAlignMovies):
         if self.memory:
             args += ' --inmemory'
         
-        if self.doDoseCorrection:
-            mag = movie.getAcquisition().getMagnification()
-            args += ' --doseCorrection %f %f %f' %(self.exposurePerFrame.get(),
-                                                   mag,
-                                                   self.previousDose.get(),)
+        if self.doApplyDoseFilter:
+            pxSize = movie.getSamplingRate()
+            vol = movie.getAcquisition().getVoltage()
+            preExp, dose = self._getCorrectedDose(inputMovies)
+            args += ' --doseCorrection %f %f %f %f' %(dose, pxSize, vol, preExp)
+            
+            if self.applyDosePreAlign:
+                args += ' pre'
+            else:
+                args += ' post'
+            
+            if self.doSaveUnweightedMic:
+                outUnwtMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                
+                # To save the unweighted aligned micrograph, we must save the
+                # unweighted aligned movie. For now, we save it in tmp movie
+                # folder.
+                uncorrFnBase = self._getMovieRoot(movie) + '_unWt_movie.mrcs'
+                outUnwtMovieFn = self._getFnInMovieFolder(movie, uncorrFnBase)
+                
+                args += ' --oUnc %s %s' % (outUnwtMicFn, outUnwtMovieFn)
+            
         try:
             self.runJob(program, args)
             
@@ -210,13 +237,20 @@ class XmippProtOFAlignment(ProtAlignMovies):
         # Although getFirstItem is not remonended in general, here it is
         # used olny once, for validation purposes, so performance
         # problems not should be apprear.
-        movie = self.inputMovies.get().getFirstItem()
+        inputSet = self.inputMovies.get()
+        movie = inputSet.getFirstItem()
         if (not movie.hasAlignment()) and self.useAlignment:
             errors.append("Your movies has not alignment. Please, set *No* "
                           "the parameter _Use previous movie alignment to SUM"
                           " frames?_")
         if self.numberOfThreads > 1 and self.doGPU:
             errors.append("GPU and Parallelization can not be used together")
+        
+        doseFrame = inputSet.getAcquisition().getDosePerFrame()
+        
+        if doseFrame == 0.0 or doseFrame is None:
+            errors.append('Dose per frame for input movies is 0 or not set. '
+                          'You cannot apply dose filter.')
         return errors
 
     def _citations(self):
@@ -243,7 +277,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
             _, _, n = inputSet.getDim()
             a0, aN = self._getFrameRange(n, 'align')
             summary.append("Frames from *%d* to *%d* were aligned" % (a0, aN))
-
+        
+        if self.doSaveMovie and self.doApplyDoseFilter:
+            summary.append("Warning!!! Your saved movies are dose weighted.")
         return summary
     
     #--------------------------- UTILS functions -------------------------------
@@ -281,7 +317,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         else:
             return fn
     
-    def _doGenerateOutputMovies(self):
+    def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
         either with alignment only or the binary aligned movie files.
@@ -317,6 +353,17 @@ class XmippProtOFAlignment(ProtAlignMovies):
         meanX, meanY = self._loadMeanShifts(movie)
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.savefig(self._getPlotCart(movie))
+
+    def _createOutputMicrographs(self):
+        createWeighted = self._createOutputWeightedMicrographs()
+        # To create the unweighted average micrographs
+        # we only consider the 'doSaveUnweightedMic' flag if the
+        # weighted ones should be created.
+        return (self.doSaveAveMic and self.doSaveUnweightedMic)
+    
+    
+    def _createOutputWeightedMicrographs(self):
+        return (self.doSaveAveMic and self.doApplyDoseFilter)
 
 
 def showCartesianShiftsPlot(inputSet, itemId):
@@ -370,4 +417,3 @@ def createAlignmentPlot(meanX, meanY):
 
 # Just for backwards compatibility
 ProtMovieAlignment = XmippProtOFAlignment
-
