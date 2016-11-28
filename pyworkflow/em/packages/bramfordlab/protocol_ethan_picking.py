@@ -47,6 +47,47 @@ class ProtEthanPicker(ProtParticlePicking):
         form.addParam('radius', params.IntParam,
                       label='Radius of particle (px)')
 
+        form.addParam('height', params.FloatParam, default=0.5,
+                      label="Min. height",
+                      help='The minimum height of the virus peak compared to '
+                           'the average peak.')
+
+        form.addParam('squareWidth', params.FloatParam, default=1.5,
+                      label="Square width",
+                      help='Minimum distance between two viruses is:\n'
+                           '2 * SQUARE_WIDTH_PARAM * RADIUS.')
+
+        form.addParam('ringWidth', params.FloatParam, default=1.2,
+                      label="Ring width",
+                      help='Width of the ring in ring filter is: \n'
+                           'RING_WIDTH_PARAM * RADIUS - RADIUS.')
+
+        form.addParam('dist', params.FloatParam, default=0.1,
+                      label="Distance",
+                      help='Distance which the peak can move in x or y '
+                           'direction during center refinement is: \n'
+                           'DIST_PARAM * RADIUS.')
+
+        form.addParam('reduction', params.IntParam, default=0,
+                      label="Reduction",
+                      help='REDUCTION_PARAM * REDUCTION_PARAM pixels are '
+                           'averaged before filtering. The value has to be '
+                           'integer. Special value 0 means that the program '
+                           'determines the parameter.')
+
+        form.addParam('doRefine', params.BooleanParam, default=True,
+                      label="Refine particle centers?",
+                      help='')
+        form.addParam('doSectorTest', params.BooleanParam, default=True,
+                      label="Perform sector test?",
+                      help='')
+        form.addParam('doHeightTest', params.BooleanParam, default=True,
+                      label="Perform height test?",
+                      help='')
+        form.addParam('doDistanceTest', params.BooleanParam, default=True,
+                      label="Perform peak pair distance test?",
+                      help='')
+
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         deps = []
@@ -64,6 +105,7 @@ class ProtEthanPicker(ProtParticlePicking):
         micDir = self._getMicDir(micFn)
         # Convert micrographs to mrc (uint8) as required by ETHAN program
         fnMicBase = pwutils.replaceBaseExt(micFn, 'mrc')
+        fnMicCfg = pwutils.replaceBaseExt(micFn, 'cfg')
         fnMicFull = os.path.join(micDir, fnMicBase)
         fnPosBase = self._getMicPosFn(micFn)
 
@@ -73,9 +115,12 @@ class ProtEthanPicker(ProtParticlePicking):
         args = '-i %s -o %s --depth uint8' % (micFn, fnMicFull)
         runProgram('xmipp_image_convert', args)
 
+        # Create a configuration file to be used by ETHAN with the parameters
+        # selected by the user
+        self.writeConfigFile(os.path.join(micDir, fnMicCfg))
         # Run ethan program with the required arguments
         program = os.environ.get('ETHAN_BIN')
-        args = "%d %s %s" % (radius, fnMicBase, fnPosBase)
+        args = "%d %s %s %s" % (radius, fnMicBase, fnPosBase, fnMicCfg)
         self.runJob(program, args, cwd=micDir)
 
         # Clean temporary micrograph
@@ -113,6 +158,54 @@ class ProtEthanPicker(ProtParticlePicking):
                     coordSet.append(coord)
             else:
                 print "Coordinate file '%s' not found. " % coordFile
+
+    def writeConfigFile(self, configFn):
+        f = open(configFn, 'w')
+        argsDict = {
+            'height': self.height.get(),
+            'squareWidth': self.squareWidth.get(),
+            'ringWidth': self.ringWidth.get(),
+            'dist': self.dist.get(),
+            'reduction': self.reduction.get(),
+            'refinement': 1 if self.doRefine else 0,
+            'sectorTest': 1 if self.doSectorTest else 0,
+            'heightTest': 1 if self.doHeightTest else 0,
+            'distanceTest': 1 if self.doDistanceTest else 0
+        }
+
+        f.write("""
+# The minimum height of the virus peak compared to the average peak.
+HEIGHT_PARAM %(height)s
+
+# Minimum distance between two viruses is 2 * SQUARE_WIDTH_PARAM * RADIUS.
+SQUARE_WIDTH_PARAM %(squareWidth)s
+
+# Width of the ring in ring filter is RING_WIDTH_PARAM * RADIUS - RADIUS.
+RING_WIDTH_PARAM %(ringWidth)s
+
+# Distance which the peak can move in x or y direction during center
+# refinement is DIST_PARAM * RADIUS.
+DIST_PARAM %(dist)s
+
+# REDUCTION_PARAM * REDUCTION_PARAM pixels are averaged before filtering.
+# The value has to be integer
+# Special value 0 means that the program determines the parameter.
+REDUCTION_PARAM %(reduction)s
+
+# Is refinement of particle centers performed? Put 1 for yes, 0 for no.
+# Producing virus files is not possible when refinement is off
+REFINEMENT_PARAM %(refinement)s
+
+# Is sector test performed? Put 1 for yes, 0 for no.
+SECTOR_TEST %(sectorTest)s
+
+# Is height test performed? Put 1 for yes, 0 for no.
+HEIGHT_TEST %(heightTest)s
+
+# Is peak pair distance test performed? Put 1 for yes, 0 for no.
+DISTANCE_TEST %(distanceTest)s
+        """ % argsDict)
+        f.close()
 
     def _summary(self):
         summary = []
