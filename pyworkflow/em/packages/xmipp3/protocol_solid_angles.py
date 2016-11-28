@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Javier Vargas (jvargas@cnb.csic.es)
+# * Authors:     C.O.S. Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -301,6 +301,9 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         self.info("Writting images info to: %s" % fnDirectionalImages)
         mdImages.write(fnDirectionalImages)
 
+    def refineAnglesStep(self):
+        # TODO: Implement this step from the current DirectionalClasses protocol
+        pass
 
     def createOutputStep(self):
         self.mdClasses = xmipp.MetaData(self._getDirectionalClassesFn())
