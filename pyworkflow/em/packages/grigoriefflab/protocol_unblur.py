@@ -28,7 +28,7 @@ import os
 import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.protocol.params as params
-from grigoriefflab import UNBLUR_PATH
+from grigoriefflab import UNBLUR_PATH, getVersion
 from convert import readShiftsMovieAlignment
 
 
@@ -54,12 +54,8 @@ class ProtUnblur(ProtAlignMovies):
         form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                       label='Apply Dose filter',
                       help='Apply a dose-dependent filter to frames before '
-                           'summing them')
-        form.addParam('exposurePerFrame', params.FloatParam,
-                      label='Exposure per frame (e/A^2)',
-                      help='Exposure per frame, in electrons per square '
-                           'Angstrom')
-
+                           'summing them. Pre-exposure and dose per frame were '
+                           'specified during movies import.')
         #group = form.addGroup('Expert Options')
         form.addParam('minShiftInitSearch', params.FloatParam,
                       default=2.,
@@ -124,6 +120,10 @@ class ProtUnblur(ProtAlignMovies):
     #Apply Dose filter?                            [NO] : YES
     #Exposure per frame (e/A^2)                   [1.0] :
     #Acceleration voltage (kV)                  [300.0] :
+
+    #Pre-exposure amount(e/A^2)                   [0.0] :
+    #Save Aligned Frames?                          [NO] : NO
+
     #Set Expert Options?                           [NO] : YES
     #Output FRC file                       [my_frc.txt] :
     #Minimum shift for initial search (Angstroms)
@@ -190,33 +190,71 @@ class ProtUnblur(ProtAlignMovies):
         if not os.path.exists(UNBLUR_PATH):
             errors.append(
                 "Cannot find the Unblur program at: " + UNBLUR_PATH)
+
+        if self.doApplyDoseFilter:
+            inputMovies = self.inputMovies.get()
+            doseFrame = inputMovies.getAcquisition().getDosePerFrame()
+
+            if doseFrame == 0.0 or doseFrame is None:
+                errors.append('Dose per frame for input movies is 0 or not '
+                              'set. You cannot apply dose filter.')
+
         return errors
 
     #--------------------------- UTILS functions -------------------------------
     def _argsUnblur(self, movie, numberOfFrames):
         """ Format argument for call unblur program. """
-        args = {'movieName' : self._getMovieFn(movie),
-                'numberOfFramesPerMovie' : numberOfFrames,
-                'micFnName' : self._getMicFn(movie),
-                'shiftFnName' : self._getShiftsFn(movie),
-                'samplingRate' : self.samplingRate,
-                'voltage' : movie.getAcquisition().getVoltage(),
-                'fscFn' : self._getFrcFn(movie),
-                'bfactor' : self.bfactor.get(),
-                'minShiftInitSearch' : self.minShiftInitSearch.get(),
-                'OutRadShiftLimit' : self.OutRadShiftLimit.get(),
-                'HWVertFourMask' : self.HWVertFourMask.get(),
-                'HWHoriFourMask' : self.HWHoriFourMask.get(),
-                'terminShiftThreshold' : self.terminShiftThreshold.get(),
-                'maximumNumberIterations' : self.maximumNumberIterations.get(),
-                'doApplyDoseFilter' : 'YES' if self.doApplyDoseFilter else 'NO',
-                'doRestoreNoisePwr' : 'YES' if self.doRestoreNoisePwr else 'NO',
-                'doVerboseOutput' : 'YES' if self.doVerboseOutput else 'NO',
-                'exposurePerFrame' : self.exposurePerFrame.get()
+        args = {'movieName': self._getMovieFn(movie),
+                'numberOfFramesPerMovie': numberOfFrames,
+                'micFnName': self._getMicFn(movie),
+                'shiftFnName': self._getShiftsFn(movie),
+                'samplingRate': self.samplingRate,
+                'voltage': movie.getAcquisition().getVoltage(),
+                'frcFn': self._getFrcFn(movie),
+                'bfactor': self.bfactor.get(),
+                'minShiftInitSearch': self.minShiftInitSearch.get(),
+                'OutRadShiftLimit': self.OutRadShiftLimit.get(),
+                'HWVertFourMask': self.HWVertFourMask.get(),
+                'HWHoriFourMask': self.HWHoriFourMask.get(),
+                'terminShiftThreshold': self.terminShiftThreshold.get(),
+                'maximumNumberIterations': self.maximumNumberIterations.get(),
+                'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
+                'doRestoreNoisePwr': 'YES' if self.doRestoreNoisePwr else 'NO',
+                'doVerboseOutput': 'YES' if self.doVerboseOutput else 'NO',
+                'exposurePerFrame': movie.getAcquisition().getDosePerFrame()
                 }
+        self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program += UNBLUR_PATH
 
-        self._program = 'export OMP_NUM_THREADS=1; ' + UNBLUR_PATH
-        self._args = """ << eof
+        if getVersion('UNBLUR') != '1.0_150529':
+            args['preExposureAmount'] = movie.getAcquisition().getDoseInitial() or 0.0
+            self._args = """ << eof
+%(movieName)s
+%(numberOfFramesPerMovie)s
+%(micFnName)s
+%(shiftFnName)s
+%(samplingRate)f
+%(doApplyDoseFilter)s
+%(exposurePerFrame)f
+%(voltage)f
+%(preExposureAmount)f
+NO
+YES
+%(frcFn)s
+%(minShiftInitSearch)f
+%(OutRadShiftLimit)f
+%(bfactor)f
+%(HWVertFourMask)d
+%(HWHoriFourMask)d
+%(terminShiftThreshold)f
+%(maximumNumberIterations)d
+%(doRestoreNoisePwr)s
+%(doVerboseOutput)s
+eof
+""" % args
+
+        else:
+            self._args = """ << eof
 %(movieName)s
 %(numberOfFramesPerMovie)s
 %(micFnName)s
@@ -226,7 +264,7 @@ class ProtUnblur(ProtAlignMovies):
 %(exposurePerFrame)f
 %(voltage)f
 YES
-%(fscFn)s
+%(frcFn)s
 %(minShiftInitSearch)f
 %(OutRadShiftLimit)f
 %(bfactor)f
@@ -271,8 +309,8 @@ eof
         pixSize = movie.getSamplingRate()
         shiftFn = self._getShiftsFn(movie)
         xShifts, yShifts = readShiftsMovieAlignment(shiftFn)
-        # convert shifts from Angstroms to px (e.g. Summovie
-        # requires shifts in px)
+        # convert shifts from Angstroms to px
+        # (e.g. Summovie requires shifts in px)
         xShiftsCorr = [x / pixSize for x in xShifts]
         yShiftsCorr = [y / pixSize for y in yShifts]
 
@@ -294,9 +332,12 @@ eof
         n = self._getNumberOfFrames(movie)
         iniFrame, _, indxFrame = movie.getFramesRange()
         first, last = self._getFrameRange(n, prefix)
-        
+
         if iniFrame != indxFrame:
             first -= (iniFrame - 1)
             last -= (iniFrame - 1)
-        
+
         return first, last
+
+    def _isNewUnblur(self):
+        return True if getVersion('UNBLUR') != '1.0.150529' else False
