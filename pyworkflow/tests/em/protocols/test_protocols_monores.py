@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:    Josue Gomez Blanco (jlvilas@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -83,7 +83,7 @@ class TestMonoRes(TestMonoResBase):
                                    significance = 0.95,
                                    exact = False,
                                    filterInput = False,
-                                   trimming = False,
+                                   trimming = False
                                     )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
@@ -102,31 +102,13 @@ class TestMonoRes(TestMonoResBase):
                                   significance = 0.95,
                                   exact = False,
                                   filterInput = False,
-                                  trimming = False,
+                                  trimming = False
                                   )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
 			"MonoRes (split and no mask) has failed")
 
     def testMonoRes3(self):
-        MonoRes = self.newProtocol(XmippProtMonoRes,
-                                  halfVolums = True,
-                                  inputVolume = self.protImportVol.outputVolume,
-                                  provideMaskInHalves = False,
-                                  Mask = '',
-                                  symmetry = 'd2',
-                                  minRes = 1,
-                                  maxRes = 100,
-                                  significance = 0.95,
-                                  exact = False,
-                                  filterInput = False,
-                                  trimming = False,
-                                  )
-        self.launchProtocol(MonoRes)
-        self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
-			"MonoRes (no split and no mask) has failed")
-
-    def testMonoRes4(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    halfVolums = False,
                                    inputVolume = self.protImportVol.outputVolume,
@@ -143,7 +125,24 @@ class TestMonoRes(TestMonoResBase):
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
 			"MonoRes (split and no mask) has failed")
-
+ 
+#     def testMonoRes3(self):
+#         MonoRes = self.newProtocol(XmippProtMonoRes,
+#                                   halfVolums = True,
+#                                   inputVolume = self.protImportVol.outputVolume,
+#                                   provideMaskInHalves = False,
+#                                   Mask = '',
+#                                   symmetry = 'd2',
+#                                   minRes = 1,
+#                                   maxRes = 100,
+#                                   significance = 0.95,
+#                                   exact = False,
+#                                   filterInput = False,
+#                                   trimming = False
+#                                   )
+#         self.launchProtocol(MonoRes)
+#         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
+#             "MonoRes (no split and no mask) has failed")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

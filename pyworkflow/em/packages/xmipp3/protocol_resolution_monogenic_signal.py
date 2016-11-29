@@ -29,7 +29,7 @@
 from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from convert import readSetOfVolumes, ImageHandler
-from shutil import copyfile
+
 
 
 class XmippProtMonoRes(ProtRefine3D):
@@ -105,7 +105,13 @@ class XmippProtMonoRes(ProtRefine3D):
 
         # Convert input into xmipp Metadata format
         volLocation1 = self.inputVolume.get().getFileName()
-        volLocation2 = self.inputVolume2.get().getFileName()
+        
+        
+        if self.halfVolums.get() is True:
+            volLocation2 = self.inputVolume2.get().getFileName()
+        else:
+            volLocation2 = ''
+            
         fnmask = self.Mask.get().getFileName()
 
         convertId = self._insertFunctionStep('convertInputStep', volLocation1, fnmask, volLocation2)
@@ -127,14 +133,14 @@ class XmippProtMonoRes(ProtRefine3D):
 
         self._insertFunctionStep("createHistrogram")
 
-    def convertInputStep(self, volLocation1, fnmask, volLocation2=None):
+    def convertInputStep(self, volLocation1, fnmask, volLocation2):
         """ Read the input volume.
         """
         # Get the converted input micrographs in Xmipp format
         ih = ImageHandler()
         ih.convert(volLocation1, self._getExtraPath('input_volume.vol'))
 
-        if volLocation2 is not None:
+        if self.halfVolums.get() is True:
             ih.convert(volLocation2, self._getExtraPath('input_volume2.vol'))
 
         if fnmask is not None:
@@ -195,7 +201,7 @@ class XmippProtMonoRes(ProtRefine3D):
     def createHistrogram(self):
 
         params = ' -i %s' % self._getExtraPath('MGresolution.vol')
-        params += ' --mask binary_file %s' % self.Mask.get().getFileName()
+        params += ' --mask binary_file %s' % self._getExtraPath('input_mask.vol')
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
         params += ' -o %s' % self._getExtraPath('hist.xmd')
