@@ -1495,15 +1495,16 @@ class FormWindow(Window):
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
         configureWeigths(paramsFrame, row=1, column=0)
-        # Expert level
-        expFrame = tk.Frame(paramsFrame)
-        expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
-        expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
-                                            self.protocol.expertLevel.get(),
-                                            self._onExpertLevelChanged, font=self.font) 
-        expCombo.grid(row=0, column=1, sticky='nw', pady=5)
-        expFrame.grid(row=0, column=0, sticky='nw')
+        # Expert level (only if the protocol has some param with expert level)
+        if self.protocol.hasExpert():
+            expFrame = tk.Frame(paramsFrame)
+            expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
+            expLabel.grid(row=0, column=0, sticky='nw', padx=5)
+            expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
+                                                self.protocol.expertLevel.get(),
+                                                self._onExpertLevelChanged, font=self.font)
+            expCombo.grid(row=0, column=1, sticky='nw', pady=5)
+            expFrame.grid(row=0, column=0, sticky='nw')
 
         contentFrame = self._createSections(paramsFrame)
         contentFrame.grid(row=1, column=0, sticky='news')
