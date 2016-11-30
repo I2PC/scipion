@@ -1303,6 +1303,11 @@ class ProtocolsView(tk.Frame):
 
     def _runItemClick(self, item=None):
 
+        # If click is in a empty area....start panning
+        if item is None:
+            print "Click on empty area"
+            return
+
         self.runsGraphCanvas.focus_set()
 
         # Get last selected item for tree or graph
