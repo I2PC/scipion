@@ -38,7 +38,7 @@ void ProgMonogenicSignalRes::readParams()
 	sampling = getDoubleParam("--sampling_rate");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
-	//R = getIntParam("--circular_mask");
+	fnSym = getParam("--sym");
 	N_freq = getDoubleParam("--number_frequencies");
 	trimBound = getDoubleParam("--trimmed");
 	linearchk = checkParam("--linear");
@@ -58,6 +58,7 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [--vol2 <vol_file=\"\">]: Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
+	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]   : Sampling rate (A/px)");
 	//addParamsLine("  [--circular_mask <R=-1>]  : The volume has been masked to a sphere of this radius (in pixels)");
@@ -72,8 +73,6 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("                            : Usually there are no difference between both in the resolution map.");
 	addParamsLine("  [--filtered_volume <vol_file=\"\">]       : The input volume is locally filtered at local resolutions.");
 	addParamsLine("  [--significance <s=0.95>]  : The level of confidence for the hypothesis test.");
-
-
 }
 
 void ProgMonogenicSignalRes::produceSideInfo()
@@ -607,6 +606,97 @@ void ProgMonogenicSignalRes::run()
 		iter++;
 	} while (doNextIteration);
 
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+	{
+		if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
+	}
+	outputResolution.write(fnOut);
+
+	if (fnSym!="c1")
+	{
+		SymList SL;
+		SL.readSymmetryFile(fnSym);
+		MultidimArray<double> VSimetrized;
+		symmetrizeVolume(SL, pOutputResolution, VSimetrized);
+		outputResolution() = VSimetrized;
+		VSimetrized.printShape();
+		outputResolution().printShape();
+		outputResolution().printStats();
+	}
+	outputResolution.write("simetrico.vol");
+
+	if (fnSpatial!="")
+		{
+			mask.read(fnMask);
+			mask().setXmippOrigin();
+			Vfiltered.read(fnVol);
+			pVfiltered=Vfiltered();
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
+			if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
+				DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
+	//		else
+	//			DIRECT_MULTIDIM_ELEM(pVfiltered,n)=0;
+			Vfiltered.write(fnSpatial);
+
+			VresolutionFiltered().clear();
+			Vfiltered().clear();
+		}
+
+
+		double resValue;
+		if (trimBound>0)
+		{
+			// Count number of voxels with resolution
+			size_t N=0;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+					++N;
+
+			// Get all resolution values
+			MultidimArray<double> resolutions(N);
+			N=0;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+					DIRECT_MULTIDIM_ELEM(resolutions,N++)=DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
+
+			// Sort value and get threshold
+			std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
+			double threshold=A1D_ELEM(resolutions,(int)(trimBound/100.0*N));
+			std::cout << "Triming threshold = " << threshold << std::endl;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+				if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)<threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0))
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n)=A1D_ELEM(resolutions,(int)(N*0.5));
+		}
+
+		// Write volume for Chimera
+		if (fnchim != "")
+		{
+			//Calculating mean
+			double SumRes = 0, Nsum = 0;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+			{
+				resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
+				if (resValue>0)
+				{
+					SumRes  += resValue;
+					Nsum += 1;
+				}
+			}
+
+			double meanRes = SumRes/Nsum;
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+			{
+				resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
+				if (resValue<=0)
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = meanRes;
+			}
+
+			outputResolution.write(fnchim);
+		}
+
+
+	/***********************
 	if (fnSpatial!="")
 	{
 		mask.read(fnMask);
@@ -651,11 +741,15 @@ void ProgMonogenicSignalRes::run()
 	}
 
 	// Compute resolution in Angstroms
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+	pOutputResolution.printStats();
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pMask)
+	//FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 	{
-		if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+		//if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+		if (DIRECT_MULTIDIM_ELEM(pMask, n)>0)
 			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
 	}
+	pOutputResolution.printStats();
 	outputResolution.write(fnOut);
 
 	// Write volume for Chimera
@@ -683,4 +777,7 @@ void ProgMonogenicSignalRes::run()
 
 		outputResolution.write(fnchim);
 	}
+
+
+	*****************/
 }

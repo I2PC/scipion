@@ -81,7 +81,7 @@ class TestMonoRes(TestMonoResBase):
                                    minRes = 1,
                                    maxRes = 100,
                                    significance = 0.95,
-                                   exact = False,
+                                   exact = True,
                                    filterInput = False,
                                    trimming = False
                                     )
@@ -100,7 +100,7 @@ class TestMonoRes(TestMonoResBase):
                                   minRes = 1,
                                   maxRes = 100,
                                   significance = 0.95,
-                                  exact = False,
+                                  exact = True,
                                   filterInput = False,
                                   trimming = False
                                   )
@@ -117,7 +117,7 @@ class TestMonoRes(TestMonoResBase):
                                    minRes = 1,
                                    maxRes = 100,
                                    significance = 0.95,
-                                   exact = True,
+                                   exact = False,
                                    filterInput = True,
                                    trimming = True,
                                    kValue = 5

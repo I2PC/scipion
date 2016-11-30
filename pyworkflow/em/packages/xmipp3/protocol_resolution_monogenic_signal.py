@@ -28,7 +28,10 @@
 
 from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
-from convert import readSetOfVolumes, ImageHandler
+from convert import readSetOfVolumes
+from pyworkflow.utils import getExt, removeExt
+from os.path import basename, abspath
+
 
 
 
@@ -62,7 +65,7 @@ class XmippProtMonoRes(ProtRefine3D):
 
         form.addParam('Mask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
                       condition='(provideMaskInHalves and halfVolums) or (not halfVolums)',
-                      label="Mask",
+                      label="Binary Mask",
                       help='The mask determines the those points where the macromolecle is')
 
         form.addParam('symmetry', StringParam, default='c1',
@@ -79,15 +82,15 @@ class XmippProtMonoRes(ProtRefine3D):
         form.addParam('significance', FloatParam, label="Significance", default=0.95, expertLevel=LEVEL_ADVANCED,
                       help='The resolution is computed performing hypothesis tests. This parameter determines'
                            ' the significance for that test.')
-        form.addParam('exact', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
-                      label="Find exact resolution?",
+        form.addParam('exact', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+                      label="Use gausian resolution",
                       help='The noise estimation can be performed exact (slow) or approximated (fast)'
                            'ussually there has not difference between them')
         form.addParam('filterInput', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
         form.addParam('trimming', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
-                      label="Remove bad resolution values?",
+                      label="Remove atypical resolution values",
                       help='In some situations bad voxels appear. This option allow to remove those voxels')
 
         form.addParam('kValue', FloatParam, label="Trimming Value", condition='trimming',
@@ -102,30 +105,24 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def _insertAllSteps(self):
         self.micsFn = self._getPath()
-
-        # Convert input into xmipp Metadata format
-        volLocation1 = self.inputVolume.get().getFileName()
-        
+        self.vol1Fn = self.inputVolume.get().getFileName()
+        self.maskFn = self.Mask.get().getFileName()
         
         if self.halfVolums.get() is True:
-            volLocation2 = self.inputVolume2.get().getFileName()
-        else:
-            volLocation2 = ''
-            
-        fnmask = self.Mask.get().getFileName()
+            self.vol2Fn = self.inputVolume2.get().getFileName() 
 
-        convertId = self._insertFunctionStep('convertInputStep', volLocation1, fnmask, volLocation2)
-        deps = []
-
+        # Convert input into xmipp Metadata format
+        convertId = self._insertFunctionStep('convertInputStep', )
+        
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
 
-        if self.symmetry.get() not in ['c1', 'C1']:
-            self._insertFunctionStep('symmetrizeStep',
-                                     self._getExtraPath('MGresolution.vol')
-                                     , prerequisites=[convertId])
-            self._insertFunctionStep('symmetrizeStep',
-                                     self._getExtraPath('MG_Chimera_resolution.vol')
-                                     , prerequisites=[convertId])
+#         if self.symmetry.get() not in ['c1', 'C1']:
+#             self._insertFunctionStep('symmetrizeStep',
+#                                      self._getExtraPath('MGresolution.vol')
+#                                      , prerequisites=[convertId])
+#             self._insertFunctionStep('symmetrizeStep',
+#                                      self._getExtraPath('MG_Chimera_resolution.vol')
+#                                      , prerequisites=[convertId])
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
@@ -133,29 +130,34 @@ class XmippProtMonoRes(ProtRefine3D):
 
         self._insertFunctionStep("createHistrogram")
 
-    def convertInputStep(self, volLocation1, fnmask, volLocation2):
+
+    def convertInputStep(self):
         """ Read the input volume.
         """
-        # Get the converted input micrographs in Xmipp format
-        ih = ImageHandler()
-        ih.convert(volLocation1, self._getExtraPath('input_volume.vol'))
-
+        extVol1 = getExt(self.vol1Fn)
+        if ((extVol1 == '.mrc') or (extVol1 == '.map')):
+            self.vol1Fn = self.vol1Fn+':mrc'
+ 
         if self.halfVolums.get() is True:
-            ih.convert(volLocation2, self._getExtraPath('input_volume2.vol'))
+            extVol2 = getExt(self.vol2Fn)
+            if ((extVol2 == '.mrc') or (extVol2 == '.map')):
+                self.vol2Fn = self.vol2Fn+':mrc'
+         
+        extMask = getExt(self.maskFn)
+        if ((extMask == '.mrc') or (extMask == '.map')):
+            self.maskFn = self.maskFn+':mrc'
 
-        if fnmask is not None:
-            ih.convert(fnmask, self._getExtraPath('input_mask.vol'))
 
     def resolutionMonogenicSignalStep(self):
 
         if self.halfVolums.get() is False:
-            params = ' --vol %s' % self._getExtraPath('input_volume.vol')
-            params += ' --mask %s' % self._getExtraPath('input_mask.vol')
+            params = ' --vol %s' % self.vol1Fn
+            params += ' --mask %s' % self.maskFn
         else:
-            params = ' --vol %s' % self._getExtraPath('input_volume.vol')
-            params += ' --vol2 %s' % self._getExtraPath('input_volume2.vol')
+            params = ' --vol %s' % self.vol1Fn
+            params += ' --vol2 %s' % self.vol2Fn
             if self.provideMaskInHalves.get() is True:
-                params += ' --mask %s' % self._getExtraPath('input_mask.vol')
+                params += ' --mask %s' % self.maskFn
             else:
                 params += ' --mask %s' % ''
 
@@ -166,8 +168,9 @@ class XmippProtMonoRes(ProtRefine3D):
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --chimera_volume %s' % self._getExtraPath('MG_Chimera_resolution.vol')
         params += ' --linear '
+        params += ' --sym %s' %self.symmetry.get()  
         params += ' --significance %s' % self.significance.get()
-        if self.exact.get():
+        if self.exact.get() is False:
             params += ' --exact'
         if self.filterInput.get():
             params += ' --filtered_volume %s' % self._getExtraPath('filteredMap.vol')
@@ -191,9 +194,15 @@ class XmippProtMonoRes(ProtRefine3D):
     def createChimeraScript(self):
         fnRoot = "extra/"
         scriptFile = self._getPath('Chimera_resolution.cmd')
+        
+        fnbase = removeExt(self.inputVolume.get().getFileName())
+        ext = getExt(self.inputVolume.get().getFileName())
+        fninput = abspath(fnbase + ext[0:4])
         fhCmd = open(scriptFile, 'w')
-        fhCmd.write("open %s\n" % (fnRoot + "input_volume.vol"))
+        fhCmd.write("open %s\n" % (fninput))
         fhCmd.write("open %s\n" % (fnRoot + "MG_Chimera_resolution.vol"))
+        smprt = self.inputVolume.get().getSamplingRate()
+        fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
         fhCmd.write("scolor #0 volume #1 cmap rainbow reverseColors True\n")
         fhCmd.close()
@@ -201,7 +210,7 @@ class XmippProtMonoRes(ProtRefine3D):
     def createHistrogram(self):
 
         params = ' -i %s' % self._getExtraPath('MGresolution.vol')
-        params += ' --mask binary_file %s' % self._getExtraPath('input_mask.vol')
+        params += ' --mask binary_file %s' % self.maskFn
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
         params += ' -o %s' % self._getExtraPath('hist.xmd')
@@ -237,9 +246,9 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def _methods(self):
         messages = []
-        if (hasattr(self, 'outputParticles')):
+        if (hasattr(self, 'outputVolume')):
             messages.append(
-                'An angular assignment of untilted and tilted particles is carried out [Publication: Not yet]')
+                'The local resolution is performed [Publication: Not yet]')
         return messages
 
     def _citations(self):

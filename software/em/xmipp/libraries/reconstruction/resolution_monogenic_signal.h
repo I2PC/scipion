@@ -39,6 +39,7 @@
 #include "fourier_filter.h"
 #include <data/filters.h>
 #include <string>
+#include "symmetrize.h"
 
 /**@defgroup Monogenic Resolution
    @ingroup ReconsLibrary */
@@ -49,9 +50,9 @@ class ProgMonogenicSignalRes : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial; //fnVol1,;
+	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym;
 
-	/** sampling rate, minumum resolutoin, and maximum resolution */
+	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes;
 
 	/** Is the volume previously masked?*/
