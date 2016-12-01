@@ -20,13 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import sys, unittest
-
-from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
 
@@ -175,24 +171,39 @@ class TestRelionRefine(TestRelionBase):
                                "The particles filenames are wrong")
         
 class TestRelionPreprocess(TestRelionBase):
-    """ This class helps to test all different preprocessing particles options on RElion. """
+    """ This class helps to test all different preprocessing particles options
+    on RElion. """
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-            
+
+    def _validations(self, imgSet, dims, pxSize):
+        self.assertIsNotNone(imgSet, "There was a problem with preprocess "
+                                     "particles")
+        xDim = imgSet.getXDim()
+        sr = imgSet.getSamplingRate()
+        self.assertEqual(xDim, dims, "The dimension of your particles are %d x "
+                                     "%d and must be  %d x %d" % (xDim, xDim,
+                                                                  dims, dims))
+        self.assertAlmostEqual(sr, pxSize, 0.0001,
+                               "Pixel size of your particles are  %0.2f and"
+                               " must be %0.2f" % (sr, pxSize))
+
     def test_NormalizeAndDust(self):
         """ Normalize particles.
         """
-        # Test now a normalization after the imported particles   
+        # Test now a normalization after the imported particles
         protocol = self.newProtocol(ProtRelionPreprocessParticles,
                                     doNormalize=True, backRadius=40,
                                     doRemoveDust=True, whiteDust=4, blackDust=8)
         protocol.setObjLabel('relion: norm-dust')
         protocol.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protocol)
-
+        
+        self._validations(protocol.outputParticles, 100, 3.5)
+        
     def test_ScaleAndInvert(self):
         """ Test all options at once.
         """
@@ -204,7 +215,8 @@ class TestRelionPreprocess(TestRelionBase):
         protocol.setObjLabel('relion: scale-invert')
         protocol.inputParticles.set(self.protImport.outputParticles)
         
-        self.launchProtocol(protocol)       
+        self.launchProtocol(protocol)
+        self._validations(protocol.outputParticles, 50, 7.0)
 
 
 class TestRelionSubtract(TestRelionBase):

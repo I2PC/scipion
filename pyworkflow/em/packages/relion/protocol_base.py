@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -107,7 +107,10 @@ class ProtRelionBase(EMProtocol):
                   'modelFinal' : self._getExtraPath("relion_model.star"),
                   'finalvolume' : self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc"),
                   'final_half1_volume': self._getExtraPath("relion_half1_class%(ref3d)03d_unfil.mrc:mrc"),
-                  'final_half2_volume': self._getExtraPath("relion_half2_class%(ref3d)03d_unfil.mrc:mrc")
+                  'final_half2_volume': self._getExtraPath("relion_half2_class%(ref3d)03d_unfil.mrc:mrc"),
+                  'preprocess_particles' : self._getPath("preprocess_particles.mrcs"),
+                  'preprocess_particles_star' : self._getPath("preprocess_particles.star"),
+                  'preprocess_particles_preffix' : "preprocess_particles"
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:
