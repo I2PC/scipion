@@ -116,14 +116,6 @@ class XmippProtMonoRes(ProtRefine3D):
         
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
 
-#         if self.symmetry.get() not in ['c1', 'C1']:
-#             self._insertFunctionStep('symmetrizeStep',
-#                                      self._getExtraPath('MGresolution.vol')
-#                                      , prerequisites=[convertId])
-#             self._insertFunctionStep('symmetrizeStep',
-#                                      self._getExtraPath('MG_Chimera_resolution.vol')
-#                                      , prerequisites=[convertId])
-
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
         self._insertFunctionStep("createChimeraScript")
@@ -183,13 +175,6 @@ class XmippProtMonoRes(ProtRefine3D):
             params += ' --trimmed %f' % 0
 
         self.runJob('xmipp_resolution_monogenic_signal', params)
-
-    def symmetrizeStep(self, fnVol2Sym):
-
-        params = ' -i %s' % fnVol2Sym
-        params += ' --sym %s' % self.symmetry.get()
-
-        self.runJob('xmipp_transform_symmetrize', params)
 
     def createChimeraScript(self):
         fnRoot = "extra/"

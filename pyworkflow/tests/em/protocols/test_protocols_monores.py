@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:    Josue Gomez Blanco (jlvilas@cnb.csic.es)
+# * Authors:    Jose Luis Vilas Prieto (jlvilas@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -28,9 +28,8 @@ import unittest, sys
 # import numpy as np
 from pyworkflow.em import exists 
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
-from pyworkflow.em.packages.xmipp3 import XmippProtMonoRes
-from pyworkflow.em.protocol import ProtImportVolumes, ProtImportMask
-
+from pyworkflow.em.packages.xmipp3 import XmippProtMonoRes, XmippProtCreateMask3D
+from pyworkflow.em.protocol import ProtImportVolumes
 
 class TestMonoResBase(BaseTest):
     @classmethod
@@ -52,16 +51,24 @@ class TestMonoResBase(BaseTest):
         return cls.protImport
     
     @classmethod
-    def runImportMask(cls, pattern, samplingRate):
-        """ Run an Import volumes protocol. """
-        cls.protImport = cls.newProtocol(ProtImportMask,
-                                         maskPath=pattern,
-                                         samplingRate=samplingRate
+    def runCreateMask(cls, pattern, thr):
+        """ Create a volume mask. """
+        cls.msk = cls.newProtocol(XmippProtCreateMask3D,
+                                         inputVolume=pattern,
+                                         volumeOperation = 0, #OPERATION_THRESHOLD,
+                                         threshold=thr,
+                                         doSmall = False,
+                                         smallSize = False,
+                                         doBig = False,
+                                         doSymmetrize = False,
+                                         doMorphological = False,
+                                         doInvert = False,
+                                         doSmooth = False,
+                                         sigmaConvolution = 2                                                                                  
                                         )
-        cls.launchProtocol(cls.protImport)
-        return cls.protImport
-
-
+        cls.launchProtocol(cls.msk)
+        return cls.msk    
+    
 class TestMonoRes(TestMonoResBase):
     @classmethod
     def setUpClass(cls):
@@ -70,13 +77,13 @@ class TestMonoRes(TestMonoResBase):
         cls.protImportVol  = cls.runImportVolumes(cls.map3D, 3.54)
         cls.protImportHalf1  = cls.runImportVolumes(cls.half1, 3.54)
         cls.protImportHalf2  = cls.runImportVolumes(cls.half2, 3.54)
-        cls.protImportMask  = cls.runImportMask(cls.mask, 3.54)
+        cls.protCreateMask  = cls.runCreateMask(cls.protImportVol.outputVolume, 0.15)
 
     def testMonoRes1(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    halfVolums = False,
                                    inputVolume = self.protImportVol.outputVolume,
-                                   Mask = self.protImportMask.outputMask,
+                                   Mask = self.protCreateMask.outputMask,
                                    symmetry = 'd2',
                                    minRes = 1,
                                    maxRes = 100,
@@ -95,7 +102,7 @@ class TestMonoRes(TestMonoResBase):
                                   inputVolume = self.protImportHalf1.outputVolume,
                                   inputVolume2 = self.protImportHalf2.outputVolume,
                                   provideMaskInHalves = True,
-                                  Mask = self.protImportMask.outputMask,
+                                  Mask = self.protCreateMask.outputMask,
                                   symmetry = 'd2',
                                   minRes = 1,
                                   maxRes = 100,
@@ -112,7 +119,7 @@ class TestMonoRes(TestMonoResBase):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    halfVolums = False,
                                    inputVolume = self.protImportVol.outputVolume,
-                                   Mask = self.protImportMask.outputMask,
+                                   Mask = self.protCreateMask.outputMask,
                                    symmetry = 'd2',
                                    minRes = 1,
                                    maxRes = 100,
@@ -126,24 +133,6 @@ class TestMonoRes(TestMonoResBase):
         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
 			"MonoRes (split and no mask) has failed")
  
-#     def testMonoRes3(self):
-#         MonoRes = self.newProtocol(XmippProtMonoRes,
-#                                   halfVolums = True,
-#                                   inputVolume = self.protImportVol.outputVolume,
-#                                   provideMaskInHalves = False,
-#                                   Mask = '',
-#                                   symmetry = 'd2',
-#                                   minRes = 1,
-#                                   maxRes = 100,
-#                                   significance = 0.95,
-#                                   exact = False,
-#                                   filterInput = False,
-#                                   trimming = False
-#                                   )
-#         self.launchProtocol(MonoRes)
-#         self.assertTrue(exists(MonoRes._getExtraPath("MGresolution.vol")), 
-#             "MonoRes (no split and no mask) has failed")
-
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         className = sys.argv[1]

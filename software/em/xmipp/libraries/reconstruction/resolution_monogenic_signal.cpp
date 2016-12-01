@@ -620,11 +620,7 @@ void ProgMonogenicSignalRes::run()
 		MultidimArray<double> VSimetrized;
 		symmetrizeVolume(SL, pOutputResolution, VSimetrized);
 		outputResolution() = VSimetrized;
-		VSimetrized.printShape();
-		outputResolution().printShape();
-		outputResolution().printStats();
 	}
-	outputResolution.write("simetrico.vol");
 
 	if (fnSpatial!="")
 		{
@@ -694,90 +690,4 @@ void ProgMonogenicSignalRes::run()
 
 			outputResolution.write(fnchim);
 		}
-
-
-	/***********************
-	if (fnSpatial!="")
-	{
-		mask.read(fnMask);
-		mask().setXmippOrigin();
-		Vfiltered.read(fnVol);
-		pVfiltered=Vfiltered();
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
-		if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
-			DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
-//		else
-//			DIRECT_MULTIDIM_ELEM(pVfiltered,n)=0;
-		Vfiltered.write(fnSpatial);
-
-		VresolutionFiltered().clear();
-		Vfiltered().clear();
-	}
-
-
-	double resValue;
-	if (trimBound>0)
-	{
-		// Count number of voxels with resolution
-		size_t N=0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-			if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
-				++N;
-
-		// Get all resolution values
-		MultidimArray<double> resolutions(N);
-		N=0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-			if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
-				DIRECT_MULTIDIM_ELEM(resolutions,N++)=DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-
-		// Sort value and get threshold
-		std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
-		double threshold=A1D_ELEM(resolutions,(int)(trimBound/100.0*N));
-		std::cout << "Triming threshold = " << threshold << std::endl;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-			if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)<threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0))
-				DIRECT_MULTIDIM_ELEM(pOutputResolution, n)=A1D_ELEM(resolutions,(int)(N*0.5));
-	}
-
-	// Compute resolution in Angstroms
-	pOutputResolution.printStats();
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pMask)
-	//FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-	{
-		//if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
-		if (DIRECT_MULTIDIM_ELEM(pMask, n)>0)
-			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-	}
-	pOutputResolution.printStats();
-	outputResolution.write(fnOut);
-
-	// Write volume for Chimera
-	if (fnchim != "")
-	{
-		//Calculating mean
-		double SumRes = 0, Nsum = 0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-		{
-			resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-			if (resValue>0)
-			{
-				SumRes  += resValue;
-				Nsum += 1;
-			}
-		}
-
-		double meanRes = SumRes/Nsum;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-		{
-			resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-			if (resValue<=0)
-				DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = meanRes;
-		}
-
-		outputResolution.write(fnchim);
-	}
-
-
-	*****************/
 }
