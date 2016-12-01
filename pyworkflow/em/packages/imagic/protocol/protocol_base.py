@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -54,3 +54,9 @@ class ImagicProtocol(EMProtocol):
         runTemplate(inputScript, paramsDict, log)
 
         self._leaveWorkingDir()
+
+        f = open(self.getLogPaths()[0], 'r')
+        for line in f.readlines():
+            if '**ERROR' in line:
+                raise Exception('IMAGIC script error!')
+        f.close()

@@ -2,8 +2,6 @@
 # *
 # * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
-# *
-# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -36,7 +34,7 @@ import os, re
 from itertools import izip
 import numpy
 from collections import OrderedDict
-from numpy import rad2deg
+from numpy import rad2deg, deg2rad
 from numpy.linalg import inv
 
 from pyworkflow.object import Float
@@ -161,7 +159,7 @@ def parseCtffindOutput(filename):
 
 def parseCtffind4Output(filename):
     """ Retrieve defocus U, V and angle from the
-    output file of the ctffind3 execution.
+    output file of the ctffind4 execution.
     """
     result = None
     if os.path.exists(filename):
@@ -211,9 +209,8 @@ def readCtfModel(ctfModel, filename, ctf4=False):
         ctfModel._ctffind4_ctfPhaseShift = Float(ctfPhaseShift)
 
 
-def geometryFromMatrix(matrix):
+def geometryFromMatrix(matrix, inverseTransform=True):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    inverseTransform = True
 
     if inverseTransform:
         matrix = inv(matrix)
@@ -225,7 +222,7 @@ def geometryFromMatrix(matrix):
 
 
 def geometryFromAligment(alignment):
-    shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(), True)
 
     return shifts, angles
 
@@ -350,3 +347,36 @@ def parseMagCorrInput(filename):
         f.close()
 
     return result
+
+
+def unDistortCoord(params):
+    # http://grigoriefflab.janelia.org/node/5140#comment-1238
+    # no need to invert Y-axis since we calculate relative to
+    # the center of mic
+
+    if len(params) != 7:
+        raise Exception("Not enough params for undistorting!")
+    x_original, y_original, mic_x, mic_y, ang, major_scale, minor_scale = params
+    angle_rad = rad2deg(ang)
+
+    # pixel location relative to center of micrograph
+    x = float(x_original) - float(mic_x) / 2.0
+    y = float(y_original) - float(mic_y) / 2.0
+
+    # rotate
+    r = numpy.sqrt(x ** 2 + y ** 2)
+    phi = numpy.arctan2(y, x) + angle_rad
+
+    # scale
+    x = r * numpy.cos(phi) * major_scale
+    y = r * numpy.sin(phi) * minor_scale
+
+    # rotate back
+    r = numpy.sqrt(x ** 2 + y ** 2)
+    phi = numpy.arctan2(y, x) - angle_rad
+
+    # pixel location relative to edge of micrograph
+    x_correct = r * numpy.cos(phi) + float(mic_x) / 2.0
+    y_correct = r * numpy.sin(phi) + float(mic_y) / 2.0
+
+    return x_correct, y_correct
