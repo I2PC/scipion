@@ -79,6 +79,11 @@ class Tester(ContentHandler):
             else:
                 self.owner = "unassigned"
 
+            if attrs.has_key("timeout"):
+                self.programTimeout = int(attrs.get("timeout"))
+            else:
+                self.programTimeout = None
+
             self.progDict[self.programName] = []
 
         elif (name == "CASE") :
@@ -188,7 +193,11 @@ class Tester(ContentHandler):
                cmd = " %(cmd)s %(pipe)s %(outDir)s/%(cmdType)s_stdout.txt 2%(pipe)s %(outDir)s/%(cmdType)s_stderr.txt" % locals()
                print "    Running %s: " % cmdType, cmd
                command = Command(cmd)
-               command.run(timeout=self._timeout)
+	       if self.programTimout!=None:
+	           timeout=self.programTimeout
+	       else:
+	           timeout=self._timeout
+               command.run(timeout=timeout)
                #os.system(cmd)
                #subprocess.call(cmd, shell=True)
                pipe = ">>"
