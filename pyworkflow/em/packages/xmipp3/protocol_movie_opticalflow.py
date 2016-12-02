@@ -247,7 +247,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         
         doseFrame = inputSet.getAcquisition().getDosePerFrame()
         
-        if doseFrame == 0.0 or doseFrame is None:
+        if doApplyDoseFilter and (doseFrame == 0.0 or doseFrame is None):
             errors.append('Dose per frame for input movies is 0 or not set. '
                           'You cannot apply dose filter.')
         return errors
