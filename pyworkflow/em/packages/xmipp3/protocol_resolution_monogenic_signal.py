@@ -32,7 +32,7 @@ from convert import readSetOfVolumes
 from pyworkflow.utils import getExt, removeExt
 from os.path import basename, abspath
 
-
+OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 
 
 class XmippProtMonoRes(ProtRefine3D):
@@ -102,18 +102,17 @@ class XmippProtMonoRes(ProtRefine3D):
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
-
     def _insertAllSteps(self):
         self.micsFn = self._getPath()
         self.vol1Fn = self.inputVolume.get().getFileName()
         self.maskFn = self.Mask.get().getFileName()
-        
-        if self.halfVolums.get() is True:
-            self.vol2Fn = self.inputVolume2.get().getFileName() 
 
-        # Convert input into xmipp Metadata format
+        if self.halfVolums.get() is True:
+            self.vol2Fn = self.inputVolume2.get().getFileName()
+
+            # Convert input into xmipp Metadata format
         convertId = self._insertFunctionStep('convertInputStep', )
-        
+
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
@@ -122,23 +121,21 @@ class XmippProtMonoRes(ProtRefine3D):
 
         self._insertFunctionStep("createHistrogram")
 
-
     def convertInputStep(self):
         """ Read the input volume.
         """
         extVol1 = getExt(self.vol1Fn)
-        if ((extVol1 == '.mrc') or (extVol1 == '.map')):
-            self.vol1Fn = self.vol1Fn+':mrc'
- 
+        if (extVol1 == '.mrc') or (extVol1 == '.map'):
+            self.vol1Fn = self.vol1Fn + ':mrc'
+
         if self.halfVolums.get() is True:
             extVol2 = getExt(self.vol2Fn)
-            if ((extVol2 == '.mrc') or (extVol2 == '.map')):
-                self.vol2Fn = self.vol2Fn+':mrc'
-         
-        extMask = getExt(self.maskFn)
-        if ((extMask == '.mrc') or (extMask == '.map')):
-            self.maskFn = self.maskFn+':mrc'
+            if (extVol2 == '.mrc') or (extVol2 == '.map'):
+                self.vol2Fn = self.vol2Fn + ':mrc'
 
+        extMask = getExt(self.maskFn)
+        if (extMask == '.mrc') or (extMask == '.map'):
+            self.maskFn = self.maskFn + ':mrc'
 
     def resolutionMonogenicSignalStep(self):
 
@@ -153,14 +150,14 @@ class XmippProtMonoRes(ProtRefine3D):
             else:
                 params += ' --mask %s' % ''
 
-        params += ' -o %s' % self._getExtraPath('MGresolution.vol')
+        params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
         params += ' --number_frequencies %f' % 50
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --chimera_volume %s' % self._getExtraPath('MG_Chimera_resolution.vol')
         params += ' --linear '
-        params += ' --sym %s' %self.symmetry.get()  
+        params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %s' % self.significance.get()
         if self.exact.get() is False:
             params += ' --exact'
@@ -179,12 +176,12 @@ class XmippProtMonoRes(ProtRefine3D):
     def createChimeraScript(self):
         fnRoot = "extra/"
         scriptFile = self._getPath('Chimera_resolution.cmd')
-        
+
         fnbase = removeExt(self.inputVolume.get().getFileName())
         ext = getExt(self.inputVolume.get().getFileName())
         fninput = abspath(fnbase + ext[0:4])
         fhCmd = open(scriptFile, 'w')
-        fhCmd.write("open %s\n" % (fninput))
+        fhCmd.write("open %s\n" % fninput)
         fhCmd.write("open %s\n" % (fnRoot + "MG_Chimera_resolution.vol"))
         smprt = self.inputVolume.get().getSamplingRate()
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
@@ -194,7 +191,7 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def createHistrogram(self):
 
-        params = ' -i %s' % self._getExtraPath('MGresolution.vol')
+        params = ' -i %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --mask binary_file %s' % self.maskFn
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
@@ -203,7 +200,7 @@ class XmippProtMonoRes(ProtRefine3D):
         self.runJob('xmipp_image_histogram', params)
 
     def createOutputStep(self):
-        volume_path = self._getExtraPath('MGresolution.vol')
+        volume_path = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
 
         volumesSet = self._createSetOfVolumes()
         volumesSet.setSamplingRate(self.inputVolume.get().getSamplingRate())
@@ -231,7 +228,7 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def _methods(self):
         messages = []
-        if (hasattr(self, 'outputVolume')):
+        if hasattr(self, 'outputVolume'):
             messages.append(
                 'The local resolution is performed [Publication: Not yet]')
         return messages

@@ -28,7 +28,7 @@ from pyworkflow.gui.plotter import Plotter
 from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, ObjectView, DataView
-from protocol_resolution_monogenic_signal import XmippProtMonoRes
+from protocol_resolution_monogenic_signal import XmippProtMonoRes, OUTPUT_RESOLUTION_FILE
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
 import numpy as np
@@ -81,16 +81,15 @@ class XmippMonoResViewer(ProtocolViewer):
         return [cm]
     
     def _showVolumeColorSlices(self, param=None):
-        imageFile = self.protocol._getExtraPath('MGresolution.vol')
+        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         max_Res = np.amax(imgData)
-        min_Res = np.amin(imgData)
-        print 'max_res = %f ' % max_Res
-        print 'min_res = %f ' % min_Res     
 
-        imgData2 = imgData
-        imgData2  = np.ma.masked_where(imgData < 0.01, imgData, copy=True)
+        #  This is to generate figures for the paper
+        # min_Res = np.amin(imgData)
+        # imgData2 = imgData
+        imgData2 = np.ma.masked_where(imgData < 0.01, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoRes slices', imgData2, 
@@ -99,8 +98,7 @@ class XmippMonoResViewer(ProtocolViewer):
         fig.colorbar(im, cax=cax)
          
         return [Plotter(fig)]
-                
-             
+
     def _plotHistogram(self, param=None):
         md = MetaData()
 #         path_ = self.protocol._getPath('extra/hist.xmd')
