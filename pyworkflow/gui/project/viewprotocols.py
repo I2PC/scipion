@@ -1268,8 +1268,13 @@ class ProtocolsView(tk.Frame):
                 if hasattr(node, 'item'):
                     node.item.setSelected(False)
         item.setSelected(True)
-        
+
     def _runItemClick(self, item=None):
+
+        # If click is in a empty area....start panning
+        if item is None:
+            print "Click on empty area"
+            return
 
         self.runsGraphCanvas.focus_set()
 
