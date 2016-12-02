@@ -29,7 +29,7 @@ This module contains utils functions to operate over xmipp metadata files.
 """
 
 from classes import MetaData, Row
-from constants import LABEL_TYPES, MDL_ITEM_ID
+from constants import LABEL_TYPES, MDL_ITEM_ID, MDL_ENABLED, MDL_IMAGE
 from functions import labelType, getBlocksInMetaDataFile
 
 
@@ -118,14 +118,16 @@ class SetMdIterator():
     """
     def __init__(self, md, sortByLabel=None, 
                  keyLabel=MDL_ITEM_ID,
-                 updateItemCallback=None):
+                 updateItemCallback=None,
+                 skipDisabled=False):
         
         if updateItemCallback is None:
             raise Exception('Set an updateItemCallback')
         
         self.iterMd = iterRows(md, sortByLabel) 
         self.keyLabel = keyLabel
-        self.updateItemCallback = updateItemCallback   
+        self.updateItemCallback = updateItemCallback
+        self.skipDisabled=skipDisabled   
         self.__nextRow()
         
     def __nextRow(self):
@@ -140,14 +142,19 @@ class SetMdIterator():
         not present in the metadata.
         """
         row = self.lastRow
+        if row.hasLabel(MDL_ENABLED):
+            enabled = row.getValue(MDL_ENABLED)
+        else:
+            enabled = 1
         if (row is None or
-            item.getObjId() != row.getValue(self.keyLabel)):
+            item.getObjId() != row.getValue(self.keyLabel) or 
+            (enabled == -1 and self.skipDisabled)):
             item._appendItem = False
         
         else:
             item._appendItem = True
             self.updateItemCallback(item, row)
-            self.__nextRow()
+        self.__nextRow()
                 
              
     
