@@ -437,6 +437,17 @@ eprint = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.full.pdf+h
 journal = {Bioinformatics} 
 }
 
+@article{Vilas2016,
+  title                    = "Fast and automatic identification of particle tilt pairs based on Delaunay triangulation.",
+  author                   = "Vilas, J. L. and Navas, J. and Gomez-Blanco, J. and de la Rosa-Trevin, J. M. and Melero, and Peschiera, I. and Ferlenghi. I and Cuenca, J. and Marabini, R. and Carazo, J. M. and Vargas, J. and Sorzano, C. O. S.",
+  journal                  = "Journal of Structural Biology",
+  year                     = "2016",
+  pages                    = "525-533",
+  volume                   = "196",
+  doi                      = "http://dx.doi.org/10.1016/j.jsb.2016.10.007",
+  url                      = "http://www.sciencedirect.com/science/article/pii/S104784771630212X"
+}
+
 @article{zhao2013,
 author = {Zhao, Zhizhen and Singer, Amit},
 title = {Fourier-Bessel rotational invariant eigenimages},
