@@ -184,14 +184,15 @@ class Tester(ContentHandler):
         outDir = self.outDir
         for cmd in cmdList:
             if cmd != "":
-               cmd = self.expandFormat(cmd)
-               cmd = " %(cmd)s %(pipe)s %(outDir)s/%(cmdType)s_stdout.txt 2%(pipe)s %(outDir)s/%(cmdType)s_stderr.txt" % locals()
-               print "    Running %s: " % cmdType, cmd
-               command = Command(cmd)
-               command.run(timeout=self._timeout)
-               #os.system(cmd)
-               #subprocess.call(cmd, shell=True)
-               pipe = ">>"
+                cmd = self.expandFormat(cmd)
+                cmd = " %(cmd)s %(pipe)s %(outDir)s/%(cmdType)s_stdout.txt 2%(pipe)s %(outDir)s/%(cmdType)s_stderr.txt"\
+                      % locals()
+                print "    Running %s: " % cmdType, cmd
+                command = Command(cmd)
+                command.run(timeout=self._timeout)
+                #os.system(cmd)
+                #subprocess.call(cmd, shell=True)
+                pipe = ">>"
            
     def runProgramTests(self, program):
         tests = self.progDict[program]
@@ -417,7 +418,6 @@ class ScriptProgramsTester(XmippScript):
         saxparser = make_parser()
         saxparser.setContentHandler(self._tester)
         testXml = 'test.xml'
-        
         if not exists(testXml):
             globalMessage += "\n cannot read file %s" % (testXml)
         else:

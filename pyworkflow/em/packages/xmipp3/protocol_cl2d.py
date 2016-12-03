@@ -507,7 +507,8 @@ class XmippProtCL2D(ProtClassify2D):
             xmpMd = self._getLevelMdImages(level, subset)
             
         iterator = md.SetMdIterator(xmpMd, sortByLabel=md.MDL_ITEM_ID,
-                                    updateItemCallback=self._updateParticle)
+                                    updateItemCallback=self._updateParticle,
+                                    skipDisabled=True)
         
         # itemDataIterator is not neccesary because, the class SetMdIterator
         # contain all the information about the metadata
