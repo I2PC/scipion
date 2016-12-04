@@ -30,11 +30,15 @@ that can be interactively dragged and clicked.
 """
 import math
 import Tkinter as tk
+import tkFont
 
 import gui
 import operator
 from widgets import Scrollable
 
+DEFAULT_ZOOM = 100
+
+DEFAULT_FONT_SIZE = -12
 
 DEFAULT_CONNECTOR_FILL = "blue"
 DEFAULT_CONNECTOR_OUTLINE = "black"
@@ -68,16 +72,22 @@ class Canvas(tk.Canvas, Scrollable):
         self.bind("<Button-3>", self.onRightClick)
         self.bind("<Double-Button-1>", self.onDoubleClick)
         self.bind("<B1-Motion>", self.onDrag)
-                # Hide the right-click menu
+        # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
         self.bind("<Key>", self._unpostMenu)
         self.bind("<Control-1>", self.onControlClick)
         #self.bind("<MouseWheel>", self.onScroll)
+        # Scroll bindings in Linux
+        self.bind("<Shift-Button-4>", self.zoomerP)
+        self.bind("<Shift-Button-5>", self.zoomerM)
         
         self._tooltipId = None
-        self._tooltipOn = False # True if the tooltip is displayed
+        self._tooltipOn = False  # True if the tooltip is displayed
         self._tooltipCallback = tooltipCallback
         self._tooltipDelay = tooltipDelay
+
+        self._runsFont = tkFont.Font(family='sans-serif', size=DEFAULT_FONT_SIZE)
+        self._zoomFactor = DEFAULT_ZOOM
         
         if tooltipCallback:
             self.bind('<Motion>', self.onMotion)
@@ -114,7 +124,8 @@ class Canvas(tk.Canvas, Scrollable):
             self._tooltipOn = False
             tw = self._tooltip # short notation
             tw.withdraw()
-        
+    def getRunsFont(self):
+        return self._runsFont
     def getImage(self, img):
         return gui.getImage(img, self._images)
     
@@ -150,16 +161,19 @@ class Canvas(tk.Canvas, Scrollable):
         self.lastItem = self._findItem(xc, yc)
         self.callbackResults = None
         self.lastPos = (0, 0)
+
         if self.lastItem is not None:
             if callback:
                 self.callbackResults = callback(self.lastItem)
-            self.lastPos = (xc, yc)
+        self.lastPos = (xc, yc)
 
     def onClick(self, event):
         self.cleanSelected = True
         self._unpostMenu()
         self._handleMouseEvent(event, self.onClickCallback)
-        
+        if self.lastItem is None:
+            self.move_start(event)
+
     def onControlClick(self, event):
         self.cleanSelected = False
         self._unpostMenu()
@@ -193,16 +207,28 @@ class Canvas(tk.Canvas, Scrollable):
     def onDoubleClick(self, event):
         self._handleMouseEvent(event, self.onDoubleClickCallback)
 
+    # move
+    def move_start(self, event):
+        # If nothing was click on ButtonPress
+        if self.lastItem is None:
+            self.config(cursor='fleur')
+            self.scan_mark(event.x, event.y)
+
     def onDrag(self, event):
         try:
+
             if self.lastItem:
                 xc, yc = self.getCoordinates(event)
                 self.lastItem.move(xc-self.lastPos[0], yc-self.lastPos[1])
                 self.lastPos = (xc, yc)
+            else:
+                if self.firstPos is None:
+                    self.firstPos = (event.x, event.y)
+                    # print "onDrag position captured."
+                (x, y) = self.getCoordinates(event)
+                self.scan_dragto(event.x, event.y, gain=1)
 
-            elif self.firstPos is None:
-                self.firstPos = (event.x, event.y)
-                # print "onDrag position captured."
+
         except Exception, ex:
             # JMRT: We are having a weird exception here.
             # Presumably because there is concurrency between the onDrag
@@ -213,9 +239,13 @@ class Canvas(tk.Canvas, Scrollable):
 
         if self.firstPos is not None:
 
-            self.onAreaSelected(self.firstPos[0], self.firstPos[1], event.x, event.y)
+            # Failing in "data" view.
+            # TODO: This is not fully implemented
+            # self.onAreaSelected(self.firstPos[0], self.firstPos[1], event.x, event.y)
 
             self.firstPos = None
+
+        self.config(cursor='arrow')
 
     def onMotion(self, event):
         self.onLeave(event) # Hide tooltip and cancel schedule
@@ -267,6 +297,52 @@ class Canvas(tk.Canvas, Scrollable):
         self.update_idletasks()
         self.config(scrollregion=self.bbox("all"))
         
+    #linux zoom
+    def __zoom(self, event, scale):
+
+        newZoomFactor = round(self._zoomFactor * scale)
+
+        if self._zoomFactor == newZoomFactor: return
+
+        self._zoomFactor = newZoomFactor
+
+        # x, y = self.getCoordinates(event)
+        self.scale("all", 0, 0, scale, scale)
+        self.__scaleFonts()
+        self.configure(scrollregion=self.bbox("all"))
+        
+    def __scaleFonts(self):
+
+        currentFontSize = self._runsFont['size']
+        newFontSize = currentFontSize
+        
+        zoomPairs = [(32, 7),
+                     (44, 6),
+                     (53, 5),
+                     (66, 4),
+                     (73, 3),
+                     (82, 2),
+                     (90, 1),
+                     (105, 0),
+                     (120, -1),
+                     (137, -2),
+                     (999, -3),
+                     ]
+
+        for factor, sizeDecrement in zoomPairs:
+            if self._zoomFactor <= factor:
+                newFontSize = DEFAULT_FONT_SIZE + sizeDecrement
+                break
+
+        if currentFontSize != newFontSize:
+            self._runsFont['size'] = newFontSize
+
+    def zoomerP(self, event):
+        self.__zoom(event, 1.111111)
+        
+    def zoomerM(self,event):
+        self.__zoom(event, 0.9)
+        
     def drawGraph(self, graph, layout=None, drawNode=None):
         """ Draw a graph in the canvas.
         nodes in the graph should have x and y.
@@ -275,7 +351,13 @@ class Canvas(tk.Canvas, Scrollable):
         Provide drawNode if you want to customize how
         to create the boxes for each graph node.
         """
-        
+
+        # Reset the zoom and font
+        scale = self._zoomFactor/DEFAULT_ZOOM
+        self._zoomFactor = DEFAULT_ZOOM
+        self._runsFont['size'] = DEFAULT_FONT_SIZE
+
+
         if drawNode is None:
             self.drawNode = self._drawNode
         else:
@@ -289,6 +371,7 @@ class Canvas(tk.Canvas, Scrollable):
         # Update node positions
         self._updatePositions(graph.getRoot(), {})
         self.updateScrollRegion()
+        self.__zoom(None, scale)
         
     def _drawNode(self, canvas, node):
         """ Default implementation to draw nodes as textboxes. """
@@ -573,8 +656,10 @@ class TextItem(Item):
     def paint(self):
         """Paint the object in a specific position."""
 
-        self.id_text = self.canvas.create_text(self.x, self.y, text=self.text, 
-                                               justify=tk.CENTER, fill=self.textColor)
+        self.id_text = self.canvas.create_text(self.x, self.y, text=self.text,
+                                               justify=tk.CENTER, fill=self.textColor, font=self.canvas.getRunsFont())
+        # self.id_text = self.canvas.create_text(self.x, self.y, text=self.text,
+        #                 justify = tk.CENTER, fill = self.textColor)
 
         xr, yr, w, h = self.canvas.bbox(self.id_text)
         m = self.margin

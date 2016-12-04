@@ -28,13 +28,19 @@
 # ******************************************************************************
 
 import os, sys
+from itertools import izip
 
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
+import pyworkflow.utils as pwutils
+import pyworkflow.em as em
+from pyworkflow.em.data import MovieAlignment
+from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
-
-from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH,
+from pyworkflow.gui.plotter import Plotter
+from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2)
+
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -55,47 +61,60 @@ class ProtMotionCorr(ProtAlignMovies):
                       label='WARNING! You need to have installed CUDA'
                             ' libraries and a Nvidia GPU')
 
+        form.addParam('GPUIDs', params.StringParam, default='0',
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      label="Choose GPU IDs",
+                      help="GPU may have several cores. Set it to zero"
+                           " if you do not know what we are talking about."
+                           " First core index is 0, second 1 and so on."
+                           " Motioncor2 can use multiple GPUs - in that case"
+                           " set to i.e. *0 1 2*.")
+
         ProtAlignMovies._defineAlignmentParams(self, form)
 
-        group = form.addGroup('GPU IDs', expertLevel=cons.LEVEL_ADVANCED)
-        group.addParam('GPUIDs', params.StringParam, default='0',
-                       label="Choose GPU IDs",
-                       help="GPU may have several cores. Set it to zero"
-                            " if you do not know what we are talking about."
-                            " First core index is 0, second 1 and so on."
-                            " Motioncor2 can use multiple GPUs - in that case"
-                            " set to i.e. *0 1 2*.")
+        form.addParam('doComputePSD', params.BooleanParam, default=False,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      label="Compute PSD (before/after)?",
+                      help="If Yes, the protocol will compute for each movie "
+                           "the average PSD before and after alignment, "
+                           "for comparison")
+
+        form.addParam('extraParams', params.StringParam, default='',
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      label='Additional parameters',
+                      help="""Extra parameters for motioncorr (NOT motioncor2)\n
+        -bft       150               BFactor in pix^2.
+        -pbx       96                Box dimension for searching CC peak.
+        -fod       2                 Number of frame offset for frame comparison.
+        -nps       0                 Radius of noise peak.
+        -sub       0                 1: Save as sub-area corrected sum. 0: Not.
+        -srs       0                 1: Save uncorrected sum. 0: Not.
+        -scc       0                 1: Save CC Map. 0: Not.
+        -slg       1                 1: Save Log. 0: Not.
+        -atm       1                 1: Align to middle frame. 0: Not.
+        -dsp       1                 1: Save quick results. 0: Not.
+        -fsc       0                 1: Calculate and log FSC. 0: Not.
+                                    """)
+
+        form.addSection(label="Motioncor2")
         form.addParam('useMotioncor2', params.BooleanParam, default=False,
                       label='Use motioncor2',
                       help='Use new *motioncor2* program with local '
                            'patch-based motion correction and dose weighting.')
+        form.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+                      condition='useMotioncor2',
+                      label='Apply Dose filter',
+                      help='Apply a dose-dependent filter to frames before '
+                           'summing them. Pre-exposure and dose per frame '
+                           'should  be specified during movies import.')
 
-        group.addParam('extraParams', params.StringParam, default='',
-                       label='Additional parameters',
-                       condition='not useMotioncor2',
-                       help="""
--bft       150               BFactor in pix^2.
--pbx       96                Box dimension for searching CC peak.
--fod       2                 Number of frame offset for frame comparison.
--nps       0                 Radius of noise peak.
--sub       0                 1: Save as sub-area corrected sum. 0: Not.
--srs       0                 1: Save uncorrected sum. 0: Not.
--scc       0                 1: Save CC Map. 0: Not.
--slg       1                 1: Save Log. 0: Not.
--atm       1                 1: Align to middle frame. 0: Not.
--dsp       1                 1: Save quick results. 0: Not.
--fsc       0                 1: Calculate and log FSC. 0: Not.
-                            """)
+        line = form.addLine('Number of patches', condition='useMotioncor2',
+                            help='Number of patches to be used for patch based '
+                                 'alignment. Set to *0 0* to do only global motion '
+                                 'correction.')
+        line.addParam('patchX', params.IntParam, default=5, label='X')
+        line.addParam('patchY', params.IntParam, default=5, label='Y')
 
-        form.addParam('patch', params.StringParam, default='5 5',
-                      label='Number of patches', condition='useMotioncor2',
-                      help='Number of patches to be used for patch based '
-                           'alignment. Set to *0 0* to do only global motion '
-                           'correction.')
-        form.addParam('frameDose', params.FloatParam, default='0.0',
-                      label='Frame dose (e/A^2)', condition='useMotioncor2',
-                      help='Frame dose in e/A^2. If set to *0.0*, dose '
-                           'weighting will be skipped.')
         form.addParam('group', params.IntParam, default='1',
                       label='Group N frames', condition='useMotioncor2',
                       help='Group every specified number of frames by adding '
@@ -108,21 +127,30 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
-                      help="""
-- Bft       100       BFactor for alignment, in px^2.
-- Iter      5         Maximum iterations for iterative alignment.
--MaskCent  0 0        Center of subarea that will be used for alignment,
-              default *0 0* corresponding to the frame center.
--MaskSize  1.0 1.0    The size of subarea that will be used for alignment,
-              default *1.0 1.0* corresponding full size.
--Align     1          Generate aligned sum (1) or simple sum (0).
--FmRef     0          Specify which frame to be the reference to which
-              all other frames are aligned, by default *0* all aligned
-              to the first frame,
-              other value aligns to the central frame.
--Tilt      0 0        Tilt angle range for a dose fractionated tomographic
-              tilt series, e.g. *-60 60*
-                      """)
+                      help="""Extra parameters for motioncor2\n
+        -Bft       100        BFactor for alignment, in px^2.
+        -Iter      5          Maximum iterations for iterative alignment.
+        -MaskCent  0 0        Center of subarea that will be used for alignment,
+                              default *0 0* corresponding to the frame center.
+        -MaskSize  1.0 1.0    The size of subarea that will be used for alignment,
+                              default *1.0 1.0* corresponding full size.
+        -Align     1          Generate aligned sum (1) or simple sum (0).
+        -FmRef     0          Specify which frame to be the reference to which
+                              all other frames are aligned, by default *0* all
+                              aligned to the first frame,
+                              other value aligns to the central frame.
+        -RotGain   0          Rotate gain reference counter-clockwise: 0 - no rotation,
+                              1 - 90 degrees, 2 - 180 degrees, 3 - 270 degrees.
+        -FlipGain  0          Flip gain reference after gain rotation: 0 - no flipping,
+                              1 - flip upside down, 2 - flip left right.
+        -Tilt      0 0        Tilt angle range for a dose fractionated tomographic
+                              tilt series, e.g. *-60 60*
+                              """)
+        form.addParam('doSaveUnweightedMic', params.BooleanParam, default=True,
+                      condition='doSaveAveMic and useMotioncor2 and doApplyDoseFilter',
+                      label="Save unweighted micrographs?",
+                      help="Yes by default, if you have selected to apply a "
+                           "dose-dependent filter to the frames")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
         form.addParallelSection(threads=0, mpi=0)
@@ -133,15 +161,16 @@ class ProtMotionCorr(ProtAlignMovies):
         movieFolder = self._getOutputMovieFolder(movie)
         outputMicFn = self._getRelPath(self._getOutputMicName(movie),
                                        movieFolder)
+        outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
+                                         movieFolder)
+        movieBaseName = pwutils.removeExt(movie.getFileName())
+        aveMicFn =  movieBaseName + '_uncorrected_avg.mrc'
+        logFile = self._getRelPath(self._getMovieLogFile(movie),
+                                   movieFolder)
 
         a0, aN = self._getRange(movie, 'align')
 
         if not self.useMotioncor2:
-            outputMovieFn = self._getRelPath(self._getOutputMovieName(movie),
-                                             movieFolder)
-            logFile = self._getRelPath(self._getMovieLogFile(movie),
-                                       movieFolder)
-
             # Get the number of frames and the range to be used
             # for alignment and sum
             s0, sN = self._getRange(movie, 'sum')
@@ -178,25 +207,23 @@ class ProtMotionCorr(ProtAlignMovies):
             program = MOTIONCORR_PATH
 
         else:
-            logFileFn = self._getRelPath(self._getMovieLogFile(movie),
-                                         movieFolder)
-            logFileBase = (logFileFn.replace('0-Full.log', '').replace(
+            logFileBase = (logFile.replace('0-Full.log', '').replace(
                            '0-Patch-Full.log', ''))
-
-            # default values for motioncor2 are (1.0, 1.0)
-            cropDimX = self.cropDimX.get() or 1.0
-            cropDimY = self.cropDimY.get() or 1.0
+            # default values for motioncor2 are (1, 1)
+            cropDimX = self.cropDimX.get() or 1
+            cropDimY = self.cropDimY.get() or 1
 
             numbOfFrames = self._getNumberOfFrames(movie)
+            preExp, dose = self._getCorrectedDose(inputMovies)
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
-                        '-Patch': self.patch.get() or '5 5',
+                        '-Patch': '%d %d' % (self.patchX, self.patchY),
                         '-MaskCent': '%d %d' % (self.cropOffsetX,
                                                 self.cropOffsetY),
                         '-MaskSize': '%d %d' % (cropDimX, cropDimY),
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
-                        '-FmDose': self.frameDose.get(),
+                        '-FmDose': dose if self.doApplyDoseFilter else 0.0,
                         '-Throw': '%d' % a0,
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
@@ -204,6 +231,9 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-Gpu': self.GPUIDs.get(),
                         '-LogFile': logFileBase,
                         }
+            if getVersion('MOTIONCOR2') != '03162016':
+                argsDict['-InitDose'] = preExp if self.doApplyDoseFilter else 0.0
+                argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
             args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
@@ -216,8 +246,30 @@ class ProtMotionCorr(ProtAlignMovies):
 
         try:
             self.runJob(program, args, cwd=movieFolder)
+            self._fixMovie(movie)
+
+            if self.doComputePSD:
+                uncorrectedPSD = movieBaseName + '_uncorrected'
+                correctedPSD = movieBaseName + '_corrected'
+                # Compute uncorrected avg mic
+                roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
+                       self.cropDimX.get(), self.cropDimY.get()]
+                fakeShiftsFn = self.writeZeroShifts(movie)
+                self.averageMovie(movie, fakeShiftsFn, aveMicFn,
+                                  binFactor=self.binFactor.get(),
+                                  roi=roi, dark=None,
+                                  gain=inputMovies.getGain())
+                # Compute PSDs
+                outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                self.computePSD(aveMicFn, uncorrectedPSD)
+                self.computePSD(outMicFn, correctedPSD)
+                self.composePSD(uncorrectedPSD + ".psd",
+                                correctedPSD + ".psd",
+                                self._getPsdCorr(movie))
+
+            self._saveAlignmentPlots(movie)
         except:
-            print >> sys.stderr, program, " failed for movie %s" % movie.getName()
+            print("ERROR: Movie %s failed\n" % movie.getName())
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -252,9 +304,9 @@ class ProtMotionCorr(ProtAlignMovies):
                               ' parameters so that protocol ')
                 errors.append('produces simple movie sum.')
 
-            if self.doSaveMovie:
+            if self.doSaveMovie and not self._isNewMotioncor2:
                 errors.append('Saving aligned movies is not supported by '
-                              'motioncor2. ')
+                              'this version of motioncor2. ')
                 errors.append('By default, the protocol will produce '
                               'outputMovies equivalent to the input ')
                 errors.append('however containing alignment information.')
@@ -265,6 +317,14 @@ class ProtMotionCorr(ProtAlignMovies):
                               'set *YES* _Use ALIGN frames range to SUM?_ '
                               'flag or use motioncorr')
 
+            if self.doApplyDoseFilter:
+                inputMovies = self.inputMovies.get()
+                doseFrame = inputMovies.getAcquisition().getDosePerFrame()
+
+                if doseFrame == 0.0 or doseFrame is None:
+                    errors.append('Dose per frame for input movies is 0 or not '
+                                  'set. You cannot apply dose filter.')
+
         return errors
 
     #--------------------------- UTILS functions ------------------------------
@@ -272,10 +332,32 @@ class ProtMotionCorr(ProtAlignMovies):
         if not self.useMotioncor2:
             return 'micrograph_%06d_Log.txt' % movie.getObjId()
         else:
-            if self.patch.get() == '0 0':
+            if self.patchX == 0 and self.patchY == 0:
                 return 'micrograph_%06d_0-Full.log' % movie.getObjId()
             else:
                 return 'micrograph_%06d_0-Patch-Full.log' % movie.getObjId()
+
+    def _getAbsPath(self, baseName):
+        return os.path.abspath(self._getExtraPath(baseName))
+
+    def _getRelPath(self, baseName, refPath):
+        return os.path.relpath(self._getExtraPath(baseName), refPath)
+
+    def _getNameExt(self, movie, postFix, ext, extra=False):
+        fn = self._getMovieRoot(movie) + postFix + '.' + ext
+        if extra:
+            return self._getExtraPath(fn)
+        else:
+            return fn
+
+    def _getPlotGlobal(self, movie):
+        return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
+
+    def _getPsdCorr(self, movie):
+        return self._getNameExt(movie, '_psd_comparison', 'psd')
+
+    def _preprocessOutputMicrograph(self, mic, movie):
+        self._setPlotInfo(movie, mic)
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
@@ -292,11 +374,49 @@ class ProtMotionCorr(ProtAlignMovies):
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
 
-    def _getAbsPath(self, baseName):
-        return os.path.abspath(self._getExtraPath(baseName))
+    def _setPlotInfo(self, movie, obj):
+        obj.plotGlobal = em.Image()
+        obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
+        if self.doComputePSD:
+            obj.psdCorr = em.Image()
+            obj.psdCorr.setFileName(self._getPsdCorr(movie))
 
-    def _getRelPath(self, baseName, refPath):
-        return os.path.relpath(self._getExtraPath(baseName), refPath)
+    def _saveAlignmentPlots(self, movie):
+        """ Compute alignment shift plots and save to file as png images. """
+        shiftsX, shiftsY = self._getMovieShifts(movie)
+        first, _ = self._getFrameRange(movie.getNumberOfFrames(), 'align')
+        plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
+        plotter.savefig(self._getPlotGlobal(movie))
+
+    def _isNewMotioncor2(self):
+        return True if getVersion('MOTIONCOR2') != '03162016' else False
+
+    def _fixMovie(self, movie):
+        if self.doSaveMovie and self.useMotioncor2 and self._isNewMotioncor2():
+            outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            outputMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
+            movieFn = outputMicFn.replace('_aligned_mic.mrc',
+                                          '_aligned_mic_Stk.mrc')
+            pwutils.moveFile(movieFn, outputMovieFn)
+
+        if self.useMotioncor2 and not self.doSaveUnweightedMic:
+            fnToDelete = self._getExtraPath(self._getOutputMicWtName(movie))
+            pwutils.cleanPath(fnToDelete)
+
+    def writeZeroShifts(self, movie):
+        # TODO: find another way to do this
+        shiftsMd = self._getTmpPath('zero_shifts.xmd')
+        pwutils.cleanPath(shiftsMd)
+        xshifts = [0] * movie.getNumberOfFrames()
+        yshifts = xshifts
+        alignment = MovieAlignment(first=1, last=movie.getNumberOfFrames(),
+                                   xshifts=xshifts, yshifts=yshifts)
+        roiList = [0, 0, 0, 0]
+        alignment.setRoi(roiList)
+        movie.setAlignment(alignment)
+        writeShiftsMovieAlignment(movie, shiftsMd,
+                                  1, movie.getNumberOfFrames())
+        return shiftsMd
 
     def _getRange(self, movie, prefix):
 
@@ -324,3 +444,50 @@ class ProtMotionCorr(ProtAlignMovies):
                 return movie.getNumberOfFrames()
         else:
             return movie.getNumberOfFrames()
+
+    def _createOutputMicrographs(self):
+        createWeighted = self._createOutputWeightedMicrographs()
+        # To create the unweighted average micrographs
+        # we only consider the 'doSaveUnweightedMic' flag if the
+        # weighted ones should be created.
+        return (self.doSaveAveMic and
+                (not createWeighted or self.doSaveUnweightedMic))
+
+    def _createOutputWeightedMicrographs(self):
+        return (self.doSaveAveMic and self.useMotioncor2 and
+                self.doApplyDoseFilter)
+
+
+def createGlobalAlignmentPlot(meanX, meanY, first):
+    """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    preX = 0.0
+    preY = 0.0
+
+    figureSize = (6, 4)
+    plotter = Plotter(*figureSize)
+    figure = plotter.getFigure()
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Global frame shift (cumulative)')
+    ax.set_xlabel('Shift x (pixels)')
+    ax.set_ylabel('Shift y (pixels)')
+    if meanX[0] != 0 or meanY[0] != 0:
+        raise Exception("First frame shift must be (0,0)!")
+
+    i = first
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        ax.text(preX-0.02, preY+0.02, str(i))
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
+    return plotter

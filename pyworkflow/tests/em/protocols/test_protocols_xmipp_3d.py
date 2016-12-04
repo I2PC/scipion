@@ -35,11 +35,11 @@ from pyworkflow.em import *
 from pyworkflow.em.packages.xmipp3 import *
 from pyworkflow.em.packages.xmipp3 import (XmippFilterHelper as xfh,
                                            XmippResizeHelper as xrh)
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import ALIGN_ALGORITHM_EXHAUSTIVE,\
-    ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL, ALIGN_ALGORITHM_LOCAL
-import  pyworkflow.em.packages.xmipp3.protocol_preprocess as pp
-from pyworkflow.em.packages.xmipp3.protocol_preprocess import OP_COLUNM, OP_DOTPRODUCT,\
-OP_MULTIPLY, OP_SQRT, OP_RADIAL, OP_ROW
+from pyworkflow.em.packages.xmipp3.protocol_align_volume import (
+    ALIGN_ALGORITHM_EXHAUSTIVE, ALIGN_ALGORITHM_EXHAUSTIVE_LOCAL,
+    ALIGN_ALGORITHM_LOCAL)
+from pyworkflow.em.packages.xmipp3.protocol_preprocess import (
+    OP_COLUNM, OP_DOTPRODUCT, OP_MULTIPLY, OP_SQRT, OP_RADIAL, OP_ROW)
 
 class TestXmippBase(BaseTest):
     """ Some utility functions to import volumes that are used in several tests."""
@@ -57,7 +57,8 @@ class TestXmippBase(BaseTest):
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportVolumes,
-                                         filesPath=pattern, samplingRate=samplingRate)
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate)
         cls.launchProtocol(cls.protImport)
         return cls.protImport
 
@@ -65,7 +66,8 @@ class TestXmippBase(BaseTest):
     def runImportMask(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         cls.protImportMask = cls.newProtocol(ProtImportMask,
-                                         maskPath=pattern, samplingRate=samplingRate)
+                                         maskPath=pattern,
+                                             samplingRate=samplingRate)
         cls.launchProtocol(cls.protImportMask)
         return cls.protImportMask
 
@@ -73,18 +75,21 @@ class TestXmippBase(BaseTest):
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         cls.protImport = cls.newProtocol(ProtImportParticles,
-                                         filesPath=pattern, samplingRate=samplingRate,
+                                         filesPath=pattern,
+                                         samplingRate=samplingRate,
                                          checkStack=checkStack)
         cls.launchProtocol(cls.protImport)
         # check that input images have been imported (a better way to do this?)
         if cls.protImport.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+            raise Exception('Import of images: %s, failed. outputParticles '
+                            'is None.' % pattern)
         return cls.protImport
 
     @classmethod
     def runClassify(cls, particles):
         cls.ProtClassify = cls.newProtocol(XmippProtML2D,
-                                           numberOfClasses=8, maxIters=4, doMlf=False,
+                                           numberOfClasses=8, maxIters=4,
+                                           doMlf=False,
                                            numberOfMpi=2, numberOfThreads=2)
         cls.ProtClassify.inputParticles.set(particles)
         cls.launchProtocol(cls.ProtClassify)
@@ -106,7 +111,8 @@ class TestXmippCreateMask3D(TestXmippBase):
         protMask1.inputVolume.set(self.protImport.outputVolume)
         protMask1.setObjLabel('threshold mask')
         self.launchProtocol(protMask1)
-        self.assertIsNotNone(protMask1.outputMask, "There was a problem with create mask from volume")
+        self.assertIsNotNone(protMask1.outputMask,
+                             "There was a problem with create mask from volume")
 
 
         print "Run create segment mask from volume"
@@ -116,24 +122,29 @@ class TestXmippCreateMask3D(TestXmippBase):
         protMask2.inputVolume.set(self.protImport.outputVolume)
         protMask2.setObjLabel('segmentation automatic')
         self.launchProtocol(protMask2)
-        self.assertIsNotNone(protMask2.outputMask, "There was a problem with create mask from volume")
+        self.assertIsNotNone(protMask2.outputMask,
+                             "There was a problem with create mask from volume")
 
     
         print "Run create mask from another mask"
         protMask3 = self.newProtocol(XmippProtCreateMask3D,
-                                     source=0, volumeOperation=2, doMorphological=True, elementSize=3)
+                                     source=0, volumeOperation=2,
+                                     doMorphological=True, elementSize=3)
         protMask3.inputVolume.set(protMask1.outputMask)
         protMask3.setObjLabel('dilation mask')
         self.launchProtocol(protMask3)
-        self.assertIsNotNone(protMask3.outputMask, "There was a problem with mask from another mask")
+        self.assertIsNotNone(protMask3.outputMask,
+                             "There was a problem with mask from another mask")
 
         print "Run create mask from geometry"
         protMask4 = self.newProtocol(XmippProtCreateMask3D,
                                      source=1, size=64, samplingRate=9.89,
-                                     geo=6, innerRadius=10, outerRadius=25, borderDecay=2)
+                                     geo=6, innerRadius=10, outerRadius=25,
+                                     borderDecay=2)
         protMask4.setObjLabel('crown mask')
         self.launchProtocol(protMask4)
-        self.assertIsNotNone(protMask4.outputMask, "There was a problem with create mask from geometry")
+        self.assertIsNotNone(protMask4.outputMask,
+                             "There was a problem with create mask from geometry")
 
 
 class TestXmippApplyMask3D(TestXmippBase):
@@ -152,8 +163,10 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask1.setObjLabel('circular mask')
         self.launchProtocol(protMask1)
         self.assertAlmostEquals(protMask1.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
-        self.assertIsNotNone(protMask1.outputVol, "There was a problem with apply circular mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+        self.assertIsNotNone(protMask1.outputVol,
+                             "There was a problem with apply circular mask for Volumes")
     
     def testApplyBoxMask(self):
         print "Run apply box mask for Volumes"
@@ -164,8 +177,10 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask2.setObjLabel('box mask')
         self.launchProtocol(protMask2)
         self.assertAlmostEquals(protMask2.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
-        self.assertIsNotNone(protMask2.outputVol, "There was a problem with apply boxed mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+        self.assertIsNotNone(protMask2.outputVol,
+                             "There was a problem with apply boxed mask for Volumes")
     
     def testapplyCrownMask(self):
         print "Run apply crown mask for Volumes"
@@ -176,7 +191,8 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask3.setObjLabel('crown mask')
         self.launchProtocol(protMask3)
         self.assertAlmostEquals(protMask3.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
         self.assertIsNotNone(protMask3.outputVol, "There was a problem with apply crown mask for Volumes")
         
     def testApplyGaussianMask(self):
@@ -188,7 +204,8 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask4.setObjLabel('gaussian mask')
         self.launchProtocol(protMask4)
         self.assertAlmostEquals(protMask4.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
         self.assertIsNotNone(protMask4.outputVol, "There was a problem with apply gaussian mask for Volumes")
         
     def testApplyRaisedCosineMask(self):
@@ -200,7 +217,8 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask5.setObjLabel('raised cosine mask')
         self.launchProtocol(protMask5)
         self.assertAlmostEquals(protMask5.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
         self.assertIsNotNone(protMask5.outputVol, "There was a problem with apply raised cosine mask for Volumes")
         
     def testApplyRaisedCrownMask(self):
@@ -212,7 +230,8 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask6.setObjLabel('raised crown mask')
         self.launchProtocol(protMask6)
         self.assertAlmostEquals(protMask6.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
         
         self.assertIsNotNone(protMask6.outputVol, "There was a problem with apply raised crown mask for Volumes")
         
@@ -224,7 +243,8 @@ class TestXmippApplyMask3D(TestXmippBase):
                                      geo=6, innerRadius=10, outerRadius=25, borderDecay=2)
         protMask01.setObjLabel('crown mask')
         self.launchProtocol(protMask01)
-        self.assertIsNotNone(protMask01.outputMask, "There was a problem with create mask from geometry")
+        self.assertIsNotNone(protMask01.outputMask,
+                             "There was a problem with create mask from geometry")
         # Apply MASK
         protMask02 = self.newProtocol(XmippProtMaskVolumes,
                                      source=1,
@@ -234,9 +254,11 @@ class TestXmippApplyMask3D(TestXmippBase):
         protMask02.setObjLabel('user custom mask')
         self.launchProtocol(protMask02)
         self.assertAlmostEquals(protMask02.outputVol.getSamplingRate(), 
-                                self.protImport.outputVolume.getSamplingRate(), "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
+                                self.protImport.outputVolume.getSamplingRate(),
+                                "There was a problem with the sampling rate value for the apply user custom mask for Volumes")
          
-        self.assertIsNotNone(protMask02.outputVol, "There was a problem with apply user custom mask for Volumes")
+        self.assertIsNotNone(protMask02.outputVol,
+                             "There was a problem with apply user custom mask for Volumes")
   
 
 class TestXmippPreprocessVolumes(TestXmippBase):

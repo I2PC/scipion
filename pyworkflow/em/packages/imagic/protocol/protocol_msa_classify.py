@@ -21,18 +21,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 
-
-from pyworkflow.em import ProtClassify2D
+from pyworkflow.em import ProtClassify2D, Float
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.utils as pwutils
 
-from ..imagic import ImagicPltFile
+from ..imagic import ImagicPltFile, ImagicLisFile
 from protocol_base import ImagicProtocol
 
 
@@ -130,18 +129,16 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         assignment and the averages for each class.
         """
         particles = self.inputMSA.get().inputParticles.get()
-        sampling = particles.getSamplingRate()
         classes2D = self._createSetOfClasses2D(particles)
         # Load the class assignment file from results
         plt = ImagicPltFile(self._getPath(self.CLASS_DIR, 'class_assignment.plt'))
+        self._loadClassInfo(self.numberOfClasses.get())
 
         # Here we are assuming that the order of the class assignment rows
         # is the same for the input particles and the generated img stack
         classes2D.classifyItems(updateItemCallback=self._updateParticle,
                                 updateClassCallback=self._updateClass,
                                 itemDataIterator=plt.iterRows())
-
-        lis = self.getOutputLis()
 
         self._defineOutputs(outputClasses=classes2D)
         self._defineSourceRelation(particles, classes2D)
@@ -174,8 +171,7 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         return self._getPath(self.CLASS_DIR, fn)
 
     def getOutputLis(self):
-        return self._getOutputPath('msa_cls_img.lis')
-
+        return self._getOutputPath('classes.lis')
 
     def _updateParticle(self, item, row):
         _, classNum = row
@@ -188,3 +184,11 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         rep = item.getRepresentative()
         rep.setSamplingRate(item.getSamplingRate())
         rep.setLocation(classId, avgFile)
+
+        item._intraClassVariance = Float(self.varianceDict[classId])
+        item._representationQuality = Float(self.quality1Dict[classId])
+        item._overallQuality = Float(self.quality2Dict[classId])
+
+    def _loadClassInfo(self, cls):
+        fn = self.getOutputLis()
+        self.varianceDict, self.quality1Dict, self.quality2Dict = ImagicLisFile(fn, cls).getParams()
