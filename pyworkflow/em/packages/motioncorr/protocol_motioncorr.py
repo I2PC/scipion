@@ -136,8 +136,8 @@ class ProtMotionCorr(ProtAlignMovies):
                               default *1.0 1.0* corresponding full size.
         -Align     1          Generate aligned sum (1) or simple sum (0).
         -FmRef     0          Specify which frame to be the reference to which
-                              all other frames are aligned, by default *0* all aligned
-                              to the first frame,
+                              all other frames are aligned, by default *0* all
+                              aligned to the first frame,
                               other value aligns to the central frame.
         -RotGain   0          Rotate gain reference counter-clockwise: 0 - no rotation,
                               1 - 90 degrees, 2 - 180 degrees, 3 - 270 degrees.

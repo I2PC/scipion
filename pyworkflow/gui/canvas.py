@@ -78,8 +78,8 @@ class Canvas(tk.Canvas, Scrollable):
         self.bind("<Control-1>", self.onControlClick)
         #self.bind("<MouseWheel>", self.onScroll)
         # Scroll bindings in Linux
-        self.bind("<Button-4>", self.zoomerP)
-        self.bind("<Button-5>", self.zoomerM)
+        self.bind("<Shift-Button-4>", self.zoomerP)
+        self.bind("<Shift-Button-5>", self.zoomerM)
         
         self._tooltipId = None
         self._tooltipOn = False  # True if the tooltip is displayed
