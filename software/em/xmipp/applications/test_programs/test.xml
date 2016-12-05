@@ -210,7 +210,7 @@
 		</CASE>
 	</PROGRAM>
 	<PROGRAM name="xmipp_ctf_estimate_from_micrograph" mpi="FALSE"
-		owner="jvargas" timeout=500>
+		owner="jvargas">
 		<CASE
 			arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf"
 			changeDir="FALSE">

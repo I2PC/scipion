@@ -127,7 +127,7 @@ class SetMdIterator():
         self.iterMd = iterRows(md, sortByLabel) 
         self.keyLabel = keyLabel
         self.updateItemCallback = updateItemCallback
-        self.skipDisabled=skipDisabled   
+        self.skipDisabled = skipDisabled
         self.__nextRow()
         
     def __nextRow(self):
@@ -147,14 +147,15 @@ class SetMdIterator():
         else:
             enabled = 1
         if (row is None or
-            item.getObjId() != row.getValue(self.keyLabel) or 
-            (enabled == -1 and self.skipDisabled)):
+            item.getObjId() != row.getValue(self.keyLabel)):
             item._appendItem = False
-        
+            
+        elif enabled == -1 and self.skipDisabled:
+            item._appendItem = False
+            self.__nextRow()
+            
         else:
             item._appendItem = True
             self.updateItemCallback(item, row)
-        self.__nextRow()
-                
-             
-    
+            self.__nextRow()
+
