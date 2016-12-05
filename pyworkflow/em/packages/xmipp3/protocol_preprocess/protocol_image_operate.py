@@ -115,7 +115,7 @@ class XmippOperateHelper():
 
     #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):
-        form.addParam('operation', params.EnumParam, choices=OP_CHOICES.keys(),
+        form.addParam('operation', params.EnumParam, choices=OP_CHOICES.values(),
                       default=OP_PLUS,
                       label="Operation",
                       help="Binary operations: \n"
