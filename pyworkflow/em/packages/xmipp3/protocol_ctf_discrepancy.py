@@ -85,7 +85,6 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         ctfMd.clear()
         ctfRow = Row()
         convert.ctfModelToRow(ctf, ctfRow)
-        print "getMicrographs222", ctf.printAll()
         convert.micrographToRow(ctf.getMicrograph(), ctfRow, alignType=convert.ALIGN_NONE)
         ctfRow.addToMd(ctfMd)
 
