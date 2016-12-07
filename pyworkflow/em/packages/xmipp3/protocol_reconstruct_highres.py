@@ -1176,7 +1176,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                          (fnAnglesToUse,fnGrayRoot,TsCurrent,R,self.contPadding.get(),fnRefVol,previousResolution,fnGrayRoot)
                     args+=" --max_gray_scale %f --max_gray_shift %f --Nsimultaneous %d"%\
                          (self.contMaxGrayScale.get(),self.contMaxGrayShift.get(),self.contSimultaneous.get())
-                    self.runJob("xmipp_transform_adjust_image_grey_levels",args,numberOfMpi=self.contSimultaneous.get())
+                    self.runJob("xmipp_transform_adjust_image_grey_levels",args)
                     fnAnglesToUse = fnGrayRoot+".xmd"
                     if deleteStack:
                         cleanPath(deletePattern)
