@@ -113,7 +113,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         ctfs.copyInfo(inputCTF1)
         ctfs.setMicrographs(inputCTF1.getMicrographs())
         for ctf in inputCTF1:
-            #print ctf.printAll()
+            
             ctfAux = ctf.clone()
             ctfId = ctf.getObjId()
             key = ctfId
