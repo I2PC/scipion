@@ -131,8 +131,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         for i, ctfs in enumerate([self.inputCTF1, self.inputCTF2]):
             protocol = self.getMapper().getParent(ctfs.get())
             message.append("Method %d: %s" % (i+1, protocol.getClassLabel()))
-        #TODO size de la cosa calculada
-        ####message.append("Comparered <%d> micrograph" % (size,'micrographs'))
+
         return message    
     
     def _methods(self):
