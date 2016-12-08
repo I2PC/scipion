@@ -64,6 +64,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
     public static final int TOGGLE_LINEAR_MODE_KEY = KeyEvent.VK_L;
     public static final int TOGGLE_ERASE_MODE_KEY = KeyEvent.VK_E;
+    public static final int NEXT_MICROGRAPH_KEY = KeyEvent.VK_R;
+    public static final int PREVIOUS_MICROGRAPH_KEY = KeyEvent.VK_W;
+    public static final int TOGGLE_MARKER_KEY = KeyEvent.VK_SPACE;
     public static final int TOGGLE_NORMAL_MODE_KEY = KeyEvent.VK_P;
     protected ParticlesDialog particlesdialog;
 
@@ -275,6 +278,22 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                 throw new IllegalArgumentException(ex);
             }
 	}
+
+    public void moveToNextMicrograph(){ 
+      int selectedRow = micrographstb.getSelectedRow();
+      selectedRow = selectedRow +1; 
+      if (selectedRow < micrographstb.getRowCount()){
+         micrographstb.setRowSelectionInterval(selectedRow,selectedRow); 
+      }
+    }
+
+    public void moveToPreviousMicrograph(){ 
+      int selectedRow = micrographstb.getSelectedRow();
+      selectedRow = selectedRow -1; 
+      if (selectedRow > -1){
+         micrographstb.setRowSelectionInterval(selectedRow,selectedRow); 
+      }
+    }
 
     protected boolean canExit() {
 
@@ -1185,6 +1204,9 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 		map.put("Up", "Moves selected particle up");
 		map.put("Down", "Moves selected particle down");
         map.put((char)TOGGLE_ERASE_MODE_KEY, "Toggle between erase and picking");
+        map.put((char)NEXT_MICROGRAPH_KEY, "Select Next Micrograph");
+        map.put((char)PREVIOUS_MICROGRAPH_KEY, "Select Previous Micrograph");
+        map.put((char)TOGGLE_MARKER_KEY, "hide/show particle markers");
 
         if (linearModeAvailable()) {
 
