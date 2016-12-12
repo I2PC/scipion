@@ -1780,7 +1780,10 @@ class SetOfMovies(SetOfMicrographsBase):
         if self._firstDim.isEmpty():
             dimStr = 'No-Dim'
         else:
-            x, y, z = self._firstDim
+            try:
+                x, y, z = self._firstDim
+            except:
+                return str(self._firstDim)
             first, last, i = self._firstFramesRange
             if last == 0:
                 last = z

@@ -110,7 +110,7 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
 				manageActive(active.getX() + step, active.getY());
 			}
 		}
-		if (code == KeyEvent.VK_SPACE)
+		if (code == ParticlePickerJFrame.TOGGLE_MARKER_KEY)
 		{
 			getFrame().circlechb.setSelected(tongleSetSelected);
 			getFrame().rectanglechb.setSelected(tongleSetSelected);
@@ -118,6 +118,12 @@ public abstract class ParticlePickerCanvas<P extends PickerParticle> extends Xmi
 		}else if (code == ParticlePickerJFrame.TOGGLE_ERASE_MODE_KEY){
             // Toggle erase mode.
             getFrame().activateEraseMode();
+        } else if (code == ParticlePickerJFrame.NEXT_MICROGRAPH_KEY)
+                {
+                getFrame().moveToNextMicrograph();
+        } else if (code == ParticlePickerJFrame.PREVIOUS_MICROGRAPH_KEY)
+                {
+                getFrame().moveToPreviousMicrograph();
         }else if (code == ParticlePickerJFrame.TOGGLE_LINEAR_MODE_KEY){
             // Toggle linear mode
             getFrame().activateLinearMode();
