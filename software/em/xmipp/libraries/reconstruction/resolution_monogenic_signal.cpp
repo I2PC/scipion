@@ -535,31 +535,29 @@ void ProgMonogenicSignalRes::run()
 		double thresholdNoise;
 		if (exactres)
 		{
-			thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
 			std::sort(noiseValues.begin(),noiseValues.end());
+			thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
+			std::cout << "Exact solution" << std::endl;
 		}
 		else
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
 
-
 		#ifdef DEBUG
 		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
 		#endif
-
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 		{
 			if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 				if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 				{
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = freq;
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/freq;
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
 				else
 					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 		}
-
 
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
@@ -606,12 +604,16 @@ void ProgMonogenicSignalRes::run()
 		iter++;
 	} while (doNextIteration);
 
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-	{
-		if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
-			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-	}
-	outputResolution.write(fnOut);
+
+	double last_resolution_2 = resolution;
+
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+//	{
+//		if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001))
+//			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
+//	}
+	if (!(trimBound>0))
+		outputResolution.write(fnOut);
 
 	if (fnSym!="c1")
 	{
@@ -646,24 +648,29 @@ void ProgMonogenicSignalRes::run()
 			// Count number of voxels with resolution
 			size_t N=0;
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001)) //the value 0.001 is a tolerance
 					++N;
 
 			// Get all resolution values
 			MultidimArray<double> resolutions(N);
 			N=0;
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0)
+				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001))
 					DIRECT_MULTIDIM_ELEM(resolutions,N++)=DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
 
 			// Sort value and get threshold
 			std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
 			double threshold=A1D_ELEM(resolutions,(int)(trimBound/100.0*N));
 			std::cout << "Triming threshold = " << threshold << std::endl;
+			double filling_value = A1D_ELEM(resolutions, (int)(0.5*N));
+					//A1D_ELEM(resolutions, (int) N*0.5); //It is filled with the median value
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-				if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)<threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>0))
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n)=A1D_ELEM(resolutions,(int)(N*0.5));
+				if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001)))
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = filling_value;
+
+			outputResolution.write(fnOut);
 		}
+
 
 		// Write volume for Chimera
 		if (fnchim != "")
@@ -673,7 +680,7 @@ void ProgMonogenicSignalRes::run()
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 			{
 				resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-				if (resValue>0)
+				if (resValue>(last_resolution_2-0.001))
 				{
 					SumRes  += resValue;
 					Nsum += 1;
@@ -681,10 +688,12 @@ void ProgMonogenicSignalRes::run()
 			}
 
 			double meanRes = SumRes/Nsum;
+
+			std::cout << "mean = " << meanRes << std::endl;
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 			{
 				resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-				if (resValue<=0)
+				if (resValue<=(last_resolution_2-0.001))
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = meanRes;
 			}
 

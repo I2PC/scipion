@@ -98,7 +98,7 @@ class TestMonoRes(TestMonoResBase):
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
-                        "MonoRes (no split and no mask) has failed")
+                        "MonoRes (no split and no mask no filter) has failed")
 
     def testMonoRes2(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
@@ -118,11 +118,30 @@ class TestMonoRes(TestMonoResBase):
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
-                        "MonoRes (split and no mask) has failed")
+                        "MonoRes (split, no mask, no filter ) has failed")
 
     def testMonoRes3(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   objLabel='Single volume monores',
+                                   objLabel='Single volume monores Trimmed',
+                                   halfVolums=False,
+                                   inputVolume=self.protImportVol.outputVolume,
+                                   Mask=self.protCreateMask.outputMask,
+                                   symmetry='d2',
+                                   minRes=1,
+                                   maxRes=100,
+                                   significance=0.95,
+                                   exact=False,
+                                   filterInput=False,
+                                   trimming=True,
+                                   kValue=95
+                                   )
+        self.launchProtocol(MonoRes)
+        self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
+                        "MonoRes trimmed has failed")
+
+    def testMonoRes4(self):
+        MonoRes = self.newProtocol(XmippProtMonoRes,
+                                   objLabel='Single volume monores Filtered',
                                    halfVolums=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
@@ -132,8 +151,8 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=False,
                                    filterInput=True,
-                                   trimming=True,
-                                   kValue=5
+                                   trimming=False,
+                                   kValue=95
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),

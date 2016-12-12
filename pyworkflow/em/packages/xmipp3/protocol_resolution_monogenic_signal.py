@@ -30,9 +30,11 @@ from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam,
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from convert import readSetOfVolumes
 from pyworkflow.utils import getExt, removeExt
-from os.path import basename, abspath
+from os.path import abspath
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
+FN_FILTERED_MAP = 'filteredMap.vol'
+OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 
 
 class XmippProtMonoRes(ProtRefine3D):
@@ -76,13 +78,13 @@ class XmippProtMonoRes(ProtRefine3D):
                             help="If the user knows the range of resolutions or only a"
                                  " range of frequency needs to be analysed", expertLevel=LEVEL_ADVANCED)
 
-        line.addParam('minRes', FloatParam, default=1, label='Min')
-        line.addParam('maxRes', FloatParam, default=100, label='Max')
+        line.addParam('minRes', FloatParam, default=1, label='Max')
+        line.addParam('maxRes', FloatParam, default=100, label='Min')
 
         form.addParam('significance', FloatParam, label="Significance", default=0.95, expertLevel=LEVEL_ADVANCED,
                       help='The resolution is computed performing hypothesis tests. This parameter determines'
                            ' the significance for that test.')
-        form.addParam('exact', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
+        form.addParam('gauss', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
                       label="Use gausian resolution",
                       help='The noise estimation can be performed exact (slow) or approximated (fast)'
                            'ussually there has not difference between them')
@@ -155,14 +157,14 @@ class XmippProtMonoRes(ProtRefine3D):
         params += ' --number_frequencies %f' % 50
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
-        params += ' --chimera_volume %s' % self._getExtraPath('MG_Chimera_resolution.vol')
+        params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --linear '
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %s' % self.significance.get()
-        if self.exact.get() is False:
+        if self.gauss.get() is False:
             params += ' --exact'
         if self.filterInput.get():
-            params += ' --filtered_volume %s' % self._getExtraPath('filteredMap.vol')
+            params += ' --filtered_volume %s' % self._getExtraPath(FN_FILTERED_MAP)
         else:
             params += ' --filtered_volume %s' % ''
 
@@ -182,7 +184,7 @@ class XmippProtMonoRes(ProtRefine3D):
         fninput = abspath(fnbase + ext[0:4])
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % fninput)
-        fhCmd.write("open %s\n" % (fnRoot + "MG_Chimera_resolution.vol"))
+        fhCmd.write("open %s\n" % (fnRoot + OUTPUT_RESOLUTION_FILE_CHIMERA))
         smprt = self.inputVolume.get().getSamplingRate()
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
@@ -201,22 +203,19 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def createOutputStep(self):
         volume_path = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
-
-        volumesSet = self._createSetOfVolumes()
-        volumesSet.setSamplingRate(self.inputVolume.get().getSamplingRate())
-
-        readSetOfVolumes(volume_path, volumesSet)
-
-        self._defineOutputs(outputVolume=volumesSet)
-        self._defineSourceRelation(self.inputVolume, volumesSet)
+        self.volumesSet = self._createSetOfVolumes()
+        self.volumesSet.setSamplingRate(self.inputVolume.get().getSamplingRate())
+        readSetOfVolumes(volume_path, self.volumesSet)
+        self._defineOutputs(outputVolume=self.volumesSet)
+        self._defineSourceRelation(self.inputVolume, self.volumesSet)
 
         if self.filterInput.get():
-            volume_filtered_path = self._getExtraPath('filteredMap.vol')
-            volumesSet2 = self._createSetOfVolumes()
-            volumesSet2.setSamplingRate(self.inputVolume.get().getSamplingRate())
-            readSetOfVolumes(volume_filtered_path, volumesSet2)
-            self._defineOutputs(outputVolume=volumesSet2)
-            self._defineSourceRelation(self.inputVolume, volumesSet2)
+            volume_filtered_path = self._getExtraPath(FN_FILTERED_MAP)
+            self.volumesSet2 = self._createSetOfVolumes()
+            self.volumesSet2.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            readSetOfVolumes(volume_filtered_path, self.volumesSet2)
+            self._defineOutputs(outputVolume_Filtered=self.volumesSet2)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet2)
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
