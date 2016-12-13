@@ -535,8 +535,6 @@ void regionGrowing3DEqualValue(const MultidimArray<double> &V_in, MultidimArray<
     } \
   }\
  }\
-  //if (voxel == stop_colour) { \
-
 
         /* Make the exploration of the pixel neighbours */
         CHECK_POINT_3D(iCurrentk, iCurrenti, iCurrentj - 1);
