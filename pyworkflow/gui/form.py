@@ -958,7 +958,7 @@ class ParamWidget():
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
                 ViewerClass = viewers[0] # Use the first viewer registered
-                # Instanciate the viewer and visualize object
+                # Instantiate the viewer and visualize object
                 viewer = ViewerClass(project=self._protocol.getProject(),
                                      protocol=self._protocol,
                                      parent=self.window)
