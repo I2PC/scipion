@@ -185,6 +185,10 @@ void ProgVolumeHomogenizer::run()
 			//filling output metaData
 			fn_proj.compose(i+1, stackName);
 			rowInput.setValue(MDL_IMAGE, fn_proj);
+			rowInput.setValue(MDL_SHIFT_X, 0.0);
+			rowInput.setValue(MDL_SHIFT_Y, 0.0);
+			rowInput.setValue(MDL_SHIFT_Z, 0.0);
+
 			projCorr.write(fn_proj, i+1,true, WRITE_OVERWRITE);
 
 			mdPartialParticles.addRow(rowInput);
