@@ -97,7 +97,7 @@ class XmippMonoResViewer(ProtocolViewer):
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         fig.colorbar(im, cax=cax)
          
-        return [Plotter(fig)]
+        return [Plotter(figure=fig)]
 
     def _plotHistogram(self, param=None):
         md = MetaData()
