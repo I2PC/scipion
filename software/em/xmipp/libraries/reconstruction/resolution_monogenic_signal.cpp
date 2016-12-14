@@ -87,7 +87,6 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		V()=V1();
 		//V()=0.5*(V1()+V2());
 		halfMapsGiven = true;
-		//V.write("AverageVolume.vol");
 	}
 	else{
 	    V.read(fnVol);
@@ -158,8 +157,6 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	}
 	MultidimArray<int> &pMask=mask();
 
-	////////////////////////
-	//if ((fnVol !="") && (fnVol2 !=""))inputVol
 	if (halfMapsGiven)
 	{
 		if (fnMask != "")
@@ -184,9 +181,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	#ifdef DEBUG
 	mask.write("mask.vol");
 	#endif
-	 ///////////////////////
 
-	//if ((fnVol !="") && (fnVol2 !=""))
 	if (halfMapsGiven)
 	{
 		Image<double> V1, V2;
@@ -202,12 +197,10 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		  V1.write("diff_volume.vol");
 		#endif
 		transformer2.FourierTransform(inputVol, *fftN);
-		//halfMapsGiven = true;
 	}
 	else
 	{
 		fftN=&fftV;
-		//halfMapsGiven = false;
 	}
 	
 	
@@ -336,7 +329,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	saveImg.write(fnDebug+iternumber);
 	saveImg.clear();
 	}
-	#endif DEBUG
+	#endif // DEBUG
 
 	// Low pass filter the monogenic amplitude
 	lowPassFilter.w1 = w1;
@@ -353,7 +346,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 		saveImg2.write(fnDebug+iternumber);
 	}
 	saveImg2.clear(); 
-	#endif DEBUG
+	#endif // DEBUG
 }
 
 
@@ -368,7 +361,6 @@ void ProgMonogenicSignalRes::run()
 	MultidimArray<double> &pOutputResolution = outputResolution();
 	MultidimArray<double> &pVfiltered = Vfiltered();
 	MultidimArray<double> &pVresolutionFiltered = VresolutionFiltered();
-	//MultidimArray<double> &pOutputResolution = outputResolution();
 	MultidimArray<double> amplitudeMS, amplitudeMN;
 
 	std::cout << "Looking for maximum frequency ..." << std::endl;
@@ -411,9 +403,10 @@ void ProgMonogenicSignalRes::run()
 		fnDebug = "Signal";
 		amplitudeMonogenicSignal3D(fftV, freq, amplitudeMS, iter, fnDebug);
 		if (halfMapsGiven)
+		{
 			fnDebug = "Noise";
 			amplitudeMonogenicSignal3D(*fftN, freq, amplitudeMN, iter, fnDebug);
-
+		}
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 		noiseValues.clear();
@@ -537,7 +530,6 @@ void ProgMonogenicSignalRes::run()
 		{
 			std::sort(noiseValues.begin(),noiseValues.end());
 			thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
-			std::cout << "Exact solution" << std::endl;
 		}
 		else
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
@@ -620,7 +612,7 @@ void ProgMonogenicSignalRes::run()
 		SymList SL;
 		SL.readSymmetryFile(fnSym);
 		MultidimArray<double> VSimetrized;
-		symmetrizeVolume(SL, pOutputResolution, VSimetrized);
+		symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR);
 		outputResolution() = VSimetrized;
 	}
 
@@ -661,7 +653,6 @@ void ProgMonogenicSignalRes::run()
 			// Sort value and get threshold
 			std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
 			double threshold=A1D_ELEM(resolutions,(int)(trimBound/100.0*N));
-			std::cout << "Triming threshold = " << threshold << std::endl;
 			double filling_value = A1D_ELEM(resolutions, (int)(0.5*N));
 					//A1D_ELEM(resolutions, (int) N*0.5); //It is filled with the median value
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)

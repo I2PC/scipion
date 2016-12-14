@@ -85,7 +85,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes1(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='single volume monores',
-                                   halfVolums=False,
+                                   halfVolumes=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
@@ -94,7 +94,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=True,
                                    filterInput=False,
-                                   trimming=False
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
@@ -103,7 +102,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes2(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='two halves monores',
-                                   halfVolums=True,
+                                   halfVolumes=True,
                                    inputVolume=self.protImportHalf1.outputVolume,
                                    inputVolume2=self.protImportHalf2.outputVolume,
                                    provideMaskInHalves=True,
@@ -114,7 +113,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=True,
                                    filterInput=False,
-                                   trimming=False
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
@@ -123,7 +121,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes3(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='Single volume monores Trimmed',
-                                   halfVolums=False,
+                                   halfVolumes=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
@@ -132,8 +130,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=False,
                                    filterInput=False,
-                                   trimming=True,
-                                   kValue=95
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
@@ -142,7 +138,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes4(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='Single volume monores Filtered',
-                                   halfVolums=False,
+                                   halfVolumes=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
@@ -151,8 +147,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=False,
                                    filterInput=True,
-                                   trimming=False,
-                                   kValue=95
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
