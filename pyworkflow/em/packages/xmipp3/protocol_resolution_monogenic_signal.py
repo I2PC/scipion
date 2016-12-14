@@ -91,14 +91,6 @@ class XmippProtMonoRes(ProtRefine3D):
         form.addParam('filterInput', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
-        form.addParam('trimming', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
-                      label="Remove atypical resolution values",
-                      help='In some situations bad voxels appear. This option allow to remove those voxels')
-
-        form.addParam('kValue', FloatParam, label="Trimming Value", condition='trimming',
-                      default=5,
-                      help='This value performs post-processing, smoothing the output resolutions.'
-                           'The resolutions in this percentile, will be changed by the mean value')
 
         form.addParallelSection(threads=1, mpi=1)
 
@@ -161,6 +153,7 @@ class XmippProtMonoRes(ProtRefine3D):
         params += ' --linear '
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %s' % self.significance.get()
+        params += ' --trimmed %f' % 95  #This parameter only considers resolution values in percentile 98
         if self.gauss.get() is False:
             params += ' --exact'
         if self.filterInput.get():
@@ -168,10 +161,7 @@ class XmippProtMonoRes(ProtRefine3D):
         else:
             params += ' --filtered_volume %s' % ''
 
-        if self.trimming.get() is True:
-            params += ' --trimmed %f' % self.kValue.get()
-        else:
-            params += ' --trimmed %f' % 0
+
 
         self.runJob('xmipp_resolution_monogenic_signal', params)
 

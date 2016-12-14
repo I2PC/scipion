@@ -94,7 +94,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=True,
                                    filterInput=False,
-                                   trimming=False
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
@@ -114,7 +113,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=True,
                                    filterInput=False,
-                                   trimming=False
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
@@ -132,8 +130,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=False,
                                    filterInput=False,
-                                   trimming=True,
-                                   kValue=95
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
@@ -151,8 +147,6 @@ class TestMonoRes(TestMonoResBase):
                                    significance=0.95,
                                    exact=False,
                                    filterInput=True,
-                                   trimming=False,
-                                   kValue=95
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
