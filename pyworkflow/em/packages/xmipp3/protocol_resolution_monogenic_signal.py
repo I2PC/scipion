@@ -47,28 +47,28 @@ class XmippProtMonoRes(ProtRefine3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('halfVolums', BooleanParam, default=False,
-                      label="Would you like to use half volums?",
+        form.addParam('halfVolumes', BooleanParam, default=False,
+                      label="Would you like to use half volumes?",
                       help='The noise estimation for determining the local resolution '
                            'is performed via half volumes.')
 
         form.addParam('inputVolume', PointerParam, pointerClass='Volume',
                       label="Input Volume",
-                      help='Select a volume for determining its local resolucion.')
+                      help='Select a volume for determining its local resolution.')
 
         form.addParam('inputVolume2', PointerParam, pointerClass='Volume',
-                      label="Second Half Volume", condition='halfVolums',
-                      help='Select a second volume for determining a local resolucion.')
+                      label="Second Half Volume", condition='halfVolumes',
+                      help='Select a second volume for determining a local resolution.')
 
         form.addParam('provideMaskInHalves', BooleanParam, default=False,
-                      condition='halfVolums',
+                      condition='halfVolumes',
                       label="Use mask with halves volumes?",
-                      help='Sometimes the volume is in an sphere, then this option ought to be selected')
+                      help='Sometimes the volume is in an sphere, then this option has to be selected')
 
         form.addParam('Mask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
-                      condition='(provideMaskInHalves and halfVolums) or (not halfVolums)',
+                      condition='(provideMaskInHalves and halfVolumes) or (not halfVolumes)',
                       label="Binary Mask",
-                      help='The mask determines the those points where the macromolecle is')
+                      help='The mask determines which points are specimen and which ones not')
 
         form.addParam('symmetry', StringParam, default='c1',
                       label="Symmetry",
@@ -87,7 +87,7 @@ class XmippProtMonoRes(ProtRefine3D):
         form.addParam('gauss', BooleanParam, default=True, expertLevel=LEVEL_ADVANCED,
                       label="Use gausian resolution",
                       help='The noise estimation can be performed exact (slow) or approximated (fast)'
-                           'ussually there has not difference between them')
+                           'usually there is no difference between them')
         form.addParam('filterInput', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
@@ -101,7 +101,7 @@ class XmippProtMonoRes(ProtRefine3D):
         self.vol1Fn = self.inputVolume.get().getFileName()
         self.maskFn = self.Mask.get().getFileName()
 
-        if self.halfVolums.get() is True:
+        if self.halfVolumes.get() is True:
             self.vol2Fn = self.inputVolume2.get().getFileName()
 
             # Convert input into xmipp Metadata format
@@ -122,7 +122,7 @@ class XmippProtMonoRes(ProtRefine3D):
         if (extVol1 == '.mrc') or (extVol1 == '.map'):
             self.vol1Fn = self.vol1Fn + ':mrc'
 
-        if self.halfVolums.get() is True:
+        if self.halfVolumes.get() is True:
             extVol2 = getExt(self.vol2Fn)
             if (extVol2 == '.mrc') or (extVol2 == '.map'):
                 self.vol2Fn = self.vol2Fn + ':mrc'
@@ -133,7 +133,7 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def resolutionMonogenicSignalStep(self):
 
-        if self.halfVolums.get() is False:
+        if self.halfVolumes.get() is False:
             params = ' --vol %s' % self.vol1Fn
             params += ' --mask %s' % self.maskFn
         else:

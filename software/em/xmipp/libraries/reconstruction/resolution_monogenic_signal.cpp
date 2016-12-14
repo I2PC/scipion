@@ -329,7 +329,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	saveImg.write(fnDebug+iternumber);
 	saveImg.clear();
 	}
-	#endif DEBUG
+	#endif // DEBUG
 
 	// Low pass filter the monogenic amplitude
 	lowPassFilter.w1 = w1;
@@ -346,7 +346,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 		saveImg2.write(fnDebug+iternumber);
 	}
 	saveImg2.clear(); 
-	#endif DEBUG
+	#endif // DEBUG
 }
 
 

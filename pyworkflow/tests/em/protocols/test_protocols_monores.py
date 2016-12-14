@@ -85,7 +85,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes1(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='single volume monores',
-                                   halfVolums=False,
+                                   halfVolumes=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
@@ -102,7 +102,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes2(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='two halves monores',
-                                   halfVolums=True,
+                                   halfVolumes=True,
                                    inputVolume=self.protImportHalf1.outputVolume,
                                    inputVolume2=self.protImportHalf2.outputVolume,
                                    provideMaskInHalves=True,
@@ -121,7 +121,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes3(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='Single volume monores Trimmed',
-                                   halfVolums=False,
+                                   halfVolumes=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
@@ -138,7 +138,7 @@ class TestMonoRes(TestMonoResBase):
     def testMonoRes4(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='Single volume monores Filtered',
-                                   halfVolums=False,
+                                   halfVolumes=False,
                                    inputVolume=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
