@@ -153,7 +153,7 @@ class XmippProtMonoRes(ProtRefine3D):
         params += ' --linear '
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %s' % self.significance.get()
-        params += ' --trimmed %f' % 95  #This parameter only considers resolution values in percentile 98
+        params += ' --trimmed %f' % 98  #This parameter only considers resolution values in percentile 98
         if self.gauss.get() is False:
             params += ' --exact'
         if self.filterInput.get():
