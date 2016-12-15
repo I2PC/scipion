@@ -118,6 +118,19 @@ void regionGrowing3D(const MultidimArray< double >& V_in,
                      float filling_colour = 1,
                      bool less = true);
 
+
+/** Region growing with equal values for volumes
+ * @ingroup Filter
+ *
+ * Given a position inside a volume this function grows a region with
+ * (filling_value) until it finds a border. If the point
+ * is outside the volume then nothing is done.
+ *
+ * The growing only considers those voxels with value equal to the selected voxel
+ */
+void regionGrowing3DEqualValue(const MultidimArray<double> &V_in,
+								MultidimArray<int> &V_out, int filling_value);
+
 /** L1 distance transform
   * @ingroup Filters
   *
