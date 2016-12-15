@@ -314,7 +314,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
             summary.append("Output volumes not ready yet.")
         else:
             inputSize = self._getInputParticles().getSize()
-            outputSize = self.outputParticles.get().getSize()
+            outputSize = self.outputParticles.getSize()
             diff = inputSize - outputSize
             summary.append("Warning!!! There are %d particles belonging to empty classes." % diff)
         return summary
