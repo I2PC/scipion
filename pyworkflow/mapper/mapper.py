@@ -37,7 +37,20 @@ class Mapper():
     
     # Just to avoid print several times the same warning
     __warnings = set()
-    
+
+    ORIGINAL_CLASS_NAME_ATTRIBUTE = "oldClassName"
+
+    @staticmethod
+    def annotateClassName(instance, oldClassName):
+        """ Annotate an object with the original class name"""
+        setattr(instance, Mapper.ORIGINAL_CLASS_NAME_ATTRIBUTE, oldClassName)
+    @staticmethod
+    def getObjectPersistingClassName(instance):
+        if hasattr(instance, Mapper.ORIGINAL_CLASS_NAME_ATTRIBUTE):
+            return getattr(instance,Mapper.ORIGINAL_CLASS_NAME_ATTRIBUTE)
+        else:
+            return instance.getClassName()
+
     def __init__(self, dictClasses=None):
         if dictClasses:
             self.dictClasses = dictClasses 
@@ -63,9 +76,16 @@ class Mapper():
         if not issubclass(objClass, obj.Object):
             print "WARNING: Class '%s' is not a subclass of Object. Ignored. " % className
             return None
-        
-        return self.dictClasses[className](**kwargs)
-    
+
+        instance = self.dictClasses[className](**kwargs)
+
+        # If it's the default class in the dictionary
+        if objClass.__name__ != className:
+            # ... annotate original class name
+            self.annotateClassName(instance, className)
+
+        return instance
+
     def _getStrValue(self, value):
         """ Return empty string if value is None or empty. """
         if not value:
