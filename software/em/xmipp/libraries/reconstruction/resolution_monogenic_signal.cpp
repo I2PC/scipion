@@ -26,6 +26,7 @@
 
 #include "resolution_monogenic_signal.h"
 //#define DEBUG
+#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
@@ -84,8 +85,8 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		Image<double> V1, V2;
 		V1.read(fnVol);
 		V2.read(fnVol2);
-		V()=V1();
-		//V()=0.5*(V1()+V2());
+		//V()=V1();
+		V()=0.5*(V1()+V2());
 		halfMapsGiven = true;
 	}
 	else{
@@ -150,11 +151,11 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		mask.read(fnMask);
 		mask().setXmippOrigin();
 	}
-	else
-	{
-		mask = pMask_int;
-		mask().setXmippOrigin();
-	}
+//	else
+//	{
+//		mask = pMask_int;
+//		mask().setXmippOrigin();
+//	}
 	MultidimArray<int> &pMask=mask();
 
 	if (halfMapsGiven)
@@ -171,14 +172,20 @@ void ProgMonogenicSignalRes::produceSideInfo()
 			mask = pMask_int;
 	}
 	else{
-		FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask_int())
+		if (fnMask == "")
 		{
-			if (A3D_ELEM(pMask_int(),k,i,j)==-1)
-				A3D_ELEM(pMask,k,i,j)=A3D_ELEM(pMask_int(),k,i,j);
+			mask = pMask_int;
 		}
-	}
+		else{
+			FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask_int())
+			{
+				if (A3D_ELEM(pMask_int(),k,i,j)==-1)
+					A3D_ELEM(pMask,k,i,j)=A3D_ELEM(pMask_int(),k,i,j);
+			}
+			}
+		}
 	
-	#ifdef DEBUG
+	#ifdef DEBUG_MASK
 	mask.write("mask.vol");
 	#endif
 
