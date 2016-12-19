@@ -396,7 +396,8 @@ Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
 
 Arguments:
-  <target>      a library, a python module, an em package or a xmipp file
+  <target>      a library, a python module, an em package or a xmipp file.
+                Version can be specified after a hyphen (-)
    -j N         where N is the number of processors to use during installation
   --help        show this help message
   --show        just show what would be done, without actually installing
@@ -404,6 +405,9 @@ Arguments:
   --no-scipy    do not install scipy or anything that depends on it
   --no-xmipp    use this option only after a successful compilation of Xmipp
                 to save some time when installing other packages 
+
+Example: scipion install eman-2.12
+
 """ % ' '.join(sys.argv[:2]))
         else:
             # Create folders if needed.
