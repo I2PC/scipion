@@ -1144,6 +1144,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
     def reconstruct(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
         TsCurrent=self.readInfoField(fnDirCurrent,"sampling",xmipp.MDL_SAMPLINGRATE)
+        
+        # Delete previous image files, they exist in case that the last iteration
+        # was performed as a single iteration
+        fnDirPrevious=self._getExtraPath("Iter%03d"%(iteration-1))
+        fnCorrectedImages1=join(fnDirPrevious,"images_corrected01.stk")
+        if exists(fnCorrectedImages1):
+            cleanPath(fnCorrectedImages1)
+        fnCorrectedImages2=join(fnDirPrevious,"images_corrected02.stk")
+        if exists(fnCorrectedImages2):
+            cleanPath(fnCorrectedImages2)
+        
         for i in range(1,3):
             fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
@@ -1313,6 +1324,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     cleanPath(join(fnGlobal,"volumeRef%02d.vol"%i))
                 if exists(fnLocal):
                     cleanPath(join(fnLocal,"images%02d.xmd"%i))
+                    cleanPath(join(fnLocal,"images.stk"))
                     cleanPath(join(fnLocal,"anglesCont%02d.stk"%i))
                     cleanPath(join(fnLocal,"anglesDisc%02d.xmd"%i))
                     cleanPath(join(fnLocal,"volumeRef%02d.vol"%i))
