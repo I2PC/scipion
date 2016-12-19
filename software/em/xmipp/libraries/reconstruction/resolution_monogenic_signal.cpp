@@ -26,7 +26,7 @@
 
 #include "resolution_monogenic_signal.h"
 //#define DEBUG
-#define DEBUG_MASK
+//#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
@@ -151,11 +151,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		mask.read(fnMask);
 		mask().setXmippOrigin();
 	}
-//	else
-//	{
-//		mask = pMask_int;
-//		mask().setXmippOrigin();
-//	}
+
 	MultidimArray<int> &pMask=mask();
 
 	if (halfMapsGiven)
@@ -606,13 +602,7 @@ void ProgMonogenicSignalRes::run()
 
 	double last_resolution_2 = resolution;
 
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-//	{
-//		if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001))
-//			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-//	}
-	if (!(trimBound>0))
-		outputResolution.write(fnOut);
+	outputResolution.write("resolution_simple.vol");
 
 	if (fnSym!="c1")
 	{
@@ -632,8 +622,6 @@ void ProgMonogenicSignalRes::run()
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
 			if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
 				DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
-	//		else
-	//			DIRECT_MULTIDIM_ELEM(pVfiltered,n)=0;
 			Vfiltered.write(fnSpatial);
 
 			VresolutionFiltered().clear();
@@ -661,11 +649,14 @@ void ProgMonogenicSignalRes::run()
 			std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
 			double threshold=A1D_ELEM(resolutions,(int)(trimBound/100.0*N));
 			double filling_value = A1D_ELEM(resolutions, (int)(0.5*N));
-					//A1D_ELEM(resolutions, (int) N*0.5); //It is filled with the median value
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 				if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001)))
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = filling_value;
 
+			outputResolution.write(fnOut);
+		}
+		else
+		{
 			outputResolution.write(fnOut);
 		}
 
