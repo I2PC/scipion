@@ -85,7 +85,6 @@ at each refinement step. The resolution you specify is a target, not the filter 
                   'partFlipSet': 'sets/inputSet__ctf_flip.lst',
                   'data_scipion': self._getExtraPath('data_scipion_it%(iter)02d.sqlite'),
                   'projections': self._getExtraPath('projections_it%(iter)02d_%(half)s.sqlite'),
-                  'volume': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
                   'classes': 'refine_%(run)02d/classes_%(iter)02d',
                   'classesEven': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_even.hdf'),
                   'classesOdd': self._getExtraPath('refine_%(run)02d/classes_%(iter)02d_odd.hdf'),
@@ -96,6 +95,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
                   'mapEven': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_even.hdf'),
                   'mapOdd': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d_odd.hdf'),
                   'mapFull': self._getExtraPath('refine_%(run)02d/threed_%(iter)02d.hdf'),
+                  'mapEvenUnmasked': self._getExtraPath('refine_%(run)02d/threed_even_unmasked.hdf'),
+                  'mapOddUnmasked': self._getExtraPath('refine_%(run)02d/threed_odd_unmasked.hdf'),
                   'fscUnmasked': self._getExtraPath('refine_%(run)02d/fsc_unmasked_%(iter)02d.txt'),
                   'fscMasked': self._getExtraPath('refine_%(run)02d/fsc_masked_%(iter)02d.txt'),
                   'fscMaskedTight': self._getExtraPath('refine_%(run)02d/fsc_maskedtight_%(iter)02d.txt'),
@@ -279,7 +280,12 @@ at each refinement step. The resolution you specify is a target, not the filter 
         numRun = self._getRun()
         
         vol = Volume()
-        vol.setFileName(self._getFileName("volume",run=numRun, iter=iterN))
+        
+        
+        vol.setFileName(self._getFileName("mapFull",run=numRun, iter=iterN))
+        halfMap1 = self._getFileName("mapEvenUnmasked", run=numRun)
+        halfMap2 = self._getFileName("mapOddUnmasked", run=numRun)
+        vol.setHalfMaps([halfMap1, halfMap2])
         vol.copyInfo(partSet)
         
         newPartSet = self._createSetOfParticles()
@@ -300,7 +306,7 @@ at each refinement step. The resolution you specify is a target, not the filter 
         samplingRate = particles.getSamplingRate()
 
         if self.resol <  2 * samplingRate:
-            errors.append("\nTarget resolution is smaller than 2*samplingRate value. This is impossible.")
+            errors.append("\nTarget resolution is smaller than nyquist limit.")
         
         if not self.doContinue:
             self._validateDim(particles, self.input3DReference.get(), errors,
@@ -316,7 +322,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
             inputSize = self._getInputParticles().getSize()
             outputSize = self.outputParticles.getSize()
             diff = inputSize - outputSize
-            summary.append("Warning!!! There are %d particles belonging to empty classes." % diff)
+            if diff > 0:
+                summary.append("Warning!!! There are %d particles belonging to empty classes." % diff)
         return summary
     
     #--------------------------- UTILS functions --------------------------------------------
@@ -446,7 +453,8 @@ at each refinement step. The resolution you specify is a target, not the filter 
         self._execEmanProcess(numRun, iterN)
         initPartSet = self._getInputParticles()
         imgSet.setAlignmentProj()
-        partIter = iter(initPartSet.iterItems(orderBy=['_micId', 'id'], direction='ASC'))
+        partIter = iter(initPartSet.iterItems(orderBy=['_micId', 'id'],
+                                              direction='ASC'))
         
         imgSet.copyItems(partIter,
                          updateItemCallback=self._createItemMatrix,
