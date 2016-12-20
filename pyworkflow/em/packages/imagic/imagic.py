@@ -48,7 +48,7 @@ def getEnviron():
     IMAGIC_BATCH is needed for batch files to work.
     """
     env = Environ(os.environ)
-    imagicdir = env.get('IMAGIC_DIR', None)  # Scipion definition
+    imagicdir = env.get('IMAGIC_HOME', None)  # Scipion definition
 
     if imagicdir is None or not isdir(imagicdir):
         print "ERROR: Missing IMAGIC_DIR variable in scipion.conf file or path does not exist."
@@ -81,7 +81,7 @@ def getEnviron():
 
 
 def getVersion():
-    imagicdir = os.environ['IMAGIC_DIR']
+    imagicdir = os.environ['IMAGIC_HOME']
     for v in getSupportedVersions():
         versionFile = join(imagicdir, 'version_' + v)
         if exists(versionFile):
