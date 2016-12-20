@@ -581,6 +581,7 @@ class Volume(Image):
     def __init__(self, location=None, **kwargs):
         Image.__init__(self, location, **kwargs)
         self._classId = Integer()
+        self._halfMapFilenames = CsvList(pType=str)
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
@@ -604,6 +605,15 @@ class Volume(Image):
         
     def hasClassId(self):
         return self._classId.hasValue()
+    
+    def hasHalfMaps(self):
+        return self._halfMapFilenames.hasValue()
+    
+    def getHalfMaps(self):
+        return self._halfMapFilenames.get()
+
+    def setHalfMaps(self, listFileNames):
+        return self._halfMapFilenames.set(listFileNames)
 
 
 class VolumeMask(Volume):
