@@ -613,6 +613,8 @@ void ProgMonogenicSignalRes::run()
 		outputResolution() = VSimetrized;
 	}
 
+	outputResolution.write("resolution_simple_simmetrized.vol");
+
 	if (fnSpatial!="")
 		{
 			mask.read(fnMask);
