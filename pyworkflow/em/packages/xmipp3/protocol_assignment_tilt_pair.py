@@ -61,6 +61,9 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
 
         self.inputType.trace(onChangeInputType)
 
+        # Force callback function
+        onChangeInputType()
+
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
