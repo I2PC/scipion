@@ -609,7 +609,7 @@ void ProgMonogenicSignalRes::run()
 		SymList SL;
 		SL.readSymmetryFile(fnSym);
 		MultidimArray<double> VSimetrized;
-		symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR);
+		symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR, DONT_WRAP);
 		outputResolution() = VSimetrized;
 	}
 
