@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -94,6 +94,9 @@ leads to objective and high-quality results.
             vol = Volume()
             vol.setFileName(self._getExtraPath('relion_class001.mrc'))
             vol.setSamplingRate(imgSet.getSamplingRate())
+            half1 = self._getFileName("final_half1_volume", ref3D=1)
+            half2 = self._getFileName("final_half2_volume", ref3D=1)
+            vol.setHalfMaps([half1, half2])
             
             outImgSet = self._createSetOfParticles()
             outImgSet.copyInfo(imgSet)
