@@ -51,8 +51,8 @@ reconstructions.
         vol = em.Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(inputSet.getSamplingRate())
-        mapHalf1 = self._getFileName('vol1', iter=lastIter)
-        mapHalf2 = self._getFileName('vol2', iter=lastIter)
+        mapHalf1 = self._getFileName('iter_vol1', iter=lastIter)
+        mapHalf2 = self._getFileName('iter_vol2', iter=lastIter)
         vol.setHalfMaps([mapHalf1, mapHalf2])
         
         self._defineOutputs(outputVolume=vol)
