@@ -602,7 +602,7 @@ void ProgMonogenicSignalRes::run()
 
 	double last_resolution_2 = resolution;
 
-	outputResolution.write("resolution_simple.vol");
+	//outputResolution.write("resolution_simple.vol");
 
 	if (fnSym!="c1")
 	{
@@ -613,7 +613,7 @@ void ProgMonogenicSignalRes::run()
 		outputResolution() = VSimetrized;
 	}
 
-	outputResolution.write("resolution_simple_simmetrized.vol");
+	//outputResolution.write("resolution_simple_simmetrized.vol");
 
 	if (fnSpatial!="")
 		{
