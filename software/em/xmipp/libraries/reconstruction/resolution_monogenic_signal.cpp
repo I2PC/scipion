@@ -32,6 +32,7 @@ void ProgMonogenicSignalRes::readParams()
 	fnVol = getParam("--vol");
 	//fnVol1 = getParam("--vol1");
 	fnVol2 = getParam("--vol2");
+	fnMeanVol = getParam("--meanVol");
 	fnOut = getParam("-o");
 	fnMask = getParam("--mask");
 	fnchim = getParam("--chimera_volume");
@@ -53,11 +54,11 @@ void ProgMonogenicSignalRes::defineParams()
 	addUsageLine("This function determines the local resolution of a map");
 	addParamsLine("  --vol <vol_file=\"\">   : Input volume");
 	addParamsLine("  [--mask <vol_file=\"\">]  : Mask defining the macromolecule");
-	//addParamsLine("  [--vol1 <vol_file=\"\">]: Half volume 1");
 	addParamsLine("                          :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [--vol2 <vol_file=\"\">]: Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
+	addParamsLine("  [--meanVol <vol_file=\"\">]: Mean volume of half1 and half2 (only it is neccesary the two haves are used)");
 	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]   : Sampling rate (A/px)");
@@ -84,8 +85,9 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		Image<double> V1, V2;
 		V1.read(fnVol);
 		V2.read(fnVol2);
-		V()=V1();
-		//V()=0.5*(V1()+V2());
+		//V()=V1();
+		V()=0.5*(V1()+V2());
+		V.write(fnMeanVol);
 		halfMapsGiven = true;
 	}
 	else{
@@ -189,14 +191,13 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		V2.read(fnVol2);
 
 		V1()-=V2();
-		V1()/=sqrt(2);
+		V1()/=2;
 		fftN=new MultidimArray< std::complex<double> >;
 		FourierTransformer transformer2;
-		MultidimArray<double> &inputVol = V1();
 		#ifdef DEBUG
 		  V1.write("diff_volume.vol");
 		#endif
-		transformer2.FourierTransform(inputVol, *fftN);
+		transformer2.FourierTransform(V1(), *fftN);
 	}
 	else
 	{

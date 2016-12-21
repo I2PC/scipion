@@ -50,7 +50,7 @@ class ProgMonogenicSignalRes : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym;
+	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym, fnMeanVol;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes;

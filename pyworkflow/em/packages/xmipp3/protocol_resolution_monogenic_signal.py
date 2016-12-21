@@ -35,6 +35,7 @@ from os.path import abspath
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
 OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
+FN_MEAN_VOL = 'mean_volume.vol'
 
 
 class XmippProtMonoRes(ProtRefine3D):
@@ -139,6 +140,7 @@ class XmippProtMonoRes(ProtRefine3D):
         else:
             params = ' --vol %s' % self.vol1Fn
             params += ' --vol2 %s' % self.vol2Fn
+            params += ' --meanVol %s' % self._getExtraPath(FN_MEAN_VOL)
             if self.provideMaskInHalves.get() is True:
                 params += ' --mask %s' % self.maskFn
             else:
