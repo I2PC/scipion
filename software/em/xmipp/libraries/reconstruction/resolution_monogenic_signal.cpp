@@ -654,6 +654,8 @@ void ProgMonogenicSignalRes::run()
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 				if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001)))
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = filling_value;
+				else
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
 
 			outputResolution.write(fnOut);
 		}
