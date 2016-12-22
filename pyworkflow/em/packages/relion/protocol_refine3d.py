@@ -94,8 +94,8 @@ leads to objective and high-quality results.
             vol = Volume()
             vol.setFileName(self._getExtraPath('relion_class001.mrc'))
             vol.setSamplingRate(imgSet.getSamplingRate())
-            half1 = self._getFileName("final_half1_volume", ref3D=1)
-            half2 = self._getFileName("final_half2_volume", ref3D=1)
+            half1 = self._getFileName("final_half1_volume", ref3d=1)
+            half2 = self._getFileName("final_half2_volume", ref3d=1)
             vol.setHalfMaps([half1, half2])
             
             outImgSet = self._createSetOfParticles()
