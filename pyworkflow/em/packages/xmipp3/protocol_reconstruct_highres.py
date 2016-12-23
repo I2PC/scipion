@@ -786,16 +786,16 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                                     args+=" --mpi_job_size 2"
                                 self.runJob('xmipp_angular_projection_matching',args,numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())
                             if exists(fnAnglesGroup):
-                                if j==1:
+                                if not exists(fnAngles) and exists(fnAnglesGroup):
                                     copyFile(fnAnglesGroup, fnAngles)
                                 else:
-                                    self.runJob("xmipp_metadata_utilities","-i %s --set union_all %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
+                                    if exists(fnAngles) and exists(fnAnglesGroup):
+                                        self.runJob("xmipp_metadata_utilities","-i %s --set union_all %s"%(fnAngles,fnAnglesGroup),numberOfMpi=1)
                     self.runJob("xmipp_metadata_utilities","-i %s --set join %s image"%(fnAngles,fnImgs),numberOfMpi=1)
                     if self.saveSpace and ctfPresent:
                         self.runJob("rm -f",fnDirSignificant+"/gallery*",numberOfMpi=1)
                 
                 # Evaluate the stability of the alignment
-                counter1 = 0
                 fnOut=join(fnGlobal,"anglesDisc%02d"%i)
                 for subset1 in perturbationList:
                     fnOut1=join(fnGlobal,"anglesDisc%02d%s"%(i,subset1))
@@ -840,11 +840,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     if counter2>0:
                         mdWeightsAll.write(fnOut1+"_weights.xmd")
                         self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAngles1,fnOut1+"_weights.xmd"),numberOfMpi=1)
-                    if counter1==0:
+                    if not exists(fnOut+".xmd") and exists(fnAngles1):
                         copyFile(fnAngles1,fnOut+".xmd")
                     else:
-                        self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s'%(fnOut+".xmd",fnAngles1),numberOfMpi=1)
-                    counter1+=1
+                        if exists(fnAngles1) and exists(fnOut+".xmd"):
+                            self.runJob("xmipp_metadata_utilities",'-i %s --set union_all %s'%(fnOut+".xmd",fnAngles1),numberOfMpi=1)
         cleanPath(join(fnGlobal,"anglesDisc*_weights.xmd"))
                 
     def adaptShifts(self, fnSource, TsSource, fnDest, TsDest):
@@ -1204,7 +1204,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 
                 # Reconstruct Fourier
                 args="-i %s -o %s --sym %s --weight --thr %d"%(fnAnglesToUse,fnVol,self.symmetryGroup,self.numberOfThreads.get())
-                self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get()+1)
+                self.runJob("xmipp_reconstruct_fourier",args,numberOfMpi=self.numberOfMpi.get())
                 
                 if deleteStack:
                     cleanPath(deletePattern)
