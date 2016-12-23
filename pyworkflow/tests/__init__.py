@@ -269,3 +269,8 @@ DataSet(name='resmap',  folder='resmap',
                'betagal_half2': 'betaGal_half02.mrc',
                'betagal_mask': 'betaGal_mask.mrc',
                })
+
+DataSet(name='10010',  folder='10010',
+        files={'initialVolume': 'initialVolume.vol',
+               'particles': 'particles.sqlite',
+               })
