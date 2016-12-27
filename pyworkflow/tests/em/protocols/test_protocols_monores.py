@@ -56,7 +56,7 @@ class TestMonoResBase(BaseTest):
     def runCreateMask(cls, pattern, thr):
         """ Create a volume mask. """
         cls.msk = cls.newProtocol(XmippProtCreateMask3D,
-                                  inputVolume=pattern,
+                                  inputVolumes=pattern,
                                   volumeOperation=0,  # OPERATION_THRESHOLD,
                                   threshold=thr,
                                   doSmall=False,
@@ -86,19 +86,18 @@ class TestMonoRes(TestMonoResBase):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='single volume monores',
                                    halfVolumes=False,
-                                   inputVolume=self.protImportVol.outputVolume,
+                                   inputVolumes=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
                                    minRes=1,
                                    maxRes=25,
-                                   significance=0.95,
-                                   exact=True,
+                                   isPremasked = False,
                                    filterInput=False,
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
-                        "MonoRes (no split and no mask no filter) has failed")
-
+                        "MonoRes (no split, no premasked) has failed")
+ 
     def testMonoRes2(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='two halves monores',
@@ -108,44 +107,27 @@ class TestMonoRes(TestMonoResBase):
                                    provideMaskInHalves=True,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
+                                   isPremasked = True,
+                                   volumeRadiusHalf = 50,
                                    minRes=1,
                                    maxRes=25,
-                                   significance=0.95,
-                                   exact=True,
                                    filterInput=False,
                                    )
         self.launchProtocol(MonoRes)
         self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
-                        "MonoRes (split, no mask, no filter ) has failed")
-
+                        "MonoRes (split, pre-masked, no filter) has failed")
+ 
     def testMonoRes3(self):
-        MonoRes = self.newProtocol(XmippProtMonoRes,
-                                   objLabel='Single volume monores Trimmed',
-                                   halfVolumes=False,
-                                   inputVolume=self.protImportVol.outputVolume,
-                                   Mask=self.protCreateMask.outputMask,
-                                   symmetry='d2',
-                                   minRes=1,
-                                   maxRes=25,
-                                   significance=0.95,
-                                   exact=False,
-                                   filterInput=False,
-                                   )
-        self.launchProtocol(MonoRes)
-        self.assertTrue(exists(MonoRes._getExtraPath(OUTPUT_RESOLUTION_FILE)),
-                        "MonoRes trimmed has failed")
-
-    def testMonoRes4(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
                                    objLabel='Single volume monores Filtered',
                                    halfVolumes=False,
-                                   inputVolume=self.protImportVol.outputVolume,
+                                   inputVolumes=self.protImportVol.outputVolume,
                                    Mask=self.protCreateMask.outputMask,
                                    symmetry='d2',
+                                   preMasked = True,
+                                   volumeRadius = 50,
                                    minRes=1,
                                    maxRes=25,
-                                   significance=0.95,
-                                   exact=False,
                                    filterInput=True,
                                    )
         self.launchProtocol(MonoRes)

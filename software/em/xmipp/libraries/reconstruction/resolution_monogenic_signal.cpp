@@ -26,17 +26,19 @@
 
 #include "resolution_monogenic_signal.h"
 //#define DEBUG
-//#define DEBUG_MASK
+#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
 	fnVol = getParam("--vol");
 	//fnVol1 = getParam("--vol1");
 	fnVol2 = getParam("--vol2");
+	fnMeanVol = getParam("--meanVol");
 	fnOut = getParam("-o");
 	fnMask = getParam("--mask");
 	fnchim = getParam("--chimera_volume");
 	sampling = getDoubleParam("--sampling_rate");
+	R = getDoubleParam("--volumeRadius");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
 	fnSym = getParam("--sym");
@@ -54,16 +56,16 @@ void ProgMonogenicSignalRes::defineParams()
 	addUsageLine("This function determines the local resolution of a map");
 	addParamsLine("  --vol <vol_file=\"\">   : Input volume");
 	addParamsLine("  [--mask <vol_file=\"\">]  : Mask defining the macromolecule");
-	//addParamsLine("  [--vol1 <vol_file=\"\">]: Half volume 1");
 	addParamsLine("                          :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [--vol2 <vol_file=\"\">]: Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
+	addParamsLine("  [--meanVol <vol_file=\"\">]: Mean volume of half1 and half2 (only it is neccesary the two haves are used)");
 	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]   : Sampling rate (A/px)");
-	//addParamsLine("  [--circular_mask <R=-1>]  : The volume has been masked to a sphere of this radius (in pixels)");
 	addParamsLine("                            : Use -1 to disable this option");
+	addParamsLine("  [--volumeRadius <s=100>]   : This parameter determines the radius of a sphere where the volume is");
 	addParamsLine("  [--number_frequencies <w=50>]       : The resolution is computed at a number of frequencies between mininum and");
 	addParamsLine("                            : maximum resolution px/A. This parameter determines that number");
 	addParamsLine("  [--minRes <s=30>]         : Minimum resolution (A)");
@@ -85,8 +87,8 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		Image<double> V1, V2;
 		V1.read(fnVol);
 		V2.read(fnVol2);
-		//V()=V1();
 		V()=0.5*(V1()+V2());
+		V.write(fnMeanVol);
 		halfMapsGiven = true;
 	}
 	else{
@@ -94,6 +96,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	    halfMapsGiven = false;
 	}
 	V().setXmippOrigin();
+
 
 	FourierTransformer transformer;
 	MultidimArray<double> &inputVol = V();
@@ -139,48 +142,25 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	lowPassFilter.FilterBand = LOWPASS;
 
 	// Prepare mask
-	Image<int> pMask_int;
-	regionGrowing3DEqualValue(V(), pMask_int(), -1);
-	
-	#ifdef DEBUG
-	  pMask_int.write("pMask_int.vol");
-	#endif
+	MultidimArray<int> &pMask=mask();
 
 	if (fnMask != "")
 	{
 		mask.read(fnMask);
 		mask().setXmippOrigin();
 	}
-
-	MultidimArray<int> &pMask=mask();
-
-	if (halfMapsGiven)
+	else
 	{
-		if (fnMask != "")
-		{
-			FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask_int())
-			{
-				if (A3D_ELEM(pMask_int(),k,i,j)==-1)
-					A3D_ELEM(pMask,k,i,j)=A3D_ELEM(pMask_int(),k,i,j);
-			}
-		}
-		else
-			mask = pMask_int;
+		std::cout << "Error: a mask ought to be provided" << std::endl;
+		exit(0);
 	}
-	else{
-		if (fnMask == "")
-		{
-			mask = pMask_int;
-		}
-		else{
-			FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask_int())
-			{
-				if (A3D_ELEM(pMask_int(),k,i,j)==-1)
-					A3D_ELEM(pMask,k,i,j)=A3D_ELEM(pMask_int(),k,i,j);
-			}
-			}
-		}
-	
+
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
+	{
+		if (i*i+j*j+k*k > R*R)
+			A3D_ELEM(pMask, k, i, j) = -1;
+	}
+
 	#ifdef DEBUG_MASK
 	mask.write("mask.vol");
 	#endif
@@ -192,7 +172,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		V2.read(fnVol2);
 
 		V1()-=V2();
-		V1()/=sqrt(2);
+		V1()/=2;
 		fftN=new MultidimArray< std::complex<double> >;
 		FourierTransformer transformer2;
 		MultidimArray<double> &inputVol = V1();
@@ -208,7 +188,6 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	
 	
 	V.clear();
-	pMask_int.clear();
 }
 
 
@@ -601,8 +580,9 @@ void ProgMonogenicSignalRes::run()
 
 
 	double last_resolution_2 = resolution;
+	std::cout << "last computed resolution = " << last_resolution_2 << std::endl;
 
-	//outputResolution.write("resolution_simple.vol");
+	outputResolution.write("resolution_simple.vol");
 
 	if (fnSym!="c1")
 	{
@@ -613,7 +593,7 @@ void ProgMonogenicSignalRes::run()
 		outputResolution() = VSimetrized;
 	}
 
-	//outputResolution.write("resolution_simple_simmetrized.vol");
+	outputResolution.write("resolution_simple_simmetrized.vol");
 
 	if (fnSpatial!="")
 		{
@@ -642,20 +622,24 @@ void ProgMonogenicSignalRes::run()
 
 			// Get all resolution values
 			MultidimArray<double> resolutions(N);
-			N=0;
+			size_t N_iter=0;
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001))
-					DIRECT_MULTIDIM_ELEM(resolutions,N++)=DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
+					DIRECT_MULTIDIM_ELEM(resolutions,N_iter++)=DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
 
 			// Sort value and get threshold
 			std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
-			double threshold=A1D_ELEM(resolutions,(int)(trimBound/100.0*N));
+			double threshold=A1D_ELEM(resolutions,(int)(trimBound*N/100));
 			double filling_value = A1D_ELEM(resolutions, (int)(0.5*N));
 			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-				if ((DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold) && (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001)))
+			{
+				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold){
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = filling_value;
-				else
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
+				}
+//				else{
+//					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
+//				}
+			}
 
 			outputResolution.write(fnOut);
 		}
