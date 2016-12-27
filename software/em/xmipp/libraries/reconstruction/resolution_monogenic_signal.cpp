@@ -26,7 +26,7 @@
 
 #include "resolution_monogenic_signal.h"
 //#define DEBUG
-#define DEBUG_MASK
+//#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
@@ -175,11 +175,10 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		V1()/=2;
 		fftN=new MultidimArray< std::complex<double> >;
 		FourierTransformer transformer2;
-		MultidimArray<double> &inputVol = V1();
 		#ifdef DEBUG
 		  V1.write("diff_volume.vol");
 		#endif
-		transformer2.FourierTransform(inputVol, *fftN);
+		transformer2.FourierTransform(V1(), *fftN);
 	}
 	else
 	{
@@ -582,7 +581,7 @@ void ProgMonogenicSignalRes::run()
 	double last_resolution_2 = resolution;
 	std::cout << "last computed resolution = " << last_resolution_2 << std::endl;
 
-	outputResolution.write("resolution_simple.vol");
+	//outputResolution.write("resolution_simple.vol");
 
 	if (fnSym!="c1")
 	{
@@ -593,7 +592,7 @@ void ProgMonogenicSignalRes::run()
 		outputResolution() = VSimetrized;
 	}
 
-	outputResolution.write("resolution_simple_simmetrized.vol");
+	//outputResolution.write("resolution_simple_simmetrized.vol");
 
 	if (fnSpatial!="")
 		{
