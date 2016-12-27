@@ -581,7 +581,9 @@ void ProgMonogenicSignalRes::run()
 	double last_resolution_2 = resolution;
 	std::cout << "last computed resolution = " << last_resolution_2 << std::endl;
 
-	//outputResolution.write("resolution_simple.vol");
+	#ifdef DEBUG
+		outputResolution.write("resolution_simple.vol");
+	#endif
 
 	if (fnSym!="c1")
 	{
@@ -592,7 +594,9 @@ void ProgMonogenicSignalRes::run()
 		outputResolution() = VSimetrized;
 	}
 
-	//outputResolution.write("resolution_simple_simmetrized.vol");
+	#ifdef DEBUG
+		outputResolution.write("resolution_simple_simmetrized.vol");
+	#endif
 
 	if (fnSpatial!="")
 		{
