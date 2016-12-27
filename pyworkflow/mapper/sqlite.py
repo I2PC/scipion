@@ -135,7 +135,7 @@ class SqliteMapper(Mapper):
         self.__updateTo(obj, level)
         # Update pending pointers to objects
         for ptr in self.updatePendingPointers:
-            self.db.updateObject(ptr._objId, ptr._objName, ptr.getClassName(),
+            self.db.updateObject(ptr._objId, ptr._objName, Mapper.getObjectPersistingClassName(ptr),
                              self.__getObjectValue(obj), ptr._objParentId, 
                              ptr._objLabel, ptr._objComment)
 
@@ -146,7 +146,7 @@ class SqliteMapper(Mapper):
                                                self.updateDict.keys())
 
     def __updateTo(self, obj, level):
-        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
+        self.db.updateObject(obj._objId, obj._objName, Mapper.getObjectPersistingClassName(obj),
                              self.__getObjectValue(obj), obj._objParentId, 
                              obj._objLabel, obj._objComment)
 
@@ -222,7 +222,7 @@ class SqliteMapper(Mapper):
             childName = childParts[-1]
             parentId = int(childParts[-2])
             # Here we are assuming that always the parent have
-            # been processed first, so it will be in the dictiorary
+            # been processed first, so it will be in the dictionary
             parentObj = self.objDict.get(parentId, None)
             if parentObj is None: # Something went wrong
                 #print "WARNING: Parent object (id=%d) was not found, object: %s. Ignored." % (parentId, childRow['name'])

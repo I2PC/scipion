@@ -575,6 +575,7 @@ for p in ['angular_break_symmetry',
           'reconstruct_wbp',
           'resolution_fsc',
           'resolution_ibw',
+          'resolution_monogenic_signal',
           'resolution_ssnr',
           'score_micrograph',
 

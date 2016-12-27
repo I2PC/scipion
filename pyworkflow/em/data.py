@@ -1777,19 +1777,17 @@ class SetOfMovies(SetOfMicrographsBase):
 
     def _dimStr(self):
         """ Return the string representing the dimensions. """
-        dimStr = 'No-Dim'
-
-        if not self._firstDim.isEmpty():
+        if self._firstDim.isEmpty():
+            dimStr = 'No-Dim'
+        else:
             try:
                 x, y, z = self._firstDim
-                first, last, i = self._firstFramesRange
-                if last == 0:
-                    last = z
-                dimStr = str(ImageDim(x, y, last - first + 1))
-            except Exception:
-                # This try/except block provides some backward compatibility
-                # when the cached firstDim only stored x,y
-                dimStr = str(self._firstDim)
+            except:
+                return str(self._firstDim)
+            first, last, i = self._firstFramesRange
+            if last == 0:
+                last = z
+            dimStr = str(ImageDim(x, y, last - first + 1))
 
         return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
 
