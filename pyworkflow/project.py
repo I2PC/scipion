@@ -178,7 +178,7 @@ class Project(object):
 
     def createMapper(self, sqliteFn):
         """ Create a new SqliteMapper object and pass as classes dict
-        all globas and update with data and protocols from em.
+        all globals and update with data and protocols from em.
         """
         classesDict = pwobj.Dict(default=pwprot.LegacyProtocol)
         classesDict.update(pwobj.__dict__)

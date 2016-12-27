@@ -542,7 +542,21 @@ class Environ(dict):
     REPLACE = 0
     BEGIN = 1
     END = 2
-    
+
+    def getWithDeprecated(self, varName, deprecatedVarName, defaultValue=None):
+        """ Get a variable environment, and use a second name as a backup for
+        deprecated names"""
+
+        if self.has_key(varName):
+            return self.get(varName)
+
+        elif self.has_key(deprecatedVarName):
+            # Use the deprecated variable. In the future this could be a list
+            print ('Environment variable %s not found. Trying with %s (DEPRECATED)' % (varName, deprecatedVarName))
+            return self.get(deprecatedVarName)
+        else:
+            return defaultValue
+
     def set(self, varName, varValue, position=REPLACE):
         """ Modify the value for some variable.
         Params:

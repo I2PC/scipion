@@ -140,7 +140,7 @@ class SqliteMapper(Mapper):
         self.__updateTo(obj, level)
         # Update pending pointers to objects
         for ptr in self.updatePendingPointers:
-            self.db.updateObject(ptr._objId, ptr._objName, ptr.getClassName(),
+            self.db.updateObject(ptr._objId, ptr._objName, Mapper.getObjectPersistingClassName(ptr),
                              self.__getObjectValue(obj), ptr._objParentId, 
                              ptr._objLabel, ptr._objComment)
 
@@ -151,7 +151,7 @@ class SqliteMapper(Mapper):
                                                self.updateDict.keys())
 
     def __updateTo(self, obj, level):
-        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
+        self.db.updateObject(obj._objId, obj._objName, Mapper.getObjectPersistingClassName(obj),
                              self.__getObjectValue(obj), obj._objParentId, 
                              obj._objLabel, obj._objComment)
 
