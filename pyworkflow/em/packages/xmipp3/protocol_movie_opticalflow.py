@@ -28,19 +28,16 @@
 # ******************************************************************************
 
 from os.path import join, exists
-from glob import glob
-from itertools import izip
 
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
+from pyworkflow.em.protocol.protocol_align_movies import createAlignmentPlot
 import pyworkflow.protocol.params as params
-from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
-from convert import writeMovieMd, getMovieFileName
-
+from convert import writeMovieMd
 
 PLOT_CART = 0
 PLOT_POLAR = 1
@@ -381,41 +378,6 @@ def showCartesianShiftsPlot(inputSet, itemId):
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,
                                     showCartesianShiftsPlot)
-
-def createAlignmentPlot(meanX, meanY):
-    """ Create a plotter with the cumulative shift per frame. """
-    sumMeanX = []
-    sumMeanY = []
-    figureSize = (8, 6)
-    plotter = Plotter(*figureSize)
-    figure = plotter.getFigure()
-
-    preX = 0.0
-    preY = 0.0
-    sumMeanX.append(0.0)
-    sumMeanY.append(0.0)
-    ax = figure.add_subplot(111)
-    ax.grid()
-    ax.set_title('Cartesian representation')
-    ax.set_xlabel('Drift x (pixels)')
-    ax.set_ylabel('Drift y (pixels)')
-    ax.plot(0, 0, 'yo-')
-    i = 1
-    for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
-        sumMeanX.append(preX)
-        sumMeanY.append(preY)
-        #ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.02, str(i))
-        i += 1
-
-    ax.plot(sumMeanX, sumMeanY, color='b')
-    ax.plot(sumMeanX, sumMeanY, 'yo')
-
-    plotter.tightLayout()
-
-    return plotter
 
 # Just for backwards compatibility
 ProtMovieAlignment = XmippProtOFAlignment
