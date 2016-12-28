@@ -105,9 +105,10 @@ if __version__ == 'devel':
         def call(cmd):
             return subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
         if call('which git > /dev/null') == 0: # Means git command is found
-            gitBranch = str(subprocess.check_output(['git', 'branch'], cwd=SCIPION_HOME))
-            gitBranch = gitBranch.split("*")[1].split("\n")
-            __version__ = gitBranch[0]
+            gitBranch = str(subprocess.check_output("git branch | grep \\* ", cwd=SCIPION_HOME, shell=True))
+            print (gitBranch)
+            gitBranch = gitBranch.split("*")[1]
+            __version__ = gitBranch.replace("\n", "")
             commitLine = str(subprocess.check_output(['git', 'log', '-1',
                                                   '--pretty=format:%h %ci'],
                                                  cwd=SCIPION_HOME))
