@@ -43,15 +43,14 @@ REGEX_KEYVALUE = re.compile('(?P<var>\[?[a-zA-Z0-9_-]+\]?)=(?P<value>"\S+")(?P<s
 
 def getEnviron():
     """ Load the environment variables needed for Imagic.
-    IMAGIC_ROOT is set to IMAGIC_DIR
-    MPI-related vars are set if IMAGIC_DIR/openmpi path exists
+    IMAGIC_ROOT is set to IMAGIC_HOME (previously IMAGIC_DIR)
+    MPI-related vars are set if IMAGIC_HOME/openmpi path exists
     IMAGIC_BATCH is needed for batch files to work.
     """
-    env = Environ(os.environ)
-    imagicdir = env.get('IMAGIC_HOME', None)  # Scipion definition
+    env, imagicdir = getImagicHomeDir()
 
     if imagicdir is None or not isdir(imagicdir):
-        print "ERROR: Missing IMAGIC_DIR variable in scipion.conf file or path does not exist."
+        print "ERROR: Missing IMAGIC_HOME or IMAGIC_DIR variable in scipion.conf file or path does not exist."
 
     else:
         env.update({'IMAGIC_ROOT': imagicdir,
@@ -80,8 +79,14 @@ def getEnviron():
     return env
 
 
+def getImagicHomeDir():
+    env = Environ(os.environ)
+    imagicdir = env.getWithDeprecated('IMAGIC_HOME', 'IMAGIC_DIR', None)  # Scipion definition
+    return env, imagicdir
+
+
 def getVersion():
-    imagicdir = os.environ['IMAGIC_HOME']
+    env, imagicdir = getImagicHomeDir()
     for v in getSupportedVersions():
         versionFile = join(imagicdir, 'version_' + v)
         if exists(versionFile):

@@ -435,10 +435,11 @@ class Protocol(Step):
         any expert parameter"""
         if self._hasExpert is None:
             self._hasExpert = False
-            for paraName, param in self._definition.iterParams():
+            for paraName, param in self._definition.iterAllParams():
                 if param.isExpert():
                     self._hasExpert = True
                     break
+
         return self._hasExpert
 
         
