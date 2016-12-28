@@ -105,18 +105,17 @@ if __version__ == 'devel':
         def call(cmd):
             return subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
         if call('which git > /dev/null') == 0: # Means git command is found
-            call('git branch | grep \* > .devel_version')
-            call('git log -1 --pretty=format:"%h %ci\n" >> .devel_version')
+
+            gitBranch = subprocess.check_output(['git', 'branch'],
+                                                cwd=SCIPION_HOME).split("*")[1]
+            __version__ = gitBranch.split("\n")[0]
+            commitLine = subprocess.check_output(['git', 'log', '-1',
+                                                  '--pretty=format:%h %ci'],
+                                                 cwd=SCIPION_HOME)
+            __nickname__, __releasedate__ = commitLine.split()[:2]
 
     # If in a future we release a nightly build, we could add the .devel_version
-    versionFile = join(SCIPION_HOME, '.devel_version')
 
-    if exists(versionFile):
-        f = open(versionFile)
-        line = f.readline()
-        __version__ = line.split()[1]
-        __nickname__, __releasedate__ = f.readline().split()[:2]
-        f.close()
 
 def getVersion(long=True):
     if long:
