@@ -397,7 +397,7 @@ public:
                 {
                 	movie.getValue(MDL_SHIFT_X, XX(shift), __iter.objId);
                 	movie.getValue(MDL_SHIFT_Y, YY(shift), __iter.objId);
-                    translate(LINEAR, translatedImage(), frameImage(), shift, WRAP);
+                    translate(BSPLINE3, translatedImage(), frameImage(), shift, WRAP);
                     frameImage()=translatedImage();
                 }
 
