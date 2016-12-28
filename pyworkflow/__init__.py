@@ -20,32 +20,62 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import os
-import os.path
 
 HOME = os.path.abspath(os.path.dirname(__file__))
 
 def join(*paths):
-    """ join paths from HOME. """
+    """ join paths from HOME . """
     return os.path.join(HOME, *paths)
 
-RESOURCES = [os.path.join(HOME, 'resources')]
-WEB_RESOURCES = os.path.join(HOME, 'web', 'pages', 'resources')
+RESOURCES = [join('resources')]
+WEB_RESOURCES = join('web', 'pages', 'resources')
 
 if "SCIPION_USER_DATA" not in os.environ:
     raise Exception("SCIPION_USER_DATA is not defined as environment variable")
 
+SCIPION_HOME = os.environ['SCIPION_HOME']
 SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
+SCIPION_PYTHON = PYTHON
+
 
 
 SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')
 
 
-from utils.path import findResource
-
 _logo = 'scipion_logo.png'
+
+
+#----------------- Some functions to centralize path access -------------------
+
+def findResource(filename):
+    """ This function will search for a give
+    resource filename in the paths specified
+    in pyworkflow.RESOURCES path list.
+    """
+    from utils.path import findFile
+
+    return findFile(filename, *RESOURCES)
+
+# Following are a set of functions to centralize the way to get
+# files from several scipion folder such as: config or apps
+
+def getScipionPath(*paths):
+     return os.path.join(SCIPION_HOME, *paths)
+
+
+def getScipionScript():
+    return getScipionPath('scipion')
+
+
+def getConfigPath(*paths):
+    return getScipionPath('config', *paths)
+
+
+def getTemplatePath(*paths):
+    return getConfigPath('templates', *paths)

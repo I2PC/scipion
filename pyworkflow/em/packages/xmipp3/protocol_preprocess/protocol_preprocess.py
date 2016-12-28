@@ -27,6 +27,7 @@
 
 from pyworkflow.em import *
 from pyworkflow.utils import *  
+from pyworkflow.protocol.params import *
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
 from ..constants import *

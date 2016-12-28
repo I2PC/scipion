@@ -1959,8 +1959,10 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(OPEN, "Open");
 			addItem(OPEN_ASTEXT, "Open as text");
 			addItem(CTF_PROFILE, "Show CTF profile");
-			addItem(CTF_RECALCULATE, "Recalculate CTF");
-            setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            if(data.parameters.recalculateCTF) {
+                addItem(CTF_RECALCULATE, "Recalculate CTF");
+                setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            }
 			addSeparator();
 			addItem(OPEN_IMAGES, "Open images");
 			addItem(SAVE_IMAGES, "Save images", "save.gif");
@@ -1969,12 +1971,12 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			addItem(SELECT_ALL, "All", null, "control released A");
 			addItem(SELECT_TOHERE, "To here");
 			addItem(SELECT_FROMHERE, "From here");
-                        addItem(INVERT_SELECT, "Invert selection");
-                        if(data.parameters.objectCommands != null)
-                            for(String cmd: data.parameters.objectCommands)
-                                addItem(cmd + "_mi", cmd);
-			initItems();
-		}// function createItems
+            addItem(INVERT_SELECT, "Invert selection");
+            if(data.parameters.objectCommands != null)
+                for(String cmd: data.parameters.objectCommands)
+                    addItem(cmd + "_mi", cmd);
+			        initItems();
+		    }// function createItems
 
 		public void show(Component cmpnt, Point location)
 		{
@@ -1986,7 +1988,9 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			// This item visibility depends on current selection
 			setItemVisible(SAVE_IMAGES, data.isClassificationMd() && gallery.getSelectionCount() > 0 && !isscipion);
 			setItemVisible(OPEN_IMAGES, data.hasClasses() && gallery.getSelectionCount() == 1);
-            setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            if(data.parameters.recalculateCTF){
+                setItemSelected(CTF_RECALCULATE, data.isRecalculateCTF(gallery.getIndex(row, col)));
+            }
 			// Update menu items status depending on item.
 			getPopupMenu().show(cmpnt, location.x, location.y);
 
@@ -2007,7 +2011,7 @@ public class GalleryJFrame extends JFrame implements iCTFGUI
 			setItemVisible(OPEN, false);
 			setItemVisible(OPEN_ASTEXT, false);
 			setItemVisible(CTF_PROFILE, data.isCTFMd());
-			setItemVisible(CTF_RECALCULATE, data.isCTFMd());
+			if(data.parameters.recalculateCTF) setItemVisible(CTF_RECALCULATE, data.isCTFMd());
 		}
 
 		@Override

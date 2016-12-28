@@ -53,10 +53,11 @@ class HostMapper(SqliteMapper):
         return None
         
         
-class HostConfig():
+class HostConfig(OrderedObject):
     """ Main store the configuration for execution hosts. """
     
     def __init__(self, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         self.label = String(kwargs.get('label', None))
         self.hostName = String(kwargs.get('hostName', None))
         self.userName = String()
@@ -154,8 +155,8 @@ class HostConfig():
 
 
 class QueueSystemConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
+    def __init__(self, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         self.name = String()
         # Number of cores from which the queue is mandatory
         # 0 means no mandatory at all
@@ -238,8 +239,8 @@ class QueueSystemConfig(OrderedObject):
         
 #TODO: maybe deprecated
 class QueueConfig(OrderedObject):
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args) 
+    def __init__(self, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         self.name = String('default')
         self.maxCores = Integer()
         self.allowMPI = Boolean()

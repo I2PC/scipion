@@ -698,18 +698,26 @@ size_t Timer::now()
            tv.tv_usec / 1000;
 }
 
-void Timer::tic()
+size_t Timer::tic()
 {
     tic_time = now();
+    return tic_time;
 }
 
-void Timer::toc(const char * msg)
+size_t Timer::toc(const char * msg, bool inSecs)
 {
     size_t diff = now() - tic_time;
+
     if (msg != NULL)
         std::cout << msg;
     std::cout << "Elapsed time: ";
-    std::cout << diff/1000.0 << " secs." << std::endl;
+
+    if (inSecs)
+        std::cout << diff/1000.0 << " secs." << std::endl;
+    else
+        std::cout << diff << " msecs." << std::endl;
+
+    return diff;
 }
 
 

@@ -20,12 +20,9 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement some wizards
-"""
 
 from pyworkflow.em.packages.xmipp3.constants import *
 
@@ -37,6 +34,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
 from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
+from protocol_sort import ProtRelionSortParticles
 from pyworkflow.utils.utils import readProperties
 
 #===============================================================================
@@ -44,12 +42,7 @@ from pyworkflow.utils.utils import readProperties
 #===============================================================================
 
 class RelionBackRadiusWizard(ParticleMaskRadiusWizard):
-    _targets = [
-#                 (ProtRelionClassify2D, ['backRadius']),
-#                 (ProtRelionRefine3D, ['backRadius']),
-#                 (ProtRelionClassify3D, ['backRadius']),
-#                 (ProtRelionClassify2D, ['backRadius']),
-                (ProtRelionPreprocessParticles, ['backRadius'])]
+    _targets = [(ProtRelionPreprocessParticles, ['backRadius'])]
     _unit = UNIT_PIXEL
     
     def _getProtocolImages(self, protocol):
@@ -82,19 +75,36 @@ class RelionPartMaskDiameterWizard(RelionBackRadiusWizard):
                 (ProtRelionClassify3D, ['maskDiameterA']),
                 (ProtRelionClassify2D, ['maskDiameterA'])]
     _unit = UNIT_ANGSTROM
-    
+
     def _getParameters(self, protocol):
         protParams = RelionBackRadiusWizard._getParameters(self, protocol)
         # adjust to from diameter to radius
         protParams['value'] = protParams['value'] / 2
-        
-        return protParams 
-    
+
+        return protParams
+
     def setVar(self, form, label, value):
         # adjust again from radius to diameter
         form.setVar(label, value * 2)
 
-        
+# We need this specific wizard for the sort protocol because
+# this protocol have a particular way to grab the input images
+class RelionSortMaskWizard(RelionPartMaskDiameterWizard):
+    _targets = [(ProtRelionSortParticles, ['maskDiameterA'])]
+
+    def _getProvider(self, protocol):
+        if protocol.isInputClasses():
+            images = [cls.clone()
+                      for cls in protocol.inputSet.get().iterRepresentatives()]
+        else:
+            images = self._getParticles(protocol._allParticles(iterate=True))
+        return ListTreeProvider(images)
+
+    def _getProtocolImages(self, protocol):
+        return None
+        #return protocol._allParticles(iterate=True)
+
+
 #===============================================================================
 # FILTER
 #===============================================================================
@@ -189,8 +199,8 @@ class RelionAutopickParams(EmWizard):
         
         
         args = {
-          "picker" : os.path.join(os.environ['SCIPION_HOME'],  "scipion relion_autopick"),
-          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
+          "picker" : "%s relion_autopick" % pw.getScipionScript(),
+          "convert" : pw.join('apps', 'pw_convert.py'),
           'coordsDir':coordsDir,
           'micsSqlite': micSet.getFileName(),
           "diameter": autopickFomProt.particleDiameter,

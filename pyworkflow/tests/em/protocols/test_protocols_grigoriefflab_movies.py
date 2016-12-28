@@ -43,7 +43,7 @@ class TestMoviesBase(BaseTest):
     @classmethod
     def runImportMovie(cls, pattern, objLabel, samplingRate, voltage,
                        scannedPixelSize, magnification, sphericalAberration):
-        """ Run an Import micrograph protocol. """
+        """ Run an Import movies protocol. """
         # We have two options: pass the SamplingRate or
         # the ScannedPixelSize + microscope magnification
         kwargs = {
@@ -52,7 +52,8 @@ class TestMoviesBase(BaseTest):
             'magnification': magnification,
             'voltage': voltage,
             'sphericalAberration': sphericalAberration,
-            'amplitudContrast': 0.1
+            'amplitudeContrast': 0.1,
+            'dosePerFrame': 1.3
         }
 
         if samplingRate is not None:
@@ -103,8 +104,11 @@ class TestMoviesBase(BaseTest):
     def runBasicTests(self, ProtocolClass):
         # Run some basic tests for both Unblur and Summovie
 
-        # Expected dimensions
+        # Expected dimensions of imported movies
         dims = [(4096, 4096, 7), (4096, 4096, 7), (1950, 1950, 16)]
+
+        # Expected dimensions of imported movies
+        dims2 = [(4096, 4096, 5), (4096, 4096, 5), (1950, 1950, 16)]
 
         # Launch unblur for 3 different set of movies
         for i, protImport in enumerate([self.runImportMovie1(),
@@ -114,14 +118,16 @@ class TestMoviesBase(BaseTest):
             self.assertIsNotNone(inputMovies)
             self.assertEqual(dims[i], inputMovies.getDim())
 
-            protUnblur = self.newProtocol(ProtocolClass,
-                                          objLabel=ProtocolClass._label + str(i),
-                                          alignFrameRange=-1,
-                                          doApplyDoseFilter=True,
-                                          exposurePerFrame=1.3)
-            protUnblur.inputMovies.set(inputMovies)
-            self.launchProtocol(protUnblur)
-            outputMics = getattr(protUnblur, 'outputMicrographs', None)
+            prot = self.newProtocol(ProtocolClass,
+                                    objLabel=ProtocolClass._label + str(i),
+                                    alignFrame0=2,
+                                    alignFrameN=6,
+                                    sumFrame0=2,
+                                    sumFrameN=6,
+                                    doApplyDoseFilter=True)
+            prot.inputMovies.set(inputMovies)
+            self.launchProtocol(prot)
+            outputMics = getattr(prot, 'outputMicrographs', None)
             self.assertIsNotNone(outputMics)
             self.assertEqual(protImport.outputMovies.getSize(),
                              outputMics.getSize())

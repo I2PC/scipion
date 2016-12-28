@@ -27,12 +27,15 @@
 This module implement the wrappers aroung Xmipp ML2D protocol
 visualization program.
 """
+
+import os
+
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.em import *
 from pyworkflow.protocol.params import LabelParam
 from protocol_ml2d import XmippProtML2D
-from convert import readSetOfClasses2D
-import numpy as np
+import pyworkflow.em as em
+import pyworkflow.em.showj as showj
+from pyworkflow.protocol.params import EnumParam, StringParam
 
 ITER_LAST = 0
 ITER_SEL = 1
@@ -47,19 +50,19 @@ class XmippML2DViewer(ProtocolViewer):
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _label = 'viewer ml2d'
-    _plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror'] 
+    _plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror']
     
     def _defineParams(self, form):
         form.addSection(label='Visualization')
 
         group = form.addGroup('Overall results')
         group.addParam('classesToShow', EnumParam, choices=ITER_CHOICES,
-                      default=ITER_LAST, display=EnumParam.DISPLAY_LIST,
+                      default=ITER_LAST, display=EnumParam.DISPLAY_HLIST,
                       label="Visualize 2D classes from iter",
                       help="Select from which iteration do you want to visualize classes")
         group.addParam('iterSelection', StringParam, condition='classesToShow==%d' % ITER_SEL,
                       label="Iter selection",
-                      help="Select several iterations such as: 1,3,4 or 3-5 ")        
+                      help="Select several iterations such as: 1,3,4 or 3-5 ")
         group.addParam('doShowPlots', LabelParam,
                        label="Show all plots per iteration?",
                       help='Visualize several plots.')
@@ -67,16 +70,16 @@ class XmippML2DViewer(ProtocolViewer):
         group = form.addGroup('Iteration plots')
         group.addParam('doShowLL', LabelParam,
                        label="Show Log-Likehood over iterations?",
-                       help='The Log-Likelihood value should increase.')      
+                       help='The Log-Likelihood value should increase.')
         group.addParam('doShowPmax', LabelParam,
-                       label="Show maximum model probability?", 
+                       label="Show maximum model probability?",
                        help='Show the maximum probability for a model, \n'
-                            'this should tend to be a deltha function.')      
+                            'this should tend to be a deltha function.')
         group.addParam('doShowSignalChange', LabelParam,
-                       label="Show plot for signal change?", 
-                       help='Should approach to zero when convergence.')      
+                       label="Show plot for signal change?",
+                       help='Should approach to zero when convergence.')
         group.addParam('doShowMirror', LabelParam,
-                       label="Show mirror fraction for last iteration?", 
+                       label="Show mirror fraction for last iteration?",
                        help='he the mirror fraction of each class in last iteration.')
         
     
@@ -93,46 +96,33 @@ class XmippML2DViewer(ProtocolViewer):
         
     def _viewPlot(self, paramName=None):
         return createPlots(self.protocol, [paramName])
-        
-    def _getClassesSqlite(self, fnXmd, it):
-        """ Return the sqlite file given the xmd of classes. """
-        fnSqlite = join(dirname(fnXmd), 'classes_it%03d.sqlite' % it)
-
-        
-        if not exists(fnSqlite): # Create the sqlite if not exists
-            classes2DSet = SetOfClasses2D(filename=fnSqlite)
-            classes2DSet.setImages(self.protocol.inputParticles.get())
-            readSetOfClasses2D(classes2DSet, fnXmd)
-            classes2DSet.write()
-        
-        return fnSqlite
-        
+            
     def _viewIterRefs(self, e=None):
+        self.protocol._defineFileNames() # Load filename templates
+        viewFinalClasses = False
+        
         if self.classesToShow == ITER_LAST:
+            if os.path.exists(self.protocol._getFileName("final_classes")):
+                viewFinalClasses = True
             iterations = [self.protocol._lastIteration()]
         else:
             iterations = self._getListFromRangeString(self.iterSelection.get())
         
         views = []
-        errors = []
         
         for it in iterations:
-            fn = self.protocol._getIterClasses(it)
-            if exists(fn):
-                # Create a classes sqlite from the classes.xmd
-                fnSqlite = self._getClassesSqlite(fn, it)
-                #views.append(DataView('classes@' + fn))
-                views.append(ClassesView(self.getProject(),
-                                        self.protocol.strId(), fnSqlite, 
-                                        self.protocol.inputParticles.get().strId()))
+            if viewFinalClasses:
+                fn = self.protocol._getFileName("final_classes")
             else:
-                errors.append("Iteration file '%s' doesn't exist." % fn)
-             
-        self.errorList(errors, views)   
+                if it <= self.protocol._lastIteration():
+                    fn = self.protocol._getIterClasses(it)
+            
+            views.append(em.ClassesView(self.getProject(),
+                                    self.protocol.strId(), fn,
+                                    self.protocol.inputParticles.get().strId()))
+        return views
 
-        return views 
 
-        
 def createPlots(protML, selectedPlots):
     ''' Launch some plot for an ML2D protocol run '''
     from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter

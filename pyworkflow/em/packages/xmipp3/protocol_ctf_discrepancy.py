@@ -31,11 +31,12 @@ from itertools import izip
 from pyworkflow.utils.path import cleanPath, removeBaseExt
 from pyworkflow.object import Set, Float, String, Object
 import pyworkflow.protocol.params as params
-
-from pyworkflow.em.metadata import Row, MetaData
 import pyworkflow.em as em
+from pyworkflow.em.metadata import Row, MetaData
+
 import convert 
 import xmipp
+
 
 
 class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
@@ -54,140 +55,83 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
     def _defineParams(self, form):
         form.addSection(label='Input')
         # Read N ctfs estimations
-        form.addParam('inputCTFs', params.MultiPointerParam, pointerClass='SetOfCTF',
-                      label="input CTFs",
-                      help='Select the first set of CTFs to compare')        
-
-        form.addParallelSection(threads=4, mpi=0)       
+        form.addParam('inputCTF1', params.PointerParam, pointerClass='SetOfCTF',
+                      label="Reference CTF",
+                      help='Reference CTF in comparison')
+        form.addParam('inputCTF2', params.PointerParam, pointerClass='SetOfCTF',
+                      label="target CTF",
+                      help='CTF to be compared with reference CTF')
+        form.addParallelSection(threads=0, mpi=0)
         
 #--------------------------- INSERT steps functions --------------------------------------------  
                                 
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
-        self.setOfCTF = self.inputCTFs[0].get()
-        #self.setOfCTF2 = self.inputCTFs[1].get()
-        self.methodNames = self._loadMethods()
-        
         deps = [] # Store all steps ids, final step createOutput depends on all of them
         # For each ctf pair insert the steps to process it
         # check same size, same micrographs
-        for method1, method2, ctf in self._iterMethods():
-            stepId = self._insertFunctionStep('_computeCTFDiscrepancyStep' 
-                                              , ctf.getObjId()
-                                              , method1
-                                              , method2
+        stepId = self._insertFunctionStep('_computeCTFDiscrepancyStep'
                                               ,prerequisites=[]) # Make estimation steps independent between them
-            deps.append(stepId)
+        deps.append(stepId)
         # Insert step to create output objects       
         self._insertFunctionStep('createAnalyzeFilesStep', prerequisites=deps)
     
-    def _computeCTFDiscrepancyStep(self, ctfId, method1, method2):
-        #TODO must be same micrographs
-        #convert to md
-        mdList = [MetaData(), MetaData()]
-        ctfList = [self.inputCTFs[method1].get()[ctfId], self.inputCTFs[method2].get()[ctfId]]
+    def _computeCTFDiscrepancyStep(self):
+        self._computeCTFDiscrepancy(self.inputCTF1.get(), self.inputCTF2.get())
+
+    def _ctfToMd(self, ctf, ctfMd):
+        """ Write the proper metadata for Xmipp from a given CTF """
+        ctfMd.clear()
         ctfRow = Row()
-        
-        for md, ctf in izip(mdList, ctfList):
-            objId = md.addObject()
-            convert.ctfModelToRow(ctf, ctfRow)
-            convert.micrographToRow(ctf.getMicrograph(), ctfRow, alignType=convert.ALIGN_NONE)
-            ctfRow.writeToMd(md, objId)
-        self._freqResol[(method1, method2, ctfId)] = xmipp.errorMaxFreqCTFs2D(*mdList)
+        convert.ctfModelToRow(ctf, ctfRow)
+        convert.micrographToRow(ctf.getMicrograph(), ctfRow, alignType=convert.ALIGN_NONE)
+        ctfRow.addToMd(ctfMd)
+
+    def _computeCTFDiscrepancy(self, method1, method2):
+        #TODO must be same micrographs
+        #move to a single step, each step takes 5 sec while the function takes 0.03 sec
+        #convert to md
+        md1 = MetaData()
+        md2 = MetaData()
+
+        for ctf1 in method1:#reference CTF
+            ctfId = ctf1.getObjId()
+            self._ctfToMd(ctf1, md1)
+            ctf2 = method2[ctfId]#.target
+            self._ctfToMd(ctf2, md2)
+            key = ctfId
+            self._freqResol[key] = xmipp.errorMaxFreqCTFs2D(md1, md2)
 
     def createAnalyzeFilesStep(self):
-        """ This method will create two sqlite files that 
-        will be used in by the viewer in the 'Analyze result' action.
-        ctfSet: a table with average ctf values between all methods.
-        ctfSetPair: a table where each row is a pair between two methods
+        """ This method will add a column with a relative consistence table
         """
-        ctfSetFn, ctfSetPairFn = self._getAnalyzeFiles()
-        
-        cleanPath(ctfSetFn, ctfSetPairFn)
-        
-        ctfSet     = Set(filename=ctfSetFn)
-        ctfSetPair = em.SetOfCTF(filename=ctfSetPairFn)
-        #import pdb
-        #pdb.set_trace()
-        minimumResolution   = {}
-        maximumResolution   = {}
-        averageResolution   = {}
-        averageDefocusU     = {}
-        averageDefocusV     = {}
-        averageDefocusAngle = {}
-        
-        for ctf in self.setOfCTF:
-            micFileName = self._getMicName(ctf)
-            minimumResolution[micFileName]   = 0.
-            maximumResolution[micFileName]   = 0.
-            averageResolution[micFileName]   = 0.
-            averageDefocusU[micFileName]     = 0.
-            averageDefocusV[micFileName]     = 0.
-            averageDefocusAngle[micFileName] = 0.
-        
-        for method1, method2, ctfId in self._freqResol:
-            ctf = em.CTFModel()
-            ctf1 = self.inputCTFs[method1].get()[ctfId]
-            ctf2 = self.inputCTFs[method2].get()[ctfId]
-            ctf.setDefocusU(    (ctf1.getDefocusU() + ctf2.getDefocusU())/2. )
-            ctf.setDefocusV(    (ctf1.getDefocusV() + ctf2.getDefocusV())/2. )
-            ctf.setDefocusAngle((ctf1.getDefocusAngle() + ctf2.getDefocusAngle())/2. )
-            ctf.setMicrograph(   ctf1.getMicrograph())
 
-            #Clean objId since we can have ctf from the same micrograph
-            # and by default it is set to micrograph id
-            ctf.cleanObjId()
-            resolution = self._freqResol[(method1, method2, ctfId)]
-            ctf.resolution = Float(resolution)
-            ctf.method1 = String(self.methodNames[method1])
-            ctf.method2 = String(self.methodNames[method2])
-            # save the values of defocus for each micrograph in a list
-            ctfSetPair.append(ctf)
+        ctfs = self._createSetOfCTF()
+        inputCTF1= self.inputCTF1.get()
+        ctfs.copyInfo(inputCTF1)
+        ctfs.setMicrographs(inputCTF1.getMicrographs())
+        for ctf in inputCTF1:
             
-            micFileName = self._getMicName(ctf1)
-            
-            if (not micFileName in minimumResolution or
-                not micFileName in maximumResolution):
-                pass
-            
-            
-            if resolution < minimumResolution[micFileName]:
-                minimumResolution[micFileName] = resolution
-            
-            if resolution > maximumResolution[micFileName]:
-                maximumResolution[micFileName] = resolution
-            
-            averageResolution[micFileName]    += resolution
-            averageDefocusU[micFileName]      += ctf.getDefocusU()
-            averageDefocusV[micFileName]      += ctf.getDefocusV()
-            averageDefocusAngle[micFileName]  += ctf.getDefocusAngle()
-            
-        size = float(len(self.setOfCTF))
-
-        for ctf in self.setOfCTF:
-            ctfAvg = Object()
-            micFileName = self._getMicName(ctf)
-            ctfAvg._micObj = ctf.getMicrograph()
-            ctfAvg.averageDefocusU     = Float(averageDefocusU[micFileName] / size)
-            ctfAvg.averageDefocusV     = Float(averageDefocusV[micFileName]     / size)
-            ctfAvg.averageDefocusAngle = Float(averageDefocusAngle[micFileName] / size)
-            ctfAvg.averageResolution   = Float(averageResolution[micFileName]   / size)
-            ctfSet.append(ctfAvg)
-            
-        ctfSetPair.write()
-        ctfSet.write()
+            ctfAux = ctf.clone()
+            ctfId = ctf.getObjId()
+            key = ctfId
+            resolution = self._freqResol[key]
+            ctfAux._discrepancy_resolution  = Float(resolution)
+            ctfAux._discrepancy_astigmatism = Float(ctf.getDefocusU() - ctf.getDefocusV())
+            ctfs.append(ctfAux)
+        self._defineOutputs(outputCTF=ctfs)
+        self._defineTransformRelation(self.inputCTF1.get(), ctfs)
 
     def _citations(self):
         return ['Marabini2014a']
     
     def _summary(self):
         message = []
-        for i, ctf in enumerate(self.inputCTFs):
-            protocol = self.getMapper().getParent(ctf.get())
-            message.append("Method %d %s" % (i+1, protocol.getClassLabel()))
-        #TODO size de la cosa calculada
-        ####message.append("Comparered <%d> micrograph" % (size,'micrographs'))
+        for i, ctfs in enumerate([self.inputCTF1, self.inputCTF2]):
+            protocol = self.getMapper().getParent(ctfs.get())
+            message.append("Method %d: %s" % (i+1, protocol.getClassLabel()))
+
         return message    
     
     def _methods(self):
@@ -202,35 +146,9 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         errors = [ ] 
         # Add some errors if input is not valid
         return errors
-    
-    def _iterMethods(self):
-        for method1 in self.methodNames:
-            for method2 in self.methodNames:
-                if method1 < method2:
-                    for ctf in self.setOfCTF:
-                        yield method1, method2, ctf
-                        
-    def _loadMethods(self):
-        """ Load the methods names for the protocols
-        that produced the selected input CTFs.
-        """
-        methodNames = collections.OrderedDict()
-        
-        for i, ctf in enumerate(self.inputCTFs):
-            protocol = self.getMapper().getParent(ctf.get())
-            methodNames[i] = "(%d) %s " % (i+1, protocol.getClassLabel())
 
-        return methodNames
+    def _stepsCheck(self):
+        # Just to avoid the stream checking inherited from ProtCTFMicrographs
+        pass
     
-    def _getMicName(self, ctf):
-        """ Get the micName to be used as Key from
-        a given ctf object. 
-        """
-        return removeBaseExt(ctf.getMicrograph().getFileName())
-    
-    def _getAnalyzeFiles(self):
-        """ Return the name of the analyze result files. """
-        return (self._getExtraPath('ctf_set.sqlite'),
-                self._getExtraPath('ctf_set_pairs.sqlite'))
-        
         

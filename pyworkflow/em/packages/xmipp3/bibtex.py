@@ -425,6 +425,17 @@ eprint = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.full.pdf+h
 journal = {Bioinformatics} 
 }
 
+@article{Vilas2016,
+  title                    = "Fast and automatic identification of particle tilt pairs based on Delaunay triangulation.",
+  author                   = "Vilas, J. L. and Navas, J. and Gomez-Blanco, J. and de la Rosa-Trevin, J. M. and Melero, and Peschiera, I. and Ferlenghi. I and Cuenca, J. and Marabini, R. and Carazo, J. M. and Vargas, J. and Sorzano, C. O. S.",
+  journal                  = "Journal of Structural Biology",
+  year                     = "2016",
+  pages                    = "525-533",
+  volume                   = "196",
+  doi                      = "http://dx.doi.org/10.1016/j.jsb.2016.10.007",
+  url                      = "http://www.sciencedirect.com/science/article/pii/S104784771630212X"
+}
+
 @article{zhao2013,
 author = {Zhao, Zhizhen and Singer, Amit},
 title = {Fourier-Bessel rotational invariant eigenimages},
@@ -495,6 +506,36 @@ doi = "",
 url = "",
 author = "Marabini et al.",
 keywords = "Contrast transfer function"
+}
+
+@article{B.Heymann2015,
+title = {Validation of 3D of 3DEM Reconstructions: The phantom in the noise},
+journal = {AIMS Biophys},
+volume = {2},
+number = {1},
+pages = {21-35},
+year = {2015},
+note = "",
+issn = "",
+doi = {10.3934/biophy.2015.1.21},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4440490/},
+author = "B. Heymann",
+keywords = ""
+}
+
+@article{C.O.S.Sorzano2015,
+title = "StructMap:... ",
+journal = "",
+volume = "",
+number = "",
+pages = "",
+year = "",
+note = "submitted",
+issn = "",
+doi = "",
+url = "",
+author = "C.O.S.Sorzano et al.",
+keywords = ""
 }
 
 @article{Sorzano2015b,
