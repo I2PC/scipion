@@ -99,6 +99,8 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         self.runJob("xmipp_volume_to_pseudoatoms", params % locals())
         for suffix in ["_approximation.vol", "_distance.hist"]:
             moveFile(self._getPath(pseudoatoms+suffix), self._getExtraPath(pseudoatoms+suffix))
+        self.runJob("xmipp_image_convert","-i %s_approximation.vol -o %s_approximation.mrc -t vol"%(self._getExtraPath(pseudoatoms),self._getExtraPath(pseudoatoms)))
+        self.runJob("xmipp_image_header","-i %s_approximation.mrc --sampling_rate %f"%(self._getExtraPath(pseudoatoms),sampling))
         cleanPattern(self._getPath(pseudoatoms+'_*'))
         
     def createChimeraScript(self, volume, pdb):

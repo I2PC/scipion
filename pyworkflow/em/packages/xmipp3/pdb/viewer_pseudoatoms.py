@@ -41,5 +41,5 @@ class XmippPseudoAtomsViewer(XmippViewer):
     
     def _visualize(self, obj, **args):
         self._views.append(ChimeraView(obj.outputPdb._chimeraScript))
-        self._views.append(DataView(obj._getExtraPath('pseudoatoms_approximation.vol')))
+        self._views.append(DataView(obj._getExtraPath('pseudoatoms_approximation.mrc')))
 
