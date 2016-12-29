@@ -52,6 +52,7 @@ from viewer_mltomo import XmippMLTomoViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
+from viewer_resolution_monogenic_signal import XmippMonoResViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
@@ -104,6 +105,7 @@ from protocol_ransac import XmippProtRansac
 from protocol_reconstruct_fourier import XmippProtReconstructFourier
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
 from protocol_resolution3d import XmippProtResolution3D
+from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra 
 from protocol_rotational_symmetry import XmippProtRotationalSymmetry 
 from protocol_screen_particles import XmippProtScreenParticles

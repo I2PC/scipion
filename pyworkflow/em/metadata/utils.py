@@ -142,10 +142,13 @@ class SetMdIterator():
         not present in the metadata.
         """
         row = self.lastRow
-        if row.hasLabel(MDL_ENABLED):
-            enabled = row.getValue(MDL_ENABLED)
-        else:
-            enabled = 1
+        
+        if row is not None:
+            if row.hasLabel(MDL_ENABLED):
+                enabled = row.getValue(MDL_ENABLED)
+            else:
+                enabled = 1
+
         if (row is None or
             item.getObjId() != row.getValue(self.keyLabel)):
             item._appendItem = False

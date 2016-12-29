@@ -170,6 +170,34 @@ TEST_F( FiltersTest, alignImages)
 
     fileTemp.deleteFile();
 }
+TEST_F( FiltersTest, regionGrowing3DEqualValue)
+{
+    Image<double> img;
+    MultidimArray<int> img_out;
+	img().initZeros(50,50,50);
+
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
+	{
+		if ((i>24))
+			A3D_ELEM(img(),k,i,j) = i+j;
+	}
+
+    double result;
+    int Nzeros=0;
+    regionGrowing3DEqualValue(img(), img_out, 0);
+
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(img_out)
+	{
+		if (A3D_ELEM(img_out,k,i,j) > 0)
+			++Nzeros;
+	}
+
+    if (Nzeros == int (25*50*50))
+    	result = 1.;
+
+    EXPECT_DOUBLE_EQ(result,1.);
+
+}
 GTEST_API_ int main(int argc, char **argv)
 {
     testing::InitGoogleTest(&argc, argv);
