@@ -56,7 +56,7 @@ class TestMonoResBase(BaseTest):
     def runCreateMask(cls, pattern, thr):
         """ Create a volume mask. """
         cls.msk = cls.newProtocol(XmippProtCreateMask3D,
-                                  inputVolumes=pattern,
+                                  inputVolume=pattern,
                                   volumeOperation=0,  # OPERATION_THRESHOLD,
                                   threshold=thr,
                                   doSmall=False,
