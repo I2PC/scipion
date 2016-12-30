@@ -80,7 +80,7 @@ class TestMonoRes(TestMonoResBase):
         cls.protImportVol = cls.runImportVolumes(cls.map3D, 3.54)
         cls.protImportHalf1 = cls.runImportVolumes(cls.half1, 3.54)
         cls.protImportHalf2 = cls.runImportVolumes(cls.half2, 3.54)
-        cls.protCreateMask = cls.runCreateMask(cls.protImportVol.outputVolume, 0.15)
+        cls.protCreateMask = cls.runCreateMask(cls.protImportVol.outputVolume, 0.02)
 
     def testMonoRes1(self):
         MonoRes = self.newProtocol(XmippProtMonoRes,
