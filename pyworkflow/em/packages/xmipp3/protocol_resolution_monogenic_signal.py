@@ -29,8 +29,10 @@
 from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from convert import readSetOfVolumes
+from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt, removeExt
 from os.path import abspath
+import numpy as np
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
@@ -213,6 +215,14 @@ class XmippProtMonoRes(ProtRefine3D):
         fnRoot = "extra/"
         scriptFile = self._getPath('Chimera_resolution.cmd')
         fhCmd = open(scriptFile, 'w')
+        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        img = ImageHandler().read(imageFile)
+        imgData = img.getData()
+        min_Res = round(np.amin(imgData)*100)/100
+        max_Res = round(np.amax(imgData)*100)/100
+        inter = round((max_Res - min_Res)*20)/100
+        print inter
+        
         if self.halfVolumes.get() is True:
             #fhCmd.write("open %s\n" % (fnRoot+FN_MEAN_VOL)) #Perhaps to check the use of mean volume is useful
             fnbase = removeExt(self.inputVolume.get().getFileName())
@@ -232,6 +242,11 @@ class XmippProtMonoRes(ProtRefine3D):
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
         fhCmd.write("scolor #0 volume #1 cmap rainbow reverseColors True\n")
+        fhCmd.write("colorkey 0,0 0.2,0.6 %s blue %s cyan %s green %s yellow %s red\n" %(min_Res, 
+                                                                                         min_Res+inter, 
+                                                                                         min_Res+2*inter,
+                                                                                         min_Res+3*inter,
+                                                                                         max_Res))       
         fhCmd.close()
 
 
