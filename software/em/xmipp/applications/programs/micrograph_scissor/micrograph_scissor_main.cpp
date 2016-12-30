@@ -56,6 +56,8 @@ protected:
         addParamsLine("  [--log]                             : Take logarithm (compute transmitance)");
         addParamsLine("  [--appendToStack]                   : The output stack is deleted.");
         addParamsLine("                                      : Use this option to add the new images to the stack");
+        addParamsLine("  [--fillBorders]                     : If the box is outside the micrograph, fill the missing pixels");
+        addParamsLine("                                      : instead of setting the whole image to blank");
 
         addParamsLine(" == Options for tilt pairs == ");
         addParamsLine("  [-t <input_tilted_micrograph>]      : From which the   tilted images will be cutted");
@@ -82,6 +84,7 @@ protected:
     bool     compute_inverse ;
     double   down_transform;
     bool     rmStack;
+    bool     fillBorders;
 
     void readParams()
     {
@@ -112,6 +115,7 @@ protected:
             fn_tilt_pos    = getParam("--tiltPos");
         }
         down_transform = getDoubleParam("--downsampling");
+        fillBorders = checkParam("--fillBorders");
     }
 public:
     void run()
@@ -135,7 +139,7 @@ public:
               ctfparam.getRow(ctfRow, ctfparam.firstObject());
               m.set_ctfparams(ctfRow);
             }
-            m.produce_all_images(0, -1, fn_out, fn_orig, 0.,0.,0., rmStack);
+            m.produce_all_images(0, -1, fn_out, fn_orig, 0.,0.,0., rmStack, fillBorders);
         }
         else
         {
