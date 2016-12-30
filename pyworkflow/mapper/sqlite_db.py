@@ -23,6 +23,8 @@
 # *  e-mail address 'jmdelarosa@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
 """
 This module contains some sqlite basic tools to handle Databases.
 """
@@ -76,15 +78,12 @@ class SqliteDb():
         
     def _debugExecute(self, *args):
         try:
-            print "COMMAND: ", args[0]
-            print "ARGUMENTS: ", args[1:]
+            print("COMMAND: ", args[0], self._dbName)
+            print("ARGUMENTS: ", args[1:])
             return self.cursor.execute(*args)
-        except Exception, ex:
-            print ">>>> FAILED cursor.execute on db: '%s'" % self._dbName
+        except Exception as ex:
+            print(">>>> FAILED cursor.execute on db: '%s'" % self._dbName)
             raise ex
-
-        
-        #return self.cursor.fetchone()
 
     def _iterResults(self):
         row = self.cursor.fetchone()

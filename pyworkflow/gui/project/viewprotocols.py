@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 from __future__ import print_function
@@ -137,8 +137,8 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
                 tree.item(item, image=self.getImage('class_obj.gif'))
 
                 for k, v in emProtocolsDict.iteritems():
-                    if (not k in subclassedDict and
-                            not v is prot and issubclass(v, prot)):
+                    if (k not in subclassedDict and
+                         v is not prot and issubclass(v, prot)):
                         key = '%s.%s' % (item, k)
                         t = v.getClassLabel()
                         tree.insert(item, 'end', key, text=t, tags=('protocol'))
@@ -187,13 +187,13 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
 
     def getObjectActions(self, obj):
 
-        def addAction(a):
-            if a:
-                text = a
-                action = a
-                a = (text, lambda: self.actionFunc(action),
-                     ActionIcons.get(action, None))
-            return a
+        def addAction(action):
+            if action:
+                text = action
+                action = action
+                action = (text, lambda: self.actionFunc(action),
+                          ActionIcons.get(action, None))
+            return action
 
         actions = [addAction(a)
                    for a, cond in self.getActionsFromSelection() if cond]
@@ -233,14 +233,16 @@ class StepsTreeProvider(pwgui.tree.TreeProvider):
     def getObjects(self):
         return self._stepsList
 
-    def getObjectInfo(self, obj):
+    @staticmethod
+    def getObjectInfo(obj):
         info = {'key': obj._index,
                 'values': (str(obj), pwutils.prettyDelta(obj.getElapsedTime()),
                            obj.getClassName())}
 
         return info
 
-    def getObjectPreview(self, obj):
+    @staticmethod
+    def getObjectPreview(obj):
         args = pickle.loads(obj.argsStr.get())
         msg = "*Prerequisites*: %s \n" % str(obj._prerequisites)
         msg += "*Arguments*: " + '\n  '.join([str(a) for a in args])
@@ -273,6 +275,7 @@ class StepsWindow(pwgui.browser.BrowserWindow):
                                               showPreviewTop=False)
         self.setBrowser(browser, row=1, column=0)
 
+    # noinspection PyUnusedLocal
     def _showTree(self, e=None):
         g = self._protocol.getStepsGraph()
         w = pwgui.Window("Protocol steps", self, minsize=(800, 600))
@@ -329,7 +332,7 @@ class SearchProtocolWindow(pwgui.Window):
         protList = []
 
         for key, prot in emProtocolsDict.iteritems():
-            if isAFinalProtocol(prot,key):
+            if isAFinalProtocol(prot, key):
                 label = prot.getClassLabel().lower()
                 if keyword in label:
                     protList.append((key, label))
@@ -729,9 +732,8 @@ class ProtocolsView(tk.Frame):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
         for protId in list(self._selection):
-            try:
-                self.project.getProtocol(protId)
-            except Exception:
+
+            if not self.project.doesProtocolExists(protId):
                 self._selection.remove(protId)
 
     # noinspection PyUnusedLocal
@@ -942,7 +944,7 @@ class ProtocolsView(tk.Frame):
         t.itemClick = self._runTreeItemClick
 
         return t
-   
+
     def updateRunsTree(self, refresh=False):
         self.provider.setRefresh(refresh)
         self.runsTree.update()
@@ -1305,7 +1307,7 @@ class ProtocolsView(tk.Frame):
 
         # If click is in a empty area....start panning
         if item is None:
-            print "Click on empty area"
+            print("Click on empty area")
             return
 
         self.runsGraphCanvas.focus_set()
@@ -1773,7 +1775,7 @@ class ProtocolsView(tk.Frame):
         if action == ACTION_TREE:
             self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
-                self.refreshRuns(checkPids=True)
+            self.refreshRuns(checkPids=True)
 
         elif action == ACTION_SWITCH_VIEW:
             self.switchRunsView()

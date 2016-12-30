@@ -841,6 +841,9 @@ class Project(object):
 
         return protocol
 
+    def doesProtocolExists(self, protId):
+        return self.mapper.exists(protId)
+
     def getProtocolsByClass(self, className):
         return self.mapper.selectByClass(className)
 

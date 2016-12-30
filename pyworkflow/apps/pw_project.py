@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -30,6 +30,8 @@ Launch main project window
 
 import sys
 import os
+
+import time
 
 from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
@@ -56,6 +58,7 @@ if __name__ == '__main__':
             
         projPath = manager.getProjectPath(projName)
         try:
+            time.sleep(10)
             projWindow = ProjectWindow(projPath)
         except Exception as e:
             sys.exit(e)

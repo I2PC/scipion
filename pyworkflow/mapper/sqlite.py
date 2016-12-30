@@ -25,11 +25,10 @@
 # **************************************************************************
 
 
+from __future__ import print_function
 from pyworkflow.utils.path import replaceExt, joinExt
 from mapper import Mapper
 from sqlite_db import SqliteDb
-
-
 
 ID = 'id'
 PARENT_ID = 'parent_id'
@@ -44,7 +43,7 @@ class SqliteMapper(Mapper):
         self.__initUpdateDict()
         try:
             self.db = SqliteObjectsDb(dbName)
-        except Exception, ex:
+        except Exception as ex:
             raise Exception('Error creating SqliteMapper, dbName: %s\n error: %s' % (dbName, ex))
     
     def close(self):
@@ -71,8 +70,8 @@ class SqliteMapper(Mapper):
         
     def __insert(self, obj, namePrefix=None):
         if not hasattr(obj, '_objDoStore'):
-            print "MAPPER: object '%s' doesn't seem to be an Object subclass," % obj
-            print "       it does not have attribute '_objDoStore'. Insert skipped."
+            print("MAPPER: object '%s' doesn't seem to be an Object subclass," % obj)
+            print("       it does not have attribute '_objDoStore'. Insert skipped.")
             return 
         obj._objId = self.db.insertObject(obj._objName, obj.getClassName(),
                                           self.__getObjectValue(obj), obj._objParentId,
@@ -91,8 +90,8 @@ class SqliteMapper(Mapper):
         
     def insertChild(self, obj, key, attr, namePrefix=None):
         if not hasattr(attr, '_objDoStore'):
-            print "MAPPER: object '%s' doesn't seem to be an Object subclass," % attr
-            print "       it does not have attribute '_objDoStore'. Insert skipped."
+            print("MAPPER: object '%s' doesn't seem to be an Object subclass," % attr)
+            print("       it does not have attribute '_objDoStore'. Insert skipped.")
             return 
 
         if namePrefix is None:
@@ -130,11 +129,11 @@ class SqliteMapper(Mapper):
         return obj.strId()
     
     def __printObj(self, obj):
-        print "obj._objId", obj._objId
-        print "obj._objParentId", obj._objParentId
-        print "obj._objName", obj._objName
-        print "obj.getObjValue()", obj.getObjValue()
-    
+        print("obj._objId", obj._objId)
+        print("obj._objParentId", obj._objParentId)
+        print("obj._objName", obj._objName)
+        print("obj.getObjValue()", obj.getObjValue())
+
     def updateTo(self, obj, level=1):
         self.__initUpdateDict()
         self.__updateTo(obj, level)
@@ -187,7 +186,8 @@ class SqliteMapper(Mapper):
                 if obj is not None:
                     self.fillObject(obj, objRow)
         return obj
-    
+    def exists(self,objId):
+        return self.db.doesRowExist(objId)
     def getParent(self, obj):
         """ Retrieve the parent object of another. """
         return self.selectById(obj._objParentId)
@@ -268,7 +268,7 @@ class SqliteMapper(Mapper):
             # Get the parent, we should have it cached
             parentObj = self.objDict.get(parentId, None)
             if parentObj is None: # Something went wrong
-                print "WARNING: Parent object (id=%d) was not found, object: %s. Ignored." % (parentId, name)
+                print("WARNING: Parent object (id=%d) was not found, object: %s. Ignored." % (parentId, name))
                 return None
 
             childObj = getattr(parentObj, childName, None)
@@ -494,6 +494,7 @@ class SqliteObjectsDb(SqliteDb):
     
     SELECT_RELATION = "SELECT object_%s_id AS id FROM Relations WHERE name=? AND object_%s_id=?"
     SELECT_RELATIONS = "SELECT * FROM Relations WHERE "
+    EXISTS = "SELECT EXISTS(SELECT 1 FROM Objects WHERE %s=? LIMIT 1)"
     
     
     def selectCmd(self, whereStr, orderByStr=' ORDER BY id'):
@@ -567,12 +568,16 @@ class SqliteObjectsDb(SqliteDb):
     def insertObject(self, name, classname, value, parent_id, label, comment):
         """Execute command to insert a new object. Return the inserted object id"""
         try:
-            self.executeCommand("INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+            self.executeCommand(
+                'INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation)' +
+                ' VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\'))',
                                 (parent_id, name, classname, value, label, comment))
             return self.cursor.lastrowid
-        except Exception, ex:
-            print "insertObject: ERROR "
-            print "INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))", (parent_id, name, classname, value, label, comment)
+        except Exception as ex:
+            print("insertObject: ERROR")
+            print('INSERT INTO Objects (parent_id, name, classname, value, label, comment, creation)' +
+                ' VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\'))')
+            print((parent_id, name, classname, value, label, comment))
             raise ex
         
     def insertRelation(self, relName, parent_id, object_parent_id, object_child_id, 
@@ -595,6 +600,12 @@ class SqliteObjectsDb(SqliteDb):
         """Select an object give its id"""
         self.executeCommand(self.selectCmd(ID + "=?"), (objId,))
         return self.cursor.fetchone()
+
+    def doesRowExist(self, objId):
+        """Return True if a row with a given id exists"""
+        self.executeCommand(self.EXISTS % ID, (objId,))
+        one = self.cursor.fetchone()
+        return one[0] == 1
 
     def selectAllObjects(self):
         """Select all data at once"""
@@ -658,15 +669,13 @@ class SqliteObjectsDb(SqliteDb):
     def deleteMissingObjectsByAncestor(self, ancestor_namePrefix, idList):
         """Select all objects in the hierarchy of ancestor_id"""
         idStr = ','.join(str(i) for i in idList)
-        cmd = "%s name LIKE '%s.%%' AND id NOT IN (%s) " % (self.DELETE,
-                                                            ancestor_namePrefix,
-                                                            idStr)
+        cmd = "%s name LIKE '%s.%%' AND id NOT IN (%s) " % (self.DELETE, ancestor_namePrefix, idStr)
         self.executeCommand(cmd)
 
     def deleteAll(self):
         """ Delete all objects from the db. """
         self.executeCommand(self.DELETE + "1")
-        self.executeCommand(self.DELETE_SEQUENCE) # restart the count of ids
+        self.executeCommand(self.DELETE_SEQUENCE)  # restart the count of ids
         
     def selectRelationChilds(self, relName, object_parent_id):
         self.executeCommand(self.SELECT_RELATION % ('child', 'parent'), 
@@ -679,7 +688,7 @@ class SqliteObjectsDb(SqliteDb):
         return self._results()
     
     def selectRelationsByCreator(self, parent_id):
-        self.executeCommand(self.SELECT_RELATIONS + PARENT_ID +"=?", (parent_id,))
+        self.executeCommand(self.SELECT_RELATIONS + PARENT_ID + "=?", (parent_id,))
         return self._results()
      
     def selectRelationsByName(self, relationName):
@@ -701,8 +710,9 @@ class SqliteFlatMapper(Mapper):
             
             if not self.doCreateTables:
                 self.__loadObjDict()
-        except Exception, ex:
-            raise Exception('Error creating SqliteFlatMapper, dbName: %s, tablePrefix: %s\n error: %s' % (dbName, tablePrefix, ex))
+        except Exception as ex:
+            raise Exception('Error creating SqliteFlatMapper, dbName: %s, tablePrefix: %s\n error: %s' %
+                            (dbName, tablePrefix, ex))
     
     def commit(self):
         self.db.commit()
@@ -820,9 +830,9 @@ class SqliteFlatMapper(Mapper):
             obj.setObjCreation(self._getStrValue(objRow['creation']))
         except Exception:
             # THIS SHOULD NOT HAPPENS
-            print "WARNING: 'creation' column not found in object: %s" % obj.getObjId()
-            print "         db: %s" % self.db.getDbName()
-            print "         objRow: ", dict(objRow)
+            print("WARNING: 'creation' column not found in object: %s" % obj.getObjId())
+            print("         db: %s" % self.db.getDbName())
+            print("         objRow: ", dict(objRow))
         
         for c, attrName in self._objColumns:
             obj.setAttributeValue(attrName, objRow[c])
@@ -882,7 +892,6 @@ class SqliteFlatMapper(Mapper):
             results.append(values)
 
         return results
-        #convert row to dictionary
 
     def count(self):
         if self.doCreateTables:
@@ -911,6 +920,7 @@ class SqliteFlatMapper(Mapper):
         
 
 SELF = 'self'
+
 
 class SqliteFlatDb(SqliteDb):
     """Class to handle a Sqlite database.

@@ -131,7 +131,9 @@ class Mapper():
     def selectById(self, objId):
         """Return the object which id is objId"""
         pass
-    
+    def exists(self,objId):
+        """Return True if the id is in the database"""
+        pass
     def selectAll(self):
         """Return all object from storage"""
         pass
