@@ -47,7 +47,7 @@ class SolidAnglesViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         views = []
         renderLabels = '_representative._filename _reprojection._filename'
-        labels = 'id enabled %s _xmipp_angleRot _xmipp_angleTilt' % renderLabels
+        labels = 'id enabled %s _xmipp_angleRot _xmipp_angleTilt _xmipp_classCount' % renderLabels
 
         outputClasses = getattr(obj, 'outputClasses', None)
 

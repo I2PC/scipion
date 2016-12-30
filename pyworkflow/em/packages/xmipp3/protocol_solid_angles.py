@@ -260,6 +260,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
             mdClasses.setValue(xmipp.MDL_IMAGE, "%d@%s" %
                                (classNo, classesStk), newClassId)
             mdClasses.setValue(xmipp.MDL_IMAGE1, projRef, newClassId)
+            mdClasses.setValue(xmipp.MDL_CLASS_COUNT,localImagesMd.size(),newClassId)
 
     def classifyGroupsStep(self):
         # Create two metadatas, one for classes and another one for images
@@ -336,6 +337,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         classRow = findRow(self.mdClasses, xmipp.MDL_REF2, classId)
         setXmippAttributes(item, classRow, xmipp.MDL_ANGLE_ROT)
         setXmippAttributes(item, classRow, xmipp.MDL_ANGLE_TILT)
+        setXmippAttributes(item, classRow, xmipp.MDL_CLASS_COUNT)
 
         representative = item.getRepresentative()
         representative.setTransform(rowToAlignment(classRow, ALIGN_PROJ))
