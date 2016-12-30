@@ -192,8 +192,8 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('contGrayValues', BooleanParam, label="Optimize gray values?", default=False, condition='alignmentMethod==1',
                       help='Optimize gray values. Do not perform this unless the reconstructed volume is gray-compatible with the projections,'\
                       ' i.e., the volumes haven been produced from projections')
-        form.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=5, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED)
-        form.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=5, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
+        form.addParam('contMaxGrayScale', FloatParam, label="Max. gray scale variation", default=0.5, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED)
+        form.addParam('contMaxGrayShift', FloatParam, label="Max. gray shift variation", default=3, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
                                  help='As a factor of the image standard deviation')
         form.addParam('contDefocus', BooleanParam, label="Optimize defocus?", condition='alignmentMethod==1', default=False)
         form.addParam('contMaxDefocus', FloatParam, label="Max. defocus variation", default=200, condition='alignmentMethod==1', expertLevel=LEVEL_ADVANCED,
