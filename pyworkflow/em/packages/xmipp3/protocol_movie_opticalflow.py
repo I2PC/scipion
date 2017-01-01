@@ -74,10 +74,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
         
         group = form.addGroup('OF Parameters')
         group.addParam('winSize', params.IntParam, default=150,
+                        expertLevel=params.LEVEL_ADVANCED,
                         label="Window size",
                         help="Window size (shifts are assumed to be constant "
                              "within this window).")
         group.addParam('groupSize', params.IntParam, default=1,
+                        expertLevel=params.LEVEL_ADVANCED,
                         label="Group Size",
                         help="The number of frames in each group at the "
                              "last step")

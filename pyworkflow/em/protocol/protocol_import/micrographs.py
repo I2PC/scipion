@@ -29,7 +29,7 @@
 import os
 from os.path import exists, join, basename
 import re
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, time
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -306,33 +306,41 @@ class ProtImportMovies(ProtImportMicBase):
 
         form.addSection('Frames')
 
+        streamingConditioned = "dataStreaming"
+        framesCondition = streamingConditioned + " and inputIndividualFrames"
+
         form.addParam('inputIndividualFrames', params.BooleanParam,
                       default=False,
+                      condition=streamingConditioned,
                       label="Input individual frames?",
                       help="Select Yes if movies are acquired in individual "
                            "frame files. ")
 
         form.addParam('numberOfIndividualFrames', params.IntParam,
-                      condition="inputIndividualFrames",
+                      condition=framesCondition,
                       label='Number of frames',
                       help='Provide how many frames are per movie. ')
 
         form.addParam('stackFrames', params.BooleanParam,
-                      default=False, condition="inputIndividualFrames",
+                      default=False, condition=framesCondition,
                       label="Create movie stacks?",
                       help="Select Yes if you want to create a new stack for "
                            "each movies with its frames. ")
 
+        # This is not working so for now its hidden
         form.addParam('writeMoviesInProject', params.BooleanParam,
-                      default=False, condition="inputIndividualFrames and stackFrames",
+                      default=False, condition=framesCondition + " and stackFrames",
                       label="Write stacks in the project folder?",
                       help="If Yes, the created stack files will be written "
                            "in the project folder. By default the movies will "
                            "be written in the same place where input frames are.")
+        # form.addParam('writeMoviesInProject', params.HiddenBooleanParam,
+        #               default=False, condition=framesCondition + " and stackFrames")
+
 
         form.addParam('movieSuffix', params.StringParam,
                       default='_frames.mrcs',
-                      condition="inputIndividualFrames and stackFrames",
+                      condition=framesCondition + " and stackFrames",
                       label="Movie suffix",
                       help="Suffix added to the output movie filename."
                            "Use the extension to select the format ("
@@ -340,7 +348,7 @@ class ProtImportMovies(ProtImportMicBase):
 
         form.addParam('deleteFrames', params.BooleanParam,
                       default=False,
-                      condition="inputIndividualFrames and stackFrames",
+                      condition=framesCondition + " and stackFrames",
                       label="Delete frame files?",
                       help="Select Yes if you want to remove the individual "
                            "frame files after creating the movie stack. ")

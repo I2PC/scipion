@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -30,164 +30,221 @@ import os
 from pyworkflow.protocol.params import (PointerParam, FloatParam, FileParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume, VolumeMask
-from pyworkflow.em.protocol import ProtAnalysis3D
+from pyworkflow.em.protocol import ProtAnalysis3D, ImageHandler
 import pyworkflow.em.metadata as md
+from convert import getVersion
+import pyworkflow.utils.path as putils
 
-from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
 
-
-
-class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
+class ProtRelionPostprocess(ProtAnalysis3D):
     """
     Relion post-processing protocol for automated masking,
     overfitting estimation, MTF-correction and B-factor sharpening.
     """
     _label = 'post-processing'
     
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called for iterations and references. """
+        myDict = {
+                  'finalVolume': self._getTmpPath("relion_class001.mrc"),
+                  'half1': self._getTmpPath("relion_half1_class001_unfil.mrc"),
+                  'half2': self._getTmpPath("relion_half2_class001_unfil.mrc"),
+                  }
+
+        self._updateFilenamesDict(myDict)
+
+    
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
         form.addSection(label='Input')
-        form.addParam('protRelionRefine', PointerParam, pointerClass="ProtRelionRefine3D",
-                      label='Select a previous relion refine3D protocol',
-                      help='Select a previous relion refine3D run to get the 3D half maps.')
-        
+        form.addParam('protRefine', PointerParam,
+                      pointerClass="ProtRefine3D",
+                      label='Select a previous refinement protocol',
+                      help='Select any previous refinement protocol to get the '
+                           '3D half maps. Note that is recomended that the '
+                           'refinement protocol uses a gold-standard method.')
         form.addSection(label='Masking')
         form.addParam('doAutoMask', BooleanParam, default=True,
-                       label='Perform automated masking?',
-                       help='Perform automated masking, based on a density threshold')
+                      label='Perform automated masking?',
+                      help='Perform automated masking, based on a density '
+                           'threshold')
         form.addParam('initMaskThreshold', FloatParam, default=0.02,
                       condition='doAutoMask',
                       label='Initial binarisation threshold',
-                      help='This threshold is used to make an initial binary mask from the'
-                           "average of the two unfiltered half-reconstructions. If you don't"
-                           "know what value to use, display one of the unfiltered half-maps in a 3D"
-                           "surface rendering viewer, like Chimera, and find the lowest threshold"
-                           " that gives no noise peaks outside the reconstruction.")
+                      help='This threshold is used to make an initial binary '
+                           'mask from the average of the two unfiltered '
+                           'half-reconstructions. If you do not know what '
+                           'value to use, display one of the unfiltered '
+                           'half-maps in a 3D surface rendering viewer, that '
+                           'gives no noise peaks outside the reconstruction.')
         form.addParam('extendInitMask', IntParam, default=3,
-                      label='Mask pixels extension (px)', condition='doAutoMask',
-                      help='The initial binary mask is extended this number of pixels in all directions.') 
-        form.addParam('addMaskEdge', IntParam, default=3,
+                      label='Mask pixels extension (px)',
+                      condition='doAutoMask',
+                      help='The initial binary mask is extended this number '
+                           'of pixels in all directions.')
+        form.addParam('addMaskEdge', IntParam, default=6,
                       label='add soft-edge width (px)', condition='doAutoMask',
-                      help='The extended binary mask is further extended with a raised-cosine soft'
-                           'edge of the specified width.')
+                      help='The extended binary mask is further extended with '
+                           'a raised-cosine soft edge of the specified width.')
         form.addParam('mask', PointerParam, pointerClass='VolumeMask',
                       label='Provide a mask', allowsNull=True,
                       condition='not doAutoMask',
-                      help='Use this to skip auto-masking by providing your own mask') 
+                      help='Provide a soft mask where the protein is white (1) '
+                           'and the solvent is black (0). Often, the softer '
+                           'the mask the higher resolution estimates you will '
+                           'get. A soft edge of 5-10 pixels is often a good '
+                           'edge width.')
         
         form.addSection(label='Sharpening')
         form.addParam('mtf', FileParam,
                       label='MTF-curve file',
-                      help='User-provided STAR-file with the MTF-curve of the detector.'
+                      help='User-provided STAR-file with the MTF-curve '
+                           'of the detector.'
                            'Relion param: <--mtf>')
         form.addParam('doAutoBfactor', BooleanParam, default=True,
-                       label='Estimate B-factor automatically?',
-                       help='If set to Yes, then the program will use the automated procedure'
-                            'described by Rosenthal and Henderson (2003, JMB) to estimate an overall'
-                            'B-factor for your map, and sharpen it accordingly.')
-        line = form.addLine('B-factor resolution (A): ', condition='doAutoBfactor',
-                            help='There are the frequency (in Angstroms), lowest and highest,'
-                            'that will be included in the linear fit of the Guinier plot as described'
-                            'in Rosenthal and Henderson (2003, JMB).')
-        line.addParam('bfactorLowRes', FloatParam, default='10.0', label='low ')
-        line.addParam('bfactorHighRes', FloatParam, default='0.0', label='high ')            
+                      label='Estimate B-factor automatically?',
+                      help='If set to Yes, then the program will use the '
+                           'automated procedure described by Rosenthal and '
+                           'Henderson (2003, JMB) to estimate an overall '
+                           'B-factor for your map, and sharpen it accordingly.')
+        line = form.addLine('B-factor resolution (A): ',
+                            condition='doAutoBfactor',
+                            help='There are the frequency (in Angstroms), '
+                                 'lowest and highest, that will be included in '
+                                 'the linear fit of the Guinier plot as '
+                                 'described in Rosenthal and Henderson '
+                                 '(2003, JMB).')
+        line.addParam('bfactorLowRes', FloatParam, default='10.0', label='low')
+        line.addParam('bfactorHighRes', FloatParam, default='0.0', label='high')
         form.addParam('bfactor', FloatParam, default=-350,
                       condition='not doAutoBfactor',
                       label='Provide B-factor:',
-                      help= 'User-provided B-factor (in A^2) for map sharpening, e.g. -400.'
-                            'Use negative values for sharpening. Be careful: if you over-sharpen\n'
-                            'your map, you may end up interpreting noise for signal!\n'
+                      help= 'User-provided B-factor (in A^2) for map '
+                            'sharpening, e.g. -400. Use negative values for '
+                            'sharpening. Be careful: if you over-sharpen\n'
+                            'your map, you may end up interpreting noise for '
+                            'signal!\n'
                             'Relion param: *--adhoc_bfac*')
         
         form.addSection(label='Filtering')
         form.addParam('skipFscWeighting', BooleanParam, default=False,
-                       label='Skip FSC-weighting for sharpening?',
-                       help='If set to No (the default), then the output map will be low-pass'
-                       ' filtered according to the mask-corrected, gold-standard FSC-curve.'
-                       ' Sometimes, it is also useful to provide an ad-hoc low-pass filter'
-                       ' (option below), as due to local resolution variations some parts of'
-                       ' the map may be better and other parts may be worse than the overall'
-                       ' resolution as measured by the FSC. In such cases, set this option to'
-                       ' Yes and provide an ad-hoc filter as described below.')
+                      label='Skip FSC-weighting for sharpening?',
+                      help='If set to No (the default), then the output map '
+                           'will be low-pass filtered according to the '
+                           'mask-corrected, gold-standard FSC-curve. '
+                           'Sometimes, it is also useful to provide an ad-hoc '
+                           'low-pass filter (option below), as due to local '
+                           'resolution variations some parts of the map may '
+                           'be better and other parts may be worse than the '
+                           'overall resolution as measured by the FSC. In '
+                           'such  cases, set this option to Yes and provide '
+                           'an ad-hoc filter as described below.')
         form.addParam('lowRes', FloatParam, default=5,
                       condition='skipFscWeighting',
                       label='Low-pass filter (A):',
-                      help='This option allows one to low-pass filter the map at a user-provided'
-                      ' frequency (in Angstroms). When using a resolution that is higher than the'
-                      ' gold-standard FSC-reported resolution, take care not to interpret noise'
-                      ' in the map for signal...')
-        form.addParam('filterEdgeWidth', IntParam, default=2, expertLevel=LEVEL_ADVANCED,
+                      help='This option allows one to low-pass filter the map '
+                           'at a user-provided frequency (in Angstroms). When '
+                           'using a resolution that is higher than the '
+                           'gold-standard FSC-reported resolution, take care '
+                           'not to interpret noise in the map for signal...')
+        if getVersion() == "2.0":
+            pass
+        form.addParam('filterEdgeWidth', IntParam, default=2,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Low-pass filter edge width:',
-                      help='Width of the raised cosine on the low-pass filter edge'
-                           '(in resolution shells)\n'
+                      help='Width of the raised cosine on the low-pass filter '
+                           'edge (in resolution shells)\n'
                            'Relion param: *--filter_edge_width*')
-        form.addParam('randomizeAtFsc', FloatParam, default=0.8, expertLevel=LEVEL_ADVANCED,
+        form.addParam('randomizeAtFsc', FloatParam, default=0.8,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Randomize phases threshold',
-                      help='Randomize phases from the resolution where FSC drops below this value\n'
+                      help='Randomize phases from the resolution where FSC '
+                           'drops below this value\n'
                            'Relion param: *--randomize_at_fsc*')
         
-        form.addParallelSection(threads=0, mpi=0) 
-            
+        form.addParallelSection(threads=0, mpi=0)
+    
     #--------------------------- INSERT steps functions ------------------------
-
     def _insertAllSteps(self):
-        self._initialize()
-        self._insertPostProcessingStep()
+        objId = self.protRefine.get().getObjId()
+        self._createFilenameTemplates()
+        self._defineParamDict()
+        self._insertFunctionStep('initializeStep', objId)
+        self._insertFunctionStep('postProcessStep', self.paramDict)
         self._insertFunctionStep('createOutputStep')
-        
-        
-    def _initialize(self):
-        # ToDo: implement a better way to get the pattern of unmasked maps.
-        self.input = self.protRelionRefine.get()._getExtraPath('relion')
-        print "INPUT: ", self.input
-        
-    def _insertPostProcessingStep(self):
-        
-        output = self._getExtraPath('postprocess')
-        self.samplingRate = self.protRelionRefine.get().inputParticles.get().getSamplingRate()
-        
-        args = " --i %s --o %s --angpix %f" %(self.input, output, self.samplingRate)
-
-        if self.doAutoMask:
-            args += " --auto_mask --inimask_threshold %f" % self.initMaskThreshold.get()
-            args += " --extend_inimask %d" % self.extendInitMask.get()
-            args += " --width_mask_edge %d" % self.addMaskEdge.get()
-        else:
-            args += ' --mask %s' % self.mask.get().getFileName()
-            
-        mtfFile = self.mtf.get()
-        if mtfFile:
-            args += ' --mtf %s' % mtfFile
-            
-        if self.doAutoBfactor:
-            args += ' --auto_bfac --autob_lowres %f' % self.bfactorLowRes.get()
-            args += ' --autob_highres %f' % self.bfactorHighRes.get()
-        else:
-            args += ' --adhoc_bfac %f' % self.bfactor.get()
-            
-        if self.skipFscWeighting:
-            args += ' --skip_fsc_weighting --low_pass %f' % self.lowRes.get()
-            
-        # Expert params
-        args += ' --filter_edge_width %d' % self.filterEdgeWidth.get()
-        args += ' --randomize_at_fsc %f' % self.randomizeAtFsc.get()
-        
-        self._insertFunctionStep('postProcessStep', args)
-        
+    
     #--------------------------- STEPS functions -------------------------------
-    def postProcessStep(self, params):
+    def initializeStep(self, protId):
+        protRef = self.protRefine.get()
+        protClassName = protRef.getClassName()
+        if protClassName.startswith('ProtRelionRefine3D'):
+            protRef._createFilenameTemplates()
+            finalMap = protRef._getFileName("finalvolume",ref3d=1)
+            half1Map = protRef._getFileName("final_half1_volume",ref3d=1)
+            half2Map = protRef._getFileName("final_half2_volume",ref3d=1)
+            
+            putils.copyFile(self._getRelionMapFn(finalMap), self._getTmpPath())
+            putils.copyFile(self._getRelionMapFn(half1Map), self._getTmpPath())
+            putils.copyFile(self._getRelionMapFn(half2Map), self._getTmpPath())
+            
+        elif protClassName.startswith('ProtFrealign'):
+            protRef._createFilenameTemplates()
+            lastIter = protRef._getLastIter()
+
+            finalMap = protRef._getFileName('iter_vol', iter=lastIter)
+            half1Map = protRef._getFileName('iter_vol1', iter=lastIter)
+            half2Map = protRef._getFileName('iter_vol2', iter=lastIter)
+            
+            putils.copyFile(finalMap, self._getFileName("finalVolume"))
+            putils.copyFile(half1Map, self._getFileName("half1"))
+            putils.copyFile(half2Map, self._getFileName("half2"))
+
+        elif protClassName.startswith('XmippProtProjMatch'):
+            iterN = protRef.getLastIter()
+            protRef._initialize()
+            vol = protRef._getFileName('reconstructedFileNamesIters',
+                                            iter=iterN, ref=1)
+            half1 = protRef._getFileName('reconstructedFileNamesItersSplit1',
+                                         iter=iterN, ref=1)
+            half2 = protRef._getFileName('reconstructedFileNamesItersSplit2',
+                                         iter=iterN, ref=1)
+            ih = ImageHandler()
+            ih.convert(vol, self._getFileName("finalVolume"))
+            ih.convert(half1, self._getFileName("half1"))
+            ih.convert(half2, self._getFileName("half2"))
+            
+        elif protClassName.startswith('EmanProtRefine'):
+            protRef._createFilenameTemplates()
+            numRun = protRef._getRun()
+            protRef._createIterTemplates(numRun)
+            iterN = protRef._lastIter()
+            print "RUN ITER: ", numRun, iterN, protRef._iterTemplate
+            vol = protRef._getFileName("mapFull", run=numRun, iter=iterN)
+            half1 = protRef._getFileName("mapEvenUnmasked", run=numRun)
+            half2 = protRef._getFileName("mapOddUnmasked", run=numRun)
+            
+            ih = ImageHandler()
+            ih.convert(vol, self._getFileName("finalVolume"))
+            ih.convert(half1, self._getFileName("half1"))
+            ih.convert(half2, self._getFileName("half2"))
+    
+    def postProcessStep(self, paramDict):
+        params = ' '.join(['%s %s' % (k, str(v))
+                           for k, v in self.paramDict.iteritems()])
         self.runJob('relion_postprocess', params)
-        
+    
     def createOutputStep(self):
         volume = Volume()
         volume.setFileName(self._getExtraPath('postprocess.mrc'))
-        volume.setSamplingRate(self.samplingRate)
-        vol = self.protRelionRefine.get().outputVolume
+        vol = self.protRefine.get().outputVolume
+        pxSize = vol.getSamplingRate()
+        
+        volume.setSamplingRate(pxSize)
         mask = VolumeMask()
         mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
-        mask.setSamplingRate(self.samplingRate)
-
+        mask.setSamplingRate(pxSize)
+        
         self._defineOutputs(outputVolume=volume)
         self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(vol, volume)
@@ -195,15 +252,23 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overriden in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
         mtfFile = self.mtf.get()
-
+        
         if mtfFile and not os.path.exists(mtfFile):
             errors.append("Missing MTF-file '%s'" % mtfFile)
 
+        protClassName = self.protRefine.get().getClassName()
+        if protClassName.startswith('SpiderProtRefinement'):
+            errors.append("Relion post-process protocol not implemented for "
+                          "Spider - refinement.")
+        
+        if protClassName.startswith('XmippProtReconstructHighRes'):
+            errors.append("Relion post-process protocol not implemented for "
+                          "Xmipp - highres.")
         return errors
     
     def _summary(self):
@@ -218,5 +283,40 @@ class ProtRelionPostprocess(ProtAnalysis3D, ProtRelionBase):
             summary.append("Final resolution: *%0.2f*" % resol)
         
         return summary
-    
+        
     #--------------------------- UTILS functions -------------------------------
+    def _defineParamDict(self):
+        """ Define all parameters to run relion_postprocess"""
+        volume = self.protRefine.get().outputVolume
+        self.paramDict = {'--i' : self._getTmpPath("relion"),
+                          '--o' : self._getExtraPath('postprocess'),
+                          '--angpix' : volume.getSamplingRate(),
+                          # Expert params
+                          '--filter_edge_width' : self.filterEdgeWidth.get(),
+                          '--randomize_at_fsc' : self.randomizeAtFsc.get()
+                          }
+        if self.doAutoMask:
+            self.paramDict['--auto_mask'] = ''
+            self.paramDict['--inimask_threshold'] = self.initMaskThreshold.get()
+            self.paramDict['--extend_inimask'] = self.extendInitMask.get()
+            self.paramDict['--width_mask_edge'] = self.addMaskEdge.get()
+        else:
+            self.paramDict['--mask'] = self.mask.get().getFileName()
+
+        mtfFile = self.mtf.get()
+        if mtfFile:
+            self.paramDict['--mtf'] = mtfFile
+
+        if self.doAutoBfactor:
+            self.paramDict['--auto_bfac'] = ''
+            self.paramDict['--autob_lowres'] = self.bfactorLowRes.get()
+            self.paramDict['--autob_highres'] = self.bfactorHighRes.get()
+        else:
+            self.paramDict['--adhoc_bfac'] = self.bfactor.get()
+
+        if self.skipFscWeighting:
+            self.paramDict['--skip_fsc_weighting'] = ''
+            self.paramDict['--low_pass'] = self.lowRes.get()
+    
+    def _getRelionMapFn(self, fn):
+        return fn.split(':')[0]
