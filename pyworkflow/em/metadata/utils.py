@@ -26,13 +26,8 @@
 # **************************************************************************
 
 from classes import MetaData, Row
-<<<<<<< HEAD
-from constants import LABEL_TYPES, MDL_ITEM_ID
-from functions import labelType, str2Label, getBlocksInMetaDataFile
-=======
 from constants import LABEL_TYPES, MDL_ITEM_ID, MDL_ENABLED, MDL_IMAGE
-from functions import labelType, getBlocksInMetaDataFile
->>>>>>> devel
+from functions import labelType, str2Label, getBlocksInMetaDataFile
 
 
 def label2Python(label):
