@@ -158,8 +158,8 @@ class XmippProtSolidAngles(ProtAnalysis3D):
             self.runJob("xmipp_image_resize",
                         "-i %s -o %s --save_metadata_stack %s --dim %d" %
                         (self._getExpParticlesFn(),
-                         self._getExtraPath('scaled_particles.stk'),
-                         self._getExtraPath('scaled_particles.xmd'),
+                         self._getTmpPath('scaled_particles.stk'),
+                         self._getTmpPath('scaled_particles.xmd'),
                          newXdim))
             # Scale volume
             Xdim = inputVolume.getXDim()
