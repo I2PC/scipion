@@ -359,7 +359,9 @@ class Protocol(Step):
         # Create an String variable to allow some protocol to precompute
         # the summary message
         self.summaryVar = String()
-        self.methodsVar = String()    
+        self.methodsVar = String()
+        # Create a variable to know if the protocol has expert params
+        self._hasExpert = None
         
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -421,6 +423,19 @@ class Protocol(Step):
             else:
                 time.sleep(tries)
                 self.__tryUpdateOuputSet(outputName, outputSet, state, tries+1)
+
+    def hasExpert(self):
+        """ This function checks if the protocol has
+        any expert parameter"""
+        if self._hasExpert is None:
+            self._hasExpert = False
+            for paraName, param in self._definition.iterAllParams():
+                if param.isExpert():
+                    self._hasExpert = True
+                    break
+
+        return self._hasExpert
+
         
     def getProject(self):
         return self.__project

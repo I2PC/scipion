@@ -37,6 +37,7 @@ from itertools import izip
 from datetime import datetime
 
 import pyworkflow.object as pwobj
+from pyworkflow.mapper import Mapper
 from pyworkflow.utils import startDebugger
 from pyworkflow.utils.path import getHomePath
 from pyworkflow.utils.properties import Message, Icon, Color
@@ -958,7 +959,7 @@ class ParamWidget():
             viewers = findViewers(obj.getClassName(), DESKTOP_TKINTER)
             if len(viewers):
                 ViewerClass = viewers[0] # Use the first viewer registered
-                # Instanciate the viewer and visualize object
+                # Instantiate the viewer and visualize object
                 viewer = ViewerClass(project=self._protocol.getProject(),
                                      protocol=self._protocol,
                                      parent=self.window)
@@ -1249,7 +1250,13 @@ class FormWindow(Window):
         #headerFrame.grid(row=0, column=0, sticky='new')
         headerFrame.columnconfigure(0, weight=1)
         package = self.protocol.getClassPackage()
-        t = '  Protocol: %s' % (self.protocol.getClassLabel())
+
+        # Consider legacy protocols
+        if self._isLegacyProtocol():
+            t = '  Legacy protocol: %s' % (Mapper.getObjectPersistingClassName(self.protocol))
+        else:
+            t = '  Protocol: %s' % (self.protocol.getClassLabel())
+
         logoPath = getattr(package, '_logo', '')
         
         if logoPath:
@@ -1495,15 +1502,16 @@ class FormWindow(Window):
     def _createParams(self, parent):
         paramsFrame = tk.Frame(parent)
         configureWeigths(paramsFrame, row=1, column=0)
-        # Expert level
-        expFrame = tk.Frame(paramsFrame)
-        expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
-        expLabel.grid(row=0, column=0, sticky='nw', padx=5)
-        expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
-                                            self.protocol.expertLevel.get(),
-                                            self._onExpertLevelChanged, font=self.font) 
-        expCombo.grid(row=0, column=1, sticky='nw', pady=5)
-        expFrame.grid(row=0, column=0, sticky='nw')
+        # Expert level (only if the protocol has some param with expert level)
+        if self.protocol.hasExpert():
+            expFrame = tk.Frame(paramsFrame)
+            expLabel = tk.Label(expFrame, text=Message.LABEL_EXPERT, font=self.fontBold)
+            expLabel.grid(row=0, column=0, sticky='nw', padx=5)
+            expCombo = self._createBoundOptions(expFrame, Message.VAR_EXPERT, params.LEVEL_CHOICES,
+                                                self.protocol.expertLevel.get(),
+                                                self._onExpertLevelChanged, font=self.font)
+            expCombo.grid(row=0, column=1, sticky='nw', pady=5)
+            expFrame.grid(row=0, column=0, sticky='nw')
 
         contentFrame = self._createSections(paramsFrame)
         contentFrame.grid(row=1, column=0, sticky='news')

@@ -73,10 +73,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
         
         group = form.addGroup('OF Parameters')
         group.addParam('winSize', params.IntParam, default=150,
+                        expertLevel=params.LEVEL_ADVANCED,
                         label="Window size",
                         help="Window size (shifts are assumed to be constant "
                              "within this window).")
         group.addParam('groupSize', params.IntParam, default=1,
+                        expertLevel=params.LEVEL_ADVANCED,
                         label="Group Size",
                         help="The number of frames in each group at the "
                              "last step")
@@ -244,12 +246,13 @@ class XmippProtOFAlignment(ProtAlignMovies):
                           " frames?_")
         if self.numberOfThreads > 1 and self.doGPU:
             errors.append("GPU and Parallelization can not be used together")
-        
-        doseFrame = inputSet.getAcquisition().getDosePerFrame()
-        
-        if doseFrame == 0.0 or doseFrame is None:
-            errors.append('Dose per frame for input movies is 0 or not set. '
-                          'You cannot apply dose filter.')
+
+        if self.doApplyDoseFilter:
+            doseFrame = inputSet.getAcquisition().getDosePerFrame()
+    
+            if doseFrame == 0.0 or doseFrame is None:
+                errors.append('Dose per frame for input movies is 0 or not '
+                              'set. You cannot apply dose filter.')
         return errors
 
     def _citations(self):

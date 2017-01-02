@@ -26,8 +26,13 @@
 # **************************************************************************
 
 from classes import MetaData, Row
+<<<<<<< HEAD
 from constants import LABEL_TYPES, MDL_ITEM_ID
 from functions import labelType, str2Label, getBlocksInMetaDataFile
+=======
+from constants import LABEL_TYPES, MDL_ITEM_ID, MDL_ENABLED, MDL_IMAGE
+from functions import labelType, getBlocksInMetaDataFile
+>>>>>>> devel
 
 
 def label2Python(label):
@@ -145,14 +150,16 @@ class SetMdIterator():
     """
     def __init__(self, md, sortByLabel=None, 
                  keyLabel=MDL_ITEM_ID,
-                 updateItemCallback=None):
+                 updateItemCallback=None,
+                 skipDisabled=False):
         
         if updateItemCallback is None:
             raise Exception('Set an updateItemCallback')
         
         self.iterMd = iterRows(md, sortByLabel) 
         self.keyLabel = keyLabel
-        self.updateItemCallback = updateItemCallback   
+        self.updateItemCallback = updateItemCallback
+        self.skipDisabled = skipDisabled
         self.__nextRow()
         
     def __nextRow(self):
@@ -167,10 +174,21 @@ class SetMdIterator():
         not present in the metadata.
         """
         row = self.lastRow
+        
+        if row is not None:
+            if row.hasLabel(MDL_ENABLED):
+                enabled = row.getValue(MDL_ENABLED)
+            else:
+                enabled = 1
+
         if (row is None or
             item.getObjId() != row.getValue(self.keyLabel)):
             item._appendItem = False
-        
+            
+        elif enabled == -1 and self.skipDisabled:
+            item._appendItem = False
+            self.__nextRow()
+            
         else:
             item._appendItem = True
             self.updateItemCallback(item, row)

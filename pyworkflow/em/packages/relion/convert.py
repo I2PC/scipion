@@ -125,7 +125,7 @@ def getVersion():
 
 
 def getSupportedVersions():
-    return ['1.3', '1.4']
+    return ['1.3', '1.4', '2.0']
 
 
 def locationToRelion(index, filename):

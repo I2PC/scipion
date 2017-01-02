@@ -181,12 +181,12 @@ arpack = env.addLibrary(
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
 if get('CUDA'):
-    opencvFlags = ['-DWITH_CUDA:BOOL=ON']
+    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
 else:
-    opencvFlags = ['-DWITH_CUDA:BOOL=OFF']
+    opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
 opencv = env.addLibrary(
     'opencv',
-    tar='opencv-2.4.9.tgz',
+    tar='opencv-2.4.13.tgz',
     targets=[env.getLib('opencv_core')],
     flags=opencvFlags,
     cmake=True,
@@ -399,7 +399,7 @@ env.addPackage('frealign', version='9.07',
 
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
-                           'bin/relion'])]
+                           'bin/relion_refine'])]
 
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
@@ -411,6 +411,10 @@ env.addPackage('relion', version='1.4f',
 
 env.addPackage('relion', version='1.3',
                tar='relion-1.3.tgz',
+               commands=relion_commands)
+
+env.addPackage('relion', version='2.0',
+               tar='relion-2.0.tgz',
                commands=relion_commands)
 
 env.addPackage('localrec', version='1.1.0',
