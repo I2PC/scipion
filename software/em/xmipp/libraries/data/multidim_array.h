@@ -2573,6 +2573,41 @@ public:
         return (T) LIN_INTERP(fy, d0, d1);
     }
 
+	/** Non-divergent version of interpolatedElement2D
+	 *
+	 * works only for outside_value = 0
+	 * does not break vectorization
+	*/
+	T interpolatedElement2DOutsideZero(double x, double y) const
+	{
+		int x0 = floor(x);
+		double fx = x - x0;
+		int x1 = x0 + 1;
+		int y0 = floor(y);
+		double fy = y - y0;
+		int y1 = y0 + 1;
+
+		int i0=STARTINGY(*this);
+		int j0=STARTINGX(*this);
+		int iF=FINISHINGY(*this);
+		int jF=FINISHINGX(*this);
+
+		int b;
+#define ASSIGNVAL2DNODIV(d,i,j) \
+		b = ((j) < j0 || (j) > jF || (i) < i0 || (i) > iF); \
+		b ? d=0 : d=A2D_ELEM(*this, i, j);
+
+		double d00, d10, d11, d01;
+		ASSIGNVAL2DNODIV(d00,y0,x0);
+		ASSIGNVAL2DNODIV(d01,y0,x1);
+		ASSIGNVAL2DNODIV(d10,y1,x0);
+		ASSIGNVAL2DNODIV(d11,y1,x1);
+
+		double d0 = LIN_INTERP(fx, d00, d01);
+		double d1 = LIN_INTERP(fx, d10, d11);
+		return (T) LIN_INTERP(fy, d0, d1);
+	}
+
     /** Interpolates the value of the nth 1D matrix M at the point (x)
      *
      * Bilinear interpolation. (x) is in logical coordinates.
@@ -2953,7 +2988,7 @@ public:
         return (T) columns;
     }
 
-    /** Interpolates the value of the nth 1D vector M at the point (x) knowing
+	/** Interpolates the value of the nth 1D vector M at the point (x) knowing
      * that this vector is a set of B-spline coefficients
      *
      * (x) is in logical coordinates
