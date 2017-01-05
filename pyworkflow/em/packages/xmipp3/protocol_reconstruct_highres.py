@@ -496,7 +496,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Produce a filtered volume
         if iteration>0:
             self.runJob('xmipp_transform_filter','-i %s -o %s --fourier low_pass %f --sampling %f'%\
-                        (join(fnDirCurrent,"volumeAvg.mrc"),join(fnDirCurrent,"volumeAvgFiltered.mrc"),resolution,TsCurrent))
+                        (join(fnDirCurrent,"volumeAvg.mrc"),join(fnDirCurrent,"volumeAvgFiltered.mrc"),resolution,TsCurrent),numberOfMpi=1)
         
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
@@ -1193,6 +1193,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         cleanPath(deletePattern)
                     deleteStack = True
                     deletePattern = fnGrayRoot+".*"
+                    
+                    # Save the gray transformation
+                    self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column "continuousA continuousB"'%fnAngles,numberOfMpi=1)
+                    fnAux = join(fnDirCurrent,"gray_transformation%02d.xmd"%i)
+                    self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "continuousA continuousB" -o %s'%(fnAnglesToUse,fnAux),numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAngles,fnAux),numberOfMpi=1)
+                    cleanPath(fnAux)
 
                 # Restrict the angles
                 if self.restrictReconstructionAngles:
