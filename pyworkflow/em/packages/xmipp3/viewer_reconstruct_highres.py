@@ -267,9 +267,10 @@ Examples:
         view=None
         if exists(fnAngles):
             fnAnglesSqLite = join(fnDir,"angles.sqlite")
-            from pyworkflow.em.metadata.utils import getSize
             from pyworkflow.em.plotter import EmPlotter
-            self.createAngDistributionSqlite(fnAnglesSqLite, getSize(fnAngles), itemDataIterator=self._iterAngles(fnAngles))
+            if not exists(fnAnglesSqLite):
+                from pyworkflow.em.metadata.utils import getSize
+                self.createAngDistributionSqlite(fnAnglesSqLite, getSize(fnAngles), itemDataIterator=self._iterAngles(fnAngles))
             view = EmPlotter(x=1, y=1, mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
             view.plotAngularDistributionFromMd(fnAnglesSqLite, 'iter %d' % it)
         return view
