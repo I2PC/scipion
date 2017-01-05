@@ -223,7 +223,7 @@ class ProtUnblur(ProtAlignMovies):
                 'doVerboseOutput': 'YES' if self.doVerboseOutput else 'NO',
                 'exposurePerFrame': movie.getAcquisition().getDosePerFrame()
                 }
-        self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program = 'export OMP_NUM_THREADS=%d; ' % 1#self.numberOfThreads.get()
         self._program += UNBLUR_PATH
 
         if getVersion('UNBLUR') != '1.0_150529':
