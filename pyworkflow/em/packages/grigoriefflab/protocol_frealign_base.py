@@ -69,6 +69,8 @@ class ProtFrealignBase(EMProtocol):
             # Volumes for the iteration
             'ref_vol': iterFile('reference_volume_iter_%(iter)03d.mrc'),
             'iter_vol': iterFile('volume_iter_%(iter)03d.mrc'),
+            'iter_vol1': iterFile('volume_1_iter_%(iter)03d.mrc'),
+            'iter_vol2': iterFile('volume_2_iter_%(iter)03d.mrc'),
             'output_vol_par': iterFile('output_vol_iter_%(iter)03d.par'),
             # dictionary for all set
             'output_par': iterFile('particles_iter_%(iter)03d.par'),

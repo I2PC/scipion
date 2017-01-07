@@ -123,6 +123,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'Use the wizard to check boxSize changes after '
                            'downsampling or using a different pixel size. ')
 
+        form.addParam('doBorders', params.BooleanParam, default=False,
+                      label='Fill pixels outside borders',
+                      help='Xmipp by default skips particles whose boxes fall outside of the micrograph borders.'
+                           'Set this option to True if you want those pixels outside the borders to be filled with the closest pixel value available')
+
         form.addParam('doSort', params.BooleanParam, default=True,
                       label='Perform sort by statistics',
                       help='Perform sort by statistics to compute a zscore '
@@ -272,6 +277,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                                                  fnCTF, fnLast, micOps,
                                                  self.doInvert.get(),
                                                  self._getNormalizeArgs(),
+                                                 self.doBorders.get(),
                                                  prerequisites=localDeps))
 
         # Insert step to create output objects
@@ -328,7 +334,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                         
     def extractParticlesStep(self, micId, baseMicName, fnCTF,
                              micrographToExtract, micOps,
-                             doInvert, normalizeArgs):
+                             doInvert, normalizeArgs, doBorders):
         """ Extract particles from one micrograph """
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getExtraPath(baseMicName + ".pos")
@@ -352,6 +358,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
             if fnCTF:
                 args += " --ctfparam " + fnCTF
+            
+            if doBorders:
+                args += " --fillBorders"
 
             self.runJob("xmipp_micrograph_scissor", args)
 
