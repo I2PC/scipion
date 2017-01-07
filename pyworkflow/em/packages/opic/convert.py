@@ -32,18 +32,16 @@ This module contains converter functions that will serve to:
 
 import os
 import sys
-import re
-from os.path import join, basename
-from itertools import izip
 import numpy
+
+from os.path import join, exists
 from collections import OrderedDict
 
-from pyworkflow.object import ObjectWrap, String, Integer
-from pyworkflow.utils import Environ
-from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
-                                   replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
+
+from pyworkflow.object import ObjectWrap, String
+from pyworkflow.utils.path import replaceBaseExt
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
@@ -315,7 +313,8 @@ def particleToRow(part, partItem, **kwargs):
         # use a fake micrograph name using id to relion
         # could at least group for CTF using that
         if not partRow.hasLabel(md.RLN_MICROGRAPH_NAME):
-            partRow.setValue(md.RLN_MICROGRAPH_NAME, 'fake_micrograph_%06d.mrc' % part.getMicId())
+            partRow.setValue(md.RLN_MICROGRAPH_NAME,
+                             'fake_micrograph_%06d.mrc' % part.getMicId())
     if part.hasAttribute('_rlnParticleId'):
         partRow.setValue(md.RLN_PARTICLE_ID, long(part._rlnParticleId.get()))
     imageToRow(part, partRow, md.RLN_IMAGE_NAME, **kwargs)
@@ -332,11 +331,52 @@ def rowToSubcoordinate(subpart, coord, particle):
         ctf = particle.getCTF()
         ctf.setDefocusU(subpart.rlnDefocusU)
         ctf.setDefocusV(subpart.rlnDefocusV)
-    
-    
+
     particle.setTransform(rowToAlignment(subpart))
-    
     
     coord.setX(subpart.rlnCoordinateX)
     coord.setY(subpart.rlnCoordinateY)
     coord._subparticle = particle
+
+
+def readSetOfCoordinates(outputDir, partSet, coordSet):
+    """This method is used to store an edition of the coordinates obtained by
+    localized reconstruction.
+    Read from Xmipp .pos files.
+    Params:
+        outputDir: the directory where the .pos files are.
+            It is also expected a file named: config.xmd
+            in this directory where the box size can be read.
+        micSet: the SetOfMicrographs to associate the .pos, which
+            name should be the same of the micrographs.
+        coordSet: the SetOfCoordinates that will be populated.
+    """
+    # Read the boxSize from the config.xmd metadata
+    configfile = join(outputDir, 'config.xmd')
+    if exists(configfile):
+        mdFn = md.MetaData('properties@' + join(outputDir, 'config.xmd'))
+        boxSize = mdFn.getValue(md.MDL_PICKING_PARTICLE_SIZE,
+                                mdFn.firstObject())
+        coordSet.setBoxSize(boxSize)
+    for part in partSet:
+        baseFn = "%06d_at_%s" % (part.getIndex(),
+                                 replaceBaseExt(part.getFileName(), 'pos'))
+        posFile = join(outputDir, baseFn)
+        readCoordinates(part, posFile, coordSet, outputDir)
+
+    coordSet._xmippMd = String(outputDir)
+
+
+def readCoordinates(part, fileName, coordsSet, outputDir):
+    from pyworkflow.em.packages.xmipp3.convert import (readPosCoordinates,
+                                                       rowToCoordinate,
+                                                       rowFromMd)
+    posMd = readPosCoordinates(fileName)
+
+    for objId in posMd:
+        coord = rowToCoordinate(rowFromMd(posMd, objId))
+        coord.setX(coord.getX())
+        coord.setY(coord.getY())
+        coord.setMicId(part.getObjId())
+        coord._subparticle = part
+        coordsSet.append(coord)
