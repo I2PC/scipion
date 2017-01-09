@@ -639,6 +639,9 @@ void ProgMonogenicSignalRes::run()
 				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold){
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = filling_value;
 				}
+				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)<(last_resolution_2-0.001)){
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
+				}
 //				else{
 //					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
 //				}
