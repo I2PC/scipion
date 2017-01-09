@@ -220,7 +220,7 @@ class XmippProtMonoRes(ProtRefine3D):
         imgData = img.getData()
         min_Res = round(np.amin(imgData)*100)/100
         max_Res = round(np.amax(imgData)*100)/100
-        inter = round((max_Res - min_Res)*20)/100
+        inter = round((max_Res - min_Res)*25)/100
         print inter
         
         if self.halfVolumes.get() is True:
@@ -241,8 +241,12 @@ class XmippProtMonoRes(ProtRefine3D):
             smprt = self.inputVolumes.get().getSamplingRate()
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
-        fhCmd.write("scolor #0 volume #1 cmap rainbow reverseColors True\n")
-        fhCmd.write("colorkey 0,0 0.2,0.6 %s blue %s cyan %s green %s yellow %s red\n" %(min_Res, 
+        fhCmd.write("scolor #0 volume #1 perPixel false cmap %s,blue:%s,cyan:%s,green:%s,yellow:%s,red\n" %(min_Res,
+                                                                                         min_Res+inter,
+                                                                                         min_Res+2*inter,
+                                                                                         min_Res+3*inter,
+                                                                                         max_Res))
+        fhCmd.write("colorkey 0.01,0.05 0.02,0.95 %s blue %s cyan %s green %s yellow %s red\n" %(min_Res,
                                                                                          min_Res+inter, 
                                                                                          min_Res+2*inter,
                                                                                          min_Res+3*inter,
