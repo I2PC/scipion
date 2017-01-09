@@ -33,6 +33,8 @@ import optparse
 
 # We use optparse instead of argparse because we want this script to
 # be compatible with python >= 2.3
+import collections
+
 UPDATE_PARAM = '--update'
 
 try:
@@ -195,7 +197,7 @@ def checkPaths(conf):
 
 
 def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
-    "Check that all the variables in the template are in the config file too"
+    """Check that all the variables in the template are in the config file too"""
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
 
@@ -220,6 +222,8 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
     dt = dict([(s, set(ct.options(s))) for s in ct.sections()])
     # That funny syntax to create the dictionaries works with old pythons.
 
+    confChanged = False
+
     if df == dt:
         print(green("All the expected sections and options found in " + fpath))
     else:
@@ -230,8 +234,6 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
         for s in sf - st:
             print("Section %s exists in the configuration file but "
                   "not in the template." % red(s))
-
-        confChanged = False
 
         for s in st - sf:
             print("Section %s exists in the template but not in the configuration file. Use %s parameter to update  "
@@ -263,10 +265,19 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
                     print("Variable %s -> %s added and set to %s in your config file."
                           % (s, green(o), value))
 
+    if update:
         if confChanged:
-            print("CHANGES detected: writing changes into %s. Please check values." % (fpath))
-            with open(fpath, 'wb') as f:
-                cf.write(f)
+            print("Changes detected: writing changes and sorting variables into %s. Please check values." % (fpath))
+        else:
+            print("Update requested no changes detected: sorting variables only for %s." % (fpath))
+
+        # Order the content of each section alphabetically
+        for section in cf._sections:
+            cf._sections[section] = collections.OrderedDict(
+                sorted(cf._sections[section].items(), key=lambda t: t[0]))
+
+        with open(fpath, 'wb') as f:
+            cf.write(f)
 
 def guessJava():
     "Guess the system's Java installation, return a dict with the Java keys"
