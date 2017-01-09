@@ -58,7 +58,6 @@ if __name__ == '__main__':
             
         projPath = manager.getProjectPath(projName)
         try:
-            time.sleep(10)
             projWindow = ProjectWindow(projPath)
         except Exception as e:
             sys.exit(e)
