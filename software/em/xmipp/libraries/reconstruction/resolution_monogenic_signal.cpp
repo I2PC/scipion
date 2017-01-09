@@ -26,7 +26,7 @@
 
 #include "resolution_monogenic_signal.h"
 //#define DEBUG
-//#define DEBUG_MASK
+#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
