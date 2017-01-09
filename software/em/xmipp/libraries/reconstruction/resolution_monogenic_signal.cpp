@@ -25,8 +25,8 @@
  ***************************************************************************/
 
 #include "resolution_monogenic_signal.h"
-#define DEBUG
-#define DEBUG_MASK
+//#define DEBUG
+//#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
@@ -488,6 +488,8 @@ void ProgMonogenicSignalRes::run()
 		if (NS == 0)
 		{
 			std::cout << "There are no points to compute inside the mask" << std::endl;
+			std::cout << "If the number of computed frequencies is low, perhaps the provided"
+					"mask is not enough tight to the volume, in that case please try another mask" << std::endl;
 			break;
 		}
 
