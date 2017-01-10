@@ -109,10 +109,6 @@ class XmippProtMonoRes(ProtRefine3D):
         form.addParam('filterInput', BooleanParam, default=False, 
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
-        form.addParam('colorMap', StringParam, default='jet',
-                      label='Color map',
-                      help='Name of a color map to apply to the resolution map. Valid names can be found at '
-                            'http://matplotlib.org/examples/color/colormaps_reference.html')
 
         form.addParallelSection(threads=1, mpi=1)
 
