@@ -279,7 +279,7 @@ class XmippProtMonoRes(ProtRefine3D):
         summary = []
         imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
         min_res, max_res = self.getMinMax(imageFile)
-        summary.append("Highest resolution %d,   Lowest resolution %d." % (min_res , max_res))
+        summary.append("Highest resolution %d A,   Lowest resolution %d A." % (min_res , max_res))
 
         return summary
 
