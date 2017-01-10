@@ -118,6 +118,19 @@ void regionGrowing3D(const MultidimArray< double >& V_in,
                      float filling_colour = 1,
                      bool less = true);
 
+
+/** Region growing with equal values for volumes
+ * @ingroup Filter
+ *
+ * Given a position inside a volume this function grows a region with
+ * (filling_value) until it finds a border. If the point
+ * is outside the volume then nothing is done.
+ *
+ * The growing only considers those voxels with value equal to the selected voxel
+ */
+void regionGrowing3DEqualValue(const MultidimArray<double> &V_in,
+								MultidimArray<int> &V_out, int filling_value);
+
 /** L1 distance transform
   * @ingroup Filters
   *
@@ -289,21 +302,28 @@ template <typename T>
 double fastCorrelation(const MultidimArray< T >& x,
                        const MultidimArray< T >& y)
 {
-    double retval = 0; // returned value
+    double retval = 0; 						// Returned value
+    double *refX, *refY;					// Pointer to vectors.
     size_t nmax=4*(MULTIDIM_SIZE(x)/4);
+
+    // Get reference to first elements in vectors.
+    refX = &DIRECT_MULTIDIM_ELEM(x, 0);
+    refY = &DIRECT_MULTIDIM_ELEM(y, 0);
+
     // loop unrolling
     for (size_t n=0; n<nmax; n+=4)
     {
-        size_t n_1=n+1;
-        size_t n_2=n+2;
-        size_t n_3=n+3;
-        retval += DIRECT_MULTIDIM_ELEM(x, n)   * DIRECT_MULTIDIM_ELEM(y, n)+
-                  DIRECT_MULTIDIM_ELEM(x, n_1) * DIRECT_MULTIDIM_ELEM(y, n_1)+
-                  DIRECT_MULTIDIM_ELEM(x, n_2) * DIRECT_MULTIDIM_ELEM(y, n_2)+
-                  DIRECT_MULTIDIM_ELEM(x, n_3) * DIRECT_MULTIDIM_ELEM(y, n_3);
+    	retval += (*refX++)*(*refY++);
+    	retval += (*refX++)*(*refY++);
+    	retval += (*refX++)*(*refY++);
+    	retval += (*refX++)*(*refY++);
     }
+
     for (size_t n=nmax; n<MULTIDIM_SIZE(x); ++n)
+    {
         retval += DIRECT_MULTIDIM_ELEM(x, n)   * DIRECT_MULTIDIM_ELEM(y, n);
+    }
+
     return retval / MULTIDIM_SIZE(x);
 }
 

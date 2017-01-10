@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Vahid Abrishami (vabrishami@cnb.csic.es)
-# *              J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Airen Zaldivar  (airenzp@gmail.com)
+# * Authors:     J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -21,57 +20,46 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module implement the wrappers aroung Xmipp ML2D protocol
-visualization program.
-"""
-from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
-from pyworkflow.protocol.params import BooleanParam, IntParam, EnumParam
 
-from protocol_movie_alignment import ProtMovieAlignment
+from pyworkflow.viewer import Viewer, DESKTOP_TKINTER, WEB_DJANGO
+import pyworkflow.em.showj as showj
 
-from pyworkflow.em.viewer import ObjectView
-from pyworkflow.em.showj import OBJCMDS
-from pyworkflow.em.packages.xmipp3.protocol_movie_alignment import createPlots
+from protocol_movie_opticalflow import (XmippProtOFAlignment,
+                                        OBJCMD_MOVIE_ALIGNCARTESIAN)
 
-class XmippMovieAlignViewer(ProtocolViewer):
-    """ Wrapper to visualize different type of data objects
-    with the Xmipp program xmipp_showj
-    """
-    #_targets = [ProtMovieAlignment]
-    _targets = []
+
+class XmippMovieAlignViewer(Viewer):
+    _targets = [XmippProtOFAlignment]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
-    _label = 'viewer movie alignment'
-    #_plotVars = ['doShowLL', 'doShowPmax', 'doShowSignalChange', 'doShowMirror']
+    _label = 'viewer optical alignment'
 
-    def _defineParams(self, form):
-        form.addSection('Visualization')
-        form.addParam('showMovies', BooleanParam, default=False,
-                      important=True,
-                      label="Display movies",
-                      help='Check to see the list of available movies.')
-        form.addParam('movieId', IntParam,
-                      default=1,
-                      label='Movie number',
-                      help='The movie number for which the plots are requested.')
-        form.addParam('plotToShow', EnumParam, choices=PLOT_CHOICES,
-                      default=PLOT_POLAR, display=EnumParam.DISPLAY_COMBO,
-                      label="Plot type",
-                      help="Select which type of plot to use")
+    def _visualize(self, obj, **kwargs):
+        views = []
 
-    def _getVisualizeDict(self):
-        return {'showMovies': self._showMics,
-                'plotToShow': self.showPlots}
+        plotLabels = ('psdCorr._filename plotPolar._filename '
+                      'plotCart._filename')
+        labels = plotLabels + ' _filename '
+        viewParams = {showj.MODE: showj.MODE_MD,
+                      showj.ORDER: labels,
+                      showj.VISIBLE: labels,
+                      showj.RENDER: plotLabels,
+                      showj.ZOOM: 50,
+                      showj.OBJCMDS: "'%s'" % OBJCMD_MOVIE_ALIGNCARTESIAN
+                      }
 
-    def _showMics(self, paramName):
-        #return XmippViewer(project=self._project)._visualize(self.protocol.outputMicrographs)
-        outputMics = self.protocol.outputMicrographs
-        #objCommands = '%s' % (OBJCMD_MOVIE_ALIGNPOLAR)
-        return [ObjectView(self._project, outputMics.strId(), outputMics.getFileName(), self.protocol.strId())]
+        if obj.hasAttribute('outputMicrographs'):
+            views.append(self.objectView(obj.outputMicrographs,
+                                         viewParams=viewParams))
+        elif obj.hasAttribute('outputMovies'):
+            views.append(self.objectView(obj.outputMovies,
+                                         viewParams=viewParams))
+        else:
+            views.append(self.infoMessage("Output (micrographs or movies) has "
+                                          "not been produced yet."))
 
-    def showPlots(self, paramName):
-        createPlots(self.plotToShow.get(), self.protocol, self.movieId.get())
+        return views
+

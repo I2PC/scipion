@@ -33,7 +33,7 @@ import ttk
 import tkFont
 
 import pyworkflow.protocol.protocol as prot
-from pyworkflow.em import findViewers, DESKTOP_TKINTER
+from pyworkflow.em import findViewers, DESKTOP_TKINTER, getObjects
 from pyworkflow.utils.graph import Graph
 from pyworkflow.utils.properties import Message, Icon, Color
 
@@ -45,6 +45,7 @@ from pyworkflow.gui import Canvas, RoundedTextBox
 from pyworkflow.gui.graph import LevelTree
 from pyworkflow.gui.form import getObjectLabel
 
+DATA_TAG = 'data'
 
 ACTION_EDIT = Message.LABEL_EDIT
 ACTION_COPY = Message.LABEL_COPY
@@ -91,11 +92,11 @@ def populateTree(tree, elements, parentId=''):
             t = node.getName()
             if node.count:
                 t += ' (%d)' % node.count
-            node.nodeId = tree.insert(parentId, 'end', node.getName(), text=t)
+            node.nodeId = tree.insert(parentId, 'end', node.getName(), text=t, tags=DATA_TAG)
             populateTree(tree, node.getChilds(), node.nodeId)
             if node.count:
                 tree.see(node.nodeId)
-                tree.item(node.nodeId, tags='non-empty')
+                tree.item(node.nodeId, tags=('non-empty', DATA_TAG))
 
     
 class ProjectDataView(tk.Frame):
@@ -124,10 +125,10 @@ class ProjectDataView(tk.Frame):
         c.grid(row=0, column=0, sticky='news')
         
     def _createContent(self):
-        """ Create the Protocols View for the Project.
+        """ Create the Data View for the Project.
         It has two panes:
             Left: containing the Protocol classes tree
-            Right: containing the Runs list
+            Right: containing the Data list
         """
         p = tk.PanedWindow(self, orient=tk.HORIZONTAL, bg='white')
         
@@ -164,7 +165,11 @@ class ProjectDataView(tk.Frame):
         f = tkFont.Font(family='helvetica', size='10', weight='bold')
         self.dataTree.tag_configure('non-empty', font=f)
         self.dataTree.grid(row=0, column=0, sticky='news')
-                        
+
+        # bind click events
+        self.dataTree.tag_bind(DATA_TAG, '<Double-1>', self._dataItemClick)
+        self.dataTree.tag_bind(DATA_TAG, '<Return>', self._dataItemClick)
+
         # Program automatic refresh
         self.dataTree.after(3000, self._automaticRefreshData)
         
@@ -237,7 +242,7 @@ class ProjectDataView(tk.Frame):
         # Create the Selected Run Info
         infoFrame = tk.Frame(v)
         gui.configureWeigths(infoFrame)
-        self._infoText = TaggedText(infoFrame, bg='white')
+        self._infoText = TaggedText(infoFrame, bg='white', handlers={'sci-open': self._openProtocolFormFromId})
         self._infoText.grid(row=0, column=0, sticky='news')
         
         v.add(runsFrame, weight=3)
@@ -263,11 +268,18 @@ class ProjectDataView(tk.Frame):
         color = '#ADD8E6' #Lightblue
         item = self._dataCanvas.createTextbox(nodeText, 100, y, bgColor=color, textColor=textColor)
 
+        # Get the dataId
+        if not node.isRoot():
+            dataId = node.pointer.get().getObjId()
+
+            if dataId in self.settings.dataSelection:
+                item.setSelected(True)
+
         return item
     
     def _createDataGraph(self, parent):
         """ This will be the upper part of the right panel.
-        It will contains the Data Graph with their relations. 
+        It will contain the Data Graph with their relations.
         """
         self._dataCanvas = Canvas(parent, width=600, height=500)
         self._dataCanvas.grid(row=0, column=0, sticky='nsew')
@@ -283,36 +295,183 @@ class ProjectDataView(tk.Frame):
         lt.setCanvas(self._dataCanvas)
         lt.paint(self._createDataItem)
         self._dataCanvas.updateScrollRegion()
-        
+
+    def _dataItemClick(self, e=None):
+        # Get the tree widget that originated the event
+        # from the left pane data tree
+        tree = e.widget
+        dataClassName = tree.getFirst()
+
+        if dataClassName is not None:
+            self._loopData(lambda item: self._selectItemByClass(item, dataClassName))
+
+
     def _selectObject(self, pobj):
         obj = pobj.get()
         self._selected = obj
         self._infoText.setReadOnly(False)
         self._infoText.setText('*Label:* ' + getObjectLabel(pobj, self.project.mapper))
         self._infoText.addText('*Info:* ' + str(obj))
-        self._infoText.addText('*Created:* ' + '2014-11-22')
+        self._infoText.addText('*Created by:*')
+        self._infoText.addText(' - ' + pobj.getObjValue().getObjectTag(pobj.getObjValue()) + ' (' + obj.getObjCreation() + ')')
+
+        # Get the consumers (this will get the data!!)
+        derivedData = self.project.getSourceChilds(pobj.getObjValue())
+
+        if derivedData is not None and len(derivedData) > 0:
+
+            self._infoText.addText('*Consumed by:*')
+            for data in derivedData:
+
+                # Get the protocol
+                protocol = self.project.getObject(data.getObjParentId())
+                self._infoText.addText(' - ' + protocol.getObjectTag(protocol))
+
+
         if obj.getObjComment():
             self._infoText.addText('*Comments:* ' + obj.getObjComment())
         self._infoText.setReadOnly(True)
         
     def _onClick(self, e=None):
+        self._deselectAll()
+
         if e.node.pointer:
+            self.toogleItemSelection(e, True)
             self._selectObject(e.node.pointer)
-    
+
+    def _invertSelection(self):
+
+        self._loopData(self._invertAction)
+
+    def _deselectAll(self):
+
+        self._loopData(self._deselectItemAction)
+
+    def _selectAll(self):
+
+        self._loopData(self._selectItemAction)
+
+    def _selectItemAction(self, item):
+        self.toogleItemSelection(item, True)
+
+    def _selectItemByClass(self, item, className):
+
+        if not item.node.isRoot():
+
+            data = item.node.pointer.get()
+            self.toogleItemSelection(item, isinstance(data, getObjects()[className]))
+
+    def _invertAction(self, item):
+        self.toogleItemSelection(item, not item.getSelected())
+
+    def _deselectItemAction(self, item):
+        self.toogleItemSelection(item, False)
+
+    def toogleItemSelection(self, item, select):
+
+        if item.node.isRoot(): return
+
+        selection = self.settings.dataSelection
+        runSelection = self.settings.runSelection
+
+        dataId = item.node.pointer.get().getObjId()
+        protocolId = item.node.pointer.getObjValue().getObjId()
+        if not select:
+            try:
+                if dataId in selection: selection.remove(dataId)
+                if protocolId in runSelection: runSelection.remove(protocolId)
+            except ValueError:
+                print "id not in selection"
+
+        else:
+            selection.append(dataId)
+            runSelection.append(protocolId)
+
+        item.setSelected(select)
+
+    def _loopData(self, action):
+
+        results = []
+
+        # Loop through all the items
+        for key, item in self._dataCanvas.items.items():
+
+            result = action(item)
+
+            if result is not None:
+                results.append(result)
+
+        return results
+
     def _onDoubleClick(self, e=None):
         if e.node.pointer:
+
             self._selectObject(e.node.pointer)
-            # Graph the first viewer available for this type of object
-            ViewerClass = findViewers(self._selected.getClassName(), DESKTOP_TKINTER)[0] #
-            viewer = ViewerClass(project=self.project)
-            viewer.visualize(self._selected)
-        
+            self._viewObject(e.node.pointer.get().getObjId())
+
+            return
+            # self._selectObject(e.node.pointer)
+            # # Graph the first viewer available for this type of object
+            # ViewerClass = findViewers(self._selected.getClassName(), DESKTOP_TKINTER)[0] #
+            # viewer = ViewerClass(project=self.project)
+            # viewer.visualize(self._selected)
+
+    def _viewObject(self, objId):
+        """ Call appropriate viewer for objId. """
+        obj = self.project.getObject(int(objId))
+        viewerClasses = findViewers(obj.getClassName(), DESKTOP_TKINTER)
+        if not viewerClasses:
+            return  # TODO: protest nicely
+        viewer = viewerClasses[0](project=self.project, parent=self.windows)
+        viewer.visualize(obj)
+
+    def _openScipionLink(self, id):
+        """ So far only protocols are coming through links"""
+        self._openProtocolFormFromId(id)
+
+    def _openProtocolFormFromId(self, protId):
+
+        prot = self.project.getObject(int(protId))
+        self._openProtocolForm(prot)
+
+    def _openProtocolForm(self, prot):
+        """Open the Protocol GUI Form given a Protocol instance"""
+
+        w = gui.form.FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(), prot,
+                                  self._executeSaveProtocol, self.windows,
+                                  hostList=self.project.getHostNames())
+        w.adjustSize()
+        w.show(center=True)
+
+    def _executeSaveProtocol(self, prot, onlySave=False):
+        if onlySave:
+            self.project.saveProtocol(prot)
+            msg = Message.LABEL_SAVED_FORM
+            #            msg = "Protocol successfully saved."
+        else:
+            self.project.launchProtocol(prot)
+            # Select the launched protocol to display its summary, methods..etc
+            # self._selection.clear()
+            # self._selection.append(prot.getObjId())
+            # self._updateSelection()
+            # self._lastStatus = None  # clear lastStatus to force re-load the logs
+            msg = ""
+
+        return msg
+
     def _onRightClick(self, e=None):
-        return [(Message.LABEL_EDIT, self._editObject, Icon.ACTION_EDIT)]
+        return [
+            (Message.LABEL_EDIT, self._editObject, Icon.ACTION_EDIT),
+            ('Go to protocol', self._goToProtocol, Icon.ACTION_SEARCH)
+        ]
     
     def _editObject(self):
         """Open the Edit GUI Form given an instance"""
         EditObjectDialog(self, Message.TITLE_EDIT_OBJECT, self._selected, self.project.mapper)
+
+    def _goToProtocol(self):
+        """Switch to protocols view selecting the correspondent protocol"""
+
 
     def refreshData(self, e=None, initRefreshCounter=True):
         """ Refresh the status of displayed data.

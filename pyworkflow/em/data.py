@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -42,8 +42,8 @@ import numpy as np
 
 class EMObject(OrderedObject):
     """Base object for all EM classes"""
-    def __init__(self, **args):
-        OrderedObject.__init__(self, **args)
+    def __init__(self, **kwargs):
+        OrderedObject.__init__(self, **kwargs)
         
     def __str__(self):
         return self.getClassName()
@@ -55,17 +55,21 @@ class EMObject(OrderedObject):
 
 class Acquisition(EMObject):
     """Acquisition information"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
-        self._magnification = Float(args.get('magnification', None)) 
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._magnification = Float(kwargs.get('magnification', None))
         # Microscope voltage in kV
-        self._voltage = Float(args.get('voltage', None))
+        self._voltage = Float(kwargs.get('voltage', None))
         # Spherical aberration in mm
-        self._sphericalAberration = Float(args.get('sphericalAberration', None)) 
-        self._amplitudeContrast = Float(args.get('amplitudeContrast', None))
+        self._sphericalAberration = Float(kwargs.get('sphericalAberration', None))
+        self._amplitudeContrast = Float(kwargs.get('amplitudeContrast', None))
+        self._doseInitial = Float(kwargs.get('doseInitial', 0))
+        self._dosePerFrame = Float(kwargs.get('dosePerFrame', None))
         
     def copyInfo(self, other):
-        self.copyAttributes(other, '_magnification', '_voltage', '_sphericalAberration', '_amplitudeContrast')
+        self.copyAttributes(other, '_magnification', '_voltage',
+                            '_sphericalAberration', '_amplitudeContrast',
+                            '_doseInitial', '_dosePerFrame')
         
     def getMagnification(self):
         return self._magnification.get()
@@ -89,14 +93,25 @@ class Acquisition(EMObject):
         return self._amplitudeContrast.get()
     
     def setAmplitudeContrast(self, value):
-        self._amplitudeContrast.set(value)        
+        self._amplitudeContrast.set(value)
+
+    def getDoseInitial(self):
+        return self._doseInitial.get()
+
+    def setDoseInitial(self, value):
+        self._doseInitial.set(value)
+
+    def getDosePerFrame(self):
+        return self._dosePerFrame.get()
+
+    def setDosePerFrame(self, value):
+        self._dosePerFrame.set(value)
 
     def __str__(self):
-        return "\n    mag=%f\n    volt= %f\n    Cs=%f\n    Q0=%f\n\n"%(self._magnification.get(),
+        return "\n    mag=%s\n    volt= %s\n    Cs=%s\n    Q0=%s\n\n"%(self._magnification.get(),
                                                                      self._voltage.get(),
                                                                      self._sphericalAberration.get(),
                                                                      self._amplitudeContrast.get())
-
 
     
 class CTFModel(EMObject):
@@ -337,8 +352,12 @@ class ImageDim(CsvList):
     
 class Image(EMObject):
     """Represents an EM Image object"""
-    def __init__(self, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        """
+         Params:
+        :param location: Could be a valid location: (index, filename) or  filename
+        """
+        EMObject.__init__(self, **kwargs)
         # Image location is composed by an index and a filename
         self._index = Integer(0)
         self._filename = String()
@@ -349,6 +368,8 @@ class Image(EMObject):
         # this matrix can be used for 2D/3D alignment or
         # to represent projection directions
         self._transform = None
+        if location:
+            self.setLocation(location)
 
     def getSamplingRate(self):
         """ Return image sampling rate. (A/pix) """
@@ -365,18 +386,15 @@ class Image(EMObject):
 
     def getDimensions(self):
         """getDimensions is redundant here but not in setOfVolumes
-         create it makes easier to crete protocols for both images
+         create it makes easier to create protocols for both images
          and sets of images
         """
         self.getDim()
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
-        fn = self.getFileName()
-        if fn is not None and os.path.exists(fn.replace(':mrc', '')):
-            x, y, z, n = ImageHandler().getDimensions(self)
-            return x, y, z
-        return None
+        x, y, z, n = ImageHandler().getDimensions(self)
+        return None if x is None else (x, y, z)
 
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
@@ -415,7 +433,7 @@ class Image(EMObject):
         if t == tuple:
             index, filename = first
         elif t == int or t == long:
-            index , filename = first, args[1]
+            index, filename = first, args[1]
         elif t == str or t == unicode:
             index, filename = NO_INDEX, first
         else:
@@ -423,6 +441,9 @@ class Image(EMObject):
             
         self.setIndex(index)
         self.setFileName(filename)
+
+    def getBaseName(self):
+        return os.path.basename(self.getFileName())
         
     def copyInfo(self, other):
         """ Copy basic information """
@@ -471,7 +492,8 @@ class Image(EMObject):
             dimStr = str(ImageDim(*dim))
         else:
             dimStr = 'No-Dim'
-        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr, self.getSamplingRate() or 99999.)
+        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr,
+                                        self.getSamplingRate() or 99999.)
     
     def getFiles(self):
         filePaths = set()
@@ -481,8 +503,8 @@ class Image(EMObject):
 
 class Micrograph(Image):
     """ Represents an EM Micrograph object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        Image.__init__(self, location, **kwargs)
         self._micName = String()
     
     def setMicName(self, micName):
@@ -502,14 +524,14 @@ class Micrograph(Image):
 
 class Particle(Image):
     """ Represents an EM Particle object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        Image.__init__(self, location, **kwargs)
         # This may be redundant, but make the Particle
         # object more indenpent for tracking coordinates
         self._coordinate = None
         self._micId = Integer()
         self._classId = Integer()
-        
+
     def hasCoordinate(self):
         return self._coordinate is not None
     
@@ -556,9 +578,10 @@ class Mask(Particle):
 
 class Volume(Image):
     """ Represents an EM Volume object """
-    def __init__(self, **args):
-        Image.__init__(self, **args)
+    def __init__(self, location=None, **kwargs):
+        Image.__init__(self, location, **kwargs)
         self._classId = Integer()
+        self._halfMapFilenames = CsvList(pType=str)
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
@@ -582,6 +605,15 @@ class Volume(Image):
         
     def hasClassId(self):
         return self._classId.hasValue()
+    
+    def hasHalfMaps(self):
+        return self._halfMapFilenames.hasValue()
+    
+    def getHalfMaps(self):
+        return self._halfMapFilenames.get()
+
+    def setHalfMaps(self, listFileNames):
+        return self._halfMapFilenames.set(listFileNames)
 
 
 class VolumeMask(Volume):
@@ -591,8 +623,8 @@ class VolumeMask(Volume):
 
 class EMFile(EMObject):
     """ Class to link usually to text files. """
-    def __init__(self, filename=None, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, filename=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._filename = String(filename)
         
     def getFileName(self):
@@ -606,8 +638,8 @@ class EMFile(EMObject):
     
 class PdbFile(EMFile):
     """Represents an PDB file. """
-    def __init__(self, filename=None, pseudoatoms=False, **args):
-        EMFile.__init__(self, filename, **args)
+    def __init__(self, filename=None, pseudoatoms=False, **kwargs):
+        EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
         
     def getPseudoAtoms(self):
@@ -675,16 +707,16 @@ class SetOfImages(EMSet):
     """ Represents a set of Images """
     ITEM_TYPE = Image
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._samplingRate = Float()
-        self._hasCtf = Boolean(args.get('ctf', False))
+        self._hasCtf = Boolean(kwargs.get('ctf', False))
         self._alignment = String(ALIGN_NONE)
         self._isPhaseFlipped = Boolean(False)
         self._isAmplitudeCorrected = Boolean(False)
         self._acquisition = Acquisition()
         self._firstDim = ImageDim() # Dimensions of the first image
-           
+
     def getAcquisition(self):
         return self._acquisition
         
@@ -741,7 +773,7 @@ class SetOfImages(EMSet):
     
     def setIsAmplitudeCorrected(self, value):
         self._isAmplitudeCorrected.set(value)
-        
+
     def append(self, image):
         """ Add a image to the set. """
         # If the sampling rate was set before, the same value
@@ -749,21 +781,31 @@ class SetOfImages(EMSet):
         if self.getSamplingRate() or not image.getSamplingRate():
             image.setSamplingRate(self.getSamplingRate())
         # Copy the acquistion from the set to images
-        if self.hasAcquisition(): # only override image acquisition if setofImages acquisition is not none
+        # only override image acquisition if setofImages acquisition is not none
+        if self.hasAcquisition():
             #TODO: image acquisition should not be overwritten
             if not image.hasAcquisition():
                 image.setAcquisition(self.getAcquisition())
         # Store the dimensions of the first image, just to 
         # avoid reading image files for further queries to dimensions
-        if self.getSize() == 0: # only check this for first time append is called
-            if self._firstDim.isEmpty():
-                self._firstDim.set(image.getDim())
+        # only check this for first time append is called
+        if self.isEmpty():
+            self._setFirstDim(image)
+
         EMSet.append(self, image)
+
+    def _setFirstDim(self, image):
+        """ Store dimensions when the first image is found.
+        This function should be called only once, to avoid reading
+        dimension from image file. """
+        if self._firstDim.isEmpty():
+            self._firstDim.set(image.getDim())
 
     def copyInfo(self, other):
         """ Copy basic information (sampling rate and ctf)
         from other set of images to current one"""
-        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped', '_isAmplitudeCorrected', '_alignment')
+        self.copyAttributes(other, '_samplingRate', '_isPhaseFlipped',
+                            '_isAmplitudeCorrected', '_alignment')
         self._acquisition.copyInfo(other._acquisition)
         
     def getFiles(self):
@@ -796,7 +838,7 @@ class SetOfImages(EMSet):
         for i, img in enumerate(self.iterItems(orderBy=orderBy,
                                                direction=direction)):
             transform = img.getTransform() if applyTransform else None
-            ih.convert(img, (i + 1, fnStack), transform=transform)
+            ih.convert(img, (i+1, fnStack), transform=transform)
     
     # TODO: Check whether this function can be used.
     # for example: protocol_apply_mask
@@ -817,6 +859,9 @@ class SetOfImages(EMSet):
             return None
         x, y, z = self._firstDim
         return x, y, z
+
+    def setDim(self, newDim):
+        self._firstDim.set(newDim)
     
     def getXDim(self):
         return self.getDim()[0] if self.getDim() is not None else 0
@@ -839,8 +884,12 @@ class SetOfImages(EMSet):
 
         s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(),
                                                self.getSize(),
-                                               self._firstDim, sampling)
+                                               self._dimStr(), sampling)
         return s
+
+    def _dimStr(self):
+        """ Return the string representing the dimensions. """
+        return str(self._firstDim)
 
     def iterItems(self, orderBy='id', direction='ASC'):
         """ Redefine iteration to set the acquisition to images. """
@@ -876,8 +925,8 @@ class SetOfMicrographsBase(SetOfImages):
     but avoid to select Movies when Micrographs are required. 
     """
     
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfImages.__init__(self, **kwargs)
         self._scannedPixelSize = Float()
     
     def copyInfo(self, other):
@@ -922,10 +971,10 @@ class SetOfParticles(SetOfImages):
     ITEM_TYPE = Particle
     REP_TYPE = Particle
     
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfImages.__init__(self, **kwargs)
         self._coordsPointer = Pointer()
-        
+
     def hasCoordinates(self):
         return self._coordsPointer.hasValue()
     
@@ -951,8 +1000,8 @@ class SetOfParticles(SetOfImages):
 class SetOfAverages(SetOfParticles):
     """Represents a set of Averages.
     It is a SetOfParticles but it is useful to differentiate outputs."""
-    def __init__(self, **args):
-        SetOfParticles.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfParticles.__init__(self, **kwargs)
 
 
 class SetOfVolumes(SetOfImages):
@@ -960,16 +1009,16 @@ class SetOfVolumes(SetOfImages):
     ITEM_TYPE = Volume
     REP_TYPE = Volume
     
-    def __init__(self, **args):
-        SetOfImages.__init__(self, **args)
+    def __init__(self, **kwargs):
+        SetOfImages.__init__(self, **kwargs)
 
 
 class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""
     ITEM_TYPE = CTFModel
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         
     def getMicrographs(self):
@@ -987,11 +1036,11 @@ class SetOfDefocusGroup(EMSet):
     """
     ITEM_TYPE = DefocusGroup
         
-    def __init__(self, **args):
-        EMSet.__init__(self, **args) 
-        self._minSet=False
-        self._maxSet=False
-        self._avgSet=False
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
+        self._minSet = False
+        self._maxSet = False
+        self._avgSet = False
         
     def getMinSet(self):
         return self._minSet.get()
@@ -1022,7 +1071,7 @@ class Coordinate(EMObject):
         self._y = Integer(kwargs.get('y', None))
         self._micId = Integer()
         self._micName = String()
-        
+
     def getX(self):
         return self._x.get()
     
@@ -1103,8 +1152,8 @@ class SetOfCoordinates(EMSet):
     """
     ITEM_TYPE = Coordinate
     
-    def __init__(self, **args):
-        EMSet.__init__(self, **args)
+    def __init__(self, **kwargs):
+        EMSet.__init__(self, **kwargs)
         self._micrographsPointer = Pointer()
         self._boxSize = Integer()
 
@@ -1176,8 +1225,8 @@ class SetOfCoordinates(EMSet):
     
 
 class Matrix(Scalar):
-    def __init__(self, **args):
-        Scalar.__init__(self, **args)
+    def __init__(self, **kwargs):
+        Scalar.__init__(self, **kwargs)
         self._matrix = np.eye(4)
         
     def _convertValue(self, value):
@@ -1219,8 +1268,8 @@ class Transform(EMObject):
     and mirroring.
     """
 
-    def __init__(self, matrix=None, **args):
-        EMObject.__init__(self, **args)
+    def __init__(self, matrix=None, **kwargs):
+        EMObject.__init__(self, **kwargs)
         self._matrix = Matrix()
         if matrix is not None:
             self.setMatrix(matrix)
@@ -1314,10 +1363,16 @@ class SetOfClasses(EMSet):
         self._representatives = Boolean(False) # Store the average images of each class(SetOfParticles)
         self._imagesPointer = Pointer()
 
-    def iterClassImages(self):
-        """ Iterate over the images of a class. """
-        pass
-    
+    def iterClassItems(self, iterDisabled=False):
+        """ Iterate over the images of a class.
+        Params:
+            iterDisabled: If True, also include the disabled items. """
+        for cls in self.iterItems():
+            if iterDisabled or cls.isEnabled():
+                for img in cls:
+                    if iterDisabled or img.isEnabled():
+                        yield img
+
     def hasRepresentatives(self):
         return self._representatives.get()
     
@@ -1369,6 +1424,15 @@ class SetOfClasses(EMSet):
         for classItem in EMSet.iterItems(self, orderBy=orderBy, direction=direction):
             self._setItemMapperPath(classItem)
             yield classItem
+
+    def iterRepresentatives(self, orderBy='id', direction='ASC'):
+        for classItem in self.iterItems(orderBy, direction):
+            if classItem.hasRepresentative():
+                rep = classItem.getRepresentative()
+                rep.setObjId(classItem.getObjId())
+                rep.setSamplingRate(classItem.getSamplingRate())
+
+                yield rep
             
     def getSamplingRate(self):
         return self.getImages().getSamplingRate()
@@ -1544,25 +1608,87 @@ class SetOfNormalModes(EMSet):
         self._pdbPointer.copy(other._pdbPointer, copyId=False)
 
 
+class FramesRange(CsvList):
+    """ Store first and last frames in a movie. The last element will be
+     the index in the stack of the first frame.
+    """
+    def __init__(self, firstFrame=1, lastFrame=0, firstFrameIndex=1):
+        """
+        Frames numbering always refer to the initial movies imported into
+        the project. Counting goes from 1 to the number of frames.
+
+        The underlying stack file could have all original frames or just
+        a subset of them, so we need to keep which is the index of the
+        first frame in the stack, again, the first image in a stack is 1
+        """
+        CsvList.__init__(self, pType=int)
+        self.set([firstFrame, lastFrame, firstFrameIndex])
+
+    def getFirstFrame(self):
+        return self[0]
+
+    def setFirstFrame(self, value):
+        self[0] = value
+
+    def getLastFrame(self):
+        return self[1]
+
+    def setLastFrame(self, value):
+        self[1] = value
+
+    def getRange(self):
+        """ Return the frames range. """
+        return self[0], self[1]
+
+    def getFirstFrameIndex(self):
+        return self[2]
+
+    def setFirstFrameIndex(self, value):
+        self[2] = value
+
+    def rangeStr(self):
+        return '[%d-%d]' % (self[0], self[1])
+
+    def __str__(self):
+        return '%s starts: %d' % (self.rangeStr(), self[2])
+
+
 class Movie(Micrograph):
     """ Represent a set of frames of micrographs.
     """
-    def __init__(self, filename=None, **kwargs):
-        Micrograph.__init__(self, filename=filename, **kwargs)
+    def __init__(self, location=None, **kwargs):
+        Micrograph.__init__(self, location, **kwargs)
+
+        # A movie could could have alignment information after some protocol
         self._alignment = None
+        self._framesRange = FramesRange()
 
     def isCompressed(self):
-        return self.getFileName().endswith('bz2') or self.getFileName().endswith('tbz')
+        fn = self.getFileName()
+        return fn.endswith('bz2') or fn.endswith('tbz')
         
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)
         Consider compressed Movie files"""
         if not self.isCompressed():
-            x, y, z, n = ImageHandler().getDimensions(self.getFileName())
-            if x is not None: # Means file exists
+            x, y, z, n = ImageHandler().getDimensions(self)
+            if x is not None:
                 return x, y, max(z, n)
         return None
-    
+
+    def getNumberOfFrames(self):
+        """ Return the number of frames of this movie
+        """
+        first, last, _ = self._framesRange
+        if last > 0:
+            return last - first + 1
+
+        if not self.isCompressed():
+            x, y, z, n = ImageHandler().getDimensions(self)
+            if x is not None:
+                return max(z, n) # Protect against evil mrc files
+        return None
+
     def hasAlignment(self):
         return self._alignment is not None
     
@@ -1576,30 +1702,52 @@ class Movie(Micrograph):
         and (3,4)
         """
         self._alignment = alignment
-    
-    
+
+    def getFramesRange(self):
+        return self._framesRange
+
+    def setFramesRange(self, value):
+        self._framesRange.set(value)
+
+
 class MovieAlignment(EMObject):
     """ Store the alignment between the different Movie frames.
     Also store the first and last frames used for alignment.
     """
-    def __init__(self, first=0, last=0, shifts=[], **kwargs):
+    def __init__(self, first=-1, last=-1, **kwargs):
         EMObject.__init__(self, **kwargs)
         self._first = Integer(first)
         self._last = Integer(last)
-        self._shifts = CsvList(pType=float)
-        self._shifts.set(shifts)
-        
+        self._xshifts = CsvList(pType=float)
+        self._yshifts = CsvList(pType=float)
+        self._xshifts.set(kwargs.get('xshifts', []))
+        self._yshifts.set(kwargs.get('yshifts', []))
+        # This list contain the coordinate where you begin the crop (x, y),
+        # the width and height of the frames.
+        # The order is: x,y, width and height.
+        # For width and height, 0 means the entire frame.
+        self._roi = CsvList(pType=int) 
+
     def getRange(self):
         """ Return the first and last frames used for alignment.
-        The first frame in a movie stack is 0.
+        The first frame in a movie stack is numbered 1 and the maximum value
+        for the last one is N,  where N is the total number of frames.
         """
-        return self._firstFrame.get(), self._lastFrame.get()
+        return self._first.get(), self._last.get()
     
     def getShifts(self):
         """ Return the list of alignment between one frame
         to another, from first to last frame used.
         """
-        return self._shifts
+        return self._xshifts, self._yshifts
+
+    def setRoi(self, roiList):
+        self._roi.set(roiList)
+    
+    def getRoi(self):
+        """ Return the size used to align the movie
+        """
+        return self._roi
 
 
 class SetOfMovies(SetOfMicrographsBase):
@@ -1610,6 +1758,8 @@ class SetOfMovies(SetOfMicrographsBase):
         SetOfMicrographsBase.__init__(self, **kwargs)
         self._gainFile = String()
         self._darkFile = String()
+        # Store the frames range to avoid loading the items
+        self._firstFramesRange = FramesRange()
 
     def setGain(self, gain):
         self._gainFile.set(gain)
@@ -1623,7 +1773,34 @@ class SetOfMovies(SetOfMicrographsBase):
     def getDark(self):
         return self._darkFile.get()
 
-    
+    def getFramesRange(self):
+        return self._firstFramesRange
+
+    def setFramesRange(self, value):
+        self._firstFramesRange.set(value)
+
+    def _setFirstDim(self, image):
+        if self._firstDim.isEmpty():
+            self._firstDim.set(image.getDim())
+            self._firstFramesRange.set(image.getFramesRange())
+            print "setting framesRange: ", self.getFramesRange()
+
+    def _dimStr(self):
+        """ Return the string representing the dimensions. """
+        if self._firstDim.isEmpty():
+            dimStr = 'No-Dim'
+        else:
+            try:
+                x, y, z = self._firstDim
+            except:
+                return str(self._firstDim)
+            first, last, i = self._firstFramesRange
+            if last == 0:
+                last = z
+            dimStr = str(ImageDim(x, y, last - first + 1))
+        return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
+
+
 class MovieParticle(Particle):
     def __init__(self, **kwargs):
         Particle.__init__(self, **kwargs)
@@ -1648,4 +1825,40 @@ class SetOfMovieParticles(SetOfParticles):
     when the particles have been extracted from a set of movies.
     """
     ITEM_TYPE = MovieParticle
-    
+
+
+class FSC(EMObject):
+    """Store a Fourier Shell Correlation"""
+    def __init__(self, **kwargs):
+        EMObject.__init__(self, **kwargs)
+        self._x = CsvList(pType=float)
+        self._y = CsvList(pType=float)
+
+    def loadFromMd(self, mdObj, labelX, labelY):
+        """
+        Fill the x and y data of the FSC from a metadata.
+        Params:
+            mdObj: either a metadata object of a filename
+            labelX: label used for frequency
+            labelY: label used for FSC values
+        """
+        #iterate through x and y and create csvLists
+        import metadata as md
+        self._x.clear()
+        self._y.clear()
+
+        for row in md.iterRows(mdObj):
+            self._x.append(row.getValue(labelX))
+            self._y.append(row.getValue(labelY))
+
+    def getData(self):
+        return self._x, self._y
+
+    def setData(self, xData, yData):
+        self._x.set(xData)
+        self._y.set(yData)
+
+
+class SetOfFSCs(EMSet):
+    """Represents a set of Volumes"""
+    ITEM_TYPE = FSC

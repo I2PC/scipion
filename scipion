@@ -31,6 +31,7 @@ Main entry point to scipion. It launches the gui, tests, etc.
 import sys
 import os
 from os.path import join, exists, dirname
+import subprocess
 
 try:
     from ConfigParser import ConfigParser, ParsingError
@@ -38,9 +39,9 @@ except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'v1.0.1'
-__nickname__ = 'Augusto'
-__releasedate__ = '2016-06-30'
+__version__ = 'devel'
+__nickname__ = 'devel'
+__releasedate__ = 'devel'
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -71,6 +72,7 @@ while len(sys.argv) > 2 and sys.argv[1].startswith('--'):
         SCIPION_LOCAL_CONFIG = SCIPION_CONFIG  # global and local are the same!
     else:
         sys.exit('Unknown argument: %s' % arg)
+
 SCIPION_PROTOCOLS = join(dirname(SCIPION_CONFIG), 'protocols.conf')
 SCIPION_HOSTS = join(dirname(SCIPION_CONFIG), 'hosts.conf')
 
@@ -93,6 +95,39 @@ any doubt.
 ***""" % dirname(SCIPION_LOCAL_CONFIG))
 
 
+#
+# Check the version if in devel mode
+#
+
+if __version__ == 'devel':
+    # Find out if the is a .git directory
+    if exists(join(SCIPION_HOME, '.git')):
+        def call(cmd):
+            return subprocess.Popen(cmd, shell=True, cwd=SCIPION_HOME).wait()
+        if call('which git > /dev/null') == 0: # Means git command is found
+            gitBranch = str(subprocess.check_output("git branch | grep \\* ", cwd=SCIPION_HOME, shell=True))
+            gitBranch = gitBranch.split("*")[1]
+            __version__ = gitBranch.replace("\n", "")
+            commitLine = str(subprocess.check_output(['git', 'log', '-1',
+                                                  '--pretty=format:%h %ci'],
+                                                 cwd=SCIPION_HOME))
+            __nickname__, __releasedate__ = commitLine.split()[:2]
+            if __nickname__.startswith("b'"):
+               __nickname__=__nickname__[2:]
+
+    # If in a future we release a nightly build, we could add the .devel_version
+
+
+def getVersion(long=True):
+    if long:
+        return "%s (%s) %s" % (__version__, __releasedate__, __nickname__)
+    else:
+        return __version__
+
+def printVersion():
+    """ Print Scipion version """
+    # Print the version and some more info
+    sys.stdout.write('\nScipion %s\n\n' % getVersion())
 
 #
 # Initialize variables from config file.
@@ -108,7 +143,7 @@ for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
 # directories and packages.
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
-    'SCIPION_VERSION': __version__,
+    'SCIPION_VERSION': getVersion(),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
     'SCIPION_CONFIG': SCIPION_CONFIG,
@@ -124,9 +159,21 @@ try:
     def getPaths(section):
         return dict([(key, join(SCIPION_HOME, os.path.expanduser(path)))
                      for key, path in config.items(section)])  # works in 2.4
+
+    def getValues(section):
+        return dict([(key, value)
+                     for key, value in config.items(section)])  # works in 2.4
+
     DIRS_GLOBAL = getPaths('DIRS_GLOBAL')
     DIRS_LOCAL = getPaths('DIRS_LOCAL')
     PACKAGES = getPaths('PACKAGES')
+    if config.has_section('VARIABLES'):
+        VARIABLES = getValues('VARIABLES')
+    else: # For now, allow old scipion.conf without the VARIABLES section
+        sys.stdout.write("Warning: Missing section 'VARIABLES' in the "
+                         "configuration file ~/.config/scipion/scipion.conf\n")
+        VARIABLES = {}
+
     REMOTE = dict(config.items('REMOTE'))
     BUILD = dict(config.items('BUILD'))
 
@@ -150,12 +197,17 @@ try:
          BUILD['CUDA'],
          os.environ.get('LD_LIBRARY_PATH', '')]
     )
-    PYTHONPATH = os.pathsep.join(
-        [SCIPION_HOME,
-         join(SCIPION_SOFTWARE, 'lib', 'python2.7', 'site-packages'),
-         XMIPP_LIB,
-         os.environ.get('PYTHONPATH', '')]
-    )
+
+    PYTHONPATH_LIST = [SCIPION_HOME,
+                       join(SCIPION_SOFTWARE,
+                            'lib', 'python2.7', 'site-packages'),
+                       XMIPP_LIB, os.environ.get('PYTHONPATH', '')]
+
+    if 'SCIPION_NOGUI' in os.environ:
+        PYTHONPATH_LIST.insert(0, join(SCIPION_HOME,
+                                       'pyworkflow', 'gui', 'no-tkinter'))
+
+    PYTHONPATH = os.pathsep.join(PYTHONPATH_LIST)
 
     VARS.update({
         'PATH': PATH,
@@ -167,6 +219,7 @@ try:
     VARS.update(PACKAGES)
     VARS.update(REMOTE)
     VARS.update(BUILD)
+    VARS.update(VARIABLES)
 except Exception:
     if len(sys.argv) == 1 or sys.argv[1] != 'config':
         # This way of catching exceptions works with Python 2 & 3
@@ -211,13 +264,6 @@ def runApp(app, args='', chdir=True):
     if isinstance(args, list):
         args = ' '.join('"%s"' % x for x in args)
     runScript('%s %s' % (join(VARS['SCIPION_APPS'], app), args), chdir)
-
-
-def printVersion():
-    """ Print Scipion version """
-    # Print the version and some more info
-    sys.stdout.write('\nScipion %s (%s) %s\n\n' % (__version__, __releasedate__, __nickname__))
-
 
 #
 # Modes (first argument given to scipion).
@@ -295,7 +341,8 @@ def main():
                 args = 'run_gunicorn -b 0.0.0.0:%s' % sys.argv[3]
         else:
             args = option
-            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n" % (args, MODE_WEBSERVER))
+            sys.stdout.write("\nPassing %s straight to manage.py in %s mode.\n"
+                             % (args, MODE_WEBSERVER))
 
         runScript('%s %s' % (manage, args))
 
@@ -349,7 +396,8 @@ Installs Scipion. Also used to install only part of it, as specified
 in the <target>, or to add extra em packages to Scipion.
 
 Arguments:
-  <target>      a library, a python module, an em package or a xmipp file
+  <target>      a library, a python module, an em package or a xmipp file.
+                Version can be specified after a hyphen (-)
    -j N         where N is the number of processors to use during installation
   --help        show this help message
   --show        just show what would be done, without actually installing
@@ -357,6 +405,9 @@ Arguments:
   --no-scipy    do not install scipy or anything that depends on it
   --no-xmipp    use this option only after a successful compilation of Xmipp
                 to save some time when installing other packages 
+
+Example: scipion install eman-2.12
+
 """ % ' '.join(sys.argv[:2]))
         else:
             # Create folders if needed.
@@ -454,8 +505,8 @@ Arguments:
 
     elif mode == MODE_ENV:
         # Print all the environment variables needed to run scipion.
-        for k, v in VARS.items():
-            sys.stdout.write('export %s="%s"\n' % (k, v))
+        for key in sorted(VARS):
+            sys.stdout.write('export %s="%s"\n' % (key, VARS[key]))
 
         sys.exit(0)
 
@@ -547,7 +598,7 @@ MODE can be:
     # If we reach this point, bad arguments were passed
     sys.stdout.write("""Unknown mode: %s
 Valid modes are:
-  browser help install manager project stats tests testdata viewer webserver printenv run
+  help install manager project stats tests testdata viewer webserver printenv run
 Run "%s help" for a full description.\n""" % (sys.argv[1], sys.argv[0]))
     sys.exit(1)
 

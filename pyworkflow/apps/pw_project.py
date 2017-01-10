@@ -35,7 +35,6 @@ from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
 
 
-
 if __name__ == '__main__':
 
     # Add callback for remote debugging if available.
@@ -49,7 +48,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
-        if projName == 'last': # Get last project
+        if projName == 'last':  # Get last project
             projects = manager.listProjects()
             if not projects:
                 sys.exit("No projects yet, cannot open the last one.")

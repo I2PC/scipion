@@ -135,7 +135,7 @@ class SqliteMapper(Mapper):
         self.__updateTo(obj, level)
         # Update pending pointers to objects
         for ptr in self.updatePendingPointers:
-            self.db.updateObject(ptr._objId, ptr._objName, ptr.getClassName(),
+            self.db.updateObject(ptr._objId, ptr._objName, Mapper.getObjectPersistingClassName(ptr),
                              self.__getObjectValue(obj), ptr._objParentId, 
                              ptr._objLabel, ptr._objComment)
 
@@ -146,7 +146,7 @@ class SqliteMapper(Mapper):
                                                self.updateDict.keys())
 
     def __updateTo(self, obj, level):
-        self.db.updateObject(obj._objId, obj._objName, obj.getClassName(),
+        self.db.updateObject(obj._objId, obj._objName, Mapper.getObjectPersistingClassName(obj),
                              self.__getObjectValue(obj), obj._objParentId, 
                              obj._objLabel, obj._objComment)
 
@@ -188,7 +188,13 @@ class SqliteMapper(Mapper):
         return self.selectById(obj._objParentId)
         
     def fillObjectWithRow(self, obj, objRow):
-        """Fill the object with row data"""
+        """ Fill the object with row data. """
+        if not hasattr(obj, '_objId'):
+            raise Exception("Entry '%s' (id=%s) in the database, stored as '%s'"
+                            ", is being mapped to %s object. " %
+                            (self._getStrValue(objRow['name']), objRow['id'],
+                             objRow['classname'], type(obj)))
+
         obj._objId = objRow['id']
         self.objDict[obj._objId] = obj
         obj._objName = self._getStrValue(objRow['name'])
@@ -216,7 +222,7 @@ class SqliteMapper(Mapper):
             childName = childParts[-1]
             parentId = int(childParts[-2])
             # Here we are assuming that always the parent have
-            # been processed first, so it will be in the dictiorary
+            # been processed first, so it will be in the dictionary
             parentObj = self.objDict.get(parentId, None)
             if parentObj is None: # Something went wrong
                 #print "WARNING: Parent object (id=%d) was not found, object: %s. Ignored." % (parentId, childRow['name'])
@@ -228,13 +234,14 @@ class SqliteMapper(Mapper):
                 if childObj is None:
                     continue
                 setattr(parentObj, childName, childObj)
+
             self.fillObjectWithRow(childObj, childRow)  
             #childsDict[childObj._objId] = childObj  
               
     def __objFromRow(self, objRow):
         objClassName = objRow['classname']
-        
         obj = self._buildObject(objClassName)
+
         if obj is not None:
             self.fillObject(obj, objRow)
         
@@ -936,7 +943,7 @@ class SqliteFlatDb(SqliteDb):
         self.setupCommands(objDict)
 
     def setupCommands(self, objDict):
-        """ Setup the INSERT and UPDATE commands base on the object dictionray. """
+        """ Setup the INSERT and UPDATE commands base on the object dictionary. """
         self.INSERT_OBJECT = "INSERT INTO %sObjects (id, enabled, label, comment, creation" % self.tablePrefix
         self.UPDATE_OBJECT = "UPDATE %sObjects SET enabled=?, label=?, comment=?" % self.tablePrefix
         c = 0
@@ -1053,7 +1060,7 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd('1').replace('*', 'COUNT(*)'))
         return self.cursor.fetchone()[0]
 
-
+    # FIXME: Seems to be duplicated and a subset of selectAll
     def selectObjectsBy(self, iterate=False, **args):
         """More flexible select where the constrains can be passed
         as a dictionary, the concatenation is done by an AND"""
@@ -1063,6 +1070,9 @@ class SqliteFlatDb(SqliteDb):
         self.executeCommand(self.selectCmd(whereStr), whereTuple)
         return self._results(iterate)
 
+    # FIXME: Seems to be duplicated and a subset of selectAll
+    # Moreover, it does not translate between "user colums" and
+    # "internal" Objects table columns
     def selectObjectsWhere(self, whereStr, iterate=False):
         self.executeCommand(self.selectCmd(whereStr))
         return self._results(iterate)

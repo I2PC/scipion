@@ -17,6 +17,7 @@ import xmipp.ij.commons.XmippImageConverter;
 import xmipp.ij.commons.XmippUtil;
 import xmipp.jni.Filename;
 import xmipp.jni.ImageGeneric;
+import xmipp.jni.Particle;
 import xmipp.utils.XmippMessage;
 
 public abstract class Micrograph {
@@ -145,6 +146,11 @@ public abstract class Micrograph {
 			int pos = name.lastIndexOf('.');
 			if (pos != -1)
 				name = name.substring(0, pos);
+
+			pos = tokens[0].lastIndexOf('@');
+			if (pos != -1) {
+			    name = tokens[0].substring(0, pos) + "_at_" + name;
+			}
 		}
 		return name;
 	}
@@ -263,6 +269,8 @@ public abstract class Micrograph {
 		imp = null;
 		
 	}
-        
 
+    public List<? extends PickerParticle> getParticleList(){
+        return null;
+    };
 }

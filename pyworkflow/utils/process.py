@@ -113,3 +113,13 @@ def killWithChilds(pid):
         c.kill()
     print "Terminating process pid: %d" % pid
     proc.kill()
+
+def isProcessAlive(pid):
+
+    import psutil
+    try:
+        proc = psutil.Process(pid)
+        return proc.is_running()
+    except psutil.NoSuchProcess, e:
+        return False
+
