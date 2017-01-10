@@ -44,7 +44,7 @@ class XmippProtMonoRes(ProtRefine3D):
     """    
     Given a map the protocol assigns local resolutions to each pixel of the map.
     """
-    _label = 'monogenic resolution'
+    _label = 'local resolution'
     
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -132,8 +132,6 @@ class XmippProtMonoRes(ProtRefine3D):
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
-
-        #self._insertFunctionStep("createChimeraScript")
 
         self._insertFunctionStep("createHistrogram")
 
