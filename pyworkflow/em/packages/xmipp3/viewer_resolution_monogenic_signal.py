@@ -33,7 +33,7 @@ from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
+
 
 
 class XmippMonoResViewer(ProtocolViewer):
@@ -93,8 +93,8 @@ class XmippMonoResViewer(ProtocolViewer):
         imgData2 = np.ma.masked_where(imgData < 0.01, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
-        fig, im = self._plotVolumeSlices('MonoRes slices', imgData2, 
-                                                  min_Res, max_Res, self.getColormap())
+        fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,
+                                         min_Res, max_Res, self.protocol.getColorMap())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
@@ -177,32 +177,3 @@ class XmippMonoResViewer(ProtocolViewer):
         cmdFile = self.protocol._getPath('Chimera_resolution.cmd')
         view = ChimeraView(cmdFile)
         return [view]
-
-    @staticmethod
-    def getColormap():
-
-        c = mcolors.ColorConverter().to_rgb
-        rvb = XmippMonoResViewer.make_colormap(
-             [c('blue'),
-              c('cyan'), 0.25, c('cyan'),
-              c('green'), 0.50, c('green'),
-              c('yellow'), 0.75, c('yellow'),
-              c('red')])
-        return rvb
-
-    @staticmethod
-    def make_colormap(seq):
-        """Return a LinearSegmentedColormap
-        seq: a sequence of floats and RGB-tuples. The floats should be increasing
-        and in the interval (0,1).
-        """
-        seq = [(None,) * 3, 0.0] + list(seq) + [1.0, (None,) * 3]
-        cdict = {'red': [], 'green': [], 'blue': []}
-        for i, item in enumerate(seq):
-            if isinstance(item, float):
-                r1, g1, b1 = seq[i - 1]
-                r2, g2, b2 = seq[i + 1]
-                cdict['red'].append([item, r1, r2])
-                cdict['green'].append([item, g1, g2])
-                cdict['blue'].append([item, b1, b2])
-        return mcolors.LinearSegmentedColormap('CustomMap', cdict)

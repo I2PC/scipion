@@ -26,13 +26,15 @@
 
 
 
-from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
+from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED, EnumParam)
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from convert import readSetOfVolumes
 from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt, removeExt
 from os.path import abspath
 import numpy as np
+from matplotlib import cm, pyplot
+import matplotlib.colors as mcolors
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
@@ -109,8 +111,16 @@ class XmippProtMonoRes(ProtRefine3D):
         form.addParam('filterInput', BooleanParam, default=False, 
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
+        form.addParam('colorMap', StringParam, default='jet',
+                      label='Color map',
+                      help='Name of a color map to apply to the resolution map. Valid names can be found at '
+                            'http://matplotlib.org/examples/color/colormaps_reference.html')
 
         form.addParallelSection(threads=1, mpi=1)
+
+    @staticmethod
+    def getColorMapChoices():
+        return pyplot.colormaps()
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -241,18 +251,35 @@ class XmippProtMonoRes(ProtRefine3D):
             smprt = self.inputVolumes.get().getSamplingRate()
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
-        fhCmd.write("scolor #0 volume #1 perPixel false cmap %s,blue:%s,cyan:%s,green:%s,yellow:%s,red\n" %(min_Res,
-                                                                                         min_Res+inter,
-                                                                                         min_Res+2*inter,
-                                                                                         min_Res+3*inter,
-                                                                                         max_Res))
-        fhCmd.write("colorkey 0.01,0.05 0.02,0.95 %s blue %s cyan %s green %s yellow %s red\n" %(min_Res,
-                                                                                         min_Res+inter, 
-                                                                                         min_Res+2*inter,
-                                                                                         min_Res+3*inter,
-                                                                                         max_Res))       
+
+        colorSteps = (min_Res, min_Res+inter, min_Res+2*inter, min_Res+3*inter, max_Res)
+        colorList = self.colorMapToColorList(colorSteps, self.getColorMap())
+
+        line = "scolor #0 volume #1 perPixel false cmap %s,%s:%s,%s:%s,%s:%s,%s:%s,%s\n" % colorList
+        fhCmd.write(line)
+
+        line = "colorkey 0.01,0.05 0.02,0.95 %s %s %s %s %s %s %s %s %s %s\n" % colorList
+        fhCmd.write(line)
+
         fhCmd.close()
 
+    @staticmethod
+    def colorMapToColorList(steps, colorMap):
+        """ Returns a list of pairs resolution, hexColor to be used in chimera scripts for coloring the volume and
+        the colorKey """
+
+        # Get the map used by monoRes
+        colors = ()
+        ratio = 255.0/(len(steps)-1)
+        for index, step in enumerate(steps):
+
+            colorPosition = int(round(index*ratio))
+            rgb = colorMap(colorPosition)[:3]
+            colors += step,
+            rgbColor = mcolors.rgb2hex(rgb)
+            colors += rgbColor,
+
+        return colors
 
     def createHistrogram(self):
 
@@ -315,3 +342,11 @@ class XmippProtMonoRes(ProtRefine3D):
 
     def _citations(self):
         return ['Not yet']
+
+    def getColorMap(self):
+
+        cmap = cm.get_cmap(self.colorMap.get())
+        if cmap is None:
+            cmap = cm.jet
+        return cmap
+
