@@ -93,6 +93,12 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                       help='In pixels. The box size is the size of the boxed particles, '
                            'actual particles may be smaller than this. If you do downsampling '
                            'after extraction, provide final box size here.')
+        
+        form.addParam('doBorders', BooleanParam, default=False,
+                      label='Fill pixels outside borders',
+                      help='Xmipp by default skips particles whose boxes fall outside of the micrograph borders.'
+                           'Set this option to True if you want those pixels outside the borders to be filled with the closest pixel value available')
+
 
         form.addSection(label='Preprocess')
         form.addParam('doRemoveDust', BooleanParam, default=True, important=True,
@@ -173,6 +179,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
                                                  None, fnLast, micOps,
                                                  self.doInvert.get(),
                                                  self._getNormalizeArgs(),
+                                                 self.doBorders.get(),
                                                  prerequisites=localDeps))
 
         metaDeps = self._insertFunctionStep('createMetadataImageStep', prerequisites=deps)
