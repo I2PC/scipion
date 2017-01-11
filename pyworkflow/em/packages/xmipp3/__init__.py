@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -62,7 +62,7 @@ from plotter import XmippPlotter
 
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
-from protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
+from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
 from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_apply_transformation_matrix import XmippProtApplyTransformationMatrix
 from protocol_break_symmetry import XmippProtAngBreakSymmetry
