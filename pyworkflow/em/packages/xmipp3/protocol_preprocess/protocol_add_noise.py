@@ -28,11 +28,10 @@
 from os.path import basename
 from pyworkflow.utils import removeExt
 from pyworkflow.protocol.params import (PointerParam, EnumParam, FloatParam, LEVEL_ADVANCED)
-from convert import writeSetOfParticles
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from pyworkflow.em.data import Volume
 import pyworkflow.em as em
-from pyworkflow.em.packages.xmipp3.convert import readSetOfParticles
+from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles 
 
 
 
