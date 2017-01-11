@@ -64,7 +64,6 @@ from plotter import XmippPlotter
 
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
-##ROB
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
 from protocol_apply_alignment import XmippProtApplyAlignment
 from protocol_apply_transformation_matrix import XmippProtApplyTransformationMatrix
