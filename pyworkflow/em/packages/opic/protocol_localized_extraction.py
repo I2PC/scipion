@@ -145,7 +145,7 @@ class ProtLocalizedExtraction(ProtParticles):
         firstCoord = inputCoords.getFirstItem()
 
         if not firstCoord.hasAttribute('_subparticle'):
-            errors.append('The selected input coordinates does not are the'
+            errors.append('The selected input coordinates does not are the '
                           'output from a localized-subparticles protocol.')
 
         return errors
