@@ -24,13 +24,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""		
+ This module contains utils functions to operate over xmipp metadata files.		
 """
-This module contains utils functions to operate over xmipp metadata files.
-"""
-
 from classes import MetaData, Row
 from constants import LABEL_TYPES, MDL_ITEM_ID, MDL_ENABLED, MDL_IMAGE
-from functions import labelType, getBlocksInMetaDataFile
+from functions import labelType, str2Label, getBlocksInMetaDataFile
 
 
 def label2Python(label):
@@ -38,6 +37,16 @@ def label2Python(label):
     metadata label (LABEL_INT, LABEL_DOUBLE..etc)
     """
     return LABEL_TYPES.get(labelType(label), str)
+
+
+def getLabel(value):
+    """ Return the label value either from an int value or an string. """
+    if isinstance(value, int):
+        return value
+    elif isinstance(value, basestring):
+        return str2Label(value)
+    else:
+        raise Exception("Invalid value type (%s) for label. " % type(value))
 
 
 def getFirstRow(mdOrFn):
@@ -92,6 +101,26 @@ def iterRows(md, sortByLabel=None):
     for objId in md:
         row.readFromMd(md, objId)
         yield row
+
+
+def dropColumns(mdObj, *labels):
+    """ Drop all columns from a given metadata.
+    Labels can be either string or int.
+    """
+    for l in labels:
+        mdObj.removeLabel(getLabel(l))
+
+
+def keepColumns(mdObj, *labels):
+    """ Drop all columns from mdObj that are not in labels.
+    Labels can be either string or int.
+    """
+    # Handle string or int labels input
+    keepLabels = {getLabel(l) for l in labels}
+
+    for l in mdObj.getActiveLabels():
+        if l not in keepLabels:
+            mdObj.removeLabel(l)
 
 
 def joinBlocks(inputMd, blockPrefix=None):
@@ -161,4 +190,3 @@ class SetMdIterator():
             item._appendItem = True
             self.updateItemCallback(item, row)
             self.__nextRow()
-
