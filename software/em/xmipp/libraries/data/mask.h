@@ -323,12 +323,12 @@ void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
  * To read a mask from a file within a program do the following
  *
  * @code
- * Mask_Params Mask;
- * Mask.type = READ_BINARY_MASK;
- * Mask.fn_mask = "...";
- * Mask.generate_2Dmask();
+ * Mask mask;
+ * mask.type = READ_BINARY_MASK;
+ * mask.fn_mask = "...";
+ * mask.generate_2Dmask();
  *
- * Mask.apply(input_Matrix2D, output_Matrix2D);
+ * mask.apply(input_Matrix2D, output_Matrix2D);
  * @endcode
  *
  * To generate a geometric mask within a program do the following:
