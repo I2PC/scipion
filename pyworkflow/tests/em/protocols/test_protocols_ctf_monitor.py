@@ -24,6 +24,7 @@
 import time
 import os
 
+from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
@@ -61,7 +62,7 @@ class TestCtfStream(BaseTest):
                   'delay':0,
                   'setof': 0 # SetOfMicrographs
                 }
-        
+
         #put some stress on the system
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
@@ -84,16 +85,16 @@ class TestCtfStream(BaseTest):
         protCTF.numberOfThreads.set(4)
         self.proj.launchProtocol(protCTF, wait=False)
 
-        counter=1
-        print("while")
+        counter = 1
+
         while not protCTF.hasAttribute('outputCTF'):
-            print("whilenot")
+
             time.sleep(10)
             protCTF = self._updateProtocol(protCTF)
             if counter > 1000:
                 break
             counter += 1
-        print("afterwhile")
+
         kwargs = {'samplingInterval':10,
                   'interval': 300,
                   'maxDefocus': 40000,
@@ -105,5 +106,5 @@ class TestCtfStream(BaseTest):
         protMonitor.inputProtocol.set(protCTF)
         self.launchProtocol(protMonitor)
 
-        baseFn = protMonitor._getPath(protMonitor.dataBase)
+        baseFn = protMonitor._getPath(CTF_LOG_SQLITE)
         self.assertTrue(os.path.isfile(baseFn))

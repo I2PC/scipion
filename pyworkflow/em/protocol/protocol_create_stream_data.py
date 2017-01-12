@@ -72,10 +72,10 @@ class ProtCreateStreamData(EMProtocol):
         form.addParam('samplingRate', params.FloatParam,default=4,
                       label="samplingRate",
                       help="Sampling rate")
-        form.addParam('creationInteval', params.IntParam,default=60,
+        form.addParam('creationInterval', params.IntParam,default=60,
               label="Create Object each (sec)",
               pointerClass='EMProtocol',
-              help="create one object each creationInteval seconds")
+              help="create one object each creationInterval seconds")
         form.addParam('delay', params.IntParam,default=0,
                       label="delay (sec)",
                       help="wait this seconds before creating stram data")
@@ -195,7 +195,7 @@ class ProtCreateStreamData(EMProtocol):
         args += " --sampling %f"%self.samplingRate
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
         self.xmippMic[baseFnImageCTF] = True
-        time.sleep(self.creationInteval.get())
+        time.sleep(self.creationInterval.get())
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
