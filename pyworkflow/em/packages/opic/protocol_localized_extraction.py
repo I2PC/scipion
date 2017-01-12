@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
 
@@ -145,7 +145,7 @@ class ProtLocalizedExtraction(ProtParticles):
         firstCoord = inputCoords.getFirstItem()
 
         if not firstCoord.hasAttribute('_subparticle'):
-            errors.append('The selected input coordinates does not are the'
+            errors.append('The selected input coordinates does not are the '
                           'output from a localized-subparticles protocol.')
 
         return errors
