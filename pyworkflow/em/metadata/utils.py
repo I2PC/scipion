@@ -24,7 +24,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+"""		
+ This module contains utils functions to operate over xmipp metadata files.		
+"""
 from classes import MetaData, Row
 from constants import LABEL_TYPES, MDL_ITEM_ID, MDL_ENABLED, MDL_IMAGE
 from functions import labelType, str2Label, getBlocksInMetaDataFile
