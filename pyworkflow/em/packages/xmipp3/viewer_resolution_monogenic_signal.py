@@ -96,7 +96,7 @@ class XmippMonoResViewer(ProtocolViewer):
                       default=COLOR_JET,
                       label='Color map',
                       help='Select the color map to apply to the resolution map. '
-                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html. The color maps'
+                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html . The color maps'
                             'virilis, parula and inferno can be selected for colorblind users'
                             ' (deuteranophya, daltonism,...')
         
