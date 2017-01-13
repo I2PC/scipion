@@ -188,7 +188,7 @@ def which(command, path=None, verbose=0, exts=None):
         not a VisualBasic script but ".vbs" is on PATHEXT. This option
         is only supported on Windows.
 
-    If no match is found for the command, a WhichError is raised.
+    If no match is found for the command, an empty String is returned.
     """
     try:
         match = whichgen(command, path, verbose, exts).next()
@@ -196,6 +196,13 @@ def which(command, path=None, verbose=0, exts=None):
         return ''
     return match
 
+def commandExists(command):
+
+    path = which(command)
+    if path == '':
+        return False
+    else:
+        return True
 
 def whichall(command, path=None, verbose=0, exts=None):
     """Return a list of full paths to all matches of the given command

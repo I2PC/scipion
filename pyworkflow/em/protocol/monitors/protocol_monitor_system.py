@@ -37,6 +37,7 @@ from pyworkflow.protocol import getProtocolFromDb
 import sys
 from pyworkflow.em.plotter import EmPlotter
 
+SYSTEM_LOG_SQLITE = 'system_log.sqlite'
 
 
 class ProtMonitorSystem(ProtMonitor):
@@ -117,7 +118,7 @@ class MonitorSystem(Monitor):
         self.cpuAlert = kwargs['cpuAlert']
         self.memAlert = kwargs['memAlert']
         self.swapAlert = kwargs['swapAlert']
-        self._dataBase = kwargs.get('dbName', 'system_log.sqlite')
+        self._dataBase = kwargs.get('dbName', SYSTEM_LOG_SQLITE)
         self._tableName = kwargs.get('tableName', 'log')
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
