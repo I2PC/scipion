@@ -120,9 +120,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                 if nVolj != nVoli:
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
+                    volId = volj.getObjId()
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn,
-                                             maskArgs, alignArgs)
+                                             maskArgs, alignArgs, volId)
                     self._insertFunctionStep('elasticAlignmentStep',nVoli, voli, nVolj)
                 nVolj += 1   
             nVoli += 1
