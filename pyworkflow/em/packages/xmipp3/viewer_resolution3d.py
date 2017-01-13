@@ -187,7 +187,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         args = '-i %s ' % volPath
         pixelSize = vol.getSamplingRate()
         args += '--sampling %f ' % pixelSize
-        args += '--maxres %d ' % maxres
+        args += '--maxres %f ' % maxres
         args += '--adhoc %f ' % -values[4]
         volName = os.path.basename(volPath)
         volOut = self.protocol._getPath(volName) 

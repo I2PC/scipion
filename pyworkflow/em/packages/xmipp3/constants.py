@@ -91,3 +91,5 @@ RECONSTRUCT_WSLART = 1
 # Micrograph type constants for particle extraction
 SAME_AS_PICKING = 0
 OTHER = 1
+
+SYM_URL = "[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"

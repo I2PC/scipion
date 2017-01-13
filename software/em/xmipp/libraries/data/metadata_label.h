@@ -60,6 +60,7 @@ enum MDLabel
     MDL_ANGLE_TILT, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT2, ///< Tilting angle of an image (double,degrees)
     MDL_ANGLE_TILT_DIFF, ///< difference between tilt angles (double,degrees)
+    MDL_ANGLE_DIFF0, ///< difference between two angles (double,degrees)
     MDL_ANGLE_DIFF, ///< difference between two angles (double,degrees)
     MDL_ANGLE_DIFF2, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
@@ -379,7 +380,9 @@ enum MDLabel
     MDL_SHIFT_Y2, ///< Shift for the image in the Y axis (double)
     MDL_SHIFT_Y_DIFF, ///< difference in Shift along  Y axis (double)
     MDL_SHIFT_Z, ///< Shift for the image in the Z axis (double)
+    MDL_SHIFT_DIFF0, ///< shift difference (double)
     MDL_SHIFT_DIFF, ///< shift difference (double)
+    MDL_SHIFT_DIFF2, ///< shift difference (double)
     MDL_SIGMANOISE, ///< Standard deviation of the noise in ML model
     MDL_SIGMAOFFSET, ///< Standard deviation of the offsets in ML model
     MDL_SIGNALCHANGE, ///< Signal change for an image
@@ -405,6 +408,7 @@ enum MDLabel
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WEIGHT_P, ///< Weight assigned to the image accordint to its clusterability with a significance with respect noise (double)
     MDL_WEIGHT_CONTINUOUS2, ///< Weight due to angular continuous assignment
+    MDL_WEIGHT_JUMPER0, ///< Weight due to angular jumping
     MDL_WEIGHT_JUMPER, ///< Weight due to angular jumping
     MDL_WEIGHT_JUMPER2, ///< Weight due to angular jumping
     MDL_WEIGHT_SIGNIFICANT, ///< Weight due to Angular significance
@@ -1364,6 +1368,7 @@ private:
         MDL::addLabel(MDL_ANGLE_TILT2, LABEL_DOUBLE, "angleTilt2");
         MDL::addLabelAlias(MDL_ANGLE_TILT2, "tilt2");
         MDL::addLabel(MDL_ANGLE_TILT_DIFF, LABEL_DOUBLE, "angleTiltDiff");
+        MDL::addLabel(MDL_ANGLE_DIFF0, LABEL_DOUBLE, "angleDiff0");
         MDL::addLabel(MDL_ANGLE_DIFF, LABEL_DOUBLE, "angleDiff");
         MDL::addLabel(MDL_ANGLE_DIFF2, LABEL_DOUBLE, "angleDiff2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
@@ -1798,7 +1803,9 @@ private:
         MDL::addLabel(MDL_SHIFT_Y_DIFF, LABEL_DOUBLE, "shiftYDiff");
         MDL::addLabel(MDL_SHIFT_Z, LABEL_DOUBLE, "shiftZ");
         MDL::addLabelAlias(MDL_SHIFT_Z, "Zoff");
+        MDL::addLabel(MDL_SHIFT_DIFF0, LABEL_DOUBLE, "shiftDiff0");
         MDL::addLabel(MDL_SHIFT_DIFF, LABEL_DOUBLE, "shiftDiff");
+        MDL::addLabel(MDL_SHIFT_DIFF2, LABEL_DOUBLE, "shiftDiff2");
         MDL::addLabel(MDL_SIGMANOISE, LABEL_DOUBLE, "sigmaNoise");
         MDL::addLabel(MDL_SIGMAOFFSET, LABEL_DOUBLE, "sigmaOffset");
         MDL::addLabel(MDL_SIGNALCHANGE, LABEL_DOUBLE, "signalChange");
@@ -1827,6 +1834,7 @@ private:
         MDL::addLabel(MDL_WEIGHT_P, LABEL_DOUBLE, "weight_clusterability");
         MDL::addLabelAlias(MDL_WEIGHT, "Weight");
         MDL::addLabel(MDL_WEIGHT_CONTINUOUS2, LABEL_DOUBLE, "weightContinuous2");
+        MDL::addLabel(MDL_WEIGHT_JUMPER0, LABEL_DOUBLE, "weightJumper0");
         MDL::addLabel(MDL_WEIGHT_JUMPER, LABEL_DOUBLE, "weightJumper");
         MDL::addLabel(MDL_WEIGHT_JUMPER2, LABEL_DOUBLE, "weightJumper2");
         MDL::addLabel(MDL_WEIGHT_SIGNIFICANT, LABEL_DOUBLE, "weightSignificant");
