@@ -30,9 +30,9 @@ from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam,
 from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
 from convert import readSetOfVolumes
 from pyworkflow.em import ImageHandler
-from pyworkflow.utils import getExt, removeExt
-from os.path import abspath
+from pyworkflow.utils import getExt
 import numpy as np
+
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
@@ -44,8 +44,8 @@ class XmippProtMonoRes(ProtRefine3D):
     """    
     Given a map the protocol assigns local resolutions to each pixel of the map.
     """
-    _label = 'monogenic resolution'
-
+    _label = 'local resolution'
+    
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -133,8 +133,6 @@ class XmippProtMonoRes(ProtRefine3D):
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
-        self._insertFunctionStep("createChimeraScript")
-
         self._insertFunctionStep("createHistrogram")
 
     def convertInputStep(self):
@@ -207,52 +205,7 @@ class XmippProtMonoRes(ProtRefine3D):
         else:
             params += ' --filtered_volume %s' % ''
 
-
-
         self.runJob('xmipp_resolution_monogenic_signal', params)
-
-    def createChimeraScript(self):
-        fnRoot = "extra/"
-        scriptFile = self._getPath('Chimera_resolution.cmd')
-        fhCmd = open(scriptFile, 'w')
-        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
-        img = ImageHandler().read(imageFile)
-        imgData = img.getData()
-        min_Res = round(np.amin(imgData)*100)/100
-        max_Res = round(np.amax(imgData)*100)/100
-        inter = round((max_Res - min_Res)*25)/100
-        print inter
-        
-        if self.halfVolumes.get() is True:
-            #fhCmd.write("open %s\n" % (fnRoot+FN_MEAN_VOL)) #Perhaps to check the use of mean volume is useful
-            fnbase = removeExt(self.inputVolume.get().getFileName())
-            ext = getExt(self.inputVolume.get().getFileName())
-            fninput = abspath(fnbase + ext[0:4])
-            fhCmd.write("open %s\n" % fninput)
-        else:
-            fnbase = removeExt(self.inputVolumes.get().getFileName())
-            ext = getExt(self.inputVolumes.get().getFileName())
-            fninput = abspath(fnbase + ext[0:4])
-            fhCmd.write("open %s\n" % fninput)
-        fhCmd.write("open %s\n" % (fnRoot + OUTPUT_RESOLUTION_FILE_CHIMERA))
-        if self.halfVolumes.get() is True:
-            smprt = self.inputVolume.get().getSamplingRate()
-        else:
-            smprt = self.inputVolumes.get().getSamplingRate()
-        fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
-        fhCmd.write("vol #1 hide\n")
-        fhCmd.write("scolor #0 volume #1 perPixel false cmap %s,blue:%s,cyan:%s,green:%s,yellow:%s,red\n" %(min_Res,
-                                                                                         min_Res+inter,
-                                                                                         min_Res+2*inter,
-                                                                                         min_Res+3*inter,
-                                                                                         max_Res))
-        fhCmd.write("colorkey 0.01,0.05 0.02,0.95 %s blue %s cyan %s green %s yellow %s red\n" %(min_Res,
-                                                                                         min_Res+inter, 
-                                                                                         min_Res+2*inter,
-                                                                                         min_Res+3*inter,
-                                                                                         max_Res))       
-        fhCmd.close()
-
 
     def createHistrogram(self):
 
@@ -264,7 +217,16 @@ class XmippProtMonoRes(ProtRefine3D):
 
         self.runJob('xmipp_image_histogram', params)
 
+
+    def getMinMax(self, imageFile):
+        img = ImageHandler().read(imageFile)
+        imgData = img.getData()
+        self.min_res = round(np.amin(imgData) * 100) / 100
+        self.max_res = round(np.amax(imgData) * 100) / 100
+        return self.min_res, self.max_res
+
     def createOutputStep(self):
+        
         volume_path = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         self.volumesSet = self._createSetOfVolumes('resolutionVol')
         if (self.halfVolumes):
@@ -312,6 +274,15 @@ class XmippProtMonoRes(ProtRefine3D):
             messages.append(
                 'The local resolution is performed [Publication: Not yet]')
         return messages
+    
+    def _summary(self):
+        summary = []
+        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        min_res, max_res = self.getMinMax(imageFile)
+        summary.append("Highest resolution %d A,   Lowest resolution %d A." % (min_res , max_res))
+
+        return summary
 
     def _citations(self):
         return ['Not yet']
+

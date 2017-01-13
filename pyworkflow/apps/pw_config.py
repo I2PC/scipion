@@ -30,19 +30,27 @@ import os
 from os.path import join, exists, basename
 import time
 import optparse
+
 # We use optparse instead of argparse because we want this script to
 # be compatible with python >= 2.3
+import collections
+
+UPDATE_PARAM = '--update'
 
 try:
     from ConfigParser import ConfigParser, Error
 except ImportError:
     from configparser import ConfigParser, Error  # Python 3
 
+
 def ansi(n):
     "Return function that escapes text with ANSI color n."
     return lambda txt: '\x1b[%dm%s\x1b[0m' % (n, txt)
 
+
 black, red, green, yellow, blue, magenta, cyan, white = map(ansi, range(30, 38))
+
+
 # We don't take them from pyworkflow.utils because this has to run
 # with all python versions (and so it is simplified).
 
@@ -52,6 +60,9 @@ def main():
     add = parser.add_option  # shortcut
     add('--overwrite', action='store_true',
         help=("Rewrite the configuration files using the original templates."))
+    add(UPDATE_PARAM, action='store_true',
+        help=("Updates you local config files with the values in the template, only for those missing values."))
+
     options, args = parser.parse_args()
 
     if args:  # no args which aren't options
@@ -68,15 +79,15 @@ def main():
         templatesDir = join(os.environ['SCIPION_HOME'], 'config', 'templates')
         # Global installation configuration files.
         for fpath, tmplt in [
-                (os.environ['SCIPION_CONFIG'], 'scipion'),
-                (os.environ['SCIPION_PROTOCOLS'], 'protocols'),
-                (os.environ['SCIPION_HOSTS'], 'hosts')]:
+            (os.environ['SCIPION_CONFIG'], 'scipion'),
+            (os.environ['SCIPION_PROTOCOLS'], 'protocols'),
+            (os.environ['SCIPION_HOSTS'], 'hosts')]:
             if not exists(fpath) or options.overwrite:
                 createConf(fpath, join(templatesDir, tmplt + '.template'),
                            remove=localSections)
             else:
                 checkConf(fpath, join(templatesDir, tmplt + '.template'),
-                          remove=localSections)
+                          remove=localSections, update=options.update)
 
         if not globalIsLocal:  # which is normally the case
             # Local user configuration files (well, only "scipion.conf").
@@ -88,7 +99,7 @@ def main():
             else:
                 checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
                           join(templatesDir, 'scipion.template'),
-                          keep=localSections)
+                          keep=localSections, update=options.update)
 
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
@@ -151,6 +162,7 @@ def checkPaths(conf):
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(conf) != [], 'Missing file: %s' % conf
+
     def get(var):
         try:
             return cf.get('BUILD', var)
@@ -158,6 +170,7 @@ def checkPaths(conf):
             _, e = sys.exc_info()[:2]
             print(red("While getting '%s' in section BUILD: %s" % (var, e)))
             return '/'
+
     allOk = True
     for var in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
                 'JAVA_HOME', 'JAVA_BINDIR']:
@@ -183,8 +196,8 @@ def checkPaths(conf):
               "can run: scipion config --overwrite")
 
 
-def checkConf(fpath, ftemplate, remove=[], keep=[]):
-    "Check that all the variables in the template are in the config file too"
+def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
+    """Check that all the variables in the template are in the config file too"""
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
 
@@ -209,6 +222,8 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
     dt = dict([(s, set(ct.options(s))) for s in ct.sections()])
     # That funny syntax to create the dictionaries works with old pythons.
 
+    confChanged = False
+
     if df == dt:
         print(green("All the expected sections and options found in " + fpath))
     else:
@@ -219,17 +234,50 @@ def checkConf(fpath, ftemplate, remove=[], keep=[]):
         for s in sf - st:
             print("Section %s exists in the configuration file but "
                   "not in the template." % red(s))
+
         for s in st - sf:
-            print("Section %s exists in the template but "
-                  "not in the configuration file." % red(s))
+            print("Section %s exists in the template but not in the configuration file. Use %s parameter to update  "
+                  "local config files." % (yellow(s), UPDATE_PARAM))
+
+            if update:
+                # Update config file with missing section
+                cf.add_section(s)
+                # add it to the keys
+                sf.add(s)
+                df[s] = set()
+                print("Section %s added to your config file."
+                      % green(s))
+                confChanged = True
+
         for s in st & sf:
             for o in df[s] - dt[s]:
                 print("In section %s, option %s exists in the configuration "
                       "file but not in the template." % (red(s), red(o)))
             for o in dt[s] - df[s]:
-                print("In section %s, option %s exists in the template "
-                      "but not in the configuration file." % (red(s), red(o)))
+                print("In section %s, option %s exists in the template but not in the configuration file. Use %s "
+                      "parameter to update local config files." % (yellow(s), yellow(o), UPDATE_PARAM))
 
+                if update:
+                    # Update config file with missing variable
+                    value = ct.get(s, o)
+                    cf.set(s, o, value)
+                    confChanged = True
+                    print("Variable %s -> %s added and set to %s in your config file."
+                          % (s, green(o), value))
+
+    if update:
+        if confChanged:
+            print("Changes detected: writing changes and sorting variables into %s. Please check values." % (fpath))
+        else:
+            print("Update requested no changes detected: sorting variables only for %s." % (fpath))
+
+        # Order the content of each section alphabetically
+        for section in cf._sections:
+            cf._sections[section] = collections.OrderedDict(
+                sorted(cf._sections[section].items(), key=lambda t: t[0]))
+
+        with open(fpath, 'wb') as f:
+            cf.write(f)
 
 def guessJava():
     "Guess the system's Java installation, return a dict with the Java keys"
@@ -262,10 +310,10 @@ def guessJava():
         if allExist:
             options['JAVA_HOME'] = javaHome
             break
-        # We could instead check individually for JAVA_BINDIR, JAVAC
-        # and so on, as we do with MPI options, but we go for an
-        # easier and consistent case instead: everything must be under
-        # JAVA_HOME, which is the most common case for Java.
+            # We could instead check individually for JAVA_BINDIR, JAVAC
+            # and so on, as we do with MPI options, but we go for an
+            # easier and consistent case instead: everything must be under
+            # JAVA_HOME, which is the most common case for Java.
 
     if not options:
         print(red("Warning: could not detect a suitable JAVA_HOME."))
@@ -305,17 +353,16 @@ def guessMPI():
     # directories and files exist. If they do, that'd be our best guess.
     for mpiHome in candidates:
         if (exists(join(mpiHome, 'include', 'mpi.h')) and
-            'MPI_INCLUDE' not in options):
+                    'MPI_INCLUDE' not in options):
             options['MPI_INCLUDE'] = join(mpiHome, 'include')
         if (exists(join(mpiHome, 'lib', 'libmpi.so')) and
-            'MPI_LIBDIR' not in options):
+                    'MPI_LIBDIR' not in options):
             options['MPI_LIBDIR'] = join(mpiHome, 'lib')
         if (exists(join(mpiHome, 'bin', 'mpicc')) and
-            'MPI_BINDIR' not in options):
+                    'MPI_BINDIR' not in options):
             options['MPI_BINDIR'] = join(mpiHome, 'bin')
 
     return options
-
 
 
 if __name__ == '__main__':

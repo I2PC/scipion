@@ -28,7 +28,7 @@
 # **************************************************************************
 
 from pyworkflow.protocol.params import PointerParam
-from pyworkflow.em.data import PdbFile
+from pyworkflow.em.data import PdbFile, Volume
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 
@@ -62,6 +62,12 @@ class XmippProtConvertToPseudoAtoms(XmippProtConvertToPseudoAtomsBase):
         self._defineOutputs(outputPdb=pdb)
         self._defineSourceRelation(self.inputStructure, pdb)
 
+        volume=Volume()
+        volume.setFileName(self._getExtraPath("pseudoatoms_approximation.vol"))
+        volume.setSamplingRate(inputVol.getSamplingRate())
+        self._defineOutputs(outputVolume=volume)
+        self._defineSourceRelation(self.inputStructure.get(),volume)
+        
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
         summary = []

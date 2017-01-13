@@ -51,6 +51,6 @@ class XmippViewerSplitVolume(XmippViewer):
     def _visualize(self, obj, **args):
         if hasattr(obj, 'outputVolumes'):
             XmippViewer._visualize(self,self.protocol.outputVolumes)
-        fnBasis=self.protocol._getPath('basis.stk')
+        fnBasis=self.protocol._getExtraPath('split_pc1.vol')
         if exists(fnBasis):
             self._views.append(DataView(fnBasis))

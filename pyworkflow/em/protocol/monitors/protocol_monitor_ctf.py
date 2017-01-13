@@ -37,6 +37,7 @@ from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.plotter import EmPlotter
 
+CTF_LOG_SQLITE = 'ctf_log.sqlite'
 
 
 class ProtMonitorCTF(ProtMonitor):
@@ -76,9 +77,11 @@ class ProtMonitorCTF(ProtMonitor):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
+
         self.createMonitor().loop()
 
     def createMonitor(self):
+
         ctfProt = self.inputProtocol.get()
         ctfProt.setProject(self.getProject())
 
@@ -109,13 +112,14 @@ class MonitorCTF(Monitor):
     """
     def __init__(self, protocol, **kwargs):
         Monitor.__init__(self, **kwargs)
+
         # The CTF protocol to monitor
         self.protocol = protocol
 
         self.maxDefocus = kwargs['maxDefocus']
         self.minDefocus = kwargs['minDefocus']
         self.astigmatism = kwargs['astigmatism']
-        self._dataBase = kwargs.get('dbName', 'ctf_log.sqlite')
+        self._dataBase = kwargs.get('dbName', CTF_LOG_SQLITE)
         self._tableName = kwargs.get('tableName', 'log')
         self.readCTFs = set()
 
@@ -222,14 +226,14 @@ class MonitorCTF(Monitor):
         return data
 
 
-from pyworkflow.viewer import ( DESKTOP_TKINTER, WEB_DJANGO, Viewer)
+from pyworkflow.viewer import ( DESKTOP_TKINTER, Viewer)
 from pyworkflow.protocol.params import (LabelParam, NumericRangeParam,
                                         EnumParam, FloatParam, IntParam)
 from matplotlib import animation
 
 
 class ProtMonitorCTFViewer(Viewer):
-    _environments = [DESKTOP_TKINTER, WEB_DJANGO]
+    _environments = [DESKTOP_TKINTER]
     _label = 'ctf monitor'
     _targets = [ProtMonitorCTF]
 
