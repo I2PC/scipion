@@ -722,7 +722,7 @@ if opencv:
         addProg('movie_optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
-
+        addProg('gpu_example',cuda=True)
 
 
 #  ***********************************************************************
