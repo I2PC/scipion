@@ -133,12 +133,12 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         labels = []
         
         for voli in volList:
-            if voli.getObjLabel() is not None:
-                labels.append("%s"%voli.getObjLabel())
-                count += 1
-            else:
+            if not voli.getObjLabel():
                 count+=1
-                labels.append("vol_%02d"%count)            
+                labels.append("vol_%02d"%count)                            
+            else:
+                labels.append("%s"%voli.getObjLabel())
+                count += 1              
         
         nComponent = self.numberOfDimensions.get()
         
