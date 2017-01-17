@@ -1,6 +1,9 @@
 #include <data/xmipp_image.h>
 #include <iostream>
 #include <gtest/gtest.h>
+#include <data/geometry.h>
+#include <data/normalize.h>
+
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
 class GeometryTest : public ::testing::Test
 {
@@ -128,6 +131,41 @@ TEST_F(GeometryTest, rotateAngleAroundAxis)
     //    EXPECT_NEAR(0, rot, XMIPP_EQUAL_ACCURACY);
     //    EXPECT_NEAR(0, psi, XMIPP_EQUAL_ACCURACY);
 
+}
+
+
+// check the plane fit is right
+TEST_F( GeometryTest, least_squares_plane_fit_All_Points)
+{
+    XMIPP_TRY
+    MultidimArray<double> img;
+
+    img.resize(4,4);
+    img.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(img)
+    A2D_ELEM(img, i,j) = i+j;
+    double a,b,c;
+    least_squares_plane_fit_All_Points(img, a, b, c);
+    EXPECT_NEAR(a,1,XMIPP_EQUAL_ACCURACY);
+    EXPECT_NEAR(b,1,XMIPP_EQUAL_ACCURACY);
+    EXPECT_NEAR(c,0,XMIPP_EQUAL_ACCURACY);
+    XMIPP_CATCH
+}
+
+TEST_F( GeometryTest, normalize_ramp)
+{
+    XMIPP_TRY
+    MultidimArray<double> img;
+
+    img.resize(4,4);
+    img.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(img)
+    A2D_ELEM(img, i,j) = i+j;
+    double a,b,c;
+    normalize_ramp(img);
+    img.selfABS();
+    EXPECT_NEAR(img.sum(),0,XMIPP_EQUAL_ACCURACY);
+    XMIPP_CATCH
 }
 
 GTEST_API_ int main(int argc, char **argv)
