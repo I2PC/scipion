@@ -2128,7 +2128,7 @@ void MetaData::replace(const MDLabel label, const String &oldStr, const String &
         REPORT_ERROR(ERR_MD, "MetaData::replace: error doing operation");
 }
 
-void MetaData::randomize(MetaData &MDin)
+void MetaData::randomize(const MetaData &MDin)
 {
     static bool randomized = false;
     if (!randomized)
@@ -2257,6 +2257,16 @@ void MetaData::selectSplitPart(const MetaData &mdIn, size_t n, size_t part, cons
         REPORT_ERROR(ERR_MD, "selectSplitPart: 'part' should be between 0 and n-1");
     _selectSplitPart(mdIn, n, part, mdSize, sortLabel);
 
+}
+
+void MetaData::selectRandomSubset(const MetaData &mdIn, size_t numberOfObjects, const MDLabel sortLabel)
+{
+    clear();
+
+    MetaData mdAux, mdAux2;
+    mdAux.randomize(mdIn);
+    mdAux2.selectPart(mdAux, 0, numberOfObjects);
+    sort(mdAux2,sortLabel);
 }
 
 void MetaData::selectPart(const MetaData &mdIn, size_t startPosition, size_t numberOfObjects,

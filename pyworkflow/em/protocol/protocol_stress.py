@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'roberto@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -33,6 +33,7 @@ import xmipp
 import random
 from pyworkflow.em.data import SetOfMicrographs
 
+STRESS_NG = 'stress-ng'
 
 
 class ProtStress(EMProtocol):
@@ -40,7 +41,7 @@ class ProtStress(EMProtocol):
        ways. Several options require the program stress-ng.
     """
     _label = 'stress'
-    _program = 'stress-ng'
+    _program = STRESS_NG
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)

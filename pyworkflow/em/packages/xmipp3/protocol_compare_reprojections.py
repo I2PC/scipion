@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -35,6 +35,7 @@ from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages, SetOfParticles, Class2D
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
 import pyworkflow.em.metadata as md
+from pyworkflow.protocol.constants import LEVEL_ADVANCED
 
 import xmipp
 from xmipp3 import ProjMatcher
@@ -42,9 +43,13 @@ from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
 
         
 class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
-    """Compares a set of classes or averages with the corresponding projections
-     of a reference volume.
-    """
+    """Compares a set of classes or averages with the corresponding projections of a reference volume.
+    The set of images must have a 3D angular assignment and the protocol computes the residues
+    (the difference between the experimental images and the reprojections). The zscore of the mean
+    and variance of the residues are computed. Large values of these scores may indicate outliers.
+    The protocol also analyze the covariance matrix of the residual and computes the logarithm of
+    its determinant [Cherian2013]. The extremes of this score (called zScoreResCov), that is
+    values particularly low or high, may indicate outliers."""
     _label = 'compare reprojections'
     
     def __init__(self, **args):
@@ -97,6 +102,13 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
             writeSetOfClasses2D(imgSet, self.imgsFn, writeParticles=True)
         else:
             writeSetOfParticles(imgSet, self.imgsFn)
+        from pyworkflow.em.convert import ImageHandler
+        img = ImageHandler()
+        fnVol = self._getTmpPath("volume.vol")
+        img.convert(self.inputVolume.get(), fnVol)
+        xdim=self.inputVolume.get().getDim()[0]
+        if xdim!=self._getDimensions():
+            self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()))
     
     def produceResiduals(self,volumeFn,anglesFn,Ts):
         if volumeFn.endswith(".mrc"):
@@ -120,6 +132,10 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         cleanPath(fnAutoCorrelations)
     
     def createOutputStep(self):
+        fnImgs = self._getExtraPath('images.stk')
+        if os.path.exists(fnImgs):
+            cleanPath(fnImgs)
+
         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")

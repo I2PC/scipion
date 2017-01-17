@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -429,10 +429,11 @@ class Protocol(Step):
         any expert parameter"""
         if self._hasExpert is None:
             self._hasExpert = False
-            for paraName, param in self._definition.iterParams():
+            for paraName, param in self._definition.iterAllParams():
                 if param.isExpert():
                     self._hasExpert = True
                     break
+
         return self._hasExpert
 
         
