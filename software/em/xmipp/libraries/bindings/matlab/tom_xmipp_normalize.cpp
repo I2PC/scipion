@@ -61,7 +61,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
         normalize_NewXmipp2(I(), mask);
         break;
     case RAMP:
-        normalize_ramp(I(), mask);
+        normalize_ramp(I(), &mask);
         break;
     /*case NEIGHBOUR:
         normalize_remove_neighbours(img, bg_mask, thresh_neigh);
