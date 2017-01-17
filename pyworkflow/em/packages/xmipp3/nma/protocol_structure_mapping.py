@@ -30,6 +30,7 @@ from glob import glob
 import pyworkflow.em.metadata as md
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile, copyFile, makePath, cleanPath
@@ -53,6 +54,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
     as points in a lower dimensional distance space.    
     """
     _label = 'structure mapping'
+    _version = VERSION_1_1
            
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):

@@ -26,6 +26,7 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, 
                                                    readSetOfParticles)
@@ -41,7 +42,8 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     The output is a setOfParticles contaied deformed reference particles.
     """
     
-    _label = 'volume homogenizer'    
+    _label = 'volume homogenizer'
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions --------------------------------------------   
    
     def _defineParams(self, form):

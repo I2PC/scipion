@@ -29,6 +29,7 @@
 import os
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtAlignMovies
 import pyworkflow.em.metadata as md
 from convert import writeMovieMd
@@ -50,6 +51,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
     INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
 
     _label = 'correlation alignment'
+    _version = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
 

@@ -29,6 +29,7 @@ import os
 import sys
 
 import pyworkflow.em.metadata as md
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import ProtOperateParticles
 
@@ -42,6 +43,7 @@ class ProtRelionSubtract(ProtOperateParticles):
     properly generate volume projections.
     """
     _label = 'subtract projection'
+    _version = VERSION_1_1
     
     def _initialize(self):
         self._createFilenameTemplates()

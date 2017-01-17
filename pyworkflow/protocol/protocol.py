@@ -294,6 +294,10 @@ class Protocol(Step):
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed
     """
+
+    # Version where protocol appeared first time
+    _version = "v1.0"
+
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)        
         self._steps = [] # List of steps that will be executed
@@ -450,7 +454,16 @@ class Protocol(Step):
         only serve as base for other, not to be instantiated. 
         """
         return hasattr(cls, '_definition')
-    
+
+    @classmethod
+    def getVersion(cls):
+        return cls._version
+
+    @classmethod
+    def isNew(cls):
+        version = cls.getVersion()
+        return version not in pw.OLD_VERSIONS
+
     def getDefinition(self):
         """ Access the protocol definition. """
         return self._definition
