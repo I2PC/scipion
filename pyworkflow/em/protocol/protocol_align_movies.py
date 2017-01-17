@@ -27,6 +27,7 @@
 # **************************************************************************
 
 import os
+from itertools import izip
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
@@ -35,6 +36,7 @@ import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import MovieAlignment, SetOfMovies, SetOfMicrographs
 from pyworkflow.em.protocol import ProtProcessMovies
+from pyworkflow.gui.plotter import Plotter
 
 
 class ProtAlignMovies(ProtProcessMovies):
@@ -503,4 +505,40 @@ class ProtAlignMovies(ProtProcessMovies):
         data1[:, m:] = data2[:, m:]
         psd.setData(data1)
         psd.write(outputFn)
-    
+
+def createAlignmentPlot(meanX, meanY):
+    """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    figureSize = (8, 6)
+    plotter = Plotter(*figureSize)
+    figure = plotter.getFigure()
+
+    preX = 0.0
+    preY = 0.0
+    sumMeanX.append(0.0)
+    sumMeanY.append(0.0)
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Cartesian representation')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.plot(0, 0, 'yo-')
+    i = 1
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        #ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.02, str(i))
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
+    return plotter
+
+
