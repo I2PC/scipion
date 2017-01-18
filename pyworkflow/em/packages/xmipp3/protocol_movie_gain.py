@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import MultiPointerParam
@@ -37,6 +37,7 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
     Estimate the gain image of a camera, directly analyzing one of its movies.
     """
     _label = 'movie gain'
+    _version = VERSION_1_1
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)

@@ -27,12 +27,16 @@
 # **************************************************************************
 
 import os
+import pyworkflow.utils as pwutils
+import pyworkflow.object as pwobj
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
+import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtAlignMovies
+from pyworkflow.em.protocol.protocol_align_movies import createAlignmentPlot
 import pyworkflow.em.metadata as md
 from convert import writeMovieMd
-
 
 
 class XmippProtMovieCorr(ProtAlignMovies):
@@ -50,6 +54,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
     INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
 
     _label = 'correlation alignment'
+    _version = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
 
@@ -70,6 +75,12 @@ class XmippProtMovieCorr(ProtAlignMovies):
                             "accordingly) to this resolution. Then shifts are "
                             "calculated, and they are applied to the original "
                             "frames without any filtering and downsampling.")
+
+        form.addParam('doComputePSD', params.BooleanParam, default=True,
+                      label="Compute PSD (before/after)?",
+                      help="If Yes, the protocol will compute for each movie "
+                           "the PSD of the average micrograph (without CC "
+                           "alignement) and after that, to compare each PSDs")
 
         form.addParam('maxShift', params.IntParam, default=30,
                       expertLevel=cons.LEVEL_ADVANCED,
@@ -144,8 +155,13 @@ class XmippProtMovieCorr(ProtAlignMovies):
         args += ' --frameRangeSum %d %d ' % (s0-a0, sN-s0)
         args += ' --max_shift %d ' % self.maxShift
 
-        if self.doSaveAveMic:
-            args += ' --oavg %s' % self._getExtraPath(self._getOutputMicName(movie))
+        if self.doSaveAveMic or self.doComputePSD:
+            fnAvg = self._getExtraPath(self._getOutputMicName(movie))
+            args += ' --oavg %s' % fnAvg
+
+        if self.doComputePSD:
+            fnInitial = os.path.join(movieFolder,"initialMic.mrc")
+            args  += ' --oavgInitial %s' % fnInitial
 
         if self.doSaveMovie:
             args += ' --oaligned %s' % self._getExtraPath(self._getOutputMovieName(movie))
@@ -158,6 +174,21 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
 
+        if self.doComputePSD:
+            uncorrectedPSD = os.path.join(movieFolder,"uncorrected")
+            correctedPSD = os.path.join(movieFolder,"corrected")
+            self.computePSD(fnInitial, uncorrectedPSD)
+            self.computePSD(fnAvg, correctedPSD)
+            self.composePSD(uncorrectedPSD + ".psd",
+                            correctedPSD + ".psd",
+                            self._getPsdCorr(movie))
+            # If the micrograph was only saved for computing the PSD
+            # we can remove it
+            pwutils.cleanPath(fnInitial)
+            if not self.doSaveAveMic:
+                pwutils.cleanPath(fnAvg)
+
+        self._saveAlignmentPlots(movie)
 
     #--------------------------- UTILS functions ------------------------------
     def _getShiftsFile(self, movie):
@@ -183,4 +214,50 @@ class XmippProtMovieCorr(ProtAlignMovies):
                                     "the frames selected without alignment "
                                     "information, will be aligned by setting "
                                     "alignment to 0")
+
+    def _loadMeanShifts(self, movie):
+        alignMd = md.MetaData(self._getShiftsFile(movie))
+        meanX = alignMd.getColumnValues(md.MDL_SHIFT_X)
+        meanY = alignMd.getColumnValues(md.MDL_SHIFT_Y)
+
+        return meanX, meanY
+
+    def _getPlotCart(self,movie):
+        return self._getExtraPath(self._getMovieRoot(movie)+"_plot_cart.png")
+
+    def _getPsdCorr(self,movie):
+        return self._getExtraPath(self._getMovieRoot(movie)+"_aligned_corrected.psd")
+
+    def _saveAlignmentPlots(self, movie):
+        """ Compute alignment shifts plot and save to file as a png image. """
+        meanX, meanY = self._loadMeanShifts(movie)
+        plotter = createAlignmentPlot(meanX, meanY)
+        plotter.savefig(self._getPlotCart(movie))
+
+    def _setAlignmentInfo(self, movie, obj):
+        """ Set alignment info such as plot and psd filename, and
+        the cumulative shifts values.
+        Params:
+            movie: Pass the reference movie
+            obj: should pass either the created micrograph or movie
+        """
+        obj.plotCart = em.Image()
+        obj.plotCart.setFileName(self._getPlotCart(movie))
+        if self.doComputePSD:
+            obj.psdCorr = em.Image()
+            obj.psdCorr.setFileName(self._getPsdCorr(movie))
+
+        meanX, meanY = self._loadMeanShifts(movie)
+        obj._xmipp_ShiftX = pwobj.CsvList()
+        obj._xmipp_ShiftX.set(meanX)
+        obj._xmipp_ShiftY = pwobj.CsvList()
+        obj._xmipp_ShiftY.set(meanY)
+
+    def _preprocessOutputMicrograph(self, mic, movie):
+        self._setAlignmentInfo(movie, mic)
+
+    def _createOutputMovie(self, movie):
+        alignedMovie = ProtAlignMovies._createOutputMovie(self, movie)
+        self._setAlignmentInfo(movie, alignedMovie)
+        return alignedMovie
 

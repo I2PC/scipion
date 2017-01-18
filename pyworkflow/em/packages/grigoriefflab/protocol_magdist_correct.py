@@ -27,6 +27,7 @@
 import os
 from os.path import exists
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.object import Set
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
@@ -45,6 +46,7 @@ class ProtMagDistCorr(ProtProcessMovies):
     """
     CONVERT_TO_MRC = 'mrc'
     _label = 'mag distortion correction'
+    _version = VERSION_1_1
     doSaveAveMic = False
     doSaveMovie = True
 

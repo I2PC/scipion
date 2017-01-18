@@ -247,9 +247,11 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 
     //Generate a Matrix for true PCA and compute the average C'*data
     Matrix2D<double> data;
+    double *refData;
     MultidimArray<double> average;
     data.initZeros(NPCA,v.size());
     average.initZeros(NPCA);
+    refData = &MAT_ELEM(data,0,0);
     for (size_t ii=0;ii<NPCA;ii++)
     {
         MultidimArray<double> &C=PCAbasis[ii];
@@ -257,8 +259,8 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
         {
             MultidimArray<float> &D=v[jj];
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(C)
-            MAT_ELEM(data,ii,jj)+=DIRECT_A1D_ELEM(C,i)*DIRECT_A1D_ELEM(D,i);
-            DIRECT_A1D_ELEM(average,ii)+=MAT_ELEM(data,ii,jj);
+            (*refData) += DIRECT_A1D_ELEM(C,i)*DIRECT_A1D_ELEM(D,i);
+            DIRECT_A1D_ELEM(average,ii)+=(*refData)++;
         }
     }
     average/=v.size();
@@ -476,3 +478,61 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
     Zscore.indexSort(idx);
 }
 #undef DEBUG
+
+// Empty constructor
+PCAonline::PCAonline()
+{
+	N=0;
+}
+
+// Add a new vector
+void PCAonline::addVector(MultidimArray<double> &y)
+{
+	if (N==0)
+	{
+		ysum=y;
+		yxt.resizeNoCopy(y);
+		c1.resizeNoCopy(y);
+		ycentered.resizeNoCopy(y);
+		N=1;
+		zn=0;
+	}
+	else if (N==1)
+	{
+		xxt=0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(y)
+		{
+			double yval=DIRECT_MULTIDIM_ELEM(y,n);
+			DIRECT_MULTIDIM_ELEM(yxt,n)=DIRECT_MULTIDIM_ELEM(c1,n)=yval-0.5*DIRECT_MULTIDIM_ELEM(ysum,n);// c1=y-ysum/2
+			xxt+=DIRECT_MULTIDIM_ELEM(c1,n)*DIRECT_MULTIDIM_ELEM(c1,n);
+		}
+		c1/=sqrt(xxt); // Normalize c1
+		zn=1;
+		N=2;
+	}
+	else
+	{
+		double iN=1.0/N;
+		zn=0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(y)
+		{
+			DIRECT_MULTIDIM_ELEM(ycentered,n)=DIRECT_MULTIDIM_ELEM(y,n)-iN*DIRECT_MULTIDIM_ELEM(ysum,n);// ycentered=y-ysum/N
+			zn+=DIRECT_MULTIDIM_ELEM(c1,n)*DIRECT_MULTIDIM_ELEM(ycentered,n); // zn = ycentered^T c1
+		}
+		if (fabs(zn)>maxzn)
+			return;
+
+		xxt+=zn*zn;
+		double ixxt=1.0/xxt;
+		double c1norm=0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(y)
+		{
+			DIRECT_MULTIDIM_ELEM(ysum,n)+=DIRECT_MULTIDIM_ELEM(y,n); // ysum+=y
+			DIRECT_MULTIDIM_ELEM(yxt,n)+=zn*DIRECT_MULTIDIM_ELEM(ycentered,n); // yxt+=zn*ycentered
+			DIRECT_MULTIDIM_ELEM(c1,n)=ixxt*DIRECT_MULTIDIM_ELEM(yxt,n); // c1=yxt/xxt
+			c1norm+=DIRECT_MULTIDIM_ELEM(c1,n)*DIRECT_MULTIDIM_ELEM(c1,n);
+		}
+		c1/=sqrt(c1norm);
+		N++;
+	}
+}

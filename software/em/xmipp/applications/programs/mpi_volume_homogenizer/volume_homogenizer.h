@@ -40,8 +40,6 @@ class ProgVolumeHomogenizer: public XmippProgram
 public:
     FileName fnVol, fnRef, fnSetOfImgIn, fnSetOfImgOut;
 
-    FileName fnTestOut1, fnTestOut2, fnTestOut3;
-
     int winSize;
 
     double cutFreq;

@@ -29,6 +29,7 @@ from os.path import join, exists, basename
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from convert import readCtfModel, parseGctfOutput, getVersion
 
@@ -47,6 +48,7 @@ class ProtGctf(em.ProtCTFMicrographs):
     http://www.mrc-lmb.cam.ac.uk/kzhang
     """
     _label = 'CTF estimation on GPU'
+    _version = VERSION_1_1
 
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)

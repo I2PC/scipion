@@ -38,6 +38,7 @@ void ProgMovieAlignmentCorrelation::readParams()
 {
     fnMovie = getParam("-i");
     fnOut = getParam("-o");
+    fnInitialAvg = getParam("--oavgInitial");
     fnDark = getParam("--dark");
     fnGain = getParam("--gain");
     maxShift = getDoubleParam("--max_shift");
@@ -87,6 +88,7 @@ void ProgMovieAlignmentCorrelation::show()
     << "Solver iterations:   " << solverIterations   << std::endl
     << "Aligned movie:       " << fnAligned          << std::endl
     << "Aligned micrograph:  " << fnAvg              << std::endl
+	<< "Unaligned micrograph: " << fnInitialAvg      << std::endl
     << "Frame range alignment: " << nfirst << " " << nlast << std::endl
     << "Frame range sum:       " << nfirstSum << " " << nlastSum << std::endl
     << "Crop corners  " << "(" << xLTcorner << ", " << yLTcorner << ") "
@@ -114,6 +116,7 @@ void ProgMovieAlignmentCorrelation::defineParams()
     addParamsLine("  [--sampling <Ts=1>]          : Sampling rate (A/pixel)");
     addParamsLine("  [--solverIterations <N=2>]   : Number of robust least squares iterations");
     addParamsLine("  [--oaligned <fn=\"\">]       : Give the name of a stack if you want to generate an aligned movie");
+    addParamsLine("  [--oavgInitial <fn=\"\">]    : Give the name of a micrograph to generate an unaligned (initial) micrograph");
     addParamsLine("  [--oavg <fn=\"\">]           : Give the name of a micrograph to generate an aligned micrograph");
     addParamsLine("  [--frameRange <n0=-1> <nF=-1>]  : First and last frame to align, frame numbers start at 0");
     addParamsLine("  [--frameRangeSum <n0=-1> <nF=-1>]  : First and last frame to sum, frame numbers start at 0");
@@ -473,7 +476,8 @@ void ProgMovieAlignmentCorrelation::run()
     // Apply shifts and compute average
 	int n=0;
     int j=0;
-	size_t N=0;
+	size_t N=0, Ninitial=0;
+	Image<double> initialMic;
     FOR_ALL_OBJECTS_IN_METADATA(movie)
     {
         if (n>=nfirstSum && n<=nlastSum)
@@ -497,6 +501,15 @@ void ProgMovieAlignmentCorrelation::run()
             	scaleToSizeFourier(1,floor(YSIZE(croppedFrame())/bin),floor(XSIZE(croppedFrame())/bin),croppedFrame(),reducedFrame());
             	shift/=bin;
             	croppedFrame()=reducedFrame();
+            }
+
+            if (fnInitialAvg!="")
+            {
+            	if (j==0)
+            		initialMic()=croppedFrame();
+            	else
+            		initialMic()+=croppedFrame();
+            	Ninitial++;
             }
 
             if (fnAligned!="" || fnAvg!="")
@@ -523,11 +536,18 @@ void ProgMovieAlignmentCorrelation::run()
         }
         n++;
     }
+    if (fnInitialAvg!="")
+    {
+    	initialMic()/=Ninitial;
+    	initialMic.write(fnInitialAvg);
+    }
+
     if (fnAvg!="")
     {
         averageMicrograph()/=N;
         averageMicrograph.write(fnAvg);
     }
+
     movie.write((FileName)"frameShifts@"+fnOut);
     if (bestIref>=0)
     {
