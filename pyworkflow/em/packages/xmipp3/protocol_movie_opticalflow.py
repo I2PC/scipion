@@ -32,6 +32,7 @@ from os.path import join, exists
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.em.protocol.protocol_align_movies import createAlignmentPlot
@@ -49,6 +50,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
     """
     _label = 'optical alignment'
+    _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
 
     #--------------------------- DEFINE param functions ------------------------

@@ -38,7 +38,7 @@ class ProtMonitor(EMProtocol):
     where several protocols will be run in streaming and the monitor will
     be 'observing' their progress.
     """
-    _label = 'monitor'
+    _label = None
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)

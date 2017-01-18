@@ -32,6 +32,7 @@ import pyworkflow.object as pwobj
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.em.protocol.protocol_align_movies import createAlignmentPlot
 import pyworkflow.em.metadata as md
@@ -53,6 +54,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
     INTERP_MAP = {INTERP_LINEAR: 1, INTERP_CUBIC: 3}
 
     _label = 'correlation alignment'
+    _version = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
 
@@ -171,7 +173,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
             args += ' --gain ' + self.inputMovies.get().getGain()
 
         self.runJob('xmipp_movie_alignment_correlation', args, numberOfMpi=1)
-        
+
         if self.doComputePSD:
             uncorrectedPSD = os.path.join(movieFolder,"uncorrected")
             correctedPSD = os.path.join(movieFolder,"corrected")
@@ -185,7 +187,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
             pwutils.cleanPath(fnInitial)
             if not self.doSaveAveMic:
                 pwutils.cleanPath(fnAvg)
-        
+
         self._saveAlignmentPlots(movie)
 
     #--------------------------- UTILS functions ------------------------------

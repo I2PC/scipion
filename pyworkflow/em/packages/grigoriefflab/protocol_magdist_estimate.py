@@ -29,6 +29,7 @@ from os.path import exists
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils.path as pwutils
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtPreprocessMicrographs
 
 from grigoriefflab import MAGDISTEST_PATH
@@ -41,6 +42,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     grating
     """    
     _label = 'magnification distortion estimation'
+    _version = VERSION_1_1
 
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)
