@@ -187,13 +187,13 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
 
     def getObjectActions(self, obj):
 
-        def addAction(action):
-            if action:
-                text = action
-                action = action
-                action = (text, lambda: self.actionFunc(action),
+        def addAction(a):
+            if a:
+                text = a
+                action = a
+                a = (text, lambda: self.actionFunc(action),
                           ActionIcons.get(action, None))
-            return action
+            return a
 
         actions = [addAction(a)
                    for a, cond in self.getActionsFromSelection() if cond]
