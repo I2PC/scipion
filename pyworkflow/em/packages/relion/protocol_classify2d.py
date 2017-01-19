@@ -20,12 +20,10 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains the protocol base class for Relion protocols
-"""
+
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses2D
@@ -46,13 +44,14 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         
     def _initialize(self):
         """ This function is mean to be called after the 
-        working dir for the protocol have been set. (maybe after recovery from mapper)
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
         
 
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions ------------------------
     def _setSamplingArgs(self, args):
         """ Set sampling related params. """
         # Sampling stuff
@@ -63,14 +62,15 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         else:
             args['--skip_align'] = ''
 
-    #--------------------------- STEPS functions --------------------------------------------       
+    #--------------------------- STEPS functions -------------------------------
     def _loadClassesInfo(self, iteration):
         """ Read some information about the produced Relion 2D classes
         from the *model.star file.
         """
         self._classesInfo = {} # store classes info, indexed by class id
          
-        modelStar = md.MetaData('model_classes@' + self._getFileName('model', iter=iteration))
+        modelStar = md.MetaData('model_classes@%s' %
+                                self._getFileName('model', iter=iteration))
         
         for classNumber, row in enumerate(md.iterRows(modelStar)):
             index, fn = relionToLocation(row.getValue('rlnReferenceImage'))
@@ -84,7 +84,8 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         dataStar = self._getFileName('data', iter=iteration)
         clsSet.classifyItems(updateItemCallback=self._updateParticle,
                              updateClassCallback=self._updateClass,
-                             itemDataIterator=md.iterRows(dataStar, sortByLabel=md.RLN_IMAGE_ID))
+                             itemDataIterator=md.iterRows(dataStar,
+                                                          sortByLabel=md.RLN_IMAGE_ID))
         
     def createOutputStep(self):
         partSet = self.inputParticles.get()       
@@ -95,7 +96,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         self._defineOutputs(outputClasses=classes2D)
         self._defineSourceRelation(self.inputParticles, classes2D)
         
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validateNormal(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 

@@ -92,13 +92,13 @@ void ProgVolumeHomogenizer::run()
 {
 	FileName fn_proj, fnIn;
 	Image<double> inV, refV;
-	Image<double> imgIn;
+	Image<double> imgIn, imgCorr;
 	MetaData setOfImgIn, setOfImgOut;
 	double rot, tilt, psi, xShift, yShift;
 	bool flip;
-	Projection projIn, projRef, projCorr;
+	Projection projIn, projRef;
 	cv::Mat ProjIn, ProjRef, ProjIn8, ProjRef8, ImgIn;
-	cv::Mat flow, ProjCorr;
+	cv::Mat flow, ImgCorr;
 	cv::Mat planes[]={flow, flow};
 	size_t objId;
 	int count = 0;
@@ -177,10 +177,10 @@ void ProgVolumeHomogenizer::run()
 			    }
 
 			//applying the flow on the input image to use as the corrected one
-			cv::remap(ImgIn, ProjCorr, planes[0], planes[1], cv::INTER_CUBIC);
+			cv::remap(ImgIn, ImgCorr, planes[0], planes[1], cv::INTER_CUBIC);
 
 			//preparing output data to use for xmipp
-			opencv2Xmipp(ProjCorr, projCorr());
+			opencv2Xmipp(ImgCorr, imgCorr());
 
 			//filling output metaData
 			fn_proj.compose(i+1, stackName);
@@ -189,7 +189,7 @@ void ProgVolumeHomogenizer::run()
 			rowInput.setValue(MDL_SHIFT_Y, 0.0);
 			rowInput.setValue(MDL_SHIFT_Z, 0.0);
 
-			projCorr.write(fn_proj, i+1,true, WRITE_OVERWRITE);
+			imgCorr.write(fn_proj, i+1,true, WRITE_OVERWRITE);
 
 			mdPartialParticles.addRow(rowInput);
 			rowInput.clear();

@@ -29,6 +29,7 @@ from os.path import join
 
 import pyworkflow.protocol.params as params
 import pyworkflow.utils as pwutils
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import SetOfMicrographs
 
@@ -40,6 +41,7 @@ class ProtRelionExportCtf(EMProtocol):
     Export a SetOfCTF to the expected Relion STAR file.
     """
     _label = 'export ctf'
+    _version = VERSION_1_1
     CTF_STAR_FILE = 'micrographs_ctf.star'
     
     #--------------------------- DEFINE param functions ------------------------

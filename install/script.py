@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 import os
@@ -399,7 +399,7 @@ env.addPackage('frealign', version='9.07',
 
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
-                           'bin/relion'])]
+                           'bin/relion_refine'])]
 
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
@@ -411,6 +411,10 @@ env.addPackage('relion', version='1.4f',
 
 env.addPackage('relion', version='1.3',
                tar='relion-1.3.tgz',
+               commands=relion_commands)
+
+env.addPackage('relion', version='2.0',
+               tar='relion-2.0.tgz',
                commands=relion_commands)
 
 env.addPackage('localrec', version='1.1.0',
@@ -426,6 +430,9 @@ env.addPackage('spider', version='21.13',
 
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
+
+env.addPackage('motioncorr', version='2.1.cuda.7.5',
+               tar='motioncorr_v2.1.cuda.7.5.tgz')
 
 env.addPackage('motioncor2', version='16.03.16',
                tar='motioncor2_03162016.tgz')

@@ -186,7 +186,7 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
     fitting of a least squares plane through the pixels in the
     bg_mask, then subtraction of the plane, and division by the
     standard deviation of the pixels in the bg_mask */
-void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> &bg_mask);
+void normalize_ramp(MultidimArray<double> &I, MultidimArray<int> *bg_mask=NULL);
 
 /** Removal of neighbouring particles.
     @ingroup NormalizationProcedures

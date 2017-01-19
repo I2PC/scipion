@@ -308,29 +308,29 @@ void Micrograph::scale_coordinates(const double &c)
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
-                        bool only_check)
+                        bool only_check, bool fillBorders)
 {
     if (X_window_size == -1 || Y_window_size == -1)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "Micrograph::scissor: window size not set");
     if (datatype == DT_UChar)
         return templateScissor(*IUChar, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_UShort)
         return templateScissor(*IUShort, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_Short)
         return templateScissor(*IShort, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_UInt)
         return templateScissor(*IUInt, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_Int)
         return templateScissor(*IInt, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_Float)
         return templateScissor(*IFloat, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT,
                      "Micrograph::scissor: unknown datatype");
@@ -340,7 +340,7 @@ int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, double minCost,
                                     const FileName &fn_rootIn, const FileName &fn_image, double ang,
-                                    double tilt, double psi, bool rmStack)
+                                    double tilt, double psi, bool rmStack, bool fillBorders)
 {
     MetaData SF;
     Image<double> I;
@@ -410,7 +410,7 @@ void Micrograph::produce_all_images(int label, double minCost,
             SF.setValue(MDL_MICROGRAPH, M->fn_micrograph, id);
             SF.setValue(MDL_XCOOR, coords[n].X, id);
             SF.setValue(MDL_YCOOR, coords[n].Y, id);
-            bool t = M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
+            bool t = M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY, false, fillBorders);
             if (!t)
             {
                 std::cout << "Particle " << fn_aux

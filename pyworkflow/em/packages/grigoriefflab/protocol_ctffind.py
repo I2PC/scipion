@@ -299,7 +299,10 @@ eof
 """
 
     def _argsCtffind4(self):
-        self._program = 'export OMP_NUM_THREADS=%d; ' % 1#self.numberOfThreads.get()
+
+        # Avoid threads multiplication
+        # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program = 'export OMP_NUM_THREADS=1; '
         self._program += CTFFIND4_PATH
         self._args = """ << eof
 %(micFn)s

@@ -21,3 +21,6 @@ if cleanAll:
 
 for ext in ['so', 'os', 'o']:
     cmd('find software/em/xmipp -name "*.%s" -exec rm -rf {} \;' % ext)
+#force pyc refresh even if .pyc's timestamp is not older than the corresponding .py's timestamp 
+#to trigger a recompilation. 
+find . -iname "*.pyc" -delete

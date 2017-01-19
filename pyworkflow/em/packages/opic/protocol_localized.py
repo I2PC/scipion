@@ -26,22 +26,25 @@
 
 import math
 
+from os.path import join, exists
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam, LEVEL_ADVANCED)
-from pyworkflow.em.protocol import ProtParticles
-from pyworkflow.em.data import Coordinate
+from pyworkflow.em.protocol import ProtParticles, ProtParticlePicking
+from pyworkflow.em.data import Coordinate, SetOfCoordinates
+
+from pyworkflow.utils.path import replaceBaseExt
 
 from convert import particleToRow, rowToSubcoordinate, setEnviron
-
-
 
 
 CMM = 0
 HAND = 1
 
 
-class ProtLocalizedRecons(ProtParticles):
+class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     """ This class cointains a re-implementation to a method for the
     localized three-dimensional reconstruction of such subunits. 
     After determining the particle orientations, local areas 
@@ -49,8 +52,10 @@ class ProtLocalizedRecons(ProtParticles):
     single particles.
     """
     _label = 'localized subparticles'
+    _version = VERSION_1_1
     
-    def __init__(self, **args):        
+    def __init__(self, **args):
+        ProtParticlePicking.__init__(self, **args)
         ProtParticles.__init__(self, **args)
         
     
@@ -223,7 +228,7 @@ class ProtLocalizedRecons(ProtParticles):
     
     #--------------------------- UTILS functions ------------------------------
     def _getInputParticles(self):
-        return self.inputParticles.get()
+        return self.getInputParticlesPointer().get()
     
     def _getSymMatrices(self):
         pass
@@ -244,3 +249,43 @@ class ProtLocalizedRecons(ProtParticles):
 #             print "Cadena Xmipp: ", a
 #             matricesObjs.append(lr.Matrix3(a))
 #        return matricesObjs
+
+    def getInputParticlesPointer(self):
+        return self.inputParticles
+
+    def registerCoords(self, coordsDir):
+        """ This methods is usually inherited from all Pickers
+        and it is used from the Java picking GUI to register
+        a new SetOfCoordinates when the user click on +Particles button.
+        """
+        suffix = self.__getOutputSuffix()
+        outputName = self.OUTPUT_PREFIX + suffix
+
+        from pyworkflow.em.packages.opic.convert import readSetOfCoordinates
+        inputset = self._getInputParticles()
+        # micrographs are the input set if protocol is not finished
+        outputset = self._createSetOfCoordinates(inputset, suffix=suffix)
+        readSetOfCoordinates(coordsDir, self._getInputParticles(), outputset)
+        summary = self.getSummary(outputset)
+        outputset.setObjComment(summary)
+        outputs = {outputName: outputset}
+        self._defineOutputs(**outputs)
+        self._defineSourceRelation(self.getInputParticlesPointer(), outputset)
+        self._store()
+
+    def __getOutputSuffix(self):
+        """ Get the name to be used for a new output.
+        For example: outputCoordiantes7.
+        It should take into account previous outputs
+        and number with a higher value.
+        """
+        maxCounter = -1
+        for attrName, _ in self.iterOutputAttributes(SetOfCoordinates):
+            suffix = attrName.replace(self.OUTPUT_PREFIX, '')
+            try:
+                counter = int(suffix)
+            except:
+                counter = 1 # when there is not number assume 1
+            maxCounter = max(counter, maxCounter)
+
+        return str(maxCounter+1) if maxCounter > 0 else '' # empty if not outputs

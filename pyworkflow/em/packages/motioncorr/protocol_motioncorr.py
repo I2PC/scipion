@@ -34,13 +34,14 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2)
-
+from pyworkflow.protocol import STEPS_PARALLEL
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -53,7 +54,12 @@ class ProtMotionCorr(ProtAlignMovies):
     """
 
     _label = 'motioncorr alignment'
+    _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrc'
+
+    def __init__(self, **args):
+        ProtAlignMovies.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
@@ -153,7 +159,7 @@ class ProtMotionCorr(ProtAlignMovies):
                            "dose-dependent filter to the frames")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
-        form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=2, mpi=0)
 
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):

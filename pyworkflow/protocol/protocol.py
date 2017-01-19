@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -294,6 +294,10 @@ class Protocol(Step):
     It also have the inputs, outputs and other Steps properties,
     but contains a list of steps that are executed
     """
+
+    # Version where protocol appeared first time
+    _version = "v1.0"
+
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)        
         self._steps = [] # List of steps that will be executed
@@ -429,10 +433,11 @@ class Protocol(Step):
         any expert parameter"""
         if self._hasExpert is None:
             self._hasExpert = False
-            for paraName, param in self._definition.iterParams():
+            for paraName, param in self._definition.iterAllParams():
                 if param.isExpert():
                     self._hasExpert = True
                     break
+
         return self._hasExpert
 
         
@@ -449,7 +454,16 @@ class Protocol(Step):
         only serve as base for other, not to be instantiated. 
         """
         return hasattr(cls, '_definition')
-    
+
+    @classmethod
+    def getVersion(cls):
+        return cls._version
+
+    @classmethod
+    def isNew(cls):
+        version = cls.getVersion()
+        return version not in pw.OLD_VERSIONS
+
     def getDefinition(self):
         """ Access the protocol definition. """
         return self._definition

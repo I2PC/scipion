@@ -20,12 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
 This sub-package contains the XmippProtNormalizeStrain protocol
 """
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from pyworkflow.protocol.params import MultiPointerParam
 from pyworkflow.utils.path import createLink
@@ -38,6 +39,7 @@ class XmippProtNormalizeStrain(ProtAnalysis3D):
     Normalize the local strain and rotations amongst several runs
     """
     _label = 'normalize strain'
+    _version = VERSION_1_1
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)

@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -35,6 +35,8 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam,
                                         FloatParam, StringParam, Positive, GE,
                                         EnumParam, NumericListParam, TextParam,
                                         DigFreqParam)
+
+from pyworkflow.em.packages.xmipp3.constants import SYM_URL
                                         
 
 def _defineProjectionMatchingParams(self, form):
@@ -278,24 +280,26 @@ def _defineProjectionMatchingParams(self, form):
     *Note:* if there are more values than iterations the extra value are ignored
     """)          
     
-    form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+    form.addParam('doRestricSearchbyTiltAngle', BooleanParam, default=False,
+                  expertLevel=LEVEL_ADVANCED,
                  label="Restrict tilt angle search?", 
                  help ='Restrict tilt angle search \n ')             
     
-    form.addParam('tilt0', FloatParam, default=0, condition='doRestricSearchbyTiltAngle',
+    form.addParam('tilt0', FloatParam, default=0,
+                  condition='doRestricSearchbyTiltAngle',
                  label="Lower-value for restricted tilt angle search", 
                  help ='Lower-value for restricted tilt angle search \n ')             
     
-    form.addParam('tiltF', FloatParam, default=180, condition='doRestricSearchbyTiltAngle',
+    form.addParam('tiltF', FloatParam, default=180,
+                  condition='doRestricSearchbyTiltAngle',
                  label="Higher-value for restricted tilt angle search", 
                  help ='Higher-value for restricted tilt angle search \n ')             
     form.addParam('symmetry', TextParam, default='c1',
                  label='Point group symmetry',
-                 help=""" See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]
-    for a description of the symmetry groups format
-    If no symmetry is present, give c1
-    """)
-    form.addParam('symmetryGroupNeighbourhood', TextParam, default='', expertLevel=LEVEL_ADVANCED,
+                 help=" See %s for a description of the symmetry groups format."
+                      "\nIf no symmetry is present, give c1. " % SYM_URL)
+    form.addParam('symmetryGroupNeighbourhood', TextParam, default='',
+                  expertLevel=LEVEL_ADVANCED,
                  label='Symmetry group for Neighbourhood computations',
                  help=""" If you do not know what this is leave it blank.
     This symmetry will be using for compute neighboring points,
@@ -306,7 +310,8 @@ def _defineProjectionMatchingParams(self, form):
     """
     )
     form.addParam('onlyWinner', NumericListParam, default='0', 
-                 label='compute only closest neighbor', expertLevel=LEVEL_ADVANCED,
+                 label='compute only closest neighbor',
+                  expertLevel=LEVEL_ADVANCED,
                  condition="symmetryGroupNeighbourhood != ''",
                  help="""This option is only relevant if symmetryGroupNeighbourhood !=''
     If set to 1 only one neighbor will be computed per sampling point

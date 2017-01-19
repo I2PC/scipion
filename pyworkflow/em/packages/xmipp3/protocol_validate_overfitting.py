@@ -21,11 +21,11 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-from pyworkflow.protocol.params import (PointerParam, FloatParam, 
+from pyworkflow import VERSION_1_1
+from pyworkflow.protocol.params import (PointerParam, FloatParam,
                                         NumericListParam, IntParam,
                                         StringParam, BooleanParam,
                                         LEVEL_ADVANCED)
@@ -57,7 +57,8 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     B. Heymann "Validation of 3D EM Reconstructions", 2015. 
     (see References)
     """
-    _label = 'validate overfitting'    
+    _label = 'validate overfitting'
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions --------------------------------------------   
    
     def _defineParams(self, form):

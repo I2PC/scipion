@@ -27,6 +27,7 @@
 import os
 import glob
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PathParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.utils.path import moveFile, copyFile
@@ -47,7 +48,7 @@ class ProtPDFReport(EMProtocol):
     when these files are sorted, they will be sorted by the number in front.
     """    
     _label = 'pdf report'
-
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------
     
     def _defineParams(self, form):

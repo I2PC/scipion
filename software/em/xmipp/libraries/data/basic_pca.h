@@ -153,5 +153,32 @@ public:
         return idx(n)-1;
     }
 };
+
+/** Online PCA */
+class PCAonline {
+public:
+	MultidimArray<double> ysum, yxt, c1, ycentered;
+	double zn, xxt;
+	int N;
+	double maxzn;
+public:
+	/// Empty constructor
+	PCAonline();
+
+	/** Add new vector.
+	 * The input vector is centered according to the current average.
+	 */
+	void addVector(MultidimArray<double> &y);
+
+	/// Get principal component
+	MultidimArray<double> & getCurrentPCA() {
+		return c1;
+	}
+
+	/// Get current projection
+	double getCurrentProjection() {
+		return zn;
+	}
+};
 //@}
 #endif

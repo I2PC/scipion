@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -29,6 +29,7 @@ Protocol to perform high-resolution reconstructions
 
 from glob import glob
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile, createLink
@@ -70,6 +71,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
        defocus group. You may want to perform iterations one by one, and remove from one
        iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
+    _version = VERSION_1_1
     
     SPLIT_STOCHASTIC = 0
     SPLIT_FIXED = 1
