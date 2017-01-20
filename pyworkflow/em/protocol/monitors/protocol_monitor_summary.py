@@ -28,6 +28,7 @@ import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor
 from protocol_monitor_ctf import MonitorCTF
 from protocol_monitor_system import MonitorSystem
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtCTFMicrographs
 from pyworkflow.em.protocol.monitors.report_html import ReportHtml
 
@@ -39,6 +40,7 @@ class ProtMonitorSummary(ProtMonitor):
     - CTF estimation.
     """
     _label = 'monitor summary'
+    _version = VERSION_1_1
 
     def _defineParams(self, form):
         ProtMonitor._defineParams(self, form)

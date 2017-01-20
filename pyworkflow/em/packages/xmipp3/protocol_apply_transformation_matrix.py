@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 import pyworkflow.protocol.params as params
 from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles
@@ -40,6 +40,7 @@ class XmippProtApplyTransformationMatrix(ProtProcessParticles):
     """
     
     _label = 'apply transformation matrix'
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------------------
     
     def _defineParams(self, form):

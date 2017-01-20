@@ -39,7 +39,7 @@ class XmippProtCreateGallery(ProtAnalysis3D):
     observed in the microscope.
     """
     _label = 'create gallery'
-    
+    _version = pyworkflow.VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='General parameters')

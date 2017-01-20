@@ -23,11 +23,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
-
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
-from pyworkflow.em.protocol.protocol_3d import ProtRefine3D
+from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from convert import readSetOfVolumes
 from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
@@ -40,11 +38,12 @@ OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 FN_MEAN_VOL = 'mean_volume.vol'
 
 
-class XmippProtMonoRes(ProtRefine3D):
+class XmippProtMonoRes(ProtAnalysis3D):
     """    
     Given a map the protocol assigns local resolutions to each pixel of the map.
     """
     _label = 'local resolution'
+    _version = VERSION_1_1
     
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):

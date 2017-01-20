@@ -29,13 +29,13 @@ import pyworkflow.em.showj as showj
 
 from protocol_movie_opticalflow import (XmippProtOFAlignment,
                                         OBJCMD_MOVIE_ALIGNCARTESIAN)
-
+from protocol_movie_correlation import XmippProtMovieCorr
 
 class XmippMovieAlignViewer(Viewer):
-    _targets = [XmippProtOFAlignment]
+    _targets = [XmippProtOFAlignment, XmippProtMovieCorr]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
 
-    _label = 'viewer optical alignment'
+    _label = 'viewer optical/correlation alignment'
 
     def _visualize(self, obj, **kwargs):
         views = []

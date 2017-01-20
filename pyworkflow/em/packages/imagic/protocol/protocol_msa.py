@@ -27,6 +27,7 @@
 
 from os.path import join, exists
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import IntParam, PointerParam, EnumParam, FloatParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.convert import ImageHandler
@@ -45,6 +46,7 @@ class ImagicProtMSA(ImagicProtocol):
 
     """
     _label = 'msa'
+    _version = VERSION_1_1
     MSA_DIR = 'MSA'
 
     def __init__(self, **kwargs):
