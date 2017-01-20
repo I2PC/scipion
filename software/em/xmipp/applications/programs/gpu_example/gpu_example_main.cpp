@@ -131,7 +131,7 @@ main(void)
     mDsource.setValue(MDL_X,3.,id);
     mDsource.setValue(MDL_Y,4.,id);
     mDsource.write("kk.xmd");
-    printf("Metadata written in file %s","kk.xmd");
+    printf("Metadata written in file %s\n","kk.xmd");
     printf("Done\n");
     return 0;
 }
