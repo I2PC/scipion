@@ -261,6 +261,7 @@ class XmippMonoResViewer(ProtocolViewer):
             smprt = self.protocol.inputVolume.get().getSamplingRate()
         else:
             smprt = self.protocol.inputVolumes.get().getSamplingRate()
+        fhCmd.write("volume #0 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
         
