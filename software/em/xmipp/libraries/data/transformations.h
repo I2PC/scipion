@@ -199,6 +199,36 @@ void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
 #define BSPLINE3 3
 #define BSPLINE4 4
 
+inline int iterationLowerBound(double pos, double step, double min, double max) {
+    if (step > 0.000001) {
+        double ret = (min-pos)/step;
+        return XMIPP_MAX((int)(ret+1.0), 0);
+    }
+    else if (step < -0.000001) {
+        double ret = (max-pos)/step;
+        return XMIPP_MAX((int)(ret+1.0), 0);
+    }
+    else {
+        if ((pos < min) || (pos > max))
+            return INT_MAX;
+        else
+            return 0;
+    }
+}
+
+inline int iterationUpperBound(double pos, double step, double min, double max, int orig) {
+    if (step > 0.000001) {
+        double ret = (max-pos)/step;
+        return (int)(ret) + 1;
+    }
+    else if (step < -0.000001) {
+        double ret = (min-pos)/step;
+        return (int)(ret) + 1;
+    }
+    else
+        return orig; //XXX guard out of bound for safety?
+}
+
 /** Applies a geometrical transformation.
  * @ingroup GeometricalTransformations
  *
@@ -383,44 +413,38 @@ void applyGeometry(int SplineDegree,
             double xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
             double yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
 
-            for (size_t j = 0; j < XSIZE(V2); j++)
-            {
+            if (wrap) {
+                //XXX this branch is not vectorized
+                for (size_t j = 0; j < XSIZE(V2); j++)
+                {
 #ifdef DEBUG_APPLYGEO
 
-                std::cout << "Computing (" << i << "," << j << ")\n";
-                std::cout << "   (y, x) =(" << y << "," << x << ")\n"
-                << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-                << std::endl;
+                    std::cout << "Computing (" << i << "," << j << ")\n";
+                    std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                    << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                    << std::endl;
 #endif
-                // If the point is outside the image, apply a periodic extension
-                // of the image, what exits by one side enters by the other
-                bool interp = true;
-                bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
-                bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
+                    // If the point is outside the image, apply a periodic extension
+                    // of the image, what exits by one side enters by the other
+                    bool interp = true;
+                    bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
+                    bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
 
-                if (wrap)
-                {
                     if (x_isOut)
                         xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
 
                     if (y_isOut)
                         yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
 
-                }
-                else if (x_isOut || y_isOut)
-                    interp = false;
-
 #ifdef DEBUG_APPLYGEO
 
-                std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-                << std::endl;
-                std::cout << "   Interp = " << interp << std::endl;
-                // The following line sounds dangerous...
-                //x++;
+                    std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                    << std::endl;
+                    std::cout << "   Interp = " << interp << std::endl;
+                    // The following line sounds dangerous...
+                    //x++;
 #endif
 
-                if (interp)
-                {
                     if (SplineDegree==1)
                     {
                         // Linear interpolation
@@ -439,13 +463,10 @@ void applyGeometry(int SplineDegree,
                         size_t n2 = n1 + 1;
 
                         // m2 and n2 can be out by 1 so wrap must be check here
-                        if (wrap)
-                        {
-                            if (m2 >= Xdim)
-                                m2 = 0;
-                            if (n2 >= Ydim)
-                                n2 = 0;
-                        }
+                        if (m2 >= Xdim)
+                            m2 = 0;
+                        if (n2 >= Ydim)
+                            n2 = 0;
 
 #ifdef DEBUG_APPLYGEO
                         std::cout << "   From (" << n1 << "," << m1 << ") and ("
@@ -472,36 +493,195 @@ void applyGeometry(int SplineDegree,
                             tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
 
                             if (wx != 0 && m2 < V1.xdim)
-                                tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
+                               tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
                         }
 
                         dAij(V2, i, j) = (T) tmp;
                     }
                     else if (SplineDegree==0)
-					{
-						dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
-					}
+                    {
+                        dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
+                    }
                     else
                     {
                         // B-spline interpolation
                         dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(
-                                             xp, yp, SplineDegree);
+                                            xp, yp, SplineDegree);
                     }
 #ifdef DEBUG_APPYGEO
                     std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
 
+                    // Compute new point inside input image
+                    xp += Aref00;
+                    yp += Aref10;
                 }
+            }
+            else { //XXX no wrap -- vectorized branch
+                int start = 0;
+                int start2 = XMIPP_MAX(
+                    iterationLowerBound(xp, Aref00, minxpp, maxxpp),
+                    iterationLowerBound(yp, Aref10, minypp, maxypp));
+                start = start2;
+                int end = XSIZE(V2);
+                end = XMIPP_MAX(start, end);
+                int end2 = XMIPP_MIN(
+                    iterationUpperBound(xp, Aref00, minxpp, maxxp, end),
+                    iterationUpperBound(yp, Aref10, minypp, maxypp, end));
+                end = XMIPP_MIN(end, end2);
 
-                // Compute new point inside input image
-                xp += Aref00;
-                yp += Aref10;
+                end = XMIPP_MAX(start, end);
+                double xp_orig = xp;
+                double yp_orig = yp;
+                xp += (double)start * Aref00;
+                yp += (double)start * Aref10;
+                // The loop iterates inside the image only -- it eases further optimizationsi
+                if (SplineDegree==1)
+                {
+#if 0 /* different type of vectorization, possibly safer due to reduction on xp, py, but slower */
+                    int j;
+#define APPLY_GEO_VEC_LEN 8
+                    double vxp[APPLY_GEO_VEC_LEN];
+                    double vyp[APPLY_GEO_VEC_LEN];
+                    //#pragma simd
+                    for (j = start; j < end-APPLY_GEO_VEC_LEN; /*j++*/j+=APPLY_GEO_VEC_LEN)
+                    {
+                        // Linear interpolation
+
+                        // Calculate the integer position in input image, be careful
+                        // that it is not the nearest but the one at the top left corner
+                        // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
+                        // Calculate also weights for point m1+1,n1+1
+                        
+                        //double vxp[APPLY_GEO_VEC_LEN];
+                        //double vyp[APPLY_GEO_VEC_LEN];
+                        for (int k = 0; k < APPLY_GEO_VEC_LEN; k++) {
+                            /*vxp[k] = xp+Aref00*double(j+k-start);
+                            vyp[k] = yp+Aref10*double(j+k-start);*/
+                            vxp[k] = xp;
+                            vyp[k] = yp;
+                            xp += Aref00;
+                            yp += Aref10;
+                        }
+                        /*xp = vxp[APPLY_GEO_VEC_LEN-1];
+                        yp = vyp[APPLY_GEO_VEC_LEN-1];*/
+                        #pragma simd
+                        for (int k = 0; k < APPLY_GEO_VEC_LEN; k++) {
+                            double wx = vxp[k]/*xp*/ + cen_xp;
+                            int m1 = (int) wx;
+                            wx = wx - m1;
+                            int m2 = m1 + 1;
+                            double wy = vyp[k]/*yp*/ + cen_yp;
+                            int n1 = (int) wy;
+                            wy = wy - n1;
+                            int n2 = n1 + 1;
+
+                            // Perform interpolation
+                            // if wx == 0 means that the rightest point is useless for this
+                            // interpolation, and even it might not be defined if m1=xdim-1
+                            // The same can be said for wy.
+                            double wx_1 = (1.-wx);
+                            double wy_1 = (1.-wy);
+                            double aux1=wy_1;
+                            double aux2=aux1* wx_1 ;
+                            double tmp = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
+                            if (wx != 0 && m2 < V1.xdim)
+                                tmp += (aux1-aux2) * DIRECT_A2D_ELEM(V1, n1, m2);
+        
+                            if (wy != 0 && n2 < V1.ydim)
+                            {
+                                aux2=wy * wx_1;
+                                tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
+
+                                if (wx != 0 && m2 < V1.xdim)
+                                    tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
+                            }
+
+                            dAij(V2, i, j+k) = (T) tmp;
+
+                            //xp += Aref00;
+                            //yp += Aref10;
+                        }
+
+                        //xp += Aref00*(double)(APPLY_GEO_VEC_LEN);
+                        //yp += Aref10*(double)(APPLY_GEO_VEC_LEN);
+                    }
+                    //xp = vxp[APPLY_GEO_VEC_LEN-1] + Aref00;
+                    //yp = vyp[APPLY_GEO_VEC_LEN-1] + Aref10;
+
+                    //for (; j < end; j++)
+                    //XXX end of loop, not vectorized
+#endif
+                    #pragma simd
+                    for (int j = start; j < end; j++)
+                    {
+                        // Linear interpolation
+
+                        // Calculate the integer position in input image, be careful
+                        // that it is not the nearest but the one at the top left corner
+                        // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
+                        // Calculate also weights for point m1+1,n1+1
+                        double wx = xp + cen_xp;
+                        int m1 = (int) wx;
+                        wx = wx - m1;
+                        int m2 = m1 + 1;
+                        double wy = yp + cen_yp;
+                        int n1 = (int) wy;
+                        wy = wy - n1;
+                        int n2 = n1 + 1;
+
+                        // Perform interpolation
+                        // if wx == 0 means that the rightest point is useless for this
+                        // interpolation, and even it might not be defined if m1=xdim-1
+                        // The same can be said for wy.
+                        double wx_1 = (1.0-wx);
+                        double wy_1 = (1.0-wy);
+                        double aux1=wy_1;
+                        double aux2=aux1* wx_1 ;
+                        double tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
+
+                        if (wx != 0 && m2 < V1.xdim)
+                            tmp += (aux1-aux2) * DIRECT_A2D_ELEM(V1, n1, m2);
+
+                        if (wy != 0 && n2 < V1.ydim)
+                        {
+                            aux2=wy * wx_1;
+                            tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
+
+                            if (wx != 0 && m2 < V1.xdim)
+                                tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
+                        }
+
+                        dAij(V2, i, j) = (T) tmp;
+
+                        xp += Aref00;
+                        yp += Aref10;
+                    }
+                }
+                else if (SplineDegree==0)
+                {
+                    for (size_t j = start; j < end; j++) {
+                        dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
+                        xp += Aref00;
+                        yp += Aref10;
+                    }
+                }
+                else
+                {
+                    for (size_t j = start; j < end; j++)
+                    {
+                        // B-spline interpolation
+                        dAij(V2, i, j) = (T) Bcoeffs.interpolatedElementBSpline2D(xp, yp, SplineDegree);
+                        xp += Aref00;
+                        yp += Aref10;
+                    }
+                }
             }
         }
     }
     else
     {
-        // 3D transformation
+        // 3D transformation, not vectorized
     	size_t m1, n1, o1, m2, n2, o2;
         double x, y, z, xp, yp, zp;
         double minxp, minyp, maxxp, maxyp, minzp, maxzp;
@@ -752,6 +932,8 @@ void applyGeometry(int SplineDegree,
     SWITCHDATATYPE(V1.datatype, APPLYGEO)
 #undef APPLYGEO
 }
+
+
 
 /** Applies a geometrical transformation and overwrites the input matrix.
  * @ingroup GeometricalTransformations

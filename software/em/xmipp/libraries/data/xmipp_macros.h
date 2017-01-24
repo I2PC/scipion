@@ -305,6 +305,8 @@
                              ? ((x) - (int)(((x) - (x0)) / ((xF) - (x0)) - 1) * ((xF) - (x0))) : \
                              ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))))
 
+#define realWRAPNoDiv(x, x0, xF) ((x) - floor(((x) - (x0)) / ((xF) - (x0))) * ((xF) - (x0)))
+
 /** Degrees to radians
  *
  * @code
