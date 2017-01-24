@@ -18,24 +18,28 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
-
-
+from pyworkflow.em.protocol.monitors.protocol_monitor_system import SYSTEM_LOG_SQLITE
+from pyworkflow.em.protocol.protocol_stress import STRESS_NG
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pyworkflow.em.protocol import ProtStress, ProtMonitorSystem
+from pyworkflow.utils import commandExists
 
-    
+
 class TestStress(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        #cls.dataset = tests.DataSet.getDataSet('emx')
-        #cls.dsRelion = tests.DataSet.getDataSet('relion_tutorial')
 
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
+
+        # Check stress-ng is installed
+        print "Command exists?&&&&&&&&&&&&&&&&&&& %s" % commandExists(STRESS_NG)
+        self.assertTrue(commandExists(STRESS_NG), "This test requires to have %s installed" % STRESS_NG)
+
         kwargs = {'noCpu': 2,
                 'noMem': 0,
                 'amountMem': 256,
@@ -56,7 +60,8 @@ class TestStress(BaseTest):
         prot2.inputProtocols.append(prot1)
         self.launchProtocol(prot2)
 
-        baseFn = prot2._getExtraPath(prot2.dataBase)
+        baseFn = prot2._getPath(SYSTEM_LOG_SQLITE)
         import os.path
         #not sure what to test here
+        print baseFn
         self.assertTrue(os.path.isfile(baseFn))

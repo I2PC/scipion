@@ -31,6 +31,7 @@ from collections import OrderedDict
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
@@ -43,6 +44,7 @@ class ProtMonitorISPyB(ProtMonitor):
     """ Monitor to communicated with ISPyB system at Diamond.
     """
     _label = 'monitor to ISPyB'
+    _version = VERSION_1_1
 
     def _defineParams(self, form):
         ProtMonitor._defineParams(self, form)

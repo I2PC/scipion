@@ -21,11 +21,12 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.em.packages.xmipp3.convert import (writeSetOfParticles, 
                                                    readSetOfParticles)
@@ -38,11 +39,11 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     Method to get two volume from different classes (with different conformation)
     and correcting (deforming) all images of one of the volumes (input volume) 
     with respect to the another one as a reference, using optical flow algorithm.
-    The output is a setOfParticles contaied deformed particles merged with 
-    reference particles.
+    The output is a setOfParticles contaied deformed reference particles.
     """
     
-    _label = 'volume homogenizer'    
+    _label = 'volume homogenizer'
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions --------------------------------------------   
    
     def _defineParams(self, form):
@@ -53,12 +54,6 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                  label='Reference volume', 
                  help="This is the volume that will be used as the reference "
                       "in OF algorithm.")
-        form.addParam('referenceParticles', params.PointerParam, 
-                      pointerClass='SetOfParticles',
-                      pointerCondition='hasAlignmentProj',
-                      label="Reference particles",  
-                      help="Aligned particles related to the reference "
-                           "volume.")
         form.addParam('inputVolume', params.PointerParam,
                  pointerClass='Volume',
                  label='Input volume', 
@@ -69,10 +64,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                       label="Input particles",  
                       help="Aligned particles related to the input volume. "
                            "These particles will be deformed (corrected) "
-                           "based on the reference volume using OF algorithm. "
-                           "Deformed particles will be merged with "
-                           "reference particles inside the protocol to "
-                           "create outputParticles.")        
+                           "based on the reference volume using OF algorithm.")        
         form.addParam('doAlignment', params.BooleanParam, default=False,
                       label='Reference and input volumes need to be aligned?',
                       help="Input and reference volumes must be aligned. "
@@ -176,24 +168,12 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
                     fnOutput, winSize, cutFreq), 
                     numberOfMpi=self.numberOfMpi.get()*self.numberOfThreads.get())        
     
-    def createOutputStep(self):        
-        refernceParticlesMd = self._getExtraPath('reference_particles.xmd')
-        referenceParticles = self.referenceParticles.get()
-        writeSetOfParticles(referenceParticles, refernceParticlesMd)
-        inputParticles = self.inputParticles.get()
-        
+    def createOutputStep(self):
+        inputParticles = self.inputParticles.get()        
         fnDeformedParticles = self._getExtraPath('deformed-particles.xmd')
-        fnOutputParticles = self._getExtraPath('OutputParticles_merged.xmd')
-        self.runJob("xmipp_metadata_utilities", 
-                    '-i %s -o %s -s union_all %s' % (
-                    refernceParticlesMd, fnOutputParticles, fnDeformedParticles),
-                    numberOfMpi = 1)
-        self.runJob("xmipp_metadata_utilities", 
-                    '-i %s -o %s -l itemId lineal 1 1' % (
-                    fnOutputParticles, fnOutputParticles), numberOfMpi = 1)
 
         outputSetOfParticles = self._createSetOfParticles()
-        readSetOfParticles(fnOutputParticles, outputSetOfParticles)        
+        readSetOfParticles(fnDeformedParticles, outputSetOfParticles)        
         outputSetOfParticles.copyInfo(inputParticles)        
         self._defineOutputs(outputParticles=outputSetOfParticles)              
     #--------------------------- INFO functions -------------------------------------------- 
@@ -203,16 +183,11 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
-        inputSize = self.inputParticles.get().getSize()
-        referenceSize = self.referenceParticles.get().getSize()        
+        inputSize = self.inputParticles.get().getSize()        
         if not hasattr(self, 'outputParticles'):
-            summary.append("Output particles not ready yet.")
+            summary.append("Output particles are not ready yet.")
         else:
-            summary.append("Applied OF to deform %d particles.\n" % inputSize)
-            summary.append("Output has %d particles as it is "
-                           "the result of merging deformed input "
-                           "particles and reference ones." %
-                           (inputSize+referenceSize))
+            summary.append("Applied OF to deform %d particles.\n" % inputSize)            
         return summary
     
     def _methods(self):

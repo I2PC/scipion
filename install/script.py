@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 import os
@@ -430,6 +430,9 @@ env.addPackage('spider', version='21.13',
 
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
+
+env.addPackage('motioncorr', version='2.1.cuda.7.5',
+               tar='motioncorr_v2.1.cuda.7.5.tgz')
 
 env.addPackage('motioncor2', version='16.03.16',
                tar='motioncor2_03162016.tgz')

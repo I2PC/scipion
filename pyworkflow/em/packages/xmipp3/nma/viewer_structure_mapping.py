@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -133,8 +133,12 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
         labels = []
         
         for voli in volList:
-            labels.append("%s"%voli.getObjLabel())
-            count += 1
+            if not voli.getObjLabel():
+                count+=1
+                labels.append("vol_%02d"%count)                            
+            else:
+                labels.append("%s"%voli.getObjLabel())
+                count += 1              
         
         nComponent = self.numberOfDimensions.get()
         
