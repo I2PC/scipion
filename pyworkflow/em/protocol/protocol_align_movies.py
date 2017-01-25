@@ -243,6 +243,10 @@ class ProtAlignMovies(ProtProcessMovies):
         # self.inputMovies.get().close()
         # frames = movie.getNumberOfFrames()
 
+	if self.inputMovies.get() is None:
+            errors.append("Input movies is None")
+            return errors
+
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
         if lastFrame == 0:
             # Although getFirstItem is not remonended in general, here it is
