@@ -32,6 +32,7 @@ from glob import glob
 import math
 from itertools import izip
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam, NumericListParam
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile, createLink
@@ -74,6 +75,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
        defocus group. You may want to perform iterations one by one, and remove from one
        iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
+    _version = VERSION_1_1
     
     SPLIT_STOCHASTIC = 0
     SPLIT_FIXED = 1

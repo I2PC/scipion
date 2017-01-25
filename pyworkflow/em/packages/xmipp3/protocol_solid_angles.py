@@ -28,6 +28,7 @@ from os.path import join, exists
 import math
 
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.utils.path import makePath
 from pyworkflow.em.convert import ImageHandler, ALIGN_PROJ
 from pyworkflow.em.data import Image
@@ -48,6 +49,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
     """
 
     _label = 'solid angles'
+    _version = VERSION_1_1
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)

@@ -24,8 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-
+from pyworkflow import VERSION_1_1
 from pyworkflow.em import ProtClassify2D, Float
 from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
@@ -42,6 +41,7 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         (an enhanced Ward-type algorithm).
     """
     _label = 'msa-classify'
+    _version = VERSION_1_1
     CLASS_DIR = 'MSA-cls'
 
     def __init__(self, **kwargs):

@@ -31,6 +31,8 @@ import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor, EmailNotifier
 import sqlite3 as lite
 import time, sys
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 import tkMessageBox
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
@@ -44,7 +46,7 @@ class ProtMonitorCTF(ProtMonitor):
     """ check CPU, mem and IO usage.
     """
     _label = 'ctf monitor'
-
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):    
         #ProtMonitor._defineParams(self, form)

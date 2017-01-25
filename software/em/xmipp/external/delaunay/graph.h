@@ -28,22 +28,6 @@ struct Graph_T
 };
 
 
-// Graph statistics data.
-struct Graph_Statistics_T
-{
-	long long int		*depths;			// Branch depth.
-	bool				*nodeChecked;		// Already checked node.
-	long long int		nLeaves;			// # leaves in graph.
-	long long int		nSplitted;			// # triangles splitted in graph.
-	long long int		trianglesFound[3];	// Triangles where points are located while building.
-	long long int		max;				// Max depth.
-};
-
-/*****************************************************************************
-* Variables declaration
-*****************************************************************************/
-extern struct Graph_Statistics_T graphStatistics;	// Statistics data.
-
 
 /**************************************************************************
 * Public function headers.

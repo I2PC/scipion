@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import pyworkflow.object as pwobj
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         BooleanParam, IntParam, LEVEL_ADVANCED)
 from pyworkflow.utils import removeExt
@@ -46,6 +47,7 @@ class ProtRelionSortParticles(ProtParticles):
 
     """
     _label = 'sort particles'
+    _version = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
