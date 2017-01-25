@@ -409,13 +409,6 @@ void ProgMonogenicSignalRes::run()
 								++NS;
 								++NN;
 							}
-							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-							{
-								noiseValues.push_back(amplitudeValueN);
-								sumN  += amplitudeValueN;
-								sumN2 += amplitudeValueN*amplitudeValueN;
-								++NN;
-							}
 						}
 					}
 					else
@@ -454,12 +447,6 @@ void ProgMonogenicSignalRes::run()
 								sumN  += amplitudeValueN;
 								sumN2 += amplitudeValueN*amplitudeValueN;
 								++NS;
-								++NN;
-							}
-							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-							{
-								sumN  += amplitudeValueN;
-								sumN2 += amplitudeValueN*amplitudeValueN;
 								++NN;
 							}
 						}
