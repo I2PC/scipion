@@ -97,9 +97,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         coordsSet = self._createSetOfCoordinates(inputMics)
         coordsSet.setBoxSize(self.boxSize.get())
         ci = self.getImportClass()
-        print "HELLO"
         for coordFile, fileId in self.iterFiles():
-            print "Coord and fileId", coordFile, fileId
             mic = self.getMatchingMic(coordFile,fileId)
             if mic is not None:
                 def addCoordinate(coord):
