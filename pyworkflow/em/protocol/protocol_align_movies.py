@@ -243,8 +243,8 @@ class ProtAlignMovies(ProtProcessMovies):
         # self.inputMovies.get().close()
         # frames = movie.getNumberOfFrames()
 
-	if self.inputMovies.get() is None:
-            errors.append("Input movies is None")
+        # Do not continue if there ar no movies. Validation message will take place since attribute is a Pointer.
+        if self.inputMovies.get() is None:
             return errors
 
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()

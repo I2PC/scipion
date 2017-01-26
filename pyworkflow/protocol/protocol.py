@@ -39,7 +39,7 @@ import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, formatExceptionInfo
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -1397,9 +1397,15 @@ class Protocol(Step):
             label = param.label.get()
             errors += ['*%s* %s' % (label, err) for err in paramErrors]                
         # Validate specific for the subclass 
-        childErrors = self._validate()        
-        if childErrors:
-            errors += childErrors
+        try:
+            childErrors = self._validate()
+            if childErrors:
+                errors += childErrors
+        except Exception as e:
+            errors.append("Validation failed: Some validations fails because they are assuming some input values are "
+                          "filled. Check ou the message, it might help to workaround this problem.")
+            errors.append(formatExceptionInfo(e))
+
         
         return errors 
     
