@@ -29,6 +29,7 @@ import webbrowser
 import Tkinter as tk
 import tkFont
 
+from pyworkflow import SCIPION_SUPPORT_EMAIL
 from pyworkflow.gui import Window, Message, Color
 from pyworkflow.gui.widgets import GradientFrame
 
@@ -177,7 +178,6 @@ It integrates several software packages with a unified interface. This way you c
 
 *Scipion* is developed by a multidisciplinary group of engineers, physicists, mathematicians and computer scientists. We are part of the [[http://i2pc.cnb.csic.es/][Instruct Image Processing Center]] and are hosted by the [[http://biocomp.cnb.csic.es/][Biocomputing Unit]] at the Spanish National Center for Biotechnology [[http://www.cnb.csic.es/][CNB]]-[[http://www.csic.es/][CSIC]].
 """)
-        # We should have something nice as in
-        # http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome
-        # http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/XmippTeam
-        # http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/XmippHistory
+    def onContactSupport(self):
+        # Help -> Contact support
+        self.showInfo("""Please, do contact us at [[mailto:%s][%s]] for any feedback, bug, idea, anything that will make Scipion better.""" % (SCIPION_SUPPORT_EMAIL, SCIPION_SUPPORT_EMAIL))

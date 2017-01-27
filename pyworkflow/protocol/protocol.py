@@ -1402,9 +1402,16 @@ class Protocol(Step):
             if childErrors:
                 errors += childErrors
         except Exception as e:
-            errors.append("Validation failed: Some validations fails because they are assuming some input values are "
-                          "filled. Check ou the message, it might help to workaround this problem.")
-            errors.append(formatExceptionInfo(e))
+            import urllib
+
+            exceptionStr = formatExceptionInfo(e)
+            errors.append("Sorry, this is embarrassing: the validation is failing due to a programming mistake." +
+                          "This should not happen. Some validations fail because they are assuming some input values are "
+                          "filled. Check out the message. It might help to workaround this bug."
+                          " We'd really appreciate if you report this to [[mailto:%s?subject=Scipion validation bug found&body=%s][%s]]" %
+                          (pw.SCIPION_SUPPORT_EMAIL, urllib.quote(exceptionStr), pw.SCIPION_SUPPORT_EMAIL))
+
+            errors.append(exceptionStr)
 
         
         return errors 
