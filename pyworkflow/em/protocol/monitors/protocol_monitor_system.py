@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'roberto@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -31,18 +31,22 @@ from protocol_monitor import ProtMonitor, Monitor
 import sqlite3 as lite
 import psutil
 import time, sys
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
 import sys
 from pyworkflow.em.plotter import EmPlotter
 
+SYSTEM_LOG_SQLITE = 'system_log.sqlite'
 
 
 class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
     """
     _label = 'system_monitor'
+    _version = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtMonitor.__init__(self, **kwargs)
@@ -117,7 +121,7 @@ class MonitorSystem(Monitor):
         self.cpuAlert = kwargs['cpuAlert']
         self.memAlert = kwargs['memAlert']
         self.swapAlert = kwargs['swapAlert']
-        self._dataBase = kwargs.get('dbName', 'system_log.sqlite')
+        self._dataBase = kwargs.get('dbName', SYSTEM_LOG_SQLITE)
         self._tableName = kwargs.get('tableName', 'log')
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),

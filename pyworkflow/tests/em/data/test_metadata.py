@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -77,4 +77,19 @@ class TestMetaData(unittest.TestCase):
         self.assertEqual(md1.size(), 1)
         objId = md1.firstObject()
         self.assertEqual(md1.getValue(md.MDL_YCOOR, objId), 1)
+
+    def test_dropKeepColumns(self):
+        md0 = self._newMd()
+        md1 = self._newMd()
+
+        self.assertEqual(md0, md1)
+
+        md.dropColumns(md0, md.MDL_XCOOR, md.MDL_YCOOR)
+        self.assertEqual(md0.getActiveLabels(), [md.MDL_IMAGE])
+
+        md.keepColumns(md1, "image")
+        self.assertEqual(md1.getActiveLabels(), [md.MDL_IMAGE])
+
+        self.assertEqual(md0, md1)
+
 

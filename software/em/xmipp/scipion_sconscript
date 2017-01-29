@@ -498,6 +498,7 @@ for p in ['angular_break_symmetry',
           'classify_analyze_cluster',
           'classify_compare_classes',
           'classify_evaluate_classes',
+          'classify_first_split',
           'classify_kerdensom',
 			
 		  'ctf_correct_wiener2d',

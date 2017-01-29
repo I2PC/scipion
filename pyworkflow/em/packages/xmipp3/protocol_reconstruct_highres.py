@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 from scipy.io.arff.arffread import MetaData
@@ -32,6 +32,7 @@ from glob import glob
 import math
 from itertools import izip
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam, EnumParam, NumericListParam
 from pyworkflow.utils.path import cleanPath, makePath, copyFile, moveFile, createLink
@@ -74,6 +75,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
        defocus group. You may want to perform iterations one by one, and remove from one
        iteration to the next, those particles that worse fit the model."""
     _label = 'highres'
+    _version = VERSION_1_1
     
     SPLIT_STOCHASTIC = 0
     SPLIT_FIXED = 1
@@ -496,7 +498,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         # Produce a filtered volume
         if iteration>0:
             self.runJob('xmipp_transform_filter','-i %s -o %s --fourier low_pass %f --sampling %f'%\
-                        (join(fnDirCurrent,"volumeAvg.mrc"),join(fnDirCurrent,"volumeAvgFiltered.mrc"),resolution,TsCurrent))
+                        (join(fnDirCurrent,"volumeAvg.mrc"),join(fnDirCurrent,"volumeAvgFiltered.mrc"),resolution,TsCurrent),numberOfMpi=1)
         
         # A little bit of statistics (accepted and rejected particles, number of directions, ...)
         if iteration>0:
@@ -1193,6 +1195,13 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                         cleanPath(deletePattern)
                     deleteStack = True
                     deletePattern = fnGrayRoot+".*"
+                    
+                    # Save the gray transformation
+                    self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column "continuousA continuousB"'%fnAngles,numberOfMpi=1)
+                    fnAux = join(fnDirCurrent,"gray_transformation%02d.xmd"%i)
+                    self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "continuousA continuousB" -o %s'%(fnAnglesToUse,fnAux),numberOfMpi=1)
+                    self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAngles,fnAux),numberOfMpi=1)
+                    cleanPath(fnAux)
 
                 # Restrict the angles
                 if self.restrictReconstructionAngles:
@@ -1289,7 +1298,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             self.runJob('xmipp_volume_halves_restoration',args,numberOfMpi=1)
             moveFile("%s_restored1.vol"%fnRootRestored,fnVol1)
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
-            cleanPath("%s_filterbank.vol"%fnRootRestored)
+            cleanPath("%s_filterBank.vol"%fnRootRestored)
      
         # Blind deconvolution
         if self.postDeconvolve:
@@ -1302,6 +1311,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
             self.runJob("xmipp_image_convert","-i %s_convolved.vol -o %s -t vol"%(fnRootRestored,fnVolAvg),numberOfMpi=1)
             cleanPath("%s_convolved.vol"%fnRootRestored)
+            cleanPath("%s_deconvolved.vol"%fnRootRestored)
 
         # Recalculate the average after alignment and denoising
         if not exists(fnVolAvg):

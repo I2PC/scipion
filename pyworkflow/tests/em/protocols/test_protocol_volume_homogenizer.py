@@ -18,7 +18,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
@@ -79,7 +79,6 @@ class TestVolumeHomogenizer(BaseTest):
         protVolumeHomogenizer = self.newProtocol(XmippProtVolumeHomogenizer,
                                 objLabel='volume homogenizer')
         protVolumeHomogenizer.referenceVolume.set(protImportVols.outputVolume)
-        protVolumeHomogenizer.referenceParticles.set(protImportParts.outputParticles)
         protVolumeHomogenizer.inputVolume.set(protImportVols.outputVolume)
         protVolumeHomogenizer.inputParticles.set(protImportParts.outputParticles)
         protVolumeHomogenizer.doAlignment.set(True)  

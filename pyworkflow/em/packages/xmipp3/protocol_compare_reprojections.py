@@ -20,13 +20,14 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from math import floor
 import os
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.constants import ALIGN_PROJ
@@ -51,6 +52,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
     its determinant [Cherian2013]. The extremes of this score (called zScoreResCov), that is
     values particularly low or high, may indicate outliers."""
     _label = 'compare reprojections'
+    _version = VERSION_1_1
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)
@@ -101,6 +103,13 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
             writeSetOfClasses2D(imgSet, self.imgsFn, writeParticles=True)
         else:
             writeSetOfParticles(imgSet, self.imgsFn)
+        from pyworkflow.em.convert import ImageHandler
+        img = ImageHandler()
+        fnVol = self._getTmpPath("volume.vol")
+        img.convert(self.inputVolume.get(), fnVol)
+        xdim=self.inputVolume.get().getDim()[0]
+        if xdim!=self._getDimensions():
+            self.runJob("xmipp_image_resize","-i %s --dim %d"%(fnVol,self._getDimensions()))
     
     def produceResiduals(self, fnVol, fnAngles, Ts):
         if fnVol.endswith(".mrc"):
@@ -112,7 +121,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
         self.runJob("xmipp_angular_continuous_assign2", "-i %s -o %s --ref %s --optimizeAngles --optimizeGray --optimizeShift --max_shift %d --oresiduals %s --oprojections %s --sampling %f" %\
                     (self.imgsFn,anglesOutFn,fnVol,floor(xdim*0.05),residualsOutFn,projectionsOutFn,Ts))
         fnNewParticles=self._getExtraPath("images.stk")
-        if exists(fnNewParticles):
+        if os.path.exists(fnNewParticles):
             cleanPath(fnNewParticles)
     
     def evaluateResiduals(self):
@@ -128,7 +137,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
     
     def createOutputStep(self):
         fnImgs = self._getExtraPath('images.stk')
-        if exists(fnImgs):
+        if os.path.exists(fnImgs):
             cleanPath(fnImgs)
 
         outputSet = self._createSetOfParticles()

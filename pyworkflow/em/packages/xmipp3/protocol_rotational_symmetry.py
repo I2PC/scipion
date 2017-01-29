@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -39,6 +39,7 @@ class XmippProtRotationalSymmetry(ProtPreprocessVolumes):
     If this is unknown you may try several and see the most consistent results.
     """
     _label = 'rotational symmetry'
+    _version = pyworkflow.VERSION_1_1
     
     GLOBAL_SEARCH = 0
     LOCAL_SEARCH = 1

@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.protocol import EMProtocol
 from convert import parseMagCorrInput, unDistortCoord
@@ -36,7 +37,7 @@ class ProtMagDistCorrCoord(EMProtocol):
     It works on a set of coordinates.
     """
     _label = 'mag distortion correction (coords)'
-
+    _version = VERSION_1_1
     # --------------------------- DEFINE params functions ----------------------
 
     def _defineParams(self, form):

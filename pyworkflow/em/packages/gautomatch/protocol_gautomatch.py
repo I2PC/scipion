@@ -29,6 +29,7 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 
 from convert import (readSetOfCoordinates, writeSetOfCoordinates,
@@ -42,6 +43,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     automatic particle picking from cryo-EM micrographs with or without templates.
     """
     _label = 'auto-picking'
+    _version = VERSION_1_1
 
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
