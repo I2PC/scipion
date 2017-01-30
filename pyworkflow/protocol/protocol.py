@@ -41,7 +41,7 @@ import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, getFileLastModificationDate
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, formatExceptionInfo, getFileLastModificationDate
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -1403,9 +1403,22 @@ class Protocol(Step):
             label = param.label.get()
             errors += ['*%s* %s' % (label, err) for err in paramErrors]                
         # Validate specific for the subclass 
-        childErrors = self._validate()        
-        if childErrors:
-            errors += childErrors
+        try:
+            childErrors = self._validate()
+            if childErrors:
+                errors += childErrors
+        except Exception as e:
+            import urllib
+
+            exceptionStr = formatExceptionInfo(e)
+            errors.append("Sorry, this is embarrassing: the validation is failing due to a programming mistake." +
+                          "This should not happen. Some validations fail because they are assuming some input values are "
+                          "filled. Check out the message. It might help to workaround this bug."
+                          " We'd really appreciate if you report this to [[mailto:%s?subject=Scipion validation bug found&body=%s][%s]]" %
+                          (pw.SCIPION_SUPPORT_EMAIL, urllib.quote(exceptionStr), pw.SCIPION_SUPPORT_EMAIL))
+
+            errors.append(exceptionStr)
+
         
         return errors 
     
