@@ -235,9 +235,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
-        # Although getFirstItem is not recomended in general, here it is
-        # used olny once, for validation purposes, so performance
-        # problems not should be apprear.
+        # Although getFirstItem is not recommended in general, here it is
+        # used only once, for validation purposes, so performance
+        # problems not should be appear.
 
         if not self.inputMovies.get() is None:
             inputSet = self.inputMovies.get()
