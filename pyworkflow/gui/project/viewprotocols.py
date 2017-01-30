@@ -119,9 +119,11 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
 
         if tag == 'protocol' and text == 'default':
             if prot is None:
-                raise Exception("Protocol className '%s' not found!!!. \n"
-                                "Fix your config/scipion.conf configuration."
-                                % protClassName)
+
+                print("Protocol className '%s' not found!!!. \n"
+                      "Fix your config/protocols.conf configuration."
+                      % protClassName)
+                return
 
             text = prot.getClassLabel()
 
@@ -137,8 +139,9 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
                 tree.item(item, image=self.getImage('class_obj.gif'))
 
                 for k, v in emProtocolsDict.iteritems():
+
                     if (k not in subclassedDict and
-                         v is not prot and issubclass(v, prot)):
+                        v is not prot and issubclass(v, prot)):
                         key = '%s.%s' % (item, k)
                         t = v.getClassLabel()
                         tree.insert(item, 'end', key, text=t, tags=('protocol'))
@@ -187,13 +190,13 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
 
     def getObjectActions(self, obj):
 
-        def addAction(a):
-            if a:
-                text = a
-                action = a
-                a = (text, lambda: self.actionFunc(action),
-                          ActionIcons.get(action, None))
-            return a
+        def addAction(actionLabel):
+            if actionLabel:
+                text = actionLabel
+                action = actionLabel
+                actionLabel = (text, lambda: self.actionFunc(action),
+                     ActionIcons.get(action, None))
+            return actionLabel
 
         actions = [addAction(a)
                    for a, cond in self.getActionsFromSelection() if cond]
@@ -243,6 +246,7 @@ class StepsTreeProvider(pwgui.tree.TreeProvider):
 
     @staticmethod
     def getObjectPreview(obj):
+
         args = pickle.loads(obj.argsStr.get())
         msg = "*Prerequisites*: %s \n" % str(obj._prerequisites)
         msg += "*Arguments*: " + '\n  '.join([str(a) for a in args])
@@ -274,6 +278,7 @@ class StepsWindow(pwgui.browser.BrowserWindow):
         browser = pwgui.browser.ObjectBrowser(self.root, provider,
                                               showPreviewTop=False)
         self.setBrowser(browser, row=1, column=0)
+
 
     # noinspection PyUnusedLocal
     def _showTree(self, e=None):
@@ -416,6 +421,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
     @staticmethod
     def getObjectPreview(obj):
+
         desc = "<name>: " + obj.getName()
 
         return (None, desc)
@@ -456,6 +462,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
     @staticmethod
     def getObjectLabel(obj, parent):
+
         """ We will try to show in the list the string representation
         that is more readable for the user to pick the desired object.
         """
@@ -760,6 +767,7 @@ class ProtocolsView(tk.Frame):
         self.updateRunsTree(False)
 
         if initRefreshCounter:
+
             self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
             if self.__autoRefresh:
                 self.runsTree.after_cancel(self.__autoRefresh)
@@ -849,6 +857,7 @@ class ProtocolsView(tk.Frame):
         """ Update which action buttons should be visible. """
 
         def displayAction(actionToDisplay, column, condition=True):
+
             """ Show/hide the action button if the condition is met. """
 
             # If action present (set color is not in the toolbar but in the context menu)
@@ -1246,6 +1255,7 @@ class ProtocolsView(tk.Frame):
             self._selection.append(prot.getObjId())
         self._updateSelection()
 
+
         # self.updateRunsGraph()
         self.drawRunsGraph()
 
@@ -1585,6 +1595,7 @@ class ProtocolsView(tk.Frame):
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
             # msg = "Protocol successfully saved."
+
         else:
             self.project.launchProtocol(prot)
             # Select the launched protocol to display its summary, methods..etc
