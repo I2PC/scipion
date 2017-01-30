@@ -33,6 +33,7 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
 import numpy as np
 
+MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
@@ -286,7 +287,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         messages = []
         if hasattr(self, 'outputVolume'):
             messages.append(
-                'Information about the method/article in [https://github.com/I2PC/scipion/wiki/XmippProtMonoRes]')
+                'Information about the method/article in ' + MONORES_METHOD_URL)
         return messages
     
     def _summary(self):
@@ -297,5 +298,5 @@ class XmippProtMonoRes(ProtAnalysis3D):
         return summary
 
     def _citations(self):
-        return ['https://github.com/I2PC/scipion/wiki/XmippProtMonoRes']
+        return [MONORES_METHOD_URL]
 
