@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Jose Luis Vilas (jlvilas@cnb.csic.es)
@@ -290,7 +291,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
-        summary.append("Highest resolution %.2f A,   Lowest resolution %.2f A." % (self.min_res_init
+        summary.append("Highest resolution %.2f Å,   Lowest resolution %.2f Å." % (self.min_res_init
                                                                                , self.max_res_init))
 
         return summary
