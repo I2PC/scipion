@@ -40,6 +40,7 @@ if "SCIPION_USER_DATA" not in os.environ:
 
 SCIPION_HOME = os.environ['SCIPION_HOME']
 SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
+SCIPION_SUPPORT_EMAIL = 'scipion@cnb.csic.es'
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
 SCIPION_PYTHON = PYTHON
 

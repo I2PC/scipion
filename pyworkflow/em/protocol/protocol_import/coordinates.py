@@ -67,9 +67,12 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
+
+
         ProtImportFiles._defineParams(self, form)
 
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
+    def _defineImportParams(self, form):
+        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
                           label='Input micrographs',
                           help='Select the micrographs for which you want to import coordinates.')
 
@@ -94,7 +97,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         coordsSet = self._createSetOfCoordinates(inputMics)
         coordsSet.setBoxSize(self.boxSize.get())
         ci = self.getImportClass()
-        
         for coordFile, fileId in self.iterFiles():
             mic = self.getMatchingMic(coordFile,fileId)
             if mic is not None:
