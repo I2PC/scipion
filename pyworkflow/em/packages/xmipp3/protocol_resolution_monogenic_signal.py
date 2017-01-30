@@ -285,7 +285,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         messages = []
         if hasattr(self, 'outputVolume'):
             messages.append(
-                'The local resolution is performed [Publication: Not yet]')
+                'Information about the method/article in [https://github.com/I2PC/scipion/wiki/XmippProtMonoRes]')
         return messages
     
     def _summary(self):
@@ -296,5 +296,5 @@ class XmippProtMonoRes(ProtAnalysis3D):
         return summary
 
     def _citations(self):
-        return ['Not yet']
+        return ['https://github.com/I2PC/scipion/wiki/XmippProtMonoRes']
 
