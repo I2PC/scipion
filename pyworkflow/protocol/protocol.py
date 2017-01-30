@@ -23,6 +23,8 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
 """
 This modules contains classes required for the workflow
 execution and tracking like: Step and Protocol
@@ -39,7 +41,7 @@ import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob
+from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, getFileLastModificationDate
 from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
                                    getFiles, exists, renderTextFile, copyFile)
 from pyworkflow.utils.log import ScipionLogger
@@ -320,6 +322,10 @@ class Protocol(Step):
         self.__project = kwargs.get('project', None)
         # Filename templates dict that will be used by _getFileName
         self.__filenamesDict = {}
+
+        # This will be used at project load time to check if
+        # we need to update the protocol with the data from run.db
+        self.lastUpdateTimeStamp = String()
         
         # For non-parallel protocols mpi=1 and threads=1
         self.allowMpi = hasattr(self, 'numberOfMpi')
@@ -590,7 +596,7 @@ class Protocol(Step):
                 var = param.paramClass(value=kwargs.get(paramName, param.default.get()))
                 setattr(self, paramName, var)
         else:
-            print "FIXME: Protocol '%s' has not DEFINITION" % self.getClassName()
+            print("FIXME: Protocol '%s' has not DEFINITION" % self.getClassName())
         
     def _getFileName(self, key, **kwargs):
         """ This function will retrieve filenames given a key and some
@@ -626,8 +632,8 @@ class Protocol(Step):
             setattr(self, key, child)
             if self.hasObjId():
                 self.mapper.insertChild(self, key, child)
-        except Exception, ex:
-            print "Error with child '%s', value=%s, type=%s" % (key, child, type(child))
+        except Exception as ex:
+            print("Error with child '%s', value=%s, type=%s" % (key, child, type(child)))
             raise ex
         
     def _deleteChild(self, key, child):
@@ -1478,9 +1484,9 @@ class Protocol(Step):
                 label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
             
             return '[[%s][%s]] ' % (cite['doi'].strip(), label)
-        except Exception, ex:
-            print "Error with citation: " + label
-            print ex
+        except Exception as ex:
+            print ("Error with citation: " + label)
+            print (ex)
             text = "Error with citation *%s*." % label
         return text
     
@@ -1545,7 +1551,7 @@ class Protocol(Step):
                     link = self._getCiteText(cite, useKeyLabel=True)
                     m = m.replace(k, link)
                 parsedMethods.append(m)
-        except Exception, ex:
+        except Exception as ex:
             parsedMethods = ['ERROR generating methods info: %s' % ex]
         
         return parsedMethods
@@ -1703,4 +1709,24 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
                  loadAllConfig=False)     
     protocol = project.getProtocol(protId)
     return protocol
+
+
+def isProtocolUpToDate(protocol):
+    """ Check timestamps between protocol lastModificationDate and the
+    corresponding runs.db timestamp"""
+    if protocol is None: return True
+
+    if protocol.lastUpdateTimeStamp.get(None) is None: return False
+
+    protTS = protocol.lastUpdateTimeStamp.datetime()
+
+    if protTS is None: return False
+
+    dbTS = getFileLastModificationDate(protocol.getDbPath())
+
+    if protTS < dbTS:
+        return False
+    else:
+        return True
+
 
