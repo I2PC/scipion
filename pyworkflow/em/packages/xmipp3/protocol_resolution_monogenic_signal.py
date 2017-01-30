@@ -290,7 +290,6 @@ class XmippProtMonoRes(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
-        print 
         summary.append("Highest resolution %.2f A,   Lowest resolution %.2f A." % (self.min_res_init
                                                                                , self.max_res_init))
 
