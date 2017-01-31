@@ -382,3 +382,11 @@ eof
         ctf.setPsdFile(psdFile)
 
         return ctf
+
+    def _summary(self):
+        summary = em.ProtCTFMicrographs._summary(self)
+        if self.useCtffind4:
+            summary.append("NOTE: ctffind4.1.5 finishes correctly (all output is generated properly),"
+                           " but returns an error code. Disregard error messages until this is fixed."
+                           "http://grigoriefflab.janelia.org/node/5421")
+        return summary
