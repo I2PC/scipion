@@ -33,8 +33,7 @@ from time import time, sleep
 from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
 
-from pyworkflow.utils.utils import envVarOn, getLocalHostName
-
+from pyworkflow.utils.utils import envVarOn, getLocalHostName, formatExceptionInfo
 
 TIMEOUT = 60  # seconds trying to send/receive data through a socket
 
@@ -130,7 +129,9 @@ def runJobMPISlave(mpiComm):
                 cwd = None  # unset directory
                 env = None  # unset environment
         except Exception as e:
+            print ("EXCEPTION HAPPENED AT MPI SLAVE: " + formatExceptionInfo(e))
             req_send = mpiComm.isend(str(e), dest=0, tag=TAG_RUN_JOB+rank)
+
             t0 = time()
             while not req_send.test()[0]:
                 sleep(1)

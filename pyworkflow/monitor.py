@@ -21,6 +21,18 @@ def printInstances():
         print("%s: %d", k, v)
 
 
+def waitForDebugger(seconds=20):
+    print ("Waiting for debugger %d seconds." % seconds)
+    from pyworkflow.utils import printTraceBack
+    printTraceBack()
+
+    while seconds > 0:
+        time.sleep(1)
+        # Set seconds to 0:
+        # Execute this in the debugger:  seconds = 0
+        print(str(seconds) + " seconds left.")
+        seconds -= 1
+
 # From: https://www.huyng.com/posts/python-performance-analysis
 
 class Timer(object):
