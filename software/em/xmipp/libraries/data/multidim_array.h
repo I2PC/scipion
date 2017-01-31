@@ -5603,6 +5603,11 @@ std::ostream& operator<< (std::ostream& ostrm, const MultidimArray<T>& v)
 
     return ostrm;
 }
+
+/** Extract piece from image.
+ * No check on boundaries are performed.
+ */
+void window2D(const MultidimArray<double> &Ibig, MultidimArray<double> &Ismall, int y0, int x0, int yF, int xF);
 //@}
 
 // Specializations cases for complex numbers

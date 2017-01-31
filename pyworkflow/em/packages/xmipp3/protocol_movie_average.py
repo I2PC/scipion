@@ -28,6 +28,7 @@
 
 import os
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtAlignMovies
 from convert import writeMovieMd
 
@@ -41,6 +42,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     Protocol to average movies
     """
     _label = 'movie average'
+    _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
 

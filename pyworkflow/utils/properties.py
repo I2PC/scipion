@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
@@ -218,7 +219,7 @@ pixel size (microns/pixel, Tm).
 They are related by  Ts = Tm / M"""
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
-    LABEL_SAMP_RATE = 'Pixel size ("sampling rate") (A/px)'
+    LABEL_SAMP_RATE = 'Pixel size ("sampling rate") (Å/px)'
     TEXT_SAMP_RATE = "Pixel size"
     LABEL_MAGNI_RATE = 'Magnification rate'
     TEXT_MAGNI_RATE = """\

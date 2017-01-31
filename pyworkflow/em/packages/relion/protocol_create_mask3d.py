@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+from pyworkflow import VERSION_1_1
 from pyworkflow.em import ProtCreateMask3D, VolumeMask
 from convert import convertBinaryVol
 import pyworkflow.protocol.params as params
@@ -40,6 +40,7 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
     The mask is created from a 3d volume or by comparing two input volumes.
     """
     _label = 'create 3d mask'
+    _version = VERSION_1_1
     
     # --------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
