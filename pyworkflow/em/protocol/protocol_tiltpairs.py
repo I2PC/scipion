@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -194,7 +195,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         else:
             summary.append("Import of %d " % output.getTilted().getSize() + self._className + "s tilted from %s" % self.patternTilted.get())
             summary.append("Import of %d " % output.getUntilted().getSize() + self._className + "s untilted from %s" % self.patternUntilted.get())
-            summary.append("Sampling rate : %0.2f A/px" % self.samplingRate.get())
+            summary.append("Sampling rate : %0.2f Å/px" % self.samplingRate.get())
         
         return summary
     
@@ -203,7 +204,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         output = self._getOutput()
         if output:
             methods.append("Imported %d micrographs tilted pairs %s " % (output.getTilted().getSize(), self.getObjectTag(output)))
-            methods.append("with a sampling rate : %0.2f A/px." % self.samplingRate.get())
+            methods.append("with a sampling rate : %0.2f Å/px." % self.samplingRate.get())
             
         return methods
     

@@ -357,7 +357,7 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)
     
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         
@@ -366,13 +366,15 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select a set of previously imported movies.')
         form.addParam('gainImage', PointerParam, pointerClass='Image',
-                      label="Gain image", help="Select a gain image. The movie will be corrected as newMovie=Movie/gain")
+                      label="Gain image",
+                      help="Select a gain image. The movie will be corrected "
+                           "as newMovie=Movie/gain")
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createOutputStep')
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def createOutputStep(self):
         moviesIn = self.inputMovies.get()
         moviesOut = self._createSetOfMovies()
