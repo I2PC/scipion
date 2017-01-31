@@ -241,7 +241,7 @@ class XmippMonoResViewer(ProtocolViewer):
         min_Res = round(np.amin(imgData)*100)/100
         max_Res = round(np.amax(imgData)*100)/100
 
-        numberOfColors = 20
+        numberOfColors = 21
         colors_labels = self.numberOfColors(min_Res, max_Res, numberOfColors)
         colorList = self.colorMapToColorList(colors_labels, self.getColorMap())
         
@@ -261,6 +261,7 @@ class XmippMonoResViewer(ProtocolViewer):
             smprt = self.protocol.inputVolume.get().getSamplingRate()
         else:
             smprt = self.protocol.inputVolumes.get().getSamplingRate()
+        fhCmd.write("volume #0 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("vol #1 hide\n")
         

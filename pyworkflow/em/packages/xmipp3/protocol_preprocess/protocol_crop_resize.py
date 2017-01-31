@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Josue Gomez Blanco   (jgomez@cnb.csic.es)
@@ -65,7 +66,7 @@ class XmippResizeHelper():
                       '_Pyramid_: Use positive level value to expand and negative to reduce. \n')
         form.addParam('resizeSamplingRate', FloatParam, default=1.0,
                       condition='doResize and resizeOption==%d' % cls.RESIZE_SAMPLINGRATE,
-                      label='Resize sampling rate (A/px)',
+                      label='Resize sampling rate (Å/px)',
                       help='Set the new output sampling rate.')
         form.addParam('doFourier', BooleanParam, default=False,
                       condition='doResize and resizeOption==%d' % cls.RESIZE_DIMENSIONS,
@@ -261,7 +262,7 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             size = _getSize(self.outputParticles)
             if self.doResize:
                 summary.append("Output particles have a different sampling "
-                               "rate (pixel size): *%0.3f* A/px" % sampling)
+                               "rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow:
@@ -377,7 +378,7 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             size = _getSize(self.outputVol)
             if self.doResize:
                 summary.append("Output volume(s) have a different sampling "
-                               "rate (pixel size): *%0.3f* A/px" % sampling)
+                               "rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow.get():

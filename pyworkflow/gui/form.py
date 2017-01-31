@@ -1376,10 +1376,10 @@ class FormWindow(Window):
 
             # FIXME: JMRT (2015-02-08) We are having problems with MPI and
             # FIXME:    protocols parallelized with steps, for now use only threads
-            if mode == params.STEPS_PARALLEL:
-                mode = None
-                allowMpi = False
-                allowThread = True
+            #if mode == params.STEPS_PARALLEL:
+            #    mode = None
+            #    allowMpi = False
+            #    allowThread = True
 
             if mode == params.STEPS_PARALLEL:
                 self.procTypeVar = tk.StringVar()
@@ -1388,9 +1388,11 @@ class FormWindow(Window):
                     if numberOfMpi > 1:
                         procs = numberOfMpi
                         self.procTypeVar.set(MPI)
+                        self.protocol.numberOfThreads.set(1)
                     else:
                         procs = numberOfThreads
                         self.procTypeVar.set(THREADS)
+                        self.protocol.numberOfMpi.set(1)
                         
                     self.procTypeVar.trace('w', self._setThreadsOrMpi)
                     procCombo = tk.Frame(procFrame, bg='white')

@@ -24,6 +24,12 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
+import time
+
+INIT_REFRESH_SECONDS = 3
+
 """
 View with the protocols inside the main project window.
 """
@@ -113,6 +119,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
 
         if tag == 'protocol' and text == 'default':
             if prot is None:
+
                 print("Protocol className '%s' not found!!!. \n"
                       "Fix your config/protocols.conf configuration."
                       % protClassName)
@@ -132,8 +139,9 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
                 tree.item(item, image=self.getImage('class_obj.gif'))
 
                 for k, v in emProtocolsDict.iteritems():
-                    if (not k in subclassedDict and
-                            not v is prot and issubclass(v, prot)):
+
+                    if (k not in subclassedDict and
+                        v is not prot and issubclass(v, prot)):
                         key = '%s.%s' % (item, k)
                         t = v.getClassLabel()
                         tree.insert(item, 'end', key, text=t, tags=('protocol'))
@@ -228,14 +236,17 @@ class StepsTreeProvider(pwgui.tree.TreeProvider):
     def getObjects(self):
         return self._stepsList
 
-    def getObjectInfo(self, obj):
+    @staticmethod
+    def getObjectInfo(obj):
         info = {'key': obj._index,
                 'values': (str(obj), pwutils.prettyDelta(obj.getElapsedTime()),
                            obj.getClassName())}
 
         return info
 
-    def getObjectPreview(self, obj):
+    @staticmethod
+    def getObjectPreview(obj):
+
         args = pickle.loads(obj.argsStr.get())
         msg = "*Prerequisites*: %s \n" % str(obj._prerequisites)
         msg += "*Arguments*: " + '\n  '.join([str(a) for a in args])
@@ -268,6 +279,8 @@ class StepsWindow(pwgui.browser.BrowserWindow):
                                               showPreviewTop=False)
         self.setBrowser(browser, row=1, column=0)
 
+
+    # noinspection PyUnusedLocal
     def _showTree(self, e=None):
         g = self._protocol.getStepsGraph()
         w = pwgui.Window("Protocol steps", self, minsize=(800, 600))
@@ -344,7 +357,8 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
         self.protocol = protocol
         self.mapper = mapper
 
-    def getColumns(self):
+    @staticmethod
+    def getColumns():
         return [('Attribute', 200), ('Info', 100)]
 
     def getObjects(self):
@@ -391,7 +405,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                                       obj, self.mapper)
 
     def _deleteObject(self, obj):
-        """ Remove unnecesary output, specially for Coordinates. """
+        """ Remove unnecessary output, specially for Coordinates. """
         prot = self.protocol
         try:
             objLabel = self.getObjectLabel(obj, prot)
@@ -402,10 +416,12 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
                 self.parent._fillSummary()
                 self.parent.windows.showInfo("Object *%s* successfuly deleted."
                                              % objLabel)
-        except Exception, ex:
+        except Exception as ex:
             self.parent.windows.showError(str(ex))
 
-    def getObjectPreview(self, obj):
+    @staticmethod
+    def getObjectPreview(obj):
+
         desc = "<name>: " + obj.getName()
 
         return (None, desc)
@@ -420,8 +436,8 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
         viewers = em.findViewers(obj.getClassName(), DESKTOP_TKINTER)
 
-        def yatevalejosemi(v):
-            return lambda: self._visualizeObject(v, obj)
+        def yatevalejosemi(viewer):
+            return lambda: self._visualizeObject(viewer, obj)
 
         for v in viewers:
             actions.append(('Open with %s' % v.__name__,
@@ -444,7 +460,9 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
 
         return actions
 
-    def getObjectLabel(self, obj, parent):
+    @staticmethod
+    def getObjectLabel(obj, parent):
+
         """ We will try to show in the list the string representation
         that is more readable for the user to pick the desired object.
         """
@@ -510,6 +528,7 @@ class RunIOTreeProvider(pwgui.tree.TreeProvider):
         return info
 
 
+# noinspection PyAttributeOutsideInit
 class ProtocolsView(tk.Frame):
     """ What you see when the "Protocols" tab is selected.
 
@@ -542,7 +561,7 @@ class ProtocolsView(tk.Frame):
         self.root.bind("<Control-a>", self._selectAllProtocols)
         self.root.bind("<Control-t>", self._toggleColorScheme)
 
-        # To bind key press to mehtods
+        # To bind key press to methods
         # Listen to any key: send event to keyPressed method
         self.root.bind("<Key>", self.keyPressed)
         self.keybinds = dict()
@@ -551,7 +570,7 @@ class ProtocolsView(tk.Frame):
         self._bindKeyPress('Delete', self._onDelPressed)
 
         self.__autoRefresh = None
-        self.__autoRefreshCounter = 3  # start by 3 secs
+        self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
 
         c = self.createContent()
         pwgui.configureWeigths(self)
@@ -720,11 +739,11 @@ class ProtocolsView(tk.Frame):
         """ Load selected items, remove if some do not exists. """
         self._selection = self.settings.runSelection
         for protId in list(self._selection):
-            try:
-                self.project.getProtocol(protId)
-            except Exception:
+
+            if not self.project.doesProtocolExists(protId):
                 self._selection.remove(protId)
 
+    # noinspection PyUnusedLocal
     def refreshRuns(self, e=None, initRefreshCounter=True, checkPids=False):
         """ Refresh the status of displayed runs.
          Params:
@@ -737,32 +756,44 @@ class ProtocolsView(tk.Frame):
             import psutil
             proc = psutil.Process(os.getpid())
             mem = psutil.virtual_memory()
-            print "------------- refreshing ---------- "
+            print("------------- refreshing ---------- ")
             files = proc.get_open_files()
-            print "  open files: ", len(files)
+            print("  open files: ", len(files))
             for f in files:
-                print "    - %s, %s" % (f.path, f.fd)
-            print "  memory percent: ", proc.get_memory_percent()
+                print("    - %s, %s" % (f.path, f.fd))
+            print("  memory percent: ", proc.get_memory_percent())
 
         self.updateRunsGraph(True, checkPids=checkPids)
         self.updateRunsTree(False)
 
         if initRefreshCounter:
-            self.__autoRefreshCounter = 3  # start by 3 secs
+
+            self.__autoRefreshCounter = INIT_REFRESH_SECONDS  # start by 3 secs
             if self.__autoRefresh:
                 self.runsTree.after_cancel(self.__autoRefresh)
                 self.__autoRefresh = self.runsTree.after(self.__autoRefreshCounter * 1000,
                                                          self._automaticRefreshRuns)
 
+    # noinspection PyUnusedLocal
     def _automaticRefreshRuns(self, e=None):
         """ Schedule automatic refresh increasing the time between refreshes. """
-        self.refreshRuns(initRefreshCounter=False)
-        secs = self.__autoRefreshCounter
+        if pwutils.envVarOn('DO_NOT_AUTO_REFRESH'):
+            return
+
+        if self.project.needRefresh():
+
+            self.refreshRuns(initRefreshCounter=False)
+            secs = self.__autoRefreshCounter
+
+        else:
+            secs = INIT_REFRESH_SECONDS / 2
+
         # double the number of seconds up to 30 min
         self.__autoRefreshCounter = min(2 * secs, 1800)
         self.__autoRefresh = self.runsTree.after(secs * 1000,
                                                  self._automaticRefreshRuns)
 
+    # noinspection PyUnusedLocal
     def _findProtocol(self, e=None):
         """ Find a desired protocol by typing some keyword. """
         window = SearchProtocolWindow(self.windows)
@@ -825,16 +856,17 @@ class ProtocolsView(tk.Frame):
     def _updateActionToolbar(self):
         """ Update which action buttons should be visible. """
 
-        def displayAction(action, i, cond=True):
+        def displayAction(actionToDisplay, column, condition=True):
+
             """ Show/hide the action button if the condition is met. """
 
             # If action present (set color is not in the toolbar but in the context menu)
-            if self.actionButtons.has_key(action):
-                if cond:
-                    self.actionButtons[action].grid(row=0, column=i, sticky='sw',
-                                                    padx=(0, 5), ipadx=0)
+            if self.actionButtons.has_key(actionToDisplay):
+                if condition:
+                    self.actionButtons[actionToDisplay].grid(row=0, column=column, sticky='sw',
+                                                             padx=(0, 5), ipadx=0)
                 else:
-                    self.actionButtons[action].grid_remove()
+                    self.actionButtons[actionToDisplay].grid_remove()
             else:
                 # print action + " not in toolbar."
                 pass
@@ -956,6 +988,10 @@ class ProtocolsView(tk.Frame):
 
         self.runsGraph = self.project.getRunsGraph(refresh=refresh,
                                                    checkPids=checkPids)
+        self.drawRunsGraph(reorganize)
+
+    def drawRunsGraph(self, reorganize=False):
+
         self.runsGraphCanvas.clear()
 
         # Check if there are positions stored
@@ -1055,7 +1091,8 @@ class ProtocolsView(tk.Frame):
 
         return boxColor
 
-    def _ageColor(self, rgbColor, ageInDays):
+    @staticmethod
+    def _ageColor(rgbColor, ageInDays):
 
         if ageInDays > 255: ageInDays = 255
 
@@ -1107,7 +1144,7 @@ class ProtocolsView(tk.Frame):
             status = node.run.status.get(pwprot.STATUS_FAILED)
             return STATUS_COLORS[status]
         else:
-            return '#ADD8E6'  # Lightblue
+            return '#ADD8E6'  # Light blue
 
     def _getNodeText(self, node):
 
@@ -1205,22 +1242,33 @@ class ProtocolsView(tk.Frame):
 
         self.settings.setColorMode(nextColorMode)
         self._updateActionToolbar()
-        self.updateRunsGraph()
+        # self.updateRunsGraph()
+        self.drawRunsGraph()
 
     def _selectAllProtocols(self, e=None):
         self._selection.clear()
-        for prot in self.project.getRuns():
+
+        # WHY GOING TO THE db?
+        #  Let's try using in memory data.
+        # for prot in self.project.getRuns():
+        for prot in self.project.runs:
             self._selection.append(prot.getObjId())
         self._updateSelection()
-        self.updateRunsGraph()
 
-    def _deleteSelectedProtocols(self, e=None):
 
-        for selection in self._selection:
-            self.project.getProtocol(self._selection[0])
+        # self.updateRunsGraph()
+        self.drawRunsGraph()
 
-        self._updateSelection()
-        self.updateRunsGraph()
+    # NOt used!: pconesa 02/11/2016.
+    # def _deleteSelectedProtocols(self, e=None):
+    #
+    #     for selection in self._selection:
+    #         self.project.getProtocol(self._selection[0])
+    #
+    #
+    #     self._updateSelection()
+    #     self.updateRunsGraph()
+    #
 
     def _updateSelection(self):
         self._fillSummary()
@@ -1269,7 +1317,7 @@ class ProtocolsView(tk.Frame):
 
         # If click is in a empty area....start panning
         if item is None:
-            print "Click on empty area"
+            print("Click on empty area")
             return
 
         self.runsGraphCanvas.focus_set()
@@ -1302,6 +1350,7 @@ class ProtocolsView(tk.Frame):
     def _runItemControlClick(self, item=None):
         # Get last selected item for tree or graph
         if self.runsView == VIEW_LIST:
+            # TODO: Prot is not used!!
             prot = self.project.mapper.selectById(int(self.runsTree.getFirst()))
         else:
             prot = item.node.run
@@ -1355,7 +1404,8 @@ class ProtocolsView(tk.Frame):
             else:
                 pwgui.dialog.fillMessageText(tw.tooltipText, tm)
 
-    def _selectItemsWithinArea(self, x1, y1, x2, y2, enclosed=False):
+    @staticmethod
+    def _selectItemsWithinArea(x1, y1, x2, y2, enclosed=False):
         """
         Parameters
         ----------
@@ -1371,26 +1421,25 @@ class ProtocolsView(tk.Frame):
 
         """
 
-        # NOT working properly: Commented for the moment.
         return
-
-        if enclosed:
-            items = self.runsGraphCanvas.find_enclosed(x1, y1, x2, y2)
-        else:
-            items = self.runsGraphCanvas.find_overlapping(x1, y1, x2, y2)
-
-        update = False
-
-        for itemId in items:
-            if itemId in self.runsGraphCanvas.items:
-
-                item = self.runsGraphCanvas.items[itemId]
-                if not item.node.isRoot():
-                    item.setSelected(True)
-                    self._selection.append(itemId)
-                    update = True
-
-        if update is not None: self._updateSelection()
+        # NOT working properly: Commented for the moment.
+        # if enclosed:
+        #     items = self.runsGraphCanvas.find_enclosed(x1, y1, x2, y2)
+        # else:
+        #     items = self.runsGraphCanvas.find_overlapping(x1, y1, x2, y2)
+        #
+        # update = False
+        #
+        # for itemId in items:
+        #     if itemId in self.runsGraphCanvas.items:
+        #
+        #         item = self.runsGraphCanvas.items[itemId]
+        #         if not item.node.isRoot():
+        #             item.setSelected(True)
+        #             self._selection.append(itemId)
+        #             update = True
+        #
+        # if update is not None: self._updateSelection()
 
     def _openProtocolForm(self, prot):
         """Open the Protocol GUI Form given a Protocol instance"""
@@ -1545,7 +1594,8 @@ class ProtocolsView(tk.Frame):
         if onlySave:
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
-        #            msg = "Protocol successfully saved."
+            # msg = "Protocol successfully saved."
+
         else:
             self.project.launchProtocol(prot)
             # Select the launched protocol to display its summary, methods..etc
@@ -1621,7 +1671,8 @@ class ProtocolsView(tk.Frame):
                 for node in selectedNodes:
                     node.setLabels([label.getName() for label in dlg.values])
 
-                self.updateRunsGraph()
+                # self.updateRunsGraph()
+                self.drawRunsGraph()
 
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
@@ -1633,7 +1684,7 @@ class ProtocolsView(tk.Frame):
                 self.project.exportProtocols(protocols, filename)
                 self.windows.showInfo("Workflow successfully saved to '%s' "
                                       % filename)
-            except Exception, ex:
+            except Exception as ex:
                 self.windows.showError(str(ex))
 
         browser = pwgui.browser.FileBrowserWindow("Choose .json file to save workflow",
@@ -1725,7 +1776,7 @@ class ProtocolsView(tk.Frame):
                 elif action == ACTION_LABELS:
                     self._selectLabels()
 
-            except Exception, ex:
+            except Exception as ex:
                 self.windows.showError(str(ex))
                 if pwutils.envVarOn('SCIPION_DEBUG'):
                     import traceback
@@ -1736,6 +1787,7 @@ class ProtocolsView(tk.Frame):
             self.updateRunsGraph(True, reorganize=True)
         elif action == ACTION_REFRESH:
             self.refreshRuns(checkPids=True)
+
         elif action == ACTION_SWITCH_VIEW:
             self.switchRunsView()
 

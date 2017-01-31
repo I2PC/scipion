@@ -104,6 +104,8 @@ class ProjectWindow(ProjectBaseWindow):
                             icon='fa-external-link.png')
         helpMenu.addSubMenu('About', 'about',
                             icon='fa-question-circle.png')
+        helpMenu.addSubMenu('Contact support', 'contact_us',
+                            icon='fa-question-circle.png')
 
         self.menuCfg = menu
         # TODO: up to here
