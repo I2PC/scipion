@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Jose Luis Vilas (jlvilas@cnb.csic.es)
@@ -27,10 +28,12 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from convert import readSetOfVolumes
+from pyworkflow.object import Float
 from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
 import numpy as np
 
+MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
@@ -44,6 +47,12 @@ class XmippProtMonoRes(ProtAnalysis3D):
     """
     _label = 'local resolution'
     _version = VERSION_1_1
+    
+    def __init__(self, **args):
+        ProtAnalysis3D.__init__(self, **args)
+        self.min_res_init = Float() 
+        self.max_res_init = Float() 
+        
     
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -220,9 +229,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def getMinMax(self, imageFile):
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
-        self.min_res = round(np.amin(imgData) * 100) / 100
+        min_res = round(np.amin(imgData) * 100) / 100
         self.max_res = round(np.amax(imgData) * 100) / 100
-        return self.min_res, self.max_res
+        return min_res, self.max_res
 
     def createOutputStep(self):
         
@@ -238,7 +247,14 @@ class XmippProtMonoRes(ProtAnalysis3D):
             self._defineSourceRelation(self.inputVolume, self.volumesSet)
         else:
             self._defineSourceRelation(self.inputVolumes, self.volumesSet)
-        
+            
+        #Setting the min max for the summary
+        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        min_, max_ = self.getMinMax(imageFile)
+        self.min_res_init.set(round(min_*100)/100)
+        self.max_res_init.set(round(max_*100)/100)
+        self._store(self.min_res_init)
+        self._store(self.max_res_init)
 
         if self.filterInput.get():
             print 'Saving filtered map'
@@ -271,17 +287,16 @@ class XmippProtMonoRes(ProtAnalysis3D):
         messages = []
         if hasattr(self, 'outputVolume'):
             messages.append(
-                'The local resolution is performed [Publication: Not yet]')
+                'Information about the method/article in ' + MONORES_METHOD_URL)
         return messages
     
     def _summary(self):
         summary = []
-        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
-        min_res, max_res = self.getMinMax(imageFile)
-        summary.append("Highest resolution %d A,   Lowest resolution %d A." % (min_res , max_res))
+        summary.append("Highest resolution %.2f Å,   Lowest resolution %.2f Å." % (self.min_res_init
+                                                                               , self.max_res_init))
 
         return summary
 
     def _citations(self):
-        return ['Not yet']
+        return [MONORES_METHOD_URL]
 
