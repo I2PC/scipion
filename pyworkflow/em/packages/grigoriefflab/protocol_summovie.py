@@ -190,6 +190,7 @@ class ProtSummovie(ProtAlignMovies):
     
     #--------------------------- UTILS functions -------------------------------
     def _argsSummovie(self):
+
         # Avoid threads multiplication
         # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
         self._program = 'export OMP_NUM_THREADS=1; '

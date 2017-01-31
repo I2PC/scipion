@@ -1799,6 +1799,7 @@ class SetOfMovies(SetOfMicrographsBase):
             if last == 0:
                 last = z
             dimStr = str(ImageDim(x, y, last - first + 1))
+
         return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
 
 
