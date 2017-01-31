@@ -706,7 +706,7 @@ size_t Timer::tic()
 
 size_t Timer::toc(const char * msg, bool inSecs)
 {
-    size_t diff = now() - tic_time;
+    size_t diff = elapsed();
 
     if (msg != NULL)
         std::cout << msg;
@@ -718,6 +718,11 @@ size_t Timer::toc(const char * msg, bool inSecs)
         std::cout << diff << " msecs." << std::endl;
 
     return diff;
+}
+
+size_t Timer::elapsed()
+{
+    return now() - tic_time;
 }
 
 

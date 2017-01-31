@@ -303,6 +303,7 @@ public:
         {
             movie.read(fnMovie);
             getImageSize(movie, Xdim, Ydim, Zdim, Ndim);
+            Ndim=movie.size();
         }
         else
         {
