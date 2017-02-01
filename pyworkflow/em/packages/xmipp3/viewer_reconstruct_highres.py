@@ -94,7 +94,7 @@ Examples:
                       help='Number of bins in histograms')
 
         group = form.addGroup('Volumes')
-        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed'],
+        group.addParam('displayVolume', EnumParam, choices=['Reference', 'Reconstructed', 'Filtered'],
                        default=1, display=EnumParam.DISPLAY_COMBO,
                        label='Display volume',
                        help='Displays selected volume')
@@ -180,6 +180,8 @@ Examples:
                 fnVolume = join(fnDir,"volumeRef01.vol")
             elif choice == 1:
                 fnVolume = join(fnDir,"volumeAvg.mrc")
+            elif choice == 2:
+                fnVolume = join(fnDir,"volumeAvgFiltered.mrc")
             if exists(fnVolume):
                 samplingRate=self.protocol.readInfoField(fnDir,"sampling",MDL_SAMPLINGRATE)
                 views.append(ObjectView(self._project, None, fnVolume, viewParams={showj.RENDER: 'image', showj.SAMPLINGRATE: samplingRate}))
@@ -191,9 +193,9 @@ Examples:
             obj = self.protocol.outputParticles
             fn = obj.getFileName()
             labels = 'id enabled _filename _xmipp_zScore _xmipp_cumulativeSSNR '
-            labels += '_ctfModel._defocusU _ctfModel._defocusV _xmipp_shiftX _xmipp_shiftY _xmipp_tilt _xmipp_continuousX _xmipp_continuousY _xmipp_scale _xmipp_maxCC _xmipp_weight'
+            labels += '_ctfModel._defocusU _ctfModel._defocusV _xmipp_shiftX _xmipp_shiftY _xmipp_tilt _xmipp_scale _xmipp_maxCC _xmipp_weight'
             labels += " _xmipp_cost _xmipp_weightContinuous2 _xmipp_angleDiff0 _xmipp_weightJumper0 _xmipp_angleDiff _xmipp_weightJumper _xmipp_angleDiff2 _xmipp_weightJumper2"
-            labels += "_xmipp_weightSSNR _xmipp_maxCCPerc _xmipp_costPerc _xmipp_continuousX _xmipp_continuousY"
+            labels += "_xmipp_weightSSNR _xmipp_maxCCPerc _xmipp_costPerc _xmipp_continuousScaleX _xmipp_continuousScaleY _xmipp_continuousX _xmipp_continuousY _xmipp_continuousA _xmipp_continuousB"
             views.append(ObjectView(self._project, obj.strId(), fn,
                                           viewParams={showj.ORDER: labels, 
                                                       showj.VISIBLE: labels, 
@@ -265,9 +267,10 @@ Examples:
         view=None
         if exists(fnAngles):
             fnAnglesSqLite = join(fnDir,"angles.sqlite")
-            from pyworkflow.em.metadata.utils import getSize
             from pyworkflow.em.plotter import EmPlotter
-            self.createAngDistributionSqlite(fnAnglesSqLite, getSize(fnAngles), itemDataIterator=self._iterAngles(fnAngles))
+            if not exists(fnAnglesSqLite):
+                from pyworkflow.em.metadata.utils import getSize
+                self.createAngDistributionSqlite(fnAnglesSqLite, getSize(fnAngles), itemDataIterator=self._iterAngles(fnAngles))
             view = EmPlotter(x=1, y=1, mainTitle="Iteration %d" % it, windowTitle="Angular distribution")
             view.plotAngularDistributionFromMd(fnAnglesSqLite, 'iter %d' % it)
         return view

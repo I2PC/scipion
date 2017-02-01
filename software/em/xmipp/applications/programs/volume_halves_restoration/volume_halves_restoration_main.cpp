@@ -23,5 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/adjust_volume_grey_levels.h>
-RUN_XMIPP_PROGRAM(ProgAdjustVolume)
+#include <reconstruction/volume_halves_restoration.h>
+
+RUN_XMIPP_PROGRAM(ProgVolumeHalvesRestoration)

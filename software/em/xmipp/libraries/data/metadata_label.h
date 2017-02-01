@@ -65,6 +65,7 @@ enum MDLabel
     MDL_ANGLE_DIFF2, ///< difference between two angles (double,degrees)
     MDL_ANGLE_Y,   ///< Angle between y-axis and tilt-axis (double, degrees) for untilted micrographs
     MDL_ANGLE_Y2,   ///< Angle between y-axis and tilt-axis (double, degrees) for tilted micrographs
+    MDL_ANGLE_TEMPERATURE, ///< Angular temperature (double,degrees)
     MDL_APPLY_SHIFT,///<Apply shift when project the volume ,
     MDL_AVG, ///< average value (double)
     MDL_AVG_CHANGES_ORIENTATIONS, /// Average change in angular orientation (double degrees)
@@ -107,8 +108,9 @@ enum MDLabel
     MDL_CONTINUOUS_FLIP, ///< Flip of continuous assignment
     MDL_CONTINUOUS_GRAY_A, ///< a value of continuous assignment
     MDL_CONTINUOUS_GRAY_B, ///< b value of continuous assignment
-    MDL_CONTINUOUS_SCALE_X, ///< a value of continuous assignment
-    MDL_CONTINUOUS_SCALE_Y, ///< b value of continuous assignment
+    MDL_CONTINUOUS_SCALE_ANGLE, ///< scale angle of continuous assignment
+    MDL_CONTINUOUS_SCALE_X, ///< scale x of continuous assignment
+    MDL_CONTINUOUS_SCALE_Y, ///< scale y of continuous assignment
 
     MDL_CTF_DATA_PHASE_FLIPPED, // Is the Data Phase-Flippled?
     MDL_CTF_CORRECTED, // Is the CTF corrected?
@@ -1373,6 +1375,7 @@ private:
         MDL::addLabel(MDL_ANGLE_DIFF2, LABEL_DOUBLE, "angleDiff2");
         MDL::addLabel(MDL_ANGLE_Y, LABEL_DOUBLE, "angleY");
         MDL::addLabel(MDL_ANGLE_Y2, LABEL_DOUBLE, "angleY2");
+        MDL::addLabel(MDL_ANGLE_TEMPERATURE, LABEL_DOUBLE, "angleTemp");
 
         MDL::addLabel(MDL_APPLY_SHIFT, LABEL_BOOL, "applyShift");
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
@@ -1478,6 +1481,7 @@ private:
         MDL::addLabel(MDL_CONTINUOUS_FLIP, LABEL_BOOL, "continuousFlip");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_A, LABEL_DOUBLE, "continuousA");
         MDL::addLabel(MDL_CONTINUOUS_GRAY_B, LABEL_DOUBLE, "continuousB");
+        MDL::addLabel(MDL_CONTINUOUS_SCALE_ANGLE, LABEL_DOUBLE, "continuousScaleAngle");
         MDL::addLabel(MDL_CONTINUOUS_SCALE_X, LABEL_DOUBLE, "continuousScaleX");
         MDL::addLabel(MDL_CONTINUOUS_SCALE_Y, LABEL_DOUBLE, "continuousScaleY");
         MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "ctfChromaticAberration");
