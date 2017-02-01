@@ -665,8 +665,10 @@ public:
             {
                 // from polar to original cartesian coordinates
                 phi = iphi * dphi;
-                double sine, cosine;
-                sincos(phi,&sine,&cosine);
+//                double sine, cosine;
+//                sincos(phi,&sine,&cosine);
+                double sine=sin(phi); // Faster depending on the compiler
+                double cosine=cos(phi);
                 xp = sine * radius;
                 yp = cosine * radius;
 
@@ -682,7 +684,7 @@ public:
 
                 // Perform the convolution interpolation
                 if (BsplineOrder==1)
-                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2D(xp,yp);
+                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2DOutsideZero(xp,yp);
                 else
                     DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
             }
