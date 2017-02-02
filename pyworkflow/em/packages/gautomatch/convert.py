@@ -194,7 +194,7 @@ def getProgram():
                            os.path.basename(os.environ['GAUTOMATCH']))
 
 
-def runGautomatch(micName, refStack, workDir, args):
+def runGautomatch(micName, refStack, workDir, args, env=None):
     # We convert the input micrograph on demand if not in .mrc
     outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
     if micName.endswith('.mrc'):
@@ -205,7 +205,7 @@ def runGautomatch(micName, refStack, workDir, args):
         args = ' %s --T %s %s' % (outMic, refStack, args)
     else:
         args = ' %s %s' % (outMic, args)
-    # Run Gautomatch:
-    pwutils.runJob(None, getProgram(), args)
+
+    pwutils.runJob(None, getProgram(), args, env=env)
     # After picking we can remove the temporary file.
     pwutils.cleanPath(outMic)
