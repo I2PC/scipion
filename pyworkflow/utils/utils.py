@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+from os.path import join
 
 
 def prettyDate(time=False):
@@ -581,7 +582,23 @@ class Environ(dict):
         """ Use set for each key, value pair in valuesDict. """
         for k, v in valuesDict.iteritems():
             self.set(k, v, position)
-            
+
+    def addCUDA75(self):
+        self.addLibrary('CUDA_75_LIB')
+
+    def addCUDA55(self):
+        self.addLibrary('CUDA_55_LIB')
+
+    def addLibrary(self, variableName):
+
+        value = os.environ.get(variableName, '')
+
+        if value == '':
+            print "WARNING: Value for %s not found in environment. Check scipion configuration file." % (variableName)
+
+        self.update({'LD_LIBRARY_PATH': value},
+                    position=Environ.BEGIN)
+
             
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.

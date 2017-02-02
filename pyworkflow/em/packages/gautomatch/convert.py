@@ -173,6 +173,17 @@ _rlnAutopickFigureOfMerit #5
             f.close()
 
 
+def getEnviron():
+    """ Return the environ settings to run gautomatch programs. """
+    environ = pwutils.Environ(os.environ)
+
+    # Take Scipion CUDA 7.5 library path
+    environ.addCUDA75()
+
+    return environ
+
+
+
 def getProgram():
     """ Return the program binary that will be used. """
     if (not 'GAUTOMATCH' in os.environ or
