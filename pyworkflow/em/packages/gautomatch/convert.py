@@ -178,10 +178,10 @@ def getEnviron():
     environ = pwutils.Environ(os.environ)
 
     # Take Scipion CUDA 7.5 library path
-    environ.addCUDA75()
+    cudaLib = environ.getFirst(('GAUTOMATCH_CUDA_LIB', 'CUDA_LIB'))
+    environ.addLibrary(cudaLib)
 
     return environ
-
 
 
 def getProgram():
