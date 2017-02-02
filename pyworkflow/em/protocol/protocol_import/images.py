@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -338,7 +339,7 @@ class ProtImportImages(ProtImportFiles):
                                                          self._getOutputItemName(),
                                                          self.getPattern()))
             summary.append("Is the data phase flipped : %s" % outputSet.isPhaseFlipped())
-            summary.append("Sampling rate : *%0.2f* A/px" % outputSet.getSamplingRate())
+            summary.append("Sampling rate : *%0.2f* Å/px" % outputSet.getSamplingRate())
         
         return summary
     
@@ -347,7 +348,7 @@ class ProtImportImages(ProtImportFiles):
         outputSet = self._getOutputSet()
         if outputSet is not None:
             methods.append("*%d* %s were imported with a sampling rate of "
-                           "*%0.2f* A/px (microscope voltage %d kV, "
+                           "*%0.2f* Å/px (microscope voltage %d kV, "
                            "magnification %dx). Output set is %s."
                            % (outputSet.getSize(), self._getOutputItemName(),
                               outputSet.getSamplingRate(),

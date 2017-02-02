@@ -31,6 +31,8 @@ Launch main project window
 import sys
 import os
 
+import time
+
 from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
 
