@@ -173,6 +173,17 @@ _rlnAutopickFigureOfMerit #5
             f.close()
 
 
+def getEnviron():
+    """ Return the environ settings to run gautomatch programs. """
+    environ = pwutils.Environ(os.environ)
+
+    # Take Scipion CUDA 7.5 library path
+    cudaLib = environ.getFirst(('GAUTOMATCH_CUDA_LIB', 'CUDA_LIB'))
+    environ.addLibrary(cudaLib)
+
+    return environ
+
+
 def getProgram():
     """ Return the program binary that will be used. """
     if (not 'GAUTOMATCH' in os.environ or
@@ -183,7 +194,7 @@ def getProgram():
                            os.path.basename(os.environ['GAUTOMATCH']))
 
 
-def runGautomatch(micName, refStack, workDir, args):
+def runGautomatch(micName, refStack, workDir, args, env=None):
     # We convert the input micrograph on demand if not in .mrc
     outMic = os.path.join(workDir, pwutils.replaceBaseExt(micName, 'mrc'))
     if micName.endswith('.mrc'):
@@ -194,7 +205,7 @@ def runGautomatch(micName, refStack, workDir, args):
         args = ' %s --T %s %s' % (outMic, refStack, args)
     else:
         args = ' %s %s' % (outMic, args)
-    # Run Gautomatch:
-    pwutils.runJob(None, getProgram(), args)
+
+    pwutils.runJob(None, getProgram(), args, env=env)
     # After picking we can remove the temporary file.
     pwutils.cleanPath(outMic)

@@ -83,6 +83,10 @@ MPI_LIBDIR = /usr/lib64/mpi/gcc/openmpi/lib
 MPI_INCLUDE = /usr/lib64/mpi/gcc/openmpi/include
 MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
 
+# NVCC (CUDA) variables
+# Default CUDA path if not defined for a certain package
+CUDA_LIB = /usr/local/cuda-7.5/lib64
+
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
 # Java variables
