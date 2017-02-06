@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -20,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -492,7 +493,7 @@ class Image(EMObject):
             dimStr = str(ImageDim(*dim))
         else:
             dimStr = 'No-Dim'
-        return "%s (%s, %0.2f A/px)" % (self.getClassName(), dimStr,
+        return "%s (%s, %0.2f Å/px)" % (self.getClassName(), dimStr,
                                         self.getSamplingRate() or 99999.)
     
     def getFiles(self):
@@ -581,6 +582,7 @@ class Volume(Image):
     def __init__(self, location=None, **kwargs):
         Image.__init__(self, location, **kwargs)
         self._classId = Integer()
+        self._halfMapFilenames = CsvList(pType=str)
 
     def getDim(self):
         """Return image dimensions as tuple: (Xdim, Ydim, Zdim)"""
@@ -604,6 +606,15 @@ class Volume(Image):
         
     def hasClassId(self):
         return self._classId.hasValue()
+    
+    def hasHalfMaps(self):
+        return self._halfMapFilenames.hasValue()
+    
+    def getHalfMaps(self):
+        return self._halfMapFilenames.get()
+
+    def setHalfMaps(self, listFileNames):
+        return self._halfMapFilenames.set(listFileNames)
 
 
 class VolumeMask(Volume):
@@ -872,7 +883,7 @@ class SetOfImages(EMSet):
             print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
             sampling = -999.0
 
-        s = "%s (%d items, %s, %0.2f A/px)" % (self.getClassName(),
+        s = "%s (%d items, %s, %0.2f Å/px)" % (self.getClassName(),
                                                self.getSize(),
                                                self._dimStr(), sampling)
         return s
@@ -1780,11 +1791,15 @@ class SetOfMovies(SetOfMicrographsBase):
         if self._firstDim.isEmpty():
             dimStr = 'No-Dim'
         else:
-            x, y, z = self._firstDim
+            try:
+                x, y, z = self._firstDim
+            except:
+                return str(self._firstDim)
             first, last, i = self._firstFramesRange
             if last == 0:
                 last = z
             dimStr = str(ImageDim(x, y, last - first + 1))
+
         return '%s %s' % (dimStr, self._firstFramesRange.rangeStr())
 
 

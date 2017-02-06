@@ -34,13 +34,14 @@ import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
                      parseMovieAlignment, parseMovieAlignment2)
-
+from pyworkflow.protocol import STEPS_PARALLEL
 
 
 class ProtMotionCorr(ProtAlignMovies):
@@ -53,7 +54,12 @@ class ProtMotionCorr(ProtAlignMovies):
     """
 
     _label = 'motioncorr alignment'
+    _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrc'
+
+    def __init__(self, **args):
+        ProtAlignMovies.__init__(self, **args)
+        self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
@@ -136,8 +142,8 @@ class ProtMotionCorr(ProtAlignMovies):
                               default *1.0 1.0* corresponding full size.
         -Align     1          Generate aligned sum (1) or simple sum (0).
         -FmRef     0          Specify which frame to be the reference to which
-                              all other frames are aligned, by default *0* all aligned
-                              to the first frame,
+                              all other frames are aligned, by default *0* all
+                              aligned to the first frame,
                               other value aligns to the central frame.
         -RotGain   0          Rotate gain reference counter-clockwise: 0 - no rotation,
                               1 - 90 degrees, 2 - 180 degrees, 3 - 270 degrees.
@@ -153,7 +159,7 @@ class ProtMotionCorr(ProtAlignMovies):
                            "dose-dependent filter to the frames")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
-        form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=2, mpi=0)
 
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
@@ -317,7 +323,7 @@ class ProtMotionCorr(ProtAlignMovies):
                               'set *YES* _Use ALIGN frames range to SUM?_ '
                               'flag or use motioncorr')
 
-            if self.doApplyDoseFilter:
+            if self.doApplyDoseFilter and self.inputMovies.get():
                 inputMovies = self.inputMovies.get()
                 doseFrame = inputMovies.getAcquisition().getDosePerFrame()
 

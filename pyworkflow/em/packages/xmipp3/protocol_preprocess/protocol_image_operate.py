@@ -24,7 +24,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
 
@@ -115,7 +115,7 @@ class XmippOperateHelper():
 
     #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):
-        form.addParam('operation', params.EnumParam, choices=OP_CHOICES.keys(),
+        form.addParam('operation', params.EnumParam, choices=OP_CHOICES.values(),
                       default=OP_PLUS,
                       label="Operation",
                       help="Binary operations: \n"

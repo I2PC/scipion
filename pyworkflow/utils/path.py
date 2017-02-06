@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -35,6 +35,7 @@ from os.path import (exists, join, splitext, isdir, isfile, islink, expanduser,
                      expandvars, basename, dirname, split, relpath)
 from glob import glob
 
+import datetime
 
 
 def findFileRecursive(filename, path):
@@ -410,6 +411,15 @@ def createUniqueFileName(fn):
 def getFileSize(fn):
     """ Shortcut to inspect the size of a file. """
     return os.stat(fn).st_size
+
+
+def getFileLastModificationDate(fn):
+    """ Returns the last modification date of a file or None if it doesn't exist"""
+    if os.path.exists(fn):
+        ts = os.path.getmtime(fn)
+        return datetime.datetime.fromtimestamp(ts)
+    else:
+        return None
 
 
 

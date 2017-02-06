@@ -186,18 +186,20 @@ class ProtUnblur(ProtAlignMovies):
         return []
 
     def _validate(self):
+
         errors = []
         if not os.path.exists(UNBLUR_PATH):
             errors.append(
                 "Cannot find the Unblur program at: " + UNBLUR_PATH)
+        if self.inputMovies.get():
 
-        if self.doApplyDoseFilter:
-            inputMovies = self.inputMovies.get()
-            doseFrame = inputMovies.getAcquisition().getDosePerFrame()
+            if self.doApplyDoseFilter:
+                inputMovies = self.inputMovies.get()
+                doseFrame = inputMovies.getAcquisition().getDosePerFrame()
 
-            if doseFrame == 0.0 or doseFrame is None:
-                errors.append('Dose per frame for input movies is 0 or not '
-                              'set. You cannot apply dose filter.')
+                if doseFrame == 0.0 or doseFrame is None:
+                    errors.append('Dose per frame for input movies is 0 or not '
+                                  'set. You cannot apply dose filter.')
 
         return errors
 
@@ -223,7 +225,10 @@ class ProtUnblur(ProtAlignMovies):
                 'doVerboseOutput': 'YES' if self.doVerboseOutput else 'NO',
                 'exposurePerFrame': movie.getAcquisition().getDosePerFrame()
                 }
-        self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+
+        # Avoid threads multiplication
+        # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program = 'export OMP_NUM_THREADS=1; '
         self._program += UNBLUR_PATH
 
         if getVersion('UNBLUR') != '1.0_150529':

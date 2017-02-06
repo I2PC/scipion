@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -52,24 +52,12 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         
-        self.averagesFile, self.pairsFile = self.protocol._getAnalyzeFiles()
-        
         form.addSection(label='Visualization')
         #group = form.addGroup('Overall results')
-        form.addParam('resolutionThreshold', FloatParam, default=999999.,
-                      label='Resolution threshold (A)',
-                      help='Select only CTF consistent at this resolution (in A).')
         form.addParam('visualizePairs', LabelParam,
-                      label="Visualize comparison table.",
-                      help="List with resolution at which the CTF estimated by a pair of methods"
-                           " is no longer equivalent."  )
-        form.addParam('visualizeAverage', LabelParam,
-                      label="Visualize average table.",
-                      help="Show a table with the averaged CTFs."  )     
-        form.addParam('visualizeMatrix', LabelParam,
-                      label="Visualize comparison matrix.",
-                      help="Number of micrographs that have a CTF estimation"
-                           " -given by two methods- that are equivalent at resolution=threshold")
+                      label="Visualize ctf + max resolution.",
+                      help="""Reference CTF plus a new column with resolution up to which
+                      reference CTF and target reference  are similar"""  )
         form.addParam('visualizeHistogram', IntParam, default=10,
                       label="Visualize Histogram (Bin size)",
                       help="Histogram of the resolution at which two methods are equivalent")
@@ -77,126 +65,33 @@ class XmippCTFDiscrepancyViewer(ProtocolViewer):
     def _getVisualizeDict(self):
         return {
                  'visualizePairs': self._visualizePairs,
-                 'visualizeAverage': self._visualizeAverages,
-                 'visualizeMatrix': self._visualizeMatrix,
                  'visualizeHistogram': self._visualizeHistogram
                 }        
 
-    def _calculateAuxiliaryFile(self):
-        """create new ctf_set with ctf that satisfies the
-        constraint and persist it
-        """
-        try:
-            self.setOfCTFsConst
-        except AttributeError:
-            pass
-        else:
-            #TODO close the mapper, if not the object cannot be reused (Although it should be able)
-            self.setOfCTFsConst.close()
-
-        #metadata file with protocol output
-        #get temporary fileName for metadata file
-        self.targetFile = self.protocol._getTmpPath(self.tmpMetadataFile)
-        resolutionThreshold = self.resolutionThreshold.get()
-        print "TODO: this should be closer to the mapper. Here it does not make any sense. ROB"
-        #TODO check if this is necessary
-        cleanPath(self.targetFile)
-        
-        #metadata with selected CTFs
-        self.setOfCTFsConst  = data.SetOfCTF(filename=self.targetFile)
-        #object read metadata file
-        ctfs  = data.SetOfCTF(filename=self.pairsFile)
-        #condition to be satisfized for CTFs
-        for ctf in ctfs:
-            if ctf.resolution < resolutionThreshold:
-                self.setOfCTFsConst.append(ctf)
-        #new file with selected CTFs
-        self.setOfCTFsConst.write()
-        #check if empty
-        if self.setOfCTFsConst.getSize() < 1:
-            print "WARNING: Empty set of CTFs."
-        #TODO aggregation function to compute the minimum resolution by micrograph
-        #TODO aggregation function to compute the average resolution by micrograph
-        #self._setOfCTFsConst.close()
-
-    def isComputed(self):
-        _resolutionThreshold = self.resolutionThreshold.get()
-        if self.resolutionThresholdOLD != _resolutionThreshold:
-            self._calculateAuxiliaryFile()
-            self.resolutionThresholdOLD = _resolutionThreshold
-
     def _visualizePairs(self, e=None):
-        """ From here call all visualizations
-        """
-        self.isComputed()
         views = []
 
         #display metadata with selected variables
-        labels = 'id enabled _micObj._filename method1 method2 resolution _defocusU _defocusV _defocusAngle' 
+        labels = 'id enabled _psdFile _micObj_filename _discrepancy_resolution _discrepancy_astigmatism _defocusU _defocusV _defocusAngle'
         views.append(ObjectView(self._project,
                                 self.protocol.strId(), 
-                                self.targetFile,
+                                self.protocol.outputCTF.getFileName(),
                                 viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         return views 
 
-    def _visualizeAverages(self, e=None):
-        """ From here call all visualizations
-        """
-        views = []
 
-        #display metadata with selected variables
-        labels = '_micObj._filename averageDefocusU averageDefocusV averageDefocusAngle averageResolution' 
-        views.append(ObjectView(self._project,
-                                self.protocol.strId(), 
-                                self.averagesFile,
-                                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
-        return views 
-    
     def _visualizeHistogram(self, e=None):
         views = []
-        self.isComputed()
         numberOfBins = self.visualizeHistogram.get()
-        numberOfBins = min(numberOfBins, self.setOfCTFsConst.getSize())
+        numberOfBins = min(numberOfBins, self.protocol.outputCTF.getSize())
         plotter = EmPlotter()
         plotter.createSubPlot("Resolution Discrepancies histogram", 
                       "Resolution (A)", "# of Comparisons")
-        resolution = [ctf.resolution.get() for ctf in self.setOfCTFsConst]
+        resolution = [ctf._discrepancy_resolution.get() for ctf in self.protocol.outputCTF]
+        #print "resolution", resolution
+        #print "numberOfBins",numberOfBins,self.protocol.outputCTF.getSize()
         plotter.plotHist(resolution, nbins=numberOfBins)
+        #ROB: why do I need this show?
+        plotter.show()
         return views.append(plotter)
-
-    def extract(self, string, start='(', stop=')'):
-        return string[string.index(start)+1:string.index(stop)]
-
-    def _visualizeMatrix(self,e=None):
-        views = []
-        self.isComputed()
-        inputCTFs=self.protocol.inputCTFs
-        shape=len(inputCTFs)#number of methods
-        _matrix = np.zeros(shape=(shape, shape))
-        ticksLablesMajorX=[None] * shape
-        ticksLablesMajorY=[None] * shape
-        for ctf in self.setOfCTFsConst:
-            m1 = int(self.extract(ctf.getAttributeValue('method1')))-1
-            m2 = int(self.extract(ctf.getAttributeValue('method2')))-1
-            _matrix[m1][m2] += 1
-            _matrix[m2][m1] = _matrix[m1][m2]
-            #rather inefficient but since  outputCTF is not ordered...
-            if ticksLablesMajorX[m1] is None:
-                ticksLablesMajorX[m1] = "(%d)"%(m1+1)
-                ticksLablesMajorY[m1] = ctf.getAttributeValue('method1')
-            if ticksLablesMajorX[m2] is None:
-                ticksLablesMajorX[m2] = "(%d)"%(m2+1)
-                ticksLablesMajorY[m2] = ctf.getAttributeValue('method2')
-
-        plotter = EmPlotter(fontsize=14)
-        resolution=self.resolutionThreshold.get()
-        plotter.createSubPlot("# micrographs with resolution (A)\n lower than %d"%(resolution),
-                      "Method #", "Method")
-#        plotter.plotMatrix(_matrix,cmap='seismic_r'
-        plotter.plotMatrix(_matrix,cmap='Greens'
-                        , xticksLablesMajor=ticksLablesMajorX,rotationX=0
-                        , yticksLablesMajor=ticksLablesMajorY)
-        views.append(plotter)
-        return views
-        #return views.append(plotter)
 

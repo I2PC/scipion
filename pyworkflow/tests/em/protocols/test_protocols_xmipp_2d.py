@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -670,7 +670,7 @@ class TestXmippCL2D(TestXmippBase):
         print "Run CL2D"
         # Run CL2D with random class and core analysis
         protCL2DRandomCore = self.newProtocol(XmippProtCL2D,
-                                   numberOfClasses=2, numberOfInitialClasses=1,
+                                   numberOfClasses=8, numberOfInitialClasses=1,
                                    numberOfIterations=4, numberOfMpi=2)
         protCL2DRandomCore.inputParticles.set(self.protImport.outputParticles)
         protCL2DRandomCore.setObjLabel("CL2D with random class and core analysis")

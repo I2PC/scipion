@@ -1016,7 +1016,7 @@ public:
      * MDin is input and the "randomized"
      * result will be in the "calling" Metadata.
     */
-    void randomize(MetaData &MDin);
+    void randomize(const MetaData &MDin);
 
     /**Remove duplicate entries for attribute in label
      */
@@ -1077,6 +1077,9 @@ public:
     void selectSplitPart(const MetaData &mdIn,
                          size_t n, size_t part,
                          const MDLabel sortLabel=MDL_OBJID);
+
+    /** Select random subset */
+    void selectRandomSubset(const MetaData &mdIn, size_t numberOfObjects, const MDLabel sortLabel=MDL_OBJID);
 
     /** Select some part from Metadata.
      * Select elements from input Metadata

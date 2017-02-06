@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
@@ -21,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -92,7 +93,7 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
         # For geometrical sources
         form.addParam('samplingRate', FloatParam, default=1, 
                       condition='source==%d' % SOURCE_GEOMETRY, 
-                      label="Sampling Rate (A/px)")
+                      label="Sampling Rate (Å/px)")
         XmippGeometricalMask3D.defineParams(self, form, 
                                             isGeometry='source==%d' % SOURCE_GEOMETRY, 
                                             addSize=True)

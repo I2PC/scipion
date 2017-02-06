@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -38,7 +38,7 @@ class ProtMonitor(EMProtocol):
     where several protocols will be run in streaming and the monitor will
     be 'observing' their progress.
     """
-    _label = 'monitor'
+    _label = None
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)

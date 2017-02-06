@@ -24,14 +24,4 @@
  ***************************************************************************/
 
 #include <reconstruction/adjust_volume_grey_levels.h>
-
-
-int main(int argc, char *argv[])
-{
-    ProgAdjustVolume      prog;
-
-    prog.read(argc, argv);
-    prog.tryRun();
-
-    return 0;
-}
+RUN_XMIPP_PROGRAM(ProgAdjustVolume)
