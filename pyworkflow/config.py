@@ -205,6 +205,7 @@ class ProjectSettings(pwobj.OrderedObject):
         self.config = ProjectConfig()
         self.currentProtocolsView = pwobj.String() # Store the current view selected by the user
         self.nodeList = NodeConfigList() # Store graph nodes positions and other info
+        self.labelsList = LabelsList() # Label list
         self.mapper = None # This should be set when load, or write
         self.runsView = pwobj.Integer(1) # by default the graph view
         self.readOnly = pwobj.Boolean(False)
@@ -284,6 +285,9 @@ class ProjectSettings(pwobj.OrderedObject):
     
     def addNode(self, nodeId, **kwargs):
         return self.nodeList.addNode(nodeId, **kwargs)
+
+    def getLabels(self):
+        return self.labelsList
     
 
 class ProjectConfig(pwobj.OrderedObject):
@@ -312,6 +316,7 @@ class MenuConfig(object):
         self.value = pwobj.String(value)
         self.icon = pwobj.String(icon)
         self.tag = pwobj.String(tag)
+        self.shortCut = pwobj.String(kwargs.get('shortCut', None))
         self.childs = pwobj.List()
         self.openItem = pwobj.Boolean(kwargs.get('openItem', False))
 
@@ -338,13 +343,15 @@ class ProtocolConfig(MenuConfig):
         if 'openItem' not in args:
             self.openItem.set(self.tag.get() != 'protocol_base')
 
-    def addSubMenu(self, text, value=None, **args):
+    def addSubMenu(self, text, value=None, shortCut=None, **args):
         if 'icon' not in args:
             tag = args.get('tag', None)
             if tag == 'protocol':
                 args['icon'] = 'python_file.gif'
             elif tag == 'protocol_base':
                 args['icon'] = 'class_obj.gif'
+
+        args['shortCut'] = shortCut
         return MenuConfig.addSubMenu(self, text, value, **args)
 
 
@@ -358,10 +365,11 @@ class NodeConfig(pwobj.Scalar):
                         'x': pwobj.Integer(x).get(0), 
                         'y': pwobj.Integer(y).get(0), 
                         'selected': selected, 
-                        'expanded': expanded}
+                        'expanded': expanded,
+                        'labels': []}
         
     def _convertValue(self, value):
-        """Value should be a str with comman separated values
+        """Value should be a str with comma separated values
         or a list.
         """
         self._values = json.loads(value)
@@ -406,6 +414,12 @@ class NodeConfig(pwobj.Scalar):
         
     def isExpanded(self):
         return self._values['expanded']
+
+    def setLabels(self, labels):
+        self._values['labels'] = labels
+
+    def getLabels(self):
+        return self._values.get('labels', None)
     
     def __str__(self):
         return 'NodeConfig: %s' % self._values
@@ -452,3 +466,71 @@ class DownloadRecord(pwobj.OrderedObject):
         self.version = pwobj.String(kwargs.get('version', None))
         self.platform = pwobj.String(kwargs.get('platform', None))
     
+class Label(pwobj.Scalar):
+    """ Store Label information """
+
+    def __init__(self, labelId=None, name='', color=None):
+        pwobj.Scalar.__init__(self)
+        # Special node id 0 for project node
+        self._values = {'id': labelId,
+                        'name': name,
+                        'color': color}
+
+    def _convertValue(self, value):
+        """Value should be a str with comma separated values
+        or a list.
+        """
+        self._values = json.loads(value)
+
+    def getObjValue(self):
+        self._objValue = json.dumps(self._values)
+        return self._objValue
+
+    def get(self):
+        return self.getObjValue()
+
+    def getId(self):
+        return self._values['id']
+
+    def getName(self):
+        return self._values['name']
+
+    def setName(self, newName):
+        self._values['name'] = newName
+
+    def setColor(self, color):
+        self._values['color'] = color
+
+    def getColor(self):
+        return self._values.get('color', None)
+
+    def __str__(self):
+        return 'Label: %s' % self._values
+
+
+class LabelsList(pwobj.List):
+    """ Store all labels information"""
+    def __init__(self):
+        self._labelsDict = {}
+        pwobj.List.__init__(self)
+
+    def getLabel(self, id):
+        return self._labelsDict.get(id, None)
+
+    def addLabel(self, label):
+
+        self._labelsDict[label.getId()] = label
+        self.append(label)
+        return label
+
+    def updateDict(self):
+        self._labelsDict.clear()
+        for label in self:
+            self._labelsDict[label.getId()] = label
+    def deleteLabel(self, label):
+        self._labelsDict.pop(label.getId())
+        self.pop(label.getId())
+
+    def clear(self):
+        pwobj.List.clear(self)
+        self._labelDict.clear()

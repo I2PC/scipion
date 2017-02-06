@@ -35,11 +35,16 @@ It is composed by three panels:
 import os, sys
 import threading
 import shlex
+import uuid
+
+from pyworkflow.gui.dialog import ListDialog, TableDialog, emptyOkHandler, createDefaultTableDialogConfiguration, \
+    TableDialogConfiguration, TableDialogButtonDefinition, RESULT_CANCEL, RESULT_YES, askString, askColor, askYesNo
+from pyworkflow.gui.tree import LabelTreeProvider
 from pyworkflow.utils import envVarOn, getLocalHostName, getLocalUserName
 from pyworkflow.manager import Manager
-from pyworkflow.config import MenuConfig, ProjectSettings
+from pyworkflow.config import MenuConfig, ProjectSettings, Label
 from pyworkflow.project import Project
-from pyworkflow.gui import Message
+from pyworkflow.gui import Message, Icon
 from pyworkflow.gui.browser import FileBrowserWindow
 from pyworkflow.em.plotter import plotFile
 from pyworkflow.gui.plotter import Plotter
@@ -73,6 +78,10 @@ class ProjectWindow(ProjectBaseWindow):
         projMenu = menu.addSubMenu('Project')
         projMenu.addSubMenu('Browse files', 'browse', icon='fa-folder-open.png')
         projMenu.addSubMenu('Remove temporary files', 'delete', icon='fa-trash-o.png')
+        projMenu.addSubMenu('Manage project labels', 'labels', icon=Icon.TAGS)
+        projMenu.addSubMenu('Toogle color mode', 'color_mode', shortCut="Control-t", icon=Icon.ACTION_VISUALIZE)
+        projMenu.addSubMenu('Select all protocols', 'select all', shortCut="Control-a")
+        projMenu.addSubMenu('Find protocol to add', 'find protocol', shortCut="Control-f")
         projMenu.addSubMenu('', '') # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow', icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
@@ -170,6 +179,153 @@ class ProjectWindow(ProjectBaseWindow):
             print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
         else:
             print "\nexport SCIPION_TREE_NAME=0 # to use ids instead of names"
+
+    def onManageProjectLabels(self):
+        self.manageLabels()
+
+    def onToogleColorMode(self):
+        self.getViewWidget()._toogleColourScheme(None)
+
+    def onSelectAllProtocols(self):
+        self.getViewWidget()._selectAllProtocols(None)
+
+    def onFindProtocolToAdd(self):
+        self.getViewWidget()._findProtocol(None)
+
+    def manageLabels(self):
+
+        conf = self._createManageLabelsTableConf()
+
+        self._showLabels(tableDialogConfig=conf)
+
+    def _createManageLabelsTableConf(self):
+
+        conf = TableDialogConfiguration(selectmode='browse',
+                                        title='Manage labels',
+                                        message='Double click to edit a label.')
+
+        # Have only one button: Close
+        btnDefClose = TableDialogButtonDefinition('Close', RESULT_YES)
+        conf.addUnloadButton(btnDefClose)
+
+        # Add toolbar buttons
+
+        # Add button
+        addButton = TableDialogButtonDefinition('Add', 'add_label', Icon.ACTION_NEW)
+
+        def addLabelHandler(dialog, label=None):
+
+            # Call the label editor method with None (to create a new one)
+            (refresh, updatedlabel) = editOrAddLabel(dialog, label)
+
+            if refresh:
+
+                # When label is none we are editing, no need to add the label.
+                if label is None:
+                    self.settings.labelsList.addLabel(updatedlabel)
+
+                    # Add the label ad tag
+                    LabelTreeProvider.addTagToTree(updatedlabel, dialog.tree)
+
+                dialog.tree.update()
+
+        addButton.handler = addLabelHandler
+        conf.addToolBarButton(addButton)
+
+        # Edit button
+        editButton = TableDialogButtonDefinition('Edit', 'edit_label', Icon.ACTION_EDIT)
+
+        def editOrAddLabel(dialog, label):
+
+            defaultName = '' if label is None else label.getName()
+
+            labelName = askString('Enter the label name', 'Label name', dialog, defaultValue=defaultName)
+
+            if labelName is not None:
+
+                defaultColor = None if label is None else label.getColor()
+
+                color = askColor(defaultColor=defaultColor)
+
+                if color is not None:
+
+                    if label is None:
+
+                        label = Label(uuid.uuid1().int, labelName, color)
+                    else:
+
+                        label.setColor(color)
+                        label.setName(labelName)
+                    return True, label
+                else:
+                    return False, None
+            else:
+                return False, None
+
+        def editLabelHandler(dialog):
+
+            # Get the selected label.
+            selection = dialog.tree.getSelectedObjects()
+
+            # If there is something selected
+            if len(selection) > 0:
+
+                # Get the first element
+                selection = selection[0]
+
+                addLabelHandler(dialog, selection)
+
+        editButton.handler = editLabelHandler
+        conf.addToolBarButton(editButton)
+
+        # Delete button
+        deleteButton = TableDialogButtonDefinition('Delete', 'delete_label', Icon.ACTION_DELETE)
+
+        def deleteLabelHandler(dialog):
+
+            # Get the selected label.
+            selection = dialog.tree.getSelectedObjects()
+
+            # If there is something selected
+            if len(selection) > 0:
+
+                # Get the first element
+                selection = selection[0]
+
+                yes = askYesNo("Delete a label", 'Are you sure you want to delete "' + selection.getName() + '" label?', dialog)
+
+                if yes:
+                    self.settings.labelsList.deleteLabel(selection)
+                    dialog.tree.update()
+
+        deleteButton.handler = deleteLabelHandler
+        conf.addToolBarButton(deleteButton)
+
+        # Ok handler should not validate anything
+        conf.onOkHandler = emptyOkHandler
+
+        return conf
+
+    def showLabels(self):
+
+        conf = createDefaultTableDialogConfiguration(emptyOkHandler)
+        conf.selectmode = 'extended'
+        conf.title = 'Label a protocol'
+        conf.message = 'Select the labels to be assigned. To remove labels click "Select" without any selection.'
+
+        return self._showLabels(conf)
+
+    def _showLabels(self, tableDialogConfig):
+
+        labels = self.project.settings.getLabels()
+
+        labelsTable = LabelTreeProvider(labels)
+
+        dlg = TableDialog(self.root,
+                          labelsTable,
+                          tableDialogConfig)
+
+        return dlg.values, dlg.resultCancel()
 
     def initProjectTCPServer(self):
         server = ProjectTCPServer((self.project.address, self.project.port), ProjectTCPRequestHandler)
