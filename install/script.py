@@ -478,7 +478,6 @@ env.addPackage('Gautomatch', version='0.53',
 
 env.addPackage('mag_distortion', version='1.0.1',
                tar='mag_distortion_v1.0.1.tgz',
-               buildDir='mag_distortion',
-               commands=[])
+               buildDir='mag_distortion')
 
 env.execute()
