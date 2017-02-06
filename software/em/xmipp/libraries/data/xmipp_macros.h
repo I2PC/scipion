@@ -301,9 +301,12 @@
  * Corrected_angle = realWRAP(angle, 0, 2*PI);
  * @endcode
  */
-#define realWRAP(x, x0, xF) (((x) >= (x0) && (x) < (xF)) ? (x) : ((x) < (x0)) \
-                             ? ((x) - (int)(((x) - (x0)) / ((xF) - (x0)) - 1) * ((xF) - (x0))) : \
-                             ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))))
+#define realWRAP(x, x0, xF) ((x) - floor(((x) - (x0)) / ((xF) - (x0))) * ((xF) - (x0)))
+// By Jiri Filipovic: it avoids extra divisions
+
+//#define realWRAPOld(x, x0, xF) (((x) >= (x0) && (x) < (xF)) ? (x) : ((x) < (x0)) \
+//                             ? ((x) - (int)(((x) - (x0)) / ((xF) - (x0)) - 1) * ((xF) - (x0))) : \
+//                             ((x) - (int)(((x) - (xF)) / ((xF) - (x0)) + 1) * ((xF) - (x0))))
 
 /** Degrees to radians
  *

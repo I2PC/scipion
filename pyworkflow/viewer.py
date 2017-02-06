@@ -375,8 +375,8 @@ class ProtocolViewer(Protocol, Viewer):
                 Return None if not found close enough.
                 """
                 for projection in projectionList:
-                    if (abs(projection[0] - angleRot) <= 0.01 and
-                        abs(projection[1] - angleTilt) <= 0.01):
+                    if (abs(projection[0] - angleRot) <= 0.5 and
+                        abs(projection[1] - angleTilt) <= 0.5):
                         return projection
                 return None            
             
