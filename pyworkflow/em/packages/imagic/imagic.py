@@ -81,7 +81,7 @@ def getEnviron():
 
 def getImagicHomeDir():
     env = Environ(os.environ)
-    imagicdir = env.getWithDeprecated('IMAGIC_HOME', 'IMAGIC_DIR', None)  # Scipion definition
+    imagicdir = env.getFirst(('IMAGIC_HOME', 'IMAGIC_DIR'))  # Scipion definition
     return env, imagicdir
 
 
