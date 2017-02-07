@@ -698,7 +698,7 @@ public:
                 }
                 else {
                     for (int jphi = 0; jphi < VEC_LEN; jphi++) {
-                        DIRECT_A1D_ELEM(Mring,iphi+jphi) = M1.interpolatedElement2D(axp[jphi],ayp[jphi],BsplineOrder);
+                        DIRECT_A1D_ELEM(Mring,iphi+jphi) = M1.interpolatedElementBSpline2D(axp[jphi],ayp[jphi],BsplineOrder);
                     }
                 }
             }
