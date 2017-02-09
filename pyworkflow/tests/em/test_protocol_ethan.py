@@ -27,7 +27,7 @@
 from pyworkflow.tests import BaseTest, DataSet, setupTestProject
 from pyworkflow.em.packages.xmipp3 import XmippProtPreprocessMicrographs
 from pyworkflow.em.protocol import ProtImportMicrographs
-from pyworkflow.em.packages.bramfordlab import ProtEthanPicker
+from pyworkflow.em.packages.bamfordlab import ProtEthanPicker
 
 
 class TestProtEthanPicking(BaseTest):
