@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -106,9 +106,9 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
 #         mpi = 1
     protStrId = protocol.strId()
     #threads = protocol.numberOfThreads.get()
-    python = os.environ['SCIPION_PYTHON']
-    scipion = os.path.join(os.environ['SCIPION_HOME'], 'scipion')
-    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion, 
+    python = pw.SCIPION_PYTHON
+    scipion = pw.getScipionScript()
+    command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion,
                                                                      protocol.getProject().path, 
                                                                      protocol.getDbPath(), 
                                                                      protStrId)

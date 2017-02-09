@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -40,6 +40,8 @@ STATUS_FAILED = "failed"      # it run and failed
 STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
 STATUS_INTERACTIVE = "interactive"    # waiting for user interaction
+STATUS_WAITING = "waiting"            # following status is used for streamming only
+
 
 ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE]
 

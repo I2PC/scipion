@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -42,7 +42,8 @@ from pyworkflow.mapper.sqlite_db import SqliteDb
 
 
 class TestSqliteMapper(BaseTest):
-    
+    _labels = [SMALL]
+
     @classmethod
     def setUpClass(cls):
         setupTestOutput(cls)
@@ -175,6 +176,10 @@ class TestSqliteMapper(BaseTest):
             # Note compare the scalar objects, which have a well-defined comparison
             if isinstance(a1, Scalar):
                 self.assertEqual(a1, a2)
+
+        # Test select all batch approach
+        allBatch = mapper2.selectAllBatch()
+
             
         # Test relations
         childs = mapper2.getRelationChilds(relName, i)
@@ -269,6 +274,7 @@ class TestSqliteMapper(BaseTest):
         
 class TestSqliteFlatMapper(BaseTest):
     """ Some tests for DataSet implementation. """
+    _labels = [SMALL]
 
     @classmethod
     def setUpClass(cls):
@@ -379,6 +385,7 @@ class TestXmlMapper(BaseTest):
 
 class TestDataSet(BaseTest):
     """ Some tests for DataSet implementation. """
+    _labels = [SMALL]
 
     @classmethod
     def setUpClass(cls):

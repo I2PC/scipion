@@ -20,36 +20,43 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import sys, unittest
-
-from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.relion import *
+from pyworkflow.em.protocol import ImageHandler
 
 
-# Some utility functions to import micrographs that are used
-# in several tests.
 class TestRelionBase(BaseTest):
     @classmethod
-    def setData(cls, dataProject='xmipp_tutorial'):
+    def setData(cls, dataProject='hemoglobin_mda'):
         cls.dataset = DataSet.getDataSet(dataProject)
         cls.particlesFn = cls.dataset.getFile('particles')
         cls.vol = cls.dataset.getFile('volumes')
+
+    def checkOutput(self, prot, outputName, conditions=[]):
+        """ Check that an output was generated and
+        the condition is valid.
+        """
+        o = getattr(prot, outputName, None)
+        locals()[outputName] = o
+        self.assertIsNotNone(o, "Output: %s is None" % outputName)
+        for cond in conditions:
+            self.assertTrue(eval(cond), 'Condition failed: ' + cond)
     
     @classmethod
     def runImportParticles(cls, pattern, samplingRate, checkStack=False):
         """ Run an Import particles protocol. """
         protImport = cls.newProtocol(ProtImportParticles, 
-                                      filesPath=pattern, samplingRate=samplingRate, 
-                                      checkStack=checkStack)
+                                     filesPath=pattern,
+                                     samplingRate=samplingRate,
+                                     checkStack=checkStack)
         cls.launchProtocol(protImport)
         # check that input images have been imported (a better way to do this?)
         if protImport.outputParticles is None:
-            raise Exception('Import of images: %s, failed. outputParticles is None.' % pattern)
+            raise Exception('Import of images: %s, failed. outputParticles '
+                            'is None.' % pattern)
         return protImport
     
     @classmethod
@@ -65,7 +72,8 @@ class TestRelionBase(BaseTest):
     def runImportVolumes(cls, pattern, samplingRate):
         """ Run an Import particles protocol. """
         protImport = cls.newProtocol(ProtImportVolumes, 
-                                     filesPath=pattern, samplingRate=samplingRate)
+                                     filesPath=pattern,
+                                     samplingRate=samplingRate)
         cls.launchProtocol(protImport)
         return protImport
 
@@ -87,12 +95,14 @@ class TestRelionClassify2D(TestRelionBase):
         prot2D.numberOfIterations.set(3)
         prot2D.inputParticles.set(self.protNormalize.outputParticles)
         self.launchProtocol(prot2D)        
+        self.assertIsNotNone(prot2D.outputClasses, "There was a problem with "
+                                                   "Relion 2D classify")
         
-        self.assertIsNotNone(getattr(prot2D, 'outputClasses', None), 
-                             "There was a problem with Relion 2D:\n" + prot2D.getErrorMessage())
-        self.assertAlmostEquals(self.protNormalize.outputParticles.getSamplingRate(), 
-                                prot2D.outputClasses.getImages().getSamplingRate(),
-                                "There was a problem with the sampling rate of the particles")
+        partsPixSize = self.protNormalize.outputParticles.getSamplingRate()
+        classsesPixSize = prot2D.outputClasses.getImages().getSamplingRate()
+        self.assertAlmostEquals(partsPixSize,classsesPixSize,
+                                "There was a problem with the sampling rate "
+                                "of the particles")
         for class2D in prot2D.outputClasses:
             self.assertTrue(class2D.hasAlignment2D())
 
@@ -103,7 +113,6 @@ class TestRelionClassify3D(TestRelionBase):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-#         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
     
     def testProtRelionClassify3D(self):
@@ -114,16 +123,19 @@ class TestRelionClassify3D(TestRelionBase):
 
         print "Run ProtRelionClassify3D"
         relion3DClass = self.newProtocol(ProtRelionClassify3D, 
-                                         numberOfClasses=3, numberOfIterations=4, 
-                                         doCTF=False, runMode=1, maskDiameterA=320,
+                                         numberOfClasses=3,
+                                         numberOfIterations=4,
+                                         doCTF=False, runMode=1,
+                                         maskDiameterA=320,
                                          numberOfMpi=2, numberOfThreads=2)
         relion3DClass.inputParticles.set(relionNormalize.outputParticles)
         relion3DClass.referenceVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(relion3DClass)
         
-        self.assertIsNotNone(getattr(relion3DClass, 'outputClasses', None), 
-                             "There was a problem with Relion 3D:\n" + relion3DClass.getErrorMessage()) 
-
+        self.assertIsNotNone(relion3DClass.outputClasses, "There was a "
+                                                          "problem with "
+                                                          "Relion 3D classify")
+        
         for class3D in relion3DClass.outputClasses:
             self.assertTrue(class3D.hasAlignment3D())
 
@@ -134,7 +146,6 @@ class TestRelionRefine(TestRelionBase):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-#         cls.protNormalize = cls.runNormalizeParticles(cls.protImport.outputParticles)
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
       
     def testProtRelionRefine(self):
@@ -145,15 +156,16 @@ class TestRelionRefine(TestRelionBase):
   
         print "Run ProtRelionRefine"
         relionRefine = self.newProtocol(ProtRelionRefine3D, 
-                                         doCTF=False, runMode=1, memoryPreThreads=1,
-                                         maskDiameterA=340, symmetryGroup="d6",
-                                         numberOfMpi=3, numberOfThreads=2)
+                                        doCTF=False, runMode=1,
+                                        memoryPreThreads=1,
+                                        maskDiameterA=340, symmetryGroup="d6",
+                                        numberOfMpi=3, numberOfThreads=2)
         relionRefine.inputParticles.set(relionNormalize.outputParticles)
         relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
         self.launchProtocol(relionRefine)
         
-        self.assertIsNotNone(getattr(relionRefine, 'outputVolume', None), 
-                             "There was a problem with Relion 3D:\n" + relionRefine.getErrorMessage())
+        self.assertIsNotNone(relionRefine.outputVolume,
+                             "There was a problem with Relion autorefine")
         
         relionRefine._initialize() # Load filename templates
         dataSqlite =  relionRefine._getIterData(3)
@@ -167,24 +179,39 @@ class TestRelionRefine(TestRelionBase):
                                "The particles filenames are wrong")
         
 class TestRelionPreprocess(TestRelionBase):
-    """ This class helps to test all different preprocessing particles options on RElion. """
+    """ This class helps to test all different preprocessing particles options
+    on RElion. """
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
-            
+
+    def _validations(self, imgSet, dims, pxSize):
+        self.assertIsNotNone(imgSet, "There was a problem with preprocess "
+                                     "particles")
+        xDim = imgSet.getXDim()
+        sr = imgSet.getSamplingRate()
+        self.assertEqual(xDim, dims, "The dimension of your particles are %d x "
+                                     "%d and must be  %d x %d" % (xDim, xDim,
+                                                                  dims, dims))
+        self.assertAlmostEqual(sr, pxSize, 0.0001,
+                               "Pixel size of your particles are  %0.2f and"
+                               " must be %0.2f" % (sr, pxSize))
+
     def test_NormalizeAndDust(self):
         """ Normalize particles.
         """
-        # Test now a normalization after the imported particles   
+        # Test now a normalization after the imported particles
         protocol = self.newProtocol(ProtRelionPreprocessParticles,
                                     doNormalize=True, backRadius=40,
                                     doRemoveDust=True, whiteDust=4, blackDust=8)
         protocol.setObjLabel('relion: norm-dust')
         protocol.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(protocol)
-
+        
+        self._validations(protocol.outputParticles, 100, 3.5)
+        
     def test_ScaleAndInvert(self):
         """ Test all options at once.
         """
@@ -196,81 +223,344 @@ class TestRelionPreprocess(TestRelionBase):
         protocol.setObjLabel('relion: scale-invert')
         protocol.inputParticles.set(self.protImport.outputParticles)
         
-        self.launchProtocol(protocol)       
+        self.launchProtocol(protocol)
+        self._validations(protocol.outputParticles, 50, 7.0)
 
 
-# class TestPolishParticles(TestRelionBase):
-#     @classmethod
-#     def setUpClass(cls):
-#         setupTestProject(cls)
-#         cls.dataset = DataSet.getDataSet('ribo_movies')
-#         cls.movies = cls.dataset.getFile('movies')
-#         cls.crdsDir = cls.dataset.getFile('posAllDir')
-#         cls.vol = cls.dataset.getFile('volume')
-#         cls.protImportVol = cls.runImportVolumes(cls.vol, 4.74)
-#     
-#     def test_polish(self):
-#         #First, import a set of movies
-#         print "Importing a set of movies..."
-#         protImport = self.newProtocol(ProtImportMovies,
-#                                       filesPath=self.movies,
-#                                       samplingRate=2.37, magnification=59000,
-#                                       voltage=300, sphericalAberration=2.0)
-#         protImport.setObjLabel('import movies')
-#         self.proj.launchProtocol(protImport, wait=True)
-#         self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
-#         
-#         print "Aligning the movies..."
-#         protAlignMov = self.newProtocol(ProtMovieAlignment, numberOfThreads=4)
-#         protAlignMov.inputMovies.set(protImport.outputMovies)
-#         protAlignMov.setObjLabel('align movies')
-#         self.proj.launchProtocol(protAlignMov, wait=True)
-#         self.assertIsNotNone(protAlignMov.outputMicrographs, "There was a problem aligning movies")
-#          
-#         print "Preprocessing the micrographs..."
-#         protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs, doCrop=True,
-#                                           cropPixels=50, doDownsample=True, downFactor=2,
-#                                           numberOfThreads=4)
-#         protPreprocess.inputMicrographs.set(protAlignMov.outputMicrographs)
-#         protPreprocess.setObjLabel('crop and Down')
-#         self.proj.launchProtocol(protPreprocess, wait=True)
-#         self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the crop")
-#          
-#         # Now estimate CTF on the micrographs
-#         print "Performing CTF Micrographs..."
-#         protCTF = self.newProtocol(ProtCTFFind, lowRes=0.03, highRes=0.31, numberOfThreads=4)
-#         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
-#         protCTF.setObjLabel('ctf')
-#         self.proj.launchProtocol(protCTF, wait=True)
-#         self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
-#  
-#         print "Running Xmipp Import Coordinates"
-#         protPP = self.newProtocol(ProtImportCoordinates,
-#                                  importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
-#                                  filesPath=self.crdsDir,
-#                                  filesPattern='*.pos', boxSize=120, scale=0.5)
-#         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
-#         protPP.setObjLabel('Picking')
-#         self.launchProtocol(protPP)
-#         self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
-#  
-#         print "Run extract particles with <Other> option"
-#         protExtract = self.newProtocol(XmippProtExtractParticles,
-#                                        boxSize=110, doInvert=True,
-#                                                  doFlip=False, numberOfThreads=4)
-#         protExtract.inputCoordinates.set(protPP.outputCoordinates)
-#         protExtract.ctfRelations.set(protCTF.outputCTF)
-#         protExtract.setObjLabel('extract particles')
-#         self.proj.launchProtocol(protExtract, wait=True)
-#         self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
-#         
-#         print "Run Relion Refine"
-#         proRef = self.newProtocol(ProtRelionRefine3D,
-#                                   initialLowPassFilterA=40, maskDiameterA=500,
-#                                   numberOfMpi=8, numberOfThreads=2)
-#         proRef.inputParticles.set(protExtract.outputParticles)
-#         proRef.referenceVolume.set(self.protImportVol.outputVolume)
-#         proRef.setObjLabel('relion Refine')
-#         self.launchProtocol(proRef)
-#         self.assertIsNotNone(proRef.outputVolume, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
-#         self.assertIsNotNone(proRef.outputParticles, "There was a problem with Relion Refine:\n" + (proRef.getErrorMessage() or "No error set"))
+class TestRelionSubtract(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dsRelion = DataSet.getDataSet('relion_tutorial')
+    
+    def test_subtract(self):
+        protParts = self.newProtocol(ProtImportParticles,
+                                     objLabel='from relion auto-refine',
+                                     importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                     starFile=self.dsRelion.getFile('import/refine3d/extra/relion_it001_data.star'),
+                                     magnification=10000,
+                                     samplingRate=7.08,
+                                     haveDataBeenPhaseFlipped=True
+                                     )
+        self.launchProtocol(protParts)
+        self.assertEqual(60, protParts.outputParticles.getXDim())
+        
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   filesPath=self.dsRelion.getFile('volumes/reference.mrc'),
+                                   samplingRate=7.08)
+        self.launchProtocol(protVol)
+        self.assertEqual(60, protVol.outputVolume.getDim()[0])
+        
+        protSubtract = self.newProtocol(ProtRelionSubtract)
+        protSubtract.inputParticles.set(protParts.outputParticles)
+        protSubtract.inputVolume.set(protVol.outputVolume)
+        self.launchProtocol(protSubtract)
+        self.assertIsNotNone(protSubtract.outputParticles,
+                             "There was a problem with subtract projection")
+
+
+class TestRelionSortParticles(TestRelionBase):
+    """ This class helps to test sort particles protocol from Relion. """
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+
+        # FIXME
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.partFn = cls.dataset.getFile('import/particles.sqlite')
+        cls.partAvg = cls.dataset.getFile('import/averages.mrcs')
+        cls.partCl2dFn = cls.dataset.getFile('import/classify2d/extra/relion_it015_data.star')
+        cls.partCl3dFn = cls.dataset.getFile('import/classify3d/extra/relion_it015_data.star')
+        #FIXME: import from completed relion 3d refine run is not working
+        #cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
+        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_it025_data.star')
+        cls.volFn = cls.dataset.getFile('import/refine3d/extra/relion_class001.mrc')
+
+    def importParticles(self, partStar):
+        """ Import particles from Relion star file. """
+        protPart = self.newProtocol(ProtImportParticles,
+                                    importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                    starFile=partStar,
+                                    magnification=10000,
+                                    samplingRate=7.08,
+                                    haveDataBeenPhaseFlipped=True
+                                    )
+        self.launchProtocol(protPart)
+        return protPart
+
+    def importParticlesFromScipion(self):
+        partFn = self.ds.getFile('import/particles.sqlite')
+        protPart = self.newProtocol(ProtImportParticles,
+                                    objLabel='from xmipp extract (after relion auto-picking)',
+                                    importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                    sqliteFile=partFn,
+                                    magnification=10000,
+                                    samplingRate=7.08,
+                                    haveDataBeenPhaseFlipped=True
+                                    )
+
+        self.launchProtocol(protPart)
+        return protPart
+
+    def importAverages(self):
+        """ Import averages used for relion autopicking. """
+        partAvg = self.ds.getFile('import/averages.mrcs')
+        protAvg = self.newProtocol(ProtImportAverages,
+                                   importFrom=ProtImportParticles.IMPORT_FROM_FILES,
+                                   filesPath=partAvg,
+                                   samplingRate=7.08
+                                   )
+        self.launchProtocol(protAvg)
+        return protAvg
+
+    def importVolume(self):
+        volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   objLabel='import volume',
+                                   filesPath=volFn,
+                                   samplingRate=7.08)
+        self.launchProtocol(protVol)
+        return protVol
+
+    def test_afterCl2D(self):
+        partCl2dFn = self.ds.getFile(
+            'import/classify2d/extra/relion_it015_data.star')
+        importRun = self.importParticles(partCl2dFn)
+
+        prot = self.newProtocol(ProtRelionSortParticles)
+        prot.setObjLabel('relion - sort after cl2d')
+        prot.inputSet.set(importRun.outputClasses)
+        self.launchProtocol(prot)
+
+    def test_afterCl3D(self):
+        prot = self.newProtocol(ProtRelionSortParticles)
+        prot.setObjLabel('relion - sort after cl3d')
+        partCl3dFn = self.ds.getFile(
+            'import/classify3d/extra/relion_it015_data.star')
+        importRun = self.importParticles(partCl3dFn)
+        prot.inputSet.set(importRun.outputClasses)
+        self.launchProtocol(prot)
+
+    def test_after3DRefinement(self):
+        prot = self.newProtocol(ProtRelionSortParticles)
+        prot.setObjLabel('relion - sort after ref3d')
+        # FIXME: import from completed relion 3d refine run is not working
+        # partRef3dFn = self.ds.getFile('import/refine3d/extra/relion_data.star')
+        partRef3dFn = self.ds.getFile(
+            'import/refine3d/extra/relion_it025_data.star')
+        importRun = self.importParticles(partRef3dFn)
+        prot.inputSet.set(importRun.outputParticles)
+        prot.referenceVolume.set(self.importVolume().outputVolume)
+        self.launchProtocol(prot)
+
+    def test_afterPicking(self):
+        prot = self.newProtocol(ProtRelionSortParticles)
+        prot.setObjLabel('relion - sort after picking')
+        prot.inputSet.set(self.importParticlesFromScipion().outputParticles)
+        prot.referenceAverages.set(self.importAverages().outputAverages)
+        self.launchProtocol(prot)
+
+
+class TestRelionPostprocess(TestRelionBase):
+    """ This class helps to test sort particles protocol from Relion. """
+    
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+    
+    def importVolume(self):
+        volFn = self.ds.getFile('import/refine3d/extra/relion_class001.mrc')
+        protVol = self.newProtocol(ProtImportVolumes,
+                                   objLabel='import volume',
+                                   filesPath=volFn,
+                                   samplingRate=3)
+        self.launchProtocol(protVol)
+        return protVol
+
+    def importPartsFromScipion(self):
+        partFn = self.ds.getFile('import/particles.sqlite')
+        protPart = self.newProtocol(ProtImportParticles,
+                                    objLabel='Import Particles',
+                                    importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                    sqliteFile=partFn,
+                                    magnification=10000,
+                                    samplingRate=3,
+                                    haveDataBeenPhaseFlipped=True
+                                    )
+        self.launchProtocol(protPart)
+        return protPart
+    
+    def _createRef3DProtBox(self, label, protocol, volPatt="kk.mrc",
+                            storeIter=False, iterN=0):
+        from pyworkflow.protocol.constants import STATUS_FINISHED
+        
+        prot = self.newProtocol(protocol)
+        self.saveProtocol(prot)
+        
+        prot.setObjLabel(label)
+        project = prot.getProject()
+        makePath(prot._getPath())
+        makePath(prot._getExtraPath())
+        makePath(prot._getTmpPath())
+
+        prot.inputParticles.set(self.importPartsFromScipion().outputParticles)
+        
+        protClassName = prot.getClassName()
+        if protClassName.startswith('ProtRelionRefine3D'):
+            prot.referenceVolume.set(self.importVolume().outputVolume)
+        elif protClassName.startswith('ProtFrealign'):
+            prot.input3DReference.set(self.importVolume().outputVolume)
+        elif protClassName.startswith('XmippProtProjMatch'):
+            prot.input3DReferences.set(self.importVolume().outputVolume)
+        elif protClassName.startswith('EmanProtRefine'):
+            pass
+        
+        volume = em.Volume()
+        volume.setFileName(prot._getExtraPath(volPatt))
+        pxSize = prot.inputParticles.get().getSamplingRate()
+        volume.setSamplingRate(pxSize)
+        if storeIter:
+            prot._setLastIter(iterN)
+        prot._defineOutputs(outputVolume=volume)
+
+        prot.setStatus(STATUS_FINISHED)
+        project._storeProtocol(prot)
+        return prot
+    
+    
+    def _validations(self, vol, dims, pxSize, prot=""):
+        self.assertIsNotNone(vol, "There was a problem with postprocess "
+                                  "protocol, using %s protocol as input" % prot)
+        xDim = vol.getXDim()
+        sr = vol.getSamplingRate()
+        self.assertEqual(xDim, dims, "The dimension of your volume is (%d)^3 "
+                                     "and must be (%d)^3" % (xDim, dims))
+
+        self.assertAlmostEqual(sr, pxSize, 0.0001,
+                               "Pixel size of your volume is %0.2f and"
+                               " must be %0.2f" % (sr, pxSize))
+    
+    def test_postProcess_from_autorefine(self):
+        pathFns = 'import/refine3d/extra'
+        vol = self.ds.getFile(join(pathFns, 'relion_class001.mrc'))
+        half1 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half1_class001.mrc'))
+        half2 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half2_class001.mrc'))
+        volPatt = 'relion_class001.mrc'
+        
+        protRef = self._createRef3DProtBox("auto-refine",
+                                           ProtRelionRefine3D,
+                                           volPatt)
+        
+        copyFile(vol, protRef._getExtraPath(volPatt))
+        copyFile(half1,
+                 protRef._getExtraPath('relion_half1_class001_unfil.mrc'))
+        copyFile(half2,
+                 protRef._getExtraPath('relion_half2_class001_unfil.mrc'))
+
+        postProt = self.newProtocol(ProtRelionPostprocess,
+                                    protRefine=protRef)
+        postProt.setObjLabel('post process Auto-refine')
+        
+        self.launchProtocol(postProt)
+        self._validations(postProt.outputVolume, 60, 3, "Relion auto-refine")
+        
+    def test_postProcess_from_frealign(self):
+        from pyworkflow.em.packages.grigoriefflab import ProtFrealign
+        
+        pathFns = 'import/refine3d/extra'
+        vol = self.ds.getFile(join(pathFns, 'relion_class001.mrc'))
+        half1 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half1_class001.mrc'))
+        half2 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half2_class001.mrc'))
+        volPatt = 'iter_002/volume_iter_002.mrc'
+
+        protRef = self._createRef3DProtBox("frealign", ProtFrealign, volPatt,
+                                           storeIter=True, iterN=2)
+        makePath(join(protRef._getExtraPath(), 'iter_002'))
+        
+        copyFile(vol, protRef._getExtraPath(volPatt))
+        copyFile(half1,
+                 protRef._getExtraPath('iter_002/volume_1_iter_002.mrc'))
+        copyFile(half2,
+                 protRef._getExtraPath('iter_002/volume_2_iter_002.mrc'))
+
+        postProt = self.newProtocol(ProtRelionPostprocess,
+                                    protRefine=protRef)
+        postProt.setObjLabel('post process frealign')
+        self.launchProtocol(postProt)
+        self._validations(postProt.outputVolume, 60, 3, "Frealign")
+
+    def test_postProcess_from_projMatch(self):
+        from pyworkflow.em.packages.xmipp3 import XmippProtProjMatch
+        
+        pathFns = 'import/refine3d/extra'
+        vol = self.ds.getFile(join(pathFns, 'relion_class001.mrc'))
+        half1 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half1_class001.mrc'))
+        half2 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half2_class001.mrc'))
+        
+        volPatt = 'iter_002/reconstruction_Ref3D_001.vol'
+        protRef = self._createRef3DProtBox("Proj Match", XmippProtProjMatch,
+                                           volPatt, storeIter=True, iterN=2)
+        
+        makePath(join(protRef._getExtraPath(), 'iter_002'))
+        
+        protRef._initialize()
+        
+        volXmipp = protRef._getFileName('reconstructedFileNamesIters',
+                                        iter=2, ref=1)
+        half1Xmipp = protRef._getFileName('reconstructedFileNamesItersSplit1',
+                                          iter=2, ref=1)
+        half2Xmipp = protRef._getFileName('reconstructedFileNamesItersSplit2',
+                                          iter=2, ref=1)
+        
+        ih = ImageHandler()
+        ih.convert(ih.getVolFileName(vol), volXmipp)
+        ih.convert(ih.getVolFileName(half1), half1Xmipp)
+        ih.convert(ih.getVolFileName(half2), half2Xmipp)
+
+        postProt = self.newProtocol(ProtRelionPostprocess,
+                                    protRefine=protRef)
+        postProt.setObjLabel('post process Xmipp Projection Matchings')
+        self.launchProtocol(postProt)
+        self._validations(postProt.outputVolume, 60, 3, "Projection Matchings")
+    
+    def test_postProcess_from_eman_refineEasy(self):
+        from pyworkflow.em.packages.eman2 import EmanProtRefine
+        from pyworkflow.em.packages.eman2.convert import convertImage
+        
+        pathFns = 'import/refine3d/extra'
+        vol = self.ds.getFile(join(pathFns, 'relion_class001.mrc'))
+        half1 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half1_class001.mrc'))
+        half2 = self.ds.getFile(join(pathFns,
+                                     'relion_it025_half2_class001.mrc'))
+
+        volPatt = 'refine_01/threed_02.hdf'
+        protRef = self._createRef3DProtBox("Eman refine Easy",
+                                           EmanProtRefine, volPatt)
+        makePath(join(protRef._getExtraPath(), 'refine_01'))
+        protRef._createFilenameTemplates()
+        protRef._createFilenameTemplates()
+
+        volEman = protRef._getFileName("mapFull",run=1, iter=2)
+        half1Eman = protRef._getFileName("mapEvenUnmasked", run=1)
+        half2Eman = protRef._getFileName("mapOddUnmasked", run=1)
+        
+        convertImage(vol, volEman)
+        convertImage(half1, half1Eman)
+        convertImage(half2, half2Eman)
+
+        postProt = self.newProtocol(ProtRelionPostprocess,
+                                    protRefine=protRef)
+        postProt.setObjLabel('post process Eman2 refine-easy')
+        self.launchProtocol(postProt)
+        self._validations(postProt.outputVolume, 60, 3, "Eman refine Easy")

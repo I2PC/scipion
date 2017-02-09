@@ -355,6 +355,9 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
 
         switch (wDType)
         {
+        case DT_Double:
+        case DT_Int:
+        case DT_UInt:
         case DT_Float:
             header->mode = 2;
             break;
@@ -368,6 +371,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, const String 
             header->mode = 1;
             break;
         case DT_CFloat:
+        case DT_CDouble:
             header->mode = 4;
             break;
         default:

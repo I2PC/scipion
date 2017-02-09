@@ -58,6 +58,9 @@ _sqlCommand4 = "CREATE TABLE verifyfiles "\
                "FOREIGN KEY(step_id, run_id) REFERENCES steps(step_id, run_id) on delete cascade);" 
 
 class TestPySqlite(unittest.TestCase):
+    
+    _labels = [WEEKLY]
+    
     testsPath = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/applications/tests'
     def setUp(self):
         """This function performs all the setup stuff.      

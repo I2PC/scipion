@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -41,6 +41,7 @@ from pyworkflow.em.packages.xmipp3.utils import iterMdRows
 from xmipp3 import XmippMdRow, getLabelPythonType, RowMetaData
 from pyworkflow.em import *
 from pyworkflow.utils.path import replaceBaseExt, removeExt, findRootFrom
+import pyworkflow.em.metadata as md
 
 
 # This dictionary will be used to map
@@ -55,6 +56,13 @@ COOR_DICT = OrderedDict([
              ("_x", xmipp.MDL_XCOOR), 
              ("_y", xmipp.MDL_YCOOR) 
              ])
+
+COOR_EXTRA_LABELS = [
+    # Additional autopicking-related metadata
+    md.RLN_PARTICLE_AUTOPICK_FOM,
+    md.RLN_PARTICLE_CLASS,
+    md.RLN_ORIENT_PSI
+    ]
 
 CTF_DICT = OrderedDict([
        ("_defocusU", xmipp.MDL_CTF_DEFOCUSU),
@@ -146,7 +154,7 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def objectToRow(obj, row, attrDict, extraLabels={}):
+def objectToRow(obj, row, attrDict, extraLabels=[]):
     """ This function will convert an EMObject into a XmippMdRow.
     Params:
         obj: the EMObject instance (input)
@@ -176,7 +184,7 @@ def objectToRow(obj, row, attrDict, extraLabels={}):
             row.setValue(label, value)
             
 
-def rowToObject(row, obj, attrDict, extraLabels={}):
+def rowToObject(row, obj, attrDict, extraLabels=[]):
     """ This function will convert from a XmippMdRow to an EMObject.
     Params:
         row: the XmippMdRow instance (input)
@@ -239,19 +247,17 @@ def _rowToObjectFunc(obj):
     """ From a given object, return the function rowTo{OBJECT_CLASS_NAME}. """
     return globals()['rowTo' + obj.getClassName()]
 
+
 def _readSetFunc(obj):
     """ From a given object, return the function read{OBJECT_CLASS_NAME}. """
     return globals()['read' + obj.getClassName()]
-    
+
+
 def locationToXmipp(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Xmipp.
     """
-    #TODO: Maybe we need to add more logic dependent of the format
-    if index != NO_INDEX:
-        return "%06d@%s" % (index, filename)
-    
-    return filename
+    return ImageHandler.locationToXmipp((index, filename))
 
 
 def fixVolumeFileName(image):
@@ -259,18 +265,24 @@ def fixVolumeFileName(image):
     because for mrc format is not possible to distinguish 
     between 3D volumes and 2D stacks. 
     """
-    fn = image.getFileName()
-    if isinstance(image, Volume):
-        if fn.endswith('.mrc') or fn.endswith('.map'):
-            fn += ':mrc'
-        
-    return fn   
-    
+    return ImageHandler.fixXmippVolumeFileName(image)
+
+
+def getMovieFileName(movie):
+    """ Add the :mrcs or :ems extensions to movie files to be
+    recognized by Xmipp as proper stack files.
+    """
+    fn = movie.getFileName()
+    if fn.endswith('.mrc'):
+        fn += ':mrcs'
+    elif fn.endswith('.em'):
+        fn += ':ems'
+
+    return fn
+
+
 def getImageLocation(image):
-    xmippFn = locationToXmipp(image.getIndex(),
-                              fixVolumeFileName(image))
-        
-    return xmippFn
+    return ImageHandler.locationToXmipp(image)
 
 
 def xmippToLocation(xmippFilename):
@@ -424,7 +436,7 @@ def coordinateToRow(coord, coordRow, copyId=True):
     """ Set labels values from Coordinate coord to md row. """
     if copyId:
         setRowId(coordRow, coord)
-    objectToRow(coord, coordRow, COOR_DICT)
+    objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
     if coord.getMicId():
         coordRow.setValue(xmipp.MDL_MICROGRAPH, str(coord.getMicId()))
 
@@ -434,11 +446,11 @@ def rowToCoordinate(coordRow):
     # Check that all required labels are present in the row
     if _containsAll(coordRow, COOR_DICT):
         coord = Coordinate()
-        rowToObject(coordRow, coord, COOR_DICT)
+        rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
             
         # Setup the micId if is integer value
         try:
-            coord.setMicId(int(coordRow.getValue(xmipp.MDL_MICROGRAPH)))
+            coord.setMicId(int(coordRow.getValue(xmipp.MDL_MICROGRAPH_ID)))
         except Exception:
             pass
     else:
@@ -589,11 +601,9 @@ def writeSetOfVolumes(volSet, filename, blockName='Volumes', **kwargs):
 def mdToCTFModel(md, mic):    
     ctfRow = rowFromMd(md, md.firstObject())
     ctfObj = rowToCtfModel(ctfRow)
-    if md.containsLabel(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY):
-        ctfObj._xmipp_ctfCritNonAstigmaticValidty = Float(ctfRow.getValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY))
-    if md.containsLabel(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY):
-        ctfObj._xmipp_ctfCritCtfMargin = Float(ctfRow.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO))
-    # the ctf id is set to micId when calling setMicrograph
+    setXmippAttributes(ctfObj, ctfRow,
+                       xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
+                       xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO)
     ctfObj.setMicrograph(mic)
     
     return ctfObj
@@ -628,7 +638,7 @@ loop_
     f.write(s)
     return f
 
-def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
+def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
     Params:
@@ -640,7 +650,12 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
     # Create a dictionary with the pos filenames for each micrograph
     posDict = {}
     for mic in coordSet.iterMicrographs():
-        micName = mic.getFileName()
+        micIndex, micFileName = mic.getLocation()
+        micName = os.path.basename(micFileName)
+
+        if micIndex != NO_INDEX:
+            micName = '%06d_at_%s' % (micIndex, micName)
+
         posFn = join(posDir, replaceBaseExt(micName, "pos"))
         posDict[mic.getObjId()] = posFn
         
@@ -661,9 +676,14 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True):
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
         c += 1
-        f.write(" %06d   1   %d  %d  %d   %06d\n" % (coord.getObjId(), 
-                                                 coord.getX(), coord.getY(), 1,
-                                                 micId))
+        if scale != 1:
+            x = coord.getX() * scale
+            y = coord.getY() * scale
+        else:
+            x = coord.getX()
+            y = coord.getY()
+        f.write(" %06d   1   %d  %d  %d   %06d\n"
+                % (coord.getObjId(), x, y, 1, micId))
     
     if f:
         f.close()
@@ -1030,7 +1050,7 @@ def writeSetOfClassesVol(classesVolSet, filename, classesBlock='classes'):
     classFn = '%s@%s' % (classesBlock, filename)
     classMd = xmipp.MetaData()
     classMd.write(classFn) # Empty write to ensure the classes is the first block
-    
+    #FIXME: review implementation of this function since there are syntax errors
     classRow = XmippMdRow()
     for classVol in classesVolSet:        
         classVolToRow(classVol, classRow)
@@ -1427,3 +1447,102 @@ def createClassesFromImages(inputImages, inputMd,
 
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
+
+
+def readShiftsMovieAlignment(xmdFn):
+    shiftsMd = md.MetaData(xmdFn)
+    shiftsMd.removeDisabled()
+
+    return (shiftsMd.getColumnValues(md.MDL_SHIFT_X),
+            shiftsMd.getColumnValues(md.MDL_SHIFT_Y))
+
+
+def writeShiftsMovieAlignment(movie, xmdFn, s0, sN):
+    
+    movieAlignment=movie.getAlignment()
+    shiftListX, shiftListY = movieAlignment.getShifts()
+    # Generating metadata for global shifts
+    a0, aN = movieAlignment.getRange()
+    globalShiftsMD = xmipp.MetaData()
+    alFrame = a0
+    
+    if s0 < a0:
+        for i in range(s0, a0):
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(i, getMovieFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0.0, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)
+            
+    for shiftX, shiftY in izip(shiftListX, shiftListY):
+        if alFrame >= s0 and alFrame <= sN:
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(alFrame, getMovieFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, shiftX, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, shiftY, objId)
+        alFrame += 1
+
+    if sN > aN:
+        for j in range(aN, sN):
+            objId = globalShiftsMD.addObject()
+            imgFn = locationToXmipp(j+1, getMovieFileName(movie))
+            globalShiftsMD.setValue(xmipp.MDL_IMAGE, imgFn, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_X, 0.0, objId)
+            globalShiftsMD.setValue(xmipp.MDL_SHIFT_Y, 0.0, objId)
+    
+    globalShiftsMD.write(xmdFn)
+
+
+def writeMovieMd(movie, outXmd, f1, fN, useAlignment=False):
+    movieMd = md.MetaData()
+    frame = movie.clone()
+    firstFrame, lastFrame, frameIndex = movie.getFramesRange()
+
+    if lastFrame == 0:
+        # this condition is for old SetOfMovies, that has lastFrame = 0.
+        frames = movie.getNumberOfFrames()
+        if frames is not None:
+            lastFrame = frames
+
+    if f1 < firstFrame or fN > lastFrame:
+        raise Exception("Frame range could not be greater than the movie one. ")
+
+    ih = ImageHandler()
+
+    if useAlignment:
+        alignment = movie.getAlignment()
+        if alignment is None:
+            raise Exception("Can not write alignment for movie. ")
+        a0, aN = alignment.getRange()
+        if (firstFrame, lastFrame) != (a0, aN):
+            raise Exception("Mismatch between alignment frames range and "
+                            "movie frames range. ")
+        shiftListX, shiftListY = alignment.getShifts()
+
+    row = md.Row()
+    stackIndex = frameIndex + (f1 - firstFrame)
+
+    for i in range(f1, fN+1):
+        frame.setIndex(stackIndex)
+        row.setValue(md.MDL_IMAGE, ih.locationToXmipp(frame))
+
+        if useAlignment:
+            shiftIndex = i - firstFrame
+            row.setValue(xmipp.MDL_SHIFT_X, shiftListX[shiftIndex])
+            row.setValue(xmipp.MDL_SHIFT_Y, shiftListY[shiftIndex])
+
+        row.addToMd(movieMd)
+        stackIndex += 1
+
+    movieMd.write(outXmd)
+
+
+def createParamPhantomFile(filename, dimX, partSetMd, phFlip=False, ctfCorr=False):
+    f = open(filename,'w')
+    str = "# XMIPP_STAR_1 *\n#\ndata_block1\n_dimensions2D '%d %d'\n" % (dimX, dimX)
+    str += "_projAngleFile %s\n" % partSetMd
+    str += "_ctfPhaseFlipped %d\n_ctfCorrected %d\n" % (phFlip, ctfCorr)
+    str += "_applyShift 1\n_noisePixelLevel    '0 0'\n"
+    f.write(str)
+    f.close()

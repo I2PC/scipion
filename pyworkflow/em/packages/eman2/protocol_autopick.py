@@ -20,12 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import os
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import IntParam, FloatParam
 from pyworkflow.em.protocol import ProtParticlePicking
 
@@ -41,6 +42,7 @@ class SparxGaussianProtPicking(ProtParticlePicking):
     For more information see http://sparx-em.org/sparxwiki/e2boxer
     """
     _label = 'sparx gaussian picker'
+    _version = VERSION_1_1
         
     def __init__(self, **args):     
         ProtParticlePicking.__init__(self, **args)
@@ -87,7 +89,7 @@ class SparxGaussianProtPicking(ProtParticlePicking):
     #--------------------------- STEPS functions ---------------------------------------------------
     def executeSparxGaussianPickerStep(self, micFile):
         print micFile
-        params = '--gauss_autoboxer=demoparms --write_dbbox %s'%micFile
+        params = '--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s' % (self.boxSize.get(), micFile)
         self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
         
     def createOutputStep(self):

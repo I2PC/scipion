@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -46,7 +46,8 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     """
     _label = '3D classification'
     CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS, 
-                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS,
+                     md.RLN_OPTIMISER_CHANGES_OPTIMAL_CLASSES]
     
     def __init__(self, **args):        
         ProtRelionBase.__init__(self, **args)

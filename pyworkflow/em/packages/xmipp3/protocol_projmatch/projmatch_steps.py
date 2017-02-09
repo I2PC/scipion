@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -711,10 +711,17 @@ def runCreateOutputStep(self):
         self._defineSourceRelation(self.input3DReferences, volumes)
         self._defineSourceRelation(self.input3DReferences, classes)
     else:
-        volFn = self._getFileName('reconstructedFileNamesIters', iter=lastIter, ref=1)
+        volFn = self._getFileName('reconstructedFileNamesIters',
+                                  iter=lastIter, ref=1)
+        halfMap1 = self._getFileName('reconstructedFileNamesItersSplit1',
+                                     iter=lastIter, ref=1)
+        halfMap2 = self._getFileName('reconstructedFileNamesItersSplit2',
+                                     iter=lastIter, ref=1)
+
         vol = Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(imgSet.getSamplingRate())
+        vol.setHalfMaps([halfMap1, halfMap2])
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputParticles, vol)
         self._defineSourceRelation(self.input3DReferences, vol)

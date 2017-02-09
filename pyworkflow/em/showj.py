@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -69,12 +69,6 @@ CHIMERA_PORT = 'chimera_port'
 INVERTY = 'inverty'
 
 OBJCMDS = 'object_commands'
-OBJCMD_NMA_PLOTDIST = "Plot distance profile"
-OBJCMD_NMA_VMD = "Display VMD animation"
-#OBJCMD_MOVIE_ALIGNPOLAR = "Display Polar Presentation"
-OBJCMD_MOVIE_ALIGNCARTESIAN = "Display Cartesian Presentation"
-#OBJCMD_MOVIE_ALIGNPOLARCARTESIAN = "Display Polar + Cartesian Presentations"
-OBJCMD_CTFFIND4 = "Display Ctf Fitting"
 
 GOTO = 'goto'
 ROWS = 'rows'

@@ -20,13 +20,14 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import os
 
-from pyworkflow.utils import Environ
+import pyworkflow as pw
 
-CRYOEM_HOME = os.path.join(os.environ.get('SCIPION_HOME'),'software/lib/python2.7/site-packages/cryoem')
+
+CRYOEM_HOME = pw.getScipionPath('software/lib/python2.7/site-packages/cryoem')
 CRYOEM_BIN = os.path.join(CRYOEM_HOME, 'program')

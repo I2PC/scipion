@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -71,8 +71,12 @@ class SpiderProtocol(EMProtocol):
         """
         self._enterWorkingDir()
         
-        log = getattr(self, '_log', None)        
+        log = getattr(self, '_log', None)
         runTemplate(inputScript, ext, paramsDict, log)
-        
         self._leaveWorkingDir()
     
+        f = open(self.getLogPaths()[0], 'r')
+        for line in f.readlines():
+            if 'FATAL ERROR ENCOUNTERED IN BATCH MODE' in line:
+                raise Exception('Spider script error!')
+        f.close()

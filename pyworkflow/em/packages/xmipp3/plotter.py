@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -74,5 +74,5 @@ class XmippPlotter(EmPlotter):
         """
         from xmipp import MetaData
         md = MetaData(mdFilename)
-        self.plotMd(md, mdLabelX, mdLabelY, color='g',**args)
+        self.plotMd(md, mdLabelX, mdLabelY, color=color,**args)
       

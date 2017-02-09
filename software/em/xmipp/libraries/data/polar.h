@@ -48,12 +48,13 @@
 //@{
 
 /** Structure for fftw plans */
-typedef struct Polar_Fftw_Plans
+class Polar_fftw_plans
 {
-    std::vector<FourierTransformer>          transformers;
+public:
+    std::vector<FourierTransformer *>    transformers;
     std::vector<MultidimArray<double> >  arrays;
-}
-Polar_fftw_plans;
+    ~Polar_fftw_plans();
+};
 
 /** Class for polar coodinates */
 template<typename T>
@@ -669,10 +670,8 @@ public:
                 for (int jphi = 0; jphi < VEC_LEN; jphi++) {
                     // from polar to original cartesian coordinates
                     phi = (iphi+jphi) * dphi;
-                    double sine, cosine;
-                    //sincos(phi,&sine,&cosine);
-                    sine = sin(phi);
-                    cosine = cos(phi);
+                    double sine=sin(phi); // Faster depending on the compiler
+   	                double cosine=cos(phi);
                     axp[jphi] = sine * radius;
                     ayp[jphi] = cosine * radius;
 
@@ -683,10 +682,8 @@ public:
 
                 for (int jphi = 0; jphi < VEC_LEN; jphi++) {
                     // Wrap coordinates
-                    //if (axp[jphi] < minxp_e || axp[jphi] > maxxp_e)
-                        axp[jphi] = realWRAPNoDiv(axp[jphi], minxp - 0.5, maxxp + 0.5);
-                    //if (ayp[jphi] < minyp_e || ayp[jphi] > maxyp_e)
-                        ayp[jphi] = realWRAPNoDiv(ayp[jphi], minyp - 0.5, maxyp + 0.5);
+   	                axp[jphi] = realWRAP(axp[jphi], minxp - 0.5, maxxp + 0.5);
+   	                ayp[jphi] = realWRAP(ayp[jphi], minyp - 0.5, maxyp + 0.5);
                 }
 
                 // Perform the convolution interpolation
@@ -706,10 +703,8 @@ public:
             {
                 // from polar to original cartesian coordinates
                 phi = iphi * dphi;
-                double sine, cosine;
-                //sincos(phi,&sine,&cosine);
-                sine = sin(phi);
-                cosine = cos(phi);
+                double sine=sin(phi); // Faster depending on the compiler
+                double cosine=cos(phi);
                 xp = sine * radius;
                 yp = cosine * radius;
 
@@ -725,7 +720,7 @@ public:
 
                 // Perform the convolution interpolation
                 if (BsplineOrder==1)
-                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2D(xp,yp);
+                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2DOutsideZero(xp,yp);
                 else
                     DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
             }
@@ -739,15 +734,15 @@ public:
      */
     void calculateFftwPlans(Polar_fftw_plans &out)
     {
-        (out.transformers).resize(rings.size());
         (out.arrays).resize(rings.size());
         for (size_t iring = 0; iring < rings.size(); iring++)
         {
             (out.arrays)[iring] = rings[iring];
-            ((out.transformers)[iring]).setReal((out.arrays)[iring]);
+            FourierTransformer *ptr_transformer = new FourierTransformer();
+            ptr_transformer->setReal((out.arrays)[iring]);
+            out.transformers.push_back(ptr_transformer);
         }
     }
-
 };
 
 /** Calculate FourierTransform of all rings

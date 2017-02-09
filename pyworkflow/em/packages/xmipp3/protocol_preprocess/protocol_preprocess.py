@@ -21,12 +21,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from pyworkflow.em import *
 from pyworkflow.utils import *  
+from pyworkflow.protocol.params import *
 from protocol_process import XmippProcessParticles, XmippProcessVolumes
 from pyworkflow.utils.path import cleanPath
 from ..constants import *

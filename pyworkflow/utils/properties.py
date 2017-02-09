@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Jose Gutierrez (jose.gutierrez@cnb.csic.es)
@@ -21,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -42,6 +43,7 @@ class Message():
     # Projects Template
     LABEL_PROJECTS = 'Projects'
     LABEL_CREATE_PROJECT = 'Create Project'
+    LABEL_IMPORT_PROJECT = 'Import project'
     TITLE_CREATE_PROJECT = 'Enter the project name'
     TITLE_CREATE_PROJECT_NAME = 'Project Name: '
     TITLE_EDIT_OBJECT = 'Edit Object properties'
@@ -217,7 +219,7 @@ pixel size (microns/pixel, Tm).
 They are related by  Ts = Tm / M"""
     LABEL_SAMP_MODE_1 = 'From image'
     LABEL_SAMP_MODE_2 = 'From scanner'
-    LABEL_SAMP_RATE = 'Pixel size ("sampling rate") (A/px)'
+    LABEL_SAMP_RATE = 'Pixel size ("sampling rate") (Å/px)'
     TEXT_SAMP_RATE = "Pixel size"
     LABEL_MAGNI_RATE = 'Magnification rate'
     TEXT_MAGNI_RATE = """\
@@ -322,7 +324,9 @@ Do you really want to continue?'
 
     TITLE_PICK_GAUSS = 'Automatic gaussian picking'
     LABEL_PICK_GAUSS = 'Do you wish to perform an automatic gaussian picking for the remaining micrographs?'
-    
+
+
+# To get font awesome icons into png use: http://fa2png.io/
 class Icon():
     # Project Content Template
     RUNS_TREE = 'fa-sitemap.png'
@@ -362,10 +366,12 @@ class Icon():
     
     ARROW_UP = 'fa-arrow-up.png'
     ARROW_LEFT = 'fa-arrow-left.png'
-    
+    BRUSH = 'fa-paint-brush.png'
+    TAGS = 'fa-tags.png'
     HOME = 'fa-home.png'
     LIGHTBULB = 'fa-lightbulb-o.png'
     PLUS_CIRCLE = 'fa-plus-circle.png'
+    LINK = 'fa-iconmoon-link.png'
 
 
 class Color():

@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -203,14 +203,6 @@ class ProtImportParticles(ProtImportImages):
             summary += '\n_WARNING_: Binary files copied into project (extra disk space)'
             
         self.summaryVar.set(summary)
-        
-    def loadAcquisitionInfo(self):
-        ci = self.getImportClass()
-        
-        if exists(self.importFilePath):
-            return ci.loadAcquisitionInfo()
-        else:
-            return None
 
     def _validateFileExtension(self):
         """ Simple check about the expected file extension. """

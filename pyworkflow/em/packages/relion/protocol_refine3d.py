@@ -20,14 +20,14 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
 This module contains the protocol for 3d refinement with Relion.
 """
 import pyworkflow.em.metadata as md
-from pyworkflow.em.data import Volume
+from pyworkflow.em.data import(Volume,FSC)
 from pyworkflow.em.protocol import ProtRefine3D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
@@ -94,6 +94,9 @@ leads to objective and high-quality results.
             vol = Volume()
             vol.setFileName(self._getExtraPath('relion_class001.mrc'))
             vol.setSamplingRate(imgSet.getSamplingRate())
+            half1 = self._getFileName("final_half1_volume", ref3d=1)
+            half2 = self._getFileName("final_half2_volume", ref3d=1)
+            vol.setHalfMaps([half1, half2])
             
             outImgSet = self._createSetOfParticles()
             outImgSet.copyInfo(imgSet)
@@ -103,6 +106,18 @@ leads to objective and high-quality results.
             self._defineSourceRelation(self.inputParticles, vol)
             self._defineOutputs(outputParticles=outImgSet)
             self._defineTransformRelation(self.inputParticles, outImgSet)
+
+            fsc = FSC(objLabel=self.getRunName())
+            blockName = 'model_class_%d@'%1
+            fn = blockName + self._getExtraPath("relion_model.star")
+            mData = md.MetaData(fn)
+            fsc.loadFromMd(mData,
+                       md.RLN_RESOLUTION,
+                       md.RLN_MLMODEL_FSC_HALVES_REF)
+            self._defineOutputs(outputFSC=fsc)
+            self._defineSourceRelation(vol,fsc)
+
+
         else:
             pass
     

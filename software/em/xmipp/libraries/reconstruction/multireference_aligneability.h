@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (jvargas@cnb.csic.es)
+ * Authors:     Javier Vargas (jvargas@cnb.csic.es) (2016)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -33,6 +33,8 @@
 #include <data/metadata.h>
 #include <string.h>
 #include <data/mask.h>
+#include <data/symmetries.h>
+
 
 
 class MultireferenceAligneability: public XmippProgram
@@ -41,18 +43,26 @@ class MultireferenceAligneability: public XmippProgram
 
 public:
     /** Filenames */
-    FileName fnDir, fnSym, fin, finRef, fnInit;
+    FileName fnDir, fnSym, fin, finRef, fnInit, fnGallery, fnParticles, fnParticlesRef;
+
     bool donNotUseWeights;
-    //fsig, fnInit;
+
+    bool check_mirror;
+    SymList SL;
+
+    size_t rank, Nprocessors;
+
+    MetaData mdPartialParticles;
 
 private:
     size_t Xdim,Ydim,Zdim,Ndim;
-
     /** Sampling rate of the volume and projections */
     //double sampling_rate   //COMMENTED
 
 
 public:
+
+    MultireferenceAligneability();
 
     void readParams();
 
@@ -64,10 +74,19 @@ private:
 
     void write_projection_file();
 
-    void calc_sumu(const MetaData & tempMd, double & sum_W);
+    void calc_sumu(const MetaData & tempMd, double & sum_W, double & mirrorProb);
 
     void calc_sumw(const size_t num, double & sumw);
 
+    void calc_sumw2(const size_t num, double & sumw, const MetaData & mdGallery);
+
+    void obtainAngularAccuracy(const MetaData & tempMd, const MDRow & row, double & accuracy,double & accuracyMirror);
+
+    /// Gather alignment
+    virtual void gatherResults() {}
+
+    /// Synchronize with other processors
+    virtual void synchronize() {}
 };
 
 

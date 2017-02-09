@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -31,6 +31,7 @@ from xmipp3 import XmippProtocol
 from convert import createXmippInputVolumes, readSetOfVolumes, locationToXmipp
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 import pyworkflow.em.metadata as md
+from os.path import exists 
 
 
 class XmippProtResolution3D(ProtAnalysis3D):
@@ -74,7 +75,21 @@ class XmippProtResolution3D(ProtAnalysis3D):
             self._insertFunctionStep('calculateFscStep')
         if self.doComputeBfactor:
             self._insertFunctionStep('computeBfactorStep')
+        self._insertFunctionStep('createOutputStep')
         self._insertFunctionStep('createSummaryStep')
+
+    def createOutputStep(self):
+        fnFSC = self._defineFscName()
+        if exists(fnFSC):
+            mData = md.MetaData(self._defineFscName())
+            # Create the FSC object and set the same protocol label
+            fsc = FSC(objLabel=self.getRunName())
+            fsc.loadFromMd(mData,
+                           md.MDL_RESOLUTION_FREQ,
+                           md.MDL_RESOLUTION_FRC)
+            self._defineOutputs(outputFSC=fsc)
+            self._defineSourceRelation(self.referenceVolume,fsc)
+            self._defineSourceRelation(self.inputVolume,fsc)
 
     #--------------------------- STEPS steps functions --------------------------------------------
     def calculateFscStep(self):

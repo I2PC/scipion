@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -64,7 +64,7 @@ MEM_3 = 3
 INTERPOLATION_0 = 0
 INTERPOLATION_1 = 1
 
-# Parameters to Remine
+# Parameters to Refine
 REF_ALL = 0
 REF_ANGLES = 1
 REF_SHIFTS = 2

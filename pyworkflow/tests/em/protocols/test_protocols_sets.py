@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -241,6 +241,26 @@ class TestSets(BaseTest):
         check(self.vols)
         check(self.movies)
         check(self.particles)
+
+    def testMergeDifferentAttrs(self):
+        """ Test merge from subsets with different attritubes. """
+        partFn = self.dataset_mda.getFile('particles/xmipp_particles.xmd')
+        protImport = self.newProtocol(ProtImportParticles,
+                                      objLabel='import from xmd',
+                                      importFrom=ProtImportParticles.IMPORT_FROM_XMIPP3,
+                                      mdFile=partFn,
+                                      samplingRate=3.5)
+
+        self.launchProtocol(protImport)
+        protJoin = self.newProtocol(ProtUnionSet,
+                                    objLabel='join different',
+                                    ignoreExtraAttributes=True)
+
+        protJoin.inputSets.append(self.particles)
+        protJoin.inputSets.append(protImport.outputParticles)
+
+        self.launchProtocol(protJoin)
+
 
     def testOrderBy(self):
         """ create set of particles and orderby a given attribute

@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es' Eso eso ...las quejas a XMIPP
+# *  e-mail address 'scipion@cnb.csic.es' Eso eso ...las quejas a XMIPP
 # *
 # **************************************************************************
 
@@ -37,7 +37,20 @@ class Mapper():
     
     # Just to avoid print several times the same warning
     __warnings = set()
-    
+
+    ORIGINAL_CLASS_NAME_ATTRIBUTE = "oldClassName"
+
+    @staticmethod
+    def annotateClassName(instance, oldClassName):
+        """ Annotate an object with the original class name"""
+        setattr(instance, Mapper.ORIGINAL_CLASS_NAME_ATTRIBUTE, oldClassName)
+    @staticmethod
+    def getObjectPersistingClassName(instance):
+        if hasattr(instance, Mapper.ORIGINAL_CLASS_NAME_ATTRIBUTE):
+            return getattr(instance,Mapper.ORIGINAL_CLASS_NAME_ATTRIBUTE)
+        else:
+            return instance.getClassName()
+
     def __init__(self, dictClasses=None):
         if dictClasses:
             self.dictClasses = dictClasses 
@@ -49,7 +62,7 @@ class Mapper():
             print "WARNING: %s" % msg
             self.__warnings.add(msg)
     
-    def _buildObject(self, className, **kwargs):
+    def _buildObjectFromClass(self, className, **kwargs):
         """ Build an instance of an object
         given the class name, it should be in 
         the classes dictionary.
@@ -63,9 +76,16 @@ class Mapper():
         if not issubclass(objClass, obj.Object):
             print "WARNING: Class '%s' is not a subclass of Object. Ignored. " % className
             return None
-        
-        return self.dictClasses[className](**kwargs)
-    
+
+        instance = self.dictClasses[className](**kwargs)
+
+        # If it's the default class in the dictionary
+        if objClass.__name__ != className:
+            # ... annotate original class name
+            self.annotateClassName(instance, className)
+
+        return instance
+
     def _getStrValue(self, value):
         """ Return empty string if value is None or empty. """
         if not value:
@@ -111,7 +131,9 @@ class Mapper():
     def selectById(self, objId):
         """Return the object which id is objId"""
         pass
-    
+    def exists(self,objId):
+        """Return True if the id is in the database"""
+        pass
     def selectAll(self):
         """Return all object from storage"""
         pass

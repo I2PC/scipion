@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -20,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -112,7 +113,7 @@ class ProtImportVolumes(ProtImportImages):
         if self.hasAttribute('outputVolume') or self.hasAttribute('outputVolumes'):
             summary.append("%s imported from:\n%s" % (self._getVolMessage(), self.getPattern()))
 
-            summary.append("Sampling rate: *%0.2f* (A/px)" % self.samplingRate.get())
+            summary.append("Sampling rate: *%0.2f* (Å/px)" % self.samplingRate.get())
         return summary
     
     def _methods(self):

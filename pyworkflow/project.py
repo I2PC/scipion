@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -35,8 +35,11 @@ import time
 from collections import OrderedDict
 import datetime as dt
 
+import datetime
+
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
+import pyworkflow.hosts as pwhosts
 import pyworkflow.protocol as pwprot
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
@@ -53,9 +56,10 @@ PROJECT_CONFIG = '.config'
 PROJECT_CONFIG_HOSTS = 'hosts.conf'
 PROJECT_CONFIG_PROTOCOLS = 'protocols.conf'
 
+PROJECT_CREATION_TIME = 'CreationTime'
+
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
-
 
 class Project(object):
     """This class will handle all information 
@@ -67,6 +71,7 @@ class Project(object):
         self.name = path
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
+        self._isLink = os.path.islink(path)
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -86,6 +91,9 @@ class Project(object):
         # Host configuration
         self._hosts = None
         self._protocolViews = None
+        #  Creation time should be stored in project.sqlite when the project
+        # is created and then loaded with other properties from the database
+        self._creationTime = None
 
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -103,15 +111,24 @@ class Project(object):
             return os.path.join(*paths)
         else:
             return self.path
-
+    def isLink(self):
+        """Returns if the project path is a link to another folder."""
+        return self._isLink
     def getDbPath(self):
         """ Return the path to the sqlite db. """
         return self.dbPath
+
+    def getDbLastModificationDate(self):
+        """ Return the last modification date of the database """
+        pwutils.getFileLastModificationDate(self.getDbPath())
 
     def getCreationTime(self):
         """ Return the time when the project was created. """
         # In project.create method, the first object inserted
         # in the mapper should be the creation time
+        return self._creationTime
+
+    def getSettingsCreationTime(self):
         return self.settings.getCreationTime()
 
     def getElapsedTime(self):
@@ -148,6 +165,9 @@ class Project(object):
     def getTmpPath(self, *paths):
         return self.getPath(PROJECT_TMP, *paths)
 
+    def getLogPath(self, *paths):
+        return self.getPath(PROJECT_LOGS, *paths)
+
     def getSettings(self):
         return self.settings
 
@@ -158,10 +178,12 @@ class Project(object):
 
     def createMapper(self, sqliteFn):
         """ Create a new SqliteMapper object and pass as classes dict
-        all globas and update with data and protocols from em.
+        all globals and update with data and protocols from em.
         """
         classesDict = pwobj.Dict(default=pwprot.LegacyProtocol)
         classesDict.update(pwobj.__dict__)
+        classesDict.update(pwconfig.__dict__)
+        classesDict.update(pwhosts.__dict__)
         classesDict.update(em.getProtocols())
         classesDict.update(em.getObjects())
         return SqliteMapper(sqliteFn, classesDict)
@@ -177,7 +199,8 @@ class Project(object):
                 or read from ~/.config/scipion/hosts.conf
             settings: where to read the settings.
                 If None, use the settings.sqlite in project folder.
-            If forProtocol is True, the settings and protocols.conf will not be loaded.
+                If forProtocol is True, the settings and protocols.conf will
+                not be loaded.
         """
         if not os.path.exists(self.path):
             raise Exception(
@@ -203,6 +226,22 @@ class Project(object):
                 self.settings = pwconfig.loadSettings(settingsPath)
             else:
                 self.settings = None
+
+        self._loadCreationTime()
+
+    def _loadCreationTime(self):
+        # Load creation time, it should be in project.sqlite or
+        # in some old projects it is found in settings.sqlite
+
+        creationTime = self.mapper.selectBy(name=PROJECT_CREATION_TIME)
+
+        if creationTime: # CreationTime was found in project.sqlite
+            self._creationTime = creationTime[0].datetime()
+        else:
+            # We should read the creation time from settings.sqlite and
+            # update the CreationTime in the project.sqlite
+            self._creationTime = self.getSettingsCreationTime()
+            self._storeCreationTime(self._creationTime)
 
     # ---- Helper functions to load different pieces of a project
     def _loadDb(self, dbPath):
@@ -295,7 +334,8 @@ class Project(object):
                protocolsConf=None):
         """Prepare all required paths and files to create a new project.
         Params:
-         hosts: a list of configuration hosts associated to this projects (class ExecutionHostConfig)
+         hosts: a list of configuration hosts associated to this projects
+               (class ExecutionHostConfig)
         """
         # Create project path if not exists
         pwutils.path.makePath(self.path)
@@ -304,10 +344,8 @@ class Project(object):
         print "Creating project at: ", os.path.abspath(self.dbPath)
         # Create db through the mapper
         self.mapper = self.createMapper(self.dbPath)
-        creation = pwobj.String(objName='CreationTime')  # Store creation time
-        creation.set(dt.datetime.now())
-        self.mapper.insert(creation)
-        self.mapper.commit()
+        # Store creation time
+        self._storeCreationTime(dt.datetime.now())
         # Load settings from .conf files and write .sqlite
         self.settings = pwconfig.ProjectSettings()
         self.settings.setRunsView(runsView)
@@ -321,6 +359,14 @@ class Project(object):
 
         self._loadProtocols(protocolsConf)
 
+    def _storeCreationTime(self, creationTime):
+        """ Store the creation time in the project db. """
+        # Store creation time
+        creation = pwobj.String(objName=PROJECT_CREATION_TIME)
+        creation.set(creationTime)
+        self.mapper.insert(creation)
+        self.mapper.commit()
+
     def _cleanData(self):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
@@ -330,7 +376,8 @@ class Project(object):
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
         2. Create the working dir and also the protocol independent db
-        3. Call the launch method in protocol.job to handle submition: mpi, thread, queue,
+        3. Call the launch method in protocol.job to handle submition:
+           mpi, thread, queue,
         and also take care if the execution is remotely."""
 
         isRestart = protocol.getRunMode() == MODE_RESTART
@@ -349,8 +396,8 @@ class Project(object):
         self.mapper.commit()
 
         # Prepare a separate db for this run
-        # NOTE: now we are simply copying the entire project db, this can be changed later
-        # to only create a subset of the db need for the run
+        # NOTE: now we are simply copying the entire project db, this can be
+        # changed later to only create a subset of the db need for the run
         pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
 
         # Launch the protocol, the jobId should be set after this call
@@ -363,48 +410,63 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def _updateProtocol(self, protocol, tries=0):
-        if not self.isReadOnly():
-            try:
-                # Backup the values of 'jobId', 'label' and 'comment'
-                # to be restored after the .copy
-                jobId = protocol.getJobId()
-                label = protocol.getObjLabel()
-                comment = protocol.getObjComment()
+    def _updateProtocol(self, protocol, tries=0, checkPid=False):
 
-                # TODO: when launching remote protocols, the db should be retrieved
-                # in a different way.
+        # If this is read only exit
+        if self.isReadOnly(): return
 
-                # join(protocol.getHostConfig().getHostPath(), protocol.getDbPath())
-                prot2 = pwprot.getProtocolFromDb(self.path,
-                                                 protocol.getDbPath(),
-                                                 protocol.getObjId())
+        # If we are already updated, comparing timestamps
+        if pwprot.isProtocolUpToDate(protocol): return
 
-                # Copy is only working for db restored objects
-                protocol.setMapper(self.mapper)
-                protocol.copy(prot2, copyId=False)
-                # Restore backup values
-                protocol.setJobId(jobId)
-                protocol.setObjLabel(label)
-                protocol.setObjComment(comment)
+        try:
+            # Backup the values of 'jobId', 'label' and 'comment'
+            # to be restored after the .copy
+            jobId = protocol.getJobId()
+            label = protocol.getObjLabel()
+            comment = protocol.getObjComment()
 
+            # If the protocol database has ....
+            #  Comparing date will not work unless we have a reliable
+            # lastModifiactionDate of a protocol in the project.sqlite.
+
+
+            # TODO: when launching remote protocols, the db should be
+            # TODO: retrieved in a different way.
+            prot2 = pwprot.getProtocolFromDb(self.path,
+                                             protocol.getDbPath(),
+                                             protocol.getObjId())
+
+            if checkPid:
+                self.checkPid(prot2)
+
+            # Copy is only working for db restored objects
+            protocol.setMapper(self.mapper)
+            protocol.copy(prot2, copyId=False)
+            # Restore backup values
+            protocol.setJobId(jobId)
+            protocol.setObjLabel(label)
+            protocol.setObjComment(comment)
+            protocol.lastUpdateTimeStamp.set(datetime.datetime.now())
+
+            self.mapper.store(protocol)
+
+            # Close DB connections
+            prot2.getProject().closeMapper()
+            prot2.closeMappers()
+
+        except Exception, ex:
+            print("Error trying to update protocol: %s(jobId=%s)\n "
+                  "ERROR: %s, tries=%d"
+                  % (protocol.getObjName(), jobId, ex, tries))
+            if tries == 3:  # 3 tries have been failed
+                traceback.print_exc()
+                # If any problem happens, the protocol will be marked
+                # with a FAILED status
+                protocol.setFailed(str(ex))
                 self.mapper.store(protocol)
-
-                # Close DB connections
-                prot2.getProject().closeMapper()
-                prot2.closeMappers()
-
-            except Exception, ex:
-                print "Error trying to update protocol: %s(jobId=%s)\n ERROR: %s, tries=%d" % (
-                protocol.getObjName(), jobId, ex, tries)
-                if tries == 3:  # 3 tries have been failed
-                    traceback.print_exc()
-                    # If any problem happens, the protocol will be marked with a status fail
-                    protocol.setFailed(str(ex))
-                    self.mapper.store(protocol)
-                else:
-                    time.sleep(0.5)
-                    self._updateProtocol(protocol, tries + 1)
+            else:
+                time.sleep(0.5)
+                self._updateProtocol(protocol, tries + 1)
 
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
@@ -607,10 +669,12 @@ class Project(object):
                     newChildProt = newDict.get(childNode.run.getObjId(), None)
 
                     if newChildProt:
-                        # Get the matches between outputs/inputs of node and childNode
+                        # Get the matches between outputs/inputs of
+                        # node and childNode
                         matches = self.__getIOMatches(node, childNode)
-                        # For each match, set the pointer and the extend attribute
-                        # to reproduce the dependencies in the new workflow
+                        # For each match, set the pointer and the extend
+                        # attribute to reproduce the dependencies in the
+                        # new workflow
                         for oKey, iKey in matches:
                             childPointer = getattr(newChildProt, iKey)
                             childPointer.set(newProt)
@@ -624,15 +688,19 @@ class Project(object):
 
         return result
 
-    def exportProtocols(self, protocols, filename):
-        """ Create a text json file with the info
-        to import the workflow into another project.
-        This methods is very similar to copyProtocol
-        Params:
-            protocols: a list of protocols to export.
-            filename: the filename where to write the workflow.
-        
+    def getProtocolsJson(self, protocols=None, namesOnly=False):
+        """ Create a Json string with the information of the given protocols.
+         Params:
+            protocols: list of protocols or None to include all.
+            namesOnly: the output list will contain only the protocol names.
         """
+        protocols = protocols or self.getRuns()
+
+        # If the nameOnly, we will simply return a json list with their names
+        if namesOnly:
+            return json.dumps([prot.getClassName() for prot in protocols])
+
+
         # Handle the copy of a list of protocols
         # for this case we need to update the references of input/outputs
         newDict = OrderedDict()
@@ -652,7 +720,8 @@ class Project(object):
                 childProt = childNode.run
                 if childId in newDict:
                     childDict = newDict[childId]
-                    # Get the matches between outputs/inputs of node and childNode
+                    # Get the matches between outputs/inputs of
+                    # node and childNode
                     matches = self.__getIOMatches(node, childNode)
                     for oKey, iKey in matches:
                         inputAttr = getattr(childProt, iKey)
@@ -663,10 +732,20 @@ class Project(object):
                             childDict[iKey] = '%s.%s' % (
                             protId, oKey)  # equivalent to pointer.getUniqueId
 
-        f = open(filename, 'w')
+        return json.dumps(list(newDict.values()),
+                          indent=4, separators=(',', ': '))
 
-        f.write(json.dumps(list(newDict.values()),
-                           indent=4, separators=(',', ': ')) + '\n')
+    def exportProtocols(self, protocols, filename):
+        """ Create a text json file with the info
+        to import the workflow into another project.
+        This methods is very similar to copyProtocol
+        Params:
+            protocols: a list of protocols to export.
+            filename: the filename where to write the workflow.
+        """
+        jsonStr = self.getProtocolsJson(protocols)
+        f = open(filename, 'w')
+        f.write(jsonStr)
         f.close()
 
     def loadProtocols(self, filename=None, jsonStr=None):
@@ -762,6 +841,9 @@ class Project(object):
 
         return protocol
 
+    def doesProtocolExists(self, protId):
+        return self.mapper.exists(protId)
+
     def getProtocolsByClass(self, className):
         return self.mapper.selectByClass(className)
 
@@ -804,7 +886,7 @@ class Project(object):
             # Update with changes
             self._storeProtocol(protocol)
 
-    def getRuns(self, iterate=False, refresh=True):
+    def getRuns(self, iterate=False, refresh=True, checkPids=False):
         """ Return the existing protocol runs in the project. 
         """
         if self.runs is None or refresh:
@@ -813,86 +895,130 @@ class Project(object):
                 for r in self.runs:
                     r.closeMappers()
 
-            #self.runs = self.mapper.selectByClass("Protocol", iterate=False)
-            self.runs = self.mapper.selectAll(iterate=False,
-                                              objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+            # Use new selectAll Batch
+            # self.runs = self.mapper.selectAll(iterate=False,
+            #               objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+            self.runs = self.mapper.selectAllBatch(objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+
             for r in self.runs:
                 self._setProtocolMapper(r)
-                # Update nodes that are running and are not invoked by other protocols
+
+                # Update nodes that are running and were not invoked
+                # by other protocols
                 if r.isActive():
                     if not r.isChild():
-                        # pwutils.prettyLog("Updating protocol %s, because isActive (%s)" % (pwutils.green(r.getRunName()),
-                        #                                                                   r.getStatus()))
+                        self._updateProtocol(r, checkPid=checkPids)
 
-                        self._updateProtocol(r)
+            # cursor = self.mapper.db.executeCommand('SELECT * FROM Objects WHERE parent_Id IS NOT NULL ORDER BY parent_id, name')
+
             self.mapper.commit()
 
         return self.runs
+
+    def needRefresh(self):
+        """ True if any run is active and its timestamp is older than its corresponding runs.db
+        NOTE: If an external script changes the DB this will fail. It uses only in memory objects."""
+        # Loop through the runs
+        for run in self.runs:
+
+            if run.isActive():
+                if not pwprot.isProtocolUpToDate(run):
+                    return True
+
+        return False
+
+    def checkPid(self, protocol):
+        """ Check if a running protocol is still alive or not.
+        The check will only be done for protocols that have not been sent
+        to a queue system.
+        """
+        from pyworkflow.protocol.launch import _isLocal
+        pid = protocol.getPid()
+
+        if (protocol.isRunning() and _isLocal(protocol)
+            and not protocol.useQueue()
+            and not pwutils.isProcessAlive(pid)):
+            protocol.setFailed("Process %s not found running on the machine. "
+                               "It probably has died or been killed without "
+                               "reporting the status to Scipion. Logs might "
+                               "have information about what happened to this "
+                               "process." % pid)
+
 
     def iterSubclasses(self, classesName, objectFilter=None):
         """ Retrieve all objects from the project that are instances
             of any of the classes in classesName list.
         Params: 
             classesName: String with commas separated values of classes name. 
-            objectFilter: a filter function to discard some of the retrieved objects."""
+            objectFilter: a filter function to discard some of the retrieved
+            objects."""
         for objClass in classesName.split(","):
             for obj in self.mapper.selectByClass(objClass.strip(), iterate=True,
                                                  objectFilter=objectFilter):
                 yield obj
 
-    def getRunsGraph(self, refresh=True):
+    def getRunsGraph(self, refresh=True, checkPids=False):
         """ Build a graph taking into account the dependencies between
         different runs, ie. which outputs serves as inputs of other protocols. 
         """
+
         if refresh or self._runsGraph is None:
-            outputDict = {}  # Store the output dict
             runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
-            g = pwutils.graph.Graph(rootName='PROJECT')
-
-            for r in runs:
-                n = g.createNode(r.strId())
-                n.run = r
-                n.setLabel(r.getRunName())
-                outputDict[r.getObjId()] = n
-                for _, attr in r.iterOutputAttributes(em.EMObject):
-                    outputDict[
-                        attr.getObjId()] = n  # mark this output as produced by r
-
-            def _checkInputAttr(node, pointed):
-                """ Check if an attr is registered as output"""
-                if pointed is not None:
-                    pointedId = pointed.getObjId()
-
-                    if pointedId in outputDict:
-                        parentNode = outputDict[pointedId]
-                        if parentNode is node:
-                            print "WARNING: Found a cyclic dependence from node %s to itself, problably a bug. " % pointedId
-                        else:
-                            parentNode.addChild(node)
-                            return True
-                return False
-
-            for r in runs:
-                node = g.getNode(r.strId())
-                for _, attr in r.iterInputAttributes():
-                    if attr.hasValue():
-                        pointed = attr.getObjValue()
-                        # Only checking pointed object and its parent, if more levels
-                        # we need to go up to get the correct dependencies
-                        if not _checkInputAttr(node, pointed):
-                            parent = self.mapper.getParent(pointed)
-                            _checkInputAttr(node, parent)
-            rootNode = g.getRoot()
-            rootNode.run = None
-            rootNode.label = "PROJECT"
-
-            for n in g.getNodes():
-                if n.isRoot() and not n is rootNode:
-                    rootNode.addChild(n)
-            self._runsGraph = g
-
+            self._runsGraph = self.getGraphFromRuns(runs)
+            
         return self._runsGraph
 
+    def getGraphFromRuns(self, runs):
+        """ This function will build a dependencies graph from a set
+         of given runs.
+        :param runs: The input runs to build the graph
+        :return: The graph taking into account run dependencies
+        """
+        outputDict = {} # Store the output dict
+        g = pwutils.graph.Graph(rootName='PROJECT')
+
+        for r in runs:
+            n = g.createNode(r.strId())
+            n.run = r
+            n.setLabel(r.getRunName())
+            outputDict[r.getObjId()] = n
+            for _, attr in r.iterOutputAttributes(em.EMObject):
+                outputDict[attr.getObjId()] = n # mark this output as produced by r
+
+        def _checkInputAttr(node, pointed):
+            """ Check if an attr is registered as output"""
+            if pointed is not None:
+                pointedId = pointed.getObjId()
+
+                if pointedId in outputDict:
+                    parentNode = outputDict[pointedId]
+                    if parentNode is node:
+                        print "WARNING: Found a cyclic dependence from node %s to itself, problably a bug. " % pointedId
+                    else:
+                        parentNode.addChild(node)
+                        return True
+            return False
+
+        for r in runs:
+            node = g.getNode(r.strId())
+            for _, attr in r.iterInputAttributes():
+                if attr.hasValue():
+                    pointed = attr.getObjValue()
+                    # Only checking pointed object and its parent, if more levels
+                    # we need to go up to get the correct dependencies
+                    if not _checkInputAttr(node, pointed):
+                        parent = self.mapper.getParent(pointed)
+                        _checkInputAttr(node, parent)
+        rootNode = g.getRoot()
+        rootNode.run = None
+        rootNode.label = "PROJECT"
+
+        for n in g.getNodes():
+            if n.isRoot() and not n is rootNode:
+                rootNode.addChild(n)
+
+        return g
+    
     def _getRelationGraph(self, relation=em.RELATION_SOURCE, refresh=False):
         """ Retrieve objects produced as outputs and
         make a graph taking into account the SOURCE relation. """
@@ -923,23 +1049,31 @@ class Project(object):
                 parent = g.getNode(pp.getUniqueId())
 
             if not parent:
-                print "project._getRelationGraph: ERROR, parent Node is None: ", pid
+                print("project._getRelationGraph: ERROR, parent Node "
+                      "is None: ", pid)
             else:
                 cObj = self.getObject(rel['object_child_id'])
-                if cObj:
-                    cExt = rel['object_child_extended']
-                    cp = pwobj.Pointer(cObj, extended=cExt)
+                cExt = rel['object_child_extended']
+
+                if cObj is not None:
+                    if cObj.isPointer():
+                        cp = cObj
+                        if cExt:
+                            cp.setExtended(cExt)
+                    else:
+                        cp = pwobj.Pointer(cObj, extended=cExt)
                     child = g.getNode(cp.getUniqueId())
 
                     if not child:
-                        print "project._getRelationGraph: ERROR, child Node is None: ", cp.getUniqueId()
-                        print "   parent: ", pid
+                        print("project._getRelationGraph: ERROR, child Node "
+                              "is None: ", cp.getUniqueId())
+                        print("   parent: ", pid)
                     else:
                         parent.addChild(child)
                 else:
-                    print "project._getRelationGraph: ERROR, child Obj is None, id: ", \
-                    rel['object_child_id']
-                    print "   parent: ", pid
+                    print("project._getRelationGraph: ERROR, child Obj "
+                          "is None, id: ", rel['object_child_id'])
+                    print("   parent: ", pid)
 
         for n in g.getNodes():
             if n.isRoot() and not n is root:
@@ -1030,3 +1164,29 @@ class Project(object):
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
+
+    def fixLinks(self, searchDir):
+
+        runs = self.getRuns()
+
+        for prot in runs:
+            broken = False
+            if isinstance(prot, em.ProtImport):
+                for _, attr in prot.iterOutputEM():
+                    fn = attr.getFiles()
+                    for f in attr.getFiles():
+                        if ':' in f:
+                            f = f.split(':')[0]
+
+                        if not os.path.exists(f):
+                            if not broken:
+                                broken = True
+                                print "Found broken links in run: ", pwutils.magenta(prot.getRunName())
+                            print "  Missing: ", pwutils.magenta(f)
+                            if os.path.islink(f):
+                                print "    -> ", pwutils.red(os.path.realpath(f))
+                            newFile = pwutils.findFile(os.path.basename(f), searchDir, recursive=True)
+                            if newFile:
+                                print "  Found file %s, creating link..." % newFile
+                                print pwutils.green("   %s -> %s" % (f, newFile))
+                                pwutils.createAbsLink(newFile, f)

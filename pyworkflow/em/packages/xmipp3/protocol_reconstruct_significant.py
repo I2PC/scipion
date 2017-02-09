@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -30,6 +30,7 @@ from pyworkflow.em.packages.xmipp3.convert import volumeToRow
 from pyworkflow.em.packages.xmipp3.xmipp3 import XmippMdRow
 from convert import writeSetOfClasses2D, writeSetOfParticles
 import pyworkflow.em.metadata as metadata
+from pyworkflow.protocol.params import *
 
 
 
@@ -232,6 +233,11 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                     errors.append('The input images and the reference volume have different sizes') 
             else:
                 errors.append("Please, enter a reference image")
+        
+        SL = xmipp.SymList()
+        SL.readSymmetryFile(self.symmetryGroup.get())
+        if (100-self.alpha0.get())/100.0*(SL.getTrueSymsNo()+1)>1:
+            errors.append("Increase the initial significance it is too low for this symmetry")
         return errors
         
     def _summary(self):

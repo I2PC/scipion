@@ -34,7 +34,7 @@ int initialize_Voronoi( struct Voronoi_T *voronoi, int nPoints)
 	voronoi->computed = FALSE;
 
     // Initialize Voronoi DCEL.
-	if (initialize_DCEL( &voronoi->dcel, nPoints, nPoints*8, (nPoints+2)*2) == FAILURE)
+	if (initialize_DCEL( &voronoi->dcel, nPoints, INVALID, INVALID) == FAILURE)
 	{
 #ifdef LOGGING
 		sprintf( log_Text, "Error allocating memory in initialize_Voronoi\n");
@@ -251,7 +251,7 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 					turn = check_Turn( &dcel->vertex[dcel->edges[edgeID-1].origin_Vertex-1].vertex,
 									   &dcel->vertex[dcel->edges[dcel->edges[edgeID-1].twin_Edge-1].origin_Vertex-1].vertex,
 									   &centre);
-					if (turn == RIGHT)
+					if (turn == RIGHT_TURN)
 					{
 #ifdef DEBUG_BUILD_VORONOI_AREA
 						printf("Turn RIGHT\n");
@@ -348,7 +348,7 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 					turn = check_Turn( &dcel->vertex[dcel->edges[edgeID-1].origin_Vertex-1].vertex,
 									   &dcel->vertex[dcel->edges[dcel->edges[edgeID-1].twin_Edge-1].origin_Vertex-1].vertex,
 									   &centre);
-					if (turn == RIGHT)
+					if (turn == RIGHT_TURN)
 					{
 #ifdef DEBUG_BUILD_VORONOI_AREA
 						printf("Turn RIGHT 2\n");
@@ -431,7 +431,7 @@ void build_Voronoi_Area( struct Voronoi_T *voronoi, struct DCEL_T *dcel, int poi
 			turn = check_Turn( &dcel->vertex[dcel->edges[edgeID-1].origin_Vertex-1].vertex,
 							   &dcel->vertex[dcel->edges[dcel->edges[edgeID-1].twin_Edge-1].origin_Vertex-1].vertex,
 							   &centre);
-			if (turn == RIGHT)
+			if (turn == RIGHT_TURN)
 			{
 #ifdef DEBUG_BUILD_VORONOI_AREA
 				printf("Turn RIGHT\n");
@@ -655,7 +655,7 @@ int	 inner_To_Voronoi_Area( struct Voronoi_T *voronoi, int index,
 			// Check edge turn between current edge and input point.
 			if (check_Turn( &voronoi->dcel.vertex[origin].vertex,
 							&voronoi->dcel.vertex[dest].vertex,
-							q) == RIGHT)
+							q) == RIGHT_TURN)
 			{
 				inner = FALSE;
 			}

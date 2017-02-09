@@ -5,9 +5,7 @@ import ij.gui.ImageCanvas;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+import java.awt.event.*;
 import javax.swing.SwingUtilities;
 import xmipp.utils.XmippDialog;
 import xmipp.viewer.particlepicker.tiltpair.gui.TiltPairPickerJFrame;
@@ -29,7 +27,8 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 	private ParticlePickerCanvas canvas;
 	private int side;
 
-	public ParticleCanvas(PickerParticle pickerParticle, ParticlePickerJFrame frame)
+
+    public ParticleCanvas(PickerParticle pickerParticle, ParticlePickerJFrame frame)
 	{
 		super(pickerParticle.getMicrograph().getImagePlus());
 		this.particle = pickerParticle;
@@ -51,16 +50,14 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		super.paint(g);
 		g.setColor(Color.white);
 		g.drawRect(0, 0, side - 1, side - 1);
-                if(particle instanceof UntiltedParticle)
-                {
-                    String type = "U";
-                    g.drawString(type, 5, side - 2);
-                }
-                else if(particle instanceof TiltedParticle)
-                {
-                    String type = "T";
-                    g.drawString(type, 5, side - 2);
-                }
+
+        if(particle instanceof UntiltedParticle){
+            String type = "U";
+            g.drawString(type, 5, side - 2);
+        } else if(particle instanceof TiltedParticle) {
+            String type = "T";
+            g.drawString(type, 5, side - 2);
+        }
 	}
 
 	@Override
@@ -100,22 +97,19 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 			lastx = e.getX();
 			lasty = e.getY();
 
-			if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown())
-			{
-				if (frame instanceof SupervisedPickerJFrame)
-					((SupervisedPickerMicrograph) frame.getMicrograph()).removeParticle(particle, ((SupervisedPickerJFrame) frame).getParticlePicker());
-				else if (frame instanceof TiltPairPickerJFrame)
-				{
-					if (frame.getMicrograph() instanceof UntiltedMicrograph)
-						((UntiltedMicrograph) frame.getMicrograph()).removeParticle((UntiltedParticle) particle);
-					else if (frame.getMicrograph() instanceof TiltedMicrograph)
-						((TiltedMicrograph) frame.getMicrograph()).removeParticle((TiltedParticle) particle);
-				}
-				canvas.repaint();
-				frame.updateMicrographsModel();
-				frame.loadParticles(false);
-			}
-			else
+			if (SwingUtilities.isLeftMouseButton(e) && e.isShiftDown()) {
+                if (frame instanceof SupervisedPickerJFrame)
+                    ((SupervisedPickerMicrograph) frame.getMicrograph()).removeParticle(particle, ((SupervisedPickerJFrame) frame).getParticlePicker());
+                else if (frame instanceof TiltPairPickerJFrame) {
+                    if (frame.getMicrograph() instanceof UntiltedMicrograph)
+                        ((UntiltedMicrograph) frame.getMicrograph()).removeParticle((UntiltedParticle) particle);
+                    else if (frame.getMicrograph() instanceof TiltedMicrograph)
+                        ((TiltedMicrograph) frame.getMicrograph()).removeParticle((TiltedParticle) particle);
+                }
+                canvas.repaint();
+                frame.updateMicrographsModel();
+                frame.loadParticles(false);
+            }else
 			{
 				canvas.moveTo(particle);
 				canvas.refreshActive(particle);
@@ -130,5 +124,4 @@ public class ParticleCanvas extends ImageCanvas implements MouseMotionListener, 
 		dragged = false;
 
 	}
-
 }

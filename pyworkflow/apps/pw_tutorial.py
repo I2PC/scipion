@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -32,6 +32,7 @@ import os
 import sys
 from collections import OrderedDict
 
+import pyworkflow as pw
 import pyworkflow.tests as tests
 from pyworkflow.manager import Manager
 import pyworkflow.utils as pwutils
@@ -42,8 +43,7 @@ def getWorkflow(workflow):
     """ Return the full workflow path from
     the Scipion folder + config/workflows/
     """
-    return os.path.join(os.environ['SCIPION_HOME'], 
-                        'config', 'workflows', workflow)
+    return pw.getConfigPath('workflows', workflow)
     
 
 class Tutorial():

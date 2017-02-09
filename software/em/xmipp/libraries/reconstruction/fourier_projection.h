@@ -48,7 +48,7 @@ public:
 
 public:
     // Auxiliary FFT transformer
-    FourierTransformer transformer3D, transformer2D;
+    FourierTransformer transformer2D;
 
     // Volume to project
     MultidimArray<double> *volume;
@@ -67,6 +67,9 @@ public:
 
     // Original volume size
     int volumeSize;
+
+    // Volume padded size
+    int volumePaddedSize;
 
     // Euler matrix
     Matrix2D<double> E;

@@ -91,8 +91,6 @@ public:
     double iMask2Dsum;
     // Fourier projector
     FourierProjector *projector;
-    // Reference volume
-    Image<double> V;
     // Volume size
     size_t Xdim;
     // Input image

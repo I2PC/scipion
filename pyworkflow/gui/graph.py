@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """ 
@@ -134,7 +134,7 @@ class LevelTree(object):
         if nodeText.startswith('Project'):
             textColor='white'
         
-        return canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor)
+        return canvas.createTextbox(nodeText, 100, y, bgColor='light blue', textColor=textColor, margin=0)
         
     def _defaultCreateEdge(self, srcItem, dstItem):
         if self.canvas is None:

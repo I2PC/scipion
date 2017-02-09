@@ -20,12 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
-This module contains the protocol to obtain a refined 3D recontruction from a set of particles using Frealign
+This module contains the protocol to obtain a refined 3D reconstruction from a set of particles using Frealign
 """
+
 import pyworkflow.em as em 
 from protocol_frealign_base import ProtFrealignBase
 
@@ -50,6 +51,10 @@ reconstructions.
         vol = em.Volume()
         vol.setFileName(volFn)
         vol.setSamplingRate(inputSet.getSamplingRate())
+        mapHalf1 = self._getFileName('iter_vol1', iter=lastIter)
+        mapHalf2 = self._getFileName('iter_vol2', iter=lastIter)
+        vol.setHalfMaps([mapHalf1, mapHalf2])
+        
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self._getInputParticlesPointer(), vol)
         # Register output Particles with their 3D alignment
@@ -97,5 +102,3 @@ reconstructions.
     def _createItemMatrix(self, item, row):
         from convert import rowToAlignment
         item.setTransform(rowToAlignment(row, item.getSamplingRate()))
-
-

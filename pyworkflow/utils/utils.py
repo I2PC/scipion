@@ -20,18 +20,17 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains utilities functions and classes.
-"""
 
 import sys
 import os
 import re
 from datetime import datetime
 import traceback
+import numpy as np
+from os.path import join
 
 
 def prettyDate(time=False):
@@ -79,7 +78,7 @@ def prettyDate(time=False):
     return str(day_diff/365) + " years ago"
 
 
-def dateStr(dt=None, time=True, secs=False):
+def dateStr(dt=None, time=True, secs=False, dateFormat=None):
     """ Get a normal string representation of datetime. 
     If dt is None, use NOW.
     """
@@ -87,14 +86,24 @@ def dateStr(dt=None, time=True, secs=False):
         dt = datetime.now()
     elif isinstance(dt, float) or isinstance(dt, int):
         dt = datetime.fromtimestamp(dt)
-    dateFormat = '%d-%m-%Y'
-    if time:
-        dateFormat += ' %H:%M'
-        if secs:
-            dateFormat += ':%S'
+
+    if dateFormat is None:
+        dateFormat = '%d-%m-%Y'
+        if time:
+            dateFormat += ' %H:%M'
+            if secs:
+                dateFormat += ':%S'
+
     return dt.strftime(dateFormat)
 
 prettyTime = dateStr
+
+
+def prettyTimestamp(dt=None, format='%Y-%m-%d_%H%M%S'):
+    if dt is None:
+        dt = datetime.now()
+
+    return dt.strftime(format)
 
 
 def prettySize(size):
@@ -360,7 +369,7 @@ In particular:
 HYPER_BOLD = 'bold'
 HYPER_ITALIC = 'italic'
 HYPER_LINK1 = 'link1'
-HYPER_SCIOPEN = 'sciopen'
+HYPER_SCIPION_OPEN = 'sci-open'
 HYPER_LINK2 = 'link2'
 HYPER_ALL = 'all'
 
@@ -534,7 +543,20 @@ class Environ(dict):
     REPLACE = 0
     BEGIN = 1
     END = 2
-    
+
+    def getFirst(self, keys, defaultValue=None):
+        """ Return the value of the first key present in the environment.
+        If none is found, returns the 'defaultValue' parameter.
+        """
+        for k in keys:
+            if k in self:
+                return self.get(k)
+
+        if defaultValue is None:
+            print "None of the variables: %s found in the Environment. Please check scipion.conf files." % (str(keys))
+
+        return defaultValue
+
     def set(self, varName, varValue, position=REPLACE):
         """ Modify the value for some variable.
         Params:
@@ -553,13 +575,21 @@ class Environ(dict):
                 self[varName] = self[varName] + os.pathsep + varValue
         else:
             self[varName] = varValue
-                
             
     def update(self, valuesDict, position=REPLACE):
         """ Use set for each key, value pair in valuesDict. """
         for k, v in valuesDict.iteritems():
             self.set(k, v, position)
-            
+
+    def addLibrary(self, libraryPath, position=BEGIN):
+        """ Adds a path to LD_LIBRARY_PATH at the requested position. If valid (exists)."""
+        if libraryPath is None:
+            return
+        elif os.path.exists(libraryPath):
+            self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
+        else:
+            print "Library path does not exists: % s" % libraryPath
+
             
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
@@ -621,3 +651,36 @@ def readProperties(propsFile):
             k, v = line.split("=", 1)
             myprops[k] = v
     return myprops
+
+
+# ---------------------Color utils --------------------------
+def hex_to_rgb(value):
+    value = value.lstrip('#')
+    lv = len(value)
+    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+
+
+def rgb_to_hex(rgb):
+    return '#%02x%02x%02x' % rgb
+
+
+def lighter(color, percent):
+    '''assumes color is rgb between (0, 0, 0) and (255, 255, 255)'''
+    color = np.array(color)
+    white = np.array([255, 255, 255])
+    vector = white - color
+    return tuple(np.around(color + vector * percent))
+
+
+def formatExceptionInfo(level = 6):
+    error_type, error_value, trbk = sys.exc_info()
+    tb_list = traceback.format_tb(trbk, level)
+    s = "Error: %s \nDescription: %s \nTraceback:" % (error_type.__name__, error_value)
+    for i in tb_list:
+        s += "\n" + i
+    return s
+
+
+def printTraceBack():
+    import traceback
+    traceback.print_stack()
