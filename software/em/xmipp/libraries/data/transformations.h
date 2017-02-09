@@ -434,60 +434,61 @@ void applyGeometry(int SplineDegree,
         		}
         	}
 
-            // Loop over j is splitted according to SplineDegree value
-            // This is due to vectorization -- I have not fully analyzed 
-            // vector dependences for SplineDegree==3 and else branch
-            if (SplineDegree==1)
+            // Loop over j is splitted according to wrap (wrap==true is not
+            // vectorizable) and also according to SplineDegree value
+            // (I have not fully analyzed vector dependences for 
+            // SplineDegree==3 and else branch)
+            if (wrap) 
             {
-                if (wrap) 
+                // This is original implementation
+                for (int j=globalMin; j<globalMax ;j++)
                 {
-                    for (size_t j=globalMin; j<globalMax ;j++)
-                    {   
 #ifdef DEBUG_APPLYGEO
 
-                        std::cout << "Computing (" << i << "," << j << ")\n";
-                        std::cout << "   (y, x) =(" << y << "," << x << ")\n"
-                        << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-                        << std::endl;
+                    std::cout << "Computing (" << i << "," << j << ")\n";
+                    std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                    << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                    << std::endl;
 #endif
-                        // If the point is outside the image, apply a periodic extension
-                        // of the image, what exits by one side enters by the other
-                        bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
-                        bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
+                    bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
+                    bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
 
-                        if (x_isOut)
-                        {
-                            xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                        }
+                    if (x_isOut)
+                    {
+                        xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
+                    }
 
-                        if (y_isOut)
-                        {
-                            yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-                        }
+                    if (y_isOut)
+                    {
+                        yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
+                    }
 
 #ifdef DEBUG_APPLYGEO
 
-                        std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-                        << std::endl;
-                        std::cout << "   Interp = " << interp << std::endl;
-                        // The following line sounds dangerous...
-                        //x++;
+                    std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                    << std::endl;
+                    std::cout << "   Interp = " << interp << std::endl;
+                    // The following line sounds dangerous...
+                    //x++;
 #endif
 
+                    if (SplineDegree==1)
+                    {
                         // Linear interpolation
 
-                        // Calculate the integer position in input image, be careful
-                        // that it is not the nearest but the one at the top left corner
-                        // of the interpolation square. Ie, (0.7,0.7) would give (0,0)
+                        // Calculate the integer position in input image, be 
+                        // careful that it is not the nearest but the one 
+                        // at the top left corner of the interpolation square. 
+                        // Ie, (0.7,0.7) would give (0,0)
                         // Calculate also weights for point m1+1,n1+1
                         double wx = xp + cen_xp;
-                        size_t m1 = (int) wx;
+                        int m1 = (int) wx;
                         wx = wx - m1;
-                        size_t m2 = m1 + 1;
+                        int m2 = m1 + 1;
                         double wy = yp + cen_yp;
-                        size_t n1 = (int) wy;
+                        int n1 = (int) wy;
                         wy = wy - n1;
-                        size_t n2 = n1 + 1;
+                        int n2 = n1 + 1;
 
                         // m2 and n2 can be out by 1 so wrap must be check here
                         if (m2 >= Xdim)
@@ -497,13 +498,15 @@ void applyGeometry(int SplineDegree,
 
 #ifdef DEBUG_APPLYGEO
                         std::cout << "   From (" << n1 << "," << m1 << ") and ("
-                            << n2 << "," << m2 << ")\n";
-                        std::cout << "   wx= " << wx << " wy= " << wy << std::endl;
+                                << n2 << "," << m2 << ")\n";
+                        std::cout << "   wx= " << wx << " wy= " << wy 
+                                << std::endl;
 #endif
 
                         // Perform interpolation
-                        // if wx == 0 means that the rightest point is useless for this
-                        // interpolation, and even it might not be defined if m1=xdim-1
+                        // if wx == 0 means that the rightest point is useless 
+                        // for this interpolation, and even it might not be 
+                        // defined if m1=xdim-1
                         // The same can be said for wy.
                         double wx_1 = (1-wx);
                         double wy_1 = (1-wy);
@@ -517,24 +520,40 @@ void applyGeometry(int SplineDegree,
                         {
                             aux2=wy * wx_1;
                             tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
-    
+
                             if (wx != 0 && m2 < V1.xdim)
                                 tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
                         }
-    
-                        dAij(V2, i, j) = (T) tmp;
 
+                        dAij(V2, i, j) = (T) tmp;
+                    }
+                    else if (SplineDegree==0)
+                    {
+                        dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
+                    }
+                    else if (SplineDegree==3)
+                    {
+                        // B-spline interpolation
+                        dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D_Degree3(xp, yp);
+                    }
+                    else
+                    {
+                        // B-spline interpolation
+                        dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D(xp, yp, SplineDegree);
+                    }
 #ifdef DEBUG_APPYGEO
-                        std::cout << "   val= " << dAij(V2, i, j) << std::endl;
+                    std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
 
-                        // Compute new point inside input image
-                        xp += Aref00;
-                        yp += Aref10;
-                    }
-
+                    // Compute new point inside input image
+                    xp += Aref00;
+                    yp += Aref10;
                 }
-                else {
+            } /* wrap == true */
+            else
+            {
+                if (SplineDegree==1)
+                {
                     #pragma simd reduction (+:xp,yp)
                 	for (int j=globalMin; j<globalMax ;j++)
                     {
@@ -605,155 +624,95 @@ void applyGeometry(int SplineDegree,
                         yp += Aref10;
                     }
                 }
-            }
-            else if (SplineDegree==0)
-            {
-                for (size_t j=globalMin; j<globalMax ;j++) 
+                else if (SplineDegree==0)
                 {
-#ifdef DEBUG_APPLYGEO
-
-                    std::cout << "Computing (" << i << "," << j << ")\n";
-                    std::cout << "   (y, x) =(" << y << "," << x << ")\n"
-                    << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-                    << std::endl;
-#endif
-                    // If the point is outside the image, apply a periodic extension
-                    // of the image, what exits by one side enters by the other
-                    if (wrap)
+                    #pragma simd reduction (+:xp,yp)
+                    for (int j=globalMin; j<globalMax ;j++) 
                     {
-                        bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
-                        bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
-
-                        if (x_isOut)
-                        {
-                            xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                        }
-
-                        if (y_isOut)
-                        {
-                            yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-                        }
-                    }
-
 #ifdef DEBUG_APPLYGEO
 
-                    std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-                    << std::endl;
-                    std::cout << "   Interp = " << interp << std::endl;
-                    // The following line sounds dangerous...
-                    //x++;
+                        std::cout << "Computing (" << i << "," << j << ")\n";
+                        std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                        << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                        << std::endl;
+
+                        std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                        << std::endl;
+                        std::cout << "   Interp = " << interp << std::endl;
+                        // The following line sounds dangerous...
+                        //x++;
 #endif
-                	dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
+                	    dAij(V2, i, j) = (T) A2D_ELEM(V1,(int)trunc(yp),(int)trunc(xp));
 
 #ifdef DEBUG_APPYGEO
-                    std::cout << "   val= " << dAij(V2, i, j) << std::endl;
+                        std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
 
-                    // Compute new point inside input image
-                    xp += Aref00;
-                    yp += Aref10;
-                }
-            }
-            else if (SplineDegree==3)
-            {
-                for (size_t j=globalMin; j<globalMax ;j++)
-                {
-#ifdef DEBUG_APPLYGEO
-
-                    std::cout << "Computing (" << i << "," << j << ")\n";
-                    std::cout << "   (y, x) =(" << y << "," << x << ")\n"
-                    << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-                    << std::endl;
-#endif
-                    // If the point is outside the image, apply a periodic extension
-                    // of the image, what exits by one side enters by the other
-                    if (wrap)
-                    {
-                        bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
-                        bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
-
-                        if (x_isOut)
-                        {
-                            xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                        }
-
-                        if (y_isOut)
-                        {
-                            yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-                        }
+                        // Compute new point inside input image
+                        xp += Aref00;
+                        yp += Aref10;
                     }
-
+                }
+                else if (SplineDegree==3)
+                {
+                    for (int j=globalMin; j<globalMax ;j++)
+                    {
 #ifdef DEBUG_APPLYGEO
 
-                    std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-                    << std::endl;
-                    std::cout << "   Interp = " << interp << std::endl;
-                    // The following line sounds dangerous...
-                    //x++;
+                        std::cout << "Computing (" << i << "," << j << ")\n";
+                        std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                        << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                        << std::endl;
+
+                        std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                        << std::endl;
+                        std::cout << "   Interp = " << interp << std::endl;
+                        // The following line sounds dangerous...
+                        //x++;
 #endif
 
-                	// B-spline interpolation
-                	dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D_Degree3(xp, yp);
+                	    // B-spline interpolation
+                    	dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D_Degree3(xp, yp);
 
 #ifdef DEBUG_APPYGEO
-                    std::cout << "   val= " << dAij(V2, i, j) << std::endl;
+                        std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
 
-                    // Compute new point inside input image
-                    xp += Aref00;
-                    yp += Aref10;
-                }
-            }
-            else
-            {
-                for (size_t j=globalMin; j<globalMax ;j++)
-                {
-#ifdef DEBUG_APPLYGEO
-
-                    std::cout << "Computing (" << i << "," << j << ")\n";
-                    std::cout << "   (y, x) =(" << y << "," << x << ")\n"
-                    << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
-                    << std::endl;
-#endif
-                    // If the point is outside the image, apply a periodic extension
-                    // of the image, what exits by one side enters by the other
-                    if (wrap)
-                    {
-                        bool x_isOut = XMIPP_RANGE_OUTSIDE_FAST(xp, minxpp, maxxpp);
-                        bool y_isOut = XMIPP_RANGE_OUTSIDE_FAST(yp, minypp, maxypp);
-
-                        if (x_isOut)
-                        {
-                            xp = realWRAP(xp, minxp - 0.5, maxxp + 0.5);
-                        }
-
-                        if (y_isOut)
-                        {
-                            yp = realWRAP(yp, minyp - 0.5, maxyp + 0.5);
-                        }
+                        // Compute new point inside input image
+                        xp += Aref00;
+                        yp += Aref10;
                     }
-
+                }
+                else
+                {
+                    for (int j=globalMin; j<globalMax ;j++)
+                    {
 #ifdef DEBUG_APPLYGEO
 
-                    std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
-                    << std::endl;
-                    std::cout << "   Interp = " << interp << std::endl;
-                    // The following line sounds dangerous...
-                    //x++;
+                        std::cout << "Computing (" << i << "," << j << ")\n";
+                        std::cout << "   (y, x) =(" << y << "," << x << ")\n"
+                        << "   before wrapping (y',x')=(" << yp << "," << xp << ") "
+                        << std::endl;
+
+                        std::cout << "   after wrapping (y',x')=(" << yp << "," << xp << ") "
+                        << std::endl;
+                        std::cout << "   Interp = " << interp << std::endl;
+                        // The following line sounds dangerous...
+                        //x++;
 #endif
 
-                	// B-spline interpolation
-                	dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D(
-                			xp, yp, SplineDegree);
+                    	// B-spline interpolation
+                    	dAij(V2, i, j) = (T) BcoeffsToUse->interpolatedElementBSpline2D(xp, yp, SplineDegree);
 #ifdef DEBUG_APPYGEO
-                    std::cout << "   val= " << dAij(V2, i, j) << std::endl;
+                        std::cout << "   val= " << dAij(V2, i, j) << std::endl;
 #endif
 
-                    // Compute new point inside input image
-                    xp += Aref00;
-                    yp += Aref10;
+                        // Compute new point inside input image
+                        xp += Aref00;
+                        yp += Aref10;
+                    }
                 }
-            }
+            } /* wrap == false */
 
         	y++;
         }
