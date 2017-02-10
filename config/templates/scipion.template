@@ -61,6 +61,8 @@ SCIPION_NOTES_PROGRAM =
 SCIPION_NOTES_ARGS =
 SCIPION_NOTES_FILE =  notes.txt
 
+#protocol notifier
+SCIPION_NOTIFY = False
 
 # This section of the configuration file is used to setup variables to
 # compile from sources. Most of them you won't want to change.
