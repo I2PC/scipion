@@ -52,6 +52,8 @@ public:
     FileName fnAligned;
     /** Aligned micrograph */
     FileName fnAvg;
+    /** Aligned micrograph */
+    FileName fnInitialAvg;
     /** Metadata with shifts */
     FileName fnOut;
     /** First and last frame*/

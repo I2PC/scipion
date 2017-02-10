@@ -27,6 +27,7 @@
 # **************************************************************************
 
 import os
+from itertools import izip
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
@@ -35,6 +36,7 @@ import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import MovieAlignment, SetOfMovies, SetOfMicrographs
 from pyworkflow.em.protocol import ProtProcessMovies
+from pyworkflow.gui.plotter import Plotter
 
 
 class ProtAlignMovies(ProtProcessMovies):
@@ -169,7 +171,7 @@ class ProtAlignMovies(ProtProcessMovies):
                    % (allDone, len(self.listOfMovies)))
         self.debug('   streamMode: %s' % streamMode)
 
-        if self._doGenerateOutputMovies():
+        if self._createOutputMovies():
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
@@ -186,8 +188,9 @@ class ProtAlignMovies(ProtProcessMovies):
                 self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
-        if self.getAttributeValue('doSaveAveMic', True):
-            micSet = self._loadOutputSet(SetOfMicrographs, 'micrographs.sqlite')
+        def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
+            """ Updated the output micrographs set with new items found. """
+            micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -195,12 +198,12 @@ class ProtAlignMovies(ProtProcessMovies):
                 mic.setMicName(movie.getMicName())
                 # The subclass protocol is responsible of generating the output
                 # micrograph file in the extra path with the required name
-                extraMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
-            self._updateOutputSet('outputMicrographs', micSet, streamMode)
+            self._updateOutputSet(outputName, micSet, streamMode)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -209,28 +212,15 @@ class ProtAlignMovies(ProtProcessMovies):
                 # different movie alignment
                 self._defineTransformRelation(self.inputMovies, micSet)
 
-            if (self.getAttributeValue('useMotioncor2', False) == True and
-                self.getAttributeValue('frameDose', 0.0) != 0.0):
-                micSet2 = self._loadOutputSet(SetOfMicrographs,
-                                              'micrographs_dose-weighted.sqlite')
+        if self._createOutputMicrographs():
+            _updateOutputMicSet('micrographs.sqlite',
+                                self._getOutputMicName,
+                                'outputMicrographs')
 
-                for movie in newDone:
-                    mic2 = micSet2.ITEM_TYPE()
-                    mic2.copyObjId(movie)
-                    mic2.setMicName(movie.getMicName())
-                    # The subclass protocol is responsible of generating the output
-                    # micrograph file in the extra path with the required name
-                    extraMicFn2 = self._getExtraPath(self._getOutputMicWtName(movie))
-                    mic2.setFileName(extraMicFn2)
-                    self._preprocessOutputMicrograph(mic2, movie)
-                    # FIXME The micSet is not setting properly dimensions (No-Dim)
-                    micSet2.append(mic2)
-
-                self._updateOutputSet('outputMicrographsDoseWt',
-                                      micSet2, streamMode)
-
-                if firstTime:
-                    self._defineTransformRelation(self.inputMovies, micSet2)
+        if self._createOutputWeightedMicrographs():
+            _updateOutputMicSet('micrographs_dose-weighted.sqlite',
+                                self._getOutputMicWtName,
+                                'outputMicrographsDoseWeighted')
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -245,13 +235,17 @@ class ProtAlignMovies(ProtProcessMovies):
         if (self.cropDimX > 0 and self.cropDimY <= 0 or
                         self.cropDimY > 0 and self.cropDimX <= 0):
             errors.append("If you give cropDimX, you should also give cropDimY"
-                          " and viceversa")
+                          " and vice versa")
 
         # movie = self.inputMovies.get().getFirstItem()
         # # Close movies db because the getFirstItem open it
         # # we do not want to leave the file open
         # self.inputMovies.get().close()
         # frames = movie.getNumberOfFrames()
+
+        # Do not continue if there ar no movies. Validation message will take place since attribute is a Pointer.
+        if self.inputMovies.get() is None:
+            return errors
 
         firstFrame, lastFrame, _ = self.inputMovies.get().getFramesRange()
         if lastFrame == 0:
@@ -398,13 +392,23 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         return [], []
 
-    def _doGenerateOutputMovies(self):
+    def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
         either with alignment only or the binary aligned movie files.
         Subclasses can override this function to change this behavior.
         """
         return True
+
+    def _createOutputMicrographs(self):
+        """ By default check if the user have selected 'doSaveAveMic'
+        property. Subclasses can override this method to implement different
+        behaviour.
+        """
+        return self.getAttributeValue('doSaveAveMic', True)
+
+    def _createOutputWeightedMicrographs(self):
+        return False
 
     def _preprocessOutputMicrograph(self, mic, movie):
         """ Hook function that will be call before adding the micrograph
@@ -416,6 +420,20 @@ class ProtAlignMovies(ProtProcessMovies):
         """ Implement this method if you want to store the summary. """
         pass
 
+    def _getCorrectedDose(self, movieSet):
+        """get and correct the pre-exposure dose. It is important for cases
+        in which the first frame is different of one. The method support both
+        movie and sets of movies"""
+        
+        firstFrame, _, _ = movieSet.getFramesRange()
+        preExp = movieSet.getAcquisition().getDoseInitial()
+        dose = movieSet.getAcquisition().getDosePerFrame()
+        preExp += dose * (firstFrame - 1)
+        
+        return preExp, dose
+        
+        
+    
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
@@ -491,3 +509,40 @@ class ProtAlignMovies(ProtProcessMovies):
         data1[:, m:] = data2[:, m:]
         psd.setData(data1)
         psd.write(outputFn)
+
+def createAlignmentPlot(meanX, meanY):
+    """ Create a plotter with the cumulative shift per frame. """
+    sumMeanX = []
+    sumMeanY = []
+    figureSize = (8, 6)
+    plotter = Plotter(*figureSize)
+    figure = plotter.getFigure()
+
+    preX = 0.0
+    preY = 0.0
+    sumMeanX.append(0.0)
+    sumMeanY.append(0.0)
+    ax = figure.add_subplot(111)
+    ax.grid()
+    ax.set_title('Cartesian representation')
+    ax.set_xlabel('Drift x (pixels)')
+    ax.set_ylabel('Drift y (pixels)')
+    ax.plot(0, 0, 'yo-')
+    i = 1
+    for x, y in izip(meanX, meanY):
+        preX += x
+        preY += y
+        sumMeanX.append(preX)
+        sumMeanY.append(preY)
+        #ax.plot(preX, preY, 'yo-')
+        ax.text(preX-0.02, preY+0.02, str(i))
+        i += 1
+
+    ax.plot(sumMeanX, sumMeanY, color='b')
+    ax.plot(sumMeanX, sumMeanY, 'yo')
+
+    plotter.tightLayout()
+
+    return plotter
+
+

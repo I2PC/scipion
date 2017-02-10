@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -39,7 +39,7 @@ class TestGautomatchBase(BaseTest):
     @classmethod
     def setData(cls):
         cls.ds = DataSet.getDataSet('igbmc_gempicker')
-    
+
     @classmethod
     def runImportAverages(cls):
         """ Run an Import averages protocol. """
@@ -73,9 +73,22 @@ class TestGautomatchBase(BaseTest):
                                        samplingRate=4.4, 
                                        voltage=120, sphericalAberration=2,
                                        magnification=66000)
-    
+
     @classmethod
-    def runPicking(cls):
+    def runImportCoords(cls):
+        """ Run an Import coords protocol. """
+        cls.protImportCoords = cls.newProtocol(ProtImportCoordinates,
+                                               importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
+                                               objLabel='import bad coords',
+                                               filesPath=cls.ds.getFile('coords/'),
+                                               filesPattern='*.pos',
+                                               boxSize=100)
+        cls.protImportCoords.inputMicrographs.set(cls.protImportMics.outputMicrographs)
+        cls.launchProtocol(cls.protImportCoords)
+        return cls.protImportCoords
+
+    @classmethod
+    def runPicking1(cls):
         """ Run a particle picking. """
         protGM = ProtGautomatch(objLabel='Gautomatch auto-picking (klh)',
                                invertTemplatesContrast=True,
@@ -89,6 +102,23 @@ class TestGautomatchBase(BaseTest):
         cls.launchProtocol(protGM)
         return protGM
 
+    @classmethod
+    def runPicking2(cls):
+        """ Run a particle picking with excludsive options. """
+        protGM2 = ProtGautomatch(objLabel='Gautomatch auto-picking 2 (klh)',
+                                invertTemplatesContrast=True,
+                                threshold=0.18,
+                                particleSize=250,
+                                advanced='False',
+                                boxSize=150,
+                                localSigmaCutoff=2.0,
+                                exclusive=True)
+        protGM2.inputMicrographs.set(cls.protImportMics.outputMicrographs)
+        protGM2.inputReferences.set(cls.protImportAvgs.outputAverages)
+        protGM2.inputBadCoords.set(cls.protImportCoords.outputCoordinates)
+        cls.launchProtocol(protGM2)
+        return protGM2
+
 class TestGautomatchAutomaticPicking(TestGautomatchBase):
     """This class check if the protocol to pick the micrographs automatically by gautomatch works properly."""
     @classmethod
@@ -97,7 +127,8 @@ class TestGautomatchAutomaticPicking(TestGautomatchBase):
         TestGautomatchBase.setData()
         cls.protImportMics = cls.runImportMicrographKLH()
         cls.protImportAvgs = cls.runImportAverages()
+        cls.protImportCoords = cls.runImportCoords()
     
     def testAutomaticPicking(self):
-        print "Run automatic particle picking"
-        self.runPicking()
+        self.runPicking1()
+        self.runPicking2()

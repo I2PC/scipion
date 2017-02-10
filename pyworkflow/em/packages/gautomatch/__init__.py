@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -28,8 +28,11 @@ This EM module contains Gautomatch auto-picking protocol
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
+from convert import getEnviron
 
 _logo = "gautomatch_logo.png"
 
 from protocol_gautomatch import ProtGautomatch
-from wizard import GautomatchParticleWizard, GautomatchPickerWizard
+from viewer import GautomatchViewer
+from wizard import *
+_environ = getEnviron()

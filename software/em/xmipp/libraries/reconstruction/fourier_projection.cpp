@@ -44,7 +44,6 @@ void FourierProjector::project(double rot, double tilt, double psi, const Multid
 
     projectionFourier.initZeros();
     double maxFreq2=maxFrequency*maxFrequency;
-    double volumePaddedSize=XSIZE(VfourierRealCoefs);
     int Xdim=(int)XSIZE(VfourierRealCoefs);
     int Ydim=(int)YSIZE(VfourierRealCoefs);
     int Zdim=(int)ZSIZE(VfourierRealCoefs);
@@ -203,6 +202,7 @@ void FourierProjector::produceSideInfo()
     volume->clear();
     // Make Fourier transform, shift the volume origin to the volume center and center it
     MultidimArray< std::complex<double> > Vfourier;
+    FourierTransformer transformer3D;
     transformer3D.completeFourierTransform(Vpadded,Vfourier);
     ShiftFFT(Vfourier, FIRST_XMIPP_INDEX(XSIZE(Vpadded)), FIRST_XMIPP_INDEX(YSIZE(Vpadded)), FIRST_XMIPP_INDEX(ZSIZE(Vpadded)));
     CenterFFT(Vfourier,true);
@@ -220,9 +220,20 @@ void FourierProjector::produceSideInfo()
         Complex2RealImag(Vfourier, VfourierRealAux, VfourierImagAux);
         Vfourier.clear();
         produceSplineCoefficients(BSPLINE3,VfourierRealCoefs,VfourierRealAux);
+
+        // Release memory as soon as you can
+        VfourierRealAux.clear();
+
+        // Remove all those coefficients we are sure we will not use during the projections
+        volumePaddedSize=XSIZE(VfourierRealCoefs);
+        int idxMax=maxFrequency*XSIZE(VfourierRealCoefs)+10; // +10 is a safety guard
+        idxMax=std::min(FINISHINGX(VfourierRealCoefs),idxMax);
+        int idxMin=std::max(-idxMax,STARTINGX(VfourierRealCoefs));
+        VfourierRealCoefs.selfWindow(idxMin,idxMin,idxMin,idxMax,idxMax,idxMax);
+
         produceSplineCoefficients(BSPLINE3,VfourierImagCoefs,VfourierImagAux);
-        //VfourierRealAux.clear();
-        //VfourierImagAux.clear();
+        VfourierImagAux.clear();
+        VfourierImagCoefs.selfWindow(idxMin,idxMin,idxMin,idxMax,idxMax,idxMax);
     }
     else
         Complex2RealImag(Vfourier, VfourierRealCoefs, VfourierImagCoefs);

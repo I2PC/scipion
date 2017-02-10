@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'roberto@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -31,6 +31,8 @@ from protocol import EMProtocol
 import time
 import xmipp
 import random
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename, exists
@@ -40,6 +42,7 @@ class ProtCreateStreamData(EMProtocol):
     """ create  setofXXXX in streaming mode.
     """
     _label="create stream data"
+    _version = VERSION_1_1
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200
@@ -72,10 +75,10 @@ class ProtCreateStreamData(EMProtocol):
         form.addParam('samplingRate', params.FloatParam,default=4,
                       label="samplingRate",
                       help="Sampling rate")
-        form.addParam('creationInteval', params.IntParam,default=60,
+        form.addParam('creationInterval', params.IntParam,default=60,
               label="Create Object each (sec)",
               pointerClass='EMProtocol',
-              help="create one object each creationInteval seconds")
+              help="create one object each creationInterval seconds")
         form.addParam('delay', params.IntParam,default=0,
                       label="delay (sec)",
                       help="wait this seconds before creating stram data")
@@ -195,7 +198,7 @@ class ProtCreateStreamData(EMProtocol):
         args += " --sampling %f"%self.samplingRate
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
         self.xmippMic[baseFnImageCTF] = True
-        time.sleep(self.creationInteval.get())
+        time.sleep(self.creationInterval.get())
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):

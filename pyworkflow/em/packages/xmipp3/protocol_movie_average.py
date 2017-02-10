@@ -28,6 +28,7 @@
 
 import os
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtAlignMovies
 from convert import writeMovieMd
 
@@ -41,6 +42,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     Protocol to average movies
     """
     _label = 'movie average'
+    _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
 
@@ -154,7 +156,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     def _getShiftsFile(self, movie):
         return self._getExtraPath(self._getMovieRoot(movie) + '_shifts.xmd')
     
-    def _doGenerateOutputMovies(self):
+    def _createOutputMovies(self):
         """ Returns True if an output set of movies will be generated.
         The most common case is to always generate output movies,
         either with alignment only or the binary aligned movie files.

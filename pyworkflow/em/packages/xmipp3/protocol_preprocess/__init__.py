@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -41,6 +41,12 @@ from protocol_preprocess import XmippProtPreprocessVolumes
 from protocol_image_operate import XmippOperateHelper
 from protocol_image_operate import XmippProtImageOperateParticles
 from protocol_image_operate import XmippProtImageOperateVolumes
+from protocol_image_operate import OP_PLUS, OP_MINUS, OP_MULTIPLY, \
+                                   OP_DIVIDE, OP_MINIMUM, OP_MAXIMUM, \
+                                   OP_DOTPRODUCT, OP_LOG, OP_LOG10, \
+                                   OP_SQRT, OP_ABS, OP_POW, OP_SLICE, \
+                                   OP_COLUNM, OP_ROW, OP_RADIAL, OP_RESET
 
 from protocol_create_mask3d import XmippProtCreateMask3D
 from protocol_create_mask2d import XmippProtCreateMask2D
+

@@ -21,32 +21,33 @@ EM_ROOT = software/em
 
 BSOFT_HOME = %(EM_ROOT)s/bsoft-1.9.0
 CTFFIND_HOME = %(EM_ROOT)s/ctffind
-CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
+CTFFIND4_HOME = %(EM_ROOT)s/ctffind4-4.1.5
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
-EMAN2DIR = %(EM_ROOT)s/eman2.12
-FREALIGN_HOME = %(EM_ROOT)s/frealign
-GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch_v0.53
-GAUTOMATCH = Gautomatch-v0.53_sm_20_cu5.5_x86_64
-GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker_v1.1
+EMAN2DIR = %(EM_ROOT)s/eman-2.12
+FREALIGN_HOME = %(EM_ROOT)s/frealign-9.07
+GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch-0.53
+GAUTOMATCH = Gautomatch-v0.53_sm_20_cu7.5_x86_64
+GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker-1.1
 GEMPICKER = gEMpicker_nocuda_Ubuntu_14.04.x64
-GEMPICKER_CUDA = None # gEMpicker_cuda_55.x64
-GCTF_HOME = %(EM_ROOT)s/Gctf_v0.50
-GCTF = Gctf-v0.50_sm_30_cu5.5_x86_64
-LOCALREC_HOME = %(EM_ROOT)s/localrec
-MAGDIST_HOME = %(EM_ROOT)s/mag_distortion
+GEMPICKER_CUDA = None # gEMpicker_cuda_75.x64
+GCTF_HOME = %(EM_ROOT)s/Gctf-1.06
+GCTF = Gctf-1.06_sm_20_cu7.5_x86_64
+IMAGIC_HOME = %(EM_ROOT)s/imagic
+LOCALREC_HOME = %(EM_ROOT)s/localrec-1.1.0
+MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
-MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr
+MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
 MOTIONCORR_CUDA_LIB = None
-MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2
+MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-16.10.19
 NMA_HOME = %(EM_ROOT)s/nma
 PYTOM_HOME = %(EM_ROOT)s/pytom
-RELION_HOME = %(EM_ROOT)s/relion-1.4
-RESMAP_HOME = %(EM_ROOT)s/resmap
-SIMPLE_HOME = %(EM_ROOT)s/simple
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-SUMMOVIE_HOME = %(EM_ROOT)s/summovie
-UNBLUR_HOME = %(EM_ROOT)s/unblur
+RELION_HOME = %(EM_ROOT)s/relion-2.0
+RESMAP_HOME = %(EM_ROOT)s/resmap-1.1.5s2
+SIMPLE_HOME = %(EM_ROOT)s/simple-2.1
+SPIDER_HOME = %(EM_ROOT)s/spider-21.13/spider
+SUMMOVIE_HOME = %(EM_ROOT)s/summovie-1.0.2
+UNBLUR_HOME = %(EM_ROOT)s/unblur-1.0.2
 XMIPP_HOME = %(EM_ROOT)s/xmipp
 
 # Some visualization packages
@@ -81,6 +82,10 @@ MPI_LIB = mpi
 MPI_LIBDIR = /usr/lib64/mpi/gcc/openmpi/lib
 MPI_INCLUDE = /usr/lib64/mpi/gcc/openmpi/include
 MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
+
+# NVCC (CUDA) variables
+# Default CUDA path if not defined for a certain package
+CUDA_LIB = /usr/local/cuda-7.5/lib64
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 

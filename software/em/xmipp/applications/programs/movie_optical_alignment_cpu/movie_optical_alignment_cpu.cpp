@@ -126,6 +126,8 @@ public:
         {
             fnMicUncOut = getParam("--oUnc",0);
         	fnMovieUncOut = getParam("--oUnc",1);
+        	if (fnMicUncOut!="" && fnMovieUncOut=="")
+        		REPORT_ERROR(ERR_ARG_MISSING,"Writing the uncompensated images require both movie and micrograph");
         }
         finalGroupSize = getIntParam("--groupSize");
         nfirst = getIntParam("--frameRange",0);
@@ -301,6 +303,7 @@ public:
         {
             movie.read(fnMovie);
             getImageSize(movie, Xdim, Ydim, Zdim, Ndim);
+            Ndim=movie.size();
         }
         else
         {
@@ -395,7 +398,7 @@ public:
                 {
                 	movie.getValue(MDL_SHIFT_X, XX(shift), __iter.objId);
                 	movie.getValue(MDL_SHIFT_Y, YY(shift), __iter.objId);
-                    translate(LINEAR, translatedImage(), frameImage(), shift, WRAP);
+                    translate(BSPLINE3, translatedImage(), frameImage(), shift, WRAP);
                     frameImage()=translatedImage();
                 }
 
@@ -515,7 +518,6 @@ public:
 
                 d_flowx.download(flowCurrentGroup[0]);
                 d_flowy.download(flowCurrentGroup[1]);
-                d_currentReference8.release();
                 d_currentGroupAverage8.release();
                 d_flowx.release();
                 d_flowy.release();
@@ -608,7 +610,9 @@ public:
                 }
                 cvNewReference+=cvUndeformedGroupAverage;
             }
-
+#ifdef GPU
+            d_currentReference8.release();
+#endif
             cvCurrentReference=cvNewReference;
             cvCurrentReference*=1.0/numberOfGroups;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);

@@ -20,12 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
 
 import numpy as np
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.em import ImageHandler
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import ProtParticles, IntParam
@@ -37,7 +38,7 @@ class ProtLocalizedExtraction(ProtParticles):
     """
     
     _label = 'localized extraction'
-    
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -145,7 +146,7 @@ class ProtLocalizedExtraction(ProtParticles):
         firstCoord = inputCoords.getFirstItem()
 
         if not firstCoord.hasAttribute('_subparticle'):
-            errors.append('The selected input coordinates does not are the'
+            errors.append('The selected input coordinates does not are the '
                           'output from a localized-subparticles protocol.')
 
         return errors

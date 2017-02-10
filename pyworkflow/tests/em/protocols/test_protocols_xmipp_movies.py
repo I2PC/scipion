@@ -41,15 +41,16 @@ class TestXmippBase(BaseTest):
     
     @classmethod
     def runImportMovie(cls, pattern, samplingRate, voltage, scannedPixelSize,
-                       magnification, sphericalAberration):
+                       magnification, sphericalAberration, dosePerFrame=None):
         """ Run an Import micrograph protocol. """
 
         kwargs = {
-            'filesPath': pattern,
-            'magnification': magnification,
-            'voltage': voltage,
-            'sphericalAberration': sphericalAberration
-        }
+                 'filesPath': pattern,
+                 'magnification': magnification,
+                 'voltage': voltage,
+                 'sphericalAberration': sphericalAberration,
+                 'dosePerFrame' : dosePerFrame
+                  }
 
         # We have two options: pass the SamplingRate or
         # the ScannedPixelSize + microscope magnification
@@ -78,14 +79,15 @@ class TestXmippBase(BaseTest):
     def runImportMovie1(cls, pattern):
         """ Run an Import movie protocol. """
         return cls.runImportMovie(pattern, samplingRate=1.14, voltage=300,
-                                  sphericalAberration=2.26,
+                                  sphericalAberration=2.26, dosePerFrame=1.5,
                                   scannedPixelSize=None, magnification=50000)
     
     @classmethod
     def runImportMovie2(cls, pattern):
         """ Run an Import movie protocol. """
         return cls.runImportMovie(pattern, samplingRate=1.4, voltage=300,
-                                  sphericalAberration=2.7, scannedPixelSize=None,
+                                  sphericalAberration=2.7, dosePerFrame=1.5,
+                                  scannedPixelSize=None,
                                   magnification=61000)
 
 
@@ -130,7 +132,7 @@ class TestOFAlignment(TestXmippBase):
     
     def testAlignOFSaveMovieNoMic(self):
         protOF4 = self.runOFProtocol(self.protImport1.outputMovies,
-                                     label="Save Movie", saveMic=False, 
+                                     label="Save Movie", saveMic=False,
                                      saveMovie=True)
         self.assertIsNotNone(protOF4.outputMovies,
                              "SetOfMovies has not been created.")
@@ -203,7 +205,7 @@ class TestCorrelationAlignment(BaseTest):
                          msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
 
     def test_qbeta(self):
-        prot = self.newProtocol(XmippProtMovieCorr)
+        prot = self.newProtocol(XmippProtMovieCorr,doPSD=True)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
@@ -213,7 +215,8 @@ class TestCorrelationAlignment(BaseTest):
 
     def test_cct(self):
         prot = self.newProtocol(XmippProtMovieCorr,
-                                doSaveMovie=True)
+                                doSaveMovie=True,
+                                doPSD=True)
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
 
@@ -225,7 +228,8 @@ class TestCorrelationAlignment(BaseTest):
         prot = self.newProtocol(XmippProtMovieCorr,
                                 alignFrame0=3, alignFrameN=5,
                                 sumFrame0=3, sumFrameN=5,
-                                cropOffsetX=10, cropOffsetY=10)
+                                cropOffsetX=10, cropOffsetY=10,
+                                doPSD=True)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 

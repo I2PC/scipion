@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -142,7 +142,7 @@ class ProtGemPicker(em.ProtParticlePicking):
     #--------------------------- STEPS functions ---------------------------------------------------
 
     def convertInputStep(self, micsId, refsId):
-        """ This step will take of the convertions from the inputs.
+        """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrc' format
         Mask: either converted (to '.tif' format) or generated a circular one
@@ -187,7 +187,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         value2 = round(self.thresholdHigh,1)
         
         if (self.thresholdLow < self.thresholdHigh and 
-            0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0):
+                        0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0):
             pass
         else:
             errors.append('Wrong threshold values!')
@@ -249,7 +249,7 @@ class ProtGemPicker(em.ProtParticlePicking):
         return args
 
     def convertInputs(self, workingDir):
-        """ This step will take of the convertions from the inputs.
+        """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
         References: will always be converted to '.mrc' format
         Mask: either converted (to '.tif' format) or generated a circular one

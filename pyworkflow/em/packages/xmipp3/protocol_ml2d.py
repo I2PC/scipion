@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # *****************************************************************************
 
@@ -65,7 +65,7 @@ class XmippProtML2D(ProtClassify2D):
                   'input_references': self._getTmpPath('input_references.xmd'),
                   'output_classes': self._getOroot() + 'classes.xmd',
                   'final_classes': self._getPath('classes2D.sqlite'),
-                  'output_particles': self._getPath('ml2d_images.xmd'),
+                  'output_particles': self._getOroot() + 'images.xmd',
                   'classes_scipion': self._getPath('classes_scipion_iter_%(iter)02d.sqlite')
                   }
         self._updateFilenamesDict(myDict)

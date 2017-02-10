@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -30,11 +30,13 @@ import sys
 
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 
 
 class XmippProtCombinePdb(em.ProtImportFiles):
     """ Combine two PDB files into a single one.  """
     _label = 'combine PDBs'
+    _version = VERSION_1_1
     IMPORT_FROM_ID = 0
     IMPORT_OBJ = 1
     IMPORT_FROM_FILES = 2 

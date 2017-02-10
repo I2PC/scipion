@@ -21,12 +21,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from os.path import join, exists
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import IntParam, PointerParam, EnumParam, FloatParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.convert import ImageHandler
@@ -45,6 +46,7 @@ class ImagicProtMSA(ImagicProtocol):
 
     """
     _label = 'msa'
+    _version = VERSION_1_1
     MSA_DIR = 'MSA'
 
     def __init__(self, **kwargs):
@@ -63,7 +65,8 @@ class ImagicProtMSA(ImagicProtocol):
         form.addParam('inputParticles', PointerParam, label="Input particles", important=True,
                       pointerClass='SetOfParticles',
                       help='Select the input particles to perform MSA.')
-        form.addParam('distanceType', EnumParam, default=MODULATION, choices=['EUCLIDIAN', 'CHISQUARE', 'MODULATION'],
+        form.addParam('distanceType', EnumParam, default=MODULATION,
+                      choices=['EUCLIDIAN', 'CHISQUARE', 'MODULATION'],
                       label='MSA distance type',  expertLevel=LEVEL_ADVANCED,
                       help='Select general metric for square distance between images:\n\n'
                            'a. Euclidian metric (Principal Components Analysis: PCA)\n'

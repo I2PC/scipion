@@ -135,8 +135,8 @@ void ProgassignmentTiltPair::search_affine_transform(float u1x, float u1y, float
 			{
 
 				write_DCEL(delaunay_tilt.dcel, 0, "tiltdata_dcel.txt");
-				std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
-				printf("Maybe the warning involves the tilt coordinates ( %f , %f ) \n", t_dist.x, t_dist.y);
+				//std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR" << std::endl;
+				//printf("Maybe the warning involves the tilt coordinates ( %f , %f ) \n", t_dist.x, t_dist.y);
 				continue;
 			}
 			VEC_ELEM(dist_vec,tt) = dist;
@@ -242,15 +242,6 @@ void ProgassignmentTiltPair::run()
 
 	exist1 = fnuntilt.existsTrim();
 	exist2 = fntilt.existsTrim();
-
-
-
-//	std::cout << "fnuntilt = " << fnuntilt << std::endl;
-//	std::cout << "exist 1 = " << exist1 << std::endl;
-//	std::cout << "fntilt = " << fntilt << std::endl;
-//	std::cout << "exist 2 = " << exist2 << std::endl;
-//	std::cout << "exist = " << (exist1 && exist2) << std::endl;
-
 
 	if ((exist1 && exist2) == true)
 	{
@@ -398,8 +389,6 @@ void ProgassignmentTiltPair::run()
 			if (!checkwindow(t1.y, t2.y, t3.y, uy_max, uy_min))
 				continue;
 
-			//End New Idea
-
 			search_affine_transform(u1.x, u1.y, u2.x, u2.y, u3.x, u3.y, t1.x,
 					t1.y, t2.x, t2.y, t3.x, t3.y,
 					ux, uy, Xdim, Ydim, delaunay_tilt, bestInliers,
@@ -433,8 +422,8 @@ void ProgassignmentTiltPair::run()
 			t_dist.y = VEC_ELEM(t_test,1);
 			if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
-				std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR (in Coarse Phase)" << std::endl;
-				std::cout << "Maybe the warning involves the tilt coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
+				//std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR (in Coarse Phase)" << std::endl;
+				//std::cout << "Maybe the warning involves the tilt coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
 				continue;
 			}
 			if (dist<thr*particle_size)
@@ -613,8 +602,8 @@ void ProgassignmentTiltPair::run()
 			t_dist.y = VEC_ELEM(t_test,1);
 			if (!select_Closest_Point(&delaunay_tilt, &t_dist, &t_closest, &dist) )
 			{
-				std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR (in writing phase)" << std::endl;
-				std::cout << "Maybe the warning involves the tilt coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
+				//std::cerr << "WARNING IN TRIANGULATION OR CLOSEST NEIGHBOUR (in writing phase)" << std::endl;
+				//std::cout << "Maybe the warning involves the tilt coordinates " << "(" << t_dist.x << ", " << t_dist.y << ")" << std::endl;
 				continue;
 			}
 

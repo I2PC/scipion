@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -59,7 +59,7 @@ def getEnviron():
     """
     global SPIDER
     env = Environ(os.environ)
-    SPIDER_DIR = env.get('SPIDER_DIR', None) # Scipion definition
+    SPIDER_DIR = env.getFirst(('SPIDER_HOME', 'SPIDER_DIR'))  # Scipion definition
     
     if SPIDER_DIR is None:
         errors = ''

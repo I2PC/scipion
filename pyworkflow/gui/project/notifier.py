@@ -45,6 +45,9 @@ class ProjectNotifier(object):
     def _getUuidFileName(self):
         return self.project.getLogPath("uuid.log")
 
+    def _getDataFileName(self):
+        return self.project.getLogPath("data.log")
+
     def _getUuid(self):
         # Load (or create if not exits) a file
         # in the project Logs folder to store an unique
@@ -82,6 +85,16 @@ class ProjectNotifier(object):
         #print "dataDict: ", dataDict
         os.utime(self._getUuidFileName(), (now, now))
 
+    def _dataModified(self, projectWorfklow):
+        try:
+            with open(self._getDataFileName()) as f:
+                projectWorfklow2 = f.readline()
+                if projectWorfklow2 == projectWorfklow:
+                    return False
+        except IOError:
+            pass
+        return True
+
     def notifyWorkflow(self):
         #check if enviroment exists otherwise abort
         if not pwutils.envVarOn('SCIPION_NOTIFY'):
@@ -94,11 +107,20 @@ class ProjectNotifier(object):
             #print "sec, no notification", seconds
             return
 
-        # TODO: Check send frequency
+        # INFO: now we are only sending the protocols names in the project.
+        # We could pass namesOnly=False to get the full workflow template
+        projectWorfklow = self.project.getProtocolsJson(namesOnly=True)
+
+        #if list with workflow has not been altered do not sent it
+        if not self._dataModified(projectWorfklow):
+            #print "No change: Do not send new data"
+            return
+        else:
+            with open(self._getDataFileName(),'w') as f:
+                f.write(projectWorfklow)
+            #print "change send new data"
         dataDict = {'project_uuid': self._getUuid(),
-                    'project_workflow': self.project.getProtocolsNameJson()}
-        #INFO: you may use getProtocolsJson instead of getProtocolsNameJson
-        #if you want to store all the project
+                    'project_workflow': projectWorfklow}
 
         urlName = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
         urlName += "addOrUpdateWorkflow/"

@@ -461,7 +461,8 @@ class XmippProtCL2D(ProtClassify2D):
         lastLevel = self._lastLevel()
         for i in range(lastLevel):
             classFn = self._getLevelMdClasses(lev=i, block="", subset=subset)
-            levelMdFiles.append(classFn)
+            if exists(classFn):
+                levelMdFiles.append(classFn)
         return levelMdFiles
     
     def _createItemMatrix(self, item, row):
@@ -507,7 +508,8 @@ class XmippProtCL2D(ProtClassify2D):
             xmpMd = self._getLevelMdImages(level, subset)
             
         iterator = md.SetMdIterator(xmpMd, sortByLabel=md.MDL_ITEM_ID,
-                                    updateItemCallback=self._updateParticle)
+                                    updateItemCallback=self._updateParticle,
+                                    skipDisabled=True)
         
         # itemDataIterator is not neccesary because, the class SetMdIterator
         # contain all the information about the metadata
