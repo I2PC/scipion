@@ -114,6 +114,40 @@ def main():
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
+def chekReport(Config):
+    "Check if protocol statistics should be collected"
+    reportOn = Config.get('VARIABLES','SCIPION_NOTIFY')
+    print("ooooo", reportOn)
+    if reportOn=='False':
+        print("aaaaa")
+        # This works for  Python 2.x. and Python 3
+        try: 
+           input = raw_input
+        except NameError: 
+             pass
+        print("""The Scipion developers team would appreciate if you 
+anonymously share your protocol usage statistics. These statistics
+just include the name of the protocols executed in your machine.
+We understand, of course, that some people do not wish to have any 
+information collected from them. You can enable or disable the 
+collection of information at any time (by default it is disabled).
+
+This information will help our team to understand the popularity of 
+the different protocols and prioritize support for the more popular ones.
+
+Please, note that the statistics are completely anonymous and do not include 
+protocol parameters, file names or any data that can be used to identify
+your account, machine or data. In the URL 
+https://github.com/I2PC/scipion/wiki/Collecting-Usage-Statistics-for-Scipion 
+you may see examples of the transmited data as well as the 
+statistics created with it. You can always deactivate/activate 
+this option by editing the file $HOME/.config/scipion/scipion.conf 
+and setting the variable SCIPION_NOTIFY to False/True respectively.
+""")
+
+        prompt = input("Press [y|Y]<enter> is you want to share data, otherwise just press <enter>: ")
+        if prompt == 'y' or prompt=='Y':
+            Config.set('VARIABLES','SCIPION_NOTIFY','True')
 
 def createConf(fpath, ftemplate, remove=[], keep=[]):
     "Create config file in fpath following the template in ftemplate"
@@ -143,12 +177,16 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
 
+
     # Update with our guesses.
     if 'BUILD' in cf.sections():
         for options in [guessJava(), guessMPI()]:
             for key in options:
                 if key in cf.options('BUILD'):
                     cf.set('BUILD', key, options[key])
+    # Collecting Protocol Usage Statistics 
+    elif 'VARIABLES' in cf.sections():
+        chekReport(cf)
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
