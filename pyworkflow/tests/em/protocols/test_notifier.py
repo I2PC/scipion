@@ -36,10 +36,7 @@ class TestNotifier(BaseTest):
         setupTestProject(cls)
 
     def _getUrl(self):
-        if not pwutils.envVarOn('SCIPION_NOTIFY'):
-            return ''
-
-        return os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        return os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
 
     def test_projectNotifier(self):
         """ Execute a protocol and then report on it
@@ -50,6 +47,7 @@ class TestNotifier(BaseTest):
 
         #change periodicy in notification
         os.environ["SCIPION_NOTIFY_SECONDS"] = "30"
+        os.environ["SCIPION_NOTIFY"] = "True"
         if not url:
             print "SCIPION_NOTIFY and SCIPION_NOTIFY_URL should be defined!"
             print "A test server is at Heroku, you can setup as:"
@@ -59,7 +57,6 @@ class TestNotifier(BaseTest):
 
         url = url.replace("workflow/workflow/",
                           "workflow/protocol/?name=ProtStress")
-
         results = json.loads(urllib2.urlopen(url).read())
         objects = results["objects"]
         if  (len(objects)!=0):
