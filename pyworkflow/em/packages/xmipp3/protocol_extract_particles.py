@@ -166,7 +166,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'values from a Gaussian with zero-mean and '
                            'unity-standard deviation.')
 
-        form.addParam('thresholdDust', params.FloatParam, default=3.5,
+        form.addParam('thresholdDust', params.FloatParam, default=5,
                       condition='doRemoveDust', expertLevel=LEVEL_ADVANCED,
                       label='Threshold for dust removal',
                       help='Pixels with a signal higher or lower than this value times the standard '

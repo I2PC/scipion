@@ -28,9 +28,11 @@ This EM module contains Gautomatch auto-picking protocol
 """
 
 from bibtex import _bibtex # Load bibtex dict with references
+from convert import getEnviron
 
 _logo = "gautomatch_logo.png"
 
 from protocol_gautomatch import ProtGautomatch
 from viewer import GautomatchViewer
 from wizard import *
+_environ = getEnviron()
