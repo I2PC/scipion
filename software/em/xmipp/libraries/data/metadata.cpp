@@ -1799,11 +1799,13 @@ void MetaData::fillLinear(MDLabel label, double initial, double step)
 
 void MetaData::copyColumn(MDLabel labelDest, MDLabel labelSrc)
 {
-    const char * srcName = MDL::label2Str(labelSrc).c_str();
+    String srcName = MDL::label2Str(labelSrc);
     if (!containsLabel(labelSrc))
-        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName));
+        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName.c_str()));
     addLabel(labelDest);
-    String cmd = formatString("%s=%s", MDL::label2Str(labelDest).c_str(), srcName);
+
+    String destName = MDL::label2Str(labelDest);
+    String cmd = formatString("%s=%s", destName.c_str(), srcName.c_str());
     operate(cmd);
 }
 
