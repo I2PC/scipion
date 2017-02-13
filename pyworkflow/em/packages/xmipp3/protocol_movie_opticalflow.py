@@ -53,6 +53,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
 
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)

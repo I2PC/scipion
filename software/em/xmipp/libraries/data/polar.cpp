@@ -24,6 +24,12 @@
  ***************************************************************************/
 #include "polar.h"
 
+Polar_fftw_plans::~Polar_fftw_plans()
+{
+	for (size_t i=0; i<transformers.size(); ++i)
+		delete transformers[i];
+}
+
 void fourierTransformRings(Polar<double> & in,
 		Polar<std::complex<double> > &out, Polar_fftw_plans &plans,
 		bool conjugated) {
@@ -32,8 +38,8 @@ void fourierTransformRings(Polar<double> & in,
 	for (int iring = 0; iring < in.getRingNo(); iring++) {
 
 		plans.arrays[iring] = in.rings[iring];
-		(plans.transformers[iring]).FourierTransform();
-		(plans.transformers[iring]).getFourierAlias(Fring);
+		(plans.transformers[iring])->FourierTransform();
+		(plans.transformers[iring])->getFourierAlias(Fring);
 		if (conjugated) {
 			double *ptrFring_i = (double*) &DIRECT_A1D_ELEM(Fring,0);
 			++ptrFring_i;
@@ -50,8 +56,8 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 		Polar<double> &out, Polar_fftw_plans &plans, bool conjugated) {
 	out.clear();
 	for (int iring = 0; iring < in.getRingNo(); iring++) {
-		(plans.transformers[iring]).setFourier(in.rings[iring]);
-		(plans.transformers[iring]).inverseFourierTransform(); // fReal points to plans.arrays[iring]
+		(plans.transformers[iring])->setFourier(in.rings[iring]);
+		(plans.transformers[iring])->inverseFourierTransform(); // fReal points to plans.arrays[iring]
 		out.rings.push_back(plans.arrays[iring]);
 	}
 	out.mode = in.mode;

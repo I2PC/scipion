@@ -25,30 +25,31 @@
 
 #include <mpi.h>
 #include <parallel/xmipp_mpi.h>
-#include <reconstruction/angular_continuous_assign2.h>
+#include <reconstruction/transform_adjust_image_grey_levels.h>
 
 
-class MpiProgAngularContinuousAssign2: public ProgAngularContinuousAssign2, public MpiMetadataProgram
+class MpiProgTransformImageGreyLevels: public ProgTransformImageGreyLevels, public MpiMetadataProgram
 {
 public:
 	int Nsimul;
 
     void defineParams()
     {
-        ProgAngularContinuousAssign2::defineParams();
+    	ProgTransformImageGreyLevels::defineParams();
         MpiMetadataProgram::defineParams();
         addParamsLine("  [--Nsimultaneous <N=1>]     : Number of simultaneous processes that can enter in preprocessing");
     }
     void readParams()
     {
         MpiMetadataProgram::readParams();
-        ProgAngularContinuousAssign2::readParams();
+        ProgTransformImageGreyLevels::readParams();
         Nsimul = getIntParam("--Nsimultaneous");
     }
     void read(int argc, char **argv, bool reportErrors = true)
     {
         MpiMetadataProgram::read(argc,argv);
     }
+
     void preProcess()
     {
         int Nturns = (int)ceil(node->size/Nsimul);
@@ -56,7 +57,7 @@ public:
         for (int turn=0; turn<=Nturns; turn++)
         {
         	if (turn==myTurn)
-        		ProgAngularContinuousAssign2::preProcess();
+        		ProgTransformImageGreyLevels::preProcess();
     		node->barrierWait();
         }
         MetaData &mdIn = *getInputMd();
@@ -64,27 +65,31 @@ public:
         mdIn.fillLinear(MDL_GATHER_ID,1,1);
         createTaskDistributor(mdIn, blockSize);
     }
+
     void startProcessing()
     {
         if (node->rank==1)
         {
         	verbose=1;
-            ProgAngularContinuousAssign2::startProcessing();
+        	ProgTransformImageGreyLevels::startProcessing();
         }
         node->barrierWait();
     }
+
     void showProgress()
     {
         if (node->rank==1)
         {
             time_bar_done=first+1;
-            ProgAngularContinuousAssign2::showProgress();
+            ProgTransformImageGreyLevels::showProgress();
         }
     }
+
     bool getImageToProcess(size_t &objId, size_t &objIndex)
     {
         return getTaskToProcess(objId, objIndex);
     }
+
     void finishProcessing()
     {
         node->gatherMetadatas(*getOutputMd(), fn_out);
@@ -93,12 +98,13 @@ public:
         MDaux.removeLabel(MDL_GATHER_ID);
         *getOutputMd()=MDaux;
         if (node->isMaster())
-            ProgAngularContinuousAssign2::finishProcessing();
+        	ProgTransformImageGreyLevels::finishProcessing();
     }
+
     void wait()
     {
 		distributor->wait();
     }
 };
 
-RUN_XMIPP_PROGRAM(MpiProgAngularContinuousAssign2)
+RUN_XMIPP_PROGRAM(MpiProgTransformImageGreyLevels)
