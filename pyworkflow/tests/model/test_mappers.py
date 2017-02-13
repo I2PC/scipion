@@ -176,6 +176,10 @@ class TestSqliteMapper(BaseTest):
             # Note compare the scalar objects, which have a well-defined comparison
             if isinstance(a1, Scalar):
                 self.assertEqual(a1, a2)
+
+        # Test select all batch approach
+        allBatch = mapper2.selectAllBatch()
+
             
         # Test relations
         childs = mapper2.getRelationChilds(relName, i)

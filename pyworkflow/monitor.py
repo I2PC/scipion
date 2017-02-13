@@ -1,3 +1,4 @@
+from __future__ import print_function
 import time
 instances = {}
 elapsedTime = {}
@@ -17,8 +18,20 @@ def instanceDestroyed(cls):
 
 def printInstances():
     for k, v in instances.items():
-        print "%s: %d", k, v
+        print("%s: %d", k, v)
 
+
+def waitForDebugger(seconds=20):
+    print ("Waiting for debugger %d seconds." % seconds)
+    from pyworkflow.utils import printTraceBack
+    printTraceBack()
+
+    while seconds > 0:
+        time.sleep(1)
+        # Set seconds to 0:
+        # Execute this in the debugger:  seconds = 0
+        print(str(seconds) + " seconds left.")
+        seconds -= 1
 
 # From: https://www.huyng.com/posts/python-performance-analysis
 
@@ -26,7 +39,7 @@ class Timer(object):
 
     indentation = 0
     blackList = []
-    whiteList = ['project.getRuns']
+    whiteList = []
     minms = 1
 
     def __init__(self, name=None, verbose=True):
@@ -53,4 +66,26 @@ class Timer(object):
             toPrint = True
 
         if self.verbose and toPrint and self.msecs > Timer.minms:
-            print '{0} {1:10.0f} ms : {2}'.format(' ' * Timer.indentation, self.msecs, self.name)
+            print('{0}{1:10.0f}\tms\t{2}'.format('\t' * Timer.indentation, self.msecs, self.name))
+
+# To monitor memory leaks:
+# 1.- Check you have installed pympler: scipion run pip install pympler
+# 2.- Uncomment lines below
+# 3.- Add a with statement like:
+#     with monitor.MemoryMonitor():
+#         <code to analyze>
+# from pympler.tracker import SummaryTracker
+#
+#
+# class MemoryMonitor(object):
+#
+#     def __init__(self):
+#         self.tracker = None
+#
+#     def __enter__(self):
+#         self.tracker = SummaryTracker()
+#         self.tracker.print_diff()
+#         return self
+#
+#     def __exit__(self, *args):
+#         self.tracker.print_diff()

@@ -241,7 +241,7 @@ class XmippMonoResViewer(ProtocolViewer):
         min_Res = round(np.amin(imgData)*100)/100
         max_Res = round(np.amax(imgData)*100)/100
 
-        numberOfColors = 20
+        numberOfColors = 21
         colors_labels = self.numberOfColors(min_Res, max_Res, numberOfColors)
         colorList = self.colorMapToColorList(colors_labels, self.getColorMap())
         

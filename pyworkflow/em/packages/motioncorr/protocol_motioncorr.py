@@ -323,7 +323,7 @@ class ProtMotionCorr(ProtAlignMovies):
                               'set *YES* _Use ALIGN frames range to SUM?_ '
                               'flag or use motioncorr')
 
-            if self.doApplyDoseFilter:
+            if self.doApplyDoseFilter and self.inputMovies.get():
                 inputMovies = self.inputMovies.get()
                 doseFrame = inputMovies.getAcquisition().getDosePerFrame()
 

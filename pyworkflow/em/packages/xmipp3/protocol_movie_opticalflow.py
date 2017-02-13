@@ -53,6 +53,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
 
+
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
@@ -97,6 +98,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "RAM, decreasing disc access")
         
         group = form.addGroup('Dose Compensation')
+
         group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                        label='Apply Dose filter',
                        help='Apply a dose-dependent filter to frames before '
@@ -114,7 +116,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "the alignment; else will apply after alignment.")
 
         form.addParallelSection(threads=8, mpi=0)
-    
+
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
@@ -234,24 +236,28 @@ class XmippProtOFAlignment(ProtAlignMovies):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
-        # Although getFirstItem is not remonended in general, here it is
-        # used olny once, for validation purposes, so performance
-        # problems not should be apprear.
-        inputSet = self.inputMovies.get()
-        movie = inputSet.getFirstItem()
-        if (not movie.hasAlignment()) and self.useAlignment:
-            errors.append("Your movies has not alignment. Please, set *No* "
-                          "the parameter _Use previous movie alignment to SUM"
-                          " frames?_")
+        # Although getFirstItem is not recommended in general, here it is
+        # used only once, for validation purposes, so performance
+        # problems not should be appear.
+
+        if not self.inputMovies.get() is None:
+            inputSet = self.inputMovies.get()
+            movie = inputSet.getFirstItem()
+            if (not movie.hasAlignment()) and self.useAlignment:
+                errors.append("Your movies has not alignment. Please, set *No* "
+                              "the parameter _Use previous movie alignment to SUM"
+                              " frames?_")
+
+            if self.doApplyDoseFilter:
+                doseFrame = inputSet.getAcquisition().getDosePerFrame()
+
+                if doseFrame == 0.0 or doseFrame is None:
+                    errors.append('Dose per frame for input movies is 0 or not '
+                                  'set. You cannot apply dose filter.')
+
         if self.numberOfThreads > 1 and self.doGPU:
             errors.append("GPU and Parallelization can not be used together")
 
-        if self.doApplyDoseFilter:
-            doseFrame = inputSet.getAcquisition().getDosePerFrame()
-    
-            if doseFrame == 0.0 or doseFrame is None:
-                errors.append('Dose per frame for input movies is 0 or not '
-                              'set. You cannot apply dose filter.')
         return errors
 
     def _citations(self):
