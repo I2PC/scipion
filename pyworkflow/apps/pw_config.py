@@ -114,7 +114,7 @@ def main():
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
-def chekReport(Config):
+def checkReport(Config):
     "Check if protocol statistics should be collected"
     reportOn = Config.get('VARIABLES','SCIPION_NOTIFY')
     if reportOn=='False':
@@ -187,7 +187,7 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
                     cf.set('BUILD', key, options[key])
     # Collecting Protocol Usage Statistics 
     elif 'VARIABLES' in cf.sections():
-        chekReport(cf)
+        checkReport(cf)
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
