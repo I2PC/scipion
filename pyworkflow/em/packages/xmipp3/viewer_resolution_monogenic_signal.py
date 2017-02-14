@@ -86,7 +86,7 @@ class XmippMonoResViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         
         form.addParam('doShowVolumeSlices', LabelParam,
-                      label="Show volume slices")
+                      label="Show resolution slices")
 
         form.addParam('doShowResHistogram', LabelParam,
                       label="Show resolution histogram")
@@ -138,7 +138,7 @@ class XmippMonoResViewer(ProtocolViewer):
         imgData2 = np.ma.masked_where(imgData < 0.01, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
-        fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,
+        fig, im = self._plotVolumeSlices('Resolution slices', imgData2,
                                          min_Res, max_Res, self.getColorMap())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
