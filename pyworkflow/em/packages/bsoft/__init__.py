@@ -39,6 +39,7 @@ from protocol_blocres import BsoftProtBlocres
 
 from wizard import BsoftFilterParticlesWizard
 
+from viewer import BsoftViewerBlocres
 
 from convert import getEnviron, getVersion
 _environ = getEnviron()

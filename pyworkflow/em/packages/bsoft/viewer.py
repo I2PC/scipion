@@ -26,9 +26,11 @@
 
 
 from pyworkflow.em.viewer import CommandView, Viewer, DESKTOP_TKINTER
+from pyworkflow.viewer import ProtocolViewer
 from pyworkflow.em.data import Volume
-
+from protocol_blocres import BsoftProtBlocres
 from convert import getEnviron
+from pyworkflow.em.packages.xmipp3.viewer_resolution_monogenic_signal import XmippMonoResViewer
 
 
 #------------------------ Some views and  viewers ------------------------
@@ -57,4 +59,26 @@ class BsoftViewer(Viewer):
 
         fn = obj.getFileName()
         BsoftVolumeView(fn).show()
+
+
+class BsoftViewerBlocres(XmippMonoResViewer):
+    """
+    Visualization tools for blocres results.
+
+    blocres is a bsoft package for computing the local resolution of 3D
+    density maps studied in structural biology, primarily by cryo-electron
+    microscopy (cryo-EM).
+    """
+    _label = 'viewer blocres'
+    _targets = [BsoftProtBlocres]
+    _environments = [DESKTOP_TKINTER]
+
+    def __init__(self, **kwargs):
+        _label = 'viewer MonoRes'
+        _targets = [BsoftProtBlocres]
+        _environments = [DESKTOP_TKINTER]
+        from protocol_blocres import OUTPUT_RESOLUTION_FILE
+        print OUTPUT_RESOLUTION_FILE
+        ProtocolViewer.__init__(self, **kwargs)
+
 

@@ -137,7 +137,7 @@ class BsoftProtBlocres(ProtAnalysis3D):
                       label="Half 2",
                       help="""Select first half volume to compute the local resolution.
                       """)
-        form.addParam('mask', params.PointerParam,
+        form.addParam('mask', params.PointerParam, allowsNull=True,
                       pointerClass='Volume',
                       label='Mask',
                       help="""Mask file to use for limiting the analysis to a defined region
@@ -169,7 +169,7 @@ class BsoftProtBlocres(ProtAnalysis3D):
         form.addParam('maxresolution', params.FloatParam, default=2,
                       label='Maximum Resolution',
                       help="""Maximum frequency available in the data (angstrom)""")
-        form.addParam('fill', params.FloatParam, default=0,
+        form.addParam('fill', params.IntParam, allowsNull=True,
                       label='Fill',
                       help="""Value to fill the background (non-masked regions; default 0).
                           """)
@@ -178,10 +178,11 @@ class BsoftProtBlocres(ProtAnalysis3D):
                       label='Padding Factor',
                       help="""Resolution box padding factor (0 = none, default: 1 (box) and 0 (shell)).
                           """)
-        form.addParam('symmetry', params.StringParam, default='C1',
+        form.addParam('symmetry', params.StringParam, allowsNull=True,
+                      default='',
                       label='Symmetry',
                       help="""Point group symmetry.""")
-        form.addParam('smooth', params.BooleanParam, default='true',
+        form.addParam('smooth', params.BooleanParam, default=True,
                       label='Smooth',
                       help="""Smooth the shell edge.""")
 
@@ -189,10 +190,10 @@ class BsoftProtBlocres(ProtAnalysis3D):
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         # Insert processing steps
-
-        self.vol1Fn = self.half1.get().getFileName()
-        self.vol2Fn = self.half2.get().getFileName()
-        self.maskFn = self.mask.get().getFileName()
+        self.fnvol1 = self.half1.get().getFileName()
+        self.fnvol2 = self.half2.get().getFileName()
+        if self.mask.get().getFileName() != '':
+            self.fnmask = self.mask.get().getFileName()
 
         self._insertFunctionStep('convertInputStep')
         self._insertFunctionStep('resolutionStep')
@@ -200,25 +201,30 @@ class BsoftProtBlocres(ProtAnalysis3D):
 
     #--------------------------- STEPS functions --------------------------------------------   
     def convertInputStep(self):
-        # we need to put all images into a single stack to ease the call of bsoft programs
-        extVol1 = getExt(self.vol1Fn)
-        extVol2 = getExt(self.vol2Fn)
-        extMask = getExt(self.maskFn)
+        # blocres works with .map
+        vol1Fn = self.half1.get().getFileName()
+        vol2Fn = self.half2.get().getFileName()
+        if self.mask.get().getFileName() != '':
+            maskFn = self.mask.get().getFileName()
+
+        extVol1 = getExt(vol1Fn)
+        extVol2 = getExt(vol2Fn)
+
+        if self.mask.get().getFileName() != '':
+            extMask = getExt(maskFn)
 
         if (extVol1 != '.map') or (extVol2 != '.map') or (extMask != '.map'):
-            fnvol1 = 'half1.map'
-            fnvol2 = 'half2.map'
-            fnmask = 'mask.map'
+            self.fnvol1 = self._getTmpPath('half1.map')
+            self.fnvol2 = self._getTmpPath('half2.map')
+            ImageHandler().convert(vol1Fn, self.fnvol1)
+            ImageHandler().convert(vol2Fn, self.fnvol2)
+            if self.mask.get().getFileName() != '':
+                self.fnmask = self._getTmpPath('mask.map')
+                ImageHandler().convert(maskFn, self.fnmask)
 
-            ImageHandler().convert(self.vol1Fn, self._getTmpPath(fnvol1))
-            ImageHandler().convert(self.vol2Fn, self._getTmpPath(fnvol2))
-            ImageHandler().convert(self.maskFn, self._getTmpPath(fnmask))
 
     def resolutionStep(self):
-        """ Util function used by wizard. """
-        print self.vol1Fn
-        print self.vol2Fn
-        print self._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        """ blocres parameters. """
         sampling = self.half1.get().getSamplingRate()
         #Actions
         params =  ' -v 1'  # No Verbose
@@ -231,17 +237,21 @@ class BsoftProtBlocres(ProtAnalysis3D):
         params += ' -step %f' % self.step.get()
         params += ' -maxresolution %f' % self.maxresolution.get()
         params += ' -cutoff %f' % self.cutoff.get()
-        params += ' -fill %f' % self.fill.get()
+        if self.fill.get() != '':
+            params += ' -fill %f' % self.fill.get()
 
         #Parameters for local resolution
         params += ' -pad %f' % self.pad.get()
-        params += ' -symmetry %s' % self.symmetry.get()
+        if self.symmetry.get() !='':
+            params += ' -symmetry %s' % self.symmetry.get()
         if self.smooth.get():
             params += ' -smooth'
+        if self.mask.get().getFileName() !='':
+            params += ' -Mask %s' % self.fnmask
 
         # Input
         # input halves and output map
-        params += ' %s %s %s' % (self.vol1Fn, self.vol2Fn, self._getExtraPath(OUTPUT_RESOLUTION_FILE))
+        params += ' %s %s %s' % (self.fnvol1, self.fnvol2, self._getExtraPath(OUTPUT_RESOLUTION_FILE))
 
         self.runJob('blocres', params)
         
@@ -259,7 +269,7 @@ class BsoftProtBlocres(ProtAnalysis3D):
         return errors
     
     def _citations(self):
-        cites = []
+        cites = ['Cardone2013']
         return cites
     
     def _summary(self):
