@@ -114,6 +114,40 @@ def main():
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
+def checkReport(Config):
+    "Check if protocol statistics should be collected"
+    reportOn = Config.get('VARIABLES','SCIPION_NOTIFY')
+    if reportOn=='False':
+        # This works for  Python 2.x. and Python 3
+        try: 
+           input = raw_input
+        except NameError: 
+             pass
+        print("""-----------------------------------------------------------------
+-----------------------------------------------------------------
+It would be very helpful if you allow Scipion
+to send anonymous usage data. This information will help Scipion's 
+team to identify the more demanded protocols and prioritize 
+support for them.
+
+The collected usage information is completely anonymous and does not 
+include protocol parameters, file names or any data that can be used 
+to identify your account, machine or data. In the URL 
+https://github.com/I2PC/scipion/wiki/Collecting-Usage-Statistics-for-Scipion 
+you may see examples of the transmited data as well as the 
+statistics created with it. You can always deactivate/activate 
+this option by editing the file $HOME/.config/scipion/scipion.conf 
+and setting the variable SCIPION_NOTIFY to False/True respectively.
+
+We understand, of course, that you may not wish to have any 
+information collected from you and we respect your privacy.
+""")
+
+        prompt = input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        if prompt == '':
+            Config.set('VARIABLES','SCIPION_NOTIFY','True')
+        print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
+        print("-----------------------------------------------------------------\n-----------------------------------------------------------------")
 
 def createConf(fpath, ftemplate, remove=[], keep=[]):
     "Create config file in fpath following the template in ftemplate"
@@ -134,6 +168,7 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
 
     # Read the template configuration file.
     print(yellow("* Creating configuration file: %s" % fpath))
+    print("Please edit it to reflect the configuration of your system.\n")
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(ftemplate) != [], 'Missing file: %s' % ftemplate
@@ -143,16 +178,20 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
         for section in set(cf.sections()) - set(keep):
             cf.remove_section(section)
 
+
     # Update with our guesses.
     if 'BUILD' in cf.sections():
         for options in [guessJava(), guessMPI()]:
             for key in options:
                 if key in cf.options('BUILD'):
                     cf.set('BUILD', key, options[key])
+    # Collecting Protocol Usage Statistics 
+    elif 'VARIABLES' in cf.sections():
+        checkReport(cf)
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
-    print("Please edit it to reflect the configuration of your system.\n")
+    #print("Please edit it to reflect the configuration of your system.\n")
 
 
 def checkPaths(conf):
@@ -258,6 +297,8 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
                       "parameter to update local config files." % (yellow(s), yellow(o), UPDATE_PARAM))
 
                 if update:
+                    if s=='VARIABLES' and o=='SCIPION_NOTIFY':
+                        chekReport(ct)
                     # Update config file with missing variable
                     value = ct.get(s, o)
                     cf.set(s, o, value)

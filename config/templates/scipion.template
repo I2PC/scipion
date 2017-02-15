@@ -25,7 +25,7 @@ CTFFIND4_HOME = %(EM_ROOT)s/ctffind4-4.1.5
 DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
 EMAN2DIR = %(EM_ROOT)s/eman-2.12
 FREALIGN_HOME = %(EM_ROOT)s/frealign-9.07
-GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch-0.53
+GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch-v0.53
 GAUTOMATCH = Gautomatch-v0.53_sm_20_cu7.5_x86_64
 GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker-1.1
 GEMPICKER = gEMpicker_nocuda_Ubuntu_14.04.x64
@@ -37,7 +37,7 @@ LOCALREC_HOME = %(EM_ROOT)s/localrec-1.1.0
 MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
-MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
+MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1.cuda.7.5
 MOTIONCORR_CUDA_LIB = None
 MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-16.10.19
 NMA_HOME = %(EM_ROOT)s/nma
@@ -60,7 +60,8 @@ VMD_HOME = %(EM_ROOT)s/vmd
 SCIPION_NOTES_PROGRAM = 
 SCIPION_NOTES_ARGS =
 SCIPION_NOTES_FILE =  notes.txt
-
+#protocol ussage statistics
+SCIPION_NOTIFY = False
 
 # This section of the configuration file is used to setup variables to
 # compile from sources. Most of them you won't want to change.
