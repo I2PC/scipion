@@ -1737,6 +1737,8 @@ def isProtocolUpToDate(protocol):
 
     dbTS = getFileLastModificationDate(protocol.getDbPath())
 
+    if dbTS is None: return True
+
     if protTS < dbTS:
         return False
     else:
