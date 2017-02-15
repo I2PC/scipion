@@ -159,7 +159,7 @@ class ProtMotionCorr(ProtAlignMovies):
                            "dose-dependent filter to the frames")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
-        form.addParallelSection(threads=2, mpi=0)
+        form.addParallelSection(threads=2, mpi=1)
 
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
