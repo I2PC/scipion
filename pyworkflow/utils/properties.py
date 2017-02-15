@@ -300,9 +300,9 @@ Do you really want to continue?'
     
     LABEL_ENABLE = 'Enable'
     LABEL_DISABLE = 'Disable'
-    LABEL_SELECT_ALL = 'Select All'
-    LABEL_SELECT_FROM = 'Select From Here'
-    LABEL_SELECT_TO = 'Select To Here'
+    LABEL_SELECT_ALL = 'Select all'
+    LABEL_SELECT_FROM = 'Select from here'
+    LABEL_SELECT_TO = 'Select to here'
     
     LABEL_DISPLAY_TABLE_CONFIG = 'Display Table Configuration'
     
@@ -333,6 +333,7 @@ class Icon():
     RUNS_LIST = 'fa-bars.png'
     ACTION_NEW = 'fa-plus-circle.png'
     ACTION_EDIT = 'fa-pencil.png'
+    ACTION_SELECT_TO = 'fa-arrow-up.png'
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
@@ -375,8 +376,7 @@ class Icon():
 
 
 class Color():
-    RED_COLOR = 'Firebrick' # Red color for background label
-#    RED_COLOR = '#B22222'
+    RED_COLOR = 'Firebrick' # Red color for background label  = #B22222
     LIGHT_RED_COLOR = '#F3CBCB' # Very light red for row selection
     LIGHT_BLUE_COLOR = '#EAEBFF' # Very light blue for even rows
     LIGHT_GREY_COLOR = '#EAEBEC' # Light grey for background color in form, protocol, table header and west container
