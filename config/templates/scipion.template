@@ -51,7 +51,7 @@ UNBLUR_HOME = %(EM_ROOT)s/unblur-1.0.2
 XMIPP_HOME = %(EM_ROOT)s/xmipp
 
 # Some visualization packages
-CHIMERA_HOME = %(EM_ROOT)s/chimera
+CHIMERA_HOME = %(EM_ROOT)s/chimera-1.10.1
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
 VMD_HOME = %(EM_ROOT)s/vmd
 
