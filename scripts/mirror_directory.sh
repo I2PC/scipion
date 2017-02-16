@@ -25,13 +25,16 @@ TARGET=$2
 
 #retry after SEC seconds
 SEC=300
-
 #main loop
-while true; do
+#SECONS has the number of seconds the script has been running
+END=`expr $SECONDS + $TIMEOUT`
+while [ $SECONDS -lt $END ]; do
    echo rsync -h -r -P -t $SOURCE $TARGET
    rsync -h -r -P -t $SOURCE $TARGET
    date
-   printf "sleeping $SEC seconds\n"
+   printf "sleeping $SEC sec.\n"
+   ETA=`expr $END - $SECONDS`
+   printf "Remaining time= $ETA sec.\n"
    sleep $SEC
 done
 
