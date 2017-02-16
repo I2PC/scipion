@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #run for three days
 TIMEOUT=259200
