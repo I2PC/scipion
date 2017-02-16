@@ -704,11 +704,12 @@ class Environment:
     
         environ = os.environ.copy()
         if cudaLib is not None and os.path.exists(cudaLib):
-            environ.update({'LD_LIBRARY_PATH': cudaLib},
-                           position=os.environ.BEGIN)
+            environ.update({'LD_LIBRARY_PATH': cudaLib + ":" +
+                                               environ['LD_LIBRARY_PATH']})
     
         if cudaBin is not None and os.path.exists(cudaBin):
-            environ.update({'PATH': cudaBin}, position=os.environ.BEGIN)
+            environ.update(
+                {'PATH': cudaBin + ":" + environ['PATH']})
         return environ
 
 
