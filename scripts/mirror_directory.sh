@@ -7,9 +7,9 @@ TIMEOUT=259200
 help()
 {
     printf "\n\nmirror_directory.sh:  synchronize origin directory with target directory.\n (target  may be a remote machine)"
-    printf "\n\nUsage: timeout runTime $0 sourceDir targetDir"    
-    printf   "\nExample1: timeout $TIMEOUT $0 MyProjecDir MyTargetDir"    
-    printf   "\nExample2: timeout $TIMEOUT $0 MyProjecDir MyUserName@MyHost:\n\n"    
+    printf "\n\nUsage: $0 sourceDir targetDir"    
+    printf   "\nExample1: $0 MyProjecDir MyTargetDir"    
+    printf   "\nExample2: $0 MyProjecDir MyUserName@MyHost:\n\n"    
 }
 
 #call help if script is called without parameters
