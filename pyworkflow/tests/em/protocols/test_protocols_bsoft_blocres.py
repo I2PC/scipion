@@ -87,8 +87,8 @@ class TestBsoftBlocres(TestBsoftBlocresBase):
     def testBlocres1(self):
         blocres = self.newProtocol(BsoftProtBlocres,
                                    objLabel='blocres',
-                                   half1=self.protImportHalf1.outputVolume,
-                                   half2=self.protImportHalf2.outputVolume,
+                                   inputVolume=self.protImportHalf1.outputVolume,
+                                   inputVolume2=self.protImportHalf2.outputVolume,
                                    mask=self.protCreateMask.outputMask,
                                    box=20,
                                    shell=20,

@@ -31,9 +31,12 @@ from pyworkflow import VERSION_1_1
 import pyworkflow.protocol.params as params
 from pyworkflow.utils import getExt
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
-from .convert import ImageHandler
+from pyworkflow.em import ImageHandler
 from collections import OrderedDict
 from pyworkflow.em.packages.xmipp3 import readSetOfVolumes
+import numpy as np
+import pyworkflow.em.metadata as md
+
 
        
 """
@@ -127,12 +130,12 @@ class BsoftProtBlocres(ProtAnalysis3D):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('half1', params.PointerParam,
+        form.addParam('inputVolume', params.PointerParam,
                       pointerClass='Volume',
                       label="Half 1",
                       help="""Select first half volume to compute the local resolution.
                       """)
-        form.addParam('half2', params.PointerParam,
+        form.addParam('inputVolume2', params.PointerParam,
                       pointerClass='Volume',
                       label="Half 2",
                       help="""Select first half volume to compute the local resolution.
@@ -176,7 +179,8 @@ class BsoftProtBlocres(ProtAnalysis3D):
         form.addParam('pad', params.EnumParam, choices=PAD_CHOICES.values(),
                       default=PAD_BOX,
                       label='Padding Factor',
-                      help="""Resolution box padding factor (0 = none, default: 1 (box) and 0 (shell)).
+                      help="""Resolution box padding factor
+                       (0 = none, default: 1 (box) and 0 (shell)).
                           """)
         form.addParam('symmetry', params.StringParam, allowsNull=True,
                       default='',
@@ -190,20 +194,22 @@ class BsoftProtBlocres(ProtAnalysis3D):
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         # Insert processing steps
-        self.fnvol1 = self.half1.get().getFileName()
-        self.fnvol2 = self.half2.get().getFileName()
+        self.fnvol1 = self.inputVolume.get().getFileName()
+        self.fnvol2 = self.inputVolume2.get().getFileName()
         if self.mask.get().getFileName() != '':
             self.fnmask = self.mask.get().getFileName()
 
-        self._insertFunctionStep('convertInputStep')
-        self._insertFunctionStep('resolutionStep')
-        self._insertFunctionStep('createOutputStep')
+        convertId = self._insertFunctionStep('convertInputStep')
+        ResId = self._insertFunctionStep('resolutionStep', prerequisites=[convertId])
+#         histId = self._insertFunctionStep('createHistrogram', prerequisites=[ResId])
+#         histId = self._insertFunctionStep('createHistrogram', prerequisites=[ResId])        
+        self._insertFunctionStep('createOutputStep', prerequisites=[ResId])
 
     #--------------------------- STEPS functions --------------------------------------------   
     def convertInputStep(self):
         # blocres works with .map
-        vol1Fn = self.half1.get().getFileName()
-        vol2Fn = self.half2.get().getFileName()
+        vol1Fn = self.inputVolume.get().getFileName()
+        vol2Fn = self.inputVolume2.get().getFileName()
         if self.mask.get().getFileName() != '':
             maskFn = self.mask.get().getFileName()
 
@@ -225,7 +231,7 @@ class BsoftProtBlocres(ProtAnalysis3D):
 
     def resolutionStep(self):
         """ blocres parameters. """
-        sampling = self.half1.get().getSamplingRate()
+        sampling = self.inputVolume.get().getSamplingRate()
         #Actions
         params =  ' -v 1'  # No Verbose
         params += ' -criterion %s' % CRITERION_CHOICES[self.resolutionCriterion.get()]
@@ -254,14 +260,48 @@ class BsoftProtBlocres(ProtAnalysis3D):
         params += ' %s %s %s' % (self.fnvol1, self.fnvol2, self._getExtraPath(OUTPUT_RESOLUTION_FILE))
 
         self.runJob('blocres', params)
-        
+
+
+    def createHistrogram(self):
+        if self.fill.get()=='':
+            backgroundValue = 0
+        else:
+            backgroundValue = self.fill.get()
+        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        img = ImageHandler().read(imageFile)
+        imgData = img.getData()
+        Res = imgData[imgData!=backgroundValue]
+        minres = np.amin(Res)
+        maxres = np.amax(Res)
+        steps = 30
+        stepSize = (maxres - minres)/steps
+        counts=np.zeros(steps)
+ 
+        for idx in range(0,steps):
+            auxRes = Res[Res<(minres+(idx+1)*stepSize)]
+            auxRes2 = auxRes[auxRes>=(minres+(idx*stepSize))]
+            length = len(auxRes2)
+            counts[idx] = int(length)
+   
+        mdcounts = md.MetaData()
+        for mdid in range(steps):
+            print mdid
+            print counts[mdid]
+            auxInt = int(counts[mdid])
+            print auxInt
+            objId = mdcounts.addObject()
+            mdcounts.setValue(md.MDL_X, float(mdid), objId)
+            mdcounts.setValue(md.MDL_COUNT, auxInt, objId)
+        mdcounts.write(self._getExtraPath('hist.xmd'))
+
+
     def createOutputStep(self):
         fnResolutionMap = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         self.volumesSet = self._createSetOfVolumes('resolutionVol')
-        self.volumesSet.setSamplingRate(self.half1.get().getSamplingRate())
+        self.volumesSet.setSamplingRate(self.inputVolume.get().getSamplingRate())
         readSetOfVolumes(fnResolutionMap, self.volumesSet)
         self._defineOutputs(outputVolume=self.volumesSet)
-        self._defineSourceRelation(self.half1, self.volumesSet)
+        self._defineSourceRelation(self.inputVolume, self.volumesSet)
 
 #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
