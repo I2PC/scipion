@@ -207,16 +207,6 @@ nfft3 = env.addLibrary(
     deps=[fftw3],
     default=False)
 
-relCudaLib = os.environ.get('RELION_CUDA_LIB')
-cudaLib = os.environ.get('CUDA_LIB')
-if relCudaLib is not None and os.path.exists(relCudaLib):
-    print "ASF"
-    os.environ.update({'LD_LIBRARY_PATH': relCudaLib},
-                      position=os.environ.BEGIN)
-elif cudaLib is not None and os.path.exists(cudaLib):
-    os.environ.update({'LD_LIBRARY_PATH': cudaLib}, position=os.environ.BEGIN)
-
-print "Environ: ", os.environ.get('LD_LIBRARY_PATH')
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
@@ -422,9 +412,14 @@ env.addPackage('relion', version='1.3',
                tar='relion-1.3.tgz',
                commands=relion_commands)
 
+relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
+                    ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
+
 env.addPackage('relion', version='2.0.3',
                tar='relion-2.0.3.tgz',
-               commands=relion_commands)
+               commands=relion2_commands,
+               updateCuda=True,
+               cudaBin=True)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
