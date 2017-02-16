@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #run for three days
 TIMEOUT=259200
@@ -43,3 +43,4 @@ done
 #-P: --partial (keep partially transferred files) +
 #        --progress (show progress during transfer)
 #-t: preserve modification times
+#-L follow symbolic links
