@@ -147,7 +147,7 @@ class Command:
                     cmd()
                 else:  # if not, it's a command: make a system call
                     call(cmd, shell=True, env=self._environ)
-                    print "ENVIRON:", self._environ
+                    print "ENVIRON: ", self._environ
 
             # Return to working directory, useful when we change dir
             # before executing the command.
@@ -544,7 +544,7 @@ class Environment:
         
         environ = (self.updateCudaEnviron(name, kwargs.get('cudaBin', False))
                    if kwargs.get('updateCuda', False) else None)
-
+        print "environ ", environ
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % extName)
