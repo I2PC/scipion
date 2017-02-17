@@ -284,19 +284,32 @@ class BoxWizardView(tk.Frame):
         return self.vars[varKey].set(value)
 
     def _onAction(self, e=None):
+        def is_running(process):
+            counter=0
+            s = subprocess.Popen(["ps", "axw"],stdout=subprocess.PIPE)
+            for x in s.stdout:
+                if re.search(process, x):
+                    counter = x.split()[0]
+                    break
+            return counter
+
         errors = []
         doBackup = True
         # Check the Data folder exists
         dataFolder = pwutils.expandPattern(self._getValue(DATA_FOLDER))
         if not os.path.exists(pwutils.expandPattern(dataFolder)):
             errors.append("Data folder '%s' does not exists" % dataFolder)
+        #check errors
+        counter = is_running("mirror_directory.sh")
+        if counter > 0:
+            errors.append("there is a backup script running in the background")
+            errors.append('the command "kill -9 %s" will kill it.'% counter)
+            errors.append('Execute it at your own risk')
 
         backupFolder = pwutils.expandPattern(self._getValue(DATA_BACKUP))
         if backupFolder == '':
-            print("empty")
             doBackup = False
         elif backupFolder.find("@") != -1:  # if remote directory do not check
-            print "pass"
             pass
         elif not os.path.exists(pwutils.expandPattern(backupFolder)):
             errors.append("Backup folder '%s' does not exists" % backupFolder)
