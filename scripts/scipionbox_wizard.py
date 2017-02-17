@@ -302,9 +302,10 @@ class BoxWizardView(tk.Frame):
         #check errors
         counter = is_running("mirror_directory.sh")
         if counter > 0:
-            errors.append("there is a backup script running in the background")
-            errors.append('the command "kill -9 %s" will kill it.'% counter)
-            errors.append('Execute it at your own risk')
+            errors.append("There is a backup script running in the background")
+            errors.append("I cannot continue unless you stop it.")
+            errors.append('The command "kill -9 %s" will kill it.'% counter)
+            errors.append('Execute it at your own risk from a terminal')
 
         backupFolder = pwutils.expandPattern(self._getValue(DATA_BACKUP))
         if backupFolder == '':
