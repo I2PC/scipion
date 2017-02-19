@@ -382,10 +382,8 @@ class BoxWizardView(tk.Frame):
         smtpServer = self._getConfValue(SMTP_SERVER, '')
         smtpFrom = self._getConfValue(SMTP_FROM, '')
         smtpTo = self._getConfValue(SMTP_TO, '')
-        doMail = (self._getValue(EMAIL_NOTIFICATION) and
-                  smtpServer and smtpFrom and smtpTo)
-        publish = self._getConfValue(PUBLISH, '')
-
+        doMail = self._getValue(EMAIL_NOTIFICATION) 
+        doPublish = self._getValue(HTML_REPORT)
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
                                          filesPath=projPath,
@@ -393,10 +391,18 @@ class BoxWizardView(tk.Frame):
                                          sphericalAberration=self._getConfValue(CS),
                                          dataStreaming=True)
 
-        # Create import movies
+        # Should I publish html report?       
+        if doPublish==1:
+            publish=self._getConfValue('HTML_PUBLISH')
+            print("\n\nReport available at URL: %s/%s\n\n"%('http://scipion.cnb.csic.es/scipionbox',projName))
+        else:
+            publish=''
         protMonitor = project.newProtocol(em.ProtMonitorSummary,
                                           objLabel='Summary Monitor',
                                           doMail=doMail,
+                                          emailFrom=smtpFrom,
+                                          emailTo=smtpTo,
+                                          smtp=smtpServer,
                                           publishCmd=publish)
 
         def _saveProtocol(prot, movies=True, monitor=True):
