@@ -629,6 +629,7 @@ class Environment:
                 targets.extend(self._targetDict[x] for x in deps)
             else:
                 tgt.execute()
+                print "WTF: ", isinstance(tgt, Command)
                 executed.add(tgt.getName())
                 exploring.discard(tgt.getName())
 
