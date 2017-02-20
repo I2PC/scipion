@@ -617,6 +617,7 @@ class Environment:
         targets = targetList[::-1]
         while targets:
             tgt = targets.pop()
+            print  "TGT: ", tgt
             if tgt.getName() in executed:
                 continue
             deps = tgt.getDeps()
