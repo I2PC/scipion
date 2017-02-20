@@ -83,6 +83,11 @@ MPI_LIBDIR = /usr/lib64/mpi/gcc/openmpi/lib
 MPI_INCLUDE = /usr/lib64/mpi/gcc/openmpi/include
 MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
 
+# NVCC (CUDA) variables
+NVCC = nvcc --x cu
+NVCC_INCLUDE = /usr/local/cuda/include
+NVCC_LIBDIR = /usr/local/cuda/lib64
+
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
 # Java variables
@@ -93,7 +98,7 @@ JAR = %(JAVA_BINDIR)s/jar
 JNI_CPPPATH = %(JAVA_HOME)s/include:%(JAVA_HOME)s/include/linux
 
 # Modules to compile
-GTEST = False
+GTEST = False 
 CUDA = False
 DEBUG = False
 MATLAB = False
