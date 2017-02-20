@@ -663,7 +663,7 @@ class Environment:
         # the selected ones, ignore starting with 'xmipp'
         cmdTargets = [a for a in self._args[2:]
                       if a[0].isalpha() and not a.startswith('xmipp')]
-
+        print "cmdTargets: ", cmdTargets
         if cmdTargets:
             # Check that they are all command targets
             for t in cmdTargets:
