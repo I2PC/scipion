@@ -618,6 +618,7 @@ class Environment:
         while targets:
             tgt = targets.pop()
             print  "TGT: ", tgt
+            print "WTF: ", isinstance(tgt, Command)
             if tgt.getName() in executed:
                 continue
             deps = tgt.getDeps()
@@ -629,7 +630,6 @@ class Environment:
                 targets.extend(self._targetDict[x] for x in deps)
             else:
                 tgt.execute()
-                print "WTF: ", isinstance(tgt, Command)
                 executed.add(tgt.getName())
                 exploring.discard(tgt.getName())
 
