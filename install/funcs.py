@@ -146,7 +146,7 @@ class Command:
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
-                    print "ENVIRON: ", self._environ
+                    print "ENVIRON: ", self._environ, self._env
                     call(cmd, shell=True, env=self._environ)
 
             # Return to working directory, useful when we change dir
@@ -617,7 +617,7 @@ class Environment:
         targets = targetList[::-1]
         while targets:
             tgt = targets.pop()
-            print  "TGT: ", tgt, type(tgt)
+            print  "TGT: ", tgt
             if tgt.getName() in executed:
                 continue
             deps = tgt.getDeps()
