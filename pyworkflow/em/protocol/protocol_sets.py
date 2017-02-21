@@ -34,7 +34,7 @@ This module contains protocols related to Set operations such us:
 import random
 from protocol import EMProtocol
 import pyworkflow.protocol as pwprot
-
+from pyworkflow.object import Boolean
 
 class ProtSets(EMProtocol):
     """ Base class for all protocols related to subsets. """
@@ -101,16 +101,15 @@ class ProtUnionSet(ProtSets):
                       help='Make an automatic renumbering of the ids, so the new objects\n'
                            'are not associated to the old ones.')
 
-        form.addParam('ignoreExtraAttributes', pwprot.params.BooleanParam,
-                      default=False, expertLevel=pwprot.LEVEL_ADVANCED,
-                      label='Ignore extra attributes?',
-                      help='By default, it is only allowed to join sets where'
-                           'each item has the same number of attributes. Set '
-                           'this option to *Yes* if you want to join sets with'
-                           'different attribues. The items in the resulting '
-                           'set will only the common attributes to all input '
-                           'sets. ')
-
+        #form.addParam('ignoreExtraAttributes', pwprot.params.BooleanParam,
+        #              default=True, expertLevel=pwprot.LEVEL_ADVANCED,
+        #              label='Ignore extra attributes?',
+        #              help='By default, it is only allowed to join sets where'
+        #                   'each item has the same number of attributes. Set '
+        #                   'this option to *Yes* if you want to join sets with'
+        #                   'different attribues. The items in the resulting '
+        #                   'set will only the common attributes to all input '
+        #                   'sets. ')
         form.addParam('ignoreDuplicates', pwprot.params.BooleanParam, default=False,
                       expertLevel=pwprot.LEVEL_ADVANCED,
                       label='Ignore duplicates?',
@@ -142,6 +141,8 @@ class ProtUnionSet(ProtSets):
         # or we find duplicated ids in the sets
         cleanIds = self.renumber.get() or self.duplicatedIds()
 
+        #TODO ROB remove ignoreExtraAttributes condition
+        self.ignoreExtraAttributes = Boolean(True)
         if self.ignoreExtraAttributes:
             commonAttrs = list(self.commonAttributes())
 
@@ -201,14 +202,14 @@ class ProtUnionSet(ProtSets):
             return ["All objects should have the same type.",
                     "Types of objects found: %s" % ", ".join(classes)]
 
-        if not self.ignoreExtraAttributes:
-            # Do all inputSets contain elements with the same attributes defined?
-            def attrNames(s):  # get attribute names of the first element of set s
-                return sorted(iter(s.get()).next().getObjDict().keys())
-            attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
-            if len(attrs) > 1:
-                return ["All elements must have the same attributes.",
-                        "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
+#        if not self.ignoreExtraAttributes:
+#            # Do all inputSets contain elements with the same attributes defined?
+#            def attrNames(s):  # get attribute names of the first element of set s
+#                return sorted(iter(s.get()).next().getObjDict().keys())
+#            attrs = {tuple(attrNames(s)) for s in self.inputSets}  # tuples are hashable
+#            if len(attrs) > 1:
+#                return ["All elements must have the same attributes.",
+#                        "Attributes found: %s" % ", ".join(str(x) for x in attrs)]
 
         return []  # no errors
 
