@@ -325,8 +325,8 @@ class TestSets(BaseTest):
         That is, M1(a,b,c) U M2(a,b,c,d)"""
 
         #create two set of particles
-        inFileNameMetadata1 = self.proj.getTmpPath('particles1.sqlite')
-        inFileNameMetadata2 = self.proj.getTmpPath('particles2.sqlite')
+        inFileNameMetadata1 = self.proj.getTmpPath('particles11.sqlite')
+        inFileNameMetadata2 = self.proj.getTmpPath('particles22.sqlite')
         imgSet1 = SetOfParticles(filename=inFileNameMetadata1)
         imgSet2 = SetOfParticles(filename=inFileNameMetadata2)
 
