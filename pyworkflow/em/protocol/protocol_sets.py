@@ -142,6 +142,7 @@ class ProtUnionSet(ProtSets):
         cleanIds = self.renumber.get() or self.duplicatedIds()
 
         #TODO ROB remove ignoreExtraAttributes condition
+        #or implement it. But this will be for Scipion 1.2
         self.ignoreExtraAttributes = Boolean(True)
         if self.ignoreExtraAttributes:
             commonAttrs = list(self.commonAttributes())
