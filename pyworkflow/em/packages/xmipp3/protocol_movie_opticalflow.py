@@ -99,7 +99,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         
         group = form.addGroup('Dose Compensation')
 
-        group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+        group.addParam('doApplyDoseFilter', params.BooleanParam, default=False,
                        label='Apply Dose filter',
                        help='Apply a dose-dependent filter to frames before '
                             'summing them. Pre-exposure and dose per frame '
