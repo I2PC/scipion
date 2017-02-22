@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #run for three days
 TIMEOUT=259200
@@ -7,9 +7,9 @@ TIMEOUT=259200
 help()
 {
     printf "\n\nmirror_directory.sh:  synchronize origin directory with target directory.\n (target  may be a remote machine)"
-    printf "\n\nUsage: timeout runTime $0 sourceDir targetDir"    
-    printf   "\nExample1: timeout $TIMEOUT $0 MyProjecDir MyTargetDir"    
-    printf   "\nExample2: timeout $TIMEOUT $0 MyProjecDir MyUserName@MyHost:\n\n"    
+    printf "\n\nUsage: $0 sourceDir targetDir"    
+    printf   "\nExample1: $0 MyProjecDir MyTargetDir"    
+    printf   "\nExample2: $0 MyProjecDir MyUserName@MyHost:\n\n"    
 }
 
 #call help if script is called without parameters
@@ -25,13 +25,16 @@ TARGET=$2
 
 #retry after SEC seconds
 SEC=300
-
 #main loop
-while true; do
+#SECONS has the number of seconds the script has been running
+END=`expr $SECONDS + $TIMEOUT`
+while [ $SECONDS -lt $END ]; do
    echo rsync -h -r -P -t $SOURCE $TARGET
    rsync -h -r -P -t $SOURCE $TARGET
    date
-   printf "sleeping $SEC seconds\n"
+   printf "sleeping $SEC sec.\n"
+   ETA=`expr $END - $SECONDS`
+   printf "Remaining time= $ETA sec.\n"
    sleep $SEC
 done
 
@@ -40,3 +43,4 @@ done
 #-P: --partial (keep partially transferred files) +
 #        --progress (show progress during transfer)
 #-t: preserve modification times
+#-L follow symbolic links
