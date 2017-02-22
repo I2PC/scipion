@@ -62,7 +62,8 @@ def main():
         help=("Rewrite the configuration files using the original templates."))
     add(UPDATE_PARAM, action='store_true',
         help=("Updates you local config files with the values in the template, only for those missing values."))
-
+    add('--report', action='store_true',
+        help=("allow Scipion to report usage data (skips user question)"))
     options, args = parser.parse_args()
 
     if args:  # no args which aren't options
@@ -84,10 +85,11 @@ def main():
             (os.environ['SCIPION_HOSTS'], 'hosts')]:
             if not exists(fpath) or options.overwrite:
                 createConf(fpath, join(templatesDir, tmplt + '.template'),
-                           remove=localSections)
+                           remove=localSections, report=options.report)
             else:
                 checkConf(fpath, join(templatesDir, tmplt + '.template'),
-                          remove=localSections, update=options.update)
+                          remove=localSections, update=options.update,
+                          report=options.report)
 
         if not globalIsLocal:  # which is normally the case
             # Local user configuration files (well, only "scipion.conf").
@@ -95,11 +97,13 @@ def main():
                 #  It might make sense to add   "or options.overwrite" ...
                 createConf(os.environ['SCIPION_LOCAL_CONFIG'],
                            join(templatesDir, 'scipion.template'),
-                           keep=localSections)
+                           keep=localSections,
+                           report=options.report)
             else:
                 checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
                           join(templatesDir, 'scipion.template'),
-                          keep=localSections, update=options.update)
+                          keep=localSections, update=options.update,
+                          report=options.report)
 
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
@@ -114,8 +118,11 @@ def main():
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
-def chekReport(Config):
+def checkReport(Config, report=False):
     "Check if protocol statistics should be collected"
+    if report:
+        Config.set('VARIABLES','SCIPION_NOTIFY','True')
+        return
     reportOn = Config.get('VARIABLES','SCIPION_NOTIFY')
     if reportOn=='False':
         # This works for  Python 2.x. and Python 3
@@ -123,31 +130,33 @@ def chekReport(Config):
            input = raw_input
         except NameError: 
              pass
-        print("""The Scipion developers team would appreciate if you  
-anonymously share your protocol usage statistics. These statistics
-just include the name of the protocols executed in your machine.
-We understand, of course, that some people do not wish to have any 
-information collected from them. You can enable or disable the 
-collection of information at any time (by default it is disabled).
+        print("""-----------------------------------------------------------------
+-----------------------------------------------------------------
+It would be very helpful if you allow Scipion
+to send anonymous usage data. This information will help Scipion's 
+team to identify the more demanded protocols and prioritize 
+support for them.
 
-This information will help our team to understand the popularity of 
-the different protocols and prioritize support for the more popular ones.
-
-Please, note that the statistics are completely anonymous and do not include 
-protocol parameters, file names or any data that can be used to identify
-your account, machine or data. In the URL 
-https://github.com/I2PC/scipion/wiki/Collecting-Usage-Statistics-for-Scipion 
+The collected usage information is completely anonymous and does not 
+include protocol parameters, file names or any data that can be used 
+to identify your account, machine or data. In the URL 
+https://github.com/I2PC/scipion/wiki/Collecting-Usage-Statistics-for-Scipion
 you may see examples of the transmited data as well as the 
 statistics created with it. You can always deactivate/activate 
 this option by editing the file $HOME/.config/scipion/scipion.conf 
 and setting the variable SCIPION_NOTIFY to False/True respectively.
+
+We understand, of course, that you may not wish to have any 
+information collected from you and we respect your privacy.
 """)
 
-        prompt = input("Press [y|Y]<enter> is you want to share data, otherwise just press <enter>: ")
-        if prompt == 'y' or prompt=='Y':
+        prompt = input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        if prompt == '':
             Config.set('VARIABLES','SCIPION_NOTIFY','True')
+        print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
+        print("-----------------------------------------------------------------\n-----------------------------------------------------------------")
 
-def createConf(fpath, ftemplate, remove=[], keep=[]):
+def createConf(fpath, ftemplate, remove=[], keep=[], report=False):
     "Create config file in fpath following the template in ftemplate"
     # Remove from the template the sections in "remove", and if "keep"
     # is used only keep those sections.
@@ -166,6 +175,7 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
 
     # Read the template configuration file.
     print(yellow("* Creating configuration file: %s" % fpath))
+    print("Please edit it to reflect the configuration of your system.\n")
     cf = ConfigParser()
     cf.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     assert cf.read(ftemplate) != [], 'Missing file: %s' % ftemplate
@@ -184,11 +194,11 @@ def createConf(fpath, ftemplate, remove=[], keep=[]):
                     cf.set('BUILD', key, options[key])
     # Collecting Protocol Usage Statistics 
     elif 'VARIABLES' in cf.sections():
-        chekReport(cf)
+        checkReport(cf,report)
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
-    print("Please edit it to reflect the configuration of your system.\n")
+    #print("Please edit it to reflect the configuration of your system.\n")
 
 
 def checkPaths(conf):
@@ -232,7 +242,7 @@ def checkPaths(conf):
               "can run: scipion config --overwrite")
 
 
-def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
+def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,report=False):
     """Check that all the variables in the template are in the config file too"""
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
@@ -294,6 +304,8 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False):
                       "parameter to update local config files." % (yellow(s), yellow(o), UPDATE_PARAM))
 
                 if update:
+                    if s=='VARIABLES' and o=='SCIPION_NOTIFY':
+                        checkReport(ct, report=report)
                     # Update config file with missing variable
                     value = ct.get(s, o)
                     cf.set(s, o, value)

@@ -263,7 +263,7 @@ class ProtGautomatch(em.ProtParticlePicking):
 
     def runGautomatchStep(self, micName, refStack, args):
         # We convert the input micrograph on demand if not in .mrc
-        runGautomatch(micName, refStack, self.getMicrographsDir(), args)
+        runGautomatch(micName, refStack, self.getMicrographsDir(), args, env=self._getEnviron())
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()

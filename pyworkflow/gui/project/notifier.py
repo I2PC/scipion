@@ -39,6 +39,7 @@ class ProjectNotifier(object):
     """ Implement different types of notifications about a given
     project. Currently, the protocols in a workflow will be sent.
     """
+
     def __init__(self, project):
         self.project = project
 

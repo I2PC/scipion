@@ -48,13 +48,6 @@ class TestNotifier(BaseTest):
         #change periodicy in notification
         os.environ["SCIPION_NOTIFY_SECONDS"] = "30"
         os.environ["SCIPION_NOTIFY"] = "True"
-        if not url:
-            print "SCIPION_NOTIFY and SCIPION_NOTIFY_URL should be defined!"
-            print "A test server is at Heroku, you can setup as:"
-            print "export SCIPION_NOTIFY=1"
-            print "export SCIPION_NOTIFY_URL=http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/"
-            return
-
         url = url.replace("workflow/workflow/",
                           "workflow/protocol/?name=ProtStress")
         results = json.loads(urllib2.urlopen(url).read())
@@ -74,8 +67,7 @@ class TestNotifier(BaseTest):
         #create and execute protocol stress
         prot1 = self.newProtocol(ProtStress, **kwargs)
         prot1.setObjLabel('stress')
-        self.proj.launchProtocol(prot1, wait=True)
-
+        self.proj.launchProtocol(prot1, wait=True) 
 
         #we want to test this class: ProjectNotifier
         projectNotifier = ProjectNotifier(self.proj)
@@ -108,7 +100,7 @@ class TestNotifier(BaseTest):
         #test that stored protocol and local one are identical
         self.assertEqual(project_workflowLocal, project_workflowRemote)
 
-        #now check that the  number of times protstress has been executed
+        #now check that the  number of times postgress has been executed
         #has increased in 1
         urlProt = self._getUrl()
         urlProt = urlProt.replace("workflow/workflow/",
