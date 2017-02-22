@@ -37,7 +37,7 @@ from pyworkflow.em.data import Coordinate, SetOfCoordinates
 
 from pyworkflow.utils.path import replaceBaseExt
 
-from convert import particleToRow, rowToSubcoordinate, setEnviron
+from convert import particleToRow, rowToSubcoordinate, setEnviron, getVersion
 
 
 CMM = 0
@@ -190,19 +190,9 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
             partItem = pyrelion.Item()
             particleToRow(part, partItem)
             
-            subparticles, _ = localrec.create_subparticles(partItem,
-                                                     symMatrices,
-                                                     subpartVectorList,
-                                                     params["dim"],
-                                                     self.relaxSym,
-                                                     self.randomize,
-                                                     "subparticles",
-                                                     params["unique"],
-                                                     0,
-                                                     self.alignSubparticles,
-                                                     "",
-                                                     True,
-                                                     filters)
+            subparticles = self.getSubparticles(localrec, partItem,
+                                                symMatrices, params,
+                                                subpartVectorList, filters)
             for subpart in subparticles:
                 rowToSubcoordinate(subpart, coord, part)
                 coord.setObjId(None) # Force to insert as a new item
@@ -211,7 +201,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
         self._defineOutputs(outputCoordinates=outputSet)
         self._defineSourceRelation(self.inputParticles, outputSet)
     
-    #--------------------------- INFO functions -------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         return errors
@@ -226,7 +216,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     def _methods(self):
         return []
     
-    #--------------------------- UTILS functions ------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getInputParticles(self):
         return self.getInputParticlesPointer().get()
     
@@ -289,3 +279,35 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
             maxCounter = max(counter, maxCounter)
 
         return str(maxCounter+1) if maxCounter > 0 else '' # empty if not outputs
+    
+    def getSubparticles(self, localrec, partItem, symMatrices,
+                        params, subpartVectorList, filters):
+        if getVersion() == '1.1.0':
+            subparticles, _ = localrec.create_subparticles(partItem,
+                                                           symMatrices,
+                                                           subpartVectorList,
+                                                           params["dim"],
+                                                           self.relaxSym,
+                                                           self.randomize,
+                                                           "subparticles",
+                                                           params["unique"],
+                                                           0,
+                                                           self.alignSubparticles,
+                                                           "",
+                                                           True,
+                                                           filters)
+        else:
+            subparticles, _ = localrec.create_subparticles(partItem,
+                                                           symMatrices,
+                                                           subpartVectorList,
+                                                           params["dim"],
+                                                           self.randomize,
+                                                           "subparticles",
+                                                           params["unique"],
+                                                           0,
+                                                           self.alignSubparticles,
+                                                           "",
+                                                           True,
+                                                           filters)
+
+        return subparticles
