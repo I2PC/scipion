@@ -418,8 +418,7 @@ relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
 env.addPackage('relion', version='2.0.3',
                tar='relion-2.0.3.tgz',
                commands=relion2_commands,
-               updateCuda=True,
-               cudaBin=True)
+               updateCuda=True)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')

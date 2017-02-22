@@ -105,8 +105,6 @@ class Command:
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
         self._environ = kwargs.get('environ', None)
-        print "__init__: cmd: ", cmd, 'self: ', id(self)
-        print "__init__: self._environ: ", self._environ
 
     def _existsAll(self):
         """ Return True if all targets exist. """
@@ -148,8 +146,6 @@ class Command:
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
-                    print "execute: cmd: ", cmd, 'self: ', id(self)
-                    print "execute: self._environ: ", self._environ
                     call(cmd, shell=True, env=self._environ)
 
             # Return to working directory, useful when we change dir
@@ -548,7 +544,6 @@ class Environment:
         environ = (self.updateCudaEnviron(name)
                    if kwargs.get('updateCuda', False) else None)
         
-        print "environ ", environ
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % extName)
@@ -688,33 +683,27 @@ class Environment:
         else:
             self._executeTargets(targetList)
         
-    def updateCudaEnviron(self, package, useBin=False):
+    def updateCudaEnviron(self, package):
         """ Update the environment adding CUDA_LIB and/or CUDA_BIN to support
         packages that uses CUDA.
         package: must be in capital letters. if empty, it is uses the general
         CUDA_LIB
         useBin: True if its needed cuda binaries
         """
-        if package is not None:
-            cudaLib = os.environ.get(package.upper() + '_CUDA_LIB')
-            cudaBin = os.environ.get(package.upper() + '_CUDA_BIN')
-        
-            if cudaLib is None:
-                cudaLib = os.environ.get('CUDA_LIB')
-                cudaBin = os.environ.get('CUDA_BIN')
+        cudaLib = os.environ.get(package.upper() + '_CUDA_LIB')
+        cudaBin = os.environ.get(package.upper() + '_CUDA_BIN')
     
-        else:
+        if cudaLib is None:
             cudaLib = os.environ.get('CUDA_LIB')
             cudaBin = os.environ.get('CUDA_BIN')
     
         environ = os.environ.copy()
+        
         if cudaLib is not None and os.path.exists(cudaLib):
             environ.update({'LD_LIBRARY_PATH': cudaLib + ":" +
                                                environ['LD_LIBRARY_PATH']})
-    
-        if cudaBin is not None and os.path.exists(cudaBin):
-            environ.update(
-                {'PATH': cudaBin + ":" + environ['PATH']})
+            environ.update({'PATH': cudaBin + ":" + environ['PATH']})
+        
         return environ
 
 
