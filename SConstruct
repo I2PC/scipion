@@ -422,7 +422,7 @@ def addJavaTest(env, name, source, installDir=None, default=True):
 
 def addProgram(env, name, src=None, pattern=None, installDir=None, 
                libPaths=[], incs=[], libs=[], cxxflags=[], linkflags=[], 
-               deps=[], mpi=False, cuda=False, default=True):
+               deps=[], mpi=False, cuda=False, nvcc=False, default=True):
     """Add, compile and install a program to the compilation process
     
     This pseudobuilder compiles a C++ program using CXX compiler and linker.
@@ -445,18 +445,22 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     libs = libs or []
     libPathsCopy = libPaths + [Dir('lib').abspath, Dir('#software/lib').abspath]
     incsCopy = list(incs) or []
-    if cuda:
+    if cuda or nvcc:
         libs += ['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt']
-        incsCopy += [join(env['CUDA_SDK_PATH'], "CUDALibraries","common","inc"),
-                     join(env['CUDA_SDK_PATH'], "shared","inc")]
-        libPathsCopy += [join(env['CUDA_SDK_PATH'],"CUDALibraries","common","lib","linux"),
-                         join("/usr","local","cuda","lib64"), env['CUDA_LIB_PATH']]
+        incsCopy += [env['NVCC_INCLUDE']]
+        libPathsCopy += [env['NVCC_LIBDIR']]
     sources = []
     for s, p in izip(src, pattern):
         sources += glob(join(s, p))
-    
-    ccCopy = env['MPI_CC'] if mpi else env['CC']
-    cxxCopy = env['MPI_CXX'] if mpi else env['CXX']
+
+    if mpi: ccCopy = env['MPI_CC']
+    elif nvcc: ccCopy = env['NVCC']
+    else: ccCopy = env['CC']  
+
+    if mpi: cxxCopy = env['MPI_CXX']
+    elif nvcc: cxxCopy = env['NVCC']
+    else: cxxCopy = env['CXX']  
+
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
     incsCopy += env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
                                         Dir('#software/include/python2.7').abspath]
@@ -473,8 +477,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
         appendUnique(ldLibraryPathCopy, env['MPI_LIBDIR'])
     env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
     env2['ENV']['PATH'] = env['ENV']['PATH']
-
-
+    
     program = env2.Program(
                           File(join(installDir, name)).abspath,
                           source=sources,
@@ -589,6 +592,9 @@ env['MPI_LIBDIR'] = os.environ['MPI_LIBDIR']
 env['MPI_INCLUDE'] = os.environ['MPI_INCLUDE']
 env['MPI_BINDIR'] = os.environ['MPI_BINDIR']
 env['MATLAB_DIR'] = os.environ.get('MATLAB_DIR')
+env['NVCC'] = os.environ.get('NVCC')
+env['NVCC_INCLUDE'] = os.environ.get('NVCC_INCLUDE')
+env['NVCC_LIBDIR'] = os.environ.get('NVCC_LIBDIR')
 
 # Java related environment variables, probably the main one
 # that need to be modified is JAVA_HOME

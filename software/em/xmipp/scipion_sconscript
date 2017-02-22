@@ -32,7 +32,6 @@ from os.path import join
 from glob import glob
 from datetime import datetime
 
-# https://github.com/jaredhoberock/nvcc-scons
 
 Import('env')
 
@@ -49,8 +48,6 @@ AddOption('--no-scipy', dest='scipy', action='store_false', default=True,
 
 env['CUDA_SDK_PATH'] = os.environ.get('CUDA_SDK_PATH', '')
 env['CUDA_LIB_PATH'] = os.environ.get('CUDA_LIB_PATH', '')
-#env.Tool('nvcc')
-env.Tool('cuda')
 
 get = lambda x: os.environ.get(x, '0').lower() in ['true', 'yes', 'y', '1']
 
@@ -461,10 +458,6 @@ def addProg(progName, **kwargs):
     incs = kwargs.get('incs', []) + [join(XMIPP_PATH, 'external'),
                                      join(XMIPP_PATH, 'libraries')]
     kwargs['incs'] = incs
-    if "cuda" in kwargs:
-    	kwargs['libs']+=['cudart']
-    	kwargs['incs']+=[env['CUDA_SDK_PATH']+"/CUDALibraries/common/inc",
-                           env['CUDA_SDK_PATH']+"/shared/inc"]
 
     if progName.startswith('mpi_'):
         kwargs['mpi'] = True
@@ -508,7 +501,7 @@ for p in ['angular_break_symmetry',
           'classify_first_split',
           'classify_kerdensom',
 			
-		  'ctf_correct_wiener2d',
+	  'ctf_correct_wiener2d',
           'ctf_correct_wiener3d',
           'ctf_correct_idr',
           'ctf_create_ctfdat',
@@ -729,7 +722,12 @@ if opencv:
         addProg('movie_optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
-        addProg('gpu_example',cuda=True)
+
+#ROB not sure if cuda=True is necesary
+if cuda:
+    addProg('gpu_example',
+                nvcc=True,cuda=True)
+
 
 
 #  ***********************************************************************
