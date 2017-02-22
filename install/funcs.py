@@ -616,7 +616,6 @@ class Environment:
         targets = targetList[::-1]
         while targets:
             tgt = targets.pop()
-            print  "TGT: ", tgt
             if tgt.getName() in executed:
                 continue
             deps = tgt.getDeps()
@@ -663,7 +662,6 @@ class Environment:
         # the selected ones, ignore starting with 'xmipp'
         cmdTargets = [a for a in self._args[2:]
                       if a[0].isalpha() and not a.startswith('xmipp')]
-        print "cmdTargets: ", cmdTargets
         if cmdTargets:
             # Check that they are all command targets
             for t in cmdTargets:
