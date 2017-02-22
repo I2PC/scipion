@@ -207,7 +207,6 @@ nfft3 = env.addLibrary(
     deps=[fftw3],
     default=False)
 
-
 #  ************************************************************************
 #  *                                                                      *
 #  *                           Python Modules                             *
@@ -401,6 +400,10 @@ relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
 
+env.addPackage('relion', version='1.3',
+               tar='relion-1.3.tgz',
+               commands=relion_commands)
+
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
                commands=relion_commands)
@@ -409,13 +412,13 @@ env.addPackage('relion', version='1.4f',
                tar='relion-1.4_float.tgz',
                commands=relion_commands)
 
-env.addPackage('relion', version='1.3',
-               tar='relion-1.3.tgz',
-               commands=relion_commands)
+relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
+                    ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
-env.addPackage('relion', version='2.0',
-               tar='relion-2.0.tgz',
-               commands=relion_commands)
+env.addPackage('relion', version='2.0.3',
+               tar='relion-2.0.3.tgz',
+               commands=relion2_commands,
+               updateCuda=True)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
