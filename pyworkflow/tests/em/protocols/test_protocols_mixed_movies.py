@@ -105,7 +105,7 @@ class TestMixedMovies(BaseTest):
                                objLabel='CC (no-write)',
                                alignFrame0=2, alignFrameN=10,
                                useAlignToSum=True,
-                               splineOrder=XmippProtMovieCorr.INTERP_LINEAR,
+                               splineOrder=XmippProtMovieCorr.INTERP_CUBIC,
                                numberOfThreads=4)
         mc1.inputMovies.set(protMovieImport.outputMovies)
         self.launchProtocol(mc1)
@@ -121,7 +121,7 @@ class TestMixedMovies(BaseTest):
                                objLabel='CC (write)',
                                alignFrame0=2, alignFrameN=10,
                                useAlignToSum=True,
-                               splineOrder=XmippProtMovieCorr.INTERP_LINEAR,
+                               splineOrder=XmippProtMovieCorr.INTERP_CUBIC,
                                doSaveMovie=True,
                                numberOfThreads=4)
         mc2.inputMovies.set(protMovieImport.outputMovies)
@@ -137,7 +137,7 @@ class TestMixedMovies(BaseTest):
         avg1 = self.newProtocol(XmippProtMovieAverage,
                                 objLabel='AVG (1)',
                                 sumFrame0=2, sumFrameN=10,
-                                splineOrder=XmippProtMovieAverage.INTERP_LINEAR,
+                                splineOrder=XmippProtMovieAverage.INTERP_CUBIC,
                                 numberOfThreads=4)
         avg1.inputMovies.set(mc1.outputMovies)
         self.launchProtocol(avg1)
@@ -145,7 +145,7 @@ class TestMixedMovies(BaseTest):
         avg2 = self.newProtocol(XmippProtMovieAverage,
                                 objLabel='AVG (2)',
                                 sumFrame0=2, sumFrameN=10,
-                                splineOrder=XmippProtMovieAverage.INTERP_LINEAR,
+                                splineOrder=XmippProtMovieAverage.INTERP_CUBIC,
                                 numberOfThreads=4)
 
         avg2.inputMovies.set(mc2.outputMovies)
