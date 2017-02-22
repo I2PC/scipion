@@ -105,6 +105,8 @@ class Command:
         self._out = kwargs.get('out', None)
         self._always = kwargs.get('always', False)
         self._environ = kwargs.get('environ', None)
+        print "__init__: cmd: ", cmd, 'self: ', id(self)
+        print "__init__: self._environ: ", self._environ
 
     def _existsAll(self):
         """ Return True if all targets exist. """
@@ -146,7 +148,8 @@ class Command:
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
-                    print "ENVIRON: ", self._environ, self._env
+                    print "execute: cmd: ", cmd, 'self: ', id(self)
+                    print "execute: self._environ: ", self._environ
                     call(cmd, shell=True, env=self._environ)
 
             # Return to working directory, useful when we change dir
@@ -542,8 +545,9 @@ class Environment:
         if kwargs.get('pythonMod', False):
             return self.addModule(name, **kwargs)
         
-        environ = (self.updateCudaEnviron(name, kwargs.get('cudaBin', False))
+        environ = (self.updateCudaEnviron(name)
                    if kwargs.get('updateCuda', False) else None)
+        
         print "environ ", environ
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
@@ -566,12 +570,12 @@ class Environment:
 
             target.addCommand(
                 cmd, targets=[join(target.targetPath, t) for t in tgt],
-                cwd=target.buildPath, final=True)
+                cwd=target.buildPath, final=True, environ=environ)
         
         target.addCommand(Command(self, Link(extName, targetDir),
                                   targets=[self.getEm(extName),
                                            self.getEm(targetDir)],
-                                  cwd=self.getEm(''), environ=environ),
+                                  cwd=self.getEm('')),
                           final=True)
         
         # Create an alias with the name for that version
