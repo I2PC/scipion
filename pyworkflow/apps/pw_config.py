@@ -62,8 +62,8 @@ def main():
         help=("Rewrite the configuration files using the original templates."))
     add(UPDATE_PARAM, action='store_true',
         help=("Updates you local config files with the values in the template, only for those missing values."))
-    add('--report', action='store_true',
-        help=("allow Scipion to report usage data (skips user question)"))
+    add('--notify', action='store_true',
+        help=("allow Scipion to notify  usage data (skips user question)"))
     options, args = parser.parse_args()
 
     if args:  # no args which aren't options
@@ -85,11 +85,11 @@ def main():
             (os.environ['SCIPION_HOSTS'], 'hosts')]:
             if not exists(fpath) or options.overwrite:
                 createConf(fpath, join(templatesDir, tmplt + '.template'),
-                           remove=localSections, report=options.report)
+                           remove=localSections, notify=options.notify)
             else:
                 checkConf(fpath, join(templatesDir, tmplt + '.template'),
                           remove=localSections, update=options.update,
-                          report=options.report)
+                          notify=options.notify)
 
         if not globalIsLocal:  # which is normally the case
             # Local user configuration files (well, only "scipion.conf").
@@ -98,12 +98,12 @@ def main():
                 createConf(os.environ['SCIPION_LOCAL_CONFIG'],
                            join(templatesDir, 'scipion.template'),
                            keep=localSections,
-                           report=options.report)
+                           notify=options.notify)
             else:
                 checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
                           join(templatesDir, 'scipion.template'),
                           keep=localSections, update=options.update,
-                          report=options.report)
+                          notify=options.notify)
 
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
@@ -118,13 +118,13 @@ def main():
         sys.stderr.write('Error: %s\n' % sys.exc_info()[1])
         sys.exit(1)
 
-def checkReport(Config, report=False):
+def checkNotify(Config, notify=False):
     "Check if protocol statistics should be collected"
-    if report:
+    if notify:
         Config.set('VARIABLES','SCIPION_NOTIFY','True')
         return
-    reportOn = Config.get('VARIABLES','SCIPION_NOTIFY')
-    if reportOn=='False':
+    notifyOn = Config.get('VARIABLES','SCIPION_NOTIFY')
+    if notifyOn=='False':
         # This works for  Python 2.x. and Python 3
         try: 
            input = raw_input
@@ -156,7 +156,7 @@ information collected from you and we respect your privacy.
         print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
         print("-----------------------------------------------------------------\n-----------------------------------------------------------------")
 
-def createConf(fpath, ftemplate, remove=[], keep=[], report=False):
+def createConf(fpath, ftemplate, remove=[], keep=[], notify=False):
     "Create config file in fpath following the template in ftemplate"
     # Remove from the template the sections in "remove", and if "keep"
     # is used only keep those sections.
@@ -194,7 +194,7 @@ def createConf(fpath, ftemplate, remove=[], keep=[], report=False):
                     cf.set('BUILD', key, options[key])
     # Collecting Protocol Usage Statistics 
     elif 'VARIABLES' in cf.sections():
-        checkReport(cf,report)
+        checkNotify(cf,notify)
 
     # Create the actual configuration file.
     cf.write(open(fpath, 'w'))
@@ -242,7 +242,7 @@ def checkPaths(conf):
               "can run: scipion config --overwrite")
 
 
-def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,report=False):
+def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
     """Check that all the variables in the template are in the config file too"""
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
@@ -305,7 +305,7 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,report=False):
 
                 if update:
                     if s=='VARIABLES' and o=='SCIPION_NOTIFY':
-                        checkReport(ct, report=report)
+                        checkNotify(ct, notify=notify)
                     # Update config file with missing variable
                     value = ct.get(s, o)
                     cf.set(s, o, value)
