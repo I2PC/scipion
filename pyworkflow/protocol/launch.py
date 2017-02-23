@@ -125,7 +125,6 @@ def _runRemote(protocol, mode):
     """
     host = protocol.getHostConfig()
     tpl = "ssh %(address)s '%(scipion)s/scipion "
-
     if host.getScipionConfig() is not None:
         tpl += "--config %(config)s "
 
@@ -177,7 +176,8 @@ def _copyFiles(protocol, rpath):
         ssh: an ssh connection to copy the files.
     """
     remotePath = protocol.getHostConfig().getHostPath()
-
+    
+    
     for f in protocol.getFiles():
         remoteFile = join(remotePath, f)
         rpath.putFile(f, remoteFile)
@@ -223,12 +223,14 @@ def _run(command, wait, stdin=None, stdout=None, stderr=None):
     guicmd = _pass_though_no_gui_state(command)
     gcmd = greenStr(guicmd)
     print "** Running command: '%s'" % gcmd
+    guicmd = _pass_though_no_gui_state(command)
     p = Popen(guicmd, shell=True, stdout=stdout, stderr=stderr)
     jobId = p.pid
     if wait:
         p.wait()
 
     return jobId
+
 
 # ******************************************************************
 # *                 Function related to STOP
@@ -247,4 +249,5 @@ def _stopLocal(protocol):
 
 def _stopRemote(protocol):
     _runRemote(protocol, 'stop')
+    
     
