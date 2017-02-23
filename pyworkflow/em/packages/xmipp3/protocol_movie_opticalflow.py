@@ -190,14 +190,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 args += ' post'
             
             if self.doSaveUnweightedMic:
-                outUnwtMicFn = self._getExtraPath(self._getOutputMicName(movie))
-                
-                # To save the unweighted aligned micrograph, we must save the
-                # unweighted aligned movie. For now, we save it in tmp movie
-                # folder.
-                uncorrFnBase = self._getMovieRoot(movie) + '_unWt_movie.mrcs'
-                outUnwtMovieFn = self._getFnInMovieFolder(movie, uncorrFnBase)
-                
+                outUnwtMicFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_mic.mrc')
+                outUnwtMovieFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_movie.mrcs')            
                 args += ' --oUnc %s %s' % (outUnwtMicFn, outUnwtMovieFn)
             
         try:
