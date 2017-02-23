@@ -213,12 +213,17 @@ def _submit(hostConfig, submitDict):
         print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
         return UNKNOWN_JOBID
 
-    
+def _pass_though_no_gui_state(command):
+    if 'SCIPION_NOGUI' in os.environ:
+        return 'export SCIPION_NOGUI=true;' + command
+    return command
+
 def _run(command, wait, stdin=None, stdout=None, stderr=None):
     """ Execute a command in a subprocess and return the pid. """
     gcmd = greenStr(command)
     print "** Running command: '%s'" % gcmd
-    p = Popen(command, shell=True, stdout=stdout, stderr=stderr)
+    guicmd = _pass_though_no_gui_state(command)
+    p = Popen(guicmd, shell=True, stdout=stdout, stderr=stderr)
     jobId = p.pid
     if wait:
         p.wait()
