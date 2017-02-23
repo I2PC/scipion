@@ -149,34 +149,52 @@ class TestRelionRefine(TestRelionBase):
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
       
     def testProtRelionRefine(self):
+        from pyworkflow.em.packages.relion.convert import getVersion
         relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
         relionNormalize.inputParticles.set(self.protImport.outputParticles)
         relionNormalize.doNormalize.set(True)
         self.launchProtocol(relionNormalize)
-  
-        print "Run ProtRelionRefine"
-        relionRefine = self.newProtocol(ProtRelionRefine3D, 
-                                        doCTF=False, runMode=1,
-                                        memoryPreThreads=1,
-                                        maskDiameterA=340, symmetryGroup="d6",
-                                        numberOfMpi=3, numberOfThreads=2)
-        relionRefine.inputParticles.set(relionNormalize.outputParticles)
-        relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
-        self.launchProtocol(relionRefine)
         
-        self.assertIsNotNone(relionRefine.outputVolume,
-                             "There was a problem with Relion autorefine")
+        def _runRelionRefine(doGpu=False, label=""):
+            
+            print label
+            relionRefine = self.newProtocol(ProtRelionRefine3D,
+                                            doCTF=False, runMode=1,
+                                            memoryPreThreads=1,
+                                            maskDiameterA=340,
+                                            symmetryGroup="d6",
+                                            numberOfMpi=3, numberOfThreads=2)
+            relionRefine.inputParticles.set(relionNormalize.outputParticles)
+            relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
+            if getVersion() == "2.0":
+                relionRefine.doGpu.set(doGpu)
+            self.launchProtocol(relionRefine)
+            return relionRefine
         
-        relionRefine._initialize() # Load filename templates
-        dataSqlite =  relionRefine._getIterData(3)
-        outImgSet = em.SetOfParticles(filename=dataSqlite)
-        self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
-                               relionNormalize.outputParticles[1].getSamplingRate(),
-                               "The sampling rate is wrong", delta=0.00001)
-        
-        self.assertAlmostEqual(outImgSet[1].getFileName(),
+        def _checkAsserts(relionProt):
+            relionProt._initialize()  # Load filename templates
+            dataSqlite = relionProt._getIterData(3)
+            outImgSet = em.SetOfParticles(filename=dataSqlite)
+            
+            self.assertIsNotNone(relionNoGpu.outputVolume,
+                                 "There was a problem with Relion autorefine")
+            self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
+                           relionNormalize.outputParticles[1].getSamplingRate(),
+                                   "The sampling rate is wrong", delta=0.00001)
+    
+            self.assertAlmostEqual(outImgSet[1].getFileName(),
                                relionNormalize.outputParticles[1].getFileName(),
-                               "The particles filenames are wrong")
+                                   "The particles filenames are wrong")
+        
+        if getVersion() == "2.0":
+            relionNoGpu = _runRelionRefine(False, "Run Relion No GPU")
+            _checkAsserts(relionNoGpu)
+            relionNoGpu = _runRelionRefine(True, "Run Relion GPU")
+            _checkAsserts(relionNoGpu)
+        else:
+            relionProt = _runRelionRefine(label="Run Relion auto-refine")
+            _checkAsserts(relionProt)
+        
         
 class TestRelionPreprocess(TestRelionBase):
     """ This class helps to test all different preprocessing particles options
