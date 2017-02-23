@@ -57,8 +57,13 @@ def getEnviron(xmippFirst=True):
     pos = Environ.BEGIN if xmippFirst else Environ.END
     environ.update({
             'PATH': join(os.environ['XMIPP_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib')
+            'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib'),
             }, position=pos)
+    if  os.environ['CUDA']:
+        environ.update({
+            'LD_LIBRARY_PATH': os.environ['NVCC_LIBDIR']
+            }, position=pos)
+
     return environ
 
 def runXmippProgram(program, args=""):
@@ -575,7 +580,7 @@ class HelicalFinder():
             args+=" --mask cylinder %d %d"%(-cylinderOuterRadius,-height)
         elif cylinderOuterRadius>0 and cylinderInnerRadius>0:
             args+=" --mask tube %d %d %d"%(-cylinderInnerRadius,-cylinderOuterRadius,-height)
-        self.runJob('xmipp_volume_find_symmetry',args,numberOfMpi=1)
+        self.runJob('xmipp_volume_find_symmetry',args, numberOfMpi=1)
 
     def runFineSearch(self, fnVol, dihedral, fnCoarse, fnFine, heightFraction, z0, zF, rot0, rotF, cylinderInnerRadius, cylinderOuterRadius, height, Ts):
         md=MetaData(fnCoarse)
@@ -588,7 +593,7 @@ class HelicalFinder():
             args+=" --mask cylinder %d %d"%(-cylinderOuterRadius,-height)
         elif cylinderOuterRadius>0 and cylinderInnerRadius>0:
             args+=" --mask tube %d %d %d"%(-cylinderInnerRadius,-cylinderOuterRadius,-height)
-        self.runJob('xmipp_volume_find_symmetry',args,numberOfMpi=1)
+        self.runJob('xmipp_volume_find_symmetry',args, numberOfMpi=1)
 
     def runSymmetrize(self, fnVol, dihedral, fnParams, fnOut, heightFraction, cylinderInnerRadius, cylinderOuterRadius, height, Ts):
         md=MetaData(fnParams)
@@ -605,7 +610,7 @@ class HelicalFinder():
             args="-i %s --mask tube %d %d %d"%(fnVol,-cylinderInnerRadius,-cylinderOuterRadius,-height)
             doMask=True
         if doMask:
-            self.runJob('xmipp_transform_mask',args)
+            self.runJob('xmipp_transform_mask',args,numberOfMpi=1)
             
 
 # ---------------- Legacy code from 'protlib_xmipp.py' ----------------------

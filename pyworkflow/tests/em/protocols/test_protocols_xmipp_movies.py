@@ -205,7 +205,7 @@ class TestCorrelationAlignment(BaseTest):
                          msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
 
     def test_qbeta(self):
-        prot = self.newProtocol(XmippProtMovieCorr)
+        prot = self.newProtocol(XmippProtMovieCorr,doPSD=True)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
@@ -215,7 +215,8 @@ class TestCorrelationAlignment(BaseTest):
 
     def test_cct(self):
         prot = self.newProtocol(XmippProtMovieCorr,
-                                doSaveMovie=True)
+                                doSaveMovie=True,
+                                doPSD=True)
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
 
@@ -227,7 +228,8 @@ class TestCorrelationAlignment(BaseTest):
         prot = self.newProtocol(XmippProtMovieCorr,
                                 alignFrame0=3, alignFrameN=5,
                                 sumFrame0=3, sumFrameN=5,
-                                cropOffsetX=10, cropOffsetY=10)
+                                cropOffsetX=10, cropOffsetY=10,
+                                doPSD=True)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 

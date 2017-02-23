@@ -27,6 +27,8 @@
 import math
 
 from os.path import join, exists
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
                                         EnumParam, NumericRangeParam,
                                         PathParam, FloatParam, LEVEL_ADVANCED)
@@ -50,6 +52,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     single particles.
     """
     _label = 'localized subparticles'
+    _version = VERSION_1_1
     
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)

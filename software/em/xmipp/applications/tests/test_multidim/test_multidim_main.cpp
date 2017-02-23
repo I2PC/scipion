@@ -331,6 +331,29 @@ TEST( MultidimTest, mapFile)
     XMIPP_CATCH
 }
 
+// check the window2D is right
+TEST( MultidimTest, window2D)
+{
+    XMIPP_TRY
+    MultidimArray<double> imgLarge, imgSmall, imgWindow;
+
+    imgLarge.resize(4,4);
+    imgLarge.setXmippOrigin();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(imgLarge)
+    A2D_ELEM(imgLarge, i,j) = i*10+j;
+
+    imgSmall.resize(2,2);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(imgSmall)
+    A2D_ELEM(imgSmall, i,j) = i*10+j;
+
+    window2D(imgLarge, imgWindow, 0, 0, 1, 1);
+    imgWindow-=imgSmall;
+    imgWindow.selfABS();
+    EXPECT_EQ(imgWindow.sum(),0);
+
+    XMIPP_CATCH
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
 

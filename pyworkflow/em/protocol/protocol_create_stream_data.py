@@ -31,6 +31,8 @@ from protocol import EMProtocol
 import time
 import xmipp
 import random
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename, exists
@@ -40,6 +42,7 @@ class ProtCreateStreamData(EMProtocol):
     """ create  setofXXXX in streaming mode.
     """
     _label="create stream data"
+    _version = VERSION_1_1
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200

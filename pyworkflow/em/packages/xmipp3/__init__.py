@@ -56,7 +56,7 @@ from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
-
+from viewer_reconstruct_highres import XmippReconstructHighResViewer
 from viewer_solid_angles import SolidAnglesViewer
 
 from plotter import XmippPlotter
@@ -100,6 +100,7 @@ from protocol_projmatch import XmippProtProjMatch, XmippProjMatchViewer
 from protocol_random_conical_tilt import XmippProtRCT
 from protocol_ransac import XmippProtRansac
 from protocol_reconstruct_fourier import XmippProtReconstructFourier
+from protocol_reconstruct_highres import XmippProtReconstructHighRes
 from protocol_reconstruct_significant import XmippProtReconstructSignificant
 from protocol_resolution3d import XmippProtResolution3D
 from protocol_resolution_monogenic_signal import XmippProtMonoRes
@@ -110,7 +111,7 @@ from protocol_solid_angles import XmippProtSolidAngles
 from protocol_split_volume import XmippProtSplitvolume
 from protocol_validate_nontilt import XmippProtValidateNonTilt
 from protocol_validate_overfitting import XmippProtValidateOverfitting
-from protocol_validate_tilt import XmippProtValidateTilt
+# from protocol_validate_tilt import XmippProtValidateTilt
 from protocol_volume_strain import XmippProtVolumeStrain
 from protocol_volume_homogenizer import XmippProtVolumeHomogenizer
 from protocol_write_testC import XmippProtWriteTestC

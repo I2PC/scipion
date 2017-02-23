@@ -573,6 +573,9 @@ env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
 cxxFlags = os.environ.get('CXXFLAGS', '')
 if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
    cxxFlags += ' -g'
+else:
+    if cxxFlags.find("-O")==-1:
+        cxxFlags += " -O3"
 env['CXXFLAGS'] = cxxFlags.split()
 os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()

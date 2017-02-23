@@ -28,19 +28,17 @@
 # ******************************************************************************
 
 from os.path import join, exists
-from glob import glob
-from itertools import izip
 
 import pyworkflow.object as pwobj
 import pyworkflow.utils as pwutils
 import pyworkflow.em as em
+from pyworkflow import VERSION_1_1
 from pyworkflow.gui.project import ProjectWindow
 from pyworkflow.em.protocol import ProtAlignMovies
+from pyworkflow.em.protocol.protocol_align_movies import createAlignmentPlot
 import pyworkflow.protocol.params as params
-from pyworkflow.gui.plotter import Plotter
 import pyworkflow.em.metadata as md
-from convert import writeMovieMd, getMovieFileName
-
+from convert import writeMovieMd
 
 PLOT_CART = 0
 PLOT_POLAR = 1
@@ -52,7 +50,9 @@ class XmippProtOFAlignment(ProtAlignMovies):
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
     """
     _label = 'optical alignment'
+    _version = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
+
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineAlignmentParams(self, form):
@@ -98,6 +98,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "RAM, decreasing disc access")
         
         group = form.addGroup('Dose Compensation')
+
         group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
                        label='Apply Dose filter',
                        help='Apply a dose-dependent filter to frames before '
@@ -115,7 +116,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                             "the alignment; else will apply after alignment.")
 
         form.addParallelSection(threads=8, mpi=0)
-    
+
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
@@ -235,24 +236,28 @@ class XmippProtOFAlignment(ProtAlignMovies):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = ProtAlignMovies._validate(self)
-        # Although getFirstItem is not remonended in general, here it is
-        # used olny once, for validation purposes, so performance
-        # problems not should be apprear.
-        inputSet = self.inputMovies.get()
-        movie = inputSet.getFirstItem()
-        if (not movie.hasAlignment()) and self.useAlignment:
-            errors.append("Your movies has not alignment. Please, set *No* "
-                          "the parameter _Use previous movie alignment to SUM"
-                          " frames?_")
+        # Although getFirstItem is not recommended in general, here it is
+        # used only once, for validation purposes, so performance
+        # problems not should be appear.
+
+        if not self.inputMovies.get() is None:
+            inputSet = self.inputMovies.get()
+            movie = inputSet.getFirstItem()
+            if (not movie.hasAlignment()) and self.useAlignment:
+                errors.append("Your movies has not alignment. Please, set *No* "
+                              "the parameter _Use previous movie alignment to SUM"
+                              " frames?_")
+
+            if self.doApplyDoseFilter:
+                doseFrame = inputSet.getAcquisition().getDosePerFrame()
+
+                if doseFrame == 0.0 or doseFrame is None:
+                    errors.append('Dose per frame for input movies is 0 or not '
+                                  'set. You cannot apply dose filter.')
+
         if self.numberOfThreads > 1 and self.doGPU:
             errors.append("GPU and Parallelization can not be used together")
 
-        if self.doApplyDoseFilter:
-            doseFrame = inputSet.getAcquisition().getDosePerFrame()
-    
-            if doseFrame == 0.0 or doseFrame is None:
-                errors.append('Dose per frame for input movies is 0 or not '
-                              'set. You cannot apply dose filter.')
         return errors
 
     def _citations(self):
@@ -381,41 +386,6 @@ def showCartesianShiftsPlot(inputSet, itemId):
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,
                                     showCartesianShiftsPlot)
-
-def createAlignmentPlot(meanX, meanY):
-    """ Create a plotter with the cumulative shift per frame. """
-    sumMeanX = []
-    sumMeanY = []
-    figureSize = (8, 6)
-    plotter = Plotter(*figureSize)
-    figure = plotter.getFigure()
-
-    preX = 0.0
-    preY = 0.0
-    sumMeanX.append(0.0)
-    sumMeanY.append(0.0)
-    ax = figure.add_subplot(111)
-    ax.grid()
-    ax.set_title('Cartesian representation')
-    ax.set_xlabel('Drift x (pixels)')
-    ax.set_ylabel('Drift y (pixels)')
-    ax.plot(0, 0, 'yo-')
-    i = 1
-    for x, y in izip(meanX, meanY):
-        preX += x
-        preY += y
-        sumMeanX.append(preX)
-        sumMeanY.append(preY)
-        #ax.plot(preX, preY, 'yo-')
-        ax.text(preX-0.02, preY+0.02, str(i))
-        i += 1
-
-    ax.plot(sumMeanX, sumMeanY, color='b')
-    ax.plot(sumMeanX, sumMeanY, 'yo')
-
-    plotter.tightLayout()
-
-    return plotter
 
 # Just for backwards compatibility
 ProtMovieAlignment = XmippProtOFAlignment

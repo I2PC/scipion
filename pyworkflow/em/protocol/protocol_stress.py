@@ -31,6 +31,8 @@ from protocol import EMProtocol
 import time
 import xmipp
 import random
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import SetOfMicrographs
 
 STRESS_NG = 'stress-ng'
@@ -42,6 +44,7 @@ class ProtStress(EMProtocol):
     """
     _label = 'stress'
     _program = STRESS_NG
+    _version = VERSION_1_1
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
