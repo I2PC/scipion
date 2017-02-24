@@ -39,7 +39,7 @@ noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 #  *******************************
 #  *  PATHS
 #  *******************************
-SCIPION = env._args[0]
+SCIPION = os.path.abspath(env._args[0])
 SW = SCIPION + '/software'
 SW_BIN = SW + '/bin'
 SW_LIB = SW + '/lib'
