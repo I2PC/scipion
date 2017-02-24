@@ -27,7 +27,7 @@
 import os
 from os.path import join, exists
 
-from pyworkflow.utils import Environ
+from pyworkflow.utils import Environ, getEnvVariable
 
 
 def _getHome(key, default):
@@ -37,10 +37,13 @@ def _getHome(key, default):
     return os.environ.get(key, join(os.environ['EM_ROOT'], default))
 
 
-MOTIONCORR = 'dosefgpu_driftcorr'
+MOTIONCORR = getEnvVariable('MOTIONCORR')
+MOTIONCORR = os.path.basename(MOTIONCORR)
 MOTIONCOR2 = 'motioncor2'
+
 MOTIONCORR_PATH = join(_getHome('MOTIONCORR_HOME', 'motioncorr'),
                        'bin', MOTIONCORR)
+
 MOTIONCOR2_PATH = join(_getHome('MOTIONCOR2_HOME', 'motioncor2'),
                        'bin', MOTIONCOR2)
 
