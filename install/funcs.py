@@ -684,24 +684,31 @@ class Environment:
     def updateCudaEnviron(self, package):
         """ Update the environment adding CUDA_LIB and/or CUDA_BIN to support
         packages that uses CUDA.
-        package: must be in capital letters. if empty, it is uses the general
-        CUDA_LIB
-        useBin: True if its needed cuda binaries
+        package: package that needs CUDA to compile.
         """
-        cudaLib = os.environ.get(package.upper() + '_CUDA_LIB')
-        cudaBin = os.environ.get(package.upper() + '_CUDA_BIN')
+        packUpper = package.upper()
+        cudaLib = os.environ.get(packUpper + '_CUDA_LIB')
+        cudaBin = os.environ.get(packUpper + '_CUDA_BIN')
     
         if cudaLib is None:
             cudaLib = os.environ.get('CUDA_LIB')
             cudaBin = os.environ.get('CUDA_BIN')
-    
+
         environ = os.environ.copy()
         
-        if cudaLib is not None and os.path.exists(cudaLib):
+        if cudaLib is not None and cudaBin is None:
+            raise Exception("CUDA_LIB (or %s_CUDA_LIB) is defined, but not "
+                            "CUDA_BIN (or %s_CUDA_BIN), please excecute "
+                            "scipion config --update" % (packUpper, packUpper))
+        elif cudaBin is not None and cudaLib is None:
+            raise Exception("CUDA_BIN (or %s_CUDA_BIN) is defined, but not "
+                            "CUDA_LIB (or %s_CUDA_LIB), please excecute "
+                            "scipion config --update" % (packUpper, packUpper))
+        elif os.path.exists(cudaLib) and os.path.exists(cudaBin):
             environ.update({'LD_LIBRARY_PATH': cudaLib + ":" +
                                                environ['LD_LIBRARY_PATH']})
             environ.update({'PATH': cudaBin + ":" + environ['PATH']})
-        
+
         return environ
 
 
