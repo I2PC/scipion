@@ -24,13 +24,12 @@ def main():
     projectorParser.add_argument('--projectionSize', help='Projection window dimensions', type=int)
     projectorParser.add_argument('--paddingFactor', default=1, type=float, help='Projection padding factor')
     projectorParser.add_argument('--maxFreq', default=0.5, type=float, help='Projection spline degree')
-    projectorParser.add_argument('--splineDegree', default='BSPLINE2',
-                        choices=['NEAREST', 'LINEAR', 'BSPLINE2', 'BSPLINE3', 'BSPLINE4'], help='projection window dimensions')
+    projectorParser.add_argument('--splineDegree', default='BSPLINE3',
+                        choices=['NEAREST', 'LINEAR', 'BSPLINE3'], help='projection window dimensions')
     projectorParser.add_argument('--showjPort', help='Port to link projections to chimera', type=int)
 
 
-    splineDegreeDict = {'NEAREST': xmipp.NEAREST, 'LINEAR': xmipp.LINEAR,
-                        'BSPLINE2': xmipp.BSPLINE2, 'BSPLINE3': xmipp.BSPLINE3, 'BSPLINE4': xmipp.BSPLINE4}
+    splineDegreeDict = {'NEAREST': xmipp.NEAREST, 'LINEAR': xmipp.LINEAR, 'BSPLINE3': xmipp.BSPLINE3}
 
     args = parentParser.parse_args()
     #print args
