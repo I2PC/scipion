@@ -548,7 +548,6 @@ class Environment:
         variables = kwargs.get('vars',[])
         for var,value in variables:
             environ.update({var: value})
-            print var + " - " + value
 
 
         # We reuse the download and untar from the addLibrary method
