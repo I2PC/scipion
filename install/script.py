@@ -428,7 +428,7 @@ env.addPackage('relion', version='1.4f',
 
 # Define FFTW3 path variables
 relion_vars = [('FFTW_LIB', SW_LIB),
-               ('FFTW_INC', SW_INC)]
+               ('FFTW_INCLUDE', SW_INC)]
 
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
                     ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
