@@ -36,6 +36,20 @@ noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
 noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 
 
+#  *******************************
+#  *  PATHS
+#  *******************************
+# GET the real path where scipion is installed
+SCIPION = env._args[0]
+SCIPION = os.path.realpath(SCIPION)
+SCIPION = os.path.dirname(SCIPION)
+SCIPION = os.path.abspath(SCIPION)
+
+SW = SCIPION + '/software'
+SW_BIN = SW + '/bin'
+SW_LIB = SW + '/lib'
+SW_INC = SW + '/include'
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                              Libraries                               *
@@ -412,13 +426,18 @@ env.addPackage('relion', version='1.4f',
                tar='relion-1.4_float.tgz',
                commands=relion_commands)
 
+# Define FFTW3 path variables
+relion_vars = [('FFTW_LIB', SW_LIB),
+               ('FFTW_INC', SW_INC)]
+
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
                     ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
 env.addPackage('relion', version='2.0.3',
                tar='relion-2.0.3.tgz',
                commands=relion2_commands,
-               updateCuda=True)
+               updateCuda=True,
+               vars=relion_vars)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
