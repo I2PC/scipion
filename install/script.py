@@ -39,7 +39,12 @@ noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 #  *******************************
 #  *  PATHS
 #  *******************************
+# GET the real path where scipion is installed
 SCIPION = env._args[0]
+SCIPION = os.path.realpath(SCIPION)
+SCIPION = os.path.dirname(SCIPION)
+SCIPION = os.path.abspath(SCIPION)
+
 SW = SCIPION + '/software'
 SW_BIN = SW + '/bin'
 SW_LIB = SW + '/lib'
