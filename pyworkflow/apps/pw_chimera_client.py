@@ -23,9 +23,9 @@ def main():
     projectorParser = subparsers.add_parser('projector', help='Projector mode displays volume projection.', parents=[commonParser])
     projectorParser.add_argument('--projectionSize', help='Projection window dimensions', type=int)
     projectorParser.add_argument('--paddingFactor', default=1, type=float, help='Projection padding factor')
-    projectorParser.add_argument('--maxFreq', default=0.5, type=float, help='Projection spline degree')
+    projectorParser.add_argument('--maxFreq', default=0.5, type=float, help='Maximum frequency used for the projection (normalized to 0.5)')
     projectorParser.add_argument('--splineDegree', default='BSPLINE3',
-                        choices=['NEAREST', 'LINEAR', 'BSPLINE3'], help='projection window dimensions')
+                        choices=['NEAREST', 'LINEAR', 'BSPLINE3'], help='Projection spline degree')
     projectorParser.add_argument('--showjPort', help='Port to link projections to chimera', type=int)
 
 
