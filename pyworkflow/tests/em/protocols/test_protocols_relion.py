@@ -199,7 +199,7 @@ class TestRelionRefine(TestRelionBase):
 
             if cudaPath is not None and os.path.exists(cudaPath):
                 relionGpu = _runRelionRefine(True, "Relion auto-refine GPU")
-            _checkAsserts(relionGpu)
+                _checkAsserts(relionGpu)
         else:
             relionProt = _runRelionRefine(label="Run Relion auto-refine")
             _checkAsserts(relionProt)
