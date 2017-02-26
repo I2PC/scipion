@@ -147,15 +147,16 @@ class TestRelionRefine(TestRelionBase):
         TestRelionBase.setData('mda')
         cls.protImport = cls.runImportParticles(cls.particlesFn, 3.5)
         cls.protImportVol = cls.runImportVolumes(cls.vol, 3.5)
-      
+    
     def testProtRelionRefine(self):
         from pyworkflow.em.packages.relion.convert import getVersion
+        
         relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
         relionNormalize.inputParticles.set(self.protImport.outputParticles)
         relionNormalize.doNormalize.set(True)
         self.launchProtocol(relionNormalize)
         
-        def _runRelionRefine(doGpu=False, label=""):
+        def _runRelionRefine(doGpu=False, label=''):
             
             print label
             relionRefine = self.newProtocol(ProtRelionRefine3D,
@@ -164,10 +165,13 @@ class TestRelionRefine(TestRelionBase):
                                             maskDiameterA=340,
                                             symmetryGroup="d6",
                                             numberOfMpi=3, numberOfThreads=2)
+            relionRefine.setObjLabel(label)
             relionRefine.inputParticles.set(relionNormalize.outputParticles)
             relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
+            
             if getVersion() == "2.0":
                 relionRefine.doGpu.set(doGpu)
+            
             self.launchProtocol(relionRefine)
             return relionRefine
         
@@ -179,18 +183,23 @@ class TestRelionRefine(TestRelionBase):
             self.assertIsNotNone(relionNoGpu.outputVolume,
                                  "There was a problem with Relion autorefine")
             self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
-                           relionNormalize.outputParticles[1].getSamplingRate(),
+                                   relionNormalize.outputParticles[1].getSamplingRate(),
                                    "The sampling rate is wrong", delta=0.00001)
-    
+            
             self.assertAlmostEqual(outImgSet[1].getFileName(),
-                               relionNormalize.outputParticles[1].getFileName(),
+                                   relionNormalize.outputParticles[1].getFileName(),
                                    "The particles filenames are wrong")
         
         if getVersion() == "2.0":
-            relionNoGpu = _runRelionRefine(False, "Run Relion No GPU")
+            relionNoGpu = _runRelionRefine(False, "Relion auto-refine No GPU")
             _checkAsserts(relionNoGpu)
-            relionNoGpu = _runRelionRefine(True, "Run Relion GPU")
-            _checkAsserts(relionNoGpu)
+
+            environ = Environ(os.environ)
+            cudaPath = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
+
+            if cudaPath is not None and os.path.exists(cudaPath):
+                relionGpu = _runRelionRefine(True, "Relion auto-refine GPU")
+            _checkAsserts(relionGpu)
         else:
             relionProt = _runRelionRefine(label="Run Relion auto-refine")
             _checkAsserts(relionProt)
