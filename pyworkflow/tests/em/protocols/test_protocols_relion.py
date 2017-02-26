@@ -151,10 +151,10 @@ class TestRelionRefine(TestRelionBase):
     def testProtRelionRefine(self):
         from pyworkflow.em.packages.relion.convert import getVersion
         
-        relionNormalize = self.newProtocol(ProtRelionPreprocessParticles)
-        relionNormalize.inputParticles.set(self.protImport.outputParticles)
-        relionNormalize.doNormalize.set(True)
-        self.launchProtocol(relionNormalize)
+        relNorm = self.newProtocol(ProtRelionPreprocessParticles)
+        relNorm.inputParticles.set(self.protImport.outputParticles)
+        relNorm.doNormalize.set(True)
+        self.launchProtocol(relNorm)
         
         def _runRelionRefine(doGpu=False, label=''):
             
@@ -166,7 +166,7 @@ class TestRelionRefine(TestRelionBase):
                                             symmetryGroup="d6",
                                             numberOfMpi=3, numberOfThreads=2)
             relionRefine.setObjLabel(label)
-            relionRefine.inputParticles.set(relionNormalize.outputParticles)
+            relionRefine.inputParticles.set(relNorm.outputParticles)
             relionRefine.referenceVolume.set(self.protImportVol.outputVolume)
             
             if getVersion() == "2.0":
@@ -183,11 +183,11 @@ class TestRelionRefine(TestRelionBase):
             self.assertIsNotNone(relionNoGpu.outputVolume,
                                  "There was a problem with Relion autorefine")
             self.assertAlmostEqual(outImgSet[1].getSamplingRate(),
-                                   relionNormalize.outputParticles[1].getSamplingRate(),
+                                   relNorm.outputParticles[1].getSamplingRate(),
                                    "The sampling rate is wrong", delta=0.00001)
             
             self.assertAlmostEqual(outImgSet[1].getFileName(),
-                                   relionNormalize.outputParticles[1].getFileName(),
+                                   relNorm.outputParticles[1].getFileName(),
                                    "The particles filenames are wrong")
         
         if getVersion() == "2.0":
