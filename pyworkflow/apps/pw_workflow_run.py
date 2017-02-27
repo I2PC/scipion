@@ -32,11 +32,15 @@ from pyworkflow.manager import Manager
 import time
 
 from optparse import OptionParser
+from pyworkflow.object import Boolean
+import json
 
 def run(project_name, workflow, launch_timeout, location):
     manager = Manager()
     project = manager.createProject(project_name, location=location)
     protocols = project.loadProtocols(workflow)
+
+    ids_for_queue = find_protocols_to_queue(workflow)
 
     graph = project.getGraphFromRuns(protocols.values())
     nodes = graph.getRoot().iterChildsBreadth()
@@ -48,7 +52,18 @@ def run(project_name, workflow, launch_timeout, location):
         protocol = protocols_by_id[name]
         parents = collect_parents(node, protocols_by_id)
 
+        if protocol.getObjId() in ids_for_queue:
+            protocol._useQueue = Boolean(True)
+
         launch_when_ready(parents, project, protocol, name, launch_timeout)
+
+
+def find_protocols_to_queue(workflow):
+    with open(workflow) as f:
+        protocols = json.load(f)
+        ids_for_queue = {protocol['object.id'] for protocol in protocols if
+                     'useQueue' in protocol and protocol['useQueue'] is 'true'}
+        return ids_for_queue
 
 
 def collect_parents(node, protocols_by_id):
