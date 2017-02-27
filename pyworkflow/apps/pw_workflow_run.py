@@ -40,7 +40,7 @@ def run(project_name, workflow, launch_timeout, location):
     project = manager.createProject(project_name, location=location)
     protocols = project.loadProtocols(workflow)
 
-    ids_for_queue = find_protocols_to_queue(workflow)
+    labels_for_queue = find_protocols_to_queue(workflow)
 
     graph = project.getGraphFromRuns(protocols.values())
     nodes = graph.getRoot().iterChildsBreadth()
@@ -52,7 +52,8 @@ def run(project_name, workflow, launch_timeout, location):
         protocol = protocols_by_id[name]
         parents = collect_parents(node, protocols_by_id)
 
-        if protocol.getObjId() in ids_for_queue:
+        # the id's don't get reused in the new project so comparing labels
+        if protocol.getObjLabel() in labels_for_queue:
             protocol._useQueue = Boolean(True)
 
         launch_when_ready(parents, project, protocol, name, launch_timeout)
@@ -61,9 +62,9 @@ def run(project_name, workflow, launch_timeout, location):
 def find_protocols_to_queue(workflow):
     with open(workflow) as f:
         protocols = json.load(f)
-        ids_for_queue = {protocol['object.id'] for protocol in protocols if
-                     'useQueue' in protocol and protocol['useQueue'] is 'true'}
-        return ids_for_queue
+        labels_for_queue = {protocol['object.label'] for protocol in protocols if
+                     'useQueue' in protocol and protocol['useQueue']}
+        return labels_for_queue
 
 
 def collect_parents(node, protocols_by_id):
@@ -79,6 +80,7 @@ def launch_when_ready(parents, project, protocol, name, launch_timeout):
         errors = protocol.validate()
         if errors:
             print "waiting to launch protocol " + name
+            print "with useQueue status " + str(protocol.useQueue())
             print "current validation errors are: "
             print errors
             time.sleep(1)
