@@ -543,7 +543,13 @@ class Environment:
         
         environ = (self.updateCudaEnviron(name)
                    if kwargs.get('updateCuda', False) else None)
-        
+
+        # Set environment
+        variables = kwargs.get('vars',[])
+        for var,value in variables:
+            environ.update({var: value})
+
+
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
         tar = kwargs.get('tar', '%s.tgz' % extName)
