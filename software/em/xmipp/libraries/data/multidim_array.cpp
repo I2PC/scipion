@@ -300,6 +300,22 @@ void MultidimArrayBase::printShape(std::ostream& out) const
     out<<"\n";
 }
 
+// Window in 2D -----------------------------------------------------------
+void window2D(const MultidimArray<double> &Ibig, MultidimArray<double> &Ismall,
+		int y0, int x0, int yF, int xF)
+{
+    Ismall.resizeNoCopy(yF - y0 + 1, xF - x0 + 1);
+    STARTINGY(Ismall) = y0;
+    STARTINGX(Ismall) = x0;
+    /*
+	FOR_ALL_ELEMENTS_IN_ARRAY2D(Ismall)
+		A2D_ELEM(Ismall, i, j) = A2D_ELEM(Ibig, i, j);
+    */
+    size_t sizeToCopy=XSIZE(Ismall)*sizeof(double);
+    for (int y=y0; y<=yF; y++)
+    	memcpy( &A2D_ELEM(Ismall,y,STARTINGX(Ismall)), &A2D_ELEM(Ibig,y,STARTINGX(Ismall)), sizeToCopy);
+}
+
 // Show a complex array ---------------------------------------------------
 template<>
 std::ostream& operator<<(std::ostream& ostrm,

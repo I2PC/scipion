@@ -369,7 +369,8 @@ void ProgAngularDistance::computeWeights()
 			while (id1<currentId && iter1.hasNext())
 			{
 				iter1.moveNext();
-				DF1sorted.getValue(label,id1,iter1.objId);
+				if (iter1.hasNext())
+					DF1sorted.getValue(label,id1,iter1.objId);
 			}
 
 			// If we are at the end of DF1, then we did not find id1 such that id1==currentId
@@ -439,7 +440,6 @@ void ProgAngularDistance::computeWeights()
 			}
 			newObjId=DFweights.addObject();
 			DFweights.setValue(label,currentId,newObjId);
-			DFweights.setValue(label,currentId,newObjId);
     	}
     	else
     		N=0;
@@ -450,14 +450,35 @@ void ProgAngularDistance::computeWeights()
 			DFweights.setValue(angleDiffLabel,meanDistance,newObjId);
 			double meanDistanceShift=cumulatedDistanceShift/ang2.size();
 			DFweights.setValue(shiftDiffLabel,meanDistanceShift,newObjId);
+			ang1.clear();
+			ang2.clear();
     	}
     	else
     		if (newObjId>0)
     		{
 				DFweights.setValue(angleDiffLabel,-1.0,newObjId);
 				DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+				ang1.clear();
+				ang2.clear();
     		}
         anotherImageIn2=iter2.hasNext();
+    }
+    if (ang2.size()>0)
+    {
+		size_t newObjId=DFweights.addObject();
+		DFweights.setValue(label,currentId,newObjId);
+		DFweights.setValue(angleDiffLabel,-1.0,newObjId);
+		DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+    }
+
+    // If there are more images in MD1 than in MD2, set the last images to 0
+    while (iter2.hasNext())
+    {
+		size_t newObjId=DFweights.addObject();
+		DFweights.setValue(label,currentId,newObjId);
+		DFweights.setValue(angleDiffLabel,-1.0,newObjId);
+		DFweights.setValue(shiftDiffLabel,-1.0,newObjId);
+		iter2.moveNext();
     }
 
     // Calculate the deviation with respect to angleDiff=0 of the angular distances

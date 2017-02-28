@@ -31,6 +31,8 @@ from protocol_monitor import ProtMonitor, Monitor
 import sqlite3 as lite
 import psutil
 import time, sys
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
@@ -44,6 +46,7 @@ class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
     """
     _label = 'system_monitor'
+    _version = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtMonitor.__init__(self, **kwargs)

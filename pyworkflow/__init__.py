@@ -40,9 +40,14 @@ if "SCIPION_USER_DATA" not in os.environ:
 
 SCIPION_HOME = os.environ['SCIPION_HOME']
 SCIPION_USER_DATA = os.environ["SCIPION_USER_DATA"]
+SCIPION_SUPPORT_EMAIL = 'scipion@cnb.csic.es'
 PYTHON = os.environ.get("SCIPION_PYTHON", 'python')
 SCIPION_PYTHON = PYTHON
 
+# Versions
+VERSION_1 = 'v1.0'
+VERSION_1_1 = 'v1.1'
+OLD_VERSIONS = (VERSION_1,)
 
 
 SETTINGS = os.path.join(SCIPION_USER_DATA, 'settings.sqlite')

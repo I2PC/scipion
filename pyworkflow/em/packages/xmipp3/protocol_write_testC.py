@@ -25,6 +25,7 @@
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.protocol.params import IntParam
@@ -33,7 +34,9 @@ class XmippProtWriteTestC(ProtProcessParticles):
     """    
     using mpi write data to a large file (C++ level)
     """
-    _label = 'write_test_C'
+    _label = None
+    _version = VERSION_1_1
+
     
     def __init__(self, *args, **kwargs):
         ProtProcessParticles.__init__(self, *args, **kwargs)

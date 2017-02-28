@@ -216,6 +216,16 @@ void least_squares_plane_fit(FitPoint *IN_points,
                              double& plane_B,
                              double& plane_C);
 
+/** Least-squares-fit a plane to an image
+ *
+ * Performs the same computation as least_squares_plane_fit but using
+ * a complete image instead of only a set of points.
+ */
+void least_squares_plane_fit_All_Points(const MultidimArray<double> &Image,
+        					 double& plane_A,
+                             double& plane_B,
+                             double& plane_C);
+
 /** Structure of the points to do model fitting
  */
 struct fit_point2D

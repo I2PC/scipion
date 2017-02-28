@@ -48,12 +48,13 @@
 //@{
 
 /** Structure for fftw plans */
-typedef struct Polar_Fftw_Plans
+class Polar_fftw_plans
 {
-    std::vector<FourierTransformer>          transformers;
+public:
+    std::vector<FourierTransformer *>    transformers;
     std::vector<MultidimArray<double> >  arrays;
-}
-Polar_fftw_plans;
+    ~Polar_fftw_plans();
+};
 
 /** Class for polar coodinates */
 template<typename T>
@@ -664,8 +665,10 @@ public:
             {
                 // from polar to original cartesian coordinates
                 phi = iphi * dphi;
-                double sine, cosine;
-                sincos(phi,&sine,&cosine);
+//                double sine, cosine;
+//                sincos(phi,&sine,&cosine);
+                double sine=sin(phi); // Faster depending on the compiler
+                double cosine=cos(phi);
                 xp = sine * radius;
                 yp = cosine * radius;
 
@@ -681,7 +684,7 @@ public:
 
                 // Perform the convolution interpolation
                 if (BsplineOrder==1)
-                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2D(xp,yp);
+                    DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElement2DOutsideZero(xp,yp);
                 else
                     DIRECT_A1D_ELEM(Mring,iphi) = M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
             }
@@ -695,15 +698,15 @@ public:
      */
     void calculateFftwPlans(Polar_fftw_plans &out)
     {
-        (out.transformers).resize(rings.size());
         (out.arrays).resize(rings.size());
         for (size_t iring = 0; iring < rings.size(); iring++)
         {
             (out.arrays)[iring] = rings[iring];
-            ((out.transformers)[iring]).setReal((out.arrays)[iring]);
+            FourierTransformer *ptr_transformer = new FourierTransformer();
+            ptr_transformer->setReal((out.arrays)[iring]);
+            out.transformers.push_back(ptr_transformer);
         }
     }
-
 };
 
 /** Calculate FourierTransform of all rings

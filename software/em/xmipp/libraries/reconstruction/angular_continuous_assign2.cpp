@@ -148,6 +148,7 @@ void ProgAngularContinuousAssign2::startProcessing()
 void ProgAngularContinuousAssign2::preProcess()
 {
     // Read the reference volume
+    Image<double> V;
     V.read(fnVol);
     V().setXmippOrigin();
     Xdim=XSIZE(V());
@@ -316,12 +317,13 @@ double continuous2cost(double *x, void *_prm)
 	double deltay=x[4];
 	double scalex=x[5];
 	double scaley=x[6];
-	double deltaRot=x[7];
-	double deltaTilt=x[8];
-	double deltaPsi=x[9];
-	double deltaDefocusU=x[10];
-	double deltaDefocusV=x[11];
-	double deltaDefocusAngle=x[12];
+	double scaleAngle=x[7];
+	double deltaRot=x[8];
+	double deltaTilt=x[9];
+	double deltaPsi=x[10];
+	double deltaDefocusU=x[11];
+	double deltaDefocusV=x[12];
+	double deltaDefocusAngle=x[13];
 	ProgAngularContinuousAssign2 *prm=(ProgAngularContinuousAssign2 *)_prm;
 	if (prm->maxShift>0 && deltax*deltax+deltay*deltay>prm->maxShift*prm->maxShift)
 		return 1e38;
@@ -335,8 +337,21 @@ double continuous2cost(double *x, void *_prm)
 		return 1e38;
 	if (fabs(deltaDefocusU)>prm->maxDefocusChange || fabs(deltaDefocusV)>prm->maxDefocusChange)
 		return 1e38;
-	MAT_ELEM(prm->A,0,0)=1+scalex;
-	MAT_ELEM(prm->A,1,1)=1+scaley;
+//	MAT_ELEM(prm->A,0,0)=1+scalex;
+//	MAT_ELEM(prm->A,1,1)=1+scaley;
+// In Matlab
+//	syms sx sy t
+//	R=[cos(t) -sin(t); sin(t) cos(t)]
+//	S=[1+sx 0; 0 1+sy]
+//	simple(transpose(R)*S*R)
+//	[ sx - sx*sin(t)^2 + sy*sin(t)^2 + 1,            -sin(2*t)*(sx/2 - sy/2)]
+//	[            -sin(2*t)*(sx/2 - sy/2), sy + sx*sin(t)^2 - sy*sin(t)^2 + 1]
+	double sin2_t=sin(scaleAngle)*sin(scaleAngle);
+	double sin_2t=sin(2*scaleAngle);
+	MAT_ELEM(prm->A,0,0)=1+scalex+(scaley-scalex)*sin2_t;
+	MAT_ELEM(prm->A,0,1)=0.5*(scaley-scalex)*sin_2t;
+	MAT_ELEM(prm->A,1,0)=MAT_ELEM(prm->A,0,1);
+	MAT_ELEM(prm->A,1,1)=1+scaley-(scaley-scalex)*sin2_t;
 	MAT_ELEM(prm->A,0,2)=prm->old_shiftX+deltax;
 	MAT_ELEM(prm->A,1,2)=prm->old_shiftY+deltay;
 	return tranformImage(prm,prm->old_rot+deltaRot, prm->old_tilt+deltaTilt, prm->old_psi+deltaPsi,
@@ -360,7 +375,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 	rowIn.getValue(MDL_SHIFT_X,old_shiftX);
 	rowIn.getValue(MDL_SHIFT_Y,old_shiftY);
 	rowIn.getValue(MDL_FLIP,old_flip);
-	double old_scaleX=0, old_scaleY=0;
+	double old_scaleX=0, old_scaleY=0, old_scaleAngle=0;
 	old_grayA=1;
 	old_grayB=0;
 	if (rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
@@ -369,6 +384,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		rowIn.getValue(MDL_CONTINUOUS_GRAY_B,old_grayB);
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_X,old_scaleX);
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_Y,old_scaleY);
+		if (rowIn.containsLabel(MDL_CONTINUOUS_SCALE_ANGLE))
+			rowIn.getValue(MDL_CONTINUOUS_SCALE_ANGLE,old_scaleAngle);
 		rowIn.getValue(MDL_CONTINUOUS_X,old_shiftX);
 		rowIn.getValue(MDL_CONTINUOUS_Y,old_shiftY);
 		rowIn.getValue(MDL_CONTINUOUS_FLIP,old_flip);
@@ -395,11 +412,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     Ifiltered()=I();
     filter.applyMaskSpace(Ifiltered());
 
-    Matrix1D<double> p(12), steps(12);
+    Matrix1D<double> p(13), steps(13);
     p(0)=old_grayA; // a in I'=a*I+b
     p(1)=old_grayB; // b in I'=a*I+b
     p(4)=old_scaleX;
     p(5)=old_scaleY;
+    p(6)=old_scaleAngle;
 
     // Optimize
 	double cost=-1;
@@ -417,12 +435,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			if (optimizeShift)
 				steps(2)=steps(3)=1.;
 			if (optimizeScale)
-				steps(4)=steps(5)=1.;
+				steps(4)=steps(5)=steps(6)=1.;
 			if (optimizeAngles)
-				steps(6)=steps(7)=steps(8)=1.;
+				steps(7)=steps(8)=steps(9)=1.;
 			if (optimizeDefocus)
-				steps(9)=steps(10)=steps(11)=1.;
-			powellOptimizer(p, 1, 12, &continuous2cost, this, 0.01, cost, iter, steps, verbose>=2);
+				steps(10)=steps(11)=steps(12)=1.;
+			powellOptimizer(p, 1, 13, &continuous2cost, this, 0.01, cost, iter, steps, verbose>=2);
 			if (cost>1e30 || (cost>0 && contCost==CONTCOST_CORR))
 			{
 				rowOut.setValue(MDL_ENABLED,-1);
@@ -431,6 +449,7 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			    p(1)=old_grayB; // b in I'=a*I+b
 			    p(4)=old_scaleX;
 			    p(5)=old_scaleY;
+			    p(6)=old_scaleAngle;
 			}
 			else
 			{
@@ -466,8 +485,17 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			}
 			A(0,2)=p(2)+old_shiftX;
 			A(1,2)=p(3)+old_shiftY;
-			A(0,0)=1+p(4);
-			A(1,1)=1+p(5);
+			double scalex=p(4);
+			double scaley=p(5);
+			double scaleAngle=p(6);
+			double sin2_t=sin(scaleAngle)*sin(scaleAngle);
+			double sin_2t=sin(2*scaleAngle);
+			A(0,0)=1+scalex+(scaley-scalex)*sin2_t;
+			A(0,1)=0.5*(scaley-scalex)*sin_2t;
+			A(1,0)=A(0,1);
+			A(1,1)=1+scaley-(scaley-scalex)*sin2_t;
+//			A(0,0)=1+p(4);
+//			A(1,1)=1+p(5);
 
 			if (old_flip)
 			{
@@ -497,9 +525,9 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 	}
     rowOut.setValue(MDL_IMAGE_ORIGINAL, fnImg);
     rowOut.setValue(MDL_IMAGE, fnImgOut);
-    rowOut.setValue(MDL_ANGLE_ROT,  old_rot+p(6));
-    rowOut.setValue(MDL_ANGLE_TILT, old_tilt+p(7));
-    rowOut.setValue(MDL_ANGLE_PSI,  old_psi+p(8));
+    rowOut.setValue(MDL_ANGLE_ROT,  old_rot+p(7));
+    rowOut.setValue(MDL_ANGLE_TILT, old_tilt+p(8));
+    rowOut.setValue(MDL_ANGLE_PSI,  old_psi+p(9));
     rowOut.setValue(MDL_SHIFT_X,    0.);
     rowOut.setValue(MDL_SHIFT_Y,    0.);
     rowOut.setValue(MDL_FLIP,       false);
@@ -508,15 +536,16 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_X,p(4));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
+    rowOut.setValue(MDL_CONTINUOUS_SCALE_ANGLE,p(6));
     rowOut.setValue(MDL_CONTINUOUS_X,p(2)+old_shiftX);
     rowOut.setValue(MDL_CONTINUOUS_Y,p(3)+old_shiftY);
     rowOut.setValue(MDL_CONTINUOUS_FLIP,old_flip);
     if (hasCTF)
     {
-    	rowOut.setValue(MDL_CTF_DEFOCUSU,old_defocusU+p(9));
-    	rowOut.setValue(MDL_CTF_DEFOCUSV,old_defocusV+p(10));
-    	rowOut.setValue(MDL_CTF_DEFOCUS_ANGLE,old_defocusAngle+p(11));
-    	if (old_defocusU+p(9)<0 || old_defocusU+p(10)<0)
+    	rowOut.setValue(MDL_CTF_DEFOCUSU,old_defocusU+p(10));
+    	rowOut.setValue(MDL_CTF_DEFOCUSV,old_defocusV+p(11));
+    	rowOut.setValue(MDL_CTF_DEFOCUS_ANGLE,old_defocusAngle+p(12));
+    	if (old_defocusU+p(10)<0 || old_defocusU+p(11)<0)
     		rowOut.setValue(MDL_ENABLED,-1);
     }
 

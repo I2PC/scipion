@@ -360,6 +360,23 @@ public:
     double entropy() const;
 };
 
+/** Cumulative density function.
+ * This function computes a table with the cumulative density function*/
+ class CDF
+ {
+ public:
+ 	MultidimArray<double> x;
+ 	MultidimArray<double> probXLessThanx;
+ 	double minVal, maxVal;
+ public:
+ 	/// Calculate the CDF of V with a probability step of 0.005 (p is between 0 and 1)
+ 	void calculateCDF(MultidimArray<double> &V, double probStep=0.005);
+
+ 	/// Get the probability Pr{V<=x}
+ 	double getProbability(double x);
+ };
+
+
 /** Irregular histogram.
  *
  *  This class is initialized with a regular histogram and a set of bins.

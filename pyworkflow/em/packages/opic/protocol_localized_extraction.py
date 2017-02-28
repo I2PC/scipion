@@ -26,6 +26,7 @@
 
 import numpy as np
 
+from pyworkflow import VERSION_1_1
 from pyworkflow.em import ImageHandler
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import ProtParticles, IntParam
@@ -37,7 +38,7 @@ class ProtLocalizedExtraction(ProtParticles):
     """
     
     _label = 'localized extraction'
-    
+    _version = VERSION_1_1
     #--------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
