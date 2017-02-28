@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#include <data/metadata.h>
+
 // For the CUDA runtime routines (prefixed with "cuda_")
 #include <cuda_runtime.h>
 
