@@ -33,10 +33,13 @@ import time
 
 from optparse import OptionParser
 from pyworkflow.object import Boolean
+
+import pyworkflow.utils as pwutils
 import json
 
 def run(project_name, workflow, launch_timeout, location):
-    manager = Manager(SCIPION_USER_DATA=location)
+    manager = Manager()
+    pwutils.path.makePath(manager.PROJECTS)
     project = manager.createProject(project_name, location=location)
     protocols = project.loadProtocols(workflow)
 
