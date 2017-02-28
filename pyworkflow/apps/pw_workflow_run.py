@@ -36,7 +36,7 @@ from pyworkflow.object import Boolean
 import json
 
 def run(project_name, workflow, launch_timeout, location):
-    manager = Manager()
+    manager = Manager(SCIPION_USER_DATA=location)
     project = manager.createProject(project_name, location=location)
     protocols = project.loadProtocols(workflow)
 
