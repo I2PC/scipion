@@ -730,7 +730,7 @@ if opencv:
 
 #ROB not sure if cuda=True is necesary
 if cuda:
-    addProg('gpu_example',
+    addProg('movie_estimate_gain_gpu',
                 nvcc=True,cuda=True)
 
 
