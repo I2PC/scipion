@@ -46,39 +46,64 @@ class FscViewer(Viewer):
         self.plotter = EmPlotter(x=1, y=1, windowTitle='FSC',
                                  figure=kwargs.get('figure', 'active'))
         self._lastSubPlot = None
+        self._addButton = kwargs.get('addButton', False)
 
     def _formatFreq(self, value, pos):
         """ Format function for Matplotlib formatter. """
         inv = 999.
         if value:
-            inv = 1/value
+            inv = 1 / value
         return "1/%0.2f" % inv
 
-    def show(self):
-        self.plotter.show()
+    def show(self, block=True):
+        self.plotter.show(block=block)
 
-    def _visualize(self, obj, **kwargs):
+    def _plotButton(self):
+      if self._addButton:
+        axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
+        # Button does not allow to define text color so
+        # I write it directly
+        axcreateFSC.text(0.5, 0.5, 'create FSC',
+                         verticalalignment='center',
+                         horizontalalignment='center',
+                         transform=axcreateFSC.transAxes, color='white')
+        bcreateFSC = Button(axcreateFSC, '',  # leave label empty
+                            color=Color.RED_COLOR,
+                            hovercolor='maroon')
+        bcreateFSC.on_clicked(self.createFSCObject)
+        self._addButton = False
+        return  bcreateFSC
+
+    def visualize(self, obj, **kwargs):
+    #def _visualize(self, obj, **kwargs):
+        # Keep input object in case we need to launch
+        # a new protocol and set dependencies
+        self.fscList = []
         if isinstance(obj, SetOfFSCs):
             for i, fsc in enumerate(obj):
-                fscLabel = fsc.getObjLabel() or 'FSC %d' % (i+1)
+                self.fscList.append(fsc.clone())
+                fscLabel = fsc.getObjLabel() or 'FSC %d' % (i + 1)
                 self.plotFsc(fsc, label=fscLabel, **kwargs)
-        else: # single FSC
+        else:  # single FSC
             self.plotFsc(obj, **kwargs)
+            self.fscList.append(obj.clone())
 
-        return [self.plotter]
+        bcreateFSC = self._plotButton()#if you do not asign the result
+                                       #to something it will be
+                                       #delete
+        self.show()
+        #return [self.plotter]
+
+    def createFSCObject(self, event):
+        self.project = self.getProject()
+        prot = self.getProject().newProtocol(ProtCreateFSC)
+        prot.setObjLabel('FSC-%s' % self.label)  # label)
+        prot.setInputObj(self.protocol)
+        prot.setInputFscList(self.fscList)
+        self.project.launchProtocol(prot)
 
     def plotFsc(self, obj, **kwargs):
-        def createFSCObject(event):
-            prot = self.getProject().newProtocol(ProtCreateFSC)
-            prot.setObjLabel('FSC-%s' % self.label)#label)
-            prot.setInputObj(self.protocol)#protocol may be not finished
-            #prot.setParentObject(self.obj)#protocol may be not finished
-            #prot.inputObj.set(self.protocol)#protocol may be not finished
 
-            self.project.launchProtocol(prot)
-            #prot.inputObject.set(self.obj)
-
-        self.obj = obj
         x, y = obj.getData()
 
         if self._lastSubPlot is None:
@@ -89,19 +114,9 @@ class FscViewer(Viewer):
                    'k--')
             a.grid(True)
             a.xaxis.set_major_formatter(FuncFormatter(self._formatFreq))
-            axcreateFSC = plt.axes([0.75, 0.02, 0.2, 0.050])
-            #Button does not allow to define text color so
-            #I write it directly
-            axcreateFSC.text(0.5, 0.5, 'create FSC',
-                             verticalalignment='center',
-                             horizontalalignment='center',
-                             transform=axcreateFSC.transAxes,color='white')
-            bcreateFSC = Button(axcreateFSC, '',#leave label empty
-                                color=Color.RED_COLOR,
-                                hovercolor='maroon')
-            bcreateFSC.on_clicked(createFSCObject)
             self._lastSubPlot = a
 
         self.label = kwargs.get('label', self.protocol.getRunName())
-        self.plotter.plotData(x, y, '-',label=self.label)
+        self.plotter.plotData(x, y, '-', label=self.label)
         self.plotter.legend()
+        #if I run this
