@@ -878,27 +878,16 @@ class PostprocessViewer(ProtocolViewer):
                                  addButton=True)
         fscSet = self.protocol._createSetOfFSCs()
 
-#        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
-#        a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
-#        legends = []
         modelStar = self.protocol._getExtraPath('postprocess.star')
         for label in self._getFSCLabels():
             if exists(modelStar):
                 model = 'fsc@' + modelStar
-                ##self._plotFSC(a, model, label)
                 fsc = self._plotFSC(None, model, label)
                 fscSet.append(fsc)
-                #legends.append(self._getLegend(label))
-        #xplotter.showLegend(legends)
         fscViewer.visualize(fscSet)
         return [fscViewer]
-        #if threshold < self.maxfsc:
-        #    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
-        #a.grid(True)
 
-
-        return [xplotter]
-
+    #ROB this function is duplicated
     def _plotFSC(self, a, model_star, label):
         mdStar = md.MetaData(model_star)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
