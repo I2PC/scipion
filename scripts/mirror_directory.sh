@@ -3,7 +3,7 @@
 #run for TIMEOUT seconds, 3 days= 259200, 7 days=604800
 TIMEOUT=259200
 #retry after SEC seconds
-SEC=30
+SEC=300
 
 # contains(string, substring)
 #
