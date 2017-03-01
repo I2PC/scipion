@@ -798,6 +798,11 @@ class PostprocessViewer(ProtocolViewer):
                       label='Display masked volume with',
                       help='*slices*: display masked volume as 2D slices along z axis.\n'
                            '*chimera*: display masked volume as surface with Chimera.')
+        group.addParam('figure', params.EnumParam, default=0,
+                           choices=['new', 'active'],
+                           label='Figure',
+                       display=params.EnumParam.DISPLAY_HLIST,
+                       help="plot in a new window vs the last open one")
         group.addParam('resolutionPlotsFSC', params.EnumParam,
                       choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
                       default=FSC_CORRECTED, display=params.EnumParam.DISPLAY_COMBO, 
@@ -856,6 +861,9 @@ class PostprocessViewer(ProtocolViewer):
 #===============================================================================
 # plotFSC            
 #===============================================================================
+    def _getFigure(self):
+        return None if self.figure == 0 else 'active'
+
     def _showFSC(self, paramName=None):
         threshold = self.resolutionThresholdFSC.get()
 
@@ -863,35 +871,44 @@ class PostprocessViewer(ProtocolViewer):
         gridsize = [1, 1]
         
         md.activateMathExtensions()
-        
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
-        a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
-        legends = []
+        fscViewer = em.FscViewer(project=self.protocol.getProject(),
+                                 threshold=threshold,
+                                 protocol=self.protocol,
+                                 figure=self._getFigure(),
+                                 addButton=True)
+        fscSet = self.protocol._createSetOfFSCs()
+
+#        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
+#        a = xplotter.createSubPlot("GoldStandard FSC", 'Angstroms^-1', 'FSC', yformat=False)
+#        legends = []
         modelStar = self.protocol._getExtraPath('postprocess.star')
         for label in self._getFSCLabels():
             if exists(modelStar):
                 model = 'fsc@' + modelStar
-                self._plotFSC(a, model, label)
-                legends.append(self._getLegend(label))
-        xplotter.showLegend(legends)
-        if threshold < self.maxfsc:
-            a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
-        a.grid(True)
+                ##self._plotFSC(a, model, label)
+                fsc = self._plotFSC(None, model, label)
+                fscSet.append(fsc)
+                #legends.append(self._getLegend(label))
+        #xplotter.showLegend(legends)
+        fscViewer.visualize(fscSet)
+        return [fscViewer]
+        #if threshold < self.maxfsc:
+        #    a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+        #a.grid(True)
 
 
         return [xplotter]
-    
-    def _plotFSC(self, a, model, label):
-        mdStar = md.MetaData(model)
+
+    def _plotFSC(self, a, model_star, label):
+        mdStar = md.MetaData(model_star)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
-        fsc = [mdStar.getValue(label, id) for id in mdStar]
-        self.maxfsc = max(fsc)
-        self.minInv = min(resolution_inv)
-        self.maxInv = max(resolution_inv)
-        a.plot(resolution_inv, fsc)
-        a.xaxis.set_major_formatter(self._plotFormatter)
-        a.set_ylim([-0.1, 1.1])
-    
+        frc = [mdStar.getValue(label, id) for id in mdStar]
+
+        fsc = em.data.FSC(objLabel=label)
+        fsc.setData(resolution_inv,frc)
+
+        return fsc
+
 #===============================================================================
 # plotGuinier
 #===============================================================================
