@@ -576,7 +576,6 @@ Examples:
                         #fnFSC=\
                         blockName + model_star
                         fsc = self._plotFSC(None, blockName + model_star, 'iter %d' % it)
-                        #fscViewer.plotFsc(fsc, label=('iter %d' % it))
                         fscSet.append(fsc)
         fscViewer.visualize(fscSet)
         return [fscViewer]
