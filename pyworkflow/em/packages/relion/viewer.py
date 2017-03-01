@@ -44,7 +44,6 @@ from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
 from protocol_sort import ProtRelionSortParticles
 
-
 ITER_LAST = 0
 ITER_SELECTION = 1
 
@@ -111,7 +110,7 @@ class RelionPlotter(EmPlotter):
         mdObj = md.MetaData(mdFilename)
         self.plotMd(mdObj, mdLabelX, mdLabelY, color='g',**args)
         
-    
+
 class RelionViewer(ProtocolViewer):
     """ This protocol serve to analyze the results of Relion runs.
     (for protocols classify 2d/3d and 3d auto-refine)
@@ -563,7 +562,9 @@ Examples:
         fscViewer = em.FscViewer(project=self.protocol.getProject(),
                                  threshold=threshold,
                                  protocol=self.protocol,
-                                 figure=self._getFigure())
+                                 figure=self._getFigure(),
+                                 addButton=True)
+        fscSet = self.protocol._createSetOfFSCs()
         for prefix in prefixes:
             for ref3d in self._refsList:#ROB: I believe len(_refsList)==1
                 #plot_title = prefix + 'class %s' % ref3d
@@ -575,8 +576,9 @@ Examples:
                         #fnFSC=\
                         blockName + model_star
                         fsc = self._plotFSC(None, blockName + model_star, 'iter %d' % it)
-                        fscViewer.plotFsc(fsc, label=('iter %d' % it))
-
+                        #fscViewer.plotFsc(fsc, label=('iter %d' % it))
+                        fscSet.append(fsc)
+        fscViewer.visualize(fscSet)
         return [fscViewer]
     
     def _plotFSC(self, a, model_star, label):
