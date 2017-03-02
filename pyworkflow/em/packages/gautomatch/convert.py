@@ -177,7 +177,7 @@ def getEnviron():
     """ Return the environ settings to run gautomatch programs. """
     environ = pwutils.Environ(os.environ)
 
-    # Take Scipion CUDA 7.5 library path
+    # Take Scipion CUDA library path
     cudaLib = environ.getFirst(('GAUTOMATCH_CUDA_LIB', 'CUDA_LIB'))
     environ.addLibrary(cudaLib)
 

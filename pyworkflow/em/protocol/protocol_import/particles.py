@@ -25,6 +25,7 @@
 # **************************************************************************
 
 from os.path import exists
+from os.path import abspath
 
 from pyworkflow.utils.properties import Message
 import pyworkflow.protocol.params as params
@@ -153,7 +154,7 @@ class ProtImportParticles(ProtImportImages):
         """ Return the class in charge of importing the files. """
         if self.importFrom == self.IMPORT_FROM_EMX:
             from pyworkflow.em.packages.emxlib import EmxImport
-            self.importFilePath = self.emxFile.get('').strip()
+            self.importFilePath = abspath(self.emxFile.get('').strip())
             return EmxImport(self, self.importFilePath,
                                    self.alignTypeList[self.alignType.get()])
         elif self.importFrom == self.IMPORT_FROM_XMIPP3:

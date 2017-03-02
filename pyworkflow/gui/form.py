@@ -470,7 +470,11 @@ class SubclassesTreeProvider(TreeProvider):
         if parent is None:
             return getObjectLabel(pobj, self.mapper)
         else:  # This is an item coming from a set
-            return 'item %s' % pobj.get().strId()
+            # If the object has label include the label
+            if pobj.get().getObjLabel():
+                return 'item %s - %s' % (pobj.get().strId(), pobj.get().getObjLabel())
+            else:
+                return 'item %s' % pobj.get().strId()
 
     def getObjectActions(self, pobj):
         obj = pobj.get()
