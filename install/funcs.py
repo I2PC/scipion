@@ -701,8 +701,13 @@ class Environment:
             cudaBin = os.environ.get('CUDA_BIN')
 
         environ = os.environ.copy()
-        
-        if cudaLib is not None and cudaBin is None:
+
+        # If there isn't any CUDA in the environment
+        if cudaLib is None and cudaBin is None:
+            # Exit ...do not update the environment
+            return environ
+
+        elif cudaLib is not None and cudaBin is None:
             raise Exception("CUDA_LIB (or %s_CUDA_LIB) is defined, but not "
                             "CUDA_BIN (or %s_CUDA_BIN), please excecute "
                             "scipion config --update" % (packUpper, packUpper))
