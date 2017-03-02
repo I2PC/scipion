@@ -2123,9 +2123,9 @@ void MetaData::operate(const String &expression)
 
 void MetaData::replace(const MDLabel label, const String &oldStr, const String &newStr)
 {
-    const char * labelStr = MDL::label2Str(label).c_str();
+    String labelStr = MDL::label2Str(label);
     String expression = formatString("%s=replace(%s,'%s', '%s')",
-                                     labelStr, labelStr, oldStr.c_str(), newStr.c_str());
+                                     labelStr.c_str(), labelStr.c_str(), oldStr.c_str(), newStr.c_str());
     if (!myMDSql->operate(expression))
         REPORT_ERROR(ERR_MD, "MetaData::replace: error doing operation");
 }

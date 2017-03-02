@@ -61,7 +61,7 @@ class XmippProtMovieCorr(ProtAlignMovies):
     def _defineAlignmentParams(self, form):
         ProtAlignMovies._defineAlignmentParams(self, form)
 
-        form.addParam('splineOrder', params.EnumParam,
+        form.addParam('splineOrder', params.EnumParam, condition="doSaveAveMic or doSaveMovie",
                       default=self.INTERP_CUBIC, choices=['linear', 'cubic'],
                       expertLevel=cons.LEVEL_ADVANCED,
                       label='Interpolation',

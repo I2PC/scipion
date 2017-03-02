@@ -45,10 +45,9 @@ import pyworkflow.em as em
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.project.base import ProjectBaseWindow
 from pyworkflow.gui.widgets import HotButton, Button
-
+import subprocess
 
 VIEW_WIZARD = 'wizardview'
-
 
 USER_NAME = "User name"
 SAMPLE_NAME = "Sample name"
@@ -72,6 +71,7 @@ MAG = "MAG"
 DATA_FOLDER = 'DATA_FOLDER'
 USER_NAME = 'USER_NAME'
 MICROSCOPE = 'MICROSCOPE'
+DATA_BACKUP = 'DATA_BACKUP'
 PATTERN = 'PATTERN'
 PUBLISH = 'PUBLISH'
 SMTP_SERVER = 'SMTP_SERVER'
@@ -87,6 +87,7 @@ LABELS = {
     DATA_FOLDER: "Data folder",
     USER_NAME: "User name",
     SAMPLE_NAME: "Sample name",
+    DATA_BACKUP: 'Data Backup Dir',
     PROJECT_NAME: "Project name",
     FRAMES_RANGE: "Frames range",
 
@@ -142,7 +143,7 @@ class BoxWizardView(tk.Frame):
 
         self.bigFont = tkFont.Font(size=bigSize, family=fontName)
         self.bigFontBold = tkFont.Font(size=bigSize, family=fontName,
-                                        weight='bold')
+                                       weight='bold')
 
         self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
         self.projDelFont = tkFont.Font(size=smallSize, family=fontName,
@@ -241,13 +242,14 @@ class BoxWizardView(tk.Frame):
         _addPair(USER_NAME, 2, labelFrame, traceCallback=self._onInputChange)
         _addPair(SAMPLE_NAME, 3, labelFrame, traceCallback=self._onInputChange)
         _addPair(PROJECT_NAME, 4, labelFrame)
+        _addPair(DATA_BACKUP, 5, labelFrame)
 
         labelFrame.columnconfigure(0, weight=1)
         labelFrame.columnconfigure(0, minsize=120)
         labelFrame.columnconfigure(1, weight=1)
 
         labelFrame2 = tk.LabelFrame(frame, text=' Pre-processing ', bg='white',
-                                   font=self.bigFontBold)
+                                    font=self.bigFontBold)
 
         labelFrame2.grid(row=1, column=0, sticky='nw', padx=20, pady=10)
         labelFrame2.columnconfigure(0, minsize=120)
@@ -282,12 +284,36 @@ class BoxWizardView(tk.Frame):
         return self.vars[varKey].set(value)
 
     def _onAction(self, e=None):
-        errors = []
+        def is_running(process):
+            counter=0
+            s = subprocess.Popen(["ps", "axw"],stdout=subprocess.PIPE)
+            for x in s.stdout:
+                if re.search(process, x):
+                    counter = x.split()[0]
+                    break
+            return counter
 
+        errors = []
+        doBackup = True
         # Check the Data folder exists
         dataFolder = pwutils.expandPattern(self._getValue(DATA_FOLDER))
         if not os.path.exists(pwutils.expandPattern(dataFolder)):
-            errors.append("Folder '%s' does not exists" % dataFolder)
+            errors.append("Data folder '%s' does not exists" % dataFolder)
+        #check errors
+        counter = is_running("mirror_directory.sh")
+        if counter > 0:
+            errors.append("There is a backup script running in the background")
+            errors.append("I cannot continue unless you stop it.")
+            errors.append('The command "kill -9 %s" will kill it.'% counter)
+            errors.append('Execute it at your own risk from a terminal')
+
+        backupFolder = pwutils.expandPattern(self._getValue(DATA_BACKUP))
+        if backupFolder == '':
+            doBackup = False
+        elif backupFolder.find("@") != -1:  # if remote directory do not check
+            pass
+        elif not os.path.exists(pwutils.expandPattern(backupFolder)):
+            errors.append("Backup folder '%s' does not exists" % backupFolder)
 
         userName = self._getValue(USER_NAME)
         if self.re.match(userName.strip()) is None:
@@ -299,6 +325,7 @@ class BoxWizardView(tk.Frame):
 
         projName = self._getProjectName()
         projPath = os.path.join(dataFolder, projName)
+
         scipionProj = self._getConfValue('SCIPION_PROJECT').replace(
             '${PROJECT_NAME}', projName)
         scipionProjPath = os.path.join(projPath, scipionProj)
@@ -318,6 +345,13 @@ class BoxWizardView(tk.Frame):
             self.windows.showError("\n  - ".join(errors))
         else:
             self._createDataFolder(projPath, scipionProjPath)
+            command = os.path.join(os.getenv("SCIPION_HOME"),
+                                                                   "scripts/mirror_directory.sh")
+            if doBackup:
+                subprocess.Popen([command, projPath, backupFolder],
+                                 stdout=open('logfile_out.log', 'w'),
+                                 stderr=open('logfile_err.log', 'w')
+                                 )
             self._createScipionProject(projName, projPath, scipionProjPath)
             self.windows.close()
 
@@ -332,7 +366,7 @@ class BoxWizardView(tk.Frame):
 
         if self._getConfValue(GRIDS) == '1':
             for i in range(12):
-                gridFolder = os.path.join(projPath, 'GRID_%02d' % (i+1))
+                gridFolder = os.path.join(projPath, 'GRID_%02d' % (i + 1))
                 _createPath(os.path.join(gridFolder, 'ATLAS'))
                 _createPath(os.path.join(gridFolder, 'DATA'))
 
@@ -348,10 +382,8 @@ class BoxWizardView(tk.Frame):
         smtpServer = self._getConfValue(SMTP_SERVER, '')
         smtpFrom = self._getConfValue(SMTP_FROM, '')
         smtpTo = self._getConfValue(SMTP_TO, '')
-        doMail = (self._getValue(EMAIL_NOTIFICATION) and 
-                  smtpServer and smtpFrom and smtpTo)
-        publish = self._getConfValue(PUBLISH, '')
-
+        doMail = self._getValue(EMAIL_NOTIFICATION) 
+        doPublish = self._getValue(HTML_REPORT)
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
                                          filesPath=projPath,
@@ -359,10 +391,18 @@ class BoxWizardView(tk.Frame):
                                          sphericalAberration=self._getConfValue(CS),
                                          dataStreaming=True)
 
-        # Create import movies
+        # Should I publish html report?       
+        if doPublish==1:
+            publish=self._getConfValue('HTML_PUBLISH')
+            print("\n\nReport available at URL: %s/%s\n\n"%('http://scipion.cnb.csic.es/scipionbox',projName))
+        else:
+            publish=''
         protMonitor = project.newProtocol(em.ProtMonitorSummary,
                                           objLabel='Summary Monitor',
                                           doMail=doMail,
+                                          emailFrom=smtpFrom,
+                                          emailTo=smtpTo,
+                                          smtp=smtpServer,
                                           publishCmd=publish)
 
         def _saveProtocol(prot, movies=True, monitor=True):
@@ -402,7 +442,6 @@ class BoxWizardView(tk.Frame):
             # Create Optical Flow protocol
             from pyworkflow.em.packages.xmipp3 import XmippProtOFAlignment
 
-
             protOF = project.newProtocol(XmippProtOFAlignment,
                                          objLabel='Optical Flow',
                                          doSaveMovie=useSM,
@@ -437,18 +476,17 @@ class BoxWizardView(tk.Frame):
         if useGCTF:
             from pyworkflow.em.packages.gctf import ProtGctf
             protGCTF = project.newProtocol(ProtGctf,
-                                          objLabel='Gctf')
+                                           objLabel='Gctf')
             protGCTF.inputMicrographs.set(lastBeforeCTF)
             protGCTF.inputMicrographs.setExtended('outputMicrographs')
             _saveProtocol(protGCTF, movies=False)
-
 
         project.saveProtocol(protMonitor)
 
         os.system('%s project %s &' % (pw.getScipionScript(), projName))
 
         self.windows.close()
-        
+
     def _getProjectName(self):
         return '%s_%s_%s' % (pwutils.prettyTime(dateFormat='%Y%m%d'),
                              self._getValue(USER_NAME),
@@ -512,6 +550,7 @@ def createDictFromConfig():
             confDict[section.replace(MICROSCOPE, '')] = sectionDict
 
     return confDict
+
 
 if __name__ == "__main__":
     confDict = createDictFromConfig()

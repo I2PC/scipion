@@ -12,9 +12,9 @@ GRIDS = 1
 
 # Email notification settings
 EMAIL_NOTIFICATION = 1
-SMTP_SERVER = 'SMTP_SERVER'
-SMTP_FROM = 'SMTP_FROM'
-SMTP_TO = 'SMTP_TO'
+SMTP_SERVER = localhost 
+SMTP_FROM = noreply-biocomp@cnb.csic.es
+SMTP_TO = user@domain 
 
 # HTML report settings
 HTML_REPORT = 1

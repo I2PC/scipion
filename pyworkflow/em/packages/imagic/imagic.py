@@ -81,7 +81,9 @@ def getEnviron():
 
 def getImagicHomeDir():
     env = Environ(os.environ)
-    imagicdir = env.getFirst(('IMAGIC_HOME', 'IMAGIC_DIR'))  # Scipion definition
+    imagicdir = env.getFirst(('IMAGIC_HOME', 'IMAGIC_DIR'), mandatory=True)  #
+    # Scipion
+    # definition
     return env, imagicdir
 
 

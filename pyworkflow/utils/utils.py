@@ -544,7 +544,7 @@ class Environ(dict):
     BEGIN = 1
     END = 2
 
-    def getFirst(self, keys, defaultValue=None):
+    def getFirst(self, keys, mandatory=False):
         """ Return the value of the first key present in the environment.
         If none is found, returns the 'defaultValue' parameter.
         """
@@ -552,10 +552,11 @@ class Environ(dict):
             if k in self:
                 return self.get(k)
 
-        if defaultValue is None:
-            print "None of the variables: %s found in the Environment. Please check scipion.conf files." % (str(keys))
+        if mandatory:
+            print ("None of the variables: %s found in the Environment. "
+                   "Please check scipion.conf files." % (str(keys)))
 
-        return defaultValue
+        return None
 
     def set(self, varName, varValue, position=REPLACE):
         """ Modify the value for some variable.
