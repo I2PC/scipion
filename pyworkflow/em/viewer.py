@@ -610,7 +610,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
         self.size = size if size else defaultSize
         paddingFactor = self.kwargs.get('paddingFactor', 1)
         maxFreq = self.kwargs.get('maxFreq', 0.5)
-        splineDegree = self.kwargs.get('splineDegree', 2)
+        splineDegree = self.kwargs.get('splineDegree', 3)
         self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor,
                                                        maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
