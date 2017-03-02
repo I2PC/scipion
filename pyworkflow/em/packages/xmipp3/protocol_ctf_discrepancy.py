@@ -61,7 +61,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         form.addParam('inputCTF2', params.PointerParam, pointerClass='SetOfCTF',
                       label="target CTF",
                       help='CTF to be compared with reference CTF')
-        form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
         
 #--------------------------- INSERT steps functions --------------------------------------------  
                                 
