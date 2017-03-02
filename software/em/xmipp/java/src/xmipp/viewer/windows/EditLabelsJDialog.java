@@ -67,6 +67,7 @@ public class EditLabelsJDialog extends XmippDialog {
 		btnCancelDisplay = false;
 		initComponents();
 		enableDelete(false);
+		enableFill(false);
 	}// constructor ColumnsJDialog
 
 	private JButton createButton(String icon, String tip) {
@@ -105,21 +106,25 @@ public class EditLabelsJDialog extends XmippDialog {
 		panel.add(panelButtons, XmippWindowUtil.getConstraints(gbc, 1, 0));
 
 		// listen to selection changes (only one row selected)
-		tableColumns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		// tableColumns.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		tableColumns.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
-						enableDelete(getSelectedRow() >= 0);
+					    int n = getSelectedRows().length;
+						enableDelete(n > 0);
+						enableFill(n == 1);
 					}
 				});
 	}// function initComponents
 
 	private void enableDelete(boolean value) {
-		// btnAdd.setEnabled(value);
 		btnDelete.setEnabled(value);
-		btnFill.setEnabled(value);
-	}// function enableUpDown
+	}
+
+	private void enableFill(boolean value) {
+	    btnFill.setEnabled(value);
+	}
 
 	private void rowsChanged() {
 		this.rows = ((GalleryJFrame) parent).getData().getLabelsInfo();
@@ -144,26 +149,33 @@ public class EditLabelsJDialog extends XmippDialog {
 				showAddFillDialog(new AddFillLabelsJDialog(
 						(GalleryJFrame) parent, rows));
 			} else if (btn == btnDelete) {
+			    System.out.println("Here testing java...");
 				if (showWarning("Are you sure to remove this label?")) {
-					((GalleryJFrame) parent).removeLabel(getSelectedLabel());
+				    int [] rows = getSelectedRows();
+				    System.out.println("Rows: " + Integer.toString(rows.length));
+				    for (int row: rows) {
+				        ((GalleryJFrame) parent).removeLabel(rowToLabel(row));
+				    }
 					rowsChanged();
 				}
 			} else if (btn == btnFill) {
+			    int [] rows = getSelectedRows();
 				showAddFillDialog(new AddFillLabelsJDialog(
-						(GalleryJFrame) parent, getSelectedLabel()));
+						(GalleryJFrame) parent, rowToLabel(rows[0])));
 			}
 		} catch (Exception e) {
 			showException(e);
 		}
 	}// function actionPerformed
 
-	public int getSelectedRow() {
-		return tableColumns.getSelectedRow();
+	public int[] getSelectedRows() {
+		return tableColumns.getSelectedRows();
 	}
 
-	public int getSelectedLabel() {
-		return rows.get(getSelectedRow()).label;
-	}
+    // Get the label corresponding to a given row
+    public int rowToLabel(int row) {
+        return rows.get(row).label;
+    }
 
 	class ColumnsTableModel extends AbstractTableModel {
 		private static final long serialVersionUID = 1L;
