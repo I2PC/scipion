@@ -41,9 +41,7 @@ import time
 
 import pyworkflow as pw
 from pyworkflow.object import *
-from pyworkflow.utils import redStr, greenStr, magentaStr, envVarOn, runJob, formatExceptionInfo, getFileLastModificationDate
-from pyworkflow.utils.path import (makePath, join, missingPaths, cleanPath, cleanPattern,
-                                   getFiles, exists, renderTextFile, copyFile)
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.log import ScipionLogger
 from executor import StepExecutor, ThreadStepExecutor, MPIStepExecutor
 from constants import *
@@ -231,7 +229,7 @@ class FunctionStep(Step):
         if isinstance(resultFiles, basestring):
             resultFiles = [resultFiles]
         if resultFiles and len(resultFiles):
-            missingFiles = missingPaths(*resultFiles)
+            missingFiles = pwutils.missingPaths(*resultFiles)
             if len(missingFiles):
                 raise Exception('Missing filePaths: ' + ' '.join(missingFiles))
             self._resultFiles.set(pickle.dumps(resultFiles))
@@ -243,7 +241,7 @@ class FunctionStep(Step):
             return True
         filePaths = pickle.loads(self._resultFiles.get())
 
-        return len(missingPaths(*filePaths)) == 0
+        return len(pwutils.missingPaths(*filePaths)) == 0
     
     def __eq__(self, other):
         """ Compare with other FunctionStep""" 
@@ -263,7 +261,8 @@ class RunJobStep(FunctionStep):
     The runJob function should be provided by the protocol
     when inserting a new RunJobStep"""
      
-    def __init__(self, runJobFunc=None, programName=None, arguments=None, resultFiles=[], **kwargs):
+    def __init__(self, runJobFunc=None, programName=None, arguments=None,
+                 resultFiles=[], **kwargs):
         FunctionStep.__init__(self, runJobFunc, 'runJob', programName, arguments)
         # Number of mpi and threads used to run the program
         self.__runJob = runJobFunc # Store the current function to run the job
@@ -288,7 +287,8 @@ class StepSet(Set):
     """ Special type of Set for storing steps. """
     def __init__(self, filename=None, prefix='', 
                  mapperClass=None, **kwargs):
-        Set.__init__(self, filename, prefix, mapperClass, classesDict=globals(), **kwargs)
+        Set.__init__(self, filename, prefix, mapperClass, classesDict=globals(),
+                     **kwargs)
         
                 
 class Protocol(Step):
@@ -303,12 +303,13 @@ class Protocol(Step):
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)        
         self._steps = [] # List of steps that will be executed
-        self.workingDir = String(kwargs.get('workingDir', '.')) # All generated filePaths should be inside workingDir
+        # All generated filePaths should be inside workingDir
+        self.workingDir = String(kwargs.get('workingDir', '.'))
         self.mapper = kwargs.get('mapper', None)
         self._inputs = []
         self._outputs = CsvList()
-        # Expert level
-        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))#needs to be defined before parsing params 
+        # Expert level needs to be defined before parsing params
+        self.expertLevel = Integer(kwargs.get('expertLevel', LEVEL_NORMAL))
         self._definition = Form(self)
         self._defineParams(self._definition)
         self._createVarsFromDefinition(**kwargs)
@@ -480,13 +481,14 @@ class Protocol(Step):
     
     def getEnumText(self, paramName):
         """ This function will retrieve the text value
-        of an enum parameter in the definition, taking the actual value in the protocol.
+        of an enum parameter in the definition, taking the actual value in
+        the protocol.
         Params:
             paramName: the name of the enum param.
         Returns:
             the string value corresponding to the enum choice.
         """
-        index = getattr(self, paramName).get() # self.getAttributeValue(paramName)
+        index = getattr(self, paramName).get()
         return self.getParam(paramName).choices[index]
     
     def evalParamCondition(self, paramName):
@@ -496,7 +498,8 @@ class Protocol(Step):
         return self._definition.evalParamCondition(paramName)
     
     def evalExpertLevel(self, paramName):
-        """ Return the expert level evaluation for a param with the given name. """
+        """ Return the expert level evaluation for a param with the given name.
+        """
         return self.evalParamExpertLevel(self.getParam(paramName))
     
     def evalParamExpertLevel(self, param):
@@ -541,7 +544,8 @@ class Protocol(Step):
         """
         for key, attr in self.getAttributes():
             if not isinstance(attr, Object):
-                raise Exception('Attribute %s have been overwritten to type %s ' % (key, type(attr)))
+                raise Exception('Attribute %s have been overwritten to type %s '
+                                % (key, type(attr)))
             if isinstance(attr, PointerList) and attr.hasValue():
                 for item in attr:
                     # the same key is returned for all items inside the
@@ -593,10 +597,12 @@ class Protocol(Step):
             for paramName, param in self._definition.iterParams():
                 # Create the var with value coming from kwargs or from 
                 # the default param definition
-                var = param.paramClass(value=kwargs.get(paramName, param.default.get()))
+                var = param.paramClass(value=kwargs.get(paramName,
+                                                        param.default.get()))
                 setattr(self, paramName, var)
         else:
-            print("FIXME: Protocol '%s' has not DEFINITION" % self.getClassName())
+            print("FIXME: Protocol '%s' has not DEFINITION"
+                  % self.getClassName())
         
     def _getFileName(self, key, **kwargs):
         """ This function will retrieve filenames given a key and some
@@ -633,7 +639,8 @@ class Protocol(Step):
             if self.hasObjId():
                 self.mapper.insertChild(self, key, child)
         except Exception as ex:
-            print("Error with child '%s', value=%s, type=%s" % (key, child, type(child)))
+            print("Error with child '%s', value=%s, type=%s"
+                  % (key, child, type(child)))
             raise ex
         
     def _deleteChild(self, key, child):
@@ -661,7 +668,8 @@ class Protocol(Step):
         
         if prerequisites is None:
             if len(self._steps):
-                step.addPrerequisites(len(self._steps)) # By default add the previous step as prerequisite
+                # By default add the previous step as prerequisite
+                step.addPrerequisites(len(self._steps))
         else:
             step.addPrerequisites(*prerequisites)
                 
@@ -673,7 +681,7 @@ class Protocol(Step):
         
     def _getPath(self, *paths):
         """ Return a path inside the workingDir. """
-        return join(self.workingDir.get(), *paths)
+        return os.path.join(self.workingDir.get(), *paths)
 
     def _getExtraPath(self, *paths):
         """ Return a path inside the extra folder. """
@@ -716,22 +724,27 @@ class Protocol(Step):
         
         # Ensure the protocol instance have it and is callable
         if not func:
-            raise Exception("Protocol._insertFunctionStep: '%s' function is not member of the protocol" % funcName)
+            raise Exception("Protocol._insertFunctionStep: '%s' function is "
+                            "not member of the protocol" % funcName)
         if not callable(func):
-            raise Exception("Protocol._insertFunctionStep: '%s' is not callable" % funcName)
+            raise Exception("Protocol._insertFunctionStep: '%s' is not callable"
+                            % funcName)
         step = FunctionStep(func, funcName, *funcArgs, **kwargs)
         
         return self.__insertStep(step, **kwargs)
         
-    def _insertRunJobStep(self, progName, progArguments, resultFiles=[], **kwargs):
+    def _insertRunJobStep(self, progName, progArguments, resultFiles=[],
+                          **kwargs):
         """ Insert an Step that will simple call runJob function
         **args: see __insertStep
         """
-        return self._insertFunctionStep('runJob', progName, progArguments, **kwargs)
+        return self._insertFunctionStep('runJob', progName, progArguments,
+                                        **kwargs)
     
     def _insertCopyFileStep(self, sourceFile, targetFile, **kwargs):
         """ Shortcut function to insert an step for copying a file to a destiny. """
-        step = FunctionStep(copyFile, 'copyFile', sourceFile, targetFile, **kwargs)
+        step = FunctionStep(pwutils.copyFile, 'copyFile', sourceFile, targetFile,
+                            **kwargs)
         return self.__insertStep(step, **kwargs)
             
     def _enterDir(self, path):
@@ -768,7 +781,7 @@ class Protocol(Step):
         as finished, this is used now mainly in picking,
         but we should remove this since is weird for users.
         """
-        if exists(self.getStepsFile()):
+        if os.path.exists(self.getStepsFile()):
             stepsSet = StepSet(filename=self.getStepsFile())
             for step in stepsSet:
                 if step.getStatus() == STATUS_INTERACTIVE:
@@ -783,7 +796,7 @@ class Protocol(Step):
         """
         prevSteps = []
         
-        if exists(self.getStepsFile()):
+        if os.path.exists(self.getStepsFile()):
             stepsSet = StepSet(filename=self.getStepsFile())
             for step in stepsSet:
                 prevSteps.append(step.clone())
@@ -811,7 +824,8 @@ class Protocol(Step):
         self._prevSteps = self.loadSteps()
         
         n = min(len(self._steps), len(self._prevSteps))
-        self.info("len(steps) " + str(len(self._steps)) + " len(prevSteps) " + str(len(self._prevSteps)))
+        self.info("len(steps) %s len(prevSteps) %s "
+                  % (len(self._steps), len(self._prevSteps)))
         
         for i in range(n):
             newStep = self._steps[i]
@@ -855,7 +869,7 @@ class Protocol(Step):
         """This function will be called whenever an step
         has started running.
         """
-        self.info(magentaStr("STARTED") + ": %s, step %d" %
+        self.info(pwutils.magentaStr("STARTED") + ": %s, step %d" %
                   (step.funcName.get(), step._index))
         self.info("  %s" % step.initTime.datetime())
         self.__updateStep(step)
@@ -869,7 +883,7 @@ class Protocol(Step):
             doContinue = False
         elif step.isFailed():
             doContinue = False
-            errorMsg = redStr("Protocol failed: " + step.getErrorMessage())
+            errorMsg = pwutils.redStr("Protocol failed: " + step.getErrorMessage())
             self.setFailed(errorMsg)
             self.error(errorMsg)
         self.lastStatus = step.getStatus()
@@ -878,8 +892,8 @@ class Protocol(Step):
         self._stepsDone.increment()
         self._store(self._stepsDone)
         
-        self.info(magentaStr(step.getStatus().upper()) + ": %s, step %d" %
-                  (step.funcName.get(), step._index))
+        self.info(pwutils.magentaStr(step.getStatus().upper()) + ": %s, step %d"
+                  % (step.funcName.get(), step._index))
         self.info("  %s" % step.endTime.datetime())
         if step.isFailed() and self.stepsExecutionMode == STEPS_PARALLEL:
             # In parallel mode the executor will exit to close
@@ -895,8 +909,10 @@ class Protocol(Step):
         self._stepsDone.set(startIndex)
         self._numberOfSteps.set(len(self._steps))
         self.setRunning()
-        self._originalRunMode = self.runMode.get()  # Keep the original value to set in sub-protocols
-        self.runMode.set(MODE_RESUME)  # Always set to resume, even if set to restart
+        # Keep the original value to set in sub-protocols
+        self._originalRunMode = self.runMode.get()
+        # Always set to resume, even if set to restart
+        self.runMode.set(MODE_RESUME)
         self._store()
         
         if startIndex == len(self._steps):
@@ -991,34 +1007,35 @@ class Protocol(Step):
         if in RESTART mode. 
         """
         # Clean working path if in RESTART mode
-        paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(), self._getLogsPath()]
+        paths = [self._getPath(), self._getExtraPath(), self._getTmpPath(),
+                 self._getLogsPath()]
         
         if self.runMode == MODE_RESTART:
-            cleanPath(*paths)
+            pwutils.cleanPath(*paths)
             self.__deleteOutputs()
             # Delete the relations created by this protocol
             # (delete this in both project and protocol db)
             self.mapper.deleteRelations(self)
         # Create workingDir, extra and tmp paths
-        makePath(*paths)
+        pwutils.makePath(*paths)
         
     def cleanTmp(self):
         """ Delete all files and subdirectories under Tmp folder. """
-        cleanPattern(self._getTmpPath('*'))
+        pwutils.cleanPattern(self._getTmpPath('*'))
     
     def _run(self):
         # Check that a proper Steps executor have been set
         if self._stepsExecutor is None:
-            raise Exception('Protocol.run: Steps executor should be set before running protocol')
+            raise Exception('Protocol.run: Steps executor should be set before '
+                            'running protocol')
         # Check the parameters are correct
         errors = self.validate()
         if len(errors):
             raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
         
-        #self.__backupSteps() # Prevent from overriden previous stored steps
         self._insertAllSteps() # Define steps for execute later
-        #self._makePathsAndClean() This is done now in project
-        startIndex = self.__findStartingStep() # Find at which step we need to start
+        # Find at which step we need to start
+        startIndex = self.__findStartingStep()
         self.info(" Starting at step: %d" % (startIndex + 1))
         self._storeSteps() 
         self.info(" Running steps ")
@@ -1034,8 +1051,10 @@ class Protocol(Step):
         
     def runJob(self, program, arguments, **kwargs):
         if self.stepsExecutionMode == STEPS_SERIAL:
-            kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', self.numberOfMpi.get())
-            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', self.numberOfThreads.get())
+            kwargs['numberOfMpi'] = kwargs.get('numberOfMpi',
+                                               self.numberOfMpi.get())
+            kwargs['numberOfThreads'] = kwargs.get('numberOfThreads',
+                                                   self.numberOfThreads.get())
         else:
             kwargs['numberOfMpi'] = kwargs.get('numberOfMpi', 1)
             kwargs['numberOfThreads'] = kwargs.get('numberOfThreads', 1)
@@ -1054,7 +1073,7 @@ class Protocol(Step):
         """
         self.__initLogs()
         
-        self.info(greenStr('RUNNING PROTOCOL -----------------'))
+        self.info(pwutils.greenStr('RUNNING PROTOCOL -----------------'))
         self._pid.set(os.getpid())
         self.info('          PID: %s' % self._pid)
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
@@ -1077,18 +1096,20 @@ class Protocol(Step):
         self._store(self.methodsVar)
         self._store(self.endTime)
 
-        if envVarOn('SCIPION_DEBUG_NOCLEAN'):
-            self.warning('Not cleaning temporarly files since SCIPION_DEBUG_NOCLEAN is set to True.')
+        if pwutils.envVarOn('SCIPION_DEBUG_NOCLEAN'):
+            self.warning('Not cleaning temporarly files since '
+                         'SCIPION_DEBUG_NOCLEAN is set to True.')
         elif not self.isFailed():
             self.info('Cleaning temporarly files....')
             self.cleanTmp()
             
-        self.info(greenStr('------------------- PROTOCOL ' +
+        self.info(pwutils.greenStr('------------------- PROTOCOL ' +
                            self.getStatusMessage().upper()))
         self.__closeLogs()
         
     def __initLogs(self):
-        """ Open the log file overwriting its content if the protocol is going to be execute from zero. 
+        """ Open the log file overwriting its content if the protocol is going
+        to be execute from zero.
         Otherwise append the new content to the old one.
         Also open logs files and redirect the systems streams.
         """
@@ -1104,7 +1125,7 @@ class Protocol(Step):
         self.__openLogsFiles(mode)
         # Redirect the system streams to the protocol files
         sys.stdout = self.__fOut
-        if envVarOn('SCIPION_SEPARATE_STDERR'):
+        if pwutils.envVarOn('SCIPION_SEPARATE_STDERR'):
             sys.stderr = self.__fErr
         else:
             sys.stderr = self.__fOut  # send stderr to wherever stdout appears
@@ -1156,7 +1177,8 @@ class Protocol(Step):
             else:
                 from pyworkflow.web.pages import settings as django_settings
                 absolute_url = django_settings.ABSOLUTE_URL
-                self._buffer += '[[%s/get_log/?path=%s][%s]]' % (absolute_url, url, txt)
+                self._buffer += '[[%s/get_log/?path=%s][%s]]' % (absolute_url,
+                                                                 url, txt)
         else:
             self._buffer += '<font color="%s">%s</font>' % (fmt, txt)
 
@@ -1164,9 +1186,9 @@ class Protocol(Step):
 
         outputs = []
         for fname in self.getLogPaths():
-            if exists(fname):
+            if pwutils.exists(fname):
                 self._buffer = ''
-                renderTextFile(fname, self._addChunk)
+                pwutils.renderTextFile(fname, self._addChunk)
                 outputs.append(self._buffer)
             else:
                 outputs.append('File "%s" does not exist' % fname)
@@ -1182,7 +1204,7 @@ class Protocol(Step):
         self._log.error(message, redirectStandard)
 
     def debug(self, message):
-        if envVarOn('SCIPION_DEBUG'):
+        if pwutils.envVarOn('SCIPION_DEBUG'):
             self.info(message)
 
     def getWorkingDir(self):
@@ -1210,11 +1232,12 @@ class Protocol(Step):
     def getFiles(self):
         resultFiles = set()
         for paramName, _ in self.getDefinition().iterPointerParams():
-            attrPointer = getattr(self, paramName) # Get all self attribute that are pointers
+            # Get all self attribute that are pointers
+            attrPointer = getattr(self, paramName)
             obj = attrPointer.get() # Get object pointer by the attribute
             if hasattr(obj, 'getFiles'):
                 resultFiles.update(obj.getFiles()) # Add files if any
-        return resultFiles | getFiles(self.workingDir.get())
+        return resultFiles | pwutils.getFiles(self.workingDir.get())
 
     def getHostName(self):
         """ Get the execution host name """
@@ -1267,10 +1290,9 @@ class Protocol(Step):
 
     @classmethod
     def validatePackageVersion(cls, varName, errors):
-        """
-        Function to validate the the package version specified in configuration file
-        ~/.config/scipion/scipion.conf is among the available options and it is
-        properly installed.
+        """ Function to validate the the package version specified in
+        configuration file ~/.config/scipion/scipion.conf is among the available
+        options and it is properly installed.
         Params:
             package: the package object (ej: eman2 or relion). Package should contain the
                      following methods: getVersion(), getSupportedVersions()
@@ -1289,7 +1311,8 @@ class Protocol(Step):
             errorMsg = "The path value should contains a valid version (%s)." % versions
         elif not os.path.exists(varValue):
             errors.append("Path of %s does not exists." % varName)
-            errorMsg = "Check installed packages and versions with command:\n *scipion install --help*"
+            errorMsg = "Check installed packages and versions with command:\n "
+            errorMsg += "*scipion install --help*"
 
         if errorMsg:
             errors.append("%s = %s" % (varName, varValue))
@@ -1356,8 +1379,8 @@ class Protocol(Step):
         return self._stepsDone.get(0)
 
     def updateSteps(self):
-        """ After the steps list is modified, this methods will update steps information.
-        It will save the steps list and also the number of steps.
+        """ After the steps list is modified, this methods will update steps
+        information. It will save the steps list and also the number of steps.
         """
         self._storeSteps()
         self._numberOfSteps.set(len(self._steps))
@@ -1373,7 +1396,8 @@ class Protocol(Step):
         return msg
     
     def getRunMode(self):
-        """ Return the mode of execution, either: MODE_RESTART or MODE_RESUME. """
+        """ Return the mode of execution, either:
+        MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
     
     # Methods that should be implemented in subclasses
@@ -1390,7 +1414,8 @@ class Protocol(Step):
         errors = []
         # Validate that all input pointer parameters have a value
         for paramName, param in self.getDefinition().iterParams():
-            attr = getattr(self, paramName) # Get all self attribute that are pointers
+            # Get all self attribute that are pointers
+            attr = getattr(self, paramName)
             paramErrors = []
             condition = self.evalParamCondition(paramName)
             if attr.isPointer():
@@ -1409,17 +1434,19 @@ class Protocol(Step):
                 errors += childErrors
         except Exception as e:
             import urllib
-
-            exceptionStr = formatExceptionInfo(e)
-            errors.append("Sorry, this is embarrassing: the validation is failing due to a programming mistake." +
-                          "This should not happen. Some validations fail because they are assuming some input values are "
-                          "filled. Check out the message. It might help to workaround this bug."
-                          " We'd really appreciate if you report this to [[mailto:%s?subject=Scipion validation bug found&body=%s][%s]]" %
-                          (pw.SCIPION_SUPPORT_EMAIL, urllib.quote(exceptionStr), pw.SCIPION_SUPPORT_EMAIL))
+            exceptionStr = pwutils.formatExceptionInfo(e)
+            errors.append("Sorry, this is embarrassing: the validation is "
+                          "failing due to a programming mistake. This should "
+                          "not happen. Check out the message. It might help to "
+                          "workaround this bug. We'd really appreciate if you "
+                          "report this to: "
+                          "[[mailto:%s?subject=%s&body=%s][%s]]" %
+                          ("Scipion validation bug found",
+                           pw.SCIPION_SUPPORT_EMAIL, urllib.quote(exceptionStr),
+                           pw.SCIPION_SUPPORT_EMAIL))
 
             errors.append(exceptionStr)
 
-        
         return errors 
     
     def _warnings(self):
@@ -1469,8 +1496,7 @@ class Protocol(Step):
                 return '*None*'
         
         return "[[sci-open:%s][%s]]" % (obj.getObjId(), obj.getNameId())
-    #    return "[[javascript:launchViewer(%s)][%s]]" % (obj.getObjId(), obj.getNameId())
-    
+
     def _citations(self):
         """ Should be implemented in subclasses. See citations. """
         return getattr(self, "_references", [])
@@ -1532,7 +1558,8 @@ class Protocol(Step):
         return self.__getCitationsDict(self._citations() or [])
             
     def getPackageCitations(self):
-        return self.__getCitationsDict(getattr(self.getClassPackage(), "_references", []))
+        return self.__getCitationsDict(getattr(self.getClassPackage(),
+                                               "_references", []))
     
     def citations(self):
         """ Return a citation message to provide some information to users. """
@@ -1570,7 +1597,8 @@ class Protocol(Step):
         return parsedMethods
         
     def methods(self):
-        """ Return a description about methods about current protocol execution. """
+        """ Return a description about methods about current protocol
+        execution. """
         # TODO: Maybe store the methods and not computing all times??
         return self.getParsedMethods() + [''] + self.citations()
         
@@ -1589,11 +1617,13 @@ class Protocol(Step):
         self._store() #TODO: check if this is needed
         
     def isChild(self):
-        """ Return true if this protocol was invoked from a workflow (another protocol)"""
+        """ Return true if this protocol was invoked from a workflow
+        (another protocol)"""
         return self.hasObjParentId()
     
     def getStepsGraph(self, refresh=True):
-        """ Build a graph taking into account the dependencies between steps. """
+        """ Build a graph taking into account the dependencies between
+        steps. """
         from pyworkflow.utils.graph import Graph
         g = Graph(rootName='PROTOCOL')
         root = g.getRoot()
@@ -1670,9 +1700,9 @@ def runProtocolMain(projectPath, protDbPath, protId):
             # when it runs on a MPI node, it *always* has the scipion env.
             params = ['runprotocol', 'pw_protocol_mpirun.py',
                       projectPath, protDbPath, protId]
-            retcode = runJob(None, pw.getScipionScript(), params,
-                             numberOfMpi=protocol.numberOfMpi.get(),
-                             hostConfig=hostConfig)
+            retcode = pwutils.runJob(None, pw.getScipionScript(), params,
+                                     numberOfMpi=protocol.numberOfMpi.get(),
+                                     hostConfig=hostConfig)
             sys.exit(retcode)
         elif protocol.numberOfThreads > 1:
             executor = ThreadStepExecutor(hostConfig,
@@ -1692,7 +1722,8 @@ def runProtocolMainMPI(projectPath, protDbPath, protId, mpiComm):
     protocol = getProtocolFromDb(projectPath, protDbPath, protId, chdir=True)
     hostConfig = protocol.getHostConfig()
     # Create the steps executor
-    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get()-1, mpiComm)
+    executor = MPIStepExecutor(hostConfig, protocol.numberOfMpi.get()-1,
+                               mpiComm)
     
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
@@ -1706,14 +1737,16 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     # We need this import here because from Project is imported
     # all from protocol indirectly, so if move this to the top
     # we get an import error
-    if not exists(projectPath):
-        raise Exception("ERROR: project path '%s' does not exist. " % projectPath)
+    if not os.path.exists(projectPath):
+        raise Exception("ERROR: project path '%s' does not exist. "
+                        % projectPath)
         sys.exit(1)
     
     fullDbPath = os.path.join(projectPath, protDbPath)
     
-    if not exists(fullDbPath):
-        raise Exception("ERROR: protocol database '%s' does not exist. " % fullDbPath)
+    if not os.path.exists(fullDbPath):
+        raise Exception("ERROR: protocol database '%s' does not exist. "
+                        % fullDbPath)
         sys.exit(1)
         
     from pyworkflow.project import Project
@@ -1735,10 +1768,11 @@ def isProtocolUpToDate(protocol):
 
     if protTS is None: return False
 
-    dbTS = getFileLastModificationDate(protocol.getDbPath())
+    dbTS = pwutils.getFileLastModificationDate(protocol.getDbPath())
 
     if not (protTS and dbTS):
-        print("Can't compare if protocol is up to date: Protocol %s, protocol time stamp: %s, %s timeStamp: %s" %
-              (str(protocol), str(protTS), str(protocol), str(dbTS)))
+        print("Can't compare if protocol is up to date: "
+              "Protocol %s, protocol time stamp: %s, %s timeStamp: %s"
+              % (protocol, protTS, protocol, dbTS))
     else:
         return protTS > dbTS
