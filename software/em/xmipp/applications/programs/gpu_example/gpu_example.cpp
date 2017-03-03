@@ -123,14 +123,14 @@ main(void)
     cudaDeviceReset();
 	
     //Do something with xmipp libraries		
-    MetaData mDsource;		
-    size_t id = mDsource.addObject();		
-    mDsource.setValue(MDL_X,1.,id);		
-    mDsource.setValue(MDL_Y,2.,id);		
-    id = mDsource.addObject();		
-    mDsource.setValue(MDL_X,3.,id);		
-    mDsource.setValue(MDL_Y,4.,id);		
-    mDsource.write("kk.xmd");		
+    MetaData mDsource;
+    size_t id = mDsource.addObject();
+    mDsource.setValue(MDL_X,1.,id);
+    mDsource.setValue(MDL_Y,2.,id);
+    id = mDsource.addObject();
+    mDsource.setValue(MDL_X,3.,id);
+    mDsource.setValue(MDL_Y,4.,id);
+    mDsource.write("kk.xmd");
     printf("Metadata written in file %s\n","kk.xmd");
 
     printf("Done\n");
