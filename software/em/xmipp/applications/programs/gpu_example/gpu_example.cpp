@@ -12,7 +12,6 @@
 #include <cuda_runtime.h>
 // Xmipp stuff
 #include <data/metadata.h>
-
 /**
  * CUDA Kernel Device code
  *
