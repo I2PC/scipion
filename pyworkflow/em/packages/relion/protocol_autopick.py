@@ -43,7 +43,7 @@ import pyworkflow.utils as pwutils
 
 class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
 
-    #--------------------------- INSERT steps functions -------------------------------------------- 
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self): 
         # Convert the input micrographs and references to 
         # the required Relion star files
@@ -60,7 +60,7 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         self._insertFunctionStep('createOutputStep', 
                                  prerequisites=allMicSteps)
         
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def _preprocessMicrographRow(self, img, imgRow):
         # Temporarly convert the few micrographs to tmp and make sure
         # they are in 'mrc' format
@@ -110,7 +110,7 @@ class ProtRelionAutopickBase(ProtParticlePicking, ProtRelionBase):
         
         self.runJob(self._getProgram('relion_autopick'), params, cwd=self.getWorkingDir())      
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getInputReferences(self):
         return self.inputReferences.get()
     
@@ -261,13 +261,13 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
                                         self.getInputDimA(), ' --write_fom_maps',
                                         prerequisites=[convertId])
         
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
         # Does nothing
         pass
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
@@ -276,11 +276,13 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
         self.validatePackageVersion('RELION_HOME', errors)
 
         if self.particleDiameter > self.getInputDimA():
-            errors.append('Particle diameter (%d) can not be greater than size (%d)' % 
-                          (self.particleDiameter, self.getInputDimA()))
+            errors.append('Particle diameter (%d) can not be greater than '
+                          'size (%d)' % (self.particleDiameter,
+                                         self.getInputDimA()))
 
         if self.ctfRelations.get() is None and self.refsCtfCorrected:
-            errors.append("References CTF corrected parameter must be set to False or set ctf relations.")
+            errors.append("References CTF corrected parameter must be set to "
+                          "False or set ctf relations.")
             
         return errors
     
@@ -293,7 +295,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
                    'the _Threshold_ and _Inter-particle distance_ parameters.']
         return summary
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getInputDimA(self):
         """ Return the dimension of input references in A. """
         inputRefs = self.getInputReferences()
@@ -317,7 +319,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         ProtRelionAutopickBase.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
         
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
         form.addSection(label='Input')
@@ -350,7 +352,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         
         form.addParallelSection(threads=4, mpi=1)
         
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions ------------------------
         
     def _insertAutopickStep(self, mic, convertId):
         """ Prepare the command line for calling 'relion_autopick' program """
@@ -363,7 +365,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
                                         '', # neither read or write fom
                                         prerequisites=[convertId])
                 
-    #--------------------------- STEPS functions --------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -376,7 +378,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         """ Should be overriden in subclasses to 
         return summary message for NORMAL EXECUTION. 
@@ -391,7 +393,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         """
         return [self.summaryVar.get('')]
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getInputAutopick(self):
         return self.inputAutopickFom.get()
     
