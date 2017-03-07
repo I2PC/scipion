@@ -8,11 +8,10 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <data/metadata.h>
-
 // For the CUDA runtime routines (prefixed with "cuda_")
 #include <cuda_runtime.h>
-
+// Xmipp stuff
+#include <data/metadata.h>
 /**
  * CUDA Kernel Device code
  *
@@ -122,6 +121,16 @@ main(void)
     // Reset the device and exit
     cudaDeviceReset();
 
+    //Do something with xmipp libraries
+    MetaData mDsource;
+    size_t id = mDsource.addObject();
+    mDsource.setValue(MDL_X,1.,id);
+    mDsource.setValue(MDL_Y,2.,id);
+    id = mDsource.addObject();
+    mDsource.setValue(MDL_X,3.,id);
+    mDsource.setValue(MDL_Y,4.,id);
+    mDsource.write("kk.xmd");
+    printf("Metadata written in file %s\n","kk.xmd");
     printf("Done\n");
     return 0;
 }

@@ -90,11 +90,6 @@ NVCC_LIBDIR = /usr/local/cuda/lib64
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 
-# nVidia Compiler
-NVCC = nvcc --x cu
-NVCC_INCLUDE = /usr/local/cuda/include
-NVCC_LIBDIR = /usr/local/cuda/lib64
-
 # Java variables
 JAVA_HOME = /usr/lib64/jvm/java-1.7.0-openjdk-1.7.0
 JAVA_BINDIR = %(JAVA_HOME)s/bin
