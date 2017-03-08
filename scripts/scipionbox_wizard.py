@@ -29,6 +29,8 @@ import os
 import sys
 import re
 import Tkinter as tk
+import tkFileDialog
+import tkMessageBox
 import ttk
 import tkFont
 from collections import OrderedDict
@@ -123,7 +125,6 @@ class BoxWizardWindow(ProjectBaseWindow):
         self.manager = Manager()
         self.switchView(VIEW_WIZARD)
 
-
 class BoxWizardView(tk.Frame):
     def __init__(self, parent, windows, **kwargs):
         tk.Frame.__init__(self, parent, bg='white', **kwargs)
@@ -193,7 +194,7 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        def _addPair(key, r, lf, entry=True, traceCallback=None):
+        def _addPair(key, r, lf, entry=True, traceCallback=None, mouseBind=False):
             t = LABELS.get(key, key)
             label = tk.Label(lf, text=t, bg='white',
                              font=self.bigFont)
@@ -204,7 +205,10 @@ class BoxWizardView(tk.Frame):
                 entry = tk.Entry(lf, width=30, font=self.bigFont,
                                  textvariable=var)
                 if traceCallback:
-                    var.trace('w', traceCallback)
+                    if mouseBind: #call callback on click
+                        entry.bind("<Button-1>", traceCallback, "eee")
+                    else:#call callback on type
+                        var.trace('w', traceCallback)
                 self.vars[key] = var
                 entry.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
 
@@ -242,7 +246,8 @@ class BoxWizardView(tk.Frame):
         _addPair(USER_NAME, 2, labelFrame, traceCallback=self._onInputChange)
         _addPair(SAMPLE_NAME, 3, labelFrame, traceCallback=self._onInputChange)
         _addPair(PROJECT_NAME, 4, labelFrame)
-        _addPair(DATA_BACKUP, 5, labelFrame)
+        _addPair(DATA_BACKUP, 5, labelFrame,
+                 traceCallback=self.fileDialog, mouseBind=True)
 
         labelFrame.columnconfigure(0, weight=1)
         labelFrame.columnconfigure(0, minsize=120)
@@ -313,7 +318,7 @@ class BoxWizardView(tk.Frame):
         elif backupFolder.find("@") != -1:  # if remote directory do not check
             pass
         elif not os.path.exists(pwutils.expandPattern(backupFolder)):
-            errors.append("Backup folder '%s' does not exists" % backupFolder)
+            errors.append("""Backup folder '%s' already exists. If you want to use you must delete it first""" % backupFolder)
 
         userName = self._getValue(USER_NAME)
         if self.re.match(userName.strip()) is None:
@@ -326,8 +331,8 @@ class BoxWizardView(tk.Frame):
         projName = self._getProjectName()
         projPath = os.path.join(dataFolder, projName)
 
-        scipionProj = self._getConfValue('SCIPION_PROJECT').replace(
-            '${PROJECT_NAME}', projName)
+        scipionProj = self._getConfValue('SCIPION_PROJECT')#.replace(
+            #'${PROJECT_NAME}', projName)
         scipionProjPath = os.path.join(projPath, scipionProj)
         # Do more checks only if there are not previous errors
         if not errors:
@@ -346,12 +351,13 @@ class BoxWizardView(tk.Frame):
         else:
             self._createDataFolder(projPath, scipionProjPath)
             command = os.path.join(os.getenv("SCIPION_HOME"),
-                                                                   "scripts/mirror_directory.sh")
+                                   "scripts/mirror_directory.sh")
             if doBackup:
-                subprocess.Popen([command, projPath, backupFolder],
+                subprocess.Popen([command, dataFolder, projName, backupFolder],
                                  stdout=open('logfile_out.log', 'w'),
                                  stderr=open('logfile_err.log', 'w')
                                  )
+            print projName, projPath, scipionProjPath
             self._createScipionProject(projName, projPath, scipionProjPath)
             self.windows.close()
 
@@ -384,6 +390,7 @@ class BoxWizardView(tk.Frame):
         smtpTo = self._getConfValue(SMTP_TO, '')
         doMail = self._getValue(EMAIL_NOTIFICATION) 
         doPublish = self._getValue(HTML_REPORT)
+
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
                                          filesPath=projPath,
@@ -494,6 +501,18 @@ class BoxWizardView(tk.Frame):
 
     def _checkInput(self, varKey):
         value = self._getValue(varKey)
+
+    def fileDialog(self, * args):
+        """callback that display a directory dialog window"""
+        try:
+             initialdir = self._getConfValue(DATA_BACKUP, '')
+        except:
+            tkMessageBox.showerror("Error","Please select Microscope first")
+            return
+        backupFolder = tkFileDialog.askdirectory(parent=self.root,
+                                                 initialdir=initialdir,
+                                                 title='Choose Backup directory')
+        self._setValue(DATA_BACKUP, backupFolder)
 
     def _onInputChange(self, *args):
         # Quick and dirty trick to skip this function first time

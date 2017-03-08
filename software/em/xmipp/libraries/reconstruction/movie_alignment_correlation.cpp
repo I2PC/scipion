@@ -489,9 +489,9 @@ void ProgMovieAlignmentCorrelation::run()
 
             frame.read(fnFrame);
             if (XSIZE(dark())>0)
-            	croppedFrame()-=dark();
+            	frame()-=dark();
             if (XSIZE(gain())>0)
-            	croppedFrame()*=gain();
+            	frame()*=gain();
             if (yDRcorner!=-1)
                 frame().window(croppedFrame(), yLTcorner, xLTcorner, yDRcorner, xDRcorner);
             else
