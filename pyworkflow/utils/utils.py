@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+from os.path import join
 
 
 def prettyDate(time=False):
@@ -543,19 +544,19 @@ class Environ(dict):
     BEGIN = 1
     END = 2
 
-    def getWithDeprecated(self, varName, deprecatedVarName, defaultValue=None):
-        """ Get a variable environment, and use a second name as a backup for
-        deprecated names"""
+    def getFirst(self, keys, mandatory=False):
+        """ Return the value of the first key present in the environment.
+        If none is found, returns the 'defaultValue' parameter.
+        """
+        for k in keys:
+            if k in self:
+                return self.get(k)
 
-        if self.has_key(varName):
-            return self.get(varName)
+        if mandatory:
+            print ("None of the variables: %s found in the Environment. "
+                   "Please check scipion.conf files." % (str(keys)))
 
-        elif self.has_key(deprecatedVarName):
-            # Use the deprecated variable. In the future this could be a list
-            print ('Environment variable %s not found. Trying with %s (DEPRECATED)' % (varName, deprecatedVarName))
-            return self.get(deprecatedVarName)
-        else:
-            return defaultValue
+        return None
 
     def set(self, varName, varValue, position=REPLACE):
         """ Modify the value for some variable.
@@ -575,13 +576,21 @@ class Environ(dict):
                 self[varName] = self[varName] + os.pathsep + varValue
         else:
             self[varName] = varValue
-                
             
     def update(self, valuesDict, position=REPLACE):
         """ Use set for each key, value pair in valuesDict. """
         for k, v in valuesDict.iteritems():
             self.set(k, v, position)
-            
+
+    def addLibrary(self, libraryPath, position=BEGIN):
+        """ Adds a path to LD_LIBRARY_PATH at the requested position. If valid (exists)."""
+        if libraryPath is None:
+            return
+        elif os.path.exists(libraryPath):
+            self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
+        else:
+            print "Library path does not exists: % s" % libraryPath
+
             
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.

@@ -12,13 +12,14 @@ GRIDS = 1
 
 # Email notification settings
 EMAIL_NOTIFICATION = 1
-SMTP_SERVER = 'SMTP_SERVER'
-SMTP_FROM = 'SMTP_FROM'
-SMTP_TO = 'SMTP_TO'
+SMTP_SERVER = localhost 
+SMTP_FROM = noreply-biocomp@cnb.csic.es
+SMTP_TO = user@domain 
 
 # HTML report settings
 HTML_REPORT = 1
-HTML_PUBLISH = 
+HTML_PUBLISH = rsync -av $REPORT_FOLDER scipionbox@nolan:/home/scipionbox/public_html/
+
 
 # Pattern to be used when importing movies
 PATTERN = GRID_??/DATA/Images-Disc?/GridSquare_*/Data/FoilHole_*frames.mrc
@@ -26,9 +27,12 @@ PATTERN = GRID_??/DATA/Images-Disc?/GridSquare_*/Data/FoilHole_*frames.mrc
 # Name for the Scipion project inside the session folder
 SCIPION_PROJECT = ScipionUserData/projects/${PROJECT_NAME}
 
+# Default backup directory (usually usb mount point
+DATA_BACKUP = /mnt
+
 # ------- MICROSCOPES ----------------
 [MICROSCOPE:Talos]
-DATA_FOLDER = ~/work/data/inbox/Talos
+DATA_FOLDER = /home/inbox
 CS = 2.7
 MAG = 72000
 
