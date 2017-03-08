@@ -1737,9 +1737,10 @@ def isProtocolUpToDate(protocol):
 
     dbTS = getFileLastModificationDate(protocol.getDbPath())
 
-    if protTS < dbTS:
-        return False
+    if not (protTS and dbTS):
+
+        print("Can't compare if protocol is up to date: Protocol %s, protocol time stamp: %s, %s timeStamp: %s" %
+              (str(protocol), str(protTS), str(protocol), str(dbTS)))
+
     else:
-        return True
-
-
+        return protTS > dbTS
