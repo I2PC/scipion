@@ -26,9 +26,11 @@
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.protocol.params import MultiPointerParam
+from pyworkflow.protocol.params import PointerParam, IntParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import ProtPreprocessMicrographs, EMProtocol
+from pyworkflow.em.data import SetOfMovies, Movie
 import pyworkflow.em as em
+
 
 
 
@@ -47,55 +49,72 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
  
-        form.addParam('inputMovies', MultiPointerParam, pointerClass='Movie', 
+        form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies, Movie',
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select one or several movies. A gain image will '
                            'be calculated for each one of them')
+        form.addParam('frameStep', IntParam, default=1,
+                      label="Frame step", expertLevel=LEVEL_ADVANCED,
+                      help='By default, every frame (frameStep=1) is used to compute the movie gain. If you set '
+                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... frame will be used')
+        form.addParam('movieStep', IntParam, default=1,
+                      label="Movie step", expertLevel=LEVEL_ADVANCED,
+                      help='By default, every movie (movieStep=1) is used to compute the movie gain. If you set '
+                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... movie will be used')
         form.addParallelSection(threads=1, mpi=1)
 
 
     #--------------------------- STEPS functions -------------------------------
     def _insertAllSteps(self):
         gainSteps = []
-        for pointer in self.inputMovies:
-            movie = pointer.get()
+
+        if isinstance(self.inputMovies.get(), SetOfMovies):
+            for idx, movie in enumerate(self.inputMovies.get()):
+                if idx % self.movieStep.get() != 0:
+                    continue
+                movieId = movie.getObjId()
+                fnMovie = movie.getFileName()
+                stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie, prerequisites=[])
+                gainSteps.append(stepId)
+        else:
+            movie = self.inputMovies.get()
             movieId = movie.getObjId()
             fnMovie = movie.getFileName()
- 
-            stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie,
-                                              prerequisites=[])
+            stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie, prerequisites=[])
             gainSteps.append(stepId)
-             
+
         self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
 
     def createOutputStep(self):
-        movie = self.inputMovies[0].get()
-        if len(self.inputMovies)==1:
+        if isinstance(self.inputMovies.get(), Movie):
+            movie = self.inputMovies.get()
             imgOut = em.data.Image()
             imgOut.setSamplingRate(movie.getSamplingRate())
             imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
                                              % movie.getObjId()))
-    
+
             self._defineOutputs(outputGainImage=imgOut)
             self._defineSourceRelation(self.inputMovies, imgOut)
         else:
             imgSetOut = self._createSetOfImages()
-            imgSetOut.setSamplingRate(movie.getSamplingRate())
-            for pointer in self.inputMovies:
-                movie = pointer.get()
+
+            for idx, movie in enumerate(self.inputMovies.get()):
+                if idx % self.movieStep.get() != 0:
+                    continue
                 imgOut = em.data.Image()
                 imgOut.setSamplingRate(movie.getSamplingRate())
                 imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
                                                  % movie.getObjId()))
+                imgSetOut.setSamplingRate(movie.getSamplingRate())
                 imgSetOut.append(imgOut)
     
             self._defineOutputs(outputSetOfGainImages=imgSetOut)
             self._defineSourceRelation(self.inputMovies, imgSetOut)
+            print("TOTO JE DONE LIST: " + self._readDoneList())
     
     def estimateGain(self, movieId, fnMovie):
         self.runJob("xmipp_movie_estimate_gain",
-                    "-i %s --oroot %s --iter 1 --singleRef"
-                    % (fnMovie, self._getPath("movie_%06d" % movieId)),
+                    "-i %s --oroot %s --iter 1 --singleRef --frameStep %d"
+                    % (fnMovie, self._getPath("movie_%06d" % movieId), self.frameStep),
                     numberOfMpi=1)
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
-    
