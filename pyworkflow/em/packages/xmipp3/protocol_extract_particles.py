@@ -448,8 +448,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         imgSet.generateItems(self.inputCoords,
                              updateItemCallback=self.createParticles,
-                             itemIterator=md.iterRows(fnImages,
-                                                      sortByLabel=md.MDL_ITEM_ID))
+                             itemDataIterator=md.iterRows(fnImages,
+                                                          sortByLabel=md.MDL_ITEM_ID))
         
         imgSet.setSamplingRate(self._getNewSampling())
 

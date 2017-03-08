@@ -702,7 +702,7 @@ class EMSet(Set, EMObject):
                     
     def generateItems(self, otherSet,
                       updateItemCallback=None,
-                      itemIterator=None,
+                      itemDataIterator=None,
                       copyDisabled=False):
         """ Generate new items from another set (belong to a different class),
         If the updateItemCallback is passed, it will be called with each item
@@ -712,19 +712,18 @@ class EMSet(Set, EMObject):
             # copy items if enabled or copyDisabled=True
             if copyDisabled or item.isEnabled():
                 if updateItemCallback:
-                    row = None if itemIterator is None else next(itemIterator)
+                    row = None if itemDataIterator is None else next(itemDataIterator)
                     newItem = updateItemCallback(item, row)
                 else:
                     raise Exception("You should provide a callback function.")
 
                 # If updateCallBack function returns attribute
                 # _enabled to False do not append the item
-                print "Enable: ", newItem.isEnabled()
                 if newItem.isEnabled():
                     self.append(newItem)
             else:
-                if itemIterator is not None:
-                    next(itemIterator) # just skip disabled data row
+                if itemDataIterator is not None:
+                    next(itemDataIterator)  # just skip disabled data row
                     
     def getFiles(self):
         return Set.getFiles(self)
