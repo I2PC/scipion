@@ -294,8 +294,9 @@ class TestXmippAutomaticPicking(TestXmippBase):
 
 
 class TestXmippExtractParticles(TestXmippBase):
-    """This class check if the protocol to extract particles in Xmipp works properly."""
-    
+    """This class check if the protocol to extract particles
+    in Xmipp works properly.
+    """
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
@@ -329,19 +330,25 @@ class TestXmippExtractParticles(TestXmippBase):
         inputCoords = protExtract.inputCoordinates.get()
         outputParts = protExtract.outputParticles
         micSampling = protExtract.inputCoordinates.get().getMicrographs().getSamplingRate()
-        self.assertIsNotNone(outputParts, 
+        
+        self.assertIsNotNone(outputParts,
                              "There was a problem generating the output.")
         self.assertAlmostEqual(outputParts.getSamplingRate()/micSampling,
                                1, 1,
                                "There was a problem generating the output.")
+        
         def compare(objId, delta=0.001):
             cx, cy = inputCoords[objId].getPosition()
             px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
             self.assertAlmostEquals(cx, px, delta=delta)
             self.assertAlmostEquals(cy, py, delta=delta)
-
-        compare(228)
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
         compare(83)
+        compare(228)
     
     def testExtractOriginal(self):
         print "Run extract particles from the original micrographs"
@@ -365,9 +372,14 @@ class TestXmippExtractParticles(TestXmippBase):
         def compare(objId, delta=1.0):
             cx, cy = inputCoords[objId].getPosition()
             px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
             self.assertAlmostEquals(cx/factor, px, delta=delta)
             self.assertAlmostEquals(cy/factor, py, delta=delta)
-             
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
+
         compare(111)
         compare(7)        
         
@@ -405,9 +417,14 @@ class TestXmippExtractParticles(TestXmippBase):
         def compare(objId, delta=1.0):
             cx, cy = inputCoords[objId].getPosition()
             px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
             self.assertAlmostEquals(cx/factor, px, delta=delta)
             self.assertAlmostEquals(cy/factor, py, delta=delta)
-            
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
+
         compare(45)
         compare(229)  
 
@@ -452,14 +469,19 @@ class TestXmippExtractParticles(TestXmippBase):
         self.launchProtocol(protExtract)
 
         inputCoords = protExtract.inputCoordinates.get()
-        outputParts = protExtract.outputParticles 
+        outputParts = protExtract.outputParticles
         
         def compare(objId, delta=0.001):
             cx, cy = inputCoords[objId].getPosition()
             px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
             self.assertAlmostEquals(cx, px, delta=delta)
             self.assertAlmostEquals(cy, py, delta=delta)
-            
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
+
         compare(228)
         compare(83) 
                         
@@ -494,13 +516,19 @@ class TestXmippExtractParticles(TestXmippBase):
         def compare(objId, delta=0.001):
             cx, cy = inputCoords[objId].getPosition()
             px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
             self.assertAlmostEquals(cx, px, delta=delta)
             self.assertAlmostEquals(cy, py, delta=delta)
-            
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
+
         compare(228)
         compare(83) 
-               
-        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        
+        self.assertIsNotNone(outputParts, "There was a problem generating"
+                                          " the output.")
         self.assertAlmostEquals(outputParts.getSize(), 267, delta=2)
         
     def testAssignCTF(self):
@@ -553,8 +581,13 @@ class TestXmippExtractParticles(TestXmippBase):
         def compare(objId, delta=1.0):
             cx, cy = inputCoords[objId].getPosition()
             px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
             self.assertAlmostEquals(cx / factor, px, delta=delta)
             self.assertAlmostEquals(cy / factor, py, delta=delta)
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
 
         compare(45)
         compare(229)

@@ -661,8 +661,10 @@ def runFilterVolumeStep(self, iterN, refN, constantToAddToFiltration):
             filterInPxAt = fourierMaxFrequencyOfInterest + constantToAddToFiltration
         else:
             filterInPxAt = constantToAddToFiltration
+    else:
+        filterInPxAt = 1.
     
-    if (filterInPxAt > 0.5):
+    if filterInPxAt > 0.5:
         copyFile(reconstructedVolume, reconstructedFilteredVolume)
     else:
         args = ' -i %(volume)s -o %(filteredVol)s --fourier low_pass %(filter)s'
