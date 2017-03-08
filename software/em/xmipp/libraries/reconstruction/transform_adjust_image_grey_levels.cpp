@@ -162,6 +162,12 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 	rowIn.getValue(MDL_ANGLE_TILT,tilt);
 	rowIn.getValue(MDL_ANGLE_PSI,psi);
 
+	double olda=1.0, oldb=0.0;
+	if (rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A)){
+		rowIn.getValue(MDL_CONTINUOUS_GRAY_A,olda);
+		rowIn.getValue(MDL_CONTINUOUS_GRAY_B,oldb);
+	}
+
 	I.read(fnImg);
 	I().setXmippOrigin();
 	Istddev=I().computeStddev();
@@ -193,8 +199,8 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 	try
 	{
 		costAB=1e38;
-	    pAB(0)=1; // a in I'=a*I+b
-	    pAB(1)=0; // b in I'=a*I+b
+	    pAB(0)=olda; // a in I'=a*I+b
+	    pAB(1)=oldb; // b in I'=a*I+b
 		powellOptimizer(pAB, 1, 2, &transformImageGrayCostAB, this, 0.01, costAB, iter, steps, verbose>=2);
 		if (costAB>1e30)
 		{
@@ -205,8 +211,8 @@ void ProgTransformImageGreyLevels::processImage(const FileName &fnImg, const Fil
 		}
 
 		costBA=1e38;
-	    pBA(0)=0; // a in I'=a*I+b
-	    pBA(1)=1; // b in I'=a*I+b
+	    pBA(0)=oldb; // a in I'=a*I+b
+	    pBA(1)=olda; // b in I'=a*I+b
 		powellOptimizer(pBA, 1, 2, &transformImageGrayCostBA, this, 0.01, costBA, iter, steps, verbose>=2);
 		if (costBA>1e30)
 		{

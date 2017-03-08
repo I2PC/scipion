@@ -501,7 +501,7 @@ class TestXmippExtractParticles(TestXmippBase):
         compare(83) 
                
         self.assertIsNotNone(outputParts, "There was a problem generating the output.")
-        self.assertAlmostEquals(outputParts.getSize(), 249, delta=10)
+        self.assertAlmostEquals(outputParts.getSize(), 267, delta=2)
         
     def testAssignCTF(self):
         """ Test the particle extraction after importing another

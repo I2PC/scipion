@@ -1799,11 +1799,13 @@ void MetaData::fillLinear(MDLabel label, double initial, double step)
 
 void MetaData::copyColumn(MDLabel labelDest, MDLabel labelSrc)
 {
-    const char * srcName = MDL::label2Str(labelSrc).c_str();
+    String srcName = MDL::label2Str(labelSrc);
     if (!containsLabel(labelSrc))
-        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName));
+        REPORT_ERROR(ERR_ARG_MISSING, formatString("Source label: '%s' doesn't exist on metadata", srcName.c_str()));
     addLabel(labelDest);
-    String cmd = formatString("%s=%s", MDL::label2Str(labelDest).c_str(), srcName);
+
+    String destName = MDL::label2Str(labelDest);
+    String cmd = formatString("%s=%s", destName.c_str(), srcName.c_str());
     operate(cmd);
 }
 
@@ -2121,9 +2123,9 @@ void MetaData::operate(const String &expression)
 
 void MetaData::replace(const MDLabel label, const String &oldStr, const String &newStr)
 {
-    const char * labelStr = MDL::label2Str(label).c_str();
+    String labelStr = MDL::label2Str(label);
     String expression = formatString("%s=replace(%s,'%s', '%s')",
-                                     labelStr, labelStr, oldStr.c_str(), newStr.c_str());
+                                     labelStr.c_str(), labelStr.c_str(), oldStr.c_str(), newStr.c_str());
     if (!myMDSql->operate(expression))
         REPORT_ERROR(ERR_MD, "MetaData::replace: error doing operation");
 }
