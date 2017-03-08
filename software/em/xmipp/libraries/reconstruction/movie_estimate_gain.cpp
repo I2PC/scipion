@@ -35,6 +35,8 @@ void ProgMovieEstimateGain::defineParams()
     addParamsLine("                             :+(Ideal=Observed*Corr, Observed=Ideal*Gain)");
     addParamsLine(" [--iter <N=3>]: Number of iterations");
     addParamsLine(" [--maxSigma <s=3>]: Maximum number of neighbour rows/columns to analyze");
+    addParamsLine(" [--frameStep <s=1>]: Skip frames during the estimation");
+    addParamsLine("                    : Set to 1 to process all frames, set to 2 to process 1 every 2 frames, ...");
     addParamsLine(" [--sigmaStep <s=0.5>]: Step size for sigma");
     addParamsLine(" [--singleRef] : Use a single histogram reference");
     addParamsLine("               :+This assumes that there is no image contamination or carbon holes");
@@ -48,6 +50,7 @@ void ProgMovieEstimateGain::readParams()
 	maxSigma=getDoubleParam("--maxSigma");
 	sigmaStep=getDoubleParam("--sigmaStep");
 	singleReference=checkParam("--singleRef");
+	frameStep=getIntParam("--frameStep");
 }
 
 void ProgMovieEstimateGain::produceSideInfo()
@@ -69,11 +72,16 @@ void ProgMovieEstimateGain::produceSideInfo()
 	ICorrection().initConstant(1);
 	sumObs.initZeros(Ydim,Xdim);
 
+    int iFrame=0;
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
-		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-		Iframe.read(fnFrame);
-		sumObs+=Iframe();
+	    if (iFrame%frameStep==0)
+	    {
+            mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+            Iframe.read(fnFrame);
+            sumObs+=Iframe();
+		}
+		iFrame++;
 	}
 	sumObs*=2;
 
@@ -104,6 +112,7 @@ void ProgMovieEstimateGain::show()
 	<< "Max. Sigma:      " << maxSigma        << std::endl
 	<< "Sigma step:      " << sigmaStep       << std::endl
 	<< "Single ref:      " << singleReference << std::endl
+	<< "Frame step:      " << frameStep       << std::endl
 	;
 }
 
@@ -122,29 +131,34 @@ void ProgMovieEstimateGain::run()
 	{
 		std::cout << "Iteration " << n << std::endl;
 		sumIdeal.initZeros(Ydim,Xdim);
+		int iFrame=0;
 		FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 		{
-			mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-			std::cout << "   Frame " << fnFrame << std::endl;
-			Iframe.read(fnFrame);
-			IframeIdeal = Iframe();
-			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
-				DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
-			computeHistograms(IframeIdeal);
+            if (iFrame%frameStep==0)
+            {
+                mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+                std::cout << "   Frame " << fnFrame << std::endl;
+                Iframe.read(fnFrame);
+                IframeIdeal = Iframe();
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
+                    DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
+                computeHistograms(IframeIdeal);
 
-			size_t bestSigmaCol = selectBestSigmaByColumn(IframeIdeal);
-			std::cout << "      sigmaCol: " << listOfSigmas[bestSigmaCol] << std::endl;
-			size_t bestSigmaRow = selectBestSigmaByRow(IframeIdeal);
-			std::cout << "      sigmaRow: " << listOfSigmas[bestSigmaRow] << std::endl;
+                size_t bestSigmaCol = selectBestSigmaByColumn(IframeIdeal);
+                std::cout << "      sigmaCol: " << listOfSigmas[bestSigmaCol] << std::endl;
+                size_t bestSigmaRow = selectBestSigmaByRow(IframeIdeal);
+                std::cout << "      sigmaRow: " << listOfSigmas[bestSigmaRow] << std::endl;
 
-			constructSmoothHistogramsByRow(listOfWeights[bestSigmaRow],listOfWidths[bestSigmaRow]);
-			transformGrayValuesRow(IframeIdeal,IframeTransformed);
-			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
-				DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
-			constructSmoothHistogramsByColumn(listOfWeights[bestSigmaCol],listOfWidths[bestSigmaCol]);
-			transformGrayValuesColumn(IframeIdeal,IframeTransformed);
-			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
-				DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+                constructSmoothHistogramsByRow(listOfWeights[bestSigmaRow],listOfWidths[bestSigmaRow]);
+                transformGrayValuesRow(IframeIdeal,IframeTransformed);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
+                    DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+                constructSmoothHistogramsByColumn(listOfWeights[bestSigmaCol],listOfWidths[bestSigmaCol]);
+                transformGrayValuesColumn(IframeIdeal,IframeTransformed);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
+                    DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+             }
+             iFrame++;
 		}
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mICorrection)
@@ -369,9 +383,6 @@ void ProgMovieEstimateGain::transformGrayValuesRow(const MultidimArray<int> &Ifr
 #endif
 
 }
-
-
-
 
 double computeTVColumns(MultidimArray<int> &I)
 {
