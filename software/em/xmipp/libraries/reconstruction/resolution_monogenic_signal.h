@@ -50,13 +50,13 @@ class ProgMonogenicSignalRes : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym, fnMeanVol;
+	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSpatial, fnSym, fnMeanVol, fnMaskOut, fnMd;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R;
 
 	/** Is the volume previously masked?*/
-	//int R;
+	int NVoxelsOriginalMask, Nvoxels;
 
 	/** Step in digital frequency */
 	double N_freq, trimBound, significance;
@@ -72,9 +72,12 @@ public:
 
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
-    void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV, double w1, MultidimArray<double> &amplitude,
+    void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
+    		double w1, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
-
+    void postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
+    		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
+    		MultidimArray<double> &resolutionChimera);
     void run();
 
 public:
