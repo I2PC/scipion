@@ -38,6 +38,7 @@ from pyworkflow.em.data import Coordinate, SetOfCoordinates
 from convert import particleToRow, rowToSubcoordinate, setEnviron, RELION_VERSION
 from pyworkflow.em.packages.relion.convert import composeRelionVersionHome
 
+from convert import getVersion
 
 CMM = 0
 HAND = 1
@@ -310,7 +311,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
                                                            0,
                                                            self.alignSubparticles,
                                                            "",
-                                                           True,
+                                                           False,
                                                            filters)
 
         return subparticles
