@@ -32,6 +32,7 @@ This module contains converter functions that will serve to:
 import os
 import re
 from pyworkflow.object import Float
+import pyworkflow.utils as pwutils
 
 
 def getVersion():
@@ -88,3 +89,15 @@ def readCtfModel(ctfModel, filename, ctf4=False):
         ctfModel.setStandardDefocus(defocusU, defocusV, defocusAngle)
     ctfModel._gctf_crossCorrelation = Float(ctfFit)
     ctfModel._gctf_ctfResolution = Float(ctfResolution)
+
+
+def getEnviron():
+    """ Return the environ settings to run gautomatch programs. """
+    environ = pwutils.Environ(os.environ)
+
+    # Take Scipion CUDA library path
+    cudaLib = environ.getFirst(('GCTF_CUDA_LIB', 'CUDA_LIB'))
+    environ.addLibrary(cudaLib)
+
+    return environ
+

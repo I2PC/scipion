@@ -257,7 +257,7 @@ class ProtGctf(em.ProtCTFMicrographs):
         self._params['gctfOut'] = self._getCtfOutPath(micDir)
 
         try:
-            self.runJob(self._getProgram(), self._args % self._params)
+            self.runJob(self._getProgram(), self._args % self._params,  env=self._getEnviron())
         except:
             print("ERROR: Gctf has failed for micrograph %s" % micFnMrc)
 
