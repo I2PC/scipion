@@ -98,13 +98,14 @@ ALIGNMENT_DICT = OrderedDict([
        ("_rlnAnglePsi", md.RLN_ORIENT_PSI),
        ])
 
+from pyworkflow.em.packages.relion.constants import V1_4
+RELION_VERSION = V1_4
 
 def getRelionEnviron():
     """ Setup the environment variables needed to launch Relion. """
     from pyworkflow.em.packages.relion.convert import getEnviron
-    from pyworkflow.em.packages.relion.constants import V1_4
     
-    return getEnviron(V1_4)
+    return getEnviron(RELION_VERSION)
 
 
 def setEnviron():

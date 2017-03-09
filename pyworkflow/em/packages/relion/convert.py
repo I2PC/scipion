@@ -142,6 +142,14 @@ def getSupportedVersions():
 def composeRelionVersionHome(version):
     path = os.environ['RELION_HOME']
     newRelionHome = "-".join(path.split("-")[:-1]) + "-" + version
+
+    # Case for 1.4 and 1.4f
+    if version == V1_4:
+
+        # Check if path exists
+        if not os.path.exists(newRelionHome):
+            newRelionHome += 'f'
+
     return newRelionHome
 
 

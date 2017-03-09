@@ -35,7 +35,7 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
 from pyworkflow.em.protocol import ProtParticles, ProtParticlePicking
 from pyworkflow.em.data import Coordinate, SetOfCoordinates
 
-from convert import particleToRow, rowToSubcoordinate, setEnviron
+from convert import particleToRow, rowToSubcoordinate, setEnviron, RELION_VERSION
 from pyworkflow.em.packages.relion.convert import composeRelionVersionHome
 
 
@@ -213,10 +213,10 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     #--------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
-        relionPath = composeRelionVersionHome("1.4")
+        relionPath = composeRelionVersionHome(RELION_VERSION)
         if not exists(relionPath):
-            errors.append("Not exists %s. Contact with your system manager to "
-                          "install Relion-1.4" % relionPath)
+            errors.append("%s does not exists. Contact with your system manager"
+                          " to install relion-1.4 or relion-1.4f" % relionPath)
         return errors
     
     def _citations(self):
