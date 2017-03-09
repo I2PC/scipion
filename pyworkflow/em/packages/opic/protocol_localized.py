@@ -35,11 +35,8 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
 from pyworkflow.em.protocol import ProtParticles, ProtParticlePicking
 from pyworkflow.em.data import Coordinate, SetOfCoordinates
 
-from pyworkflow.utils.path import replaceBaseExt
-
 from convert import particleToRow, rowToSubcoordinate, setEnviron
 from pyworkflow.em.packages.relion.convert import composeRelionVersionHome
-from convert import particleToRow, rowToSubcoordinate, setEnviron, getVersion
 
 
 CMM = 0
