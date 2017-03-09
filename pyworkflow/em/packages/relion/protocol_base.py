@@ -42,7 +42,7 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
-from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0, V1_4
 from convert import convertBinaryVol, writeSetOfParticles, getVersion
 
 
@@ -417,7 +417,7 @@ class ProtRelionBase(EMProtocol):
                               help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
-        if getVersion() == "2.0":
+        if getVersion() == V2_0:
             form.addParam('useParallelDisk', BooleanParam, default=True,
                           label='Use parallel disc I/O?',
                           help='If set to Yes, all MPI slaves will read '
@@ -559,7 +559,7 @@ class ProtRelionBase(EMProtocol):
             self._setContinueArgs(args)
         else:
             self._setNormalArgs(args)
-        if getVersion() == "2.0":
+        if getVersion() == V2_0:
             self._setComputeArgs(args)
         
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
@@ -598,7 +598,7 @@ class ProtRelionBase(EMProtocol):
             args['--ini_high'] = self.initialLowPassFilterA.get()
             args['--sym'] = self.symmetryGroup.get()
         
-        if not getVersion() == "2.0":
+        if not getVersion() == V2_0:
             args['--memory_per_thread'] = self.memoryPreThreads.get()
         
         self._setBasicArgs(args)
@@ -708,7 +708,7 @@ class ProtRelionBase(EMProtocol):
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
 
-                if getVersion() == "1.4":
+                if getVersion() == V1_4:
                     mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
                 else:
                     mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
