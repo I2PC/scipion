@@ -677,8 +677,10 @@ void ProgMonogenicSignalRes::run()
 					doNextIteration = false;
 			}
 		}
+		std::cout << "doNextIteration = " << doNextIteration << std::endl;
 		std::cout << "checkpoint 6" << std::endl;
 		iter++;
+		std::cout << "iter = " << iter << std::endl;
 	} while (doNextIteration);
 
 	amplitudeMN.clear();
