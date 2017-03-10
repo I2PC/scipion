@@ -102,4 +102,4 @@ class TestHighres(BaseTest):
         else:
             md=xmipp.MetaData("resolution@"+fnResolution)
             R=md.getValue(xmipp.MDL_RESOLUTION_FREQREAL,md.firstObject())
-            self.assertTrue(R<8,"Resolution is not below 8A")
+            self.assertTrue(R < 7, "Resolution is not below 7A")

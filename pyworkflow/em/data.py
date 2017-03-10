@@ -700,6 +700,31 @@ class EMSet(Set, EMObject):
                 if itemDataIterator is not None:
                     next(itemDataIterator) # just skip disabled data row
                     
+    def generateItems(self, otherSet,
+                      updateItemCallback=None,
+                      itemDataIterator=None,
+                      copyDisabled=False):
+        """ Generate new items from another set (belong to a different class),
+        If the updateItemCallback is passed, it will be called with each item
+        (and optionally with a data row).
+        """
+        for item in otherSet:
+            # copy items if enabled or copyDisabled=True
+            if copyDisabled or item.isEnabled():
+                if updateItemCallback:
+                    row = None if itemDataIterator is None else next(itemDataIterator)
+                    newItem = updateItemCallback(item, row)
+                else:
+                    raise Exception("You should provide a callback function.")
+
+                # If updateCallBack function returns attribute
+                # _enabled to False do not append the item
+                if newItem.isEnabled():
+                    self.append(newItem)
+            else:
+                if itemDataIterator is not None:
+                    next(itemDataIterator)  # just skip disabled data row
+                    
     def getFiles(self):
         return Set.getFiles(self)
   
