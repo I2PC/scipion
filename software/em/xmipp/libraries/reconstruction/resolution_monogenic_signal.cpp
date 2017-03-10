@@ -346,6 +346,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
 		 MultidimArray<double> &resolutionChimera)
 {
+	std::cout << "entro" << std::endl;
 	MultidimArray<double> resolutionVol_aux = resolutionVol;
 	double last_resolution_2 = sampling/list[(list.size()-1)];
 
