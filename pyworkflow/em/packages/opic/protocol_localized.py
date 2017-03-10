@@ -229,10 +229,9 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
         #matricesObjs = lr.matrix_from_symmetry(self.symmetryGroup.get())
         # We implement the binding to remove the dependency with relion. When
         # we test the new implementation (code below) and the results were
-        # different. THe nunmber of particles removed are diverge in dependency of
-        # how you obtain the symmetry matrices.
+        # different. THe nunmber of particles removed are diverge in dependency
+        # of how you obtain the symmetry matrices.
         # There aren't any obvious bug in the matrices.
-        
         
 #         matricesObjs = []
 #         matrices = md.getSymmetryMatrices(self.symmetryGroup.get())
