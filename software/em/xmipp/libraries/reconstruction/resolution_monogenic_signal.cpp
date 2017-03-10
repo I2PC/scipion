@@ -504,6 +504,7 @@ void ProgMonogenicSignalRes::run()
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 		noiseValues.clear();
+		std::cout << "checkpoint 0" << std::endl;
 		if (exactres)
 		{
 			if (halfMapsGiven)
@@ -584,7 +585,7 @@ void ProgMonogenicSignalRes::run()
 						}
 					}
 		}
-
+		std::cout << "checkpoint 1" << std::endl;
 		if (NS == 0)
 		{
 			std::cout << "There are no points to compute inside the mask" << std::endl;
@@ -600,7 +601,7 @@ void ProgMonogenicSignalRes::run()
 
 		if (meanS>max_meanS)
 			max_meanS = meanS;
-
+		std::cout << "checkpoint 2" << std::endl;
 		if (meanS<0.001*max_meanS)
 		{
 			std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
@@ -616,7 +617,7 @@ void ProgMonogenicSignalRes::run()
 		}
 		else
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
-
+		std::cout << "checkpoint 3" << std::endl;
 		#ifdef DEBUG
 		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
 		#endif
@@ -633,7 +634,7 @@ void ProgMonogenicSignalRes::run()
 				else
 					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 		}
-
+		std::cout << "checkpoint 4" << std::endl;
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
 		if (verbose >=2)
@@ -648,7 +649,7 @@ void ProgMonogenicSignalRes::run()
 			criticalW = freq;
 			doNextIteration=false;
 		}
-
+		std::cout << "checkpoint 5" << std::endl;
 		if (doNextIteration)
 		{
 			if (linearchk == false)
@@ -676,6 +677,7 @@ void ProgMonogenicSignalRes::run()
 					doNextIteration = false;
 			}
 		}
+		std::cout << "checkpoint 6" << std::endl;
 		iter++;
 	} while (doNextIteration);
 
