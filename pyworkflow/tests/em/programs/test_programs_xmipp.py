@@ -1361,7 +1361,7 @@ class PhantomProject(XmippProgramTest):
                 outputs=["projections.stk","projections.xmd"])
     def test_case5(self):
         self.runCase("-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection_xmd.param --method fourier 2 0.5 bspline",
-                outputs=["projections.stk","projections.xmd"])
+                outputs=["projections.stk","projections.xmd"], errorthreshold=0.0021)
 
 
 class MlAlign2d(XmippProgramTest):
