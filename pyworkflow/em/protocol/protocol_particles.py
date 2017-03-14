@@ -23,13 +23,11 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-In this module are protocol base classes related to EM Particles
-"""
 
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import EMObject, SetOfCoordinates
+from pyworkflow.em.data import EMObject, SetOfCoordinates, Micrograph
+import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 
 
@@ -46,8 +44,9 @@ class ProtProcessParticles(ProtParticles):
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         
-        form.addParam('inputParticles', PointerParam, important=True,
-                      label=Message.LABEL_INPUT_PART, pointerClass='SetOfParticles')
+        form.addParam('inputParticles', PointerParam,
+                      pointerClass = 'SetOfParticles',
+                      label=Message.LABEL_INPUT_PART, important=True)
         # Hook that should be implemented in subclasses
         self._defineProcessParams(form)
         
@@ -68,12 +67,14 @@ class ProtProcessParticles(ProtParticles):
 
 
 class ProtFilterParticles(ProtProcessParticles):
-    """Base class for filters on particles of type ProtPreprocessParticles"""
+    """ Base class for filters on particles of type ProtPreprocessParticles
+    """
     pass
 
 
 class ProtOperateParticles(ProtProcessParticles):
-    """Base class for operations on particles of type ProtPreprocessParticles"""
+    """ Base class for operations on particles of type ProtPreprocessParticles
+    """
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
 
@@ -94,11 +95,13 @@ class ProtParticlePicking(ProtParticles):
     def _defineParams(self, form):
 
         form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
+        form.addParam('inputMicrographs', PointerParam,
+                      pointerClass='SetOfMicrographs',
                       label=Message.LABEL_INPUT_MIC, important=True,
-                      help='Select the SetOfMicrographs to be used during picking.')
+                      help='Select the SetOfMicrographs to be used during '
+                           'picking.')
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def getSummary(self, coordSet):
         summary = []
         summary.append("Number of particles picked: %s" % coordSet.getSize())
@@ -106,8 +109,8 @@ class ProtParticlePicking(ProtParticles):
         return "\n".join(summary)
 
     def getMethods(self, output):
-        msg = 'User picked %d particles with a particle size of %s.' % (output.getSize(),
-                                                                        output.getBoxSize())
+        msg = 'User picked %d particles ' % output.getSize()
+        msg += 'with a particle size of %s.' % output.getBoxSize()
         return msg
 
     def _methods(self):
@@ -164,7 +167,8 @@ class ProtParticlePicking(ProtParticles):
     def _summary(self):
         summary = []
         if self.getInputMicrographs() is not None:
-            summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+            summary.append("Number of input micrographs: %d"
+                           % self.getInputMicrographs().getSize())
 
         if self.getOutputsSize() >= 1:
             for key, output in self.iterOutputAttributes(EMObject):
@@ -191,10 +195,10 @@ class ProtParticlePicking(ProtParticles):
                 counter = 1 # when there is not number assume 1
             maxCounter = max(counter, maxCounter)
 
-        return str(maxCounter+1) if maxCounter > 0 else '' # empty if not outputs
+        return str(maxCounter+1) if maxCounter > 0 else '' # empty if not output
 
     def registerCoords(self, coordsDir):
-        """ This methods is usually inherited from all Pickers
+        """ This method is usually inherited by all Pickers
         and it is used from the Java picking GUI to register
         a new SetOfCoordinates when the user click on +Particles button. 
         """
@@ -212,3 +216,75 @@ class ProtParticlePicking(ProtParticles):
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.inputMicrographs, outputset)
         self._store()
+
+
+class ProtParticlePickingAuto(ProtParticlePicking):
+    """ A derived class from ProtParticlePicking to differentiate those
+    picking protocols that works in automatic way, i.e., that are not
+    interactive and are also good candidates to be run in streaming. """
+
+    def _insertAllSteps(self):
+        initialIds = self._insertInitialSteps()
+        pickMicIds = []
+
+        for mic in self.getInputMicrographs():
+            pickId = self._insertPickMicrographStep(mic, initialIds,
+                                                    *self._getPickArgs())
+            pickMicIds.append(pickId)
+
+        self._insertFinalSteps(pickMicIds)
+
+    def _insertInitialSteps(self):
+        """ Override this function to insert some steps before the
+        picking micrograph steps.
+        Should return a list of ids of the initial steps. """
+        return []
+
+    def _insertFinalSteps(self, micSteps):
+        """ Override this function to insert some steps after the
+        picking micrograph steps.
+        Receive the list of step ids of the picking steps. """
+        pass
+
+    def _getPickArgs(self):
+        """ Should be implemented in sub-classes to define the argument
+        list that should be passed to the picking step function.
+        """
+        return []
+
+    def _insertPickMicrographStep(self, mic, prerequisites, *args):
+        """ Basic method to insert a picking step for a given micrograph. """
+        micDict = mic.getObjDict(includeBasic=True)
+        micStepId = self._insertFunctionStep('pickMicrographStep',
+                                             micDict, *args,
+                                             prerequisites=prerequisites)
+
+        return micStepId
+
+    def pickMicrographStep(self, micDict, *args):
+        """ Step function that will be common for all picking protocols.
+        It will take care of re-building the micrograph object from the micDict
+        argument and perform any conversion if needed. Then, the function
+        _pickMicrograph will be called, that should be implemented by each
+        picking protocol.
+        """
+        mic = Micrograph()
+        mic.setAttributesFromDict(micDict, setBasic=True, ignoreMissing=True)
+
+        # Clean old finished files
+        pwutils.cleanPath(self._getMicDone(mic))
+
+        self.info("Picking micrograph: %s " % mic.getFileName())
+        self._pickMicrograph(mic, *args)
+
+        # Mark this movie as finished
+        open(self._getMicDone(mic), 'w').close()
+
+    def _pickMicrograph(self, mic, *args):
+        """ This function should be implemented by subclasses in order
+        to picking the given micrograph. """
+        pass
+
+    # --------------------------- UTILS functions ----------------------------
+    def _getMicDone(self, mic):
+        return self._getExtraPath('DONE_mic_%06d.TXT' % mic.getObjId())
