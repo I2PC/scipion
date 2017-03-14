@@ -45,6 +45,8 @@ public:
 	std::vector<double> listOfWidths;
 	std::vector<double *> listOfWeights;
 	int Xdim, Ydim;
+	cudaDeviceProp GPUprop;
+        int  GPUdevice; 
 };
 
 void ProgMovieEstimateGainGPU::defineParams()
@@ -107,8 +109,13 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 		listOfWidths.push_back(jmax);
 		double *weights=new double[jmax];
 		double K=-0.5/(listOfSigmas[i]*listOfSigmas[i]);
-		for (int j=1; j<=jmax; ++j)
+//********* MODIFED BY GCF
+		//for (int j=1; j<=jmax; ++j)
+		//	weights[j-1]=exp(K*j*j);
+		for (int j=2; j<=jmax; ++j)
 			weights[j-1]=exp(K*j*j);
+		weights[0]=1.;			// this is always 1. when used 
+//***********************/Weights
 		listOfWeights.push_back(weights);
 	}
 }
@@ -130,6 +137,32 @@ void ProgMovieEstimateGainGPU::show()
 
 void ProgMovieEstimateGainGPU::run()
 {
+	int deviceCount;
+	cudaGetDeviceCount(&deviceCount);
+	GPUdevice = -1;
+	for (int device = 0; device < deviceCount; ++device) {
+	    cudaDeviceProp deviceProp;
+	    if (!cudaSetDevice(device)){
+		    cudaGetDeviceProperties(&GPUprop, device);
+		    printf("Device %d has compute capability %d.%d.\n",
+        		   device, GPUprop.major, GPUprop.minor);
+		    GPUdevice=device;
+		    break;
+	    }
+	}
+
+	if (GPUdevice==-1){
+		std::cout << "No GPU found" << std::endl;
+		while(1);
+	}
+	else if (GPUdevice!=0)
+		std::cout << "GPU device 0 not selected, risk of not choosing the fastest one" << std::endl;
+	
+
+
+
+	
+	
 	produceSideInfo();
 
 	FileName fnFrame;
@@ -137,6 +170,7 @@ void ProgMovieEstimateGainGPU::run()
 	MultidimArray<int> IframeTransformed, IframeIdeal;
 	MultidimArray<double> sumIdeal;
 	MultidimArray<double> &mICorrection=ICorrection();
+
 
 	for (int n=0; n<Niter; n++)
 	{
@@ -148,6 +182,9 @@ void ProgMovieEstimateGainGPU::run()
 			std::cout << "   Frame " << fnFrame << std::endl;
 			Iframe.read(fnFrame);
 			IframeIdeal = Iframe();
+                     	std::cout << " XSIZE = " << XSIZE(Iframe());  // gacaffe: just' checking, REMOVE
+                     	std::cout << " YSIZE = " << YSIZE(Iframe()) << std::endl;  // gacaffe: just' checking, REMOVE
+
 			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
 				DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
 			computeHistograms(IframeIdeal);
@@ -242,7 +279,10 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const double *l
 		{
 			if (j+k<0 || j+k>=XSIZE(columnH))
 				continue;
-			double actualWeightC = k==0? 1:listOfWeights[abs(k)];
+			//**** MODIFED BY GCF
+			//double actualWeightC = k==0? 1:listOfWeights[abs(k)];
+			double actualWeightC = listOfWeights[abs(k)];
+			//********	
 			sumWeightsC += actualWeightC;
 			for (size_t i=0; i<Ydim; ++i)
 				DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
@@ -286,7 +326,10 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByRow(const double *list
 		{
 			if (i+k<0 || i+k>=YSIZE(rowH))
 				continue;
-			double actualWeightR = k==0? 1:listOfWeights[abs(k)];
+			//**** MODIFED BY GCF
+			//double actualWeightC = k==0? 1:listOfWeights[abs(k)];
+			double actualWeightR = listOfWeights[abs(k)];
+			//********	
 			sumWeightsR += actualWeightR;
 			for (size_t j=0; j< Xdim; ++j)
 				DIRECT_A2D_ELEM(smoothRowH,i,j) += actualWeightR * DIRECT_A2D_ELEM(rowH,i+k,j);
@@ -355,8 +398,6 @@ void ProgMovieEstimateGainGPU::transformGrayValuesColumn(const MultidimArray<int
 	char c; std::cin >> c;
 #endif
 }
-
-
 void ProgMovieEstimateGainGPU::transformGrayValuesRow(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedRow)
 {
 	IframeTransformedRow.initZeros(Ydim,Xdim);
