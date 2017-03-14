@@ -458,7 +458,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # coordinates and it not stored.
         coordsAux = SetOfCoordinates()
         coordsAux.copyItems(self.inputCoords,
-                             updateItemCallback=iterator.updateItem)
+                            updateItemCallback=iterator.updateItem,
+                            copyDisabled=True)
         
         self.imgSet.setSamplingRate(self._getNewSampling())
 
