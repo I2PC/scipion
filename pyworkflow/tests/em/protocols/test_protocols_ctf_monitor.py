@@ -59,11 +59,11 @@ class TestCtfStream(BaseTest):
                   'nDim': MICS,
                   'samplingRate': 1.25,
                   'creationInterval': 5,
-                  'delay':0,
-                  'setof': 0 # SetOfMicrographs
+                  'delay': 0,
+                  'setof': 0  # SetOfMicrographs
                 }
 
-        #put some stress on the system
+        # put some stress on the system
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream,wait=False)
@@ -72,11 +72,12 @@ class TestCtfStream(BaseTest):
         while not protStream.hasAttribute('outputMicrographs'):
             time.sleep(10)
             protStream = self._updateProtocol(protStream)
-            if counter > 1000:
+            if counter > 10:
                 break
             counter += 1
 
-        #then introduce monitor, checking all the time ctf and sving to database
+        # then introduce monitor, checking all the time ctf and saving to
+        # database
         protCTF = ProtCTFFind(useCftfind4=True)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         protCTF.ctfDownFactor.set(2)
@@ -91,11 +92,11 @@ class TestCtfStream(BaseTest):
 
             time.sleep(10)
             protCTF = self._updateProtocol(protCTF)
-            if counter > 1000:
+            if counter > 10:
                 break
             counter += 1
 
-        kwargs = {'samplingInterval':10,
+        kwargs = {'samplingInterval': 10,
                   'interval': 300,
                   'maxDefocus': 40000,
                   'minDefocus': 1000,
