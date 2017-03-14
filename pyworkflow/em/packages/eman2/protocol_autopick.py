@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es)
+# * Authors:     Airen Zaldivar (azaldivar@cnb.csic.es) [1]
+# *              J.M. de la Rosa Trevin (delarosatrevin@scilifelab.se) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [2] Science for Life Laboratory, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -28,14 +30,14 @@ import os
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import IntParam, FloatParam
-from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePickingAuto
 
 import eman2
 from convert import readSetOfCoordinates
 
 
 
-class SparxGaussianProtPicking(ProtParticlePicking):
+class SparxGaussianProtPicking(ProtParticlePickingAuto):
     """
     Protocol to pick particles automatically in a set of micrographs
     using sparx gaussian picker.
@@ -44,15 +46,12 @@ class SparxGaussianProtPicking(ProtParticlePicking):
     _label = 'sparx gaussian picker'
     _version = VERSION_1_1
         
-    def __init__(self, **args):     
-        ProtParticlePicking.__init__(self, **args)
-        self.extraParams = 'pixel_input=1:pixel_output=1:invert_contrast=True:use_variance=True'
+    def __init__(self, **kwargs):
+        ProtParticlePickingAuto.__init__(self, **kwargs)
 
-
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-
-        ProtParticlePicking._defineParams(self, form)
+        ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('boxSize', IntParam, default=100,
                       label='Box Size', help='Box size in pixels')
         line = form.addLine('Picker range',
@@ -63,33 +62,37 @@ class SparxGaussianProtPicking(ProtParticlePicking):
                       label='Higher')
 
         form.addParam('gaussWidth', FloatParam, default='1',
-              label='Gauss Width', help='Width of the Gaussian kernel used')
+                      label='Gauss Width',
+                      help='Width of the Gaussian kernel used')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
-    def _insertAllSteps(self):
-        args = {"lowerThreshold": self.lowerThreshold,
-                "higherThreshold": self.higherThreshold,
-                "boxSize": self.boxSize,
-                "gaussWidth": self.gaussWidth,
-                'extraParams': self.extraParams}
-        params =  'demoparms --makedb=thr_low=%(lowerThreshold)s:'
+    #--------------------------- INSERT steps functions ------------------------
+    def _insertInitialSteps(self):
+        initId = self._insertFunctionStep('initSparxDb',
+                                 self.lowerThreshold.get(),
+                                 self.higherThreshold.get(),
+                                 self.boxSize.get(), self.gaussWidth.get())
+        return [initId]
+
+    def _insertFinalSteps(self, deps):
+        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+
+    #--------------------------- STEPS functions -------------------------------
+    def initSparxDb(self, lowerThreshold, higherThreshold, boxSize, gaussWidth):
+        args = {"lowerThreshold": lowerThreshold,
+                "higherThreshold": higherThreshold,
+                "boxSize": boxSize,
+                "gaussWidth": gaussWidth}
+        params = 'demoparms --makedb=thr_low=%(lowerThreshold)s:'
         params += 'thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:'
-        params += 'gauss_width=%(gaussWidth)s:%(extraParams)s'
+        params += 'gauss_width=%(gaussWidth)s:pixel_input=1:'
+        params += 'pixel_output=1:invert_contrast=True:use_variance=True'
 
         self.runJob('sxprocess.py', params % args, cwd=self.getWorkingDir())
 
-        deps = [] # Store all steps ids, final step createOutput depends on all of them
-        for mic in self.inputMicrographs.get():
-            micFile = os.path.relpath(mic.getFileName(), self.workingDir.get())
-            stepId = self._insertFunctionStep('executeSparxGaussianPickerStep', micFile)
-            deps.append(stepId)
-
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
-    #--------------------------- STEPS functions ---------------------------------------------------
-    def executeSparxGaussianPickerStep(self, micFile):
-        print micFile
-        params = '--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s' % (self.boxSize.get(), micFile)
+    def _pickMicrograph(self, mic, *args):
+        micFile = os.path.relpath(mic.getFileName(), self.workingDir.get())
+        params = ('--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s'
+                  % (self.boxSize, micFile))
         self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
         
     def createOutputStep(self):
@@ -99,15 +102,16 @@ class SparxGaussianProtPicking(ProtParticlePicking):
         self._defineOutputs(outputCoordinates=coordSet)
         self._defineSourceRelation(self.inputMicrographs, coordSet)
     
-    #--------------------------- INFO functions ---------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         eman2.validateVersion(self, errors)
         return errors
 
-    #--------------------------- UTILS functions --------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getFiles(self):
-        return self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
+        return (self.inputMicrographs.get().getFiles() |
+                ProtParticlePickingAuto.getFiles(self))
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.inputMicrographs.get(), coordSet)
