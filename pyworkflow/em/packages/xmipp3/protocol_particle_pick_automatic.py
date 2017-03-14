@@ -37,7 +37,7 @@ MICS_SAMEASPICKING = 0
 MICS_OTHER = 1
 
 
-class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
+class XmippParticlePickingAutomatic(ProtParticlePickingAuto, XmippProtocol):
     """Protocol to pick particles automatically in a set of
     micrographs using previous training """
     _label = 'auto-picking (step 2)'  
@@ -46,11 +46,11 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                    'model_pca_model.stk', 'model_rotpca_model.stk',
                    'model_particle_avg.xmp', 'config.xmd', 'templates.stk']
     
-    def __init__(self, **args):        
-        ProtParticlePicking.__init__(self, **args)
+    def __init__(self, **kwargs):
+        ProtParticlePickingAuto.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
     
-    # --------------------------- DEFINE param functions -------------------------------------
+    # --------------------------- DEFINE param functions -----------------------
     def _defineParams(self, form):
     
         form.addSection(label='Input')
@@ -78,24 +78,16 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
                       label='Memory to use (In Gb)', expertLevel=2)
         form.addParallelSection(threads=1, mpi=1)
         
-    # --------------------------- INSERT steps functions -------------------------------------
-    def _insertAllSteps(self):
-        """The Particle Picking process is realized for a set of micrographs"""
-        
-        # Get pointer to input micrographs 
+    # --------------------------- INSERT steps functions -----------------------
+    def _insertInitialSteps(self):
+        # Get pointer to input micrographs
         self.particlePickingRun = self.xmippParticlePicking.get()
-        
+
         copyId = self._insertFunctionStep('copyInputFilesStep')
-        # Get micrographs to pick
-        #self.inputMicrographs.set(self.getInputMicrographs())
-            
-        deps = []
-        for mic in self.getInputMicrographs():
-            stepId = self._insertFunctionStep('autopickMicrographStep',
-                                              mic.getFileName(),
-                                              prerequisites=[copyId])
-            deps.append(stepId)
-                    
+
+        return [copyId]
+
+    def _insertFinalSteps(self, deps):
         self._insertFunctionStep('_createOutput', self._getExtraPath(),
                                  prerequisites=deps)
         
@@ -105,8 +97,9 @@ class XmippParticlePickingAutomatic(ProtParticlePicking, XmippProtocol):
         for f in self.filesToCopy:
             copyFile(self.particlePickingRun._getExtraPath(f),
                      self._getExtraPath(f))
-        
-    def autopickMicrographStep(self, micPath):
+
+    def _pickMicrograph(self, mic, *args):
+        micPath = mic.getFileName()
         # Get particle picking boxsize from the previous run
         boxSize = self.particlePickingRun.outputCoordinates.getBoxSize()
         modelRoot = self._getExtraPath('model')
