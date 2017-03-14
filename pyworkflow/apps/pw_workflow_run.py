@@ -44,6 +44,7 @@ def run(project_name, workflow, launch_timeout, location):
     protocols = project.loadProtocols(workflow)
 
     labels_for_queue = find_protocols_to_queue(workflow)
+    streaming = workflow_is_streaming(workflow)
 
     graph = project.getGraphFromRuns(protocols.values())
     nodes = graph.getRoot().iterChildsBreadth()
@@ -59,7 +60,7 @@ def run(project_name, workflow, launch_timeout, location):
         if protocol.getObjLabel() in labels_for_queue:
             protocol._useQueue = Boolean(True)
 
-        launch_when_ready(parents, project, protocol, name, launch_timeout)
+        launch_when_ready(parents, project, protocol, name, launch_timeout, streaming)
 
 
 def find_protocols_to_queue(workflow):
@@ -70,29 +71,41 @@ def find_protocols_to_queue(workflow):
         return labels_for_queue
 
 
+def workflow_is_streaming(workflow):
+    with open(workflow) as f:
+        protocols = json.load(f)
+        return any(['dataStreaming' in protocol and protocol['dataStreaming'] for protocol in protocols])
+
+
 def collect_parents(node, protocols_by_id):
     return {protocols_by_id[parent_node.getName()]
             for parent_node in node.getParents() if not parent_node.isRoot()}
 
 
-def launch_when_ready(parents, project, protocol, name, launch_timeout):
+def launch_when_ready(parents, project, protocol, name, launch_timeout, streaming):
     start = time.time()
     while time.time() < start + launch_timeout:
         update_protocols(parents, project)
 
         errors = protocol.validate()
+        parents_not_finished = any([not parent.isFinished() for parent in parents])
+
         if errors:
             print "waiting to launch protocol " + name
-            print "with useQueue status " + str(protocol.useQueue())
             print "current validation errors are: "
             print errors
-            time.sleep(1)
+        elif not streaming and parents_not_finished:
+            print "waiting to launch protocol " + name + " as not all parents finished"
+            print "statuses are " + str([parent.getStatus() for parent in parents])
         else:
+            print "launching protocol " + name
             project.launchProtocol(protocol)
             break
 
         check_protocol(protocol)
-
+        for parent in parents:
+            check_protocol(parent)
+        time.sleep(1)
 
 def update_protocols(parents, project):
     for parent in parents:
