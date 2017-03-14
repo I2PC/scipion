@@ -28,9 +28,9 @@
 import re
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow import VERSION_1_1
+from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
-
+import os
 
 
 class ProtExportEMDB(EMProtocol):
@@ -39,7 +39,7 @@ class ProtExportEMDB(EMProtocol):
     """
     _label = 'exportEMDB'
     _program = "" 
-    _version = VERSION_1_1
+    _version = VERSION_1_2
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -62,30 +62,21 @@ class ProtExportEMDB(EMProtocol):
             self._insertFunctionStep('exportFSCStep')
 
     #--------------------------- STEPS functions --------------------------------------------
+
     def exportVolumeStep(self):
-        name = self.exportVolume.get().getFileName()
-        match = re.search(r'[\w.]+.mrc', name)
-        if match:
-            nombreVolumen = match.group()[:-4]
-        else:
-            nombreVolumen = "volume.mrc"
+
+        self.nombreVolumen, self.nombreFsc = self.getName()
 
         ih = ImageHandler()
-        cmdFile = self._getExtraPath(nombreVolumen)
+        cmdFile = self._getExtraPath(self.nombreVolumen)
         ih.convert(self.exportVolume.get().getLocation(), cmdFile)
 
     def exportFSCStep(self):
-        name = self.exportVolume.get().getFileName()
-        match = re.search(r'[\w.]+.mrc', name)
-        if match:
-            nombreFsc = match.group()[:-8]+'.xml'
-        else:
-            nombreFsc = "fsc.xml"
 
         x,y = self.exportFSC.get().getData()
-        cmdFSCFile = self._getExtraPath(nombreFsc)
+        cmdFSCFile = self._getExtraPath(self.nombreFsc)
         fo = open(cmdFSCFile, "w")
-        fo.write("<fsc title=\"FSC\" xaxis=\"Resolution\" yaxis=\"Correlation Coefficient\">\n")
+        fo.write('<fsc title="FSC(%s)" xaxis="Resolution(A-1)" yaxis="Correlation Coefficient">\n'%self.nombreVolumen)
         for i in range(len(x)):
             fo.write("<coordinate>\n")
             fo.write("<x>%f</x>\n"%x[i])
@@ -101,10 +92,23 @@ class ProtExportEMDB(EMProtocol):
         return message
 
     def _summary(self):
-        message = "Data Available at directory: *%s*"% self._getPath()
+        message = "Data Available at directory: *%s*"% os.path.abspath(self._getExtraPath())
 
         return [message]
 
     def _methods(self):
         return []
 
+#--------------------------- UTILS functions ---------------------------------------------------
+
+    def getName(self):
+        name = self.exportVolume.get().getFileName()
+        match = re.search(r'[\w.]+.mrc', name)
+        if match:
+            nombreVolumen = match.group()[:-4]
+            nombreFsc = match.group()[:-8] + '.xml'
+        else:
+            nombreVolumen = "volume.mrc"
+            nombreFsc = "fsc.xml"
+
+        return nombreVolumen, nombreFsc
