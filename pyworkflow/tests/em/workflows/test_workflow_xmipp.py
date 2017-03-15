@@ -95,7 +95,7 @@ class TestXmippWorkflow(TestWorkflow):
         print "Run extract particles with other downsampling factor"
         protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=64, downsampleType=OTHER,
-                                       doFlip=True,
+                                       doFlip=True, downFactor=8,
                                        runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
