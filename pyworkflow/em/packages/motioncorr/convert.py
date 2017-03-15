@@ -61,8 +61,8 @@ def getEnviron():
                        position=Environ.BEGIN)
 
     #FIXME: do we need separate libs for motioncor2?
-    environ.update({'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))},
-                   position=Environ.BEGIN)
+    cudaLib = environ.getFirst(['MOTIONCORR_CUDA_LIB', 'CUDA_LIB'], True)
+    environ.addLibrary(cudaLib)
 
     return environ
 
