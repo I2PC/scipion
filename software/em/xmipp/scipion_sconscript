@@ -628,7 +628,7 @@ for p in ['angular_break_symmetry',
           'xray_import',
           'xray_psf_create',
           'xray_project',
-
+          'gpu_example2',
           # MPI programs, the mpi_ prefix set mpi=True flag.
           'mpi_angular_class_average',
           'mpi_angular_continuous_assign',
