@@ -29,6 +29,9 @@ from os.path import join, exists
 
 from pyworkflow.utils import Environ, getEnvVariable
 
+CUDA_LIB = 'CUDA_LIB'
+MOTIONCORR_CUDA_LIB = 'MOTIONCORR_CUDA_LIB'
+
 
 def _getHome(key, default):
     """ Get the required home path, if not present..
@@ -61,10 +64,18 @@ def getEnviron():
                        position=Environ.BEGIN)
 
     #FIXME: do we need separate libs for motioncor2?
-    cudaLib = environ.getFirst(('MOTIONCORR_CUDA_LIB', 'CUDA_LIB'), True)
+    cudaLib = getCudaLib(environ)
     environ.addLibrary(cudaLib)
 
     return environ
+
+
+def getCudaLib(environ=None):
+
+    if environ is None:
+        environ = Environ(os.environ)
+
+    return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB), True)
 
 
 def getVersion(var):
