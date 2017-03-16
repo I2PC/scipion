@@ -67,9 +67,6 @@ class localResolutionViewer(ProtocolViewer):
     """
     Visualization tools for local resolution results.
     
-    MonoRes is a Xmipp packagefor computing the local resolution of 3D
-    density maps studied in structural biology, primarily by cryo-electron
-    microscopy (cryo-EM).
     """
     _label = 'viewer local resolution'
     _targets = [Volume]      
@@ -157,9 +154,9 @@ class localResolutionViewer(ProtocolViewer):
 
     def _plotHistogram(self, param=None):
         # check if a histogram has been generated
-        if exists(self.protocol._getPath('extra/'+OUTPUT_HISTOGRAM)):
+        if exists(self.protocol._getExtraPath(OUTPUT_HISTOGRAM)):
             md = MetaData()
-            md.read(self.protocol._getPath('extra/'+OUTPUT_HISTOGRAM))
+            md.read(self.protocol._getExtraPath(OUTPUT_HISTOGRAM))
             x_axis = []
             y_axis = []
             i = 0
