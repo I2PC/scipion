@@ -583,15 +583,25 @@ class Environ(dict):
             self.set(k, v, position)
 
     def addLibrary(self, libraryPath, position=BEGIN):
-        """ Adds a path to LD_LIBRARY_PATH at the requested position. If valid (exists)."""
+        """ Adds a path to LD_LIBRARY_PATH at the requested position
+        if the provided paths exist. """
+
         if libraryPath is None:
             return
-        elif os.path.exists(libraryPath):
+
+        if existsVariablePaths(libraryPath):
             self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
         else:
-            print "Library path does not exists: % s" % libraryPath
+            print "Some paths do not exist in: % s" % libraryPath
 
-            
+
+def existsVariablePaths(variableValue):
+    """ Check if the path (or paths) in variableValue exists.
+    Multiple paths are allowed if separated by os."""
+    return all(os.path.exists(p)
+               for p in variableValue.split(os.pathsep) if p.split())
+
+
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
     If valueFirst is true, the new value will be at the beginning.
@@ -685,3 +695,19 @@ def formatExceptionInfo(level = 6):
 def printTraceBack():
     import traceback
     traceback.print_stack()
+
+
+def getEnvVariable(variableName, exceptionMsg=None):
+    """ Returns the value of an environment variable or raise an exception message.
+    Useful when adding variable to the config file and report accurate messages"""
+    value = os.getenv(variableName)
+
+    if exceptionMsg is None:
+        exceptionMsg = "Environment variable %s not found. Please check scipion configuration. Try running : scipion " \
+                       "config." % variableName
+
+    if value is None:
+        raise Exception(exceptionMsg)
+
+    else:
+        return value

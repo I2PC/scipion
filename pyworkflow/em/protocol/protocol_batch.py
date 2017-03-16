@@ -33,7 +33,7 @@ from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                 SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
                                 SetOfNormalModes, SetOfParticles, FSC,
-                                Class2D, Class3D, SetOfMicrographs)
+                                Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
 from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
                                           ParticlesTiltPair)
 from pyworkflow.em.data import Mask
@@ -249,6 +249,7 @@ class ProtUserSubSet(BatchProtocol):
         count = 0
         output = createFunc()
         output.copyInfo(inputImages)
+        output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
             if cls.isEnabled():
                 img = cls.getRepresentative()
