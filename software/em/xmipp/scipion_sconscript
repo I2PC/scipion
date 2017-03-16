@@ -695,6 +695,7 @@ for p in ['angular_break_symmetry',
           'test_sampling',
           'test_symmetries',
           'test_transformation',
+          'test_transform_window',
           'test_wavelets'
           ]:
     # Allow to add specific libs for indiviual programs
