@@ -387,6 +387,45 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertEqual(outputParts.getSamplingRate(), samplingMics, 
                          "Output sampling rate should be equal to input sampling rate.")
 
+    def testNoExtractBorders(self):
+        print "Run extract particles avoiding extract in borders"
+        protExtract = self.newProtocol(XmippProtExtractParticles,
+                                       boxSize=750,
+                                       downsampleType=OTHER,
+                                       doInvert=False,
+                                       doFlip=False)
+        protExtract.setObjLabel("extract-avoid borders")
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
+        self.launchProtocol(protExtract)
+    
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles
+        samplingCoords = self.protPP.outputCoordinates.getMicrographs().getSamplingRate()
+        samplingFinal = self.protImport.outputMicrographs.getSamplingRate()
+        samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
+        factor = samplingFinal / samplingCoords
+    
+        def compare(objId, delta=1.0):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
+            self.assertAlmostEquals(cx / factor, px, delta=delta)
+            self.assertAlmostEquals(cy / factor, py, delta=delta)
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             % (micNameCoord, micNamePart))
+    
+        compare(111)
+        compare(7)
+    
+        self.assertIsNotNone(outputParts,
+                             "There was a problem generating the output.")
+        self.assertEqual(outputParts.getSamplingRate(), samplingMics,
+                         "Output sampling rate should be equal to input sampling rate.")
+        self.assertAlmostEquals(outputParts.getSize(), 399, delta=1)
+
 
     def testExtractOther(self):
         print "Run extract particles from original micrographs, with downsampling"
