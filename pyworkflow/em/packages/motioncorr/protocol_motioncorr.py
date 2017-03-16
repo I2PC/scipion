@@ -302,11 +302,10 @@ class ProtMotionCorr(ProtAlignMovies):
                           " present in scipion configuration."
                           % (MOTIONCORR_CUDA_LIB, CUDA_LIB))
 
-        else:
-            if not os.path.exists(cudaLib):
-                errors.append("Either %s or %s variables points to a non existing "
-                              "path (%s). Please, check scipion configuration."
-                              % (MOTIONCORR_CUDA_LIB, CUDA_LIB, cudaLib))
+        elif not pwutils.existsVariablePaths(cudaLib):
+            errors.append("Either %s or %s variables points to a non existing "
+                          "path (%s). Please, check scipion configuration."
+                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB, cudaLib))
 
         gpu = self.GPUIDs.get()
 

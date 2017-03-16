@@ -583,22 +583,23 @@ class Environ(dict):
             self.set(k, v, position)
 
     def addLibrary(self, libraryPath, position=BEGIN):
-        """ Adds a path to LD_LIBRARY_PATH at the requested position. If valid (exists)."""
+        """ Adds a path to LD_LIBRARY_PATH at the requested position
+        if the provided paths exist. """
+
         if libraryPath is None:
             return
 
-        def _updatePath(path):
-            if os.path.exists(path):
-                self.update({'LD_LIBRARY_PATH': path}, position=position)
-            else:
-                print "Library path does not exists: % s" % path
-
-        if ':' in libraryPath:
-            for p in libraryPath.split(':'):
-                if p.strip():
-                    _updatePath(p)
+        if existsVariablePaths(libraryPath):
+            self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
         else:
-            _updatePath(libraryPath)
+            print "Some paths do not exist in: % s" % libraryPath
+
+
+def existsVariablePaths(variableValue):
+    """ Check if the path (or paths) in variableValue exists.
+    Multiple paths are allowed if separated by os."""
+    return all(os.path.exists(p)
+               for p in variableValue.split(os.pathsep) if p.split())
 
 
 def environAdd(varName, newValue, valueFirst=False):
