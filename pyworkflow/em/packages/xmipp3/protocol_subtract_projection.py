@@ -130,7 +130,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
             self.vol.inplaceMultiply(self.mask)
         padding = 2
         maxFreq = 0.5
-        splineDegree = 2
+        splineDegree = 3
         ###
         self.fourierProjectVol = xmipp.FourierProjector(self.vol, padding, maxFreq, splineDegree)
         ###

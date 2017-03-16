@@ -736,7 +736,7 @@ class TestXmippDenoiseParticles(TestXmippBase):
     """Check protocol Denoise Particles"""
     @classmethod
     def setUpClass(cls):
-        from pyworkflow.em.packages.relion import ProtRelionClassify2D, ProtRelionPreprocessParticles
+        from pyworkflow.em.packages.relion import ProtRelionClassify2D, ProtRelionPreprocessParticles, getVersion
         # To denoise particles we need to import the particles and the
         # classes, and particles must be aligned with classes. As this
         # is the usual situation after a CL2D, we just run that protocol.
@@ -756,13 +756,17 @@ class TestXmippDenoiseParticles(TestXmippBase):
         cls.protNormalize.inputParticles.set(cls.protImport.outputParticles)
         cls.launchProtocol(cls.protNormalize)
         diameterInA = 2 * radiusInPixel * psize
-        cls.protCL2D = cls.newProtocol(ProtRelionClassify2D,
-                                       doCTF=False, maskDiameterA=diameterInA,
-                                       numberOfMpi=4, numberOfThreads=1)
-        cls.protCL2D.numberOfClasses.set(4)
-        cls.protCL2D.numberOfIterations.set(3)
-        cls.protCL2D.inputParticles.set(cls.protNormalize.outputParticles)
-        cls.launchProtocol(cls.protCL2D)
+        cls.protRelion2DClass = cls.newProtocol(ProtRelionClassify2D,
+                                                doCTF=False, maskDiameterA=diameterInA,
+                                                numberOfMpi=4, numberOfThreads=1)
+        cls.protRelion2DClass.numberOfClasses.set(4)
+        cls.protRelion2DClass.numberOfIterations.set(3)
+        cls.protRelion2DClass.inputParticles.set(cls.protNormalize.outputParticles)
+
+        if getVersion() == "2.0":
+            cls.protRelion2DClass.doGpu.set(False)
+
+        cls.launchProtocol(cls.protRelion2DClass)
 
     def test_denoiseparticles(self):
         print """
@@ -773,7 +777,7 @@ class TestXmippDenoiseParticles(TestXmippBase):
 """
         protDenoise = self.newProtocol(XmippProtDenoiseParticles)
         protDenoise.inputParticles.set(self.protImport.outputParticles)
-        protDenoise.inputClasses.set(self.protCL2D.outputClasses)
+        protDenoise.inputClasses.set(self.protRelion2DClass.outputClasses)
         self.launchProtocol(protDenoise)
         # We check that protocol generates output
         self.assertIsNotNone(protDenoise.outputParticles,

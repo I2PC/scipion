@@ -312,6 +312,9 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             volume=Volume()
             volume.setFileName(fnLastVol)
             volume.setSamplingRate(Ts)
+            halfMap1=fnLastVol=join(fnLastDir,"volume01.vol")
+            halfMap2=fnLastVol=join(fnLastDir,"volume02.vol")
+            volume.setHalfMaps([halfMap1, halfMap2])
             self._defineOutputs(outputVolume=volume)
             self._defineSourceRelation(self.inputParticles.get(),volume)
             #self._defineSourceRelation(self.inputVolumes.get(),volume)
@@ -1157,6 +1160,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if exists(fnCorrectedImages2):
             cleanPath(fnCorrectedImages2)
         
+        grayAdjusted=False
         for i in range(1,3):
             fnAngles=join(fnDirCurrent,"angles%02d.xmd"%i)
             fnVol=join(fnDirCurrent,"volume%02d.vol"%i)
@@ -1178,6 +1182,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                     deletePattern = fnCorrectedImagesRoot+".*"
                 
                 if self.contGrayValues or (self.alignmentMethod.get()==self.AUTOMATIC_ALIGNMENT and iteration>=5):
+                    grayAdjusted=True
                     R=self.particleRadius.get()
                     if R<=0:
                         R=self.inputParticles.get().getDimensions()[0]/2
@@ -1217,6 +1222,17 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                 
                 if deleteStack:
                     cleanPath(deletePattern)
+        if grayAdjusted:
+            fnAngles=join(fnDirCurrent,"angles.xmd")
+            fnAnglesAux=join(fnDirCurrent,"anglesAux.xmd")
+            fnAngles1=join(fnDirCurrent,"angles01.xmd")
+            fnAngles2=join(fnDirCurrent,"angles02.xmd")
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate drop_column "continuousA continuousB"'%fnAngles,numberOfMpi=1)
+            self.runJob('xmipp_metadata_utilities',"-i %s --set union %s -o %s"%(fnAngles1,fnAngles2,fnAnglesAux),numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate sort itemId'%fnAngles,numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate sort itemId'%fnAnglesAux,numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --operate keep_column "continuousA continuousB"'%fnAnglesAux,numberOfMpi=1)
+            self.runJob("xmipp_metadata_utilities",'-i %s --set merge %s'%(fnAngles,fnAnglesAux),numberOfMpi=1)            
     
     def postProcessing(self, iteration):
         fnDirCurrent=self._getExtraPath("Iter%03d"%iteration)
