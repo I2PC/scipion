@@ -1,149 +1,171 @@
+ /* Authors:     Roberto Marabini (roberto@cnb.csic.es)*/
 
 #include <stdlib.h>
 #include <data/xmipp_image.h>
 #include <data/xmipp_image_extension.h>
 #include <iostream>
 #include <gtest/gtest.h>
-#include <data/xmipp_fftw.h>
+#include <data/phantom.h>
+#include <data/xmipp_program.h>
+#include <cstdio>
+#include <unistd.h>
 
-// MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
-// This test is named "Size", and belongs to the "MetadataTest"
-// test case.
-class ResolutionFSCTest : public ::testing::Test
+const char ico_i2[] = "# Phantom description file, (generated with phantom help)\n\
+# General Volume Parameters: \n\
+#      Xdim      Ydim      Zdim   Background_Density Scale \n\
+     5 5 5 0 60  \n\
+# Feature Parameters: \n\
+#Type  +/=  Density X_Center Y_Center Z_Center \n\
+sph  + 1.   1.000 0.000 1.618 .15\n\
+sph  + 1.   1.000 0.000 -1.618 .15\n\
+sph  + 1.   -1.000 0.000 1.618 .15\n\
+sph  + 1.   -1.000 0.000 -1.618 .15\n\
+sph  + 1.   0.000 1.618 1.000 .15\n\
+sph  + 1.   0.000 -1.618 1.000 .15\n\
+sph  + 1.   0.000 1.618 -1.000 .15\n\
+sph  + 1.   0.000 -1.618 -1.000 .15\n\
+sph  + 1.   1.618 1.000 0.000 .15\n\
+sph  + 1.   -1.618 1.000 0.000 .15\n\
+sph  + 1.   1.618 -1.000 0.000 .15\n\
+sph  + 1.   -1.618 -1.000 0.000 .15\n\
+sph  + 1.   0.000 -0.539 1.412 .10\n\
+sph  + 1.   0.000 0.539 1.412 .10\n\
+sph  + 1.   0.873 -0.873 0.873 .10\n\
+sph  + 1.   0.873 0.873 0.873 .10\n\
+sph  + 1.   1.412 0.000 0.539 .10\n\
+sph  + 1.   0.000 0.539 -1.412 .10\n\
+sph  + 1.   0.873 0.873 -0.873 .10\n\
+sph  + 1.   0.000 -0.539 -1.412 .10\n\
+sph  + 1.   1.412 0.000 -0.539 .10\n\
+sph  + 1.   0.873 -0.873 -0.873 .10\n\
+sph  + 1.   -0.873 0.873 0.873 .10\n\
+sph  + 1.   -1.412 0.000 0.539 .10\n\
+sph  + 1.   -0.873 -0.873 0.873 .10\n\
+sph  + 1.   -0.873 0.873 -0.873 .10\n\
+sph  + 1.   -1.412 0.000 -0.539 .10\n\
+sph  + 1.   -0.873 -0.873 -0.873 .10\n\
+sph  + 1.   -0.539 1.412 0.000 .10\n\
+sph  + 1.   0.539 1.412 0.000 .10\n\
+sph  + 1.   -0.539 -1.412 0.000 .10\n\
+sph  + 1.   0.539 -1.412 0.000 .10\n\
+sph  + 1.   0.000 0.000 1.618 .10\n\
+sph  + 1.   -0.500 -0.809 1.309 .10\n\
+sph  + 1.   0.500 -0.809 1.309 .10\n\
+sph  + 1.   0.500 0.809 1.309 .10\n\
+sph  + 1.   -0.500 0.809 1.309 .10\n\
+sph  + 1.   0.000 0.000 1.618 .10\n\
+sph  + 1.   0.500 -0.809 1.309 .10\n\
+sph  + 1.   0.809 -1.309 0.500 .10\n\
+sph  + 1.   1.309 -0.500 0.809 .10\n\
+sph  + 1.   1.309 0.500 0.809 .10\n\
+sph  + 1.   0.809 1.309 0.500 .10\n\
+sph  + 1.   0.500 0.809 1.309 .10\n\
+sph  + 1.   1.309 -0.500 0.809 .10\n\
+sph  + 1.   1.618 0.000 0.000 .10\n\
+sph  + 1.   1.309 0.500 0.809 .10\n\
+sph  + 1.   0.000 0.000 -1.618 .10\n\
+sph  + 1.   -0.500 0.809 -1.309 .10\n\
+sph  + 1.   0.500 0.809 -1.309 .10\n\
+sph  + 1.   0.500 0.809 -1.309 .10\n\
+sph  + 1.   0.809 1.309 -0.500 .10\n\
+sph  + 1.   1.309 0.500 -0.809 .10\n\
+sph  + 1.   0.500 -0.809 -1.309 .10\n\
+sph  + 1.   -0.500 -0.809 -1.309 .10\n\
+sph  + 1.   0.000 0.000 -1.618 .10\n\
+sph  + 1.   1.309 0.500 -0.809 .10\n\
+sph  + 1.   1.618 0.000 0.000 .10\n\
+sph  + 1.   1.309 -0.500 -0.809 .10\n\
+sph  + 1.   1.309 -0.500 -0.809 .10\n\
+sph  + 1.   0.809 -1.309 -0.500 .10\n\
+sph  + 1.   0.500 -0.809 -1.309 .10\n\
+sph  + 1.   -0.500 0.809 1.309 .10\n\
+sph  + 1.   -0.809 1.309 0.500 .10\n\
+sph  + 1.   -1.309 0.500 0.809 .10\n\
+sph  + 1.   -1.309 0.500 0.809 .10\n\
+sph  + 1.   -1.618 0.000 0.000 .10\n\
+sph  + 1.   -1.309 -0.500 0.809 .10\n\
+sph  + 1.   -1.309 -0.500 0.809 .10\n\
+sph  + 1.   -0.809 -1.309 0.500 .10\n\
+sph  + 1.   -0.500 -0.809 1.309 .10\n\
+sph  + 1.   -0.500 0.809 -1.309 .10\n\
+sph  + 1.   -0.809 1.309 -0.500 .10\n\
+sph  + 1.   -1.309 0.500 -0.809 .10\n\
+sph  + 1.   -1.309 0.500 -0.809 .10\n\
+sph  + 1.   -1.618 0.000 0.000 .10\n\
+sph  + 1.   -1.309 -0.500 -0.809 .10\n\
+sph  + 1.   -1.309 -0.500 -0.809 .10\n\
+sph  + 1.   -0.809 -1.309 -0.500 .10\n\
+sph  + 1.   -0.500 -0.809 -1.309 .10\n\
+sph  + 1.   0.000 1.618 0.000 .10\n\
+sph  + 1.   -0.809 1.309 -0.500 .10\n\
+sph  + 1.   -0.809 1.309 0.500 .10\n\
+sph  + 1.   0.809 1.309 0.500 .10\n\
+sph  + 1.   0.809 1.309 -0.500 .10\n\
+sph  + 1.   0.000 1.618 0.000 .10\n\
+sph  + 1.   0.000 -1.618 0.000 .10\n\
+sph  + 1.   -0.809 -1.309 -0.500 .10\n\
+sph  + 1.   -0.809 -1.309 0.500 .10\n\
+sph  + 1.   0.809 -1.309 0.500 .10\n\
+sph  + 1.   0.809 -1.309 -0.500 .10\n\
+sph  + 1.   0.000 -1.618 0.000 .10\n";
+
+
+class TransformWindowTest : public ::testing::Test
 {
 protected:
-    //init metadatas
     virtual void SetUp()
     {
         XMIPP_TRY
         ;
         XMIPP_CATCH
     }
-
-
 };
 
 
-TEST_F( ResolutionFSCTest, copy)
+TEST_F( TransformWindowTest, unitcell)
 {
+	//create phantom volume
+	char filename[] = "/tmp/mytemp.XXXXXX"; // template for our file.
+    int fd = mkstemp(filename);    // Creates and opens a new temp file r/w.
+	                                 // Xs are replaced with a unique number.
+#define DEBUG
+#ifdef DEBUG
+    std::cerr << "filename: " << filename << std::endl;
+#endif
+    if (fd == -1) {
+    	std::cerr << " cannot open temporary file" << std::endl;
+    	ASSERT_TRUE(false);
+    	return;
+    }
+    write(fd, ico_i2,sizeof(ico_i2));
+	Phantom           phantom;
+    Image<double>     vol;
+    const char  inFn[] = "/tmp/inTransformWindowTest.mrc";
+    const char  outFn[] ="/tmp/outTransformWindowTest.mrc";
+    XMIPP_TRY
+		phantom.read(filename);
+		phantom.draw_in(vol());
+		vol().addNoise(0,0.1,"gaussian");
+		vol.write(inFn);
+	XMIPP_CATCH
+	//transform window is not in a library as it should be
+	//so I need to make a system call
+    char commandBuff[180];
 
-    Image<double> vol1, vol2;
-    vol1().initZeros(3, 3, 3);
-    vol2().initZeros(3, 3, 3);
-    
-    DIRECT_A3D_ELEM(vol1(),0,0,0) = 1;
-    DIRECT_A3D_ELEM(vol1(),0,0,1) = 2;
-    DIRECT_A3D_ELEM(vol1(),0,0,2) = 3;
-
-    DIRECT_A3D_ELEM(vol1(),0,1,0) = 4;
-    DIRECT_A3D_ELEM(vol1(),0,1,1) = 5;
-    DIRECT_A3D_ELEM(vol1(),0,1,2) = 6;
-
-    DIRECT_A3D_ELEM(vol1(),0,2,0) = 7;
-    DIRECT_A3D_ELEM(vol1(),0,2,1) = 8;
-    DIRECT_A3D_ELEM(vol1(),0,2,2) = 9;
-
-    DIRECT_A3D_ELEM(vol1(),1,0,0) = 10;
-    DIRECT_A3D_ELEM(vol1(),1,0,1) = 11;
-    DIRECT_A3D_ELEM(vol1(),1,0,2) = 12;
-
-    DIRECT_A3D_ELEM(vol1(),1,1,0) = 13;
-    DIRECT_A3D_ELEM(vol1(),1,1,1) = 14;
-    DIRECT_A3D_ELEM(vol1(),1,1,2) = 15;
-
-    DIRECT_A3D_ELEM(vol1(),1,2,0) = 17;
-    DIRECT_A3D_ELEM(vol1(),1,2,1) = 18;
-    DIRECT_A3D_ELEM(vol1(),1,2,2) = 19;
-
-    DIRECT_A3D_ELEM(vol1(),2,0,0) = 20;
-    DIRECT_A3D_ELEM(vol1(),2,0,1) = 21;
-    DIRECT_A3D_ELEM(vol1(),2,0,2) = 22;
-
-    DIRECT_A3D_ELEM(vol1(),2,1,0) = 23;
-    DIRECT_A3D_ELEM(vol1(),2,1,1) = 24;
-    DIRECT_A3D_ELEM(vol1(),2,1,2) = 25;
-
-    DIRECT_A3D_ELEM(vol1(),2,2,0) = 26.4;
-    DIRECT_A3D_ELEM(vol1(),2,2,1) = 27.5;
-    DIRECT_A3D_ELEM(vol1(),2,2,2) = 28.5;
-    
-    //vol2
-    DIRECT_A3D_ELEM(vol2(),2,0,0) = 1.5;
-    DIRECT_A3D_ELEM(vol2(),2,0,1) = 2.4;
-    DIRECT_A3D_ELEM(vol2(),2,0,2) = 3.3;
-
-    DIRECT_A3D_ELEM(vol2(),2,1,0) = 4.6;
-    DIRECT_A3D_ELEM(vol2(),2,1,1) = 5.7;
-    DIRECT_A3D_ELEM(vol2(),2,1,2) = 6.4;
-
-    DIRECT_A3D_ELEM(vol2(),2,2,0) = 7.3;
-    DIRECT_A3D_ELEM(vol2(),2,2,1) = 8.2;
-    DIRECT_A3D_ELEM(vol2(),2,2,2) = 9.5;
-
-    DIRECT_A3D_ELEM(vol2(),1,0,0) = 10.2;
-    DIRECT_A3D_ELEM(vol2(),1,0,1) = 11.4;
-    DIRECT_A3D_ELEM(vol2(),1,0,2) = 12.5;
-
-    DIRECT_A3D_ELEM(vol2(),1,1,0) = 13.6;
-    DIRECT_A3D_ELEM(vol2(),1,1,1) = 14.5;
-    DIRECT_A3D_ELEM(vol2(),1,1,2) = 15.7;
-
-    DIRECT_A3D_ELEM(vol2(),1,2,0) = 17.3;
-    DIRECT_A3D_ELEM(vol2(),1,2,1) = 18.2;
-    DIRECT_A3D_ELEM(vol2(),1,2,2) = 19.4;
-
-    DIRECT_A3D_ELEM(vol2(),0,0,0) = 20.3;
-    DIRECT_A3D_ELEM(vol2(),0,0,1) = 21.4;
-    DIRECT_A3D_ELEM(vol2(),0,0,2) = 22.5;
-
-    DIRECT_A3D_ELEM(vol2(),0,1,0) = 23.4;
-    DIRECT_A3D_ELEM(vol2(),0,1,1) = 24.5;
-    DIRECT_A3D_ELEM(vol2(),0,1,2) = 25.6;
-
-    DIRECT_A3D_ELEM(vol2(),0,2,0) = 26.7;
-    DIRECT_A3D_ELEM(vol2(),0,2,1) = 24;
-    DIRECT_A3D_ELEM(vol2(),0,2,2) = 23;
-/*
-
-    DIRECT_A3D_ELEM(vol1(),0,0,0) = 1;
-    DIRECT_A3D_ELEM(vol1(),0,0,1) = 2;
-    DIRECT_A3D_ELEM(vol1(),0,1,0) = 3;
-    DIRECT_A3D_ELEM(vol1(),0,1,1) = 4;
-
-    DIRECT_A3D_ELEM(vol1(),1,0,0) = 5;
-    DIRECT_A3D_ELEM(vol1(),1,0,1) = 6.4;
-    DIRECT_A3D_ELEM(vol1(),1,1,0) = 7.5;
-    DIRECT_A3D_ELEM(vol1(),1,1,1) = 8.5;
-    
-    //vol2
-    DIRECT_A3D_ELEM(vol2(),0,0,0) = 1.5;
-    DIRECT_A3D_ELEM(vol2(),0,0,1) = 2.4;
-    DIRECT_A3D_ELEM(vol2(),0,1,0) = 3.3;
-    DIRECT_A3D_ELEM(vol2(),0,1,1) = 4.6;
-
-    DIRECT_A3D_ELEM(vol2(),1,0,0) = 5.7;
-    DIRECT_A3D_ELEM(vol2(),1,0,1) = 6.4;
-    DIRECT_A3D_ELEM(vol2(),1,1,0) = 7.3;
-    DIRECT_A3D_ELEM(vol2(),1,1,1) = 8.2;
-    
-   */ 
-    double sam = 2.;
-    //std::cerr << "Vol1: " << vol1 << std::endl;
-    //std::cerr << vol1() << std::endl;
-    //std::cerr << "Vol2: " << vol2 << std::endl;
-    //std::cerr << vol2() << std::endl;
-    MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
-    bool do_dpr = false;
-    bool do_rfactor = true;
-    double min_sam =  -1.; //no restrictionn
-    double max_sam =  2; //no restriction
-    double  rFactor = -1;
-    frc_dpr(vol1(), vol2(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr, do_rfactor, sam/min_sam, sam/max_sam, &rFactor);
-
-    //double Rfactor = 0.0862;
-    double Rfactor = 0.134661;
-    //std::cerr << "rFactor: " << fabs(Rfactor-rFactor) << " " << Rfactor << " " << rFactor << std::endl;
-    ASSERT_TRUE( fabs(Rfactor-rFactor) < 0.00001);
+	snprintf(commandBuff, sizeof(commandBuff),
+			"xmipp_transform_window -i %s -o %s --unitcell i2 80 140 .25 0",
+			inFn, outFn);
+    system(commandBuff);
+#ifdef DEBUG
+    std::cerr << "commandBuff: " << commandBuff << std::endl;
+#endif
+#ifndef DEBUG
+	unlink(inFn);
+	unlink(outFn);
+	unlink(filename);
+#endif
+	ASSERT_TRUE(true);
+#undef DEBUG
 }
 
 GTEST_API_ int main(int argc, char **argv)
