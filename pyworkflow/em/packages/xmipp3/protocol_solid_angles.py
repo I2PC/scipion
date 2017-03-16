@@ -315,10 +315,14 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         inputParticles = self.inputParticles.get()
         classes2D = self._createSetOfClasses2D(inputParticles)
 
-        classes2D.classifyItems(updateItemCallback=self._updateParticle,
-                                updateClassCallback=self._updateClass,
-                                itemDataIterator=md.iterRows(self.mdImages,
-                                                          sortByLabel=md.MDL_ITEM_ID))
+        # Let's use a SetMdIterator because it could be less particles
+        # in the metadata produced than in the input set
+        iterator = md.SetMdIterator(self.mdImages, sortByLabel=md.MDL_ITEM_ID,
+                                    updateItemCallback=self._updateParticle,
+                                    skipDisabled=True)
+
+        classes2D.classifyItems(updateItemCallback=iterator.updateItem,
+                                updateClassCallback=self._updateClass)
 
         self._defineOutputs(outputClasses=classes2D)
         self._defineSourceRelation(self.inputParticles, classes2D)
