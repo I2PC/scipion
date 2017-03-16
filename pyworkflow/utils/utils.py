@@ -685,3 +685,19 @@ def formatExceptionInfo(level = 6):
 def printTraceBack():
     import traceback
     traceback.print_stack()
+
+
+def getEnvVariable(variableName, exceptionMsg=None):
+    """ Returns the value of an environment variable or raise an exception message.
+    Useful when adding variable to the config file and report accurate messages"""
+    value = os.getenv(variableName)
+
+    if exceptionMsg is None:
+        exceptionMsg = "Environment variable %s not found. Please check scipion configuration. Try running : scipion " \
+                       "config." % variableName
+
+    if value is None:
+        raise Exception(exceptionMsg)
+
+    else:
+        return value
