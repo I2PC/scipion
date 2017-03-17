@@ -68,17 +68,20 @@ class TestExport2EMDB(BaseTest):
         protExp = self.newProtocol(ProtExportEMDB)
         protExp.exportVolume.set(self.protImportHalf1.outputVolume)
         protExp.exportFSC.set(prot.outputFSC)
+
+        protExp.filesPath.set(os.getcwd())
         self.launchProtocol(protExp)
 
-        # Check the files were generated properly
-        nameVolume, nameFsc = protExp.getName()
-        self.assertTrue(os.path.exists(protExp._getExtraPath(nameVolume)))
-        self.assertTrue(os.path.exists(protExp._getExtraPath(nameFsc)))
+        # Check the files were generated properly.
+        protExp._createFileNamesTemplates()
+        nameVolume = protExp.getFnPath()
+        nameFsc = protExp.getFnPath('fsc')
+        self.assertTrue(os.path.exists(nameVolume))
+        self.assertTrue(os.path.exists(nameFsc))
 
-        #print 'Hecho el assert de los archivos'
         #Chek if the files have the correct data
         orig_list_x, orig_list_y = protExp.exportFSC.get().getData()
-        fo = open(protExp._getExtraPath(nameFsc), "rU")
+        fo = open(protExp.getFnPath('fsc'), "rU")
         saved_x=[]
         orig_x=[]
         count=0
