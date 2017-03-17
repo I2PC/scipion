@@ -40,7 +40,8 @@ from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
-                     parseMovieAlignment, parseMovieAlignment2)
+                     parseMovieAlignment, parseMovieAlignment2, getCudaLib,
+                     MOTIONCORR_CUDA_LIB, CUDA_LIB)
 from pyworkflow.protocol import STEPS_PARALLEL
 
 
@@ -290,6 +291,21 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if not os.path.exists(program):
             errors.append('Missing %s' % program)
+
+
+        # Check CUDA paths
+        cudaLib = getCudaLib()
+
+        if cudaLib is None:
+            errors.append("Do not know where to find CUDA lib path. "
+                          " %s or %s variables have None value or are not"
+                          " present in scipion configuration."
+                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB))
+
+        elif not pwutils.existsVariablePaths(cudaLib):
+            errors.append("Either %s or %s variables points to a non existing "
+                          "path (%s). Please, check scipion configuration."
+                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB, cudaLib))
 
         gpu = self.GPUIDs.get()
 
