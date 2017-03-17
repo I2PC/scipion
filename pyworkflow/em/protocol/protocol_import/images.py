@@ -274,7 +274,11 @@ class ProtImportImages(ProtImportFiles):
                 # inactivity time elapsed (from last event to now) and
                 # if it is greater than the defined timeout, we conclude
                 # the import and close the output set
-                finished = now - lastDetectedChange > timeout
+                # Another option is to check if the protocol have some
+                # special stop condition, this can be used to manually stop
+                # some protocols such as import movies
+                finished = (now - lastDetectedChange > timeout or
+                            self.streamingHasFinished())
                 self.debug("Checking if finished:")
                 self.debug("   Now - Last Change: %s"
                            % pwutils.prettyDelta(now - lastDetectedChange))
@@ -448,3 +452,31 @@ class ProtImportImages(ProtImportFiles):
     def _createOutputSet(self):
         """ Create the output set that will be populated as more data is
         imported. """
+
+    # --------------- Streaming special functions -----------------------
+    def _getStopStreamingFilename(self):
+        return self._getExtraPath("STOP_STREAMING.TXT")
+
+    def getActions(self):
+        """ This method will allow that the 'Stop import' action to appears
+        in the GUI when the user right-click in the protocol import box.
+        It will allow a user to manually stop the streaming.
+        """
+        # Only allow to stop if running and in streaming mode
+        if self.dataStreaming and self.isRunning():
+            return [('STOP STREAMING', self.stopImport)]
+        else:
+            return []
+
+    def stopImport(self):
+        """ Since the actual protocol that is running is in a different
+        process that the one that this method will be invoked from the GUI,
+        we will use a simple mechanism to place an special file to stop
+        the streaming.
+        """
+        # Just place an special file into the run folder
+        f = open(self._getStopStreamingFilename(), 'w')
+        f.close()
+
+    def streamingHasFinished(self):
+        return os.path.exists(self._getStopStreamingFilename())

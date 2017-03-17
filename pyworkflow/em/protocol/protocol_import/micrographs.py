@@ -146,6 +146,7 @@ class ProtImportMicBase(ProtImportImages):
 
         return acq
 
+
     
 class ProtImportMicrographs(ProtImportMicBase):
     """Protocol to import a set of micrographs to the project"""
