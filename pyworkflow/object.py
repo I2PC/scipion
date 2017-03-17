@@ -1028,7 +1028,15 @@ class Set(OrderedObject):
 
     def getFirstItem(self):
         """ Return the first item in the Set. """
-        return self._getMapper().selectFirst()
+        # This function is used in many contexts where the mapper can be
+        # left open and could be problematic locking other db
+        # So, we looking if the mapper was closed before, in which case
+        # we will close it after that
+        closedMapper = self._mapper is None
+        firstItem = self._getMapper().selectFirst()
+        if closedMapper:
+            self.close()
+        return firstItem
     
     def __iter__(self):
         """ Iterate over the set of images. """
