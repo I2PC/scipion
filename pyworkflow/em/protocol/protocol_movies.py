@@ -33,9 +33,9 @@ from datetime import datetime
 
 import pyworkflow.object as pwobj
 from pyworkflow import VERSION_1_1
-from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import PointerParam
 
-from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
+from pyworkflow.protocol.constants import STEPS_PARALLEL, MODE_RESUME
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment, Acquisition
@@ -196,6 +196,11 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFolder = self._getOutputMovieFolder(movie)
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
+
+        if (self.getRunMode() == MODE_RESUME and
+            os.path.exists(self._getMovieDone(movie))):
+            self.info("Skipping movie: %s, seems to be done" % movieFn)
+            return
 
         # Clean old finished files
         pwutils.cleanPath(self._getMovieDone(movie))
