@@ -8,6 +8,7 @@ int main(void)
     MultidimArray<double> m2(2,2);
     MultidimArray<double> m3(2,2);
 
+
     A2D_ELEM(m1,0,0) = 1.;
     A2D_ELEM(m1,1,0) = 2.;
     A2D_ELEM(m1,0,1) = 3.;
