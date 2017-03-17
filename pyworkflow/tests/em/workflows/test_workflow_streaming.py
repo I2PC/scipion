@@ -39,11 +39,15 @@ from pyworkflow.em.protocol import ProtMonitorSummary
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
-MOVS = os.environ.get('SCIPION_TEST_STREAM_MOVS', 10)
-PATTERN = os.environ.get('SCIPION_TEST_STREAM_PATTERN', '')
-DELAY = os.environ.get('SCIPION_TEST_STREAM_DELAY', 10) # in seconds
+def _getVar(varSuffix, varType, default=None):
+    return varType(os.environ.get('SCIPION_TEST_STREAM_%s' % varSuffix, default))
+
+MOVS = _getVar('MOVS', int, 10)
+PATTERN = _getVar('PATTERN', str, '')
+DELAY = _getVar('DELAY', int, 10) # in seconds
 # Change the timeout for stoping waiting for new files
-TIMEOUT = os.environ.get('SCIPION_TEST_STREAM_TIMEOUT', 60)
+TIMEOUT = _getVar('TIMEOUT', int, 60)
+
 
 class TestStreamingWorkflow(BaseTest):
     @classmethod
