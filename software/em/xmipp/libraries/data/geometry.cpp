@@ -139,6 +139,74 @@ void least_squares_plane_fit(FitPoint *IN_points,
     plane_c = (F * G * J - E * H * J - E * F * K + D * H * K + E * E * L - D * G * L) / denom;
 }
 
+
+/* Least-squares-fit a plane to an image.
+ *
+ * Performs the same computation as least_squares_plane_fit function but it has been
+ * optimized removing redundant computations or moving computations to
+ * outer loop.
+ *
+ * Check least_squares_plane_fit function for a clearer code.
+*/
+void least_squares_plane_fit_All_Points(const MultidimArray<double> &Image,
+															 double& plane_a,
+															 double& plane_b,
+															 double& plane_c)
+{
+    double  D = 0;
+    double  E = 0;
+    double  F = 0;
+    double  G = 0;
+    double  H = 0;
+    double  I = 0;
+    double  J = 0;
+    double  K = 0;
+    double  L = 0;
+    double  denom = 0;
+    int	nIterations=0;
+    double value;
+    double sumjValues=0.0;
+    for (int j=STARTINGX(Image); j<=FINISHINGX(Image); ++j)
+    {
+    	D += j*j;
+    	sumjValues += j;
+    	I += 1;
+    }
+    F = sumjValues;
+
+    double *ref;
+    double sumElements;
+    for (int i=STARTINGY(Image); i<=FINISHINGY(Image); ++i)
+    {
+    	nIterations++;
+    	ref = &A2D_ELEM(Image, i, STARTINGX(Image));
+    	sumElements = 0.0;
+        for (int j=STARTINGX(Image); j<=FINISHINGX(Image); ++j)
+        {
+			J += j*(*ref);
+			sumElements += (*ref);
+			ref++;
+        }
+		K += i*sumElements;
+		L += sumElements;
+        E += sumjValues*i;
+        G += i*i*I;
+        H += i*I;
+    }
+    D = D*nIterations;
+    F = F*nIterations;
+    I = I*nIterations;
+
+    denom = F * F * G - 2 * E * F * H + D * H * H + E * E * I - D * G * I;
+
+    // X axis slope
+    plane_a = (H * H * J - G * I * J + E * I * K + F * G * L - H * (F * K + E * L)) / denom;
+    // Y axis slope
+    plane_b = (E * I * J + F * F * K - D * I * K + D * H * L - F * (H * J + E * L)) / denom;
+    // Z axis intercept
+    plane_c = (F * G * J - E * H * J - E * F * K + D * H * K + E * E * L - D * G * L) / denom;
+}
+
 void least_squares_line_fit(const std::vector<fit_point2D> & IN_points,
                             double &line_a,
                             double &line_b)

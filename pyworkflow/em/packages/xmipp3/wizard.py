@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -43,6 +43,7 @@ from protocol_cl2d import XmippProtCL2D
 from protocol_helical_parameters import XmippProtHelicalParameters
 from pyworkflow.em.protocol.protocol_import.coordinates import ProtImportCoordinates
 from protocol_particle_pick_consensus import XmippProtConsensusPicking
+from protocol_resolution_monogenic_signal import XmippProtMonoRes
 from protocol_rotational_spectra import XmippProtRotSpectra
 from protocol_reconstruct_highres import XmippProtReconstructHighRes
 
@@ -230,21 +231,14 @@ class XmippParticleMaskRadiiWizard(ParticlesMaskRadiiWizard):
         ParticlesMaskRadiiWizard.show(self, form, _value, _label, UNIT_PIXEL)
     
 
-class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
-    _targets = [(XmippProtMaskVolumes, ['radius']),
-                (XmippProtAlignVolume, ['maskRadius']),
-                (XmippProtPreprocessVolumes, ['backRadius'])]
-    
+class XmippVolumeMaskRadiusBasicWizard(VolumeMaskRadiusWizard):
     def _getParameters(self, protocol):
-        
         label, value = self._getInputProtocol(self._targets, protocol)
-        
         protParams = {}
-        protParams['input']= protocol.inputVolumes
         protParams['label']= label
         protParams['value']= value
         return protParams
-    
+
     def _getProvider(self, protocol):
         _objs = self._getParameters(protocol)['input']
         return VolumeMaskRadiusWizard._getListProvider(self, _objs)
@@ -254,13 +248,40 @@ class XmippVolumeMaskRadiusWizard(VolumeMaskRadiusWizard):
         _value = params['value']
         _label = params['label']
         VolumeMaskRadiusWizard.show(self, form, _value, _label, UNIT_PIXEL)
+
+class XmippVolumeMaskRadiusWizard(XmippVolumeMaskRadiusBasicWizard):
+    _targets = [(XmippProtMaskVolumes, ['radius']),
+                (XmippProtAlignVolume, ['maskRadius']),
+                (XmippProtPreprocessVolumes, ['backRadius'])]
     
+    def _getParameters(self, protocol):
+        protParams=XmippVolumeMaskRadiusBasicWizard._getParameters(self, protocol)
+        protParams['input']= protocol.inputVolumes
+        return protParams
+
+class XmippVolumeMaskRadiusWizard2(XmippVolumeMaskRadiusBasicWizard):
+    _targets = [(XmippProtMonoRes, ['volumeRadius'])]
+    
+    def _getParameters(self, protocol):
+        protParams=XmippVolumeMaskRadiusBasicWizard._getParameters(self, protocol)
+        protParams['input']= protocol.inputVolumes
+        return protParams
+    
+class XmippVolumeMaskRadiusWizard3(XmippVolumeMaskRadiusBasicWizard):
+    _targets = [(XmippProtMonoRes, ['volumeRadiusHalf'])]
+    
+    def _getParameters(self, protocol):
+        protParams=XmippVolumeMaskRadiusBasicWizard._getParameters(self, protocol)
+        protParams['input']= protocol.inputVolumes
+        return protParams
+
+
 class XmippVolumeOuterRadiusWizard(XmippVolumeMaskRadiusWizard):
     _targets = [(XmippProtHelicalParameters, ['cylinderOuterRadius'])]
 
     def _getParameters(self, protocol):
         protParams = {}
-        protParams['input']= protocol.inputVolume
+        protParams['input']= protocol.inputVolumes
         protParams['label']= 'cylinderOuterRadius'
         protParams['value']= protocol.cylinderOuterRadius.get()
         return protParams
@@ -270,7 +291,7 @@ class XmippVolumeInnerRadiusWizard(XmippVolumeMaskRadiusWizard):
 
     def _getParameters(self, protocol):
         protParams = {}
-        protParams['input']= protocol.inputVolume
+        protParams['input']= protocol.inputVolumes
         protParams['label']= 'cylinderInnerRadius'
         protParams['value']= protocol.cylinderInnerRadius.get()
         return protParams

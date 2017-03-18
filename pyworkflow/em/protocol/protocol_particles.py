@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -163,7 +163,7 @@ class ProtParticlePicking(ProtParticles):
 
     def _summary(self):
         summary = []
-        if self.getInputMicrographs() is  not None:
+        if self.getInputMicrographs() is not None:
             summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
 
         if self.getOutputsSize() >= 1:

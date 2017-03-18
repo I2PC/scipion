@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -39,7 +39,7 @@ class XmippProtCreateGallery(ProtAnalysis3D):
     observed in the microscope.
     """
     _label = 'create gallery'
-    
+    _version = pyworkflow.VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='General parameters')

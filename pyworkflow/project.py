@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -34,6 +34,8 @@ import traceback
 import time
 from collections import OrderedDict
 import datetime as dt
+
+import datetime
 
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
@@ -58,7 +60,6 @@ PROJECT_CREATION_TIME = 'CreationTime'
 
 # Regex to get numbering suffix and automatically propose runName
 REGEX_NUMBER_ENDING = re.compile('(?P<prefix>.+\D)(?P<number>\d*)\s*$')
-
 
 class Project(object):
     """This class will handle all information 
@@ -117,6 +118,10 @@ class Project(object):
         """ Return the path to the sqlite db. """
         return self.dbPath
 
+    def getDbLastModificationDate(self):
+        """ Return the last modification date of the database """
+        pwutils.getFileLastModificationDate(self.getDbPath())
+
     def getCreationTime(self):
         """ Return the time when the project was created. """
         # In project.create method, the first object inserted
@@ -173,7 +178,7 @@ class Project(object):
 
     def createMapper(self, sqliteFn):
         """ Create a new SqliteMapper object and pass as classes dict
-        all globas and update with data and protocols from em.
+        all globals and update with data and protocols from em.
         """
         classesDict = pwobj.Dict(default=pwprot.LegacyProtocol)
         classesDict.update(pwobj.__dict__)
@@ -406,50 +411,62 @@ class Project(object):
         self.mapper.commit()
 
     def _updateProtocol(self, protocol, tries=0, checkPid=False):
-        if not self.isReadOnly():
-            try:
-                # Backup the values of 'jobId', 'label' and 'comment'
-                # to be restored after the .copy
-                jobId = protocol.getJobId()
-                label = protocol.getObjLabel()
-                comment = protocol.getObjComment()
 
-                # TODO: when launching remote protocols, the db should be
-                # TODO: retrieved in a different way.
-                prot2 = pwprot.getProtocolFromDb(self.path,
-                                                 protocol.getDbPath(),
-                                                 protocol.getObjId())
+        # If this is read only exit
+        if self.isReadOnly(): return
 
-                if checkPid:
-                    self.checkPid(prot2)
+        # If we are already updated, comparing timestamps
+        if pwprot.isProtocolUpToDate(protocol): return
 
-                # Copy is only working for db restored objects
-                protocol.setMapper(self.mapper)
-                protocol.copy(prot2, copyId=False)
-                # Restore backup values
-                protocol.setJobId(jobId)
-                protocol.setObjLabel(label)
-                protocol.setObjComment(comment)
+        try:
+            # Backup the values of 'jobId', 'label' and 'comment'
+            # to be restored after the .copy
+            jobId = protocol.getJobId()
+            label = protocol.getObjLabel()
+            comment = protocol.getObjComment()
 
+            # If the protocol database has ....
+            #  Comparing date will not work unless we have a reliable
+            # lastModifiactionDate of a protocol in the project.sqlite.
+
+
+            # TODO: when launching remote protocols, the db should be
+            # TODO: retrieved in a different way.
+            prot2 = pwprot.getProtocolFromDb(self.path,
+                                             protocol.getDbPath(),
+                                             protocol.getObjId())
+
+            if checkPid:
+                self.checkPid(prot2)
+
+            # Copy is only working for db restored objects
+            protocol.setMapper(self.mapper)
+            protocol.copy(prot2, copyId=False)
+            # Restore backup values
+            protocol.setJobId(jobId)
+            protocol.setObjLabel(label)
+            protocol.setObjComment(comment)
+            protocol.lastUpdateTimeStamp.set(datetime.datetime.now())
+
+            self.mapper.store(protocol)
+
+            # Close DB connections
+            prot2.getProject().closeMapper()
+            prot2.closeMappers()
+
+        except Exception, ex:
+            print("Error trying to update protocol: %s(jobId=%s)\n "
+                  "ERROR: %s, tries=%d"
+                  % (protocol.getObjName(), jobId, ex, tries))
+            if tries == 3:  # 3 tries have been failed
+                traceback.print_exc()
+                # If any problem happens, the protocol will be marked
+                # with a FAILED status
+                protocol.setFailed(str(ex))
                 self.mapper.store(protocol)
-
-                # Close DB connections
-                prot2.getProject().closeMapper()
-                prot2.closeMappers()
-
-            except Exception, ex:
-                print("Error trying to update protocol: %s(jobId=%s)\n "
-                      "ERROR: %s, tries=%d"
-                      % (protocol.getObjName(), jobId, ex, tries))
-                if tries == 3:  # 3 tries have been failed
-                    traceback.print_exc()
-                    # If any problem happens, the protocol will be marked
-                    # with a FAILED status
-                    protocol.setFailed(str(ex))
-                    self.mapper.store(protocol)
-                else:
-                    time.sleep(0.5)
-                    self._updateProtocol(protocol, tries + 1)
+            else:
+                time.sleep(0.5)
+                self._updateProtocol(protocol, tries + 1)
 
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
@@ -824,6 +841,9 @@ class Project(object):
 
         return protocol
 
+    def doesProtocolExists(self, protId):
+        return self.mapper.exists(protId)
+
     def getProtocolsByClass(self, className):
         return self.mapper.selectByClass(className)
 
@@ -875,8 +895,11 @@ class Project(object):
                 for r in self.runs:
                     r.closeMappers()
 
-            self.runs = self.mapper.selectAll(iterate=False,
-                          objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+            # Use new selectAll Batch
+            # self.runs = self.mapper.selectAll(iterate=False,
+            #               objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+            self.runs = self.mapper.selectAllBatch(objectFilter=lambda o: isinstance(o, pwprot.Protocol))
+
             for r in self.runs:
                 self._setProtocolMapper(r)
 
@@ -886,9 +909,23 @@ class Project(object):
                     if not r.isChild():
                         self._updateProtocol(r, checkPid=checkPids)
 
+            # cursor = self.mapper.db.executeCommand('SELECT * FROM Objects WHERE parent_Id IS NOT NULL ORDER BY parent_id, name')
+
             self.mapper.commit()
 
         return self.runs
+
+    def needRefresh(self):
+        """ True if any run is active and its timestamp is older than its corresponding runs.db
+        NOTE: If an external script changes the DB this will fail. It uses only in memory objects."""
+        # Loop through the runs
+        for run in self.runs:
+
+            if run.isActive():
+                if not pwprot.isProtocolUpToDate(run):
+                    return True
+
+        return False
 
     def checkPid(self, protocol):
         """ Check if a running protocol is still alive or not.

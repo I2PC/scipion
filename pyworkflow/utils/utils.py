@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+from os.path import join
 
 
 def prettyDate(time=False):
@@ -542,7 +543,21 @@ class Environ(dict):
     REPLACE = 0
     BEGIN = 1
     END = 2
-    
+
+    def getFirst(self, keys, mandatory=False):
+        """ Return the value of the first key present in the environment.
+        If none is found, returns the 'defaultValue' parameter.
+        """
+        for k in keys:
+            if k in self:
+                return self.get(k)
+
+        if mandatory:
+            print ("None of the variables: %s found in the Environment. "
+                   "Please check scipion.conf files." % (str(keys)))
+
+        return None
+
     def set(self, varName, varValue, position=REPLACE):
         """ Modify the value for some variable.
         Params:
@@ -561,13 +576,21 @@ class Environ(dict):
                 self[varName] = self[varName] + os.pathsep + varValue
         else:
             self[varName] = varValue
-                
             
     def update(self, valuesDict, position=REPLACE):
         """ Use set for each key, value pair in valuesDict. """
         for k, v in valuesDict.iteritems():
             self.set(k, v, position)
-            
+
+    def addLibrary(self, libraryPath, position=BEGIN):
+        """ Adds a path to LD_LIBRARY_PATH at the requested position. If valid (exists)."""
+        if libraryPath is None:
+            return
+        elif os.path.exists(libraryPath):
+            self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
+        else:
+            print "Library path does not exists: % s" % libraryPath
+
             
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
@@ -649,3 +672,16 @@ def lighter(color, percent):
     vector = white - color
     return tuple(np.around(color + vector * percent))
 
+
+def formatExceptionInfo(level = 6):
+    error_type, error_value, trbk = sys.exc_info()
+    tb_list = traceback.format_tb(trbk, level)
+    s = "Error: %s \nDescription: %s \nTraceback:" % (error_type.__name__, error_value)
+    for i in tb_list:
+        s += "\n" + i
+    return s
+
+
+def printTraceBack():
+    import traceback
+    traceback.print_stack()

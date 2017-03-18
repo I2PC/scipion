@@ -48,7 +48,7 @@ void ProgAlign2d::show()
     std::cerr
     << "Input selfile:        " << fnSel       << std::endl
     << "Input reference:      " << fnRef       << std::endl
-    << "Output ootname:       " << fnRoot      << std::endl
+    << "Output rootname:       " << fnRoot      << std::endl
     << "Number of iterations: " << Niter       << std::endl
     << "Do not check mirrors: " << dont_mirror << std::endl
     << "PSPC:                 " << pspc        << std::endl

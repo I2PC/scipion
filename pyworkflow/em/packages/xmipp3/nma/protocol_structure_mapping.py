@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -30,6 +30,7 @@ from glob import glob
 import pyworkflow.em.metadata as md
 import pyworkflow.em as em
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.packages.xmipp3.convert import getImageLocation
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile, copyFile, makePath, cleanPath
@@ -53,6 +54,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
     as points in a lower dimensional distance space.    
     """
     _label = 'structure mapping'
+    _version = VERSION_1_1
            
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -120,9 +122,10 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                 if nVolj != nVoli:
                     refFn = getImageLocation(voli)
                     inVolFn = getImageLocation(volj)
+                    volId = volj.getObjId()
                     outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                     self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn,
-                                             maskArgs, alignArgs)
+                                             maskArgs, alignArgs, volId)
                     self._insertFunctionStep('elasticAlignmentStep',nVoli, voli, nVolj)
                 nVolj += 1   
             nVoli += 1

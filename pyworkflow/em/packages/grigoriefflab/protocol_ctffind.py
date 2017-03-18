@@ -299,7 +299,10 @@ eof
 """
 
     def _argsCtffind4(self):
-        self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+
+        # Avoid threads multiplication
+        # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program = 'export OMP_NUM_THREADS=1; '
         self._program += CTFFIND4_PATH
         self._args = """ << eof
 %(micFn)s
@@ -379,3 +382,11 @@ eof
         ctf.setPsdFile(psdFile)
 
         return ctf
+
+    def _summary(self):
+        summary = em.ProtCTFMicrographs._summary(self)
+        if self.useCtffind4:
+            summary.append("NOTE: ctffind4.1.5 finishes correctly (all output is generated properly),"
+                           " but returns an error code. Disregard error messages until this is fixed."
+                           "http://grigoriefflab.janelia.org/node/5421")
+        return summary

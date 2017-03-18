@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -71,6 +72,9 @@ class SummaryProvider(TreeProvider):
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 from pyworkflow.em import ProtImportImages
+                #NOTE by rmarabini do not use the angstrom symbol instead of A
+                #it breaks html production in the monitor:
+                #UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 
                 if isinstance(prot, ProtImportImages):
                     self.acquisition = [("Microscope Voltage: ",
                                          prot.voltage.get()),

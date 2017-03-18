@@ -20,9 +20,10 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import time
 
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
@@ -48,6 +49,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
     *Note:* Fast Fourier requires compilation of Xmipp with --cltomo flag
      """
     _label = 'align volume'
+    nVols = 0
     
     def __init__(self, **args):
         em.ProtAlignVolume.__init__(self, **args)
@@ -275,10 +277,24 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
             itemId = item.getObjId()
             if isinstance(item, em.Volume):
                 item.outputName = self._getExtraPath('output_vol%06d.vol' % itemId)
+                # If item is a Volume and label is empty
+                if not item.getObjLabel():
+                    # Volume part of a set
+                    if item.getObjParentId() is None:
+                        item.setObjLabel("%s.%s" % (pointer.getObjValue(), pointer.getExtended()))
+                    else:
+                        item.setObjLabel('%s.%s' % (self.getMapper().getParent(item).getRunName(), item.getClassName()))
                 yield item
             elif isinstance(item, em.SetOfVolumes):
                 for vol in item:
                     vol.outputName = self._getExtraPath('output_vol%06d_%03d.vol' % (itemId, vol.getObjId()))
+                    # If set item label is empty
+                    if not vol.getObjLabel():
+                        # if set label is not empty use it
+                        if item.getObjLabel():
+                            vol.setObjLabel("%s - %s%s" % (item.getObjLabel(), vol.getClassName(), vol.getObjId()))
+                        else:
+                            vol.setObjLabel("%s - %s%s" % (self.getMapper().getParent(item).getRunName(), vol.getClassName(), vol.getObjId()))
                     yield vol
                     
     def _getNumberOfInputs(self):

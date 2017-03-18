@@ -27,6 +27,7 @@
 #include <data/xmipp_program.h>
 #include <data/micrograph.h>
 #include <data/args.h>
+#include <data/metadata_extension.h>
 
 class ProgMicrographScissor: public XmippProgram
 {
@@ -47,6 +48,10 @@ protected:
         addParamsLine("     alias --untiltfn;");
         addParamsLine("  [--pos <position_file>]             : file with particle coordinates");
         addParamsLine("     alias --untiltPos;");
+        addParamsLine("  [--extractNoise <n=-1>]             : extract noise particles instead of true particles");
+        addParamsLine("                                      : n is the number of noise particles to extract");
+        addParamsLine("                                      : If n=-1, then the number of noise particles is the number of coordinates in the pos file");
+        addParamsLine("                                      : The input posfile WILL be rewritten with the noise coordinates");
 
         addParamsLine(" == Processing Options == ");
         addParamsLine("  --Xdim <window_X_dim>               : In pixels");
@@ -56,6 +61,8 @@ protected:
         addParamsLine("  [--log]                             : Take logarithm (compute transmitance)");
         addParamsLine("  [--appendToStack]                   : The output stack is deleted.");
         addParamsLine("                                      : Use this option to add the new images to the stack");
+        addParamsLine("  [--fillBorders]                     : If the box is outside the micrograph, fill the missing pixels");
+        addParamsLine("                                      : instead of setting the whole image to blank");
 
         addParamsLine(" == Options for tilt pairs == ");
         addParamsLine("  [-t <input_tilted_micrograph>]      : From which the   tilted images will be cutted");
@@ -82,6 +89,9 @@ protected:
     bool     compute_inverse ;
     double   down_transform;
     bool     rmStack;
+    bool     fillBorders;
+    int      Nnoise;
+    bool     extractNoise;
 
     void readParams()
     {
@@ -112,6 +122,10 @@ protected:
             fn_tilt_pos    = getParam("--tiltPos");
         }
         down_transform = getDoubleParam("--downsampling");
+        fillBorders = checkParam("--fillBorders");
+        extractNoise = checkParam("--extractNoise");
+        if (extractNoise)
+        	Nnoise = getIntParam("--extractNoise",0);
     }
 public:
     void run()
@@ -135,7 +149,25 @@ public:
               ctfparam.getRow(ctfRow, ctfparam.firstObject());
               m.set_ctfparams(ctfRow);
             }
-            m.produce_all_images(0, -1, fn_out, fn_orig, 0.,0.,0., rmStack);
+            m.produce_all_images(0, -1, fn_out, fn_orig, 0.,0.,0., rmStack, fillBorders, extractNoise, Nnoise);
+            if (extractNoise)
+            {
+            	MDRow row=firstRow(fn_pos);
+            	size_t micId=0;
+            	if (row.containsLabel(MDL_MICROGRAPH_ID))
+            		row.getValue(MDL_MICROGRAPH_ID,micId);
+
+            	// Rewrite the input posfile with the true noise coordinates
+            	MetaData MD;
+            	for (size_t i=0; i<m.coords.size(); i++)
+                {
+            		size_t id=MD.addObject();
+                    MD.setValue(MDL_XCOOR, m.coords[i].X, id);
+                    MD.setValue(MDL_YCOOR, m.coords[i].Y, id);
+                    MD.setValue(MDL_MICROGRAPH_ID, micId, id);
+                }
+            	MD.write(fn_pos);
+            }
         }
         else
         {

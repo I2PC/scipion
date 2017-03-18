@@ -10,7 +10,7 @@
 # * (at your option) any later version.
 # *
 # * This program is distributed in the hope that it will be useful,
-# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of 
 # * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # * GNU General Public License for more details.
 # *
@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -214,6 +214,12 @@ def addAllProtocols(protocols):
 
             # Add the protocol
             protLine = {"tag": "protocol", "value": k, "text": v.getClassLabel(prependPackageName=False)}
+
+            # If it's a new protocol
+            if v.isNew():
+                # add the new icon
+                protLine["icon"] = "newProt.png"
+
             addToTree(packageMenu, protLine)
 
     protocols["All"] = allProtMenu

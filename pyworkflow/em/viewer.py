@@ -52,6 +52,8 @@ import xmipp
 from viewer_fsc import FscViewer
 from viewer_pdf import PDFReportViewer
 from viewer_monitor_summary import ViewerMonitorSummary
+from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
+from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
 
 #------------------------ Some common Views ------------------
 
@@ -608,7 +610,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
         self.size = size if size else defaultSize
         paddingFactor = self.kwargs.get('paddingFactor', 1)
         maxFreq = self.kwargs.get('maxFreq', 0.5)
-        splineDegree = self.kwargs.get('splineDegree', 2)
+        splineDegree = self.kwargs.get('splineDegree', 3)
         self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor,
                                                        maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)

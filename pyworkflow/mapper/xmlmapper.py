@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -124,7 +124,7 @@ class XmlMapper(Mapper):
     def selectAll(self, iterate=False):
         """Select object from storage"""
         for child in self.root:
-            obj = self._buildObject(child.tag)
+            obj = self._buildObjectFromClass(child.tag)
             self.fillObject(obj, child)
             self._addObjectToDict(obj, self.objDict)
         #set properlly primary keys
@@ -142,7 +142,7 @@ class XmlMapper(Mapper):
         if childObj is None:
             if childClass is None:
                 raise Exception('Attribute "%s" was not found in parent object and classname not stored' % childName)
-            childObj = self._buildObject(childClass)
+            childObj = self._buildObjectFromClass(childClass)
             setattr(obj, childName, childObj)
         return childObj
                   

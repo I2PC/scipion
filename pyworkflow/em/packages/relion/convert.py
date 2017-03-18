@@ -108,11 +108,17 @@ def getEnviron():
     
     environ = Environ(os.environ)
     relPath = join(os.environ['RELION_HOME'], 'bin')
+    
     if not relPath in environ['PATH']:
         environ.update({'PATH': join(os.environ['RELION_HOME'], 'bin'),
                         'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
                         'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
                         }, position=Environ.BEGIN)
+    
+    # Take Scipion CUDA library path
+    cudaLib = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
+    environ.addLibrary(cudaLib)
+
     return environ
 
 
@@ -125,7 +131,7 @@ def getVersion():
 
 
 def getSupportedVersions():
-    return ['1.3', '1.4']
+    return ['1.3', '1.4', '2.0']
 
 
 def locationToRelion(index, filename):

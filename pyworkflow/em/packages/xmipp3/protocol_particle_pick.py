@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -98,8 +98,14 @@ class XmippProtParticlePicking(ProtParticlePicking, XmippProtocol):
         if not hasattr(self, 'outputCoordinates'):
             msg = "No particles picked yet."
         else:
-            picked = self.outputCoordinates.getSize()
-            msg = "Number of particles picked: %d (from %d micrographs)" % (picked, self.inputMicrographs.get().getSize())
+
+            picked = 0
+            # Get the number of picked particles of the last coordinates set
+            for key, output in self.iterOutputAttributes(EMObject):
+                picked = output.getSize()
+
+            msg = "%d particles picked (from %d micrographs)" % \
+                  (picked, self.inputMicrographs.get().getSize())
     
         return msg
 

@@ -205,7 +205,7 @@ class TestCorrelationAlignment(BaseTest):
                          msgRoi % (goldRoi, roi, type(goldRoi), type(roi)))
 
     def test_qbeta(self):
-        prot = self.newProtocol(XmippProtMovieCorr)
+        prot = self.newProtocol(XmippProtMovieCorr,doPSD=True)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
@@ -215,7 +215,8 @@ class TestCorrelationAlignment(BaseTest):
 
     def test_cct(self):
         prot = self.newProtocol(XmippProtMovieCorr,
-                                doSaveMovie=True)
+                                doSaveMovie=True,
+                                doPSD=True)
         prot.inputMovies.set(self.protImport2.outputMovies)
         self.launchProtocol(prot)
 
@@ -227,7 +228,8 @@ class TestCorrelationAlignment(BaseTest):
         prot = self.newProtocol(XmippProtMovieCorr,
                                 alignFrame0=3, alignFrameN=5,
                                 sumFrame0=3, sumFrameN=5,
-                                cropOffsetX=10, cropOffsetY=10)
+                                cropOffsetX=10, cropOffsetY=10,
+                                doPSD=True)
         prot.inputMovies.set(self.protImport1.outputMovies)
         self.launchProtocol(prot)
 
@@ -306,6 +308,7 @@ class TestAverageMovie(BaseTest):
                              (3,5), [10, 10, 0, 0])
         
         protAverage = self.newProtocol(XmippProtMovieAverage,
+                                       sumFrame0=3, sumFrameN=5,
                                        cropRegion=1)
         protAverage.inputMovies.set(prot.outputMovies)
         protAverage.setObjLabel('average w alignment info')
@@ -313,7 +316,7 @@ class TestAverageMovie(BaseTest):
         
         self._checkMicrographs(protAverage, (4086,4086))
         protAverage2 = self.newProtocol(XmippProtMovieAverage,
-                                        sumFrame0=1, sumFrameN=1,
+                                        sumFrame0=3, sumFrameN=5,
                                        cropRegion=2)
         protAverage2.inputMovies.set(prot.outputMovies)
         protAverage2.setObjLabel('average w alignment')
@@ -324,6 +327,7 @@ class TestAverageMovie(BaseTest):
     def test_cct(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
                                        cropRegion=2,
+                                       sumFrame0=1, sumFrameN=7,
                                        cropOffsetX=10, cropOffsetY=10,
                                        cropDimX=1500, cropDimY=1500)
         protAverage.inputMovies.set(self.protImport2.outputMovies)
@@ -334,7 +338,8 @@ class TestAverageMovie(BaseTest):
 
     def test_cct2(self):
         protAverage = self.newProtocol(XmippProtMovieAverage,
-                                       cropRegion=1)
+                                       cropRegion=1,
+                                       sumFrame0=1, sumFrameN=7)
         protAverage.inputMovies.set(self.protImport2.outputMovies)
         protAverage.setObjLabel('average imported movies')
         self.launchProtocol(protAverage)

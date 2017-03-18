@@ -308,29 +308,29 @@ void Micrograph::scale_coordinates(const double &c)
 /* Scissor ----------------------------------------------------------------- */
 int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
-                        bool only_check)
+                        bool only_check, bool fillBorders)
 {
     if (X_window_size == -1 || Y_window_size == -1)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "Micrograph::scissor: window size not set");
     if (datatype == DT_UChar)
         return templateScissor(*IUChar, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_UShort)
         return templateScissor(*IUShort, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_Short)
         return templateScissor(*IShort, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_UInt)
         return templateScissor(*IUInt, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_Int)
         return templateScissor(*IInt, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else if (datatype == DT_Float)
         return templateScissor(*IFloat, P, result, Dmin, Dmax, scaleX, scaleY,
-                               only_check);
+                               only_check, fillBorders);
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT,
                      "Micrograph::scissor: unknown datatype");
@@ -340,7 +340,8 @@ int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, double minCost,
                                     const FileName &fn_rootIn, const FileName &fn_image, double ang,
-                                    double tilt, double psi, bool rmStack)
+                                    double tilt, double psi, bool rmStack, bool fillBorders,
+									bool extractNoise, int Nnoise)
 {
     MetaData SF;
     Image<double> I;
@@ -385,6 +386,9 @@ void Micrograph::produce_all_images(int label, double minCost,
         std::cout << "Angle from Y axis to tilt axis " << ang << std::endl
         << "   applying appropriate rotation\n";
     int nmax = ParticleNo();
+    int nparticles = nmax;
+    if (extractNoise && Nnoise>0)
+    	nmax=Nnoise;
     FileName fn_aux;
     FileName _ext = fn_rootIn.getFileFormat();
     FileName fn_out;
@@ -398,7 +402,13 @@ void Micrograph::produce_all_images(int label, double minCost,
         fn_out.deleteFile();
     size_t ii = 0;
     size_t id;
+
+    Particle_coords Pnoise;
+	int minNoiseDistance=Y_window_size/2;
+	std::vector<Particle_coords> noiseCoords;
+
     for (int n = 0; n < nmax; n++)
+    {
         if (coords[n].valid && coords[n].cost > minCost && coords[n].label == label)
         {
             fn_aux.compose(++ii, fn_out);
@@ -410,7 +420,30 @@ void Micrograph::produce_all_images(int label, double minCost,
             SF.setValue(MDL_MICROGRAPH, M->fn_micrograph, id);
             SF.setValue(MDL_XCOOR, coords[n].X, id);
             SF.setValue(MDL_YCOOR, coords[n].Y, id);
-            bool t = M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
+            bool t=false;
+            if (extractNoise)
+            {
+            	// Look for coordinate that is away from the rest of coordinates
+            	bool found=false;
+            	while (!found)
+            	{
+            		Pnoise.X=int(rnd_unif(X_window_size,thisXdim-X_window_size));
+            		Pnoise.Y=int(rnd_unif(Y_window_size,thisYdim-Y_window_size));
+            		found=true;
+            		for (int nn=0; nn<nparticles; nn++)
+            		{
+            			if (std::abs(Pnoise.X-coords[nn].X)<minNoiseDistance && std::abs(Pnoise.Y-coords[nn].Y)<minNoiseDistance)
+            			{
+            				found=false;
+            				break;
+            			}
+            		}
+            	}
+        		noiseCoords.push_back(Pnoise);
+            	t = M->scissor(Pnoise, I(), Dmin, Dmax, scaleX, scaleY, false, fillBorders);
+            }
+            else
+                t = M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY, false, fillBorders);
             if (!t)
             {
                 std::cout << "Particle " << fn_aux
@@ -423,6 +456,7 @@ void Micrograph::produce_all_images(int label, double minCost,
             //  if (ang!=0) I().rotate(-ang);
             I.write(fn_out, ii, true, WRITE_APPEND);
         }
+    }
     SF.write(fn_out.withoutExtension() + ".xmd");
 
 
@@ -431,6 +465,12 @@ void Micrograph::produce_all_images(int label, double minCost,
     {
         M->close_micrograph();
         delete M;
+    }
+
+    if (extractNoise)
+    {
+    	coords.clear();
+    	coords=noiseCoords;
     }
 }
 

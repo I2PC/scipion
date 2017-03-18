@@ -256,7 +256,7 @@ public:
     int templateScissor(const Image<T> &I,
                         const Particle_coords &P, MultidimArray<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
-                        bool only_check)
+                        bool only_check, bool fillBorders)
     {
         result.initZeros(Y_window_size, X_window_size);
         int _i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
@@ -265,26 +265,34 @@ public:
         int _jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
         int retval = 1;
         double irange=1.0/(Dmax - Dmin);
-		size_t i0 = (size_t)_i0;
-		size_t iF = (size_t)_iF;
-		size_t j0 = (size_t)_j0;
-		size_t jF = (size_t)_jF;
 
-        if (_i0 < 0 || iF >= Ydim || _j0 < 0 || jF >= Xdim)
-        {
+        if (!fillBorders && (_i0 < 0 || _iF >= Ydim || _j0 < 0 || _jF >= Xdim))
         	retval = 0;
-        }
         else
             if (!only_check)
             {
 
-                for (size_t i = i0; i <= iF; i++)
+                for (int i = _i0, i_i0=0; i <= _iF; i++, i_i0++)
                 {
-                    int i_i0=i-i0;
-                    for (size_t j = j0; j <= jF; j++)
+                    int ifrom=i;
+                    if (fillBorders)
                     {
-                        int j_j0=j-j0;
-                        double val=IMGPIXEL(I,i,j);
+						if (ifrom<0)
+							ifrom=0;
+						else if (ifrom>=Ydim)
+							ifrom=Ydim-1;
+                    }
+                    for (int j=_j0, j_j0=0; j<=_jF; j++, j_j0++)
+                    {
+                    	int jfrom=j;
+                        if (fillBorders)
+                        {
+    						if (jfrom<0)
+    							jfrom=0;
+    						else if (jfrom>=Xdim)
+    							jfrom=Xdim-1;
+                        }
+                        double val=IMGPIXEL(I,ifrom,jfrom);
                         if (compute_transmitance)
                         {
                             double temp;
@@ -330,7 +338,8 @@ public:
         Returns 0 if an error occurred and 1 if everything is all right*/
     int scissor(const Particle_coords &P, MultidimArray<double> &result,
                 double Dmin, double Dmax,
-                double scaleX = 1, double scaleY = 1, bool only_check = false);
+                double scaleX = 1, double scaleY = 1, bool only_check = false,
+				bool fillBorders = false);
 
     /** Access to array of 8 bits. */
     unsigned char * arrayUChar() const
@@ -514,7 +523,10 @@ public:
         If this angle is 0 no rotation is applied.*/
     void produce_all_images(int label, double minCost, const FileName &fn_root,
                             const FileName &fn_image = "", double ang = 0,
-                            double gamma = 0., double psi = 0., bool rmStack=false);
+                            double gamma = 0., double psi = 0., bool rmStack=false,
+							bool fillBorders=false,
+							bool extractNoise=false,
+							int Nnoise=-1);
 
     /** Search coordinate near a position.
         By default the precission is set to 3 pixels. The index of the coordinate

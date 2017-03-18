@@ -21,16 +21,15 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""		
+ This module contains utils functions to operate over xmipp metadata files.		
 """
-This module contains utils functions to operate over xmipp metadata files.
-"""
-
 from classes import MetaData, Row
-from constants import LABEL_TYPES, MDL_ITEM_ID
-from functions import labelType, getBlocksInMetaDataFile
+from constants import LABEL_TYPES, MDL_ITEM_ID, MDL_ENABLED, MDL_IMAGE
+from functions import labelType, str2Label, getBlocksInMetaDataFile
 
 
 def label2Python(label):
@@ -38,6 +37,16 @@ def label2Python(label):
     metadata label (LABEL_INT, LABEL_DOUBLE..etc)
     """
     return LABEL_TYPES.get(labelType(label), str)
+
+
+def getLabel(value):
+    """ Return the label value either from an int value or an string. """
+    if isinstance(value, int):
+        return value
+    elif isinstance(value, basestring):
+        return str2Label(value)
+    else:
+        raise Exception("Invalid value type (%s) for label. " % type(value))
 
 
 def getFirstRow(mdOrFn):
@@ -94,6 +103,26 @@ def iterRows(md, sortByLabel=None):
         yield row
 
 
+def dropColumns(mdObj, *labels):
+    """ Drop all columns from a given metadata.
+    Labels can be either string or int.
+    """
+    for l in labels:
+        mdObj.removeLabel(getLabel(l))
+
+
+def keepColumns(mdObj, *labels):
+    """ Drop all columns from mdObj that are not in labels.
+    Labels can be either string or int.
+    """
+    # Handle string or int labels input
+    keepLabels = {getLabel(l) for l in labels}
+
+    for l in mdObj.getActiveLabels():
+        if l not in keepLabels:
+            mdObj.removeLabel(l)
+
+
 def joinBlocks(inputMd, blockPrefix=None):
     mdImages = MetaData()
     mdAll = MetaData()
@@ -118,14 +147,16 @@ class SetMdIterator():
     """
     def __init__(self, md, sortByLabel=None, 
                  keyLabel=MDL_ITEM_ID,
-                 updateItemCallback=None):
+                 updateItemCallback=None,
+                 skipDisabled=False):
         
         if updateItemCallback is None:
             raise Exception('Set an updateItemCallback')
         
         self.iterMd = iterRows(md, sortByLabel) 
         self.keyLabel = keyLabel
-        self.updateItemCallback = updateItemCallback   
+        self.updateItemCallback = updateItemCallback
+        self.skipDisabled = skipDisabled
         self.__nextRow()
         
     def __nextRow(self):
@@ -140,14 +171,22 @@ class SetMdIterator():
         not present in the metadata.
         """
         row = self.lastRow
+        
+        if row is not None:
+            if row.hasLabel(MDL_ENABLED):
+                enabled = row.getValue(MDL_ENABLED)
+            else:
+                enabled = 1
+
         if (row is None or
             item.getObjId() != row.getValue(self.keyLabel)):
             item._appendItem = False
-        
+            
+        elif enabled == -1 and self.skipDisabled:
+            item._appendItem = False
+            self.__nextRow()
+            
         else:
             item._appendItem = True
             self.updateItemCallback(item, row)
             self.__nextRow()
-                
-             
-    

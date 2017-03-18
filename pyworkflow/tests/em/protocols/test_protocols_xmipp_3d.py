@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -981,7 +981,7 @@ class TestXmippPdbConvert(TestXmippBase):
         self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], 48, places=1, msg="wrong size")
 
 
-class TEstXmippValidateNonTilt(TestXmippBase):
+class TestXmippValidateNonTilt(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)

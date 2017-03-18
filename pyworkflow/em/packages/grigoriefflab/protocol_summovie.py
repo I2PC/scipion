@@ -29,7 +29,7 @@ from os.path import exists, realpath, abspath
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 import pyworkflow.utils.path as pwutils
-from pyworkflow.em.protocol import ProtAlignMovies
+from pyworkflow.em.protocol import ProtAlignMovies, ProtProcessMovies
 
 from grigoriefflab import SUMMOVIE_PATH
 from convert import writeShiftsMovieAlignment
@@ -134,7 +134,12 @@ class ProtSummovie(ProtAlignMovies):
         return []
 
     def _validate(self):
+
+        if self.inputMovies.get() is None:
+            return
+
         errors = []
+
         inputMovies = self.inputMovies.get()
         firstFrame, lastFrame, _ = inputMovies.getFramesRange()
         frames = lastFrame - firstFrame + 1
@@ -185,7 +190,10 @@ class ProtSummovie(ProtAlignMovies):
     
     #--------------------------- UTILS functions -------------------------------
     def _argsSummovie(self):
-        self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+
+        # Avoid threads multiplication
+        # self._program = 'export OMP_NUM_THREADS=%d; ' % self.numberOfThreads.get()
+        self._program = 'export OMP_NUM_THREADS=1; '
         self._program += SUMMOVIE_PATH
         self._args = """ << eof
 %(movieFn)s
