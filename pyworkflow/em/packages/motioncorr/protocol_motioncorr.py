@@ -221,7 +221,12 @@ class ProtMotionCorr(ProtAlignMovies):
             cropDimY = self.cropDimY.get() or 1
 
             numbOfFrames = self._getNumberOfFrames(movie)
-            preExp, dose = self._getCorrectedDose(inputMovies)
+
+            if self.doApplyDoseFilter:
+                preExp, dose = self._getCorrectedDose(inputMovies)
+            else:
+                preExp, dose = 0.0, 0.0
+
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': '%d %d' % (self.patchX, self.patchY),
                         '-MaskCent': '%d %d' % (self.cropOffsetX,
@@ -230,7 +235,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
-                        '-FmDose': dose if self.doApplyDoseFilter else 0.0,
+                        '-FmDose': dose,
                         '-Throw': '%d' % a0,
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
@@ -239,7 +244,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
-                argsDict['-InitDose'] = preExp if self.doApplyDoseFilter else 0.0
+                argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
             args = ' -InMrc "%s" ' % movie.getBaseName()

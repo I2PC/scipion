@@ -75,7 +75,7 @@ def getCudaLib(environ=None):
     if environ is None:
         environ = Environ(os.environ)
 
-    return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB), True)
+    return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB))
 
 
 def getVersion(var):
