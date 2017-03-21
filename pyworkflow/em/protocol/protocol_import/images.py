@@ -27,7 +27,7 @@
 
 import sys
 import os
-from os.path import basename, exists, isdir, join, dirname
+from os.path import basename, exists, isdir
 import time
 from datetime import timedelta, datetime
 
@@ -92,8 +92,12 @@ class ProtImportImages(ProtImportFiles):
     
     #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
-        
-        if self.dataStreaming:
+
+        # Only the import movies has property 'inputIndividualFrames'
+        # so let's query in a non-intrusive manner
+        inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
+
+        if self.dataStreaming or inputIndividualFrames:
             funcName = 'importImagesStreamStep' 
         else:
             funcName = 'importImagesStep'
@@ -193,8 +197,16 @@ class ProtImportImages(ProtImportFiles):
         Register other parameters.
         """
         self.info("Using pattern: '%s'" % pattern)
-        createSetFunc = getattr(self, '_create' + self._outputClassName)
-        imgSet = createSetFunc()
+
+        imgSet = self._getOutputSet() if self.isContinued() else None
+
+        if imgSet is None:
+            createSetFunc = getattr(self, '_create' + self._outputClassName)
+            imgSet = createSetFunc()
+        elif imgSet.getSize() > 0: # in case of continue
+            imgSet.loadAllProperties()
+            imgSet.enableAppend()
+
         imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
         acquisition = imgSet.getAcquisition()
         self.fillAcquisition(acquisition)
@@ -215,8 +227,14 @@ class ProtImportImages(ProtImportFiles):
 
         i = 0
         lastDetectedChange = datetime.now()
-        timeout = timedelta(seconds=self.timeout.get())
-        fileTimeout = timedelta(seconds=self.fileTimeout.get())
+
+        # Ignore the timeout variables if we are not really in streaming mode
+        if self.dataStreaming:
+            timeout = timedelta(seconds=self.timeout.get())
+            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+        else:
+            timeout = timedelta(seconds=5)
+            fileTimeout = timedelta(seconds=5)
 
         while not finished:
             time.sleep(3) # wait 3 seconds before check for new files

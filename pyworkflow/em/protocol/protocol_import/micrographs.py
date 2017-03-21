@@ -27,9 +27,9 @@
 # **************************************************************************
 
 import os
-from os.path import exists, join, basename
+from os.path import join, basename
 import re
-from datetime import timedelta, datetime, time
+from datetime import timedelta
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -308,11 +308,10 @@ class ProtImportMovies(ProtImportMicBase):
         form.addSection('Frames')
 
         streamingConditioned = "dataStreaming"
-        framesCondition = streamingConditioned + " and inputIndividualFrames"
+        framesCondition = "inputIndividualFrames"
 
         form.addParam('inputIndividualFrames', params.BooleanParam,
                       default=False,
-                      condition=streamingConditioned,
                       label="Input individual frames?",
                       help="Select Yes if movies are acquired in individual "
                            "frame files. ")
@@ -458,15 +457,25 @@ class ProtImportMovies(ProtImportMicBase):
                     if movieOut.endswith("mrc"):
                         movieOut += ":mrcs"
 
-                    self.info("Writing movie stack: %s" % movieFn)
-                    pwutils.cleanPath(movieFn)  # Remove the output file if exists
+                    # By default we will write the movie stacks
+                    # unless we are in continue mode and the file exists
+                    writeMovie = True
+                    if (self.isContinued() and os.path.exists(movieFn)):
+                        self.info("Skipping movie stack: %s, seems to be done"
+                                  % movieFn)
+                        writeMovie = False
 
-                    for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
-                        frameFn = frame[1] # Frame name stored previously
-                        ih.convert(frameFn, (i+1, movieOut))
+                    if writeMovie:
+                        self.info("Writing movie stack: %s" % movieFn)
+                        # Remove the output file if exists
+                        pwutils.cleanPath(movieFn)
 
-                        if self.deleteFrames:
-                            pwutils.cleanPath(frameFn)
+                        for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
+                            frameFn = frame[1] # Frame name stored previously
+                            ih.convert(frameFn, (i+1, movieOut))
+
+                            if self.deleteFrames:
+                                pwutils.cleanPath(frameFn)
 
                     # Now return the newly created movie file as imported file
                     self.createdStacks.add(movieFn)
