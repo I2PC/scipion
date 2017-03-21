@@ -30,11 +30,11 @@ import threading
 
 import pyworkflow.utils as pwutils
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol import ProtImportMovies
+from pyworkflow.em.protocol import ProtImportMovies, ProtMonitorSummary
 from pyworkflow.em.packages.xmipp3 import XmippProtOFAlignment
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.protocol import ProtMonitorSummary
+from pyworkflow.em import ImageHandler
 
 
 # Load the number of movies for the simulation, by default equal 5, but
@@ -156,3 +156,87 @@ class TestStreamingWorkflow(BaseTest):
 
         # Wait until the thread that is creating links finish:
         self.importThread.join()
+
+
+class TestFrameStacking(BaseTest):
+    """ Test the cases where the input movies are input as individual frames.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('movies')
+
+    @classmethod
+    def _createFrames(cls, delay=0):
+        # Create a test folder path
+        pattern = cls.ds.getFile('ribo/Falcon*mrcs')
+        files = glob(pattern)
+
+        nFiles = len(files)
+        nMovies = MOVS
+        ih = ImageHandler()
+
+        for i in range(nMovies):
+            # Loop over the number of input movies if we want more for testing
+            f = files[i % nFiles]
+            _, _, _, nFrames = ih.getDimensions(f)
+
+            for j in range(1, nFrames + 1):
+                outputFramePath = cls.proj.getTmpPath('movie%06d_%03d.mrc'
+                                                      % (i+1, j))
+                ih.convert((j, f), outputFramePath)
+                time.sleep(delay)
+
+    def test_noStream(self):
+        """ Test that we can input individual frames even if not
+        processing in streaming.
+        """
+        self._createFrames()
+
+        # ----------- IMPORT MOVIES -------------------
+        protImport = self.newProtocol(ProtImportMovies,
+                                      objLabel='import movies',
+                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      filesPath=os.path.abspath(self.proj.getTmpPath()),
+                                      filesPattern="movie*.mrc",
+                                      amplitudConstrast=0.1,
+                                      sphericalAberration=2.,
+                                      voltage=300,
+                                      samplingRate=3.54,
+                                      dataStreaming=False,
+                                      inputIndividualFrames=True,
+                                      numberOfIndividualFrames=16,
+                                      stackFrames=True,
+                                      writeMoviesInProject=True,
+                                      deleteFrames=True)
+        self.launchProtocol(protImport)
+
+
+    def test_Stream(self):
+        # Create a separated thread to simulate real streaming with
+        # individual frames
+        thread = threading.Thread(target=lambda: self._createFrames(delay=1))
+        thread.start()
+        time.sleep(5)
+
+        # ----------- IMPORT MOVIES -------------------
+        protImport = self.newProtocol(ProtImportMovies,
+                                      objLabel='import movies',
+                                      importFrom=ProtImportMovies.IMPORT_FROM_FILES,
+                                      filesPath=os.path.abspath(self.proj.getTmpPath()),
+                                      filesPattern="movie*.mrc",
+                                      amplitudConstrast=0.1,
+                                      sphericalAberration=2.,
+                                      voltage=300,
+                                      samplingRate=3.54,
+                                      dataStreaming=True,
+                                      timeout=30,
+                                      fileTimeout=10,
+                                      inputIndividualFrames=True,
+                                      numberOfIndividualFrames=16,
+                                      stackFrames=True,
+                                      writeMoviesInProject=True,
+                                      deleteFrames=False)
+        self.launchProtocol(protImport)
+        thread.join()
