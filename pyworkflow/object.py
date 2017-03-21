@@ -1092,6 +1092,7 @@ class Set(OrderedObject):
         fn, prefix = self._mapperPath
         self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)            
         self._size.set(self._mapper.count())
+        self._idCount = self._mapper.maxId()
            
     def __del__(self):
         # Close connections to db when destroy this object
