@@ -197,8 +197,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
 
-        if (self.getRunMode() == MODE_RESUME and
-            os.path.exists(self._getMovieDone(movie))):
+        if (self.isContinued() and os.path.exists(self._getMovieDone(movie))):
             self.info("Skipping movie: %s, seems to be done" % movieFn)
             return
 
