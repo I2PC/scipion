@@ -1384,6 +1384,10 @@ class Protocol(Step):
     def getRunMode(self):
         """ Return the mode of execution, either: MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
+
+    def isContinued(self):
+        """ Return if running in continue mode (MODE_RESUME). """
+        return self.getRunMode() == MODE_RESUME
     
     # Methods that should be implemented in subclasses
     def _validate(self):
