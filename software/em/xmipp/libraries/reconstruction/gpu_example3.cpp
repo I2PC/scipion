@@ -53,6 +53,11 @@ void ProgGpuExample3::defineParams()
 
 }
 
+int ProgGpuExample3::getAng()
+{
+    return fn_ang1.getNumber();
+}
+
 //#define DEBUG
 // Compute distance --------------------------------------------------------
 void ProgGpuExample3::run()
