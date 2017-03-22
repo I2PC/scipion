@@ -249,6 +249,9 @@ class ProtUserSubSet(BatchProtocol):
         count = 0
         output = createFunc()
         output.copyInfo(inputImages)
+        # For now this is to avoid having a wrong alignment.
+        # THis is because is getting the alignment info from the input images and this does not have to match.
+        # This created a error when scaling averages #903
         output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
             if cls.isEnabled():
