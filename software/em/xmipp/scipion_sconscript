@@ -198,6 +198,17 @@ addLib('XmippRecons',
              'fftw3_threads',  
              'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
 
+
+# AJ - Reconstruction CUDA
+addLib('XmippReconsCuda',
+       dirs=['libraries'],
+       patterns=['reconstruction_cuda/*.cpp'],
+       incs=bilib_incs, cuda=True,
+       libs=['hdf5', 'hdf5_cpp', 'pthread',
+             'fftw3_threads',  
+             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
+
+
 # Interface
 python_incs = ['#software/include/python2.7',
                '#software/lib/python2.7/site-packages',
@@ -463,6 +474,13 @@ def addProg(progName, **kwargs):
         kwargs['mpi'] = True
         kwargs['libs'] += ['mpi', 'mpi_cxx', 'XmippParallel']
 
+    #AJ
+    if progName.startswith('cuda_'):
+        kwargs['cuda'] = True
+	kwargs['nvcc'] = True
+        kwargs['libs'] += ['XmippReconsCuda']
+    #FIN AJ
+
     xmippProgName = 'xmipp_%s' % progName
 
     if progName.startswith('test_'):
@@ -597,7 +615,7 @@ for p in ['angular_break_symmetry',
           'transform_randomize_phases',
           'transform_range_adjust',
           'transform_symmetrize',
-          'transform_threshold',
+	  'transform_threshold',
           'transform_window',
           'tomo_align_dual_tilt_series',
           'tomo_align_refinement',
@@ -731,6 +749,10 @@ if opencv:
 #ROB not sure if cuda=True is necesary
 if cuda:
     addProg('gpu_example',
+                nvcc=True,cuda=True)
+    addProg('gpu_example3',
+                nvcc=True,cuda=True)
+    addProg('cuda_transform_symmetrize',
                 nvcc=True,cuda=True)
 
 
