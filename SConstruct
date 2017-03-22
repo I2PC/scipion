@@ -244,6 +244,14 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
 #             Exit(1)
 #         env = conf.Finish()
         env2.PrependENVPath('PATH', env['MPI_BINDIR'])
+
+    #AJ
+    elif cuda:
+	_libs.append(['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt'])
+	_incs.append(env['NVCC_INCLUDE'])
+	_libpath.append(env['NVCC_LIBDIR'])
+	mpiArgs = {'CC': env['NVCC'], 'CXX': env['NVCC'], 'LINK': env['LINKERFORPROGRAMS']}
+    #FIN AJ
     
 
     _incs.append(env['CPPPATH'])
@@ -260,8 +268,7 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
               SHLIBSUFFIX=suffix,
               CXXFLAGS=env['CXXFLAGS'],
               LINKFLAGS=env['LINKFLAGS'],
-              **mpiArgs
-              )
+              **mpiArgs)
     SideEffect('dummy', library)
     env.Depends(library, sources)
     
