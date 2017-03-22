@@ -9,7 +9,7 @@
 
 //CUDA functions
 __global__ void
-vecAdd(const double *A, const double *B, double *C, int numElements)
+vecAdd(const float *A, const float *B, float *C, int numElements)
 {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
