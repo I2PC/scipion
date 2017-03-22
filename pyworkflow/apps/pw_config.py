@@ -137,11 +137,11 @@ to send anonymous usage data. This information will help Scipion's
 team to identify the more demanded protocols and prioritize 
 support for them.
 
-The collected usage information is completely anonymous and does not 
+The collected usage information is COMPLETELY ANONYMOUS and does NOT
 include protocol parameters, file names or any data that can be used 
-to identify your account, machine or data. In the URL 
+to identify you or your data. In the URL
 https://github.com/I2PC/scipion/wiki/Collecting-Usage-Statistics-for-Scipion
-you may see examples of the transmited data as well as the 
+you may see examples of the transmitted data as well as the
 statistics created with it. You can always deactivate/activate 
 this option by editing the file $HOME/.config/scipion/scipion.conf 
 and setting the variable SCIPION_NOTIFY to False/True respectively.
