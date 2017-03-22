@@ -624,6 +624,7 @@ for p in ['angular_break_symmetry',
           'transform_randomize_phases',
           'transform_range_adjust',
           'transform_symmetrize',
+          'cuda_transform_symmetrize',
 	  'transform_threshold',
           'transform_window',
           'tomo_align_dual_tilt_series',
@@ -761,8 +762,7 @@ if cuda:
                 nvcc=True,cuda=True)
     addProg('gpu_example3',
                 nvcc=True,cuda=True)
-    addProg('cuda_transform_symmetrize',
-                nvcc=True,cuda=True)
+
 
 
 
