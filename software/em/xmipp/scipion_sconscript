@@ -113,8 +113,6 @@ def addLib(name, **kwargs):
     patterns = kwargs.get('patterns', '*.cpp')
     kwargs['patterns'] = patterns
     
-    for key, value in kwargs.iteritems():
-        print "%s = %s" % (key, value)
     if 'cuda' in kwargs and kwargs['cuda']:
     	lib = env.AddCppLibraryCuda(name, **kwargs)
     else:    	
