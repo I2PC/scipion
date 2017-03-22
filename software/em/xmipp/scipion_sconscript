@@ -115,7 +115,7 @@ def addLib(name, **kwargs):
     
     for key, value in kwargs.iteritems():
         print "%s = %s" % (key, value)
-    if 'cuda' in kwargs.keys and kwargs['cuda']:
+    if 'cuda' in kwargs and kwargs['cuda']:
     	lib = env.AddCppLibraryCuda(name, **kwargs)
     else:    	
     	lib = env.AddCppLibrary(name, **kwargs)
