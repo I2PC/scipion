@@ -73,9 +73,9 @@ void ProgGpuExample3::run()
 
     cuda_funcion(m1_gpu, m2_gpu, result, num);
 
-	std::cout << "m1" << m1 << std::endl;
+	/*std::cout << "m1" << m1 << std::endl;
 	std::cout << "m2" << m2 << std::endl;
-	std::cout << "mResult" << mResult << std::endl;
+	std::cout << "mResult" << mResult << std::endl;*/
 
 
 }
