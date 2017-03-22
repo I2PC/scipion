@@ -22,7 +22,6 @@ vecAdd(const double *A, const double *B, double *C, int numElements)
 void cuda_funcion(int num){
 
 	std::cerr  << "Inside CUDA function " << num << std::endl;
-	double m3_out_device[4], m3_out_host[4];
 
 	/*MultidimArray<double> m1(num,num);
 	MultidimArray<double> m2(num,num);
