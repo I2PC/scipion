@@ -55,18 +55,30 @@ void ProgGpuExample3::defineParams()
 
 }
 
-int ProgGpuExample3::getAng()
-{
-    return fn_ang1.getNumber();
-}
-
 //#define DEBUG
 // Compute distance --------------------------------------------------------
 void ProgGpuExample3::run()
 {
 
-    std::cout << "Inside run" << std::endl;
-    cuda_funcion(3);
+    int num = fn_ang1.getNumber();
+    std::cout << "Inside run with " << num << std::endl;
+    MultidimArray<float> m1(num,num);
+    MultidimArray<float> m2(num,num);
+    MultidimArray<float> mResult(num,num);
+
+    m1.initRandom(0, 10, RND_UNIFORM);
+    m2.initRandom(100, 200, RND_UNIFORM);
+
+    float *m1_gpu = MULTIDIM_ARRAY(m1);
+    float *m2_gpu = MULTIDIM_ARRAY(m2);
+    float * result = MULTIDIM_ARRAY(mResult);
+
+
+    cuda_funcion(m1_gpu, m2_gpu, result, num);
+
+	std::cout << "m1" << m1 << std::endl;
+	std::cout << "m2" << m2 << std::endl;
+	std::cout << "mResult" << mResult << std::endl;
 
 
 }

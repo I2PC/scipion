@@ -49,8 +49,6 @@ public:
     /// Define parameters
     void defineParams();
 
-    int getAng();
-
     /** Run */
     void run();
 
