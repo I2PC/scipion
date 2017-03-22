@@ -69,7 +69,7 @@ int main(void)
 
     A2D_ELEM(m2,0,0) = 11.;
     A2D_ELEM(m2,1,0) = 22.;
-    A2D_ELEM(m2,0,1) = 333.;
+    A2D_ELEM(m2,0,1) = 1033.;
     A2D_ELEM(m2,1,1) = 44.;
 
 
