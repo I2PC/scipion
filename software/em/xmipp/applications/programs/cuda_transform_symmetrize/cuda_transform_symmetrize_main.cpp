@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/gpu_example3.h>
+#include "../../../libraries/reconstruction_adapt_cuda/gpu_example3.h"
 #include "../../../libraries/reconstruction_cuda/cuda_gpu_example3.h"
 
 int main(int argc, char** argv) {

@@ -204,13 +204,18 @@ addLib('XmippRecons',
 
 
 # AJ - Reconstruction CUDA
-addLib('XmippReconsCuda',
+if cuda:
+	addLib('XmippReconsCuda',
        dirs=['libraries'],
        patterns=['reconstruction_cuda/*.cpp'],
        incs=bilib_incs, cuda=True,
-       libs=['hdf5', 'hdf5_cpp', 'pthread',
-             'fftw3_threads',  
-             'XmippData', 'XmippClassif', 'XmippBilib', 'XmippCondor', 'XmippDelaunay'])
+       libs=['pthread'])
+       
+	addLib('XmippReconsAdaptCuda',
+       dirs=['libraries'],
+       patterns=['reconstruction_adapt_cuda/*.cpp'],
+       incs=bilib_incs, cuda=True,
+       libs=['pthread'])
 
 
 # Interface
@@ -482,7 +487,7 @@ def addProg(progName, **kwargs):
     if progName.startswith('cuda_'):
         kwargs['cuda'] = True
         kwargs['nvcc'] = True
-        kwargs['libs'] += ['XmippReconsCuda']
+        kwargs['libs'] += ['XmippReconsCuda', 'XmippReconsAdaptCuda']
     #FIN AJ
 
     xmippProgName = 'xmipp_%s' % progName

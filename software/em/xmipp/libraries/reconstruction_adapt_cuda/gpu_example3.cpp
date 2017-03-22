@@ -23,8 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction_cuda/cuda_gpu_example3.h>
 #include "gpu_example3.h"
+
+#include <reconstruction_cuda/cuda_gpu_example3.h>
 #include <data/args.h>
 
 
@@ -65,7 +66,11 @@ void ProgGpuExample3::run()
 {
 
     std::cout << "Inside run" << std::endl;
+#ifdef CUDA
     cuda_funcion(3);
+#else
+    std::cout << "This programs requires CUDA libraries, recompile the code using CUDA" << std::endl;
+#endif
 
 }
 
