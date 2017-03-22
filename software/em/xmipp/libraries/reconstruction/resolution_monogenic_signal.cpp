@@ -694,12 +694,18 @@ void ProgMonogenicSignalRes::run()
 	#endif
 
 	MultidimArray<double> resolutionFiltered, resolutionChimera;
-	postProcessingLocalResolutions(pOutputResolution, list, resolutionFiltered, resolutionChimera);
+//	postProcessingLocalResolutions(pOutputResolution, list, resolutionFiltered, resolutionChimera);
+
+//	Image<double> outputResolutionImage;
+//	outputResolutionImage() = resolutionFiltered;
+//	outputResolutionImage.write(fnOut);
+//	outputResolutionImage() = resolutionChimera;
+//	outputResolutionImage.write(fnchim);
 
 	Image<double> outputResolutionImage;
-	outputResolutionImage() = resolutionFiltered;
+	outputResolutionImage() = pOutputResolution;
 	outputResolutionImage.write(fnOut);
-	outputResolutionImage() = resolutionChimera;
+	outputResolutionImage() = pOutputResolution;
 	outputResolutionImage.write(fnchim);
 
 	//	double last_resolution_2 = resolution;
