@@ -26,7 +26,7 @@ void cuda_funcion(float *m1, float* m2, float *result, int num){
 
 
 	//CUDA code
-	double *d_m1, *d_m3, *d_m2;
+	float *d_m1, *d_m3, *d_m2;
 
 	size_t matSize=num*num*sizeof(float);
 	cudaMalloc((void **)&d_m1, matSize);
@@ -47,8 +47,6 @@ void cuda_funcion(float *m1, float* m2, float *result, int num){
 	vecAdd<<<numBlk, numTh>>>(d_m1, d_m2, d_m3, num*num);
 
 	cudaMemcpy(result, d_m3, matSize, cudaMemcpyDeviceToHost);
-
-	std::cout << "CUDA result" << result << std::endl;
 
 	cudaFree(d_m1);
 	cudaFree(d_m2);
