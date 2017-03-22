@@ -25,7 +25,7 @@
 
 #include "gpu_example3.h"
 #include <data/args.h>
-//#include "../../../libraries/reconstruction_cuda/cuda_gpu_example3.h"
+#include "../../../libraries/reconstruction_cuda/cuda_gpu_example3.h"
 
 
 
