@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <reconstruction_cuda/cuda_gpu_example3.h>
 #include "gpu_example3.h"
 #include <data/args.h>
 
@@ -64,6 +65,7 @@ void ProgGpuExample3::run()
 {
 
     std::cout << "Inside run" << std::endl;
+    cuda_funcion(3);
 
 }
 
