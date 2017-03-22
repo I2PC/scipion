@@ -191,7 +191,7 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 # to do one step while the previous one is still running in the background.
 
 
-def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
+def addCppLibrary2(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
                   libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[],
                   mpi=False, cuda=False, default=True, target=None):
     """Add self-made and compiled shared library to the compilation process
