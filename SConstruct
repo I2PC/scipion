@@ -61,7 +61,6 @@ else:
     print 'OS not tested yet'
     Exit(1)
 
-
 # Create the environment the whole build will use.
 env = Environment(ENV=os.environ,
                   BUILDERS=Environment()['BUILDERS'],
@@ -79,7 +78,7 @@ if not GetOption('verbose'):
     env['AUTOCONFIGCOMSTR'] = "Configuring $TARGET from $SOURCES"
     env['MAKECOMSTR'] = "Compiling & installing $TARGET from $SOURCES "
 
-    
+
 def targetInBuild(env, targetName):
     return targetName in map(str, BUILD_TARGETS)
 
@@ -96,10 +95,11 @@ elif WINDOWS:
 else:
     print "Unknown system: %s\nPlease tell the developers." % platform.system()
 
-
 # Python and SCons versions are fixed
-env.EnsurePythonVersion(2,7)
-env.EnsureSConsVersion(2,3,2)
+env.EnsurePythonVersion(2, 7)
+env.EnsureSConsVersion(2, 3, 2)
+
+
 # TODO: see after all is clean and crispy if we can avoid fixing the versions.
 # We can specify a range of valid version after we check it works with them.
 
@@ -191,9 +191,9 @@ def CheckMPI(context, mpi_inc, mpi_libpath, mpi_lib, mpi_cc, mpi_cxx, mpi_link, 
 # to do one step while the previous one is still running in the background.
 
 
-def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[], 
-                      libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[], 
-                      mpi=False, cuda=False, default=True, target=None):
+def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
+                  libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[],
+                  mpi=False, cuda=False, default=True, target=None):
     """Add self-made and compiled shared library to the compilation process
     
     This pseudobuilder access given directory, compiles it
@@ -210,16 +210,16 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     lastTarget = deps
     prefix = 'lib' if prefix is None else prefix
     suffix = '.so' if suffix is None else suffix
-    
+
     basedir = 'lib'
     targetName = join(basedir, target if target else prefix + name)
     sources = []
 
     _libpath.append(Dir('#software/lib').abspath)
-    
+
     for d, p in izip(dirs, patterns):
         sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
-        
+
     if not sources and env.TargetInBuild(name):
         Exit('No sources found for Library: %s. Exiting!!!' % name)
 
@@ -230,48 +230,48 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     mpiArgs = {}
     if mpi:
         _libpath.append(env['MPI_LIBDIR'])
-        _libs.append(env['MPI_LIB']) 
+        _libs.append(env['MPI_LIB'])
         _incs.append(env['MPI_INCLUDE'])
-               
+
         mpiArgs = {'CC': env['MPI_CC'],
                    'CXX': env['MPI_CXX'],
                    'LINK': env['MPI_LINKERFORPROGRAMS']}
-#         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
-#         if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'], 
-#                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'], 
-#                              env['MPI_LINKERFORPROGRAMS'], False):
-#             print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
-#             Exit(1)
-#         env = conf.Finish()
+        #         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
+        #         if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+        #                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'],
+        #                              env['MPI_LINKERFORPROGRAMS'], False):
+        #             print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
+        #             Exit(1)
+        #         env = conf.Finish()
         env2.PrependENVPath('PATH', env['MPI_BINDIR'])
 
-    #AJ
+    # AJ
     elif cuda:
-	_libs.append(['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt'])
-	_incs.append(env['NVCC_INCLUDE'])
-	_libpath.append(env['NVCC_LIBDIR'])
-	mpiArgs = {'CC': env['NVCC'], 'CXX': env['NVCC'], 'LINK': env['LINKERFORPROGRAMS']}
-    #FIN AJ
-    
+        _libs.append(['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt'])
+        _incs.append(env['NVCC_INCLUDE'])
+        _libpath.append(env['NVCC_LIBDIR'])
+        mpiArgs = {'CC': env['NVCC'], 'CXX': env['NVCC'], 'LINK': env['LINKERFORPROGRAMS']}
+    # FIN AJ
+
 
     _incs.append(env['CPPPATH'])
     _incs.append('#software/include')
 
-    library = env2.SharedLibrary(
-              target=targetName,
-              #source=lastTarget,
-              source=sources,
-              CPPPATH=_incs,
-              LIBPATH=_libpath,
-              LIBS=_libs,
-              SHLIBPREFIX=prefix,
-              SHLIBSUFFIX=suffix,
-              CXXFLAGS=env['CXXFLAGS'],
-              LINKFLAGS=env['LINKFLAGS'],
-              **mpiArgs)
+    library = env2.Library(
+        target=targetName,
+        # source=lastTarget,
+        source=sources,
+        CPPPATH=_incs,
+        LIBPATH=_libpath,
+        LIBS=_libs,
+        SHLIBPREFIX=prefix,
+        SHLIBSUFFIX=suffix,
+        CXXFLAGS=env['CXXFLAGS'],
+        LINKFLAGS=env['LINKFLAGS'],
+        **mpiArgs)
     SideEffect('dummy', library)
     env.Depends(library, sources)
-    
+
     if installDir:
         install = env.Install(installDir, library)
         SideEffect('dummy', install)
@@ -279,19 +279,19 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     else:
         lastTarget = library
     env.Default(lastTarget)
-    
+
     for dep in deps:
         env.Depends(sources, dep)
-    
+
     env.Alias(name, lastTarget)
-    
+
     return lastTarget
 
 
 def symLink(env, target, source):
-    #As the link will be in bin/ directory we need to move up
+    # As the link will be in bin/ directory we need to move up
     sources = source
-    current = Dir('.').path+'/'
+    current = Dir('.').path + '/'
     import SCons
     if isinstance(target, SCons.Node.NodeList) or isinstance(target, list):
         link = target[0].path
@@ -305,13 +305,13 @@ def symLink(env, target, source):
         sources = sources.split(current)[1]
 
     sources = os.path.relpath(sources, os.path.split(link)[0])
-    #if os.path.lexists(link):
+    # if os.path.lexists(link):
     #    os.remove(link)
-    #print 'Linking to %s from %s' % (sources, link)
-    #os.symlink(sources, link)
+    # print 'Linking to %s from %s' % (sources, link)
+    # os.symlink(sources, link)
     result = env.Command(Entry(link),
                          Entry(source),
-                         Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources, 
+                         Action('rm -rf %s && ln -v -s %s %s' % (Entry(link).abspath, sources,
                                                                  Entry(link).abspath),
                                 'Creating a link from %s to %s' % (link, sources)))
     env.Default(result)
@@ -329,7 +329,7 @@ def AddMatchingFiles((pattern, blacklist, sources), directory, files):
         if filename not in blacklist:
             sources.append(join(directory, filename))
 
-    
+
 def Glob(path, pattern, blacklist=[]):
     """ Custom made globbing, walking into all subdirectories from path. """
     sources = []
@@ -342,10 +342,10 @@ def CreateFileList(path, pattern, filename, root='', root2=''):
     files = [f.replace(root, root2) + '\n' for f in Glob(path, pattern, [])]
     fOut.writelines(files)
     fOut.close()
-    
-    
-def CompileJavaJar(target, source, env):  
-    """Add self-made and compiled java library to the compilation process """  
+
+
+def CompileJavaJar(target, source, env):
+    """Add self-made and compiled java library to the compilation process """
     srcDir = str(source[0])
     print "Compiling jar: ", target[0]
     buildDir = join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_BUILDPATH'])
@@ -353,11 +353,11 @@ def CompileJavaJar(target, source, env):
     globalSrcDir = join(env['PACKAGE']['SCONSCRIPT'], env['JAVA_SOURCEPATH'])
     jarfile = str(target[0])
     name = os.path.basename(jarfile)
-    listfile = join(buildDir, name+'_source.txt')
-    classfile = join(buildDir, name+'_classes.txt')
+    listfile = join(buildDir, name + '_source.txt')
+    classfile = join(buildDir, name + '_classes.txt')
     CreateFileList(srcDir, '*.java', listfile)
     Cmd(env['JAVAC'] + ' -cp %(classPath)s -d %(buildDir)s -sourcepath %(srcDir)s @%(listfile)s' % locals())
-    
+
     classDir = join(buildDir, os.path.relpath(srcDir, globalSrcDir))
     # This is needed for compiling IJ plugins
     # where the file 'plugins.config' need to be include in the final .jar file
@@ -391,19 +391,19 @@ def addJavaLibrary(env, name, path, deps=[], default=True):
     jar = '%s.jar' % name
     jarfile = join(libPath, jar)
     jarCreation = env.Command(jarfile, [libSrcPath], CompileJavaJar)
-    
+
     for sd in sources + deps:
         env.Depends(jarCreation, sd)
 
     env.Alias(jar, jarCreation)
     if default:
         env.Default(jar)
-    
+
     packageName = env['PACKAGE']['NAME']
-    env.Alias(packageName+'-java', jarCreation)
-    
+    env.Alias(packageName + '-java', jarCreation)
+
     return jarCreation
-    
+
 
 def addJavaTest(env, name, source, installDir=None, default=True):
     """Add java test to the compilation process
@@ -418,17 +418,17 @@ def addJavaTest(env, name, source, installDir=None, default=True):
     if not env.TargetInBuild('run_java_tests'):
         return ''
     installDir = installDir or 'java/lib'
-    classPath = ":".join(glob(join(Dir(installDir).abspath,'*.jar')))
+    classPath = ":".join(glob(join(Dir(installDir).abspath, '*.jar')))
     cmd = '%s -cp %s org.junit.runner.JUnitCore xmipp.test.%s' % (join(env['JAVA_BINDIR'], 'java'), classPath, name)
     runTest = env.Command(name, join(installDir, source), cmd)
     env.Alias('run_java_tests', runTest)
     env.Default(runTest)
-    
+
     return runTest
 
 
-def addProgram(env, name, src=None, pattern=None, installDir=None, 
-               libPaths=[], incs=[], libs=[], cxxflags=[], linkflags=[], 
+def addProgram(env, name, src=None, pattern=None, installDir=None,
+               libPaths=[], incs=[], libs=[], cxxflags=[], linkflags=[],
                deps=[], mpi=False, cuda=False, nvcc=False, default=True):
     """Add, compile and install a program to the compilation process
     
@@ -460,48 +460,54 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     for s, p in izip(src, pattern):
         sources += glob(join(s, p))
 
-    if mpi: ccCopy = env['MPI_CC']
-    elif nvcc: ccCopy = env['NVCC']
-    else: ccCopy = env['CC']  
+    if mpi:
+        ccCopy = env['MPI_CC']
+    elif nvcc:
+        ccCopy = env['NVCC']
+    else:
+        ccCopy = env['CC']
 
-    if mpi: cxxCopy = env['MPI_CXX']
-    elif nvcc: cxxCopy = env['NVCC']
-    else: cxxCopy = env['CXX']  
+    if mpi:
+        cxxCopy = env['MPI_CXX']
+    elif nvcc:
+        cxxCopy = env['NVCC']
+    else:
+        cxxCopy = env['CXX']
 
     linkCopy = env['MPI_LINKERFORPROGRAMS'] if mpi else env['LINKERFORPROGRAMS']
-    incsCopy += env['CPPPATH'] + ['libraries', Dir('#software/include').abspath, 
-                                        Dir('#software/include/python2.7').abspath]
+    incsCopy += env['CPPPATH'] + ['libraries', Dir('#software/include').abspath,
+                                  Dir('#software/include/python2.7').abspath]
     libsCopy = libs
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
     appendUnique(libPathsCopy, env.get('LIBPATH', ''))
     env2 = Environment()
-    if mpi: 
+    if mpi:
         appendUnique(incsCopy, env['MPI_INCLUDE'])
         appendUnique(libPathsCopy, env['MPI_LIBDIR'])
         appendUnique(libsCopy, env['MPI_LIB'])
         appendUnique(ldLibraryPathCopy, env['MPI_LIBDIR'])
     env2['ENV']['LD_LIBRARY_PATH'] = env['ENV'].get('LD_LIBRARY_PATH', '')
     env2['ENV']['PATH'] = env['ENV']['PATH']
-    
+
     program = env2.Program(
-                          File(join(installDir, name)).abspath,
-                          source=sources,
-                          CC=ccCopy,
-                          CXX=cxxCopy,
-                          CPPPATH=incsCopy,
-                          LIBPATH=libPathsCopy,
-                          LIBS=libsCopy,
-                          CXXFLAGS=cxxflagsCopy,
-                          LINKFLAGS=linkflagsCopy,
-                          LINK=linkCopy,
-                          LD_LIBRARY_PATH=ldLibraryPathCopy
-                          )
+        File(join(installDir, name)).abspath,
+        source=sources,
+        CC=ccCopy,
+        CXX=cxxCopy,
+        CPPPATH=incsCopy,
+        LIBPATH=libPathsCopy,
+        LIBS=libsCopy,
+        CXXFLAGS=cxxflagsCopy,
+        LINKFLAGS=linkflagsCopy,
+        LINK=linkCopy,
+        LD_LIBRARY_PATH=ldLibraryPathCopy
+    )
     env2.Default(program)
-    
+
     env2.Depends(program, deps)
-    
+
     return program
 
 
@@ -542,7 +548,7 @@ def compilerConfig(env):
 
 def libraryTest(env, name, lang='c'):
     """Check the existence of a concrete C/C++ library."""
-    env2 = Environment(LIBS=env.get('LIBS',''))
+    env2 = Environment(LIBS=env.get('LIBS', ''))
     conf = Configure(env2)
     conf.CheckLib(name, language=lang)
     env2 = conf.Finish()
@@ -560,7 +566,6 @@ env.AddMethod(addJavaTest, 'AddJavaTest')
 env.AddMethod(addProgram, 'AddProgram')
 env.AddMethod(targetInBuild, 'TargetInBuild')
 
-
 #  ************************************************************************
 #  *                                                                      *
 #  *                            Extra options                             *
@@ -577,16 +582,15 @@ env['CC'] = os.environ.get('CC')
 env['CXX'] = os.environ.get('CXX')
 env['LINKERFORPROGRAMS'] = os.environ.get('LINKERFORPROGRAMS')
 env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
-cxxFlags = os.environ.get('CXXFLAGS', '') 
-if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
-   cxxFlags += ' -g'
+cxxFlags = os.environ.get('CXXFLAGS', '')
+if os.environ.get('DEBUG', '0') == 'True':  # FIXME, use 1, true, yes...
+    cxxFlags += ' -g'
 else:
-    if cxxFlags.find("-O")==-1:
+    if cxxFlags.find("-O") == -1:
         cxxFlags += " -O3"
 env['CXXFLAGS'] = cxxFlags.split()
-os.environ['CXXFLAGS'] = cxxFlags # FIXME use only env or os.environ in the rest of the code
+os.environ['CXXFLAGS'] = cxxFlags  # FIXME use only env or os.environ in the rest of the code
 env['LINKFLAGS'] = os.environ.get('LINKFLAGS', '').split()
-
 
 for path in ['MPI_LIBDIR', 'MPI_INCLUDE', 'MPI_BINDIR',
              'JAVA_HOME', 'JAVA_BINDIR']:
@@ -613,7 +617,6 @@ env['JAVA_BINDIR'] = os.environ['JAVA_BINDIR']
 env['JAVAC'] = os.environ.get('JAVAC')
 env['JAR'] = os.environ.get('JAR')
 env['JNI_CPPPATH'] = os.environ.get('JNI_CPPPATH').split(':')
-
 
 AddOption('--with-all-packages', dest='withAllPackages', action='store_true',
           help='Get all EM packages')
