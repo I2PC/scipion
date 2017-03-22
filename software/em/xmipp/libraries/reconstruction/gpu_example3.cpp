@@ -25,8 +25,6 @@
 
 #include "gpu_example3.h"
 #include <data/args.h>
-#include "../../../libraries/reconstruction_cuda/cuda_gpu_example3.h"
-
 
 
 // Read arguments ==========================================================
@@ -61,6 +59,6 @@ void ProgGpuExample3::run()
 {
 
     std::cout << "Inside run" << std::endl;
-    cuda_funcion(fn_ang1.getNumber());
+
 }
 
