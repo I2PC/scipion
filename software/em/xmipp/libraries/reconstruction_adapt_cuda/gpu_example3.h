@@ -37,7 +37,7 @@ class ProgGpuExample3: public XmippProgram
 {
 public:
     /** Filename angle doc 1 */
-    FileName fn_ang1;
+    FileName matSize;
 
 public:
     /// Read argument from command line

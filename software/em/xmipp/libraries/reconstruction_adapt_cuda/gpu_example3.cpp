@@ -32,7 +32,7 @@
 // Read arguments ==========================================================
 void ProgGpuExample3::readParams()
 {
-    fn_ang1 = getParam("--ang1");
+	matSize = getParam("--matSize");
 
 }
 
@@ -40,18 +40,15 @@ void ProgGpuExample3::readParams()
 void ProgGpuExample3::show()
 {
     std::cout
-    << "Angular docfile 1: " << fn_ang1       << std::endl
+    << "Size of the matrixes: " << matSize       << std::endl
     ;
 }
 
 // usage ===================================================================
 void ProgGpuExample3::defineParams()
 {
-    addUsageLine("Computes the angular distance between two angle files. The angular distance ");
-    addUsageLine("is defined as the average angular distance between the 3 vectors of the ");
-    addUsageLine("coordinate system defined by the Euler angles (taking into account any ");
-    addUsageLine("possible symmetry). ");
-    addParamsLine("   --ang1 <Metadata1>        : Angular document file 1");
+    addUsageLine("Computes the sum between two matrixes with CUDA in GPU");
+    addParamsLine("   --matSize <Metadata1>        : Size of the matrixes");
 
 }
 
@@ -60,7 +57,7 @@ void ProgGpuExample3::defineParams()
 void ProgGpuExample3::run()
 {
 
-    int num = fn_ang1.getNumber();
+    int num = matSize.getNumber();
     std::cout << "Inside run with " << num << std::endl;
     MultidimArray<float> m1(num,num);
     MultidimArray<float> m2(num,num);
