@@ -16,7 +16,7 @@ vecAdd(const double *A, const double *B, double *C, int numElements)
     if (i < numElements)
     {
         C[i] = A[i] + B[i];
-	//printf("elem %d, m1 = %f, m2= %f, suma= %f \n", i, A[i], B[i], C[i]);
+        printf("elem %d, m1 = %f, m2= %f, suma= %f \n", i, A[i], B[i], C[i]);
     }
 }
 
@@ -47,6 +47,8 @@ void cuda_funcion(float *m1, float* m2, float *result, int num){
 	vecAdd<<<numBlk, numTh>>>(d_m1, d_m2, d_m3, num*num);
 
 	cudaMemcpy(result, d_m3, matSize, cudaMemcpyDeviceToHost);
+
+	std::cout << "CUDA result" << result << std::endl;
 
 	cudaFree(d_m1);
 	cudaFree(d_m2);
