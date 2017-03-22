@@ -24,5 +24,12 @@
  ***************************************************************************/
 
 #include <reconstruction/gpu_example3.h>
+#include <reconstruction_cuda/gpu_example3.h>
 
-RUN_XMIPP_PROGRAM(ProgGpuExample3)
+int main(int argc, char** argv) {
+	ProgGpuExample3 program;
+	program.read(argc, argv);\
+	program.tryRun();
+	cuda_funcion();
+}
+

@@ -25,6 +25,7 @@
 
 #include "gpu_example3.h"
 #include <data/args.h>
+//#include <cuda_runtime.h>
 
 
 // Read arguments ==========================================================
@@ -53,11 +54,9 @@ void ProgGpuExample3::defineParams()
 
 }
 
-
-
 //#define DEBUG
 // Compute distance --------------------------------------------------------
-void ProgAngularDistance::run()
+void ProgGpuExample3::run()
 {
 
     std::cout << "Inside run" << std::endl;
