@@ -29,6 +29,5 @@ int main(int argc, char** argv) {
 	ProgGpuExample3 program;
 	program.read(argc, argv);\
 	program.tryRun();
-	//cuda_funcion(program.getAng());
 }
 
