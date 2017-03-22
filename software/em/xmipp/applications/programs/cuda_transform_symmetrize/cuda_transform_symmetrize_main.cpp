@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <reconstruction/gpu_example3.h>
-#include <reconstruction_cuda/gpu_example3.h>
+#include "../../../libraries/reconstruction_cuda/cuda_gpu_example3.h"
 
 int main(int argc, char** argv) {
 	ProgGpuExample3 program;

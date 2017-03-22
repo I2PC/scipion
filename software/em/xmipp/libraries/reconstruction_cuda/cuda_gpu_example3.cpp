@@ -1,5 +1,6 @@
+#include "cuda_gpu_example3.h"
+
 #include <iostream>
-#include "gpu_example3.h"
 
 void cuda_funcion(){
 
