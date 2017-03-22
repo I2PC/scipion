@@ -206,7 +206,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 {
 	fftVRiesz.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
-
+	std::complex<double> J(0,1);
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
@@ -258,7 +258,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 				if (iun<=iu1)
 				{
 					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 				}
 				++n;
 			}
@@ -280,7 +280,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				if (iun<=iu1)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 				++n;
 			}
 		}
@@ -301,7 +301,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				if (iun<=iu1)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 				++n;
 			}
 		}
@@ -322,11 +322,11 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	saveImg.clear();
 	}
 	#endif // DEBUG
-
-	// Low pass filter the monogenic amplitude
-	lowPassFilter.w1 = w1;
-	amplitude.setXmippOrigin();
-	lowPassFilter.applyMaskSpace(amplitude);
+//
+//	// Low pass filter the monogenic amplitude
+//	lowPassFilter.w1 = w1;
+//	amplitude.setXmippOrigin();
+//	lowPassFilter.applyMaskSpace(amplitude);
 
 	#ifdef DEBUG
 	//Image<double> saveImg2;
@@ -346,7 +346,6 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
 		 MultidimArray<double> &resolutionChimera)
 {
-	std::cout << "entro" << std::endl;
 	MultidimArray<double> resolutionVol_aux = resolutionVol;
 	double last_resolution_2 = sampling/list[(list.size()-1)];
 
@@ -368,7 +367,6 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 	if (trimBound>0)
 	{
 		double threshold=A1D_ELEM(resolutions,(int)(trimBound*N/100));
-		std::cout << "threshold = " << threshold << std::endl;
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
 		{
 			if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>threshold){
@@ -505,7 +503,7 @@ void ProgMonogenicSignalRes::run()
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 		noiseValues.clear();
-		std::cout << "checkpoint 0" << std::endl;
+
 		if (exactres)
 		{
 			if (halfMapsGiven)
@@ -586,7 +584,7 @@ void ProgMonogenicSignalRes::run()
 						}
 					}
 		}
-		std::cout << "checkpoint 1" << std::endl;
+
 		if (NS == 0)
 		{
 			std::cout << "There are no points to compute inside the mask" << std::endl;
@@ -602,7 +600,7 @@ void ProgMonogenicSignalRes::run()
 
 		if (meanS>max_meanS)
 			max_meanS = meanS;
-		std::cout << "checkpoint 2" << std::endl;
+
 		if (meanS<0.001*max_meanS)
 		{
 			std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
@@ -618,7 +616,7 @@ void ProgMonogenicSignalRes::run()
 		}
 		else
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
-		std::cout << "checkpoint 3" << std::endl;
+
 		#ifdef DEBUG
 		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
 		#endif
@@ -635,7 +633,6 @@ void ProgMonogenicSignalRes::run()
 				else
 					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 		}
-		std::cout << "checkpoint 4" << std::endl;
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
 		if (verbose >=2)
@@ -650,7 +647,6 @@ void ProgMonogenicSignalRes::run()
 			criticalW = freq;
 			doNextIteration=false;
 		}
-		std::cout << "checkpoint 5" << std::endl;
 		if (doNextIteration)
 		{
 			if (linearchk == false)
@@ -678,10 +674,7 @@ void ProgMonogenicSignalRes::run()
 					doNextIteration = false;
 			}
 		}
-		std::cout << "doNextIteration = " << doNextIteration << std::endl;
-		std::cout << "checkpoint 6" << std::endl;
 		iter++;
-		std::cout << "iter = " << iter << std::endl;
 	} while (doNextIteration);
 
 	amplitudeMN.clear();
