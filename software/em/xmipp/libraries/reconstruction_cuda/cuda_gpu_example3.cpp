@@ -1,7 +1,7 @@
 
 //Host includes
 #include "cuda_gpu_example3.h"
-#include <iostream>
+#include <stdio.h>
 //CUDA includes
 #include <cuda_runtime.h>
 
