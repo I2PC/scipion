@@ -200,6 +200,10 @@ class ProtAlignMovies(ProtProcessMovies):
                 # micrograph file in the extra path with the required name
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
+                if not os.path.exists(extraMicFn):
+                    print("Micrograph %s was not producing, not added to "
+                          "output set." % extraMicFn)
+                    continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
