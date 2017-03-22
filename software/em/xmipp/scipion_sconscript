@@ -112,8 +112,12 @@ def addLib(name, **kwargs):
     # If pattern not provided use *.cpp as default
     patterns = kwargs.get('patterns', '*.cpp')
     kwargs['patterns'] = patterns
-
-    lib = env.AddCppLibrary(name, **kwargs)
+    
+    if kwargs['cuda']:
+    	lib = env.AddCppLibraryCuda(name, **kwargs)
+    else:    	
+    	lib = env.AddCppLibrary(name, **kwargs)
+    	
     env.Alias('xmipp-libs', lib)
 
     return lib

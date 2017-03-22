@@ -257,6 +257,103 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     _incs.append(env['CPPPATH'])
     _incs.append('#software/include')
 
+    library = env2.SharedLibrary(
+        target=targetName,
+        # source=lastTarget,
+        source=sources,
+        CPPPATH=_incs,
+        LIBPATH=_libpath,
+        LIBS=_libs,
+        SHLIBPREFIX=prefix,
+        SHLIBSUFFIX=suffix,
+        CXXFLAGS=env['CXXFLAGS'],
+        LINKFLAGS=env['LINKFLAGS'],
+        **mpiArgs)
+    SideEffect('dummy', library)
+    env.Depends(library, sources)
+
+    if installDir:
+        install = env.Install(installDir, library)
+        SideEffect('dummy', install)
+        lastTarget = install
+    else:
+        lastTarget = library
+    env.Default(lastTarget)
+
+    for dep in deps:
+        env.Depends(sources, dep)
+
+    env.Alias(name, lastTarget)
+
+    return lastTarget
+
+
+def addCppLibraryCuda(env, name, dirs=[], tars=[], untarTargets=['configure'], patterns=[], incs=[],
+                  libs=[], prefix=None, suffix=None, installDir=None, libpath=['lib'], deps=[],
+                  mpi=False, cuda=False, default=True, target=None):
+    """Add self-made and compiled shared library to the compilation process
+
+    This pseudobuilder access given directory, compiles it
+    and installs it. It also tells SCons about it dependencies.
+
+    If default=False, the library will not be built unless the option
+    --with-<name> is used.
+
+    Returns the final targets, the ones that Make will create.
+    """
+    _libs = list(libs)
+    _libpath = list(libpath)
+    _incs = list(incs)
+    lastTarget = deps
+    prefix = 'lib' if prefix is None else prefix
+    suffix = '.so' if suffix is None else suffix
+
+    basedir = 'lib'
+    targetName = join(basedir, target if target else prefix + name)
+    sources = []
+
+    _libpath.append(Dir('#software/lib').abspath)
+
+    for d, p in izip(dirs, patterns):
+        sources += glob(join(env['PACKAGE']['SCONSCRIPT'], d, p))
+
+    if not sources and env.TargetInBuild(name):
+        Exit('No sources found for Library: %s. Exiting!!!' % name)
+
+    # FIXME: There must be a key in env dictionary that breaks the compilation. Please find it to make it more beautiful
+    env2 = Environment()
+    env2['ENV']['PATH'] = env['ENV']['PATH']
+
+    mpiArgs = {}
+    if mpi:
+        _libpath.append(env['MPI_LIBDIR'])
+        _libs.append(env['MPI_LIB'])
+        _incs.append(env['MPI_INCLUDE'])
+
+        mpiArgs = {'CC': env['MPI_CC'],
+                   'CXX': env['MPI_CXX'],
+                   'LINK': env['MPI_LINKERFORPROGRAMS']}
+        #         conf = Configure(env, custom_tests = {'CheckMPI': CheckMPI})
+        #         if not conf.CheckMPI(env['MPI_INCLUDE'], env['MPI_LIBDIR'],
+        #                              env['MPI_LIB'], env['MPI_CC'], env['MPI_CXX'],
+        #                              env['MPI_LINKERFORPROGRAMS'], False):
+        #             print >> sys.stderr, 'ERROR: MPI is not properly working. Exiting...'
+        #             Exit(1)
+        #         env = conf.Finish()
+        env2.PrependENVPath('PATH', env['MPI_BINDIR'])
+
+    # AJ
+    elif cuda:
+        _libs.append(['cudart', 'cublas', 'cufft', 'curand', 'cusparse', 'nvToolsExt'])
+        _incs.append(env['NVCC_INCLUDE'])
+        _libpath.append(env['NVCC_LIBDIR'])
+        mpiArgs = {'CC': env['NVCC'], 'CXX': env['NVCC'], 'LINK': env['LINKERFORPROGRAMS']}
+    # FIN AJ
+
+
+    _incs.append(env['CPPPATH'])
+    _incs.append('#software/include')
+
     library = env2.Library(
         target=targetName,
         # source=lastTarget,
@@ -286,6 +383,8 @@ def addCppLibrary(env, name, dirs=[], tars=[], untarTargets=['configure'], patte
     env.Alias(name, lastTarget)
 
     return lastTarget
+
+
 
 
 def symLink(env, target, source):
