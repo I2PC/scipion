@@ -214,7 +214,7 @@ if cuda:
 	addLib('XmippReconsAdaptCuda',
        dirs=['libraries'],
        patterns=['reconstruction_adapt_cuda/*.cpp'],
-       incs=bilib_incs, cuda=True,
+       incs=bilib_incs,
        libs=['pthread'])
 
 
