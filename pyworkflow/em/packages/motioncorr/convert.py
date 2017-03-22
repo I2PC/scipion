@@ -75,7 +75,7 @@ def getCudaLib(environ=None):
     if environ is None:
         environ = Environ(os.environ)
 
-    return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB), True)
+    return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB))
 
 
 def getVersion(var):
@@ -91,7 +91,7 @@ def getSupportedVersions(var):
     if var == 'MOTIONCORR':
         return ['2.1']
     elif var == 'MOTIONCOR2':
-        return ['03162016', '10192016']
+        return ['03162016', '10192016', '01302017']
 
 
 def parseMovieAlignment(logFile):
