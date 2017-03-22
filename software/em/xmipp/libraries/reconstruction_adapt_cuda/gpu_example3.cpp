@@ -69,9 +69,6 @@ void ProgGpuExample3::run()
     m1.initRandom(0, 10, RND_UNIFORM);
     m2.initRandom(100, 200, RND_UNIFORM);
 
-    std::cout << "Antes m1" << m1 << std::endl;
-    std::cout << "Antes m2" << m2 << std::endl;
-
     float *m1_gpu = MULTIDIM_ARRAY(m1);
     float *m2_gpu = MULTIDIM_ARRAY(m2);
     float *result = MULTIDIM_ARRAY(mResult);

@@ -16,14 +16,12 @@ vecAdd(const float *A, const float *B, float *C, int numElements)
     if (i < numElements)
     {
         C[i] = A[i] + B[i];
-        printf("elem %d, m1 = %f, m2= %f, suma= %f \n", i, A[i], B[i], C[i]);
     }
 }
 
 void cuda_funcion(float *m1, float* m2, float *result, int num){
 
 	std::cerr  << "Inside CUDA function " << num << std::endl;
-
 
 	//CUDA code
 	float *d_m1, *d_m3, *d_m2;
