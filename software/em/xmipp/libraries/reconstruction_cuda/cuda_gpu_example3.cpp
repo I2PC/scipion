@@ -2,7 +2,6 @@
 //Host includes
 #include "cuda_gpu_example3.h"
 #include <iostream>
-#include <data/multidim_array.h>
 //CUDA includes
 #include <cuda_runtime.h>
 
