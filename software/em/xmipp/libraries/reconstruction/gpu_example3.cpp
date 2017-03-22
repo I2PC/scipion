@@ -61,6 +61,6 @@ void ProgGpuExample3::run()
 {
 
     std::cout << "Inside run" << std::endl;
-    cuda_funcion((int)fn_ang1);
+    cuda_funcion(fn_ang1.getNumber());
 }
 
