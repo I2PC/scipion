@@ -1,2 +1,2 @@
 
-void cuda_funcion();
+void cuda_funcion(int num);
