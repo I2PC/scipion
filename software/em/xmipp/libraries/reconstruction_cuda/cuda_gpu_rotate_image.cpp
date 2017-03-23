@@ -30,7 +30,7 @@ rotate_kernel(float *output, int num, float ang)
     output[y * num + x] = tex2D(texRef, tu, tv);
 }
 
-void cuda_rotate_image(float *image, float *rotated_image, float ang){
+void cuda_rotate_image(float *image, float *rotated_image, float ang, int interp){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 
@@ -46,9 +46,13 @@ void cuda_rotate_image(float *image, float *rotated_image, float ang){
     cudaMemcpyToArray(cuArray, 0, 0, image, matSize, cudaMemcpyHostToDevice);
 
     // Specify texture object parameters
-    texRef.addressMode[0]   = cudaAddressModeWrap;
-    texRef.addressMode[1]   = cudaAddressModeWrap;
-    texRef.filterMode       = cudaFilterModeLinear;
+    texRef.addressMode[0] = cudaAddressModeWrap;
+    texRef.addressMode[1] = cudaAddressModeWrap;
+    if (interp==0){
+    	texRef.filterMode = cudaFilterModePoint;
+    }else{
+    	texRef.filterMode = cudaFilterModeLinear;
+    }
     texRef.normalized = true;
 
     // Bind the array to the texture reference

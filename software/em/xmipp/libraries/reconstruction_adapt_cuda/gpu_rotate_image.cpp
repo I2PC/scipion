@@ -33,6 +33,7 @@
 void ProgGpuRotateImage::readParams()
 {
 	ang = getParam("--ang");
+	interp = getParam("--interp");
 
 }
 
@@ -41,6 +42,7 @@ void ProgGpuRotateImage::show()
 {
     std::cout
     << "Rotate an image by an angle: " << ang       << std::endl
+	<< "Choose the interpolation method: 0 - Point, 1 - Linear " << interp    << std::endl
     ;
 }
 
@@ -49,6 +51,7 @@ void ProgGpuRotateImage::defineParams()
 {
     addUsageLine("Computes the rotation of an image with CUDA in GPU");
     addParamsLine("   --ang <Metadata1>        : Rotation angle in degrees");
+    addParamsLine("   --interp <Metadata1>        : Interpolation method");
 
 }
 
@@ -59,6 +62,7 @@ void ProgGpuRotateImage::run()
 
 	int num=5;
     int ang2 = ang.getNumber();
+    int interpol = interp.getNumber();
     float rad = 3.14159*(float)ang2/180.0;
     std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
     MultidimArray<float> original_image(num,num);
@@ -73,7 +77,7 @@ void ProgGpuRotateImage::run()
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
-    cuda_rotate_image(original_image_gpu, rotated_image_gpu, rad);
+    cuda_rotate_image(original_image_gpu, rotated_image_gpu, rad, interpol);
 
 	std::cout << "original_image" << original_image << std::endl;
 	std::cout << "rotated_image" << rotated_image << std::endl;
