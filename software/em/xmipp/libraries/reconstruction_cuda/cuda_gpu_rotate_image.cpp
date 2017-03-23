@@ -46,8 +46,8 @@ void cuda_rotate_image(float *image, float *rotated_image, float ang){
     cudaMemcpyToArray(cuArray, 0, 0, image, matSize, cudaMemcpyHostToDevice);
 
     // Specify texture object parameters
-    texRef.addressMode[0]   = cudaAddressModeWrap;
-    texRef.addressMode[1]   = cudaAddressModeWrap;
+    texRef.addressMode[0]   = cudaAddressModeBorder;
+    texRef.addressMode[1]   = cudaAddressModeBorder;
     texRef.filterMode       = cudaFilterModePoint;
     texRef.normalized = true;
 
