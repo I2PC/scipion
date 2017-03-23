@@ -51,7 +51,7 @@ void ProgGpuRotateImage::defineParams()
 {
     addUsageLine("Computes the rotation of an image with CUDA in GPU");
     addParamsLine("   --ang <Metadata1>        : Rotation angle in degrees");
-    addParamsLine("   --interp <Metadata1>        : Interpolation method");
+    addParamsLine("   --interp <Metadata1>        : Interpolation method: 0 - Point, 1 - Linear");
 
 }
 
