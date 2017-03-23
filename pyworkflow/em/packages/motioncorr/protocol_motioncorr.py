@@ -87,6 +87,13 @@ class ProtMotionCorr(ProtAlignMovies):
                            "the average PSD before and after alignment, "
                            "for comparison")
 
+        form.addParam('doComputeMicThumbnail', params.BooleanParam,
+                      default=False, condition='doSaveAveMic',
+                      label='Compute micrograph thumbnail?',
+                      help='When using this option, we will compute a '
+                           'micrograph thumbnail and keep it with the '
+                           'micrograph object for visualization purposes. ')
+
         form.addParam('extraParams', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED,
                       label='Additional parameters',
@@ -135,31 +142,31 @@ class ProtMotionCorr(ProtAlignMovies):
 
         group = form.addGroup('Magnification correction')
         group.addParam('doMagCor', params.BooleanParam, default=False,
-                      label='Correct anisotropic magnification?', condition='useMotioncor2',
-                      help='Correct anisotropic magnification by stretching '
-                           'image along the major axis, the axis where the '
-                           'lower magnification is detected.')
+                       label='Correct anisotropic magnification?', condition='useMotioncor2',
+                       help='Correct anisotropic magnification by stretching '
+                            'image along the major axis, the axis where the '
+                            'lower magnification is detected.')
         group.addParam('useEst', params.BooleanParam, default=True,
-                      label='Use previous estimation?', condition='useMotioncor2 and doMagCor',
-                      help='Use previously calculated parameters of '
-                           'magnification anisotropy (from magnification distortion '
-                           'estimation protocol).')
+                       label='Use previous estimation?', condition='useMotioncor2 and doMagCor',
+                       help='Use previously calculated parameters of '
+                            'magnification anisotropy (from magnification distortion '
+                            'estimation protocol).')
         group.addParam('inputEst', params.PointerParam,
-                      pointerClass='ProtMagDistEst', condition='useEst and useMotioncor2 and doMagCor',
-                      label='Input protocol',
-                      help='Select previously executed estimation protocol.')
+                       pointerClass='ProtMagDistEst', condition='useEst and useMotioncor2 and doMagCor',
+                       label='Input protocol',
+                       help='Select previously executed estimation protocol.')
         group.addParam('scaleMaj', params.FloatParam, default=1.0,
-                      condition='not useEst and useMotioncor2 and doMagCor',
-                      label='Major scale factor',
-                      help='Major scale factor.')
+                       condition='not useEst and useMotioncor2 and doMagCor',
+                       label='Major scale factor',
+                       help='Major scale factor.')
         group.addParam('scaleMin', params.FloatParam, default=1.0,
-                      condition='not useEst and useMotioncor2 and doMagCor',
-                      label='Minor scale factor',
-                      help='Minor scale factor.')
+                       condition='not useEst and useMotioncor2 and doMagCor',
+                       label='Minor scale factor',
+                       help='Minor scale factor.')
         group.addParam('angDist', params.FloatParam, default=0.0,
-                      condition='not useEst and useMotioncor2 and doMagCor',
-                      label='Distortion angle (deg)',
-                      help='Distortion angle, in degrees.')
+                       condition='not useEst and useMotioncor2 and doMagCor',
+                       label='Distortion angle (deg)',
+                       help='Distortion angle, in degrees.')
 
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
@@ -247,7 +254,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         else:
             logFileBase = (logFile.replace('0-Full.log', '').replace(
-                           '0-Patch-Full.log', ''))
+                '0-Patch-Full.log', ''))
             # default values for motioncor2 are (1, 1)
             cropDimX = self.cropDimX.get() or 1
             cropDimY = self.cropDimY.get() or 1
@@ -305,6 +312,12 @@ class ProtMotionCorr(ProtAlignMovies):
             self.runJob(program, args, cwd=movieFolder)
             self._fixMovie(movie)
 
+            # Compute PSDs
+            outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            if not os.path.exists(outMicFn):
+                # if only DW mic is saved
+                outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+
             if self.doComputePSD:
                 uncorrectedPSD = movieBaseName + '_uncorrected'
                 correctedPSD = movieBaseName + '_corrected'
@@ -316,11 +329,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                   binFactor=self.binFactor.get(),
                                   roi=roi, dark=None,
                                   gain=inputMovies.getGain())
-                # Compute PSDs
-                outMicFn = self._getExtraPath(self._getOutputMicName(movie))
-                if not os.path.exists(outMicFn):
-                    # if only DW mic is saved
-                    outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+
                 self.computePSD(aveMicFn, uncorrectedPSD)
                 self.computePSD(outMicFn, correctedPSD)
                 self.composePSD(uncorrectedPSD + ".psd",
@@ -328,6 +337,10 @@ class ProtMotionCorr(ProtAlignMovies):
                                 self._getPsdCorr(movie))
 
             self._saveAlignmentPlots(movie)
+
+            if self._doComputeMicThumbnail():
+                self.computeThumbnail(outMicFn,
+                                      outputFn=self._getOutputMicThumbnail(movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getName())
 
@@ -344,7 +357,6 @@ class ProtMotionCorr(ProtAlignMovies):
 
         if not os.path.exists(program):
             errors.append('Missing %s' % program)
-
 
         # Check CUDA paths
         cudaLib = getCudaLib()
@@ -426,10 +438,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getNameExt(self, movie, postFix, ext, extra=False):
         fn = self._getMovieRoot(movie) + postFix + '.' + ext
-        if extra:
-            return self._getExtraPath(fn)
-        else:
-            return fn
+        return self._getExtraPath(fn) if extra else fn
 
     def _getPlotGlobal(self, movie):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
@@ -455,12 +464,12 @@ class ProtMotionCorr(ProtAlignMovies):
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
 
-    def _setPlotInfo(self, movie, obj):
-        obj.plotGlobal = em.Image()
-        obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
+    def _setPlotInfo(self, movie, mic):
+        mic.plotGlobal = em.Image(location=self._getPlotGlobal(movie))
         if self.doComputePSD:
-            obj.psdCorr = em.Image()
-            obj.psdCorr.setFileName(self._getPsdCorr(movie))
+            mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
+        if self._doComputeMicThumbnail():
+            mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
 
     def _saveAlignmentPlots(self, movie):
         """ Compute alignment shift plots and save to file as png images. """
@@ -538,6 +547,9 @@ class ProtMotionCorr(ProtAlignMovies):
     def _createOutputWeightedMicrographs(self):
         return (self.doSaveAveMic and self.useMotioncor2 and
                 self.doApplyDoseFilter)
+
+    def _doComputeMicThumbnail(self):
+        return (self.doSaveAveMic and self.doComputeMicThumbnail)
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
