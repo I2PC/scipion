@@ -17,10 +17,6 @@ rotate_kernel(float *output, int num, int ang)
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
-    if(x<num || y<num){
-    	return;
-    }
-
     float u = x / (float)num;
     float v = y / (float)num;
 
@@ -39,7 +35,7 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 
 	//CUDA code
-	int num=2;
+	int num=5;
 	size_t matSize=num*num*sizeof(float);
 
 	// Allocate CUDA array in device memory
@@ -53,7 +49,7 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
     texRef.addressMode[0]   = cudaAddressModeWrap;
     texRef.addressMode[1]   = cudaAddressModeWrap;
     texRef.filterMode       = cudaFilterModePoint;
-    texRef.normalized = 1;
+    texRef.normalized = true;
 
     // Bind the array to the texture reference
     cudaBindTextureToArray(texRef, cuArray, channelDesc);
@@ -64,7 +60,7 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 
 
 	//Kernel
-	int numTh = 32;
+	int numTh = num;
 	const dim3 blockSize(numTh, numTh, 1);
 	int numBlkx = (int)(num)/numTh;
 	if((num)%numTh>0){
@@ -77,6 +73,8 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 	const dim3 gridSize(numBlkx, numBlky, 1);
 
 	rotate_kernel<<<gridSize, blockSize>>>(d_output, num, ang);
+
+	cudaDeviceSynchronize();
 
 	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 

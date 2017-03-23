@@ -57,15 +57,17 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
+	int num=5;
     int ang2 = ang.getNumber();
     std::cout << "Inside run with ang " << ang2 << std::endl;
-    MultidimArray<float> original_image(2,2);
-    MultidimArray<float> rotated_image(2,2);
+    MultidimArray<float> original_image(num,num);
+    MultidimArray<float> rotated_image(num,num);
 
-    A2D_ELEM(original_image,0,0) = 38.;
+    /*A2D_ELEM(original_image,0,0) = 38.;
     A2D_ELEM(original_image,1,0) = 39.;
     A2D_ELEM(original_image,0,1) = 118.;
-    A2D_ELEM(original_image,1,1) = 13.;
+    A2D_ELEM(original_image,1,1) = 13.;*/
+    original_image.initRandom(0, 100, RND_UNIFORM);
 
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
