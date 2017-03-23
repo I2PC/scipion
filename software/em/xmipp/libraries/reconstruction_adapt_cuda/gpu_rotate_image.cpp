@@ -32,11 +32,8 @@
 // Read arguments ==========================================================
 void ProgGpuRotateImage::readParams()
 {
-	//ang = getParam("--ang");
-	//interp = getParam("--interp");
-
-	ang = (checkParam("--ang"))? getIntParam("--ang"):  1000;
-	interp = (checkParam("--interp"))? getIntParam("--interp"): 1;
+	ang = getParam("--ang");
+	interp = getParam("--interp");
 
 }
 
@@ -64,11 +61,19 @@ void ProgGpuRotateImage::run()
 {
 
 	int num=5;
-    int ang2 = ang.getNumber();
-    if (ang2==1000){
-    		REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Rotation angle unspecified");
-    }
-    int interpol = interp.getNumber();
+	int ang2, interpol;
+	if (ang.isEmpty()){
+		REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Rotation angle unspecified");
+	}else{
+		ang2 = ang.getNumber();
+	}
+
+	if(interp.isEmpty()){
+		interpol = 1;
+	}
+	else{
+		interpol = interp.getNumber();
+	}
     float rad = 3.14159*(float)ang2/180.0;
     std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
     MultidimArray<float> original_image(num,num);
