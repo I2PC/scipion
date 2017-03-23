@@ -12,7 +12,7 @@ texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
 //CUDA functions
 __global__ void
-rotate_kernel(float *output, int num, int ang)
+rotate_kernel(float *output, int num, float ang)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -30,7 +30,7 @@ rotate_kernel(float *output, int num, int ang)
     output[y * num + x] = tex2D(texRef, tu, tv);
 }
 
-void cuda_rotate_image(float *image, float *rotated_image, int ang){
+void cuda_rotate_image(float *image, float *rotated_image, float ang){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 

@@ -48,7 +48,7 @@ void ProgGpuRotateImage::show()
 void ProgGpuRotateImage::defineParams()
 {
     addUsageLine("Computes the rotation of an image with CUDA in GPU");
-    addParamsLine("   --ang <Metadata1>        : Rotation angle");
+    addParamsLine("   --ang <Metadata1>        : Rotation angle in degrees");
 
 }
 
@@ -59,7 +59,8 @@ void ProgGpuRotateImage::run()
 
 	int num=5;
     int ang2 = ang.getNumber();
-    std::cout << "Inside run with ang " << ang2 << std::endl;
+    float rad = 3.14159*(float)ang2/180.0;
+    std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
     MultidimArray<float> original_image(num,num);
     MultidimArray<float> rotated_image(num,num);
 
@@ -72,7 +73,7 @@ void ProgGpuRotateImage::run()
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
-    cuda_rotate_image(original_image_gpu, rotated_image_gpu, ang2);
+    cuda_rotate_image(original_image_gpu, rotated_image_gpu, rad);
 
 	std::cout << "original_image" << original_image << std::endl;
 	std::cout << "rotated_image" << rotated_image << std::endl;
