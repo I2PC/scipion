@@ -67,10 +67,22 @@ class Object(object):
     
     def getDoc(self):
         return self.__doc__ or ''
-    
+
+    #FIXME: This function should be renamed to hasAttribute when we address that issue
+    def hasAttributeExt(self, attrName):
+        attrList = attrName.split('.')
+        obj = self
+        for partName in attrList:
+            obj = getattr(obj, partName, None)
+            if obj is None:
+                return False
+        return True
+
+    # FIXME: This function is not symmetric with setAttributeValue
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)
-    
+
+    #FIXME: This function is not symmetric with setAttributeValue
     def getAttributeValue(self, attrName, defaultValue=None):
         """ Get the attribute value given its name.
         Equivalent to getattr(self, name).get() 
