@@ -1137,9 +1137,9 @@ void MpiProgAngularClassAverage::filterInputMetadata()
     if (!auxDF.containsLabel(MDL_ORDER))
         auxDF.addLabel(MDL_ORDER);
     {
-
-        String cmd = formatString("%s=%s+%d", MDL::label2Str(MDL_ORDER).c_str(),
-                                  MDL::label2Str(MDL_REF).c_str(), FIRST_IMAGE);
+    	String labelOrder=MDL::label2Str(MDL_ORDER);
+    	String labelRef=MDL::label2Str(MDL_REF);
+        String cmd = formatString("%s=%s+%d", labelOrder.c_str(), labelRef.c_str(), FIRST_IMAGE);
         auxDF.operate(cmd);
     }
     //std::cerr << "DEBUG_JM: Read inFile" <<std::endl;

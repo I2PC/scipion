@@ -123,7 +123,7 @@ class Command:
                 if not self._env.showOnly:
                     os.chdir(self._cwd)
                 print(cyan("cd %s" % self._cwd))
-
+    
             # Actually allow self._cmd to be a list or a
             # '\n'-separated list of commands, and run them all.
             if isinstance(self._cmd, basestring):
@@ -132,17 +132,17 @@ class Command:
                 cmds = [self._cmd]  # a function call
             else:
                 cmds = self._cmd  # already a list of whatever
-
+    
             for cmd in cmds:
                 if self._out is not None:
                     cmd += ' > %s 2>&1' % self._out
                     # TODO: more general, this only works for bash.
-
+        
                 print(cyan(cmd))
-
+        
                 if self._env.showOnly:
                     continue  # we don't really execute the command here
-
+        
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
@@ -175,6 +175,7 @@ class Target:
         else:
             c = Command(self._env, cmd, **kwargs)
         self._commandList.append(c)
+
         if kwargs.get('final', False):
             self._finalCommands.append(c)
         return c
@@ -539,6 +540,15 @@ class Environment:
         # from elsewhere.
         if kwargs.get('pythonMod', False):
             return self.addModule(name, **kwargs)
+        
+        environ = (self.updateCudaEnviron(name)
+                   if kwargs.get('updateCuda', False) else None)
+
+        # Set environment
+        variables = kwargs.get('vars',[])
+        for var,value in variables:
+            environ.update({var: value})
+
 
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
@@ -558,15 +568,17 @@ class Environment:
             if isinstance(tgt, basestring):
                 tgt = [tgt]
             # Take all package targets relative to package build dir
+
             target.addCommand(
                 cmd, targets=[join(target.targetPath, t) for t in tgt],
-                cwd=target.buildPath, final=True)
-
+                cwd=target.buildPath, final=True, environ=environ)
+        
         target.addCommand(Command(self, Link(extName, targetDir),
                                   targets=[self.getEm(extName),
                                            self.getEm(targetDir)],
-                                  cwd=self.getEm('')), final=True)
-
+                                  cwd=self.getEm('')),
+                          final=True)
+        
         # Create an alias with the name for that version
         # this imply that the last package version added will be
         # the one installed by default, so the last versions should
@@ -656,7 +668,6 @@ class Environment:
         # the selected ones, ignore starting with 'xmipp'
         cmdTargets = [a for a in self._args[2:]
                       if a[0].isalpha() and not a.startswith('xmipp')]
-
         if cmdTargets:
             # Check that they are all command targets
             for t in cmdTargets:
@@ -675,8 +686,43 @@ class Environment:
                 self._showTargetTree(targetList)
         else:
             self._executeTargets(targetList)
-            
         
+    def updateCudaEnviron(self, package):
+        """ Update the environment adding CUDA_LIB and/or CUDA_BIN to support
+        packages that uses CUDA.
+        package: package that needs CUDA to compile.
+        """
+        packUpper = package.upper()
+        cudaLib = os.environ.get(packUpper + '_CUDA_LIB')
+        cudaBin = os.environ.get(packUpper + '_CUDA_BIN')
+    
+        if cudaLib is None:
+            cudaLib = os.environ.get('CUDA_LIB')
+            cudaBin = os.environ.get('CUDA_BIN')
+
+        environ = os.environ.copy()
+
+        # If there isn't any CUDA in the environment
+        if cudaLib is None and cudaBin is None:
+            # Exit ...do not update the environment
+            return environ
+
+        elif cudaLib is not None and cudaBin is None:
+            raise Exception("CUDA_LIB (or %s_CUDA_LIB) is defined, but not "
+                            "CUDA_BIN (or %s_CUDA_BIN), please excecute "
+                            "scipion config --update" % (packUpper, packUpper))
+        elif cudaBin is not None and cudaLib is None:
+            raise Exception("CUDA_BIN (or %s_CUDA_BIN) is defined, but not "
+                            "CUDA_LIB (or %s_CUDA_LIB), please excecute "
+                            "scipion config --update" % (packUpper, packUpper))
+        elif os.path.exists(cudaLib) and os.path.exists(cudaBin):
+            environ.update({'LD_LIBRARY_PATH': cudaLib + ":" +
+                                               environ['LD_LIBRARY_PATH']})
+            environ.update({'PATH': cudaBin + ":" + environ['PATH']})
+
+        return environ
+
+
 class Link:
     def __init__(self, packageLink, packageFolder):
         self._packageLink = packageLink
