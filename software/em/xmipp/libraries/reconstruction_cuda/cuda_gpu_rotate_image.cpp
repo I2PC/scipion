@@ -31,7 +31,7 @@ rotate_kernel(float *output, cudaTextureObject_t texObj, int num, int ang)
     float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
 
     // Read from texture and write to global memory
-    output[y * num + x] = tex2D<float>(texObj, tu, tv);
+    output[y * num + x] = tex2D<float>(texRef, tu, tv);
 }
 
 void cuda_rotate_image(float *image, float *rotated_image, int ang){
@@ -66,7 +66,7 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 
     // Create texture object
     cudaTextureObject_t texObj = 0;
-    cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL);
+    cudaCreateTextureObject(&texRef, &resDesc, &texDesc, NULL);
 
     // Allocate result of transformation in device memory
     float *d_output;
@@ -86,12 +86,12 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 	}
 	const dim3 gridSize(numBlkx, numBlky, 1);
 
-	rotate_kernel<<<gridSize, blockSize>>>(d_output, textObj, num, ang);
+	rotate_kernel<<<gridSize, blockSize>>>(d_output, texRef, num, ang);
 
-	cudaMemcpy(rotated_image, d_m2, matSize, cudaMemcpyDeviceToHost);
+	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 
 	// Destroy texture object
-	cudaDestroyTextureObject(texObj);
+	cudaDestroyTextureObject(texRef);
 
 	cudaFree(cuArray);
 	cudaFree(d_output);
