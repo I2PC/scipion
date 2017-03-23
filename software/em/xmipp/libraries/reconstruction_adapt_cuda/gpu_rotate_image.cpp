@@ -32,8 +32,11 @@
 // Read arguments ==========================================================
 void ProgGpuRotateImage::readParams()
 {
-	ang = getParam("--ang");
-	interp = getParam("--interp");
+	//ang = getParam("--ang");
+	//interp = getParam("--interp");
+
+	(checkParam("--ang"))? getParam("--ang"):  REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Rotation angle unspecified");
+	(checkParam("--interp"))? getParam("--interp"): 1;
 
 }
 
