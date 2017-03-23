@@ -35,8 +35,8 @@ void ProgGpuRotateImage::readParams()
 	//ang = getParam("--ang");
 	//interp = getParam("--interp");
 
-	ang = (checkParam("--ang"))? getParam("--ang"):  1000;
-	interp = (checkParam("--interp"))? getParam("--interp"): 1;
+	ang = (checkParam("--ang"))? getIntParam("--ang"):  1000;
+	interp = (checkParam("--interp"))? getIntParam("--interp"): 1;
 
 }
 
