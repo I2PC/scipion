@@ -364,6 +364,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 	// Sort value and get threshold
 	std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
 	double filling_value = A1D_ELEM(resolutions, (int)(0.5*N)); //median value
+	filling_value = 3;
 	if (trimBound>0)
 	{
 		double threshold=A1D_ELEM(resolutions,(int)(trimBound*N/100));
@@ -468,9 +469,6 @@ void ProgMonogenicSignalRes::run()
 	int iter=0;
 	int count_res = 0;
 	std::vector<double> list;
-
-
-
 
 	std::cout << "Analyzing frequencies" << std::endl;
 	std::vector<double> noiseValues;
