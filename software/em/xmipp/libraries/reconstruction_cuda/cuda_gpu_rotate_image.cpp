@@ -53,7 +53,7 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
     texRef.addressMode[0]   = cudaAddressModeWrap;
     texRef.addressMode[1]   = cudaAddressModeWrap;
     texRef.filterMode       = cudaFilterModePoint;
-    texRef.normalizedCoords = 1;
+    texRef.normalized = 1;
 
     // Bind the array to the texture reference
     cudaBindTextureToArray(texRef, cuArray, channelDesc);
@@ -80,8 +80,6 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 
 	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 
-	// Destroy texture object
-	cudaDestroyTextureObject(texRef);
 
 	cudaFree(cuArray);
 	cudaFree(d_output);
