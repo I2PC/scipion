@@ -12,13 +12,13 @@ texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
 //CUDA functions
 __global__ void
-rotate_kernel(float *output, int num, float ang)
+rotate_kernel(float *output, size_t Xdim, size_t Ydim, float ang)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
-    float u = x / (float)num;
-    float v = y / (float)num;
+    float u = x / (float)Xdim;
+    float v = y / (float)Ydim;
 
     // Transform coordinates
     u -= 0.5f;
@@ -27,16 +27,15 @@ rotate_kernel(float *output, int num, float ang)
     float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
 
     // Read from texture and write to global memory
-    output[y * num + x] = tex2D(texRef, tu, tv);
+    output[y * Xdim + x] = tex2D(texRef, tu, tv);
 }
 
-void cuda_rotate_image(float *image, float *rotated_image, float ang, int interp){
+void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, float ang, int interp){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 
 	//CUDA code
-	int num=5;
-	size_t matSize=num*num*sizeof(float);
+	size_t matSize=Xdim*Ydim*sizeof(float);
 
 	// Allocate CUDA array in device memory
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
@@ -64,19 +63,19 @@ void cuda_rotate_image(float *image, float *rotated_image, float ang, int interp
 
 
 	//Kernel
-	int numTh = num;
+	int numTh = 32;
 	const dim3 blockSize(numTh, numTh, 1);
-	int numBlkx = (int)(num)/numTh;
-	if((num)%numTh>0){
+	int numBlkx = (int)(Xdim)/numTh;
+	if((Xdim)%numTh>0){
 		numBlkx++;
 	}
-	int numBlky = (int)(num)/numTh;
-	if((num)%numTh>0){
+	int numBlky = (int)(Ydim)/numTh;
+	if((Ydim)%numTh>0){
 	  numBlky++;
 	}
 	const dim3 gridSize(numBlkx, numBlky, 1);
 
-	rotate_kernel<<<gridSize, blockSize>>>(d_output, num, ang);
+	rotate_kernel<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
 
 	cudaDeviceSynchronize();
 

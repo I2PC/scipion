@@ -1,2 +1,2 @@
 
-void cuda_rotate_image(float *image, float *rotated_image, float ang, int interp);
+void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, float ang, int interp);

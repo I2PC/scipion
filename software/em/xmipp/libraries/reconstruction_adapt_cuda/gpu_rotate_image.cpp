@@ -26,12 +26,16 @@
 #include "gpu_rotate_image.h"
 
 #include <reconstruction_cuda/cuda_gpu_rotate_image.h>
+#include <data/xmipp_image.h>
+#include "data/xmipp_program.h"
 #include <data/args.h>
 
 
 // Read arguments ==========================================================
 void ProgGpuRotateImage::readParams()
 {
+	fnRef = getParam("-i");
+	fnOut = getParam("-o");
 	ang = getParam("--ang");
 	interp = getParam("--interp");
 
@@ -41,8 +45,10 @@ void ProgGpuRotateImage::readParams()
 void ProgGpuRotateImage::show()
 {
     std::cout
+	<< "Input:          " << fnRef    << std::endl
+	<< "Output:          " << fnOut    << std::endl
     << "Rotate an image by an angle: " << ang       << std::endl
-	<< "Choose the interpolation method: 0 - Point, 1 - Linear " << interp    << std::endl
+	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear " << interp    << std::endl
     ;
 }
 
@@ -50,6 +56,8 @@ void ProgGpuRotateImage::show()
 void ProgGpuRotateImage::defineParams()
 {
     addUsageLine("Computes the rotation of an image with CUDA in GPU");
+    addParamsLine("   -i <Metadata1>        : Input image");
+    addParamsLine("   -o <Metadata1>        : Output image");
     addParamsLine("   --ang <Metadata1>        : Rotation angle in degrees");
     addParamsLine("   --interp <Metadata1>        : Interpolation method: 0 - Point, 1 - Linear");
 
@@ -60,29 +68,39 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
-	int num=5;
 	int ang2, interpol;
 	ang2 = ang.getNumber();
 	interpol = interp.getNumber();
 
 	float rad = 3.14159*(float)ang2/180.0;
     std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
-    MultidimArray<float> original_image(num,num);
-    MultidimArray<float> rotated_image(num,num);
 
-    /*A2D_ELEM(original_image,0,0) = 38.;
-    A2D_ELEM(original_image,1,0) = 39.;
-    A2D_ELEM(original_image,0,1) = 118.;
-    A2D_ELEM(original_image,1,1) = 13.;*/
-    original_image.initRandom(0, 100, RND_UNIFORM);
+    Image<float> Iref, Iout;
+    Iref.read(fnRef, HEADER);
+    size_t Xdim, Ydim, Zdim, Ndim;
+    Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
+    if (Zdim>1 || Ndim>1){
+    	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
+    }
+    Iref.clear();
+    Iref.read(fnRef);
+
+    MultidimArray<float> &original_image=Iref();
+
+    MultidimArray<float> rotated_image(Xdim,Ydim);
+
+    //original_image.initRandom(0, 100, RND_UNIFORM);
 
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
-    cuda_rotate_image(original_image_gpu, rotated_image_gpu, rad, interpol);
+    cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad, interpol);
 
-	std::cout << "original_image" << original_image << std::endl;
-	std::cout << "rotated_image" << rotated_image << std::endl;
+    Iout() = rotated_image;
+    Iout.write(fnOut);
+
+	//std::cout << "original_image" << original_image << std::endl;
+	//std::cout << "rotated_image" << rotated_image << std::endl;
 
 
 }
