@@ -435,7 +435,7 @@ class ProtMotionCorr(ProtAlignMovies):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
 
     def _getPsdCorr(self, movie):
-        return self._getNameExt(movie, '_psd_comparison', 'psd')
+        return self._getNameExt(movie, '_psd_comparison', 'psd', extra=True)
 
     def _preprocessOutputMicrograph(self, mic, movie):
         self._setPlotInfo(movie, mic)
