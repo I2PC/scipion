@@ -547,6 +547,43 @@ class TestXmippExtractParticles(TestXmippBase):
                                           " the output.")
         self.assertAlmostEquals(outputParts.getSize(), 267, delta=2)
         
+    def testExtractSortSmall(self):
+        print "Run extract small particles sort by statistics"
+        downFactor = 3.0
+        protExtract = self.newProtocol(XmippProtExtractParticles, 
+                                       boxSize=40, 
+                                       downsampleType=SAME_AS_PICKING,
+                                       doDownsample=True,
+                                       downFactor=downFactor,
+                                       doFlip=True, doSort=True,
+                                       doInvert=False,
+                                       rejectionMethod=1, maxZscore=2)
+        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+        protExtract.ctfRelations.set(self.protCTF.outputCTF)
+        protExtract.setObjLabel("extract-sort small")
+        self.launchProtocol(protExtract)
+ 
+        inputCoords = protExtract.inputCoordinates.get()
+        outputParts = protExtract.outputParticles 
+        
+        def compare(objId, delta=1):
+            cx, cy = inputCoords[objId].getPosition()
+            px, py = outputParts[objId].getCoordinate().getPosition()
+            micNameCoord = inputCoords[objId].getMicName()
+            micNamePart = outputParts[objId].getCoordinate().getMicName()
+            self.assertAlmostEquals(cx/downFactor, px, delta=delta)
+            self.assertAlmostEquals(cy/downFactor, py, delta=delta)
+            self.assertEqual(micNameCoord, micNamePart,
+                             "The micName should be %s and its %s"
+                             %(micNameCoord, micNamePart))
+
+        compare(228)
+        compare(82) 
+         
+        self.assertIsNotNone(outputParts, "There was a problem generating"
+                                          " the output.")
+        self.assertAlmostEquals(outputParts.getSize(), 280, delta=2)
+        
     def testAssignCTF(self):
         """ Test the particle extraction after importing another
         SetOfMicrographs with a different micName but same ids.
