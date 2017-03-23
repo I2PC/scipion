@@ -342,6 +342,100 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 }
 
 
+//void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
+//		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
+//		 MultidimArray<double> &resolutionChimera)
+//{
+//	MultidimArray<double> resolutionVol_aux = resolutionVol;
+//	double last_resolution_2 = sampling/list[(list.size()-1)];
+//
+//	// Count number of voxels with resolution
+//	size_t N=0;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+//		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001)) //the value 0.001 is a tolerance
+//			++N;
+//
+//	// Get all resolution values
+//	MultidimArray<double> resolutions(N);
+//	size_t N_iter=0;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+//		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001))
+//			DIRECT_MULTIDIM_ELEM(resolutions,N_iter++)=DIRECT_MULTIDIM_ELEM(resolutionVol, n);
+//	// Sort value and get threshold
+//	std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
+//	double filling_value = A1D_ELEM(resolutions, (int)(0.5*N)); //median value
+//	filling_value = 3;
+//	if (trimBound>0)
+//	{
+//		double threshold=A1D_ELEM(resolutions,(int)(trimBound*N/100));
+//		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+//		{
+//			if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>threshold){
+//				DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value;
+//			}
+//			if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)<(last_resolution_2-0.001)){
+//				DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value; //meanRes;
+//			}
+//		}
+//	}
+//
+//	FourierTransformer transformer;
+//	MultidimArray<int> &pMask = mask();
+//
+//	transformer.FourierTransform(resolutionVol_aux, fftV);
+//	resolutionFiltered = resolutionVol;
+//
+//	double freq, res, resValue, init_res, last_res;
+//	size_t len;
+//	len = list.size();
+//
+//	init_res = sampling/list[0];
+//	last_res = sampling/list[(list.size()-1)];
+//	resolutionFiltered.resizeNoCopy(resolutionVol);
+//
+//	std:: cout << "list = " << list[(list.size()-1)] << std::endl;
+//
+//	freq = list[(list.size()-1)];
+//	res = sampling/freq;
+//	std::cout << "freq_filter = " << res << std::endl;
+//	std::cout << "init_res = " << init_res << std::endl;
+//	std::cout << "last_res = " << last_res << std::endl;
+//
+//	lowPassFilter.FilterShape = RAISED_COSINE;
+//	lowPassFilter.raised_w = 0.01;
+//	lowPassFilter.do_generate_3dmask = false;
+//	lowPassFilter.FilterBand = LOWPASS;
+//	lowPassFilter.w1 = freq;
+//	resolutionVol_aux.setXmippOrigin();
+//	lowPassFilter.applyMaskFourierSpace(resolutionVol_aux, fftV);
+//	transformer_inv.inverseFourierTransform(fftV, resolutionFiltered);
+//
+//	resolutionChimera = resolutionFiltered;
+//
+//	Nvoxels = 0;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionFiltered)
+//	{
+//		if (DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) < last_res)
+//			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = last_res;
+//		if (DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) > init_res)
+//			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = init_res;
+//		DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = DIRECT_MULTIDIM_ELEM(resolutionFiltered, n);
+//		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) < last_res)
+//		{
+//			DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
+//			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = 0;
+//			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
+//		}
+//		else
+//		{
+//			DIRECT_MULTIDIM_ELEM(pMask,n) = 1;
+//			Nvoxels++;
+//		}
+//	}
+//
+//	mask.write(fnMaskOut);
+//}
+
 void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
 		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
 		 MultidimArray<double> &resolutionChimera)
@@ -350,34 +444,15 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 	double last_resolution_2 = sampling/list[(list.size()-1)];
 
 	// Count number of voxels with resolution
-	size_t N=0;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
-		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001)) //the value 0.001 is a tolerance
-			++N;
 
-	// Get all resolution values
-	MultidimArray<double> resolutions(N);
-	size_t N_iter=0;
+	double filling_value = 3;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
-		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001))
-			DIRECT_MULTIDIM_ELEM(resolutions,N_iter++)=DIRECT_MULTIDIM_ELEM(resolutionVol, n);
-	// Sort value and get threshold
-	std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
-	double filling_value = A1D_ELEM(resolutions, (int)(0.5*N)); //median value
-	filling_value = 3;
-	if (trimBound>0)
 	{
-		double threshold=A1D_ELEM(resolutions,(int)(trimBound*N/100));
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
-		{
-			if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>threshold){
-				DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value;
-			}
-			if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)<(last_resolution_2-0.001)){
-				DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value; //meanRes;
-			}
+		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)<(last_resolution_2-0.001)){
+			DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value; //meanRes;
 		}
 	}
+
 
 	FourierTransformer transformer;
 	MultidimArray<int> &pMask = mask();
