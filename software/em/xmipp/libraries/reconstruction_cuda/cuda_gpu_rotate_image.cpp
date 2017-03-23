@@ -40,7 +40,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	// Allocate CUDA array in device memory
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
     cudaArray* cuArray;
-    cudaMallocArray(&cuArray, &channelDesc, num, num);
+    cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
     // Copy to device memory some data located at address h_data in host memory
     cudaMemcpyToArray(cuArray, 0, 0, image, matSize, cudaMemcpyHostToDevice);
 
