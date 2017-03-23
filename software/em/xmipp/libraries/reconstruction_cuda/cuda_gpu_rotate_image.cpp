@@ -12,7 +12,7 @@ texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
 //CUDA functions
 __global__ void
-rotate_kernel(float *output, cudaTextureObject_t texObj, int num, int ang)
+rotate_kernel(float *output, int num, int ang)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -31,7 +31,7 @@ rotate_kernel(float *output, cudaTextureObject_t texObj, int num, int ang)
     float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
 
     // Read from texture and write to global memory
-    output[y * num + x] = tex2D<float>(texRef, tu, tv);
+    output[y * num + x] = tex2D(texRef, tu, tv);
 }
 
 void cuda_rotate_image(float *image, float *rotated_image, int ang){
@@ -49,24 +49,14 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
     // Copy to device memory some data located at address h_data in host memory
     cudaMemcpyToArray(cuArray, 0, 0, image, matSize, cudaMemcpyHostToDevice);
 
-    // Specify texture
-    struct cudaResourceDesc resDesc;
-    memset(&resDesc, 0, sizeof(resDesc));
-    resDesc.resType = cudaResourceTypeArray;
-    resDesc.res.array.array = cuArray;
-
     // Specify texture object parameters
-    struct cudaTextureDesc texDesc;
-    memset(&texDesc, 0, sizeof(texDesc));
-    texDesc.addressMode[0]   = cudaAddressModeWrap;
-    texDesc.addressMode[1]   = cudaAddressModeWrap;
-    texDesc.filterMode       = cudaFilterModePoint;
-    texDesc.readMode         = cudaReadModeElementType;
-    texDesc.normalizedCoords = 1;
+    texRef.addressMode[0]   = cudaAddressModeWrap;
+    texRef.addressMode[1]   = cudaAddressModeWrap;
+    texRef.filterMode       = cudaFilterModePoint;
+    texRef.normalizedCoords = 1;
 
-    // Create texture object
-    cudaTextureObject_t texObj = 0;
-    cudaCreateTextureObject(&texRef, &resDesc, &texDesc, NULL);
+    // Bind the array to the texture reference
+    cudaBindTextureToArray(texRef, cuArray, channelDesc);
 
     // Allocate result of transformation in device memory
     float *d_output;
@@ -86,7 +76,7 @@ void cuda_rotate_image(float *image, float *rotated_image, int ang){
 	}
 	const dim3 gridSize(numBlkx, numBlky, 1);
 
-	rotate_kernel<<<gridSize, blockSize>>>(d_output, texRef, num, ang);
+	rotate_kernel<<<gridSize, blockSize>>>(d_output, num, ang);
 
 	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 
