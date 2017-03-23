@@ -35,7 +35,7 @@ void ProgGpuRotateImage::readParams()
 	//ang = getParam("--ang");
 	//interp = getParam("--interp");
 
-	ang = (checkParam("--ang"))? getParam("--ang"):  REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Rotation angle unspecified");
+	ang = (checkParam("--ang"))? getParam("--ang"):  1000;
 	interp = (checkParam("--interp"))? getParam("--interp"): 1;
 
 }
@@ -65,6 +65,9 @@ void ProgGpuRotateImage::run()
 
 	int num=5;
     int ang2 = ang.getNumber();
+    if (ang2==1000){
+    		REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Rotation angle unspecified");
+    }
     int interpol = interp.getNumber();
     float rad = 3.14159*(float)ang2/180.0;
     std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
