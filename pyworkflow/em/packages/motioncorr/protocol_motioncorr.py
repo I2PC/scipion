@@ -88,6 +88,7 @@ class ProtMotionCorr(ProtAlignMovies):
                            "for comparison")
 
         form.addParam('doComputeMicThumbnail', params.BooleanParam,
+                      expertLevel=cons.LEVEL_ADVANCED,
                       default=False, condition='doSaveAveMic',
                       label='Compute micrograph thumbnail?',
                       help='When using this option, we will compute a '
