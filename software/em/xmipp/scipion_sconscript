@@ -217,7 +217,7 @@ if cuda:
        incs=bilib_incs,
        libs=['pthread'])
        
-	addLib('CudaCubicInterp',
+	addLib('XmippCudaCubicInterp',
        dirs=['libraries'],
        patterns=['cuda_cubic_interpolation/*.cu'],
        incs=bilib_incs, cuda=True,
@@ -493,7 +493,7 @@ def addProg(progName, **kwargs):
     if progName.startswith('cuda_'):
         kwargs['cuda'] = True
         #kwargs['nvcc'] = True
-        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda', 'CudaCubicInterp']
+        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda', 'XmippCudaCubicInterp']
     #FIN AJ
 
     xmippProgName = 'xmipp_%s' % progName
