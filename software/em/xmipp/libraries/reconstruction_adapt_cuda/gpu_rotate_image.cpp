@@ -30,6 +30,8 @@
 #include "data/xmipp_program.h"
 #include <data/args.h>
 
+#define PI ((float)3.141592653589793)
+
 
 // Read arguments ==========================================================
 void ProgGpuRotateImage::readParams()
@@ -72,7 +74,7 @@ void ProgGpuRotateImage::run()
 	ang2 = ang.getNumber();
 	interpol = interp.getNumber();
 
-	float rad = 3.14159*(float)ang2/180.0;
+	float rad = PI*(float)ang2/180.0;
     std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
 
     Image<float> Iref, Iout;
