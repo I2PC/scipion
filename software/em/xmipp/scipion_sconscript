@@ -211,16 +211,16 @@ if cuda:
        incs=bilib_incs, cuda=True,
        libs=['pthread'])
        
-	addLib('CudaCubicInterp',
-       dirs=['libraries'],
-       patterns=['cuda_cubic_interpolation/*.cpp'],
-       incs=bilib_incs, cuda=True,
-       libs=['pthread'])
-       
 	addLib('XmippReconsAdaptCuda',
        dirs=['libraries'],
        patterns=['reconstruction_adapt_cuda/*.cpp'],
        incs=bilib_incs,
+       libs=['pthread'])
+       
+	addLib('CudaCubicInterp',
+       dirs=['libraries'],
+       patterns=['cuda_cubic_interpolation/*.cu'],
+       incs=bilib_incs, cuda=True,
        libs=['pthread'])
 
 
