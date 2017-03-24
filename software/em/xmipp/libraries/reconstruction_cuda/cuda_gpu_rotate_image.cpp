@@ -72,7 +72,7 @@ rotate_kernel_normalized(float *output, size_t Xdim, size_t Ydim, float ang)
 
     // Read from texture and write to global memory
    	output[y * Xdim + x] = tex2D(texRef, tu, tv);
-   	output[y * Xdim + x] = cubicTex2DSimple(texRef, tu, tv);
+
 }
 
 
