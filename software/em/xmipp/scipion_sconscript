@@ -219,7 +219,7 @@ if cuda:
        
 	addLib('XmippCudaCubicInterp',
        dirs=['libraries'],
-       patterns=['cuda_cubic_interpolation/*.cu'],
+       patterns=['cuda_cubic_interpolation/*.cpp'],
        incs=bilib_incs, cuda=True,
        libs=['pthread'])
 
