@@ -34,8 +34,8 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
-	float2 index = floor(coord_grid);
-	const float2 fraction = coord_grid - index;
+	float2 index = make_float2(floor(coord_grid.x, floor(coord_grid.y)));
+	const float2 fraction = make_float2(coord_grid.x - index.x, coord_grid.y - index.y);
 	index.x += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
 	index.y += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
 
