@@ -126,10 +126,10 @@ def checkNotify(Config, notify=False):
     notifyOn = Config.get('VARIABLES','SCIPION_NOTIFY')
     if notifyOn=='False':
         # This works for  Python 2.x. and Python 3
-        try: 
-           input = raw_input
-        except NameError: 
-             pass
+        if sys.version_info[0] >= 3:
+            get_input = input
+        else:
+            get_input = raw_input
         print("""-----------------------------------------------------------------
 -----------------------------------------------------------------
 It would be very helpful if you allow Scipion
@@ -150,7 +150,7 @@ We understand, of course, that you may not wish to have any
 information collected from you and we respect your privacy.
 """)
 
-        prompt = input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        prompt = get_input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
         if prompt == '':
             Config.set('VARIABLES','SCIPION_NOTIFY','True')
         print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
