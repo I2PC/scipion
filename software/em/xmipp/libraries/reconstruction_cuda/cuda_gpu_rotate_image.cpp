@@ -56,22 +56,46 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 
 
 __global__ void
-rotate_kernel(float *output, size_t Xdim, size_t Ydim, float ang)
+rotate_kernel_normalized(float *output, size_t Xdim, size_t Ydim, float ang)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
+    // Transform coordinates
     float u = x / (float)Xdim;
     float v = y / (float)Ydim;
-
-    // Transform coordinates
     u -= 0.5f;
     v -= 0.5f;
+
     float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
     float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
 
     // Read from texture and write to global memory
-    output[y * Xdim + x] = tex2D(texRef, tu, tv);
+   	output[y * Xdim + x] = tex2D(texRef, tu, tv);
+   	output[y * Xdim + x] = cubicTex2DSimple(texRef, tu, tv);
+}
+
+
+__global__ void
+rotate_kernel_unnormalized(float *output, size_t Xdim, size_t Ydim, float ang)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // Transform coordinates
+    float u = x / (float)Xdim;
+    float v = y / (float)Ydim;
+    u -= 0.5f;
+    v -= 0.5f;
+
+    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
+    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
+
+    tu = tu*(float)Xdim;
+    tv = tv*(float)Ydim;
+
+    // Read from texture and write to global memory
+   	output[y * Xdim + x] = cubicTex2DSimple(texRef, tu, tv);
 }
 
 
@@ -98,7 +122,11 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     }else{
     	texRef.filterMode = cudaFilterModeLinear;
     }
-    texRef.normalized = true;
+    if (interp<2){
+    	texRef.normalized = true;
+    }else{
+    	texRef.normalized = false;
+    }
 
     // Bind the array to the texture reference
     cudaBindTextureToArray(texRef, cuArray, channelDesc);
@@ -121,7 +149,11 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	}
 	const dim3 gridSize(numBlkx, numBlky, 1);
 
-	rotate_kernel<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+	if(interp<2){
+		rotate_kernel_normalized<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+	}else{
+		rotate_kernel_unnormalized<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+	}
 
 	cudaDeviceSynchronize();
 

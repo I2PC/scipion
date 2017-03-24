@@ -50,7 +50,7 @@ void ProgGpuRotateImage::show()
 	<< "Input:          " << fnRef    << std::endl
 	<< "Output:          " << fnOut    << std::endl
     << "Rotate an image by an angle: " << ang       << std::endl
-	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear " << interp    << std::endl
+	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear, 2 - Cubic " << interp    << std::endl
     ;
 }
 
@@ -61,7 +61,7 @@ void ProgGpuRotateImage::defineParams()
     addParamsLine("   -i <Metadata1>        : Input image");
     addParamsLine("   -o <Metadata1>        : Output image");
     addParamsLine("   --ang <Metadata1>        : Rotation angle in degrees");
-    addParamsLine("   --interp <Metadata1>        : Interpolation method: 0 - Point, 1 - Linear");
+    addParamsLine("   --interp <Metadata1>        : Interpolation method: 0 - Point, 1 - Linear, 2 - Cubic");
 
 }
 
@@ -91,8 +91,6 @@ void ProgGpuRotateImage::run()
 
     MultidimArray<float> rotated_image(Xdim,Ydim);
 
-    //original_image.initRandom(0, 100, RND_UNIFORM);
-
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
@@ -100,9 +98,6 @@ void ProgGpuRotateImage::run()
 
     Iout() = rotated_image;
     Iout.write(fnOut);
-
-	//std::cout << "original_image" << original_image << std::endl;
-	//std::cout << "rotated_image" << rotated_image << std::endl;
 
 
 }
