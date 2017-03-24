@@ -706,6 +706,13 @@ void ProgMonogenicSignalRes::run()
 				else
 					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 		}
+		#ifdef DEBUG_MASK
+		FileName fnmask_debug;
+		fnmask_debug = formatString("maske_%i.vol", iter);
+		mask.write(fnmask_debug);
+		#endif
+
+
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
 		if (verbose >=2)
@@ -743,7 +750,7 @@ void ProgMonogenicSignalRes::run()
 			}
 			else
 			{
-				if (resolution == minRes)
+				if (resolution <= minRes)
 					doNextIteration = false;
 			}
 		}
