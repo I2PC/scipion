@@ -45,6 +45,7 @@ following papers:
 #define _CUBIC2D_KERNEL_H_
 
 #include "bspline_kernel.cpp"
+#include "math_func.cpp"
 
 //! Bilinearly interpolated texture lookup, using unnormalized coordinates.
 //! This function merely serves as a reference for the bicubic versions.

@@ -30,7 +30,7 @@
 #include "data/xmipp_program.h"
 #include <data/args.h>
 
-#define PI ((float)3.141592653589793)
+//#define PI ((float)3.141592653589793)
 
 
 // Read arguments ==========================================================

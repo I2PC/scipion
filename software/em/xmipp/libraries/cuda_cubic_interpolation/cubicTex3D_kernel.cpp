@@ -32,7 +32,7 @@ policies, either expressed or implied.
 
 When using this code in a scientific project, please cite one or all of the
 following papers:
-*  Daniel Ruijters and Philippe Thévenaz,
+*  Daniel Ruijters and Philippe Thï¿½venaz,
    GPU Prefilter for Accurate Cubic B-Spline Interpolation, 
    The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
    http://dannyruijters.nl/docs/cudaPrefilter3.pdf
@@ -45,6 +45,10 @@ following papers:
 //! Fast implementation, using 8 trilinear lookups.
 //! @param tex  3D texture
 //! @param coord  unnormalized 3D texture coordinate
+
+#include "math_func.cpp"
+
+
 template<class floatN, class T, enum cudaTextureReadMode mode>
 __device__ floatN CUBICTEX3D(texture<T, 3, mode> tex, float3 coord)
 {
