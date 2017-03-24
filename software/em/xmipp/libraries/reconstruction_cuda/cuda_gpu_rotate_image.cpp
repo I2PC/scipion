@@ -11,6 +11,50 @@ texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
 
 //CUDA functions
+
+// Cubic B-spline function
+// The 3rd order Maximal Order and Minimum Support function, that it is maximally differentiable.
+__device__ float bspline(float t)
+{
+	t = fabs(t);
+	const float a = 2.0f - t;
+
+	if (t < 1.0f) return 2.0f/3.0f - 0.5f*t*t*a;
+	else if (t < 2.0f) return a*a*a / 6.0f;
+	else return 0.0f;
+}
+
+
+//! Bicubic interpolated texture lookup, using unnormalized coordinates.
+//! Straight forward implementation, using 16 nearest neighbour lookups.
+//! @param tex  2D texture
+//! @param x  unnormalized x texture coordinate
+//! @param y  unnormalized y texture coordinate
+__device__ float cubicTex2DSimple(texture tex, float x, float y)
+{
+	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
+	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
+	float2 index = floor(coord_grid);
+	const float2 fraction = coord_grid - index;
+	index.x += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+	index.y += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+
+	float result = 0.0f;
+	for (float y=-1; y < 2.5f; y++)
+	{
+		float bsplineY = bspline(y-fraction.y);
+		float v = index.y + y;
+		for (float x=-1; x < 2.5f; x++)
+		{
+			float bsplineXY = bspline(x-fraction.x) * bsplineY;
+			float u = index.x + x;
+			result += bsplineXY * tex2D(tex, u, v);
+		}
+	}
+	return result;
+}
+
+
 __global__ void
 rotate_kernel(float *output, size_t Xdim, size_t Ydim, float ang)
 {
@@ -29,6 +73,8 @@ rotate_kernel(float *output, size_t Xdim, size_t Ydim, float ang)
     // Read from texture and write to global memory
     output[y * Xdim + x] = tex2D(texRef, tu, tv);
 }
+
+
 
 void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, float ang, int interp){
 
