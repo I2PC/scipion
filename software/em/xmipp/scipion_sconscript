@@ -216,6 +216,13 @@ if cuda:
        patterns=['reconstruction_adapt_cuda/*.cpp'],
        incs=bilib_incs,
        libs=['pthread'])
+       
+	addLib('XmippCudaCubirInterp',
+       dirs=['libraries'],
+       patterns=['cuda_cubic_interpolation/*.cpp'],
+       incs=bilib_incs, cuda=True,
+       libs=['pthread'])       
+
 
 
 # Interface
