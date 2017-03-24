@@ -493,7 +493,7 @@ def addProg(progName, **kwargs):
     if progName.startswith('cuda_'):
         kwargs['cuda'] = True
         #kwargs['nvcc'] = True
-        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda', 'XmippCudaCubicInterp']
+        kwargs['libs'] += ['XmippReconsAdaptCuda', 'XmippReconsCuda']
     #FIN AJ
 
     xmippProgName = 'xmipp_%s' % progName
