@@ -32,7 +32,7 @@ policies, either expressed or implied.
 
 When using this code in a scientific project, please cite one or all of the
 following papers:
-*  Daniel Ruijters and Philippe Thévenaz,
+*  Daniel Ruijters and Philippe Thï¿½venaz,
    GPU Prefilter for Accurate Cubic B-Spline Interpolation, 
    The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
    http://dannyruijters.nl/docs/cudaPrefilter3.pdf
@@ -44,7 +44,7 @@ following papers:
 #ifndef _CUBIC2D_KERNEL_H_
 #define _CUBIC2D_KERNEL_H_
 
-#include "bspline_kernel.cu"
+#include "bspline_kernel.cpp"
 
 //! Bilinearly interpolated texture lookup, using unnormalized coordinates.
 //! This function merely serves as a reference for the bicubic versions.
@@ -94,7 +94,7 @@ __device__ float cubicTex2DSimple(texture<T, 2, mode> tex, float x, float y)
 //! @param y  unnormalized y texture coordinate
 #define WEIGHTS bspline_weights
 #define CUBICTEX2D cubicTex2D
-#include "cubicTex2D_kernel.cu"
+#include "cubicTex2D_kernel.cpp"
 #undef CUBICTEX2D
 #undef WEIGHTS
 
@@ -120,13 +120,13 @@ __device__ void bspline_weights_1st_derivative_y(float2 fraction, float2& w0, fl
 
 #define WEIGHTS bspline_weights_1st_derivative_x
 #define CUBICTEX2D cubicTex2D_1st_derivative_x
-#include "cubicTex2D_kernel.cu"
+#include "cubicTex2D_kernel.cpp"
 #undef CUBICTEX2D
 #undef WEIGHTS
 
 #define WEIGHTS bspline_weights_1st_derivative_y
 #define CUBICTEX2D cubicTex2D_1st_derivative_y
-#include "cubicTex2D_kernel.cu"
+#include "cubicTex2D_kernel.cpp"
 #undef CUBICTEX2D
 #undef WEIGHTS
 
@@ -144,19 +144,19 @@ __device__ void bspline_weights_1st_derivative_y(float2 fraction, float2& w0, fl
 
 #define WEIGHTS bspline_weights
 #define CUBICTEX2D cubicTex2DLayered
-#include "cubicTex2D_kernel.cu"
+#include "cubicTex2D_kernel.cpp"
 #undef CUBICTEX2D
 #undef WEIGHTS
 
 #define WEIGHTS bspline_weights_1st_derivative_x
 #define CUBICTEX2D cubicTex2DLayered_1st_derivative_x
-#include "cubicTex2D_kernel.cu"
+#include "cubicTex2D_kernel.cpp"
 #undef CUBICTEX2D
 #undef WEIGHTS
 
 #define WEIGHTS bspline_weights_1st_derivative_y
 #define CUBICTEX2D cubicTex2DLayered_1st_derivative_y
-#include "cubicTex2D_kernel.cu"
+#include "cubicTex2D_kernel.cpp"
 #undef CUBICTEX2D
 #undef WEIGHTS
 #endif //cudaTextureType2DLayered

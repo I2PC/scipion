@@ -32,7 +32,7 @@ policies, either expressed or implied.
 
 When using this code in a scientific project, please cite one or all of the
 following papers:
-*  Daniel Ruijters and Philippe Thévenaz,
+*  Daniel Ruijters and Philippe Thï¿½venaz,
    GPU Prefilter for Accurate Cubic B-Spline Interpolation, 
    The Computer Journal, vol. 55, no. 1, pp. 15-20, January 2012.
    http://dannyruijters.nl/docs/cudaPrefilter3.pdf
@@ -44,7 +44,7 @@ following papers:
 #ifndef _MATH_FUNC_CUDA_H_
 #define _MATH_FUNC_CUDA_H_
 
-#include "version.cu"
+#include "version.cpp"
 
 typedef unsigned int uint;
 typedef unsigned short ushort;
