@@ -30,7 +30,7 @@ __device__ float bspline(float t)
 //! @param tex  2D texture
 //! @param x  unnormalized x texture coordinate
 //! @param y  unnormalized y texture coordinate
-__device__ float cubicTex2DSimple(texture tex, float x, float y)
+__device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadModeElementType> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
