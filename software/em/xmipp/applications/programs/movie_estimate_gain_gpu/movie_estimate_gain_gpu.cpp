@@ -2,6 +2,10 @@
 
 #include <data/xmipp_program.h>
 
+#include <time.h> // GCF
+
+#include "movie_estimate_gain_kernels.cu"
+
 double computeTVColumns(MultidimArray<int> &I);
 double computeTVRows(MultidimArray<int> &I);
 
@@ -45,8 +49,19 @@ public:
 	std::vector<double> listOfWidths;
 	std::vector<double *> listOfWeights;
 	int Xdim, Ydim;
+
 	cudaDeviceProp GPUprop;
         int  GPUdevice; 
+	int* d_columnH, d_rowH, d_aSingleColumnH, d_aSingleRowH; //matrix
+	double* d_smoothColumnH, * d_smoothRowH, * d_sumObs; //matrix
+	double** d_Iframe;		// vector of images
+	double* d_ICorrection; 		//Image
+	double* d_Itemp;       		//Image
+	double* d_ImagePool;   		//Image
+	double* d_listOfWidths;		//vector
+	double** d_listOfWeights;	//vector
+	double* d_listOfSigmas;		//vector
+
 };
 
 void ProgMovieEstimateGainGPU::defineParams()
@@ -91,6 +106,33 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	ICorrection().initConstant(1);
 	sumObs.initZeros(Ydim,Xdim);
 
+	// Copy all images to GPU
+	int im=0;
+	d_Iframe = (double**)malloc( sizeof(double*)*mdIn.size());
+	size_t sz_img=Xdim*Ydim*sizeof(double);
+ 
+	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+	{
+		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+		Iframe.read(fnFrame);
+		cudaMalloc(&d_Iframe[im], sz_img);
+		cudaMemcpy(d_Iframe[im++], Iframe.data.data, sz_img, cudaMemcpyHostToDevice); 
+	}
+	
+	// Allocate d_sumObs
+	cudaMalloc( &d_sumObs, sz_img);
+	//****
+	// Kernel
+	std::cout << "CALLING KERNEL" << std::endl;
+
+        dim3 block(floor((Xdim+31)/32),floor((Ydim+17)/16),1);
+	dim3 thread( 32, 16);
+	sumall<<< block, thread >>>(d_sumObs, d_Iframe[0], mdIn.size(), Xdim, Ydim);
+ 	double* sumObs_tmp=(double*)malloc(sz_img); // remove
+	std::cout << "READING RESULTS " << sz_img << std::endl;
+	cudaMemcpy(sumObs_tmp, d_sumObs, sz_img, cudaMemcpyDeviceToHost);
+	std::cout << "RESULTS READ" << std::endl;
+	
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
@@ -98,6 +140,16 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 		sumObs+=Iframe();
 	}
 	sumObs*=2;
+	
+	std::cout << "sumObs[0]=" << DIRECT_A2D_ELEM(sumObs,0,0) << " -> d_sumObs[0]=" << sumObs_tmp[0] << std::endl;
+
+	// free stuff // REMOVE
+	free(sumObs_tmp);
+	cudaFree(d_sumObs);
+	for (int i=0; i< mdIn.size(); i++)
+		cudaFree(d_Iframe[i]);
+ 
+	//****
 
 	// Initialize sigma values
 	for (double sigma=0; sigma<=maxSigma; sigma+=sigmaStep)
@@ -118,6 +170,7 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 //***********************/Weights
 		listOfWeights.push_back(weights);
 	}
+		// Nice place to copy onto GPU
 }
 
 void ProgMovieEstimateGainGPU::show()
@@ -158,10 +211,6 @@ void ProgMovieEstimateGainGPU::run()
 	else if (GPUdevice!=0)
 		std::cout << "GPU device 0 not selected, risk of not choosing the fastest one" << std::endl;
 	
-
-
-
-	
 	
 	produceSideInfo();
 
@@ -201,9 +250,11 @@ void ProgMovieEstimateGainGPU::run()
 			constructSmoothHistogramsByColumn(listOfWeights[bestSigmaCol],listOfWidths[bestSigmaCol]);
 			transformGrayValuesColumn(IframeIdeal,IframeTransformed);
 			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
-				DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+			DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
 		}
 
+		//***
+		// kernel with partial average
 		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mICorrection)
 		{
 			double den=DIRECT_A2D_ELEM(sumObs,i,j);
@@ -213,6 +264,7 @@ void ProgMovieEstimateGainGPU::run()
 				DIRECT_A2D_ELEM(mICorrection,i,j)=DIRECT_A2D_ELEM(sumIdeal,i,j)/den;
 		}
 		mICorrection/=mICorrection.computeAvg();
+		//****
 
 #ifdef NEVER_DEFINED
 	ICorrection.write(fnCorr);
@@ -239,6 +291,10 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 		int* auxElemC=new int[Ydim];
 		int* auxElemR=new int[Xdim];
 
+
+		
+		clock_t start = clock();
+
 		for(size_t j=0; j<XSIZE(columnH); j++)
 		{
 			for(size_t i=0; i<Ydim; i++)
@@ -249,6 +305,11 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 		}
 		delete auxElemC;
 
+		clock_t end = clock();
+		std::cout << "colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+
+		start=clock();
+		
 		for(size_t i=0; i<YSIZE(rowH); i++)
 		{
 			memcpy(auxElemR,&A2D_ELEM(Iframe,i,0),Xdim*sizeof(int));
@@ -258,6 +319,8 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 		delete auxElemR;
 
 
+		end = clock();
+		std::cout << "rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 #ifdef NEVER_DEFINED
 	Image<double> save;
 	typeCast(columnH,save());
