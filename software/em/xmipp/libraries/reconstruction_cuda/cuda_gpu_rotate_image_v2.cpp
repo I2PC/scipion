@@ -24,7 +24,7 @@ typedef signed char schar;
 ////////////////////////////////////////////////////////////////////////////////
 
 // additional constructors
-__host__ __device__ float2 make_float2(float s)
+inline __host__ __device__ float2 make_float2(float s)
 {
     return make_float2(s, s);
 }
