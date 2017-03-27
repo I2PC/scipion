@@ -636,7 +636,7 @@ void ProgMonogenicSignalRes::run()
 						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 						{
 							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
+							if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 							{
 								sumS  += amplitudeValue;
 								sumS2 += amplitudeValue*amplitudeValue;
