@@ -82,6 +82,7 @@ void ProgGpuRotateImage::run()
     Iref.read(fnRef);
     size_t Xdim, Ydim, Zdim, Ndim;
     Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
+    std::cout << "Zdim = " << Zdim << std::endl;
     if (Zdim>1 || Ndim>1){
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
