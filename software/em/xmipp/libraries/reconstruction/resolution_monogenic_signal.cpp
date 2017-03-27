@@ -25,8 +25,8 @@
  ***************************************************************************/
 
 #include "resolution_monogenic_signal.h"
-//#define DEBUG
-//#define DEBUG_MASK
+#define DEBUG
+#define DEBUG_MASK
 
 void ProgMonogenicSignalRes::readParams()
 {
@@ -574,82 +574,82 @@ void ProgMonogenicSignalRes::run()
 		if (exactres)
 		{
 			if (halfMapsGiven)
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								noiseValues.push_back(amplitudeValueN);
-								sumN  += amplitudeValueN;
-								sumN2 += amplitudeValueN*amplitudeValueN;
-								++NS;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						noiseValues.push_back(amplitudeValueN);
+						sumN  += amplitudeValueN;
+						sumN2 += amplitudeValueN*amplitudeValueN;
+						++NS;
+						++NN;
 					}
-					else
+				}
+			}
+			else
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								++NS;
-							}
-							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-							{
-								noiseValues.push_back(amplitudeValue);
-								sumN  += amplitudeValue;
-								sumN2 += amplitudeValue*amplitudeValue;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						++NS;
 					}
+					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+					{
+						noiseValues.push_back(amplitudeValue);
+						sumN  += amplitudeValue;
+						sumN2 += amplitudeValue*amplitudeValue;
+						++NN;
+					}
+				}
+			}
 		}
 		else
 		{
 			if (halfMapsGiven)
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								sumN  += amplitudeValueN;
-								sumN2 += amplitudeValueN*amplitudeValueN;
-								++NS;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						sumN  += amplitudeValueN;
+						sumN2 += amplitudeValueN*amplitudeValueN;
+						++NS;
+						++NN;
 					}
-					else
+				}
+			}
+			else
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								++NS;
-							}
-							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-							{
-								sumN  += amplitudeValue;
-								sumN2 += amplitudeValue*amplitudeValue;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						++NS;
 					}
+					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+					{
+						sumN  += amplitudeValue;
+						sumN2 += amplitudeValue*amplitudeValue;
+						++NN;
+					}
+				}
+			}
 		}
 
 		if (NS == 0)
@@ -687,11 +687,10 @@ void ProgMonogenicSignalRes::run()
 		#ifdef DEBUG
 		  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
 		#endif
-		int maskValue;
+
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 		{
-			maskValue = DIRECT_MULTIDIM_ELEM(pMask, n);
-			if (maskValue>=1)
+			if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 				if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 				{
 					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
@@ -701,8 +700,8 @@ void ProgMonogenicSignalRes::run()
 				}
 				else
 				{
-					++maskValue;
-					if (maskValue >2)
+					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
+					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
 					{
 						DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/(maxRes - (count_res-2)*R_);
