@@ -325,7 +325,7 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a, float2 sh
 	float x1 = a.x * x0 - a.y * y0 + shift.x;
 	float y1 = a.x * y0 + a.y * x0 + shift.y;
 
-	output[i] = cubicTex2D<float2>(texRef, x1, y1);
+	output[i] = cubicTex2D<float>(texRef, x1, y1);
 
 }
 
