@@ -62,7 +62,7 @@ public:
 	double N_freq, trimBound, significance;
 
 	/** The search for resolutions is linear or inverse**/
-	bool linearchk, exactres;
+	bool exactres;
 
 public:
 
