@@ -376,7 +376,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
 	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, 1);
 	CubicBSplinePrefilter2DTimer((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim);
 
-	std::cerr  << "bsplineCoeffs " << &bsplineCoeffs.ptr << std::endl;
+	std::cerr  << "bsplineCoeffs " << bsplineCoeffs.ptr << std::endl;
 	std::cerr  << "bsplineCoeffs.pitch " << bsplineCoeffs.pitch << std::endl;
 
 
