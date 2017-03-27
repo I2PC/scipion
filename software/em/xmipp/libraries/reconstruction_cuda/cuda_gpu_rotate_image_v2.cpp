@@ -93,23 +93,6 @@ __host__ __device__ float2 operator+(float2 a, float2 b)
     a *= inv;
 }
 
-// lerp
- __device__ __host__ float2 lerp(float2 a, float2 b, float t)
-{
-    return a + t*(b-a);
-}
-
-// clamp
- __device__ __host__ float2 clamp(float2 v, float a, float b)
-{
-    return make_float2(clamp(v.x, a, b), clamp(v.y, a, b));
-}
-
- __device__ __host__ float2 clamp(float2 v, float2 a, float2 b)
-{
-    return make_float2(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y));
-}
-
 // dot product
  __host__ __device__ float dot(float2 a, float2 b)
 {
