@@ -385,7 +385,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     cudaArray* cuArray;
     cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
     // Copy to device memory some data located at address h_data in host memory
-    cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyHostToDevice);
+    cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
 
     // Bind the array to the texture reference
     cudaBindTextureToArray(texRef, cuArray, channelDesc);
