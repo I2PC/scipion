@@ -334,10 +334,14 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a)
 }
 
 
-cudaPitchedPtr interpolate(float* output, uint width, uint height, double angle)
+cudaPitchedPtr interpolate(uint width, uint height, double angle)
 {
 	// Prepare the geometry
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
+
+	// Allocate the output image
+	float* output;
+	cudaMalloc((void**)&output, width * height * sizeof(float));
 
 	// Visit all pixels of the output image and assign their value
 	dim3 blockSize(min(PowTwoDivider(width), 16), min(PowTwoDivider(height), 16));
@@ -376,10 +380,6 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
 	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, 1);
 	CubicBSplinePrefilter2DTimer((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim);
 
-	std::cerr  << "bsplineCoeffs " << bsplineCoeffs.ptr << std::endl;
-	std::cerr  << "bsplineCoeffs.pitch " << bsplineCoeffs.pitch << std::endl;
-
-
 	// Init texture
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
     cudaArray* cuArray;
@@ -395,16 +395,12 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     texRef.normalized = false;
 
     //Interpolation (second step)
-    float *d_output;
-    cudaMalloc((void **)&d_output, matSize);
-    cudaOutput = interpolate(d_output, Xdim, Ydim, ang);
+    cudaOutput = interpolate(Xdim, Ydim, ang);
 
-    CopyVolumeDeviceToHost(d_output, cudaOutput, Xdim, Ydim, 1);
-
-    cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
+    CopyVolumeDeviceToHost(rotated_image, cudaOutput, Xdim, Ydim, 1);
 
     cudaFree(cuArray);
-    cudaFree(d_output);
+
 
 
 }
