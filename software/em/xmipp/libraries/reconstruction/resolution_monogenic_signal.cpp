@@ -704,7 +704,7 @@ void ProgMonogenicSignalRes::run()
 					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
 					{
 						DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/(maxRes - (count_res-2)*R_);
+						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes - (count_res-2)*R_;
 					}
 				}
 		}
