@@ -20,12 +20,12 @@ typedef unsigned short ushort;
 typedef unsigned char uchar;
 typedef signed char schar;
 
-inline __device__ __host__ uint UMIN(uint a, uint b)
+ __device__ __host__ uint UMIN(uint a, uint b)
 {
 	return a < b ? a : b;
 }
 
-inline __device__ __host__ uint PowTwoDivider(uint n)
+ __device__ __host__ uint PowTwoDivider(uint n)
 {
 	if (n == 0) return 0;
 	uint divider = 1;
@@ -33,12 +33,12 @@ inline __device__ __host__ uint PowTwoDivider(uint n)
 	return divider;
 }
 
-inline __host__ __device__ float2 operator-(float a, float2 b)
+ __device__ __host__ float2 operator-(float a, float2 b)
 {
 	return make_float2(a - b.x, a - b.y);
 }
 
-inline __host__ __device__ float3 operator-(float a, float3 b)
+ __device__ __host__ float3 operator-(float a, float3 b)
 {
 	return make_float3(a - b.x, a - b.y, a - b.z);
 }
@@ -64,9 +64,8 @@ cudaPitchedPtr CopyVolumeHostToDevice(const float* host, uint width, uint height
 
 
 
-template<class floatN>
-__host__ __device__ floatN InitialCausalCoefficient(
-	floatN* c,			// coefficients
+__device__ float InitialCausalCoefficient(
+	float* c,			// coefficients
 	uint DataLength,	// number of coefficients
 	int step)			// element interleave in bytes
 {
@@ -75,18 +74,18 @@ __host__ __device__ floatN InitialCausalCoefficient(
 	// this initialization corresponds to clamping boundaries
 	// accelerated loop
 	float zn = Pole;
-	floatN Sum = *c;
+	float Sum = *c;
 	for (uint n = 0; n < Horizon; n++) {
 		Sum += zn * *c;
 		zn *= Pole;
-		c = (floatN*)((uchar*)c + step);
+		c = (float*)((uchar*)c + step);
 	}
 	return(Sum);
 }
 
-template<class floatN>
-__host__ __device__ floatN InitialAntiCausalCoefficient(
-	floatN* c,			// last coefficient
+
+__device__ float InitialAntiCausalCoefficient(
+	float* c,			// last coefficient
 	uint DataLength,	// number of samples or coefficients
 	int step)			// element interleave in bytes
 {
@@ -94,9 +93,8 @@ __host__ __device__ floatN InitialAntiCausalCoefficient(
 	return((Pole / (Pole - 1.0f)) * *c);
 }
 
-template<class floatN>
-__host__ __device__ void ConvertToInterpolationCoefficients(
-	floatN* coeffs,		// input samples --> output coefficients
+__device__ void ConvertToInterpolationCoefficients(
+	float* coeffs,		// input samples --> output coefficients
 	uint DataLength,	// number of samples or coefficients
 	int step)			// element interleave in bytes
 {
@@ -104,19 +102,19 @@ __host__ __device__ void ConvertToInterpolationCoefficients(
 	const float Lambda = (1.0f - Pole) * (1.0f - 1.0f / Pole);
 
 	// causal initialization
-	floatN* c = coeffs;
-	floatN previous_c;  //cache the previously calculated c rather than look it up again (faster!)
+	float* c = coeffs;
+	float previous_c;  //cache the previously calculated c rather than look it up again (faster!)
 	*c = previous_c = Lambda * InitialCausalCoefficient(c, DataLength, step);
 	// causal recursion
 	for (uint n = 1; n < DataLength; n++) {
-		c = (floatN*)((uchar*)c + step);
+		c = (float*)((uchar*)c + step);
 		*c = previous_c = Lambda * *c + Pole * previous_c;
 	}
 	// anticausal initialization
 	*c = previous_c = InitialAntiCausalCoefficient(c, DataLength, step);
 	// anticausal recursion
 	for (int n = DataLength - 2; 0 <= n; n--) {
-		c = (floatN*)((uchar*)c - step);
+		c = (float*)((uchar*)c - step);
 		*c = previous_c = Pole * (previous_c - *c);
 	}
 }
@@ -125,46 +123,44 @@ __host__ __device__ void ConvertToInterpolationCoefficients(
 
 
 
-template<class floatN>
-__global__ void SamplesToCoefficients2DX(
-	floatN* image,		// in-place processing
+void SamplesToCoefficients2DX(
+	float* image,		// in-place processing
 	uint pitch,			// width in bytes
 	uint width,			// width of the image
 	uint height)		// height of the image
 {
 	// process lines in x-direction
 	const uint y = blockIdx.x * blockDim.x + threadIdx.x;
-	floatN* line = (floatN*)((uchar*)image + y * pitch);  //direct access
+	float* line = (float*)((uchar*)image + y * pitch);  //direct access
 
-	ConvertToInterpolationCoefficients(line, width, sizeof(floatN));
+	ConvertToInterpolationCoefficients(line, width, sizeof(float));
 }
 
-template<class floatN>
-__global__ void SamplesToCoefficients2DY(
-	floatN* image,		// in-place processing
+void SamplesToCoefficients2DY(
+	float* image,		// in-place processing
 	uint pitch,			// width in bytes
 	uint width,			// width of the image
 	uint height)		// height of the image
 {
 	// process lines in x-direction
 	const uint x = blockIdx.x * blockDim.x + threadIdx.x;
-	floatN* line = image + x;  //direct access
+	float* line = image + x;  //direct access
 
 	ConvertToInterpolationCoefficients(line, height, pitch);
 }
 
 
-template<class floatN>
-extern void CubicBSplinePrefilter2DTimer(floatN* image, uint pitch, uint width, uint height)
+
+void CubicBSplinePrefilter2DTimer(float* image, uint pitch, uint width, uint height)
 {
 
 	dim3 dimBlockX(min(PowTwoDivider(height), 64));
 	dim3 dimGridX(height / dimBlockX.x);
-	SamplesToCoefficients2DX<floatN><<<dimGridX, dimBlockX>>>(image, pitch, width, height);
+	SamplesToCoefficients2DX<<<dimGridX, dimBlockX>>>(image, pitch, width, height);
 
 	dim3 dimBlockY(min(PowTwoDivider(width), 64));
 	dim3 dimGridY(width / dimBlockY.x);
-	SamplesToCoefficients2DY<floatN><<<dimGridY, dimBlockY>>>(image, pitch, width, height);
+	SamplesToCoefficients2DY<<<dimGridY, dimBlockY>>>(image, pitch, width, height);
 
 }
 
@@ -172,11 +168,11 @@ extern void CubicBSplinePrefilter2DTimer(floatN* image, uint pitch, uint width, 
 
 
 
-template<class T> inline __device__ void bspline_weights(T fraction, T& w0, T& w1, T& w2, T& w3)
+__device__ void bspline_weights(float2 fraction, float2 w0, float2 w1, float2 w2, float2 w3)
 {
-	const T one_frac = 1.0f - fraction;
-	const T squared = fraction * fraction;
-	const T one_sqd = one_frac * one_frac;
+	const float2 one_frac = 1.0f - fraction;
+	const float2 squared = fraction * fraction;
+	const float2 one_sqd = one_frac * one_frac;
 
 	w0 = 1.0f/6.0f * one_sqd * one_frac;
 	w1 = 2.0f/3.0f - 0.5f * squared * (2.0f-fraction);
@@ -184,8 +180,7 @@ template<class T> inline __device__ void bspline_weights(T fraction, T& w0, T& w
 	w3 = 1.0f/6.0f * squared * fraction;
 }
 
-template<class floatN>
-__device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
+__device__ cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
@@ -200,10 +195,10 @@ __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, flo
 	const float2 h1 = (w3 / g1) + make_float2(1.5f) + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
 
 	// fetch the four linear interpolations
-	floatN tex00 = tex2D(tex, h0.x, h0.y);
-	floatN tex10 = tex2D(tex, h1.x, h0.y);
-	floatN tex01 = tex2D(tex, h0.x, h1.y);
-	floatN tex11 = tex2D(tex, h1.x, h1.y);
+	float tex00 = tex2D(tex, h0.x, h0.y);
+	float tex10 = tex2D(tex, h1.x, h0.y);
+	float tex01 = tex2D(tex, h0.x, h1.y);
+	float tex11 = tex2D(tex, h1.x, h1.y);
 
 	// weigh along the y-direction
 	tex00 = g0.y * tex00 + g1.y * tex01;
@@ -235,15 +230,10 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a)
 }
 
 
-cudaPitchedPtr interpolate(
-	uint width, uint height, double angle)
+cudaPitchedPtr interpolate(float* output, uint width, uint height, double angle)
 {
 	// Prepare the geometry
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
-
-	// Allocate the output image
-	float* output;
-	cudaMalloc((void**)&output, width * height * sizeof(float));
 
 	// Visit all pixels of the output image and assign their value
 	dim3 blockSize(min(PowTwoDivider(width), 16), min(PowTwoDivider(height), 16));
@@ -297,10 +287,10 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     texRef.normalized = false;
 
     //Interpolation (second step)
-    cudaOutput = interpolate(Xdim, Ydim, ang);
-
     float *d_output;
     cudaMalloc((void **)&d_output, matSize);
+    cudaOutput = interpolate(d_output, Xdim, Ydim, ang);
+
     CopyVolumeDeviceToHost(d_output, cudaOutput, Xdim, Ydim, 1);
 
     cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
