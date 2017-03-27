@@ -82,14 +82,14 @@ void ProgGpuRotateImage::run()
     Iref.read(fnRef);
     size_t Xdim, Ydim, Zdim, Ndim;
     Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
-    std::cout << "Xdim = " << Xdim << " Ydim = " << Ydim << " Zdim = " << Zdim << std::endl;
+    //std::cout << "Xdim = " << Xdim << " Ydim = " << Ydim << " Zdim = " << Zdim << std::endl;
     if (Zdim>1 || Ndim>1){
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
 
     MultidimArray<float> &original_image=Iref();
 
-    MultidimArray<float> rotated_image(Xdim,Ydim);
+    MultidimArray<float> rotated_image(Ydim,Xdim);
 
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);

@@ -216,6 +216,8 @@ void ProgSymmetrize::preProcess()
         {
             double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
             SL.readSymmetryFile(fn_sym, accuracy);
+            std::cout << "Matriz L " << SL.__L << std::endl;
+            std::cout << "Matriz R " << SL.__R << std::endl;
             symorder=-1;
         }
     }
