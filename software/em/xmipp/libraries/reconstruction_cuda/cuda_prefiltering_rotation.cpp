@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "cuda_basic_math.cpp"
-
 
 template<class floatN>
 __device__ floatN InitialCausalCoefficient(

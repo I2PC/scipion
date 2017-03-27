@@ -5,6 +5,7 @@
 #include <math.h>
 //CUDA includes
 #include <cuda_runtime.h>
+#include "cuda_basic_math.cpp"
 #include "cuda_copy_data.cpp"
 #include "cuda_interpolation_rotation.cpp"
 #include "cuda_prefiltering_rotation.cpp"
