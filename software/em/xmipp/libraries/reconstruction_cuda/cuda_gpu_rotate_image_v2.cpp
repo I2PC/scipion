@@ -184,8 +184,8 @@ template<class T> inline __device__ void bspline_weights(T fraction, T& w0, T& w
 	w3 = 1.0f/6.0f * squared * fraction;
 }
 
-template<class floatN, class T>
-__device__ floatN cubicTex2D(texture<T, 2, cudaReadModeElementType> tex, float x, float y)
+template<class floatN>
+__device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
@@ -287,7 +287,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     cudaArray* cuArray;
     cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
     // Copy to device memory some data located at address h_data in host memory
-    cudaMemcpyToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyHostToDevice);
+    cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyHostToDevice);
 
     // Bind the array to the texture reference
     cudaBindTextureToArray(texRef, cuArray, channelDesc);
