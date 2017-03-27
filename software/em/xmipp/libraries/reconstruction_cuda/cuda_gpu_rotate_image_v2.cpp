@@ -283,7 +283,8 @@ __device__ void bspline_weights(float2 fraction, float2& w0, float2& w1, float2&
 	w3 = 1.0f/6.0f * squared * fraction;
 }
 
-__device__ float cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
+template<class floatN>
+__device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
@@ -298,10 +299,10 @@ __device__ float cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, floa
 	const float2 h1 = (w3 / g1) + make_float2(1.5f) + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
 
 	// fetch the four linear interpolations
-	float tex00 = tex2D(tex, h0.x, h0.y);
-	float tex10 = tex2D(tex, h1.x, h0.y);
-	float tex01 = tex2D(tex, h0.x, h1.y);
-	float tex11 = tex2D(tex, h1.x, h1.y);
+	floatN tex00 = tex2D(tex, h0.x, h0.y);
+	floatN tex10 = tex2D(tex, h1.x, h0.y);
+	floatN tex01 = tex2D(tex, h0.x, h1.y);
+	floatN tex11 = tex2D(tex, h1.x, h1.y);
 
 	// weigh along the y-direction
 	tex00 = g0.y * tex00 + g1.y * tex01;
@@ -333,12 +334,12 @@ cudaPitchedPtr interpolate(uint width, uint height, float angle)
 {
 	// Prepare the geometry
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
-	double xOrigin = floor(width/2);
-	double yOrigin = floor(height/2);
-	double x0 = a.x * (xOrigin) - a.y * (yOrigin);
-	double y0 = a.y * (xOrigin) + a.x * (yOrigin);
-	double xShift = xOrigin - x0;
-	double yShift = yOrigin - y0;
+	float xOrigin = floor(width/2);
+	float yOrigin = floor(height/2);
+	float x0 = a.x * (xOrigin) - a.y * (yOrigin);
+	float y0 = a.y * (xOrigin) + a.x * (yOrigin);
+	float xShift = xOrigin - x0;
+	float yShift = yOrigin - y0;
 
 	// Allocate the output image
 	float* output;
