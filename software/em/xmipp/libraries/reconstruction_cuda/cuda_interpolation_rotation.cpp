@@ -24,7 +24,6 @@
  ***************************************************************************/
 
 
-#include "cuda_basic_math.cpp"
 
 __device__ void bspline_weights(float2 fraction, float2& w0, float2& w1, float2& w2, float2& w3)
 {
