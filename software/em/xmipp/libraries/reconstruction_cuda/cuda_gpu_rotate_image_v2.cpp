@@ -6,8 +6,8 @@
 //CUDA includes
 #include <cuda_runtime.h>
 #include "cuda_copy_data.cpp"
-#include "cuda_prefiltering_rotation.cpp"
 #include "cuda_interpolation_rotation.cpp"
+#include "cuda_prefiltering_rotation.cpp"
 #include "cuda_gpu_rotate_image_v2.h"
 
 
