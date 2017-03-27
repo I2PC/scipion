@@ -123,7 +123,7 @@ __device__ void ConvertToInterpolationCoefficients(
 
 
 
-void SamplesToCoefficients2DX(
+__global__ void SamplesToCoefficients2DX(
 	float* image,		// in-place processing
 	uint pitch,			// width in bytes
 	uint width,			// width of the image
@@ -136,7 +136,7 @@ void SamplesToCoefficients2DX(
 	ConvertToInterpolationCoefficients(line, width, sizeof(float));
 }
 
-void SamplesToCoefficients2DY(
+__global__ void SamplesToCoefficients2DY(
 	float* image,		// in-place processing
 	uint pitch,			// width in bytes
 	uint width,			// width of the image
