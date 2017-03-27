@@ -272,7 +272,7 @@ void CubicBSplinePrefilter2DTimer(float* image, uint pitch, uint width, uint hei
 
 
 
-__device__ void bspline_weights(float2 fraction, float2 w0, float2 w1, float2 w2, float2 w3)
+__device__ void bspline_weights(float2 fraction, float2& w0, float2& w1, float2& w2, float2& w3)
 {
 	const float2 one_frac = 1.0f - fraction;
 	const float2 squared = fraction * fraction;
@@ -325,16 +325,12 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a)
 	float x1 = a.x * x0 - a.y * y0;
 	float y1 = a.x * y0 + a.y * x0;
 
-	bool inside =
-		-0.5f < x1 && x1 < (extent.x - 0.5f) &&
-		-0.5f < y1 && y1 < (extent.y - 0.5f);
-
 	output[i] = cubicTex2D(texRef, x1, y1);
 
 }
 
 
-cudaPitchedPtr interpolate(uint width, uint height, double angle)
+cudaPitchedPtr interpolate(uint width, uint height, float angle)
 {
 	// Prepare the geometry
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
