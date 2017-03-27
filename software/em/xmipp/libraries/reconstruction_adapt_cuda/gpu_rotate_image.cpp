@@ -26,6 +26,7 @@
 #include "gpu_rotate_image.h"
 
 #include <reconstruction_cuda/cuda_gpu_rotate_image.h>
+#include <reconstruction_cuda/cuda_gpu_rotate_image_v2.h>
 #include <data/xmipp_image.h>
 #include "data/xmipp_program.h"
 #include <data/args.h>
@@ -92,7 +93,11 @@ void ProgGpuRotateImage::run()
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
-    cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad, interpol);
+    if (interpol<2){
+    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad, interpol);
+    }else{
+    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad);
+    }
 
     Iout() = rotated_image;
     Iout.write(fnOut);
