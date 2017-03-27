@@ -3,6 +3,7 @@
 #include "cuda_gpu_rotate_image_v2.h"
 #include <iostream>
 #include <stdio.h>
+#include <math.h>
 //CUDA includes
 #include <cuda_runtime.h>
 
@@ -154,8 +155,9 @@ __global__ void SamplesToCoefficients2DY(
 
 
 template<class floatN>
-extern void CubicBSplinePrefilter2D(floatN* image, uint pitch, uint width, uint height)
+extern void CubicBSplinePrefilter2DTimer(floatN* image, uint pitch, uint width, uint height)
 {
+
 	dim3 dimBlockX(min(PowTwoDivider(height), 64));
 	dim3 dimGridX(height / dimBlockX.x);
 	SamplesToCoefficients2DX<floatN><<<dimGridX, dimBlockX>>>(image, pitch, width, height);
@@ -163,7 +165,9 @@ extern void CubicBSplinePrefilter2D(floatN* image, uint pitch, uint width, uint 
 	dim3 dimBlockY(min(PowTwoDivider(width), 64));
 	dim3 dimGridY(width / dimBlockY.x);
 	SamplesToCoefficients2DY<floatN><<<dimGridY, dimBlockY>>>(image, pitch, width, height);
+
 }
+
 
 
 
@@ -180,6 +184,7 @@ template<class T> inline __device__ void bspline_weights(T fraction, T& w0, T& w
 	w3 = 1.0f/6.0f * squared * fraction;
 }
 
+template<class floatN, class T>
 __device__ floatN cubicTex2D(texture<T, 2, mode> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
