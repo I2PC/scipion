@@ -185,7 +185,7 @@ template<class T> inline __device__ void bspline_weights(T fraction, T& w0, T& w
 }
 
 template<class floatN, class T>
-__device__ floatN cubicTex2D(texture<T, 2, mode> tex, float x, float y)
+__device__ floatN cubicTex2D(texture<T, 2, cudaReadModeElementType> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
@@ -223,14 +223,14 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a)
 
 	float x0 = (float)x;
 	float y0 = (float)y;
-	float x1 = a.x * x0 - a.y * y0 + shift.x;
-	float y1 = a.x * y0 + a.y * x0 + shift.y;
+	float x1 = a.x * x0 - a.y * y0;
+	float y1 = a.x * y0 + a.y * x0;
 
 	bool inside =
 		-0.5f < x1 && x1 < (extent.x - 0.5f) &&
 		-0.5f < y1 && y1 < (extent.y - 0.5f);
 
-	output[i] = cubicTex2D(textRef, x1, y1);
+	output[i] = cubicTex2D(texRef, x1, y1);
 
 }
 
