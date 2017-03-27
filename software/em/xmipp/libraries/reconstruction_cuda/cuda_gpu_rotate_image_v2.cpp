@@ -20,6 +20,127 @@ typedef unsigned short ushort;
 typedef unsigned char uchar;
 typedef signed char schar;
 
+// float2 functions
+////////////////////////////////////////////////////////////////////////////////
+
+// additional constructors
+__host__ __device__ float2 make_float2(float s)
+{
+    return make_float2(s, s);
+}
+__host__ __device__ float2 make_float2(int2 a)
+{
+    return make_float2(float(a.x), float(a.y));
+}
+
+// addition
+__host__ __device__ float2 operator+(float2 a, float2 b)
+{
+    return make_float2(a.x + b.x, a.y + b.y);
+}
+ __host__ __device__ void operator+=(float2 &a, float2 b)
+{
+    a.x += b.x; a.y += b.y;
+}
+
+// subtract
+ __host__ __device__ float2 operator-(float2 a, float2 b)
+{
+    return make_float2(a.x - b.x, a.y - b.y);
+}
+ __host__ __device__ void operator-=(float2 &a, float2 b)
+{
+    a.x -= b.x; a.y -= b.y;
+}
+
+// multiply
+ __host__ __device__ float2 operator*(float2 a, float2 b)
+{
+    return make_float2(a.x * b.x, a.y * b.y);
+}
+ __host__ __device__ float2 operator*(float2 a, float s)
+{
+    return make_float2(a.x * s, a.y * s);
+}
+ __host__ __device__ float2 operator*(float s, float2 a)
+{
+    return make_float2(a.x * s, a.y * s);
+}
+ __host__ __device__ void operator*=(float2 &a, float s)
+{
+    a.x *= s; a.y *= s;
+}
+
+// divide
+ __host__ __device__ float2 operator/(float2 a, float2 b)
+{
+    return make_float2(a.x / b.x, a.y / b.y);
+}
+ __host__ __device__ float2 operator/(float2 a, float s)
+{
+    float inv = 1.0f / s;
+    return a * inv;
+}
+ __host__ __device__ float2 operator/(float s, float2 a)  //Danny
+{
+//    float inv = 1.0f / s;
+//    return a * inv;
+	return make_float2(s / a.x, s / a.y);
+}
+ __host__ __device__ void operator/=(float2 &a, float s)
+{
+    float inv = 1.0f / s;
+    a *= inv;
+}
+
+// lerp
+ __device__ __host__ float2 lerp(float2 a, float2 b, float t)
+{
+    return a + t*(b-a);
+}
+
+// clamp
+ __device__ __host__ float2 clamp(float2 v, float a, float b)
+{
+    return make_float2(clamp(v.x, a, b), clamp(v.y, a, b));
+}
+
+ __device__ __host__ float2 clamp(float2 v, float2 a, float2 b)
+{
+    return make_float2(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y));
+}
+
+// dot product
+ __host__ __device__ float dot(float2 a, float2 b)
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+// length
+ __host__ __device__ float length(float2 v)
+{
+    return sqrtf(dot(v, v));
+}
+
+// normalize
+ __host__ __device__ float2 normalize(float2 v)
+{
+    float invLen = 1.0f / sqrtf(dot(v, v));
+    return v * invLen;
+}
+
+// floor
+ __host__ __device__ float2 floor(const float2 v)
+{
+    return make_float2(floor(v.x), floor(v.y));
+}
+
+// reflect
+ __host__ __device__ float2 reflect(float2 i, float2 n)
+{
+	return i - 2.0f * n * dot(n,i);
+}
+
  __device__ __host__ uint UMIN(uint a, uint b)
 {
 	return a < b ? a : b;
