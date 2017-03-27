@@ -78,14 +78,12 @@ void ProgGpuRotateImage::run()
     std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
 
     Image<float> Iref, Iout;
-    Iref.read(fnRef, HEADER);
+    Iref.read(fnRef);
     size_t Xdim, Ydim, Zdim, Ndim;
     Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
     if (Zdim>1 || Ndim>1){
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
-    Iref.clear();
-    Iref.read(fnRef);
 
     MultidimArray<float> &original_image=Iref();
 
