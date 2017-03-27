@@ -284,7 +284,7 @@ __device__ void bspline_weights(float2 fraction, float2 w0, float2 w1, float2 w2
 	w3 = 1.0f/6.0f * squared * fraction;
 }
 
-__device__ cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
+__device__ float cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
