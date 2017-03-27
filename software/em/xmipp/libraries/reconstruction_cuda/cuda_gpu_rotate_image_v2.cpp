@@ -314,7 +314,7 @@ __device__ float cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, floa
 
 
 __global__ void
-interpolate_kernel(float* output, uint width, float2 extent, float2 a)
+interpolate_kernel(float* output, uint width, float2 extent, float2 a, float2 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -322,8 +322,8 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a)
 
 	float x0 = (float)x;
 	float y0 = (float)y;
-	float x1 = a.x * x0 - a.y * y0;
-	float y1 = a.x * y0 + a.y * x0;
+	float x1 = a.x * x0 - a.y * y0 + shift.x;
+	float y1 = a.x * y0 + a.y * x0 + shift.y;
 
 	output[i] = cubicTex2D(texRef, x1, y1);
 
@@ -334,6 +334,12 @@ cudaPitchedPtr interpolate(uint width, uint height, float angle)
 {
 	// Prepare the geometry
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
+	double xOrigin = floor(width/2);
+	double yOrigin = floor(height/2);
+	double x0 = a.x * (xOrigin) - a.y * (yOrigin);
+	double y0 = a.y * (xOrigin) + a.x * (yOrigin);
+	double xShift = xOrigin - x0;
+	double yShift = yOrigin - y0;
 
 	// Allocate the output image
 	float* output;
@@ -342,8 +348,9 @@ cudaPitchedPtr interpolate(uint width, uint height, float angle)
 	// Visit all pixels of the output image and assign their value
 	dim3 blockSize(min(PowTwoDivider(width), 16), min(PowTwoDivider(height), 16));
 	dim3 gridSize(width / blockSize.x, height / blockSize.y);
+	float2 shift = make_float2((float)xShift, (float)yShift);
 	float2 extent = make_float2((float)width, (float)height);
-	interpolate_kernel<<<gridSize, blockSize>>>(output, width, extent, a);
+	interpolate_kernel<<<gridSize, blockSize>>>(output, width, extent, a, shift);
 
 	return make_cudaPitchedPtr(output, width * sizeof(float), width, height);
 }
