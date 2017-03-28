@@ -440,50 +440,50 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
 		 MultidimArray<double> &resolutionChimera)
 {
-	MultidimArray<double> resolutionVol_aux = resolutionVol;
-	double last_resolution_2 = sampling/list[(list.size()-1)];
-
-	// Count number of voxels with resolution
-
-	double filling_value = 3;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
-	{
-		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)<(last_resolution_2-0.001)){
-			DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value; //meanRes;
-		}
-	}
-
-
-	FourierTransformer transformer;
+//	MultidimArray<double> resolutionVol_aux = resolutionVol;
+//	double last_resolution_2 = sampling/list[(list.size()-1)];
+//
+//	// Count number of voxels with resolution
+//
+//	double filling_value = 3;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+//	{
+//		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)<(last_resolution_2-0.001)){
+//			DIRECT_MULTIDIM_ELEM(resolutionVol_aux, n) = filling_value; //meanRes;
+//		}
+//	}
+//
+//
+//	FourierTransformer transformer;
 	MultidimArray<int> &pMask = mask();
-
-	transformer.FourierTransform(resolutionVol_aux, fftV);
+//
+//	transformer.FourierTransform(resolutionVol_aux, fftV);
 	resolutionFiltered = resolutionVol;
 
 	double freq, res, resValue, init_res, last_res;
-	size_t len;
-	len = list.size();
-
+//	size_t len;
+//	len = list.size();
+//
 	init_res = sampling/list[0];
 	last_res = sampling/list[(list.size()-1)];
-	resolutionFiltered.resizeNoCopy(resolutionVol);
-
-	std:: cout << "list = " << list[(list.size()-1)] << std::endl;
-
-	freq = list[(list.size()-1)];
-	res = sampling/freq;
-	std::cout << "freq_filter = " << res << std::endl;
-	std::cout << "init_res = " << init_res << std::endl;
-	std::cout << "last_res = " << last_res << std::endl;
-
-	lowPassFilter.FilterShape = RAISED_COSINE;
-	lowPassFilter.raised_w = 0.01;
-	lowPassFilter.do_generate_3dmask = false;
-	lowPassFilter.FilterBand = LOWPASS;
-	lowPassFilter.w1 = freq;
-	resolutionVol_aux.setXmippOrigin();
-	lowPassFilter.applyMaskFourierSpace(resolutionVol_aux, fftV);
-	transformer_inv.inverseFourierTransform(fftV, resolutionFiltered);
+//	resolutionFiltered.resizeNoCopy(resolutionVol);
+//
+//	std:: cout << "list = " << list[(list.size()-1)] << std::endl;
+//
+//	freq = list[(list.size()-1)];
+//	res = sampling/freq;
+//	std::cout << "freq_filter = " << res << std::endl;
+//	std::cout << "init_res = " << init_res << std::endl;
+//	std::cout << "last_res = " << last_res << std::endl;
+//
+//	lowPassFilter.FilterShape = RAISED_COSINE;
+//	lowPassFilter.raised_w = 0.01;
+//	lowPassFilter.do_generate_3dmask = false;
+//	lowPassFilter.FilterBand = LOWPASS;
+//	lowPassFilter.w1 = freq;
+//	resolutionVol_aux.setXmippOrigin();
+//	lowPassFilter.applyMaskFourierSpace(resolutionVol_aux, fftV);
+//	transformer_inv.inverseFourierTransform(fftV, resolutionFiltered);
 
 	resolutionChimera = resolutionFiltered;
 
@@ -499,7 +499,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 		{
 			DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
 			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = 0;
-			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
+//			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
 		}
 		else
 		{
@@ -771,26 +771,27 @@ void ProgMonogenicSignalRes::run()
 		symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR, DONT_WRAP);
 		outputResolution() = VSimetrized;
 	}
+
 	#ifdef DEBUG
 		outputResolution.write("resolution_simple_simmetrized.vol");
 	#endif
 
 	MultidimArray<double> resolutionFiltered, resolutionChimera;
-//	postProcessingLocalResolutions(pOutputResolution, list, resolutionFiltered, resolutionChimera);
-
-
-//	Image<double> outputResolutionImage;
-//	outputResolutionImage() = resolutionFiltered;
-//	outputResolutionImage.write(fnOut);
-//	outputResolutionImage() = resolutionChimera;
-//	outputResolutionImage.write(fnchim);
+	postProcessingLocalResolutions(pOutputResolution, list, resolutionFiltered, resolutionChimera);
 
 
 	Image<double> outputResolutionImage;
-	outputResolutionImage() = pOutputResolution;
+	outputResolutionImage() = resolutionFiltered;
 	outputResolutionImage.write(fnOut);
-	outputResolutionImage() = pOutputResolution;
+	outputResolutionImage() = resolutionChimera;
 	outputResolutionImage.write(fnchim);
+
+
+//	Image<double> outputResolutionImage;
+//	outputResolutionImage() = pOutputResolution;
+//	outputResolutionImage.write(fnOut);
+//	outputResolutionImage() = pOutputResolution;
+//	outputResolutionImage.write(fnchim);
 
 	//	double last_resolution_2 = resolution;
 	std::cout << "last computed resolution = " << last_resolution_2 << std::endl;
