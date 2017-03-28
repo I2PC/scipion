@@ -257,10 +257,6 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
     }
 
-
-
-
-
     // Allocate result of transformation in device memory
     float *d_output;
 	cudaMalloc((void **)&d_output, matSize);
@@ -313,7 +309,6 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
-
 
 	cudaFree(cuArray);
 	cudaFree(d_output);

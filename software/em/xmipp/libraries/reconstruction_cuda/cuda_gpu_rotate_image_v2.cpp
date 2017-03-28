@@ -15,13 +15,17 @@
 // 2D float texture
 texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
+// 3D float texture
+texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
+
 
 //CUDA functions
-__device__ void bspline_weights(float2 fraction, float2& w0, float2& w1, float2& w2, float2& w3)
+template<class floatN>
+__device__ void bspline_weights(floatN fraction, floatN& w0, floatN& w1, floatN& w2, floatN& w3)
 {
-	const float2 one_frac = 1.0f - fraction;
-	const float2 squared = fraction * fraction;
-	const float2 one_sqd = one_frac * one_frac;
+	const floatN one_frac = 1.0f - fraction;
+	const floatN squared = fraction * fraction;
+	const floatN one_sqd = one_frac * one_frac;
 
 	w0 = 1.0f/6.0f * one_sqd * one_frac;
 	w1 = 2.0f/3.0f - 0.5f * squared * (2.0f-fraction);
@@ -59,8 +63,45 @@ __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, flo
 }
 
 
+template<class floatN>
+__device__ floatN cubicTex3D(texture<float, 3, mode> tex, float3 coord)
+{
+	// shift the coordinate from [0,extent] to [-0.5, extent-0.5]
+	const float3 coord_grid = coord - 0.5f;
+	const float3 index = floor(coord_grid);
+	const float3 fraction = coord_grid - index;
+	float3 w0, w1, w2, w3;
+	bspline_weights(fraction, w0, w1, w2, w3);
+
+	const float3 g0 = w0 + w1;
+	const float3 g1 = w2 + w3;
+	const float3 h0 = (w1 / g0) - 0.5f + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
+	const float3 h1 = (w3 / g1) + 1.5f + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
+
+	// fetch the eight linear interpolations
+	// weighting and fetching is interleaved for performance and stability reasons
+	floatN tex000 = tex3D(tex, h0.x, h0.y, h0.z);
+	floatN tex100 = tex3D(tex, h1.x, h0.y, h0.z);
+	tex000 = g0.x * tex000 + g1.x * tex100;  //weigh along the x-direction
+	floatN tex010 = tex3D(tex, h0.x, h1.y, h0.z);
+	floatN tex110 = tex3D(tex, h1.x, h1.y, h0.z);
+	tex010 = g0.x * tex010 + g1.x * tex110;  //weigh along the x-direction
+	tex000 = g0.y * tex000 + g1.y * tex010;  //weigh along the y-direction
+	floatN tex001 = tex3D(tex, h0.x, h0.y, h1.z);
+	floatN tex101 = tex3D(tex, h1.x, h0.y, h1.z);
+	tex001 = g0.x * tex001 + g1.x * tex101;  //weigh along the x-direction
+	floatN tex011 = tex3D(tex, h0.x, h1.y, h1.z);
+	floatN tex111 = tex3D(tex, h1.x, h1.y, h1.z);
+	tex011 = g0.x * tex011 + g1.x * tex111;  //weigh along the x-direction
+	tex001 = g0.y * tex001 + g1.y * tex011;  //weigh along the y-direction
+
+	return (g0.z * tex000 + g1.z * tex001);  //weigh along the z-direction
+}
+
+
+
 __global__ void
-interpolate_kernel(float* output, uint width, float2 extent, float2 a, float2 shift)
+interpolate_kernel2D(float* output, uint width, float2 extent, float2 a, float2 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -68,15 +109,37 @@ interpolate_kernel(float* output, uint width, float2 extent, float2 a, float2 sh
 
 	float x0 = (float)x;
 	float y0 = (float)y;
+
 	float x1 = a.x * x0 - a.y * y0 + shift.x;
 	float y1 = a.x * y0 + a.y * x0 + shift.y;
 
-	output[i] = cubicTex2D<float>(texRef, x1, y1);
+	output[i] = cubicTex2D<float>(texRefVol, x1, y1);
 
 }
 
 
-cudaPitchedPtr interpolate(uint width, uint height, float angle)
+__global__ void
+interpolate_kernel3D(float* output, uint width, uint height, float3 extent, float3 a, float3 shift)
+{
+	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+	uint z = __umul24(blockIdx.z, blockDim.z) + threadIdx.z;
+	uint i = (width * height * z) + (width * y) + x;
+
+	float x0 = (float)x;
+	float y0 = (float)y;
+	float z0 = (float)z;
+	//AJ cambiar esto viene de desarrollar la multiplicacion de matrices
+	float x1 = a.x * x0 - a.y * y0 + shift.x;
+	float y1 = a.x * y0 + a.y * x0 + shift.y;
+	float z1 = a.x * y0 + a.y * x0 + shift.z;
+
+	output[i] = cubicTex3D<float>(texRef, x1, y1, z1);
+
+}
+
+
+cudaPitchedPtr interpolate2D(uint width, uint height, float angle)
 {
 	// Prepare the geometry
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
@@ -96,42 +159,122 @@ cudaPitchedPtr interpolate(uint width, uint height, float angle)
 	dim3 gridSize(width / blockSize.x, height / blockSize.y);
 	float2 shift = make_float2((float)xShift, (float)yShift);
 	float2 extent = make_float2((float)width, (float)height);
-	interpolate_kernel<<<gridSize, blockSize>>>(output, width, extent, a, shift);
+	interpolate_kernel2D<<<gridSize, blockSize>>>(output, width, extent, a, shift);
 
 	return make_cudaPitchedPtr(output, width * sizeof(float), width, height);
 }
 
 
-void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_t Ydim, float ang){
+void interpolate3D(uint width, uint height, uint depth, float angle, float* output)
+{
+	// Prepare the geometry
+
+	float2 a = make_float2((float)cos(angle), (float)sin(angle));
+	float xOrigin = floor(width/2);
+	float yOrigin = floor(height/2);
+	float zOrigin = floor(depth/2);
+	//AJ mal, hay que hacerlo conforme a las ecuaciones de rotacion
+	float x0 = a.x * (xOrigin) - a.y * (yOrigin);
+	float y0 = a.y * (xOrigin) + a.x * (yOrigin);
+	float z0 = a.y * (zOrigin) + a.x * (yOrigin);
+
+	float xShift = xOrigin - x0;
+	float yShift = yOrigin - y0;
+	float zShift = zOrigin - z0;
+
+	// Visit all pixels of the output image and assign their value
+	int numTh = 10;
+	const dim3 blockSize(numTh, numTh, numTh);
+	int numBlkx = (int)(Xdim)/numTh;
+	if((Xdim)%numTh>0){
+		numBlkx++;
+	}
+	int numBlky = (int)(Ydim)/numTh;
+	if((Ydim)%numTh>0){
+		numBlky++;
+	}
+	int numBlkz = (int)(Zdim)/numTh;
+	if((Zdim)%numTh>0){
+		numBlkz++;
+	}
+	const dim3 gridSize(numBlkx, numBlky, numBlkz);
+
+	float3 shift = make_float3((float)xShift, (float)yShift, (float)zShift);
+	float3 extent = make_float3((float)width, (float)height, (float)depth);
+	interpolate_kernel3D<<<gridSize, blockSize>>>(output, width, extent, a, shift);
+
+}
+
+
+void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float ang){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 
 	//CUDA code
-	//size_t matSize=Xdim*Ydim*sizeof(float);
 
-	//Filtering process (first step)
 	struct cudaPitchedPtr bsplineCoeffs, cudaOutput;
-	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, 1); //AJ el 1 habra que cambiarlo cuando sea volumen
-	CubicBSplinePrefilter2D((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim);
+	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, (uint)Zdim);
 
 	// Init texture
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
     cudaArray* cuArray;
-    cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
-    // Copy to device memory some data located at address h_data in host memory
-    cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
 
-    // Bind the array to the texture reference
-    cudaBindTextureToArray(texRef, cuArray, channelDesc);
 
-    // Specify texture object parameters
-    texRef.filterMode = cudaFilterModeLinear;
-    texRef.normalized = false;
+    if(Zdim==1){
 
-    //Interpolation (second step)
-    cudaOutput = interpolate(Xdim, Ydim, ang);
+    	//Filtering process (first step)
+    	CubicBSplinePrefilter2D((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim);
 
-    CopyVolumeDeviceToHost(rotated_image, cudaOutput, Xdim, Ydim, 1); //AJ el 1 habra que cambiarlo cuando sea volumen
+    	cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
+    	// Copy to device memory some data located at address h_data in host memory
+    	cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
+
+    	// Bind the array to the texture reference
+    	cudaBindTextureToArray(texRef, cuArray, channelDesc);
+
+    	// Specify texture object parameters
+    	texRef.filterMode = cudaFilterModeLinear;
+    	texRef.normalized = false;
+
+    	//Interpolation (second step)
+    	cudaOutput = interpolate2D(Xdim, Ydim, ang);
+    	cudaDeviceSynchronize();
+
+    	CopyVolumeDeviceToHost(rotated_image, cudaOutput, Xdim, Ydim, Zdim);
+
+
+    }else if (Zdim>1){
+
+    	//Filtering process (first step)
+    	CubicBSplinePrefilter3D((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim, (uint)Zdim);
+
+    	cudaExtent volumeExtent = make_cudaExtent(Xdim, Ydim, Zdim);
+    	cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent);
+    	cudaMemcpy3DParms p = {0};
+    	p.extent   = volumeExtent;
+    	p.srcPtr   = bsplineCoeffs;
+    	p.dstArray = cuArray;
+    	p.kind     = cudaMemcpyDeviceToDevice;
+    	cudaMemcpy3D(&p);
+    	// bind array to 3D texture
+    	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
+
+    	// Specify texture object parameters
+  		texRefVol.filterMode = cudaFilterModeLinear;
+    	texRefVol.normalized = false;
+
+    	float *d_output;
+    	cudaMalloc((void **)&d_output, matSize);
+
+    	//Interpolation (second step)
+    	interpolate3D(Xdim, Ydim, Zdim ang, d_output);
+    	cudaDeviceSynchronize();
+
+    	cudaMemcpy(rotated_image, d_output, Xdim * Ydim * Zdim * sizeof(float), cudaMemcpyDeviceToHost);
+    	cudaFree(d_output);
+
+    }
+
 
     cudaFree(cuArray);
 
