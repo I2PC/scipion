@@ -31,6 +31,7 @@ from pyworkflow.utils import Environ, getEnvVariable
 
 CUDA_LIB = 'CUDA_LIB'
 MOTIONCORR_CUDA_LIB = 'MOTIONCORR_CUDA_LIB'
+MOTIONCOR2_CUDA_LIB = 'MOTIONCOR2_CUDA_LIB'
 
 
 def _getHome(key, default):
@@ -51,31 +52,32 @@ MOTIONCOR2_PATH = join(_getHome('MOTIONCOR2_HOME', 'motioncor2'),
                        'bin', MOTIONCOR2)
 
 
-def getEnviron():
+def getEnviron(useMC2=False):
     """ Return the environ settings to run motioncorr programs. """
     environ = Environ(os.environ)
 
-    if exists(MOTIONCORR_PATH):
+    if exists(MOTIONCORR_PATH) and not useMC2:
         environ.update({'PATH': join(os.environ['MOTIONCORR_HOME'], 'bin')},
                        position=Environ.BEGIN)
 
     if exists(MOTIONCOR2_PATH):
         environ.update({'PATH': join(os.environ['MOTIONCOR2_HOME'], 'bin')},
                        position=Environ.BEGIN)
-
-    #FIXME: do we need separate libs for motioncor2?
-    cudaLib = getCudaLib(environ)
+    
+    cudaLib = getCudaLib(environ, useMC2)
     environ.addLibrary(cudaLib)
 
     return environ
 
 
-def getCudaLib(environ=None):
+def getCudaLib(environ=None, useMC2=False):
 
     if environ is None:
         environ = Environ(os.environ)
-
-    return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB))
+    if useMC2:
+        return environ.getFirst((MOTIONCOR2_CUDA_LIB, CUDA_LIB))
+    else:
+        return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB))
 
 
 def getVersion(var):
