@@ -42,7 +42,7 @@ from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion, getEnviron,
                      parseMovieAlignment, parseMovieAlignment2, getCudaLib,
-                     MOTIONCORR_CUDA_LIB, CUDA_LIB)
+                     MOTIONCORR_CUDA_LIB, MOTIONCOR2_CUDA_LIB, CUDA_LIB)
 from pyworkflow.protocol import STEPS_PARALLEL
 
 
@@ -376,18 +376,20 @@ class ProtMotionCorr(ProtAlignMovies):
             errors.append('Missing %s' % program)
 
         # Check CUDA paths
-        cudaLib = getCudaLib(self.useMotioncor2)
-
+        cudaLib = getCudaLib(useMC2=self.useMotioncor2)
+        cudaConst = (MOTIONCOR2_CUDA_LIB if self.useMotioncor2 else
+                     MOTIONCORR_CUDA_LIB)
+        
         if cudaLib is None:
             errors.append("Do not know where to find CUDA lib path. "
                           " %s or %s variables have None value or are not"
                           " present in scipion configuration."
-                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB))
+                          % (cudaConst, CUDA_LIB))
 
         elif not pwutils.existsVariablePaths(cudaLib):
             errors.append("Either %s or %s variables points to a non existing "
                           "path (%s). Please, check scipion configuration."
-                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB, cudaLib))
+                          % (cudaConst, CUDA_LIB, cudaLib))
 
         gpu = self.GPUIDs.get()
 
@@ -428,12 +430,6 @@ class ProtMotionCorr(ProtAlignMovies):
                 if doseFrame == 0.0 or doseFrame is None:
                     errors.append('Dose per frame for input movies is 0 or not '
                                   'set. You cannot apply dose filter.')
-
-            if self.doMagCor:
-                if getVersion('MOTIONCOR2') in ['03162016', '10192016']:
-                    errors.append('Your current motioncor2 version does not '
-                                  'support mag. correction. Please install '
-                                  'the latest program version.')
 
         return errors
 
