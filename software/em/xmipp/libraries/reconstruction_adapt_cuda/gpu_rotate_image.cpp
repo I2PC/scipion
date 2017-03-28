@@ -112,7 +112,7 @@ void ProgGpuRotateImage::run()
     if (interpol<2){
     	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, radIm, interpol);
     }else if(interpol==2){
-    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, radIm);
+    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, radIm);
     }
 
     Iout() = rotated_image;
