@@ -219,7 +219,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     	cudaMemcpy3DParms p = {0};
     	p.extent   = make_cudaExtent(Xdim*sizeof(float),Ydim,Zdim);
     	p.srcPtr   = make_cudaPitchedPtr((void*)image, Xdim * sizeof(float), Ydim, Zdim);
-    	p.dstArray = *cuArray;
+    	p.dstArray = cuArray;
     	p.kind     = cudaMemcpyHostToDevice;
     	cudaMemcpy3D(&p);
     	// bind array to 3D texture
