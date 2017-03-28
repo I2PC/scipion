@@ -300,7 +300,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 
 
-	cudaArray(cuArray);
+	cudaFree(cuArray);
 	cudaFree(d_output);
 
 }
