@@ -29,6 +29,4 @@ from bibtex import _bibtex # Load bibtex dict with references
 _references = ['Li2013', 'Zheng2016']
 
 from protocol_motioncorr import ProtMotionCorr
-# from convert import *
 from viewer import ProtMotioncorrViewer
-# _environ = getEnviron()
