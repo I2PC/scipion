@@ -112,6 +112,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	//CUDA code
 	size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
 	struct cudaPitchedPtr bsplineCoeffs, cudaOutput;
+	cudaArray* cuArray;
 
 	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, Zdim);
 
@@ -119,7 +120,6 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 		// Init texture
 		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-		cudaArray* cuArray;
 		cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
 		// Copy to device memory some data located at address h_data in host memory
 		cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
