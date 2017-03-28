@@ -41,10 +41,10 @@ class TestHighres(BaseTest):
         cls.protImport = cls.newProtocol(ProtImportVolumes,
                                          filesPath=pattern,
                                          samplingRate=samplingRate
-                                        )
+                                         )
         cls.launchProtocol(cls.protImport)
         return cls.protImport
-    
+
     @classmethod
     def runImportParticles(cls):
         """ Import Particles.
@@ -65,17 +65,16 @@ class TestHighres(BaseTest):
         cls.launchProtocol(protImport)
         return protImport
 
-
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        
+
         # Data
         cls.dataset = DataSet.getDataSet('10010')
         cls.initialVolume = cls.dataset.getFile('initialVolume')
         cls.particles = cls.dataset.getFile('particles')
-        
-        cls.protImportVol  = cls.runImportVolume(cls.initialVolume, 4.95)
+
+        cls.protImportVol = cls.runImportVolume(cls.initialVolume, 4.95)
         cls.protImportParts = cls.runImportParticles()
 
     def test(self):
@@ -84,7 +83,7 @@ class TestHighres(BaseTest):
                                   chooseAtRandom=True,
                                   nElements=400)
         self.launchProtocol(subset)
-        
+
         highres = self.newProtocol(XmippProtReconstructHighRes,
                                    inputParticles=subset.outputParticles,
                                    inputVolumes=self.protImportVol.outputVolume,
@@ -94,12 +93,13 @@ class TestHighres(BaseTest):
                                    maximumTargetResolution="15 10 7",
                                    numberOfMpi=8)
         self.launchProtocol(highres)
-        self.assertIsNotNone(highres.outputParticles, "There was a problem with Highres")
-        
-        fnResolution=highres._getExtraPath("Iter005/iterInfo.xmd")
+        self.assertIsNotNone(highres.outputParticles,
+                             "There was a problem with Highres")
+
+        fnResolution = highres._getExtraPath("Iter005/iterInfo.xmd")
         if not exists(fnResolution):
-            self.assertTrue(False,fnResolution+" does not exist")
+            self.assertTrue(False, fnResolution + " does not exist")
         else:
-            md=xmipp.MetaData("resolution@"+fnResolution)
-            R=md.getValue(xmipp.MDL_RESOLUTION_FREQREAL,md.firstObject())
-            self.assertTrue(R < 7, "Resolution is not below 7A")
+            md = xmipp.MetaData("resolution@" + fnResolution)
+            R = md.getValue(xmipp.MDL_RESOLUTION_FREQREAL, md.firstObject())
+            self.assertTrue(R < 8, "Resolution is not below 8A")

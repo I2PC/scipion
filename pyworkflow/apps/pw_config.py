@@ -126,10 +126,10 @@ def checkNotify(Config, notify=False):
     notifyOn = Config.get('VARIABLES','SCIPION_NOTIFY')
     if notifyOn=='False':
         # This works for  Python 2.x. and Python 3
-        try: 
-           input = raw_input
-        except NameError: 
-             pass
+        if sys.version_info[0] >= 3:
+            get_input = input
+        else:
+            get_input = raw_input
         print("""-----------------------------------------------------------------
 -----------------------------------------------------------------
 It would be very helpful if you allow Scipion
@@ -137,11 +137,11 @@ to send anonymous usage data. This information will help Scipion's
 team to identify the more demanded protocols and prioritize 
 support for them.
 
-The collected usage information is completely anonymous and does not 
+The collected usage information is COMPLETELY ANONYMOUS and does NOT
 include protocol parameters, file names or any data that can be used 
-to identify your account, machine or data. In the URL 
+to identify you or your data. In the URL
 https://github.com/I2PC/scipion/wiki/Collecting-Usage-Statistics-for-Scipion
-you may see examples of the transmited data as well as the 
+you may see examples of the transmitted data as well as the
 statistics created with it. You can always deactivate/activate 
 this option by editing the file $HOME/.config/scipion/scipion.conf 
 and setting the variable SCIPION_NOTIFY to False/True respectively.
@@ -150,7 +150,7 @@ We understand, of course, that you may not wish to have any
 information collected from you and we respect your privacy.
 """)
 
-        prompt = input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        prompt = get_input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
         if prompt == '':
             Config.set('VARIABLES','SCIPION_NOTIFY','True')
         print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))

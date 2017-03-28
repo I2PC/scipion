@@ -42,7 +42,7 @@ class ProtRelionExportCtf(EMProtocol):
     """
     _label = 'export ctf'
     _version = VERSION_1_1
-    CTF_STAR_FILE = 'micrographs_ctf.star'
+    CTF_STAR_FILE = 'micrographs_ctf_%06d.star'
     
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -63,8 +63,7 @@ class ProtRelionExportCtf(EMProtocol):
         
     def writeCtfStarStep(self):
         inputCTF = self.inputCTF.get()
-        print "Writing SetOfCtf: %s" % inputCTF
-        print " to: %s" % self._getPath(self.CTF_STAR_FILE)
+
 
         ctfMicSet = inputCTF.getMicrographs()
         micSet = SetOfMicrographs(filename=':memory:')
@@ -84,13 +83,22 @@ class ProtRelionExportCtf(EMProtocol):
             mic2.setCTF(ctf)
             if hasPsd:
                 psdFile = ctf.getPsdFile()
-                newPsdFile = join('PSD', '%s_psd.mrc' % mic.getMicName())
-                pwutils.copyFile(psdFile, self._getPath(newPsdFile))
+                newPsdFile = join(psdPath, '%s_psd.mrc' % mic.getMicName())
+                pwutils.copyFile(psdFile, newPsdFile)
                 ctf.setPsdFile(newPsdFile)
             micSet.append(mic2)
 
-        writeSetOfMicrographs(micSet, self._getPath(self.CTF_STAR_FILE),
+        starFile = self._getPath(self.CTF_STAR_FILE % self.getObjId())
+        print "Writing set: %s" % inputCTF
+        print " to: %s" % starFile
+
+        writeSetOfMicrographs(micSet, starFile,
                               preprocessImageRow=self.preprocessMicrograph)
+
+        # Let's create a link from the project roots to facilitate the import
+        # of the star file into a Relion project
+        pwutils.createLink(starFile, os.path.basename(starFile))
+
 
     #--------------------------- INFO functions --------------------------------
 
@@ -107,4 +115,5 @@ class ProtRelionExportCtf(EMProtocol):
     
     #--------------------------- UTILS functions -------------------------------
     def preprocessMicrograph(self, mic, micRow):
+        micRow.setValue('rlnSamplingRate', mic.getSamplingRate())
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
