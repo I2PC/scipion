@@ -50,17 +50,23 @@ public:
 	std::vector<double *> listOfWeights;
 	int Xdim, Ydim;
 
+	// Note that most GPU data is float instead of double
+	// d_ means GPU data, h_ means host (uP) data 
 	cudaDeviceProp GPUprop;
         int  GPUdevice; 
 	int* d_columnH, d_rowH, d_aSingleColumnH, d_aSingleRowH; //matrix
-	double* d_smoothColumnH, * d_smoothRowH, * d_sumObs; //matrix
-	double** d_Iframe;		// vector of images
-	double* d_ICorrection; 		//Image
-	double* d_Itemp;       		//Image
-	double* d_ImagePool;   		//Image
-	double* d_listOfWidths;		//vector
-	double** d_listOfWeights;	//vector
-	double* d_listOfSigmas;		//vector
+	float* d_smoothColumnH, * d_smoothRowH, * d_sumObs; //matrix
+	// d_Iframes and h_Iframes contains the same info
+	// d_Iframes is used internally by the GPU to access the images
+	// h_Iframes is used if a kernel is using a single image
+	float** d_Iframes;		// vector of images
+	float** h_Iframes;		// vector of images
+	float* d_ICorrection; 		//Image
+	float* d_Itemp;       		//Image
+	float* d_ImagePool;   		//Image
+	float* d_listOfWidths;		//vector
+	float** d_listOfWeights;	//vector
+	float* d_listOfSigmas;		//vector
 
 };
 
@@ -93,7 +99,8 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	mdIn.removeDisabled();
 	if (mdIn.size()==0)
 		exit(0);
-	Image<double> Iframe;
+//	Image<double> Iframe;
+	Image<float> Iframe;	// GPU => float
 	FileName fnFrame;
 	mdIn.getValue(MDL_IMAGE,fnFrame,mdIn.firstObject());
 	Iframe.read(fnFrame);
@@ -108,27 +115,36 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 
 	// Copy all images to GPU
 	int im=0;
-	d_Iframe = (double**)malloc( sizeof(double*)*mdIn.size());
-	size_t sz_img=Xdim*Ydim*sizeof(double);
+	int sz_Iframes=sizeof(float*)*mdIn.size();
+	h_Iframes = (float**)malloc(sz_Iframes);
+	size_t sz_img=Xdim*Ydim*sizeof(float);
  
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
+		std::cout << "im="<< im <<"; Image size in bytes = " << sz_img << std::endl;
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 		Iframe.read(fnFrame);
-		cudaMalloc(&d_Iframe[im], sz_img);
-		cudaMemcpy(d_Iframe[im++], Iframe.data.data, sz_img, cudaMemcpyHostToDevice); 
+
+		gpuErrchk(cudaMalloc(&h_Iframes[im], sz_img));
+	std::cout << "Total global mem = " << GPUprop. totalGlobalMem << " bytes" << std::endl;
+		gpuErrchk(cudaMemcpy(h_Iframes[im++], &Iframe(0,0), sz_img, cudaMemcpyHostToDevice)); 
 	}
-	
+	// send vector of images to GPU
+	gpuErrchk(cudaMalloc(&d_Iframes, sz_Iframes));
+	gpuErrchk(cudaMemcpy(d_Iframes, h_Iframes, sz_Iframes, cudaMemcpyHostToDevice));
 	// Allocate d_sumObs
-	cudaMalloc( &d_sumObs, sz_img);
+	gpuErrchk(cudaMalloc( &d_sumObs, sz_img));
 	//****
 	// Kernel
 	std::cout << "CALLING KERNEL" << std::endl;
 
         dim3 block(floor((Xdim+31)/32),floor((Ydim+17)/16),1);
 	dim3 thread( 32, 16);
-	sumall<<< block, thread >>>(d_sumObs, d_Iframe[0], mdIn.size(), Xdim, Ydim);
- 	double* sumObs_tmp=(double*)malloc(sz_img); // remove
+	sumall<<< block, thread >>>(d_sumObs, d_Iframes, mdIn.size(), Xdim, Ydim);
+ 	cudaThreadSynchronize();
+	gpuErrchk(cudaGetLastError());
+
+	float* sumObs_tmp=(float*)malloc(sz_img); // remove
 	std::cout << "READING RESULTS " << sz_img << std::endl;
 	cudaMemcpy(sumObs_tmp, d_sumObs, sz_img, cudaMemcpyDeviceToHost);
 	std::cout << "RESULTS READ" << std::endl;
@@ -141,20 +157,31 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	}
 	sumObs*=2;
 	
+	// check if sumObs and sumObs_tmp are the same
+	for (int i=0; i<Xdim*Ydim; i++){
+		if (DIRECT_A1D_ELEM(sumObs,i)!=sumObs_tmp[i]){
+			std::cout << "ERROR: sumObs"<< std::endl;
+			break;
+		}	
+	}	
 	std::cout << "sumObs[0]=" << DIRECT_A2D_ELEM(sumObs,0,0) << " -> d_sumObs[0]=" << sumObs_tmp[0] << std::endl;
 
 	// free stuff // REMOVE
 	free(sumObs_tmp);
 	cudaFree(d_sumObs);
-	for (int i=0; i< mdIn.size(); i++)
-		cudaFree(d_Iframe[i]);
- 
+/*	for (int i=0; i< mdIn.size(); i++){
+		cudaFree(d_Iframes[i]);
+		free(h_Iframes[i]);
+	}
+	cudaFree(d_Iframes);
+	free(h_Iframes);
+*/ 
 	//****
 
 	// Initialize sigma values
 	for (double sigma=0; sigma<=maxSigma; sigma+=sigmaStep)
 		listOfSigmas.push_back(sigma);
-
+	
 	for (size_t i=0; i<listOfSigmas.size(); ++i)
 	{
 		int jmax=ceil(3*listOfSigmas[i]);
@@ -170,7 +197,13 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 //***********************/Weights
 		listOfWeights.push_back(weights);
 	}
-		// Nice place to copy onto GPU
+	// Copy to GPU
+	size_t sz_list = sizeof(float)*listOfSigmas.size();
+	gpuErrchk(cudaMalloc(&d_listOfSigmas, sz_list));
+	gpuErrchk(cudaMemcpy(d_listOfSigmas, listOfSigmas, sz_list, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMalloc(&d_listOfWeights, sz_list));
+	gpuErrchk(cudaMemcpy(d_listOfWeights, listOfWeights, sz_list, cudaMemcpyHostToDevice));
+	
 }
 
 void ProgMovieEstimateGainGPU::show()
@@ -193,7 +226,7 @@ void ProgMovieEstimateGainGPU::run()
 	int deviceCount;
 	cudaGetDeviceCount(&deviceCount);
 	GPUdevice = -1;
-	for (int device = 0; device < deviceCount; ++device) {
+	for (int device = 1; device < deviceCount; ++device) {
 	    cudaDeviceProp deviceProp;
 	    if (!cudaSetDevice(device)){
 		    cudaGetDeviceProperties(&GPUprop, device);
@@ -210,7 +243,8 @@ void ProgMovieEstimateGainGPU::run()
 	}
 	else if (GPUdevice!=0)
 		std::cout << "GPU device 0 not selected, risk of not choosing the fastest one" << std::endl;
-	
+	std::cout << "Total global mem = " << GPUprop. totalGlobalMem << " bytes" << std::endl;
+
 	
 	produceSideInfo();
 
