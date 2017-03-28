@@ -151,6 +151,8 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     v -= 0.5f;
     w -= 0.5f;
 
+    ang = 0;
+
     float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
     float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
     float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
@@ -189,8 +191,6 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
 }
 
 
-
-
 void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float ang, int interp){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
@@ -201,7 +201,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 	cudaArray* cuArray;
 
-	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, Zdim);
+	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, (uint)Zdim);
 
 	if(Zdim==1){
 
@@ -215,12 +215,13 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 	}else if (Zdim>1){
 
-    	cudaMalloc3DArray(&cuArray, &channelDesc, make_cudaExtent(Xdim*sizeof(float),Ydim,Zdim), 0);
-    	cudaMemcpy3DParms p = {0};
-    	p.extent   = make_cudaExtent(Xdim*sizeof(float),Ydim,Zdim);
-    	p.srcPtr   = make_cudaPitchedPtr((void*)image, Xdim * sizeof(float), Ydim, Zdim);
-    	p.dstArray = cuArray;
-    	p.kind     = cudaMemcpyHostToDevice;
+		cudaExtent volumeExtent = make_cudaExtent(volumeSize.x, volumeSize.y, volumeSize.z);
+		cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent);
+		cudaMemcpy3DParms p = {0};
+		p.extent   = volumeExtent;
+		p.srcPtr   = bsplineCoeffs;
+		p.dstArray = cuArray;
+    	p.kind     = cudaMemcpyDeviceToDevice;
     	cudaMemcpy3D(&p);
     	// bind array to 3D texture
     	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
@@ -252,19 +253,19 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 
 	//Kernel
-	if(Zdim==1){
+	int numTh = 32;
+	const dim3 blockSize(numTh, numTh, 1);
+	int numBlkx = (int)(Xdim)/numTh;
+	if((Xdim)%numTh>0){
+		numBlkx++;
+	}
+	int numBlky = (int)(Ydim)/numTh;
+	if((Ydim)%numTh>0){
+		numBlky++;
+	}
+	const dim3 gridSize(numBlkx, numBlky, 1);
 
-		int numTh = 32;
-		const dim3 blockSize(numTh, numTh, 1);
-		int numBlkx = (int)(Xdim)/numTh;
-		if((Xdim)%numTh>0){
-			numBlkx++;
-		}
-		int numBlky = (int)(Ydim)/numTh;
-		if((Ydim)%numTh>0){
-			numBlky++;
-		}
-		const dim3 gridSize(numBlkx, numBlky, 1);
+	if(Zdim==1){
 
 		if(interp<2){
 			rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
@@ -274,27 +275,19 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 	}else if(Zdim>1){
 
-		int numTh = 10;
-		const dim3 blockSize(numTh, numTh, numTh);
-		int numBlkx = (int)(Xdim)/numTh;
-		if((Xdim)%numTh>0){
-			numBlkx++;
+		double sum = 0.0;
+		const int3 volumeExtent = make_int3(Xdim, Ydim, Zdim);
+		for (uint z=0; z < Zdim; z++)
+		{
+			if(interp<2){
+				rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, z, ang);
+			}else{
+				rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, z, ang);
+			}
+			//cudaMemcpy(output, d_output, Xdim*Ydim* sizeof(float), cudaMemcpyDeviceToHost);
 		}
-		int numBlky = (int)(Ydim)/numTh;
-		if((Ydim)%numTh>0){
-			numBlky++;
-		}
-		int numBlkz = (int)(Zdim)/numTh;
-		if((Zdim)%numTh>0){
-			numBlkz++;
-		}
-		const dim3 gridSize(numBlkx, numBlky, numBlkz);
 
-		if(interp<2){
-			rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
-		}else{
-			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
-		}
+
 
 	}
 
