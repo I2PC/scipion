@@ -31,14 +31,16 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
 from pyworkflow.protocol.params import PointerParam, IntParam, LEVEL_ADVANCED
-from pyworkflow.em.protocol import ProtPreprocessMicrographs, EMProtocol
+from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
 from pyworkflow.em.data import SetOfMovies, Movie
+from pyworkflow.object import Set
+import pyworkflow.protocol.constants as cons
 import pyworkflow.em as em
+import os
+import math
 
 import xmipp
-
-
-class XmippProtMovieGain(ProtPreprocessMicrographs):
+class XmippProtMovieGain(ProtProcessMovies):
     """
     Estimate the gain image of a camera, directly analyzing one of its movies.
     """
@@ -69,59 +71,203 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
 
 
     #--------------------------- STEPS functions -------------------------------
-    def _insertAllSteps(self):
-        gainSteps = []
+    # def _insertAllSteps(self):
+    #     gainSteps = []
+    #     self.insertedDict = {}
+    #     if isinstance(self.inputMovies.get(), SetOfMovies):
+    #         for idx, movie in enumerate(self.inputMovies.get()):
+    #             if idx % self.movieStep.get() != 0:
+    #                 continue
+    #
+    #             stepId = self._insertFunctionStep('_processMovie', movie, prerequisites=[])
+    #             gainSteps.append(stepId)
+    #             self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
+    #
+    #     else:
+    #         movie = self.inputMovies.get()
+    #         stepId = self._insertFunctionStep('_processMovie', movie, prerequisites=[])
+    #         gainSteps.append(stepId)
+    #         self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
 
-        if isinstance(self.inputMovies.get(), SetOfMovies):
-            for idx, movie in enumerate(self.inputMovies.get()):
-                if idx % self.movieStep.get() != 0:
-                    continue
-                movieId = movie.getObjId()
-                fnMovie = movie.getFileName()
-                stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie, prerequisites=[])
-                gainSteps.append(stepId)
-        else:
-            movie = self.inputMovies.get()
-            movieId = movie.getObjId()
-            fnMovie = movie.getFileName()
-            stepId = self._insertFunctionStep('estimateGain', movieId, fnMovie, prerequisites=[])
-            gainSteps.append(stepId)
-
-        self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
 
     def createOutputStep(self):
+        # Do nothing now, the output should be ready.
+        pass
+
+        # if isinstance(self.inputMovies.get(), Movie):
+        #     movie = self.inputMovies.get()
+        #     imgOut = em.data.Image()
+        #     imgOut.setSamplingRate(movie.getSamplingRate())
+        #     imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
+        #                                      % movie.getObjId()))
+        #     self._defineOutputs(outputGainImage=imgOut)
+        #     self._defineSourceRelation(self.inputMovies, imgOut)
+        # else:
+        #     imgSetOut = []
+        #     for idx, movie in enumerate(self.inputMovies.get()):
+        #         if idx % self.movieStep.get() != 0:
+        #             continue
+        #         imgOut = em.data.Image()
+        #         imgOut.setSamplingRate(movie.getSamplingRate())
+        #         imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" % movie.getObjId()))
+        #
+        #         imgSetOut.setSamplingRate(movie.getSamplingRate())
+        #         imgSetOut.append(imgOut)
+        #
+        #         self._defineOutputs(outputSetOfGainImages=imgSetOut)
+        #         self._defineSourceRelation(self.inputMovies, imgSetOut)
+
+
+    def _insertNewMoviesSteps(self, insertedDict, inputMovies):
+        """ Insert steps to process new movies (from streaming)
+        Params:
+            insertedDict: contains already processed movies
+            inputMovies: input movies set to be check
+        """
+        deps = []
         if isinstance(self.inputMovies.get(), Movie):
             movie = self.inputMovies.get()
-            imgOut = em.data.Image()
-            imgOut.setSamplingRate(movie.getSamplingRate())
-            imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
-                                             % movie.getObjId()))
-
-            self._defineOutputs(outputGainImage=imgOut)
-            self._defineSourceRelation(self.inputMovies, imgOut)
+            if movie.getObjId() not in insertedDict:
+                stepId = self._insertMovieStep(movie)
+                deps.append(stepId)
+                insertedDict[movie.getObjId()] = stepId
         else:
-            imgSetOut = self._createSetOfImages()
-
+            # For each movie insert the step to process it
             for idx, movie in enumerate(self.inputMovies.get()):
                 if idx % self.movieStep.get() != 0:
                     continue
-                imgOut = em.data.Image()
-                imgOut.setSamplingRate(movie.getSamplingRate())
-                imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
-                                                 % movie.getObjId()))
-                imgSetOut.setSamplingRate(movie.getSamplingRate())
-                imgSetOut.append(imgOut)
-    
-            self._defineOutputs(outputSetOfGainImages=imgSetOut)
-            self._defineSourceRelation(self.inputMovies, imgSetOut)
-            print("TOTO JE DONE LIST: " + self._readDoneList())
-    
-    def estimateGain(self, movieId, fnMovie):
+                if movie.getObjId() not in insertedDict:
+                    stepId = self._insertMovieStep(movie)
+                    deps.append(stepId)
+                    insertedDict[movie.getObjId()] = stepId
+        return deps
+
+
+    def _processMovie(self, movie):
+        movieId = movie.getObjId()
+        fnMovie = movie.getFileName()
         self.runJob("xmipp_movie_estimate_gain",
                     "-i %s --oroot %s --iter 1 --singleRef --frameStep %d"
-                    % (fnMovie, self._getPath("movie_%06d" % movieId), self.frameStep),
-                    numberOfMpi=1)
+                    % (fnMovie, self._getPath("movie_%06d" % movieId), self.frameStep), numberOfMpi=1)
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
+
+
+    def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
+        """
+        Load the output set if it exists or create a new one.
+        fixSampling: correct the output sampling rate if binning was used,
+        except for the case when the original movies are kept and shifts
+        refers to that one.
+        """
+        setFile = self._getPath(baseName)
+        if os.path.exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            outputSet.loadAllProperties()
+            outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+
+        if isinstance(self.inputMovies.get(), SetOfMovies):
+            inputMovies = self.inputMovies.get()
+            outputSet.copyInfo(inputMovies)
+
+        if fixSampling:
+            newSampling = inputMovies.getSamplingRate() * self._getBinFactor()
+            outputSet.setSamplingRate(newSampling)
+
+        return outputSet
+
+
+    def _checkNewOutput(self):
+        if getattr(self, 'finished', False):
+            return
+        if isinstance(self.inputMovies.get(), Movie):
+            saveMovie = self.getAttributeValue('doSaveMovie', False)
+            imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
+
+            movie = self.inputMovies.get()
+            imgOut = em.data.Image()
+            imgOut.setObjId(movie.getObjId())
+            imgOut.setSamplingRate(movie.getSamplingRate())
+            imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" % movie.getObjId()))
+            imageSet.setSamplingRate(movie.getSamplingRate())
+            imageSet.append(imgOut)
+
+            self._updateOutputSet('outputMovies', imageSet, Set.STREAM_CLOSED)
+            outputStep = self._getFirstJoinStep()
+            outputStep.setStatus(cons.STATUS_NEW)
+            self.finished = True
+        else:
+
+            # Load previously done items (from text file)
+            doneList = self._readDoneList()
+            # Check for newly done items
+            newDone = [m.clone() for m in self.listOfMovies
+                       if int(m.getObjId()) not in doneList and self._isMovieDone(m)]
+
+            # Update the file with the newly done movies
+            # or exit from the function if no new done movies
+            print('_checkNewOutput: ')
+            print('   listOfMovies: {0}, doneList: {1}, newDone: {2}'
+                       .format(int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get()))), len(doneList), len(newDone)))
+
+            allDone = len(doneList) + len(newDone)
+            # We have finished when there is not more input movies (stream closed)
+            # and the number of processed movies is equal to the number of inputs
+            self.finished = self.streamClosed and allDone == int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get())))
+            streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+            if newDone:
+                self._writeDoneList(newDone)
+            elif not self.finished:
+                # If we are not finished and no new output have been produced
+                # it does not make sense to proceed and updated the outputs
+                # so we exit from the function here
+                return
+
+            print('   finished: %s ' % self.finished)
+            print('        self.streamClosed ({0}) AND' .format(self.streamClosed))
+            print('        allDone ({0}) == len(self.listOfMovies ({1})'
+                       .format(allDone, int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get())))))
+            print('   streamMode: %s' % streamMode)
+
+            saveMovie = self.getAttributeValue('doSaveMovie', False)
+            imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
+
+            for movie in newDone:
+                imgOut = em.data.Image()
+                imgOut.setObjId(movie.getObjId())
+                imgOut.setSamplingRate(movie.getSamplingRate())
+                imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" % movie.getObjId()))
+                imageSet.setSamplingRate(movie.getSamplingRate())
+                imageSet.append(imgOut)
+
+            self._updateOutputSet('outputMovies', imageSet, streamMode)
+
+            if self.finished:  # Unlock createOutputStep if finished all jobs
+                outputStep = self._getFirstJoinStep()
+                if outputStep and outputStep.isWaiting():
+                    outputStep.setStatus(cons.STATUS_NEW)
+
+
+    def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
+        outputSet.setStreamState(state)
+
+        if self.hasAttribute(outputName):
+            outputSet.write()  # Write to commit changes
+            outputAttr = getattr(self, outputName)
+            # Copy the properties to the object contained in the protcol
+            outputAttr.copy(outputSet, copyId=False)
+            # Persist changes
+            self._store(outputAttr)
+        else:
+            # Here the defineOutputs function will call the write() method
+            self._defineOutputs(**{outputName: outputSet})
+            self._store(outputSet)
+
+        # Close set databaset to avoid locking it
+        outputSet.close()
 
     #--------------------------- INFO functions -------------------------------
     def _summary(self):
