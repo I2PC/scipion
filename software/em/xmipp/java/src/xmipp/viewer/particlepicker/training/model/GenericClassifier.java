@@ -105,7 +105,10 @@ public class GenericClassifier extends Classifier
 			}
 			
 			output = XmippWindowUtil.executeCommand(convertCommand, true);
-			//System.out.println("convert output \n" + output);
+			if (DEBUG.hasScipionDebug()) {
+			    System.out.println("Convert command: \n" + convertCommand + "\n");
+			    System.out.println("Convert output \n" + output);
+			}
 			writeProperties();
 		}
 		catch (Exception e)
