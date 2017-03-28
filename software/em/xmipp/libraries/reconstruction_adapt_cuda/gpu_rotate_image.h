@@ -41,9 +41,9 @@ public:
 	FileName fnRef;
     FileName fnOut;
     FileName ang;
-    FileName angX;
-    FileName angY;
-    FileName angZ;
+    //FileName angX;
+    //FileName angY;
+    //FileName angZ;
     FileName interp;
 
 

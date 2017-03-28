@@ -40,9 +40,9 @@ void ProgGpuRotateImage::readParams()
 	fnRef = getParam("-i");
 	fnOut = getParam("-o");
 	ang = getParam("-ang");
-	angX = getParam("-angX");
-	angY = getParam("-angY");
-	angZ = getParam("-angZ");
+	//angX = getParam("-angX");
+	//angY = getParam("-angY");
+	//angZ = getParam("-angZ");
 	interp = getParam("-interp");
 
 }
@@ -54,9 +54,9 @@ void ProgGpuRotateImage::show()
 	<< "Input:          " << fnRef    << std::endl
 	<< "Output:          " << fnOut    << std::endl
     << "Rotation angle for images: " << ang       << std::endl
-	<< "Rotation angle for volumes in X axis: " << angX       << std::endl
-	<< "Rotation angle for volumes in Y axis: " << angY       << std::endl
-	<< "Rotation angle for volumes in Z axis: " << angZ       << std::endl
+	//<< "Rotation angle for volumes in X axis: " << angX       << std::endl
+	//<< "Rotation angle for volumes in Y axis: " << angY       << std::endl
+	//<< "Rotation angle for volumes in Z axis: " << angZ       << std::endl
 	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear, 2 - Cubic " << interp    << std::endl
     ;
 }
@@ -68,9 +68,9 @@ void ProgGpuRotateImage::defineParams()
     addParamsLine("   -i <input_file>        : Input image or volume");
     addParamsLine("   -o <output_file>        : Output image or volume");
     addParamsLine("   -ang <angle_im>     : For images: Rotation angle in degrees");
-    addParamsLine("   -angX <angle_volx>    : For volumes: Rotation angle in X axis in degrees");
-    addParamsLine("   -angY <angle_voly>    : For volumes: Rotation angle in Y axis in degrees");
-    addParamsLine("   -angZ <angle_volz>    : For volumes: Rotation angle in Z axis in degrees");
+    //addParamsLine("   -angX <angle_volx>    : For volumes: Rotation angle in X axis in degrees");
+    //addParamsLine("   -angY <angle_voly>    : For volumes: Rotation angle in Y axis in degrees");
+    //addParamsLine("   -angZ <angle_volz>    : For volumes: Rotation angle in Z axis in degrees");
     addParamsLine("   -interp <interpolation>        : Interpolation method: 0 - Point, 1 - Linear, 2 - Cubic");
 
 }
@@ -81,7 +81,7 @@ void ProgGpuRotateImage::run()
 {
 
 	int angIm, interpol;
-	int angVolX, angVolY, angVolZ;
+	//int angVolX, angVolY, angVolZ;
 	angIm = ang.getNumber();
 	interpol = interp.getNumber();
 
