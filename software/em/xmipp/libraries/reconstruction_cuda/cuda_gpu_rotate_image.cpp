@@ -177,8 +177,8 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
     w -= 0.5f;
 
     float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
-    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
-    float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
+    float tv = v * cosf(0) + u * sinf(0) + 0.5f;
+    float tw = w * cosf(0) + w * sinf(0) + 0.5f;
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;
