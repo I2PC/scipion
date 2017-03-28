@@ -50,7 +50,7 @@ inline __host__ __device__ void operator*=(float2 &a, float s);
 // divide
 inline __host__ __device__ float2 operator/(float2 a, float2 b);
 inline __host__ __device__ float2 operator/(float2 a, float s);
-inline __host__ __device__ float2 operator/(float s, float2 a)  //Danny;
+inline __host__ __device__ float2 operator/(float s, float2 a);  //Danny
 inline __host__ __device__ void operator/=(float2 &a, float s);
 
 // dot product
