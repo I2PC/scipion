@@ -61,9 +61,11 @@ void ProgGpuRotateImage::defineParams()
     addUsageLine("Computes the rotation of an image or a volume with CUDA in GPU");
     addParamsLine("   -i <Metadata1>        : Input image or volume");
     addParamsLine("   -o <Metadata1>        : Output image or volume");
-    addParamsLine("   --ang <Metadata1>        : Rotation angle or angles in degrees");
+    addParamsLine("   --ang <Metadata1>     : For images: Rotation angle in degrees");
     addParamsLine("                         : For volumes: the rotation angle in each axis must be specified");
-    addParamsLine("                         : Valid parameters are: X, Y, Z");
+    addParamsLine("   --angX <Metadata1>    : For volumes: Rotation angle in X axis in degrees");
+    addParamsLine("   --angY <Metadata1>    : For volumes: Rotation angle in Y axis in degrees");
+    addParamsLine("   --angZ <Metadata1>    : For volumes: Rotation angle in Z axis in degrees");
     addParamsLine("   --interp <Metadata1>        : Interpolation method: 0 - Point, 1 - Linear, 2 - Cubic");
 
 }
