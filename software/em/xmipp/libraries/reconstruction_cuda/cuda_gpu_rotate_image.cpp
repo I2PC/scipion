@@ -60,8 +60,37 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 }
 
 
+__device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadModeElementType> tex, float3 coord)
+{
+	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
+	const float3 coord_grid = coord - 0.5f;
+	float3 index = floor(coord_grid);
+	const float3 fraction = coord_grid - index;
+	index = index + 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+
+	float result = 0.0f;
+	for (float z=-1; z < 2.5f; z++)  //range [-1, 2]
+	{
+		float bsplineZ = bspline(z-fraction.z);
+		float w = index.z + z;
+		for (float y=-1; y < 2.5f; y++)
+		{
+			float bsplineYZ = bspline(y-fraction.y) * bsplineZ;
+			float v = index.y + y;
+			for (float x=-1; x < 2.5f; x++)
+			{
+				float bsplineXYZ = bspline(x-fraction.x) * bsplineYZ;
+				float u = index.x + x;
+				result += bsplineXYZ * tex3D(tex, u, v, w);
+			}
+		}
+	}
+	return result;
+}
+
+
 __global__ void
-rotate_kernel_normalized(float *output, size_t Xdim, size_t Ydim, float ang)
+rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float ang)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -82,7 +111,7 @@ rotate_kernel_normalized(float *output, size_t Xdim, size_t Ydim, float ang)
 
 
 __global__ void
-rotate_kernel_unnormalized(float *output, size_t Xdim, size_t Ydim, float ang)
+rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float ang)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -102,6 +131,61 @@ rotate_kernel_unnormalized(float *output, size_t Xdim, size_t Ydim, float ang)
     // Read from texture and write to global memory
    	output[y * Xdim + x] = cubicTex2DSimple(texRef, tu, tv);
 }
+
+
+
+__global__ void
+rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float ang)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    int z = blockDim.z * blockIdx.z + threadIdx.z;
+
+    // Transform coordinates
+    float u = x / (float)Xdim;
+    float v = y / (float)Ydim;
+    float w = z / (float)Zdim;
+    u -= 0.5f;
+    v -= 0.5f;
+    w -= 0.5f;
+
+    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
+    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
+    float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
+
+    // Read from texture and write to global memory
+   	output[((y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
+
+}
+
+
+__global__ void
+rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float ang)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+    int z = blockDim.z * blockIdx.z + threadIdx.z;
+
+    // Transform coordinates
+    float u = x / (float)Xdim;
+    float v = y / (float)Ydim;
+    float w = z / (float)Zdim;
+    u -= 0.5f;
+    v -= 0.5f;
+    w -= 0.5f;
+
+    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
+    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
+    float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
+
+    tu = tu*(float)Xdim;
+    tv = tv*(float)Ydim;
+    tw = tw*(float)Zdim;
+
+    // Read from texture and write to global memory
+   	output[((y * Xdim + x) + (Xdim * Ydim * z)] = cubicTex3DSimple(texRefVol, tu, tv, tw);
+}
+
 
 
 
@@ -127,7 +211,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 		// Bind the array to the texture reference
 		cudaBindTextureToArray(texRef, cuArray, channelDesc);
 
-	}/*else if (Zdim>1){
+	}else if (Zdim>1){
 
     	cudaMalloc3DArray(&cuArray, &channelDesc, make_cudaExtent(Xdim*sizeof(float),Ydim,Zdim), 0);
     	cudaMemcpy3DParms p = {0};
@@ -139,7 +223,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     	// bind array to 3D texture
     	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
 
-    }*/
+    }
 
     // Specify texture object parameters
     texRef.addressMode[0] = cudaAddressModeWrap;
@@ -166,22 +250,50 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 
 	//Kernel
-	int numTh = 32;
-	const dim3 blockSize(numTh, numTh, 1);
-	int numBlkx = (int)(Xdim)/numTh;
-	if((Xdim)%numTh>0){
-		numBlkx++;
-	}
-	int numBlky = (int)(Ydim)/numTh;
-	if((Ydim)%numTh>0){
-	  numBlky++;
-	}
-	const dim3 gridSize(numBlkx, numBlky, 1);
+	if(Zdim==1){
 
-	if(interp<2){
-		rotate_kernel_normalized<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
-	}else{
-		rotate_kernel_unnormalized<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+		int numTh = 32;
+		const dim3 blockSize(numTh, numTh, 1);
+		int numBlkx = (int)(Xdim)/numTh;
+		if((Xdim)%numTh>0){
+			numBlkx++;
+		}
+		int numBlky = (int)(Ydim)/numTh;
+		if((Ydim)%numTh>0){
+			numBlky++;
+		}
+		const dim3 gridSize(numBlkx, numBlky, 1);
+
+		if(interp<2){
+			rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+		}else{
+			rotate_kernel_unnormalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+		}
+
+	}else if(Zdim>1){
+
+		int numTh = 10;
+		const dim3 blockSize(numTh, numTh, numTh);
+		int numBlkx = (int)(Xdim)/numTh;
+		if((Xdim)%numTh>0){
+			numBlkx++;
+		}
+		int numBlky = (int)(Ydim)/numTh;
+		if((Ydim)%numTh>0){
+			numBlky++;
+		}
+		int numBlkz = (int)(Zdim)/numTh;
+		if((Zdim)%numTh>0){
+			numBlkz++;
+		}
+		const dim3 gridSize(numBlkx, numBlky, numBlkz);
+
+		if(interp<2){
+			rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
+		}else{
+			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
+		}
+
 	}
 
 	cudaDeviceSynchronize();
