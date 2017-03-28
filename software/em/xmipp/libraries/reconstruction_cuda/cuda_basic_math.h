@@ -24,6 +24,14 @@
  ***************************************************************************/
 
 
+
+typedef unsigned int uint;
+typedef unsigned short ushort;
+typedef unsigned char uchar;
+typedef signed char schar;
+
+#define Pole (sqrt(3.0f)-2.0f)  //pole for cubic b-spline
+
 // float2 functions
 ////////////////////////////////////////////////////////////////////////////////
 
