@@ -135,6 +135,10 @@ def getVersion():
     return ''
 
 
+def isVersion2():
+    return getVersion().startswith(V2_0)
+
+
 def getSupportedVersions():
     return [V1_3, V1_4, V2_0]
 
