@@ -294,18 +294,13 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
 		}
 
-		}
-
-
-
 	}
-
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 
 
-	cudaFree(cuArray);
+	cudaArray(cuArray);
 	cudaFree(d_output);
 
 }
