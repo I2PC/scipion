@@ -60,3 +60,7 @@ ALIGN_3D   = '3D'         # 3D map alignment
 ALIGN_PROJ = 'Projection' # relate projections with 3d map
 
 ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
+
+#SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/UsersGuide/midas/sym.html
+SYM_I222 = 0
+
