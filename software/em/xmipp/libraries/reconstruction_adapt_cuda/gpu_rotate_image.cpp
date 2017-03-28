@@ -39,7 +39,7 @@ void ProgGpuRotateImage::readParams()
 {
 	fnRef = getParam("-i");
 	fnOut = getParam("-o");
-	ang = getDoubleParam("-ang");
+	ang = getParam("-ang");
 	//angX = getParam("-angX");
 	//angY = getParam("-angY");
 	//angZ = getParam("-angZ");
@@ -80,15 +80,15 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
-	//double angIm;
+	double angIm;
 	int interpol;
 	//int angVolX, angVolY, angVolZ;
-	//angIm = ang.getNumber();
+	angIm = ang.getNumber();
 	interpol = interp.getNumber();
 
 
-	float radIm = PI*(float)ang/180.0;ang
-    std::cout << "Inside run with deg " << ang << " and rad " << radIm << std::endl ;
+	float radIm = PI*(float)angIm/180.0;ang
+    std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl ;
 
     Image<float> Iref, Iout;
     Iref.read(fnRef);
