@@ -151,14 +151,11 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     v -= 0.5f;
     w -= 0.5f;
 
-    ang = 0;
-
     float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
-    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
-    float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
+    float tv = v * cosf(0) + u * sinf(0) + 0.5f;
+    float tw = w * cosf(0) + w * sinf(0) + 0.5f;
 
     // Read from texture and write to global memory
-    //printf("Escribe hilo %i", (int)(y * Xdim + x) + (Xdim * Ydim * z));
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
 
 }
