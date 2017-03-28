@@ -24,6 +24,9 @@
  ***************************************************************************/
 
 
+
+#include "cuda_copy_data.h"
+
 cudaPitchedPtr CopyVolumeHostToDevice(const float* host, uint width, uint height, uint depth)
 {
 	cudaPitchedPtr device = {0};
