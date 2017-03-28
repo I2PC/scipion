@@ -64,7 +64,7 @@ __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, flo
 
 
 template<class floatN>
-__device__ floatN cubicTex3D(texture<float, 3, mode> tex, float3 coord)
+__device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, float3 coord)
 {
 	// shift the coordinate from [0,extent] to [-0.5, extent-0.5]
 	const float3 coord_grid = coord - 0.5f;
@@ -113,7 +113,7 @@ interpolate_kernel2D(float* output, uint width, float2 extent, float2 a, float2 
 	float x1 = a.x * x0 - a.y * y0 + shift.x;
 	float y1 = a.x * y0 + a.y * x0 + shift.y;
 
-	output[i] = cubicTex2D<float>(texRefVol, x1, y1);
+	output[i] = cubicTex2D<float>(texRef, x1, y1);
 
 }
 
@@ -134,7 +134,7 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, floa
 	float y1 = a.x * y0 + a.y * x0 + shift.y;
 	float z1 = a.x * y0 + a.y * x0 + shift.z;
 
-	output[i] = cubicTex3D<float>(texRef, x1, y1, z1);
+	output[i] = cubicTex3D<float>(texRefVol, x1, y1, z1);
 
 }
 
@@ -185,16 +185,16 @@ void interpolate3D(uint width, uint height, uint depth, float angle, float* outp
 	// Visit all pixels of the output image and assign their value
 	int numTh = 10;
 	const dim3 blockSize(numTh, numTh, numTh);
-	int numBlkx = (int)(Xdim)/numTh;
-	if((Xdim)%numTh>0){
+	int numBlkx = (int)(width)/numTh;
+	if((width)%numTh>0){
 		numBlkx++;
 	}
-	int numBlky = (int)(Ydim)/numTh;
-	if((Ydim)%numTh>0){
+	int numBlky = (int)(height)/numTh;
+	if((height)%numTh>0){
 		numBlky++;
 	}
-	int numBlkz = (int)(Zdim)/numTh;
-	if((Zdim)%numTh>0){
+	int numBlkz = (int)(depth)/numTh;
+	if((depth)%numTh>0){
 		numBlkz++;
 	}
 	const dim3 gridSize(numBlkx, numBlky, numBlkz);
