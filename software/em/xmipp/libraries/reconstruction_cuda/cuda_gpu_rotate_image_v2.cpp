@@ -119,7 +119,7 @@ interpolate_kernel2D(float* output, uint width, float2 extent, float2 a, float2 
 
 
 __global__ void
-interpolate_kernel3D(float* output, uint width, uint height, float3 extent, float3 a, float3 shift)
+interpolate_kernel3D(float* output, uint width, uint height, float3 extent, float2 a, float3 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
