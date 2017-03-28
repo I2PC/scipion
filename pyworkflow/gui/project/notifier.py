@@ -46,8 +46,8 @@ class ProjectNotifier(object):
     def _getUuidFileName(self):
         return self.project.getLogPath("uuid.log")
 
-    def _getDataFileName(self):
-        return self.project.getLogPath("data.log")
+    def _getDataFileName(self, fileName="data.log"):
+        return self.project.getLogPath(fileName)
 
     def _getUuid(self):
         # Load (or create if not exits) a file
@@ -117,6 +117,12 @@ class ProjectNotifier(object):
             #print "No change: Do not send new data"
             return
         else:
+            # For compatibility with version 1.0 check 
+            # if Log directory exists. If it does not 
+            # create it
+            #TODO REMOVE this check in scipion 1.3
+            import distutils.dir_util
+            distutils.dir_util.mkpath(self._getDataFileName(""))
             with open(self._getDataFileName(),'w') as f:
                 f.write(projectWorfklow)
             #print "change send new data"
