@@ -63,10 +63,12 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadModeElementType> tex, float3 coord)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float3 coord_grid = coord - 0.5f;
-	float3 index = floor(coord_grid);
-	const float3 fraction = coord_grid - index;
-	index = index + 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+	const float3 coord_grid = make_float3(coord.x - 0.5f, coord.y - 0.5f, coord.z - 0.5f);
+	float3 index = make_float3(floor(coord_grid.x), floor(coord_grid.y), floor(coord_grid.z));
+	const float3 fraction = make_float3(coord_grid.x - index.x, coord_grid.y - index.y, coord_grid.z - index.z);
+	index.x += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+	index.y += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+	index.z += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
 
 	float result = 0.0f;
 	for (float z=-1; z < 2.5f; z++)  //range [-1, 2]
