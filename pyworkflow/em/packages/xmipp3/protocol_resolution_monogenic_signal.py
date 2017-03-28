@@ -221,7 +221,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim
         params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
-        params += ' --linear '
+        #params += ' --linear '
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --trimmed %f' % 95  #This parameter only considers resolution values in percentile 95
