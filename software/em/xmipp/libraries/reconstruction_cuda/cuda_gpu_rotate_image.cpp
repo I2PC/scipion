@@ -9,6 +9,9 @@
 // 2D float texture
 texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
+// 3D float texture
+texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
+
 
 //CUDA functions
 
@@ -100,23 +103,48 @@ rotate_kernel_unnormalized(float *output, size_t Xdim, size_t Ydim, float ang)
 
 
 
-void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, float ang, int interp){
+void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float ang, int interp){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 
 	//CUDA code
-	size_t matSize=Xdim*Ydim*sizeof(float);
+	size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
+	struct cudaPitchedPtr bsplineCoeffs, cudaOutput;
 
-	// Allocate CUDA array in device memory
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
-    cudaArray* cuArray;
-    cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
-    // Copy to device memory some data located at address h_data in host memory
-    cudaMemcpyToArray(cuArray, 0, 0, image, matSize, cudaMemcpyHostToDevice);
+	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, Zdim);
+
+	if(Zdim==1){
+
+		// Init texture
+		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+		cudaArray* cuArray;
+		cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
+		// Copy to device memory some data located at address h_data in host memory
+		cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
+
+		// Bind the array to the texture reference
+		cudaBindTextureToArray(texRef, cuArray, channelDesc);
+
+	}/*else if (Zdim>1){
+
+    	cudaMalloc3DArray(&cuArray, &channelDesc, make_cudaExtent(Xdim*sizeof(float),Ydim,Zdim), 0);
+    	cudaMemcpy3DParms p = {0};
+    	p.extent   = make_cudaExtent(Xdim*sizeof(float),Ydim,Zdim);
+    	p.srcPtr   = make_cudaPitchedPtr((void*)image, Xdim * sizeof(float), Ydim, Zdim);
+    	p.dstArray = *cuArray;
+    	p.kind     = cudaMemcpyHostToDevice;
+    	cudaMemcpy3D(&p);
+    	// bind array to 3D texture
+    	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
+
+    }*/
 
     // Specify texture object parameters
     texRef.addressMode[0] = cudaAddressModeWrap;
     texRef.addressMode[1] = cudaAddressModeWrap;
+    if(Zdim>1){
+    	texRef.addressMode[2] = cudaAddressModeWrap;
+    }
     if (interp==0){
     	texRef.filterMode = cudaFilterModePoint;
     }else{
@@ -128,8 +156,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     	texRef.normalized = false;
     }
 
-    // Bind the array to the texture reference
-    cudaBindTextureToArray(texRef, cuArray, channelDesc);
+
 
     // Allocate result of transformation in device memory
     float *d_output;

@@ -13,7 +13,7 @@
 
 
 // 2D float texture
-texture<float, 2, cudaReadModeElementType> texRef;
+texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
 
 //CUDA functions

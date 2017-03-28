@@ -39,7 +39,7 @@ void ProgGpuRotateImage::readParams()
 {
 	fnRef = getParam("-i");
 	fnOut = getParam("-o");
-	ang = getParam("-ang");
+	ang = getDoubleParam("-ang");
 	//angX = getParam("-angX");
 	//angY = getParam("-angY");
 	//angZ = getParam("-angZ");
@@ -80,18 +80,20 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
-	int angIm, interpol;
+	//double angIm;
+	int interpol;
 	//int angVolX, angVolY, angVolZ;
-	angIm = ang.getNumber();
+	//angIm = ang.getNumber();
 	interpol = interp.getNumber();
 
 
-	float radIm = PI*(float)angIm/180.0;
-    std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl;
+	float radIm = PI*(float)ang/180.0;ang
+    std::cout << "Inside run with deg " << ang << " and rad " << radIm << std::endl ;
 
     Image<float> Iref, Iout;
     Iref.read(fnRef);
     size_t Xdim, Ydim, Zdim, Ndim;
+    //Iref.getSize();
     Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
     //std::cout << "Xdim = " << Xdim << " Ydim = " << Ydim << " Zdim = " << Zdim << std::endl;
     if (Zdim>1 || Ndim>1){
@@ -106,7 +108,7 @@ void ProgGpuRotateImage::run()
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
     if (interpol<2){
-    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, radIm, interpol);
+    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, radIm, interpol);
     }else if(interpol==2){
     	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, radIm);
     }
