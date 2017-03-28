@@ -109,11 +109,11 @@ void ProgGpuRotateImage::run()
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
-    //if (interpol<2){
+    if (interpol<2){
     	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, radIm, interpol);
-    /*}else if(interpol==2){
+    }else if(interpol==2){
     	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, radIm);
-    }*/
+    }
 
     Iout() = rotated_image;
     Iout.write(fnOut);
