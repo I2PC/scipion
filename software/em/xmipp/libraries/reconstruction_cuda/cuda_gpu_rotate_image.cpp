@@ -5,7 +5,7 @@
 #include <stdio.h>
 //CUDA includes
 #include <cuda_runtime.h>
-#include "cuda_copy_data.cpp"
+#include "cuda_copy_data.h"
 
 
 // 2D float texture
