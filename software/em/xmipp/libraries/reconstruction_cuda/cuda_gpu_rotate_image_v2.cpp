@@ -134,7 +134,7 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, floa
 	float y1 = a.x * y0 + a.y * x0 + shift.y;
 	float z1 = a.x * y0 + a.y * x0 + shift.z;
 
-	output[i] = cubicTex3D<float>(texRefVol, x1, y1, z1);
+	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
 
 }
 
@@ -201,7 +201,7 @@ void interpolate3D(uint width, uint height, uint depth, float angle, float* outp
 
 	float3 shift = make_float3((float)xShift, (float)yShift, (float)zShift);
 	float3 extent = make_float3((float)width, (float)height, (float)depth);
-	interpolate_kernel3D<<<gridSize, blockSize>>>(output, width, extent, a, shift);
+	interpolate_kernel3D<<<gridSize, blockSize>>>(output, width, height, extent, a, shift);
 
 }
 
@@ -264,10 +264,10 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     	texRefVol.normalized = false;
 
     	float *d_output;
-    	cudaMalloc((void **)&d_output, matSize);
+    	cudaMalloc((void **)&d_output, Xdim * Ydim * Zdim * sizeof(float));
 
     	//Interpolation (second step)
-    	interpolate3D(Xdim, Ydim, Zdim ang, d_output);
+    	interpolate3D(Xdim, Ydim, Zdim, ang, d_output);
     	cudaDeviceSynchronize();
 
     	cudaMemcpy(rotated_image, d_output, Xdim * Ydim * Zdim * sizeof(float), cudaMemcpyDeviceToHost);
