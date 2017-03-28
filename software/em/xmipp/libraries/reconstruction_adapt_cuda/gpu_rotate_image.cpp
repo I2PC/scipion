@@ -102,10 +102,8 @@ void ProgGpuRotateImage::run()
     }
 
     MultidimArray<float> &original_image=Iref();
-    std::cout << "MultidimArray<float> &original_image=Iref();" << std::endl;
 
-    MultidimArray<float> rotated_image(Ydim,Xdim,Zdim);
-    std::cout << "MultidimArray<float> rotated_image(Ydim,Xdim,Zdim);" << std::endl;
+    MultidimArray<float> rotated_image(Zdim,Ydim,Xdim);
 
     float *original_image_gpu = MULTIDIM_ARRAY(original_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
