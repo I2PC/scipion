@@ -80,9 +80,23 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
-	int angIm, interpol;
-	angIm = ang.getNumber();
+	int angIm, angVolX, angVolY, angVolZ, interpol;
+	//angIm = ang.getNumber();
 	interpol = interp.getNumber();
+	if (checkParam("-ang")){
+		angIm = ang.getNumber();
+	}else{
+		angIm = 0;
+	}
+	if (checkParam("-angX") && checkParam("-angY") && checkParam("-angZ")){
+		angVolX = angX.getNumber();
+		angVolY = angY.getNumber();
+		angVolZ = angZ.getNumber();
+	}else{
+		angVolX = 0;
+		angVolY = 0;
+		angVolZ = 0;
+	}
 
 	float radIm = PI*(float)angIm/180.0;
     std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl;
