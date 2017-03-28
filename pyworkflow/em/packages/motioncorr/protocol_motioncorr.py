@@ -40,7 +40,7 @@ from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.packages.grigoriefflab.convert import parseMagCorrInput
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
-from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
+from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion, getEnviron,
                      parseMovieAlignment, parseMovieAlignment2, getCudaLib,
                      MOTIONCORR_CUDA_LIB, CUDA_LIB)
 from pyworkflow.protocol import STEPS_PARALLEL
@@ -140,34 +140,49 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-
-        group = form.addGroup('Magnification correction')
-        group.addParam('doMagCor', params.BooleanParam, default=False,
-                       label='Correct anisotropic magnification?', condition='useMotioncor2',
-                       help='Correct anisotropic magnification by stretching '
-                            'image along the major axis, the axis where the '
-                            'lower magnification is detected.')
-        group.addParam('useEst', params.BooleanParam, default=True,
-                       label='Use previous estimation?', condition='useMotioncor2 and doMagCor',
-                       help='Use previously calculated parameters of '
-                            'magnification anisotropy (from magnification distortion '
-                            'estimation protocol).')
-        group.addParam('inputEst', params.PointerParam,
-                       pointerClass='ProtMagDistEst', condition='useEst and useMotioncor2 and doMagCor',
-                       label='Input protocol',
-                       help='Select previously executed estimation protocol.')
-        group.addParam('scaleMaj', params.FloatParam, default=1.0,
-                       condition='not useEst and useMotioncor2 and doMagCor',
-                       label='Major scale factor',
-                       help='Major scale factor.')
-        group.addParam('scaleMin', params.FloatParam, default=1.0,
-                       condition='not useEst and useMotioncor2 and doMagCor',
-                       label='Minor scale factor',
-                       help='Minor scale factor.')
-        group.addParam('angDist', params.FloatParam, default=0.0,
-                       condition='not useEst and useMotioncor2 and doMagCor',
-                       label='Distortion angle (deg)',
-                       help='Distortion angle, in degrees.')
+        if getVersion('MOTIONCOR2') == '01302017':
+            group = form.addGroup('Magnification correction')
+            group.addParam('doMagCor', params.BooleanParam, default=False,
+                           label='Correct anisotropic magnification?',
+                           condition='useMotioncor2',
+                           help='Correct anisotropic magnification by '
+                                'stretching image along the major axis, '
+                                'the axis where the lower magnification is '
+                                'detected.')
+            group.addParam('useEst', params.BooleanParam, default=True,
+                           label='Use previous estimation?',
+                           condition='useMotioncor2 and doMagCor',
+                           help='Use previously calculated parameters of '
+                                'magnification anisotropy (from magnification '
+                                'distortion estimation protocol).')
+            group.addParam('inputEst', params.PointerParam,
+                           pointerClass='ProtMagDistEst',
+                           condition='useEst and useMotioncor2 and doMagCor',
+                           label='Input protocol',
+                           help='Select previously executed estimation protocol.')
+            group.addParam('scaleMaj', params.FloatParam, default=1.0,
+                           condition='not useEst and useMotioncor2 and doMagCor',
+                           label='Major scale factor',
+                           help='Major scale factor.')
+            group.addParam('scaleMin', params.FloatParam, default=1.0,
+                           condition='not useEst and useMotioncor2 and doMagCor',
+                           label='Minor scale factor',
+                           help='Minor scale factor.')
+            group.addParam('angDist', params.FloatParam, default=0.0,
+                           condition='not useEst and useMotioncor2 and doMagCor',
+                           label='Distortion angle (deg)',
+                           help='Distortion angle, in degrees.')
+        else:
+            form.addParam('motioncor2Version', params.LabelParam,
+                          condition='useMotioncor2',
+                          label='It seems motioncor2-v01302017 is not '
+                                'installed in your system. If you want to '
+                                'correct anisotropic magnification, get in '
+                                'touch with your system manager to install '
+                                'it, and set MOTIONCOR2_HOME on your '
+                                'scipion.conf properly.\n'
+                                'Make sure MOTIONCOR2_CUDA_LIB or CUDA_LIB '
+                                'point to cuda-8.0/lib path')
 
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
@@ -310,7 +325,8 @@ class ProtMotionCorr(ProtAlignMovies):
             program = MOTIONCOR2_PATH
 
         try:
-            self.runJob(program, args, cwd=movieFolder)
+            self.runJob(program, args, cwd=movieFolder, env=getEnviron(
+                        self.useMotioncor2))
             self._fixMovie(movie)
 
             # Compute PSDs
@@ -360,7 +376,7 @@ class ProtMotionCorr(ProtAlignMovies):
             errors.append('Missing %s' % program)
 
         # Check CUDA paths
-        cudaLib = getCudaLib()
+        cudaLib = getCudaLib(self.useMotioncor2)
 
         if cudaLib is None:
             errors.append("Do not know where to find CUDA lib path. "
