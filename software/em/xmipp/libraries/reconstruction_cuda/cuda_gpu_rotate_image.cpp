@@ -252,20 +252,19 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 
 	//Kernel
-	int numTh = 32;
-	const dim3 blockSize(numTh, numTh, 1);
-	int numBlkx = (int)(Xdim)/numTh;
-	if((Xdim)%numTh>0){
-		numBlkx++;
-	}
-	int numBlky = (int)(Ydim)/numTh;
-	if((Ydim)%numTh>0){
-		numBlky++;
-	}
-	const dim3 gridSize(numBlkx, numBlky, 1);
-
 	if(Zdim==1){
 
+		int numTh = 32;
+		const dim3 blockSize(numTh, numTh, 1);
+		int numBlkx = (int)(Xdim)/numTh;
+		if((Xdim)%numTh>0){
+			numBlkx++;
+		}
+		int numBlky = (int)(Ydim)/numTh;
+		if((Ydim)%numTh>0){
+			numBlky++;
+		}
+		const dim3 gridSize(numBlkx, numBlky, 1);
 		if(interp<2){
 			rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
 		}else{
@@ -274,26 +273,36 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 	}else if(Zdim>1){
 
-		double sum = 0.0;
-		const int3 volumeExtent = make_int3(Xdim, Ydim, Zdim);
-		for (uint z=0; z < Zdim; z++)
-		{
-			if(interp<2){
-				rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, z, ang);
-			}else{
-				rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, z, ang);
-			}
-			cudaDeviceSynchronize();
-			cudaMemcpy(rotated_image, d_output, Xdim*Ydim* sizeof(float), cudaMemcpyDeviceToHost);
+		int numTh = 10;
+		const dim3 blockSize(numTh, numTh, numTh);
+		int numBlkx = (int)(Xdim)/numTh;
+		if((Xdim)%numTh>0){
+			numBlkx++;
+		}
+		int numBlky = (int)(Ydim)/numTh;
+		if((Ydim)%numTh>0){
+			numBlky++;
+		}
+		int numBlkz = (int)(Zdim)/numTh;
+		if((Zdim)%numTh>0){
+			numBlkz++;
+		}
+		const dim3 gridSize(numBlkx, numBlky, numBlkz);
+		if(interp<2){
+			rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
+		}else{
+			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
+		}
+
 		}
 
 
 
 	}
 
-	//cudaDeviceSynchronize();
+	cudaDeviceSynchronize();
 
-	//cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
+	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
 
 
 	cudaFree(cuArray);
