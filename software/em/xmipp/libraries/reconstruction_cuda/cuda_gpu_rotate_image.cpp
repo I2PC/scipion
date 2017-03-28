@@ -158,6 +158,7 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
 
     // Read from texture and write to global memory
+    printf("Escribe hilo %i", (int)(y * Xdim + x) + (Xdim * Ydim * z));
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
 
 }
@@ -186,7 +187,6 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
     tv = tv*(float)Ydim;
     tw = tw*(float)Zdim;
 
-    std::cout << "Escribe hilo " << (y * Xdim + x) + (Xdim * Ydim * z) << std::endl;
     // Read from texture and write to global memory
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = cubicTex3DSimple(texRefVol, make_float3(tu, tv, tw));
 }
