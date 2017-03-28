@@ -262,23 +262,6 @@ inline __host__ __device__ void operator/=(float3 &a, float s)
     a *= inv;
 }
 
-// lerp
-inline __device__ __host__ float3 lerp(float3 a, float3 b, float t)
-{
-    return a + t*(b-a);
-}
-
-// clamp
-inline __device__ __host__ float3 clamp(float3 v, float a, float b)
-{
-    return make_float3(clamp(v.x, a, b), clamp(v.y, a, b), clamp(v.z, a, b));
-}
-
-inline __device__ __host__ float3 clamp(float3 v, float3 a, float3 b)
-{
-    return make_float3(clamp(v.x, a.x, b.x), clamp(v.y, a.y, b.y), clamp(v.z, a.z, b.z));
-}
-
 // dot product
 inline __host__ __device__ float dot(float3 a, float3 b)
 {
