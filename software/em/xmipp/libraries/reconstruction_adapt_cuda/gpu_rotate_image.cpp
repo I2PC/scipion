@@ -30,6 +30,7 @@
 #include <data/xmipp_image.h>
 #include "data/xmipp_program.h"
 #include <data/args.h>
+#include "cuda_copy_data.cpp"
 
 //#define PI ((float)3.141592653589793)
 
