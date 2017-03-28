@@ -62,6 +62,7 @@ void ProgGpuRotateImage::defineParams()
     addParamsLine("   -i <Metadata1>        : Input image or volume");
     addParamsLine("   -o <Metadata1>        : Output image or volume");
     addParamsLine("   --ang <Metadata1>     : For images: Rotation angle in degrees");
+    addParamsLine("                                                                                         ");
     addParamsLine("                         : For volumes: the rotation angle in each axis must be specified");
     addParamsLine("   --angX <Metadata1>    : For volumes: Rotation angle in X axis in degrees");
     addParamsLine("   --angY <Metadata1>    : For volumes: Rotation angle in Y axis in degrees");
