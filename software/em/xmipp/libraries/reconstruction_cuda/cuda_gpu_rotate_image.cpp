@@ -215,7 +215,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 	}else if (Zdim>1){
 
-		cudaExtent volumeExtent = make_cudaExtent(volumeSize.x, volumeSize.y, volumeSize.z);
+		cudaExtent volumeExtent = make_cudaExtent(Xdim, Ydim, Zdim);
 		cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent);
 		cudaMemcpy3DParms p = {0};
 		p.extent   = volumeExtent;
