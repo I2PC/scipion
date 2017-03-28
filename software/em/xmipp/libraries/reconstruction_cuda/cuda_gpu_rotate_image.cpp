@@ -158,7 +158,7 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     float tw = w * cosf(ang) + w * sinf(ang) + 0.5f;
 
     // Read from texture and write to global memory
-    printf("Escribe hilo %i", (int)(y * Xdim + x) + (Xdim * Ydim * z));
+    //printf("Escribe hilo %i", (int)(y * Xdim + x) + (Xdim * Ydim * z));
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
 
 }
@@ -213,6 +213,23 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 		// Bind the array to the texture reference
 		cudaBindTextureToArray(texRef, cuArray, channelDesc);
 
+		// Specify texture object parameters
+		texRef.addressMode[0] = cudaAddressModeWrap;
+		texRef.addressMode[1] = cudaAddressModeWrap;
+		if(Zdim>1){
+			texRef.addressMode[2] = cudaAddressModeWrap;
+		}
+		if (interp==0){
+		    texRef.filterMode = cudaFilterModePoint;
+		}else{
+		    texRef.filterMode = cudaFilterModeLinear;
+		}
+		if (interp<2){
+		    texRef.normalized = true;
+		}else{
+			texRef.normalized = false;
+		}
+
 	}else if (Zdim>1){
 
 		cudaExtent volumeExtent = make_cudaExtent(Xdim, Ydim, Zdim);
@@ -226,24 +243,24 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     	// bind array to 3D texture
     	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
 
+    	// Specify texture object parameters
+    	texRefVol.addressMode[0] = cudaAddressModeWrap;
+    	texRefVol.addressMode[1] = cudaAddressModeWrap;
+    	texRefVol.addressMode[2] = cudaAddressModeWrap;
+    	if (interp==0){
+    		texRefVol.filterMode = cudaFilterModePoint;
+    	}else{
+    		texRefVol.filterMode = cudaFilterModeLinear;
+    	}
+    	if (interp<2){
+    		texRefVol.normalized = true;
+    	}else{
+    		texRefVol.normalized = false;
+    	}
+
     }
 
-    // Specify texture object parameters
-    texRef.addressMode[0] = cudaAddressModeWrap;
-    texRef.addressMode[1] = cudaAddressModeWrap;
-    if(Zdim>1){
-    	texRef.addressMode[2] = cudaAddressModeWrap;
-    }
-    if (interp==0){
-    	texRef.filterMode = cudaFilterModePoint;
-    }else{
-    	texRef.filterMode = cudaFilterModeLinear;
-    }
-    if (interp<2){
-    	texRef.normalized = true;
-    }else{
-    	texRef.normalized = false;
-    }
+
 
 
 
