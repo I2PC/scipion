@@ -39,8 +39,11 @@ void ProgGpuRotateImage::readParams()
 {
 	fnRef = getParam("-i");
 	fnOut = getParam("-o");
-	ang = getParam("--ang");
-	interp = getParam("--interp");
+	ang = getParam("-ang");
+	ang = getParam("-angX");
+	ang = getParam("-angY");
+	ang = getParam("-angZ");
+	interp = getParam("-interp");
 
 }
 
@@ -50,7 +53,10 @@ void ProgGpuRotateImage::show()
     std::cout
 	<< "Input:          " << fnRef    << std::endl
 	<< "Output:          " << fnOut    << std::endl
-    << "Rotation angle or angles: " << ang       << std::endl
+    << "Rotation angle for images: " << ang       << std::endl
+	<< "Rotation angle for volumes in X axis: " << angX       << std::endl
+	<< "Rotation angle for volumes in Y axis: " << angY       << std::endl
+	<< "Rotation angle for volumes in Z axis: " << angZ       << std::endl
 	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear, 2 - Cubic " << interp    << std::endl
     ;
 }
@@ -62,8 +68,6 @@ void ProgGpuRotateImage::defineParams()
     addParamsLine("   -i <input_file>        : Input image or volume");
     addParamsLine("   -o <output_file>        : Output image or volume");
     addParamsLine("   -ang <angle_im>     : For images: Rotation angle in degrees");
-    addParamsLine("                         \n");
-    addParamsLine("                         : For volumes: the rotation angle in each axis must be specified");
     addParamsLine("   -angX <angle_volx>    : For volumes: Rotation angle in X axis in degrees");
     addParamsLine("   -angY <angle_voly>    : For volumes: Rotation angle in Y axis in degrees");
     addParamsLine("   -angZ <angle_volz>    : For volumes: Rotation angle in Z axis in degrees");
@@ -76,12 +80,12 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
-	int ang2, interpol;
-	ang2 = ang.getNumber();
+	int angIm, interpol;
+	angIm = ang.getNumber();
 	interpol = interp.getNumber();
 
-	float rad = PI*(float)ang2/180.0;
-    std::cout << "Inside run with deg " << ang2 << " and rad " << rad << std::endl;
+	float radIm = PI*(float)angIm/180.0;
+    std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl;
 
     Image<float> Iref, Iout;
     Iref.read(fnRef);
@@ -100,9 +104,9 @@ void ProgGpuRotateImage::run()
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
     if (interpol<2){
-    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad, interpol);
+    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, radIm, interpol);
     }else if(interpol==2){
-    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad);
+    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, radIm);
     }
 
     Iout() = rotated_image;

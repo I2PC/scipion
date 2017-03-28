@@ -39,9 +39,13 @@ class ProgGpuRotateImage: public XmippProgram
 public:
     /** Filename angle doc 1 */
 	FileName fnRef;
-    FileName ang;
-    FileName interp;
     FileName fnOut;
+    FileName ang;
+    FileName angX;
+    FileName angY;
+    FileName angZ;
+    FileName interp;
+
 
 public:
     /// Read argument from command line
