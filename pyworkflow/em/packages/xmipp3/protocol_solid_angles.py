@@ -347,13 +347,13 @@ class XmippProtSolidAngles(ProtAnalysis3D):
     def _updateClass(self, item):
         classId = item.getObjId()
         classRow = findRow(self.mdClasses, xmipp.MDL_REF2, classId)
-        setXmippAttributes(item, classRow, xmipp.MDL_ANGLE_ROT)
-        setXmippAttributes(item, classRow, xmipp.MDL_ANGLE_TILT)
-        setXmippAttributes(item, classRow, xmipp.MDL_CLASS_COUNT)
 
         representative = item.getRepresentative()
         representative.setTransform(rowToAlignment(classRow, ALIGN_PROJ))
         representative.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE)))
+        setXmippAttributes(representative, classRow, xmipp.MDL_ANGLE_ROT)
+        setXmippAttributes(representative, classRow, xmipp.MDL_ANGLE_TILT)
+        setXmippAttributes(representative, classRow, xmipp.MDL_CLASS_COUNT)
 
         self.averageSet.append(representative)
 
