@@ -87,8 +87,8 @@ void ProgGpuRotateImage::run()
 	interpol = interp.getNumber();
 
 
-	float radIm = PI*(float)angIm/180.0;ang
-    std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl ;
+	float radIm = PI*(float)angIm/180.0;
+    std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl;
 
     Image<float> Iref, Iout;
     Iref.read(fnRef);
