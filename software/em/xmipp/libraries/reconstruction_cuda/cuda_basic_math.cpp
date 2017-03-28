@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "cuda_basic_math.h"
 
 typedef unsigned int uint;
 typedef unsigned short ushort;

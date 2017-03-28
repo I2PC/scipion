@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "cuda_basic_math.h"
+#include "cuda_basic_math.cpp"
 
 
 template<class floatN>
