@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
+# * Authors:     Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,45 +25,52 @@
 # **************************************************************************
 
 
-import os
-
-import pyworkflow.protocol.params as params
-
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.protocol.params import StringParam, PointerParam, FloatParam, EnumParam
+from pyworkflow.em.constants import SYM_I222
 
-
-class ProtExportEMDB(EMProtocol):
+class XmippProtExtractUnit(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
     """
-    _label = 'export emdb'
+    _label = 'extract unit cell'
     _program = "" 
-    #_version = VERSION_1_2
+    _version = VERSION_1_2
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
 
-    def _createFileNamesTemplates(self):
-        myDict = {
-                  'volume' : 'final_volume.mrc',
-                  'fsc' : 'final_fsc.xml'
-                  }
-        self._updateFilenamesDict(myDict)
+    # def _createFileNamesTemplates(self):
+    #     myDict = {
+    #               'volume' : 'final_volume.mrc',
+    #               'fsc' : 'final_fsc.xml'
+    #               }
+    #     self._updateFilenamesDict(myDict)
 
         #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
-        form.addParam('exportVolume', params.PointerParam, label="Volume to export", important=True,
+        form.addParam('inputVolumes', PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
-                      help='This volume will be exported using mrc format')
-        form.addParam('exportFSC', params.PointerParam, label="FSC to export", important=True,
-                      pointerClass='FSC',
-                      help='This FSC will be exported using XML emdb format')
-        form.addParam('filesPath', params.PathParam, important=True,
-                      label="Export to directory",
-                      help="Directory where the files will be generate.")
+                      help='This volume will be cropped')
+        form.addParam('symmetryGroup', EnumParam, choices=["I2 (I222)"],
+                      default=SYM_I222,
+                      label="Symmetry",
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
+                           " for a description of the symmetry groups format in Xmipp.\n"
+                           "If no symmetry is present, use _c1_."
+                      )
+        #WIZARD
+        form.addParam('innerRadius', FloatParam, default=-1,
+                      label="Inner Radius (px)", help="inner Mask radius, if -1, the radius will be 0")
+        form.addParam('outerRadius', FloatParam, default=-1,
+                      label="Outer Radius (px)", help="outer Mask radius, if -1, the radius will be volume_size/2")
+        form.addParam('expandFactor', FloatParam, default=0.,
+                      label="Expand Factor", help="Increment cropped region by this factor")
+        form.addParam('offset', FloatParam, default=0.,
+                      label="offset", help="to be defined")
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
@@ -96,13 +103,11 @@ class ProtExportEMDB(EMProtocol):
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
         message = []
-        fnPath = self.filesPath.get()
-        if fnPath == "" or fnPath is None:
-            message.append("You must set a path to export.")
         return message
 
     def _summary(self):
-        message = "Data Available at : *%s*"% self.filesPath.get()
+        #message = "Data Available at : *%s*"% self.filesPath.get()
+        message=""
         return [message]
 
     def _methods(self):
@@ -110,5 +115,5 @@ class ProtExportEMDB(EMProtocol):
 
 #--------------------------- UTILS functions ---------------------------------------------------
 
-    def getFnPath(self, label='volume'):
-        return os.path.join(self.filesPath.get(), self._getFileName(label))
+#    def getFnPath(self, label='volume'):
+#        return os.path.join(self.filesPath.get(), self._getFileName(label))
