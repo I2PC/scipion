@@ -50,7 +50,7 @@ void ProgGpuRotateImage::show()
     std::cout
 	<< "Input:          " << fnRef    << std::endl
 	<< "Output:          " << fnOut    << std::endl
-    << "Rotate an image by an angle: " << ang       << std::endl
+    << "Rotation angle or angles: " << ang       << std::endl
 	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear, 2 - Cubic " << interp    << std::endl
     ;
 }
@@ -58,10 +58,12 @@ void ProgGpuRotateImage::show()
 // usage ===================================================================
 void ProgGpuRotateImage::defineParams()
 {
-    addUsageLine("Computes the rotation of an image with CUDA in GPU");
-    addParamsLine("   -i <Metadata1>        : Input image");
-    addParamsLine("   -o <Metadata1>        : Output image");
-    addParamsLine("   --ang <Metadata1>        : Rotation angle in degrees");
+    addUsageLine("Computes the rotation of an image or a volume with CUDA in GPU");
+    addParamsLine("   -i <Metadata1>        : Input image or volume");
+    addParamsLine("   -o <Metadata1>        : Output image or volume");
+    addParamsLine("   --ang <Metadata1>        : Rotation angle or angles in degrees");
+    addParamsLine("                         : For volumes: the rotation angle in each axis must be specified");
+    addParamsLine("                         : Valid parameters are: X, Y, Z");
     addParamsLine("   --interp <Metadata1>        : Interpolation method: 0 - Point, 1 - Linear, 2 - Cubic");
 
 }
@@ -96,7 +98,7 @@ void ProgGpuRotateImage::run()
 
     if (interpol<2){
     	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad, interpol);
-    }else{
+    }else if(interpol==2){
     	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, rad);
     }
 
