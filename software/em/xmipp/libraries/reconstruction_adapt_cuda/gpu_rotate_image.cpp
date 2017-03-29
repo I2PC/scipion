@@ -41,7 +41,7 @@ void ProgGpuRotateImage::readParams()
 {
 	fnRef = getParam("-i");
 	fnOut = getParam("-o");
-	interp = getParam("-interp");
+	interp = getIntParam("-interp");
 
 }
 
