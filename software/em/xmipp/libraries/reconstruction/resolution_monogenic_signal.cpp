@@ -144,7 +144,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 
 	Image<double> saveiu;
 	saveiu = 1/iu;
-	saveiu.write("iu");
+	saveiu.write("iu.vol");
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
@@ -586,12 +586,14 @@ void ProgMonogenicSignalRes::run()
 		std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << resolution << " (A)" << std::endl;
 		freq_two_ago = freq;
 
+		std::cout << "             " << " FreqLOW = " << freqL << " FreqHIGH = " << freqH << std::endl;
+
 		fnDebug = "Signal";
 		amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
 		if (halfMapsGiven)
 		{
 			fnDebug = "Noise";
-			amplitudeMonogenicSignal3D(*fftN, freq, freqL, freqH, amplitudeMN, iter, fnDebug);
+			amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, fnDebug);
 		}
 
 		list.push_back(freq);
