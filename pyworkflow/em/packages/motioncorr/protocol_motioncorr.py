@@ -324,8 +324,8 @@ class ProtMotionCorr(ProtAlignMovies):
             program = MOTIONCOR2_PATH
 
         try:
-            self.runJob(program, args, cwd=movieFolder, env=getEnviron(
-                        self.useMotioncor2))
+            self.runJob(program, args, cwd=movieFolder,
+                        env=getEnviron(self.useMotioncor2))
             self._fixMovie(movie)
 
             # Compute PSDs
