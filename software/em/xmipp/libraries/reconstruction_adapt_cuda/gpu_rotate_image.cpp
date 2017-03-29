@@ -98,6 +98,9 @@ void ProgGpuRotateImage::run()
     	angIm = getDoubleParam("-angX");
     	angVolY = getDoubleParam("-angY");
     	angVolZ = getDoubleParam("-angZ");
+		#ifndef VOLUME
+		#define VOLUME
+		#endif
     }
     radIm = PI*(float)angIm/180.0;
     radVolY = PI*(float)angVolY/180.0;

@@ -6,111 +6,14 @@
 //CUDA includes
 #include <cuda_runtime.h>
 #include "cuda_copy_data.h"
+
+#ifdef VOLUME
+#include "cuda_interpolation3D_rotation.h"
+#else
 #include "cuda_interpolation2D_rotation.h"
-
-
-
-
-// 3D float texture
-texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
-
+#endif
 
 //CUDA functions
-
-
-
-
-
-__device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadModeElementType> tex, float3 coord)
-{
-	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float3 coord_grid = make_float3(coord.x - 0.5f, coord.y - 0.5f, coord.z - 0.5f);
-	float3 index = make_float3(floor(coord_grid.x), floor(coord_grid.y), floor(coord_grid.z));
-	const float3 fraction = make_float3(coord_grid.x - index.x, coord_grid.y - index.y, coord_grid.z - index.z);
-	index.x += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
-	index.y += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
-	index.z += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
-
-	float result = 0.0f;
-	for (float z=-1; z < 2.5f; z++)  //range [-1, 2]
-	{
-		float bsplineZ = bspline(z-fraction.z);
-		float w = index.z + z;
-		for (float y=-1; y < 2.5f; y++)
-		{
-			float bsplineYZ = bspline(y-fraction.y) * bsplineZ;
-			float v = index.y + y;
-			for (float x=-1; x < 2.5f; x++)
-			{
-				float bsplineXYZ = bspline(x-fraction.x) * bsplineYZ;
-				float u = index.x + x;
-				result += bsplineXYZ * tex3D(tex, u, v, w);
-			}
-		}
-	}
-	return result;
-}
-
-
-
-
-
-
-
-
-
-__global__ void
-rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, double* angle)
-{
-    int x = blockDim.x * blockIdx.x + threadIdx.x;
-    int y = blockDim.y * blockIdx.y + threadIdx.y;
-    int z = blockDim.z * blockIdx.z + threadIdx.z;
-
-    // Transform coordinates
-    float u = x / (float)Xdim;
-    float v = y / (float)Ydim;
-    float w = z / (float)Zdim;
-    u -= 0.5f;
-    v -= 0.5f;
-    w -= 0.5f;
-
-    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f;
-    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f;
-
-    // Read from texture and write to global memory
-   	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
-
-}
-
-
-__global__ void
-rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, double* angle)
-{
-    int x = blockDim.x * blockIdx.x + threadIdx.x;
-    int y = blockDim.y * blockIdx.y + threadIdx.y;
-    int z = blockDim.z * blockIdx.z + threadIdx.z;
-
-    // Transform coordinates
-    float u = x / (float)Xdim;
-    float v = y / (float)Ydim;
-    float w = z / (float)Zdim;
-    u -= 0.5f;
-    v -= 0.5f;
-    w -= 0.5f;
-
-    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f;
-    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f;
-
-    tu = tu*(float)Xdim;
-    tv = tv*(float)Ydim;
-    tw = tw*(float)Zdim;
-
-    // Read from texture and write to global memory
-   	output[(y * Xdim + x) + (Xdim * Ydim * z)] = cubicTex3DSimple(texRefVol, make_float3(tu, tv, tw));
-}
-
 
 void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double* ang, int interp){
 
