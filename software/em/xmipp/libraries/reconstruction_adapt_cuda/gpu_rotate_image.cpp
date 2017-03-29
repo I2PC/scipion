@@ -141,12 +141,12 @@ void ProgGpuRotateImage::run()
     int aux=0;
     for(int i=0; i<3; i++){
     	for(int j=0; j<3; j++){
-    		rot_vector[aux]=*rot_matrix(i,j);
+    		rot_vector[aux]=rot_matrix(i,j);
     		aux++;
     	}
     }
     for (int i=0; i<9; i++){
-    	std::cout << "i " << i << " rot_vector " << rot_vector << std::endl;
+    	std::cout << "i " << i << " rot_vector " << rot_vector[i] << std::endl;
     }
 
 
