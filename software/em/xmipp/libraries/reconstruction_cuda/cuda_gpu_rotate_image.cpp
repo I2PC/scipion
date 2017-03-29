@@ -7,11 +7,10 @@
 #include <cuda_runtime.h>
 #include "cuda_copy_data.h"
 
-#ifdef VOLUME
+
 #include "cuda_interpolation3D_rotation.h"
-#else
 #include "cuda_interpolation2D_rotation.h"
-#endif
+
 
 //CUDA functions
 
