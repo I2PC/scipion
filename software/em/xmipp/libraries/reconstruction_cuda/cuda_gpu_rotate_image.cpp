@@ -92,7 +92,7 @@ __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadMode
 
 
 __global__ void
-rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float* angle)
+rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -119,7 +119,7 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float* angl
 
 
 __global__ void
-rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float* angle)
+rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, double* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -143,7 +143,7 @@ rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float* an
 
 
 __global__ void
-rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float* angle)
+rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, double* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -168,7 +168,7 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
 
 
 __global__ void
-rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float* angle)
+rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, double* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
