@@ -239,7 +239,7 @@ class Relion2AutopickParams(EmWizard):
     def show(self, form):
         autopickProt = form.protocol
         project = autopickProt.getProject()
-        micSet = autopickProt.getInputMicrographs()
+        micSet = autopickProt.outputMicrographs
         micfn = micSet.getFileName()
         coordsDir = project.getTmpPath(micSet.getName())
         cleanPath(coordsDir)
