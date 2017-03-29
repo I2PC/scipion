@@ -32,6 +32,8 @@
 
 #endif
 
+#include "cuda_bspline_rotation.h"
+
 //! Bicubic interpolated texture lookup, using unnormalized coordinates.
 //! Straight forward implementation, using 16 nearest neighbour lookups.
 //! @param tex  2D texture
