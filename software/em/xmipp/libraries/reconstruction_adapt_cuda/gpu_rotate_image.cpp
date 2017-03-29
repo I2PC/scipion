@@ -115,6 +115,7 @@ void ProgGpuRotateImage::run()
     prueba2(1,1)=40;
     std::cout << "prueba1 " << prueba1 << std::endl;
     std::cout << "prueba2 " << prueba2 << std::endl;
+    std::cout << "multiplicacion " << prueba1*prueba2 << std::endl;
 
     MultidimArray<float> &original_image=Iref();
 
