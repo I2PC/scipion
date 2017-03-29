@@ -656,7 +656,7 @@ void ProgMonogenicSignalRes::run()
 				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 				{
 					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 					{
 						sumS  += amplitudeValue;
 						sumS2 += amplitudeValue*amplitudeValue;
@@ -710,23 +710,23 @@ void ProgMonogenicSignalRes::run()
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 		{
-			if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+			if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 				if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 				{
-					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+//					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/freq;
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
-				else
-				{
-					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
-					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
-					{
-						DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes - (count_res-2)*R_;
-					}
-				}
+//				else
+//				{
+//					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
+//					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
+//					{
+//						DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+//						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes - (count_res-2)*R_;
+//					}
+//				}
 		}
 		#ifdef DEBUG_MASK
 		FileName fnmask_debug;
@@ -751,30 +751,9 @@ void ProgMonogenicSignalRes::run()
 		}
 		if (doNextIteration)
 		{
-//			if (linearchk == false)
-//			{
-//				last_resolution = resolution;
-//				w+=stepW;
-//				resolution = sampling/w;
-//
-//
-//			if (last_resolution-resolution<0.1)
-//			{
-//				resolution=last_resolution-0.1;
-//				w = sampling/resolution;
-//			}
-//
-//			if (w > wF)
-//			{
-//				doNextIteration = false;
-//				std::cout << "Search of resolutions stopped due to out of resolution range" << std::endl;
-//			}
-//			}
-//			else
-//			{
-				if (resolution <= minRes)
-					doNextIteration = false;
-//			}
+			if (resolution <= minRes)
+				doNextIteration = false;
+
 		}
 		iter++;
 	} while (doNextIteration);
