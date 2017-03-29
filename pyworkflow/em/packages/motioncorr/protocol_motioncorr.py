@@ -140,7 +140,7 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-        if getVersion('MOTIONCOR2') == '01302017':
+        if getVersion('MOTIONCOR2') not in ['03162016', '10192016']:
             group = form.addGroup('Magnification correction')
             group.addParam('doMagCor', params.BooleanParam, default=False,
                            label='Correct anisotropic magnification?',
@@ -175,12 +175,13 @@ class ProtMotionCorr(ProtAlignMovies):
         else:
             form.addParam('motioncor2Version', params.LabelParam,
                           condition='useMotioncor2',
-                          label='It seems motioncor2-v01302017 is not '
-                                'installed in your system. If you want to '
-                                'correct anisotropic magnification, get in '
-                                'touch with your system manager to install '
-                                'it, and set MOTIONCOR2_HOME on your '
-                                'scipion.conf properly.\n'
+                          label='It seems any version of motioncor2 '
+                                'beyond v10192016 is notinstalled in your '
+                                'system. If you want to correct anisotropic '
+                                'magnification, get in touch with your system '
+                                'manager to install it, and set '
+                                'MOTIONCOR2_HOME on your scipion.conf '
+                                'properly.\n'
                                 'Make sure MOTIONCOR2_CUDA_LIB or CUDA_LIB '
                                 'point to cuda-8.0/lib path')
 
