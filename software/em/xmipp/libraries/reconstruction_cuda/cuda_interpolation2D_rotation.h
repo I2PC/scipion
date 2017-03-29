@@ -34,6 +34,9 @@
 
 #include "cuda_bspline_rotation.h"
 
+// 2D float texture
+texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
+
 //! Bicubic interpolated texture lookup, using unnormalized coordinates.
 //! Straight forward implementation, using 16 nearest neighbour lookups.
 //! @param tex  2D texture
@@ -63,4 +66,46 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 	return result;
 }
 
+
+__global__ void
+rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* angle)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // Transform coordinates
+    float u = x / (float)Xdim;
+    float v = y / (float)Ydim;
+    u -= 0.5f;
+    v -= 0.5f;
+
+    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f;
+
+    // Read from texture and write to global memory
+   	output[y * Xdim + x] = tex2D(texRef, tu, tv);
+
+}
+
+__global__ void
+rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, double* angle)
+{
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
+
+    // Transform coordinates
+    float u = x / (float)Xdim;
+    float v = y / (float)Ydim;
+    u -= 0.5f;
+    v -= 0.5f;
+
+    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f;
+
+    tu = tu*(float)Xdim;
+    tv = tv*(float)Ydim;
+
+    // Read from texture and write to global memory
+   	output[y * Xdim + x] = cubicTex2DSimple(texRef, tu, tv);
+}
 
