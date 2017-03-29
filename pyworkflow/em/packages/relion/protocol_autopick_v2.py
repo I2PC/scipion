@@ -68,10 +68,11 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     def _insertAllSteps(self):
         # Convert the input micrographs and references to
         # the required Relion star files
+        inputRefs = self.getInputReferences()
+        refId = inputRefs.strId() if self.useInputReferences() else 'Gaussian'
         convertId = self._insertFunctionStep('convertInputStep',
                                              self.getInputMicrographs().strId(),
-                                             self.getInputReferences().strId(),
-                                             self.runType.get())
+                                             refId, self.runType.get())
         # Insert the picking steps for each micrograph separately 
         # (Relion requires in that way if micrographs have different dimensions)
         allMicSteps = []
@@ -126,8 +127,9 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                               preprocessImageRow=self._preprocessMicrographRow,
                               postprocessImageRow=self._postprocessMicrographRow)
 
-        writeReferences(self.getInputReferences(),
-                        self._getPath('input_references'), useBasename=True)
+        if self.useInputReferences():
+            writeReferences(self.getInputReferences(),
+                            self._getPath('input_references'), useBasename=True)
 
     def _pickMicrograph(self, micStarFile, params, threshold,
                                minDistance, fom):
@@ -491,7 +493,36 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
             errors.append("References CTF corrected parameter must be set to "
                           "False or set ctf relations.")
 
+        errors.extend(self._validateMicSelection())
+
         return errors
+
+    def _validateMicSelection(self):
+        """ Validate the cases when selecting a subset of micrographs
+        to optimize.
+        """
+        inputMics = self.getInputMicrographs()
+        inputCTFs = self.ctfRelations.get()
+
+        if self.isRunOptimize():
+            parts = self.micrographsList.get().strip().replace(',', ' ').split()
+            if any(not p.isdigit() for p in parts):
+                return ['Number of micrographs or IDs should be integers.']
+            n = len(parts)
+            if n == 1:
+                n = int(parts[0])
+            if n < 3 or n > min(30, inputMics.getSize()):
+                return ['Number of micrographs should be between 3 and '
+                        'min(30, input_size)']
+
+            def missing(strId):
+                micId = int(strId)
+                return inputMics[micId] is None or inputCTFs[micId] is None
+
+            if any(missing(p) for p in parts):
+                return ['Some selected micrograph IDs are missing from the '
+                        'input micrographs or CTFs.']
+        return []
 
     def _summary(self):
         summary = []
