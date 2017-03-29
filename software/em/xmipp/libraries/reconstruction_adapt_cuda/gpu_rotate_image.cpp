@@ -30,7 +30,7 @@
 #include <data/xmipp_image.h>
 #include "data/xmipp_program.h"
 #include <data/args.h>
-#include "data/image_operate.h"
+#include "data/matrix2d.h"
 
 
 //#define PI ((float)3.141592653589793)
