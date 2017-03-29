@@ -6,6 +6,7 @@
 //CUDA includes
 #include <cuda_runtime.h>
 #include "cuda_copy_data.h"
+#include "cuda_interpolation2D_rotation.h"
 
 
 // 2D float texture
@@ -30,34 +31,7 @@ __device__ float bspline(float t)
 }
 
 
-//! Bicubic interpolated texture lookup, using unnormalized coordinates.
-//! Straight forward implementation, using 16 nearest neighbour lookups.
-//! @param tex  2D texture
-//! @param x  unnormalized x texture coordinate
-//! @param y  unnormalized y texture coordinate
-__device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadModeElementType> tex, float x, float y)
-{
-	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
-	float2 index = make_float2(floor(coord_grid.x), floor(coord_grid.y));
-	const float2 fraction = make_float2(coord_grid.x - index.x, coord_grid.y - index.y);
-	index.x += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
-	index.y += 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
 
-	float result = 0.0f;
-	for (float y=-1; y < 2.5f; y++)
-	{
-		float bsplineY = bspline(y-fraction.y);
-		float v = index.y + y;
-		for (float x=-1; x < 2.5f; x++)
-		{
-			float bsplineXY = bspline(x-fraction.x) * bsplineY;
-			float u = index.x + x;
-			result += bsplineXY * tex2D(tex, u, v);
-		}
-	}
-	return result;
-}
 
 
 __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadModeElementType> tex, float3 coord)
