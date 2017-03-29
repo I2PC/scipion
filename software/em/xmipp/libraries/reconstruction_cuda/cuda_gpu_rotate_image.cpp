@@ -195,7 +195,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 	//CUDA code
 	size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
-	struct cudaPitchedPtr bsplineCoeffs, cudaOutput;
+	struct cudaPitchedPtr bsplineCoeffs;
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 	cudaArray* cuArray;
 
@@ -253,6 +253,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     	}
 
     }
+	cudaFree(bsplineCoeffs.ptr);
 
     // Allocate result of transformation in device memory
     float *d_output;

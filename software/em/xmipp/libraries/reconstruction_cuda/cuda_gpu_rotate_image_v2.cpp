@@ -243,6 +243,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
 
     	// Bind the array to the texture reference
     	cudaBindTextureToArray(texRef, cuArray, channelDesc);
+    	cudaFree(bsplineCoeffs.ptr);
 
     	// Specify texture object parameters
     	texRef.filterMode = cudaFilterModeLinear;
@@ -270,6 +271,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     	cudaMemcpy3D(&p);
     	// bind array to 3D texture
     	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
+    	cudaFree(bsplineCoeffs.ptr);
 
     	// Specify texture object parameters
   		texRefVol.filterMode = cudaFilterModeLinear;
