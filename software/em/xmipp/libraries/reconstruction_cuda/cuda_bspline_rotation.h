@@ -37,3 +37,16 @@ __device__ float bspline(float t)
 	else return 0.0f;
 }
 
+//CUDA functions
+template<class floatN>
+__device__ void bspline_weights(floatN fraction, floatN& w0, floatN& w1, floatN& w2, floatN& w3)
+{
+	const floatN one_frac = 1.0f - fraction;
+	const floatN squared = fraction * fraction;
+	const floatN one_sqd = one_frac * one_frac;
+
+	w0 = 1.0f/6.0f * one_sqd * one_frac;
+	w1 = 2.0f/3.0f - 0.5f * squared * (2.0f-fraction);
+	w2 = 2.0f/3.0f - 0.5f * one_sqd * (2.0f-one_frac);
+	w3 = 1.0f/6.0f * squared * fraction;
+}
