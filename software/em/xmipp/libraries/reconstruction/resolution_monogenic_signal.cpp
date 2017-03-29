@@ -142,6 +142,9 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		}
 	}
 
+	Image<double> saveiu;
+	saveiu = 1/iu;
+	saveiu.write("iu");
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
