@@ -103,8 +103,8 @@ void ProgGpuRotateImage::run()
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
 
-    MultidimArray<float> prueba1(2,2);
-    MultidimArray<float> prueba2(2,2);
+    Matrix2D<double> prueba1(2,2);
+    Matrix2D<double> prueba2(2,2);
     prueba1(0,0)=0;
     prueba1(0,1)=1;
     prueba1(1,0)=2;
