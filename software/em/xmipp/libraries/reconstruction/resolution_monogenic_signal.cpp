@@ -229,14 +229,14 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (w1l>=un && w1<=un)
+				if (iwl>=iun && iw<=iun)
 				{
 					double H=0.5*(1+cos((un-w1)*ideltal));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
                                         ifCounter++;
 				}
-				else if (w1h<un && un<=w1)
+				else if (iwh<iun && iun<=iw)
 				{
 					double H=0.5*(1+cos((w1-un)*ideltah));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -280,7 +280,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (w1l>=un && un>=w1h)
+				if (iwl>=iun && iun>=iwh)
 				{
 					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -305,7 +305,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (w1l>=un && un>=w1h)
+				if (iwl>=uin && iun>=iwh)
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 				++n;
 			}
@@ -327,7 +327,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (w1l>=un && un>=w1h)
+				if (iwl>=iun && iun>=iwh)
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 				++n;
 			}
@@ -585,7 +585,6 @@ void ProgMonogenicSignalRes::run()
 
 		std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << resolution << " (A)" << std::endl;
 		freq_two_ago = freq;
-
 		std::cout << "             " << " FreqLOW = " << freqL << " FreqHIGH = " << freqH << std::endl;
 
 		fnDebug = "Signal";
