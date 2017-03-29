@@ -220,7 +220,7 @@ void interpolate3D(uint width, uint height, uint depth, double* angle, float* ou
 
 void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double *ang){
 
-	//std::cerr  << "Inside CUDA function " << ang << std::endl;
+	std::cerr  << "Inside CUDA function " << CUDABASICMATH << std::endl;
 
 	//CUDA code
 
