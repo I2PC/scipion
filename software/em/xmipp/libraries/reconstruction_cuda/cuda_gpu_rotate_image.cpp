@@ -189,9 +189,9 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
 }
 
 
-void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float* ang, int interp){
+void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double* ang, int interp){
 
-	std::cerr  << "Inside CUDA function " << ang << std::endl;
+	//std::cerr  << "Inside CUDA function " << ang << std::endl;
 
 	//CUDA code
 	size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
@@ -262,7 +262,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	cudaMalloc((void **)&d_output, matSize);
 	float* d_angle;
 	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
-	cudaMemcpy(d_angle, ang, 9 * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_angle, (float*)ang, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 
 	//Kernel
