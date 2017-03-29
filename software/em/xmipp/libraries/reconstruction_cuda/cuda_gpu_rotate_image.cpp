@@ -266,9 +266,9 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     // Allocate result of transformation in device memory
     float *d_output;
 	cudaMalloc((void **)&d_output, matSize);
-	float* d_angle;
-	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
-	cudaMemcpy(d_angle, (float*)ang, 9 * sizeof(float), cudaMemcpyHostToDevice);
+	double* d_angle;
+	cudaMalloc((void**)&d_angle, 9 * sizeof(double));
+	cudaMemcpy(d_angle, ang, 9 * sizeof(double), cudaMemcpyHostToDevice);
 
 
 	//Kernel
