@@ -103,8 +103,8 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* ang
     u -= 0.5f;
     v -= 0.5f;
 
-    float tu = u * angle[0] + v * angle[1] + 0.5f;
-    float tv = u * angle[3] + v * angle[4] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f;
 
     // Read from texture and write to global memory
    	output[y * Xdim + x] = tex2D(texRef, tu, tv);
@@ -124,8 +124,8 @@ rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, double* a
     u -= 0.5f;
     v -= 0.5f;
 
-    float tu = u * angle[0] + v * angle[1] + 0.5f;
-    float tv = u * angle[3] + v * angle[4] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f;
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;
@@ -151,9 +151,9 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     v -= 0.5f;
     w -= 0.5f;
 
-    float tu = u * angle[0] + v * angle[1] + w * angle[2] + 0.5f;
-    float tv = u * angle[3] + v * angle[4] + w * angle[5] + 0.5f;
-    float tw = u * angle[6] + v * angle[7] + w * angle[8] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f;
+    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f;
 
     // Read from texture and write to global memory
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
@@ -176,9 +176,9 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
     v -= 0.5f;
     w -= 0.5f;
 
-    float tu = u * angle[0] + v * angle[1] + w * angle[2] + 0.5f;
-    float tv = u * angle[3] + v * angle[4] + w * angle[5] + 0.5f;
-    float tw = u * angle[6] + v * angle[7] + w * angle[8] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f;
+    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f;
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;

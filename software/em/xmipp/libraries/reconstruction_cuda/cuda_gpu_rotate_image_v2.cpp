@@ -111,8 +111,8 @@ interpolate_kernel2D(float* output, uint width, float2 extent, double* angle, fl
 	float x0 = (float)x;
 	float y0 = (float)y;
 
-	float x1 = angle[0] * x0 + angle[1] * y0 + shift.x;
-	float y1 = angle[3] * x0 + angle[4] * y0 + shift.y;
+	float x1 = (float)angle[0] * x0 + (float)angle[1] * y0 + shift.x;
+	float y1 = (float)angle[3] * x0 + (float)angle[4] * y0 + shift.y;
 
 	output[i] = cubicTex2D<float>(texRef, x1, y1);
 
@@ -131,9 +131,9 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, doub
 	float y0 = (float)y;
 	float z0 = (float)z;
 
-	float x1 = angle[0] * (x0) + angle[1] * (y0) + angle[2] * (z0);
-	float y1 = angle[3] * (x0) + angle[4] * (y0) + angle[5] * (z0);
-	float z1 = angle[6] * (x0) + angle[7] * (y0) + angle[8] * (z0);
+	float x1 = (float)angle[0] * (x0) + (float)angle[1] * (y0) + (float)angle[2] * (z0);
+	float y1 = (float)angle[3] * (x0) + (float)angle[4] * (y0) + (float)angle[5] * (z0);
+	float z1 = (float)angle[6] * (x0) + (float)angle[7] * (y0) + (float)angle[8] * (z0);
 
 	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
 
@@ -145,8 +145,8 @@ cudaPitchedPtr interpolate2D(uint width, uint height, double* angle)
 	// Prepare the geometry
 	float xOrigin = floor(width/2);
 	float yOrigin = floor(height/2);
-	float x0 = angle[0] * (xOrigin) + angle[1] * (yOrigin);
-	float y0 = angle[3] * (xOrigin) + angle[4] * (yOrigin);
+	float x0 = (float)angle[0] * (xOrigin) + (float)angle[1] * (yOrigin);
+	float y0 = (float)angle[3] * (xOrigin) + (float)angle[4] * (yOrigin);
 	float xShift = xOrigin - x0;
 	float yShift = yOrigin - y0;
 
@@ -179,9 +179,9 @@ void interpolate3D(uint width, uint height, uint depth, double* angle, float* ou
 	float yOrigin = floor(height/2);
 	float zOrigin = floor(depth/2);
 
-	float x0 = angle[0] * (xOrigin) + angle[1] * (yOrigin) + angle[2] * (zOrigin);
-	float y0 = angle[3] * (xOrigin) + angle[4] * (yOrigin) + angle[5] * (zOrigin);
-	float z0 = angle[6] * (xOrigin) + angle[7] * (yOrigin) + angle[8] * (zOrigin);
+	float x0 = (float)angle[0] * xOrigin + (float)angle[1] * yOrigin + (float)angle[2] * zOrigin;
+	float y0 = (float)angle[3] * xOrigin + (float)angle[4] * yOrigin + (float)angle[5] * zOrigin;
+	float z0 = (float)angle[6] * xOrigin + (float)angle[7] * yOrigin + (float)angle[8] * zOrigin;
 
 	float xShift = xOrigin - x0;
 	float yShift = yOrigin - y0;
