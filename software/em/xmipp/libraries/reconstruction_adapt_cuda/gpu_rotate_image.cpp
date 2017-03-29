@@ -69,10 +69,10 @@ void ProgGpuRotateImage::defineParams()
     addUsageLine("Computes the rotation of an image or a volume with CUDA in GPU");
     addParamsLine("   -i <input_file>        : Input image or volume");
     addParamsLine("   -o <output_file>        : Output image or volume");
-    addParamsLine("   -ang <angle_im>     : For images: Rotation angle in degrees");
-    //addParamsLine("   -angX <angle_volx>    : For volumes: Rotation angle in X axis in degrees");
-    //addParamsLine("   -angY <angle_voly>    : For volumes: Rotation angle in Y axis in degrees");
-    //addParamsLine("   -angZ <angle_volz>    : For volumes: Rotation angle in Z axis in degrees");
+    addParamsLine("   [-ang <angle_im>]     : For images: Rotation angle in degrees");
+    addParamsLine("   [-angX <angle_volx>]  : For volumes: Rotation angle in X axis in degrees");
+    addParamsLine("   [-angY <angle_voly>]  : For volumes: Rotation angle in Y axis in degrees");
+    addParamsLine("   [-angZ <angle_volz>]  : For volumes: Rotation angle in Z axis in degrees");
     addParamsLine("   -interp <interpolation>        : Interpolation method: 0 - Point, 1 - Linear, 2 - Cubic");
 
 }
@@ -82,36 +82,39 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::run()
 {
 
-	double angIm;
+	double radIm, radVolY, radVolz;
 	int interpol;
-	//int angVolX, angVolY, angVolZ;
-	angIm = ang.getNumber();
-	interpol = interp.getNumber();
 
-
-	float radIm = PI*(float)angIm/180.0;
-    std::cout << "Inside run with deg " << angIm << " and rad " << radIm << std::endl;
+	interpol = getIntParam("-interp");;
 
     Image<float> Iref, Iout;
     Iref.read(fnRef);
     size_t Xdim, Ydim, Zdim, Ndim;
     //Iref.getSize();
     Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
-    std::cout << "Xdim = " << Xdim << " Ydim = " << Ydim << " Zdim = " << Zdim << " Ndim = " << Ndim << std::endl;
-    //if (Zdim>1 || Ndim>1){
+    //std::cout << "Xdim = " << Xdim << " Ydim = " << Ydim << " Zdim = " << Zdim << " Ndim = " << Ndim << std::endl;
+
     if (Ndim>1){
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
 
-    double alfa = radIm;
-    double beta, chi;
     if(Zdim==1){
-    	beta=0;
-    	chi=0;
+    	angIm = getDoubleParam("-ang");
+    	angVolY = 0;
+    	angVolZ = 0;
     }else{
-    	beta=radIm;
-    	chi=radIm;
+    	angIm = getDoubleParam("-angX");
+    	angVolY = getDoubleParam("-angY");
+    	angVolZ = getDoubleParam("-angZ");
     }
+    radIm = PI*(float)angIm/180.0;
+    radVolY = PI*(float)angVolY/180.0;
+    radVolz = PI*(float)angVolZ/180.0;
+
+    double alfa = radIm;
+    double beta = radVolY;
+   	double chi = radVolz;
+
     Matrix2D<double> rot_matrix(3,3), rotZ(3,3), rotY(3,3), rotX(3,3);
 
     rotZ(0,0)=cos(alfa);

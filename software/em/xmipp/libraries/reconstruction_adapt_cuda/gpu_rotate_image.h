@@ -40,11 +40,7 @@ public:
     /** Filename angle doc 1 */
 	FileName fnRef;
     FileName fnOut;
-    FileName ang;
-    //FileName angX;
-    //FileName angY;
-    //FileName angZ;
-    FileName interp;
+    int interp;
 
 
 public:
@@ -60,7 +56,8 @@ public:
     /** Run */
     void run();
 
-
+public:
+    double angIm, angVolY, angVolZ;
 
 };
 //@}
