@@ -3,7 +3,8 @@
 #include <data/xmipp_program.h>
 
 #include <time.h> // GCF
-
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 #include "movie_estimate_gain_kernels.cu"
 
 double computeTVColumns(MultidimArray<int> &I);
@@ -16,7 +17,7 @@ public:
 	FileName fnIn; // Set of input images
 	FileName fnRoot; // Correction image
 	int Niter; // Number of iterations
-	double maxSigma, sigmaStep;
+	float maxSigma, sigmaStep;  //it was double
 	bool singleReference;
 public:
     void defineParams();
@@ -29,8 +30,8 @@ public:
     void normalizeHistograms();
     void invertHistograms();
 
-    void constructSmoothHistogramsByColumn(const double *listOfWeights, int width);
-    void constructSmoothHistogramsByRow(const double *listOfWeights, int width);
+    void constructSmoothHistogramsByColumn(const float *listOfWeights, int width);
+    void constructSmoothHistogramsByRow(const float *listOfWeights, int width);
     void transformGrayValuesColumn(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedColumn);
     void transformGrayValuesRow(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedRow);
     void computeTransformedHistograms(const MultidimArray<int> &Iframe);
@@ -43,11 +44,12 @@ public:
 public:
 	MetaData mdIn;
 	MultidimArray<int> columnH,rowH, aSingleColumnH, aSingleRowH;
-	MultidimArray<double> smoothColumnH, smoothRowH, sumObs;
-	Image<double> ICorrection;
-	std::vector<double> listOfSigmas;
-	std::vector<double> listOfWidths;
-	std::vector<double *> listOfWeights;
+	MultidimArray<float> smoothColumnH, smoothRowH, sumObs; // it was double
+	Image<float> ICorrection;         // it was double
+	std::vector<float> listOfSigmas;  // it was double
+	std::vector<float> listOfWidths; // it was double
+	std::vector<float *> listOfWeights; // it was double
+
 	int Xdim, Ydim;
 
 	// Note that most GPU data is float instead of double
@@ -59,11 +61,12 @@ public:
 	// d_Iframes and h_Iframes contains the same info
 	// d_Iframes is used internally by the GPU to access the images
 	// h_Iframes is used if a kernel is using a single image
-	float** d_Iframes;		// vector of images
-	float** h_Iframes;		// vector of images
+	float** d_IframesFL;		// vector of images
+	float** h_IframesFL;		// vector of images
+	int** d_IframesINT;		// vector of images
+	int** h_IframesINT;		// vector of images
 	float* d_ICorrection; 		//Image
-	float* d_Itemp;       		//Image
-	float* d_ImagePool;   		//Image
+	int* d_IframeIdeal; 		//Image
 	float* d_listOfWidths;		//vector
 	float** d_listOfWeights;	//vector
 	float* d_listOfSigmas;		//vector
@@ -113,10 +116,11 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	ICorrection().initConstant(1);
 	sumObs.initZeros(Ydim,Xdim);
 
+	clock_t start=clock();
 	// Copy all images to GPU
 	int im=0;
-	int sz_Iframes=sizeof(float*)*mdIn.size();
-	h_Iframes = (float**)malloc(sz_Iframes);
+	size_t sz_IframesFL=sizeof(float*)*mdIn.size();
+	h_IframesFL = (float**)malloc(sz_IframesFL);
 	size_t sz_img=Xdim*Ydim*sizeof(float);
  
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
@@ -125,30 +129,32 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 		Iframe.read(fnFrame);
 
-		gpuErrchk(cudaMalloc(&h_Iframes[im], sz_img));
-	std::cout << "Total global mem = " << GPUprop. totalGlobalMem << " bytes" << std::endl;
-		gpuErrchk(cudaMemcpy(h_Iframes[im++], &Iframe(0,0), sz_img, cudaMemcpyHostToDevice)); 
+		gpuErrchk(cudaMalloc(&h_IframesFL[im], sz_img));
+		gpuErrchk(cudaMemcpy(h_IframesFL[im++], &Iframe(0,0), sz_img, cudaMemcpyHostToDevice)); 
 	}
 	// send vector of images to GPU
-	gpuErrchk(cudaMalloc(&d_Iframes, sz_Iframes));
-	gpuErrchk(cudaMemcpy(d_Iframes, h_Iframes, sz_Iframes, cudaMemcpyHostToDevice));
-	// Allocate d_sumObs
-	gpuErrchk(cudaMalloc( &d_sumObs, sz_img));
+	gpuErrchk(cudaMalloc(&d_IframesFL, sz_IframesFL));
+	gpuErrchk(cudaMemcpy(d_IframesFL, h_IframesFL, sz_IframesFL, cudaMemcpyHostToDevice));
+	// Allocate and intialize GPU data	gpuErrchk(cudaMalloc( &d_sumObs, sz_img)); // no need to initialize (it's done in kernel)
 	//****
 	// Kernel
 	std::cout << "CALLING KERNEL" << std::endl;
 
         dim3 block(floor((Xdim+31)/32),floor((Ydim+17)/16),1);
 	dim3 thread( 32, 16);
-	sumall<<< block, thread >>>(d_sumObs, d_Iframes, mdIn.size(), Xdim, Ydim);
+	sumall<<< block, thread >>>(d_sumObs, d_IframesFL, mdIn.size(), Xdim, Ydim);
  	cudaThreadSynchronize();
 	gpuErrchk(cudaGetLastError());
 
 	float* sumObs_tmp=(float*)malloc(sz_img); // remove
+	
 	std::cout << "READING RESULTS " << sz_img << std::endl;
 	cudaMemcpy(sumObs_tmp, d_sumObs, sz_img, cudaMemcpyDeviceToHost);
 	std::cout << "RESULTS READ" << std::endl;
+	clock_t end=clock();
+	std::cout << "SEND+KERNEL+SEND= " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 	
+	start=clock();
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
@@ -156,6 +162,8 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 		sumObs+=Iframe();
 	}
 	sumObs*=2;
+	end=clock();	
+	std::cout << "SEQUENTIAL= " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 	
 	// check if sumObs and sumObs_tmp are the same
 	for (int i=0; i<Xdim*Ydim; i++){
@@ -179,15 +187,15 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	//****
 
 	// Initialize sigma values
-	for (double sigma=0; sigma<=maxSigma; sigma+=sigmaStep)
+	for (float sigma=0; sigma<=maxSigma; sigma+=sigmaStep)
 		listOfSigmas.push_back(sigma);
 	
 	for (size_t i=0; i<listOfSigmas.size(); ++i)
 	{
 		int jmax=ceil(3*listOfSigmas[i]);
 		listOfWidths.push_back(jmax);
-		double *weights=new double[jmax];
-		double K=-0.5/(listOfSigmas[i]*listOfSigmas[i]);
+		float *weights=new float[jmax];    //it was double
+		float K=-0.5/(listOfSigmas[i]*listOfSigmas[i]); //it was double
 //********* MODIFED BY GCF
 		//for (int j=1; j<=jmax; ++j)
 		//	weights[j-1]=exp(K*j*j);
@@ -200,9 +208,8 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	// Copy to GPU
 	size_t sz_list = sizeof(float)*listOfSigmas.size();
 	gpuErrchk(cudaMalloc(&d_listOfSigmas, sz_list));
-	gpuErrchk(cudaMemcpy(d_listOfSigmas, listOfSigmas, sz_list, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(d_listOfSigmas, &listOfSigmas[0], sz_list, cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMalloc(&d_listOfWeights, sz_list));
-	gpuErrchk(cudaMemcpy(d_listOfWeights, listOfWeights, sz_list, cudaMemcpyHostToDevice));
 	
 }
 
@@ -223,6 +230,7 @@ void ProgMovieEstimateGainGPU::show()
 
 void ProgMovieEstimateGainGPU::run()
 {
+	// Select GPU and show
 	int deviceCount;
 	cudaGetDeviceCount(&deviceCount);
 	GPUdevice = -1;
@@ -251,10 +259,101 @@ void ProgMovieEstimateGainGPU::run()
 	FileName fnFrame;
 	Image<int> Iframe;
 	MultidimArray<int> IframeTransformed, IframeIdeal;
-	MultidimArray<double> sumIdeal;
-	MultidimArray<double> &mICorrection=ICorrection();
+	//MultidimArray<double> sumIdeal;
+	//MultidimArray<double> &mICorrection=ICorrection();
+	MultidimArray<float> sumIdeal;
+	MultidimArray<float> &mICorrection=ICorrection();
 
 
+	// Copy all int images onto GPU
+	int im=0;
+	size_t sz_IframesINT=sizeof(int*)*mdIn.size();
+	h_IframesINT = (int**)malloc(sz_IframesINT);
+	size_t px_img=Xdim*Ydim;
+	size_t sz_img=px_img*sizeof(int);
+
+ 
+	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+	{
+		std::cout << "im="<< im <<"; Image size in bytes = " << sz_img << std::endl;
+		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+		Iframe.read(fnFrame);
+
+		gpuErrchk(cudaMalloc(&h_IframesINT[im], sz_img));
+		gpuErrchk(cudaMemcpy(h_IframesINT[im++], &Iframe(0,0), sz_img, cudaMemcpyHostToDevice)); 
+	}
+	// send vector of images to GPU
+	gpuErrchk(cudaMalloc(&d_IframesINT, sz_IframesINT));
+	gpuErrchk(cudaMemcpy(d_IframesINT, h_IframesINT, sz_IframesINT, cudaMemcpyHostToDevice));
+	// Malloc several data
+	gpuErrchk(cudaMalloc(&d_IframeIdeal, sz_img));
+	
+	
+//*********** GPU Computation
+	for (int n=0; n<Niter; n++)
+	{
+		std::cout << "Iteration " << n << std::endl;
+		sumIdeal.initZeros(Ydim,Xdim);
+		im=0;
+		FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+		{
+			mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+			std::cout << "   Frame " << fnFrame << std::endl;
+			Iframe.read(fnFrame);
+			IframeIdeal = Iframe();
+
+			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
+				DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
+			//GPU kernel
+			thrust::device_ptr<int> thptr_d_IframeIdeal = thrust::device_pointer_cast(d_IframeIdeal);
+			thrust::device_ptr<int> thptr_d_Iframe = thrust::device_pointer_cast(h_IframesINT[im]);
+			thrust::copy(thptr_d_Iframe, thptr_d_Iframe+px_img, thptr_d_IframeIdeal);
+			thrust::copy(thptr_d_Iframe, thptr_d_Iframe+px_img, thptr_d_IframeIdeal);
+			thrust::transform(thptr_d_IframeIdeal, thptr_d_IframeIdeal+px_img, thptr_d_ICorrection, thrust::multiplies());
+			im++;
+
+			computeHistograms(IframeIdeal); //rowH columnH
+
+			size_t bestSigmaCol = selectBestSigmaByColumn(IframeIdeal);
+			std::cout << "      sigmaCol: " << listOfSigmas[bestSigmaCol] << std::endl;
+			size_t bestSigmaRow = selectBestSigmaByRow(IframeIdeal);
+			std::cout << "      sigmaRow: " << listOfSigmas[bestSigmaRow] << std::endl;
+
+			constructSmoothHistogramsByRow(listOfWeights[bestSigmaRow],listOfWidths[bestSigmaRow]);   //smooth
+			transformGrayValuesRow(IframeIdeal,IframeTransformed);
+			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
+				DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+			constructSmoothHistogramsByColumn(listOfWeights[bestSigmaCol],listOfWidths[bestSigmaCol]);
+			transformGrayValuesColumn(IframeIdeal,IframeTransformed);
+			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
+			DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+		}
+		//***
+		// kernel with partial average
+		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mICorrection)
+		{
+			double den=DIRECT_A2D_ELEM(sumObs,i,j);
+			if (fabs(den)<1e-6)
+				DIRECT_A2D_ELEM(mICorrection,i,j)=1.0;
+			else
+				DIRECT_A2D_ELEM(mICorrection,i,j)=DIRECT_A2D_ELEM(sumIdeal,i,j)/den;
+		}
+		mICorrection/=mICorrection.computeAvg();
+		//****
+
+#ifdef NEVER_DEFINED
+	ICorrection.write(fnCorr);
+	Image<double> save;
+	typeCast(sumIdeal,save());
+	save.write("PPPSumIdeal.xmp");
+	typeCast(sumObs,save());
+	save.write("PPPSumObs.xmp");
+	//std::cout << "Press any key\n";
+	//char c; std::cin >> c;
+#endif
+	}
+	
+//***********
 	for (int n=0; n<Niter; n++)
 	{
 		std::cout << "Iteration " << n << std::endl;
@@ -364,7 +463,7 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 #endif
 }
 
-void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const double *listOfWeights, int width)
+void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const float *listOfWeights, int width)
 {
 
 	smoothColumnH.initZeros(columnH);
@@ -413,7 +512,7 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const double *l
 #endif
 }
 
-void ProgMovieEstimateGainGPU::constructSmoothHistogramsByRow(const double *listOfWeights, int width)
+void ProgMovieEstimateGainGPU::constructSmoothHistogramsByRow(const float *listOfWeights, int width)
 {
 	smoothRowH.initZeros(rowH);
 	for(size_t i = 0; i<YSIZE(rowH); ++i)
