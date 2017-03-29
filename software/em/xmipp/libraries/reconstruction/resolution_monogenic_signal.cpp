@@ -343,7 +343,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	#endif // DEBUG
 //
 	// Low pass filter the monogenic amplitude
-	lowPassFilter.w1 = w1;
+	lowPassFilter.w1 = w1h;
 	amplitude.setXmippOrigin();
 	lowPassFilter.applyMaskSpace(amplitude);
 
@@ -733,6 +733,8 @@ void ProgMonogenicSignalRes::run()
 		fnmask_debug = formatString("maske_%i.vol", iter);
 		mask.write(fnmask_debug);
 		#endif
+
+		outputResolution.write(formatString("resolutionSoFar_%i.vol", iter));
 
 
 		// Is the mean inside the signal significantly different from the noise?
