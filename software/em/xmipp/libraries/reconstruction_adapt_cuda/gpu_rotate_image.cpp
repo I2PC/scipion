@@ -145,7 +145,7 @@ void ProgGpuRotateImage::run()
     		aux++;
     	}
     }
-    for (int i=0; i<<; i<9){
+    for (int i=0; i++; i<9){
     	std::cout << "i " << i << " rot_vector " << rot_vector << std::endl;
     }
 
