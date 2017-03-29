@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+
 //CUDA includes
 #include <cuda_runtime.h>
 

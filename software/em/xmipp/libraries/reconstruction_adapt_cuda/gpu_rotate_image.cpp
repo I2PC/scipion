@@ -30,6 +30,7 @@
 #include <data/xmipp_image.h>
 #include "data/xmipp_program.h"
 #include <data/args.h>
+#include "data/image_operate.h"
 
 
 //#define PI ((float)3.141592653589793)
@@ -101,6 +102,19 @@ void ProgGpuRotateImage::run()
     if (Ndim>1){
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
+
+    MultidimArray<float> prueba1(2,2);
+    MultidimArray<float> prueba2(2,2);
+    prueba1(0,0)=0;
+    prueba1(0,1)=1;
+    prueba1(1,0)=2;
+    prueba1(1,1)=3;
+    prueba2(0,0)=10;
+    prueba2(0,1)=20;
+    prueba2(1,0)=30;
+    prueba2(1,1)=40;
+    std::cout << "prueba1 " << prueba1 << std::endl;
+    std::cout << "prueba2 " << prueba2 << std::endl;
 
     MultidimArray<float> &original_image=Iref();
 
