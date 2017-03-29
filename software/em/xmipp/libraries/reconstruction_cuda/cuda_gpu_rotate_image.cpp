@@ -211,8 +211,8 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 		cudaBindTextureToArray(texRef, cuArray, channelDesc);
 
 		// Specify texture object parameters
-		texRef.addressMode[0] = cudaAddressModeBorder;
-		texRef.addressMode[1] = cudaAddressModeBorder;
+		//texRef.addressMode[0] = cudaAddressModeBorder;
+		//texRef.addressMode[1] = cudaAddressModeBorder;
 		if (interp==0){
 		    texRef.filterMode = cudaFilterModePoint;
 		}else{
