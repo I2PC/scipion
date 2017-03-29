@@ -140,7 +140,7 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-        if not self._isPrevMc2VersionsSupp():
+        if self._supportsMagCorrection():
             group = form.addGroup('Magnification correction')
             group.addParam('doMagCor', params.BooleanParam, default=False,
                            label='Correct anisotropic magnification?',
@@ -175,15 +175,13 @@ class ProtMotionCorr(ProtAlignMovies):
         else:
             form.addParam('motioncor2Version', params.LabelParam,
                           condition='useMotioncor2',
-                          label='It seems any version of motioncor2 '
-                                'beyond v10192016 is notinstalled in your '
-                                'system. If you want to correct anisotropic '
-                                'magnification, get in touch with your system '
-                                'manager to install it, and set '
-                                'MOTIONCOR2_HOME on your scipion.conf '
-                                'properly.\n'
-                                'Make sure MOTIONCOR2_CUDA_LIB or CUDA_LIB '
-                                'point to cuda-8.0/lib path')
+                          label='Scipion supports some versions of motioncor2 '
+                                'that can do magnification correction, '
+                                'but they do not seems to be installed. Check '
+                                'available versions with: \n'
+                                'scipion install --help.\n'
+                                'Also, make sure MOTIONCOR2_CUDA_LIB or '
+                                'CUDA_LIB point to cuda-8.0/lib path')
 
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
@@ -303,7 +301,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if self.doMagCor and (not self._isPrevMc2VersionsSupp()):
+            if self.doMagCor and self._supportsMagCorrection():
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
                     input_params = parseMagCorrInput(inputEst)
@@ -565,8 +563,8 @@ class ProtMotionCorr(ProtAlignMovies):
     def _doComputeMicThumbnail(self):
         return (self.doSaveAveMic and self.doComputeMicThumbnail)
     
-    def _isPrevMc2VersionsSupp(self):
-        return getVersion('MOTIONCOR2') in ['03162016', '10192016']
+    def _supportsMagCorrection(self):
+        return getVersion('MOTIONCOR2') not in ['03162016', '10192016']
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
