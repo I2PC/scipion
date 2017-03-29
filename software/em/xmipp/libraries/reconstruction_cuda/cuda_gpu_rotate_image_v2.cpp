@@ -131,9 +131,9 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, doub
 	float y0 = (float)y;
 	float z0 = (float)z;
 
-	float x1 = (float)angle[0] * (x0) + (float)angle[1] * (y0) + (float)angle[2] * (z0);
-	float y1 = (float)angle[3] * (x0) + (float)angle[4] * (y0) + (float)angle[5] * (z0);
-	float z1 = (float)angle[6] * (x0) + (float)angle[7] * (y0) + (float)angle[8] * (z0);
+	float x1 = (float)angle[0] * x0 + (float)angle[1] * y0 + (float)angle[2] * z0 + shift.x;
+	float y1 = (float)angle[3] * x0 + (float)angle[4] * y0 + (float)angle[5] * z0 + shift.y;
+	float z1 = (float)angle[6] * x0 + (float)angle[7] * y0 + (float)angle[8] * z0 + shift.z;
 
 	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
 
