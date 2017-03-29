@@ -41,10 +41,6 @@ void ProgGpuRotateImage::readParams()
 {
 	fnRef = getParam("-i");
 	fnOut = getParam("-o");
-	ang = getParam("-ang");
-	//angX = getParam("-angX");
-	//angY = getParam("-angY");
-	//angZ = getParam("-angZ");
 	interp = getParam("-interp");
 
 }
@@ -55,10 +51,6 @@ void ProgGpuRotateImage::show()
     std::cout
 	<< "Input:          " << fnRef    << std::endl
 	<< "Output:          " << fnOut    << std::endl
-    << "Rotation angle for images: " << ang       << std::endl
-	//<< "Rotation angle for volumes in X axis: " << angX       << std::endl
-	//<< "Rotation angle for volumes in Y axis: " << angY       << std::endl
-	//<< "Rotation angle for volumes in Z axis: " << angZ       << std::endl
 	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear, 2 - Cubic " << interp    << std::endl
     ;
 }
