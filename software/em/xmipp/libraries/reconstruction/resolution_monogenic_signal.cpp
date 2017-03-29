@@ -210,11 +210,13 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
-	double iwl=1.0/w1l;
+	double iwl=1.0/w1h;
 	double iw=1.0/w1;
-	double iwh=1.0/w1h;
+	double iwh=1.0/w1l;
 	double ideltal=PI/(iw-iwl);
 	double ideltah=PI/(iwh-iw);
+        std::cout << iwl << " " << iw << " " << iwh << " " << ideltal << " " << ideltah << std::endl;
+        int ifCounter=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
@@ -227,17 +229,20 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 					double H=0.5*(1+cos((iun-w1)*ideltal));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+                                        ifCounter++;
 				}
 				else if (iun>iw && iun<=iwh)
 				{
 					double H=0.5*(1+cos((w1-iun)*ideltah));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+                                        ifCounter++;
 				}
 				++n;
 			}
 		}
 	}
+        std::cout << ifCounter << std::endl;
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	if (fnSpatial!="")
 		Vfiltered()=VRiesz;
