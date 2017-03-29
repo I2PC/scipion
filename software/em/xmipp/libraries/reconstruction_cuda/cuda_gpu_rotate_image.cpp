@@ -92,7 +92,7 @@ __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadMode
 
 
 __global__ void
-rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float ang)
+rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -103,8 +103,8 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float ang)
     u -= 0.5f;
     v -= 0.5f;
 
-    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
-    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
+    float tu = u * angle[0] + v * angle[1] + 0.5f;
+    float tv = u * angle[3] + v * angle[4] + 0.5f;
 
     // Read from texture and write to global memory
    	output[y * Xdim + x] = tex2D(texRef, tu, tv);
@@ -113,7 +113,7 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, float ang)
 
 
 __global__ void
-rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float ang)
+rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -124,8 +124,8 @@ rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float ang
     u -= 0.5f;
     v -= 0.5f;
 
-    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
-    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
+    float tu = u * angle[0] + v * angle[1] + 0.5f;
+    float tv = u * angle[3] + v * angle[4] + 0.5f;
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;
@@ -137,7 +137,7 @@ rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, float ang
 
 
 __global__ void
-rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float ang)
+rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -151,10 +151,9 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     v -= 0.5f;
     w -= 0.5f;
 
-    //AJ simple transformation in just one axis
-    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
-    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
-    float tw = w + 0.5f;
+    float tu = u * angle[0] + v * angle[1] + w * angle[2] + 0.5f;
+    float tv = u * angle[3] + v * angle[4] + w * angle[5] + 0.5f;
+    float tw = u * angle[6] + v * angle[7] + w * angle[8] + 0.5f;
 
     // Read from texture and write to global memory
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
@@ -163,7 +162,7 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
 
 
 __global__ void
-rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float ang)
+rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, float* angle)
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -177,10 +176,9 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
     v -= 0.5f;
     w -= 0.5f;
 
-    //AJ simple transformation in just one axis
-    float tu = u * cosf(ang) - v * sinf(ang) + 0.5f;
-    float tv = v * cosf(ang) + u * sinf(ang) + 0.5f;
-    float tw = w + 0.5f;
+    float tu = u * angle[0] + v * angle[1] + w * angle[2] + 0.5f;
+    float tv = u * angle[3] + v * angle[4] + w * angle[5] + 0.5f;
+    float tw = u * angle[6] + v * angle[7] + w * angle[8] + 0.5f;
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;
@@ -191,7 +189,7 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
 }
 
 
-void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float ang, int interp){
+void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float* ang, int interp){
 
 	std::cerr  << "Inside CUDA function " << ang << std::endl;
 
@@ -262,6 +260,9 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
     // Allocate result of transformation in device memory
     float *d_output;
 	cudaMalloc((void **)&d_output, matSize);
+	float* d_angle;
+	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
+	cudaMemcpy(d_angle, ang, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 
 	//Kernel
@@ -279,9 +280,9 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 		}
 		const dim3 gridSize(numBlkx, numBlky, 1);
 		if(interp<2){
-			rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+			rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, d_angle);
 		}else{
-			rotate_kernel_unnormalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, ang);
+			rotate_kernel_unnormalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, d_angle);
 		}
 
 	}else if(Zdim>1){
@@ -302,9 +303,9 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 		}
 		const dim3 gridSize(numBlkx, numBlky, numBlkz);
 		if(interp<2){
-			rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
+			rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, d_angle);
 		}else{
-			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, ang);
+			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, d_angle);
 		}
 
 	}
@@ -314,5 +315,6 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 
 	cudaFree(cuArray);
 	cudaFree(d_output);
+	cudaFree(d_angle);
 
 }

@@ -102,7 +102,7 @@ __device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, flo
 
 
 __global__ void
-interpolate_kernel2D(float* output, uint width, float2 extent, float2 a, float2 shift)
+interpolate_kernel2D(float* output, uint width, float2 extent, float* angle, float2 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -111,8 +111,8 @@ interpolate_kernel2D(float* output, uint width, float2 extent, float2 a, float2 
 	float x0 = (float)x;
 	float y0 = (float)y;
 
-	float x1 = a.x * x0 - a.y * y0 + shift.x;
-	float y1 = a.x * y0 + a.y * x0 + shift.y;
+	float x1 = angle[0] * x0 + angle[1] * y0 + shift.x;
+	float y1 = angle[3] * x0 + angle[4] * y0 + shift.y;
 
 	output[i] = cubicTex2D<float>(texRef, x1, y1);
 
@@ -120,7 +120,7 @@ interpolate_kernel2D(float* output, uint width, float2 extent, float2 a, float2 
 
 
 __global__ void
-interpolate_kernel3D(float* output, uint width, uint height, float3 extent, float2 a, float3 shift)
+interpolate_kernel3D(float* output, uint width, uint height, float3 extent, float* angle, float3 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -130,58 +130,66 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, floa
 	float x0 = (float)x;
 	float y0 = (float)y;
 	float z0 = (float)z;
-	//AJ aqui se hace una transformacion simple en un solo eje
-	float x1 = a.x * x0 - a.y * y0 + shift.x;
-	float y1 = a.x * y0 + a.y * x0 + shift.y;
-	float z1 = z0 + shift.z;
+
+	float x1 = angle[0] * (x0) + angle[1] * (y0) + angle[2] * (z0);
+	float y1 = angle[3] * (x0) + angle[4] * (y0) + angle[5] * (z0);
+	float z1 = angle[6] * (x0) + angle[7] * (y0) + angle[8] * (z0);
 
 	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
 
 }
 
 
-cudaPitchedPtr interpolate2D(uint width, uint height, float angle)
+cudaPitchedPtr interpolate2D(uint width, uint height, float* angle)
 {
 	// Prepare the geometry
-	float2 a = make_float2((float)cos(angle), (float)sin(angle));
 	float xOrigin = floor(width/2);
 	float yOrigin = floor(height/2);
-	float x0 = a.x * (xOrigin) - a.y * (yOrigin);
-	float y0 = a.y * (xOrigin) + a.x * (yOrigin);
+	float x0 = angle[0] * (xOrigin) + angle[1] * (yOrigin);
+	float y0 = angle[3] * (xOrigin) + angle[4] * (yOrigin);
 	float xShift = xOrigin - x0;
 	float yShift = yOrigin - y0;
 
 	// Allocate the output image
 	float* output;
 	cudaMalloc((void**)&output, width * height * sizeof(float));
+	float* d_angle;
+	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
+	cudaMemcpy(d_angle, angle, 9 * sizeof(float), cudaMemcpyHostToDevice);
+
 
 	// Visit all pixels of the output image and assign their value
 	dim3 blockSize(min(PowTwoDivider(width), 16), min(PowTwoDivider(height), 16));
 	dim3 gridSize(width / blockSize.x, height / blockSize.y);
 	float2 shift = make_float2((float)xShift, (float)yShift);
 	float2 extent = make_float2((float)width, (float)height);
-	interpolate_kernel2D<<<gridSize, blockSize>>>(output, width, extent, a, shift);
+	interpolate_kernel2D<<<gridSize, blockSize>>>(output, width, extent, d_angle, shift);
+
+	cudaDeviceSynchronize();
+	cudaFree(d_angle);
 
 	return make_cudaPitchedPtr(output, width * sizeof(float), width, height);
 }
 
 
-void interpolate3D(uint width, uint height, uint depth, float angle, float* output)
+void interpolate3D(uint width, uint height, uint depth, float* angle, float* output)
 {
 	// Prepare the geometry
-	//AJ mal, esto es una transformacion simple en un solo eje, hay que generalizar
-	float2 a = make_float2((float)cos(angle), (float)sin(angle));
 	float xOrigin = floor(width/2);
 	float yOrigin = floor(height/2);
 	float zOrigin = floor(depth/2);
 
-	float x0 = a.x * (xOrigin) - a.y * (yOrigin);
-	float y0 = a.y * (xOrigin) + a.x * (yOrigin);
-	float z0 = zOrigin;
+	float x0 = angle[0] * (xOrigin) + angle[1] * (yOrigin) + angle[2] * (zOrigin);
+	float y0 = angle[3] * (xOrigin) + angle[4] * (yOrigin) + angle[5] * (zOrigin);
+	float z0 = angle[6] * (xOrigin) + angle[7] * (yOrigin) + angle[8] * (zOrigin);
 
 	float xShift = xOrigin - x0;
 	float yShift = yOrigin - y0;
 	float zShift = zOrigin - z0;
+
+	float* d_angle;
+	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
+	cudaMemcpy(d_angle, angle, 9 * sizeof(float), cudaMemcpyHostToDevice);
 
 	// Visit all pixels of the output image and assign their value
 	int numTh = 10;
@@ -202,14 +210,17 @@ void interpolate3D(uint width, uint height, uint depth, float angle, float* outp
 
 	float3 shift = make_float3((float)xShift, (float)yShift, (float)zShift);
 	float3 extent = make_float3((float)width, (float)height, (float)depth);
-	interpolate_kernel3D<<<gridSize, blockSize>>>(output, width, height, extent, a, shift);
+	interpolate_kernel3D<<<gridSize, blockSize>>>(output, width, height, extent, d_angle, shift);
+
+	cudaDeviceSynchronize();
+	cudaFree(d_angle);
 
 }
 
 
-void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, float ang){
+void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double *ang){
 
-	std::cerr  << "Inside CUDA function " << ang << std::endl;
+	//std::cerr  << "Inside CUDA function " << ang << std::endl;
 
 	//CUDA code
 
@@ -238,7 +249,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     	texRef.normalized = false;
 
     	//Interpolation (second step)
-    	cudaOutput = interpolate2D(Xdim, Ydim, ang);
+    	cudaOutput = interpolate2D(Xdim, Ydim, (float*)ang);
     	cudaDeviceSynchronize();
 
     	CopyVolumeDeviceToHost(rotated_image, cudaOutput, Xdim, Ydim, Zdim);
@@ -268,7 +279,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     	cudaMalloc((void **)&d_output, Xdim * Ydim * Zdim * sizeof(float));
 
     	//Interpolation (second step)
-    	interpolate3D(Xdim, Ydim, Zdim, ang, d_output);
+    	interpolate3D(Xdim, Ydim, Zdim, (float*)ang, d_output);
     	cudaDeviceSynchronize();
 
     	cudaMemcpy(rotated_image, d_output, Xdim * Ydim * Zdim * sizeof(float), cudaMemcpyDeviceToHost);

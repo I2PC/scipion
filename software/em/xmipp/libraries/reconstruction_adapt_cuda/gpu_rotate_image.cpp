@@ -133,16 +133,16 @@ void ProgGpuRotateImage::run()
     rotX(2,2)=cos(chi);
 
     rot_matrix=rotZ*(rotY*rotX);
-    std::cout << "rot_matrix " << rot_matrix << std::endl;
-    double vector[9];
+    //std::cout << "rot_matrix " << rot_matrix << std::endl;
+    double rot_vector[9];
     int aux=0;
     for(int i=0; i<3; i++){
     	for(int j=0; j<3; j++){
-    		vector[aux]=rot_matrix(i,j);
+    		rot_vector[aux]=rot_matrix(i,j);
     		aux++;
     	}
     }
-    std::cout << "vector " << vector << std::endl;
+
 
     MultidimArray<float> &original_image=Iref();
 
@@ -152,9 +152,9 @@ void ProgGpuRotateImage::run()
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
     if (interpol<2){
-    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, radIm, interpol);
+    	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, rot_vector, interpol);
     }else if(interpol==2){
-    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, radIm);
+    	cuda_rotate_image_v2(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, rot_vector);
     }
 
     Iout() = rotated_image;
