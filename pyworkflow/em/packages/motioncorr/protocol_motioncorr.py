@@ -140,7 +140,7 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-        if getVersion('MOTIONCOR2') not in ['03162016', '10192016']:
+        if not self._isPrevMc2VersionsSupp():
             group = form.addGroup('Magnification correction')
             group.addParam('doMagCor', params.BooleanParam, default=False,
                            label='Correct anisotropic magnification?',
@@ -303,7 +303,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if self.doMagCor and (getVersion('MOTIONCOR2') not in ['03162016', '10192016']):
+            if self.doMagCor and (not self._isPrevMc2VersionsSupp()):
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
                     input_params = parseMagCorrInput(inputEst)
@@ -564,6 +564,9 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _doComputeMicThumbnail(self):
         return (self.doSaveAveMic and self.doComputeMicThumbnail)
+    
+    def _isPrevMc2VersionsSupp(self):
+        return getVersion('MOTIONCOR2') in ['03162016', '10192016']
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
