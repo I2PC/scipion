@@ -102,7 +102,7 @@ __device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, flo
 
 
 __global__ void
-interpolate_kernel2D(float* output, uint width, float2 extent, float* angle, float2 shift)
+interpolate_kernel2D(float* output, uint width, float2 extent, double* angle, float2 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -120,7 +120,7 @@ interpolate_kernel2D(float* output, uint width, float2 extent, float* angle, flo
 
 
 __global__ void
-interpolate_kernel3D(float* output, uint width, uint height, float3 extent, float* angle, float3 shift)
+interpolate_kernel3D(float* output, uint width, uint height, float3 extent, double* angle, float3 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -140,7 +140,7 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, floa
 }
 
 
-cudaPitchedPtr interpolate2D(uint width, uint height, float* angle)
+cudaPitchedPtr interpolate2D(uint width, uint height, double* angle)
 {
 	// Prepare the geometry
 	float xOrigin = floor(width/2);
@@ -153,9 +153,9 @@ cudaPitchedPtr interpolate2D(uint width, uint height, float* angle)
 	// Allocate the output image
 	float* output;
 	cudaMalloc((void**)&output, width * height * sizeof(float));
-	float* d_angle;
-	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
-	cudaMemcpy(d_angle, angle, 9 * sizeof(float), cudaMemcpyHostToDevice);
+	double* d_angle;
+	cudaMalloc((void**)&d_angle, 9 * sizeof(double));
+	cudaMemcpy(d_angle, angle, 9 * sizeof(double), cudaMemcpyHostToDevice);
 
 
 	// Visit all pixels of the output image and assign their value
@@ -172,7 +172,7 @@ cudaPitchedPtr interpolate2D(uint width, uint height, float* angle)
 }
 
 
-void interpolate3D(uint width, uint height, uint depth, float* angle, float* output)
+void interpolate3D(uint width, uint height, uint depth, double* angle, float* output)
 {
 	// Prepare the geometry
 	float xOrigin = floor(width/2);
@@ -187,9 +187,9 @@ void interpolate3D(uint width, uint height, uint depth, float* angle, float* out
 	float yShift = yOrigin - y0;
 	float zShift = zOrigin - z0;
 
-	float* d_angle;
-	cudaMalloc((void**)&d_angle, 9 * sizeof(float));
-	cudaMemcpy(d_angle, angle, 9 * sizeof(float), cudaMemcpyHostToDevice);
+	double* d_angle;
+	cudaMalloc((void**)&d_angle, 9 * sizeof(double));
+	cudaMemcpy(d_angle, angle, 9 * sizeof(double), cudaMemcpyHostToDevice);
 
 	// Visit all pixels of the output image and assign their value
 	int numTh = 10;
@@ -249,7 +249,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     	texRef.normalized = false;
 
     	//Interpolation (second step)
-    	cudaOutput = interpolate2D(Xdim, Ydim, (float*)ang);
+    	cudaOutput = interpolate2D(Xdim, Ydim, ang);
     	cudaDeviceSynchronize();
 
     	CopyVolumeDeviceToHost(rotated_image, cudaOutput, Xdim, Ydim, Zdim);
@@ -279,7 +279,7 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     	cudaMalloc((void **)&d_output, Xdim * Ydim * Zdim * sizeof(float));
 
     	//Interpolation (second step)
-    	interpolate3D(Xdim, Ydim, Zdim, (float*)ang, d_output);
+    	interpolate3D(Xdim, Ydim, Zdim, ang, d_output);
     	cudaDeviceSynchronize();
 
     	cudaMemcpy(rotated_image, d_output, Xdim * Ydim * Zdim * sizeof(float), cudaMemcpyDeviceToHost);

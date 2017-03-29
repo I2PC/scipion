@@ -105,12 +105,6 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* ang
 
     float tu = u * angle[0] + v * angle[1] + 0.5f;
     float tv = u * angle[3] + v * angle[4] + 0.5f;
-    if(x==0 && y==0){
-    	printf("angle[0] %f \n", angle[0]);
-    	printf("angle[1] %f \n", angle[1]);
-    	printf("angle[3] %f \n", angle[3]);
-    	printf("angle[4] %f \n", angle[4]);
-    }
 
     // Read from texture and write to global memory
    	output[y * Xdim + x] = tex2D(texRef, tu, tv);

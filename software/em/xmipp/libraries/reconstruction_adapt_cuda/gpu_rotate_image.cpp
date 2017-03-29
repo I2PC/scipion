@@ -133,10 +133,6 @@ void ProgGpuRotateImage::run()
     rotX(2,2)=cos(chi);
 
     rot_matrix=rotZ*(rotY*rotX);
-    std::cout << "rotZ " << rotZ << std::endl;
-    std::cout << "rotY " << rotY << std::endl;
-    std::cout << "rotX " << rotX << std::endl;
-    std::cout << "rot_matrix " << rot_matrix << std::endl;
     double rot_vector[9];
     int aux=0;
     for(int i=0; i<3; i++){
@@ -144,9 +140,6 @@ void ProgGpuRotateImage::run()
     		rot_vector[aux]=rot_matrix(i,j);
     		aux++;
     	}
-    }
-    for (int i=0; i<9; i++){
-    	std::cout << "i " << i << " rot_vector " << rot_vector[i] << std::endl;
     }
 
 
