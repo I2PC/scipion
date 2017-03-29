@@ -135,7 +135,13 @@ void ProgGpuRotateImage::run()
     rot_matrix=rotZ*(rotY*rotX);
     std::cout << "rot_matrix " << rot_matrix << std::endl;
     double vector[9];
-    vector=rot_matrix();
+    int aux=0;
+    for(int i=0; i<3; i++){
+    	for(int j=0; j<3; j++){
+    		vector[aux]=rot_matrix(i,j);
+    		aux++;
+    	}
+    }
     std::cout << "vector " << vector << std::endl;
 
     MultidimArray<float> &original_image=Iref();
