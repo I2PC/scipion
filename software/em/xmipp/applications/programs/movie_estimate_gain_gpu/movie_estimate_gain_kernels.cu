@@ -13,7 +13,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line,
  sumall - sum no_imgs images in matrix sumObjs, starting from firstImg
 ****/
 __global__
-void sumall( double* sumObjs, double** array_Img, int no_imgs, int Xdim, int Ydim){
+void sumall( float* sumObjs, float** array_Img, int no_imgs, int Xdim, int Ydim){
 
    int x = blockIdx.x*blockDim.x + threadIdx.x;
    int y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -22,8 +22,8 @@ void sumall( double* sumObjs, double** array_Img, int no_imgs, int Xdim, int Ydi
 
    if ((x<Xdim)&&(y<Ydim)){
 //   	printf("no_imgs=%d, (%d, %d) th=(%d,%d) blk=(%d,%d)\n", no_imgs, x, y, threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
-	double sum=0;
-	double* ptr;
+	float sum=0;
+	float* ptr;
 	for (int img=0; img<no_imgs; img++){
 	    	ptr=array_Img[img];
 		sum+= ptr[offset];
