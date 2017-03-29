@@ -129,10 +129,10 @@ interpolate_kernel3D(float* output, uint width, uint height, float3 extent, floa
 	float x0 = (float)x;
 	float y0 = (float)y;
 	float z0 = (float)z;
-	//AJ cambiar esto viene de desarrollar la multiplicacion de matrices
+	//AJ aqui se hace una transformacion simple en un solo eje
 	float x1 = a.x * x0 - a.y * y0 + shift.x;
 	float y1 = a.x * y0 + a.y * x0 + shift.y;
-	float z1 = a.x * y0 + a.y * x0 + shift.z;
+	float z1 = z0 + shift.z;
 
 	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
 
@@ -168,15 +168,15 @@ cudaPitchedPtr interpolate2D(uint width, uint height, float angle)
 void interpolate3D(uint width, uint height, uint depth, float angle, float* output)
 {
 	// Prepare the geometry
-
+	//AJ mal, esto es una transformacion simple en un solo eje, hay que generalizar
 	float2 a = make_float2((float)cos(angle), (float)sin(angle));
 	float xOrigin = floor(width/2);
 	float yOrigin = floor(height/2);
 	float zOrigin = floor(depth/2);
-	//AJ mal, hay que hacerlo conforme a las ecuaciones de rotacion
+
 	float x0 = a.x * (xOrigin) - a.y * (yOrigin);
 	float y0 = a.y * (xOrigin) + a.x * (yOrigin);
-	float z0 = a.y * (zOrigin) + a.x * (yOrigin);
+	float z0 = zOrigin;
 
 	float xShift = xOrigin - x0;
 	float yShift = yOrigin - y0;
