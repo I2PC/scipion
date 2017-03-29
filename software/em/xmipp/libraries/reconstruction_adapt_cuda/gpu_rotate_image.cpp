@@ -103,19 +103,13 @@ void ProgGpuRotateImage::run()
     	REPORT_ERROR(ERR_MATRIX_DIM,"Problem with image dimensions");
     }
 
-    Matrix2D<double> prueba1(2,2);
-    Matrix2D<double> prueba2(2,2);
-    prueba1(0,0)=0;
-    prueba1(0,1)=1;
-    prueba1(1,0)=2;
-    prueba1(1,1)=3;
-    prueba2(0,0)=10;
-    prueba2(0,1)=20;
-    prueba2(1,0)=30;
-    prueba2(1,1)=40;
-    std::cout << "prueba1 " << prueba1 << std::endl;
-    std::cout << "prueba2 " << prueba2 << std::endl;
-    std::cout << "multiplicacion " << prueba1*prueba2 << std::endl;
+    Matrix2D<double> rot_matrix(3,3);
+    rot_matrix(0,0)=cos(radIm);
+    rot_matrix(0,1)=-1*sin(radIm);
+    rot_matrix(1,0)=sin(radIm);
+    rot_matrix(1,1)=cos(radIm);
+    rot_matrix(2,2)=1;
+    std::cout << "rot_matrix " << rot_matrix << std::endl;
 
     MultidimArray<float> &original_image=Iref();
 
