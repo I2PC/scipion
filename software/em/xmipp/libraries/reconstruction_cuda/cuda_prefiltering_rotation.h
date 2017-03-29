@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (amaia@cnb.csic.es)
+ * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -28,7 +28,7 @@
 #ifndef CUDABASICMATH
 #define CUDABASICMATH
 
-#include "cuda_basic_math.cpp"
+#include "cuda_basic_math.h"
 
 #endif
 
