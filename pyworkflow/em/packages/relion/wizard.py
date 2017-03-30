@@ -34,7 +34,7 @@ from protocol_refine3d import ProtRelionRefine3D
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_preprocess import ProtRelionPreprocessParticles
 from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
-from protocol_autopick_v2 import ProtRelion2Autopick
+from protocol_autopick_v2 import ProtRelion2Autopick, RUN_COMPUTE
 from protocol_sort import ProtRelionSortParticles
 from pyworkflow.utils.utils import readProperties
 
@@ -233,11 +233,18 @@ class RelionAutopickParams(EmWizard):
 
 
 class Relion2AutopickParams(EmWizard):
-    _targets = [(ProtRelion2Autopick, ['pickingThreshold',
-                                      'interParticleDistance'])]
+    _targets = [(ProtRelion2Autopick, ['runType',
+                                       'pickingThreshold',
+                                       'interParticleDistance'])]
 
     def show(self, form):
         autopickProt = form.protocol
+
+        if not autopickProt.hasAttribute('outputCoordinates'):
+            form.showWarning("You should run the procotol in 'Optimize' mode "
+                               "at least once before opening the wizard.")
+            return
+
         project = autopickProt.getProject()
         micSet = autopickProt.outputMicrographs
         micfn = micSet.getFileName()
@@ -287,3 +294,8 @@ class Relion2AutopickParams(EmWizard):
         myprops = readProperties(pickerProps)
         form.setVar('pickingThreshold', myprops['threshold.value'])
         form.setVar('interParticleDistance', myprops['ipd.value'])
+        # Change the run type now to 'Compute' after using the wizard
+        # and (supposedly) optimized parameters
+        form.setVar('runType', RUN_COMPUTE)
+        # Mark the wizard was used
+        setattr(autopickProt, 'wizardExecuted', True)

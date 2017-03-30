@@ -278,7 +278,8 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         # need to add these parameters
         refCondition = 'referencesType==%s' % REF_AVERAGES
 
-        form.addParam('referencesType', params.EnumParam,
+        group = form.addGroup('References')
+        group.addParam('referencesType', params.EnumParam,
                       choices=['References', 'Gaussian blobs'],
                       default=REF_AVERAGES,
                       display=params.EnumParam.DISPLAY_HLIST,
@@ -290,13 +291,13 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                            'The Gaussian blob references may be useful to '
                            'kickstart a new data set.')
 
-        form.addParam('gaussianPeak', params.FloatParam, default=0.1,
+        group.addParam('gaussianPeak', params.FloatParam, default=0.1,
                       condition='referencesType==%s' % REF_BLOBS,
                       label='Gaussian peak value',
                       help='The peak value of the Gaussian blob. '
                            'Weaker data will need lower values.')
 
-        form.addParam('inputReferences', params.PointerParam,
+        group.addParam('inputReferences', params.PointerParam,
                       pointerClass='SetOfAverages',
                       condition=refCondition,
                       label='Input references', important=True,
@@ -304,7 +305,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                            'Note that the absolute greyscale needs to be correct, \n'
                            'so only use images with proper normalization.')
 
-        form.addParam('particleDiameter', params.IntParam, default=-1,
+        group.addParam('particleDiameter', params.IntParam, default=-1,
                       condition=refCondition,
                       label='Mask diameter (A)',
                       help='Diameter of the circular mask that will be applied '
@@ -506,6 +507,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
             errors.append("References CTF corrected parameter must be set to "
                           "False or set ctf relations.")
 
+
         errors.extend(self._validateMicSelection())
 
         return errors
@@ -535,6 +537,15 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                 if any(missing(mic) for mic in micSubset):
                     return ['Some selected micrograph IDs are missing from the '
                             'input micrographs or CTFs.']
+        return []
+
+    def _warnings(self):
+        if not self.isRunOptimize():
+            if not hasattr(self, 'wizardExecuted'):
+                return ['It seems that you have not executed the wizard to '
+                        'optimize the picking parameters. \n'
+                        'Do you want to launch the whole picking anyway?']
+
         return []
 
     def _summary(self):
