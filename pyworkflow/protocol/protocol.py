@@ -173,7 +173,7 @@ class Step(OrderedObject):
 
     def isInteractive(self):
         return self.interactive.get()
-    
+
     def isWaiting(self):
         return self.getStatus() == STATUS_WAITING
 
@@ -562,6 +562,15 @@ class Protocol(Step):
         from pyworkflow.em.data import EMObject
         for paramName, attr in self.iterOutputAttributes(EMObject):
             yield paramName, attr
+
+    def isInStreaming(self):
+        # For the moment let's assume a protocol is in streaming
+        # if at least one of the output sets is in STREAM_OPEN state
+        for paramName, attr in self.iterOutputEM():
+            if isinstance(attr, Set):
+                if attr.isStreamOpen():
+                    return True
+        return False
 
     def getOutputsSize(self):
         return sum(1 for _ in self.iterOutputEM())
@@ -1375,6 +1384,10 @@ class Protocol(Step):
     def getRunMode(self):
         """ Return the mode of execution, either: MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
+
+    def isContinued(self):
+        """ Return if running in continue mode (MODE_RESUME). """
+        return self.getRunMode() == MODE_RESUME
     
     # Methods that should be implemented in subclasses
     def _validate(self):
