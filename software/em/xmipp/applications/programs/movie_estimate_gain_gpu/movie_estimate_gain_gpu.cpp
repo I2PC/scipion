@@ -9,6 +9,7 @@
 
 double computeTVColumns(MultidimArray<int> &I);
 double computeTVRows(MultidimArray<int> &I);
+bool equal(MultidiamArray<float> &A, float *B);
 
 
 class ProgMovieEstimateGainGPU: public XmippProgram
@@ -135,7 +136,9 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	// send vector of images to GPU
 	gpuErrchk(cudaMalloc(&d_IframesFL, sz_IframesFL));
 	gpuErrchk(cudaMemcpy(d_IframesFL, h_IframesFL, sz_IframesFL, cudaMemcpyHostToDevice));
-	// Allocate and intialize GPU data	gpuErrchk(cudaMalloc( &d_sumObs, sz_img)); // no need to initialize (it's done in kernel)
+
+	// Allocate and intialize GPU data	
+	gpuErrchk(cudaMalloc( &d_sumObs, sz_img)); // no need to initialize (it's done in kernel)
 	//****
 	// Kernel
 	std::cout << "CALLING KERNEL" << std::endl;
@@ -165,14 +168,7 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	end=clock();	
 	std::cout << "SEQUENTIAL= " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 	
-	// check if sumObs and sumObs_tmp are the same
-	for (int i=0; i<Xdim*Ydim; i++){
-		if (DIRECT_A1D_ELEM(sumObs,i)!=sumObs_tmp[i]){
-			std::cout << "ERROR: sumObs"<< std::endl;
-			break;
-		}	
-	}	
-	std::cout << "sumObs[0]=" << DIRECT_A2D_ELEM(sumObs,0,0) << " -> d_sumObs[0]=" << sumObs_tmp[0] << std::endl;
+std::cout << "sumObs[0]=" << DIRECT_A2D_ELEM(sumObs,0,0) << " -> d_sumObs[0]=" << sumObs_tmp[0] << std::endl;
 
 	// free stuff // REMOVE
 	free(sumObs_tmp);
@@ -290,6 +286,7 @@ void ProgMovieEstimateGainGPU::run()
 	
 	
 //*********** GPU Computation
+	
 	for (int n=0; n<Niter; n++)
 	{
 		std::cout << "Iteration " << n << std::endl;
@@ -301,7 +298,7 @@ void ProgMovieEstimateGainGPU::run()
 			std::cout << "   Frame " << fnFrame << std::endl;
 			Iframe.read(fnFrame);
 			IframeIdeal = Iframe();
-
+		
 			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
 				DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
 			//GPU kernel
@@ -309,7 +306,7 @@ void ProgMovieEstimateGainGPU::run()
 			thrust::device_ptr<int> thptr_d_Iframe = thrust::device_pointer_cast(h_IframesINT[im]);
 			thrust::copy(thptr_d_Iframe, thptr_d_Iframe+px_img, thptr_d_IframeIdeal);
 			thrust::copy(thptr_d_Iframe, thptr_d_Iframe+px_img, thptr_d_IframeIdeal);
-			thrust::transform(thptr_d_IframeIdeal, thptr_d_IframeIdeal+px_img, thptr_d_ICorrection, thrust::multiplies());
+			thrust::transform(thptr_d_IframeIdeal, thptr_d_IframeIdeal+px_img, thptr_d_ICorrection, thptf_d_IframeIdeal, thrust::multiplies());
 			im++;
 
 			computeHistograms(IframeIdeal); //rowH columnH
@@ -689,6 +686,19 @@ size_t ProgMovieEstimateGainGPU::selectBestSigmaByRow(const MultidimArray<int> &
 	}
 
 	return best_s;
+}
+
+
+bool equal(MultidiamArray<float> &A, float *B){
+
+	// check if sumObs and sumObs_tmp are the same
+	for (int i=0; i<Xdim*Ydim; i++){
+		if (DIRECT_A1D_ELEM(sumObs,i)!=sumObs_tmp[i]){
+			std::cout << "ERROR: sumObs"<< std::endl;
+			return false;
+		}	
+	}	
+	return true;
 }
 
 RUN_XMIPP_PROGRAM(ProgMovieEstimateGainGPU)
