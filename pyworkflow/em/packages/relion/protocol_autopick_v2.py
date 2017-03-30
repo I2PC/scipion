@@ -42,6 +42,9 @@ REF_BLOBS = 1
 RUN_OPTIMIZE = 0 # Run only on several micrographs to optimize parameters
 RUN_COMPUTE = 1 # Run the picking for all micrographs after optimize
 
+MICS_AUTO = 0
+MICS_SUBSET = 1
+
 
 class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     """
@@ -163,24 +166,22 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         if not self.isRunOptimize():
             return inputMics
 
-        parts = self.micrographsList.get().strip().replace(',', ' ').split()
-
-        if len(parts) == 1: # Treat as the number of micrographs
+        if self.micrographsSelection == MICS_AUTO:
             # Lets sort micrograph by defocus and take the equally-space
             # number of them from the list
             inputCTFs = self.ctfRelations.get()
             sortedMicIds = [ctf.getObjId()
                             for ctf in inputCTFs.iterItems(orderBy='_defocusU')]
-            nMics = int(parts[0])
+            nMics = self.micrographsNumber.get()
             space = len(sortedMicIds) / (nMics - 1)
 
             micIds = [sortedMicIds[0], sortedMicIds[-1]]
             pos = 0
-            while len(micIds) < nMics: # just add first and last
+            while len(micIds) < nMics:  # just add first and last
                 pos += space
                 micIds.insert(1, sortedMicIds[pos])
-        else:
-            micIds = parts
+        else: # Subset selection
+            micIds = [mic.getObjId() for mic in self.micrographsSubset.get()]
 
         mics = []
         for micId in micIds:
@@ -249,17 +250,29 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                            'wizard. After that you can run the job in *Compute*'
                            ' mode and auto-pick all the micrographs. ')
 
-        form.addParam('micrographsList', params.StringParam, default='10',
-                      condition='runType==%d' % RUN_OPTIMIZE,
+        group = form.addGroup('Micrographs for optimization',
+                              condition='runType==%d' % RUN_OPTIMIZE)
+        group.addParam('micrographsSelection', params.EnumParam,
+                       default=MICS_AUTO,
+                       choices=['automatic selection', 'input subset'],
+                       display=params.EnumParam.DISPLAY_HLIST,
+                       label='Choose micrographs by',
+                       help='If you choose "automatic selection", you only '
+                            'need to provide the number of microgrphs to use '
+                            'and that number will be selected to cover the '
+                            'defocus range. ')
+        group.addParam('micrographsNumber', params.IntParam, default='10',
+                      condition='micrographsSelection==%d' % MICS_AUTO,
                       label='Micrographs for optimization:',
-                      help='Select the micrographs to be used for parameters '
-                           'optimization. If you provide a single number, it '
-                           'will be considered as the number of micrographs '
-                           'you want to use and they will be picked in a way '
-                           'to cover the CTF defocus range. On the other hand, '
-                           'you can provide the IDs of each micrograph '
-                           'separated by spaces. IDs can be typed or selected '
-                           'using the provided wizard. ')
+                      help='Select the number of micrographs that you want'
+                           'to be used for the parameters optimization. ')
+        group.addParam('micrographsSubset', params.PointerParam,
+                       condition='micrographsSelection==%d' % MICS_SUBSET,
+                       pointerClass='SetOfMicrographs',
+                       label='Subset of micrographs',
+                       help='Choose as input a subset of micrographs that '
+                            'you have previously selected. '
+                            '(Probably covering the defocus range).')
 
         # From Relion 2.+, it can be picked with gaussian blobs, so we
         # need to add these parameters
@@ -505,23 +518,23 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         inputCTFs = self.ctfRelations.get()
 
         if self.isRunOptimize():
-            parts = self.micrographsList.get().strip().replace(',', ' ').split()
-            if any(not p.isdigit() for p in parts):
-                return ['Number of micrographs or IDs should be integers.']
-            n = len(parts)
-            if n == 1:
-                n = int(parts[0])
-            if n < 3 or n > min(30, inputMics.getSize()):
-                return ['Number of micrographs should be between 3 and '
-                        'min(30, input_size)']
+            if self.micrographsSelection == MICS_AUTO:
+                n = self.micrographsNumber.get()
+                if n < 3 or n > min(30, inputMics.getSize()):
+                    return ['Number of micrographs should be between 3 and '
+                            'min(30, input_size)']
+            else:
+                micSubset = self.micrographsSubset.get()
+                if micSubset is None:
+                    return ['Select the subset of micrographs']
 
-            def missing(strId):
-                micId = int(strId)
-                return inputMics[micId] is None or inputCTFs[micId] is None
+                def missing(mic):
+                    micId = mic.getObjId()
+                    return inputMics[micId] is None or inputCTFs[micId] is None
 
-            if any(missing(p) for p in parts):
-                return ['Some selected micrograph IDs are missing from the '
-                        'input micrographs or CTFs.']
+                if any(missing(mic) for mic in micSubset):
+                    return ['Some selected micrograph IDs are missing from the '
+                            'input micrographs or CTFs.']
         return []
 
     def _summary(self):
