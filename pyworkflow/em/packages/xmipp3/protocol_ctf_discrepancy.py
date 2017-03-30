@@ -51,6 +51,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
         self._freqResol = {}
+        self.stepsExecutionMode = params.STEPS_SERIAL
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -61,7 +62,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
         form.addParam('inputCTF2', params.PointerParam, pointerClass='SetOfCTF',
                       label="target CTF",
                       help='CTF to be compared with reference CTF')
-        form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=0, mpi=0)
         
 #--------------------------- INSERT steps functions --------------------------------------------  
                                 
