@@ -17,6 +17,13 @@
 
 #endif
 
+// 2D float texture
+texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
+
+// 3D float texture
+texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
+
+
 template<class floatN>
 __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
 {
