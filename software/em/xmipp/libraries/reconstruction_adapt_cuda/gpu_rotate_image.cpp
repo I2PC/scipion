@@ -25,18 +25,20 @@
 
 #include "gpu_rotate_image.h"
 
-#include <reconstruction_cuda/cuda_gpu_rotate_image.h>
-#include <reconstruction_cuda/cuda_gpu_rotate_image_v2.h>
-#include <data/xmipp_image.h>
-#include "data/xmipp_program.h"
-#include <data/args.h>
-#include "data/matrix2d.h"
 #ifndef CUDABSPLINE
 #define CUDABSPLINE
 
 #include "cuda_bspline_rotation.h"
 
 #endif
+
+#include <reconstruction_cuda/cuda_gpu_rotate_image.h>
+#include <reconstruction_cuda/cuda_gpu_rotate_image_v2.h>
+#include <data/xmipp_image.h>
+#include "data/xmipp_program.h"
+#include <data/args.h>
+#include "data/matrix2d.h"
+
 
 
 //#define PI ((float)3.141592653589793)
