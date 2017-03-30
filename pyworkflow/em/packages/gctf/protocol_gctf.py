@@ -24,6 +24,7 @@
 # *
 # **************************************************************************
 
+import sys
 import os
 from os.path import join, exists, basename
 import pyworkflow.utils as pwutils
@@ -231,6 +232,11 @@ class ProtGctf(em.ProtCTFMicrographs):
     #--------------------------- STEPS functions -------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run Gctf with required parameters """
+        doneFile = os.path.join(micDir, 'done.txt')
+
+        if self.isContinued() and os.path.exists(doneFile):
+            return
+
         # Create micrograph dir
         pwutils.makePath(micDir)
         downFactor = self.ctfDownFactor.get()
@@ -249,7 +255,11 @@ class ProtGctf(em.ProtCTFMicrographs):
             sps = self.inputMicrographs.get().getScannedPixelSize() * downFactor
             self._params['scannedPixelSize'] = sps
         else:
-            em.ImageHandler().convert(micFn, micFnMrc, em.DT_FLOAT)
+            ih = em.ImageHandler()
+            if ih.existsLocation(micFn):
+                ih.convert(micFn, micFnMrc, em.DT_FLOAT)
+            else:
+                print >> sys.stderr, "Missing input micrograph %s" % micFn
 
         # Update _params dictionary
         self._params['micFn'] = micFnMrc
@@ -268,7 +278,7 @@ class ProtGctf(em.ProtCTFMicrographs):
 
         # Let's notify that this micrograph has been processed
         # just creating an empty file at the end (after success or failure)
-        open(os.path.join(micDir, 'done.txt'), 'w')
+        open(doneFile, 'w')
         # Let's clean the temporary mrc micrographs
         pwutils.cleanPath(micFnMrc)
 
