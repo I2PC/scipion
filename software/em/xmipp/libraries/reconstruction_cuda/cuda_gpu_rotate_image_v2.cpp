@@ -9,8 +9,14 @@
 #include <cuda_runtime.h>
 #include "cuda_copy_data.h"
 #include "cuda_prefiltering_rotation.h"
+#ifndef CUDINTERPOLATION
+#define CUDAINTERPOLATION
+
 #include "cuda_interpolation3D_rotation.h"
 #include "cuda_interpolation2D_rotation.h"
+
+#endif
+
 
 
 template<class floatN>
