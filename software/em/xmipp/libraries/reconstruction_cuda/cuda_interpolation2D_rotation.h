@@ -32,12 +32,7 @@
 
 #endif
 
-#ifndef CUDABSPLINE
-#define CUDABSPLINE
 
-#include "cuda_bspline_rotation.h"
-
-#endif
 
 // 2D float texture
 texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;

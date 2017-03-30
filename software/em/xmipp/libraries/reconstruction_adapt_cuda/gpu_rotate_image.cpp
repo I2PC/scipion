@@ -31,6 +31,12 @@
 #include "data/xmipp_program.h"
 #include <data/args.h>
 #include "data/matrix2d.h"
+#ifndef CUDABSPLINE
+#define CUDABSPLINE
+
+#include "cuda_bspline_rotation.h"
+
+#endif
 
 
 //#define PI ((float)3.141592653589793)
