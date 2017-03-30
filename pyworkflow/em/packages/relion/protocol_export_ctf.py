@@ -53,7 +53,23 @@ class ProtRelionExportCtf(EMProtocol):
                       pointerClass="SetOfCTF",
                       label='Input CTF',
                       help='Select set of CTF that you want to export.')
-        
+
+        form.addParam('micrographSource', params.EnumParam,
+                      choices=['used for CTF estimation', 'other'],
+                      default=0, important=True,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      label='Micrographs source',
+                      help='By default the micrograph used to create the'
+                           'exported STAR files are those used for the CTF '
+                           'estimation. You can selected *other* to use a '
+                           'different set of micrographs (e.g., dose weighted)')
+
+        form.addParam('inputMicrographs', params.PointerParam,
+                      pointerClass='SetOfMicrographs',
+                      condition='micrographSource == 1',
+                      important=True, label='Input micrographs',
+                      help='Select the SetOfMicrographs from which to extract.')
+
         form.addParallelSection(threads=0, mpi=0)
             
     #--------------------------- INSERT steps functions ------------------------
@@ -64,8 +80,11 @@ class ProtRelionExportCtf(EMProtocol):
     def writeCtfStarStep(self):
         inputCTF = self.inputCTF.get()
 
+        if self.micrographSource == 0: # same as CTF estimation
+            ctfMicSet = inputCTF.getMicrographs()
+        else:
+            ctfMicSet = self.inputMicrographs.get()
 
-        ctfMicSet = inputCTF.getMicrographs()
         micSet = SetOfMicrographs(filename=':memory:')
 
         psd = inputCTF.getFirstItem().getPsdFile()
@@ -79,11 +98,25 @@ class ProtRelionExportCtf(EMProtocol):
         for ctf in inputCTF:
             # Get the corresponding micrograph
             mic = ctfMicSet[ctf.getObjId()]
+            if mic is None:
+                print("Skipping CTF id: %s, it is missing from input "
+                      "micrographs. " % ctf.getObjId())
+                continue
+
+            micFn = mic.getFileName()
+            if not os.path.exists(micFn):
+                print "Skipping micrograph %s, it does not exists. " % micFn
+                continue
+
             mic2 = mic.clone()
             mic2.setCTF(ctf)
             if hasPsd:
                 psdFile = ctf.getPsdFile()
                 newPsdFile = join(psdPath, '%s_psd.mrc' % mic.getMicName())
+                if not os.path.exists(psdFile):
+                    print "PSD file %s does not exits" % psdFile
+                    print "Skipping micrograph %s" % micFn
+                    continue
                 pwutils.copyFile(psdFile, newPsdFile)
                 ctf.setPsdFile(newPsdFile)
             micSet.append(mic2)

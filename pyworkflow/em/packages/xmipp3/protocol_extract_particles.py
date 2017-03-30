@@ -445,8 +445,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         if self.doFlip:
             self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
-        
-        
+
+        self.imgSet.setSamplingRate(self._getNewSampling())
+        self.imgSet.setHasCTF(self.ctfRelations.hasValue())
+
         # a SetMdIterator is needed because in some cases, the number of
         # items in SetOfCoordinates and in the metadata could be different.
         iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
@@ -460,11 +462,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         coordsAux.copyItems(self.inputCoords,
                             updateItemCallback=iterator.updateItem,
                             copyDisabled=True)
-        
-        self.imgSet.setSamplingRate(self._getNewSampling())
 
-        self.imgSet.setHasCTF(self.ctfRelations.hasValue())
-        
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=self.imgSet)
         self._defineSourceRelation(self.inputCoordinates, self.imgSet)
