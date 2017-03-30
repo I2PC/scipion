@@ -37,10 +37,12 @@ import pyworkflow.em as em
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
+from pyworkflow.em.packages.grigoriefflab.convert import parseMagCorrInput
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
-                     parseMovieAlignment, parseMovieAlignment2)
+                     parseMovieAlignment, parseMovieAlignment2, getCudaLib,
+                     MOTIONCORR_CUDA_LIB, CUDA_LIB)
 from pyworkflow.protocol import STEPS_PARALLEL
 
 
@@ -130,6 +132,35 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
+
+        group = form.addGroup('Magnification correction')
+        group.addParam('doMagCor', params.BooleanParam, default=False,
+                      label='Correct anisotropic magnification?', condition='useMotioncor2',
+                      help='Correct anisotropic magnification by stretching '
+                           'image along the major axis, the axis where the '
+                           'lower magnification is detected.')
+        group.addParam('useEst', params.BooleanParam, default=True,
+                      label='Use previous estimation?', condition='useMotioncor2 and doMagCor',
+                      help='Use previously calculated parameters of '
+                           'magnification anisotropy (from magnification distortion '
+                           'estimation protocol).')
+        group.addParam('inputEst', params.PointerParam,
+                      pointerClass='ProtMagDistEst', condition='useEst and useMotioncor2 and doMagCor',
+                      label='Input protocol',
+                      help='Select previously executed estimation protocol.')
+        group.addParam('scaleMaj', params.FloatParam, default=1.0,
+                      condition='not useEst and useMotioncor2 and doMagCor',
+                      label='Major scale factor',
+                      help='Major scale factor.')
+        group.addParam('scaleMin', params.FloatParam, default=1.0,
+                      condition='not useEst and useMotioncor2 and doMagCor',
+                      label='Minor scale factor',
+                      help='Minor scale factor.')
+        group.addParam('angDist', params.FloatParam, default=0.0,
+                      condition='not useEst and useMotioncor2 and doMagCor',
+                      label='Distortion angle (deg)',
+                      help='Distortion angle, in degrees.')
+
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
@@ -141,10 +172,12 @@ class ProtMotionCorr(ProtAlignMovies):
         -MaskSize  1.0 1.0    The size of subarea that will be used for alignment,
                               default *1.0 1.0* corresponding full size.
         -Align     1          Generate aligned sum (1) or simple sum (0).
-        -FmRef     0          Specify which frame to be the reference to which
-                              all other frames are aligned, by default *0* all
-                              aligned to the first frame,
-                              other value aligns to the central frame.
+        -FmRef     -1         Specify which frame to be the reference to which
+                              all other frames are aligned, by default (-1) the
+                              the central frame is chosen. The central frame is
+                              at N/2 based upon zero indexing where N is the
+                              number of frames that will be summed, i.e., not
+                              including the frames thrown away.
         -RotGain   0          Rotate gain reference counter-clockwise: 0 - no rotation,
                               1 - 90 degrees, 2 - 180 degrees, 3 - 270 degrees.
         -FlipGain  0          Flip gain reference after gain rotation: 0 - no flipping,
@@ -159,7 +192,7 @@ class ProtMotionCorr(ProtAlignMovies):
                            "dose-dependent filter to the frames")
 
         # Since only runs on GPU, do not allow neither threads nor mpi
-        form.addParallelSection(threads=3, mpi=1)
+        form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
@@ -220,7 +253,12 @@ class ProtMotionCorr(ProtAlignMovies):
             cropDimY = self.cropDimY.get() or 1
 
             numbOfFrames = self._getNumberOfFrames(movie)
-            preExp, dose = self._getCorrectedDose(inputMovies)
+
+            if self.doApplyDoseFilter:
+                preExp, dose = self._getCorrectedDose(inputMovies)
+            else:
+                preExp, dose = 0.0, 0.0
+
             argsDict = {'-OutMrc': '"%s"' % outputMicFn,
                         '-Patch': '%d %d' % (self.patchX, self.patchY),
                         '-MaskCent': '%d %d' % (self.cropOffsetX,
@@ -229,7 +267,7 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-FtBin': self.binFactor.get(),
                         '-Tol': self.tol.get(),
                         '-Group': self.group.get(),
-                        '-FmDose': dose if self.doApplyDoseFilter else 0.0,
+                        '-FmDose': dose,
                         '-Throw': '%d' % a0,
                         '-Trunc': '%d' % (abs(aN - numbOfFrames + 1)),
                         '-PixSize': inputMovies.getSamplingRate(),
@@ -238,8 +276,21 @@ class ProtMotionCorr(ProtAlignMovies):
                         '-LogFile': logFileBase,
                         }
             if getVersion('MOTIONCOR2') != '03162016':
-                argsDict['-InitDose'] = preExp if self.doApplyDoseFilter else 0.0
+                argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
+
+            if self.doMagCor and (getVersion('MOTIONCOR2') not in ['03162016', '10192016']):
+                if self.useEst:
+                    inputEst = self.inputEst.get().getOutputLog()
+                    input_params = parseMagCorrInput(inputEst)
+                    # mag dist angle is inverted due to a different convention
+                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (input_params[1],
+                                                              input_params[2],
+                                                              -1 * input_params[0])
+                else:
+                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (self.scaleMaj.get(),
+                                                              self.scaleMin.get(),
+                                                              self.angDist.get())
 
             args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
@@ -267,6 +318,9 @@ class ProtMotionCorr(ProtAlignMovies):
                                   gain=inputMovies.getGain())
                 # Compute PSDs
                 outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                if not os.path.exists(outMicFn):
+                    # if only DW mic is saved
+                    outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
                 self.computePSD(aveMicFn, uncorrectedPSD)
                 self.computePSD(outMicFn, correctedPSD)
                 self.composePSD(uncorrectedPSD + ".psd",
@@ -291,6 +345,21 @@ class ProtMotionCorr(ProtAlignMovies):
         if not os.path.exists(program):
             errors.append('Missing %s' % program)
 
+
+        # Check CUDA paths
+        cudaLib = getCudaLib()
+
+        if cudaLib is None:
+            errors.append("Do not know where to find CUDA lib path. "
+                          " %s or %s variables have None value or are not"
+                          " present in scipion configuration."
+                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB))
+
+        elif not pwutils.existsVariablePaths(cudaLib):
+            errors.append("Either %s or %s variables points to a non existing "
+                          "path (%s). Please, check scipion configuration."
+                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB, cudaLib))
+
         gpu = self.GPUIDs.get()
 
         if not self.useMotioncor2:
@@ -305,17 +374,17 @@ class ProtMotionCorr(ProtAlignMovies):
         else:
             if not self.doSaveAveMic:
                 errors.append('Option not supported. Please select Yes for '
-                              'Save aligned micrograph. ')
-                errors.append('Optionally you could add -Align 0 to additional'
-                              ' parameters so that protocol ')
-                errors.append('produces simple movie sum.')
+                              'Save aligned micrograph. '
+                              'Optionally you could add -Align 0 to additional '
+                              'parameters so that protocol '
+                              'produces simple movie sum.')
 
-            if self.doSaveMovie and not self._isNewMotioncor2:
+            if self.doSaveMovie and not self._isOutStackSupport:
                 errors.append('Saving aligned movies is not supported by '
-                              'this version of motioncor2. ')
-                errors.append('By default, the protocol will produce '
-                              'outputMovies equivalent to the input ')
-                errors.append('however containing alignment information.')
+                              'this version of motioncor2. '
+                              'By default, the protocol will produce '
+                              'outputMovies equivalent to the input '
+                              'however containing alignment information.')
 
             if not self.useAlignToSum:
                 errors.append('Frame range for ALIGN and SUM must be '
@@ -330,6 +399,12 @@ class ProtMotionCorr(ProtAlignMovies):
                 if doseFrame == 0.0 or doseFrame is None:
                     errors.append('Dose per frame for input movies is 0 or not '
                                   'set. You cannot apply dose filter.')
+
+            if self.doMagCor:
+                if getVersion('MOTIONCOR2') in ['03162016', '10192016']:
+                    errors.append('Your current motioncor2 version does not '
+                                  'support mag. correction. Please install '
+                                  'the latest program version.')
 
         return errors
 
@@ -394,11 +469,12 @@ class ProtMotionCorr(ProtAlignMovies):
         plotter = createGlobalAlignmentPlot(shiftsX, shiftsY, first)
         plotter.savefig(self._getPlotGlobal(movie))
 
-    def _isNewMotioncor2(self):
+    def _isOutStackSupport(self):
+        # checks if output aligned movies can be saved by motioncor2
         return True if getVersion('MOTIONCOR2') != '03162016' else False
 
     def _fixMovie(self, movie):
-        if self.doSaveMovie and self.useMotioncor2 and self._isNewMotioncor2():
+        if self.doSaveMovie and self.useMotioncor2 and self._isOutStackSupport():
             outputMicFn = self._getExtraPath(self._getOutputMicName(movie))
             outputMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
             movieFn = outputMicFn.replace('_aligned_mic.mrc',
@@ -406,7 +482,7 @@ class ProtMotionCorr(ProtAlignMovies):
             pwutils.moveFile(movieFn, outputMovieFn)
 
         if self.useMotioncor2 and not self.doSaveUnweightedMic:
-            fnToDelete = self._getExtraPath(self._getOutputMicWtName(movie))
+            fnToDelete = self._getExtraPath(self._getOutputMicName(movie))
             pwutils.cleanPath(fnToDelete)
 
     def writeZeroShifts(self, movie):

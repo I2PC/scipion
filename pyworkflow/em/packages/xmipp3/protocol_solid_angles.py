@@ -301,7 +301,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         mdJoined.write(fnDirectional)
 
         fnDirectionalImages = self._getDirectionalImagesFn()
-        self.info("Writting images info to: %s" % fnDirectionalImages)
+        self.info("Writing images info to: %s" % fnDirectionalImages)
         mdImages.write(fnDirectionalImages)
 
     def refineAnglesStep(self):
@@ -315,13 +315,23 @@ class XmippProtSolidAngles(ProtAnalysis3D):
         inputParticles = self.inputParticles.get()
         classes2D = self._createSetOfClasses2D(inputParticles)
 
-        classes2D.classifyItems(updateItemCallback=self._updateParticle,
-                                updateClassCallback=self._updateClass,
-                                itemDataIterator=md.iterRows(self.mdImages,
-                                                          sortByLabel=md.MDL_ITEM_ID))
+        self.averageSet = self._createSetOfAverages()
+        self.averageSet.copyInfo(inputParticles)
+        self.averageSet.setAlignmentProj()
+
+        # Let's use a SetMdIterator because it could be less particles
+        # in the metadata produced than in the input set
+        iterator = md.SetMdIterator(self.mdImages, sortByLabel=md.MDL_ITEM_ID,
+                                    updateItemCallback=self._updateParticle,
+                                    skipDisabled=True)
+
+        classes2D.classifyItems(updateItemCallback=iterator.updateItem,
+                                updateClassCallback=self._updateClass)
 
         self._defineOutputs(outputClasses=classes2D)
+        self._defineOutputs(outputAverages=self.averageSet)
         self._defineSourceRelation(self.inputParticles, classes2D)
+        self._defineSourceRelation(self.inputParticles, self.averageSet)
 
     def _updateParticle(self, item, row):
         item.setClassId(row.getValue(xmipp.MDL_REF2))
@@ -337,13 +347,15 @@ class XmippProtSolidAngles(ProtAnalysis3D):
     def _updateClass(self, item):
         classId = item.getObjId()
         classRow = findRow(self.mdClasses, xmipp.MDL_REF2, classId)
-        setXmippAttributes(item, classRow, xmipp.MDL_ANGLE_ROT)
-        setXmippAttributes(item, classRow, xmipp.MDL_ANGLE_TILT)
-        setXmippAttributes(item, classRow, xmipp.MDL_CLASS_COUNT)
 
         representative = item.getRepresentative()
         representative.setTransform(rowToAlignment(classRow, ALIGN_PROJ))
         representative.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE)))
+        setXmippAttributes(representative, classRow, xmipp.MDL_ANGLE_ROT)
+        setXmippAttributes(representative, classRow, xmipp.MDL_ANGLE_TILT)
+        setXmippAttributes(representative, classRow, xmipp.MDL_CLASS_COUNT)
+
+        self.averageSet.append(representative)
 
         reprojection = Image()
         reprojection.setLocation(xmippToLocation(classRow.getValue(xmipp.MDL_IMAGE1)))
