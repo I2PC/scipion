@@ -86,7 +86,7 @@ public:
 	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
 	FourierTransformer transformer_inv;
 	MultidimArray< std::complex<double> > fftVRiesz;
-	FourierFilter lowPassFilter;
+	FourierFilter lowPassFilter, FilterBand;
 	bool halfMapsGiven;
 	Image<double> Vfiltered, VresolutionFiltered;
 };
