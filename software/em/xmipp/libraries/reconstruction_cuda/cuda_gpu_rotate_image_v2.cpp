@@ -7,16 +7,15 @@
 
 //CUDA includes
 #include <cuda_runtime.h>
-#include "cuda_copy_data.h"
-#include "cuda_prefiltering_rotation.h"
-#ifndef CUDINTERPOLATION
-#define CUDAINTERPOLATION
+//#include "cuda_copy_data.h"
+//#include "cuda_prefiltering_rotation.h"
 
-#include "cuda_interpolation3D_rotation.h"
-#include "cuda_interpolation2D_rotation.h"
 
-#endif
+// 2D float texture
+texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
+// 3D float texture
+texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
 
 
 template<class floatN>
