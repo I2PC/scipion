@@ -10,12 +10,7 @@
 #include "cuda_copy_data.h"
 #include "cuda_prefiltering_rotation.h"
 #include "cuda_gpu_rotate_image_v2.h"
-#ifndef CUDABSPLINE
-#define CUDABSPLINE
 
-#include "cuda_bspline_rotation.h"
-
-#endif
 
 template<class floatN>
 __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
