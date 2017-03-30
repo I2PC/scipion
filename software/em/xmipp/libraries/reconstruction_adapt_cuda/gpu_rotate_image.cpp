@@ -51,7 +51,7 @@ void ProgGpuRotateImage::show()
     std::cout
 	<< "Input:          " << fnRef    << std::endl
 	<< "Output:          " << fnOut    << std::endl
-	<< "The user can choose the interpolation method: 0 - Point, 1 - Linear, 2 - Cubic " << interp    << std::endl
+	<< "Interpolation method: " << interp    << std::endl
     ;
 }
 
@@ -73,6 +73,7 @@ void ProgGpuRotateImage::defineParams()
 // Compute distance --------------------------------------------------------
 void ProgGpuRotateImage::run()
 {
+
 
 	double radIm, radVolY, radVolz;
 	int interpol;

@@ -10,29 +10,12 @@
 #include "cuda_copy_data.h"
 #include "cuda_prefiltering_rotation.h"
 #include "cuda_gpu_rotate_image_v2.h"
+#ifndef CUDABSPLINE
+#define CUDABSPLINE
 
+#include "cuda_bspline_rotation.h"
 
-
-// 2D float texture
-texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
-
-// 3D float texture
-texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
-
-
-//CUDA functions
-template<class floatN>
-__device__ void bspline_weights(floatN fraction, floatN& w0, floatN& w1, floatN& w2, floatN& w3)
-{
-	const floatN one_frac = 1.0f - fraction;
-	const floatN squared = fraction * fraction;
-	const floatN one_sqd = one_frac * one_frac;
-
-	w0 = 1.0f/6.0f * one_sqd * one_frac;
-	w1 = 2.0f/3.0f - 0.5f * squared * (2.0f-fraction);
-	w2 = 2.0f/3.0f - 0.5f * one_sqd * (2.0f-one_frac);
-	w3 = 1.0f/6.0f * squared * fraction;
-}
+#endif
 
 template<class floatN>
 __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
