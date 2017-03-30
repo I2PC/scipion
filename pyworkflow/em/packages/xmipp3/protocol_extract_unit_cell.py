@@ -29,7 +29,10 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import StringParam, PointerParam, FloatParam, EnumParam
-from pyworkflow.em.constants import SYM_I222
+from pyworkflow.em.constants import SYM_I222r
+from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
+from pyworkflow.em.constants import SCIPION_SYM_NAME
+from pyworkflow.em import Volume
 
 class XmippProtExtractUnit(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
@@ -41,28 +44,22 @@ class XmippProtExtractUnit(EMProtocol):
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
 
-    # def _createFileNamesTemplates(self):
-    #     myDict = {
-    #               'volume' : 'final_volume.mrc',
-    #               'fsc' : 'final_fsc.xml'
-    #               }
-    #     self._updateFilenamesDict(myDict)
-
-        #--------------------------- DEFINE param functions ----------------------
+    #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
 
         form.addParam('inputVolumes', PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
                       help='This volume will be cropped')
-        form.addParam('symmetryGroup', EnumParam, choices=["I2 (I222)"],
-                      default=SYM_I222,
+        form.addParam('symmetryGroup', EnumParam, choices=[XMIPP_SYM_NAME[SYM_I222r] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_I222r] + ")"],
+                      default=SYM_I222r,
                       label="Symmetry",
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
                            " for a description of the symmetry groups format in Xmipp.\n"
                            "If no symmetry is present, use _c1_."
                       )
-        #WIZARD
+
         form.addParam('innerRadius', FloatParam, default=-1,
                       label="Inner Radius (px)", help="inner Mask radius, if -1, the radius will be 0")
         form.addParam('outerRadius', FloatParam, default=-1,
@@ -74,31 +71,15 @@ class XmippProtExtractUnit(EMProtocol):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._createFileNamesTemplates()
-        self._insertFunctionStep('exportVolumeStep')
-        self._insertFunctionStep('exportFSCStep')
+        self._insertFunctionStep('extractUnit')
+        self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions --------------------------------------------
 
-    def exportVolumeStep(self):
-
-        ih = ImageHandler()
-        ih.convert(self.exportVolume.get().getLocation(), self.getFnPath())
-
-    def exportFSCStep(self):
-
-        x,y = self.exportFSC.get().getData()
-        fo = open(self.getFnPath("fsc"), "w")
-        fo.write('<fsc title="FSC(%s)" xaxis="Resolution(A-1)" '
-                 'yaxis="Correlation Coefficient">\n' % self._getFileName('volume'))
-        for i in range(len(x)):
-            fo.write("<coordinate>\n")
-            fo.write("<x>%f</x>\n"%x[i])
-            fo.write("<y>%f</y>\n" % y[i])
-            fo.write("</coordinate>\n")
-
-        fo.write("</fsc>\n")
-        fo.close()
+    def extractUnit(self):
+        args = "-i %s -o %s" % (self.inputVolumes)
+        args += " --unitcell <sym> <rmin=0> <rmax=0> <degree=0> <offset=0>" % ()
+        self.runJob("xmipp_transform_window", args)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -112,6 +93,14 @@ class XmippProtExtractUnit(EMProtocol):
 
     def _methods(self):
         return []
+
+    def createOutputStep(self):
+
+        vol = Volume()
+        vol.setLocation(self._getExtraPath('volume.mrc'))
+        vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        self._defineOutputs(outputVolume=vol)
+        #vol.write()
 
 #--------------------------- UTILS functions ---------------------------------------------------
 
