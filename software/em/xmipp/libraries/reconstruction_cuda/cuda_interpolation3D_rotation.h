@@ -31,12 +31,9 @@
 
 #endif
 
-#ifndef CUDABSPLINE
-#define CUDABSPLINE
 
 #include "cuda_bspline_rotation.h"
 
-#endif
 
 // 3D float texture
 texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
