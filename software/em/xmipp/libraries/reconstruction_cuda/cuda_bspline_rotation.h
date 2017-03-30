@@ -27,6 +27,6 @@
 
 // Cubic B-spline function
 // The 3rd order Maximal Order and Minimum Support function, that it is maximally differentiable.
-float bspline(float t);
+__device__ float bspline(float t);
 
 
