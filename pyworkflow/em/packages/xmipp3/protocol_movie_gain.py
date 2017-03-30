@@ -23,10 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
-import numpy as np
-import os
-
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
@@ -36,10 +32,12 @@ from pyworkflow.em.data import SetOfMovies, Movie
 from pyworkflow.object import Set
 import pyworkflow.protocol.constants as cons
 import pyworkflow.em as em
+import numpy as np
 import os
 import math
-
 import xmipp
+
+
 class XmippProtMovieGain(ProtProcessMovies):
     """
     Estimate the gain image of a camera, directly analyzing one of its movies.
@@ -71,51 +69,10 @@ class XmippProtMovieGain(ProtProcessMovies):
 
 
     #--------------------------- STEPS functions -------------------------------
-    # def _insertAllSteps(self):
-    #     gainSteps = []
-    #     self.insertedDict = {}
-    #     if isinstance(self.inputMovies.get(), SetOfMovies):
-    #         for idx, movie in enumerate(self.inputMovies.get()):
-    #             if idx % self.movieStep.get() != 0:
-    #                 continue
-    #
-    #             stepId = self._insertFunctionStep('_processMovie', movie, prerequisites=[])
-    #             gainSteps.append(stepId)
-    #             self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
-    #
-    #     else:
-    #         movie = self.inputMovies.get()
-    #         stepId = self._insertFunctionStep('_processMovie', movie, prerequisites=[])
-    #         gainSteps.append(stepId)
-    #         self._insertFunctionStep('createOutputStep', prerequisites=gainSteps)
-
 
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
         pass
-
-        # if isinstance(self.inputMovies.get(), Movie):
-        #     movie = self.inputMovies.get()
-        #     imgOut = em.data.Image()
-        #     imgOut.setSamplingRate(movie.getSamplingRate())
-        #     imgOut.setFileName(self._getPath("movie_%06d_gain.xmp"
-        #                                      % movie.getObjId()))
-        #     self._defineOutputs(outputGainImage=imgOut)
-        #     self._defineSourceRelation(self.inputMovies, imgOut)
-        # else:
-        #     imgSetOut = []
-        #     for idx, movie in enumerate(self.inputMovies.get()):
-        #         if idx % self.movieStep.get() != 0:
-        #             continue
-        #         imgOut = em.data.Image()
-        #         imgOut.setSamplingRate(movie.getSamplingRate())
-        #         imgOut.setFileName(self._getPath("movie_%06d_gain.xmp" % movie.getObjId()))
-        #
-        #         imgSetOut.setSamplingRate(movie.getSamplingRate())
-        #         imgSetOut.append(imgOut)
-        #
-        #         self._defineOutputs(outputSetOfGainImages=imgSetOut)
-        #         self._defineSourceRelation(self.inputMovies, imgSetOut)
 
 
     def _insertNewMoviesSteps(self, insertedDict, inputMovies):
@@ -150,6 +107,23 @@ class XmippProtMovieGain(ProtProcessMovies):
                     "-i %s --oroot %s --iter 1 --singleRef --frameStep %d"
                     % (fnMovie, self._getPath("movie_%06d" % movieId), self.frameStep), numberOfMpi=1)
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
+
+        fnSummary = self._getPath("summary.txt")
+        if not os.path.exists(fnSummary):
+            fhSummary = open(fnSummary, "w")
+        else:
+            fhSummary = open(fnSummary, "a")
+        fnGain = self._getPath("movie_%06d_gain.xmp" % movieId)
+        if os.path.exists(fnGain):
+            G = xmipp.Image()
+            G.read(fnGain)
+            mean, dev, min, max = G.computeStats()
+            Gnp = G.getData()
+            p = np.percentile(Gnp, [2.5, 25, 50, 75, 97.5])
+            fhSummary.write("movie_%06d: mean=%f std=%f [min=%f,max=%f]\n" % (movieId, mean, dev, min, max))
+            fhSummary.write(
+                "            2.5%%=%f 25%%=%f 50%%=%f 75%%=%f 97.5%%=%f\n" % (p[0], p[1], p[2], p[3], p[4]))
+            fhSummary.close()
 
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
@@ -208,8 +182,8 @@ class XmippProtMovieGain(ProtProcessMovies):
 
             # Update the file with the newly done movies
             # or exit from the function if no new done movies
-            print('_checkNewOutput: ')
-            print('   listOfMovies: {0}, doneList: {1}, newDone: {2}'
+            self.debug('_checkNewOutput: ')
+            self.debug('   listOfMovies: {0}, doneList: {1}, newDone: {2}'
                        .format(int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get()))), len(doneList), len(newDone)))
 
             allDone = len(doneList) + len(newDone)
@@ -226,11 +200,11 @@ class XmippProtMovieGain(ProtProcessMovies):
                 # so we exit from the function here
                 return
 
-            print('   finished: %s ' % self.finished)
-            print('        self.streamClosed ({0}) AND' .format(self.streamClosed))
-            print('        allDone ({0}) == len(self.listOfMovies ({1})'
+            self.debug('   finished: %s ' % self.finished)
+            self.debug('        self.streamClosed ({0}) AND' .format(self.streamClosed))
+            self.debug('        allDone ({0}) == len(self.listOfMovies ({1})'
                        .format(allDone, int(math.ceil(len(self.listOfMovies)/float(self.movieStep.get())))))
-            print('   streamMode: %s' % streamMode)
+            self.debug('   streamMode: %s' % streamMode)
 
             saveMovie = self.getAttributeValue('doSaveMovie', False)
             imageSet = self._loadOutputSet(em.data.SetOfImages, 'movies.sqlite', fixSampling=saveMovie)
@@ -273,23 +247,11 @@ class XmippProtMovieGain(ProtProcessMovies):
     def _summary(self):
         fnSummary = self._getPath("summary.txt")
         if not os.path.exists(fnSummary):
-            fhSummary = open(fnSummary,"w")
-            for pointer in self.inputMovies:
-                movie = pointer.get()
-                movieId = movie.getObjId()
-                fnGain = self._getPath("movie_%06d_gain.xmp" % movieId)
-                if os.path.exists(fnGain):
-                    G = xmipp.Image()
-                    G.read(fnGain)
-                    mean, dev, min, max = G.computeStats()
-                    Gnp=G.getData()
-                    p = np.percentile(Gnp,[2.5, 25, 50, 75, 97.5])
-                    fhSummary.write("movie_%06d: mean=%f std=%f [min=%f,max=%f]\n"%(movieId, mean, dev, min, max))
-                    fhSummary.write("            2.5%%=%f 25%%=%f 50%%=%f 75%%=%f 97.5%%=%f\n"%(p[0],p[1],p[2],p[3],p[4]))
+            summary = ["No summary information yet."]
+        else:
+            fhSummary = open(fnSummary,"r")
+            summary = []
+            for line in fhSummary.readlines():
+                summary.append(line.rstrip())
             fhSummary.close()
-        fhSummary = open(fnSummary,"r")
-        summary = []
-        for line in fhSummary.readlines():
-            summary.append(line.rstrip())
-        fhSummary.close()
         return summary
