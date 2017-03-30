@@ -40,9 +40,9 @@ from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
 from pyworkflow.em.packages.grigoriefflab.convert import parseMagCorrInput
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
-from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion,
+from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion, getEnviron,
                      parseMovieAlignment, parseMovieAlignment2, getCudaLib,
-                     MOTIONCORR_CUDA_LIB, CUDA_LIB)
+                     MOTIONCORR_CUDA_LIB, MOTIONCOR2_CUDA_LIB, CUDA_LIB)
 from pyworkflow.protocol import STEPS_PARALLEL
 
 
@@ -86,6 +86,14 @@ class ProtMotionCorr(ProtAlignMovies):
                       help="If Yes, the protocol will compute for each movie "
                            "the average PSD before and after alignment, "
                            "for comparison")
+
+        form.addParam('doComputeMicThumbnail', params.BooleanParam,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      default=False, condition='doSaveAveMic',
+                      label='Compute micrograph thumbnail?',
+                      help='When using this option, we will compute a '
+                           'micrograph thumbnail and keep it with the '
+                           'micrograph object for visualization purposes. ')
 
         form.addParam('extraParams', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED,
@@ -132,34 +140,48 @@ class ProtMotionCorr(ProtAlignMovies):
         form.addParam('tol', params.FloatParam, default='0.5',
                       label='Tolerance (px)', condition='useMotioncor2',
                       help='Tolerance for iterative alignment, default *0.5px*.')
-
-        group = form.addGroup('Magnification correction')
-        group.addParam('doMagCor', params.BooleanParam, default=False,
-                      label='Correct anisotropic magnification?', condition='useMotioncor2',
-                      help='Correct anisotropic magnification by stretching '
-                           'image along the major axis, the axis where the '
-                           'lower magnification is detected.')
-        group.addParam('useEst', params.BooleanParam, default=True,
-                      label='Use previous estimation?', condition='useMotioncor2 and doMagCor',
-                      help='Use previously calculated parameters of '
-                           'magnification anisotropy (from magnification distortion '
-                           'estimation protocol).')
-        group.addParam('inputEst', params.PointerParam,
-                      pointerClass='ProtMagDistEst', condition='useEst and useMotioncor2 and doMagCor',
-                      label='Input protocol',
-                      help='Select previously executed estimation protocol.')
-        group.addParam('scaleMaj', params.FloatParam, default=1.0,
-                      condition='not useEst and useMotioncor2 and doMagCor',
-                      label='Major scale factor',
-                      help='Major scale factor.')
-        group.addParam('scaleMin', params.FloatParam, default=1.0,
-                      condition='not useEst and useMotioncor2 and doMagCor',
-                      label='Minor scale factor',
-                      help='Minor scale factor.')
-        group.addParam('angDist', params.FloatParam, default=0.0,
-                      condition='not useEst and useMotioncor2 and doMagCor',
-                      label='Distortion angle (deg)',
-                      help='Distortion angle, in degrees.')
+        if self._supportsMagCorrection():
+            group = form.addGroup('Magnification correction')
+            group.addParam('doMagCor', params.BooleanParam, default=False,
+                           label='Correct anisotropic magnification?',
+                           condition='useMotioncor2',
+                           help='Correct anisotropic magnification by '
+                                'stretching image along the major axis, '
+                                'the axis where the lower magnification is '
+                                'detected.')
+            group.addParam('useEst', params.BooleanParam, default=True,
+                           label='Use previous estimation?',
+                           condition='useMotioncor2 and doMagCor',
+                           help='Use previously calculated parameters of '
+                                'magnification anisotropy (from magnification '
+                                'distortion estimation protocol).')
+            group.addParam('inputEst', params.PointerParam,
+                           pointerClass='ProtMagDistEst',
+                           condition='useEst and useMotioncor2 and doMagCor',
+                           label='Input protocol',
+                           help='Select previously executed estimation protocol.')
+            group.addParam('scaleMaj', params.FloatParam, default=1.0,
+                           condition='not useEst and useMotioncor2 and doMagCor',
+                           label='Major scale factor',
+                           help='Major scale factor.')
+            group.addParam('scaleMin', params.FloatParam, default=1.0,
+                           condition='not useEst and useMotioncor2 and doMagCor',
+                           label='Minor scale factor',
+                           help='Minor scale factor.')
+            group.addParam('angDist', params.FloatParam, default=0.0,
+                           condition='not useEst and useMotioncor2 and doMagCor',
+                           label='Distortion angle (deg)',
+                           help='Distortion angle, in degrees.')
+        else:
+            form.addParam('motioncor2Version', params.LabelParam,
+                          condition='useMotioncor2',
+                          label='Scipion supports some versions of motioncor2 '
+                                'that can do magnification correction, '
+                                'but they do not seems to be installed. Check '
+                                'available versions with: \n'
+                                'scipion install --help.\n'
+                                'Also, make sure MOTIONCOR2_CUDA_LIB or '
+                                'CUDA_LIB point to cuda-8.0/lib path')
 
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
@@ -247,7 +269,7 @@ class ProtMotionCorr(ProtAlignMovies):
 
         else:
             logFileBase = (logFile.replace('0-Full.log', '').replace(
-                           '0-Patch-Full.log', ''))
+                '0-Patch-Full.log', ''))
             # default values for motioncor2 are (1, 1)
             cropDimX = self.cropDimX.get() or 1
             cropDimY = self.cropDimY.get() or 1
@@ -279,7 +301,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if self.doMagCor and (getVersion('MOTIONCOR2') not in ['03162016', '10192016']):
+            if self.doMagCor and self._supportsMagCorrection():
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
                     input_params = parseMagCorrInput(inputEst)
@@ -302,8 +324,15 @@ class ProtMotionCorr(ProtAlignMovies):
             program = MOTIONCOR2_PATH
 
         try:
-            self.runJob(program, args, cwd=movieFolder)
+            self.runJob(program, args, cwd=movieFolder,
+                        env=getEnviron(self.useMotioncor2))
             self._fixMovie(movie)
+
+            # Compute PSDs
+            outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            if not os.path.exists(outMicFn):
+                # if only DW mic is saved
+                outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
 
             if self.doComputePSD:
                 uncorrectedPSD = movieBaseName + '_uncorrected'
@@ -316,11 +345,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                   binFactor=self.binFactor.get(),
                                   roi=roi, dark=None,
                                   gain=inputMovies.getGain())
-                # Compute PSDs
-                outMicFn = self._getExtraPath(self._getOutputMicName(movie))
-                if not os.path.exists(outMicFn):
-                    # if only DW mic is saved
-                    outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+
                 self.computePSD(aveMicFn, uncorrectedPSD)
                 self.computePSD(outMicFn, correctedPSD)
                 self.composePSD(uncorrectedPSD + ".psd",
@@ -328,6 +353,10 @@ class ProtMotionCorr(ProtAlignMovies):
                                 self._getPsdCorr(movie))
 
             self._saveAlignmentPlots(movie)
+
+            if self._doComputeMicThumbnail():
+                self.computeThumbnail(outMicFn,
+                                      outputFn=self._getOutputMicThumbnail(movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getName())
 
@@ -345,20 +374,21 @@ class ProtMotionCorr(ProtAlignMovies):
         if not os.path.exists(program):
             errors.append('Missing %s' % program)
 
-
         # Check CUDA paths
-        cudaLib = getCudaLib()
-
+        cudaLib = getCudaLib(useMC2=self.useMotioncor2)
+        cudaConst = (MOTIONCOR2_CUDA_LIB if self.useMotioncor2 else
+                     MOTIONCORR_CUDA_LIB)
+        
         if cudaLib is None:
             errors.append("Do not know where to find CUDA lib path. "
                           " %s or %s variables have None value or are not"
                           " present in scipion configuration."
-                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB))
+                          % (cudaConst, CUDA_LIB))
 
         elif not pwutils.existsVariablePaths(cudaLib):
             errors.append("Either %s or %s variables points to a non existing "
                           "path (%s). Please, check scipion configuration."
-                          % (MOTIONCORR_CUDA_LIB, CUDA_LIB, cudaLib))
+                          % (cudaConst, CUDA_LIB, cudaLib))
 
         gpu = self.GPUIDs.get()
 
@@ -400,12 +430,6 @@ class ProtMotionCorr(ProtAlignMovies):
                     errors.append('Dose per frame for input movies is 0 or not '
                                   'set. You cannot apply dose filter.')
 
-            if self.doMagCor:
-                if getVersion('MOTIONCOR2') in ['03162016', '10192016']:
-                    errors.append('Your current motioncor2 version does not '
-                                  'support mag. correction. Please install '
-                                  'the latest program version.')
-
         return errors
 
     #--------------------------- UTILS functions ------------------------------
@@ -426,16 +450,13 @@ class ProtMotionCorr(ProtAlignMovies):
 
     def _getNameExt(self, movie, postFix, ext, extra=False):
         fn = self._getMovieRoot(movie) + postFix + '.' + ext
-        if extra:
-            return self._getExtraPath(fn)
-        else:
-            return fn
+        return self._getExtraPath(fn) if extra else fn
 
     def _getPlotGlobal(self, movie):
         return self._getNameExt(movie, '_global_shifts', 'png', extra=True)
 
     def _getPsdCorr(self, movie):
-        return self._getNameExt(movie, '_psd_comparison', 'psd')
+        return self._getNameExt(movie, '_psd_comparison', 'psd', extra=True)
 
     def _preprocessOutputMicrograph(self, mic, movie):
         self._setPlotInfo(movie, mic)
@@ -455,12 +476,12 @@ class ProtMotionCorr(ProtAlignMovies):
         ySfhtsCorr = [y * binning for y in yShifts]
         return xSfhtsCorr, ySfhtsCorr
 
-    def _setPlotInfo(self, movie, obj):
-        obj.plotGlobal = em.Image()
-        obj.plotGlobal.setFileName(self._getPlotGlobal(movie))
+    def _setPlotInfo(self, movie, mic):
+        mic.plotGlobal = em.Image(location=self._getPlotGlobal(movie))
         if self.doComputePSD:
-            obj.psdCorr = em.Image()
-            obj.psdCorr.setFileName(self._getPsdCorr(movie))
+            mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
+        if self._doComputeMicThumbnail():
+            mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
 
     def _saveAlignmentPlots(self, movie):
         """ Compute alignment shift plots and save to file as png images. """
@@ -538,6 +559,12 @@ class ProtMotionCorr(ProtAlignMovies):
     def _createOutputWeightedMicrographs(self):
         return (self.doSaveAveMic and self.useMotioncor2 and
                 self.doApplyDoseFilter)
+
+    def _doComputeMicThumbnail(self):
+        return (self.doSaveAveMic and self.doComputeMicThumbnail)
+    
+    def _supportsMagCorrection(self):
+        return getVersion('MOTIONCOR2') not in ['03162016', '10192016']
 
 
 def createGlobalAlignmentPlot(meanX, meanY, first):
