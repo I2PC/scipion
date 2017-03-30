@@ -121,9 +121,9 @@ class ProjectNotifier(object):
             # if Log directory exists. If it does not 
             # create it
             #TODO REMOVE this check in scipion 1.3
-            import distutils.dir_util
-            distutils.dir_util.mkpath(self._getDataFileName(""))
-            with open(self._getDataFileName(),'w') as f:
+            dataFile = self._getDataFileName()
+            pwutils.makeFilePath(dataFile) # create the folder of the file path if not exists
+            with open(dataFile,'w') as f:
                 f.write(projectWorfklow)
             #print "change send new data"
         dataDict = {'project_uuid': self._getUuid(),
