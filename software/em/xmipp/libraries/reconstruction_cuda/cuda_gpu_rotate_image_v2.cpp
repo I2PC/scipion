@@ -1,22 +1,16 @@
 
 //Host includes
+#include "cuda_gpu_rotate_image_v2.h"
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
 
 //CUDA includes
 #include <cuda_runtime.h>
-
 #include "cuda_copy_data.h"
 #include "cuda_prefiltering_rotation.h"
-#include "cuda_gpu_rotate_image_v2.h"
-
-
-// 2D float texture
-texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
-
-// 3D float texture
-texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
+#include "cuda_interpolation3D_rotation.h"
+#include "cuda_interpolation2D_rotation.h"
 
 
 template<class floatN>

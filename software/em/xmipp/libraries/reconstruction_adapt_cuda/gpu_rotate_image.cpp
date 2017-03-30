@@ -25,12 +25,6 @@
 
 #include "gpu_rotate_image.h"
 
-#ifndef CUDABSPLINE
-#define CUDABSPLINE
-
-#include "cuda_bspline_rotation.h"
-
-#endif
 
 #include <reconstruction_cuda/cuda_gpu_rotate_image.h>
 #include <reconstruction_cuda/cuda_gpu_rotate_image_v2.h>
