@@ -25,13 +25,6 @@
 
 #include "gpu_rotate_image.h"
 
-#include "reconstruction_cuda/cuda_basic_math.h"
-#include "reconstruction_cuda/cuda_bspline_rotation.h"
-#include "reconstruction_cuda/cuda_copy_data.h"
-#include "reconstruction_cuda/cuda_prefiltering_rotation.h"
-#include "reconstruction_cuda/cuda_interpolation3D_rotation.h"
-#include "reconstruction_cuda/cuda_interpolation2D_rotation.h"
-
 
 #include <reconstruction_cuda/cuda_gpu_rotate_image.h>
 #include <reconstruction_cuda/cuda_gpu_rotate_image_v2.h>

@@ -24,8 +24,7 @@
  ***************************************************************************/
 
 
-
-/*#ifndef CUDABASICMATH
+#ifndef CUDABASICMATH
 #define CUDABASICMATH
 
 #include "cuda_basic_math.h"
@@ -37,7 +36,7 @@
 
 #include "cuda_bspline_rotation.h"
 
-#endif*/
+#endif
 
 // 3D float texture
 texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;

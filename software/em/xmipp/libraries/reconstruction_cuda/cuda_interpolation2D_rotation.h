@@ -25,7 +25,7 @@
 
 
 
-/*#ifndef CUDABASICMATH
+#ifndef CUDABASICMATH
 #define CUDABASICMATH
 
 #include "cuda_basic_math.h"
@@ -37,7 +37,7 @@
 
 #include "cuda_bspline_rotation.h"
 
-#endif*/
+#endif
 
 // 2D float texture
 texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
