@@ -252,7 +252,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 
 	Image<double> filteredvolume;
 	filteredvolume = VRiesz;
-	filteredvolume.write("Volumen_filtrado.vol");
+	filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
 
 	if (fnSpatial!="")
 		Vfiltered()=VRiesz;
