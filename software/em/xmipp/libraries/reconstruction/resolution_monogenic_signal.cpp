@@ -356,16 +356,9 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	#endif // DEBUG
 //
 	// Low pass filter the monogenic amplitude
-	lowPassFilter.FilterBand = BANDPASS;
-	FilterBand.w1 = w1l;
-	FilterBand.w2 = w1h;
+	lowPassFilter.w1 = w1h;
 	amplitude.setXmippOrigin();
-	FilterBand.applyMaskSpace(amplitude);
-
-
-//	lowPassFilter.w1 = w1h;
-//	amplitude.setXmippOrigin();
-//	lowPassFilter.applyMaskSpace(amplitude);
+	lowPassFilter.applyMaskSpace(amplitude);
 
 	#ifdef DEBUG
 	//Image<double> saveImg2;
