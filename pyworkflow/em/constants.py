@@ -62,5 +62,10 @@ ALIGN_PROJ = 'Projection' # relate projections with 3d map
 ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
 
 #SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/UsersGuide/midas/sym.html
-SYM_I222 = 0
+SYM_I222  = 1
+SYM_I222r = 0
 
+#Diccionario sym
+SCIPION_SYM_NAME={}
+SCIPION_SYM_NAME[SYM_I222]  = 'I222'
+SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
