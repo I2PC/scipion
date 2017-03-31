@@ -108,7 +108,7 @@ class ProgramTest(unittest.TestCase):
                 
     def runCase(self, args, mpi=0, changeDir=False, 
                 preruns=None, postruns=None, validate=None,
-                outputs=None, random=False):
+                outputs=None, random=False, errorthreshold=0.001):
         # Retrieve the correct case number from the test name id
         # We asumme here that 'test_caseXXX' should be in the name
         caseId = unittest.TestCase.id(self)
@@ -158,14 +158,14 @@ class ProgramTest(unittest.TestCase):
             self._runCommands(postruns, 'postruns')
             
         if outputs:
-            self._checkOutputs(outputs,random)
+            self._checkOutputs(outputs, random, errorthreshold=errorthreshold)
             
         if validate:
             validate()
             
         os.chdir(cwd)
         
-    def _checkOutputs(self, outputs, random=False):
+    def _checkOutputs(self, outputs, random=False, errorthreshold=0.001):
         """ Check that all output files are produced
         and are equivalent to the ones in goldStandard folder.
         """
@@ -184,8 +184,9 @@ class ProgramTest(unittest.TestCase):
                 if fnGoldStd.isImage():
                     im1 = xmipp.Image(fileGoldStd)
                     im2 = xmipp.Image(outFile)
-                    msg = "Images are not equal:\n  output: %s\n  gold: %s" % (outFile, fileGoldStd)
-                    self.assertTrue(im1.equal(im2, 0.001), msg)
+                    msg = "Images are not equal (+-%f):\n  output: %s\n  gold: %s" % \
+                          (errorthreshold, outFile, fileGoldStd)
+                    self.assertTrue(im1.equal(im2, errorthreshold), msg)
                 elif fnGoldStd.isMetaData():
                     msg = "MetaDatas are not equal:\n  output: %s\n  gold: %s" % (outFile, fileGoldStd)
                     self.assertTrue(xmipp.compareTwoMetadataFiles(outFile, fileGoldStd), msg)

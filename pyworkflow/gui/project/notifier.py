@@ -39,6 +39,7 @@ class ProjectNotifier(object):
     """ Implement different types of notifications about a given
     project. Currently, the protocols in a workflow will be sent.
     """
+
     def __init__(self, project):
         self.project = project
 
@@ -122,7 +123,7 @@ class ProjectNotifier(object):
         dataDict = {'project_uuid': self._getUuid(),
                     'project_workflow': projectWorfklow}
 
-        urlName = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        urlName = os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
         urlName += "addOrUpdateWorkflow/"
         t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
         t.start() # will execute function in a separate thread
