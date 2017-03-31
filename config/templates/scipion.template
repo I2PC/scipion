@@ -91,7 +91,7 @@ MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
 # Default CUDA path if not defined for a certain package
 CUDA_LIB = /usr/local/cuda-7.5/lib64
 CUDA_BIN = /usr/local/cuda-7.5/bin
-NVCC = nvcc --x cu
+NVCC = nvcc --x cu -D_FORCE_INLINES
 NVCC_INCLUDE = /usr/local/cuda/include
 NVCC_LIBDIR = CUDA_LIB
 
