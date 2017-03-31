@@ -188,6 +188,7 @@ void ProgMovieEstimateGain::run()
 			DIRECT_A2D_ELEM(mICorrection,i,j)=1.0/DIRECT_A2D_ELEM(mICorrection,i,j);
 		else
 			DIRECT_A2D_ELEM(mICorrection,i,j)=1;
+	mICorrection/=mICorrection.computeAvg();
 	ICorrection.write(fnRoot+"_gain.xmp");
 }
 
