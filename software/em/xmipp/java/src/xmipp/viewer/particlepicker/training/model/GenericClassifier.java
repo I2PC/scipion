@@ -24,6 +24,7 @@ public class GenericClassifier extends Classifier
 
 	protected String classifierProperties;
 	protected Properties properties;
+	
 
 	public GenericClassifier(String classifierProperties)
 	{
@@ -36,6 +37,7 @@ public class GenericClassifier extends Classifier
 			properties.load(in);
 			
 			in.close();
+			properties.setProperty("applyChanges", String.valueOf(applyChanges));
 			String[] paramNames = properties.getProperty("parameters").split(",");
 			Parameter param;
 			String label, help, value;
@@ -142,6 +144,7 @@ public class GenericClassifier extends Classifier
 		{
 			for(Classifier.Parameter param: params)
 				properties.setProperty(param.name + ".value", param.value);
+			properties.setProperty("applyChanges", String.valueOf(applyChanges));
 			File file = new File(classifierProperties);
 			FileOutputStream fileOut;
 			fileOut = new FileOutputStream(file);
@@ -156,4 +159,10 @@ public class GenericClassifier extends Classifier
 				XmippDialog.showError(null,e.getMessage());
 		}
 	}
+	
+	public void setApplyChanges(boolean applyChanges) {
+		super.setApplyChanges(applyChanges);
+		writeProperties();
+	}
+
 }
