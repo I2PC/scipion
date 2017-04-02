@@ -48,3 +48,32 @@ void mult( int* a, float* b, int* c, int Xdim, int Ydim){
    if ((x<Xdim)&&(y<Ydim))
 	c[offset]=int((double)a[offset]*b[offset]);
 }//mult
+i
+
+
+#define TILE_DIM 32
+#define BLOCK_ROWS
+// Kernel to transpose a matrix
+// The kernel assumes that each block deals with a 32x32 tile
+// each block has 32x8 threads (
+__global__ void transpose(int *odata, const int *idata, int Xdim, int Ydim)
+{
+  __shared__ int tile[TILE_DIM * TILE_DIM];
+
+  int x = blockIdx.x * TILE_DIM + threadIdx.x;
+  int y = blockIdx.y * TILE_DIM + threadIdx.y;
+
+  if (x<Xdim){
+	  for (int j = 0; j < TILE_DIM; j += BLOCK_ROWS)
+		if (y+j<Ydim)
+		     tile[(threadIdx.y+j)*TILE_DIM + threadIdx.x] = idata[(y+j)*width + x];
+  }
+  __syncthreads();
+
+  if (x>Xdim){
+	  for (int j = 0; j < TILE_DIM; j += BLOCK_ROWS)
+		if (y+j<Ydim)
+		     odata[(y+j)*width + x] = tile[(threadIdx.y+j)*TILE_DIM + threadIdx.x];          
+  }
+}
+

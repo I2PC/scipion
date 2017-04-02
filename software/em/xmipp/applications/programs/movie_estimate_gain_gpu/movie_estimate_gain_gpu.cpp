@@ -36,7 +36,27 @@ template <typename T>
 		}
 	return ok;
 }
- 
+
+template <typename T>
+ bool isequalT(T* A, T* B, int xdim, int ydim, int show=10)  { 
+	bool ok=true;
+	for (int i=0; i<xdim; i++){
+		for (int j=0; j<ydim; j++){
+			if (A[i+j*xdim]!=B[j+i*xdim]){
+				ok=false;
+				break;
+			}	
+		}	
+	}
+
+	if (!ok)
+		for (int i=0; i<show; i++){
+			std::cout << "A[" <<i<<"]="<< A[i];
+			std::cout << " B[" <<i<<"]="<< B[i*xdim] << std::endl;
+		}
+	return ok;
+} 
+
 // Used for nested sort
 struct sort_functor
 {
@@ -338,7 +358,7 @@ std::cout << "1st CHECK" << std::endl;
 std::cout << "2nd CHECK" << std::endl;
 			gpuErrchk(cudaMemcpy(colH_tmp, d_columnH, sz_imgINT, cudaMemcpyDeviceToHost));
 std::cout << "3rd CHECK" << std::endl;
-			if (!isequal(&DIRECT_A2D_ELEM(columnH,0,0), colH_tmp, Xdim*Ydim))	
+			if (!isequalT(&DIRECT_A2D_ELEM(columnH,0,0), colH_tmp, Xdim, Ydim))	
 		 		std::cout << "columnH is not equal!!!!!!!!!!!!" << std::endl;
 			int* rowH_tmp=(int*)malloc(sz_imgINT); // remove
 			gpuErrchk(cudaMemcpy(rowH_tmp, d_rowH, sz_imgINT, cudaMemcpyDeviceToHost));
@@ -525,40 +545,6 @@ void ProgMovieEstimateGainGPU::computeHistogramsGPU(const int* d_IframeIdeal)
 		std::cout << "(VECTORIZED) GPU colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 
 
-
-// LOOP SORT -> worse than CPU
-/*		start=clock();
-		
-		// copy IFrameIdeal to rowH (GPU)
-		size_t sz_imgINT = sizeof(int)*Xdim*Ydim;
-		gpuErrchk(cudaMemcpy(d_rowH, d_IframeIdeal, sz_imgINT, cudaMemcpyDeviceToDevice));        
-		
-		for(size_t i=0; i<Ydim; i++) //sort all rows
-		{
-			thrust::device_ptr<int> th_d_rowH = thrust::device_pointer_cast((int*)(d_rowH+i*Xdim));
-			thrust::sort(th_d_rowH, th_d_rowH+Xdim);
-		}
-
-
-		end = clock();
-		std::cout << "GPU rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
-*/
-
-// NESTED SORT: almost the same as CPU
-/*		start=clock();
-		// copy IFrameIdeal to rowH (GPU)
-		gpuErrchk(cudaMemcpy(d_rowH, d_IframeIdeal, sz_imgINT, cudaMemcpyDeviceToDevice));        
-		
-		thrust::device_ptr<int> th_d_rowH = thrust::device_pointer_cast(d_rowH);
-		sort_functor f = {th_d_rowH, Xdim};
-		thrust::device_vector<int> idxs(Ydim);
-		thrust::sequence(idxs.begin(), idxs.end());	
-		thrust::for_each(idxs.begin(), idxs.end(), f);
-		cudaDeviceSynchronize();
-
-		end = clock();
-		std::cout << "(NESTED) GPU rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
-*/
 
 // VECTORIZED SORT: much better than CPU
 		start = clock();
