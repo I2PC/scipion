@@ -5,11 +5,62 @@
 #include <time.h> // GCF
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/sort.h>
+#include <thrust/device_ptr.h>
+#include <thrust/host_vector.h>
+#include <thrust/execution_policy.h>
+#include <thrust/generate.h>
+#include <thrust/equal.h>
+#include <thrust/sequence.h>
+#include <thrust/for_each.h>
 #include "movie_estimate_gain_kernels.cu"
 
 double computeTVColumns(MultidimArray<int> &I);
 double computeTVRows(MultidimArray<int> &I);
-bool equal(MultidiamArray<float> &A, float *B);
+
+
+template <typename T>
+ bool isequal(T* A, T* B, int size, int show=10)  { 
+	bool ok=true;
+	for (int i=0; i<size; i++){
+		if (A[i]!=B[i]){
+				ok=false;
+				break;
+		}	
+	}	
+
+	if (!ok)
+		for (int i=0; i<show; i++){
+			std::cout << "A[" <<i<<"]="<< A[i];
+			std::cout << " B[" <<i<<"]="<< B[i] << std::endl;
+		}
+	return ok;
+}
+ 
+// Used for nested sort
+struct sort_functor
+{
+  thrust::device_ptr<int> data;
+  int dsize;
+  __host__ __device__
+  void operator()(int start_idx)
+  {
+    thrust::sort(thrust::device, data+(dsize*start_idx), data+(dsize*(start_idx+1)));
+  }
+};
+
+int my_mod_start;
+int no_el;
+
+//used for vectorized sort
+int my_modC(){
+  return (my_mod_start++)%no_el;
+}
+
+int my_modR(){
+  return (my_mod_start++)/no_el;
+}
+
 
 
 class ProgMovieEstimateGainGPU: public XmippProgram
@@ -28,6 +79,7 @@ public:
 
     void produceSideInfo();
     void computeHistograms(const MultidimArray<int> &Iframe);
+    void computeHistogramsGPU(const int* d_IframeIdeal);
     void normalizeHistograms();
     void invertHistograms();
 
@@ -40,32 +92,34 @@ public:
     size_t selectBestSigmaByColumn(const MultidimArray<int> &Iframe);
     size_t selectBestSigmaByRow(const MultidimArray<int> &Iframe);
 
+  //  int my_modXdim(void);	// used for vectorized sort
+
 
 
 public:
 	MetaData mdIn;
 	MultidimArray<int> columnH,rowH, aSingleColumnH, aSingleRowH;
-	MultidimArray<float> smoothColumnH, smoothRowH, sumObs; // it was double
+	MultidimArray<float> smoothColumnH, smoothRowH;
+	MultidimArray<double> sumObs; // it was double
 	Image<float> ICorrection;         // it was double
 	std::vector<float> listOfSigmas;  // it was double
 	std::vector<float> listOfWidths; // it was double
 	std::vector<float *> listOfWeights; // it was double
 
 	int Xdim, Ydim;
+//	int my_mod_start;  //used for vectorized sort
 
 	// Note that most GPU data is float instead of double
 	// d_ means GPU data, h_ means host (uP) data 
 	cudaDeviceProp GPUprop;
         int  GPUdevice; 
-	int* d_columnH, d_rowH, d_aSingleColumnH, d_aSingleRowH; //matrix
+	int* d_columnH, *d_rowH, *d_aSingleColumnH, *d_aSingleRowH; //matrix
 	float* d_smoothColumnH, * d_smoothRowH, * d_sumObs; //matrix
 	// d_Iframes and h_Iframes contains the same info
 	// d_Iframes is used internally by the GPU to access the images
 	// h_Iframes is used if a kernel is using a single image
-	float** d_IframesFL;		// vector of images
-	float** h_IframesFL;		// vector of images
-	int** d_IframesINT;		// vector of images
-	int** h_IframesINT;		// vector of images
+	int** d_Iframe_vec;		// vector of images
+	int** h_Iframe_vec;		// vector of images
 	float* d_ICorrection; 		//Image
 	int* d_IframeIdeal; 		//Image
 	float* d_listOfWidths;		//vector
@@ -103,13 +157,13 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	mdIn.removeDisabled();
 	if (mdIn.size()==0)
 		exit(0);
-//	Image<double> Iframe;
-	Image<float> Iframe;	// GPU => float
+	Image<double> Iframe;
 	FileName fnFrame;
 	mdIn.getValue(MDL_IMAGE,fnFrame,mdIn.firstObject());
 	Iframe.read(fnFrame);
 	Xdim=XSIZE(Iframe());
 	Ydim=YSIZE(Iframe());
+	size_t sz_imgFL=Xdim*Ydim*sizeof(float);
 
 	columnH.initZeros(Ydim,Xdim);
 	rowH.initZeros(Ydim,Xdim);
@@ -117,47 +171,17 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	ICorrection().initConstant(1);
 	sumObs.initZeros(Ydim,Xdim);
 
-	clock_t start=clock();
-	// Copy all images to GPU
-	int im=0;
-	size_t sz_IframesFL=sizeof(float*)*mdIn.size();
-	h_IframesFL = (float**)malloc(sz_IframesFL);
-	size_t sz_img=Xdim*Ydim*sizeof(float);
- 
-	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
-	{
-		std::cout << "im="<< im <<"; Image size in bytes = " << sz_img << std::endl;
-		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-		Iframe.read(fnFrame);
-
-		gpuErrchk(cudaMalloc(&h_IframesFL[im], sz_img));
-		gpuErrchk(cudaMemcpy(h_IframesFL[im++], &Iframe(0,0), sz_img, cudaMemcpyHostToDevice)); 
-	}
-	// send vector of images to GPU
-	gpuErrchk(cudaMalloc(&d_IframesFL, sz_IframesFL));
-	gpuErrchk(cudaMemcpy(d_IframesFL, h_IframesFL, sz_IframesFL, cudaMemcpyHostToDevice));
-
+	// Send ICorrection to GPU
+	gpuErrchk(cudaMalloc(&d_ICorrection, sz_imgFL));
+	gpuErrchk(cudaMemcpy(d_ICorrection, &ICorrection(0,0), sz_imgFL, cudaMemcpyHostToDevice));        
+		
 	// Allocate and intialize GPU data	
-	gpuErrchk(cudaMalloc( &d_sumObs, sz_img)); // no need to initialize (it's done in kernel)
-	//****
-	// Kernel
-	std::cout << "CALLING KERNEL" << std::endl;
+	gpuErrchk(cudaMalloc( &d_sumObs, sz_imgFL)); // no need to initialize (it's done in kernel)
+	gpuErrchk(cudaMalloc( &d_rowH, sz_imgFL)); // no need to initialize (it's done in kernel)
+	gpuErrchk(cudaMalloc( &d_columnH, sz_imgFL)); // no need to initialize (it's done in kernel)
 
-        dim3 block(floor((Xdim+31)/32),floor((Ydim+17)/16),1);
-	dim3 thread( 32, 16);
-	sumall<<< block, thread >>>(d_sumObs, d_IframesFL, mdIn.size(), Xdim, Ydim);
- 	cudaThreadSynchronize();
-	gpuErrchk(cudaGetLastError());
-
-	float* sumObs_tmp=(float*)malloc(sz_img); // remove
-	
-	std::cout << "READING RESULTS " << sz_img << std::endl;
-	cudaMemcpy(sumObs_tmp, d_sumObs, sz_img, cudaMemcpyDeviceToHost);
-	std::cout << "RESULTS READ" << std::endl;
-	clock_t end=clock();
-	std::cout << "SEND+KERNEL+SEND= " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
-	
-	start=clock();
+	MultidimArray<float> sumObsFL; // it was double
+	sumObsFL.initZeros(Ydim,Xdim);
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
@@ -165,21 +189,9 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 		sumObs+=Iframe();
 	}
 	sumObs*=2;
-	end=clock();	
-	std::cout << "SEQUENTIAL= " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 	
-std::cout << "sumObs[0]=" << DIRECT_A2D_ELEM(sumObs,0,0) << " -> d_sumObs[0]=" << sumObs_tmp[0] << std::endl;
-
-	// free stuff // REMOVE
-	free(sumObs_tmp);
-	cudaFree(d_sumObs);
-/*	for (int i=0; i< mdIn.size(); i++){
-		cudaFree(d_Iframes[i]);
-		free(h_Iframes[i]);
-	}
-	cudaFree(d_Iframes);
-	free(h_Iframes);
-*/ 
+	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(sumObsFL)
+		DIRECT_A2D_ELEM(sumObsFL,i,j)=(float)(DIRECT_A2D_ELEM(sumObs,i,j));
 	//****
 
 	// Initialize sigma values
@@ -263,26 +275,27 @@ void ProgMovieEstimateGainGPU::run()
 
 	// Copy all int images onto GPU
 	int im=0;
-	size_t sz_IframesINT=sizeof(int*)*mdIn.size();
-	h_IframesINT = (int**)malloc(sz_IframesINT);
+	size_t sz_Iframe_vec=sizeof(int*)*mdIn.size();
 	size_t px_img=Xdim*Ydim;
-	size_t sz_img=px_img*sizeof(int);
+	size_t sz_imgINT=px_img*sizeof(int);
 
+	h_Iframe_vec = (int**)malloc(sz_Iframe_vec);
  
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
-		std::cout << "im="<< im <<"; Image size in bytes = " << sz_img << std::endl;
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 		Iframe.read(fnFrame);
 
-		gpuErrchk(cudaMalloc(&h_IframesINT[im], sz_img));
-		gpuErrchk(cudaMemcpy(h_IframesINT[im++], &Iframe(0,0), sz_img, cudaMemcpyHostToDevice)); 
+		gpuErrchk(cudaMalloc(&h_Iframe_vec[im], sz_imgINT));
+		gpuErrchk(cudaMemcpy(h_Iframe_vec[im++], &Iframe(0,0), sz_imgINT, cudaMemcpyHostToDevice)); 
 	}
 	// send vector of images to GPU
-	gpuErrchk(cudaMalloc(&d_IframesINT, sz_IframesINT));
-	gpuErrchk(cudaMemcpy(d_IframesINT, h_IframesINT, sz_IframesINT, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMalloc(&d_Iframe_vec, sz_Iframe_vec));
+	gpuErrchk(cudaMemcpy(d_Iframe_vec, h_Iframe_vec, sz_Iframe_vec, cudaMemcpyHostToDevice));
+
+ 
 	// Malloc several data
-	gpuErrchk(cudaMalloc(&d_IframeIdeal, sz_img));
+	gpuErrchk(cudaMalloc(&d_IframeIdeal, sz_imgINT));
 	
 	
 //*********** GPU Computation
@@ -302,15 +315,38 @@ void ProgMovieEstimateGainGPU::run()
 			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
 				DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
 			//GPU kernel
-			thrust::device_ptr<int> thptr_d_IframeIdeal = thrust::device_pointer_cast(d_IframeIdeal);
-			thrust::device_ptr<int> thptr_d_Iframe = thrust::device_pointer_cast(h_IframesINT[im]);
-			thrust::copy(thptr_d_Iframe, thptr_d_Iframe+px_img, thptr_d_IframeIdeal);
-			thrust::copy(thptr_d_Iframe, thptr_d_Iframe+px_img, thptr_d_IframeIdeal);
-			thrust::transform(thptr_d_IframeIdeal, thptr_d_IframeIdeal+px_img, thptr_d_ICorrection, thptf_d_IframeIdeal, thrust::multiplies());
+		        gpuErrchk(cudaMemcpy(d_IframeIdeal, h_Iframe_vec[im], sz_imgINT, cudaMemcpyDeviceToDevice));
+			dim3 block(floor((Xdim+31)/32),floor((Ydim+17)/16),1);
+			dim3 thread( 32, 16);
+			mult<<< block, thread >>>(h_Iframe_vec[im], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
+			cudaThreadSynchronize();
+			gpuErrchk(cudaGetLastError());
+
+	
+			int* IframeIdeal_tmp=(int*)malloc(sz_imgINT); // remove
+			gpuErrchk(cudaMemcpy(IframeIdeal_tmp, d_IframeIdeal, sz_imgINT, cudaMemcpyDeviceToHost));
+			if (!isequal(&IframeIdeal(0,0), IframeIdeal_tmp, Xdim*Ydim))	
+		 		std::cout << "IframeIdeal is not equal!!!!!!!!!!!!" << std::endl;
 			im++;
 
 			computeHistograms(IframeIdeal); //rowH columnH
+		        computeHistogramsGPU(d_IframeIdeal); // GPU test	
+		
+std::cout << "1st CHECK" << std::endl;
 
+			int* colH_tmp=(int*)malloc(sz_imgINT); // remove
+std::cout << "2nd CHECK" << std::endl;
+			gpuErrchk(cudaMemcpy(colH_tmp, d_columnH, sz_imgINT, cudaMemcpyDeviceToHost));
+std::cout << "3rd CHECK" << std::endl;
+			if (!isequal(&DIRECT_A2D_ELEM(columnH,0,0), colH_tmp, Xdim*Ydim))	
+		 		std::cout << "columnH is not equal!!!!!!!!!!!!" << std::endl;
+			int* rowH_tmp=(int*)malloc(sz_imgINT); // remove
+			gpuErrchk(cudaMemcpy(rowH_tmp, d_rowH, sz_imgINT, cudaMemcpyDeviceToHost));
+			if (!isequal(&DIRECT_A2D_ELEM(rowH,0,0), rowH_tmp, Xdim*Ydim))	
+		 		std::cout << "rowH is not equal!!!!!!!!!!!!" << std::endl;
+			
+std::cout << "FINISHED" << std::endl;
+	
 			size_t bestSigmaCol = selectBestSigmaByColumn(IframeIdeal);
 			std::cout << "      sigmaCol: " << listOfSigmas[bestSigmaCol] << std::endl;
 			size_t bestSigmaRow = selectBestSigmaByRow(IframeIdeal);
@@ -414,6 +450,16 @@ void ProgMovieEstimateGainGPU::run()
 		else
 			DIRECT_A2D_ELEM(mICorrection,i,j)=1;
 	ICorrection.write(fnRoot+"_gain.xmp");
+
+	// Free memory
+	for (int i=0; i< mdIn.size(); i++){
+		cudaFree(d_Iframe_vec[i]);
+	}
+	cudaFree(d_Iframe_vec);
+	cudaFree(d_rowH);
+	cudaFree(d_columnH);
+	free(h_Iframe_vec);
+
 }
 
 void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Iframe)
@@ -451,6 +497,85 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 
 		end = clock();
 		std::cout << "rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+#ifdef NEVER_DEFINED
+	Image<double> save;
+	typeCast(columnH,save());
+	save.write("PPPcolumnH.xmp");
+	typeCast(rowH,save());
+	save.write("PPProwH.xmp");
+#endif
+}
+
+// compute colH and rowH of image in GPU (Iframe)
+// it's always applied to d_IframeIdeal
+void ProgMovieEstimateGainGPU::computeHistogramsGPU(const int* d_IframeIdeal)
+{
+			clock_t start = clock();
+		gpuErrchk(cudaMemcpy(d_columnH, d_IframeIdeal, sizeof(int)*Xdim*Ydim, cudaMemcpyDeviceToDevice));	
+		thrust::device_ptr<int> th_d_colH = thrust::device_pointer_cast(d_columnH);
+		thrust::host_vector<int> h_segmentsC(Xdim*Ydim);
+		my_mod_start = 0;
+		no_el = Xdim;
+		thrust::generate(h_segmentsC.begin(), h_segmentsC.end(), my_modC);
+		thrust::device_vector<int> d_segmentsC = h_segmentsC;
+		thrust::stable_sort_by_key(th_d_colH, th_d_colH+Xdim*Ydim, d_segmentsC.begin());
+		thrust::stable_sort_by_key(d_segmentsC.begin(), d_segmentsC.end(), th_d_colH);
+		cudaDeviceSynchronize();
+		clock_t end = clock();
+		std::cout << "(VECTORIZED) GPU colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+
+
+
+// LOOP SORT -> worse than CPU
+/*		start=clock();
+		
+		// copy IFrameIdeal to rowH (GPU)
+		size_t sz_imgINT = sizeof(int)*Xdim*Ydim;
+		gpuErrchk(cudaMemcpy(d_rowH, d_IframeIdeal, sz_imgINT, cudaMemcpyDeviceToDevice));        
+		
+		for(size_t i=0; i<Ydim; i++) //sort all rows
+		{
+			thrust::device_ptr<int> th_d_rowH = thrust::device_pointer_cast((int*)(d_rowH+i*Xdim));
+			thrust::sort(th_d_rowH, th_d_rowH+Xdim);
+		}
+
+
+		end = clock();
+		std::cout << "GPU rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+*/
+
+// NESTED SORT: almost the same as CPU
+/*		start=clock();
+		// copy IFrameIdeal to rowH (GPU)
+		gpuErrchk(cudaMemcpy(d_rowH, d_IframeIdeal, sz_imgINT, cudaMemcpyDeviceToDevice));        
+		
+		thrust::device_ptr<int> th_d_rowH = thrust::device_pointer_cast(d_rowH);
+		sort_functor f = {th_d_rowH, Xdim};
+		thrust::device_vector<int> idxs(Ydim);
+		thrust::sequence(idxs.begin(), idxs.end());	
+		thrust::for_each(idxs.begin(), idxs.end(), f);
+		cudaDeviceSynchronize();
+
+		end = clock();
+		std::cout << "(NESTED) GPU rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+*/
+
+// VECTORIZED SORT: much better than CPU
+		start = clock();
+		gpuErrchk(cudaMemcpy(d_rowH, d_IframeIdeal, sizeof(int)*Xdim*Ydim, cudaMemcpyDeviceToDevice));	
+		thrust::device_ptr<int> th_d_rowH = thrust::device_pointer_cast(d_rowH);
+		thrust::host_vector<int> h_segmentsR(Xdim*Ydim);
+		my_mod_start = 0;
+		no_el = Xdim;
+		thrust::generate(h_segmentsR.begin(), h_segmentsR.end(), my_modR);
+		thrust::device_vector<int> d_segmentsR= h_segmentsR;
+		thrust::stable_sort_by_key(th_d_rowH, th_d_rowH+Xdim*Ydim, d_segmentsR.begin());
+		thrust::stable_sort_by_key(d_segmentsR.begin(), d_segmentsR.end(), th_d_rowH);
+		cudaDeviceSynchronize();
+		end = clock();
+		std::cout << "(VECTORIZED) GPU rowH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+
+
 #ifdef NEVER_DEFINED
 	Image<double> save;
 	typeCast(columnH,save());
@@ -625,8 +750,6 @@ void ProgMovieEstimateGainGPU::transformGrayValuesRow(const MultidimArray<int> &
 }
 
 
-
-
 double computeTVColumns(MultidimArray<int> &I)
 {
 	double retvalC=0;
@@ -688,17 +811,68 @@ size_t ProgMovieEstimateGainGPU::selectBestSigmaByRow(const MultidimArray<int> &
 	return best_s;
 }
 
+//used for vectorized sort
+//int ProgMovieEstimateGainGPU::my_modXdim(void){
+  //return (my_mod_start++)/Xdim;
+//}
 
-bool equal(MultidiamArray<float> &A, float *B){
-
-	// check if sumObs and sumObs_tmp are the same
-	for (int i=0; i<Xdim*Ydim; i++){
-		if (DIRECT_A1D_ELEM(sumObs,i)!=sumObs_tmp[i]){
-			std::cout << "ERROR: sumObs"<< std::endl;
-			return false;
+/*
+bool equal(float *A, float *B, int size){
+	bool ok=true;
+	for (int i=0; i<size; i++){
+		if (A[i]!=B[i]){
+				std::cout<<"A["<<i <<"]="<<A[i];
+				std::cout<<" B["<<i <<"]="<<B[i] << std::endl;
+				ok=false;
 		}	
 	}	
-	return true;
+	return ok;
+
 }
 
+bool equal(int *A, int *B, int size){
+	bool ok=true;
+	for (int i=0; i<size; i++){
+		if (A[i]!=B[i]){
+				std::cout<<"A["<<i <<"]="<<A[i];
+				std::cout<<" B["<<i <<"]="<<B[i] << std::endl;
+				ok=false;
+		}	
+	}	
+	return ok;
+
+
+}
+*/
 RUN_XMIPP_PROGRAM(ProgMovieEstimateGainGPU)
+
+/*	std::cout << "Test on small matrix" << std::endl;
+
+	int xd=3;
+	int yd=4;
+  	size_t sz_t= sizeof(int)*xd*yd;	
+	int h_t[]={11,21,51, 1002,32,22, 13,53,33, 44,84,34};
+
+	int *h_t2=(int*)malloc(sz_t);
+	int* d_t;
+	gpuErrchk(cudaMalloc(&d_t,sz_t));
+	gpuErrchk(cudaMemcpy(d_t, h_t, sz_t, cudaMemcpyHostToDevice));
+	thrust::device_ptr<int> th_d_t = thrust::device_pointer_cast(d_t);
+	thrust::host_vector<int> h_segR(xd*yd);
+	my_mod_start = 0;
+	no_el = xd;
+
+	thrust::generate(h_segR.begin(), h_segR.end(), my_modC);
+	for (int i=0; i<xd*yd; i++)
+		std::cout<<h_segR[i] << " ";
+	std::cout << std::endl;
+	thrust::device_vector<int> d_segR= h_segR;
+	thrust::stable_sort_by_key(th_d_t, th_d_t+xd*yd, d_segR.begin());
+	thrust::stable_sort_by_key(d_segR.begin(), d_segR.end(), th_d_t);
+	cudaDeviceSynchronize();
+	std::cout<<"after sorting"<<std::endl;
+	gpuErrchk(cudaMemcpy(h_t2, d_t, sz_t, cudaMemcpyDeviceToHost));
+	std::cout<<"after copying"<<std::endl;
+	isequal(h_t,h_t2, xd*yd, xd*yd);
+
+*/
