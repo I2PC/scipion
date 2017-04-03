@@ -168,8 +168,7 @@ class RelionVolFilterWizard(FilterVolumesWizard):
 #===============================================================================
 
 class RelionPartDiameter(RelionPartMaskDiameterWizard):  
-    _targets = [(ProtRelionAutopickFom, ['particleDiameter']),
-                (ProtRelion2Autopick, ['particleDiameter'])]
+    _targets = [(ProtRelionAutopickFom, ['particleDiameter'])]
     
     def _getProtocolImages(self, protocol):
         return protocol.inputReferences 
@@ -228,8 +227,10 @@ class RelionAutopickParams(EmWizard):
         process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)
-        form.setVar('pickingThreshold', myprops['threshold.value'])
-        form.setVar('interParticleDistance', myprops['ipd.value'])
+
+        if myprops['applyChanges'] == 'true':
+            form.setVar('pickingThreshold', myprops['threshold.value'])
+            form.setVar('interParticleDistance', myprops['ipd.value'])
 
 
 class Relion2AutopickParams(EmWizard):
@@ -269,19 +270,24 @@ class Relion2AutopickParams(EmWizard):
             'min_distance': autopickProt.interParticleDistance,
             'autopickCommand': cmd,
             'convertCmd': convertCmd,
-            'protDir': autopickProt.getWorkingDir()
+            'protDir': autopickProt.getWorkingDir(),
+            'maxStddevNoise': autopickProt.maxStddevNoise
         }
 
         pickerProps = os.path.join(coordsDir, 'picker.conf')
+
         f = open(pickerProps, "w")
         f.write("""
-        parameters = ipd,threshold
+        parameters = ipd,threshold,maxStddevNoise
         ipd.value = %(min_distance)s
-        ipd.label = Minimum inter-particles distance
-        ipd.help = some help
+        ipd.label = Inter-particles distance
+        ipd.help = Minimum distance (in Angstroms) between particles
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = some help
+        maxStddevNoise.value = %(maxStddevNoise)s
+        maxStddevNoise.label = Max. stddev noise
+        maxStddevNoise.help = Prevent picking in carbon areas, useful values probably between 1.0 and 1.2, use -1 to switch it off
         runDir = %(protDir)s
         autopickCommand = %(autopickCommand)s
         convertCommand = %(convertCmd)s
@@ -292,10 +298,32 @@ class Relion2AutopickParams(EmWizard):
                                         pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)
-        form.setVar('pickingThreshold', myprops['threshold.value'])
-        form.setVar('interParticleDistance', myprops['ipd.value'])
-        # Change the run type now to 'Compute' after using the wizard
-        # and (supposedly) optimized parameters
-        form.setVar('runType', RUN_COMPUTE)
-        # Mark the wizard was used
-        setattr(autopickProt, 'wizardExecuted', True)
+
+        # Check if the wizard changes were accepted or just canceled
+        if myprops['applyChanges'] == 'true':
+            form.setVar('pickingThreshold', myprops['threshold.value'])
+            form.setVar('interParticleDistance', myprops['ipd.value'])
+            form.setVar('maxStddevNoise', myprops['maxStddevNoise.value'])
+            # Change the run type now to 'Compute' after using the wizard
+            # and (supposedly) optimized parameters
+            form.setVar('runType', RUN_COMPUTE)
+            # Mark the wizard was used
+            setattr(autopickProt, 'wizardExecuted', True)
+
+
+class Relion2PartDiameter(RelionPartMaskDiameterWizard):
+    _targets = [(ProtRelion2Autopick, ['particleDiameter'])]
+
+    def _getProtocolImages(self, protocol):
+        return protocol.inputReferences
+
+    def show(self, form):
+        prot = form.protocol
+        if prot.useInputReferences():
+            if prot.getInputReferences() is None:
+                form.showWarning("Please select the input references first. ")
+            else:
+                RelionPartMaskDiameterWizard.show(self, form)
+        else: # Gaussian blobs
+            form.showWarning("This wizard only works when using input "
+                             "references, not Gaussian blobs. ")
