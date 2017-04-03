@@ -414,6 +414,8 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                       important=True,
                       label='Helix processing is not implemented still.')
 
+        form.addParallelSection(threads=0, mpi=4)
+
     # -------------------------- INSERT steps functions ------------------------
 
     def getAutopickParams(self):
@@ -432,7 +434,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
             ps = self.getInputReferences().getSamplingRate()
             params += ' --angpix_ref %0.3f' % ps
         else: # Gaussian blobs
-            params += ' --ref gauss --gaus_max %0.3f' % self.gaussianPeak
+            params += ' --ref gauss --gauss_max %0.3f' % self.gaussianPeak
 
         if self.refsHaveInvertedContrast:
             params += ' --invert'
