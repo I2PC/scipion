@@ -26,7 +26,6 @@
 
 
 from pyworkflow import VERSION_1_2
-from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import StringParam, PointerParam, FloatParam, EnumParam
 from pyworkflow.em.constants import SYM_I222r
@@ -76,9 +75,18 @@ class XmippProtExtractUnit(EMProtocol):
 
     #--------------------------- STEPS functions --------------------------------------------
 
+    def _getOutputVol(self):
+        return self._getExtraPath("output_volume.mrc")
+
     def extractUnit(self):
-        args = "-i %s -o %s" % (self.inputVolumes)
-        args += " --unitcell <sym> <rmin=0> <rmax=0> <degree=0> <offset=0>" % ()
+        #        samplingRate = protocol._getSetSampling()
+        args = "-i %s -o %s" % (self.inputVolumes.get().getFileName(), self._getOutputVol())
+        args += " --unitcell %s "% XMIPP_SYM_NAME[self.symmetryGroup.get()]
+        args += " %f "% self.innerRadius.get()
+        args += " %f "% self.outerRadius.get()
+        args += " %f "% self.expandFactor.get()
+        args += " %f "% self.offset.get()
+        print "args", args
         self.runJob("xmipp_transform_window", args)
 
     #--------------------------- INFO functions --------------------------------------------
@@ -97,7 +105,7 @@ class XmippProtExtractUnit(EMProtocol):
     def createOutputStep(self):
 
         vol = Volume()
-        vol.setLocation(self._getExtraPath('volume.mrc'))
+        vol.setLocation(self._getOutputVol())
         vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
         self._defineOutputs(outputVolume=vol)
         #vol.write()
