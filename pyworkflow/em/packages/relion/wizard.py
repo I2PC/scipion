@@ -168,8 +168,7 @@ class RelionVolFilterWizard(FilterVolumesWizard):
 #===============================================================================
 
 class RelionPartDiameter(RelionPartMaskDiameterWizard):  
-    _targets = [(ProtRelionAutopickFom, ['particleDiameter']),
-                (ProtRelion2Autopick, ['particleDiameter'])]
+    _targets = [(ProtRelionAutopickFom, ['particleDiameter'])]
     
     def _getProtocolImages(self, protocol):
         return protocol.inputReferences 
@@ -275,12 +274,13 @@ class Relion2AutopickParams(EmWizard):
         }
 
         pickerProps = os.path.join(coordsDir, 'picker.conf')
+
         f = open(pickerProps, "w")
         f.write("""
         parameters = ipd,threshold
         ipd.value = %(min_distance)s
-        ipd.label = Minimum inter-particles distance
-        ipd.help = some help
+        ipd.label = Inter-particles distance
+        ipd.help = Minimum distance (in Angstroms) between particles
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = some help
@@ -304,3 +304,21 @@ class Relion2AutopickParams(EmWizard):
             form.setVar('runType', RUN_COMPUTE)
             # Mark the wizard was used
             setattr(autopickProt, 'wizardExecuted', True)
+
+
+class Relion2PartDiameter(RelionPartMaskDiameterWizard):
+    _targets = [(ProtRelion2Autopick, ['particleDiameter'])]
+
+    def _getProtocolImages(self, protocol):
+        return protocol.inputReferences
+
+    def show(self, form):
+        prot = form.protocol
+        if prot.useInputReferences():
+            if prot.getInputReferences() is None:
+                form.showWarning("Please select the input references first. ")
+            else:
+                RelionPartMaskDiameterWizard.show(self, form)
+        else: # Gaussian blobs
+            form.showWarning("This wizard only works when using input "
+                             "references, not Gaussian blobs. ")

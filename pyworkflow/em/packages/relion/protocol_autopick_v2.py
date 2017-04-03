@@ -306,7 +306,6 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                            'so only use images with proper normalization.')
 
         group.addParam('particleDiameter', params.IntParam, default=-1,
-                      condition=refCondition,
                       label='Mask diameter (A)',
                       help='Diameter of the circular mask that will be applied '
                            'around the templates in Angstroms. When set to a '
@@ -367,6 +366,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                       label='Picking threshold',
                       help='Use lower thresholds to pick more particles '
                            '(and more junk probably)')
+
         form.addParam('interParticleDistance', params.IntParam, default=-1,
                       label='Minimum inter-particle distance (A)',
                       help='Particles closer together than this distance \n'
@@ -375,6 +375,8 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                            'picked.')
 
         form.addParam('shrinkFactor', params.FloatParam, default=1,
+                      validators=[params.Range(0, 1, "value should be "
+                                                     "between 0 and 1. ")],
                       label='Shrink factor',
                       help='This is useful to speed up the calculations, '
                            'and to make them less memory-intensive. The '
@@ -482,7 +484,16 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                 self._deleteChild('outputMicrographs', self.outputMicrographs)
 
         coordSet = self._createSetOfCoordinates(micSet)
-        coordSet.setBoxSize(self.getInputReferences().getDim()[0])
+        if self.useInputReferences():
+            boxSize = self.getInputReferences().getDim()[0]
+        else:
+            # Let figure out a reasonable box-size given the particle diamenter
+            # Let's assume that particle diameter is 75% of the box size
+            # and we need to convert from A to pixels
+            boxAng = 1.25 * self.particleDiameter.get()
+            boxSize = int( boxAng / micSet.getSamplingRate())
+
+        coordSet.setBoxSize(boxSize)
         template = self._getExtraPath("%s_autopick.star")
         starFiles = [template % pwutils.removeBaseExt(mic.getFileName())
                      for mic in micSet]
@@ -497,11 +508,15 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
 
-        if (self.useInputReferences() and
-            self.particleDiameter > self.getInputDimA()):
-            errors.append('Particle diameter (%d) can not be greater than '
-                          'size (%d)' % (self.particleDiameter,
-                                         self.getInputDimA()))
+        if self.useInputReferences():
+            if self.particleDiameter > self.getInputDimA():
+                errors.append('Particle diameter (%d) can not be greater than '
+                              'size (%d)' % (self.particleDiameter,
+                                             self.getInputDimA()))
+        else:
+            if self.particleDiameter <= 0:
+                errors.append('When using Gaussian blobs, you need to specify '
+                              'the particles diameter manually. ')
 
         if self.ctfRelations.get() is None and self.refsCtfCorrected:
             errors.append("References CTF corrected parameter must be set to "
