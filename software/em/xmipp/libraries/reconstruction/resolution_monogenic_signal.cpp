@@ -210,6 +210,8 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	fftVRiesz.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
 	std::complex<double> J(0,1);
+	Image<double> fmask;
+	fmask().initZeros(fftVRiesz);
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
@@ -234,20 +236,24 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 					double H=0.5*(1+cos((un-w1)*ideltal));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
-                                        ifCounter++;
+					ifCounter++;
+                    DIRECT_MULTIDIM_ELEM(fmask(), n) =H;
 				}
 				else if (iwh<iun && iun<=iw)
 				{
 					double H=0.5*(1+cos((w1-un)*ideltah));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
-                                        ifCounter++;
+					ifCounter++;
+					DIRECT_MULTIDIM_ELEM(fmask(), n) =H;
 				}
 				++n;
 			}
 		}
 	}
         std::cout << ifCounter << std::endl;
+    FileName fnMask=formatString("_Filter_%i.vol", count);
+    fmask.write(fnMask);
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 	Image<double> filteredvolume;
