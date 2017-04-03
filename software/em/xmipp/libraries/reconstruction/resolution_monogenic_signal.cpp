@@ -229,9 +229,16 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iw<=iun)
+				if (iwl>=iun && iw<=iun)
 				{
 					double H=0.5*(1+cos((un-w1)*ideltal));
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+                                        ifCounter++;
+				}
+				else if (iwh<iun && iun<=iw)
+				{
+					double H=0.5*(1+cos((w1-un)*ideltah));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
                                         ifCounter++;
@@ -574,7 +581,7 @@ void ProgMonogenicSignalRes::run()
 	FileName fnDebug;
 	do
 	{
-		resolution = minRes + count_res*R_;
+		resolution = maxRes - count_res*R_;
 		freqL = sampling/(resolution+R_);
 		freq = sampling/resolution;
 		freqH = sampling/(resolution-R_);
@@ -725,8 +732,6 @@ void ProgMonogenicSignalRes::run()
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
-				else
-					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 //				else
 //				{
 //					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
