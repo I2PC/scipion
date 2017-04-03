@@ -228,8 +228,10 @@ class RelionAutopickParams(EmWizard):
         process = CoordinatesObjectView(autopickProt.getProject(), micfn, coordsDir, autopickFomProt, pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)
-        form.setVar('pickingThreshold', myprops['threshold.value'])
-        form.setVar('interParticleDistance', myprops['ipd.value'])
+
+        if myprops['applyChanges'] == 'true':
+            form.setVar('pickingThreshold', myprops['threshold.value'])
+            form.setVar('interParticleDistance', myprops['ipd.value'])
 
 
 class Relion2AutopickParams(EmWizard):
@@ -292,10 +294,13 @@ class Relion2AutopickParams(EmWizard):
                                         pickerProps=pickerProps).show()
         process.wait()
         myprops = readProperties(pickerProps)
-        form.setVar('pickingThreshold', myprops['threshold.value'])
-        form.setVar('interParticleDistance', myprops['ipd.value'])
-        # Change the run type now to 'Compute' after using the wizard
-        # and (supposedly) optimized parameters
-        form.setVar('runType', RUN_COMPUTE)
-        # Mark the wizard was used
-        setattr(autopickProt, 'wizardExecuted', True)
+
+        # Check if the wizard changes were accepted or just canceled
+        if myprops['applyChanges'] == 'true':
+            form.setVar('pickingThreshold', myprops['threshold.value'])
+            form.setVar('interParticleDistance', myprops['ipd.value'])
+            # Change the run type now to 'Compute' after using the wizard
+            # and (supposedly) optimized parameters
+            form.setVar('runType', RUN_COMPUTE)
+            # Mark the wizard was used
+            setattr(autopickProt, 'wizardExecuted', True)
