@@ -858,7 +858,12 @@ def readSetOfCoordinates(coordSet, coordFiles):
     micSet = coordSet.getMicrographs()
     
     for mic, coordFn in izip(micSet, coordFiles):
-        readCoordinates(mic, coordFn, coordSet)
+        if not os.path.exists(coordFn):
+            print "WARNING: Missing coordinates star file: ", coordFn
+        try:
+            readCoordinates(mic, coordFn, coordSet)
+        except Exception:
+            print "WARNING: Error reading coordinates star file: ", coordFn
         
 
 def readCoordinates(mic, fileName, coordsSet):

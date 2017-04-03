@@ -270,20 +270,24 @@ class Relion2AutopickParams(EmWizard):
             'min_distance': autopickProt.interParticleDistance,
             'autopickCommand': cmd,
             'convertCmd': convertCmd,
-            'protDir': autopickProt.getWorkingDir()
+            'protDir': autopickProt.getWorkingDir(),
+            'maxStddevNoise': autopickProt.maxStddevNoise
         }
 
         pickerProps = os.path.join(coordsDir, 'picker.conf')
 
         f = open(pickerProps, "w")
         f.write("""
-        parameters = ipd,threshold
+        parameters = ipd,threshold,maxStddevNoise
         ipd.value = %(min_distance)s
         ipd.label = Inter-particles distance
         ipd.help = Minimum distance (in Angstroms) between particles
         threshold.value =  %(threshold)s
         threshold.label = Threshold
         threshold.help = some help
+        maxStddevNoise.value = %(maxStddevNoise)s
+        maxStddevNoise.label = Max. stddev noise
+        maxStddevNoise.help = Prevent picking in carbon areas, useful values probably between 1.0 and 1.2, use -1 to switch it off
         runDir = %(protDir)s
         autopickCommand = %(autopickCommand)s
         convertCommand = %(convertCmd)s
@@ -299,6 +303,7 @@ class Relion2AutopickParams(EmWizard):
         if myprops['applyChanges'] == 'true':
             form.setVar('pickingThreshold', myprops['threshold.value'])
             form.setVar('interParticleDistance', myprops['ipd.value'])
+            form.setVar('maxStddevNoise', myprops['maxStddevNoise.value'])
             # Change the run type now to 'Compute' after using the wizard
             # and (supposedly) optimized parameters
             form.setVar('runType', RUN_COMPUTE)
