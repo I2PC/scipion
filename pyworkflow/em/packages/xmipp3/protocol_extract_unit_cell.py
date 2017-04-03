@@ -108,6 +108,8 @@ class XmippProtExtractUnit(EMProtocol):
         vol.setLocation(self._getOutputVol())
         vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
         self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputVolumes, self.outputVolume)
+
         #vol.write()
 
 #--------------------------- UTILS functions ---------------------------------------------------
