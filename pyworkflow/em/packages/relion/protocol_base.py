@@ -630,7 +630,7 @@ class ProtRelionBase(EMProtocol):
             args['--preread_images'] = ''
         else:
             if self.dirPath.hasValue():
-                args['--scratch_dir'] = ''
+                args['--scratch_dir'] = self.dirPath.get()
             
         args['--pool'] = self.pooledParticles.get()
         
