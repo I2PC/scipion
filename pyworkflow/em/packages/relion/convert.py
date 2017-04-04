@@ -103,14 +103,13 @@ ALIGNMENT_DICT = OrderedDict([
        ])
 
 
-def getEnviron(version=None):
+def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     
     environ = Environ(os.environ)
 
-    relionHome = (os.environ['RELION_HOME'] if version is None
-                  else composeRelionVersionHome(version))
-        
+    relionHome = os.environ['RELION_HOME']
+    
     binPath = join(relionHome, 'bin')
     libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
     
@@ -137,20 +136,6 @@ def getVersion():
 
 def getSupportedVersions():
     return [V1_3, V1_4, V2_0]
-
-
-def composeRelionVersionHome(version):
-    path = os.environ['RELION_HOME']
-    newRelionHome = "-".join(path.split("-")[:-1]) + "-" + version
-
-    # Case for 1.4 and 1.4f
-    if version == V1_4:
-
-        # Check if path exists
-        if not os.path.exists(newRelionHome):
-            newRelionHome += 'f'
-
-    return newRelionHome
 
 
 def locationToRelion(index, filename):
