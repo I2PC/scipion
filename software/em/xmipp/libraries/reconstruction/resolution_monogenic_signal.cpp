@@ -231,7 +231,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iwl<=iun)
+				if (iwl>=iun)
 				{
 					double H=0.5*(1+cos((un-w1)*ideltal));
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -283,7 +283,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iwl<=iun)
+				if (iwl>=iun)
 				{
 					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -308,7 +308,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iwl<=iun)
+				if (iwl>=iun)
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 				++n;
 			}
@@ -758,11 +758,11 @@ void ProgMonogenicSignalRes::run()
 			std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 			std::cout << "  z=" << z << " (" << criticalZ << ")" << std::endl;
 		}
-		if (z<criticalZ)
-		{
-			criticalW = freq;
-			doNextIteration=false;
-		}
+//		if (z<criticalZ)
+//		{
+//			criticalW = freq;
+//			doNextIteration=false;
+//		}
 		if (doNextIteration)
 		{
 			if (resolution <= minRes)
