@@ -588,9 +588,9 @@ void ProgMonogenicSignalRes::run()
 	do
 	{
 		resolution = maxRes - count_res*R_;
-		freqL = sampling/(resolution+R_);
+		freqL = sampling/(resolution+2*R_);
 		freq = sampling/resolution;
-		freqH = sampling/(resolution-R_);
+		freqH = sampling/(resolution-2*R_);
 		++count_res;
 
 
