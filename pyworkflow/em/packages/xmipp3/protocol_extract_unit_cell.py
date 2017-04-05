@@ -27,7 +27,7 @@
 
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import StringParam, PointerParam, FloatParam, EnumParam
+from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam
 from pyworkflow.em.constants import SYM_I222r
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
@@ -69,14 +69,12 @@ class XmippProtExtractUnit(EMProtocol):
                       label="offset", help="to be defined")
 
     #--------------------------- INSERT steps functions --------------------------------------------
+
     def _insertAllSteps(self):
         self._insertFunctionStep('extractUnit')
         self._insertFunctionStep('createOutputStep')
 
     #--------------------------- STEPS functions --------------------------------------------
-
-    def _getOutputVol(self):
-        return self._getExtraPath("output_volume.mrc")
 
     def extractUnit(self):
         #        samplingRate = protocol._getSetSampling()
@@ -88,6 +86,13 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f "% self.offset.get()
         print "args", args
         self.runJob("xmipp_transform_window", args)
+
+    def createOutputStep(self):
+        vol = Volume()
+        vol.setLocation(self._getOutputVol())
+        vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputVolumes, self.outputVolume)
 
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -102,17 +107,7 @@ class XmippProtExtractUnit(EMProtocol):
     def _methods(self):
         return []
 
-    def createOutputStep(self):
-
-        vol = Volume()
-        vol.setLocation(self._getOutputVol())
-        vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-        self._defineOutputs(outputVolume=vol)
-        self._defineSourceRelation(self.inputVolumes, self.outputVolume)
-
-        #vol.write()
-
 #--------------------------- UTILS functions ---------------------------------------------------
 
-#    def getFnPath(self, label='volume'):
-#        return os.path.join(self.filesPath.get(), self._getFileName(label))
+def _getOutputVol(self):
+    return self._getExtraPath("output_volume.mrc")
