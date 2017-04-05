@@ -140,3 +140,9 @@ class TestWorkflowRelionPick(TestWorkflow):
         protPick3.inputReferences.set(None)
         self.launchProtocol(protPick3)
 
+        # Launch the same picking run but now in 1 GPU.
+        protPick4 = self.proj.copyProtocol(protPick1)
+        protPick4.setObjLabel('autopick refs (optimize) 1 GPU')
+        protPick4.gpusToUse.set('0')
+        self.launchProtocol(protPick4)
+        
