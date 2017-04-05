@@ -117,7 +117,8 @@ class TestWorkflowRelionPick(TestWorkflow):
                                      runType=RUN_OPTIMIZE,
                                      micrographsList=5,
                                      referencesType=REF_AVERAGES,
-                                     refsHaveInvertedContrast=True
+                                     refsHaveInvertedContrast=True,
+                                     particleDiameter=380
                                      )
 
         protPick1.inputMicrographs.set(protPreprocess.outputMicrographs)
