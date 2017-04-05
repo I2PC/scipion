@@ -210,8 +210,6 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	fftVRiesz.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
 	std::complex<double> J(0,1);
-	Image<double> fmask;
-	fmask().initZeros(fftVRiesz);
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
@@ -222,28 +220,19 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	double ideltah=PI/(w1h-w1);
 	std::cout << w1 << " " << w1l << " " << w1h << " " << std::endl;
 	std::cout << iwl << " " << iw << " " << iwh << " " << ideltal << " " << ideltah << std::endl;
-    int ifCounter=0;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(myfftV)
 	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+		double un=1.0/iun;
+		if (w1l<=un && un<=w1)
 		{
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
-			{
-				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-				double un=1.0/iun;
-				if (iwl>=iun)
-				{
-					double H=0.5*(1+cos((un-w1)*ideltal));
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
-					ifCounter++;
-                    //DIRECT_MULTIDIM_ELEM(fmask(), n) =H;
-				}
-				++n;
-			}
-		}
+			double H=0.5*(1+cos((un-w1)*ideltal));
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+		} else if (un>w1)
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 	}
-        std::cout << ifCounter << std::endl;
+
     //FileName fnMask=formatString("_Filter_%i.vol", count);
     //fmask.write(fnMask);
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
@@ -283,10 +272,16 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iwl>=iun)
+				if (w1l<=un && un<=w1)
 				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					double H=0.5*(1+cos((un-w1)*ideltal));
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*ux*iun);
+				} else if (un>w1)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*ux*iun);
 				}
 				++n;
 			}
@@ -308,8 +303,17 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iwl>=iun)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+				if (w1l<=un && un<=w1)
+				{
+					double H=0.5*(1+cos((un-w1)*ideltal));
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*uy*iun);
+				} else if (un>w1)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*uy*iun);
+				}
 				++n;
 			}
 		}
@@ -330,8 +334,17 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				double un=1.0/iun;
-				if (iwl<=iun)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+				if (w1l<=un && un<=w1)
+				{
+					double H=0.5*(1+cos((un-w1)*ideltal));
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=H;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*uz*iun);
+				} else if (un>w1)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*uz*iun);
+				}
 				++n;
 			}
 		}
@@ -580,9 +593,9 @@ void ProgMonogenicSignalRes::run()
 	do
 	{
 		resolution = maxRes - count_res*R_;
-		freqL = sampling/(resolution+2*R_);
+		freqL = sampling/(resolution+R_);
 		freq = sampling/resolution;
-		freqH = sampling/(resolution-2*R_);
+		freqH = sampling/(resolution-R_);
 		++count_res;
 
 
@@ -730,8 +743,10 @@ void ProgMonogenicSignalRes::run()
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
-//				else
-//				{
+				else{
+					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+				}
+				  //				{
 //					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
 //					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
 //					{
@@ -758,11 +773,11 @@ void ProgMonogenicSignalRes::run()
 			std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 			std::cout << "  z=" << z << " (" << criticalZ << ")" << std::endl;
 		}
-//		if (z<criticalZ)
-//		{
-//			criticalW = freq;
-//			doNextIteration=false;
-//		}
+		if (z<criticalZ)
+		{
+			criticalW = freq;
+			doNextIteration=false;
+		}
 		if (doNextIteration)
 		{
 			if (resolution <= minRes)
