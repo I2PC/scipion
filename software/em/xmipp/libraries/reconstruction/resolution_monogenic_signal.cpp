@@ -641,7 +641,7 @@ void ProgMonogenicSignalRes::run()
 				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 				{
 					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-					if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
 						sumS  += amplitudeValue;
 						sumS2 += amplitudeValue*amplitudeValue;
@@ -681,7 +681,7 @@ void ProgMonogenicSignalRes::run()
 				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 				{
 					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-					if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
 						sumS  += amplitudeValue;
 						sumS2 += amplitudeValue*amplitudeValue;
@@ -738,22 +738,22 @@ void ProgMonogenicSignalRes::run()
 			if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
 				if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 				{
-//					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
 					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/freq;
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
 				else{
-					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-				}
-				  //				{
-//					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
-//					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
-//					{
-//						DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-//						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes - (count_res-2)*R_;
-//					}
+//					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
 //				}
+//				  //				{
+					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
+					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
+					{
+						DIRECT_MULTIDIM_ELEM(pMask, n) = -1;
+						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes - (count_res-2)*R_;
+					}
+				}
 		}
 		#ifdef DEBUG_MASK
 		FileName fnmask_debug;
@@ -761,7 +761,7 @@ void ProgMonogenicSignalRes::run()
 		mask.write(fnmask_debug);
 		#endif
 
-		outputResolution.write(formatString("resolutionSoFar_%i.vol", iter));
+	//	outputResolution.write(formatString("resolutionSoFar_%i.vol", iter));
 
 
 		// Is the mean inside the signal significantly different from the noise?
