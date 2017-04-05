@@ -79,12 +79,18 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         # Insert the picking steps for each micrograph separately 
         # (Relion requires in that way if micrographs have different dimensions)
         allMicSteps = []
-        for mic in self.getMicrographList():
-            autopickId = self._insertAutopickStep(mic, convertId)
-            allMicSteps.append(autopickId)
+        micStar = self._getPath('input_micrographs.star')
+        autopickId = self._insertAutopickStep(micStar, convertId)
+        allMicSteps.append(autopickId)
+
+        #for mic in self.getMicrographList():
+        #    autopickId = self._insertAutopickStep(mic, convertId)
+        #    allMicSteps.append(autopickId)
         # Register final coordinates as output
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=allMicSteps)
+
+
 
     #--------------------------- STEPS functions -------------------------------
     def _preprocessMicrographRow(self, img, imgRow):
@@ -473,11 +479,11 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
 
         return params
 
-    def _insertAutopickStep(self, mic, convertId):
+    def _insertAutopickStep(self, micStarFile, convertId):
         fomParam = ' --write_fom_maps' if self.isRunOptimize() else ''
 
         return self._insertFunctionStep('autopickStep',
-                                        self._getMicStarFile(mic),
+                                        micStarFile,
                                         self.getAutopickParams(),
                                         self.pickingThreshold.get(),
                                         self.interParticleDistance.get(),
