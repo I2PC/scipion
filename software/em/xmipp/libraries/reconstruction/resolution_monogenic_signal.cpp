@@ -743,9 +743,9 @@ void ProgMonogenicSignalRes::run()
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
-				else{
-					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-				}
+//				else{
+//					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+//				}
 				  //				{
 //					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
 //					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
