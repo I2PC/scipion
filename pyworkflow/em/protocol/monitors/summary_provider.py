@@ -72,6 +72,9 @@ class SummaryProvider(TreeProvider):
                 outSet.close()
                 # Store acquisition parameters in case of the import protocol
                 from pyworkflow.em import ProtImportImages
+                #NOTE by rmarabini do not use the angstrom symbol instead of A
+                #it breaks html production in the monitor:
+                #UnicodeDecodeError: 'ascii' codec can't decode byte 0xe2 
                 if isinstance(prot, ProtImportImages):
                     self.acquisition = [("Microscope Voltage: ",
                                          prot.voltage.get()),
@@ -79,7 +82,7 @@ class SummaryProvider(TreeProvider):
                                          prot.sphericalAberration.get()),
                                         ("Magnification: ",
                                          prot.magnification.get()),
-                                        ("Pixel Size (Å/px): ",
+                                        ("Pixel Size (A/px): ",
                                          outSet.getSamplingRate())
                                         ]
 

@@ -36,13 +36,14 @@ from os.path import exists, basename
 import pyworkflow.em.metadata as md
 import pyworkflow.utils as pwutils
 from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING, OTHER
-from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED, STATUS_FINISHED
+from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
+                                           STATUS_FINISHED)
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtExtractParticles
-from pyworkflow.em.data import SetOfParticles
+from pyworkflow.em.data import SetOfCoordinates
 from pyworkflow.em.constants import RELATION_CTF
 
-from convert import writeSetOfCoordinates, readSetOfParticles, micrographToCTFParam
+from convert import writeSetOfCoordinates, micrographToCTFParam
 from xmipp3 import XmippProtocol
 
 # Rejection method constants
@@ -78,15 +79,15 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       default=0, important=True,
                       display=params.EnumParam.DISPLAY_HLIST,
                       label='Micrographs source',
-                      help='By default the particles will be extracted \n'
-                           'from the micrographs used in the picking \n'
+                      help='By default the particles will be extracted '
+                           'from the micrographs used in the picking '
                            'step ( _same as picking_ option ). \n'
-                           'If you select _other_ option, you must provide \n'
-                           'a different set of micrographs to extract from.\n'
-                           '*Note*: In the _other_ case, ensure that provided \n'
-                           'micrographs and coordinates are related \n'
-                           'by micName or by micId. Difference in pixel size will \n'
-                           'be handled automatically.')
+                           'If you select _other_ option, you must provide '
+                           'a different set of micrographs to extract from. \n'
+                           '*Note*: In the _other_ case, ensure that provided '
+                           'micrographs and coordinates are related '
+                           'by micName or by micId. Difference in pixel size '
+                           'will be handled automatically.')
 
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
@@ -98,9 +99,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       relationName=RELATION_CTF,
                       attributeName='getInputMicrographs',
                       label='CTF estimation',
-                      help='Choose some CTF estimation related to input micrographs. \n'
-                           'CTF estimation is needed if you want to do phase flipping or \n'
-                           'you want to associate CTF information to the particles.')
+                      help='Choose some CTF estimation related to input '
+                           'micrographs. \n CTF estimation is needed if you '
+                           'want to do phase flipping or you want to '
+                           'associate CTF information to the particles.')
 
         # downFactor should always be 1.0 or greater
         geOne = params.GE(1.0,
@@ -125,8 +127,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         form.addParam('doBorders', params.BooleanParam, default=False,
                       label='Fill pixels outside borders',
-                      help='Xmipp by default skips particles whose boxes fall outside of the micrograph borders.'
-                           'Set this option to True if you want those pixels outside the borders to be filled with the closest pixel value available')
+                      help='Xmipp by default skips particles whose boxes fall '
+                           'outside of the micrograph borders. Set this '
+                           'option to True if you want those pixels outside '
+                           'the borders to be filled with the closest pixel '
+                           'value available')
 
         form.addParam('doSort', params.BooleanParam, default=True,
                       label='Perform sort by statistics',
@@ -166,19 +171,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'values from a Gaussian with zero-mean and '
                            'unity-standard deviation.')
 
-        form.addParam('thresholdDust', params.FloatParam, default=3.5,
+        form.addParam('thresholdDust', params.FloatParam, default=5,
                       condition='doRemoveDust', expertLevel=LEVEL_ADVANCED,
                       label='Threshold for dust removal',
-                      help='Pixels with a signal higher or lower than this value times the standard '
-                           'deviation of the image will be affected. For cryo, 3.5 is a good value.'
-                           'For high-contrast negative stain, the signal itself may be affected so '
-                           'that a higher value may be preferable.')
+                      help='Pixels with a signal higher or lower than this '
+                           'value times the standard deviation of the image '
+                           'will be affected. For cryo, 3.5 is a good value. '
+                           'For high-contrast negative stain, the signal '
+                           'itself may be affected so that a higher value may '
+                           'be preferable.')
 
         form.addParam('doInvert', params.BooleanParam, default=None,
                       label='Invert contrast', 
-                      help='Invert the contrast if your particles are black over a white background.\n'
-                           'Xmipp, Spider, Relion and Eman require white particles over a black background\n'
-                           'Frealign (up to v9.07) requires black particles over a white background')
+                      help='Invert the contrast if your particles are black '
+                           'over a white background.  Xmipp, Spider, Relion '
+                           'and Eman require white particles over a black '
+                           'background. Frealign (up to v9.07) requires black '
+                           'particles over a white background')
         
         form.addParam('doFlip', params.BooleanParam, default=None,
                       label='Phase flipping',
@@ -192,25 +201,27 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         form.addParam('doNormalize', params.BooleanParam, default=True,
                       label='Normalize (Recommended)', 
-                      help='It subtract a ramp in the gray values and normalizes so that in the '
-                           'background there is 0 mean and standard deviation 1.')
+                      help='It subtract a ramp in the gray values and '
+                           'normalizes so that in the background there is 0 '
+                           'mean and standard deviation 1.')
         form.addParam('normType', params.EnumParam,
                       choices=['OldXmipp','NewXmipp','Ramp'], default=2,
                       condition='doNormalize', expertLevel=LEVEL_ADVANCED,
                       display=params.EnumParam.DISPLAY_COMBO,
                       label='Normalization type', 
-                      help='OldXmipp (mean(Image)=0, stddev(Image)=1).  \n  '
-                           'NewXmipp (mean(background)=0, stddev(background)=1)  \n  '
-                           'Ramp (subtract background+NewXmipp).  \n  ')
+                      help='OldXmipp (mean(Image)=0, stddev(Image)=1). \n'
+                           'NewXmipp (mean(background)=0, '
+                           'stddev(background)=1) \n  '
+                           'Ramp (subtract background+NewXmipp).')
         form.addParam('backRadius', params.IntParam, default=-1,
                       condition='doNormalize',
                       label='Background radius', expertLevel=LEVEL_ADVANCED,
-                      help='Pixels outside this circle are assumed to be noise and their stddev '
-                           'is set to 1. Radius for background circle definition (in pix.). '
-                           'If this value is 0, then half the box size is used.')
-
+                      help='Pixels outside this circle are assumed to be noise '
+                           'and their stddev is set to 1. Radius for '
+                           'background circle definition (in pix.). If this '
+                           'value is 0, then half the box size is used.')
         form.addParallelSection(threads=4, mpi=1)
-
+    
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         """for each micrograph insert the steps to preprocess it"""
@@ -426,35 +437,37 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Create the SetOfImages object on the database
         fnImages = self._getOutputImgMd()
         # Create output SetOfParticles
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputMics)
+        self.imgSet = self._createSetOfParticles()
+        self.imgSet.copyInfo(self.inputMics)
         # set coords from the input, will update later if needed
-        imgSet.setCoordinates(self.inputCoords)
+        self.imgSet.setCoordinates(self.inputCoords)
+        coords2 = SetOfCoordinates()
 
         if self.doFlip:
-            imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
+            self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
 
-        boxScale = self.getBoxScale()
-        doScale = self.notOne(boxScale)
+        self.imgSet.setSamplingRate(self._getNewSampling())
+        self.imgSet.setHasCTF(self.ctfRelations.hasValue())
 
-        imgSet.setSamplingRate(self._getNewSampling())
+        # a SetMdIterator is needed because in some cases, the number of
+        # items in SetOfCoordinates and in the metadata could be different.
+        iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
+                                    updateItemCallback=self.createParticles,
+                                    skipDisabled=True)
+        # THis use case is special, because copyItems method is designed to
+        # modified the same type of object of the input set. Here, a new type
+        #  (SetOfParticles) is generated, and its needed an auxiliary set of
+        # coordinates and it not stored.
+        coordsAux = SetOfCoordinates()
+        coordsAux.copyItems(self.inputCoords,
+                            updateItemCallback=iterator.updateItem,
+                            copyDisabled=True)
 
-        # Create a temporary set to read from the metadata file
-        # and later create the good one with the coordinates 
-        # properly set. We need this because the .update is not
-        # working in the mapper when new attributes are added.
-        imgSet.setHasCTF(self.ctfRelations.hasValue())
-        readSetOfParticles(fnImages, imgSet)
-        
-        # Since the coordinates are properly get in readSetOfParticles (
-        # scaled if
-        # necessary), is not necessary iterate again over the whole
-        # setOfParticles.
         self._storeMethodsInfo(fnImages)
-        self._defineOutputs(outputParticles=imgSet)
-        self._defineSourceRelation(self.inputCoordinates, imgSet)
+        self._defineOutputs(outputParticles=self.imgSet)
+        self._defineSourceRelation(self.inputCoordinates, self.imgSet)
         if self.ctfRelations.hasValue():
-            self._defineSourceRelation(self.ctfRelations.get(), imgSet)
+            self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -473,7 +486,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self._setupCtfProperties() # setup self.micKey among others
         if self.ctfRelations.hasValue() and self.micKey is None:
             errors.append('Some problem occurs matching micrographs and CTF.\n'
-                          'There were micrographs for which CTF was not found\n'
+                          'There were micrographs for which CTF was not found '
                           'either using micName or micId.\n')
         return errors
     
@@ -498,10 +511,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         methodsMsgs = []
 
         if self.getStatus() == STATUS_FINISHED:
-            msg = "A total of %d particles of size %d were extracted" % (self.getOutput().getSize(),
-                                                                         self.boxSize)
+            msg = ("A total of %d particles of size %d were extracted"
+                   % (self.getOutput().getSize(), self.boxSize))
+            
             if self._micsOther():
-                msg += " from another set of micrographs: %s" % self.getObjectTag('inputMicrographs')
+                msg += (" from another set of micrographs: %s"
+                        % self.getObjectTag('inputMicrographs'))
 
             msg += " using coordinates %s" % self.getObjectTag('inputCoordinates')
             msg += self.methodsVar.get('')
@@ -631,3 +646,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     def _getOutputImgMd(self):
         return self._getPath('images.xmd')
+
+    def createParticles(self, item, row):
+        from pyworkflow.em.packages.xmipp3.convert import rowToParticle
+        
+        particle = rowToParticle(row, readCtf=self.ctfRelations.hasValue())
+        coord = particle.getCoordinate()
+        item.setY(coord.getY())
+        item.setX(coord.getX())
+        particle.setCoordinate(item)
+        self.imgSet.append(particle)
+        item._appendItem = False

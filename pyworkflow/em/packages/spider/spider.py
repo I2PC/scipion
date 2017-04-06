@@ -59,7 +59,9 @@ def getEnviron():
     """
     global SPIDER
     env = Environ(os.environ)
-    SPIDER_DIR = env.getWithDeprecated('SPIDER_HOME', 'SPIDER_DIR', None) # Scipion definition
+    SPIDER_DIR = env.getFirst(('SPIDER_HOME', 'SPIDER_DIR'), mandatory=True)  #
+    # Scipion
+    # definition
     
     if SPIDER_DIR is None:
         errors = ''

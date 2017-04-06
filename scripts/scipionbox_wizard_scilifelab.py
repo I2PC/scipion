@@ -35,7 +35,6 @@ import ttk
 import tkFont
 from collections import OrderedDict
 from ConfigParser import ConfigParser
-import argparse
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
@@ -50,11 +49,6 @@ from pyworkflow.gui.widgets import HotButton, Button
 import subprocess
 
 VIEW_WIZARD = 'wizardview'
-
-USER_NAME = "User name"
-SAMPLE_NAME = "Sample name"
-PROJECT_NAME = "Project name"
-FRAMES_RANGE = "FRAMES_RANGE"
 
 # Protocol's contants
 MOTIONCORR = "MOTIONCORR"
@@ -72,6 +66,10 @@ MAG = "MAG"
 # Some related environment variables
 DATA_FOLDER = 'DATA_FOLDER'
 USER_NAME = 'USER_NAME'
+SAMPLE_NAME = 'SAMPLE_NAME'
+PROJECT_NAME = 'PROJECT_NAME'
+SCIPION_PROJECT = 'SCIPION_PROJECT'
+FRAMES_RANGE = 'FRAMES_RANGE'
 MICROSCOPE = 'MICROSCOPE'
 DATA_BACKUP = 'DATA_BACKUP'
 PATTERN = 'PATTERN'
@@ -83,6 +81,7 @@ SMTP_TO = 'SMTP_TO'
 PROTOCOLS = "Protocols"
 MONITORS = "Monitors"
 MICROSCOPE = "Microscope"
+MESSAGE = 'Message'
 
 # Define some string constants
 LABELS = {
@@ -90,7 +89,8 @@ LABELS = {
     USER_NAME: "User name",
     SAMPLE_NAME: "Sample name",
     DATA_BACKUP: 'Data Backup Dir',
-    PROJECT_NAME: "Project name",
+    PROJECT_NAME: "Project ID",
+    SCIPION_PROJECT: "Scipion project",
     FRAMES_RANGE: "Frames range",
 
     # Protocol's contants
@@ -103,6 +103,12 @@ LABELS = {
     EMAIL_NOTIFICATION: "Email notification",
     HTML_REPORT: "HTML Report"
 }
+
+USER_GROUPS = ['cem', 'dbb', 'fac', 'int']
+# Project ID should start by one of the previous groups
+# followed by 5 digits code
+PROJECT_REGEX = re.compile("(%s)(\d{5})$" % ('|'.join(USER_GROUPS)))
+
 
 
 class BoxWizardWindow(ProjectBaseWindow):
@@ -124,6 +130,7 @@ class BoxWizardWindow(ProjectBaseWindow):
         self.viewFuncs = {VIEW_WIZARD: BoxWizardView}
         self.manager = Manager()
         self.switchView(VIEW_WIZARD)
+
 
 class BoxWizardView(tk.Frame):
     def __init__(self, parent, windows, **kwargs):
@@ -194,23 +201,30 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        def _addPair(key, r, lf, entry=True, traceCallback=None, mouseBind=False):
+        def _addPair(key, r, lf, widget='entry', traceCallback=None, mouseBind=False):
             t = LABELS.get(key, key)
             label = tk.Label(lf, text=t, bg='white',
                              font=self.bigFont)
             label.grid(row=r, column=0, padx=(10, 5), pady=2, sticky='ne')
 
-            if entry:
-                var = tk.StringVar()
-                entry = tk.Entry(lf, width=30, font=self.bigFont,
+            if not widget:
+                return
+
+            var = tk.StringVar()
+
+            if widget == 'entry':
+                widget = tk.Entry(lf, width=30, font=self.bigFont,
                                  textvariable=var)
                 if traceCallback:
                     if mouseBind: #call callback on click
-                        entry.bind("<Button-1>", traceCallback, "eee")
+                        widget.bind("<Button-1>", traceCallback, "eee")
                     else:#call callback on type
                         var.trace('w', traceCallback)
-                self.vars[key] = var
-                entry.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
+            elif widget == 'label':
+                widget = tk.Label(lf, font=self.bigFont, textvariable=var)
+
+            self.vars[key] = var
+            widget.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
 
         def _addCheckPair(key, r, lf, col=1):
             t = LABELS.get(key, key)
@@ -241,13 +255,11 @@ class BoxWizardView(tk.Frame):
 
         self.micCombo = _addComboPair(MICROSCOPE, 0, labelFrame,
                                       traceCallback=self._onMicroscopeChanged)
-        _addPair(DATA_FOLDER, 1, labelFrame)
+        _addPair(PROJECT_NAME, 1, labelFrame, traceCallback=self._onInputChange)
+        _addPair(DATA_FOLDER, 2, labelFrame, widget='label')
+        _addPair(SCIPION_PROJECT, 3, labelFrame, widget='label')
+        _addPair(MESSAGE, 4, labelFrame, widget='label')
 
-        _addPair(USER_NAME, 2, labelFrame, traceCallback=self._onInputChange)
-        _addPair(SAMPLE_NAME, 3, labelFrame, traceCallback=self._onInputChange)
-        _addPair(PROJECT_NAME, 4, labelFrame)
-        _addPair(DATA_BACKUP, 5, labelFrame,
-                 traceCallback=self.fileDialog, mouseBind=True)
 
         labelFrame.columnconfigure(0, weight=1)
         labelFrame.columnconfigure(0, minsize=120)
@@ -260,18 +272,20 @@ class BoxWizardView(tk.Frame):
         labelFrame2.columnconfigure(0, minsize=120)
 
         _addPair(FRAMES_RANGE, 0, labelFrame2)
-        _addPair(PROTOCOLS, 1, labelFrame2, entry=False)
+        _addPair(PROTOCOLS, 1, labelFrame2, widget=False)
         _addCheckPair(MOTIONCORR, 1, labelFrame2)
         _addCheckPair(MOTIONCOR2, 1, labelFrame2, col=2)
         _addCheckPair(OPTICAL_FLOW, 2, labelFrame2)
         _addCheckPair(SUMMOVIE, 3, labelFrame2)
         _addCheckPair(CTFFIND4, 4, labelFrame2)
         _addCheckPair(GCTF, 4, labelFrame2, col=2)
-        _addPair("Monitors", 5, labelFrame2, entry=False)
+        _addPair("Monitors", 5, labelFrame2, widget=False)
         _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2)
         _addCheckPair(HTML_REPORT, 5, labelFrame2, col=2)
 
         frame.columnconfigure(0, weight=1)
+
+        self._onInputChange()
 
     def _getConfValue(self, key, default=''):
         return self.windows.config[self.microscope].get(key, default)
@@ -289,55 +303,24 @@ class BoxWizardView(tk.Frame):
         return self.vars[varKey].set(value)
 
     def _onAction(self, e=None):
-        def is_running(process):
-            counter=0
-            s = subprocess.Popen(["ps", "axw"],stdout=subprocess.PIPE)
-            for x in s.stdout:
-                if re.search(process, x):
-                    counter = x.split()[0]
-                    break
-            return counter
-
         errors = []
         doBackup = True
         # Check the Data folder exists
-        dataFolder = pwutils.expandPattern(self._getValue(DATA_FOLDER))
-        if not os.path.exists(pwutils.expandPattern(dataFolder)):
-            errors.append("Data folder '%s' does not exists" % dataFolder)
-        #check errors
-        counter = is_running("mirror_directory.sh")
-        if counter > 0:
-            errors.append("There is a backup script running in the background")
-            errors.append("I cannot continue unless you stop it.")
-            errors.append('The command "kill -9 %s" will kill it.'% counter)
-            errors.append('Execute it at your own risk from a terminal')
-
-        backupFolder = pwutils.expandPattern(self._getValue(DATA_BACKUP))
-        if backupFolder == '':
-            doBackup = False
-        elif backupFolder.find("@") != -1:  # if remote directory do not check
-            pass
-        elif not os.path.exists(pwutils.expandPattern(backupFolder)):
-            errors.append("""Backup folder '%s' already exists. If you want to use you must delete it first""" % backupFolder)
-
-        userName = self._getValue(USER_NAME)
-        if self.re.match(userName.strip()) is None:
-            errors.append("Wrong username")
-
-        sampleName = self._getValue(SAMPLE_NAME)
-        if self.re.match(sampleName.strip()) is None:
-            errors.append("Wrong sample name")
-
+        dataFolder = self._getDataFolder()
         projName = self._getProjectName()
-        projPath = os.path.join(dataFolder, projName)
-
-        scipionProj = self._getConfValue('SCIPION_PROJECT')#.replace(
-            #'${PROJECT_NAME}', projName)
+        projPath = dataFolder
+        scipionProj = self._getScipionProject()
         scipionProjPath = os.path.join(projPath, scipionProj)
         # Do more checks only if there are not previous errors
+        if not self._validProjectName():
+            errors.append("Project ID should start with the group name"
+                          "followed by five digits."
+                          "Possible groups are: %s"
+                          "Examples: \n   int00012\n   dbb00028\n   fac00003")
         if not errors:
-            if os.path.exists(projPath):
-                errors.append("Project path '%s' already exists." % projPath)
+            if os.path.exists(scipionProjPath):
+                errors.append("Scipion Project path '%s' already exists."
+                              % scipionProjPath)
 
         if not errors:
             if not (self._getValue(MOTIONCORR) or self._getValue(MOTIONCOR2)
@@ -350,14 +333,6 @@ class BoxWizardView(tk.Frame):
             self.windows.showError("\n  - ".join(errors))
         else:
             self._createDataFolder(projPath, scipionProjPath)
-            command = os.path.join(os.getenv("SCIPION_HOME"),
-                                   "scripts/mirror_directory.sh")
-            if doBackup:
-                subprocess.Popen([command, dataFolder, projName, backupFolder],
-                                 stdout=open('logfile_out.log', 'w'),
-                                 stderr=open('logfile_err.log', 'w')
-                                 )
-            print projName, projPath, scipionProjPath
             self._createScipionProject(projName, projPath, scipionProjPath)
             self.windows.close()
 
@@ -369,17 +344,9 @@ class BoxWizardView(tk.Frame):
             sys.stdout.write("DONE\n")
 
         _createPath(projPath)
-
-        if self._getConfValue(GRIDS) == '1':
-            for i in range(12):
-                gridFolder = os.path.join(projPath, 'GRID_%02d' % (i + 1))
-                _createPath(os.path.join(gridFolder, 'ATLAS'))
-                _createPath(os.path.join(gridFolder, 'DATA'))
-
         _createPath(scipionProjPath)
 
     def _createScipionProject(self, projName, projPath, scipionProjPath):
-
         manager = Manager()
         project = manager.createProject(projName, location=scipionProjPath)
         self.lastProt = None
@@ -399,11 +366,13 @@ class BoxWizardView(tk.Frame):
                                          dataStreaming=True)
 
         # Should I publish html report?       
-        if doPublish==1:
-            publish=self._getConfValue('HTML_PUBLISH')
-            print("\n\nReport available at URL: %s/%s\n\n"%('http://scipion.cnb.csic.es/scipionbox',projName))
+        if doPublish == 1:
+            publish = self._getConfValue('HTML_PUBLISH')
+            print("\n\nReport available at URL: %s/%s\n\n"
+                  %('http://scipion.cnb.csic.es/scipionbox',projName))
         else:
-            publish=''
+            publish = ''
+
         protMonitor = project.newProtocol(em.ProtMonitorSummary,
                                           objLabel='Summary Monitor',
                                           doMail=doMail,
@@ -494,10 +463,37 @@ class BoxWizardView(tk.Frame):
 
         self.windows.close()
 
+    def _replaceVars(self, value):
+        newValue = value
+        for v in [USER_NAME, SAMPLE_NAME]:
+            newValue = newValue.replace('${%s}' % v, self._getValue(v))
+
+        return newValue
+
     def _getProjectName(self):
-        return '%s_%s_%s' % (pwutils.prettyTime(dateFormat='%Y%m%d'),
-                             self._getValue(USER_NAME),
-                             self._getValue(SAMPLE_NAME))
+        return self._getValue(PROJECT_NAME)
+
+    def _validProjectName(self):
+        return PROJECT_REGEX.match(self._getProjectName())
+
+    def _isInputReady(self):
+        return self.microscope is not None and self._validProjectName()
+
+    def _getDataFolder(self):
+        if not self._isInputReady():
+            return ''
+        dataFolder = self._getConfValue(DATA_FOLDER)
+        projName = self._getProjectName()
+        groups = PROJECT_REGEX.match(projName).groups()
+
+        dataFolder = os.path.join(dataFolder, groups[0], projName)
+        return dataFolder
+
+    def _getScipionProject(self):
+        if not self._isInputReady():
+            return ''
+        scipionProj = self._getConfValue(SCIPION_PROJECT)
+        return scipionProj.replace('${PROJECT_NAME}', self._getProjectName())
 
     def _checkInput(self, varKey):
         value = self._getValue(varKey)
@@ -515,18 +511,20 @@ class BoxWizardView(tk.Frame):
         self._setValue(DATA_BACKUP, backupFolder)
 
     def _onInputChange(self, *args):
-        # Quick and dirty trick to skip this function first time
-        if SAMPLE_NAME not in self.vars:
-            return
+        if self.microscope is None:
+            msg = 'Select microscope'
+        elif not self._validProjectName():
+            msg = ('Invalid project name. ')
+        else:
+            msg = ''
 
-        self._setValue(PROJECT_NAME, self._getProjectName())
+        self._setValue(MESSAGE, msg)
+        self._setValue(DATA_FOLDER, self._getDataFolder())
+        self._setValue(SCIPION_PROJECT, self._getScipionProject())
 
     def _onMicroscopeChanged(self, *args):
         self.microscope = self._getValue(MICROSCOPE)
         self.micCombo.selection_clear()
-
-        # Update the values of other field according to the selected microscope
-        self._setValue(DATA_FOLDER, self._getConfValue(DATA_FOLDER))
         # Check/uncheck different options
         for key in self.checkvars:
             self.vars[key].set(int(self._getConfValue(key, 0)))

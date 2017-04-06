@@ -378,10 +378,8 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 	double old_scaleX=0, old_scaleY=0, old_scaleAngle=0;
 	old_grayA=1;
 	old_grayB=0;
-	if (rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
+	if (rowIn.containsLabel(MDL_CONTINUOUS_SCALE_X))
 	{
-		rowIn.getValue(MDL_CONTINUOUS_GRAY_A,old_grayA);
-		rowIn.getValue(MDL_CONTINUOUS_GRAY_B,old_grayB);
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_X,old_scaleX);
 		rowIn.getValue(MDL_CONTINUOUS_SCALE_Y,old_scaleY);
 		if (rowIn.containsLabel(MDL_CONTINUOUS_SCALE_ANGLE))
@@ -389,6 +387,12 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 		rowIn.getValue(MDL_CONTINUOUS_X,old_shiftX);
 		rowIn.getValue(MDL_CONTINUOUS_Y,old_shiftY);
 		rowIn.getValue(MDL_CONTINUOUS_FLIP,old_flip);
+	}
+
+	if (optimizeGrayValues && rowIn.containsLabel(MDL_CONTINUOUS_GRAY_A))
+	{
+		rowIn.getValue(MDL_CONTINUOUS_GRAY_A,old_grayA);
+		rowIn.getValue(MDL_CONTINUOUS_GRAY_B,old_grayB);
 	}
 
 	if (rowIn.containsLabel(MDL_CTF_DEFOCUSU) || rowIn.containsLabel(MDL_CTF_MODEL))
@@ -413,8 +417,17 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     filter.applyMaskSpace(Ifiltered());
 
     Matrix1D<double> p(13), steps(13);
-    p(0)=old_grayA; // a in I'=a*I+b
-    p(1)=old_grayB; // b in I'=a*I+b
+    // COSS: Gray values are optimized in transform_image_adjust_gray_values
+    if (optimizeGrayValues)
+    {
+		p(0)=old_grayA; // a in I'=a*I+b
+		p(1)=old_grayB; // b in I'=a*I+b
+    }
+    else
+    {
+		p(0)=1; // a in I'=a*I+b
+		p(1)=0; // b in I'=a*I+b
+    }
     p(4)=old_scaleX;
     p(5)=old_scaleY;
     p(6)=old_scaleAngle;
@@ -445,8 +458,16 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 			{
 				rowOut.setValue(MDL_ENABLED,-1);
 				p.initZeros();
-			    p(0)=old_grayA; // a in I'=a*I+b
-			    p(1)=old_grayB; // b in I'=a*I+b
+				if (optimizeGrayValues)
+				{
+					p(0)=old_grayA; // a in I'=a*I+b
+					p(1)=old_grayB; // b in I'=a*I+b
+				}
+				else
+				{
+					p(0)=1;
+					p(1)=0;
+				}
 			    p(4)=old_scaleX;
 			    p(5)=old_scaleY;
 			    p(6)=old_scaleAngle;
@@ -504,15 +525,18 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
 				MAT_ELEM(A,0,2)*=-1;
 			}
 			applyGeometry(BSPLINE3,Ip(),I(),A,IS_NOT_INV,DONT_WRAP);
-			MultidimArray<double> &mIp=Ip();
-			double ia=1.0/p(0);
-			double b=p(1);
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
+			if (optimizeGrayValues)
 			{
-				if (DIRECT_MULTIDIM_ELEM(mask2D,n))
-					DIRECT_MULTIDIM_ELEM(mIp,n)=ia*(DIRECT_MULTIDIM_ELEM(mIp,n)-b);
-				else
-					DIRECT_MULTIDIM_ELEM(mIp,n)=0.0;
+				MultidimArray<double> &mIp=Ip();
+				double ia=1.0/p(0);
+				double b=p(1);
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mIp)
+				{
+					if (DIRECT_MULTIDIM_ELEM(mask2D,n))
+						DIRECT_MULTIDIM_ELEM(mIp,n)=ia*(DIRECT_MULTIDIM_ELEM(mIp,n)-b);
+					else
+						DIRECT_MULTIDIM_ELEM(mIp,n)=0.0;
+				}
 			}
 			Ip.write(fnImgOut);
 		}
@@ -532,8 +556,11 @@ void ProgAngularContinuousAssign2::processImage(const FileName &fnImg, const Fil
     rowOut.setValue(MDL_SHIFT_Y,    0.);
     rowOut.setValue(MDL_FLIP,       false);
     rowOut.setValue(MDL_COST,       cost);
-    rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(0));
-    rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
+    if (optimizeGrayValues)
+    {
+		rowOut.setValue(MDL_CONTINUOUS_GRAY_A,p(0));
+		rowOut.setValue(MDL_CONTINUOUS_GRAY_B,p(1));
+    }
     rowOut.setValue(MDL_CONTINUOUS_SCALE_X,p(4));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_Y,p(5));
     rowOut.setValue(MDL_CONTINUOUS_SCALE_ANGLE,p(6));
