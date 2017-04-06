@@ -205,7 +205,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
         relionPath = os.environ['LOCALREC_RELION_HOME']
         if getRelionVersion() != '1.4':
             errors.append("Relion version must be 1.4. Please add "
-                          "LOCALREC_RELION_HOME = path/to/reion-1.4 into your "
+                          "LOCALREC_RELION_HOME = path/to/relion-1.4 into your "
                           "config file.")
         if not os.path.exists(relionPath):
             errors.append("%s does not exists. Contact with your system manager"
