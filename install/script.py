@@ -443,7 +443,7 @@ env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
 
 env.addPackage('localrec', version='1.2.0',
-               tar='localrec-1.2.0-beta.3.tgz')
+               tar='localrec-1.2.0.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
