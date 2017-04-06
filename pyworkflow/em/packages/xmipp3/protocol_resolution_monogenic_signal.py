@@ -49,7 +49,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
     """    
     Given a map the protocol assigns local resolutions to each pixel of the map.
     """
-    _label = 'local resolution MonoRes'
+    _label = 'local MonoRes'
     _version = VERSION_1_1
     
     def __init__(self, **args):
@@ -68,44 +68,47 @@ class XmippProtMonoRes(ProtAnalysis3D):
                            'is performed via half volumes.')
 
         form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
-                      label="Input Volume",
+                      label="Input Volume", important=True,
                       condition = 'not halfVolumes',
                       help='Select a volume for determining its local resolution.')
 
         form.addParam('inputVolume', PointerParam, pointerClass='Volume',
-                      label="Input Volume",
-                      condition = 'halfVolumes',
+                      label="Volume Half 1", important=True,
+                      condition = 'halfVolumes', 
                       help='Select a volume for determining its local resolution.')
 
         form.addParam('inputVolume2', PointerParam, pointerClass='Volume',
-                      label="Second Half Volume",
+                      label="Volume Half 2", important=True,
                       condition='halfVolumes',
                       help='Select a second volume for determining a local resolution.')
 
         form.addParam('Mask', PointerParam, pointerClass='VolumeMask', 
                       condition='(halfVolumes) or (not halfVolumes)',
-                      label="Binary Mask",
+                      label="Binary Mask", important=True,
                       help='The mask determines which points are specimen and which ones not')
 
-        form.addParam('symmetry', StringParam, default='c1',
+        group = form.addGroup('Extra parameters')
+        group.addParam('symmetry', StringParam, default='c1',
                       label="Symmetry",
-                      help='Symmetry group. By default = c1')
+                      help='Symmetry group. By default = c1.'
+                      'See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
+                      'for a description of the symmetry groups format, If no symmetry is present, give c1.')
 
-        line = form.addLine('Resolution Range (A)',
+        line = group.addLine('Resolution Range (A)',
                             help="If the user knows the range of resolutions or only a"
                                  " range of frequency needs to be analysed")
         
-        form.addParam('significance', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
+        group.addParam('significance', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
                       label="Significance",
                       help='Relution is computed using hipothesis tests, this value determines'
                       'the significance of that test')
         
-        form.addParam('isPremasked', BooleanParam, default=False,
+        group.addParam('isPremasked', BooleanParam, default=False,
                       label="Is the original premasked?",
                       help='Sometimes the original volume is masked inside a spherical mask. In this case'
                       'please select yes')
         
-        form.addParam('volumeRadius', FloatParam, default=-1,
+        group.addParam('volumeRadius', FloatParam, default=-1,
                       label="Spherical mask radius",
                       condition = 'isPremasked and not halfVolumes', 
                       help='When the original volume is originally premasked, the noise estimation ought'
@@ -113,7 +116,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'box. The radius value, determines the radius of the spherical premask. By default'
                       'radius = -1 use the half of the volume size as radius')
         
-        form.addParam('volumeRadiusHalf', FloatParam, default=-1,
+        group.addParam('volumeRadiusHalf', FloatParam, default=-1,
                       label="Spherical mask radius",
                       condition = 'halfVolumes and isPremasked',
                       help='When the origianl volume is originally premasked, the noise estimation ought'
@@ -126,7 +129,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         line.addParam('stepSize', FloatParam, allowsNull=True,
                       expertLevel=LEVEL_ADVANCED, label='Step')
 
-        form.addParam('filterInput', BooleanParam, default=False, 
+        group.addParam('filterInput', BooleanParam, default=False, 
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
 
@@ -221,7 +224,6 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim
         params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
-        #params += ' --linear '
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --trimmed %f' % 95  #This parameter only considers resolution values in percentile 95
