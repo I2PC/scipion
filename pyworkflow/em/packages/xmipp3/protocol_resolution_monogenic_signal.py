@@ -47,7 +47,7 @@ METADATA_MASK_FILE = 'mask_data.xmd'
 
 class XmippProtMonoRes(ProtAnalysis3D):
     """    
-    Given a map the protocol assigns local resolutions to each pixel of the map.
+    Given a map the protocol assigns local resolutions to each voxel of the map.
     """
     _label = 'local MonoRes'
     _version = VERSION_1_1
@@ -226,7 +226,6 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
-        params += ' --trimmed %f' % 95  #This parameter only considers resolution values in percentile 95
         params += ' --md_outputdata %s' % self._getExtraPath('mask_data.xmd')  
         if self.filterInput.get():
             params += ' --filtered_volume %s' % self._getExtraPath(FN_FILTERED_MAP)
