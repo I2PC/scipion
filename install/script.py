@@ -397,7 +397,7 @@ env.addPackage('unblur', version='1.0.2',
                tar='unblur_1.0.2.tgz')
 
 eman2_commands = [('./eman2-installer',
-                   'eman2.bashrc')]
+                   'eman2.*rc')]
 
 env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
