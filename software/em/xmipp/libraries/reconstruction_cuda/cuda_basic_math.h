@@ -23,6 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#ifndef CUDA_BASICMAT_H
+#define CUDA_BASICMAT_H
 
 typedef unsigned int uint;
 typedef unsigned short ushort;
@@ -298,3 +300,4 @@ inline __host__ __device__ float3 reflect(float3 i, float3 n)
 {
 	return i - 2.0f * n * dot(n,i);
 }
+#endif
