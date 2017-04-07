@@ -42,19 +42,8 @@ class TestWorkflowRelionPick(TestWorkflow):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
-        files={
-            'allMics': 'micrographs/*.mrc',
-            'boxingDir': 'pickingEman',
-            'input_particles': 'gold/input_particles.star',
-            'particles': 'gold/particles.sqlite',
-            'posAllDir': 'pickingXmipp',
-            'relion_it020_data': 'gold/relion_it020_data.star',
-            'volume': 'volumes/reference.mrc',
-            'import1_data_star': 'import/case1/classify3d_small_it038_data.star',
-            'import2_data_star': 'import/case2/relion_it015_data.star',
-        }
 
-    def test_ribo(self):
+    def _runPickWorkflow(self):
         #First, import a set of micrographs
         print "Importing a set of micrographs..."
         protImport = self.newProtocol(ProtImportMicrographs,
@@ -127,6 +116,11 @@ class TestWorkflowRelionPick(TestWorkflow):
 
         self.launchProtocol(protPick1)
 
+        return protPick1
+
+    def test_ribo(self):
+        protPick1 = self._runPickWorkflow()
+
         # Launch the same picking run but now for all micrographs
         protPick2 = self.proj.copyProtocol(protPick1)
         protPick2.setObjLabel('autopick refs (all)')
@@ -145,4 +139,49 @@ class TestWorkflowRelionPick(TestWorkflow):
         protPick4.setObjLabel('autopick refs (optimize) 1 GPU')
         protPick4.gpusToUse.set('0')
         self.launchProtocol(protPick4)
-        
+
+
+class TestWorkflowRelionExtract(TestWorkflowRelionPick):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.ds = DataSet.getDataSet('relion_tutorial')
+
+    def _checkOutput(self, prot, **kwargs):
+        # Read expected parameters
+        size = kwargs.get('size', 2618)
+        sampling = kwargs.get('sampling', 7.08)
+        dim = kwargs.get('dim', 64)
+
+        outputParts = getattr(prot, 'outputParticles', None)
+
+        self.assertIsNotNone(outputParts)
+        self.assertEqual(outputParts.getSize(), size)
+
+        first = outputParts.getFirstItem()
+        self.assertEqual(first.getDim(), (dim, dim, 1))
+        self.assertAlmostEqual(first.getSamplingRate(), sampling, delta=0.001)
+
+    def test_ribo(self):
+        """ Reimplement this test to run several extract cases. """
+        protPick1 = self._runPickWorkflow()
+
+        protExtract = self.newProtocol(ProtRelionExtractParticles,
+                                       objLabel='extract - box=64',
+                                       boxSize=64,
+                                       doInvert=True
+                                       )
+
+        protExtract.inputCoordinates.set(protPick1.outputCoordinates)
+
+        self.launchProtocol(protExtract)
+        self._checkOutput(protExtract)
+
+        # Now test the re-scale option
+        protExtract2 = self.proj.copyProtocol(protExtract)
+        protExtract2.setObjLabel('extract - rescale 32')
+        protExtract2.doRescale.set(True)
+        protExtract2.rescaledSize.set(32)
+        self.launchProtocol(protExtract2)
+
+        self._checkOutput(protExtract2, dim=32, sampling=14.16)

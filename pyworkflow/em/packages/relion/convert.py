@@ -859,3 +859,92 @@ def readCoordinates(mic, fileName, coordsSet):
         coord.setMicrograph(mic)
         coordsSet.append(coord)
 
+
+def writeSetOfCoordinates(coordSet, outputDir):
+    pass
+
+
+def writeCoordinates(mic, fileName):
+    pass
+
+
+def openStar(fn, extraLabels=False):
+    # We are going to write metadata directy to file to do it faster
+    f = open(fn, 'w')
+    s = """
+data_
+
+loop_
+_rlnCoordinateX
+_rlnCoordinateY
+"""
+    if extraLabels:
+        s += "_rlnClassNumber\n"
+        s += "_rlnAutopickFigureOfMerit\n"
+        s += "_rlnAnglePsi\n"
+    f.write(s)
+    return f
+
+
+def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
+    """ Convert a SetOfCoordinates to Relion star files.
+    Params:
+        posDir: the output directory where to generate the files.
+        coordSet: the input SetOfCoordinates that will be converted.
+         getStarFileFunc: function object that receives the micrograph name
+            and return the coordinates star file (only the base filename).
+        scale: pass a value if the coordinates have a different scale.
+            (for example when extracting from micrographs with a different
+            pixel size than during picking)
+    """
+    boxSize = coordSet.getBoxSize() or 100
+
+    # Create a dictionary with the pos filenames for each micrograph
+    posDict = {}
+    for mic in coordSet.iterMicrographs():
+        posFn = os.path.basename(getStarFileFunc(mic))
+        posDict[mic.getObjId()] = join(posDir, posFn)
+
+    f = None
+    lastMicId = None
+    c = 0
+
+    extraLabels = coordSet.getFirstItem().hasAttribute('_rlnClassNumber')
+    doScale = abs(scale - 1) > 0.001
+
+    print "Scaling: %s, factor: %s" % (doScale, scale)
+
+    for coord in coordSet.iterItems(orderBy='_micId'):
+        micId = coord.getMicId()
+
+        if micId != lastMicId:
+            # we need to close previous opened file
+            if f:
+                f.close()
+                c = 0
+            f = openStar(posDict[micId], extraLabels)
+            lastMicId = micId
+        c += 1
+
+        if doScale:
+            x = coord.getX() * scale
+            y = coord.getY() * scale
+            print "coord: %s %s, new: %s %s" % (coord.getX(), coord.getY(),
+                                                x, y)
+        else:
+            x = coord.getX()
+            y = coord.getY()
+
+        if not extraLabels:
+            f.write("%d %d \n" % (x, y))
+        else:
+            f.write("%d %d %d %0.6f %0.6f\n"
+                    % (x, y,
+                       coord._rlnClassNumber,
+                       coord._rlnAutopickFigureOfMerit,
+                       coord._rlnAnglePsi))
+
+    if f:
+        f.close()
+
+    return posDict.values()
