@@ -1,4 +1,4 @@
- GLO [nummps]                 = 0            ; Use all available OMP processors
+ [nummps]                     = 0            ; Use all available OMP processors
  GLO [unaligned_images]       = 'particles'  ; Unaligned images stack (usually links)
  GLO [next_group_align]       = 'docfile'    ; Alignment parameter output file
  GLO [next_group_vol]         = 'volume'     ; Next group volumes

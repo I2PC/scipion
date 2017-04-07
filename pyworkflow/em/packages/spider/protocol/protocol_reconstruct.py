@@ -111,8 +111,7 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                   '[next_group_align]': "'docfile'",
                   '[nummps]': self.numberOfThreads.get()
                   }     
-        writeScript(getScript(script),
-                    self._getPath('recons_fourier.txt'), params)
+        writeScript(script, self._getPath('recons_fourier.txt'), params)
         runScript(script, 'txt/stk', log=self._log,
                          cwd=self.getWorkingDir())
         
