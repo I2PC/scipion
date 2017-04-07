@@ -53,7 +53,7 @@ fr l
 [temp_eigenvalues_text]eigenvalues.txt
 
 vm
-echo "if(! -d [ca_dir]) mkdir [ca_dir]"|csh
+echo "[ ! -d [ca_dir] ] && mkdir [ca_dir]"|sh
 
 md
 set mp

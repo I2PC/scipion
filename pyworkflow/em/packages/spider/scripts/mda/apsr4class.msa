@@ -3,6 +3,7 @@
 ; Using SPIDER command AP SR
 
 ; ---------------- Parameters ----------------
+x30 = 0                ; number of threads to use, 0 = use all
 [inner-rad] = 5        ; first ring radius for alignment, pixels
 [outer-rad] = 44       ; expected object radius, pixels
 ;;[obj-diam] = 88        ; expected object diameter, pixels
@@ -35,9 +36,7 @@ vm
 echo "Performing reference-free alignment"; date
 
 vm
-echo "if(! -d [apsr_dir]) mkdir -p [apsr_dir]"|csh
-;vm
-;echo "if(! -d [aligned_dir]) mkdir -p [aligned_dir]"|csh
+echo "[ ! -d [apsr_dir] ] && mkdir -p [apsr_dir]"|sh
 
 ; GET IMAGE DIMENSION
 
@@ -77,10 +76,10 @@ _2      ; OUTPUT
 (3)     ; Gaussian low-pass
 (0.02)  ; filter radius
 
-;; use all processors
-;md
-;set mp
-;(0)
+; use x30 processors
+md
+set mp
+x30
 
 ; run reference-free alignment
 AP SR
