@@ -64,7 +64,7 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
         # Create new stacks and selfiles per defocus groups
         self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
 
-        self._insertFunctionStep('runScriptStep')
+        self._insertFunctionStep('runScriptStep', 'recons_fourier.txt')
                 
         self._insertFunctionStep('createOutputStep')
     
@@ -111,9 +111,9 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                   '[next_group_align]': "'docfile'",
                   '[nummps]': self.numberOfThreads.get()
                   }     
-        writeScript('recons_fourier.txt', 
+        writeScript(script,
                     self._getPath('recons_fourier.txt'), params)
-        runScript('recons_fourier.txt', 'txt/stk', log=self._log,
+        runScript(script, 'txt/stk', log=self._log,
                          cwd=self.getWorkingDir())
         
     def createOutputStep(self):
