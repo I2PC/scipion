@@ -496,8 +496,8 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
             for mic in self.getMicrographList():
                 micSubSet.append(mic)
             self._defineOutputs(outputMicrographs=micSubSet)
-            self._defineSourceRelation(self.getInputMicrographsPointer(),
-                                       micSubSet)
+            self._defineTransformRelation(self.getInputMicrographsPointer(),
+                                          micSubSet)
             micSet = micSubSet
         else:
             # Clean up if previously created the outputMicrographs
