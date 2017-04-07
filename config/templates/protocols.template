@@ -209,8 +209,8 @@ Protocols SPA = [
 		]}
     ]},
 	{"tag": "section", "text": "Model Building", "openItem": "False", "children": [
-        {"tag": "protocol", "value": "XmippProtExtractUnit",   "text": "default"}
-        {"tag": "protocol", "value": "ProtRunRefmac",   "text": "default"}
+        {"tag": "protocol", "value": "XmippProtExtractUnit",   "text": "default"},
+        {"tag": "protocol", "value": "CCP4ProtRunRefmac",   "text": "default"}
     ]}
 
     ]
