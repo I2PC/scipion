@@ -26,18 +26,19 @@
 
 
 #include "cuda_copy_data.h"
+#include "cuda_check_errors.h"
 
 cudaPitchedPtr CopyVolumeHostToDevice(const float* host, uint width, uint height, uint depth)
 {
 	cudaPitchedPtr device = {0};
 	const cudaExtent extent = make_cudaExtent(width * sizeof(float), height, depth);
-	cudaMalloc3D(&device, extent);
+	gpuErrchk(cudaMalloc3D(&device, extent));
 	cudaMemcpy3DParms p = {0};
 	p.srcPtr = make_cudaPitchedPtr((void*)host, width * sizeof(float), width, height);
 	p.dstPtr = device;
 	p.extent = extent;
 	p.kind = cudaMemcpyHostToDevice;
-	cudaMemcpy3D(&p);
+	gpuErrchk(cudaMemcpy3D(&p));
 	return device;
 }
 
@@ -49,6 +50,6 @@ void CopyVolumeDeviceToHost(float* host, const cudaPitchedPtr device, uint width
 	p.dstPtr = make_cudaPitchedPtr((void*)host, width * sizeof(float), width, height);
 	p.extent = extent;
 	p.kind = cudaMemcpyDeviceToHost;
-	cudaMemcpy3D(&p);
-	cudaFree(device.ptr);  //free the GPU volume
+	gpuErrchk(cudaMemcpy3D(&p));
+	gpuErrchk(cudaFree(device.ptr));  //free the GPU volume
 }
