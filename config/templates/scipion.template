@@ -36,6 +36,7 @@ GCTF = Gctf-v1.06_sm_20_cu7.5_x86_64
 # GCTF_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 IMAGIC_HOME = %(EM_ROOT)s/imagic
 LOCALREC_HOME = %(EM_ROOT)s/localrec-1.2.0
+LOCALREC_RELION_HOME = %(EM_ROOT)s/relion-1.4
 MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None

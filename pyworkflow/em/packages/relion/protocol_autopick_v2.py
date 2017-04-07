@@ -27,7 +27,6 @@
 import os
 from os.path import relpath
 import pyworkflow.protocol.params as params
-from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 from pyworkflow.em.constants import RELATION_CTF, ALIGN_NONE
 from protocol_base import ProtRelionBase
@@ -48,22 +47,24 @@ MICS_SUBSET = 1
 
 class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     """
-    This Relion protocol uses 2D class averages as templates to run the auto-picking
-    job-type. In this first stage, the auto-picking will be run just in few micrographs
-    to optimise two of its main parameters ( _Picking threshold_ and _Minimum inter-particle distance_).
+    This Relion protocol uses the 'relion_autopick' program to pick particles
+    from micrographs, either using templates or gaussian blobs.
 
-    In order to save time, only 2 or 3 micrographs should be used with their CTF
-    information. One should use representative micrographs for the entire data set,
-    e.g. a high and a low-defocus one, and/or with thin or thick ice.
+    The picking with this protocol is divided in three steps:
+    1) Run with 'Optimize' option for several (less than 30) micrographs.
+    2) Execute the wizard to refine the picking parameters.
+    3) Run with 'Pick all' option to pick particles from all micrographs.
 
-    The expensive part of this calculation is to calculate a probability-based figure-of-merit
-    (related to the cross-correlation coefficient between each rotated reference and all positions
-    in the micrographs. This calculation is followed by a much cheaper peak-detection algorithm that
-    uses the threshold and minimum distance parameters mentioned above. Because these parameters
-    need to be optimised, this first stage of the auto-picking will write out so-called FOM maps.
-    These are two large (micrograph-sized) files per reference. To avoid running into hard disc I/O
-    problems, the autopicking program can only be run sequentially (hence there is no option to use
-    more than one single MPI processor).
+    The first steps will use internally the option '--write-fom-maps' to write
+    to disk the FOM maps. The expensive part of this calculation is to calculate
+    a probability-based figure-of-merit (related to the cross-correlation
+    coefficient between each rotated reference and all positions in the
+    micrographs. That's why it is only done in an small subset of the
+    micrographs, where one should use representative micrographs for the entire
+    data set, e.g. a high and a low-defocus one, and/or with thin or thick ice.
+
+    Step 2 uses a much cheaper peak-detection algorithm that uses the threshold
+    and minimum distance parameters.
     """
     _label = 'auto-picking'
 
@@ -76,16 +77,11 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         convertId = self._insertFunctionStep('convertInputStep',
                                              self.getInputMicrographs().strId(),
                                              refId, self.runType.get())
-        # Insert the picking steps for each micrograph separately 
-        # (Relion requires in that way if micrographs have different dimensions)
         allMicSteps = []
         micStar = self._getPath('input_micrographs.star')
         autopickId = self._insertAutopickStep(micStar, convertId)
         allMicSteps.append(autopickId)
 
-        #for mic in self.getMicrographList():
-        #    autopickId = self._insertAutopickStep(mic, convertId)
-        #    allMicSteps.append(autopickId)
         # Register final coordinates as output
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=allMicSteps)
@@ -116,9 +112,6 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(),
                                                          'star'))
 
-    def _postprocessMicrographRow(self, img, imgRow):
-        imgRow.writeToFile(self._getMicStarFile(img))
-
     def convertInputStep(self, micsId, refsId, runType):
         # runType is passed as parameter to force a re-execute of this step
         # if there is a change in the type
@@ -133,8 +126,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         micStar = self._getPath('input_micrographs.star')
         writeSetOfMicrographs(self.getMicrographList(), micStar,
                               alignType=ALIGN_NONE,
-                              preprocessImageRow=self._preprocessMicrographRow,
-                              postprocessImageRow=self._postprocessMicrographRow)
+                              preprocessImageRow=self._preprocessMicrographRow)
 
         if self.useInputReferences():
             writeReferences(self.getInputReferences(),
@@ -142,8 +134,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
 
     def _pickMicrograph(self, micStarFile, params, threshold,
                                minDistance, fom):
-        """ Launch the 'relion_autopick' for a micrograph with the
-        given parameters. """
+        """ Launch the 'relion_autopick' for all micrographs. """
         params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
         params += ' --threshold %0.3f --min_distance %0.3f %s' % (threshold,
                                                                   minDistance,
