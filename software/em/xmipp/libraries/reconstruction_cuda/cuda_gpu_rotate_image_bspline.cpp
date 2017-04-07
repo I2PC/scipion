@@ -1,228 +1,39 @@
 
 //Host includes
-#include "cuda_gpu_rotate_image_v2.h"
+#include "cuda_gpu_rotate_image_bspline.h"
+
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
+#include "cuda_basic_math.h"
 
 //CUDA includes
 #include <cuda_runtime.h>
 #include "cuda_copy_data.h"
 #include "cuda_prefiltering_rotation.h"
-
-
-// 2D float texture
-texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
-
-// 3D float texture
-texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
-
+#include "cuda_interpolation2D_rotation.h"
+#include "cuda_interpolation3D_rotation.h"
+#include "cuda_check_errors.h"
 
 
 //CUDA functions
-template<class floatN>
-__device__ void bspline_weights(floatN fraction, floatN& w0, floatN& w1, floatN& w2, floatN& w3)
-{
-	const floatN one_frac = 1.0f - fraction;
-	const floatN squared = fraction * fraction;
-	const floatN one_sqd = one_frac * one_frac;
 
-	w0 = 1.0f/6.0f * one_sqd * one_frac;
-	w1 = 2.0f/3.0f - 0.5f * squared * (2.0f-fraction);
-	w2 = 2.0f/3.0f - 0.5f * one_sqd * (2.0f-one_frac);
-	w3 = 1.0f/6.0f * squared * fraction;
-}
+void cuda_rotate_image_bspline(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double *ang, int wrap, int first_call){
 
+//#define TIME
 
-template<class floatN>
-__device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
-{
-	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
-	const float2 index = floor(coord_grid);
-	const float2 fraction = coord_grid - index;
-	float2 w0, w1, w2, w3;
-	bspline_weights(fraction, w0, w1, w2, w3);
-
-	const float2 g0 = w0 + w1;
-	const float2 g1 = w2 + w3;
-	const float2 h0 = (w1 / g0) - make_float2(0.5f) + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
-	const float2 h1 = (w3 / g1) + make_float2(1.5f) + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
-
-	// fetch the four linear interpolations
-	floatN tex00 = tex2D(tex, h0.x, h0.y);
-	floatN tex10 = tex2D(tex, h1.x, h0.y);
-	floatN tex01 = tex2D(tex, h0.x, h1.y);
-	floatN tex11 = tex2D(tex, h1.x, h1.y);
-
-	// weigh along the y-direction
-	tex00 = g0.y * tex00 + g1.y * tex01;
-	tex10 = g0.y * tex10 + g1.y * tex11;
-
-	// weigh along the x-direction
-	return (g0.x * tex00 + g1.x * tex10);
-}
-
-
-template<class floatN>
-__device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, float3 coord)
-{
-	// shift the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float3 coord_grid = coord - 0.5f;
-	const float3 index = floor(coord_grid);
-	const float3 fraction = coord_grid - index;
-	float3 w0, w1, w2, w3;
-	bspline_weights(fraction, w0, w1, w2, w3);
-
-	const float3 g0 = w0 + w1;
-	const float3 g1 = w2 + w3;
-	const float3 h0 = (w1 / g0) - 0.5f + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
-	const float3 h1 = (w3 / g1) + 1.5f + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
-
-	// fetch the eight linear interpolations
-	// weighting and fetching is interleaved for performance and stability reasons
-	floatN tex000 = tex3D(tex, h0.x, h0.y, h0.z);
-	floatN tex100 = tex3D(tex, h1.x, h0.y, h0.z);
-	tex000 = g0.x * tex000 + g1.x * tex100;  //weigh along the x-direction
-	floatN tex010 = tex3D(tex, h0.x, h1.y, h0.z);
-	floatN tex110 = tex3D(tex, h1.x, h1.y, h0.z);
-	tex010 = g0.x * tex010 + g1.x * tex110;  //weigh along the x-direction
-	tex000 = g0.y * tex000 + g1.y * tex010;  //weigh along the y-direction
-	floatN tex001 = tex3D(tex, h0.x, h0.y, h1.z);
-	floatN tex101 = tex3D(tex, h1.x, h0.y, h1.z);
-	tex001 = g0.x * tex001 + g1.x * tex101;  //weigh along the x-direction
-	floatN tex011 = tex3D(tex, h0.x, h1.y, h1.z);
-	floatN tex111 = tex3D(tex, h1.x, h1.y, h1.z);
-	tex011 = g0.x * tex011 + g1.x * tex111;  //weigh along the x-direction
-	tex001 = g0.y * tex001 + g1.y * tex011;  //weigh along the y-direction
-
-	return (g0.z * tex000 + g1.z * tex001);  //weigh along the z-direction
-}
-
-
-
-__global__ void
-interpolate_kernel2D(float* output, uint width, float2 extent, double* angle, float2 shift)
-{
-	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
-	uint i = __umul24(y, width) + x;
-
-	float x0 = (float)x;
-	float y0 = (float)y;
-
-	float x1 = (float)angle[0] * x0 + (float)angle[1] * y0 + shift.x;
-	float y1 = (float)angle[3] * x0 + (float)angle[4] * y0 + shift.y;
-
-	output[i] = cubicTex2D<float>(texRef, x1, y1);
-
-}
-
-
-__global__ void
-interpolate_kernel3D(float* output, uint width, uint height, float3 extent, double* angle, float3 shift)
-{
-	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
-	uint z = __umul24(blockIdx.z, blockDim.z) + threadIdx.z;
-	uint i = (width * height * z) + (width * y) + x;
-
-	float x0 = (float)x;
-	float y0 = (float)y;
-	float z0 = (float)z;
-
-	float x1 = (float)angle[0] * x0 + (float)angle[1] * y0 + (float)angle[2] * z0 + shift.x;
-	float y1 = (float)angle[3] * x0 + (float)angle[4] * y0 + (float)angle[5] * z0 + shift.y;
-	float z1 = (float)angle[6] * x0 + (float)angle[7] * y0 + (float)angle[8] * z0 + shift.z;
-
-	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
-
-}
-
-
-cudaPitchedPtr interpolate2D(uint width, uint height, double* angle)
-{
-	// Prepare the geometry
-	float xOrigin = floor(width/2);
-	float yOrigin = floor(height/2);
-	float x0 = (float)angle[0] * (xOrigin) + (float)angle[1] * (yOrigin);
-	float y0 = (float)angle[3] * (xOrigin) + (float)angle[4] * (yOrigin);
-	float xShift = xOrigin - x0;
-	float yShift = yOrigin - y0;
-
-	// Allocate the output image
-	float* output;
-	cudaMalloc((void**)&output, width * height * sizeof(float));
-	double* d_angle;
-	cudaMalloc((void**)&d_angle, 9 * sizeof(double));
-	cudaMemcpy(d_angle, angle, 9 * sizeof(double), cudaMemcpyHostToDevice);
-
-
-	// Visit all pixels of the output image and assign their value
-	dim3 blockSize(min(PowTwoDivider(width), 16), min(PowTwoDivider(height), 16));
-	dim3 gridSize(width / blockSize.x, height / blockSize.y);
-	float2 shift = make_float2((float)xShift, (float)yShift);
-	float2 extent = make_float2((float)width, (float)height);
-	interpolate_kernel2D<<<gridSize, blockSize>>>(output, width, extent, d_angle, shift);
-
-	cudaDeviceSynchronize();
-	cudaFree(d_angle);
-
-	return make_cudaPitchedPtr(output, width * sizeof(float), width, height);
-}
-
-
-void interpolate3D(uint width, uint height, uint depth, double* angle, float* output)
-{
-	// Prepare the geometry
-	float xOrigin = floor(width/2);
-	float yOrigin = floor(height/2);
-	float zOrigin = floor(depth/2);
-
-	float x0 = (float)angle[0] * xOrigin + (float)angle[1] * yOrigin + (float)angle[2] * zOrigin;
-	float y0 = (float)angle[3] * xOrigin + (float)angle[4] * yOrigin + (float)angle[5] * zOrigin;
-	float z0 = (float)angle[6] * xOrigin + (float)angle[7] * yOrigin + (float)angle[8] * zOrigin;
-
-	float xShift = xOrigin - x0;
-	float yShift = yOrigin - y0;
-	float zShift = zOrigin - z0;
-
-	double* d_angle;
-	cudaMalloc((void**)&d_angle, 9 * sizeof(double));
-	cudaMemcpy(d_angle, angle, 9 * sizeof(double), cudaMemcpyHostToDevice);
-
-	// Visit all pixels of the output image and assign their value
-	int numTh = 10;
-	const dim3 blockSize(numTh, numTh, numTh);
-	int numBlkx = (int)(width)/numTh;
-	if((width)%numTh>0){
-		numBlkx++;
+	if(first_call==1){
+		gpuErrchk(cudaSetDevice(0));
+		gpuErrchk(cudaFree(0));
 	}
-	int numBlky = (int)(height)/numTh;
-	if((height)%numTh>0){
-		numBlky++;
-	}
-	int numBlkz = (int)(depth)/numTh;
-	if((depth)%numTh>0){
-		numBlkz++;
-	}
-	const dim3 gridSize(numBlkx, numBlky, numBlkz);
-
-	float3 shift = make_float3((float)xShift, (float)yShift, (float)zShift);
-	float3 extent = make_float3((float)width, (float)height, (float)depth);
-	interpolate_kernel3D<<<gridSize, blockSize>>>(output, width, height, extent, d_angle, shift);
-
-	cudaDeviceSynchronize();
-	cudaFree(d_angle);
-
-}
 
 
-void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double *ang){
+#ifdef TIME
+	clock_t t_ini0, t_fin0;
+	double secs0;
+	t_ini0 = clock();
+#endif
 
-	//std::cerr  << "Inside CUDA function " << ang << std::endl;
-
-	//CUDA code
 
 	struct cudaPitchedPtr bsplineCoeffs, cudaOutput;
 	bsplineCoeffs = CopyVolumeHostToDevice(image, (uint)Xdim, (uint)Ydim, (uint)Zdim);
@@ -231,66 +42,150 @@ void cuda_rotate_image_v2(float *image, float *rotated_image, size_t Xdim, size_
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
     cudaArray* cuArray;
 
+#ifdef TIME
+    t_fin0 = clock();
+    secs0 = (double)(t_fin0 - t_ini0) / CLOCKS_PER_SEC;
+    printf("CopyVolumeHostToDevice: %.16g milisegundos\n", (secs0) * 1000.0);
+#endif
+
 
     if(Zdim==1){
+
+#ifdef TIME
+	clock_t t_ini2, t_fin2;
+	double secs2;
+	t_ini2 = clock();
+#endif
 
     	//Filtering process (first step)
     	CubicBSplinePrefilter2D((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim);
 
-    	cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
+    	gpuErrchk(cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim));
     	// Copy to device memory some data located at address h_data in host memory
-    	cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
+    	gpuErrchk(cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice));
 
     	// Bind the array to the texture reference
-    	cudaBindTextureToArray(texRef, cuArray, channelDesc);
-    	cudaFree(bsplineCoeffs.ptr);
+    	gpuErrchk(cudaBindTextureToArray(texRef, cuArray, channelDesc));
+    	gpuErrchk(cudaFree(bsplineCoeffs.ptr));
 
     	// Specify texture object parameters
     	texRef.filterMode = cudaFilterModeLinear;
     	texRef.normalized = false;
+    	texRef.addressMode[0] = (cudaTextureAddressMode)wrap;
+    	texRef.addressMode[1] = (cudaTextureAddressMode)wrap;
+
+#ifdef TIME
+    t_fin2 = clock();
+    secs2 = (double)(t_fin2 - t_ini2) / CLOCKS_PER_SEC;
+    printf("Memory host to device and prefiltering: %.16g milisegundos\n", (secs2) * 1000.0);
+#endif
+
+#ifdef TIME
+	clock_t t_ini3, t_fin3;
+	double secs3;
+	t_ini3 = clock();
+#endif
 
     	//Interpolation (second step)
     	cudaOutput = interpolate2D(Xdim, Ydim, ang);
-    	cudaDeviceSynchronize();
+    	gpuErrchk(cudaDeviceSynchronize());
+
+#ifdef TIME
+    t_fin3 = clock();
+    secs3 = (double)(t_fin3 - t_ini3) / CLOCKS_PER_SEC;
+    printf("Kernel (interpolation): %.16g milisegundos\n", secs3 * 1000.0);
+#endif
+
+#ifdef TIME
+	clock_t t_ini4, t_fin4;
+	double secs4;
+	t_ini4 = clock();
+#endif
 
     	CopyVolumeDeviceToHost(rotated_image, cudaOutput, Xdim, Ydim, Zdim);
 
+#ifdef TIME
+    t_fin4 = clock();
+    secs4 = (double)(t_fin4 - t_ini4) / CLOCKS_PER_SEC;
+    printf("Memory device to host: %.16g milisegundos\n", secs4 * 1000.0);
+#endif
+
 
     }else if (Zdim>1){
+
+
+#ifdef TIME
+	clock_t t_ini5, t_fin5;
+	double secs5;
+	t_ini5 = clock();
+#endif
 
     	//Filtering process (first step)
     	CubicBSplinePrefilter3D((float*)bsplineCoeffs.ptr, (uint)bsplineCoeffs.pitch, (uint)Xdim, (uint)Ydim, (uint)Zdim);
 
     	cudaExtent volumeExtent = make_cudaExtent(Xdim, Ydim, Zdim);
-    	cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent);
+    	gpuErrchk(cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent));
     	cudaMemcpy3DParms p = {0};
     	p.extent   = volumeExtent;
     	p.srcPtr   = bsplineCoeffs;
     	p.dstArray = cuArray;
     	p.kind     = cudaMemcpyDeviceToDevice;
-    	cudaMemcpy3D(&p);
+    	gpuErrchk(cudaMemcpy3D(&p));
     	// bind array to 3D texture
-    	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
-    	cudaFree(bsplineCoeffs.ptr);
+    	gpuErrchk(cudaBindTextureToArray(texRefVol, cuArray, channelDesc));
+    	gpuErrchk(cudaFree(bsplineCoeffs.ptr));
 
     	// Specify texture object parameters
   		texRefVol.filterMode = cudaFilterModeLinear;
     	texRefVol.normalized = false;
+    	texRefVol.addressMode[0] = (cudaTextureAddressMode)wrap;
+    	texRefVol.addressMode[1] = (cudaTextureAddressMode)wrap;
+    	texRefVol.addressMode[2] = (cudaTextureAddressMode)wrap;
 
     	float *d_output;
-    	cudaMalloc((void **)&d_output, Xdim * Ydim * Zdim * sizeof(float));
+    	gpuErrchk(cudaMalloc((void **)&d_output, Xdim * Ydim * Zdim * sizeof(float)));
+
+#ifdef TIME
+    t_fin5 = clock();
+    secs5 = (double)(t_fin5 - t_ini5) / CLOCKS_PER_SEC;
+    printf("Memory host to device and prefiltering: %.16g milisegundos\n", (secs5) * 1000.0);
+#endif
+
+#ifdef TIME
+	clock_t t_ini6, t_fin6;
+	double secs6;
+	t_ini6 = clock();
+#endif
 
     	//Interpolation (second step)
     	interpolate3D(Xdim, Ydim, Zdim, ang, d_output);
-    	cudaDeviceSynchronize();
+    	gpuErrchk(cudaDeviceSynchronize());
 
-    	cudaMemcpy(rotated_image, d_output, Xdim * Ydim * Zdim * sizeof(float), cudaMemcpyDeviceToHost);
-    	cudaFree(d_output);
+#ifdef TIME
+    t_fin6 = clock();
+    secs6 = (double)(t_fin6 - t_ini6) / CLOCKS_PER_SEC;
+    printf("Kernel (interpolation): %.16g milisegundos\n", secs6 * 1000.0);
+#endif
+
+#ifdef TIME
+	clock_t t_ini7, t_fin7;
+	double secs7;
+	t_ini7 = clock();
+#endif
+
+		gpuErrchk(cudaMemcpy(rotated_image, d_output, Xdim * Ydim * Zdim * sizeof(float), cudaMemcpyDeviceToHost));
+		gpuErrchk(cudaFree(d_output));
+
+#ifdef TIME
+    t_fin7 = clock();
+    secs7 = (double)(t_fin7 - t_ini7) / CLOCKS_PER_SEC;
+    printf("Memory device to host: %.16g milisegundos\n", secs7 * 1000.0);
+#endif
 
     }
 
 
-    cudaFree(cuArray);
+    gpuErrchk(cudaFreeArray(cuArray));
 
 }
 
