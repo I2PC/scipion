@@ -26,18 +26,15 @@
 
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import StringParam, PointerParam, IntParam, FloatParam, EnumParam, FileParam
-from pyworkflow.em import Volume
+import pyworkflow.protocol.constants as const
+from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
 
-class ProtRunRefmac(EMProtocol):
+class CCP4ProtRunRefmac(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
     """
     _label = 'Run REFMAC5'
     _program = ""
     _version = VERSION_1_2
-    IMPORT_FROM_ID = 0
-    IMPORT_OBJ = 1
-    IMPORT_FROM_FILES = 2
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -48,31 +45,18 @@ class ProtRunRefmac(EMProtocol):
 
         form.addParam('inputVolumes', PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
-                      help='This is the unit cell volume')
-        form.addParam('inputPdbData', EnumParam, choices=['id', 'object', 'file'],
-                      label="Retrieve PDB from", default=self.IMPORT_FROM_ID,
-                      display= EnumParam.DISPLAY_HLIST,
-                      help='Retrieve PDB data from server, use a pdb Object, or a local file')
-        form.addParam('pdbId', StringParam, condition='inputPdbData == IMPORT_FROM_ID',
-                      label="Pdb Id ", allowsNull=True,
-                      help='Type a pdb Id (four alphanumeric characters).')
-        form.addParam('pdbObj', PointerParam, pointerClass='PdbFile',
-                      label="Input pdb ", condition='inputPdbData == IMPORT_OBJ', allowsNull=True,
-                      help='Specify a pdb object.')
-        form.addParam('pdbFile', FileParam,
-                      label="File path", condition='inputPdbData == IMPORT_FROM_FILES', allowsNull=True,
-                      help='Specify a path to desired PDB structure.')
+                      help='This is the unit cell volume.')
+        form.addParam('inputStructure', PointerParam, label="Input PDB file", important=True,
+                      pointerClass='PdbFile', help='Specify a PDB object.')
         form.addParam('maxResolution', FloatParam, default=5,
-                      label='Max. Resolution (A):', help="The reconstructed volume will be limited to \n"
-                           "this resolution in Angstroms.")
-        form.addParam('minResolution', FloatParam, default=1,
-                      label='Max. Resolution (A):', help="The reconstructed volume will be limited to \n"
-                                                         "this resolution in Angstroms.")
-        form.addParam('nRefCycle', IntParam, default=30,
+                      label='Max. Resolution (A):', help="Max resolution used in the refinement (Angstroms).")
+        form.addParam('minResolution', FloatParam, default=200,
+                      label='Min. Resolution (A):', help="Min resolution used in the refinement (Angstroms).")
+        form.addParam('nRefCycle', IntParam, default=30, expertLevel=const.LEVEL_ADVANCED,
                       label='Number of refinement cycles:',
                       help='Specify the number of cycles of refinement.\n')
-        form.addParam('weightMatrix', FloatParam, default=0.01, label= 'Matrix refinement weight:',
-                      help='Set the refinement weight.\n')
+        form.addParam('weightMatrix', FloatParam, default=0.01, expertLevel=const.LEVEL_ADVANCED, label= 'Matrix refinement weight:',
+                      help='Weight between density map and chemical constrain. Smaller means less weight for EM map\n')
 
 
 
@@ -80,14 +64,9 @@ class ProtRunRefmac(EMProtocol):
 
 
         # --------------------------- UTLIS functions --------------------------------------------
-        def _getPdbFileName(self):
-            if self.inputPdbData == self.IMPORT_FROM_ID:
-                return self._getExtraPath('%s.pdb' % self.pdbId.get())
-            elif self.inputPdbData == self.IMPORT_OBJ:
-                return self.pdbObj.get().getFileName()
-            else:
-                return self.pdbFile.get()
+    def _getPdbFileName(self):
+        return self.pdbFile.get()
 
-        def _getVolName(self):
-            return self._getExtraPath(replaceBaseExt(self._getPdbFileName(), "vol"))
+    def _getVolName(self):
+        pass
 
