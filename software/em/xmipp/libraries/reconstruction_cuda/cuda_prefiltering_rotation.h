@@ -25,12 +25,14 @@
 
 
 
-#ifndef CUDABASICMATH
-#define CUDABASICMATH
+#ifndef CUDA_PREFILTER_H
+#define CUDA_PREFILTER_H
 
-#include "cuda_basic_math.h"
+//#include "cuda_basic_math.h"
 
-#endif
+
+
+#include <stdio.h>
 
 template<class floatN>
 __device__ floatN InitialCausalCoefficient(
@@ -206,3 +208,4 @@ extern void CubicBSplinePrefilter3D(floatN* volume, uint pitch, uint width, uint
 	SamplesToCoefficients3DZ<floatN><<<dimGridZ, dimBlock>>>(volume, pitch, width, height, depth);
 
 }
+#endif
