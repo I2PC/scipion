@@ -27,11 +27,12 @@
 import os
 
 import pyworkflow.utils as pwutils
-from pyworkflow.protocol.constants import (STEPS_PARALLEL, STATUS_FINISHED)
+from pyworkflow.protocol.constants import STATUS_FINISHED
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 
 from convert import writeSetOfCoordinates, writeSetOfMicrographs, rowToParticle
+from protocol_base import ProtRelionBase
 
 
 # Rejection method constants
@@ -44,13 +45,12 @@ SAME_AS_PICKING = 0
 OTHER = 1
 
 
-class ProtRelionExtractParticles(em.ProtExtractParticles):
+class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'particles extraction'
     
     def __init__(self, **kwargs):
         em.ProtExtractParticles.__init__(self, **kwargs)
-        self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -166,7 +166,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles):
                            'values from a Gaussian distribution. \n'
                            'Use negative value to switch off dust removal.')
 
-        form.addParallelSection(threads=1, mpi=1)
+        form.addParallelSection(threads=0, mpi=4)
     
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -252,7 +252,8 @@ class ProtRelionExtractParticles(em.ProtExtractParticles):
     def extractParticlesStep(self, inputId, params):
         """ Extract particles from one micrograph, ignore if the .star
         with the coordinates is not present. """
-        self.runJob('relion_preprocess', params, cwd=self.getWorkingDir())
+        self.runJob(self._getProgram('relion_preprocess'), params,
+                    cwd=self.getWorkingDir())
 
     def createOutputStep(self):
         inputMics = self.getInputMicrographs()
