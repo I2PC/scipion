@@ -216,7 +216,7 @@ sd e
 
 ; ALIGNMENT
 
-; use all processors
+; use nummps processors
 md
 set mp
 [nummps]

@@ -14,6 +14,7 @@
 [num-sd]        = 3.0   ; number of standard deviations to plot in factor map
                         ; (range will be {-NUMSD,+NUMSD}
                         ; (SPIDER sometimes crashes if this number is too small)
+[nummps]        = 0     ; number of processors to use (0=all)
 
 ; ------------------ Inputs ------------------
 ;;fr l
@@ -57,7 +58,7 @@ echo "[ ! -d [ca_dir] ] && mkdir [ca_dir]"|sh
 
 md
 set mp
-0
+[nummps]
 
 ;; get window dimension
 ;ud 17, [idim]
