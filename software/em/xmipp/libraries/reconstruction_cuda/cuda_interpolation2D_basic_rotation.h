@@ -23,21 +23,18 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
-
-#ifndef CUDABASICMATH
-#define CUDABASICMATH
+#ifndef CUDA_BASIC_INTERPOLATION2D_H
+#define CUDA_BASIC_INTERPOLATION2D_H
 
 #include "cuda_basic_math.h"
+#include "cuda_bspline_basic_rotation.h"
 
-#endif
-
-#include "cuda_bspline_rotation.h"
 
 
 // 2D float texture
-texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
+texture<float, cudaTextureType2D, cudaReadModeElementType> texRefBasic;
 
+/*
 //! Bicubic interpolated texture lookup, using unnormalized coordinates.
 //! Straight forward implementation, using 16 nearest neighbour lookups.
 //! @param tex  2D texture
@@ -67,6 +64,8 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 	return result;
 }
 
+*/
+
 
 __global__ void
 rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* angle)
@@ -74,20 +73,26 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* ang
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
+    if(x>=Xdim || y>=Ydim){
+    	return;
+    }
+
     // Transform coordinates
     float u = x / (float)Xdim;
     float v = y / (float)Ydim;
     u -= 0.5f;
     v -= 0.5f;
+    float desp_u = ((float)angle[2]/(float)Xdim);
+    float desp_v = ((float)angle[5]/(float)Ydim);
 
-    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + desp_u + 0.5f;
+    float tv = u * (float)angle[3] + v * (float)angle[4] + desp_v + 0.5f;
 
     // Read from texture and write to global memory
-   	output[y * Xdim + x] = tex2D(texRef, tu, tv);
-
+   	output[y * Xdim + x] = tex2D(texRefBasic, tu, tv);
 }
 
+/*
 __global__ void
 rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, double* angle)
 {
@@ -107,8 +112,9 @@ rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, double* a
     tv = tv*(float)Ydim;
 
     // Read from texture and write to global memory
-   	output[y * Xdim + x] = cubicTex2DSimple(texRef, tu, tv);
+   	output[y * Xdim + x] = cubicTex2DSimple(texRefBasic, tu, tv);
 }
+*/
 
 
-
+#endif
