@@ -55,7 +55,8 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                       pointerClass='SetOfParticles', 
                       pointerCondition='hasAlignmentProj',
                       label="Input particles", important=True,
-                      help='Select the input particles.\n')  
+                      help='Select the input particles.\n')
+        form.addParallelSection(threads=1, mpi=0)
         
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):        
@@ -106,7 +107,8 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                 
     def runScriptStep(self, script):
         params = {'[unaligned_images]': "'particles'",
-                  '[next_group_align]': "'docfile'"
+                  '[next_group_align]': "'docfile'",
+                  '[nummps]': self.numberOfThreads.get()
                   }     
         writeScript('recons_fourier.txt', 
                     self._getPath('recons_fourier.txt'), params)

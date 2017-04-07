@@ -1,11 +1,15 @@
-
+ nummps                       = 0                         ; Use all available OMP processors
  GLO [unaligned_images]       = 'input02/data003'                      ; Unaligned images stack (usually links)
  GLO [next_group_align]       = 'input02/align_01_003'    ; Alignment parameter output file 
  GLO [next_group_vol]         = 'volume'       ; Next group volumes   
 
 ; ----------------- END BATCH HEADER ---------------------------------
 
-; Get number of images 
+ MD
+   SET MP                     ; Use all available OMP processors
+   [nummps]
+
+; Get number of images
  FI H [maxim],[nx],[ny]             ; Find total number of images (not [numparts])
    [unaligned_images]@;             ; Input file needed                 (input)
    MAXIM,NX,NY                      ; Max. image number, image size
