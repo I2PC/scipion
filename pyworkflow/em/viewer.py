@@ -132,7 +132,6 @@ class DataView(View):
         params = {}
         
         for key, value in self._viewParams.items():
-            print (str(key), ":",str(value))
             if key in parameters:
                 if key == 'mode' and value == 'metadata':
                     value = 'table'
@@ -346,6 +345,13 @@ class ChimeraViewer(Viewer):
 
 class ChimeraClient:
     
+    def openVolumeOnServer(self, volume, sendEnd=True):
+        self.send('open_volume', volume)
+        if not self.voxelSize is None:
+            self.send('voxel_size', self.voxelSize)
+        if sendEnd:
+            self.client.send('end')
+
     def __init__(self, volfile, sendEnd=True,**kwargs):
         if volfile.endswith('.mrc'):
             volfile += ':mrc'
@@ -377,20 +383,14 @@ class ChimeraClient:
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
         self.initVolumeData()
-        self.openVolumeOnServer(self.vol,sendEnd)
+        #self.openVolumeOnServer(self.vol,sendEnd)
+        self.openVolumeOnServer(self.vol)
         self.initListenThread()
             
     def send(self, cmd, data):
         self.client.send(cmd)
         self.client.send(data)
         
-    def openVolumeOnServer(self, volume, sendEnd=True):
-        self.send('open_volume', volume)
-        if not self.voxelSize is None:
-            self.send('voxel_size', self.voxelSize)
-        if sendEnd:
-            self.client.send('end')
-
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
             #self.listen_thread.daemon = True
@@ -497,15 +497,32 @@ class ChimeraVirusClient(ChimeraClient):
 
     def __init__(self, volfile, **kwargs):
         self.h = kwargs.get('h', 5)
+        if self.h is None:
+                self.h = 5
         self.k = kwargs.get('k', 0)
-        self.sym = kwargs.get('sym','n25')
-        self.radius = kwargs.get('radius', 100)
+        if self.k is None:
+                self.k = 0
+        self.sym = kwargs.get('sym','i222r')
+        if self.sym is None:
+                self.sym = 'i222r'
+        self.radius = kwargs.get('radius', 100.)
+        if self.radius is None:
+                self.radius = 100.
         self.spheRadius = kwargs.get('spheRadius',1.5)
-        print("spheRadius1",self.spheRadius)
+        if self.spheRadius is None:
+                self.spheRadius = 1.5
         self.color = kwargs.get('color', 'red')
+        if self.color is None:
+                self.color = 'red'
         self.linewidth = kwargs.get('linewidth', 1)
+        if self.linewidth is None:
+                self.linewidth = 1
         self.sphere = kwargs.get('sphere', 0)
+        if self.sphere is None:
+                self.sphere = 0
         self.shellRadius = kwargs.get('shellRadius',self.spheRadius)
+        if self.shellRadius is None:
+                self.shellRadius = self.spheRadius
         kwargs['ChimeraServer']='ChimeraVirusServer'
         ChimeraClient.__init__(self, volfile, **kwargs)
 
@@ -523,7 +540,6 @@ class ChimeraVirusClient(ChimeraClient):
     def openVolumeOnServer(self, volume):
         ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
         commandList=[self.hkcageCommand()]
-        print("spheRadius2",self.spheRadius)
         self.send('hk_icosahedron_lattice',(self.h,
                                           self.k,
                                           self.radius,
@@ -534,6 +550,10 @@ class ChimeraVirusClient(ChimeraClient):
                                           self.color))
         #get here the list of vertexes, info will be pass by id later
         self.send('command_list', commandList)
+        #endhere
+        self.client.send('end')
+        return
+
         #get va with sphere centers
 
         #va coordinates of  vertex of the triangles inside de canonical triangle
