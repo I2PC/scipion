@@ -62,6 +62,11 @@ COLOR_CHOICES[COLOR_OTHER] = 'other'
 
 binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
 
+#Axis code
+AX_X = 0
+AX_Y = 1
+AX_Z = 2
+
 class XmippMonoResViewer(ProtocolViewer):
     """
     Visualization tools for MonoRes results.
@@ -86,7 +91,10 @@ class XmippMonoResViewer(ProtocolViewer):
         form.addSection(label='Visualization')
         
         form.addParam('doShowVolumeSlices', LabelParam,
-                      label="Show volume slices")
+                      label="Show resolution slices")
+        
+        form.addParam('doShowOriginalVolumeSlices', LabelParam,
+                      label="Show original volume slices")
 
         form.addParam('doShowResHistogram', LabelParam,
                       label="Show resolution histogram")
@@ -96,15 +104,17 @@ class XmippMonoResViewer(ProtocolViewer):
                       default=COLOR_JET,
                       label='Color map',
                       help='Select the color map to apply to the resolution map. '
-                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html . The color maps'
-                            'virilis, parula and inferno can be selected for colorblind users'
-                            ' (deuteranophya, daltonism,...')
+                            'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html.')
         
         group.addParam('otherColorMap', StringParam, default='jet',
                       condition = binaryCondition,
                       label='Customized Color map',
                       help='Name of a color map to apply to the resolution map. Valid names can be found at '
                             'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
+        group.addParam('sliceAxis', EnumParam, default=AX_Z,
+                       choices=['x', 'y', 'z'],
+                       display=EnumParam.DISPLAY_HLIST,
+                       label='Slice axis')
 
         group.addParam('doShowVolumeColorSlices', LabelParam,
               label="Show colored slices")
@@ -115,7 +125,8 @@ class XmippMonoResViewer(ProtocolViewer):
 
         
     def _getVisualizeDict(self):
-        return {'doShowVolumeSlices': self._showVolumeSlices,
+        return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
+                'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
                 'doShowResHistogram': self._plotHistogram,
                 'doShowChimera': self._showChimera,
@@ -123,6 +134,11 @@ class XmippMonoResViewer(ProtocolViewer):
        
     def _showVolumeSlices(self, param=None):
         cm = DataView(self.protocol.outputVolume.getFileName())
+        
+        return [cm]
+    
+    def _showOriginalVolumeSlices(self, param=None):
+        cm = DataView(self.protocol.inputVolumes.get().getFileName())
         
         return [cm]
     
@@ -139,7 +155,7 @@ class XmippMonoResViewer(ProtocolViewer):
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,
-                                         min_Res, max_Res, self.getColorMap())
+                                         min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
@@ -175,6 +191,10 @@ class XmippMonoResViewer(ProtocolViewer):
         plt.ylabel("Counts")
         
         return [plt.show()]
+
+
+    def _getAxis(self):
+        return self.getEnumText('sliceAxis')
 
     def _plotVolumeSlices(self, title, volumeData, vminData, vmaxData, cmap, **kwargs):
         """ Helper function to create plots of volumes slices. 
