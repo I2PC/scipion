@@ -229,9 +229,11 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
+	#ifdef DEBUG
 	Image<double> filteredvolume;
 	filteredvolume = VRiesz;
 	filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
+	#endif
 
 	if (fnSpatial!="")
 		Vfiltered()=VRiesz;
