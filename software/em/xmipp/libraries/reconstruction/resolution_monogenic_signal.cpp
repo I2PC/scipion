@@ -346,12 +346,10 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -uz*iun*0.5*(1+cos((un-w1)*ideltal));//H;
-					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*uz*iun);
 				} else if (un>w1)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
-					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=(-J*uz*iun);
 				}
 				++n;
 			}
@@ -380,7 +378,6 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	lowPassFilter.applyMaskSpace(amplitude);
 
 	#ifdef DEBUG
-	//Image<double> saveImg2;
 	saveImg2 = amplitude;
 	FileName fnSaveImg2;
 	if (fnDebug.c_str() != "")
@@ -479,7 +476,6 @@ void ProgMonogenicSignalRes::run()
 	MultidimArray<double> &pVfiltered = Vfiltered();
 	MultidimArray<double> &pVresolutionFiltered = VresolutionFiltered();
 	MultidimArray<double> amplitudeMS, amplitudeMN;
-	//MultidimArray<double> &pamplitudeMS = amplitudeMS;
 
 	std::cout << "Looking for maximum frequency ..." << std::endl;
 	double criticalZ=icdf_gauss(significance);
@@ -601,14 +597,14 @@ void ProgMonogenicSignalRes::run()
 					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						sumS  += amplitudeValue;//DIRECT_MULTIDIM_ELEM(pamplitudeMS, n);
-						sumS2 += amplitudeValue*amplitudeValue;//DIRECT_MULTIDIM_ELEM(pamplitudeMS, n)*DIRECT_MULTIDIM_ELEM(pamplitudeMS, n);
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
 						++NS;
 					}
 					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 					{
-						sumN  += amplitudeValue; //DIRECT_MULTIDIM_ELEM(pamplitudeMS, n);
-						sumN2 += amplitudeValue*amplitudeValue; //DIRECT_MULTIDIM_ELEM(pamplitudeMS, n)*DIRECT_MULTIDIM_ELEM(pamplitudeMS, n);
+						sumN  += amplitudeValue;
+						sumN2 += amplitudeValue*amplitudeValue;
 						++NN;
 					}
 				}
@@ -678,13 +674,12 @@ void ProgMonogenicSignalRes::run()
 
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
-		if (verbose >=2)
-		{
+		#ifdef DEBUG
 			std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 			std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 			std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 			std::cout << "  z=" << z << " (" << criticalZ << ")" << std::endl;
-		}
+		#endif
 		if (z<criticalZ)
 		{
 			criticalW = freq;
@@ -727,8 +722,6 @@ void ProgMonogenicSignalRes::run()
 	outputResolutionImage() = resolutionChimera;
 	outputResolutionImage.write(fnchim);
 
-	//	double last_resolution_2 = resolution;
-	std::cout << "last computed resolution = " << last_resolution_2 << std::endl;
 
 	#ifdef DEBUG
 		outputResolution.write("resolution_simple.vol");
