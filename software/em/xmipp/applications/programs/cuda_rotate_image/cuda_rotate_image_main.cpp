@@ -25,9 +25,5 @@
 
 #include "../../../libraries/reconstruction_adapt_cuda/gpu_rotate_image.h"
 
-int main(int argc, char** argv) {
-	ProgGpuRotateImage program;
-	program.read(argc, argv);\
-	program.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgGpuRotateImage)
 
