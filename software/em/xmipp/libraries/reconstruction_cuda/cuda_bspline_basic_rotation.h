@@ -25,7 +25,8 @@
 
 
 
-#include "cuda_bspline_rotation.h"
+#ifndef CUDA_BASIC_BSPLINE_H
+#define CUDA_BASIC_BSPLINE_H
 
 // Cubic B-spline function
 // The 3rd order Maximal Order and Minimum Support function, that it is maximally differentiable.
@@ -39,5 +40,5 @@ __device__ float bspline(float t)
 	else return 0.0f;
 }
 
-
+#endif
 
