@@ -31,6 +31,7 @@ import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.constants import ALIGN_PROJ
+from pyworkflow.em.data import Volume
 
 from ..spider import SpiderDocFile, writeScript, runScript
 from ..convert import ANGLE_PHI, ANGLE_PSI, ANGLE_THE, SHIFTX, SHIFTY, convertEndian, alignmentToRow
@@ -63,7 +64,7 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
         # Create new stacks and selfiles per defocus groups
         self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
 
-        self._insertFunctionStep('runScriptStep', 'refine.pam')
+        self._insertFunctionStep('runScriptStep')
                 
         self._insertFunctionStep('createOutputStep')
     
@@ -116,7 +117,14 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                          cwd=self.getWorkingDir())
         
     def createOutputStep(self):
-        pass
+        imgSet = self.inputParticles.get()
+        vol = Volume()
+        # FIXME: return two half-volumes as well
+        vol.setFileName(self._getPath('volume.stk'))
+        vol.setSamplingRate(imgSet.getSamplingRate())
+
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputParticles, vol)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
