@@ -52,7 +52,6 @@ int main(void)
 	m2[2]=33.;
 	m2[3]=44.;
 */
-    double m3_out_device[4], m3_out_host[4];
 
     MultidimArray<double> m1(2,2);
     MultidimArray<double> m2(2,2);
