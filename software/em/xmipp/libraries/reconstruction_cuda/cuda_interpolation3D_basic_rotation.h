@@ -24,21 +24,18 @@
  ***************************************************************************/
 
 
-#ifndef CUDABASICMATH
-#define CUDABASICMATH
+#ifndef CUDA_BASIC_INTERPOLATION3D_H
+#define CUDA_BASIC_INTERPOLATION3D_H
 
 #include "cuda_basic_math.h"
-
-#endif
-
-
-#include "cuda_bspline_rotation.h"
+#include "cuda_bspline_basic_rotation.h"
 
 
 // 3D float texture
-texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
+texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVolBasic;
 
 
+/*
 __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadModeElementType> tex, float3 coord)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
@@ -68,6 +65,7 @@ __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadMode
 	}
 	return result;
 }
+*/
 
 
 __global__ void
@@ -77,6 +75,10 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     int y = blockDim.y * blockIdx.y + threadIdx.y;
     int z = blockDim.z * blockIdx.z + threadIdx.z;
 
+    if(x>=Xdim || y>=Ydim || z>=Zdim){
+    	return;
+    }
+
     // Transform coordinates
     float u = x / (float)Xdim;
     float v = y / (float)Ydim;
@@ -84,16 +86,20 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     u -= 0.5f;
     v -= 0.5f;
     w -= 0.5f;
+    float desp_u = ((float)angle[3]/(float)Xdim);
+    float desp_v = ((float)angle[7]/(float)Ydim);
+    float desp_w = ((float)angle[11]/(float)Zdim);
 
-    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f;
-    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + desp_u + 0.5f;
+    float tv = u * (float)angle[4] + v * (float)angle[5] + w * (float)angle[6] + desp_v + 0.5f;
+    float tw = u * (float)angle[8] + v * (float)angle[9] + w * (float)angle[10] + desp_w + 0.5f;
 
     // Read from texture and write to global memory
-   	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVol, tu, tv, tw);
+   	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVolBasic, tu, tv, tw);
 
 }
 
+/*
 __global__ void
 rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim, double* angle)
 {
@@ -118,8 +124,10 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
     tw = tw*(float)Zdim;
 
     // Read from texture and write to global memory
-   	output[(y * Xdim + x) + (Xdim * Ydim * z)] = cubicTex3DSimple(texRefVol, make_float3(tu, tv, tw));
+   	output[(y * Xdim + x) + (Xdim * Ydim * z)] = cubicTex3DSimple(texRefVolBasic, make_float3(tu, tv, tw));
 }
+*/
 
+#endif
 
 
