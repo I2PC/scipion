@@ -1,24 +1,44 @@
 
 //Host includes
-#include "cuda_gpu_rotate_image.h"
+#include "cuda_gpu_rotate_image_linear_nearest.h"
+
 #include <iostream>
 #include <stdio.h>
 //CUDA includes
 #include <cuda_runtime.h>
+
 #include "cuda_copy_data.h"
-#include "cuda_interpolation3D_rotation.h"
-#include "cuda_interpolation2D_rotation.h"
+#include "cuda_interpolation2D_basic_rotation.h"
+#include "cuda_interpolation3D_basic_rotation.h"
+#include "cuda_check_errors.h"
 
 
+void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t Xdim,
+		size_t Ydim, size_t Zdim, double* ang, int interp, int wrap, int first_call){
 
-//CUDA functions
+		//CUDA code
+		size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
 
-void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim, double* ang, int interp){
+		if(first_call==1){
+			gpuErrchk(cudaSetDevice(0));
+			gpuErrchk(cudaFree(0));
+		}
 
-	//std::cerr  << "Inside CUDA function " << ang << std::endl;
+//#define TIME
 
-	//CUDA code
-	size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
+		/*//AJ prueba con pinned memory
+		float *h_image;
+		gpuErrchk( cudaMallocHost((void**)&h_image, matSize) );
+		memcpy(h_image, image, matSize);*/
+
+
+#ifdef TIME
+	clock_t t_ini8, t_fin8;
+	double secs8;
+	t_ini8 = clock();
+#endif
+
+
 	struct cudaPitchedPtr bsplineCoeffs;
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 	cudaArray* cuArray;
@@ -28,64 +48,70 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 	if(Zdim==1){
 
 		// Init texture
-		cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim);
+		gpuErrchk(cudaMallocArray(&cuArray, &channelDesc, Xdim, Ydim));
 		// Copy to device memory some data located at address h_data in host memory
-		cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice);
+		gpuErrchk(cudaMemcpy2DToArray(cuArray, 0, 0, bsplineCoeffs.ptr, bsplineCoeffs.pitch, Xdim * sizeof(float), Ydim, cudaMemcpyDeviceToDevice));
 		// Bind the array to the texture reference
-		cudaBindTextureToArray(texRef, cuArray, channelDesc);
+		gpuErrchk(cudaBindTextureToArray(texRefBasic, cuArray, channelDesc));
 
 		// Specify texture object parameters
-		//texRef.addressMode[0] = cudaAddressModeBorder;
-		//texRef.addressMode[1] = cudaAddressModeBorder;
+		texRefBasic.addressMode[0] = (cudaTextureAddressMode)wrap;
+		texRefBasic.addressMode[1] = (cudaTextureAddressMode)wrap;
 		if (interp==0){
-		    texRef.filterMode = cudaFilterModePoint;
+			texRefBasic.filterMode = cudaFilterModePoint;
 		}else{
-		    texRef.filterMode = cudaFilterModeLinear;
+			texRefBasic.filterMode = cudaFilterModeLinear;
 		}
-		if (interp<2){
-		    texRef.normalized = true;
-		}else{
-			texRef.normalized = false;
-		}
+	    texRefBasic.normalized = true;
+
 
 	}else if (Zdim>1){
 
 		cudaExtent volumeExtent = make_cudaExtent(Xdim, Ydim, Zdim);
-		cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent);
+		gpuErrchk(cudaMalloc3DArray(&cuArray, &channelDesc, volumeExtent));
 		cudaMemcpy3DParms p = {0};
 		p.extent   = volumeExtent;
 		p.srcPtr   = bsplineCoeffs;
 		p.dstArray = cuArray;
     	p.kind     = cudaMemcpyDeviceToDevice;
-    	cudaMemcpy3D(&p);
+    	gpuErrchk(cudaMemcpy3D(&p));
     	// bind array to 3D texture
-    	cudaBindTextureToArray(texRefVol, cuArray, channelDesc);
-
+    	gpuErrchk(cudaBindTextureToArray(texRefVolBasic, cuArray, channelDesc));
     	// Specify texture object parameters
-    	//texRefVol.addressMode[0] = cudaAddressModeWrap;
-    	//texRefVol.addressMode[1] = cudaAddressModeWrap;
-    	//texRefVol.addressMode[2] = cudaAddressModeWrap;
+    	texRefVolBasic.addressMode[0] = (cudaTextureAddressMode)wrap;
+    	texRefVolBasic.addressMode[1] = (cudaTextureAddressMode)wrap;
+    	texRefVolBasic.addressMode[2] = (cudaTextureAddressMode)wrap;
     	if (interp==0){
-    		texRefVol.filterMode = cudaFilterModePoint;
+    		texRefVolBasic.filterMode = cudaFilterModePoint;
     	}else{
-    		texRefVol.filterMode = cudaFilterModeLinear;
+    		texRefVolBasic.filterMode = cudaFilterModeLinear;
     	}
-    	if (interp<2){
-    		texRefVol.normalized = true;
-    	}else{
-    		texRefVol.normalized = false;
-    	}
+   		texRefVolBasic.normalized = true;
+
 
     }
-	cudaFree(bsplineCoeffs.ptr);
+	gpuErrchk(cudaFree(bsplineCoeffs.ptr));
 
     // Allocate result of transformation in device memory
     float *d_output;
-	cudaMalloc((void **)&d_output, matSize);
+    gpuErrchk(cudaMalloc((void **)&d_output, matSize));
 	double* d_angle;
-	cudaMalloc((void**)&d_angle, 9 * sizeof(double));
-	cudaMemcpy(d_angle, ang, 9 * sizeof(double), cudaMemcpyHostToDevice);
+	int angle_size = (Zdim==1) ? 9 : 16;
+	gpuErrchk(cudaMalloc((void**)&d_angle, angle_size * sizeof(double)));
+	gpuErrchk(cudaMemcpy(d_angle, ang, angle_size * sizeof(double), cudaMemcpyHostToDevice));
 
+
+#ifdef TIME
+    t_fin8 = clock();
+    secs8 = (double)(t_fin8 - t_ini8) / CLOCKS_PER_SEC;
+    printf("Memory host to device : %.16g milisegundos\n", secs8 * 1000.0);
+#endif
+
+#ifdef TIME
+	clock_t t_ini9, t_fin9;
+	double secs9;
+	t_ini9 = clock();
+#endif
 
 	//Kernel
 	if(Zdim==1){
@@ -101,11 +127,8 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 			numBlky++;
 		}
 		const dim3 gridSize(numBlkx, numBlky, 1);
-		if(interp<2){
-			rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, d_angle);
-		}else{
-			rotate_kernel_unnormalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, d_angle);
-		}
+		rotate_kernel_normalized_2D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, d_angle);
+
 
 	}else if(Zdim>1){
 
@@ -124,19 +147,37 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim, size_t Y
 			numBlkz++;
 		}
 		const dim3 gridSize(numBlkx, numBlky, numBlkz);
-		if(interp<2){
-			rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, d_angle);
-		}else{
-			rotate_kernel_unnormalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, d_angle);
-		}
+		rotate_kernel_normalized_3D<<<gridSize, blockSize>>>(d_output, Xdim, Ydim, Zdim, d_angle);
+
 
 	}
-	cudaDeviceSynchronize();
+	gpuErrchk(cudaDeviceSynchronize());
 
-	cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost);
+#ifdef TIME
+    t_fin9 = clock();
+    secs9 = (double)(t_fin9 - t_ini9) / CLOCKS_PER_SEC;
+    printf("Kernel : %.16g milisegundos\n", secs9 * 1000.0);
+#endif
 
-	cudaFree(cuArray);
-	cudaFree(d_output);
-	cudaFree(d_angle);
+#ifdef TIME
+	clock_t t_ini10, t_fin10;
+	double secs10;
+	t_ini10 = clock();
+#endif
+
+	gpuErrchk(cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost));
+
+	gpuErrchk(cudaFreeArray(cuArray));
+	gpuErrchk(cudaFree(d_output));
+	gpuErrchk(cudaFree(d_angle));
+
+#ifdef TIME
+    t_fin10 = clock();
+    secs10 = (double)(t_fin10 - t_ini10) / CLOCKS_PER_SEC;
+    printf("Memory device to host : %.16g milisegundos\n", secs10 * 1000.0);
+#endif
+
+    //AJ prueba con pinned memory
+    //gpuErrchk(cudaFreeHost(h_image));
 
 }
