@@ -3,9 +3,9 @@
 ; Using SPIDER command AP SR
 
 ; ---------------- Parameters ----------------
-x30 = 0                ; number of threads to use, 0 = use all
 [inner-rad] = 5        ; first ring radius for alignment, pixels
 [outer-rad] = 44       ; expected object radius, pixels
+[nummps]    = 0        ; number of processors to use (0=all)
 ;;[obj-diam] = 88        ; expected object diameter, pixels
 
 ; ---------------- Input files ----------------
@@ -76,10 +76,10 @@ _2      ; OUTPUT
 (3)     ; Gaussian low-pass
 (0.02)  ; filter radius
 
-; use x30 processors
+; use [nummps] processors
 md
 set mp
-x30
+[nummps]
 
 ; run reference-free alignment
 AP SR

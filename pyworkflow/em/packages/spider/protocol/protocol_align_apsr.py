@@ -63,7 +63,7 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
                              '[group_particles]': self._params['particlesSel'],
                              '[unaligned]': self._params['particles'] + '@******',
                              '[aligned_stack]': self._params['particlesAligned'],
-                             'x30': self.numberOfThreads.get()
+                             '[nummps]': self.numberOfThreads.get()
                             })
         
         self.runTemplate(self.getScript(), self.getExt(), self._params)
