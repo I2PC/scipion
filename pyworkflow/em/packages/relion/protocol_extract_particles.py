@@ -245,9 +245,23 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
         # We need to compute a scale factor for the coordinates if extracting
         # from other micrographs with a different pixel size
+        micDict = {}
+        for mic in self.getInputMicrographs():
+            micDict[mic.getMicName()] = mic.getFileName()
+
+        pwutils.prettyDict(micDict)
+
+        def _getCoordsStarFile(mic):
+            micName = mic.getMicName()
+            if not micName in micDict:
+                return None
+            micFn = micDict[micName]
+            return self._getExtraPath(pwutils.replaceBaseExt(micFn,
+                                                             'coords.star'))
+
         self.info("Using scale: %s" % self.getScaleFactor())
         writeSetOfCoordinates(self._getExtraPath(), self.getInputCoords(),
-                              self._getCoordsStarFile, scale=self.getScaleFactor())
+                              _getCoordsStarFile, scale=self.getScaleFactor())
 
     def extractParticlesStep(self, inputId, params):
         """ Extract particles from one micrograph, ignore if the .star
@@ -514,7 +528,4 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
     def _getMicStackFile(self, mic):
         return self.__getMicFile(mic, 'mrcs')
-
-    def _getCoordsStarFile(self, mic):
-        return self.__getMicFile(mic, 'coords.star')
 

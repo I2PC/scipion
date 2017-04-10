@@ -902,8 +902,10 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
     # Create a dictionary with the pos filenames for each micrograph
     posDict = {}
     for mic in coordSet.iterMicrographs():
-        posFn = os.path.basename(getStarFileFunc(mic))
-        posDict[mic.getObjId()] = join(posDir, posFn)
+        starFile = getStarFileFunc(mic)
+        if starFile is not None:
+            posFn = os.path.basename(starFile)
+            posDict[mic.getObjId()] = join(posDir, posFn)
 
     f = None
     lastMicId = None
@@ -916,6 +918,9 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
 
     for coord in coordSet.iterItems(orderBy='_micId'):
         micId = coord.getMicId()
+        if not micId in posDict:
+            print "micId %s not found" % micId
+            continue
 
         if micId != lastMicId:
             # we need to close previous opened file
