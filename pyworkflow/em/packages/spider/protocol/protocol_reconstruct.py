@@ -33,7 +33,7 @@ from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.constants import ALIGN_PROJ
 from pyworkflow.em.data import Volume
 
-from ..spider import SpiderDocFile, writeScript, runScript, getScript
+from ..spider import SpiderDocFile, writeScript, runScript
 from ..convert import ANGLE_PHI, ANGLE_PSI, ANGLE_THE, SHIFTX, SHIFTY, convertEndian, alignmentToRow
 from protocol_base import SpiderProtocol
 
