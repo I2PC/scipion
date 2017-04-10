@@ -35,6 +35,7 @@ void ProgSortByStatistics::readParams()
     fn = getParam("-i");
     fn_out = getParam("-o");
     addToInput = checkParam("--addToInput");
+    addFeatures = checkParam("--addFeatures");
     fn_train = getParam("--train");
     cutoff = getDoubleParam("--zcut");
     per = getDoubleParam("--percent");
@@ -65,6 +66,7 @@ void ProgSortByStatistics::defineParams()
     addParamsLine(" [--train <selfile=\"\">]: Train on selfile with good particles");
     addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
     addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
+    addParamsLine(" [--addFeatures]         : Add calculated features to the output metadata");
     addParamsLine(" [--percent <float=0>]   : Cut-off for particles (zero for no cut-off) ");
     addParamsLine("                         : Percentage of images with larger Z-scores are disabled");
     addParamsLine(" [--addToInput]          : Add columns also to input MetaData");
@@ -103,6 +105,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
     MultidimArray<float> v2(numDescriptors2);
     MultidimArray<float> v3(numDescriptors3);
     MultidimArray<float> v4(numDescriptors4);
+    std::vector<double> v04;
 
     if (verbose>0)
     {
@@ -191,6 +194,8 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         int numDescriptors1 = XSIZE(mI)/2; //=100;
         MultidimArray<float> v1(numDescriptors1);
         v1.initZeros(numDescriptors1);
+        v04.reserve(numDescriptors0+numDescriptors1+numDescriptors2+numDescriptors3+numDescriptors4);
+        v04.clear();
 
         double var = 1;
         normalize(transformer,mI,tempI,modI,0,var,mask);
@@ -210,6 +215,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
             nI += sign*tempI*(modI*modI);
             tempM += (modI*modI);
             A1D_ELEM(v0,index) = (tempM*ROI).sum();
+            v04.push_back(A1D_ELEM(v0,index));
             index++;
             var+=2;
         }
@@ -227,7 +233,10 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         fastRadialAverage(autoCorr, distance, dim, radial_avg, radial_count);
 
         for (int n = 0; n < numDescriptors1; ++n)
+        {
             A1D_ELEM(v1,n)=(float)DIRECT_A1D_ELEM(radial_avg,n);
+            v04.push_back(A1D_ELEM(v1,n));
+        }
 
         tempPcaAnalyzer1.addVector(v1);
 
@@ -275,6 +284,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         {
             if ( std::isnan(std::abs(A1D_ELEM(v2,n))))
                 A1D_ELEM(v2,n)=0;
+            v04.push_back(A1D_ELEM(v2,n));
         }
 
         tempPcaAnalyzer2.addVector(v2);
@@ -287,10 +297,12 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         svdcmp(temp,U,D,V);
 
         for (int n = 0; n < numDescriptors3; ++n)
+        {
             A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n); //A1D_ELEM(v3,n)=(float)VEC_ELEM(D,n)/VEC_ELEM(D,0);
+            v04.push_back(A1D_ELEM(v3,n));
+        }
 
         tempPcaAnalyzer3.addVector(v3);
-
 
         double minVal=0.;
         double maxVal=0.;
@@ -300,8 +312,11 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         for (int n=0 ; n <= numDescriptors4-1 ; n++)
         {
             A1D_ELEM(v4,n)= (hist.percentil((n+1)*10));
+            v04.push_back(A1D_ELEM(v4,n));
         }
         tempPcaAnalyzer4.addVector(v4);
+        if (addFeatures)
+        	SF.setValue(MDL_SCORE_BY_SCREENING,v04,__iter.objId);
 
 #ifdef DEBUG
 
