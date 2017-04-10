@@ -18,7 +18,7 @@
 
 ; ------------------ Inputs ------------------
 ;;fr l
-;;[parameter_doc]params                    ; parameter doc file
+;;[parameter_doc]params                  ; parameter doc file
 fr l
 [selection_doc]listparticles             ; selection doc file
 fr l
@@ -56,6 +56,7 @@ fr l
 vm
 echo "[ ! -d [ca_dir] ] && mkdir [ca_dir]"|sh
 
+; use [nummps] processors
 md
 set mp
 [nummps]
