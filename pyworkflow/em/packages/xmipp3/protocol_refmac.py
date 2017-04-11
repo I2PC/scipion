@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
 class CCP4ProtRunRefmac(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
     """
-    _label = 'Run REFMAC5'
+    _label = 'refmac'
     _program = ""
     _version = VERSION_1_2
 
