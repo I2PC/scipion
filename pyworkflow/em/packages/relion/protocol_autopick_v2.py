@@ -108,6 +108,9 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         if self.ctfRelations.get() is not None:
             img.setCTF(self.ctfDict[img.getMicName()])
 
+    def _postprocessMicrographRow(self, img, imgRow):
+        imgRow.writeToFile(self._getMicStarFile(img))
+
     def _getMicStarFile(self, mic):
         return self._getExtraPath(pwutils.replaceBaseExt(mic.getFileName(),
                                                          'star'))
@@ -126,7 +129,8 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         micStar = self._getPath('input_micrographs.star')
         writeSetOfMicrographs(self.getMicrographList(), micStar,
                               alignType=ALIGN_NONE,
-                              preprocessImageRow=self._preprocessMicrographRow)
+                              preprocessImageRow=self._preprocessMicrographRow,
+                              postprocessImageRow=self._postprocessMicrographRow)
 
         if self.useInputReferences():
             writeReferences(self.getInputReferences(),
