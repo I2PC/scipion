@@ -84,6 +84,7 @@ class ProtRelionSortParticles(ProtParticles):
                            'spherical mask of the reference structures if no '
                            'user-provided mask is specified.')
         form.addParam('doLowPass', IntParam, default=-1,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Low pass filter references to (A):',
                       help='Lowpass filter in Angstroms for the references '
                            '(prevent Einstein-from-noise!)')
