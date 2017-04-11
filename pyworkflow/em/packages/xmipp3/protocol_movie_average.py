@@ -113,7 +113,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
                       help="linear (faster but lower quality), "
                            "cubic (slower but more accurate).")
 
-        form.addParallelSection(threads=1, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
