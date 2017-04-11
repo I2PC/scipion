@@ -334,8 +334,15 @@ class ProtRelionSortParticles(ProtParticles):
 
     def _postProcessImageRow(self, img, imgRow):
         if self.classDict:
-            classId = img.getClassId() or imgRow.getValue(md.RLN_PARTICLE_CLASS)
-            newClassId = self.classDict[classId]
+            classId = img.getClassId()
+
+            if classId is not None:
+                if not classId in self.classDict:
+                    raise Exception("Class Id %s from particle %s is not found"
+                                    % (classId, img.getObjId()))
+                newClassId = self.classDict[classId]
+            else:
+                newClassId = imgRow.getValue(md.RLN_PARTICLE_CLASS)
         else:
             newClassId = 1
 
