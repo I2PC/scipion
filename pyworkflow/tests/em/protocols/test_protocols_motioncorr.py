@@ -28,7 +28,7 @@
 import unittest, sys
 from pyworkflow.em import ProtImportMovies
 from pyworkflow.tests import *
-from pyworkflow.em.packages.motioncorr import ProtMotionCorr, MOTIONCORR
+from pyworkflow.em.packages.motioncorr import ProtMotionCorr
 
 
 # Some utility functions to import movies that are used
