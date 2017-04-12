@@ -51,6 +51,8 @@ class SpiderProtCustomMask(ProtCreateMask2D, SpiderProtocol):
     def __init__(self, **kwargs):
         ProtCreateMask2D.__init__(self, **kwargs)
         SpiderProtocol.__init__(self, **kwargs)
+        # To avoid showing MPI box due to duplicated init
+        self.allowMpi = False
         
         self._params = {'ext': 'stk',
                         'inputImage': 'input_image',
