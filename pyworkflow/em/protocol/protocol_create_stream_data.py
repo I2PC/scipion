@@ -83,7 +83,7 @@ class ProtCreateStreamData(EMProtocol):
                       label="delay (sec)",
                       help="wait this seconds before creating stram data")
 
-        form.addParallelSection(threads=2, mpi=1)
+        form.addParallelSection(threads=1, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):

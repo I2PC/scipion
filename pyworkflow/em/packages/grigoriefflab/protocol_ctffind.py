@@ -94,7 +94,13 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     #--------------------------- STEPS functions ---------------------------------------------------
     def _estimateCTF(self, micFn, micDir, micName):
         """ Run ctffind, 3 or 4, with required parameters """
-        # Create micrograph dir 
+
+        doneFile = os.path.join(micDir, 'done.txt')
+
+        if self.isContinued() and os.path.exists(doneFile):
+            return
+
+        # Create micrograph dir
         pwutils.makePath(micDir)
         downFactor = self.ctfDownFactor.get()
         scannedPixelSize = self.inputMicrographs.get().getScannedPixelSize()
@@ -109,8 +115,12 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                         args, env=xmipp3.getEnviron())
             self._params['scannedPixelSize'] =  scannedPixelSize * downFactor
         else:
-            micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
-            em.ImageHandler().convert(micFn, micFnMrc, em.DT_FLOAT)
+            ih = em.ImageHandler()
+            if ih.existsLocation(micFn):
+                micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
+                ih.convert(micFn, micFnMrc, em.DT_FLOAT)
+            else:
+                print >> sys.stderr, "Missing input micrograph %s" % micFn
 
         # Update _params dictionary
         self._params['micFn'] = micFnMrc
@@ -124,7 +134,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
 
         # Let's notify that this micrograph have been processed
         # just creating an empty file at the end (after success or failure)
-        open(os.path.join(micDir, 'done.txt'), 'w')
+        open(doneFile, 'w')
         # Let's clean the temporary mrc micrographs
         pwutils.cleanPath(micFnMrc)
 
