@@ -381,8 +381,7 @@ class Project(object):
         and also take care if the execution is remotely."""
 
         isRestart = protocol.getRunMode() == MODE_RESTART
-
-        if not protocol.isInteractive() or isRestart:
+        if (not protocol.isInteractive() and not protocol.isInStreaming()) or isRestart:
             self._checkModificationAllowed([protocol],
                                            'Cannot RE-LAUNCH protocol')
 
@@ -427,8 +426,7 @@ class Project(object):
 
             # If the protocol database has ....
             #  Comparing date will not work unless we have a reliable
-            # lastModifiactionDate of a protocol in the project.sqlite.
-
+            # lastModificationDate of a protocol in the project.sqlite.
 
             # TODO: when launching remote protocols, the db should be
             # TODO: retrieved in a different way.

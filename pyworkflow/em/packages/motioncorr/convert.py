@@ -27,7 +27,11 @@
 import os
 from os.path import join, exists
 
-from pyworkflow.utils import Environ
+from pyworkflow.utils import Environ, getEnvVariable
+
+CUDA_LIB = 'CUDA_LIB'
+MOTIONCORR_CUDA_LIB = 'MOTIONCORR_CUDA_LIB'
+MOTIONCOR2_CUDA_LIB = 'MOTIONCOR2_CUDA_LIB'
 
 
 def _getHome(key, default):
@@ -37,31 +41,43 @@ def _getHome(key, default):
     return os.environ.get(key, join(os.environ['EM_ROOT'], default))
 
 
-MOTIONCORR = 'dosefgpu_driftcorr'
+MOTIONCORR = getEnvVariable('MOTIONCORR')
+MOTIONCORR = os.path.basename(MOTIONCORR)
 MOTIONCOR2 = 'motioncor2'
+
 MOTIONCORR_PATH = join(_getHome('MOTIONCORR_HOME', 'motioncorr'),
                        'bin', MOTIONCORR)
+
 MOTIONCOR2_PATH = join(_getHome('MOTIONCOR2_HOME', 'motioncor2'),
                        'bin', MOTIONCOR2)
 
 
-def getEnviron():
+def getEnviron(useMC2=False):
     """ Return the environ settings to run motioncorr programs. """
     environ = Environ(os.environ)
 
-    if exists(MOTIONCORR_PATH):
+    if exists(MOTIONCORR_PATH) and not useMC2:
         environ.update({'PATH': join(os.environ['MOTIONCORR_HOME'], 'bin')},
                        position=Environ.BEGIN)
 
     if exists(MOTIONCOR2_PATH):
         environ.update({'PATH': join(os.environ['MOTIONCOR2_HOME'], 'bin')},
                        position=Environ.BEGIN)
-
-    #FIXME: do we need separate libs for motioncor2?
-    environ.update({'LD_LIBRARY_PATH': join(os.environ.get('MOTIONCORR_CUDA_LIB', ''))},
-                   position=Environ.BEGIN)
+    
+    cudaLib = getCudaLib(environ, useMC2)
+    environ.addLibrary(cudaLib)
 
     return environ
+
+
+def getCudaLib(environ=None, useMC2=False):
+
+    if environ is None:
+        environ = Environ(os.environ)
+    if useMC2:
+        return environ.getFirst((MOTIONCOR2_CUDA_LIB, CUDA_LIB))
+    else:
+        return environ.getFirst((MOTIONCORR_CUDA_LIB, CUDA_LIB))
 
 
 def getVersion(var):
@@ -77,7 +93,7 @@ def getSupportedVersions(var):
     if var == 'MOTIONCORR':
         return ['2.1']
     elif var == 'MOTIONCOR2':
-        return ['03162016', '10192016']
+        return ['03162016', '10192016', '01302017']
 
 
 def parseMovieAlignment(logFile):
