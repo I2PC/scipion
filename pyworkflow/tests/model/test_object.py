@@ -59,7 +59,9 @@ class TestObject(BaseTest):
         l = CsvList()
         l.set('')
         self.assertEqual(len(l), 0)
-        
+
+        # Test emptiness
+        self.assertIsNotEmpty(b)
 
     def test_String(self):
         value = 'thisisanstring'

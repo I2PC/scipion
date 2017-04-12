@@ -117,7 +117,7 @@ if __version__ == 'devel':
                __nickname__=__nickname__[2:]
 
 
-    # If in a future we release a nightly build, we could add the .devel_version
+    # If in a future we release  a nightly build, we could add the .devel_version
 
 
 def getVersion(long=True):
@@ -406,7 +406,7 @@ Arguments:
   --no-opencv   do not install opencv (big) or anything that depends on it
   --no-scipy    do not install scipy or anything that depends on it
   --no-xmipp    use this option only after a successful compilation of Xmipp
-                to save some time when installing other packages 
+                to save some time when installing other packages
 
 Example: scipion install eman-2.12
 
