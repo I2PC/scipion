@@ -33,7 +33,7 @@ from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                 SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
                                 SetOfNormalModes, SetOfParticles, FSC,
-                                Class2D, Class3D, SetOfMicrographs)
+                                Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
 from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
                                           ParticlesTiltPair)
 from pyworkflow.em.data import Mask
@@ -249,6 +249,10 @@ class ProtUserSubSet(BatchProtocol):
         count = 0
         output = createFunc()
         output.copyInfo(inputImages)
+        # For now this is to avoid having a wrong alignment.
+        # THis is because is getting the alignment info from the input images and this does not have to match.
+        # This created a error when scaling averages #903
+        output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
             if cls.isEnabled():
                 img = cls.getRepresentative()

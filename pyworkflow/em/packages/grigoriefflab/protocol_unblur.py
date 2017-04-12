@@ -109,7 +109,7 @@ class ProtUnblur(ProtAlignMovies):
                       label='Verbose Output?',
                       help='Verbose Output?',
                       expertLevel=params.LEVEL_ADVANCED)
-        form.addParallelSection(threads=1, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
 
     #
     #Input stack filename                [my_movie.mrc] : kk.mrc

@@ -80,7 +80,7 @@ class XmippProtSubtractProjection(ProtOperateParticles):
         form.addParam('normalize', BooleanParam, default=False,
                    label='normalize', help = "adjust grey scale range so experimental data and synthetic data match")
 
-        form.addParallelSection(threads=3, mpi=0)
+        form.addParallelSection(threads=3, mpi=1)
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
