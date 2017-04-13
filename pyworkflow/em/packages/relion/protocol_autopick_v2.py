@@ -171,8 +171,13 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
             # Lets sort micrograph by defocus and take the equally-space
             # number of them from the list
             inputCTFs = self.ctfRelations.get()
-            sortedMicIds = [ctf.getObjId()
-                            for ctf in inputCTFs.iterItems(orderBy='_defocusU')]
+            sortedMicIds = []
+
+            for ctf in inputCTFs.iterItems(orderBy='_defocusU'):
+                itemId = ctf.getObjId()
+                if itemId in inputMics:
+                    sortedMicIds.append(itemId)
+
             nMics = self.micrographsNumber.get()
             space = len(sortedMicIds) / (nMics - 1)
 
