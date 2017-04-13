@@ -839,11 +839,18 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
 	}
 
-	public boolean isEraserMode()
+	public boolean isEraserMode(MouseEvent e)
 	{
 		if (!eraseAvailable())
 			return false;
-		return eraserbt.isSelected();
+
+		boolean eraseHotKeyPressed = false;
+
+		if (e != null) {
+            eraseHotKeyPressed = e.isShiftDown();
+        }
+
+		return eraserbt.isSelected() || eraseHotKeyPressed;
 	}
 
     protected boolean eraseAvailable() {
@@ -853,7 +860,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     public void activateEraseMode(){
         if (eraseAvailable()) {
 
-            if (isEraserMode()) {
+            if (isEraserMode(null)) {
                 activateNormalMode();
             } else {
                 eraserbt.setSelected(true);
@@ -907,7 +914,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
     }
 
     public int getEraserSize(){
-        if (isEraserMode()){
+        if (isEraserMode(null)){
             return (Integer) eSize.getValue();
         } else {
             return 1;
@@ -929,7 +936,7 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
 
     protected void showHideModeParameters(){
 
-        boolean isEraseMode = isEraserMode();
+        boolean isEraseMode = isEraserMode(null);
         boolean isLinearMode = isLinearMode();
 
         sizepn.setVisible(!isEraseMode);
