@@ -439,12 +439,6 @@ env.addPackage('relion', version='2.0',
                updateCuda=True,
                vars=relion_vars)
 
-env.addPackage('relion', version='2.0.4',
-               tar='relion-2.0.4.tgz',
-               commands=relion2_commands,
-               updateCuda=True,
-               vars=relion_vars)
-
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
 
