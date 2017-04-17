@@ -75,7 +75,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 
 		if (frame.isPickingAvailable(e))
 		{
-			if (frame.isEraserMode())
+			if (frame.isEraserMode(null))
 			{
 				getMicrograph().removeParticles(x, y, picker);
 				active = getLastParticle();
@@ -109,7 +109,7 @@ public class ExtractCanvas extends ParticlePickerCanvas
 		int y = super.offScreenY(e.getY());
 		if (frame.isPickingAvailable(e))
 		{
-			if (frame.isEraserMode())
+			if (frame.isEraserMode(e))
 			{
 				getMicrograph().removeParticles(x, y, picker);
 				active = getLastParticle();
