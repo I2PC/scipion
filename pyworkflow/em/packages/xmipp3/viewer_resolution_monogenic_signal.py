@@ -160,7 +160,7 @@ class XmippMonoResViewer(ProtocolViewer):
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
 
-        return [Plotter(figure=fig)]
+        return plt.show(fig)
 
     def _plotHistogram(self, param=None):
         md = MetaData()
@@ -185,12 +185,13 @@ class XmippMonoResViewer(ProtocolViewer):
         delta = x1-x0
         for ii in range(len(x_axis)):
             x_axis[ii] = x_axis[ii]-0.5*delta
+        plt.figure()
         plt.bar(x_axis, y_axis, width = delta)
         plt.title("Resolutions Histogram")
         plt.xlabel("Resolution (A)")
         plt.ylabel("Counts")
         
-        return [plt.show()]
+        return plt.show()
 
 
     def _getAxis(self):
