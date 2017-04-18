@@ -167,7 +167,10 @@ def loadProtocolsConf(protocolsConf):
                 # Get the class name and then if it is disabled
                 protClassName = item["value"]
                 protClass = em.getProtocols().get(protClassName)
-                return not protClass.isDisabled()
+                if protClass is None:
+                    return False
+                else:
+                    return not protClass.isDisabled()
             else:
                 return True
 
