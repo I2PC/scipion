@@ -35,6 +35,9 @@ import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 
 
+#
+cootPdbTemplateFileName="scipionOut%04d.pdb"
+cootScriptFileName = "cootScript.py"
 
 
 def getEnviron(ccp4First=True):
@@ -48,7 +51,9 @@ def getEnviron(ccp4First=True):
 
 def runCCP4Program(program, args=""):
     """ Internal shortcut function to launch a CCP4 program. """
-    pwutils.runJob(None, program, args, env=getEnviron())
+    env=getEnviron()
+    #env.update(_envDict)
+    pwutils.runJob(None, program, args, env=env)
 
 def adapBinFileToCCP4(inFileName,outFileName):
     if inFileName.endswith('.mrc'):
@@ -60,5 +65,6 @@ def getProgram(progName):
     """ Return the program binary that will be used. """
     if (not 'CCP4_HOME' in os.environ):
         return None
+    return os.path.join(os.environ['CCP4_HOME'], 'bin',
+                           os.path.basename(progName))
 
-    return os.path.join(os.environ['CCP4_HOME'], 'bin', progName)
