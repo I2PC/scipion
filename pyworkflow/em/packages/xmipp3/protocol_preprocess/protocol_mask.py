@@ -184,6 +184,8 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
         ProtMaskParticles.__init__(self, **kwargs)
         XmippProcessParticles.__init__(self, **kwargs)
         XmippProtMask.__init__(self, **kwargs)
+        self.allowThreads = False
+        self.allowMpi = False
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -228,6 +230,8 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
         ProtMaskVolumes.__init__(self, **kwargs)
         XmippProcessVolumes.__init__(self, **kwargs)
         XmippProtMask.__init__(self, **kwargs)
+        self.allowMpi = False
+        self.allowThreads = False
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

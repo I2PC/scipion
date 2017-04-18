@@ -309,12 +309,21 @@ class ProtImportImages(ProtImportFiles):
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
         return outFiles
-    
-    #--------------------------- INFO functions --------------------------------
+
+    @classmethod
+    def validatePath(cls, pathstr):
+        errors = []
+        badChars = ['%', '#', ':']
+        if any(bc in pathstr for bc in badChars):
+            errors.append("File name can't contain these characters:")
+            errors.append('  %s' % " ".join(badChars))
+        return errors
+
+        #--------------------------- INFO functions --------------------------------
     def _validateImages(self):
         errors = []
         ih = ImageHandler()
-        
+
         for imgFn, _ in self.iterFiles():
             
             if isdir(imgFn):
@@ -326,20 +335,23 @@ class ProtImportImages(ProtImportFiles):
                 # Exceptions: 
                 #  - Compressed movies (bz2 or tbz extensions)
                 #  - Importing in streaming, since files may be incomplete
-                if (not self.dataStreaming and 
+                #  - Bad characters in path [':' ,'%', '#']
+                if (not self.dataStreaming and
                     not (imgFn.endswith('bz2') or 
                          imgFn.endswith('tbz') or 
-                         ih.isImageFile(imgFn))): 
-                    if not errors: # if empty add the first line
+                         ih.isImageFile(imgFn))):
+                    if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
+                    errors += ProtImportImages.validatePath(imgFn)
         
         return errors
         
     def _validate(self):
         errors = ProtImportFiles._validate(self)
+
         # Check that files are proper EM images, only when importing from
-        # files and not using streamming. In the later case we could
+        # files and not using streaming. In the later case we could
         # have partial files not completed.
         if (self.importFrom == self.IMPORT_FROM_FILES and
             not self.dataStreaming):
