@@ -35,10 +35,16 @@ texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
 
 
 template<class floatN>
-__device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, float3 coord)
+__device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, float3 coord, float3 comp_shift, uint Xdim, uint Ydim, uint Zdim)
 {
 	// shift the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float3 coord_grid = coord - 0.5f;
+	float auxX = (Xdim%2==0) ? 0.5 : (trunc((float)(Xdim/2.))/Xdim);
+	float auxY = (Ydim%2==0) ? 0.5 : (trunc((float)(Ydim/2.))/Ydim);
+	float auxZ = (Zdim%2==0) ? 0.5 : (trunc((float)(Zdim/2.))/Zdim);
+	const float3  center = make_float3(auxX, auxY, auxZ);
+	const float3 coord_grid = coord - center + comp_shift;
+
+	//const float3 coord_grid = coord - 0.5f + comp_shift;
 	const float3 index = floor(coord_grid);
 	const float3 fraction = coord_grid - index;
 	float3 w0, w1, w2, w3;
@@ -46,8 +52,11 @@ __device__ floatN cubicTex3D(texture<float, 3, cudaReadModeElementType> tex, flo
 
 	const float3 g0 = w0 + w1;
 	const float3 g1 = w2 + w3;
-	const float3 h0 = (w1 / g0) - 0.5f + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
-	const float3 h1 = (w3 / g1) + 1.5f + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
+
+	const float3 h0 = (w1 / g0) + make_float3(-1+auxX, -1+auxY, -1+auxZ) + index;
+	const float3 h1 = (w3 / g1) + make_float3(1+auxX, 1+auxY, 1+auxZ) + index;
+	//const float3 h0 = (w1 / g0) - 0.5f + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
+	//const float3 h1 = (w3 / g1) + 1.5f + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
 
 	// fetch the eight linear interpolations
 	// weighting and fetching is interleaved for performance and stability reasons
@@ -86,11 +95,14 @@ interpolate_kernel3D(float* output, uint width, uint height, uint depth, float3 
 	float y0 = (float)y;
 	float z0 = (float)z;
 
+	//AJ to compensate the shift in texture memory
+	float3 comp_shift = make_float3(0.5f, 0.5f, 0.5f);
+
 	float x1 = (float)angle[0] * x0 + (float)angle[1] * y0 + (float)angle[2] * z0 + shift.x;
 	float y1 = (float)angle[4] * x0 + (float)angle[5] * y0 + (float)angle[6] * z0 + shift.y;
 	float z1 = (float)angle[8] * x0 + (float)angle[9] * y0 + (float)angle[10] * z0 + shift.z;
 
-	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1));
+	output[i] = cubicTex3D<float>(texRefVol, make_float3(x1, y1, z1), comp_shift, width, height, depth);
 
 }
 
