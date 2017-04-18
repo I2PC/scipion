@@ -34,6 +34,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "../reconstruction_cuda/cuda_gpu_rotate_image_bspline.h"
 #include "../reconstruction_cuda/cuda_gpu_rotate_image_linear_nearest.h"
