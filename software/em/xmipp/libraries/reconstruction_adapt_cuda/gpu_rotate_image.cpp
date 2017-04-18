@@ -144,6 +144,22 @@ void ProgGpuRotateImage::readParams()
 
     flip = checkParam("--flip");
     first_call=0;
+
+
+    	/** In most cases output "-o" is a metadata with the new geometry keeping the names of input images
+         *  so we set the flags to keep the same image names in the output metadata
+         */
+        if ( !checkParam("--oroot") && fn_out.hasMetadataExtension())
+        {
+            if ( input_is_metadata )
+                each_image_produces_an_output = !(produces_a_metadata = true);
+            else /** If "-o" is a metadata but we are writing output images, -o can only be a stack if --oroot is no passed, and then MD is generated automatically **/
+                fn_out = fn_out.replaceExtension("stk");
+        }
+        else if ( !checkParam("--oroot") && !checkParam("-o") )
+            produces_a_metadata = true;
+
+
 }
 
 // Show ====================================================================
@@ -195,10 +211,7 @@ void ProgGpuRotateImage::defineParams()
 void ProgGpuRotateImage::preProcess()
 {
 
-
-	std::cout << "wrapMode = " << wrapMode << std::endl;
-
-    //If zdimOut greater than 1, is a volume
+	//If zdimOut greater than 1, is a volume
     isVol = (zdimOut > 1);
     dim = isVol ? 3 : 2;
 
@@ -264,7 +277,6 @@ void ProgGpuRotateImage::preProcess()
 void ProgGpuRotateImage::processImage(const FileName &fnRef, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
-//#define TIME
 #ifdef TIME
 	clock_t t_ini1, t_fin1;
 	double secs1;
@@ -294,15 +306,34 @@ void ProgGpuRotateImage::processImage(const FileName &fnRef, const FileName &fnI
 
     double *rot_vector = MATRIX2D_ARRAY(R);
 
-    MultidimArray<float> rotated_image(Zdim,Ydim,Xdim);
+    /*Xdim=5;
+    Ydim=5;
+    Zdim=1;*/
 
-    float *original_image_gpu = MULTIDIM_ARRAY(Iref());
+    MultidimArray<float> rotated_image(Zdim, Ydim, Xdim);
+
+    /*MultidimArray<float> input_image;
+    input_image.initZeros(5,5);
+    input_image(0,2)=1;
+    input_image(1,2)=1;
+    input_image(2,2)=1;
+    input_image(3,2)=1;
+    input_image(4,2)=1;
+    input_image(2,0)=1;
+    input_image(2,1)=1;
+    input_image(2,3)=1;
+    input_image(2,4)=1;
+    std::cerr << "Input image: " << input_image << std::endl;*/
+
+    float *original_image_gpu = MULTIDIM_ARRAY(Iref()); //MULTIDIM_ARRAY(input_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
 	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, rot_vector, splineDegree, wrapMode, first_call);
 
 	Iout() = rotated_image;
     Iout.write(fnImgOut);
+
+    //std::cerr << "Output image: " << rotated_image << std::endl;
 
 #ifdef TIME
     t_fin1 = clock();
