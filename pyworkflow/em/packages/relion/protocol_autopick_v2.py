@@ -30,7 +30,8 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 from pyworkflow.em.constants import RELATION_CTF, ALIGN_NONE
 from protocol_base import ProtRelionBase
-from convert import writeSetOfMicrographs, writeReferences, readSetOfCoordinates
+from convert import writeSetOfMicrographs, writeReferences, readSetOfCoordinates, \
+    isVersion2
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.utils as pwutils
 
@@ -67,6 +68,10 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     and minimum distance parameters.
     """
     _label = 'auto-picking'
+
+    @classmethod
+    def isDisabled(cls):
+        return not isVersion2()
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
