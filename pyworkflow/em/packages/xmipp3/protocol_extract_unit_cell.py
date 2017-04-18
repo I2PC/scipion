@@ -1,5 +1,4 @@
 # **************************************************************************
-# *
 # * Authors:     Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -58,6 +57,19 @@ class XmippProtExtractUnit(EMProtocol):
                            " for a description of the symmetry groups format in Xmipp.\n"
                            "If no symmetry is present, use _c1_."
                       )
+#form.addParam('symmetry', TextParam, default='C1',
+#                      label='Point group symmetry:',
+#                      condition='not doContinue',
+#                      help='Parameter *ASYM* in FREALIGN\n\n'
+#                           'Specify the symmetry.Choices are: Cn,Dn,T,O,I,I1,I2,N or H (can be zero)\n'
+#                           'n  = rotational symmetry required in pointgroup C(n) or D(n)\n'
+#                           'N  = number of symmetry matrices to read in.\n'
+#                           'T  = tetrahedral pointgroup 23\n'
+#                           'O  = octahedral pointgroup 432\n'
+#                           'I  = icosahedral 532 symmetry in setting 1 (5fold is on X)\n'
+#                           'I1 = also in setting 1 (X) - as used by Imagic\n'
+#                           'I2 = in setting 2 (Y) - as used by Crowther et. al\n'
+#~/scipion/pyworkflow/em/packages/grigoriefflab/protocol_frealign_base.py
 
         form.addParam('innerRadius', FloatParam, default=-1,
                       label="Inner Radius (px)", help="inner Mask radius, if -1, the radius will be 0")
