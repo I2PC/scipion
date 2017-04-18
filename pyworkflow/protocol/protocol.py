@@ -1316,6 +1316,13 @@ class Protocol(Step):
         return label
     
     @classmethod
+    def isDisabled(cls):
+        """ Return True if this Protocol is disabled.
+        Disabled protocols will not be offered in the available protocols."""
+        return False
+
+
+    @classmethod
     def isBase(cls):
         """ Return True if this Protocol is a base class.
         Base classes should be marked with _label = None.
