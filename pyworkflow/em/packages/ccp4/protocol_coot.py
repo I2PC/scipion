@@ -27,74 +27,113 @@
 import os
 
 import pyworkflow.utils as pwutils
-#import pyworkflow.protocol.params as params
-#import pyworkflow.em as em
 from pyworkflow import VERSION_1_2
 from pyworkflow.utils.properties import Message
-from pyworkflow.em import PointerParam
+from pyworkflow.protocol.params import MultiPointerParam, PointerParam, BooleanParam
 from pyworkflow.em.protocol import EMProtocol
-from convert import (getProgram)
+from convert import (getProgram, adapBinFileToCCP4,runCCP4Program,
+                     cootPdbTemplateFileName, cootScriptFileName)
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.em import PdbFile
 
 
+#TODO:
+# 1) restart using last saved pdb (parameter)
+# 2) Visualize user as guide pyworkflow/em/packages/xmipp3/nma/viewer_nma.py
 
 class CCP4ProtCoot(EMProtocol):
     """Coot is aninteractive graphical application for
 macromolecular model building, model completion
 and validation.
 """
-    _label = 'refinement'
+    _label = 'coot'
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
-        #set of volumes
-        form.addParam('inputVolumes', PointerParam, pointerClass="SetOfVolumes",
+        form.addSection(label='Input')
+        form.addParam('inputVolumes', MultiPointerParam, pointerClass="Volume",
                       label='Input Volume/s',
                       help="Set of volumes to process")
-
-        #set of PDF files
-        form.addParam('setOfPdbFiles', PointerParam, pointerClass="SetOfPdbFiles",
-                      label='Input PDB/s',
-                      help="Set of PDB files to process")
+        form.addParam('doNormalize', BooleanParam, default=True,
+                      label='Normalize', important=True,
+                      help='If set to True, particles will be normalized in the'
+                           'way COOT prefers it. It is recommended to '
+                           '*always normalize your particles* if the maximum value is higher than 1.')
+        form.addParam('pdbFileToBeRefined', PointerParam, pointerClass="PdbFile",
+                      label='PDB to be refined',
+                      help="PDB file to be refined. This PDB object, after refinement, will be saved")
+        form.addParam('inputPdbFiles', MultiPointerParam, pointerClass="PdbFile",
+                      label='Other referece PDBs',
+                      help="Other PDB files used as reference. This PDB objects will not be saved")
 
         # --------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
         #test loop over inputVol
-        f = open("/tmp/kk","w")
-        for vol in self.inputVolumes:
-            f.write("vol",vol.get().getLocation())
-        #test loop over pdbFiles
-        for pdbFile in self.setOfPdbFiles:
-            f.write("pdbFile",pdbFile.get().getFileName())
 
         convertId = self._insertFunctionStep('convertInputStep')
-        runCootId = self._insertFunctionStep('runCootStep', prerequisites=[convertId])
+        runCootId = self._insertFunctionStep('runCootStep', prerequisites=[convertId], interactive=True)
         self._insertFunctionStep('createOutputStep', prerequisites=[runCootId])
-        f.close()
     # --------------------------- STEPS functions ---------------------------------------------------
 
-    def convertInputStep(self):
-        """ convert 3Dmaps to MRC '.mrcs' format
-        """
-        #micDir = self.getMicrographsDir()  # put output and mics in extra dir
-        #pwutils.makePath(micDir)
-        pass
+    def _getVolumeFileName(self, inFileName):
+        return os.path.join(self._getExtraPath(''),
+                            pwutils.replaceBaseExt(inFileName, 'mrc'))
 
-    def runCootStep(self, micName, refStack, args):
-        # We convert the input micrograph on demand if not in .mrc
-        #runCoot(micName, refStack, self.getMicrographsDir(), args, env=self._getEnviron())
-        pass
+    def convertInputStep(self):
+        """ convert 3Dmaps to MRC '.mrc' format
+        """
+        for vol in self.inputVolumes:
+            inFileName  = vol.get().getFileName()
+            if inFileName.endswith('.mrc'):
+                inFileName = inFileName + ":mrc"
+            outFileName = self._getVolumeFileName(inFileName)
+            if self.doNormalize:
+                img = ImageHandler()._img
+                img.read(inFileName)
+                mean, dev, min, max = img.computeStats()
+                img.inplaceMultiply(1./max)
+                mean2, dev2, min2, max2 = img.computeStats()
+                img.write(outFileName)
+            else:
+                adapBinFileToCCP4(inFileName, outFileName)
+
+    def runCootStep(self):#vols,pdbs
+        createScriptFile(0,#imol
+                         self._getTmpPath(cootScriptFileName),
+                         self._getExtraPath(cootPdbTemplateFileName))#scriptfileName
+        args = ""
+        args +=  " --pdb " + self.pdbFileToBeRefined.get().getFileName()
+        for pdb in self.inputPdbFiles:
+            args += " --pdb " + pdb.get().getFileName()
+        args +=  " --script " + self._getTmpPath(cootScriptFileName)
+        for vol in self.inputVolumes:
+            inFileName  = vol.get().getFileName()
+            args += " --map " + self._getVolumeFileName(inFileName)
+        #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
+        runCCP4Program(getProgram(os.environ['COOT']), args)
+    #        for vol in self.inputVolumes:
+    #            print "vol", vol
+    #            f.write("vol" + vol.get().getFileName())
+    #test loop over pdbFiles
+    #        for pdbFile in self.inputPdbFiles:
+    #            print "pdbFile", pdbFile
+    #            f.write("pdbFile" + pdbFile.get().getFileName())
 
     def createOutputStep(self):
-        #micSet = self.getInputMicrographs()
-        #ih = em.ImageHandler()
-        #coordSet = self._createSetOfCoordinates(micSet)
-        #if self.boxSize and self.boxSize > 0:
-        #    coordSet.setBoxSize(self.boxSize.get())
-        #else:
-        #    coordSet.setBoxSize(self.inputReferences.get().getXDim or 100)
-        pass
+        """ Copy the PDB structure and register the output object.
+        """
+        template = self._getExtraPath(cootPdbTemplateFileName)
+        counter=1
+        while os.path.isfile(template%counter):
+            counter += 1
+
+        pdb = PdbFile()
+        pdb.setFileName(template%counter)
+        self._defineOutputs(outputPdb=pdb)
+        self._defineSourceRelation(self.inputPdbFiles, self.outputPdb)
+        self._defineSourceRelation(self.inputVolumes, self.outputPdb)
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -132,19 +171,7 @@ and validation.
 
     def _methods(self):
         methodsMsgs = []
-        if self.getInputMicrographs() is None:
-            return ['Input micrographs not available yet.']
-        methodsMsgs.append("Input micrographs %s."
-                           % (self.getObjectTag(self.getInputMicrographs())))
-
-        if self.getOutputsSize() > 0:
-            output = self.getCoords()
-            methodsMsgs.append("%s: User picked %d particles with a particle "
-                               "size of %d px and minimal threshold %0.2f."
-                               % (self.getObjectTag(output), output.getSize(),
-                                  output.getBoxSize(), self.threshold))
-        else:
-            methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
+        methodsMsgs.append("TODO")
 
         return methodsMsgs
 
@@ -152,70 +179,146 @@ and validation.
         return ['Emsley_2004']
 
     # --------------------------- UTILS functions --------------------------------------------------
-    def getArgs(self, threshold=True, mindist=True):
-        """ Return the Gautomatch parameters for picking one micrograph.
-         The command line will depends on the protocol selected parameters.
-         Params:
-            micFn: micrograph filename
-            refStack: filename with the references stack (.mrcs)
-        """
-        args = ' --apixM %0.2f' % self.inputMicrographs.get().getSamplingRate()
-        args += ' --ang_step %d' % self.angStep
-        args += ' --diameter %d' % (2 * self.particleSize.get())
-        args += ' --lp %d' % self.lowPass
-        args += ' --hp %d' % self.highPass
-        args += ' --gid %d' % self.GPUId
 
-        if self.inputReferences.get():
-            args += ' --apixT %0.2f' % self.inputReferences.get().getSamplingRate()
+cootScriptHeader='''import ConfigParser
+import os
+from subprocess import call
+mydict={}
+mydict['imol']=%d
+mydict['aa_main_chain']="B"
+mydict['aa_auxiliary_chain']="BB"
+mydict['aaNumber']=37
+mydict['step']=5
+mydict['outfile']='%s'
+'''
 
-        if not self.invertTemplatesContrast:
-            args += ' --dont_invertT'
+cootScriptBody='''
 
-        if threshold:
-            args += ' --cc_cutoff %0.2f' % self.threshold
+def beep(time):
+   """I simply do not know how to create a portable beep sound.
+      This system call seems to work pretty well if you have sox
+      installed"""
+   try:
+      call(["play","-n","synth","%f"%time,"sin","880"])
+   except:
+      pass
 
-        if not self.advanced:
-            args += ' --speed %d' % self.speed
-            args += ' --boxsize %d' % self.boxSize
-            if mindist:
-                args += ' --min_dist %d' % self.minDist
-            args += ' --lsigma_cutoff %0.2f' % self.localSigmaCutoff
-            args += ' --lsigma_D %d' % self.localSigmaDiam
-            args += ' --lave_max %0.2f' % self.localAvgMax
-            args += ' --lave_min %0.2f' % self.localAvgMin
-            args += ' --lave_D %d' % self.localAvgDiam
+def _change_chain_id(signStep):
+    """move a few aminoacid between chains"""
+    global mydict
+    dic = dict(mydict)
+    if signStep < 0:
+        dic['fromAaNumber'] = mydict['aaNumber'] - dic['step'] +1
+        dic['toAaNumber']   = mydict['aaNumber']
+        dic['fromAaChain']  = mydict['aa_auxiliary_chain']
+        dic['toAaChain']    = mydict['aa_main_chain']
+    else:
+        dic['fromAaNumber'] = mydict['aaNumber']
+        dic['toAaNumber']   = mydict['aaNumber'] + dic['step'] -1
+        dic['fromAaChain']  = mydict['aa_main_chain']
+        dic['toAaChain']    = mydict['aa_auxiliary_chain']
+    mydict['aaNumber'] = mydict['aaNumber'] + (dic['step'] * signStep)
+    command = "change_chain_id(%(imol)d, '%(fromAaChain)s', '%(toAaChain)s', 1, %(fromAaNumber)d, %(toAaNumber)d)"%dic
+    doIt(command)
 
-        if self.preFilt:
-            args += ' --do_pre_filter --pre_lp %d' % self.prelowPass
-            args += ' --pre_hp %d' % self.prehighPass
+def _refine_zone(signStep):
+    """Execute the refine command"""
+    global  mydict
+    dic = dict(mydict)
+    if signStep <0:
+        dic['fromAaNumber'] = mydict['aaNumber'] - dic['step']
+        dic['toAaNumber']   = mydict['aaNumber'] + 2
+        mydict['aaNumber']  = mydict['aaNumber'] - dic['step']
+    else:
+        dic['fromAaNumber'] = mydict['aaNumber'] - 2
+        dic['toAaNumber']   = mydict['aaNumber'] + dic['step']
+        mydict['aaNumber']  = mydict['aaNumber'] + dic['step']
+    command = 'refine_zone(%(imol)s, "%(aa_main_chain)s", %(fromAaNumber)d, %(toAaNumber)d, "")'%dic
+    doIt(command)
 
-        if self.exclusive:
-            if self.inputBadCoords.get():
-                args += ' --exclusive_picking --excluded_suffix _rubbish.star'
-            if self.inputDefects.get():
-                args += ' --global_excluded_box %s' % self._getExtraPath('micrographs/defects.star')
+def _updateMol():
+    """update global variable using a file as
+    [myvars]
+    imol: 0
+    aa_main_chain: A
+    aa_auxiliary_chain: AA
+    aaNumber: 82
+    called /tmp/config.ini"""
+    global mydict
+    config = ConfigParser.ConfigParser()
+    config.read(os.environ.get('COOT_INI',"/tmp/coot.ini"))
+    try:
+        mydict['imol']               = int(config.get("myvars", "imol"))
+        mydict['aa_main_chain']      = config.get("myvars", "aa_main_chain")
+        mydict['aa_auxiliary_chain'] = config.get("myvars", "aa_auxiliary_chain")
+        mydict['aaNumber']           = int(config.get("myvars", "aaNumber"))
+        mydict['step']               = int(config.get("myvars", "step"))
+        mydict['outfile']            = int(config.get("myvars", "outfile"))
+    except ConfigParser.NoOptionError:
+        pass
+    print ("reading:", "/tmp/coot.ini", mydict)
+    beep(0.1)
 
-        if self.writeCC:
-            args += ' --write_ccmax_mic'
-        if self.writeFilt:
-            args += ' --write_pref_mic'
-        if self.writeBg:
-            args += ' --write_bg_mic'
-        if self.writeBgSub:
-            args += ' --write_bgfree_mic'
-        if self.writeSigma:
-            args += ' --write_lsigma_mic'
-        if self.writeMsk:
-            args += ' --write_mic_mask'
+def getOutPutFileName(template):
+    """get name based on template that does not exists
+    %04d will be incremented untill it does not exists"""
+    counter=1
+    if "%04d" in template:
+        while os.path.isfile(template%counter):
+             counter += 1
 
-        return args
+    return template%counter
 
+def _write():
+    """write pdb file, default names
+       can be overwritted using coot.ini"""
+    #imol = getOutPutFileName(mydict['imol'])
+    #outFile = getOutPutFileName(mydict['outfile'])
+    dic = dict(mydict)
+    dic['outfile']=getOutPutFileName(dic['outfile'])
+    command = "write_pdb_file(%(imol)s,'%(outfile)s')"%dic
+    doIt(command)
+    beep(0.1)
 
-    def getOutputName(self, fn, key):
-        """ Give a key, append the mrc extension
-        and prefix the protocol working dir.
-        """
-        template = pwutils.removeBaseExt(fn) + key + '.mrc'
+def scipion_write(imol=0):
+    """scipion utility for writting files
+    args: model number, 0 by default"""
+    global mydict
+    mydict['imol']=imol
+    _write()
 
-        return pwutils.join(self.getMicrographsDir(), template)
+def doIt(command):
+    """launch command"""
+    print "********", command
+    eval(command)
+    #beep(0.1)
+
+def _printEnv():
+    for key in os.environ.keys():
+       print "%30s %s \\n" % (key,os.environ[key])
+
+#change chain id
+add_key_binding("change_chain_id_down","x", lambda: _change_chain_id(-1))
+add_key_binding("change_chain_id_down","X", lambda: _change_chain_id(1))
+
+#refine aminoacid segment
+add_key_binding("refine zone m","z", lambda: _refine_zone(1))
+add_key_binding("refine zone m","Z", lambda: _refine_zone(-1))
+
+#update global variables
+add_key_binding("init global variables","U", lambda: _updateMol())
+
+#write file
+add_key_binding("write pdb file","w", lambda: _write())
+
+#print environ
+add_key_binding("print enviroment","e", lambda: _printEnv())
+
+'''
+
+def createScriptFile(imol, scriptFile, pdbFile):
+    f = open(scriptFile,"w")
+    f.write(cootScriptHeader%(imol, pdbFile))
+    f.write(cootScriptBody)
+    f.close()
+
