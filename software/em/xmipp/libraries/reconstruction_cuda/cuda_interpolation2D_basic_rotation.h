@@ -53,11 +53,11 @@ __device__ float cubicTex2DSimple(texture<float, cudaTextureType2D, cudaReadMode
 	for (float y=-1; y < 2.5f; y++)
 	{
 		float bsplineY = bspline(y-fraction.y);
-		float v = index.y + y;
+		float v = index.y + y; //AJ + (float(0.5)/(float)Ydim);
 		for (float x=-1; x < 2.5f; x++)
 		{
 			float bsplineXY = bspline(x-fraction.x) * bsplineY;
-			float u = index.x + x;
+			float u = index.x + x; //AJ + (float(0.5)/(float)Xdim);
 			result += bsplineXY * tex2D(tex, u, v);
 		}
 	}
@@ -80,13 +80,21 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* ang
     // Transform coordinates
     float u = x / (float)Xdim;
     float v = y / (float)Ydim;
-    u -= 0.5f;
-    v -= 0.5f;
+
+    u = (Xdim%2==0) ? u-0.5 : u-(trunc((float)(Xdim/2.))/Xdim);
+    v = (Ydim%2==0) ? v-0.5 : v-(trunc((float)(Ydim/2.))/Ydim);
+    //u -= 0.5f; //- (float(0.5)/(float)Xdim);
+    //v -= 0.5f; //+ (float(0.5)/(float)Ydim);
+
     float desp_u = ((float)angle[2]/(float)Xdim);
     float desp_v = ((float)angle[5]/(float)Ydim);
 
-    float tu = u * (float)angle[0] + v * (float)angle[1] + desp_u + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + desp_v + 0.5f;
+    //float tu = u * (float)angle[0] + v * (float)angle[1] + desp_u + 0.5f + (float(0.5)/(float)Xdim);
+    //float tv = u * (float)angle[3] + v * (float)angle[4] + desp_v + 0.5f + (float(0.5)/(float)Ydim);
+    float tu = u * (float)angle[0] + v * (float)angle[1] + desp_u + (float(0.5)/(float)Xdim);
+    float tv = u * (float)angle[3] + v * (float)angle[4] + desp_v + (float(0.5)/(float)Ydim);
+    tu = (Xdim%2==0) ? tu+0.5 : tu+(trunc((float)(Xdim/2.))/Xdim);
+    tv = (Ydim%2==0) ? tv+0.5 : tv+(trunc((float)(Ydim/2.))/Ydim);
 
     // Read from texture and write to global memory
    	output[y * Xdim + x] = tex2D(texRefBasic, tu, tv);
@@ -105,8 +113,8 @@ rotate_kernel_unnormalized_2D(float *output, size_t Xdim, size_t Ydim, double* a
     u -= 0.5f;
     v -= 0.5f;
 
-    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + 0.5f; //AJ + (float(0.5)/(float)Xdim);
+    float tv = u * (float)angle[3] + v * (float)angle[4] + 0.5f; //AJ + (float(0.5)/(float)Ydim);
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;
