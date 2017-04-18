@@ -41,10 +41,8 @@ import xmipp
 
 class XmippProtCTFSelection(em.ProtCTFMicrographs):
     """
-    Protocol to estimate the agreement between different estimation of the CTF
-    for the same set of micrographs. The algorithm assumes that two CTF are consistent
-    if the phase (wave aberration function) of the two CTFs are closer than 90 degrees.
-    The reported resolution is the resolution at which the two CTF phases differ in 90 degrees.
+    Protocol to make a selection of meaningful CTFs in basis of the defocus values,
+    the astigmatism, and the resolution.
     """
     _label = 'ctf selection'
     
@@ -62,19 +60,19 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                       help='Estimated CTF to evaluate.')
         form.addParam('maxDefocus', params.FloatParam, default=1,
                       label='Maximum defocus (A)',
-                      help='Maximum value for defocus in Amstrongs. '
+                      help='Maximum value for defocus in Angstroms. '
                            'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
         form.addParam('minDefocus', params.FloatParam, default=1,
                       label='Mimimum defocus (A)',
-                      help='Minimum value for defocus in Amstrongs. '
+                      help='Minimum value for defocus in Angstroms. '
                            'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
         form.addParam('astigmatism', params.FloatParam, default=1,
                       label='Astigmatism (A)',
-                      help='Maximum value allowed for astigmatism in Amstrongs. '
+                      help='Maximum value allowed for astigmatism in Angstroms. '
                            'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
         form.addParam('resolution', params.FloatParam, default=1,
                   label='Resolution (A)',
-                  help='Minimum value for resolution in Amstrongs. '
+                  help='Minimum value for resolution in Angstroms. '
                        'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -98,6 +96,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             astigm = defocusU - defocusV
             #astigm = ctf.getDefocusRatio()
             print "astigm = ", astigm
+            resol = ctf._ctffind4_ctfResolution.get()
+            print "resol = ", resol
 
 
     #--------------------------- INFO functions --------------------------------
@@ -113,10 +113,11 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         is launched to be executed. It should return a list of errors. If the list is
         empty the protocol can be executed.
         """
-        #same micrographs in both CTF??
-        errors = [ ] 
-        # Add some errors if input is not valid
-        return errors
+        message = [ ]
+        fileCTF = self.inputCTF.get()
+        if fileCTF == None:
+            message.append("You must specify a set of CTFs.")
+        return message
 
     def _stepsCheck(self):
         # Just to avoid the stream checking inherited from ProtCTFMicrographs
