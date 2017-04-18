@@ -159,12 +159,20 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         self.assertEqual(outputParts.getSize(), size)
 
         first = outputParts.getFirstItem()
+        ctfModel = first.getCTF()
+        
         self.assertEqual(first.getDim(), (dim, dim, 1))
         self.assertAlmostEqual(first.getSamplingRate(), sampling, delta=0.001)
+        self.assertAlmostEqual(ctfModel.getDefocusU(), 23467, delta=10)
+        self.assertAlmostEqual(ctfModel.getDefocusV(), 23308, delta=10)
 
     def test_ribo(self):
         """ Reimplement this test to run several extract cases. """
         protPick1 = self._runPickWorkflow()
+        proj = protPick1.getProject()
+        protCTF = proj.getProtocolsByClass('ProtCTFFind')[0]
+
+        size = protPick1.outputCoordinates.getSize()
 
         protExtract = self.newProtocol(ProtRelionExtractParticles,
                                        objLabel='extract - box=64',
@@ -173,9 +181,10 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
                                        )
 
         protExtract.inputCoordinates.set(protPick1.outputCoordinates)
+        protExtract.ctfRelations.set(protCTF.outputCTF)
 
         self.launchProtocol(protExtract)
-        self._checkOutput(protExtract)
+        self._checkOutput(protExtract, size=size,)
 
         # Now test the re-scale option
         protExtract2 = self.proj.copyProtocol(protExtract)
@@ -184,4 +193,4 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         protExtract2.rescaledSize.set(32)
         self.launchProtocol(protExtract2)
 
-        self._checkOutput(protExtract2, dim=32, sampling=14.16)
+        self._checkOutput(protExtract2, size=size, dim=32, sampling=14.16)
