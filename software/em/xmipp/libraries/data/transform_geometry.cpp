@@ -25,6 +25,9 @@
  ***************************************************************************/
 #include "transform_geometry.h"
 
+#include <stdio.h>
+#include <time.h>
+
 ProgTransformGeometry::ProgTransformGeometry()
 {}
 
@@ -195,6 +198,14 @@ void ProgTransformGeometry::preProcess()
 void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
+#ifdef TIME
+	clock_t t_ini, t_fin;
+	double secs;
+	t_ini = clock();
+#endif
+
+	int aux2;
+
     if (checkParam("--matrix"))
     {
       // In this case we are directly reading the transformation matrix
@@ -210,7 +221,10 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
     if (apply_geo || mdVol)
         geo2TransformationMatrix(rowOut, B);
 
+      //std::cout << "A = " << A << std::endl;
+      //std::cout << "B = " << B << std::endl;
       T = A * B;
+      //std::cout << "T = " << T << std::endl;
     }
 
     if (checkParam("--write_matrix"))
@@ -225,7 +239,9 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         imgOut.setDatatype(img.getDatatype());
         imgOut().resize(1, zdimOut, ydimOut, xdimOut, false);
         imgOut().setXmippOrigin();
+        //for (int i=0; i<1000; i++){
         applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
+        //}
         imgOut.write(fnImgOut);
         rowOut.resetGeo(false);
     }
@@ -235,4 +251,11 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         if (fnImg != fnImgOut )
             img.write(fnImgOut);
     }
+
+#ifdef TIME
+    t_fin = clock();
+    secs = (double)(t_fin - t_ini) / CLOCKS_PER_SEC;
+    printf("%.16g milisegundos\n", secs * 1000.0);
+#endif
+
 }
