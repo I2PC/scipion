@@ -50,15 +50,15 @@ __device__ float cubicTex3DSimple(texture<float, cudaTextureType3D, cudaReadMode
 	for (float z=-1; z < 2.5f; z++)  //range [-1, 2]
 	{
 		float bsplineZ = bspline(z-fraction.z);
-		float w = index.z + z;
+		float w = index.z + z; //AJ + (float(0.5)/(float)Zdim);
 		for (float y=-1; y < 2.5f; y++)
 		{
 			float bsplineYZ = bspline(y-fraction.y) * bsplineZ;
-			float v = index.y + y;
+			float v = index.y + y; //AJ + (float(0.5)/(float)Ydim);
 			for (float x=-1; x < 2.5f; x++)
 			{
 				float bsplineXYZ = bspline(x-fraction.x) * bsplineYZ;
-				float u = index.x + x;
+				float u = index.x + x; //AJ + (float(0.5)/(float)Xdim);
 				result += bsplineXYZ * tex3D(tex, u, v, w);
 			}
 		}
@@ -83,16 +83,27 @@ rotate_kernel_normalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zdim
     float u = x / (float)Xdim;
     float v = y / (float)Ydim;
     float w = z / (float)Zdim;
-    u -= 0.5f;
-    v -= 0.5f;
-    w -= 0.5f;
+
+    u = (Xdim%2==0) ? u-0.5 : u-(trunc((float)(Xdim/2.))/Xdim);
+    v = (Ydim%2==0) ? v-0.5 : v-(trunc((float)(Ydim/2.))/Ydim);
+    w = (Zdim%2==0) ? w-0.5 : w-(trunc((float)(Zdim/2.))/Zdim);
+    //u -= 0.5f;
+    //v -= 0.5f;
+    //w -= 0.5f;
+
     float desp_u = ((float)angle[3]/(float)Xdim);
     float desp_v = ((float)angle[7]/(float)Ydim);
     float desp_w = ((float)angle[11]/(float)Zdim);
 
-    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + desp_u + 0.5f;
-    float tv = u * (float)angle[4] + v * (float)angle[5] + w * (float)angle[6] + desp_v + 0.5f;
-    float tw = u * (float)angle[8] + v * (float)angle[9] + w * (float)angle[10] + desp_w + 0.5f;
+    //float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + desp_u + 0.5f + (float(0.5)/(float)Xdim);
+    //float tv = u * (float)angle[4] + v * (float)angle[5] + w * (float)angle[6] + desp_v + 0.5f + (float(0.5)/(float)Ydim);
+    //float tw = u * (float)angle[8] + v * (float)angle[9] + w * (float)angle[10] + desp_w + 0.5f + (float(0.5)/(float)Zdim);
+    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + desp_u + (float(0.5)/(float)Xdim);
+    float tv = u * (float)angle[4] + v * (float)angle[5] + w * (float)angle[6] + desp_v + (float(0.5)/(float)Ydim);
+    float tw = u * (float)angle[8] + v * (float)angle[9] + w * (float)angle[10] + desp_w + (float(0.5)/(float)Zdim);
+    tu = (Xdim%2==0) ? tu+0.5 : tu+(trunc((float)(Xdim/2.))/Xdim);
+    tv = (Ydim%2==0) ? tv+0.5 : tv+(trunc((float)(Ydim/2.))/Ydim);
+    tw = (Zdim%2==0) ? tw+0.5 : tw+(trunc((float)(Zdim/2.))/Zdim);
 
     // Read from texture and write to global memory
    	output[(y * Xdim + x) + (Xdim * Ydim * z)] = tex3D(texRefVolBasic, tu, tv, tw);
@@ -115,9 +126,9 @@ rotate_kernel_unnormalized_3D(float *output, size_t Xdim, size_t Ydim, size_t Zd
     v -= 0.5f;
     w -= 0.5f;
 
-    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f;
-    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f;
-    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f;
+    float tu = u * (float)angle[0] + v * (float)angle[1] + w * (float)angle[2] + 0.5f; //AJ + (float(0.5)/(float)Xdim);
+    float tv = u * (float)angle[3] + v * (float)angle[4] + w * (float)angle[5] + 0.5f; //AJ + (float(0.5)/(float)Ydim);
+    float tw = u * (float)angle[6] + v * (float)angle[7] + w * (float)angle[8] + 0.5f; //AJ + (float(0.5)/(float)Zdim);
 
     tu = tu*(float)Xdim;
     tv = tv*(float)Ydim;
