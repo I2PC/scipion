@@ -37,19 +37,30 @@ texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
 
 
 template<class floatN>
-__device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y)
+__device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, float x, float y, float2 comp_shift, uint Xdim, uint Ydim)
 {
 	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
-	const float2 coord_grid = make_float2(x - 0.5f, y - 0.5f);
+
+	float auxX = (Xdim%2==0) ? 0.5 : (trunc((float)(Xdim/2.))/Xdim);
+	float auxY = (Ydim%2==0) ? 0.5 : (trunc((float)(Ydim/2.))/Ydim);
+	const float2 coord_grid = make_float2(x - auxX + comp_shift.x, y - auxY + comp_shift.y);
+	//const float2 coord_grid = make_float2(x - 0.5f + comp_shift.x, y - 0.5f + comp_shift.y);
+
 	const float2 index = floor(coord_grid);
 	const float2 fraction = coord_grid - index;
+
 	float2 w0, w1, w2, w3;
 	bspline_weights(fraction, w0, w1, w2, w3);
 
 	const float2 g0 = w0 + w1;
 	const float2 g1 = w2 + w3;
-	const float2 h0 = (w1 / g0) - make_float2(0.5f) + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
-	const float2 h1 = (w3 / g1) + make_float2(1.5f) + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
+	const float2 auxh0 = (w1 / g0) + index;
+
+	const float2 h0 = (w1 / g0) + make_float2(-1+auxX, -1+auxY) + index;
+	const float2 h1 = (w3 / g1) + make_float2(1+auxX, 1+auxY) + index;
+	//const float2 h0 = (w1 / g0) - make_float2(0.5f) + index;  //h0 = w1/g0 - 1, move from [-0.5, extent-0.5] to [0, extent]
+	//const float2 h1 = (w3 / g1) + make_float2(1.5f) + index;  //h1 = w3/g1 + 1, move from [-0.5, extent-0.5] to [0, extent]
+
 
 	// fetch the four linear interpolations
 	floatN tex00 = tex2D(tex, h0.x, h0.y);
@@ -67,7 +78,7 @@ __device__ floatN cubicTex2D(texture<float, 2, cudaReadModeElementType> tex, flo
 
 
 __global__ void
-interpolate_kernel2D(float* output, uint width, uint height, float2 extent, double* angle, float2 shift)
+interpolate_kernel2D(float* output, uint width, uint height, double* angle, float2 shift)
 {
 	uint x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
 	uint y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -77,16 +88,22 @@ interpolate_kernel2D(float* output, uint width, uint height, float2 extent, doub
 		return;
 	}
 
+	//for(int i=0; i<1000; i++){
+
 	float x0 = (float)x;
 	float y0 = (float)y;
+
+	//AJ to compensate the shift in texture memory
+	float2 comp_shift = make_float2(0.5f, 0.5f);
 
 	float x1 = (float)angle[0] * x0 + (float)angle[1] * y0 + shift.x;
 	float y1 = (float)angle[3] * x0 + (float)angle[4] * y0 + shift.y;
 
-	output[i] = cubicTex2D<float>(texRef, x1, y1);
+	output[i] = cubicTex2D<float>(texRef, x1, y1, comp_shift, width, height);
+
+	//}
 
 }
-
 
 
 cudaPitchedPtr interpolate2D(uint width, uint height, double* angle)
@@ -112,8 +129,8 @@ cudaPitchedPtr interpolate2D(uint width, uint height, double* angle)
 	dim3 gridSize(width / blockSize.x, height / blockSize.y);
 	//AJ to obtain a shift with the same direction that in transform_geometry
 	float2 shift = make_float2((float)xShift, (float)yShift);
-	float2 extent = make_float2((float)width, (float)height);
-	interpolate_kernel2D<<<gridSize, blockSize>>>(output, width, height, extent, d_angle, shift);
+
+	interpolate_kernel2D<<<gridSize, blockSize>>>(output, width, height, d_angle, shift);
 
 	cudaDeviceSynchronize();
 	gpuErrchk(cudaFree(d_angle));
