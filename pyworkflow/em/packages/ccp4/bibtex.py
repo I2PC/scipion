@@ -29,13 +29,17 @@ Bibtex string file for Gautomatch package.
 """
 
 _bibtexStr = """
-@article{Emsley_2004,
-  author = "Emsley, P. and Cowtan, K.",
-  year = 2004,
-  title = "Coot: Model-Building Tools for Molecular Graphics",
-  journal = "Acta Cryst.",
-  volume = "D60",
-  pages = "2126--2132"
+@Article{Emsley_2004,
+Author="Emsley, P.  and Cowtan, K. ",
+Title="{{C}oot: model-building tools for molecular graphics}",
+Journal="Acta Crystallogr. D Biol. Crystallogr.",
+Year="2004",
+Volume="60",
+Number="Pt 12 Pt 1",
+Pages="2126--2132",
+Month="Dec",
+doi = "http://doi.org/10.1107/S0907444904019158",
+url = "http://scripts.iucr.org/cgi-bin/paper?S0907444904019158"
 }
 """
 
