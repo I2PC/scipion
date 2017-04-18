@@ -167,7 +167,7 @@ _projPsiNoise   '0'
 # Noise applied to pixels [noise (bias)]
 _noisePixelLevel   '0'
 # Noise applied to particle center coordenates [noise (bias)]
-_noiseCoord   '0'
+_noiseCoord   '2'
 """%(DIMENSION,DIMENSION,NUMIMAGES)
         (fd, cls.filenameImages) = mkstemp(suffix=".xmd")
         f = os.fdopen(fd, "w")
@@ -180,7 +180,7 @@ _noiseCoord   '0'
         """
         _, volFile = mkstemp(suffix=".vol")
         _, projFile = mkstemp(suffix=".stk")
-        _, projMetadata = mkstemp(suffix=".xmd")
+        projMetadata = projFile[0:-4]+".xmd"
         _, imOutFile = mkstemp(suffix="_trans.stk")
             
         if not SKIP:
@@ -202,7 +202,7 @@ _noiseCoord   '0'
         args    = " -i %s"%projMetadata
         args += " -o %s"%imOutFile
         args += " --wrap %s"%WRAP_MODE
-        args += " --interp %d"%INTERP_MODE
+        args += " --interp %s"%INTERP_MODE
         args += " --use_md %s" %USE_MD
         if USE_MD!="md":
             args += " --rotate %d"%ROTATE
