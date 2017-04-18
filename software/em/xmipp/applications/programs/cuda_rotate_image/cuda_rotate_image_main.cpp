@@ -25,5 +25,34 @@
 
 #include "../../../libraries/reconstruction_adapt_cuda/gpu_rotate_image.h"
 
-RUN_XMIPP_PROGRAM(ProgGpuRotateImage)
+
+//RUN_XMIPP_PROGRAM(ProgGpuRotateImage)
+
+double timeval_diff(struct timeval *a, struct timeval *b)
+{
+  return
+    (double)(a->tv_sec + (double)a->tv_usec/1000000) -
+    (double)(b->tv_sec + (double)b->tv_usec/1000000);
+}
+
+int main(int argc, char** argv) {
+
+	int aux;
+
+	struct timeval t_inigpu, t_fingpu;
+	double secsgpu;
+	gettimeofday(&t_inigpu, NULL);
+
+	ProgGpuRotateImage program;
+	program.read(argc, argv);
+    int errorCode = program.tryRun();
+
+    gettimeofday(&t_fingpu, NULL);
+    secsgpu = timeval_diff(&t_fingpu, &t_inigpu);
+    printf("Total Rotate Image GPU: %.16g milisegundos\n", secsgpu * 1000.0);
+
+    return errorCode;
+
+}
+
 
