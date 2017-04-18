@@ -55,6 +55,8 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)
         ProtParticles.__init__(self, **args)
+        self.allowMpi = False
+        self.allowThreads = False
         
     
     #--------------------------- DEFINE param functions -----------------------
