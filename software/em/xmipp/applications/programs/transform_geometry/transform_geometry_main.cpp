@@ -27,4 +27,36 @@
 
 #include "data/transform_geometry.h"
 
-RUN_XMIPP_PROGRAM(ProgTransformGeometry)
+#include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
+
+//RUN_XMIPP_PROGRAM(ProgTransformGeometry)
+
+/* retorna "a - b" en segundos */
+double timeval_diff(struct timeval *a, struct timeval *b)
+{
+  return
+    (double)(a->tv_sec + (double)a->tv_usec/1000000) -
+    (double)(b->tv_sec + (double)b->tv_usec/1000000);
+}
+
+int main(int argc, char** argv) {
+
+	int aux;
+
+	struct timeval t_inicpu, t_fincpu;
+	double secscpu;
+	gettimeofday(&t_inicpu, NULL);
+
+	ProgTransformGeometry program;
+	program.read(argc, argv);
+    int errorCode = program.tryRun();
+
+    gettimeofday(&t_fincpu, NULL);
+    secscpu = timeval_diff(&t_fincpu, &t_inicpu);
+    printf("Total Transform Geometry CPU: %.16g milisegundos\n", secscpu * 1000.0);
+
+    return errorCode;
+
+}
