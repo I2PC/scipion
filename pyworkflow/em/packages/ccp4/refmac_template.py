@@ -25,11 +25,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-Template=
-"""
-
+template="""
 #
-# This script will run REFMAC for a model against an EM map. 
+# This example script will run REFMAC for a model against an EM map. 
 # In this example the model is A/molecule-A.pdb
 # 
 # The latest version of REFMAC is required from CCP4 (www.ccp4.ac.uk)
@@ -44,28 +42,28 @@ Template=
 # The radius is given in Angstrom and is can be user-defined (SFCALC MRAD 3). 
 #
 
-REFMACPATH=/usr/local/CCP4/
 # set generateMaskedVolume to True if you want to see the mask using chimera
 generateMaskedVolume=true
 
 #refmac binary
-refmac=${REFMACPATH}/refmacgfortran
+refmac=%(REFMAC_BIN)s
 
 #PATH to PDB file
-PDBDIR=./
+PDBDIR=%(PDBDIR)s
 
-#PDB molecule without extension
-MOL= %(mol)s
+#PDB molecule without extension or path just the basename
+MOL=%(PDBFILE)s
+
 PDBFILE=${MOL}.pdb
 
-#3D MAP FILENAME ###(extension .mrc? always)
-MAPFILE= %(vol)s
+#3D MAP FILENAME
+MAPFILE=%(MAPFILE)s
 
 #CCP4 PATH
-PATHCCP4=/usr/local/CCP4/ccp4-6.5
+PATHCCP4=%(CCP4_HOME)s
 
 #CHIMERA command
-CHIMERA=/usr/local/bin/chimera
+CHIMERA=%(CHIMERA_BIN)s
 
 #suffix for output files 
 molecule_id=${MOL}
@@ -178,6 +176,4 @@ EOF
           #cd - 
       #fi
 #done
-
-
 """
