@@ -35,18 +35,19 @@ from convert import (getProgram, adapBinFileToCCP4,runCCP4Program,
                      cootPdbTemplateFileName, cootScriptFileName)
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em import PdbFile
+from pyworkflow.em.data import EMObject
 
 
 #TODO:
-# 1) restart using last saved pdb (parameter)
-# 2) Visualize user as guide pyworkflow/em/packages/xmipp3/nma/viewer_nma.py
+# 1) Visualize user as guide pyworkflow/em/packages/xmipp3/nma/viewer_nma.py
 
 class CCP4ProtCoot(EMProtocol):
     """Coot is aninteractive graphical application for
 macromolecular model building, model completion
-and validation.
+and validation. IMPORTANT: press "w" in coot to transfer
+the pdb file from coot  to scipion '
 """
-    _label = 'coot'
+    _label = 'coot refinement'
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------------------------------
@@ -66,20 +67,18 @@ and validation.
         form.addParam('inputPdbFiles', MultiPointerParam, pointerClass="PdbFile",
                       label='Other referece PDBs',
                       help="Other PDB files used as reference. This PDB objects will not be saved")
-
+        form.addSection(label='Help')
+        form.addLine('Press "w" in coot to transfer the pdb file from coot  to scipion')
         # --------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
         #test loop over inputVol
 
         convertId = self._insertFunctionStep('convertInputStep')
-        runCootId = self._insertFunctionStep('runCootStep', prerequisites=[convertId], interactive=True)
-        self._insertFunctionStep('createOutputStep', prerequisites=[runCootId])
-    # --------------------------- STEPS functions ---------------------------------------------------
+        runCootId = self._insertFunctionStep('runCootStep', prerequisites=[convertId],
+                                             interactive=True)
 
-    def _getVolumeFileName(self, inFileName):
-        return os.path.join(self._getExtraPath(''),
-                            pwutils.replaceBaseExt(inFileName, 'mrc'))
+    # --------------------------- STEPS functions ---------------------------------------------------
 
     def convertInputStep(self):
         """ convert 3Dmaps to MRC '.mrc' format
@@ -94,46 +93,64 @@ and validation.
                 img.read(inFileName)
                 mean, dev, min, max = img.computeStats()
                 img.inplaceMultiply(1./max)
-                mean2, dev2, min2, max2 = img.computeStats()
                 img.write(outFileName)
             else:
                 adapBinFileToCCP4(inFileName, outFileName)
 
-    def runCootStep(self):#vols,pdbs
         createScriptFile(0,#imol
                          self._getTmpPath(cootScriptFileName),
-                         self._getExtraPath(cootPdbTemplateFileName))#scriptfileName
-        args = ""
-        args +=  " --pdb " + self.pdbFileToBeRefined.get().getFileName()
-        for pdb in self.inputPdbFiles:
-            args += " --pdb " + pdb.get().getFileName()
-        args +=  " --script " + self._getTmpPath(cootScriptFileName)
-        for vol in self.inputVolumes:
-            inFileName  = vol.get().getFileName()
-            args += " --map " + self._getVolumeFileName(inFileName)
-        #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
-        runCCP4Program(getProgram(os.environ['COOT']), args)
-    #        for vol in self.inputVolumes:
-    #            print "vol", vol
-    #            f.write("vol" + vol.get().getFileName())
-    #test loop over pdbFiles
-    #        for pdbFile in self.inputPdbFiles:
-    #            print "pdbFile", pdbFile
-    #            f.write("pdbFile" + pdbFile.get().getFileName())
+                         self._getExtraPath(cootPdbTemplateFileName))
 
-    def createOutputStep(self):
-        """ Copy the PDB structure and register the output object.
-        """
+    def runCootStep(self):
+        #find last created PDB output file
         template = self._getExtraPath(cootPdbTemplateFileName)
         counter=1
         while os.path.isfile(template%counter):
             counter += 1
 
-        pdb = PdbFile()
-        pdb.setFileName(template%counter)
-        self._defineOutputs(outputPdb=pdb)
-        self._defineSourceRelation(self.inputPdbFiles, self.outputPdb)
-        self._defineSourceRelation(self.inputVolumes, self.outputPdb)
+        #if there is not previous output use pdb file form form
+        #otherwise use last created pdb file
+        if counter == 1:
+            pdbFileToBeRefined = self.pdbFileToBeRefined.get().getFileName()
+        else:
+            pdbFileToBeRefined = template%(counter-1)
+            self._log.info("Using last created PDB file named=%s", pdbFileToBeRefined)
+        args = ""
+        args +=  " --pdb " + pdbFileToBeRefined
+        for pdb in self.inputPdbFiles:
+            args += " --pdb " + pdb.get().getFileName() # other pdb files
+        args +=  " --script " + self._getTmpPath(cootScriptFileName) # script wit auxiliary files
+        for vol in self.inputVolumes:
+            inFileName  = vol.get().getFileName()
+            args += " --map " + self._getVolumeFileName(inFileName)
+        #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
+        self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
+
+        #run in the background
+        runCCP4Program(getProgram(os.environ['COOT']), args)
+
+        # while creating files
+        #if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
+        self.createOutput(counter)
+
+    def createOutput(self, init_counter=1):
+        """ Copy the PDB structure and register the output object.
+        """
+        template = self._getExtraPath(cootPdbTemplateFileName)
+        counter=init_counter
+        while os.path.isfile(template%counter):
+            #counter -=1
+            pdb = PdbFile()
+            pdb.setFileName(template%counter)
+
+            outputs = {"outputPdb_%04d"%counter: pdb}
+            self._defineOutputs(**outputs)
+
+            #self._defineOutputs(outputPdb=pdb)
+            self._defineSourceRelation(self.inputPdbFiles, pdb)
+            #self._defineSourceRelation(self.inputVolumes, self.outputPdb)
+            self._defineSourceRelation(self.inputVolumes, pdb)
+            counter += 1
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -157,14 +174,11 @@ and validation.
         return errors
 
     def _summary(self):
-        #Think on how to update this summary with created PDB
+        #Think on how to uprrrrdate this summary with created PDB
         summary = []
-        summary.append("Number of input micrographs: %d"
-                       % self.getInputMicrographs().getSize())
-        if (self.getOutputsSize() > 0):
-            summary.append("Number of particles picked: %d" % self.getCoords().getSize())
-            summary.append("Particle size: %d px" % self.getCoords().getBoxSize())
-            summary.append("Threshold min: %0.2f" % self.threshold)
+        if self.getOutputsSize() >= 1:
+            for key, output in self.iterOutputAttributes(EMObject):
+                summary.append("*%s:* \n %s " % (key, output.getObjComment()))
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
@@ -179,6 +193,10 @@ and validation.
         return ['Emsley_2004']
 
     # --------------------------- UTILS functions --------------------------------------------------
+
+    def _getVolumeFileName(self, inFileName):
+        return os.path.join(self._getExtraPath(''),
+                            pwutils.replaceBaseExt(inFileName, 'mrc'))
 
 cootScriptHeader='''import ConfigParser
 import os
@@ -199,7 +217,9 @@ def beep(time):
       This system call seems to work pretty well if you have sox
       installed"""
    try:
-      call(["play","-n","synth","%f"%time,"sin","880"])
+      command = "play --no-show-progress -n synth %f sin 880"%time
+      print command
+      os.system(command)
    except:
       pass
 
