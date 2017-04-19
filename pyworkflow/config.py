@@ -291,7 +291,7 @@ class ProjectSettings(pwobj.OrderedObject):
     COLOR_MODE_STATUS = 0
     COLOR_MODE_LABELS = 1
     COLOR_MODE_AGE = 2
-    COLOR_MODES = (COLOR_MODE_STATUS, COLOR_MODE_LABELS)
+    COLOR_MODES = (COLOR_MODE_STATUS, COLOR_MODE_LABELS, COLOR_MODE_AGE)
 
     def __init__(self, confs={}, **kwargs):
         pwobj.OrderedObject.__init__(self, **kwargs)

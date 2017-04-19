@@ -228,8 +228,7 @@ class Canvas(tk.Canvas, Scrollable):
                 (x, y) = self.getCoordinates(event)
                 self.scan_dragto(event.x, event.y, gain=1)
 
-
-        except Exception, ex:
+        except Exception as ex:
             # JMRT: We are having a weird exception here.
             # Presumably because there is concurrency between the onDrag
             # event and the refresh one. For now, just ignore it.
@@ -479,6 +478,7 @@ class Item(object):
         self.sockets = {}
         self.listeners = []
         self.selectionListeners = []
+        self._selected = False
 
     def getCenter(self,x1,y1,x2,y2):
         xc=(x2+x1)/2.0
@@ -616,6 +616,7 @@ class Item(object):
             listenerFunc(value)
 
     def setSelected(self, value):
+        self._selected = value
         bw = 0
         bc = 'black'
         if value:
@@ -625,6 +626,8 @@ class Item(object):
         self.canvas.itemconfig(self.id, width=bw, outline=bc)
         self._notifySelectionListeners(value)
 
+    def getSelected(self):
+        return self._selected
 
     def lift(self):
         self.canvas.lift(self.id)
@@ -874,6 +877,9 @@ class Edge():
         self.canvas = canvas
         source.addPositionListener(self.updateSrc)
         dest.addPositionListener(self.updateDst)
+
+        source.addSelectionListener(self.updateColor)
+        dest.addSelectionListener(self.updateColor)
         self.id = None
         self.paint()
         
@@ -886,10 +892,20 @@ class Edge():
     
             if self.id:
                 self.canvas.delete(self.id)
+
+            lineColor = '#ccc'
+            lineWidth = 1.
+
+            if self.dest.getSelected():
+                lineColor = '#000'
+                lineWidth = 2.
+            elif self.source.getSelected():
+                lineColor = '#b22222'
+                lineWidth = 2.
     
             self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
                                               c2Coords[0], c2Coords[1],
-                                              width=1., fill='#ccc')
+                                              width=lineWidth, fill=lineColor)
             self.canvas.tag_lower(self.id)
         
     def updateSrc(self, dx, dy):
@@ -900,6 +916,9 @@ class Edge():
     def updateDst(self, dx, dy):
         self.dstX += dx
         self.dstY += dy
+        self.paint()
+
+    def updateColor(self, value):
         self.paint()
 
 
