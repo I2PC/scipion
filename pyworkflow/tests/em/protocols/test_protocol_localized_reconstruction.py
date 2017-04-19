@@ -29,6 +29,8 @@ import sys, unittest
 from pyworkflow.em import ProtImportParticles, ProtImportVolumes
 from pyworkflow.tests import *
 from pyworkflow.em.packages.opic import *
+from pyworkflow.em.packages.relion import ProtRelionReconstruct
+
 
 
 # Some utility functions to import micrographs that are used
@@ -77,7 +79,7 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1)
     #         cls.protImportVol = cls.runImportVolumes(cls.vol, 1)
 
-    def _runSubparticles(self, checkSize, **kwargs):
+    def _runSubparticles(self, checkSize, angles, **kwargs):
         label = 'localized subpartices ('
         for t in kwargs.iteritems():
             label += '%s=%s' % t
@@ -92,25 +94,55 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         prot.inputParticles.set(self.protImport.outputParticles)
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputCoordinates,
-                             "There was a problem with localized subparticles protocol")
+                             "There was a problem with localized "
+                             "subparticles protocol")
         self.assertEqual(checkSize, prot.outputCoordinates.getSize())
+        
+        coord = prot.outputCoordinates[10]
+        row = md.Row()
+        alignmentToRow(coord._subparticle.getTransform(), row)
+        self.assertAlmostEqual(first=row.getValue(md.RLN_ORIENT_ROT),
+                               second=angles[0], delta=0.1,
+                               msg="Rot angle is %0.1f, but should be %0.1f "
+                                   "for subparticle 10."
+                                % (row.getValue(md.RLN_ORIENT_ROT), angles[0]))
+        
+        self.assertAlmostEqual(first=row.getValue(md.RLN_ORIENT_TILT),
+                               second=angles[1], delta=0.1,
+                               msg="Tilt angle is %0.1f, but should be %0.1f "
+                                   "for subparticle 10."
+                                % (row.getValue(md.RLN_ORIENT_TILT), angles[1]))
+        
+        self.assertAlmostEqual(first=row.getValue(md.RLN_ORIENT_PSI),
+                               second=angles[2], delta=0.1,
+                               msg="Psi angle is %0.1f, but should be %0.1f "
+                                   "for subparticle 10."
+                                % (row.getValue(md.RLN_ORIENT_PSI), angles[2]))
 
         return prot
 
     def testProtLocalizedReconstruction(self):
         print "Run ProtLocalized Reconstruction"
 
-        localSubparticles = self._runSubparticles(120)
+        localSubparticles = self._runSubparticles(120, [-77.3, 65.1, -66.5])
 
-        self._runSubparticles(94, mindist=10)
-        self._runSubparticles(47, side=25)
-        self._runSubparticles(20, top=50)
+        self._runSubparticles(94,[-4.4, 59.6, -139.8], mindist=10)
+        self._runSubparticles(47, [176.3, 65.5, -79.0], side=25)
+        self._runSubparticles(20, [-2.7, 131.0, 177.9], top=50)
 
-        localExtraction = self.newProtocol(ProtLocalizedExtraction, boxSize=14)
+        localExtraction = self.newProtocol(ProtLocalizedExtraction, boxSize=26)
         localExtraction.inputParticles.set(self.protImport.outputParticles)
         localExtraction.inputCoordinates.set(localSubparticles.outputCoordinates)
         self.launchProtocol(localExtraction)
         self.assertIsNotNone(localExtraction.outputParticles,
-                             "There was a problem with localized extraction protocol")
-        
+                             "There was a problem with localized "
+                             "extraction protocol")
+        # following protocol is just for visual inspection.
+        protRecons = self.newProtocol(ProtRelionReconstruct)
+        protRecons.inputParticles.set(localExtraction.outputParticles)
+        self.launchProtocol(protRecons)
+        self.assertIsNotNone(protRecons.outputVolume,
+                             "There was a problem reconstruction the "
+                             "subparticles.")
+
         
