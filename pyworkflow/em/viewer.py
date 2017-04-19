@@ -735,7 +735,7 @@ class VmdView(CommandView):
 class VmdViewer(Viewer):
     """ Wrapper to visualize PDB objects with VMD viewer. """
     _environments = [DESKTOP_TKINTER]
-    _targets = [PdbFile]
+    #_targets = [PdbFile]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)

@@ -45,7 +45,7 @@ class CCP4ProtRunRefmac(EMProtocol):
 
         form.addParam('inputVolumes', PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
-                      help='This is the unit cell volume.')
+                      help='This is the unit cell volume.')#que pasa si la extension no es mrc?
         form.addParam('inputStructure', PointerParam, label="Input PDB file", important=True,
                       pointerClass='PdbFile', help='Specify a PDB object.')
         form.addParam('maxResolution', FloatParam, default=5,
@@ -61,12 +61,28 @@ class CCP4ProtRunRefmac(EMProtocol):
 
 
     #--------------------------- INSERT steps functions --------------------------------------------
+    #def _insertAllSteps(self):
+    #    self._insertFunctionStep(('modCoordFileStep') #Modificacion del fichero de coordenadas
+    #    self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
+
+    # --------------------------- STEPS functions --------------------------------------------
+    def modCoordFileStep(self):
+
+        pass
+
+    def createRefmacOutputStep(self):
+        # vol = Volume()
+        # vol.setLocation(self._getVolName())
+        pass
+            
+
+    # --------------------------- INFO functions --------------------------------------------
 
 
         # --------------------------- UTLIS functions --------------------------------------------
-    def _getPdbFileName(self):
-        return self.pdbFile.get()
-
-    def _getVolName(self):
-        pass
-
+    #def _getPdbFileName(self):
+        #return self.pdbFile.get()
+        #pass
+    #def _getVolName(self):
+        #return self.Volume.get()
+        #pass
