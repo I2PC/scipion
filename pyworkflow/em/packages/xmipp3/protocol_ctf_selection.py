@@ -25,18 +25,13 @@
 # *
 # **************************************************************************
 
-import collections
-from itertools import izip
 
-from pyworkflow.utils.path import cleanPath, removeBaseExt
-from pyworkflow.object import Set, Float, String, Object
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
-from pyworkflow.em.metadata import Row, MetaData
-
-import convert 
-import xmipp
-
+from datetime import datetime
+import os
+import pyworkflow.utils as pwutils
+from pyworkflow.em.data import SetOfCTF
 
 
 class XmippProtCTFSelection(em.ProtCTFMicrographs):
@@ -54,23 +49,20 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _defineParams(self, form):
         form.addSection(label='Input')
         # Read a ctf estimation
-        form.addParam('inputCTF', params.PointerParam, pointerClass='SetOfCTF',
+        form.addParam('inputCTFs', params.PointerParam, pointerClass='SetOfCTF',
                       important=True,
-                      label="Estimated CTF",
+                      label="Set of CTFs",
                       help='Estimated CTF to evaluate.')
-        form.addParam('maxDefocus', params.FloatParam, default=1,
-                      label='Maximum defocus (A)',
-                      help='Maximum value for defocus in Angstroms. '
-                           'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
-        form.addParam('minDefocus', params.FloatParam, default=1,
-                      label='Mimimum defocus (A)',
-                      help='Minimum value for defocus in Angstroms. '
-                           'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
-        form.addParam('astigmatism', params.FloatParam, default=1,
+        line = form.addLine('Defocus (A)',
+                            help='Minimum and maximum values for defocus in Angstroms')
+        line.addParam('minDefocus', params.FloatParam, default=0, label='Min')
+        line.addParam('maxDefocus', params.FloatParam, default=40000, label='Max')
+
+        form.addParam('astigmatism', params.FloatParam, default=1000,
                       label='Astigmatism (A)',
                       help='Maximum value allowed for astigmatism in Angstroms. '
                            'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
-        form.addParam('resolution', params.FloatParam, default=1,
+        form.addParam('resolution', params.FloatParam, default=5,
                   label='Resolution (A)',
                   help='Minimum value for resolution in Angstroms. '
                        'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
@@ -79,26 +71,75 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
-        self._insertFunctionStep('readCTF')
+        self._insertFunctionStep('readCTF', wait=True)
 
 
     # --------------------------- STEPS functions -------------------------------
     def readCTF(self):
-        inputCTF = self.inputCTF.get()
+        inputCTFs = self.inputCTFs.get()
+        outputCTFs = self._createSetOfCTF()
 
-        for ctf in inputCTF:
-            ctfName = ctf.getMicrograph().getMicName()
-            print "ctf: ", ctfName
+        #self.minDefocus=20000
+        #self.maxDefocus=30000
+
+        for ctf in inputCTFs:
             defocusU = ctf.getDefocusU()
-            print "defocusU = ", defocusU
             defocusV = ctf.getDefocusV()
-            print "defocusV = ", defocusV
             astigm = defocusU - defocusV
-            #astigm = ctf.getDefocusRatio()
-            print "astigm = ", astigm
             resol = ctf._ctffind4_ctfResolution.get()
-            print "resol = ", resol
+            if defocusU>self.minDefocus and defocusU<self.maxDefocus and \
+                defocusV>self.minDefocus and defocusV<self.maxDefocus and \
+                astigm <self.astigmatism and resol<self.resolution:
 
+                outputCTFs.append(ctf)
+
+        self._defineOutputs(outputCTF=outputCTFs)
+        self._defineTransformRelation(self.inputCTFs.get(), outputCTFs)
+
+    def _stepsCheck(self):
+        # Input movie set can be loaded or None when checked for new inputs
+        # If None, we load it
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _loadInputList(self):
+        """ Load the input set of ctf and create a list. """
+        ctfFile = self.inputCTFs.get().getFileName()
+        self.debug("Loading input db: %s" % ctfFile)
+        ctfSet = SetOfCTF(filename=ctfFile)
+        ctfSet.loadAllProperties()
+        self.listOfMovies = [m.clone() for m in ctfSet]
+        self.streamClosed = ctfSet.isStreamClosed()
+        ctfSet.close()
+        self.debug("Closed db.")
+
+    def _checkNewInput(self):
+        # Check if there are new ctfs to process from the input set
+        localFile = self.inputCTFs.get().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
+        self.debug('Last check: %s, modification: %s'
+                  % (pwutils.prettyTime(self.lastCheck),
+                     pwutils.prettyTime(mTime)))
+        # If the input ctfs.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfCTFs'):
+            return None
+
+        self.lastCheck = now
+        # Open input movies.sqlite and close it as soon as possible
+        self._loadInputList()
+        newCTFs = any(m.getObjId() not in self.insertedDict
+                        for m in self.listOfCTFs)
+        outputStep = self._getFirstJoinStep()#####################################
+
+        if newCTFs:
+            fDeps = self._insertNewCTFSteps(self.insertedDict,
+                                               self.listOfCTFs)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -114,7 +155,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         empty the protocol can be executed.
         """
         message = [ ]
-        fileCTF = self.inputCTF.get()
+        fileCTF = self.inputCTFs.get()
         if fileCTF == None:
             message.append("You must specify a set of CTFs.")
         return message
