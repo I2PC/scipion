@@ -56,6 +56,7 @@ from constants import STATUS_COLORS
 DEFAULT_BOX_COLOR = '#f8f8f8'
 
 ACTION_EDIT = Message.LABEL_EDIT
+ACTION_SELECT_TO = Message.LABEL_SELECT_TO
 ACTION_COPY = Message.LABEL_COPY
 ACTION_DELETE = Message.LABEL_DELETE
 ACTION_REFRESH = Message.LABEL_REFRESH
@@ -83,6 +84,7 @@ VIEW_TREE_SMALL = 2
 
 ActionIcons = {
     ACTION_EDIT: Icon.ACTION_EDIT,
+    ACTION_SELECT_TO: Icon.ACTION_SELECT_TO,
     ACTION_COPY: Icon.ACTION_COPY,
     ACTION_DELETE: Icon.ACTION_DELETE,
     ACTION_REFRESH: Icon.ACTION_REFRESH,
@@ -185,7 +187,8 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
                 (ACTION_EXPORT, not single),
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
-                (ACTION_LABELS, True)
+                (ACTION_LABELS, True),
+                (ACTION_SELECT_TO, True)
                 ]
 
     def getObjectActions(self, obj):
@@ -200,6 +203,10 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
 
         actions = [addAction(a)
                    for a, cond in self.getActionsFromSelection() if cond]
+
+        if hasattr(obj, 'getActions'):
+            for text, action in obj.getActions():
+                actions.append((text, action, None))
 
         return actions
 
@@ -975,6 +982,8 @@ class ProtocolsView(tk.Frame):
         self.runsGraphCanvas.onRightClickCallback = self._runItemRightClick
         self.runsGraphCanvas.onControlClickCallback = self._runItemControlClick
         self.runsGraphCanvas.onAreaSelected = self._selectItemsWithinArea
+        self.runsGraphCanvas.onMiddleMouseClickCallback = self._runItemMiddleClick
+
 
         parent.grid_columnconfigure(0, weight=1)
         parent.grid_rowconfigure(0, weight=1)
@@ -1046,61 +1055,74 @@ class ProtocolsView(tk.Frame):
 
     def _getBoxColor(self, nodeInfo, statusColor, node):
 
-        # If the color has to go to the box
-        if self.settings.statusColorMode():
-            boxColor = statusColor
+        try:
 
-        elif self.settings.ageColorMode():
+            # If the color has to go to the box
+            if self.settings.statusColorMode():
+                boxColor = statusColor
 
-            if node.run:
+            elif self.settings.ageColorMode():
 
-                # Get the latest activity timestamp
-                ts = node.run.getObjCreation().datetime(fs=False)
+                if node.run:
 
-                if node.run.initTime.hasValue():
-                    ts = node.run.initTime.datetime()
+                    # Project elapsed time
+                    elapsedTime = node.run.getProject().getElapsedTime()
+                    creationTime = node.run.getProject().getCreationTime()
 
-                if node.run.endTime.hasValue():
+                    # Get the latest activity timestamp
                     ts = node.run.endTime.datetime()
 
-                age = dt.datetime.now() - ts
+                    if elapsedTime is None or creationTime is None or ts is None:
+                        boxColor = DEFAULT_BOX_COLOR
 
-                boxColor = self._ageColor('#6666ff', age.days * 24)
-            else:
-                boxColor = DEFAULT_BOX_COLOR
+                    else:
 
-        # ... box is for the labels.
-        elif self.settings.labelsColorMode():
-            # If there is only one label use the box for the color.
-            if self._getLabelsCount(nodeInfo) == 1:
+                        # tc closer to the end are younger
+                        protAge = ts-creationTime
 
-                labelId = nodeInfo.getLabels()[0]
-                label = self.settings.getLabels().getLabel(labelId)
-
-                # If there is no label (it has been deleted)
-                if label is None:
-                    nodeInfo.getLabels().remove(labelId)
-                    boxColor = DEFAULT_BOX_COLOR
+                        boxColor = self._ageColor('#6666ff', elapsedTime, protAge)
                 else:
-                    boxColor = label.getColor()
+                    boxColor = DEFAULT_BOX_COLOR
 
+            # ... box is for the labels.
+            elif self.settings.labelsColorMode():
+                # If there is only one label use the box for the color.
+                if self._getLabelsCount(nodeInfo) == 1:
+
+                    labelId = nodeInfo.getLabels()[0]
+                    label = self.settings.getLabels().getLabel(labelId)
+
+                    # If there is no label (it has been deleted)
+                    if label is None:
+                        nodeInfo.getLabels().remove(labelId)
+                        boxColor = DEFAULT_BOX_COLOR
+                    else:
+                        boxColor = label.getColor()
+
+                else:
+                    boxColor = DEFAULT_BOX_COLOR
             else:
                 boxColor = DEFAULT_BOX_COLOR
-        else:
-            boxColor = DEFAULT_BOX_COLOR
 
-        return boxColor
+            return boxColor
+        except Exception as e:
+            print ("Can't calculate box color:" + str(e))
+            return DEFAULT_BOX_COLOR
 
     @staticmethod
-    def _ageColor(rgbColor, ageInDays):
+    def _ageColor(rgbColor, projectAge, protocolAge):
 
-        if ageInDays > 255: ageInDays = 255
+        #  Get the ratio
+        ratio = protocolAge.seconds/float(projectAge.seconds)
 
-        # Mek it a percentage: 1 = 100% white, 0 = same rgbColor
-        ageInDays /= 255.
+        # Invert direction: older = white = 100%, newest = rgbColor = 0%
+        ratio = 1 - ratio
+
+        # There are cases coming with protocols older than the project.
+        ratio = 0 if ratio < 0 else ratio
 
         return pwutils.rgb_to_hex(pwutils.lighter(pwutils.hex_to_rgb(rgbColor),
-                                                  ageInDays))
+                                                  ratio))
 
     @staticmethod
     def _getLabelsCount(nodeInfo):
@@ -1335,6 +1357,10 @@ class ProtocolsView(tk.Frame):
     def _runItemDoubleClick(self, e=None):
         self._runActionClicked(ACTION_EDIT)
 
+    def _runItemMiddleClick(self, e=None):
+        self._runActionClicked(ACTION_SELECT_TO)
+
+
     def _runItemRightClick(self, item=None):
         prot = item.node.run
         if prot is None:  # in case it is the main "Project" node
@@ -1531,25 +1557,29 @@ class ProtocolsView(tk.Frame):
         self.summaryText.setReadOnly(True)
 
     def _fillMethod(self):
-        self.methodText.setReadOnly(False)
-        self.methodText.clear()
-        self.methodText.addLine("*METHODS:*")
-        cites = OrderedDict()
 
-        for prot in self._iterSelectedProtocols():
-            self.methodText.addLine('> _%s_' % prot.getRunName())
-            for line in prot.getParsedMethods():
-                self.methodText.addLine(line)
-            cites.update(prot.getCitations())
-            cites.update(prot.getPackageCitations())
-            self.methodText.addLine('')
+        try:
+            self.methodText.setReadOnly(False)
+            self.methodText.clear()
+            self.methodText.addLine("*METHODS:*")
+            cites = OrderedDict()
 
-        if cites:
-            self.methodText.addLine('*REFERENCES:*')
-            for cite in cites.values():
-                self.methodText.addLine(cite)
+            for prot in self._iterSelectedProtocols():
+                self.methodText.addLine('> _%s_' % prot.getRunName())
+                for line in prot.getParsedMethods():
+                    self.methodText.addLine(line)
+                cites.update(prot.getCitations())
+                cites.update(prot.getPackageCitations())
+                self.methodText.addLine('')
 
-        self.methodText.setReadOnly(True)
+            if cites:
+                self.methodText.addLine('*REFERENCES:*')
+                for cite in cites.values():
+                    self.methodText.addLine(cite)
+
+            self.methodText.setReadOnly(True)
+        except Exception as e:
+            self.methodText.addLine('Could not load all methods:' + e.getMessage())
 
     def _fillLogs(self):
         prot = self.getSelectedProtocol()
@@ -1674,6 +1704,38 @@ class ProtocolsView(tk.Frame):
                 # self.updateRunsGraph()
                 self.drawRunsGraph()
 
+    def _selectAncestors(self, run=None):
+
+        children = []
+        if run is None:
+            for protId in self._selection:
+                run = self.runsGraph.getNode(str(protId))
+                children.append(run)
+        else:
+            name = run.getName()
+
+            if not name.isdigit():
+                return
+            else:
+                name = int(name)
+
+            # If already selected (may be this should be centralized)
+            if name not in self._selection:
+                children = (run,)
+                self._selection.append(name)
+
+        # Go up .
+        for run in children:
+
+            # Select himself plus ancestors
+            for parent in run.getParents():
+
+                self._selectAncestors(parent)
+
+        self._updateSelection()
+
+        self.drawRunsGraph()
+
     def _exportProtocols(self):
         protocols = self._getSelectedProtocols()
 
@@ -1775,6 +1837,8 @@ class ProtocolsView(tk.Frame):
                     self._updateActionToolbar()
                 elif action == ACTION_LABELS:
                     self._selectLabels()
+                elif action == ACTION_SELECT_TO:
+                    self._selectAncestors()
 
             except Exception as ex:
                 self.windows.showError(str(ex))

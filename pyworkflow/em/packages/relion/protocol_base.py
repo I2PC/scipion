@@ -150,6 +150,10 @@ class ProtRelionBase(EMProtocol):
                       important=True,
                       label="Input particles",  
                       help='Select the input images from the project.')
+        form.addParam('copyAlignment', BooleanParam, default=True,
+                      label='Consider previous alignment?',
+                      help='If set to Yes, then alignment information from input'
+                           ' particles will be considered.')
         form.addParam('maskDiameterA', IntParam, default=-1,
                       condition='not doContinue',
                       label='Particle mask diameter (A)',
@@ -546,7 +550,8 @@ class ProtRelionBase(EMProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
         self._initialize()
-        self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId())
+        self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId(),
+                                 self.copyAlignment)
         self._insertRelionStep()
         self._insertFunctionStep('createOutputStep')
     
@@ -625,7 +630,7 @@ class ProtRelionBase(EMProtocol):
             args['--preread_images'] = ''
         else:
             if self.dirPath.hasValue():
-                args['--scratch_dir'] = ''
+                args['--scratch_dir'] = self.dirPath.get()
             
         args['--pool'] = self.pooledParticles.get()
         
@@ -672,7 +677,7 @@ class ProtRelionBase(EMProtocol):
                 args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION, convert if necessary
     
     #--------------------------- STEPS functions --------------------------------------------       
-    def convertInputStep(self, particlesId):
+    def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
         Params:
@@ -684,9 +689,16 @@ class ProtRelionBase(EMProtocol):
 
         self.info("Converting set from '%s' into '%s'" %
                            (imgSet.getFileName(), imgStar))
-        
+
         # Pass stack file as None to avoid write the images files
-        writeSetOfParticles(imgSet, imgStar, self._getExtraPath())
+        # If copyAlignmet is set to False pass alignType to ALIGN_NONE
+        if copyAlignment:
+            alignType = imgSet.getAlignment()
+        else:
+            alignType = em.ALIGN_NONE
+
+        writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
+                            alignType=alignType)
         
         if self.doCtfManualGroups:
             self._splitInCTFGroups(imgStar)

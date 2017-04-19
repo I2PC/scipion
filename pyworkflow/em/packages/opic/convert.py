@@ -41,6 +41,7 @@ import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 
 from pyworkflow.object import ObjectWrap, String
+from pyworkflow.utils import Environ
 from pyworkflow.utils.path import replaceBaseExt
 
 # This dictionary will be used to map
@@ -98,9 +99,6 @@ ALIGNMENT_DICT = OrderedDict([
        ("_rlnAnglePsi", md.RLN_ORIENT_PSI),
        ])
 
-from pyworkflow.em.packages.relion.constants import V1_4
-RELION_VERSION = V1_4
-
 def getVersion():
     path = os.environ['LOCALREC_HOME']
     for v in getSupportedVersions():
@@ -113,11 +111,35 @@ def getSupportedVersions():
     return ['1.1.0', '1.2.0']
 
 
+def getSupportedRelionVersions():
+    return ['1.4']
+
+
+def getRelionVersion():
+    path = os.environ['LOCALREC_RELION_HOME']
+    for v in getSupportedRelionVersions():
+        if v in path:
+            return v
+    return ''
+
+
 def getRelionEnviron():
     """ Setup the environment variables needed to launch Relion. """
-    from pyworkflow.em.packages.relion.convert import getEnviron
+    environ = Environ(os.environ)
     
-    return getEnviron(RELION_VERSION)
+    relionHome = os.environ['LOCALREC_RELION_HOME']
+    
+    binPath = join(relionHome, 'bin')
+    libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
+    
+    if not binPath in environ['PATH']:
+        environ.update({'PATH': binPath,
+                        'LD_LIBRARY_PATH': libPath,
+                        'SCIPION_MPI_FLAGS': os.environ.get(
+                            'RELION_MPI_FLAGS', ''),
+                        }, position=Environ.BEGIN)
+    
+    return environ
 
 
 def setEnviron():
@@ -225,8 +247,8 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
     2D shifts in X and Y...and the 3 euler angles.
     """
     from pyworkflow.em.transformations import euler_matrix
-    from numpy import deg2rad
-    radAngles = -deg2rad(angles)
+    #angles list is in radians, but sign changed
+    radAngles = -angles
     
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     if inverseTransform:

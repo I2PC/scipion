@@ -397,7 +397,7 @@ env.addPackage('unblur', version='1.0.2',
                tar='unblur_1.0.2.tgz')
 
 eman2_commands = [('./eman2-installer',
-                   'eman2.bashrc')]
+                   'eman2.*rc')]
 
 env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
@@ -433,8 +433,8 @@ relion_vars = [('FFTW_LIB', SW_LIB),
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
                     ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
-env.addPackage('relion', version='2.0.3',
-               tar='relion-2.0.3.tgz',
+env.addPackage('relion', version='2.0',
+               tar='relion-2.0.4.tgz',
                commands=relion2_commands,
                updateCuda=True,
                vars=relion_vars)
@@ -443,7 +443,7 @@ env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
 
 env.addPackage('localrec', version='1.2.0',
-               tar='localrec-1.2.0-beta.3.tgz')
+               tar='localrec-1.2.0.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
@@ -461,6 +461,9 @@ env.addPackage('motioncor2', version='16.03.16',
 
 env.addPackage('motioncor2', version='16.10.19',
                tar='motioncor2_10192016.tgz')
+
+env.addPackage('motioncor2', version='17.01.30',
+               tar='motioncor2_01302017.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')

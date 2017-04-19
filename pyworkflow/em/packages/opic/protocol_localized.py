@@ -24,9 +24,8 @@
 # *
 # *****************************************************************************
 
+import os
 import math
-
-from os.path import exists
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
@@ -35,10 +34,9 @@ from pyworkflow.protocol.params import (PointerParam, BooleanParam, StringParam,
 from pyworkflow.em.protocol import ProtParticles, ProtParticlePicking
 from pyworkflow.em.data import Coordinate, SetOfCoordinates
 
-from convert import particleToRow, rowToSubcoordinate, setEnviron, RELION_VERSION
-from pyworkflow.em.packages.relion.convert import composeRelionVersionHome
+from convert import particleToRow, rowToSubcoordinate, setEnviron
 
-from convert import getVersion
+from convert import getVersion, getRelionVersion
 
 CMM = 0
 HAND = 1
@@ -57,6 +55,8 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)
         ProtParticles.__init__(self, **args)
+        self.allowMpi = False
+        self.allowThreads = False
         
     
     #--------------------------- DEFINE param functions -----------------------
@@ -204,8 +204,12 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
-        relionPath = composeRelionVersionHome(RELION_VERSION)
-        if not exists(relionPath):
+        relionPath = os.environ['LOCALREC_RELION_HOME']
+        if getRelionVersion() != '1.4':
+            errors.append("Relion version must be 1.4. Please add "
+                          "LOCALREC_RELION_HOME = path/to/relion-1.4 into your "
+                          "config file.")
+        if not os.path.exists(relionPath):
             errors.append("%s does not exists. Contact with your system manager"
                           " to install relion-1.4 or relion-1.4f" % relionPath)
         return errors

@@ -27,7 +27,7 @@
 
 import sys
 import os
-from os.path import basename, exists, isdir, join, dirname
+from os.path import basename, exists, isdir
 import time
 from datetime import timedelta, datetime
 
@@ -92,8 +92,12 @@ class ProtImportImages(ProtImportFiles):
     
     #--------------------------- INSERT functions ------------------------------
     def _insertAllSteps(self):
-        
-        if self.dataStreaming:
+
+        # Only the import movies has property 'inputIndividualFrames'
+        # so let's query in a non-intrusive manner
+        inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
+
+        if self.dataStreaming or inputIndividualFrames:
             funcName = 'importImagesStreamStep' 
         else:
             funcName = 'importImagesStep'
@@ -193,8 +197,16 @@ class ProtImportImages(ProtImportFiles):
         Register other parameters.
         """
         self.info("Using pattern: '%s'" % pattern)
-        createSetFunc = getattr(self, '_create' + self._outputClassName)
-        imgSet = createSetFunc()
+
+        imgSet = self._getOutputSet() if self.isContinued() else None
+
+        if imgSet is None:
+            createSetFunc = getattr(self, '_create' + self._outputClassName)
+            imgSet = createSetFunc()
+        elif imgSet.getSize() > 0: # in case of continue
+            imgSet.loadAllProperties()
+            imgSet.enableAppend()
+
         imgSet.setIsPhaseFlipped(self.haveDataBeenPhaseFlipped.get())
         acquisition = imgSet.getAcquisition()
         self.fillAcquisition(acquisition)
@@ -215,8 +227,14 @@ class ProtImportImages(ProtImportFiles):
 
         i = 0
         lastDetectedChange = datetime.now()
-        timeout = timedelta(seconds=self.timeout.get())
-        fileTimeout = timedelta(seconds=self.fileTimeout.get())
+
+        # Ignore the timeout variables if we are not really in streaming mode
+        if self.dataStreaming:
+            timeout = timedelta(seconds=self.timeout.get())
+            fileTimeout = timedelta(seconds=self.fileTimeout.get())
+        else:
+            timeout = timedelta(seconds=5)
+            fileTimeout = timedelta(seconds=5)
 
         while not finished:
             time.sleep(3) # wait 3 seconds before check for new files
@@ -274,7 +292,11 @@ class ProtImportImages(ProtImportFiles):
                 # inactivity time elapsed (from last event to now) and
                 # if it is greater than the defined timeout, we conclude
                 # the import and close the output set
-                finished = now - lastDetectedChange > timeout
+                # Another option is to check if the protocol have some
+                # special stop condition, this can be used to manually stop
+                # some protocols such as import movies
+                finished = (now - lastDetectedChange > timeout or
+                            self.streamingHasFinished())
                 self.debug("Checking if finished:")
                 self.debug("   Now - Last Change: %s"
                            % pwutils.prettyDelta(now - lastDetectedChange))
@@ -287,12 +309,21 @@ class ProtImportImages(ProtImportFiles):
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
         return outFiles
-    
-    #--------------------------- INFO functions --------------------------------
+
+    @classmethod
+    def validatePath(cls, pathstr):
+        errors = []
+        badChars = ['%', '#', ':']
+        if any(bc in pathstr for bc in badChars):
+            errors.append("File name can't contain these characters:")
+            errors.append('  %s' % " ".join(badChars))
+        return errors
+
+        #--------------------------- INFO functions --------------------------------
     def _validateImages(self):
         errors = []
         ih = ImageHandler()
-        
+
         for imgFn, _ in self.iterFiles():
             
             if isdir(imgFn):
@@ -304,20 +335,23 @@ class ProtImportImages(ProtImportFiles):
                 # Exceptions: 
                 #  - Compressed movies (bz2 or tbz extensions)
                 #  - Importing in streaming, since files may be incomplete
-                if (not self.dataStreaming and 
+                #  - Bad characters in path [':' ,'%', '#']
+                if (not self.dataStreaming and
                     not (imgFn.endswith('bz2') or 
                          imgFn.endswith('tbz') or 
-                         ih.isImageFile(imgFn))): 
-                    if not errors: # if empty add the first line
+                         ih.isImageFile(imgFn))):
+                    if not errors:  # if empty add the first line
                         errors.append("Error reading the following images:")
                     errors.append('  %s' % imgFn)
+                    errors += ProtImportImages.validatePath(imgFn)
         
         return errors
         
     def _validate(self):
         errors = ProtImportFiles._validate(self)
+
         # Check that files are proper EM images, only when importing from
-        # files and not using streamming. In the later case we could
+        # files and not using streaming. In the later case we could
         # have partial files not completed.
         if (self.importFrom == self.IMPORT_FROM_FILES and
             not self.dataStreaming):
@@ -347,9 +381,9 @@ class ProtImportImages(ProtImportFiles):
         methods = []
         outputSet = self._getOutputSet()
         if outputSet is not None:
-            methods.append("*%d* %s were imported with a sampling rate of "
-                           "*%0.2f* Å/px (microscope voltage %d kV, "
-                           "magnification %dx). Output set is %s."
+            methods.append(u"*%d* %s were imported with a sampling rate of "
+                           u"*%0.2f* Å/px (microscope voltage %d kV, "
+                           u"magnification %dx). Output set is %s."
                            % (outputSet.getSize(), self._getOutputItemName(),
                               outputSet.getSamplingRate(),
                               round(self.voltage.get()),
@@ -448,3 +482,31 @@ class ProtImportImages(ProtImportFiles):
     def _createOutputSet(self):
         """ Create the output set that will be populated as more data is
         imported. """
+
+    # --------------- Streaming special functions -----------------------
+    def _getStopStreamingFilename(self):
+        return self._getExtraPath("STOP_STREAMING.TXT")
+
+    def getActions(self):
+        """ This method will allow that the 'Stop import' action to appears
+        in the GUI when the user right-click in the protocol import box.
+        It will allow a user to manually stop the streaming.
+        """
+        # Only allow to stop if running and in streaming mode
+        if self.dataStreaming and self.isRunning():
+            return [('STOP STREAMING', self.stopImport)]
+        else:
+            return []
+
+    def stopImport(self):
+        """ Since the actual protocol that is running is in a different
+        process that the one that this method will be invoked from the GUI,
+        we will use a simple mechanism to place an special file to stop
+        the streaming.
+        """
+        # Just place an special file into the run folder
+        f = open(self._getStopStreamingFilename(), 'w')
+        f.close()
+
+    def streamingHasFinished(self):
+        return os.path.exists(self._getStopStreamingFilename())
