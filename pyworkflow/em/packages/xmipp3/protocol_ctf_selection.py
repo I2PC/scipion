@@ -43,7 +43,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
-        self._freqResol = {}
+        #self._freqResol = {}
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -71,16 +71,41 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
-        self._insertFunctionStep('readCTF', wait=True)
+        self.ctfsList = []
+        self.insertedDict = {}
+
+        deps = self._insertSteps(self.insertedDict, self.inputCTFs.get())
+        fDeps = self._insertFinalSteps(deps)
+        waitCondition = self._getFirstJoinStepName() == 'createOutputStep'
+        self._insertFunctionStep('createOutputStep', prerequisites=fDeps, wait=waitCondition)
 
 
     # --------------------------- STEPS functions -------------------------------
+
+    def createOutputStep(self):
+        # Do nothing now, the output should be ready.
+        print "en createOutputStep"
+
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streamming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+
     def readCTF(self):
+        print "en readCTF"
         inputCTFs = self.inputCTFs.get()
         outputCTFs = self._createSetOfCTF()
-
-        #self.minDefocus=20000
-        #self.maxDefocus=30000
 
         for ctf in inputCTFs:
             defocusU = ctf.getDefocusU()
@@ -96,50 +121,57 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         self._defineOutputs(outputCTF=outputCTFs)
         self._defineTransformRelation(self.inputCTFs.get(), outputCTFs)
 
+    def _insertSteps(self, insertedDict, ctfSet):
+        estimDeps = []
+        if ctfSet.get().getFileName() not in insertedDict:
+            stepId = self._insertFunctionStep('readCTF')
+            estimDeps.append(stepId)
+            self.insertedDict[ctfSet.get().getFileName()] = stepId
+        return estimDeps
+
+    def _checkNewCTFs(self, ctfSet, outputStep):
+        """ Check for new CTF and update the output set. """
+        print "en _checkNewCTFs"
+        newCTFs = []
+        if ctfSet.get().getFileName() not in self.insertedDict:
+            newCTFs.append(ctfSet)
+
+            if newCTFs:
+                fDeps = self._insertEstimationSteps(self.insertedDict, ctfSet)
+                self._storeSteps()
+                self._numberOfSteps.set(len(self._steps))
+                self._store(self._numberOfSteps)
+                if outputStep:
+                    outputStep.addPrerequisites(*fDeps)
+
+        return newCTFs
+            #outputCTFs = self._createSetOfCTF()
+            #
+            #for ctf in ctfSet:
+            #    defocusU = ctf.getDefocusU()
+            #    defocusV = ctf.getDefocusV()
+            #    astigm = defocusU - defocusV
+            #    resol = ctf._ctffind4_ctfResolution.get()
+            #    if defocusU > self.minDefocus and defocusU < self.maxDefocus and \
+            #                defocusV > self.minDefocus and defocusV < self.maxDefocus and \
+            #                astigm < self.astigmatism and resol < self.resolution:
+            #        outputCTFs.append(ctf)
+            #
+            #self._defineOutputs(outputCTF=outputCTFs)
+            #self._defineTransformRelation(self.ctfSet.get(), outputCTFs)
+
     def _stepsCheck(self):
-        # Input movie set can be loaded or None when checked for new inputs
+        print "en _stepsCheck"
+        # Input ctf set can be loaded or None when checked for new inputs
         # If None, we load it
-        self._checkNewInput()
-        self._checkNewOutput()
+        outputStep = self._getFirstJoinStep()
+        if self.inputCTFs is None:
+            return
 
-    def _loadInputList(self):
-        """ Load the input set of ctf and create a list. """
-        ctfFile = self.inputCTFs.get().getFileName()
-        self.debug("Loading input db: %s" % ctfFile)
-        ctfSet = SetOfCTF(filename=ctfFile)
-        ctfSet.loadAllProperties()
-        self.listOfMovies = [m.clone() for m in ctfSet]
-        self.streamClosed = ctfSet.isStreamClosed()
-        ctfSet.close()
-        self.debug("Closed db.")
+        newCTFs = self._checkNewCTFs(self.inputCTFs, outputStep)
+        if newCTFs is None:
+            return
 
-    def _checkNewInput(self):
-        # Check if there are new ctfs to process from the input set
-        localFile = self.inputCTFs.get().getFileName()
-        now = datetime.now()
-        self.lastCheck = getattr(self, 'lastCheck', now)
-        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
-        self.debug('Last check: %s, modification: %s'
-                  % (pwutils.prettyTime(self.lastCheck),
-                     pwutils.prettyTime(mTime)))
-        # If the input ctfs.sqlite have not changed since our last check,
-        # it does not make sense to check for new input data
-        if self.lastCheck > mTime and hasattr(self, 'listOfCTFs'):
-            return None
-
-        self.lastCheck = now
-        # Open input movies.sqlite and close it as soon as possible
-        self._loadInputList()
-        newCTFs = any(m.getObjId() not in self.insertedDict
-                        for m in self.listOfCTFs)
-        outputStep = self._getFirstJoinStep()#####################################
-
-        if newCTFs:
-            fDeps = self._insertNewCTFSteps(self.insertedDict,
-                                               self.listOfCTFs)
-            if outputStep is not None:
-                outputStep.addPrerequisites(*fDeps)
-            self.updateSteps()
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
@@ -160,8 +192,5 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             message.append("You must specify a set of CTFs.")
         return message
 
-    def _stepsCheck(self):
-        # Just to avoid the stream checking inherited from ProtCTFMicrographs
-        pass
-    
+
         
