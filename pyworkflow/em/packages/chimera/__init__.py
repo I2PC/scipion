@@ -29,8 +29,7 @@ This EM module contains Gautomatch auto-picking protocol
 from bibtex import _bibtex # Load bibtex dict with references
 from convert import getEnviron
 
-_logo = "ccp4_200.png"
+_logo = "ChimeraLogoSmall.png"
 
-from protocol_coot import CCP4ProtCoot
-from protocol_refmac import CCP4ProtRunRefmac
+from protocol_fit import ChimeraProtRigidFit
 _environ = getEnviron()
