@@ -11,10 +11,11 @@
 #include "cuda_interpolation2D_basic_rotation.h"
 #include "cuda_interpolation3D_basic_rotation.h"
 #include "cuda_check_errors.h"
+#include "cuda_utils.h"
 
 
-void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t Xdim,
-		size_t Ydim, size_t Zdim, double* ang, int interp, int wrap, int first_call){
+void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim,
+		double* ang, int interp, int wrap, int first_call, struct ioTime* mytime){
 
 		//CUDA code
 		size_t matSize=Xdim*Ydim*Zdim*sizeof(float);
@@ -24,20 +25,15 @@ void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t
 			gpuErrchk(cudaFree(0));
 		}
 
-//#define TIME
 
 		/*//AJ prueba con pinned memory
 		float *h_image;
 		gpuErrchk( cudaMallocHost((void**)&h_image, matSize) );
 		memcpy(h_image, image, matSize);*/
 
-
-#ifdef TIME
-	clock_t t_ini8, t_fin8;
-	double secs8;
-	t_ini8 = clock();
-#endif
-
+if(mytime->calcTime==true){
+    gettimeofday(&mytime->t_ini_gpu_mem_in, NULL);
+}
 
 	struct cudaPitchedPtr bsplineCoeffs;
 	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
@@ -90,6 +86,12 @@ void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t
 
 
     }
+
+if(mytime->calcTime==true){
+    gettimeofday(&mytime->t_fin_gpu_mem_in, NULL);
+    mytime->secs_gpu_mem_in = timeval_diff(&mytime->t_fin_gpu_mem_in, &mytime->t_ini_gpu_mem_in);
+}
+
 	gpuErrchk(cudaFree(bsplineCoeffs.ptr));
 
     // Allocate result of transformation in device memory
@@ -101,17 +103,9 @@ void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t
 	gpuErrchk(cudaMemcpy(d_angle, ang, angle_size * sizeof(double), cudaMemcpyHostToDevice));
 
 
-#ifdef TIME
-    t_fin8 = clock();
-    secs8 = (double)(t_fin8 - t_ini8) / CLOCKS_PER_SEC;
-    printf("Memory host to device : %.16g milisegundos\n", secs8 * 1000.0);
-#endif
-
-#ifdef TIME
-	clock_t t_ini9, t_fin9;
-	double secs9;
-	t_ini9 = clock();
-#endif
+if(mytime->calcTime==true){
+    gettimeofday(&mytime->t_ini_gpu_kernel, NULL);
+}
 
 	//Kernel
 	if(Zdim==1){
@@ -153,29 +147,27 @@ void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t
 	}
 	gpuErrchk(cudaDeviceSynchronize());
 
-#ifdef TIME
-    t_fin9 = clock();
-    secs9 = (double)(t_fin9 - t_ini9) / CLOCKS_PER_SEC;
-    printf("Kernel : %.16g milisegundos\n", secs9 * 1000.0);
-#endif
+if(mytime->calcTime==true){
+    gettimeofday(&mytime->t_fin_gpu_kernel, NULL);
+    mytime->secs_gpu_kernel = timeval_diff(&mytime->t_fin_gpu_kernel, &mytime->t_ini_gpu_kernel);
+}
 
-#ifdef TIME
-	clock_t t_ini10, t_fin10;
-	double secs10;
-	t_ini10 = clock();
-#endif
+if(mytime->calcTime==true){
+    gettimeofday(&mytime->t_ini_gpu_mem_out, NULL);
+}
 
 	gpuErrchk(cudaMemcpy(rotated_image, d_output, matSize, cudaMemcpyDeviceToHost));
+
+if(mytime->calcTime==true){
+    gettimeofday(&mytime->t_fin_gpu_mem_out, NULL);
+    mytime->secs_gpu_mem_out = timeval_diff(&mytime->t_fin_gpu_mem_out, &mytime->t_ini_gpu_mem_out);
+}
 
 	gpuErrchk(cudaFreeArray(cuArray));
 	gpuErrchk(cudaFree(d_output));
 	gpuErrchk(cudaFree(d_angle));
 
-#ifdef TIME
-    t_fin10 = clock();
-    secs10 = (double)(t_fin10 - t_ini10) / CLOCKS_PER_SEC;
-    printf("Memory device to host : %.16g milisegundos\n", secs10 * 1000.0);
-#endif
+
 
     //AJ prueba con pinned memory
     //gpuErrchk(cudaFreeHost(h_image));
