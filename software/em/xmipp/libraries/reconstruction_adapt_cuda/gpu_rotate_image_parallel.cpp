@@ -95,7 +95,7 @@ float** cuda_rotate_image_parallel(float **image, size_t *Xdim,
 	if (interp == BSPLINE3){
 		for(int i=0; i<mdInSize; i++){
 			first_call++;
-			cuda_rotate_image_bspline(image[i], rotated_image[i], Xdim[i], Ydim[i], Zdim[i], transform_matrix[i], wrap, first_call);
+			cuda_rotate_image_bspline(image[i], rotated_image[i], Xdim[i], Ydim[i], Zdim[i], transform_matrix[i], wrap, first_call, NULL);
 		}
 	}
 	else
