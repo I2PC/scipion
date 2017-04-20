@@ -38,10 +38,11 @@
 
 #include "../reconstruction_cuda/cuda_gpu_rotate_image_bspline.h"
 #include "../reconstruction_cuda/cuda_gpu_rotate_image_linear_nearest.h"
+#include "../reconstruction_cuda/cuda_utils.h"
 
 #define CUDA_NEAREST 0 //xmipp NEAREST
 #define CUDA_LINEAR  1 //xmipp linear
-#define CUDA_BSPLINE 2 //xmipp_BSPLINE3
+#define CUDA_BSPLINE 2 //xmipp BSPLINE3
 
 #define CUDA_BORDER 3 //cudaAddressModeBorder =  3
 #define CUDA_CLAMP  1 //cudaAddressModeClamp =  1
@@ -51,17 +52,15 @@
 #define USE_COMMAND 1
 #define USE_BOTH 2
 
-/**@defgroup AngularDistance angular_distance (Distance between two angular assignments)
-   @ingroup ReconsLibrary */
-//@{
-/** Angular Distance parameters. */
+#define TIME
+
 
 
 void transformationMatrixCuda(const MDRow &imageGeo, Matrix2D<double> &A, bool isVol);
 
 //CUDA functions
 void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim,
-		size_t Ydim, size_t Zdim, double* ang, int interp, int wrap, int first_call);
+		size_t Ydim, size_t Zdim, double* ang, int interp, int wrap, int first_call, struct ioTime* times);
 
 
 class ProgGpuRotateImage: public XmippMetadataProgram
