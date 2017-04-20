@@ -73,6 +73,12 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* ang
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
 
+    int repeticiones=1;
+
+
+    for (int i=0; i<repeticiones; i++){
+
+
     if(x>=Xdim || y>=Ydim){
     	return;
     }
@@ -98,6 +104,8 @@ rotate_kernel_normalized_2D(float *output, size_t Xdim, size_t Ydim, double* ang
 
     // Read from texture and write to global memory
    	output[y * Xdim + x] = tex2D(texRefBasic, tu, tv);
+
+    }//end for
 }
 
 /*
