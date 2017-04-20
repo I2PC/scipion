@@ -261,8 +261,8 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             sampling = _getSampling(self.outputParticles)
             size = _getSize(self.outputParticles)
             if self.doResize:
-                summary.append("Output particles have a different sampling "
-                               "rate (pixel size): *%0.3f* Å/px" % sampling)
+                summary.append(u"Output particles have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow:
@@ -377,8 +377,8 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             sampling = _getSampling(self.outputVol)
             size = _getSize(self.outputVol)
             if self.doResize:
-                summary.append("Output volume(s) have a different sampling "
-                               "rate (pixel size): *%0.3f* Å/px" % sampling)
+                summary.append(u"Output volume(s) have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow.get():

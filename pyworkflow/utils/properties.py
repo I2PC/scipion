@@ -98,6 +98,7 @@ class Message():
     LABEL_OBJLABEL = 'Label'
     
     LABEL_METHODS = 'Methods'
+    LABEL_BIB_BTN = 'Export .bib'
     LABEL_LOGS = 'Output Logs'
     LABEL_LOGS_OUTPUT = 'Output Log'
     LABEL_LOGS_ERROR = 'Error Log'
