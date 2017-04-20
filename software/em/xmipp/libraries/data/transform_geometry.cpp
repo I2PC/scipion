@@ -204,7 +204,11 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
 	t_ini = clock();
 #endif
 
-	int aux2;
+	//AJ
+	int aux;
+	int repeticiones=1;
+	applyTransform=true;
+	//FIN AJ
 
     if (checkParam("--matrix"))
     {
@@ -221,10 +225,7 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
     if (apply_geo || mdVol)
         geo2TransformationMatrix(rowOut, B);
 
-      //std::cout << "A = " << A << std::endl;
-      //std::cout << "B = " << B << std::endl;
       T = A * B;
-      //std::cout << "T = " << T << std::endl;
     }
 
     if (checkParam("--write_matrix"))
@@ -239,9 +240,9 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
         imgOut.setDatatype(img.getDatatype());
         imgOut().resize(1, zdimOut, ydimOut, xdimOut, false);
         imgOut().setXmippOrigin();
-        //for (int i=0; i<1000; i++){
+        for (int i=0; i<repeticiones; i++){
         applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
-        //}
+        }
         imgOut.write(fnImgOut);
         rowOut.resetGeo(false);
     }
