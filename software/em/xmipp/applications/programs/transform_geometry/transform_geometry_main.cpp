@@ -43,7 +43,7 @@ double timeval_diff(struct timeval *a, struct timeval *b)
 
 int main(int argc, char** argv) {
 
-	int aux;
+	int aux1;
 
 	struct timeval t_inicpu, t_fincpu;
 	double secscpu;
