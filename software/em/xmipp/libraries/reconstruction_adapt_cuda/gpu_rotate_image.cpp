@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Amaya Jimenez      ajimenez@cnb.csic.es (2002)
+ * Authors:    Amaya Jimenez      ajimenez@cnb.csic.es (2017)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "gpu_rotate_image.h"
+
 
 
 
@@ -89,10 +90,10 @@ void transformationMatrixCuda(const MDRow &imageGeo, Matrix2D<double> &A, bool i
 
 //CUDA functions
 void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim,
-		size_t Ydim, size_t Zdim, double* ang, int interp, int wrap, int first_call){
+		size_t Ydim, size_t Zdim, double* ang, int interp, int wrap, int first_call, struct ioTime* times){
 
 	if (interp == BSPLINE3)
-		cuda_rotate_image_bspline(image, rotated_image, Xdim, Ydim, Zdim, ang, wrap, first_call);
+		cuda_rotate_image_bspline(image, rotated_image, Xdim, Ydim, Zdim, ang, wrap, first_call, times);
 	else
 	{
 	    if (interp == NEAREST)
@@ -101,7 +102,7 @@ void cuda_rotate_image(float *image, float *rotated_image, size_t Xdim,
 	    	interp = CUDA_LINEAR;
 	    else
 	    	REPORT_ERROR(ERR_PARAM_INCORRECT,"Non supported interpolation type");
-		cuda_rotate_image_linear_nearest(image, rotated_image, Xdim, Ydim, Zdim, ang, interp, wrap, first_call);
+		cuda_rotate_image_linear_nearest(image, rotated_image, Xdim, Ydim, Zdim, ang, interp, wrap, first_call, times);
 
 	}
 }
@@ -277,11 +278,10 @@ void ProgGpuRotateImage::preProcess()
 void ProgGpuRotateImage::processImage(const FileName &fnRef, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
-#ifdef TIME
-	clock_t t_ini1, t_fin1;
-	double secs1;
-	t_ini1 = clock();
-#endif
+	if(first_call==0){
+		mytimes = (struct ioTime*) malloc(mdInSize * sizeof(struct ioTime));
+	}
+
 
 	first_call++;
 
@@ -290,7 +290,29 @@ void ProgGpuRotateImage::processImage(const FileName &fnRef, const FileName &fnI
 	R.initIdentity(dim+1);
 
     Image<float> Iref, Iout;
+#ifdef TIME
+    mytimes[first_call-1].calcTime=true;
+    if(isMd){
+    	mytimes[first_call-1].size=mdInSize;
+    }else{
+    	mytimes[first_call-1].size=1;
+    }
+    if(splineDegree==BSPLINE3){
+    	mytimes[first_call-1].spline=true;
+    }else{
+    	mytimes[first_call-1].spline=false;
+    }
+    gettimeofday(&mytimes[first_call-1].t_ini_cpu_mem_in, NULL);
+#endif
+#ifndef TIME
+    mytimes[first_call-1].calcTime=false;
+#endif
+
     Iref.read(fnRef);
+#ifdef TIME
+    gettimeofday(&mytimes[first_call-1].t_fin_cpu_mem_in, NULL);
+    mytimes[first_call-1].secs_cpu_mem_in = timeval_diff(&mytimes[first_call-1].t_fin_cpu_mem_in, &mytimes[first_call-1].t_ini_cpu_mem_in);
+#endif
     size_t Xdim, Ydim, Zdim, Ndim;
     Iref.getDimensions(Xdim, Ydim, Zdim, Ndim);
 
@@ -328,18 +350,18 @@ void ProgGpuRotateImage::processImage(const FileName &fnRef, const FileName &fnI
     float *original_image_gpu = MULTIDIM_ARRAY(Iref()); //MULTIDIM_ARRAY(input_image);
     float *rotated_image_gpu = MULTIDIM_ARRAY(rotated_image);
 
-	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, rot_vector, splineDegree, wrapMode, first_call);
+	cuda_rotate_image(original_image_gpu, rotated_image_gpu, Xdim, Ydim, Zdim, rot_vector, splineDegree, wrapMode, first_call, &mytimes[first_call-1]);
 
 	Iout() = rotated_image;
-    Iout.write(fnImgOut);
-
-    //std::cerr << "Output image: " << rotated_image << std::endl;
-
 #ifdef TIME
-    t_fin1 = clock();
-    secs1 = (double)(t_fin1 - t_ini1) / CLOCKS_PER_SEC;
-    printf("Total: %.16g milisegundos\n", secs1 * 1000.0);
+    gettimeofday(&mytimes[first_call-1].t_ini_cpu_mem_out, NULL);
 #endif
+    Iout.write(fnImgOut);
+#ifdef TIME
+    gettimeofday(&mytimes[first_call-1].t_fin_cpu_mem_out, NULL);
+    mytimes[first_call-1].secs_cpu_mem_out = timeval_diff(&mytimes[first_call-1].t_fin_cpu_mem_out, &mytimes[first_call-1].t_ini_cpu_mem_out);
+#endif
+
 
 }
 
