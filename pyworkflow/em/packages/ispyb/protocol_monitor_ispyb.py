@@ -70,7 +70,7 @@ class ProtMonitorISPyB(ProtMonitor):
                                monitorTime=100)
 
         monitor.addNotifier(PrintNotifier())
-        monitor.loop()
+        monitor.step()
 
 
 class MonitorISPyB(Monitor):
