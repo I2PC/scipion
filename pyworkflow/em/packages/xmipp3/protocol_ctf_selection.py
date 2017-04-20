@@ -62,7 +62,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                       label='Astigmatism (A)',
                       help='Maximum value allowed for astigmatism in Angstroms. '
                            'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
-        form.addParam('resolution', params.FloatParam, default=5,
+        form.addParam('resolution', params.FloatParam, default=7,
                   label='Resolution (A)',
                   help='Minimum value for resolution in Angstroms. '
                        'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
@@ -71,10 +71,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _insertAllSteps(self):
         """for each ctf insert the steps to compare it
         """
-        self.ctfsList = []
         self.insertedDict = {}
 
-        deps = self._insertSteps(self.insertedDict, self.inputCTFs.get())
+        deps = self._insertSteps(self.insertedDict, self.inputCTFs)
         fDeps = self._insertFinalSteps(deps)
         waitCondition = self._getFirstJoinStepName() == 'createOutputStep'
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps, wait=waitCondition)
@@ -111,12 +110,13 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             astigm = defocusU - defocusV
-            resol = ctf._ctffind4_ctfResolution.get()
+            resol = ctf._ctffind4_ctfResolution.get() #PENDIENTEEEEEEEEEEEEEEEEEE
             if defocusU>self.minDefocus and defocusU<self.maxDefocus and \
                 defocusV>self.minDefocus and defocusV<self.maxDefocus and \
                 astigm <self.astigmatism and resol<self.resolution:
 
                 outputCTFs.append(ctf)
+
 
         self._defineOutputs(outputCTF=outputCTFs)
         self._defineTransformRelation(self.inputCTFs.get(), outputCTFs)
