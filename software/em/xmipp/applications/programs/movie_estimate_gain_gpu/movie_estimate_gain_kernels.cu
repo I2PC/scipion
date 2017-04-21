@@ -1,0 +1,132 @@
+#define TILE_DIM 32
+#define TILE_DIM2 TILE_DIM*2
+#define BLOCK_ROWS 8
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line,
+			 bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+/****
+ sumall - sum no_imgs images in matrix sumObjs, starting from firstImg
+****/
+__global__
+void sumall( float* sumObjs, int** array_Img, int no_imgs, int Xdim, int Ydim){
+
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*blockDim.y + threadIdx.y;
+   int offset = x+y*Xdim;
+   int px_img = Xdim*Ydim;
+
+   if ((x<Xdim)&&(y<Ydim)){
+//   	printf("no_imgs=%d, (%d, %d) th=(%d,%d) blk=(%d,%d)\n", no_imgs, x, y, threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
+	double sum=0;
+	int* ptr;
+	for (int img=0; img<no_imgs; img++){
+	    	ptr=array_Img[img];
+		sum+= (double)ptr[offset];
+	}
+        sum*=2;
+        sumObjs[x+y*Xdim]=(float)sum;
+//	printf("data %f\n", sumObjs[x+y+y*Xdim]);
+
+   } //end-if Xdim, Ydim
+}//sumall
+
+/****
+ mult - c=a+b
+****/
+__global__
+void mult( int* a, float* b, int* c, int Xdim, int Ydim){
+
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*blockDim.y + threadIdx.y;
+   int offset = x+y*Xdim;
+
+   if ((x<Xdim)&&(y<Ydim))
+	c[offset]=int((double)a[offset]*b[offset]);
+}//mult
+
+/****
+ fill - fill matrix/array with value
+****/
+__global__
+void fill( int* a, const int val,  int Xdim, int Ydim){
+
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*blockDim.y + threadIdx.y;
+   int offset = x+y*Xdim;
+
+   if ((x<Xdim)&&(y<Ydim))
+	a[offset]=val;
+}//mult
+
+/****
+ smooth1: first kernel of constructSmoothHistogramColumn/Row
+          if used for constructSmoothHistogramRow, rowH must be transposed
+          before calling the kernel, and smooth after calling it
+          Each thread computes a semicolumn
+****/
+__global__ smooth1(int *smooth, int *colrow, int *listOfWeight, int width, int Xdim, int Ydim)
+{
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*TILE_DIM2 + threadIdx.y;
+
+// 	for (size_t j=0; j<XSIZE(columnH); ++j)
+//	{
+		double sumWeightsC = 0;
+		for(int k = -width; k<=width; ++k)
+		{
+			if (x+k<0 || x+k>=Xdim)
+				continue;
+			//**** MODIFED BY GCF
+			//double actualWeightC = k==0? 1:listOfWeights[abs(k)];
+			double actualWeightC = listOfWeights[abs(k)];
+			//********	
+			sumWeightsC += actualWeightC;
+			for (size_t i=0; i<TILE_DIM2; ++i){
+				if ((y+i)<Ydim)
+					smooth[x+(y+i)*Xdim] += actualWeightC * colrow[(x+k)+(y+i)*Xdim];
+			}
+		}
+
+		double iSumWeightsC=1/sumWeightsC;
+		for (size_t i=0; i<TILE_DIM2; ++i)
+			if ((y+i)<Ydim)
+				smooth[x+(y+i)*Xdim] *= iSumWeightsC;
+	}
+}
+
+// Kernel to transpose a matrix
+// The kernel assumes that each block deals with a 32x32 tile
+// each block has 32x8 threads 
+// IMPORTANT: The input has Xdim columns X Ydim rows
+//            The output has Ydim columns X Xdim rows
+__global__ void transpose(int *odata, const int *idata, int Xdim, int Ydim)
+{
+__shared__ float tile[TILE_DIM+1][TILE_DIM];
+//__shared__ float tile[TILE_DIM][TILE_DIM];
+  int x = blockIdx.x * TILE_DIM + threadIdx.x;
+  int y = blockIdx.y * TILE_DIM + threadIdx.y;
+
+  if (x<Xdim)
+	for (int j = 0; j < TILE_DIM; j += BLOCK_ROWS)
+		if (y+j<Ydim)
+		     tile[threadIdx.y+j][threadIdx.x] = idata[(y+j)*Xdim + x];
+
+  __syncthreads();
+
+  x = blockIdx.y * TILE_DIM + threadIdx.x;  // transpose block offset
+  y = blockIdx.x * TILE_DIM + threadIdx.y;
+
+  if (x<Ydim)
+	  for (int j = 0; j < TILE_DIM; j += BLOCK_ROWS)
+		if (y+j<Xdim)
+		     odata[(y+j)*Ydim + x] = tile[threadIdx.x][threadIdx.y + j];
+}
+
