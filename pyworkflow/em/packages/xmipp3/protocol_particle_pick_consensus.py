@@ -78,7 +78,7 @@ class XmippProtConsensusPicking(ProtParticlePicking):
                            "Set to -1 to indicate that it needs to be selected by all algorithms. Set to 1 to indicate that "\
                            "it suffices that only 1 algorithm selects the particle")
 
-        form.addParallelSection(threads=1, mpi=8)
+        form.addParallelSection(threads=4, mpi=1)
         
 #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):

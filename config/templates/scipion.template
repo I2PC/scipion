@@ -47,7 +47,7 @@ MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-17.01.30
 # MOTIONCOR2_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 NMA_HOME = %(EM_ROOT)s/nma
 PYTOM_HOME = %(EM_ROOT)s/pytom
-RELION_HOME = %(EM_ROOT)s/relion-2.0.3
+RELION_HOME = %(EM_ROOT)s/relion-2.0
 # Uncomment the following line to define a different CUDA path for Relion
 # RELION_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 # RELION_CUDA_BIN = None # Only for compiling purposes

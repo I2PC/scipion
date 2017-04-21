@@ -58,6 +58,7 @@ import xmipp.viewer.particlepicker.extract.ExtractPickerJFrame;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerCanvas;
 import xmipp.viewer.particlepicker.training.gui.SupervisedPickerJFrame;
 import xmipp.viewer.particlepicker.training.model.Mode;
+import xmipp.viewer.particlepicker.training.model.SupervisedParticlePicker;
 
 public abstract class ParticlePickerJFrame extends JFrame implements ActionListener
 {
@@ -180,20 +181,23 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
                     
                     @Override
                     public void actionPerformed(ActionEvent e)
-                            
                     {
-                        if (getParticlePicker().getMode() != Mode.ReadOnly)
-                            getParticlePicker().saveData();
-                        if(getParticlePicker().isScipionSave())
+                    	ParticlePicker picker = getParticlePicker();
+                        if (picker.getMode() != Mode.ReadOnly)
+                            picker.saveData();
+                        if(picker instanceof SupervisedParticlePicker)
+                        	((SupervisedParticlePicker)picker).getClassifier().setApplyChanges(true);
+                        
+                        if(picker.isScipionSave())
                         {
-                            int count = getParticlePicker().getParticlesCount();
+                            int count = picker.getParticlesCount();
                             if(count == 0)
                             {
                                 XmippDialog.showInfo(ParticlePickerJFrame.this, XmippMessage.getEmptyFieldMsg("coordinates"));
                                 return;
                             }
                             HashMap<String, String> msgfields = new HashMap<String, String>();
-                            boolean createprot = getParticlePicker().getPort() == null;
+                            boolean createprot = picker.getPort() == null;
                             if(createprot)
                                 msgfields.put("Run name:", "ProtUserCoordinates");
                             
