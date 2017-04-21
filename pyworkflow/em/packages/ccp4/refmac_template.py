@@ -25,8 +25,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-template="""
-#
+template="""#!/bin/sh
 # This example script will run REFMAC for a model against an EM map. 
 # In this example the model is A/molecule-A.pdb
 # 
@@ -65,23 +64,27 @@ PATHCCP4=%(CCP4_HOME)s
 #CHIMERA command
 CHIMERA=%(CHIMERA_BIN)s
 
+#Directory of output files (extra folder)
+OUTPUTDIR=%(OUTPUTDIR)s
+
 #suffix for output files 
 molecule_id=${MOL}
-# Delete some temporaly files. If not and the script is executed
+# Delete some temporary files. If not and the script is executed
 # two times there will be conflicts
 if [ "$generateMaskedVolume" = true ] ; then
-    rm  average_for_refmac.mtz refmac-makes-sfs.log orig_data_rescut.txt
-    rm $molecule_id-initial.pdb masked_fs.mtz shifts.txt
+    rm  ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}refmac-makes-sfs.log ${OUTPUTDIR}orig_data_rescut.txt
+    rm ${OUTPUTDIR}$molecule_id-initial.pdb ${OUTPUTDIR}masked_fs.mtz ${OUTPUTDIR}shifts.txt
     echo "GENERATE MASKED VOLUME"
 else
     echo "DO NOT GENERATE MASKED VOLUME"
 fi
-rm $molecule_id-refined.mtz $molecule_id-refined.pdb
-rm $molecule_id-refmac-refines.log ifft.log
-rm  masked_fs.map
+rm ${OUTPUTDIR}$molecule_id-refined.mtz ${OUTPUTDIR}$molecule_id-refined.pdb
+rm ${OUTPUTDIR}$molecule_id-refmac-refines.log ${OUTPUTDIR}ifft.log
+rm ${OUTPUTDIR}masked_fs.map
 
-#just show what is in the directory
-ls
+#just show what is in the directory (current)
+ls 
+
 
 #################################################################
 #Nothing to be changed below (unless you know what you are doing)
@@ -91,21 +94,18 @@ PATHMRCBIN=$PATHCCP4/bin
 
 echo $PATHMRCENV
 #####echo "source must be done outside the script"
-source $PATHMRCENV
+. $PATHMRCENV
 
 #for molecule_id in [A]######
 #do
      pdb_in=${PDBDIR}/${PDBFILE}
      if [ "$generateMaskedVolume" = true ] ; then
-      #if [ -e ${pdb_in} ] ; then
-          echo we will work on $pdb_in
-          #cd $molecule_id
-          #if [ ! -e  refmac-makes-sfs.log ] ; then 
+         echo we will work on $pdb_in
    	     $refmac MAPIN ${MAPFILE} \
-                     HKLOUT average_for_refmac.mtz \
+                     HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \
 		     XYZIN $pdb_in \
-		     XYZOUT $molecule_id-initial.pdb \
-                     > refmac-makes-sfs.log \
+		     XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \
+                     > ${OUTPUTDIR}refmac-makes-sfs.log \
             << eof
                MODE SFCALC 
                sfcalc mapradius 3
@@ -116,27 +116,27 @@ eof
      fi    
 #check volume
 
-fft HKLIN masked_fs.mtz MAPOUT masked_fs.map << END-fft > ifft.log 
+fft HKLIN ${OUTPUTDIR}masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft > ${OUTPUTDIR}ifft.log 
 LABIN F1=Fout0 PHI=Pout0 
 SCALE F1 1.0 300.0 
 RESOLUTION 3.0 
 GRID 200 200 200 
 END 
 END-fft
-${CHIMERA} masked_fs.map &
+${CHIMERA} ${OUTPUTDIR}masked_fs.map &
 
 #end check
-                $refmac HKLIN masked_fs.mtz \
-                        HKLOUT $molecule_id-refined.mtz \
-                        XYZIN  $molecule_id-initial.pdb \
-                        XYZOUT $molecule_id-refined.pdb\
+                $refmac HKLIN ${OUTPUTDIR}masked_fs.mtz \
+                        HKLOUT ${OUTPUTDIR}$molecule_id-refined.mtz \
+                        XYZIN  ${OUTPUTDIR}$molecule_id-initial.pdb \
+                        XYZOUT ${OUTPUTDIR}$molecule_id-refined.pdb\
 			atomsf ${PATHCCP4}/bin/atomsf_electron.lib \
-			> $molecule_id-refmac-refines.log <<EOF  
+			> ${OUTPUTDIR}$molecule_id-refmac-refines.log <<EOF  
 
 LABIN FP=Fout0 PHIB=Pout0
 
-# set resolution limit. The FSC=0.143 cutoff is recommended. 
-RESO 3.5
+# set resolution limits. The FSC=0.143 cutoff is recommended. 
+RESO = (%(RESOMIN)f  %(RESOMAX)f)
 
 # set B-factors at 40 prior to refinement:
 ##BFACtor SET 40
@@ -145,10 +145,10 @@ RESO 3.5
 ##REFI sharpen -50
 
 # specify number of refinement cycles:
-NCYCLE 30
+NCYCLE = %(NCYCLE)d
 
 # set refinement weight:
-WEIGht MATRix 0.01
+WEIGht MATRix = %(WEIGHT MATRIX)f
 
 #specify any other keyword:
 ##MAKE CISP NO
@@ -171,7 +171,7 @@ EXTERNAL WEIGHT GMWT 0.1
 MONI DIST 1000000
 END
 EOF
-          echo Output $molecule_id-refined.pdb  
+          echo Output ${OUTPUTDIR}$molecule_id-refined.pdb  
           #fi
           #cd - 
       #fi
