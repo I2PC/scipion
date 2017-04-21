@@ -27,6 +27,7 @@
 #include <list>
 #include "morphology.h"
 #include "wavelet.h"
+#include "xmipp_fftw.h"
 
 /* Subtract background ---------------------------------------------------- */
 void substractBackgroundPlane(MultidimArray<double> &I)
@@ -3314,5 +3315,125 @@ void BasisFilter::apply(MultidimArray<double> &img)
         DIRECT_MULTIDIM_ELEM(result,n) += cnn * (*ptrBasis++);
     }
     img = result;
+}
+
+/** Define the parameters for use inside an Xmipp program */
+void RetinexFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Retinex ==");
+    program->addParamsLine(
+        "  [ --retinex <percentile=0.9> <mask_file=\"\"> <eps=1>] : Retinex filter, remove a given percentile of the");
+    program->addParamsLine("         : Laplacian within the mask, epsilon controls the behaviour at low frequency");
+}
+
+/** Read from program command line */
+void RetinexFilter::readParams(XmippProgram * program)
+{
+    percentile = program->getDoubleParam("--retinex",0);
+    String fnMask = program->getParam("--retinex",1);
+    if (fnMask=="")
+    	mask = NULL;
+    else
+    {
+        mask = new Image<int>;
+        mask->read(fnMask);
+    }
+    eps = program->getDoubleParam("--retinex",2);
+}
+void RetinexFilter::laplacian(const MultidimArray<double> &img,
+   MultidimArray< std::complex<double> > &fimg, bool direct)
+{
+    if (ZSIZE(img)>1)
+    {
+        Matrix1D<double> w(3);
+        for (size_t k=0; k<ZSIZE(fimg); k++)
+        {
+            FFT_IDX2DIGFREQ(k,ZSIZE(img),ZZ(w));
+            double filter_k=6+eps-2*cos(TWOPI*ZZ(w));
+            for (size_t i=0; i<YSIZE(fimg); i++)
+            {
+                FFT_IDX2DIGFREQ(i,YSIZE(img),YY(w));
+                double filter_ki=filter_k-2*cos(TWOPI*YY(w));
+                for (size_t j=0; j<XSIZE(fimg); j++)
+                {
+                    FFT_IDX2DIGFREQ(j,XSIZE(img),XX(w));
+                    double filter_kij=filter_ki-2*cos(TWOPI*XX(w));
+                    if (!direct && filter_kij>0)
+                        filter_kij=1.0/filter_kij;
+                    DIRECT_A3D_ELEM(fimg,k,i,j)*=filter_kij;
+                }
+            }
+        }
+    }
+    else
+    {
+        Matrix1D<double> w(2);
+		for (size_t i=0; i<YSIZE(fimg); i++)
+		{
+			FFT_IDX2DIGFREQ(i,YSIZE(img),YY(w));
+			double filter_i=4+eps-2*cos(TWOPI*YY(w));
+			for (size_t j=0; j<XSIZE(fimg); j++)
+			{
+				FFT_IDX2DIGFREQ(j,XSIZE(img),XX(w));
+				double filter_ij=filter_i-2*cos(TWOPI*XX(w));
+				if (!direct && filter_ij>0)
+					filter_ij=1.0/filter_ij;
+				DIRECT_A2D_ELEM(fimg,i,j)*=filter_ij;
+			}
+		}
+    }
+}
+
+/** Apply the filter to an image or volume*/
+void RetinexFilter::apply(MultidimArray<double> &img)
+{
+    double mean, std;
+    if (mask==NULL)
+       img.computeAvgStdev(mean,std);
+    else
+       img.computeAvgStdev_within_binary_mask((*mask)(),mean,std);
+
+    FourierTransformer fft;
+    MultidimArray< std::complex<double> > fimg;
+
+    // Apply forward Laplacian
+    fft.FourierTransform(img,fimg,false);
+    laplacian(img,fimg,true);
+    fft.inverseFourierTransform();
+
+    // Compute the threshold outside the mask
+    double *sortedValues=NULL;
+    size_t Nsorted=0;
+    if (mask==NULL)
+    {
+        Nsorted=MULTIDIM_SIZE(img);
+        sortedValues=new double[Nsorted];
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+            sortedValues[n]=fabs(DIRECT_MULTIDIM_ELEM(img,n));
+    }
+    else
+    {
+        const MultidimArray<int> &mmask=(*mask)();
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+            if (DIRECT_MULTIDIM_ELEM(mmask,n)==0)
+               Nsorted+=1;
+
+        sortedValues=new double[Nsorted];
+        size_t i=0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+            if (DIRECT_MULTIDIM_ELEM(mmask,n)==0)
+                 sortedValues[i++]=fabs(DIRECT_MULTIDIM_ELEM(img,n));
+    }
+    std::sort(sortedValues,sortedValues+Nsorted);
+    double threshold=sortedValues[(size_t)(percentile*Nsorted)];
+
+    // Apply threshold
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img)
+        if (fabs(DIRECT_MULTIDIM_ELEM(img,n))<threshold)
+            DIRECT_MULTIDIM_ELEM(img,n)=0.0;
+
+    fft.FourierTransform(img,fimg,false);
+    laplacian(img,fimg,false);
+    fft.inverseFourierTransform();
 }
 

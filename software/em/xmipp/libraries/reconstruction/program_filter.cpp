@@ -47,6 +47,7 @@ void ProgFilter::defineParams()
     MedianFilter::defineParams(this);
     BasisFilter::defineParams(this);
     LogFilter::defineParams(this);
+    RetinexFilter::defineParams(this);
 
     //examples
     addExampleLine("Filter a volume using a mask =volumeMask.vol= to remove bad pixels:", false);
@@ -94,6 +95,8 @@ void ProgFilter::readParams()
         filter = new BasisFilter();
     else if (checkParam("--log"))
         filter = new LogFilter();
+    else if (checkParam("--retinex"))
+        filter = new RetinexFilter();
     else
         REPORT_ERROR(ERR_ARG_MISSING, "You should provide some filter");
     //Read params

@@ -249,6 +249,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
                            '/home/joe/myScript %(volume)s sampling=%(sampling)s dim=%(dim)s')
         form.addParam('postSignificantDenoise', BooleanParam, label="Significant denoising Real space", expertLevel=LEVEL_ADVANCED, default=True)
         form.addParam('postFilterBank', BooleanParam, label="Significant denoising Fourier space", expertLevel=LEVEL_ADVANCED, default=True)
+        form.addParam('postLaplacian', BooleanParam, label="Laplacian denoising", expertLevel=LEVEL_ADVANCED, default=True)
         form.addParam('postDeconvolve', BooleanParam, label="Blind deconvolution", expertLevel=LEVEL_ADVANCED, default=True)
 
         form.addParallelSection(threads=1, mpi=8)
@@ -1316,6 +1317,15 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             moveFile("%s_restored2.vol"%fnRootRestored,fnVol2)
             cleanPath("%s_filterBank.vol"%fnRootRestored)
      
+        # Laplacian Denoising
+        if self.postLaplacian:
+            fnRootRestored=join(fnDirCurrent,"volumeRestored")
+            args = "-i %s --retinex 0.95 "
+            if fnMask!="":
+                args+=fnMask
+            self.runJob('xmipp_transform_filter',args%fnVol1,numberOfMpi=1)
+            self.runJob('xmipp_transform_filter',args%fnVol2,numberOfMpi=1)
+
         # Blind deconvolution
         if self.postDeconvolve:
             fnRootRestored=join(fnDirCurrent,"volumeRestored")

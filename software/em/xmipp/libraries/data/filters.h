@@ -1663,5 +1663,21 @@ public:
     void apply(MultidimArray<double> &img);
 };
 
+class RetinexFilter: public XmippFilter
+{
+public:
+    double percentile; // Percentile of noise derivative energies filtered out
+    double eps; 
+    Image<int> *mask; // for the case of mask bad pixels
+
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+    /** Compute Laplacian */
+    void laplacian(const MultidimArray<double> &img, MultidimArray< std::complex<double> > &fimg, bool direct);
+};
 
 #endif
