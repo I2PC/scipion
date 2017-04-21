@@ -49,10 +49,13 @@ def getEnviron(ccp4First=True):
             }, position=pos)
     return environ
 
-def runCCP4Program(program, args=""):
+def runCCP4Program(program, args="", extraEnvDict=None):
     """ Internal shortcut function to launch a CCP4 program. """
     env=getEnviron()
     #env.update(_envDict)
+    print "extraEnvDict", extraEnvDict
+    #f extraEnvDict is not None:
+    env.update({'GENERIC':'Runs/000109_CCP4ProtRunRefmac/extra/'})
     pwutils.runJob(None, program, args, env=env)
 
 def adapBinFileToCCP4(inFileName,outFileName):
