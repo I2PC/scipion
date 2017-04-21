@@ -205,9 +205,8 @@ void ProgTransformGeometry::processImage(const FileName &fnImg, const FileName &
 #endif
 
 	//AJ
-	int aux;
+	int aux2;
 	int repeticiones=1;
-	applyTransform=true;
 	//FIN AJ
 
     if (checkParam("--matrix"))
