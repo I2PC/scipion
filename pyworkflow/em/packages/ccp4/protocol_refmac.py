@@ -98,19 +98,28 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     # --------------------------- STEPS functions --------------------------------------------
     def createScriptFile(self):
-        f = open(self._getScriptFileName(), "w")
         dict = {}
         dict['CCP4_HOME'] = os.environ['CCP4_HOME']
         dict['REFMAC_BIN'] = os.environ['REFMAC_BIN']
         dict['PDBDIR'] =  os.path.dirname(self.inputStructure.get().getFileName())
         pdfileName = os.path.splitext(os.path.basename(self.inputStructure.get().getFileName()))[0]
         dict['PDBFILE'] = pdfileName
-        dict['MAPFILE'] = self.inputVolume.get().getFileName()
+
+        dict['MAPFILE'] = self.inputVolume.get().getFileName().replace(':mrc', '')
+
         dict['CHIMERA_BIN'] = os.path.join(os.environ['CHIMERA_HOME'],"bin","chimera")
+        dict['RESOMIN'] = self.minResolution.get()
+        dict['RESOMAX'] = self.maxResolution.get()
+        dict['NCYCLE'] = self.nRefCycle.get()
+        dict['WEIGHT MATRIX'] = self.weightMatrix.get()
+        dict['OUTPUTDIR'] = self._getExtraPath('')
+        print "before writing template", self._getScriptFileName()
         data = template%dict
+        f = open(self._getScriptFileName(), "w")
         f.write(data)
         f.close()
-        os.chmod(self._getScriptFileName(), stat.S_IEXEC | stat.S_IREAD)
+        print "after writing template"
+        os.chmod(self._getScriptFileName(), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
         #TODO script needs to be modified so output goes to extra dir
 
     def fixAdCRYSrecordToPDBFile(self):
@@ -122,7 +131,8 @@ class CCP4ProtRunRefmac(EMProtocol):
         pass
 
     def executeRefmac(self):
-        runCCP4Program(self._getScriptFileName())
+        print "executeRefmac", self._getScriptFileName()
+        runCCP4Program(self._getScriptFileName(),"",{'GENERIC':self._getExtraPath()})
 
     def createRefmacOutputStep(self):
         pdb = PdbFile()
