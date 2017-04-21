@@ -1,4 +1,4 @@
-([sp_pixsiz],[r2],[shrange],[prj-radius],[iter1],[iter-end],[sp_lambda],[small-ang],[sp_winsiz],[converg])
+([sp_pixsiz],[r2],[shrange],[prj-radius],[iter1],[iter-end],[sp_lambda],[small-ang],[sp_winsiz],[converg],[nummps])
 ;
 ; <html><head><title>Sets refinement parameters and files</title></head><body><pre>
 ;
