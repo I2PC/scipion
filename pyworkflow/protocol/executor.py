@@ -83,17 +83,18 @@ class StepExecutor():
         # Even if this will run the steps in a single thread
         # let's follow a similar approach than the parallel one
         # In this way we can take into account the steps graph
-        # dependency and also the case when using streamming
-        print("AQUIIIIII")
+        # dependency and also the case when using streaming
 
         delta = datetime.timedelta(seconds=stepsCheckSecs)
         lastCheck = datetime.datetime.now()
 
         while True:
+            print("AQUIIIIII")
             # Get an step to run, if there is one
             runnableSteps = self._getRunnable(steps)
 
             if runnableSteps:
+                print(" ES runnableSteps")
                 step = runnableSteps[0]
                 # We found a step to work in, so let's start a new
                 # thread to do the job and book it.
