@@ -84,6 +84,7 @@ class StepExecutor():
         # let's follow a similar approach than the parallel one
         # In this way we can take into account the steps graph
         # dependency and also the case when using streamming
+        print("AQUIIIIII")
 
         delta = datetime.timedelta(seconds=stepsCheckSecs)
         lastCheck = datetime.datetime.now()
@@ -102,23 +103,28 @@ class StepExecutor():
                 doContinue = stepFinishedCallback(step)
             
                 if not doContinue:
+                    print("Break 1")
                     break
 
             elif self._arePending(steps):
                 # We have not found any runnable step, but still there
                 # there are some running or waiting for dependencies
                 # So, let's wait a bit to check if something changes
+                print("Pending")
                 time.sleep(0.5)
             else:
                 # No steps to run, neither running or waiting
                 # So, we are done, either failed or finished :)
+                print("Break 2")
                 break
 
             now = datetime.datetime.now()
             if now - lastCheck > delta:
+                print("Calling stepsCheckCallback")
                 stepsCheckCallback()
                 lastCheck = now
 
+        print("Calling2 stepsCheckCallback")
 
         stepsCheckCallback() # one last check to finalize stuff
 
