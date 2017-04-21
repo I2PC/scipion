@@ -27,19 +27,13 @@
 Consensus picking protocol
 """
 import os
-import collections
-from itertools import izip
 from math import sqrt
 
-from pyworkflow.utils.path import cleanPath, removeBaseExt, copyFile
-from pyworkflow.object import Set, Integer, Float, String, Object
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 from pyworkflow.protocol.constants import *
-from pyworkflow.em.data import SetOfCoordinates, Coordinate
+from pyworkflow.em.data import Coordinate
 
-import pyworkflow.em as em
-import convert 
 import numpy as np
 
 
