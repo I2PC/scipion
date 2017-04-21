@@ -75,8 +75,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         """for each ctf insert the steps to compare it
         """
         self.insertedDict = {}
+        self.processedMicros = []
 
-        deps = self._insertSteps(self.insertedDict, self.inputCTFs)
+        deps = self._insertSteps(self.insertedDict, self.inputCTFs.get())
         fDeps = self._insertFinalSteps(deps)
         waitCondition = True #self._getFirstJoinStepName() == 'createOutputStep'
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps, wait=waitCondition)
@@ -90,7 +91,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
 
     def _getFirstJoinStepName(self):
-        # This function will be used for streamming, to check which is
+        # This function will be used for streaming, to check which is
         # the first function that need to wait for all micrographs
         # to have completed, this can be overriden in subclasses
         # (e.g., in Xmipp 'sortPSDStep')
@@ -110,7 +111,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         outputCTFs = self._createSetOfCTF()
 
         for ctf in inputCTFs:
-            if ctf.getMicrograph() not in self.insertedDict:
+            if ctf.getMicrograph().getMicName() not in self.processedMicros:
+                self.processedMicros.append(ctf.getMicrograph().getMicName())
                 defocusU = ctf.getDefocusU()
                 defocusV = ctf.getDefocusV()
                 astigm = defocusU - defocusV
@@ -125,12 +127,14 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         self._defineTransformRelation(self.inputCTFs.get(), outputCTFs)
 
 
-    def _insertSteps(self, insertedDict, ctf):
+    def _insertSteps(self, insertedDict, inputCTFs):
         estimDeps = []
-        if ctf.get().getFileName() not in insertedDict:
-            stepId = self._insertFunctionStep('readCTF')
-            estimDeps.append(stepId)
-            self.insertedDict[ctf.get().getFileName()] = stepId
+        for ctf in inputCTFs:
+            if ctf.getMicrograph().getMicName() not in insertedDict:
+                stepId = self._insertFunctionStep('readCTF')
+                estimDeps.append(stepId)
+                insertedDict[ctf.getMicrograph().getMicName()] = stepId
+                break
         return estimDeps
 
 
@@ -141,9 +145,10 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         if ctfSet is not None:
             #if ctfSet.get().getFileName() not in self.insertedDict:
             #    newCTFs.append(ctfSet)
-            for ctf in ctfSet.get():
-                if ctf.getMicrograph() not in self.insertedDict:
+            for ctf in ctfSet:
+                if ctf.getMicrograph().getMicName() not in self.insertedDict:
                     newCTFs.append(ctfSet)
+                    break
 
         if newCTFs:
             fDeps = self._insertSteps(self.insertedDict, ctfSet)
@@ -172,8 +177,12 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _stepsCheck(self):
         print "en _stepsCheck"
         # Check if there are new micrographs to process
-        ctfSet = self.inputCTFs
-        #ctf = self.inputCTFs
+        #ctfSet = self.inputCTFs.get()
+
+        ctfFn = self.inputCTFs.get().getFileName()
+        ctfSet = SetOfCTF(filename=ctfFn)
+        ctfSet.copyInfo(self.inputCTFs)
+        #ctfSet.setMicrographs(self.inputCTFs.get().getMicrographs())
 
         # Input ctf set can be loaded or None when checked for new inputs
         # If None, we load it
@@ -183,6 +192,10 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         if newCTFs is None:
             return
 
+        if outputStep and outputStep.isWaiting():
+            outputStep.setStatus(STATUS_NEW)
+
+        #ctfSet.close()
 
 
     #--------------------------- INFO functions --------------------------------
