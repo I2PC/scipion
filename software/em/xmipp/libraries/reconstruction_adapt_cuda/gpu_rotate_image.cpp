@@ -152,13 +152,14 @@ void ProgGpuRotateImage::readParams()
          */
         if ( !checkParam("--oroot") && fn_out.hasMetadataExtension())
         {
-            if ( input_is_metadata )
-                each_image_produces_an_output = !(produces_a_metadata = true);
-            else /** If "-o" is a metadata but we are writing output images, -o can only be a stack if --oroot is no passed, and then MD is generated automatically **/
+            //if ( input_is_metadata )
+            //    each_image_produces_an_output = !(produces_a_metadata = true);
+            //else /** If "-o" is a metadata but we are writing output images, -o can only be a stack if --oroot is no passed, and then MD is generated automatically **/
                 fn_out = fn_out.replaceExtension("stk");
         }
         else if ( !checkParam("--oroot") && !checkParam("-o") )
             produces_a_metadata = true;
+        //AJ TODO: los datos de los metadatas de la transformacion no se estan guardando bien (comparar con transform_geometry)
 
 
 }
