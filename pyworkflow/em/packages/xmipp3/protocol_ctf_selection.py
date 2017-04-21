@@ -32,6 +32,9 @@ from datetime import datetime
 import os
 import pyworkflow.utils as pwutils
 from pyworkflow.em.data import SetOfCTF
+from pyworkflow.utils.path import copyTree, removeBaseExt, makePath
+from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
+                                           STATUS_NEW)
 
 
 class XmippProtCTFSelection(em.ProtCTFMicrographs):
@@ -75,7 +78,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
         deps = self._insertSteps(self.insertedDict, self.inputCTFs)
         fDeps = self._insertFinalSteps(deps)
-        waitCondition = self._getFirstJoinStepName() == 'createOutputStep'
+        waitCondition = True #self._getFirstJoinStepName() == 'createOutputStep'
         self._insertFunctionStep('createOutputStep', prerequisites=fDeps, wait=waitCondition)
 
 
@@ -107,42 +110,48 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         outputCTFs = self._createSetOfCTF()
 
         for ctf in inputCTFs:
-            defocusU = ctf.getDefocusU()
-            defocusV = ctf.getDefocusV()
-            astigm = defocusU - defocusV
-            resol = ctf._ctffind4_ctfResolution.get() #PENDIENTEEEEEEEEEEEEEEEEEE
-            if defocusU>self.minDefocus and defocusU<self.maxDefocus and \
-                defocusV>self.minDefocus and defocusV<self.maxDefocus and \
-                astigm <self.astigmatism and resol<self.resolution:
+            if ctf.getMicrograph() not in self.insertedDict:
+                defocusU = ctf.getDefocusU()
+                defocusV = ctf.getDefocusV()
+                astigm = defocusU - defocusV
+                resol = ctf._ctffind4_ctfResolution.get() #PENDIENTEEEEEEEEEEEEEEEEEE
+                if defocusU>self.minDefocus and defocusU<self.maxDefocus and \
+                    defocusV>self.minDefocus and defocusV<self.maxDefocus and \
+                    astigm <self.astigmatism and resol<self.resolution:
 
-                outputCTFs.append(ctf)
-
+                    outputCTFs.append(ctf)
 
         self._defineOutputs(outputCTF=outputCTFs)
         self._defineTransformRelation(self.inputCTFs.get(), outputCTFs)
 
-    def _insertSteps(self, insertedDict, ctfSet):
+
+    def _insertSteps(self, insertedDict, ctf):
         estimDeps = []
-        if ctfSet.get().getFileName() not in insertedDict:
+        if ctf.get().getFileName() not in insertedDict:
             stepId = self._insertFunctionStep('readCTF')
             estimDeps.append(stepId)
-            self.insertedDict[ctfSet.get().getFileName()] = stepId
+            self.insertedDict[ctf.get().getFileName()] = stepId
         return estimDeps
+
 
     def _checkNewCTFs(self, ctfSet, outputStep):
         """ Check for new CTF and update the output set. """
         print "en _checkNewCTFs"
         newCTFs = []
-        if ctfSet.get().getFileName() not in self.insertedDict:
-            newCTFs.append(ctfSet)
+        if ctfSet is not None:
+            #if ctfSet.get().getFileName() not in self.insertedDict:
+            #    newCTFs.append(ctfSet)
+            for ctf in ctfSet.get():
+                if ctf.getMicrograph() not in self.insertedDict:
+                    newCTFs.append(ctfSet)
 
-            if newCTFs:
-                fDeps = self._insertEstimationSteps(self.insertedDict, ctfSet)
-                self._storeSteps()
-                self._numberOfSteps.set(len(self._steps))
-                self._store(self._numberOfSteps)
-                if outputStep:
-                    outputStep.addPrerequisites(*fDeps)
+        if newCTFs:
+            fDeps = self._insertSteps(self.insertedDict, ctfSet)
+            self._storeSteps()
+            self._numberOfSteps.set(len(self._steps))
+            self._store(self._numberOfSteps)
+            if outputStep:
+                outputStep.addPrerequisites(*fDeps)
 
         return newCTFs
             #outputCTFs = self._createSetOfCTF()
@@ -162,15 +171,18 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
     def _stepsCheck(self):
         print "en _stepsCheck"
+        # Check if there are new micrographs to process
+        ctfSet = self.inputCTFs
+        #ctf = self.inputCTFs
+
         # Input ctf set can be loaded or None when checked for new inputs
         # If None, we load it
         outputStep = self._getFirstJoinStep()
-        if self.inputCTFs is None:
-            return
+        newCTFs = self._checkNewCTFs(ctfSet, outputStep)
 
-        newCTFs = self._checkNewCTFs(self.inputCTFs, outputStep)
         if newCTFs is None:
             return
+
 
 
     #--------------------------- INFO functions --------------------------------
@@ -192,5 +204,3 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             message.append("You must specify a set of CTFs.")
         return message
 
-
-        
