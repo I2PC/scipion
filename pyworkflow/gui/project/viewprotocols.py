@@ -1842,7 +1842,7 @@ class ProtocolsView(tk.Frame):
             except Exception as ex:
                 self.windows.showError(str(ex))
 
-        browser = pwgui.browser.FileBrowserWindow("Choose .bib file to save workflow",
+        browser = pwgui.browser.FileBrowserWindow("Choose .bib file to export references",
                                                   master=self.windows,
                                                   path=self.project.getPath(''),
                                                   onSelect=_exportBib,
