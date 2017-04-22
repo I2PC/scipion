@@ -31,7 +31,11 @@ from pyworkflow.em.constants import SYM_I222r
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em import Volume
-
+#TODO: IS OK to write in the header of the mrc file but the same\
+#information should be stored in the volume atribute
+#NOTE1: scipion origin is center volume
+#NOTE2: next wrapper should test input and coherence between header and
+#metadata.
 class XmippProtExtractUnit(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
     """
@@ -96,6 +100,7 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f "% self.outerRadius.get()
         args += " %f "% self.expandFactor.get()
         args += " %f "% self.offset.get()
+        #TODO: add sampling
         print "args", args
         self.runJob("xmipp_transform_window", args)
 
@@ -103,6 +108,25 @@ class XmippProtExtractUnit(EMProtocol):
         vol = Volume()
         vol.setLocation(self._getOutputVol())
         vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        #TODO: HORROR
+        import struct
+        f = open(self._getOutputVol(),'rb')
+        s = f.read(13*4)#read header up to angles incluse word 6
+        f.close()
+        chain = "< 3i i 3i 3i 3f"
+        a = struct.unpack(chain, s)
+        sampling = a[12]/a[9]
+        if sampling != vol.getSamplingRate():
+            a = self.replace_at_index(a, 12, a[9] * vol.getSamplingRate())
+            a = self.replace_at_index(a, 11, a[8] * vol.getSamplingRate())
+            a = self.replace_at_index(a, 10, a[7] * vol.getSamplingRate())
+            ss=struct.Struct(chain)
+            packed_data = ss.pack(*a)
+            f = open(self._getOutputVol(), 'r+')
+            f.write(packed_data)
+            f.close()
+
+        #
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputVolumes, self.outputVolume)
 
@@ -123,3 +147,6 @@ class XmippProtExtractUnit(EMProtocol):
 
     def _getOutputVol(self):
         return self._getExtraPath("output_volume.mrc")
+
+    def replace_at_index(self, tup, ix, val):
+       return tup[:ix] + (val,) + tup[ix+1:]
