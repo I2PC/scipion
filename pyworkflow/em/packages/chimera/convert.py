@@ -33,35 +33,26 @@ TODO:
 import os
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
-
+from pyworkflow.em.viewer import getChimeraEnviron
+from pyworkflow.em.constants import SYM_I222r
 
 #
 chimeraPdbTemplateFileName= "scipionOut%04d.pdb"
-chimeraScriptFileName = "cootScript.py"
+chimeraMapTemplateFileName= "scipionOut%04d.mrc"
+chimeraScriptFileName = "chimeraScript.py"
 
+symMapperScipionchimera = {}
+symMapperScipionchimera[SYM_I222r]="222r"
 
 def getEnviron(ccp4First=True):
-    environ = pwutils.Environ(os.environ)
-    pos = pwutils.Environ.BEGIN if ccp4First else pwutils.Environ.END
-    environ.update({
-            'PATH': os.path.join(os.environ['CCP4_HOME'], 'bin'),
-            'LD_LIBRARY_PATH': os.path.join(os.environ['CCP4_HOME'], 'lib'),
-            }, position=pos)
-    return environ
+    return getChimeraEnviron()
 
-def runCCP4Program(program, args=""):
-    """ Internal shortcut function to launch a CCP4 program. """
+def runChimeraProgram(program, args=""):
+    """ Internal shortcut function to launch chimera program. """
     env=getEnviron()
-    #env.update(_envDict)
     pwutils.runJob(None, program, args, env=env)
 
-def adapBinFileToCCP4(inFileName,outFileName):
-    if inFileName.endswith('.mrc'):
-        pwutils.createLink(inFileName, outFileName)
-    else:
-        em.ImageHandler().convert(inFileName, outFileName)
-
-def getProgram(progName):
+def getProgram(progName="chimera"):
     """ Return the program binary that will be used. """
     if (not 'CHIMERA_HOME' in os.environ):
         return None
