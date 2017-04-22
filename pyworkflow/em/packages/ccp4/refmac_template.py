@@ -116,7 +116,7 @@ eof
      fi    
 #check volume
 
-fft HKLIN ${OUTPUTDIR}masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft > ${OUTPUTDIR}ifft.log 
+fft HKLIN ${OUTPUTDIR}_masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft > ${OUTPUTDIR}ifft.log
 LABIN F1=Fout0 PHI=Pout0 
 SCALE F1 1.0 300.0 
 RESOLUTION 3.0 
@@ -126,7 +126,7 @@ END-fft
 ${CHIMERA} ${OUTPUTDIR}masked_fs.map &
 
 #end check
-                $refmac HKLIN ${OUTPUTDIR}masked_fs.mtz \
+                $refmac HKLIN ${OUTPUTDIR}_masked_fs.mtz \
                         HKLOUT ${OUTPUTDIR}$molecule_id-refined.mtz \
                         XYZIN  ${OUTPUTDIR}$molecule_id-initial.pdb \
                         XYZOUT ${OUTPUTDIR}$molecule_id-refined.pdb\
