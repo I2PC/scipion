@@ -42,7 +42,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     _program = ""
     _version = VERSION_1_2
     refmacScriptFileName = "refmac.sh"
-    refmacOutPDBFileName = "%s_final.pdb"
+    refmacOutPDBFileName = "%s-refined.pdb"
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -73,10 +73,11 @@ class CCP4ProtRunRefmac(EMProtocol):
         self._insertFunctionStep('createScriptFile')
         self._insertFunctionStep('executeRefmac')
         #TODO: convert input file to mrc if needed
-        #TODO: add CRYS record if neede
+        #    check shifts in the conversion
+        #TODO: add CRYS record if needed
         #TODO: pass all parameters to script
 
-    #    self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
+        self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
 
 #    def convertInputStep(self):
 #        """ convert 3Dmaps to MRC '.mrc' format
@@ -113,14 +114,11 @@ class CCP4ProtRunRefmac(EMProtocol):
         dict['NCYCLE'] = self.nRefCycle.get()
         dict['WEIGHT MATRIX'] = self.weightMatrix.get()
         dict['OUTPUTDIR'] = self._getExtraPath('')
-        print "before writing template", self._getScriptFileName()
         data = template%dict
         f = open(self._getScriptFileName(), "w")
         f.write(data)
         f.close()
-        print "after writing template"
         os.chmod(self._getScriptFileName(), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
-        #TODO script needs to be modified so output goes to extra dir
 
     def fixAdCRYSrecordToPDBFile(self):
         #read input pdb file
@@ -132,7 +130,9 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def executeRefmac(self):
         print "executeRefmac", self._getScriptFileName()
-        runCCP4Program(self._getScriptFileName(),"",{'GENERIC':self._getExtraPath()})
+        # Generic is a env variable that coot uses as base dir for some
+        # but not all files. "" force a trailing slash
+        runCCP4Program(self._getScriptFileName(),"",{'GENERIC':self._getExtraPath("")})
 
     def createRefmacOutputStep(self):
         pdb = PdbFile()
