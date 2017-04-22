@@ -31,25 +31,30 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, BooleanParam
 from pyworkflow.em.protocol import EMProtocol
-from convert import (getProgram, runCCP4Program,
-                     chimeraPdbTemplateFileName, chimeraScriptFileName)
-from pyworkflow.em.convert import ImageHandler
+from convert import (getProgram, runChimeraProgram,
+                     chimeraPdbTemplateFileName,
+                     chimeraMapTemplateFileName,
+                     chimeraScriptFileName)
 from pyworkflow.em import PdbFile
+from pyworkflow.em import Volume
 
-
+#todo add function scipion_change_scale
+#TODO:tests coherence betweem metadata and header
+#convert to mrc if needed
 
 class ChimeraProtRigidFit(EMProtocol):
     """Protocol to perform rigid fit using Chimera.
-    Execute command scipion_write from command line in order
-    to transferm fitted pdb to scipion
-"""
+        Execute command *scipionwrite [model #n] [refmodel #p] [saverefmodel=0|1]* from command
+        line in order to transferm fitted pdb to scipion. Default values are model=#0,
+        refmodel =#1 and saverefmodel=0 (false).
+        model refers to the pdb file. refmodel to a 3Dmap"""
     _label = 'Rigid Fit'
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputVolumes', PointerParam, pointerClass="Volume",
+        form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume',
                       help="Volume to process")
         form.addParam('pdbFileToBeRefined', PointerParam, pointerClass="PdbFile",
@@ -59,8 +64,10 @@ class ChimeraProtRigidFit(EMProtocol):
                       label='Other referece PDBs',
                       help="Other PDB files used as reference. This PDB objects will not be saved")
         form.addSection(label='Help')
-        form.addLine('''Execute command scipion_write from command line in order
-    to transferm fitted pdb to scipion''')
+        form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] [saverefmodel=0|1]* from command
+        line in order to transferm fitted pdb to scipion. Default values are model=#0,
+        refmodel =#1 and saverefmodel=0 (false).
+        model refers to the pdb file. refmodel to a 3Dmap''')
         # --------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
@@ -74,67 +81,65 @@ class ChimeraProtRigidFit(EMProtocol):
     def prerequisitesStep(self):
         """
         """
+        #convert to mrc
+        #create coherent header
         createScriptFile(0,  #model id pdb
                          1,  #model id 3D map
                          self._getTmpPath(chimeraScriptFileName),
-                         self._getExtraPath(chimeraPdbTemplateFileName))
+                         self._getExtraPath(chimeraPdbTemplateFileName),
+                         self._getExtraPath(chimeraMapTemplateFileName),
+                         )
 
     def runChimeraStep(self):
-        #find last created PDB output file
-        template = self._getExtraPath(chimeraPdbTemplateFileName)
-        counter=1
-        while os.path.isfile(template%counter):
-            counter += 1
-
-        #if there is not previous output use pdb file form form
-        #otherwise use last created pdb file
-        if counter == 1:
-            pdbFileToBeRefined = self.pdbFileToBeRefined.get().getFileName()
-        else:
-            pdbFileToBeRefined = template%(counter-1)
-            self._log.info("Using last created PDB file named=%s", pdbFileToBeRefined)
         args = ""
-        args +=  " --pdb " + pdbFileToBeRefined
+        args +=  " --script " + self._getTmpPath(chimeraScriptFileName) + " "
+        args += self.pdbFileToBeRefined.get().getFileName() + " "
+        args += self.inputVolume.get().getFileName() + " "
         for pdb in self.inputPdbFiles:
-            args += " --pdb " + pdb.get().getFileName() # other pdb files
-        args +=  " --script " + self._getTmpPath(chimeraScriptFileName) # script wit auxiliary files
-        for vol in self.inputVolumes:
-            inFileName  = vol.get().getFileName()
-            args += " --map " + self._getVolumeFileName(inFileName)
-        #_envDict['COOT_PDB_TEMPLATE_FILE_NAME'] = self._getExtraPath(cootPdbTemplateFileName)
-        self._log.info('Launching: ' + getProgram(os.environ['COOT']) + ' ' + args)
+            args += " " + pdb.get().getFileName() # other pdb files
+        self._log.info('Launching: ' + getProgram() + ' ' + args)
 
         #run in the background
-        runCCP4Program(getProgram(os.environ['COOT']), args)
-
-        # while creating files
-        #if askYesNo(Message.TITLE_SAVE_OUTPUT, Message.LABEL_SAVE_OUTPUT, None):
-        self.createOutput(counter)
+        runChimeraProgram(getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
         """
-        template = self._getExtraPath(chimeraPdbTemplateFileName)
-        counter=1
-        while os.path.isfile(template%counter):
-            #counter -=1
-            pdb = PdbFile()
-            pdb.setFileName(template%counter)
+        pdb = PdbFile()
+        pdb.setFileName(self._getExtraPath(chimeraPdbTemplateFileName)%1)
+        self._defineOutputs(outputPdb=pdb)
+        self._defineSourceRelation(self.inputPdbFiles, pdb)
+        self._defineSourceRelation(self.inputVolume, pdb)
 
-            outputs = {"outputPdb_%04d"%counter: pdb}
-            self._defineOutputs(**outputs)
+        volFileName = self._getExtraPath(chimeraMapTemplateFileName%1)
+        if os.path.exists(volFileName):
+            vol = Volume()
+            vol.setLocation(volFileName)
+            #TODO: this sampling rate needs to be modified
+            #HORROR: this way of changing sampling is wrong
+            #develope a central one
+            #the only nice thing is that I know that the file is MRC
+            #since it is output and I did create it
+            import struct
+            f = open(volFileName,'rb')
+            s = f.read(13*4)#read header up to angles incluse word 6
+            f.close()
+            chain = "< 3i i 3i 3i 3f"
+            a = struct.unpack(chain, s)
+            sampling = a[12]/a[9]
+            #end of the HORROR
+            #vol.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            vol.setSamplingRate(sampling)
+            self._defineOutputs(output3Dmap=vol)
+            self._defineSourceRelation(self.inputPdbFiles, vol)
+            self._defineSourceRelation(self.inputVolume, vol)
 
-            #self._defineOutputs(outputPdb=pdb)
-            self._defineSourceRelation(self.inputPdbFiles, pdb)
-            #self._defineSourceRelation(self.inputVolumes, self.outputPdb)
-            self._defineSourceRelation(self.inputVolumes, pdb)
-            counter += 1
 
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram("chimera")
+        program = getProgram()
         if program is None:
             errors.append("Missing variable CHIMERA_HOME")
         elif not os.path.exists(program):
@@ -153,12 +158,9 @@ class ChimeraProtRigidFit(EMProtocol):
     def _summary(self):
         #Think on how to update this summary with created PDB
         summary = []
-        summary.append("Number of input micrographs: %d"
-                       % self.getInputMicrographs().getSize())
+        summary.append("TO BE DONE")
         if (self.getOutputsSize() > 0):
-            summary.append("Number of particles picked: %d" % self.getCoords().getSize())
-            summary.append("Particle size: %d px" % self.getCoords().getBoxSize())
-            summary.append("Threshold min: %0.2f" % self.threshold)
+            summary.append("we have some result")
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
@@ -174,11 +176,9 @@ class ChimeraProtRigidFit(EMProtocol):
 
     # --------------------------- UTILS functions --------------------------------------------------
 
-    def _getVolumeFileName(self, inFileName):
-        return os.path.join(self._getExtraPath(''),
-                            pwutils.replaceBaseExt(inFileName, 'mrc'))
-
-chimeraScript= '''
+#TODO: add change scale, scipio_write_pdb, scipion_write_map
+chimeraScriptHeader= '''
+import os
 def beep(time):
    """I simply do not know how to create a portable beep sound.
       This system call seems to work pretty well if you have sox
@@ -193,12 +193,14 @@ def beep(time):
 from chimea command line type one of the following three options
 scipionwrite
 scipionwrite model #n
-scipionwrite model #n refmodel #p
+scipionwrite model #n refmodel #p saverefmodel 0/1
 """
 def cmd_scipionWrite(scipionWrite,args):
   from Midas.midas_text import doExtensionFunc
+'''
 
-  def scipionWrite(model="#%d",refmodel="#%d"):
+chimeraScriptMain = '''
+  def scipionWrite(model="#%(pdbID)d",refmodel="#%(_3DmapId)d", saverefmodel=0):
      #get model (pdb) id
      modelId = int(model[1:])# model to write
      refModelId = int(refmodel[1:])# coordenate system refers to this model
@@ -207,10 +209,18 @@ def cmd_scipionWrite(scipionWrite,args):
      model    = chimera.openModels.list()[modelId]
      refModel = chimera.openModels.list()[refModelId]
 
-     #write the model
-     #wrapper should incorporate this pdb as scipion object
+     # Save the PDB relative to the volume coordinate system
+     # TODO: check if this Will work if the reference is a PDB?
      from Midas import write
-     write(model, refModel, "%s")
+     write(model, refModel, "%(pdbFileTemplate)s")
+     # alternative way to save  the pdb file using a command
+     #run('write relative #1 #0 pdb_path')
+
+     # Save the map if sampling rate has been changed
+     if saverefmodel:
+         from VolumeData import save_grid_data
+         save_grid_data(refModel.data, "%(chimeraMapTemplateFileName)s")
+     beep(0.1)
 
   doExtensionFunc(scipionWrite,args)
 
@@ -218,8 +228,15 @@ from Midas.midas_text import addCommand
 addCommand('scipionwrite', cmd_scipionWrite, help="http://scipion.cnb.csic.es")
 '''
 
-def createScriptFile(pdbID, _3DmapId, scriptFile, pdbFile):
+def createScriptFile(pdbID, _3DmapId, scriptFile, pdbFileTemplate, mapFileTemplate):
     f = open(scriptFile,"w")
-    f.write(chimeraScript% (pdbID, _3DmapId, pdbFile))
+    f.write(chimeraScriptHeader)
+    d={}
+    d['pdbID'] = pdbID
+    d['_3DmapId'] = _3DmapId
+    d['pdbFileTemplate'] = pdbFileTemplate%1
+    d['chimeraMapTemplateFileName'] = mapFileTemplate%1
+
+    f.write(chimeraScriptMain % d)
     f.close()
 
