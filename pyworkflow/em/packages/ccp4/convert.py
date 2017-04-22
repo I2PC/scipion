@@ -54,8 +54,8 @@ def runCCP4Program(program, args="", extraEnvDict=None):
     env=getEnviron()
     #env.update(_envDict)
     print "extraEnvDict", extraEnvDict
-    #f extraEnvDict is not None:
-    env.update({'GENERIC':'Runs/000109_CCP4ProtRunRefmac/extra/'})
+    if extraEnvDict is not None:
+        env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
 def adapBinFileToCCP4(inFileName,outFileName):
