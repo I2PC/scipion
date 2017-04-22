@@ -32,4 +32,5 @@ from convert import getEnviron
 _logo = "ChimeraLogoSmall.png"
 
 from protocol_fit import ChimeraProtRigidFit
+from viewer_fit import viewerChimeraProtRigidFit
 _environ = getEnviron()
