@@ -36,6 +36,7 @@ from convert import (getProgram, adapBinFileToCCP4,runCCP4Program,
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em import PdbFile
 from pyworkflow.em.data import EMObject
+from pyworkflow.em import Volume
 
 
 #TODO:
@@ -69,6 +70,8 @@ the pdb file from coot  to scipion '
                       help="Other PDB files used as reference. This PDB objects will not be saved")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot  to scipion')
+        form.addLine("You may also excute (from script -> python) the command scipion_write(imol)")
+        form.addLine("where imol is the PDB id")
         # --------------------------- INSERT steps functions --------------------------------------------
 
     def _insertAllSteps(self):
@@ -94,6 +97,19 @@ the pdb file from coot  to scipion '
                 mean, dev, min, max = img.computeStats()
                 img.inplaceMultiply(1./max)
                 img.write(outFileName)
+                #TODO: HORROR
+                import struct
+                f = open(inFileName.replace(':mrc', ''),'rb')
+                s = f.read(13*4)#read header up to angles incluse word 6
+                f.close()
+                chain = "< 3i i 3i 3i 3f"
+                a = struct.unpack(chain, s)
+                ss=struct.Struct(chain)
+                packed_data = ss.pack(*a)
+                f = open(outFileName.replace(':mrc', ''), 'r+')
+                f.write(packed_data)
+
+                #END HORROR
             else:
                 adapBinFileToCCP4(inFileName, outFileName)
 
@@ -152,6 +168,21 @@ the pdb file from coot  to scipion '
             self._defineSourceRelation(self.inputVolumes, pdb)
             counter += 1
 
+        if self.doNormalize:
+            counter=init_counter
+            for vol in self.inputVolumes:
+                outVol = Volume()
+                outVol.setSamplingRate(vol.get().getSamplingRate())
+#
+                inFileName  = vol.get().getFileName()
+                if inFileName.endswith('.mrc'):
+                    inFileName = inFileName + ":mrc"
+                outFileName = self._getVolumeFileName(inFileName)
+                outVol.setFileName(outFileName)
+                outputs = {"output3DMap_%04d"%counter: outVol}
+                self._defineOutputs(**outputs)
+                self._defineSourceRelation(self.inputVolumes, outVol)
+
     # --------------------------- INFO functions --------------------------------------------
     def _validate(self):
         errors = []
@@ -197,6 +228,9 @@ the pdb file from coot  to scipion '
     def _getVolumeFileName(self, inFileName):
         return os.path.join(self._getExtraPath(''),
                             pwutils.replaceBaseExt(inFileName, 'mrc'))
+
+    def replace_at_index(self, tup, ix, val):
+       return tup[:ix] + (val,) + tup[ix+1:]
 
 cootScriptHeader='''import ConfigParser
 import os
