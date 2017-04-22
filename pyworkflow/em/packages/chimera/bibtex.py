@@ -37,7 +37,8 @@ _bibtexStr = """
    Volume="25",
    Number="13",
    Pages="1605--1612",
-   Month="Oct"
+   Month="Oct",
+   doi="https://doi.org/10.1002/jcc.20084"
 }
 """
 
