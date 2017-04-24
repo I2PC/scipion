@@ -397,7 +397,7 @@ env.addPackage('unblur', version='1.0.2',
                tar='unblur_1.0.2.tgz')
 
 eman2_commands = [('./eman2-installer',
-                   'eman2.bashrc')]
+                   'eman2.*rc')]
 
 env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
@@ -442,6 +442,9 @@ env.addPackage('relion', version='2.0.3',
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
 
+env.addPackage('localrec', version='1.2.0',
+               tar='localrec-1.2.0.tgz')
+
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
                deps=['scipy'])
@@ -453,14 +456,14 @@ env.addPackage('spider', version='21.13',
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
 
-env.addPackage('motioncorr', version='2.1.cuda.7.5',
-               tar='motioncorr_v2.1.cuda.7.5.tgz')
-
 env.addPackage('motioncor2', version='16.03.16',
                tar='motioncor2_03162016.tgz')
 
 env.addPackage('motioncor2', version='16.10.19',
                tar='motioncor2_10192016.tgz')
+
+env.addPackage('motioncor2', version='17.01.30',
+               tar='motioncor2_01302017.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
