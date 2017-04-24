@@ -395,6 +395,7 @@ class Project(object):
         and also take care if the execution is remotely."""
 
         isRestart = protocol.getRunMode() == MODE_RESTART
+
         if (not protocol.isInteractive() and not protocol.isInStreaming()) or isRestart:
             self._checkModificationAllowed([protocol],
                                            'Cannot RE-LAUNCH protocol')
@@ -423,13 +424,33 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def _updateProtocol(self, protocol, tries=0, checkPid=False):
+    def scheduleProtocol(self, protocol):
+        protocol.setStatus(pwprot.STATUS_SCHEDULED)
+        self._setupProtocol(protocol)
+        # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        protocol.makePathsAndClean()  # Create working dir if necessary
+        # Delete the relations created by this protocol if any
+        self.mapper.deleteRelations(self)
+        self.mapper.commit()
+
+        # Prepare a separate db for this run
+        # NOTE: now we are simply copying the entire project db, this can be
+        # changed later to only create a subset of the db need for the run
+        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
+        # Launch the protocol, the jobId should be set after this call
+        pwprot.schedule(protocol)
+        self.mapper.store(protocol)
+        self.mapper.commit()
+
+    def _updateProtocol(self, protocol, tries=0, checkPid=False,
+                        skipUpdatedProtocols=True):
 
         # If this is read only exit
         if self.isReadOnly(): return
 
-        # If we are already updated, comparing timestamps
-        if pwprot.isProtocolUpToDate(protocol): return
+        if skipUpdatedProtocols:
+            # If we are already updated, comparing timestamps
+            if pwprot.isProtocolUpToDate(protocol): return
 
         try:
             # Backup the values of 'jobId', 'label' and 'comment'
@@ -509,7 +530,7 @@ class Project(object):
         in order to avoid any modification.
         """
         return (not self.__protocolInList(child, protocols) and
-                not child.isSaved())
+                not child.isSaved() and not child.isScheduled())
 
     def _getProtocolsDependencies(self, protocols):
         error = ''
@@ -1185,6 +1206,9 @@ class Project(object):
         return connection
 
     def isReadOnly(self):
+        if getattr(self, 'settings', None) is None:
+            return False
+
         return self.settings.getReadOnly()
 
     def setReadOnly(self, value):
