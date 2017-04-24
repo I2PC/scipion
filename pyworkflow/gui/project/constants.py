@@ -26,8 +26,9 @@
 
 
 from pyworkflow.protocol import (STATUS_SAVED, STATUS_LAUNCHED, STATUS_RUNNING,
-                                 STATUS_FINISHED, STATUS_FAILED, STATUS_INTERACTIVE,
-                                 STATUS_ABORTED)
+                                 STATUS_FINISHED, STATUS_FAILED,
+                                 STATUS_INTERACTIVE, STATUS_ABORTED,
+                                 STATUS_SCHEDULED)
 
 STATUS_COLORS = {
                STATUS_SAVED: '#D9F1FA',
@@ -37,7 +38,7 @@ STATUS_COLORS = {
                STATUS_FAILED: '#F5CCCB',
                STATUS_INTERACTIVE: '#F3F5CB',
                STATUS_ABORTED: '#F5CCCB',
-               #STATUS_SAVED: '#124EB0',
+               STATUS_SCHEDULED: '#F3F5CB'
                }
 
 # Based on: http://paletton.com/palette.php?uid=75C1d0kleqtbzEKgVuIpcmGtdhZ
