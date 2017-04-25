@@ -274,6 +274,10 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return summary
 
     def _methods(self):
+
+        if not hasattr(self, 'outputParticles'):
+            return []
+
         methods = ["We took input particles %s of size %d " % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()))]
         if self.doWindow:
             if self.getEnumText('windowOperation') == "crop":
@@ -390,6 +394,9 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         return summary
 
     def _methods(self):
+        if not hasattr(self, 'outputVol'):
+            return []
+
         if self._isSingleInput():
             methods = ["We took one volume"]
             pronoun = "it"

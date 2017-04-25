@@ -490,32 +490,32 @@ journal = {Journal of Microscopy}
 }
 
 @article{Vargas2014a,
-title = "A general validation approach for cryoEM ",
-journal = "Nature Methods",
+title = {Particle alignment reliability in single particle electron cryomicroscopy: a general approach},
+journal = {Scientific reports},
 volume = "",
 number = "",
 pages = "",
-year = "",
-note = "submitted",
+year = "2014",
+note = "",
 issn = "",
-doi = "",
-url = "",
-author = "Vargas",
-keywords = "Validation"
+doi = {http://dx.doi.org/10.1038/srep21626},
+url = {http://dx.doi.org/10.1038/srep21626},
+author = {Vargas},
+keywords = {Validation}
 }
 
 @article{Marabini2014a,
-title = "CTF Challenge... ",
+title = "CTF Challenge: Result summary",
 journal = "J. Structural Biology",
 volume = "",
 number = "",
 pages = "",
-year = "",
-note = "submitted",
+year = "2015",
+note = "",
 issn = "",
-doi = "",
-url = "",
-author = "Marabini et al.",
+doi = "http://doi.org/10.1016/j.jsb.2015.04.003",
+url = "http://doi.org/10.1016/j.jsb.2015.04.003",
+author = "Marabini",
 keywords = "Contrast transfer function"
 }
 

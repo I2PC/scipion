@@ -700,6 +700,12 @@ class ProtocolsView(tk.Frame):
         # Method tab
         mframe = tk.Frame(tab)
         pwgui.configureWeigths(mframe)
+        # Methods text box
+        self.methodText = pwgui.text.TaggedText(mframe, width=40, height=15,
+                                                bg='white', handlers=hView)
+        self.methodText.grid(row=0, column=0, sticky='news')
+
+        # Reference export button
         btnExportBib = pwgui.Button(mframe, text=Message.LABEL_BIB_BTN,
                                   fg='white', bg=Color.RED_COLOR,
                                   image=self.getImage(Icon.ACTION_BROWSE),
@@ -708,9 +714,6 @@ class ProtocolsView(tk.Frame):
                                   activebackground='#A60C0C',
                                   command=self._bibExportClicked)
         btnExportBib.grid(row=2, column=0, sticky='w', padx=0)
-        self.methodText = pwgui.text.TaggedText(mframe, width=40, height=15,
-                                                bg='white', handlers=hView)
-        self.methodText.grid(row=0, column=0, sticky='news')
 
         # Logs
         ologframe = tk.Frame(tab)
