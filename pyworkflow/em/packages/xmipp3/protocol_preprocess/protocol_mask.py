@@ -141,7 +141,11 @@ class XmippProtMask():
         return messages    
 
     def _methods(self, geoClass):
-        messages = []      
+        messages = []
+
+        if self.inputMask.get() is None:
+            return messages
+
         messages.append("*Mask application*")
         
         if self.source.get() == SOURCE_GEOMETRY:

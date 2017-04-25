@@ -1080,7 +1080,7 @@ class Protocol(Step):
         errors = self.validate()
         if len(errors):
             raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
-        
+
         self._insertAllSteps() # Define steps for execute later
         # Find at which step we need to start
         startIndex = self.__findStartingStep()
@@ -1583,8 +1583,13 @@ class Protocol(Step):
             else:
                 label = cite['author'].split(' and ')[0].split(',')[0].strip()
                 label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
-            
-            return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+
+            if len(cite['doi'].strip())>0:
+                text = '[[%s][%s]] ' % (cite['doi'].strip(), label)
+            else:
+                text = label.strip()
+            return text
+
         except Exception as ex:
             print ("Error with citation: " + label)
             print (ex)
@@ -1604,25 +1609,29 @@ class Protocol(Step):
                 newCitations.append(c)
         return newCitations
     
-    def __getCitationsDict(self, citationList):
+    def __getCitationsDict(self, citationList, bibTexOutput=False):
         """ Return a dictionary with Cite keys and the citation links. """
         bibtex = self.__getPackageBibTex()
         od = OrderedDict()
         for c in citationList:
             if c in bibtex:
-                od[c] = self._getCiteText(bibtex[c])
+                if bibTexOutput:
+                    od[c] = bibtex[c]
+                else:
+                    od[c] = self._getCiteText(bibtex[c])
             else:
                 od[c] = c
             
         return od
         
-    def getCitations(self):
-        return self.__getCitationsDict(self._citations() or [])
+    def getCitations(self, bibTexOutput=False):
+        return self.__getCitationsDict(self._citations() or [],
+                                       bibTexOutput=bibTexOutput)
             
-    def getPackageCitations(self):
-        return self.__getCitationsDict(getattr(self.getClassPackage(),
-                                               "_references", []))
-    
+    def getPackageCitations(self, bibTexOutput=False):
+        refs = getattr(self.getClassPackage(), "_references", [])
+        return self.__getCitationsDict(refs, bibTexOutput=bibTexOutput)
+
     def citations(self):
         """ Return a citation message to provide some information to users. """
         citations = self.getCitations().values()

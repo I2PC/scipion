@@ -301,7 +301,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if self.doMagCor and self._supportsMagCorrection():
+            if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
                     input_params = parseMagCorrInput(inputEst)
