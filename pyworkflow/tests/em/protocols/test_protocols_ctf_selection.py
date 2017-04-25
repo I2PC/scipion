@@ -30,11 +30,15 @@ from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.packages.xmipp3 import XmippProtCTFSelection
+from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
 
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
 MICS = os.environ.get('SCIPION_TEST_MICS', 10)
+
+CTF_SQLITE = "ctfs.sqlite"
+MIC_SQLITE = "micrographs.sqlite"
 
 
 class TestCtfSelection(BaseTest):
@@ -125,8 +129,44 @@ class TestCtfSelection(BaseTest):
 
         protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
         protCTFSel2.inputCTFs.set(protCTFSel.outputCTF)
-        self.proj.launchProtocol(protCTFSel2,  wait=False)
+        self.proj.launchProtocol(protCTFSel2)
 
-        #baseFn = protMonitor._getPath(CTF_LOG_SQLITE)
-        #self.assertTrue(os.path.isfile(baseFn))
-        self.assertTrue(True)
+        counter=1
+
+        while not (protCTFSel2.hasAttribute('outputCTF') and protCTFSel2.hasAttribute('outputMicrograph')):
+
+            time.sleep(10)
+            protCTFSel2 = self._updateProtocol(protCTFSel2)
+            if counter > 100:
+                self.assertTrue(False)
+            counter += 1
+
+        baseFn = protCTFSel2._getPath(CTF_SQLITE)
+        self.assertTrue(os.path.isfile(baseFn))
+        baseFn = protCTFSel2._getPath(MIC_SQLITE)
+        self.assertTrue(os.path.isfile(baseFn))
+
+        micSet = SetOfMicrographs(filename=protCTFSel2._getPath(MIC_SQLITE))
+        ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))  # reading this protocol output
+        counter = 1
+        while not (ctfSet.getSize()==10 and micSet.getSize()==10):
+            time.sleep(10)
+            micSet = SetOfMicrographs(filename=protCTFSel2._getPath(MIC_SQLITE))
+            ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))
+            if counter > 100:
+                self.assertTrue(False)
+            counter += 1
+
+
+        ctfSetIn = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+        for ctf, ctfOut in zip(ctfSetIn, ctfSet):
+            defocusU = ctf.getDefocusU()
+            defocusV = ctf.getDefocusV()
+            astigm = defocusU - defocusV
+            resol = ctf._ctffind4_ctfResolution.get()  # PENDIENTEEEEEEEEEEEEEEEEEE
+            if defocusU > 1000 and defocusU < 28000 and \
+            defocusV > 1000 and defocusV < 28000 and \
+            astigm < 1000 and resol < 4:
+                self.assertTrue(ctfOut.isEnabled())
+            else:
+                self.assertFalse(ctfOut.isEnabled())
