@@ -103,11 +103,9 @@ if __name__ == '__main__':
             _log("Still missing input, sleeping...")
             time.sleep(15)
 
-        _log("Running the protocol >>>>")
+        _log("Launching the protocol >>>>")
         log.close()
-
-        runProtocolMain(projPath, dbPath, protId)
-        
+        project.launchProtocol(protocol, scheduled=True)
     else:
         from os.path import basename
         print "usage: %s dbPath protocolID" % basename(sys.argv[0])

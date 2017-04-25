@@ -385,7 +385,7 @@ class Project(object):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
 
-    def launchProtocol(self, protocol, wait=False):
+    def launchProtocol(self, protocol, wait=False, scheduled=False):
         """ In this function the action of launching a protocol
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
@@ -409,10 +409,13 @@ class Project(object):
             self.mapper.deleteRelations(self)
         self.mapper.commit()
 
-        # Prepare a separate db for this run
-        # NOTE: now we are simply copying the entire project db, this can be
-        # changed later to only create a subset of the db need for the run
-        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
+        # Prepare a separate db for this run if not from schedule jobs
+        # Scheduled protocols will load the project db from the run.db file,
+        # so there is no need to copy the database
+        if not scheduled:
+            # NOTE: now we are simply copying the entire project db, this can be
+            # changed later to only create a subset of the db need for the run
+            pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
 
         # Launch the protocol, the jobId should be set after this call
         pwprot.launch(protocol, wait)

@@ -248,7 +248,7 @@ def _run(command, wait, stdin=None, stdout=None, stderr=None):
 
 def _stopLocal(protocol):
     
-    if protocol.useQueue():     
+    if protocol.useQueue() and not protocol.isScheduled():
         jobId = protocol.getJobId()        
         host = protocol.getHostConfig()
         cancelCmd = host.getCancelCommand() % {'JOB_ID': jobId}
