@@ -89,10 +89,16 @@ class StepExecutor():
         lastCheck = datetime.datetime.now()
 
         while True:
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
             # Get an step to run, if there is one
             runnableSteps = self._getRunnable(steps)
 
             if runnableSteps:
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
                 step = runnableSteps[0]
                 # We found a step to work in, so let's start a new
                 # thread to do the job and book it.
@@ -102,23 +108,38 @@ class StepExecutor():
                 doContinue = stepFinishedCallback(step)
             
                 if not doContinue:
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
                     break
 
             elif self._arePending(steps):
                 # We have not found any runnable step, but still there
                 # there are some running or waiting for dependencies
                 # So, let's wait a bit to check if something changes
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
                 time.sleep(0.5)
             else:
                 # No steps to run, neither running or waiting
                 # So, we are done, either failed or finished :)
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
                 break
 
             now = datetime.datetime.now()
             if now - lastCheck > delta:
+<<<<<<< Updated upstream
                 stepsCheckCallback()
                 lastCheck = now
 
+=======
+                stepsCheckCallback()
+                lastCheck = now
+
+>>>>>>> Stashed changes
 
         stepsCheckCallback() # one last check to finalize stuff
 
