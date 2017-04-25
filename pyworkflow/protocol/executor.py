@@ -89,12 +89,10 @@ class StepExecutor():
         lastCheck = datetime.datetime.now()
 
         while True:
-            print("AQUIIIIII")
             # Get an step to run, if there is one
             runnableSteps = self._getRunnable(steps)
 
             if runnableSteps:
-                print(" ES runnableSteps")
                 step = runnableSteps[0]
                 # We found a step to work in, so let's start a new
                 # thread to do the job and book it.
@@ -104,28 +102,23 @@ class StepExecutor():
                 doContinue = stepFinishedCallback(step)
             
                 if not doContinue:
-                    print("Break 1")
                     break
 
             elif self._arePending(steps):
                 # We have not found any runnable step, but still there
                 # there are some running or waiting for dependencies
                 # So, let's wait a bit to check if something changes
-                print("Pending")
                 time.sleep(0.5)
             else:
                 # No steps to run, neither running or waiting
                 # So, we are done, either failed or finished :)
-                print("Break 2")
                 break
 
             now = datetime.datetime.now()
             if now - lastCheck > delta:
-                print("Calling stepsCheckCallback")
                 stepsCheckCallback()
                 lastCheck = now
 
-        print("Calling2 stepsCheckCallback")
 
         stepsCheckCallback() # one last check to finalize stuff
 
