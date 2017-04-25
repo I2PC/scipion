@@ -128,6 +128,7 @@ class ProtSummovie(ProtAlignMovies):
     
     #--------------------------- INFO functions --------------------------------
     def _citations(self):
+        #TODO: add references
         return []
         
     def _methods(self):
