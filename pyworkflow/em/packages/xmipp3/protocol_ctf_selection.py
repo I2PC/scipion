@@ -126,7 +126,12 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 defocusU = ctf.getDefocusU()
                 defocusV = ctf.getDefocusV()
                 astigm = defocusU - defocusV
-                resol = ctf._ctffind4_ctfResolution.get()  # PENDIENTEEEEEEEEEEEEEEEEEE
+                #this is an awful hack to read freq either from ctffid/gctf or xmipp
+                #labels assigned to max resolution are different
+                try:
+                    resol = ctf._ctffind4_ctfResolution.get()
+                except:
+                    resol = ctf._xmipp_ctfCritMaxFreq.get()
                 if defocusU > self.minDefocus and defocusU < self.maxDefocus and \
                 defocusV > self.minDefocus and defocusV < self.maxDefocus and \
                 astigm < self.astigmatism and resol < self.resolution:
@@ -141,6 +146,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                     micToAdd.setEnabled(False)
                 else:
                     micToAdd.setEnabled(True)
+                #By default each micrograph has the sampling rate used in the CTF find protocol
+                #We set the sampling rate to that from the original input set
+                micToAdd.setSamplingRate(self.micSetSampling)
                 micSet.append(micToAdd)
                 newCTF = True
 
@@ -159,6 +167,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
         self.micSet = self.inputCTFs.get().getMicrographs()
         ctfSet.setMicrographs(self.micSet)
+        self.micSetSampling =  self.micSet.getSamplingRate()
 
         #check if there are new ctfs and process them
         #return number of processed ctfs
