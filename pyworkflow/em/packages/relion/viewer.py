@@ -217,10 +217,16 @@ Examples:
         form.addSection('Overall')      
         form.addParam('showPMax', params.LabelParam, default=True,
                       label="Show average PMax",
-                      help='Average (per class) of the maximum value\n of normalized probability function')      
+                      help='Average (per class) of the maximum value\n '
+                           'of normalized probability function')
         form.addParam('showChanges', params.LabelParam, default=True,
                       label=changesLabel,
-                      help='Visualize changes in orientation, offset and\n number images assigned to each class')
+                      help='Visualize changes in orientation, offset and\n '
+                           'number images assigned to each class')
+        form.addParam('plotClassDistribution', params.LabelParam, default=True,
+                      label='Prot class distribution over iterations',
+                      help='Plot each class distribution over iterations as '
+                           'bar plots.')
                                               
     def _getVisualizeDict(self):
         self._load()
@@ -235,7 +241,8 @@ Examples:
                 'displayVol': self._showVolumes,
                 'displayAngDist': self._showAngularDistribution,
                 'resolutionPlotsSSNR': self._showSSNR,
-                'resolutionPlotsFSC': self._showFSC
+                'resolutionPlotsFSC': self._showFSC,
+                'plotClassDistribution': self._plotClassDistribution,
                 }
 
         # If the is some error during the load, just show that instead
@@ -361,6 +368,74 @@ Examples:
             xplotter.showLegend(self.protocol.PREFIXES)
 
         return [self.createDataView(fn), xplotter]
+
+# ==============================================================================
+# Get classes info per iteration
+# ==============================================================================
+    def _plotClassDistribution(self, paramName=None):
+        labels = ["rlnClassDistribution", "rlnAccuracyRotations",
+                  "rlnAccuracyTranslations"]
+        iterations = range(self.firstIter, self.lastIter + 1)
+
+        classInfo = {}
+
+        for it in iterations:
+            modelStar = self.protocol._getFileName('model', iter=it)
+
+            for row in md.iterRows('%s@%s' % ('model_classes', modelStar)):
+                i, fn = row.getValue('rlnReferenceImage').split('@')
+                index = int(i)
+                if index not in classInfo:
+                    classInfo[index] = {}
+                    for l in labels:
+                        classInfo[index][l] = []
+
+                for l in labels:
+                    classInfo[index][l].append(row.getValue(l))
+
+        xplotter = RelionPlotter()
+        xplotter.createSubPlot("Classes distribution over iterations",
+                               "Iterations", "Classes Distribution")
+
+        # Empty list for each iteration
+        iters = [[]] * len(iterations)
+
+        l = labels[0]
+        for index in sorted(classInfo.keys()):
+            for it, value in enumerate(classInfo[index][l]):
+                iters[it].append(value)
+
+        ax = xplotter.getLastSubPlot()
+
+        n = len(iterations)
+        ind = range(n)
+        bottomValues = [0] * n
+        width = 0.45  # the width of the bars: can also be len(x) sequence
+
+        def get_cmap(N):
+            import matplotlib.cm as cmx
+            import matplotlib.colors as colors
+            '''Returns a function that maps each index in 0, 1, ... N-1 to a distinct
+            RGB color.'''
+            color_norm = colors.Normalize(vmin=0, vmax=N - 1)
+            scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='hsv')
+
+            def map_index_to_rgb_color(index):
+                return scalar_map.to_rgba(index)
+
+            return map_index_to_rgb_color
+
+        cmap = get_cmap(len(classInfo))
+
+        for classId in sorted(classInfo.keys()):
+            values = classInfo[classId][l]
+            ax.bar(ind, values, width, bottom=bottomValues, color=cmap(classId))
+            bottomValues = [a+b for a, b in zip(bottomValues, values)]
+
+        ax.get_xaxis().set_ticks([i + 0.25 for i in ind])
+        ax.get_xaxis().set_ticklabels([str(i) for i in ind])
+
+        return [xplotter]
     
 #===============================================================================
 # ShowChanges    
