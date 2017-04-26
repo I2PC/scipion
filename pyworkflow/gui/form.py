@@ -1591,7 +1591,6 @@ class FormWindow(Window):
             self.btnExecute = HotButton(btnFrame, Message.LABEL_BUTTON_EXEC,
                                    Icon.ACTION_EXECUTE, command=self.execute)
             self.btnExecute.grid(row=0, column=2, padx=(5, 28), pady=5, sticky='se')
-            print "setting self.btnExecute: ", self.btnExecute
             self._onPointerChanged()
             
         return btnFrame
