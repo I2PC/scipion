@@ -162,6 +162,9 @@ class Step(OrderedObject):
     
     def isSaved(self):
         return self.getStatus() == STATUS_SAVED
+
+    def isScheduled(self):
+        return self.getStatus() == STATUS_SCHEDULED
     
     def isAborted(self):
         return self.getStatus() == STATUS_ABORTED
@@ -554,6 +557,42 @@ class Protocol(Step):
                     yield key, item 
             elif attr.isPointer() and attr.hasValue():
                 yield key, attr
+
+    def iterInputPointers(self):
+        """ This function is similar to iterInputAttributes, but it yields
+        all input Pointers, independently if they have value or not.
+        """
+        for key, attr in self.getAttributes():
+            if not isinstance(attr, Object):
+                raise Exception('Attribute %s have been overwritten to type %s '
+                                % (key, type(attr)))
+            if isinstance(attr, PointerList) and attr.hasValue():
+                for item in attr:
+                    # the same key is returned for all items inside the
+                    # PointerList, this is used in viewprotocols.py
+                    # to group them inside the same tree element
+                    yield key, item
+            elif attr.isPointer():
+                yield key, attr
+
+    def hasLinkedInputs(self):
+        """ Return if True if some of the input pointers are referring to
+        an output that is not ready yet.
+        """
+        linkedPointers = []
+        emptyPointers = []
+
+        for paramName, attr in self.iterInputPointers():
+            condition = self.evalParamCondition(paramName)
+            param = self.getParam(paramName)
+            obj = attr.get()
+            if condition and obj is None and not param.allowsNull:
+                if attr.hasValue():
+                    linkedPointers.append(paramName)
+                else:
+                    emptyPointers.append(paramName)
+
+        return (linkedPointers and not emptyPointers)
                 
     def iterOutputAttributes(self, outputClass):
         """ Iterate over the outputs produced by this protocol. """
@@ -1041,7 +1080,7 @@ class Protocol(Step):
         errors = self.validate()
         if len(errors):
             raise Exception('Protocol.run: Validation errors:\n' + '\n'.join(errors))
-        
+
         self._insertAllSteps() # Define steps for execute later
         # Find at which step we need to start
         startIndex = self.__findStartingStep()
@@ -1083,7 +1122,7 @@ class Protocol(Step):
         self.__initLogs()
         
         self.info(pwutils.greenStr('RUNNING PROTOCOL -----------------'))
-        self._pid.set(os.getpid())
+        self.setPid(os.getpid())
         self.info('          PID: %s' % self._pid)
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
@@ -1275,6 +1314,9 @@ class Protocol(Step):
         
     def getPid(self):
         return self._pid.get()
+
+    def setPid(self, pid):
+        self._pid.set(pid)
         
     def getRunName(self):
         runName = self.getObjLabel().strip()
@@ -1541,8 +1583,13 @@ class Protocol(Step):
             else:
                 label = cite['author'].split(' and ')[0].split(',')[0].strip()
                 label += ', et.al, %s, %s' % (cite['journal'], cite['year'])
-            
-            return '[[%s][%s]] ' % (cite['doi'].strip(), label)
+
+            if len(cite['doi'].strip())>0:
+                text = '[[%s][%s]] ' % (cite['doi'].strip(), label)
+            else:
+                text = label.strip()
+            return text
+
         except Exception as ex:
             print ("Error with citation: " + label)
             print (ex)
@@ -1562,25 +1609,29 @@ class Protocol(Step):
                 newCitations.append(c)
         return newCitations
     
-    def __getCitationsDict(self, citationList):
+    def __getCitationsDict(self, citationList, bibTexOutput=False):
         """ Return a dictionary with Cite keys and the citation links. """
         bibtex = self.__getPackageBibTex()
         od = OrderedDict()
         for c in citationList:
             if c in bibtex:
-                od[c] = self._getCiteText(bibtex[c])
+                if bibTexOutput:
+                    od[c] = bibtex[c]
+                else:
+                    od[c] = self._getCiteText(bibtex[c])
             else:
                 od[c] = c
             
         return od
         
-    def getCitations(self):
-        return self.__getCitationsDict(self._citations() or [])
+    def getCitations(self, bibTexOutput=False):
+        return self.__getCitationsDict(self._citations() or [],
+                                       bibTexOutput=bibTexOutput)
             
-    def getPackageCitations(self):
-        return self.__getCitationsDict(getattr(self.getClassPackage(),
-                                               "_references", []))
-    
+    def getPackageCitations(self, bibTexOutput=False):
+        refs = getattr(self.getClassPackage(), "_references", [])
+        return self.__getCitationsDict(refs, bibTexOutput=bibTexOutput)
+
     def citations(self):
         """ Return a citation message to provide some information to users. """
         citations = self.getCitations().values()

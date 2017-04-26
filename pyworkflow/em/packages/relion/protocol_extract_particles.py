@@ -249,8 +249,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         for mic in self.getInputMicrographs():
             micDict[mic.getMicName()] = mic.getFileName()
 
-        pwutils.prettyDict(micDict)
-
         def _getCoordsStarFile(mic):
             micName = mic.getMicName()
             if not micName in micDict:

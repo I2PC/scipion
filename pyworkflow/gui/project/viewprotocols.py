@@ -33,9 +33,10 @@ INIT_REFRESH_SECONDS = 3
 """
 View with the protocols inside the main project window.
 """
-
 import os
 import pickle
+import json
+import re
 from collections import OrderedDict
 import Tkinter as tk
 import ttk
@@ -177,13 +178,15 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
         else:
             status = None
 
+        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED]
+
         return [(ACTION_EDIT, single),
                 (ACTION_COPY, True),
                 (ACTION_DELETE, status != pwprot.STATUS_RUNNING),
                 (ACTION_STEPS, single),
                 (ACTION_BROWSE, single),
                 (ACTION_DB, single),
-                (ACTION_STOP, status == pwprot.STATUS_RUNNING and single),
+                (ACTION_STOP, stoppable and single),
                 (ACTION_EXPORT, not single),
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
@@ -699,9 +702,20 @@ class ProtocolsView(tk.Frame):
         # Method tab
         mframe = tk.Frame(tab)
         pwgui.configureWeigths(mframe)
+        # Methods text box
         self.methodText = pwgui.text.TaggedText(mframe, width=40, height=15,
                                                 bg='white', handlers=hView)
         self.methodText.grid(row=0, column=0, sticky='news')
+
+        # Reference export button
+        btnExportBib = pwgui.Button(mframe, text=Message.LABEL_BIB_BTN,
+                                  fg='white', bg=Color.RED_COLOR,
+                                  image=self.getImage(Icon.ACTION_BROWSE),
+                                  compound=tk.LEFT,
+                                  activeforeground='white',
+                                  activebackground='#A60C0C',
+                                  command=self._bibExportClicked)
+        btnExportBib.grid(row=2, column=0, sticky='w', padx=0)
 
         # Logs
         ologframe = tk.Frame(tab)
@@ -1620,14 +1634,17 @@ class ProtocolsView(tk.Frame):
         # to be executed in the same thread
         self.windows.enqueue(lambda: self._executeSaveProtocol(prot))
 
-    def _executeSaveProtocol(self, prot, onlySave=False):
+    def _executeSaveProtocol(self, prot, onlySave=False, doSchedule=False):
         if onlySave:
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
             # msg = "Protocol successfully saved."
 
         else:
-            self.project.launchProtocol(prot)
+            if doSchedule:
+                self.project.scheduleProtocol(prot)
+            else:
+                self.project.launchProtocol(prot)
             # Select the launched protocol to display its summary, methods..etc
             self._selection.clear()
             self._selection.append(prot.getObjId())
@@ -1798,6 +1815,49 @@ class ProtocolsView(tk.Frame):
             self._analyzeResults(prot)
         else:
             self.windows.showInfo("Selected protocol hasn't been run yet.")
+
+    def _bibExportClicked(self, e=None):
+
+        def _exportBib(obj):
+            try:
+                bibTexCites = OrderedDict()
+                fileName = os.path.join(browser.getCurrentDir(),
+                                        browser.getEntryValue())
+                if os.path.exists(fileName):
+                    if not pwgui.dialog.askYesNo("Confirm file name",
+                                                 "This file already exists, do you want to replace it?",
+                                                 self.root):
+                        return
+
+                for prot in self._iterSelectedProtocols():
+                    bibTexCites.update(prot.getCitations(bibTexOutput=True))
+                    bibTexCites.update(prot.getPackageCitations(bibTexOutput=True))
+
+                if bibTexCites:
+                    with open(fileName, 'w') as bibFile:
+                        for refId, refDict in bibTexCites.iteritems():
+                            refType = refDict.pop('type', None)
+                            refDict.pop('id', None)
+                            jsonStr = json.dumps(refDict, indent=4,
+                                                 ensure_ascii=False)[1:]
+                            jsonStr = jsonStr.replace('": "','"= "')
+                            jsonStr = re.sub('(?<!= )"(\S*?)"', '\\1', jsonStr)
+                            jsonStr = jsonStr.replace('= "', ' = "')
+                            refStr = '@%s{%s,%s\n\n' % (refType, refId, jsonStr)
+                            bibFile.write(refStr.encode('utf-8'))
+                    self.windows.showInfo(".bib file successfully saved to '%s'."
+                                          % fileName)
+            except Exception as ex:
+                self.windows.showError(str(ex))
+
+        browser = pwgui.browser.FileBrowserWindow("Choose .bib file to export references",
+                                                  master=self.windows,
+                                                  path=self.project.getPath(''),
+                                                  onSelect=_exportBib,
+                                                  entryLabel='File',
+                                                  entryValue='citations.bib')
+        browser.show()
+        return
 
     def _runActionClicked(self, action):
         prot = self.getSelectedProtocol()
