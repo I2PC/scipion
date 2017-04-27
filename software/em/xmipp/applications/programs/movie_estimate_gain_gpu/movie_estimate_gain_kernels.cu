@@ -1,5 +1,6 @@
 #define TILE_DIM 32
-#define TILE_DIM2 TILE_DIM*2
+#define TILE_DIMH (TILE_DIM/2)
+#define TILE_DIM2 (TILE_DIM*2)
 #define BLOCK_ROWS 8
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line,
@@ -22,7 +23,7 @@ void sumall( float* sumObjs, int** array_Img, int no_imgs, int Xdim, int Ydim){
    int y = blockIdx.y*blockDim.y + threadIdx.y;
    int offset = x+y*Xdim;
    int px_img = Xdim*Ydim;
-
+  
    if ((x<Xdim)&&(y<Ydim)){
 //   	printf("no_imgs=%d, (%d, %d) th=(%d,%d) blk=(%d,%d)\n", no_imgs, x, y, threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
 	double sum=0;
@@ -56,7 +57,7 @@ void mult( int* a, float* b, int* c, int Xdim, int Ydim){
  fill - fill matrix/array with value
 ****/
 __global__
-void fill( int* a, const int val,  int Xdim, int Ydim){
+void fill( float* a, const float val,  int Xdim, int Ydim){
 
    int x = blockIdx.x*blockDim.x + threadIdx.x;
    int y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -72,34 +73,35 @@ void fill( int* a, const int val,  int Xdim, int Ydim){
           before calling the kernel, and smooth after calling it
           Each thread computes a semicolumn
 ****/
-__global__ smooth1(int *smooth, int *colrow, int *listOfWeight, int width, int Xdim, int Ydim)
+__global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, int width, int Xdim, int Ydim)
 {
-   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
    int y = blockIdx.y*TILE_DIM2 + threadIdx.y;
 
-// 	for (size_t j=0; j<XSIZE(columnH); ++j)
-//	{
-		double sumWeightsC = 0;
-		for(int k = -width; k<=width; ++k)
-		{
-			if (x+k<0 || x+k>=Xdim)
-				continue;
-			//**** MODIFED BY GCF
-			//double actualWeightC = k==0? 1:listOfWeights[abs(k)];
-			double actualWeightC = listOfWeights[abs(k)];
-			//********	
-			sumWeightsC += actualWeightC;
-			for (size_t i=0; i<TILE_DIM2; ++i){
-				if ((y+i)<Ydim)
-					smooth[x+(y+i)*Xdim] += actualWeightC * colrow[(x+k)+(y+i)*Xdim];
-			}
-		}
-
-		double iSumWeightsC=1/sumWeightsC;
-		for (size_t i=0; i<TILE_DIM2; ++i)
-			if ((y+i)<Ydim)
-				smooth[x+(y+i)*Xdim] *= iSumWeightsC;
-	}
+   if (x<Xdim){
+	   double sumWeightsC = 0;
+	   int tmp=0;
+	   for(int k = -width; k<=width; ++k){
+		if (x+k<0 || x+k>=Xdim)
+			continue;
+		tmp++;
+		float actualWeightC = (k==0? 1:listOfWeights[abs(k)]);
+		sumWeightsC += actualWeightC;
+		for (size_t i=0; i<TILE_DIM2; ++i){
+			if ((y+i)<Ydim){
+				smooth[x+(y+i)*Xdim] += actualWeightC * (colrow[(x+k)+(y+i)*Xdim]);
+			}	
+		}	
+	  }	
+	  if ((width==0)&&(sumWeightsC==0)){
+		printf("tmp=%d sumWeightsC=%f width=%d\n", tmp, sumWeightsC, width);	
+  		printf("BLK(%d,%d), TH(%d,%d)\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y);
+	  }
+	 double iSumWeightsC=1./sumWeightsC;
+	  for (size_t i=0; i<TILE_DIM2; ++i)
+		if ((y+i)<Ydim)
+			smooth[x+(y+i)*Xdim] *= (float)iSumWeightsC;
+   }//end-if(x<=Xdim) 
 }
 
 // Kernel to transpose a matrix
