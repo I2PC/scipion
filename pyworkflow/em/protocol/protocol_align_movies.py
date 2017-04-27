@@ -159,6 +159,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if newDone:
             self._writeDoneList(newDone)
+            if getattr(self, 'computeAllFramesAvg', False):
+                self._computeAllFramesAvg(newDone, allDone)
+
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -187,6 +190,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 # first resulting movie of the processing.
                 self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
+
 
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
@@ -230,6 +234,36 @@ class ProtAlignMovies(ProtProcessMovies):
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
+
+    def _computeAllFramesAvg(self, newDone, allDone):
+        """ Compute the running average of all frames.
+        This could be use as a sanity check for the microscope.
+        """
+        allFramesSum = self._getPath('all_frames_sum.mrc')
+        allFramesAvg = self._getPath('all_frames_avg.mrc')
+
+        ih = ImageHandler()
+        sumImg = ih.createImage()
+        img = ih.createImage()
+
+        for i, movie in enumerate(newDone):
+            n = movie.getNumberOfFrames()
+            fn = movie.getFileName()
+            for frame in range(1, n + 1):
+                img.read((frame, fn))
+
+                if i == 0:
+                    sumImg.setData(img.getData())
+                else:
+                    sumImg.inplaceAdd(img)
+
+        if os.path.exists(allFramesSum):
+            prevSumImg = ih.read(allFramesSum)
+            sumImg.inplaceAdd(prevSumImg)
+
+        sumImg.write(allFramesSum)
+        sumImg.inplaceDivide(allDone)
+        sumImg.write(allFramesAvg)
 
     # --------------------------- INFO functions --------------------------------
 
@@ -506,21 +540,45 @@ class ProtAlignMovies(ProtProcessMovies):
 
         self.__runXmippProgram('xmipp_ctf_estimate_from_micrograph', args)
 
-    def composePSD(self, psd1, psd2, outputFn):
+    def composePSD(self, psd1, psd2, outputFn,
+                   outputFnUncorrected=None, outputFnCorrected=None):
         """ Compose a single PSD image:
-         left part from psd1 (corrected PSD),
-         right-part from psd2 (uncorrected PSD)
+         left part from psd1 (uncorrected PSD),
+         right-part from psd2 (corrected PSD)
         """
         ih = ImageHandler()
-        psd = ih.read(psd1)
-        data1 = psd.getData()
-        data2 = ih.read(psd2).getData()
+        psdImg1 = ih.read(psd1)
+        data1 = psdImg1.getData()
+
+        if outputFnUncorrected is not None:
+            psdImg1.convertPSD()
+            psdImg1.write(outputFnUncorrected)
+
+        psdImg2 = ih.read(psd2)
+        data2 = psdImg2.getData()
+
+        if outputFnCorrected is not None:
+            psdImg2.convertPSD()
+            psdImg2.write(outputFnCorrected)
+
         # Compute middle index
-        x, _, _, _ = psd.getDimensions()
+        x, _, _, _ = psdImg1.getDimensions()
         m = int(round(x / 2.))
-        data1[:, m:] = data2[:, m:]
-        psd.setData(data1)
-        psd.write(outputFn)
+        data1[:, :m] = data2[:, :m]
+        psdImg1.setData(data1)
+        psdImg1.write(outputFn)
+
+    def computePSDs(self, movie, fnUncorrected, fnCorrected,
+                    outputFnUncorrected=None, outputFnCorrected=None):
+        movieFolder = self._getOutputMovieFolder(movie)
+        uncorrectedPSD = os.path.join(movieFolder, "uncorrected")
+        correctedPSD = os.path.join(movieFolder, "corrected")
+        self.computePSD(fnUncorrected, uncorrectedPSD)
+        self.computePSD(fnCorrected, correctedPSD)
+        self.composePSD(uncorrectedPSD + ".psd",
+                        correctedPSD + ".psd",
+                        self._getPsdCorr(movie),
+                        outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
         outputFn = outputFn or self.getThumbnailFn(inputFn)
