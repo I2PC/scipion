@@ -610,7 +610,7 @@ class ProtocolsView(tk.Frame):
         leftFrame.rowconfigure(1, weight=1)
 
         # Protocols Tree Pane
-        protFrame = tk.Frame(leftFrame, width=30, height=20, bg=bgColor)
+        protFrame = tk.Frame(leftFrame, width=300, height=500, bg=bgColor)
         protFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
         protFrame.columnconfigure(0, weight=1)
         protFrame.rowconfigure(1, weight=1)
