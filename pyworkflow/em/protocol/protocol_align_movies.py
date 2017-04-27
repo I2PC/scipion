@@ -159,6 +159,9 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if newDone:
             self._writeDoneList(newDone)
+            if getattr(self, 'computeAllFramesAvg', False):
+                self._computeAllFramesAvg(newDone, allDone)
+
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -187,6 +190,7 @@ class ProtAlignMovies(ProtProcessMovies):
                 # first resulting movie of the processing.
                 self._storeSummary(newDone[0])
                 self._defineTransformRelation(self.inputMovies, movieSet)
+
 
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
@@ -230,6 +234,36 @@ class ProtAlignMovies(ProtProcessMovies):
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
+
+    def _computeAllFramesAvg(self, newDone, allDone):
+        """ Compute the running average of all frames.
+        This could be use as a sanity check for the microscope.
+        """
+        allFramesSum = self._getPath('all_frames_sum.mrc')
+        allFramesAvg = self._getPath('all_frames_avg.mrc')
+
+        ih = ImageHandler()
+        sumImg = ih.createImage()
+        img = ih.createImage()
+
+        for i, movie in enumerate(newDone):
+            n = movie.getNumberOfFrames()
+            fn = movie.getFileName()
+            for frame in range(1, n + 1):
+                img.read((frame, fn))
+
+                if i == 0:
+                    sumImg.setData(img.getData())
+                else:
+                    sumImg.inplaceAdd(img)
+
+        if os.path.exists(allFramesSum):
+            prevSumImg = ih.read(allFramesSum)
+            sumImg.inplaceAdd(prevSumImg)
+
+        sumImg.write(allFramesSum)
+        sumImg.inplaceDivide(allDone)
+        sumImg.write(allFramesAvg)
 
     # --------------------------- INFO functions --------------------------------
 

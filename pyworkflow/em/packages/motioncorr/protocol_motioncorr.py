@@ -89,11 +89,18 @@ class ProtMotionCorr(ProtAlignMovies):
 
         form.addParam('doComputeMicThumbnail', params.BooleanParam,
                       expertLevel=cons.LEVEL_ADVANCED,
-                      default=False, condition='doSaveAveMic',
+                      default=False,
                       label='Compute micrograph thumbnail?',
                       help='When using this option, we will compute a '
                            'micrograph thumbnail and keep it with the '
                            'micrograph object for visualization purposes. ')
+
+        form.addParam('computeAllFramesAvg', params.BooleanParam,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      default=False,
+                      label='Compute all frames average?',
+                      help='Computing all the frames average could provide a '
+                           'sanity check about the microscope and the camera.')
 
         form.addParam('extraParams', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED,
