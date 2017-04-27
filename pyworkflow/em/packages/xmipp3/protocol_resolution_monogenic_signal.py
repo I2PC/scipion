@@ -32,20 +32,24 @@ from pyworkflow.object import Float
 from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
 import numpy as np
+import pyworkflow.em.metadata as md
+
 
 MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
 FN_FILTERED_MAP = 'filteredMap.vol'
 OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
+OUTPUT_MASK_FILE = 'output_Mask.vol'
 FN_MEAN_VOL = 'mean_volume.vol'
+METADATA_MASK_FILE = 'mask_data.xmd'
 
 
 class XmippProtMonoRes(ProtAnalysis3D):
     """    
-    Given a map the protocol assigns local resolutions to each pixel of the map.
+    Given a map the protocol assigns local resolutions to each voxel of the map.
     """
-    _label = 'local resolution'
+    _label = 'local MonoRes'
     _version = VERSION_1_1
     
     def __init__(self, **args):
@@ -64,46 +68,55 @@ class XmippProtMonoRes(ProtAnalysis3D):
                            'is performed via half volumes.')
 
         form.addParam('inputVolumes', PointerParam, pointerClass='Volume',
-                      label="Input Volume",
+                      label="Input Volume", important=True,
                       condition = 'not halfVolumes',
                       help='Select a volume for determining its local resolution.')
 
         form.addParam('inputVolume', PointerParam, pointerClass='Volume',
-                      label="Input Volume",
-                      condition = 'halfVolumes',
+                      label="Volume Half 1", important=True,
+                      condition = 'halfVolumes', 
                       help='Select a volume for determining its local resolution.')
 
         form.addParam('inputVolume2', PointerParam, pointerClass='Volume',
-                      label="Second Half Volume",
+                      label="Volume Half 2", important=True,
                       condition='halfVolumes',
                       help='Select a second volume for determining a local resolution.')
 
         form.addParam('Mask', PointerParam, pointerClass='VolumeMask', 
                       condition='(halfVolumes) or (not halfVolumes)',
-                      label="Binary Mask",
+                      label="Binary Mask", important=True,
                       help='The mask determines which points are specimen and which ones not')
 
-        form.addParam('symmetry', StringParam, default='c1',
+        group = form.addGroup('Extra parameters')
+        group.addParam('symmetry', StringParam, default='c1',
                       label="Symmetry",
-                      help='Symmetry group. By default = c1')
+                      help='Symmetry group. By default = c1.'
+                      'See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
+                      'for a description of the symmetry groups format, If no symmetry is present, give c1.')
 
-        line = form.addLine('Resolution Range (A)',
+        line = group.addLine('Resolution Range (A)',
                             help="If the user knows the range of resolutions or only a"
-                                 " range of frequency needs to be analysed", expertLevel=LEVEL_ADVANCED)
-        form.addParam('isPremasked', BooleanParam, default=False,
+                                 " range of frequency needs to be analysed")
+        
+        group.addParam('significance', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
+                      label="Significance",
+                      help='Relution is computed using hipothesis tests, this value determines'
+                      'the significance of that test')
+        
+        group.addParam('isPremasked', BooleanParam, default=False,
                       label="Is the original premasked?",
                       help='Sometimes the original volume is masked inside a spherical mask. In this case'
                       'please select yes')
         
-        form.addParam('volumeRadius', FloatParam, default=-1,
+        group.addParam('volumeRadius', FloatParam, default=-1,
                       label="Spherical mask radius",
                       condition = 'isPremasked and not halfVolumes', 
-                      help='When the origianl volume is originally premasked, the noise estimation ought'
+                      help='When the original volume is originally premasked, the noise estimation ought'
                       'to be performed inside that premask, and out of the provieded mask asked in the previus'
                       'box. The radius value, determines the radius of the spherical premask. By default'
                       'radius = -1 use the half of the volume size as radius')
         
-        form.addParam('volumeRadiusHalf', FloatParam, default=-1,
+        group.addParam('volumeRadiusHalf', FloatParam, default=-1,
                       label="Spherical mask radius",
                       condition = 'halfVolumes and isPremasked',
                       help='When the origianl volume is originally premasked, the noise estimation ought'
@@ -112,13 +125,13 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'radius = -1 use the half of the volume size as radius')
 
         line.addParam('minRes', FloatParam, default=1, label='High')
-        line.addParam('maxRes', FloatParam, default=50, label='Low')
+        line.addParam('maxRes', FloatParam, default=30, label='Low')
+        line.addParam('stepSize', FloatParam, allowsNull=True,
+                      expertLevel=LEVEL_ADVANCED, label='Step')
 
-        form.addParam('filterInput', BooleanParam, default=False, 
+        group.addParam('filterInput', BooleanParam, default=False, 
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at the local resolution map.')
-
-        form.addParallelSection(threads=1, mpi=1)
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -165,6 +178,12 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def resolutionMonogenicSignalStep(self):
 
+#         #Number of frequencies
+        if (self.stepSize.hasValue()):
+            Nfreqs = round((self.maxRes.get() - self.minRes.get())/self.stepSize.get())
+        else:
+            Nfreqs = 50
+  
         if (self.halfVolumes):
             if (self.isPremasked):
                 if (self.volumeRadiusHalf.get() is -1):
@@ -194,20 +213,20 @@ class XmippProtMonoRes(ProtAnalysis3D):
             params += ' --vol2 %s' % self.vol2Fn
             params += ' --meanVol %s' % self._getExtraPath(FN_MEAN_VOL)
             params += ' --mask %s' % self.maskFn
-
+        params += ' --mask_out %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         if (self.halfVolumes):
             params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
-        params += ' --number_frequencies %f' % 50
+        params += ' --number_frequencies %f' % Nfreqs
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim
         params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
-        params += ' --linear '
         params += ' --sym %s' % self.symmetry.get()
-        params += ' --trimmed %f' % 98  #This parameter only considers resolution values in percentile 98
+        params += ' --significance %f' % self.significance.get()
+        params += ' --md_outputdata %s' % self._getExtraPath('mask_data.xmd')  
         if self.filterInput.get():
             params += ' --filtered_volume %s' % self._getExtraPath(FN_FILTERED_MAP)
         else:
@@ -215,26 +234,33 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         self.runJob('xmipp_resolution_monogenic_signal', params)
 
+
     def createHistrogram(self):
 
         params = ' -i %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
-        params += ' --mask binary_file %s' % self.maskFn
+        params += ' --mask binary_file %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
         params += ' -o %s' % self._getExtraPath('hist.xmd')
 
         self.runJob('xmipp_image_histogram', params)
-
+        
+        
+    def readMetaDataOutput(self):
+        mData = md.MetaData(self._getExtraPath(METADATA_MASK_FILE))
+        NvoxelsOriginalMask = float(mData.getValue(md.MDL_COUNT, mData.firstObject()))
+        NvoxelsOutputMask = float(mData.getValue(md.MDL_COUNT2, mData.firstObject()))
+        nvox = int(round(((NvoxelsOriginalMask-NvoxelsOutputMask)/NvoxelsOriginalMask)*100))
+        return nvox
 
     def getMinMax(self, imageFile):
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         min_res = round(np.amin(imgData) * 100) / 100
-        self.max_res = round(np.amax(imgData) * 100) / 100
-        return min_res, self.max_res
+        max_res = round(np.amax(imgData) * 100) / 100
+        return min_res, max_res
 
     def createOutputStep(self):
-        
         volume_path = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         self.volumesSet = self._createSetOfVolumes('resolutionVol')
         if (self.halfVolumes):
@@ -292,8 +318,14 @@ class XmippProtMonoRes(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
-        summary.append("Highest resolution %.2f Å,   Lowest resolution %.2f Å." % (self.min_res_init
+        summary.append("Highest resolution %.2f Å,   Lowest resolution %.2f Å. \n" % (self.min_res_init
                                                                                , self.max_res_init))
+        Nvox = self.readMetaDataOutput()
+
+        if (Nvox>10):
+            summary.append("The resolution of %i %% of the mask voxels could not be computed. Maybe the mask was"
+            "not correctly created, it is too wide or the resolution range does not cover the resolution at those voxels. "
+            "If it is not the problem, decrease the significance in the advaced parameters can be an alternative" % Nvox)
 
         return summary
 
