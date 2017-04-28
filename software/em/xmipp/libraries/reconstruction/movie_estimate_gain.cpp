@@ -85,10 +85,19 @@ void ProgMovieEstimateGain::produceSideInfo()
 	{
 		int jmax=ceil(3*listOfSigmas[i]);
 		listOfWidths.push_back(jmax);
-		double *weights=new double[jmax];
-		double K=-0.5/(listOfSigmas[i]*listOfSigmas[i]);
-		for (int j=1; j<=jmax; ++j)
-			weights[j-1]=exp(K*j*j);
+		double *weights=NULL;
+		if (jmax==0)
+		{
+			weights=new double[1];
+			weights[0]=1;
+		}
+		else
+		{
+			weights=new double[jmax];
+			double K=-0.5/(listOfSigmas[i]*listOfSigmas[i]);
+			for (int j=1; j<=jmax; ++j)
+				weights[j-1]=exp(K*j*j);
+		}
 		listOfWeights.push_back(weights);
 	}
 }
