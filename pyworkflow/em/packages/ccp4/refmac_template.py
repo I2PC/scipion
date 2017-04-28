@@ -90,7 +90,7 @@ ${RM} ${OUTPUTDIR}masked_fs.map
 pdb_in=${PDBDIR}/${PDBFILE}
 if [ "$generateMaskedVolume" = True ] ; then
     echo we will work on $pdb_in
-    $refmac MAPIN ${MAPFILE} \
+    $refmac MAPIN ${MAPFILE} \\\n
    	            HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \
    	            XYZIN $pdb_in \
    	            XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \
