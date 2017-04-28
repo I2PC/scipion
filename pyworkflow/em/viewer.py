@@ -27,6 +27,7 @@
 
 from __future__ import print_function
 import os
+import webbrowser
 import sys
 import shlex
 import ast
@@ -263,7 +264,19 @@ class ImageView(View):
     def getImagePath(self):
         return self._imagePath
 
-        
+class TextFileView(View):
+
+    def __init__(self, path):
+        self.path = path
+
+    def show(self):
+        """Show text file in default editor"""
+        editor = os.getenv('EDITOR')
+        if editor:
+            os.system(editor + ' ' + self.path)
+        else:
+            webbrowser.open(self.path)
+
 #------------------------ Some views and  viewers ------------------------
         
 def getChimeraEnviron(): 
