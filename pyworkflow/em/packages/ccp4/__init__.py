@@ -33,4 +33,5 @@ _logo = "ccp4_200.png"
 
 from protocol_coot import CCP4ProtCoot
 from protocol_refmac import CCP4ProtRunRefmac
+from viewer_refmac import CCP4ProtRunRefmacViewer
 _environ = getEnviron()
