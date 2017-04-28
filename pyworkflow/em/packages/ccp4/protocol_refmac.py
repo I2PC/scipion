@@ -27,7 +27,7 @@
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
 import pyworkflow.protocol.constants as const
-from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam
+from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, BooleanParam
 from pyworkflow.em import Volume, PdbFile
 from pyworkflow.em.packages.ccp4.refmac_template import template
 import os
@@ -42,7 +42,11 @@ class CCP4ProtRunRefmac(EMProtocol):
     _program = ""
     _version = VERSION_1_2
     refmacScriptFileName = "refmac.sh"
-    refmacOutPDBFileName = "%s-refined.pdb"
+    OutPdbFileName = "%s-refined.pdb"
+    createMaskLogFileName="mask.log"
+    refineLogFileName = "refine.log"
+    fftLogFileName = "ifft.log"
+    maskedMapFileName = "masked_fs"
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
@@ -61,11 +65,20 @@ class CCP4ProtRunRefmac(EMProtocol):
         form.addParam('minResolution', FloatParam, default=200,
                       label='Min. Resolution (A):', help="Min resolution used in the refinement (Angstroms).")
         form.addParam('nRefCycle', IntParam, default=30, expertLevel=const.LEVEL_ADVANCED,
-                      label='Number of refinement cycles:',
+                      label='Number of refinement iterations:',
                       help='Specify the number of cycles of refinement.\n')
         form.addParam('weightMatrix', FloatParam, default=0.01, expertLevel=const.LEVEL_ADVANCED, label= 'Matrix refinement weight:',
-                      help='Weight between density map and chemical constrain. Smaller means less weight for EM map\n')
-
+                      help='Weight between density map and chemical constrain. Smaller means less weight for EM map.\n')
+        form.addParam('generateMaskedVolume', BooleanParam, default=True, label="Generate masked volume",
+                      expertLevel=const.LEVEL_ADVANCED, important=True, help='If set to True, the masked volume will be generated')
+        form.addParam('SFCALCmapradius', FloatParam, default=3, expertLevel=const.LEVEL_ADVANCED,
+                      label='SFCALC mapradius:', help='Specify how much around molecule should be cut (Angstroms)')
+        form.addParam('SFCALCmradius', FloatParam, default=3, expertLevel=const.LEVEL_ADVANCED,
+                      label='SFCALC mradius:', help='Specify the radius (Angstroms)to claculate the mask around molecule')
+        form.addParam('BFactorSet', FloatParam, default=0, expertLevel=const.LEVEL_ADVANCED,
+                      label='B Factor:', help='Specify the B factor value prior to refinement')
+        form.addParam('RefiSharpen', FloatParam, default=0, expertLevel=const.LEVEL_ADVANCED,
+                      label='Map sharpening:', help='Specify the map sharpening to be used during refinement')
 
 
     #--------------------------- INSERT steps functions --------------------------------------------
@@ -78,6 +91,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         #TODO: pass all parameters to script
 
         self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
+        self._insertFunctionStep('writeFinalResultsTable') #Print output results
 
 #    def convertInputStep(self):
 #        """ convert 3Dmaps to MRC '.mrc' format
@@ -108,12 +122,36 @@ class CCP4ProtRunRefmac(EMProtocol):
 
         dict['MAPFILE'] = self.inputVolume.get().getFileName().replace(':mrc', '')
 
-        dict['CHIMERA_BIN'] = os.path.join(os.environ['CHIMERA_HOME'],"bin","chimera")
+#       dict['CHIMERA_BIN'] = os.path.join(os.environ['CHIMERA_HOME'],"bin","chimera")
         dict['RESOMIN'] = self.minResolution.get()
         dict['RESOMAX'] = self.maxResolution.get()
         dict['NCYCLE'] = self.nRefCycle.get()
         dict['WEIGHT MATRIX'] = self.weightMatrix.get()
         dict['OUTPUTDIR'] = self._getExtraPath('')
+        dict['MASKED_VOLUME'] = self.generateMaskedVolume.get()
+        dict['SFCALC_mapradius'] = self.SFCALCmapradius.get()
+        dict['SFCALC_mradius'] = self.SFCALCmradius.get()
+#       if (self.inputVolume.get().getDim()[0] % 2 == 0):
+#           dict['XDIM'] = self.inputVolume.get().getDim()[0]
+#       else:
+#           dict['XDIM'] = self.inputVolume.get().getDim()[0] + 1
+#       if (self.inputVolume.get().getDim()[1] % 2 == 0):
+#           dict['YDIM'] = self.inputVolume.get().getDim()[1]
+#       else:
+#           dict['YDIM'] = self.inputVolume.get().getDim()[1] + 1
+#       if (self.inputVolume.get().getDim()[2] % 2 == 0):
+#           dict['ZDIM'] = self.inputVolume.get().getDim()[2]
+#       else:
+#           dict['ZDIM'] = self.inputVolume.get().getDim()[2] + 1
+        if self.BFactorSet.get() ==0:
+            dict['BFACTOR_SET'] = "#BFACtor SET 0"
+        else:
+            dict['BFACTOR_SET'] = "BFACtor SET %f"%self.BFactorSet.get()
+        if self.RefiSharpen.get() ==0:
+            dict['REFI_SHARPEN'] = "#REFI sharpen SET 0"
+        else:
+            dict['REFI_SHARPEN'] = "REFI sharpen %f"%self.RefiSharpen.get()
+
         data = template%dict
         f = open(self._getScriptFileName(), "w")
         f.write(data)
@@ -141,18 +179,34 @@ class CCP4ProtRunRefmac(EMProtocol):
         self._defineSourceRelation(self.inputStructure, self.outputPdb)
         self._defineSourceRelation(self.inputVolume, self.outputPdb)
 
+    def writeFinalResultsTable(self):
+        with open(self._getlogFileName()) as input_data:
+            for line in input_data:
+                if line.strip() == '$TEXT:Result: $$ Final results $$':
+                    break
+            for line in input_data:
+                if line.strip() == '$$':
+                    break
+                print line
+
     # --------------------------- INFO functions --------------------------------------------
 
 
     # --------------------------- UTLIS functions --------------------------------------------
     def _getOutPdbFileName(self):
         pdfileName = os.path.splitext(os.path.basename(self.inputStructure.get().getFileName()))[0]
-        return self._getExtraPath(self.refmacOutPDBFileName%pdfileName)
+        return self._getExtraPath(self.OutPdbFileName%pdfileName)
 
     #def _getVolName(self):
         #return self.Volume.get()
         #pass
     def _getScriptFileName(self):
         return self._getTmpPath(self.refmacScriptFileName)
+
+    def _getlogFileName(self):
+        return self._getExtraPath(self.refineLogFileName)
+
+
+
 
 
