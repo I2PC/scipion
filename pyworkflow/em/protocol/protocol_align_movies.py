@@ -633,7 +633,7 @@ class ProtAverageFrames(ProtAlignMovies):
         sumImg.write(allFramesSum)
 
     # FIXME: Methods will change when using the streaming for the output
-    def createOutputStep(self, i=1):
+    def createOutputStep(self):
         # Really load the input, since in the streaming case we can not
         # use the self.inputMovies directly
         allFramesSum = self._getPath('all_frames_sum.mrc')
