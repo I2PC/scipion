@@ -200,6 +200,10 @@ class ProtAlignMovies(ProtProcessMovies):
                 # micrograph file in the extra path with the required name
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
+                if not os.path.exists(extraMicFn):
+                    print("Micrograph %s was not producing, not added to "
+                          "output set." % extraMicFn)
+                    continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
@@ -385,6 +389,9 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         return self._getMovieRoot(movie) + '_aligned_mic_DW.mrc'
 
+    def _getOutputMicThumbnail(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_thumbnail.png')
+
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
          The shifts should refer to the original micrograph without any binning.
@@ -432,12 +439,17 @@ class ProtAlignMovies(ProtProcessMovies):
         
         return preExp, dose
         
-        
-    
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
         xmipp3.runXmippProgram(program, args)
+
+    def __runEman2Program(self, program, args):
+        """ Internal workaround to launch an EMAN2 program. """
+        import pyworkflow.em.packages.eman2 as eman2
+        from pyworkflow.utils.process import runJob
+        runJob(self._log, eman2.getEmanProgram(program), args,
+               env=eman2.getEnviron())
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
                      dark=None, gain=None, splineOrder=None):
@@ -509,6 +521,19 @@ class ProtAlignMovies(ProtProcessMovies):
         data1[:, m:] = data2[:, m:]
         psd.setData(data1)
         psd.write(outputFn)
+
+    def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
+        outputFn = outputFn or self.getThumbnailFn(inputFn)
+        args = "%s %s " % (inputFn, outputFn)
+        args += "--fouriershrink %s --process normalize" % scaleFactor
+
+        self.__runEman2Program('e2proc2d.py', args)
+
+        return outputFn
+
+    def getThumbnailFn(self, inputFn):
+        return pwutils.replaceExt(inputFn, "thumb.png")
+
 
 def createAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """

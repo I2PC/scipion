@@ -94,6 +94,8 @@ class Project(object):
         #  Creation time should be stored in project.sqlite when the project
         # is created and then loaded with other properties from the database
         self._creationTime = None
+        # Time stamp with the last run has been updated
+        self._lastRunTime = None
 
     def getObjId(self):
         """ Return the unique id assigned to this project. """
@@ -131,9 +133,21 @@ class Project(object):
     def getSettingsCreationTime(self):
         return self.settings.getCreationTime()
 
+    # def getElapsedTime(self):
+    #     """ Return the time since the project was created. """
+    #     return dt.datetime.now() - self.getCreationTime()
+    #
     def getElapsedTime(self):
-        """ Return the time since the project was created. """
-        return dt.datetime.now() - self.getCreationTime()
+        """ Returns the time elapsed from the creation to the last execution time"""
+
+        if self._creationTime and self._lastRunTime:
+
+            creationTs = self._creationTime
+            lastRunTs = self._lastRunTime.datetime()
+
+            return lastRunTs-creationTs
+        return None
+
 
     def getLeftTime(self):
         lifeTime = self.settings.getLifeTime()
@@ -381,8 +395,7 @@ class Project(object):
         and also take care if the execution is remotely."""
 
         isRestart = protocol.getRunMode() == MODE_RESTART
-
-        if not protocol.isInteractive() or isRestart:
+        if (not protocol.isInteractive() and not protocol.isInStreaming()) or isRestart:
             self._checkModificationAllowed([protocol],
                                            'Cannot RE-LAUNCH protocol')
 
@@ -427,9 +440,7 @@ class Project(object):
 
             # If the protocol database has ....
             #  Comparing date will not work unless we have a reliable
-            # lastModifiactionDate of a protocol in the project.sqlite.
-
-
+            # lastModificationDate of a protocol in the project.sqlite
             # TODO: when launching remote protocols, the db should be
             # TODO: retrieved in a different way.
             prot2 = pwprot.getProtocolFromDb(self.path,
@@ -604,7 +615,7 @@ class Project(object):
         """ Create a new protocol from a given class. """
         newProt = protocolClass(project=self, **kwargs)
         # Only set a default label to the protocol if is was not
-        # set throught the kwargs
+        # set through the kwargs
         if not newProt.getObjLabel():
             self.__setProtocolLabel(newProt)
 
@@ -909,11 +920,25 @@ class Project(object):
                     if not r.isChild():
                         self._updateProtocol(r, checkPid=checkPids)
 
+                self._annotateLastRunTime(r.endTime)
+
             # cursor = self.mapper.db.executeCommand('SELECT * FROM Objects WHERE parent_Id IS NOT NULL ORDER BY parent_id, name')
 
             self.mapper.commit()
 
         return self.runs
+
+    def _annotateLastRunTime(self, protLastTS):
+        """ Sets _lastRunTime for the project if it is after current _lastRunTime"""
+        try:
+            if protLastTS is None: return
+
+            if self._lastRunTime is None:
+                self._lastRunTime = protLastTS
+            elif self._lastRunTime.datetime() < protLastTS.datetime():
+                self._lastRunTime = protLastTS
+        except Exception as e:
+            return
 
     def needRefresh(self):
         """ True if any run is active and its timestamp is older than its corresponding runs.db
