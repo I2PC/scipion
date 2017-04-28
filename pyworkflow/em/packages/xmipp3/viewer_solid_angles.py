@@ -46,18 +46,29 @@ class SolidAnglesViewer(Viewer):
     
     def _visualize(self, obj, **kwargs):
         views = []
-        renderLabels = '_representative._filename _reprojection._filename'
-        labels = 'id enabled %s _xmipp_angleRot _xmipp_angleTilt _xmipp_classCount' % renderLabels
-
         outputClasses = getattr(obj, 'outputClasses', None)
 
         if outputClasses is not None:
+            renderLabels = '_representative._filename _reprojection._filename'
+            labels = 'id enabled %s _representative._xmipp_angleRot _representative._xmipp_angleTilt _representative._xmipp_classCount' % renderLabels
+    
             views.append(ObjectView(self._project, outputClasses.strId(),
                                     outputClasses.getFileName(),
                                     viewParams={showj.ORDER: labels, 
                                                 showj.VISIBLE: labels,
                                                 showj.RENDER: renderLabels,
                                                 showj.MODE: showj.MODE_MD}))
+
+            outputAverages = getattr(obj, 'outputAverages', None)
+            if outputAverages is not None:
+                renderLabels = '_filename'
+                labels = 'id enabled %s _xmipp_angleRot _xmipp_angleTilt _xmipp_classCount' % renderLabels
+                views.append(ObjectView(self._project, outputAverages.strId(),
+                                        outputAverages.getFileName(),
+                                        viewParams={showj.ORDER: labels, 
+                                                    showj.VISIBLE: labels,
+                                                    showj.RENDER: renderLabels,
+                                                    showj.MODE: showj.MODE_MD}))            
         else:
             views.append(self.infoMessage("No output has been generate yet"))
         

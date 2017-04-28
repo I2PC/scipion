@@ -37,12 +37,13 @@ template <typename T>
 	return ok;
 }
 
+// Check if matrix A with Xdim columns is the transposed of B (with Ydim columns)
 template <typename T>
  bool isequalT(T* A, T* B, int xdim, int ydim, int show=10)  { 
 	bool ok=true;
-	for (int i=0; i<xdim; i++){
-		for (int j=0; j<ydim; j++){
-			if (A[i+j*xdim]!=B[j+i*xdim]){
+	for (int i=0; i<ydim; i++){
+		for (int j=0; j<xdim; j++){
+			if (A[j+i*xdim]!=B[i+j*ydim]){
 				ok=false;
 				break;
 			}	
@@ -52,7 +53,7 @@ template <typename T>
 	if (!ok)
 		for (int i=0; i<show; i++){
 			std::cout << "A[" <<i<<"]="<< A[i];
-			std::cout << " B[" <<i<<"]="<< B[i*xdim] << std::endl;
+			std::cout << " B'[" <<i<<"]="<< B[i*ydim] << std::endl;
 		}
 	return ok;
 } 
@@ -105,7 +106,12 @@ public:
 
     void constructSmoothHistogramsByColumn(const float *listOfWeights, int width);
     void constructSmoothHistogramsByRow(const float *listOfWeights, int width);
-    void transformGrayValuesColumn(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedColumn);
+    void constructSmoothHistogramsByColumnGPU(const float *listOfWeights, int width);
+    //*** REMOVE
+    void constructSmoothHistogramsByColumnTEST(const float *listOfWeights, int width);
+    //***********
+    void constructSmoothHistogramsByRowGPU(const float *listOfWeights, int width);
+     void transformGrayValuesColumn(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedColumn);
     void transformGrayValuesRow(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedRow);
     void computeTransformedHistograms(const MultidimArray<int> &Iframe);
 
@@ -123,7 +129,7 @@ public:
 	MultidimArray<double> sumObs; // it was double
 	Image<float> ICorrection;         // it was double
 	std::vector<float> listOfSigmas;  // it was double
-	std::vector<float> listOfWidths; // it was double
+	std::vector<int> listOfWidths; // it was double
 	std::vector<float *> listOfWeights; // it was double
 
 	int Xdim, Ydim;
@@ -134,18 +140,21 @@ public:
 	cudaDeviceProp GPUprop;
         int  GPUdevice; 
 	int* d_columnH, *d_rowH, *d_aSingleColumnH, *d_aSingleRowH; //matrix
+	int* d_columnHt; //, *d_rowH, *d_aSingleColumnH, *d_aSingleRowH; //matrix
 	float* d_smoothColumnH, * d_smoothRowH, * d_sumObs; //matrix
 	// d_Iframes and h_Iframes contains the same info
 	// d_Iframes is used internally by the GPU to access the images
 	// h_Iframes is used if a kernel is using a single image
-	int** d_Iframe_vec;		// vector of images
-	int** h_Iframe_vec;		// vector of images
 	float* d_ICorrection; 		//Image
 	int* d_IframeIdeal; 		//Image
-	float* d_listOfWidths;		//vector
-	float** d_listOfWeights;	//vector
+//	int* d_listOfWidths;		//vector
+	float** d_listOfWeights;	//vector of pointers
 	float* d_listOfSigmas;		//vector
-
+	float* d_weights;                 // vector
+	int** Iframe_vecGPU;		// vector of images
+	std::vector<float *> listOfWeightsGPU; // it was double
+	clock_t start, end;
+	
 };
 
 void ProgMovieEstimateGainGPU::defineParams()
@@ -184,6 +193,7 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	Xdim=XSIZE(Iframe());
 	Ydim=YSIZE(Iframe());
 	size_t sz_imgFL=Xdim*Ydim*sizeof(float);
+	size_t sz_imgINT=Xdim*Ydim*sizeof(int);
 
 	columnH.initZeros(Ydim,Xdim);
 	rowH.initZeros(Ydim,Xdim);
@@ -196,10 +206,11 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	gpuErrchk(cudaMemcpy(d_ICorrection, &ICorrection(0,0), sz_imgFL, cudaMemcpyHostToDevice));        
 		
 	// Allocate and intialize GPU data	
-	gpuErrchk(cudaMalloc( &d_sumObs, sz_imgFL)); // no need to initialize (it's done in kernel)
-	gpuErrchk(cudaMalloc( &d_rowH, sz_imgFL)); // no need to initialize (it's done in kernel)
-	gpuErrchk(cudaMalloc( &d_columnH, sz_imgFL)); // no need to initialize (it's done in kernel)
-
+	gpuErrchk(cudaMalloc( &d_sumObs, sz_imgFL)); // no need to initialized
+	gpuErrchk(cudaMalloc( &d_rowH, sz_imgINT)); // no need to initialized
+	gpuErrchk(cudaMalloc( &d_columnH, sz_imgINT)); // no need to initialized
+	gpuErrchk(cudaMalloc( &d_columnHt, sz_imgINT)); // temporal vector, no need to initialized
+	gpuErrchk(cudaMalloc( &d_smoothColumnH, sz_imgFL));
 	MultidimArray<float> sumObsFL; // it was double
 	sumObsFL.initZeros(Ydim,Xdim);
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
@@ -212,6 +223,8 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	
 	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(sumObsFL)
 		DIRECT_A2D_ELEM(sumObsFL,i,j)=(float)(DIRECT_A2D_ELEM(sumObs,i,j));
+	gpuErrchk(cudaMemcpy(d_sumObs, &sumObsFL(0,0), sz_imgFL, cudaMemcpyHostToDevice));
+	
 	//****
 
 	// Initialize sigma values
@@ -220,24 +233,33 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	
 	for (size_t i=0; i<listOfSigmas.size(); ++i)
 	{
-		int jmax=ceil(3*listOfSigmas[i]);
+		int jmax=ceil(3*listOfSigmas[i]); 
+		std::cout << "jmax= " << jmax << std::endl;
 		listOfWidths.push_back(jmax);
 		float *weights=new float[jmax];    //it was double
 		float K=-0.5/(listOfSigmas[i]*listOfSigmas[i]); //it was double
-//********* MODIFED BY GCF
-		//for (int j=1; j<=jmax; ++j)
-		//	weights[j-1]=exp(K*j*j);
-		for (int j=2; j<=jmax; ++j)
+		for (int j=1; j<=jmax; ++j)
 			weights[j-1]=exp(K*j*j);
-		weights[0]=1.;			// this is always 1. when used 
-//***********************/Weights
 		listOfWeights.push_back(weights);
 	}
 	// Copy to GPU
-	size_t sz_list = sizeof(float)*listOfSigmas.size();
-	gpuErrchk(cudaMalloc(&d_listOfSigmas, sz_list));
-	gpuErrchk(cudaMemcpy(d_listOfSigmas, &listOfSigmas[0], sz_list, cudaMemcpyHostToDevice));
-	gpuErrchk(cudaMalloc(&d_listOfWeights, sz_list));
+	size_t sz_listS = sizeof(float)*listOfSigmas.size();
+	gpuErrchk(cudaMalloc(&d_listOfSigmas, sz_listS));
+	gpuErrchk(cudaMemcpy(d_listOfSigmas, &listOfSigmas[0], sz_listS, cudaMemcpyHostToDevice));
+	size_t sz_listW = sizeof(float*)*listOfSigmas.size();
+	gpuErrchk(cudaMalloc(&d_listOfWeights, sz_listW));
+	
+	for (size_t i=0; i<listOfSigmas.size(); ++i)
+	{
+		int jmax=ceil(3*listOfSigmas[i]);
+		size_t sz_weights=sizeof(float)*jmax;
+		gpuErrchk(cudaMalloc(&d_weights, sz_weights));
+	        gpuErrchk(cudaMemcpy(d_weights, listOfWeights[i], sz_weights, cudaMemcpyHostToDevice));
+		std::cout <<" i=" << i  <<"; p_weights=" << d_weights << std::endl;
+		listOfWeightsGPU.push_back(d_weights);
+	}
+//	gpuErrchk(cudaMemcpy(d_listOfWeightGPU, listOfWeights, sz_listW, cudaMemcpyHostToDevice));
+	
 	
 }
 
@@ -299,19 +321,16 @@ void ProgMovieEstimateGainGPU::run()
 	size_t px_img=Xdim*Ydim;
 	size_t sz_imgINT=px_img*sizeof(int);
 
-	h_Iframe_vec = (int**)malloc(sz_Iframe_vec);
+	Iframe_vecGPU = (int**)malloc(sz_Iframe_vec);
  
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
 	{
 		mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
 		Iframe.read(fnFrame);
 
-		gpuErrchk(cudaMalloc(&h_Iframe_vec[im], sz_imgINT));
-		gpuErrchk(cudaMemcpy(h_Iframe_vec[im++], &Iframe(0,0), sz_imgINT, cudaMemcpyHostToDevice)); 
+		gpuErrchk(cudaMalloc(&Iframe_vecGPU[im], sz_imgINT));
+		gpuErrchk(cudaMemcpy(Iframe_vecGPU[im++], &Iframe(0,0), sz_imgINT, cudaMemcpyHostToDevice)); 
 	}
-	// send vector of images to GPU
-	gpuErrchk(cudaMalloc(&d_Iframe_vec, sz_Iframe_vec));
-	gpuErrchk(cudaMemcpy(d_Iframe_vec, h_Iframe_vec, sz_Iframe_vec, cudaMemcpyHostToDevice));
 
  
 	// Malloc several data
@@ -335,10 +354,10 @@ void ProgMovieEstimateGainGPU::run()
 			FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
 				DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
 			//GPU kernel
-		        gpuErrchk(cudaMemcpy(d_IframeIdeal, h_Iframe_vec[im], sz_imgINT, cudaMemcpyDeviceToDevice));
-			dim3 block(floor((Xdim+31)/32),floor((Ydim+17)/16),1);
-			dim3 thread( 32, 16);
-			mult<<< block, thread >>>(h_Iframe_vec[im], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
+		        gpuErrchk(cudaMemcpy(d_IframeIdeal, Iframe_vecGPU[im], sz_imgINT, cudaMemcpyDeviceToDevice));
+			dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIMH-1))/(TILE_DIMH)),1);
+			dim3 thread( TILE_DIM, TILE_DIMH);
+			mult<<< block, thread >>>(Iframe_vecGPU[im], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
 			cudaThreadSynchronize();
 			gpuErrchk(cudaGetLastError());
 
@@ -358,7 +377,7 @@ std::cout << "1st CHECK" << std::endl;
 std::cout << "2nd CHECK" << std::endl;
 			gpuErrchk(cudaMemcpy(colH_tmp, d_columnH, sz_imgINT, cudaMemcpyDeviceToHost));
 std::cout << "3rd CHECK" << std::endl;
-			if (!isequalT(&DIRECT_A2D_ELEM(columnH,0,0), colH_tmp, Xdim, Ydim))	
+			if (!isequal(&DIRECT_A2D_ELEM(columnH,0,0), colH_tmp, Xdim*Ydim))	
 		 		std::cout << "columnH is not equal!!!!!!!!!!!!" << std::endl;
 			int* rowH_tmp=(int*)malloc(sz_imgINT); // remove
 			gpuErrchk(cudaMemcpy(rowH_tmp, d_rowH, sz_imgINT, cudaMemcpyDeviceToHost));
@@ -473,12 +492,13 @@ std::cout << "FINISHED" << std::endl;
 
 	// Free memory
 	for (int i=0; i< mdIn.size(); i++){
-		cudaFree(d_Iframe_vec[i]);
+		cudaFree(Iframe_vecGPU[i]);
 	}
-	cudaFree(d_Iframe_vec);
 	cudaFree(d_rowH);
 	cudaFree(d_columnH);
-	free(h_Iframe_vec);
+	cudaFree(d_columnHt);
+	cudaFree(d_smoothColumnH);
+	free(Iframe_vecGPU);
 
 }
 
@@ -489,7 +509,7 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 
 
 		
-		clock_t start = clock();
+		start = clock();
 
 		for(size_t j=0; j<XSIZE(columnH); j++)
 		{
@@ -501,7 +521,7 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 		}
 		delete auxElemC;
 
-		clock_t end = clock();
+		end = clock();
 		std::cout << "colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 
 		start=clock();
@@ -530,20 +550,44 @@ void ProgMovieEstimateGainGPU::computeHistograms(const MultidimArray<int> &Ifram
 // it's always applied to d_IframeIdeal
 void ProgMovieEstimateGainGPU::computeHistogramsGPU(const int* d_IframeIdeal)
 {
-			clock_t start = clock();
-		gpuErrchk(cudaMemcpy(d_columnH, d_IframeIdeal, sizeof(int)*Xdim*Ydim, cudaMemcpyDeviceToDevice));	
-		thrust::device_ptr<int> th_d_colH = thrust::device_pointer_cast(d_columnH);
+		//So here we order the rows of the transposed columnH matrix
+/*		clock_t	start = clock();
+	
+	
+		thrust::device_ptr<int> th_d_columnH = thrust::device_pointer_cast(d_columnH);
+		thrust::host_vector<int> h_segmentsC(Xdim*Ydim);
+		my_mod_start = 0;
+		no_el = Ydim;
+		thrust::generate(h_segmentsC.begin(), h_segmentsC.end(), my_modR);
+		thrust::device_vector<int> d_segmentsC= h_segmentsC;
+		thrust::stable_sort_by_key(th_d_columnH, th_d_columnH+Xdim*Ydim, d_segmentsC.begin());
+		thrust::stable_sort_by_key(d_segmentsC.begin(), d_segmentsC.end(), th_d_columnH);
+		cudaDeviceSynchronize();
+		clock_t	end = clock();
+		std::cout << "(VECTORIZED) GPU colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+*/
+
+		clock_t start = clock();
+		gpuErrchk(cudaMemcpy(d_columnHt, d_IframeIdeal, sizeof(int)*Xdim*Ydim, cudaMemcpyDeviceToDevice));	
+		thrust::device_ptr<int> th_d_colHt = thrust::device_pointer_cast(d_columnHt);
 		thrust::host_vector<int> h_segmentsC(Xdim*Ydim);
 		my_mod_start = 0;
 		no_el = Xdim;
 		thrust::generate(h_segmentsC.begin(), h_segmentsC.end(), my_modC);
 		thrust::device_vector<int> d_segmentsC = h_segmentsC;
-		thrust::stable_sort_by_key(th_d_colH, th_d_colH+Xdim*Ydim, d_segmentsC.begin());
-		thrust::stable_sort_by_key(d_segmentsC.begin(), d_segmentsC.end(), th_d_colH);
+		thrust::stable_sort_by_key(th_d_colHt, th_d_colHt+Xdim*Ydim, d_segmentsC.begin());
+		thrust::stable_sort_by_key(d_segmentsC.begin(), d_segmentsC.end(), th_d_colHt);
 		cudaDeviceSynchronize();
-		clock_t end = clock();
-		std::cout << "(VECTORIZED) GPU colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 
+		// transpose output (note that the input has Ydim columns!!!)
+		dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIM-1))/TILE_DIM),1);
+		dim3 thread( TILE_DIM, BLOCK_ROWS);
+		transpose<<< block, thread >>>(d_columnH, d_columnHt, Ydim, Xdim);
+		cudaThreadSynchronize();
+		gpuErrchk(cudaGetLastError());
+			 	
+		end = clock();
+		std::cout << "(VECTORIZED and transposed) GPU colH " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 
 
 // VECTORIZED SORT: much better than CPU
@@ -571,6 +615,7 @@ void ProgMovieEstimateGainGPU::computeHistogramsGPU(const int* d_IframeIdeal)
 #endif
 }
 
+
 void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const float *listOfWeights, int width)
 {
 
@@ -583,10 +628,7 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const float *li
 		{
 			if (j+k<0 || j+k>=XSIZE(columnH))
 				continue;
-			//**** MODIFED BY GCF
-			//double actualWeightC = k==0? 1:listOfWeights[abs(k)];
-			double actualWeightC = listOfWeights[abs(k)];
-			//********	
+			float actualWeightC = k==0? 1:listOfWeights[abs(k)];
 			sumWeightsC += actualWeightC;
 			for (size_t i=0; i<Ydim; ++i)
 				DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
@@ -596,6 +638,50 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const float *li
 		for (size_t i=0; i<Ydim; ++i)
 			DIRECT_A2D_ELEM(smoothColumnH,i,j) *= iSumWeightsC;
 	}
+
+	if (singleReference)
+	{
+		// Compute the average of all column histograms
+		for (size_t i=0; i<Ydim; ++i)
+			for (size_t j=1; j<Xdim; ++j)
+				DIRECT_A2D_ELEM(smoothColumnH,i,0)+=DIRECT_A2D_ELEM(smoothColumnH,i,j);
+
+		double iXdim=1.0/Xdim;
+		for (size_t i=0; i<Ydim; ++i)
+		{
+			DIRECT_A2D_ELEM(smoothColumnH,i,0)*=iXdim;
+			double aux=DIRECT_A2D_ELEM(smoothColumnH,i,0);
+			for (size_t j=1; j<Xdim; ++j)
+				DIRECT_A2D_ELEM(smoothColumnH,i,j)=aux;
+		}
+	}
+#ifdef NEVER_DEFINED
+	Image<double> save;
+	typeCast(smoothColumnH,save());
+	save.write("PPPsmoothColumnH.xmp");
+#endif
+}
+ 
+// argument weights is a pointer to a device array with the list of weights
+void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnGPU(const float *weights, int width)
+{
+
+//	smoothColumnH.initZeros(columnH);
+	dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+TILE_DIMH-1)/(TILE_DIMH)),1);
+	dim3 thread( TILE_DIM, TILE_DIMH);
+	fill<<< block, thread >>>(d_smoothColumnH, 0., Xdim, Ydim);
+	cudaThreadSynchronize();
+	gpuErrchk(cudaGetLastError());
+
+	dim3 block2(floor((Xdim+(TILE_DIM2-1))/TILE_DIM2),floor((Ydim+(TILE_DIM2-1))/(TILE_DIM2)),1);
+	dim3 thread2( TILE_DIM2, 1, 1);
+	std::cout << block2.x << "," << block2.y << std::endl;
+	std::cout << d_smoothColumnH << " " << d_columnH << " " << weights << std::endl;
+	std::cout <<"width=" << width << std::endl;
+	smooth1<<< block2, thread2>>>(d_smoothColumnH, d_columnH, weights, width, Xdim, Ydim);
+	cudaThreadSynchronize();
+	gpuErrchk(cudaGetLastError());
+
 
 	if (singleReference)
 	{
@@ -630,10 +716,7 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByRow(const float *listO
 		{
 			if (i+k<0 || i+k>=YSIZE(rowH))
 				continue;
-			//**** MODIFED BY GCF
-			//double actualWeightC = k==0? 1:listOfWeights[abs(k)];
-			double actualWeightR = listOfWeights[abs(k)];
-			//********	
+			double actualWeightR = k==0? 1:listOfWeights[abs(k)];
 			sumWeightsR += actualWeightR;
 			for (size_t j=0; j< Xdim; ++j)
 				DIRECT_A2D_ELEM(smoothRowH,i,j) += actualWeightR * DIRECT_A2D_ELEM(rowH,i+k,j);
@@ -764,7 +847,25 @@ size_t ProgMovieEstimateGainGPU::selectBestSigmaByColumn(const MultidimArray<int
 
 	for(size_t s = 0; s< listOfWeights.size(); ++s)
 	{
-		constructSmoothHistogramsByColumn(listOfWeights[s],listOfWidths[s]);
+//		constructSmoothHistogramsByColumn(listOfWeights[s],listOfWidths[s]);
+		start = clock();
+		constructSmoothHistogramsByColumnTEST(listOfWeights[s],listOfWidths[s]);
+		end = clock();
+		std::cout << "HBCTEST " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+
+		start = clock();
+		constructSmoothHistogramsByColumnGPU(listOfWeightsGPU[s],listOfWidths[s]);
+		end = clock();
+		std::cout << "HBCGPU " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
+
+		
+		size_t sz_imgFL = sizeof(float)*Xdim*Ydim;
+		float* smoothColumnH_tmp=(float*)malloc(sz_imgFL); // remove
+		gpuErrchk(cudaMemcpy(smoothColumnH_tmp, d_smoothColumnH, sz_imgFLOAT, cudaMemcpyDeviceToHost));
+		
+		if (!isequal(&DIRECT_A2D_ELEM(smoothColumnH,0,0), smoothColumnH_tmp, Xdim*Ydim))	
+		 	std::cout << "SmoothColumn  is not equal!!!!!!!!!!!!" << std::endl;
+
 		transformGrayValuesColumn(Iframe,IframeTransformed);
 		double avgTV=computeTVColumns(IframeTransformed);
 		if (avgTV<bestAvgTV)
@@ -830,6 +931,59 @@ bool equal(int *A, int *B, int size){
 
 }
 */
+
+/*********** REMOVE **************/
+void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnTEST(const float *listOfWeights, int width)
+{
+
+	smoothColumnH.initZeros(columnH);
+
+	for (size_t j=0; j<XSIZE(columnH); ++j)
+	{
+		double sumWeightsC = 0;
+		for(int k = -width; k<=width; ++k)
+		{
+			if (j+k<0 || j+k>=XSIZE(columnH))
+				continue;
+			double actualWeightC = k==0? 1:listOfWeights[abs(k)];
+			sumWeightsC += actualWeightC;
+			for (size_t i=0; i<Ydim; ++i)
+				DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
+		}
+
+		double iSumWeightsC=1./sumWeightsC; //GCF: it wass 1/sum...
+		for (size_t i=0; i<Ydim; ++i)
+			DIRECT_A2D_ELEM(smoothColumnH,i,j) *= iSumWeightsC;
+	}
+
+//	if (singleReference)
+/*	if (0)
+
+	{
+		// Compute the average of all column histograms
+		for (size_t i=0; i<Ydim; ++i)
+			for (size_t j=1; j<Xdim; ++j)
+				DIRECT_A2D_ELEM(smoothColumnH,i,0)+=DIRECT_A2D_ELEM(smoothColumnH,i,j);
+
+		double iXdim=1.0/Xdim;
+		for (size_t i=0; i<Ydim; ++i)
+		{
+			DIRECT_A2D_ELEM(smoothColumnH,i,0)*=iXdim;
+			double aux=DIRECT_A2D_ELEM(smoothColumnH,i,0);
+			for (size_t j=1; j<Xdim; ++j)
+				DIRECT_A2D_ELEM(smoothColumnH,i,j)=aux;
+		}
+	}
+*/
+#ifdef NEVER_DEFINED
+	Image<double> save;
+	typeCast(smoothColumnH,save());
+	save.write("PPPsmoothColumnH.xmp");
+#endif
+}
+/*********** REMOVE **************/
+
+
 RUN_XMIPP_PROGRAM(ProgMovieEstimateGainGPU)
 
 /*	std::cout << "Test on small matrix" << std::endl;
@@ -860,5 +1014,7 @@ RUN_XMIPP_PROGRAM(ProgMovieEstimateGainGPU)
 	gpuErrchk(cudaMemcpy(h_t2, d_t, sz_t, cudaMemcpyDeviceToHost));
 	std::cout<<"after copying"<<std::endl;
 	isequal(h_t,h_t2, xd*yd, xd*yd);
+
+
 
 */

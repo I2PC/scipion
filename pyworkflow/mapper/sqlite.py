@@ -894,10 +894,11 @@ class SqliteFlatMapper(Mapper):
         return results
 
     def count(self):
-        if self.doCreateTables:
-            return 0
-        return self.db.count()   
-    
+        return 0 if self.doCreateTables else self.db.count()
+
+    def maxId(self):
+        return 0 if self.doCreateTables else self.db.maxId()
+
     def __objectsFromIds(self, objIds):
         """Return a list of objects, given a list of id's
         """
@@ -1192,7 +1193,12 @@ class SqliteFlatDb(SqliteDb):
 
     def count(self):
         """ Return the number of element in the table. """
-        self.executeCommand(self.selectCmd('1').replace('*', 'COUNT(*)'))
+        self.executeCommand(self.selectCmd('1').replace('*', 'COUNT(id)'))
+        return self.cursor.fetchone()[0]
+
+    def maxId(self):
+        """ Return the maximum id from the Objects table. """
+        self.executeCommand(self.selectCmd('1').replace('*', 'MAX(id)'))
         return self.cursor.fetchone()[0]
 
     # FIXME: Seems to be duplicated and a subset of selectAll
