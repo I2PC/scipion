@@ -34,7 +34,8 @@ import pyworkflow.utils.path as pwutils
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import MovieAlignment, SetOfMovies, SetOfMicrographs
+from pyworkflow.em.data import (MovieAlignment, SetOfMovies, SetOfMicrographs,
+                                Image)
 from pyworkflow.em.protocol import ProtProcessMovies
 from pyworkflow.gui.plotter import Plotter
 
@@ -159,8 +160,6 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if newDone:
             self._writeDoneList(newDone)
-            if getattr(self, 'computeAllFramesAvg', False):
-                self._computeAllFramesAvg(newDone, allDone)
 
         elif not self.finished:
             # If we are not finished and no new output have been produced
@@ -235,35 +234,7 @@ class ProtAlignMovies(ProtProcessMovies):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    def _computeAllFramesAvg(self, newDone, allDone):
-        """ Compute the running average of all frames.
-        This could be use as a sanity check for the microscope.
-        """
-        allFramesSum = self._getPath('all_frames_sum.mrc')
-        allFramesAvg = self._getPath('all_frames_avg.mrc')
 
-        ih = ImageHandler()
-        sumImg = ih.createImage()
-        img = ih.createImage()
-
-        for i, movie in enumerate(newDone):
-            n = movie.getNumberOfFrames()
-            fn = movie.getFileName()
-            for frame in range(1, n + 1):
-                img.read((frame, fn))
-
-                if i == 0:
-                    sumImg.setData(img.getData())
-                else:
-                    sumImg.inplaceAdd(img)
-
-        if os.path.exists(allFramesSum):
-            prevSumImg = ih.read(allFramesSum)
-            sumImg.inplaceAdd(prevSumImg)
-
-        sumImg.write(allFramesSum)
-        sumImg.inplaceDivide(allDone)
-        sumImg.write(allFramesAvg)
 
     # --------------------------- INFO functions --------------------------------
 
@@ -629,3 +600,78 @@ def createAlignmentPlot(meanX, meanY):
     return plotter
 
 
+class ProtAverageFrames(ProtAlignMovies):
+    """
+    Very simple protocol to align all the frames of a given data collection
+    session. It can be used as a sanity check.
+    """
+    _label = 'average frames'
+
+    #--------------------------- DEFINE param functions ------------------------
+    def _defineAlignmentParams(self, form):
+        pass
+
+    def _processMovie(self, movie):
+        allFramesSum = self._getPath('all_frames_sum.mrc')
+        ih = ImageHandler()
+        sumImg = ih.createImage()
+        img = ih.createImage()
+
+        n = movie.getNumberOfFrames()
+        fn = movie.getFileName()
+
+        sumImg.read((1, fn))
+
+        for frame in range(2, n + 1):
+            img.read((frame, fn))
+            sumImg.inplaceAdd(img)
+
+        if os.path.exists(allFramesSum):
+            img.read(allFramesSum)
+            sumImg.inplaceAdd(img)
+
+        sumImg.write(allFramesSum)
+
+    # FIXME: Methods will change when using the streaming for the output
+    def createOutputStep(self, i=1):
+        # Really load the input, since in the streaming case we can not
+        # use the self.inputMovies directly
+        allFramesSum = self._getPath('all_frames_sum.mrc')
+        allFramesAvg = self._getPath('all_frames_avg.mrc')
+        self._loadInputList()
+        n = len(self.listOfMovies)
+
+        ih = ImageHandler()
+        sumImg = ih.read(allFramesSum)
+        sumImg.inplaceDivide(float(n))
+        sumImg.write(allFramesAvg)
+
+        outputAvg = Image()
+        outputAvg.setFileName(allFramesAvg)
+        outputAvg.setSamplingRate(self.listOfMovies[0].getSamplingRate())
+        self._defineOutputs(outputAverage=outputAvg)
+        self._defineSourceRelation(self.inputMovies, outputAvg)
+
+    def _validate(self):
+        return []
+
+    def _summary(self):
+        return []
+
+    def _createOutputMovies(self):
+        """ Returns True if an output set of movies will be generated.
+        The most common case is to always generate output movies,
+        either with alignment only or the binary aligned movie files.
+        Subclasses can override this function to change this behavior.
+        """
+        return False
+
+    def _createOutputMicrographs(self):
+        """ By default check if the user have selected 'doSaveAveMic'
+        property. Subclasses can override this method to implement different
+        behaviour.
+        """
+        return False
+
+    def _createOutputWeightedMicrographs(self):
+        return False
