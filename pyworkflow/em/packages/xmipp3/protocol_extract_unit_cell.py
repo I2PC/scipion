@@ -30,7 +30,7 @@ from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam
 from pyworkflow.em.constants import SYM_I222r
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
-from pyworkflow.em import Volume
+from pyworkflow.em import Volume, Transform
 #TODO: IS OK to write in the header of the mrc file but the same\
 #information should be stored in the volume atribute
 #NOTE1: scipion origin is center volume
@@ -103,9 +103,11 @@ class XmippProtExtractUnit(EMProtocol):
         #TODO: add sampling
         print "args", args
         self.runJob("xmipp_transform_window", args)
-
     def createOutputStep(self):
         vol = Volume()
+        t = Transform()
+        m = t.getMatrix()
+        vol.setCoordenateSystem(m)
         vol.setLocation(self._getOutputVol())
         vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
         #TODO: HORROR
