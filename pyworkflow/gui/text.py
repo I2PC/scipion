@@ -41,6 +41,7 @@ from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn, expandPattern)
 from pyworkflow.utils.properties import Message, Color, Icon
+import tkMessageBox
 
 
 # Define a function to open files cleanly in a system-dependent way
@@ -60,7 +61,7 @@ elif os.name == 'posix':  # linux systems and so on
     editor = find_prog('pluma', 'gedit', 'kwrite', 'geany', 'kate',
                        'emacs', 'nedit', 'mousepad')
 
-    def _open_cmd(path):
+    def _open_cmd(path, tkParent=None):
         # If it is an url, open with browser.
         if path.startswith('http://') or path.startswith('https://'):
             try:
@@ -68,6 +69,19 @@ elif os.name == 'posix':  # linux systems and so on
                 return
             except:
                 pass
+        #OK, it is a file. Check if it does exist
+        #and notify if it does not
+        if not os.path.isfile(path):
+            try:
+                #if tkRoot is null the error message may be behind
+                #other windows
+                tkMessageBox.showerror("File Error",#bar title
+                                       "File not found\n(%s)"%path,#message
+                                       parent=tkParent)
+                return
+            except:
+                return
+
         if x_open:  # standard way to open
             proc = subprocess.Popen([x_open, path])
             time.sleep(1)
@@ -667,9 +681,9 @@ def openTextFile(filename):
         showTextFileViewer("File viewer", [filename])    
     
     
-def openTextFileEditor(filename):
+def openTextFileEditor(filename, tkParent=None):
     try:
-        _open_cmd(filename)
+        _open_cmd(filename,tkParent)
     except:
         showTextFileViewer("File viewer", [filename])
     
