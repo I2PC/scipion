@@ -27,7 +27,6 @@
 
 from __future__ import print_function
 import os
-import webbrowser
 import sys
 import shlex
 import ast
@@ -263,20 +262,27 @@ class ImageView(View):
         
     def getImagePath(self):
         return self._imagePath
-
+#TODO: delete class TextFileView
+        '''
 class TextFileView(View):
 
-    def __init__(self, path):
+    def __init__(self, path, tkRoot):
         self.path = path
+        self.tkRoot=tkRoot#message box will be painted ABOVE this window
 
     def show(self):
-        """Show text file in default editor"""
+        """Show text file in default editor, If file does not exists return error message"""
+        if not os.path.isfile(self.path):
+            tkMessageBox.showerror("Refamc Viewer Error",#bar title
+                                   "refmac log file not found\n(%s)"%self.path,#message
+                                   parent=self.tkRoot)
+            return
         editor = os.getenv('EDITOR')
         if editor:
             os.system(editor + ' ' + self.path)
         else:
             webbrowser.open(self.path)
-
+'''
 #------------------------ Some views and  viewers ------------------------
         
 def getChimeraEnviron(): 
