@@ -36,4 +36,4 @@ class PDFReportViewer(Viewer):
     _targets = [ProtPDFReport]
 
     def visualize(self, obj, **kwargs):
-        _open_cmd(obj._getPath("report.pdf"))
+        _open_cmd(obj._getPath("report.pdf"), self.getTkRoot())
