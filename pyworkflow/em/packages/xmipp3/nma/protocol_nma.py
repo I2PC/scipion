@@ -225,28 +225,32 @@ class XmippProtNMA(XmippProtNMABase):
         maxShiftMode=[]
         
         for n in range(7, numberOfModes+1):
-            fhIn = open(self._getPath("modes", "vec.%d" % n))
-            md = xmipp.MetaData()
-            atomCounter = 0
-            for line in fhIn:
-                x, y, z = map(float, line.split())
-                d = math.sqrt(x*x+y*y+z*z)
-                if n==7:
-                    maxShift.append(d)
-                    maxShiftMode.append(7)
-                else:
-                    if d>maxShift[atomCounter]:
-                        maxShift[atomCounter]=d
-                        maxShiftMode[atomCounter]=n
-                atomCounter+=1
-                md.setValue(xmipp.MDL_NMA_ATOMSHIFT,d,md.addObject())
-            md.write(join(fnOutDir,"vec%d.xmd" % n))
-            fhIn.close()
+            fnVec = self._getPath("modes", "vec.%d" % n)
+            if exists(fnVec):
+                fhIn = open(fnVec)
+                md = xmipp.MetaData()
+                atomCounter = 0
+                for line in fhIn:
+                    x, y, z = map(float, line.split())
+                    d = math.sqrt(x*x+y*y+z*z)
+                    if n==7:
+                        maxShift.append(d)
+                        maxShiftMode.append(7)
+                    else:
+                        if d>maxShift[atomCounter]:
+                            maxShift[atomCounter]=d
+                            maxShiftMode[atomCounter]=n
+                    atomCounter+=1
+                    md.setValue(xmipp.MDL_NMA_ATOMSHIFT,d,md.addObject())
+                md.write(join(fnOutDir,"vec%d.xmd" % n))
+                fhIn.close()
         md = xmipp.MetaData()
         for i, _ in enumerate(maxShift):
-            objId = md.addObject()
-            md.setValue(xmipp.MDL_NMA_ATOMSHIFT, maxShift[i],objId)
-            md.setValue(xmipp.MDL_NMA_MODEFILE, self._getPath("modes", "vec.%d" % (maxShiftMode[i]+1)), objId)
+            fnVec = self._getPath("modes", "vec.%d" % (maxShiftMode[i]+1))
+            if exists(fnVec):
+                objId = md.addObject()
+                md.setValue(xmipp.MDL_NMA_ATOMSHIFT, maxShift[i],objId)
+                md.setValue(xmipp.MDL_NMA_MODEFILE, fnVec, objId)
         md.write(self._getExtraPath('maxAtomShifts.xmd'))
                                                       
     def createOutputStep(self):

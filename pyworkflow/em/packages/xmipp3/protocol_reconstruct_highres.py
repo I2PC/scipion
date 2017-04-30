@@ -170,7 +170,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         form.addParam('globalMethod', EnumParam, label="Global alignment method", choices=['Significant','Projection Matching'], default=self.GLOBAL_SIGNIFICANT, condition='alignmentMethod==0',
                   expertLevel=LEVEL_ADVANCED, help="Significant is more accurate but slower.")
         form.addParam('maximumTargetResolution', NumericListParam, label="Max. Target Resolution", default="15 8 4",
-                      condition='alignmentMethod!=1 and multiresolution',
+                      condition='multiresolution',
                       help="In Angstroms. The actual maximum resolution will be the maximum between this number of 0.5 * previousResolution, meaning that"
                       "in a single step you cannot increase the resolution more than 1/2")
         form.addParam('shiftSearch5d', FloatParam, label="Shift search", default=7.0, condition='alignmentMethod!=1 and globalMethod==1',
@@ -631,11 +631,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if self.nextMask.hasValue():
             fnMask=join(fnDir,"mask.vol")
             self.prepareMask(self.nextMask.get(), fnMask, TsCurrent, newXdim)
-        TsPrevious=self.readInfoField(fnDirPrevious,"sampling",xmipp.MDL_SAMPLINGRATE)
+        oldXdim=self.readInfoField(fnDirPrevious,"size",xmipp.MDL_XSIZE)
         for i in range(1,3):
             fnPreviousVol=join(fnDirPrevious,"volume%02d.vol"%i)
             fnReferenceVol=join(fnDir,"volumeRef%02d.vol"%i)
-            if TsPrevious!=TsCurrent:
+            if oldXdim!=newXdim:
                 self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnReferenceVol,newXdim),numberOfMpi=1)
             else:
                 copyFile(fnPreviousVol, fnReferenceVol)
@@ -873,7 +873,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             makePath(fnDirLocal)
 
             previousResolution=self.readInfoField(fnDirPrevious,"resolution",xmipp.MDL_RESOLUTION_FREQREAL)
-            targetResolution=previousResolution*0.8
+            targetResolution=max(previousResolution*0.8,self._maximumTargetResolution[iteration-1])
             if self.multiresolution:
                 TsCurrent=max(self.TsOrig,targetResolution/3)
             else:
