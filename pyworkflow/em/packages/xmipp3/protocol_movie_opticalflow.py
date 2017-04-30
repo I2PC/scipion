@@ -115,7 +115,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                        help="if *True*, you apply dose filter before perform "
                             "the alignment; else will apply after alignment.")
 
-        form.addParallelSection(threads=8, mpi=0)
+        form.addParallelSection(threads=8, mpi=1)
 
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
