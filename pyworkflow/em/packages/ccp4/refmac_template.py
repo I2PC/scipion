@@ -26,13 +26,11 @@
 # *
 # **************************************************************************
 template="""#!/bin/sh
-# This example script will run REFMAC for a model against an EM map. 
-# In this example the model is A/molecule-A.pdb
-# 
-# The latest version of REFMAC is required from CCP4 (www.ccp4.ac.uk)
-# 
+# This  script will run REFMAC for a model against an EM map. 
+# # 
 # Prerequistes:
-#	A model in PDB or mmcif format. The CRYST card must agree with the box size of the map. The box size can be obtained using MAPDUMP from CCP4.
+#	A model in PDB or mmcif format. The CRYST card must agree with the box size of the map.
+#   The box size can be obtained using MAPDUMP from CCP4.
 #	A map, or maps, in .mrc or .map format.
 #	External restraint files.
 #	Electron scattering file: atomsf_electron.lib.
@@ -42,7 +40,7 @@ template="""#!/bin/sh
 #
 
 # set generateMaskedVolume to True if you want to see the mask using chimera
-generateMaskedVolume=true
+generateMaskedVolume=%(MASKED_VOLUME)s
 
 #refmac binary
 refmac=%(REFMAC_BIN)s
@@ -61,9 +59,6 @@ MAPFILE=%(MAPFILE)s
 #CCP4 PATH
 PATHCCP4=%(CCP4_HOME)s
 
-#CHIMERA command
-CHIMERA=%(CHIMERA_BIN)s
-
 #Directory of output files (extra folder)
 OUTPUTDIR=%(OUTPUTDIR)s
 
@@ -71,67 +66,72 @@ OUTPUTDIR=%(OUTPUTDIR)s
 molecule_id=${MOL}
 # Delete some temporary files. If not and the script is executed
 # two times there will be conflicts
-if [ "$generateMaskedVolume" = true ] ; then
-    rm  ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}refmac-makes-sfs.log ${OUTPUTDIR}orig_data_rescut.txt
-    rm ${OUTPUTDIR}$molecule_id-initial.pdb ${OUTPUTDIR}masked_fs.mtz ${OUTPUTDIR}shifts.txt
-    echo "GENERATE MASKED VOLUME"
-else
-    echo "DO NOT GENERATE MASKED VOLUME"
-fi
-rm ${OUTPUTDIR}$molecule_id-refined.mtz ${OUTPUTDIR}$molecule_id-refined.pdb
-rm ${OUTPUTDIR}$molecule_id-refmac-refines.log ${OUTPUTDIR}ifft.log
-rm ${OUTPUTDIR}masked_fs.map
 
-#just show what is in the directory (current)
-ls 
-
+RM=rm -f
+${RM}  ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}mask.log ${OUTPUTDIR}_orig_data_start.txt
+${RM} ${OUTPUTDIR}$molecule_id-initial.pdb ${OUTPUTDIR}masked_fs.mtz ${OUTPUTDIR}shifts.txt
+${RM} ${OUTPUTDIR}$molecule_id-refined.mtz ${OUTPUTDIR}$molecule_id-refined.pdb
+${RM} ${OUTPUTDIR}refine.log ${OUTPUTDIR}ifft.log
+${RM} ${OUTPUTDIR}masked_fs.map
 
 #################################################################
 #Nothing to be changed below (unless you know what you are doing)
+##################################################################
 #load ccp4 enviroment
-PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
-PATHMRCBIN=$PATHCCP4/bin
+###TODO: SI COMENTAMOS ESTAS tres lINEAS EL SCRIPT SIGUE FUNCIONANDO Si si si
+#PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
+#PATHMRCBIN=$PATHCCP4/bin
+#. $PATHMRCENV
 
-echo $PATHMRCENV
-#####echo "source must be done outside the script"
-. $PATHMRCENV
-
-#for molecule_id in [A]######
-#do
-     pdb_in=${PDBDIR}/${PDBFILE}
-     if [ "$generateMaskedVolume" = true ] ; then
-         echo we will work on $pdb_in
-   	     $refmac MAPIN ${MAPFILE} \
-                     HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \
-		     XYZIN $pdb_in \
-		     XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \
-                     > ${OUTPUTDIR}refmac-makes-sfs.log \
-            << eof
-               MODE SFCALC 
-               sfcalc mapradius 3
-	       SFCALC mradius 3
-               sfcalc shift
-               END
+#TODO: SI PONEMS \\ SE CONSEFVA \ No se conserva, aparece \ en el script
+#todo: PASAR LOD FILE NAME
+#todo: EL 3 EN SFCALC SERIA UN PARAMETRO EXPERTO CON VALOR 3D
+#create a mask by calculating complex structure factors around a given radius taken from the input model 
+pdb_in=${PDBDIR}/${PDBFILE}
+if [ "$generateMaskedVolume" = True ] ; then
+    echo we will work on $pdb_in
+    $refmac MAPIN ${MAPFILE} \
+   	            HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \
+   	            XYZIN $pdb_in \
+   	            XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \
+   	            > ${OUTPUTDIR}mask.log \
+   	        << eof
+                MODE SFCALC 
+                SFCALC mapradius %(SFCALC_mapradius)f
+	            SFCALC mradius %(SFCALC_mradius)f
+                SFCALC shift
+                END
 eof
-     fi    
-#check volume
+fi
+
+
+#transform the mask (originally in fourier space) so we can see it (in real space)
+#this step is not needed but allow users to check that the PDB file and the 3Dmap are
+#in the same coordinate system
+#todo: PASAR LOD FILE NAME
+#todo pasar x,y,z a GRID
+#TODO: pass masked_fs AQUI TENGO DUDAS
 
 fft HKLIN ${OUTPUTDIR}_masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft > ${OUTPUTDIR}ifft.log
-LABIN F1=Fout0 PHI=Pout0 
-SCALE F1 1.0 300.0 
-RESOLUTION 3.0 
-GRID 200 200 200 
-END 
+    LABIN F1=Fout0 PHI=Pout0 
+    SCALE F1 1.0 300.0 
+    RESOLUTION 3.0 
+    GRID 200 200 200
+    END 
 END-fft
-${CHIMERA} ${OUTPUTDIR}masked_fs.map &
 
-#end check
+
+#refine the structure
+#add BFACTOR AND REFI AS EXPERT PARAMETERS WITH DEFAULT VALUE=0
+#IF ZERO WRITE THEM COMENTED
+
+#todo: PASAR LOD FILE NAME
                 $refmac HKLIN ${OUTPUTDIR}_masked_fs.mtz \
                         HKLOUT ${OUTPUTDIR}$molecule_id-refined.mtz \
                         XYZIN  ${OUTPUTDIR}$molecule_id-initial.pdb \
                         XYZOUT ${OUTPUTDIR}$molecule_id-refined.pdb\
 			atomsf ${PATHCCP4}/bin/atomsf_electron.lib \
-			> ${OUTPUTDIR}$molecule_id-refmac-refines.log <<EOF  
+			> ${OUTPUTDIR}refine.log <<EOF  
 
 LABIN FP=Fout0 PHIB=Pout0
 
@@ -139,9 +139,11 @@ LABIN FP=Fout0 PHIB=Pout0
 RESO = (%(RESOMIN)f  %(RESOMAX)f)
 
 # set B-factors at 40 prior to refinement:
+BFACTOR_SET=%(BFACTOR_SET)s
 ##BFACtor SET 40
 
 # specify map sharpening to be used during refinement:
+REFI_SHARPEN=%(REFI_SHARPEN)s
 ##REFI sharpen -50
 
 # specify number of refinement cycles:
