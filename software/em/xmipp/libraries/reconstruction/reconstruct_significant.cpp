@@ -32,6 +32,7 @@ ProgReconstructSignificant::ProgReconstructSignificant()
 	rank=0;
 	Nprocessors=1;
 	randomize_random_generator();
+	deltaAlpha2=0;
 }
 
 void ProgReconstructSignificant::defineParams()
