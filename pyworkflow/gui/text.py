@@ -46,9 +46,11 @@ import tkMessageBox
 
 # Define a function to open files cleanly in a system-dependent way
 if sys.platform.startswith('darwin'):  # macs use the "open" command
-    _open_cmd = lambda path: subprocess.Popen(['open', path])
+    def _open_cmd(path, tkParent=None):
+        subprocess.Popen(['open', path])
 elif os.name == 'nt':  # there is a function os.startfile for windows
-    _open_cmd = lambda path: os.startfile(path)
+    def _open_cmd(path, tkParent=None):
+        os.startfile(path)
 elif os.name == 'posix':  # linux systems and so on
     def find_prog(*args):
         "Return the first argument that is a program in PATH"
@@ -94,8 +96,15 @@ elif os.name == 'posix':  # linux systems and so on
                 return  # hope we found your fav editor :)
         print 'WARNING: Cannot open %s' % path  # nothing worked! :(
 else:
-    def _open_cmd(path):
-        print 'Unknown system, so cannot open %s' % path
+    def _open_cmd(path, tkParent=None):
+        try:
+            tkMessageBox.showerror("Unknown sSstem",#bar title
+                                   'Unknown system, so cannot open %s' % path,#message
+                                   parent=tkParent)
+            return
+        except:
+            pass
+
 
 
 class HyperlinkManager:
