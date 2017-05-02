@@ -29,6 +29,11 @@ from protocol_refmac import CCP4ProtRunRefmac
 from pyworkflow.protocol.params import LabelParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer, Viewer
 from pyworkflow.gui.text import _open_cmd
+from pyworkflow.em.data import EMSet, EMObject
+from pyworkflow.object import Float, String
+from pyworkflow.em.viewer import ObjectView, TableView
+
+from pyworkflow.em.viewer import ImageView, ChimeraView
 
 
 class CCP4ProtRunRefmacViewer(ProtocolViewer):
@@ -37,10 +42,11 @@ class CCP4ProtRunRefmacViewer(ProtocolViewer):
     _label = 'Refmac Viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [CCP4ProtRunRefmac]
-    #ROB: do we need this memory for something?
-    #_memory = False
+
+    # ROB: do we need this memory for something?
+    # _memory = False
     # temporary metadata file with ctf that has some resolution greathan than X
-    #tmpMetadataFile = 'viewersTmp.sqlite'
+    # tmpMetadataFile = 'viewersTmp.sqlite'
 
     def _defineParams(self, form):
         form.addSection(label='Visualization of Refmac results')
@@ -52,17 +58,17 @@ class CCP4ProtRunRefmacViewer(ProtocolViewer):
                       label="Final Results Table",
                       help="Table of Final Results from refine.log file")
         form.addParam('showLogFile', LabelParam,
-                      label = "Show log file",
+                      label="Show log file",
                       help="open refmac log file in a text editor")
         form.addParam('showLastIteration', LabelParam,
-                      label = "Results Table (last iteration)",
-                      help= "Table stored in log file summarizing the last iteration")
+                      label="Results Table (last iteration)",
+                      help="Table stored in log file summarizing the last iteration")
         form.addParam('displayRFactorPlot', LabelParam,
-                      label = "R-factor vs. iteration",
-                      help= "Plot R-factor as a function of the iteration")
+                      label="R-factor vs. iteration",
+                      help="Plot R-factor as a function of the iteration")
         form.addParam('displayFOMPlot', LabelParam,
                       label="FOM vs. iteration",
-                      help= "Plot Figure Of Merit as a function of the iteration")
+                      help="Plot Figure Of Merit as a function of the iteration")
         form.addParam('displayLLPlot', LabelParam,
                       label="-LL vs. iteration",
                       help="Plot Log likelihood as a function of the iteration")
@@ -95,14 +101,55 @@ and rmsCHIRAL (root mean square of chiral index""")
         pass
 
     def _visualizeFinalResults(self, e=None):
-        pass
+        """
+        views = []
+        labels = '_1 _2'
+        emSet = EMSet(filename="/tmp/kk.sqlite")
+        emObject = EMObject()
+        emObject._1 = String('first parameter')
+        emObject._2 = Float(12.)
+        emSet.append(emObject)
+        emObject = EMObject()
+        emObject._1 = String('second parameter')
+        emObject._2 = Float(22.)
+        emSet.append(emObject)
+        emSet.write()
+        views.append(ObjectView(self._project,
+                                self.protocol.strId(),
+                                "/tmp/kk.sqlite",
+                                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
+        return views
+"""
+        headerList = ['property', 'value']
+        dataList = [
+        ('1John', 'Smith1') ,
+        ('2Larry', 'Black') ,
+        ('3Walter', 'White') ,
+        ('4Fred', 'Becker'),
+        ('5John', 'Smith') ,
+        ('6Larry', 'Black') ,
+        ('7Walter', 'White') ,
+        ('8Fred', 'Becker'),
+        ('9John', 'Smith') ,
+        ('10Larry', 'Black') ,
+        ('11Walter', 'White') ,
+        ('12Fred', 'Becker'),
+        ('13John', 'Smith') ,
+        ('14Larry', 'Black') ,
+        ('15Walter', 'White') ,
+        ('16Fred', 'Becker')
+        ]
+
+        TableView(headerList=headerList,
+                  dataList=dataList,
+                  mesg="This is a list with many important persons. This comment will be a bit longer",
+                  title= "Refmac: Final Results Summary",
+                  height=len(dataList))
 
     def _visualizeLogFile(self, e=None):
-        """ Check if the refine.log file is generated and if so, read the file."""
+        """Show refmac log file."""
         refineLogFileName = self.protocol._getExtraPath(self.protocol.refineLogFileName)
         _open_cmd(refineLogFileName, self.getTkRoot())
-        #view = TextFileView(refineLogFileName, self.getTkRoot())
-        #view.show()
 
     def _visualizeLastIteration(self, e=None):
         pass
@@ -121,4 +168,3 @@ and rmsCHIRAL (root mean square of chiral index""")
 
     def _visualizeGeometryPlot(self, e=None):
         pass
-
