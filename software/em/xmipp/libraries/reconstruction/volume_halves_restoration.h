@@ -49,6 +49,10 @@ public:
     double bankStep, bankOverlap;
     /** Initial sigma */
     double sigma0;
+    /** Number of iterations of real space difference */
+    int NiterDiff;
+    /** K diff */
+    double Kdiff;
     /** Laplacian regularization */
     double lambda;
     /** Weight function */
@@ -90,6 +94,7 @@ public:
     void significanceRealSpace(const MultidimArray<double> &V1, MultidimArray<double> &V1r);
     void filterBank();
     void filterBand(const MultidimArray< std::complex<double> > &Vin, FourierTransformer &transformer, double w);
+    void evaluateDifference();
 };
 //@}
 #endif
