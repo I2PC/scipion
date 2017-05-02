@@ -413,7 +413,7 @@ void ProgReconstructSignificant::run()
     	size_t Ndirs=mdGallery[0].size();
     	cc.initZeros(Nimgs,Nvols,Ndirs);
     	weight=cc;
-    	double oneAlpha=1-currentAlpha;
+    	double oneAlpha=1-currentAlpha-deltaAlpha2;
 
     	// Align the input images to the projections
     	alignImagesToGallery();
@@ -716,6 +716,7 @@ void ProgReconstructSignificant::numberOfProjections()
 
 	alpha0 = numOrientationsPerParticle/number_of_projections;
 	alphaF = alpha0;
+	deltaAlpha2 = 1/(2*number_of_projections);
 
     if (rank==0)
     {
