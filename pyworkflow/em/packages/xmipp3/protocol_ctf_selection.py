@@ -51,15 +51,23 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                       important=True,
                       label="Set of CTFs",
                       help='Estimated CTF to evaluate.')
+        form.addParam('useDefocus', params.BooleanParam, default=True,
+                      label='Use Defocus for selection',
+                      help='Use this button to decide if carry out the selection taking into account or not the defocus values.')
         line = form.addLine('Defocus (A)',
                             help='Minimum and maximum values for defocus in Angstroms')
         line.addParam('minDefocus', params.FloatParam, default=0, label='Min')
         line.addParam('maxDefocus', params.FloatParam, default=40000, label='Max')
-
+        form.addParam('useAstigmatism', params.BooleanParam, default=True,
+                      label='Use Astigmatism for selection',
+                      help='Use this button to decide if carry out the selection taking into account or not the astigmatism value.')
         form.addParam('astigmatism', params.FloatParam, default=1000,
                       label='Astigmatism (A)',
                       help='Maximum value allowed for astigmatism in Angstroms. '
                            'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
+        form.addParam('useResolution', params.BooleanParam, default=True,
+                      label='Use Resolution for selection',
+                      help='Use this button to decide if carry out the selection taking into account or not the resolution value.')
         form.addParam('resolution', params.FloatParam, default=7,
                   label='Resolution (A)',
                   help='Minimum value for resolution in Angstroms. '
@@ -67,17 +75,24 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        """ This is a very easy program, the createOutputStep function is a dummy function
-            There is a loop that calls the function stepsCheck that will be broken when the
-            status associated to createOutputStep change from wait=True to wait=False
-        """
+        # Depending on the flags selected by the user, we set the values of the params to compare with
+        if not self.useDefocus:
+            self.minDefocus.set(0)
+            self.maxDefocus.set(1000000)
+        if not self.useAstigmatism:
+            self.astigmatism.set(1000000)
+        if not self.useResolution:
+            self.resolution.set(1000000)
+
+        #This is a very easy program, the createOutputStep function is a dummy function
+        #There is a loop that calls the function stepsCheck that will be broken when the
+        #status associated to createOutputStep change from wait=True to wait=False
 
         # lastly function to be executed when streaming is done
         # it will be executed when waitCondition is set to True
         self._insertFunctionStep('createOutputStep', wait=True)
 
-
-    # --------------------------- STEPS functions -------------------------------
+   # --------------------------- STEPS functions -------------------------------
 
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
@@ -157,7 +172,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
 
     def _stepsCheck(self):
-
         #check if there are new CTFs
         ctfFn = self.inputCTFs.get().getFileName()
         ctfSet = SetOfCTF(filename=ctfFn)
