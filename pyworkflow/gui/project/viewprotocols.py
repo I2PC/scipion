@@ -1810,49 +1810,33 @@ class ProtocolsView(tk.Frame):
             self.windows.showInfo("Selected protocol hasn't been run yet.")
 
     def _bibExportClicked(self, e=None):
+        try:
+            bibTexCites = OrderedDict()
+            for prot in self._iterSelectedProtocols():
+                bibTexCites.update(prot.getCitations(bibTexOutput=True))
+                bibTexCites.update(prot.getPackageCitations(bibTexOutput=True))
 
-        def _exportBib(obj):
-            try:
-                bibTexCites = OrderedDict()
-                # fileName = os.path.join(browser.getCurrentDir(),
-                #                         browser.getEntryValue())
-                # if os.path.exists(fileName):
-                #     if not pwgui.dialog.askYesNo("Confirm file name",
-                #                                  "This file already exists, do you want to replace it?",
-                #                                  self.root):
-                #         return
+            if bibTexCites:
+                with tempfile.NamedTemporaryFile(suffix='.bib') as bibFile:
+                    for refId, refDict in bibTexCites.iteritems():
+                        refType = refDict['type']
+                        # remove 'type' and 'id' keys
+                        refDict = {k: v for k, v in refDict.items()
+                                   if k not in ['type', 'id']}
+                        jsonStr = json.dumps(refDict, indent=4,
+                                             ensure_ascii=False)[1:]
+                        jsonStr = jsonStr.replace('": "', '"= "')
+                        jsonStr = re.sub('(?<!= )"(\S*?)"', '\\1', jsonStr)
+                        jsonStr = jsonStr.replace('= "', ' = "')
+                        refStr = '@%s{%s,%s\n\n' % (refType, refId, jsonStr)
+                        bibFile.write(refStr.encode('utf-8'))
+                    # flush so we can see content when opening
+                    bibFile.flush()
+                    pwgui.text.openTextFileEditor(bibFile.name)
 
-                for prot in self._iterSelectedProtocols():
-                    bibTexCites.update(prot.getCitations(bibTexOutput=True))
-                    bibTexCites.update(prot.getPackageCitations(bibTexOutput=True))
+        except Exception as ex:
+            self.windows.showError(str(ex))
 
-                if bibTexCites:
-                    with tempfile.NamedTemporaryFile() as bibFile:
-                        for refId, refDict in bibTexCites.iteritems():
-                            refType = refDict.pop('type', None)
-                            refDict.pop('id', None)
-                            jsonStr = json.dumps(refDict, indent=4,
-                                                 ensure_ascii=False)[1:]
-                            jsonStr = jsonStr.replace('": "','"= "')
-                            jsonStr = re.sub('(?<!= )"(\S*?)"', '\\1', jsonStr)
-                            jsonStr = jsonStr.replace('= "', ' = "')
-                            refStr = '@%s{%s,%s\n\n' % (refType, refId, jsonStr)
-                            bibFile.write(refStr.encode('utf-8'))
-                    # self.windows.showInfo(".bib file successfully saved to '%s'."
-                    #                       % fileName)
-                        bibFile.flush()
-                        pwgui.text.openTextFileEditor(bibFile.name)
-
-            except Exception as ex:
-                self.windows.showError(str(ex))
-
-        # browser = pwgui.browser.FileBrowserWindow("Choose .bib file to save workflow",
-        #                                           master=self.windows,
-        #                                           path=self.project.getPath(''),
-        #                                           onSelect=_exportBib,
-        #                                           entryLabel='File',
-        #                                           entryValue='citations.bib')
-        # browser.show()
         return
 
     def _runActionClicked(self, action):
