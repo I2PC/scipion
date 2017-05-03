@@ -136,6 +136,9 @@ class Viewer(object):
         self.formWindow = args.get('parent', None)
         self._tkRoot = self.formWindow.root if self.formWindow else None
         
+    def getTkRoot(self):
+        return self._tkRoot
+
     def _getTmpPath(self, *paths):
         return join(self._tmpPath, *paths)
     

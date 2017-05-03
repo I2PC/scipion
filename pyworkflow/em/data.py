@@ -1013,13 +1013,6 @@ class SetOfVolumes(SetOfImages):
     def __init__(self, **kwargs):
         SetOfImages.__init__(self, **kwargs)
 
-class SetOfPdbFiles(EMSet):
-    """Represents a set of Volumes"""
-    ITEM_TYPE = PdbFile 
-    REP_TYPE = PdbFile
-
-    def __init__(self, **kwargs):
-        EMSet.__init__(self, **kwargs)
 
 class SetOfCTF(EMSet):
     """ Contains a set of CTF models estimated for a set of images."""
