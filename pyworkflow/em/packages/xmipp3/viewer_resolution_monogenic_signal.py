@@ -178,13 +178,9 @@ class XmippMonoResViewer(ProtocolViewer):
             y_axis_ = md.getValue(MDL_COUNT, idx)
 
             i+=1
-            if (y_axis_== 0):
-                continue
             x_axis.append(x_axis_)
             y_axis.append(y_axis_)
         delta = x1-x0
-        for ii in range(len(x_axis)):
-            x_axis[ii] = x_axis[ii]-0.5*delta
         plt.figure()
         plt.bar(x_axis, y_axis, width = delta)
         plt.title("Resolutions Histogram")

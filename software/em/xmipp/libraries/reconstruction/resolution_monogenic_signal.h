@@ -76,8 +76,7 @@ public:
     		double w1, double w1l, double w1h, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
     void postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
-    		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
-    		MultidimArray<double> &resolutionChimera);
+    		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask);
     void run();
 
 public:
