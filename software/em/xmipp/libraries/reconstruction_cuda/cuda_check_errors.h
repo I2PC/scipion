@@ -30,6 +30,8 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <cufft.h>
+
 
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -38,6 +40,16 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    if (code != cudaSuccess)
    {
       fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+#define gpuErrchkFFT(ans) { gpuAssertFFT((ans), __FILE__, __LINE__); }
+inline void gpuAssertFFT(cufftResult_t code, const char *file, int line, bool abort=true)
+{
+   if (code != CUFFT_SUCCESS)
+   {
+	   fprintf(stderr, "CUFFT error");
       if (abort) exit(code);
    }
 }
