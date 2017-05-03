@@ -25,6 +25,7 @@ template <typename T>
 	for (int i=0; i<size; i++){
 		if (A[i]!=B[i]){
 				ok=false;
+				std::cout << A[i] << "not eq " << B[i] << "; i=" << i << std::endl;
 				break;
 		}	
 	}	
@@ -45,6 +46,7 @@ template <typename T>
 		for (int j=0; j<xdim; j++){
 			if (A[j+i*xdim]!=B[i+j*ydim]){
 				ok=false;
+		std::cout << A[j+i*xdim] << "not eq " << B[i+j*ydim] << "(" << i << "," << j << ")" << std::endl;
 				break;
 			}	
 		}	
@@ -683,6 +685,7 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnGPU(const float 
 	gpuErrchk(cudaGetLastError());
 
 
+	/*
 	if (singleReference)
 	{
 		// Compute the average of all column histograms
@@ -699,6 +702,7 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnGPU(const float 
 				DIRECT_A2D_ELEM(smoothColumnH,i,j)=aux;
 		}
 	}
+*/
 #ifdef NEVER_DEFINED
 	Image<double> save;
 	typeCast(smoothColumnH,save());
@@ -861,7 +865,7 @@ size_t ProgMovieEstimateGainGPU::selectBestSigmaByColumn(const MultidimArray<int
 		
 		size_t sz_imgFL = sizeof(float)*Xdim*Ydim;
 		float* smoothColumnH_tmp=(float*)malloc(sz_imgFL); // remove
-		gpuErrchk(cudaMemcpy(smoothColumnH_tmp, d_smoothColumnH, sz_imgFLOAT, cudaMemcpyDeviceToHost));
+		gpuErrchk(cudaMemcpy(smoothColumnH_tmp, d_smoothColumnH, sz_imgFL, cudaMemcpyDeviceToHost));
 		
 		if (!isequal(&DIRECT_A2D_ELEM(smoothColumnH,0,0), smoothColumnH_tmp, Xdim*Ydim))	
 		 	std::cout << "SmoothColumn  is not equal!!!!!!!!!!!!" << std::endl;

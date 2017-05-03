@@ -85,7 +85,8 @@ __global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, 
 		if (x+k<0 || x+k>=Xdim)
 			continue;
 		tmp++;
-		float actualWeightC = (k==0? 1:listOfWeights[abs(k)]);
+	// DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
+			float actualWeightC = (k==0? 1:listOfWeights[abs(k)]);
 		sumWeightsC += actualWeightC;
 		for (size_t i=0; i<TILE_DIM2; ++i){
 			if ((y+i)<Ydim){
