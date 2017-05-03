@@ -31,16 +31,20 @@
 #include <data/transformations.h>
 #include <data/args.h>
 #include <data/matrix2d.h>
+#include <data/metadata_extension.h>
 
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
+#include <algorithm>
 
 #include "../reconstruction_cuda/cuda_gpu_correlation.h"
 
 
 //CUDA functions
-void cuda_correlation(float *image, float *rotated_image, float *module, float *angle, size_t Xdim, size_t Ydim, size_t Zdim);
+void cuda_fft_main(float *image, float *rotated_image, float *module, float *angle, size_t Xdim, size_t Ydim, size_t Zdim, size_t batch);
+
+void cuda_polar_main(float *image, float *polar, size_t Xdim, size_t Ydim, size_t Zdim, size_t batch);
 
 
 class ProgGpuCorrelation: public XmippProgram
