@@ -34,7 +34,7 @@ from pyworkflow.object import Float, String
 from pyworkflow.em.viewer import ObjectView, TableView
 
 from pyworkflow.em.viewer import ImageView, ChimeraView
-
+import os
 
 class CCP4ProtRunRefmacViewer(ProtocolViewer):
     """ Viewer for CCP4 program refmac
@@ -101,6 +101,8 @@ and rmsCHIRAL (root mean square of chiral index""")
         pass
 
     def _visualizeFinalResults(self, e=None):
+
+
         """
         views = []
         labels = '_1 _2'
@@ -120,29 +122,35 @@ and rmsCHIRAL (root mean square of chiral index""")
                                 viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         return views
 """
-        headerList = ['property', 'value']
-        dataList = [
-        ('1John', 'Smith1') ,
-        ('2Larry', 'Black') ,
-        ('3Walter', 'White') ,
-        ('4Fred', 'Becker'),
-        ('5John', 'Smith') ,
-        ('6Larry', 'Black') ,
-        ('7Walter', 'White') ,
-        ('8Fred', 'Becker'),
-        ('9John', 'Smith') ,
-        ('10Larry', 'Black') ,
-        ('11Walter', 'White') ,
-        ('12Fred', 'Becker'),
-        ('13John', 'Smith') ,
-        ('14Larry', 'Black') ,
-        ('15Walter', 'White') ,
-        ('16Fred', 'Becker')
-        ]
-
+        #Selection of lines from 'refine.log' file that include Refmac final results.
+        #These lines will be saved in outputLines list
+        f = self.protocol._getExtraPath(self.protocol.refineLogFileName)
+        outputLines = []
+        with open(f) as input_data:
+            for line in input_data:
+                if line.strip() == '$TEXT:Result: $$ Final results $$':
+                    break
+            for line in input_data:
+                if line.strip() == '$$':
+                    break
+                outputLines.append(line)
+        #Creation of two list (headerList and dataList) with the first line and the remaining lines of outputLines, respectively
+        headerList = []
+        dataList = []
+        for i in range(0,len(outputLines)):
+            if i == 0:
+                headerList.extend([' ', outputLines[i].strip().split()[0], outputLines[i].strip().split()[1]])
+            else:
+                dataList.extend([outputLines[i].strip().split()[0]+' '+outputLines[i].strip().split()[1],
+                                outputLines[i].strip().split()[2],
+                                outputLines[i].strip().split()[3]])
+        #Conversion of dataList in a list of 3-element tuples
+        it = iter(dataList)
+        dataList = zip(it, it, it)
+        #Arrangement of the final table
         TableView(headerList=headerList,
                   dataList=dataList,
-                  mesg="This is a list with many important persons. This comment will be a bit longer",
+                  mesg="This list includes a summary of Refmac execution final results",
                   title= "Refmac: Final Results Summary",
                   height=len(dataList))
 
