@@ -72,7 +72,12 @@ void fill( float* a, const float val,  int Xdim, int Ydim){
           if used for constructSmoothHistogramRow, rowH must be transposed
           before calling the kernel, and smooth after calling it
           Each thread computes a semicolumn
+
+          For constructSmoothHistogramsByRow, the colrow must be first transposed
 ****/
+
+/*********** IT CAN BE OPTIMIZED ************/
+/*********** adding more threads in the Y dim ************/
 __global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, int width, int Xdim, int Ydim)
 {
    int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
@@ -105,12 +110,41 @@ __global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, 
    }//end-if(x<=Xdim) 
 }
 
+/****
+ smooth2: average of rows into the first row
+          There is a thread per column. A thread averages a whole column into the first element
+          A thread copies all the values of the first element into the rest of the elements of the column
+ 	  (Not the best implementation but easy to code)
+          For constructSmoothHistogramsByCol, the smooth matrix must be first transposed
+
+****/
+/*********** IT CAN BE OPTIMIZED ************/
+/*********** adding more threads in the Y dim ************/
+__global__ void smooth2(float *smooth, int Xdim, int Ydim)
+{
+   int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
+
+   if (x<Xdim){
+	   double sum = 0.;
+ 	   for (size_t y=0; y<Ydim; ++y){
+		sum += smooth[x+y*Xdim];
+	  }	
+
+	  sum /= Ydim;
+ 	   for (size_t y=0; y<Ydim; ++y){ 
+		smooth[x+y*Xdim]=(float)sum;
+	  }	
+   }//end-if(x<=Xdim) 
+}
+
 // Kernel to transpose a matrix
+
 // The kernel assumes that each block deals with a 32x32 tile
 // each block has 32x8 threads 
 // IMPORTANT: The input has Xdim columns X Ydim rows
 //            The output has Ydim columns X Xdim rows
-__global__ void transpose(int *odata, const int *idata, int Xdim, int Ydim)
+template <typename T>
+__global__ void transpose(T *odata, const T *idata, int Xdim, int Ydim)
 {
 __shared__ float tile[TILE_DIM+1][TILE_DIM];
 //__shared__ float tile[TILE_DIM][TILE_DIM];

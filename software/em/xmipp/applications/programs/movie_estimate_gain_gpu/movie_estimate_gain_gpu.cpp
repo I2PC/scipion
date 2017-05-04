@@ -20,43 +20,65 @@ double computeTVRows(MultidimArray<int> &I);
 
 
 template <typename T>
- bool isequal(T* A, T* B, int size, int show=10)  { 
+ bool isequal(T* A, T* B, int size, int show=10, float th_perc=.1)  { 
 	bool ok=true;
+	float max_perc=0.;
+	float tmp_perc;
 	for (int i=0; i<size; i++){
 		if (A[i]!=B[i]){
+			if (A[i]==0.){
 				ok=false;
-				std::cout << A[i] << "not eq " << B[i] << "; i=" << i << std::endl;
+				std::cout << "A[i]=0!!!" << std::endl;
 				break;
+			}
+			tmp_perc = 100.*fabs(1.-B[i]/A[i]);
+			if (tmp_perc>max_perc)
+				max_perc=tmp_perc;
+			if (max_perc > th_perc)
+				ok=false;
 		}	
 	}	
 
-	if (!ok)
+	if (!ok){
+		std::cout << "MAX ERR = " << max_perc << "\%" << std::endl;
 		for (int i=0; i<show; i++){
 			std::cout << "A[" <<i<<"]="<< A[i];
 			std::cout << " B[" <<i<<"]="<< B[i] << std::endl;
 		}
+        }
 	return ok;
 }
 
 // Check if matrix A with Xdim columns is the transposed of B (with Ydim columns)
 template <typename T>
- bool isequalT(T* A, T* B, int xdim, int ydim, int show=10)  { 
+ bool isequalT(T* A, T* B, int xdim, int ydim, int show=10, float th_perc=.1)  { 
 	bool ok=true;
-	for (int i=0; i<ydim; i++){
+	float max_perc=0.;
+	float tmp_perc;
+		for (int i=0; i<ydim; i++){
 		for (int j=0; j<xdim; j++){
 			if (A[j+i*xdim]!=B[i+j*ydim]){
+				if (A[j+i*xdim]==0.){
+					ok=false;
+					std::cout << "A[j+i*ydim]=0!!!" << std::endl;
+					break;
+				}
+			tmp_perc = 100.*fabs(1-B[i+j*ydim]/A[j+i*xdim]);
+			if (tmp_perc>max_perc)
+				max_perc=tmp_perc;
+			if (max_perc > th_perc)
 				ok=false;
-		std::cout << A[j+i*xdim] << "not eq " << B[i+j*ydim] << "(" << i << "," << j << ")" << std::endl;
-				break;
 			}	
 		}	
 	}
 
-	if (!ok)
+	if (!ok){
+		std::cout << "MAX ERR = " << max_perc << "\%" << std::endl;
 		for (int i=0; i<show; i++){
 			std::cout << "A[" <<i<<"]="<< A[i];
 			std::cout << " B'[" <<i<<"]="<< B[i*ydim] << std::endl;
 		}
+        }
 	return ok;
 } 
 
@@ -144,6 +166,7 @@ public:
 	int* d_columnH, *d_rowH, *d_aSingleColumnH, *d_aSingleRowH; //matrix
 	int* d_columnHt; //, *d_rowH, *d_aSingleColumnH, *d_aSingleRowH; //matrix
 	float* d_smoothColumnH, * d_smoothRowH, * d_sumObs; //matrix
+	float* d_smoothT; // temporary smooth matrix
 	// d_Iframes and h_Iframes contains the same info
 	// d_Iframes is used internally by the GPU to access the images
 	// h_Iframes is used if a kernel is using a single image
@@ -213,6 +236,7 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	gpuErrchk(cudaMalloc( &d_columnH, sz_imgINT)); // no need to initialized
 	gpuErrchk(cudaMalloc( &d_columnHt, sz_imgINT)); // temporal vector, no need to initialized
 	gpuErrchk(cudaMalloc( &d_smoothColumnH, sz_imgFL));
+	gpuErrchk(cudaMalloc( &d_smoothT, sz_imgFL));
 	MultidimArray<float> sumObsFL; // it was double
 	sumObsFL.initZeros(Ydim,Xdim);
 	FOR_ALL_OBJECTS_IN_METADATA(mdIn)
@@ -238,7 +262,7 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 		int jmax=ceil(3*listOfSigmas[i]); 
 		std::cout << "jmax= " << jmax << std::endl;
 		listOfWidths.push_back(jmax);
-		float *weights=new float[jmax];    //it was double
+		float *weights=new float[jmax+1];    //GCF:it was double and (jmax)
 		float K=-0.5/(listOfSigmas[i]*listOfSigmas[i]); //it was double
 		for (int j=1; j<=jmax; ++j)
 			weights[j-1]=exp(K*j*j);
@@ -254,7 +278,7 @@ void ProgMovieEstimateGainGPU::produceSideInfo()
 	for (size_t i=0; i<listOfSigmas.size(); ++i)
 	{
 		int jmax=ceil(3*listOfSigmas[i]);
-		size_t sz_weights=sizeof(float)*jmax;
+		size_t sz_weights=sizeof(float)*(jmax+1); //GCF: it was (jmax)
 		gpuErrchk(cudaMalloc(&d_weights, sz_weights));
 	        gpuErrchk(cudaMemcpy(d_weights, listOfWeights[i], sz_weights, cudaMemcpyHostToDevice));
 		std::cout <<" i=" << i  <<"; p_weights=" << d_weights << std::endl;
@@ -582,7 +606,7 @@ void ProgMovieEstimateGainGPU::computeHistogramsGPU(const int* d_IframeIdeal)
 		cudaDeviceSynchronize();
 
 		// transpose output (note that the input has Ydim columns!!!)
-		dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIM-1))/TILE_DIM),1);
+		dim3 block(floor((Ydim+(TILE_DIM-1))/TILE_DIM),floor((Xdim+(TILE_DIM-1))/TILE_DIM),1);
 		dim3 thread( TILE_DIM, BLOCK_ROWS);
 		transpose<<< block, thread >>>(d_columnH, d_columnHt, Ydim, Xdim);
 		cudaThreadSynchronize();
@@ -685,24 +709,33 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnGPU(const float 
 	gpuErrchk(cudaGetLastError());
 
 
-	/*
+	
 	if (singleReference)
 	{
-		// Compute the average of all column histograms
-		for (size_t i=0; i<Ydim; ++i)
-			for (size_t j=1; j<Xdim; ++j)
-				DIRECT_A2D_ELEM(smoothColumnH,i,0)+=DIRECT_A2D_ELEM(smoothColumnH,i,j);
+		// transpose smoothColumnH
+		dim3 block3(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIM-1))/TILE_DIM),1);
+		dim3 thread3( TILE_DIM, BLOCK_ROWS);
+		transpose<<< block3, thread3 >>>(d_smoothT, d_smoothColumnH, Xdim, Ydim);
+		cudaThreadSynchronize();
+		gpuErrchk(cudaGetLastError());
 
-		double iXdim=1.0/Xdim;
-		for (size_t i=0; i<Ydim; ++i)
-		{
-			DIRECT_A2D_ELEM(smoothColumnH,i,0)*=iXdim;
-			double aux=DIRECT_A2D_ELEM(smoothColumnH,i,0);
-			for (size_t j=1; j<Xdim; ++j)
-				DIRECT_A2D_ELEM(smoothColumnH,i,j)=aux;
-		}
+		// Average all rows and replicate in all rows
+		dim3 block4(floor((Xdim+(TILE_DIM2-1))/TILE_DIM2),1,1);
+		dim3 thread4( TILE_DIM2, 1);
+		smooth2<<< block4, thread4 >>>(d_smoothT, Ydim, Xdim);
+		cudaThreadSynchronize();
+		gpuErrchk(cudaGetLastError());
+
+		// transpose back smoothColumnH
+		dim3 block5(floor((Ydim+(TILE_DIM-1))/TILE_DIM),floor((Xdim+(TILE_DIM-1))/TILE_DIM),1);
+		dim3 thread5( TILE_DIM, BLOCK_ROWS);
+		transpose<<< block5, thread5 >>>(d_smoothColumnH, d_smoothT, Ydim, Xdim);
+		cudaThreadSynchronize();
+		gpuErrchk(cudaGetLastError());
+
+	
+
 	}
-*/
 #ifdef NEVER_DEFINED
 	Image<double> save;
 	typeCast(smoothColumnH,save());
@@ -853,7 +886,7 @@ size_t ProgMovieEstimateGainGPU::selectBestSigmaByColumn(const MultidimArray<int
 	{
 //		constructSmoothHistogramsByColumn(listOfWeights[s],listOfWidths[s]);
 		start = clock();
-		constructSmoothHistogramsByColumnTEST(listOfWeights[s],listOfWidths[s]);
+		constructSmoothHistogramsByColumn(listOfWeights[s],listOfWidths[s]);
 		end = clock();
 		std::cout << "HBCTEST " <<  (float)(end - start) / CLOCKS_PER_SEC << "secs" << std::endl;
 
