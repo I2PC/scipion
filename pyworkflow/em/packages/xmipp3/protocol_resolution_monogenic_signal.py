@@ -109,7 +109,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'please select yes')
         
         group.addParam('volumeRadius', FloatParam, default=-1,
-                      label="Spherical mask radius",
+                      label="Spherical mask radius (px)",
                       condition = 'isPremasked and not halfVolumes', 
                       help='When the original volume is originally premasked, the noise estimation ought'
                       'to be performed inside that premask, and out of the provieded mask asked in the previus'
@@ -117,12 +117,14 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'radius = -1 use the half of the volume size as radius')
         
         group.addParam('volumeRadiusHalf', FloatParam, default=-1,
-                      label="Spherical mask radius",
+                      label="Spherical mask radius (px)",
                       condition = 'halfVolumes and isPremasked',
-                      help='When the origianl volume is originally premasked, the noise estimation ought'
-                      'to be performed inside that premask, and out of the provieded mask asked in the previus'
-                      'box. The radius value, determines the radius of the spherical premask. By default'
-                      'radius = -1 use the half of the volume size as radius')
+                      help='When the origianl volume is originally premasked,'
+                      'the noise estimation ought to be performed inside that'
+                      'premask, and out of the provieded mask asked in the previus'
+                      'box. The radius value, determines the radius in pixels of '
+                      'the spherical premask. By default radius = -1 use the half'
+                      'of the volume size as radius')
 
         line.addParam('minRes', FloatParam, default=1, label='High')
         line.addParam('maxRes', FloatParam, default=30, label='Low')

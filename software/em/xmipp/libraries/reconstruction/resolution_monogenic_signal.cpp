@@ -138,10 +138,11 @@ void ProgMonogenicSignalRes::produceSideInfo()
 			}
 		}
 	}
-
+	#ifdef DEBUG
 	Image<double> saveiu;
 	saveiu = 1/iu;
 	saveiu.write("iu.vol");
+	#endif
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
@@ -388,7 +389,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 }
 
 
-void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
+void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
 		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask)
 {
 	MultidimArray<double> resolutionVol_aux = resolutionVol;
@@ -424,14 +425,21 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
 	{
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) < last_res)
+		{
 			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
-		
+			DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
+		}
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) >= trimming_value)
+		{
 		  DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
+		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
+		}
 	}
+	//#ifdef DEBUG_MASK
 	Image<int> imgMask;
 	imgMask = pMask;
 	imgMask.write(fnMaskOut);
+	//#endif
 }
 
 

@@ -151,7 +151,7 @@ class XmippMonoResViewer(ProtocolViewer):
         #  This is to generate figures for the paper
         # min_Res = np.amin(imgData)
         # imgData2 = imgData
-        imgData2 = np.ma.masked_where(imgData < 0.01, imgData, copy=True)
+        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,

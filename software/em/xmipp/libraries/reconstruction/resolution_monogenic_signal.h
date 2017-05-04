@@ -75,7 +75,7 @@ public:
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, double w1h, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
-    void postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
+    void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask);
     void run();
 
