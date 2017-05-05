@@ -342,6 +342,7 @@ class TableView(View):
         height: Specifies the number of rows which should be visible
         width: minimum width in pixels
         fontSize= font size
+        padding: cell extra width
         ---------------------
         Alternative way to create a table using showj
         views = []
@@ -366,7 +367,7 @@ class TableView(View):
     def __init__(self, headerList, dataList,
                       mesg=None, title=None,
                       height=10, width=400,
-                      fontSize=16, **kwargs):
+                      fontSize=16, padding=10):
         #get new widget that has as parent the top level window and set title
         win = tk.Toplevel()
         if title:
@@ -387,7 +388,8 @@ class TableView(View):
         #create treeview to store multi list with data
         tree = ttk.Treeview(columns=headerList,
                             show="headings",master=win,
-                            style='Calendar.Treeview', height=height)
+                            style='Calendar.Treeview', height=height
+                            )
 
         #define scrollbars to be added
         if len(dataList)>height:
@@ -429,7 +431,7 @@ class TableView(View):
             colWidths = [i * factor for i in colWidths]
 
         for col,colWidth in zip(headerList,colWidths):
-            tree.column(col,width=colWidth+10)
+            tree.column(col,width=colWidth+padding)
 
         #color by rows
         tree.tag_configure('evenrow', background='white')
