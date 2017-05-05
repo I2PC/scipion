@@ -107,7 +107,7 @@ class XmippProtExtractUnit(EMProtocol):
         vol = Volume()
         t = Transform()
         m = t.getMatrix()
-        vol.setCoordenateSystem(m)
+#        vol.setCoordenateSystem(m)
         vol.setLocation(self._getOutputVol())
         vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
         #TODO: HORROR
