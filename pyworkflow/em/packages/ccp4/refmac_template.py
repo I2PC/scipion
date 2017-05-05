@@ -78,10 +78,10 @@ ${RM} ${OUTPUTDIR}masked_fs.map
 #Nothing to be changed below (unless you know what you are doing)
 ##################################################################
 #load ccp4 enviroment
-###TODO: SI COMENTAMOS ESTAS tres lINEAS EL SCRIPT SIGUE FUNCIONANDO Si si si
-#PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
-#PATHMRCBIN=$PATHCCP4/bin
-#. $PATHMRCENV
+###TODO: MOVE tHIS INITIALIZATION TO convert.getEnv
+PATHMRCENV=$PATHCCP4/setup-scripts/ccp4.setup-sh
+PATHMRCBIN=$PATHCCP4/bin
+. $PATHMRCENV
 
 #TODO: SI PONEMS \\ SE CONSEFVA \ No se conserva, aparece \ en el script
 #todo: PASAR LOD FILE NAME
