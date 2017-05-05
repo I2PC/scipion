@@ -51,16 +51,17 @@ def errorWindow(tkParent, msg):
 
 
 class ParseFile():
-    """class that parse a refmac log file"""
+    """class that parse refmac log files"""
     LASTITERATIONRESULTS="lastIteration"
     FINALRESULTS="finalResults"
     FOMPLOT="fomplot"
     RFACTORLOT="rfactorplot"
+
     def __init__(self, fileName, tkParent=None, lastIteration=0):
         self.headerDict = {}#parsed headers goes here
         self.dataDict = {}#parsed data goes here
         self.msgDict = {}#error messages goes here
-        self.titleDict={}
+        self.titleDict={}#titles go here
         self.tkParent = tkParent
         self.fileName = fileName
         self._parsefile(lastIteration)
@@ -129,6 +130,8 @@ class ParseFile():
                 if not line:
                     stop = True
                     break
+            if stop:
+                msg = 'Can not find "Last Iteration" information in log file: %s' % self.fileName
 
             for i in range(14):
                 row = []
@@ -205,7 +208,7 @@ class ParseFile():
         self.msgDict[self.RFACTORLOT]    =  msg
         self.titleDict[self.RFACTORLOT]  = "Rfact and Rfree vs Cycle"
 
-        #other need to be added here for LL LLfree Geometry
+        #other dictionary entries need to be added here for -LL -LLfree and Geometry
 
     def retrieveFomPlot(self):
         return self.headerDict[self.FOMPLOT],\
