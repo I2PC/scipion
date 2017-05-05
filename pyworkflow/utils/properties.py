@@ -84,7 +84,9 @@ class Message():
     LABEL_STOP = 'Stop'
     LABEL_STOP_ACTION = 'Stop execution'
     LABEL_TREE = 'Tree'
-    
+#ROB
+    LABEL_BIB_BTN = 'Export references'
+ 
     #-- Tabs --
     LABEL_COMMENT = 'Comments'
     LABEL_DATA = 'Data'
