@@ -33,6 +33,7 @@ from pyworkflow.em.data import EMSet, EMObject
 from pyworkflow.object import Float, String
 from pyworkflow.em.viewer import ObjectView, TableView
 from tkMessageBox import showerror
+from pyworkflow.gui.plotter import Plotter
 
 from pyworkflow.em.viewer import ImageView, ChimeraView
 import os
@@ -54,10 +55,12 @@ class ParseFile():
     LASTITERATIONRESULTS="lastIteration"
     FINALRESULTS="finalResults"
     FOMPLOT="fomplot"
+    RFACTORLOT="rfactorplot"
     def __init__(self, fileName, tkParent=None, lastIteration=0):
         self.headerDict = {}#parsed headers goes here
         self.dataDict = {}#parsed data goes here
         self.msgDict = {}#error messages goes here
+        self.titleDict={}
         self.tkParent = tkParent
         self.fileName = fileName
         self._parsefile(lastIteration)
@@ -92,7 +95,9 @@ class ParseFile():
                 row.extend([words[0]+" "+ words[1], words[2], words[3]])
                 dataList.append(tuple(row))
             #TODO: remove debug lines
-        return headerList, dataList, msg
+        self.headerDict[self.FINALRESULTS] = headerList
+        self.dataDict[self.FINALRESULTS]   = dataList
+        self.msgDict[self.FINALRESULTS]    =  msg
 
     def retrievefinalResults(self):
         return self.headerDict[self.FINALRESULTS], \
@@ -132,24 +137,97 @@ class ParseFile():
                 # the first column has 2 words
                 row.extend([words[0].strip(), words[1].strip()])
                 dataList.append(tuple(row))
-        return headerList, dataList, msg
+        self.headerDict[self.LASTITERATIONRESULTS] = headerList
+        self.dataDict[self.LASTITERATIONRESULTS]   = dataList
+        self.msgDict[self.LASTITERATIONRESULTS]    =  msg
 
     def retrievelastIteration(self):
         return self.headerDict[self.LASTITERATIONRESULTS],\
                self.dataDict[self.LASTITERATIONRESULTS],\
                self.msgDict[self.LASTITERATIONRESULTS]
 
+    #table parse cycle
+    def _parseFomPlot(self, filePointer, iteration):
+        #headerList = ["cycle","fom"]#x label,y1 label and so on
+        dataList = []#each set of values in a different column
+        stop = False
+        msg=""
+        while 1:
+            line = filePointer.readline()
+            if line.find('Ncyc    Rfact    Rfree     FOM      -LL     -LLfree  rmsBOND  zBOND rmsANGL  zANGL rmsCHIRAL $$')!=-1:
+                print("Yes Ncyc")
+                break
+            if not line:
+                print("NO Ncyc")
+                stop = True
+                break
+        if stop:
+            msg = 'Can not find "stats vs cycle" information in log file: %s' % self.fileName
+        else:
+            # skip one line
+            line = filePointer.readline()
+
+            Ncyc = []
+            Rfact = []
+            Rfree = []
+            FOM = []
+            mLL = []
+            mLLfree = []
+            rmsBOND = []
+            zBOND = []
+            rmsANGL = []
+            zANGL = []
+            rmsCHIRAL = []
+
+            for i in range(iteration):
+                line = filePointer.readline()
+                words = line.strip().split()
+                # the first column has 2 words
+                Ncyc.append(int(words[0]))
+                Rfact.append(float(words[1]))
+                Rfree.append(float(words[2]))
+                FOM.append(float(words[3]))
+                mLL.append(float(words[4]))
+                mLLfree.append(float(words[5]))
+                rmsBOND.append(float(words[6]))
+                zBOND.append(float(words[7]))
+                rmsANGL.append(float(words[8]))
+                zANGL.append(float(words[9]))
+                rmsCHIRAL.append(float(words[10]))
+
+        self.headerDict[self.FOMPLOT] = ["cycle","fom"]
+        self.dataDict[self.FOMPLOT]   = [Ncyc,FOM]
+        self.msgDict[self.FOMPLOT]    =  msg
+        self.titleDict[self.FOMPLOT]  = "FOM vs Cycle"
+
+        self.headerDict[self.RFACTORLOT] = ["cycle","Rfact", "Rfree"]
+        self.dataDict[self.RFACTORLOT]   = [Ncyc,Rfact,Rfree]
+        self.msgDict[self.RFACTORLOT]    =  msg
+        self.titleDict[self.RFACTORLOT]  = "Rfact and Rfree vs Cycle"
+
+        #other need to be added here for LL LLfree Geometry
+
+    def retrieveFomPlot(self):
+        return self.headerDict[self.FOMPLOT],\
+               self.dataDict[self.FOMPLOT],\
+               self.msgDict[self.FOMPLOT],\
+               self.titleDict[self.FOMPLOT]
+
+    def retrieveRFactorPlot(self):
+        return self.headerDict[self.RFACTORLOT],\
+               self.dataDict[self.RFACTORLOT],\
+               self.msgDict[self.RFACTORLOT],\
+               self.titleDict[self.RFACTORLOT]
+
     def _parsefile(self, lastIteration=0):
         """ call the different functions that parse the data in the right order"""
         with open(self.fileName,"r") as filePointer:
-            headerList,dataList, msg = self._parseLastIteration(filePointer, lastIteration)
-            self.headerDict[self.LASTITERATIONRESULTS] = headerList
-            self.dataDict[self.LASTITERATIONRESULTS]   = dataList
-            self.msgDict[self.LASTITERATIONRESULTS]    =  msg
-            headerList,dataList, msg = self._parseFinalResults(filePointer)
-            self.headerDict[self.FINALRESULTS] = headerList
-            self.dataDict[self.FINALRESULTS]   = dataList
-            self.msgDict[self.FINALRESULTS]    =  msg
+            #LASTITERATION
+            self._parseLastIteration(filePointer, lastIteration)
+            #FOMPLOT, LLplot LLfreePLot GeometryPlot
+            self._parseFomPlot(filePointer, lastIteration)
+            #FINALRESULTS
+            self._parseFinalResults(filePointer)
 
 class CCP4ProtRunRefmacViewer(ProtocolViewer):
     """ Viewer for CCP4 program refmac
@@ -275,32 +353,38 @@ and rmsCHIRAL (root mean square of chiral index""")
                   height=len(dataList), width=200,padding=40)
 
     def _visualizeRFactorPlot(self, e=None):
+        """ Plot FOM vs cycle :N:1,4:
         """
-        xplotter = Plotter(windowTitle="SAXS Curves")
-        a = xplotter.createSubPlot('SAXS curves', 'Angstrongs^-1', 'log(SAXS)', yformat=False)
-        a.plot(x[:, 0], numpy.log(x[:, 1]))
-        a.plot(x[:, 0], numpy.log(x[:, 2]))
-        if obj.experimentalSAXS.empty():
-            xplotter.showLegend(['SAXS in solution', 'SAXS in vacuo'])
-        else:
-            xplotter.showLegend(['Experimental SAXS', 'SAXS from volume'])
-        xplotter.show()
-        """
-        pass
-
-    def _visualizeFOMPlot(self, e=None):
-        """ Plot FOM
-        """
-        headerList, dataList, msg = self.parseFile.retrieveFomPlot()
+        headerList, dataList, msg, title  = self.parseFile.retrieveRFactorPlot()
         if not dataList:
             errorWindow(self.getTkRoot(), msg)
             return
-        #make plotter here
-        TableView(headerList=headerList,
-                  dataList=dataList,
-                  mesg=" ",
-                  title= "Refmac: Last Iteration summary",
-                  height=len(dataList), width=200,padding=40)
+
+        xplotter = Plotter(windowTitle=title)
+        a = xplotter.createSubPlot(title, headerList[0], 'Rfactor', yformat=False)
+        # see https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.plot.html
+        #for plot options
+        a.plot(dataList[0], dataList[1], 'bx-',
+               dataList[0], dataList[2], 'gx-'
+               )#plot start over line  in blue
+        xplotter.showLegend(headerList[1:])
+        xplotter.show()
+
+    def _visualizeFOMPlot(self, e=None):
+        """ Plot FOM vs cycle :N:1,4:
+        """
+        headerList, dataList, msg, title  = self.parseFile.retrieveFomPlot()
+        if not dataList:
+            errorWindow(self.getTkRoot(), msg)
+            return
+
+        xplotter = Plotter(windowTitle=title)
+        a = xplotter.createSubPlot(title, headerList[0], headerList[1], yformat=False)
+        # see https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.plot.html
+        a.plot(dataList[0], dataList[1],'bx-')
+        xplotter.showLegend(headerList[1:])
+        xplotter.show()
+
 
     def _visualizeLLPlot(self, e=None):
         pass
