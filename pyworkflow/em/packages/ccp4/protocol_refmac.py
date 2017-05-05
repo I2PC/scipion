@@ -131,18 +131,9 @@ class CCP4ProtRunRefmac(EMProtocol):
         dict['MASKED_VOLUME'] = self.generateMaskedVolume.get()
         dict['SFCALC_mapradius'] = self.SFCALCmapradius.get()
         dict['SFCALC_mradius'] = self.SFCALCmradius.get()
-#       if (self.inputVolume.get().getDim()[0] % 2 == 0):
-#           dict['XDIM'] = self.inputVolume.get().getDim()[0]
-#       else:
-#           dict['XDIM'] = self.inputVolume.get().getDim()[0] + 1
-#       if (self.inputVolume.get().getDim()[1] % 2 == 0):
-#           dict['YDIM'] = self.inputVolume.get().getDim()[1]
-#       else:
-#           dict['YDIM'] = self.inputVolume.get().getDim()[1] + 1
-#       if (self.inputVolume.get().getDim()[2] % 2 == 0):
-#           dict['ZDIM'] = self.inputVolume.get().getDim()[2]
-#       else:
-#           dict['ZDIM'] = self.inputVolume.get().getDim()[2] + 1
+        dict['XDIM'] = self.inputVolume.get().getDim()[0]
+        dict['YDIM'] = self.inputVolume.get().getDim()[1]
+        dict['ZDIM'] = self.inputVolume.get().getDim()[2]
         if self.BFactorSet.get() ==0:
             dict['BFACTOR_SET'] = "#BFACtor SET 0"
         else:
