@@ -90,17 +90,17 @@ ${RM} ${OUTPUTDIR}masked_fs.map
 pdb_in=${PDBDIR}/${PDBFILE}
 if [ "$generateMaskedVolume" = True ] ; then
     echo we will work on $pdb_in
-    $refmac MAPIN ${MAPFILE} \\\n
-   	            HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \
-   	            XYZIN $pdb_in \
-   	            XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \
-   	            > ${OUTPUTDIR}mask.log \
+    $refmac MAPIN ${MAPFILE} \\
+   	    HKLOUT ${OUTPUTDIR}average_for_refmac.mtz \\
+   	    XYZIN $pdb_in \\
+   	    XYZOUT ${OUTPUTDIR}$molecule_id-initial.pdb \\
+   	    > ${OUTPUTDIR}mask.log \\
    	        << eof
-                MODE SFCALC 
-                SFCALC mapradius %(SFCALC_mapradius)f
-	            SFCALC mradius %(SFCALC_mradius)f
-                SFCALC shift
-                END
+        MODE SFCALC 
+        SFCALC mapradius %(SFCALC_mapradius)f
+        SFCALC mradius %(SFCALC_mradius)f
+        SFCALC shift
+        END
 eof
 fi
 
@@ -116,7 +116,7 @@ fft HKLIN ${OUTPUTDIR}_masked_fs.mtz MAPOUT ${OUTPUTDIR}masked_fs.map << END-fft
     LABIN F1=Fout0 PHI=Pout0 
     SCALE F1 1.0 300.0 
     RESOLUTION 3.0 
-    GRID 200 200 200
+    GRID %(XDIM)d %(YDIM)d %(ZDIM)d  
     END 
 END-fft
 
@@ -126,11 +126,11 @@ END-fft
 #IF ZERO WRITE THEM COMENTED
 
 #todo: PASAR LOD FILE NAME
-                $refmac HKLIN ${OUTPUTDIR}_masked_fs.mtz \
-                        HKLOUT ${OUTPUTDIR}$molecule_id-refined.mtz \
-                        XYZIN  ${OUTPUTDIR}$molecule_id-initial.pdb \
-                        XYZOUT ${OUTPUTDIR}$molecule_id-refined.pdb\
-			atomsf ${PATHCCP4}/bin/atomsf_electron.lib \
+                $refmac HKLIN ${OUTPUTDIR}_masked_fs.mtz \\
+                        HKLOUT ${OUTPUTDIR}$molecule_id-refined.mtz \\
+                        XYZIN  ${OUTPUTDIR}$molecule_id-initial.pdb \\
+                        XYZOUT ${OUTPUTDIR}$molecule_id-refined.pdb\\
+			atomsf ${PATHCCP4}/bin/atomsf_electron.lib \\
 			> ${OUTPUTDIR}refine.log <<EOF  
 
 LABIN FP=Fout0 PHIB=Pout0
