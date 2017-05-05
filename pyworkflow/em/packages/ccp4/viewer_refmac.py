@@ -146,10 +146,10 @@ class ParseFile():
             self.headerDict[self.LASTITERATIONRESULTS] = headerList
             self.dataDict[self.LASTITERATIONRESULTS]   = dataList
             self.msgDict[self.LASTITERATIONRESULTS]    =  msg
-            headerList,dataList, msg = self._parseLastIteration(filePointer, lastIteration)
-            self.headerDict[self.LASTITERATIONRESULTS] = headerList
-            self.dataDict[self.LASTITERATIONRESULTS]   = dataList
-            self.msgDict[self.LASTITERATIONRESULTS]    =  msg
+            headerList,dataList, msg = self._parseFinalResults(filePointer)
+            self.headerDict[self.FINALRESULTS] = headerList
+            self.dataDict[self.FINALRESULTS]   = dataList
+            self.msgDict[self.FINALRESULTS]    =  msg
 
 class CCP4ProtRunRefmacViewer(ProtocolViewer):
     """ Viewer for CCP4 program refmac
