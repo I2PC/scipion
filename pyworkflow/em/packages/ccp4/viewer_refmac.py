@@ -35,13 +35,15 @@ from pyworkflow.em.viewer import ObjectView, TableView
 
 from pyworkflow.em.viewer import ImageView, ChimeraView
 
-
 class CCP4ProtRunRefmacViewer(ProtocolViewer):
     """ Viewer for CCP4 program refmac
     """
     _label = 'Refmac Viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [CCP4ProtRunRefmac]
+
+    def __init(self):
+        ProtocolViewer.__init__()
 
     # ROB: do we need this memory for something?
     # _memory = False
@@ -97,7 +99,7 @@ and rmsCHIRAL (root mean square of chiral index""")
             'displayGeometryPlot': self._visualizeGeometryPlot
         }
 
-    def _visualizeMask(self):
+    def _visualizeMask(self, e=None):
         pass
 
     def _visualizeFinalResults(self, e=None):
