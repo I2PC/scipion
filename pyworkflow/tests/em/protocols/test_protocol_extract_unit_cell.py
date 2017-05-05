@@ -173,7 +173,7 @@ sph  + 1.   0.000 -1.618 0.000 .10"""
         print "qqqq",prot.outputVolume.getFileName()
         ih = ImageHandler()
         xdim, ydim, zdim, ndim = ih.getDimensions(prot.outputVolume.getFileName())
-        self.assertEqual(xdim,123)
+        self.assertEqual(xdim,125)
         self.assertEqual(ydim,121)
         self.assertEqual(zdim,91)
         #delete temporary file
