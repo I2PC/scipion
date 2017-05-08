@@ -741,7 +741,7 @@ class ProtocolsView(tk.Frame):
         p.add(leftFrame, padx=0, pady=0, sticky='news')
         p.add(rightFrame, padx=0, pady=0)
         p.paneconfig(leftFrame, minsize=5)
-        leftFrame.config(width=220)
+        leftFrame.config(width=235)
         p.paneconfig(rightFrame, minsize=10)
 
         return p
