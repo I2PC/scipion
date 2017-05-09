@@ -55,7 +55,10 @@ class ParseFile():
     LASTITERATIONRESULTS="lastIteration"
     FINALRESULTS="finalResults"
     FOMPLOT="fomplot"
-    RFACTORLOT="rfactorplot"
+    RFACTORPLOT="rfactorplot"
+    MLLPLOT="-LLPlot"
+    MLLFREEPLOT="-LLfreePlot"
+    GEOMETRYPLOT="GeometryPlot"
 
     def __init__(self, fileName, tkParent=None, lastIteration=0):
         self.headerDict = {}#parsed headers goes here
@@ -112,8 +115,8 @@ class ParseFile():
         msg=""
         while 1:
             line = filePointer.readline()
-            #TODO: double check space after Cycle
-            if line.find('$GRAPHS:Cycle    %d. M(Fom) v. resln :N:1,3,5,7,8,9,10:'%iteration)!=-1:  # detect final results
+            #TODO: double check space after Cycle#Chequeado
+            if line.find('$GRAPHS:Cycle   %d. M(Fom) v. resln :N:1,3,5,7,8,9,10:'%iteration)!=-1:  # detect final results
                 break
             if not line:
                 stop = True
@@ -169,7 +172,6 @@ class ParseFile():
         else:
             # skip one line
             line = filePointer.readline()
-
             Ncyc = []
             Rfact = []
             Rfree = []
@@ -203,12 +205,26 @@ class ParseFile():
         self.msgDict[self.FOMPLOT]    =  msg
         self.titleDict[self.FOMPLOT]  = "FOM vs Cycle"
 
-        self.headerDict[self.RFACTORLOT] = ["cycle","Rfact", "Rfree"]
-        self.dataDict[self.RFACTORLOT]   = [Ncyc,Rfact,Rfree]
-        self.msgDict[self.RFACTORLOT]    =  msg
-        self.titleDict[self.RFACTORLOT]  = "Rfact and Rfree vs Cycle"
+        self.headerDict[self.RFACTORPLOT] = ["cycle","Rfact", "Rfree"]
+        self.dataDict[self.RFACTORPLOT]   = [Ncyc,Rfact,Rfree]
+        self.msgDict[self.RFACTORPLOT]    =  msg
+        self.titleDict[self.RFACTORPLOT]  = "Rfact and Rfree vs Cycle"
 
-        #other dictionary entries need to be added here for -LL -LLfree and Geometry
+        self.headerDict[self.MLLPLOT] = ["cycle", "mLL"]
+        self.dataDict[self.MLLPLOT] = [Ncyc, mLL]
+        self.msgDict[self.MLLPLOT] = msg
+        self.titleDict[self.MLLPLOT] = "-LL vs Cycle"
+
+        self.headerDict[self.MLLFREEPLOT] = ["cycle", "mLLfree"]
+        self.dataDict[self.MLLFREEPLOT] = [Ncyc, mLLfree]
+        self.msgDict[self.MLLFREEPLOT] = msg
+        self.titleDict[self.MLLFREEPLOT] = "-LLfree vs Cycle"
+
+        self.headerDict[self.GEOMETRYPLOT] = ["cycle", "rmsBOND", "zBOND", "rmsANGL", "zANGL", "rmsCHIRAL"]
+        self.dataDict[self.GEOMETRYPLOT] = [Ncyc, rmsBOND, zBOND, rmsANGL, zANGL, rmsCHIRAL]
+        self.msgDict[self.GEOMETRYPLOT] = msg
+        self.titleDict[self.GEOMETRYPLOT] = "rmsBOND, zBOND, rmsANGL, zANGL and rmsCHIRAL vs Cycle"
+
 
     def retrieveFomPlot(self):
         return self.headerDict[self.FOMPLOT],\
@@ -217,10 +233,28 @@ class ParseFile():
                self.titleDict[self.FOMPLOT]
 
     def retrieveRFactorPlot(self):
-        return self.headerDict[self.RFACTORLOT],\
-               self.dataDict[self.RFACTORLOT],\
-               self.msgDict[self.RFACTORLOT],\
-               self.titleDict[self.RFACTORLOT]
+        return self.headerDict[self.RFACTORPLOT],\
+               self.dataDict[self.RFACTORPLOT],\
+               self.msgDict[self.RFACTORPLOT],\
+               self.titleDict[self.RFACTORPLOT]
+
+    def retrievemLLPlot(self):
+        return self.headerDict[self.MLLPLOT],\
+               self.dataDict[self.MLLPLOT], \
+               self.msgDict[self.MLLPLOT], \
+               self.titleDict[self.MLLPLOT]
+
+    def retrievemLLfreePlot(self):
+        return self.headerDict[self.MLLFREEPLOT],\
+               self.dataDict[self.MLLFREEPLOT],\
+               self.msgDict[self.MLLFREEPLOT],\
+               self.titleDict[self.MLLFREEPLOT]
+
+    def retrieveGeometryPlot(self):
+        return self.headerDict[self.GEOMETRYPLOT],\
+               self.dataDict[self.GEOMETRYPLOT],\
+               self.msgDict[self.GEOMETRYPLOT],\
+               self.titleDict[self.GEOMETRYPLOT]
 
     def _parsefile(self, lastIteration=0):
         """ call the different functions that parse the data in the right order"""
@@ -356,7 +390,7 @@ and rmsCHIRAL (root mean square of chiral index""")
                   height=len(dataList), width=200,padding=40)
 
     def _visualizeRFactorPlot(self, e=None):
-        """ Plot FOM vs cycle :N:1,4:
+        """ Plot Rfactor and Rfree vs cycle :N:[1,3]:
         """
         headerList, dataList, msg, title  = self.parseFile.retrieveRFactorPlot()
         if not dataList:
@@ -390,10 +424,52 @@ and rmsCHIRAL (root mean square of chiral index""")
 
 
     def _visualizeLLPlot(self, e=None):
-        pass
+        """ Plot -LL vs cycle :N:1,5:
+                """
+        headerList, dataList, msg, title = self.parseFile.retrievemLLPlot()
+        if not dataList:
+            errorWindow(self.getTkRoot(), msg)
+            return
+
+        xplotter = Plotter(windowTitle=title)
+        a = xplotter.createSubPlot(title, headerList[0], '-LL', yformat=False)
+        # see https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.plot.html
+        a.plot(dataList[0], dataList[1], 'bx-')
+        xplotter.showLegend(headerList[1:])
+        xplotter.show()
 
     def _visualizeLLfreePlot(self, e=None):
-        pass
+        """ Plot -LLfree vs cycle :N:1,6:
+                        """
+        headerList, dataList, msg, title = self.parseFile.retrievemLLfreePlot()
+        if not dataList:
+            errorWindow(self.getTkRoot(), msg)
+            return
+
+        xplotter = Plotter(windowTitle=title)
+        a = xplotter.createSubPlot(title, headerList[0], '-LLfree', yformat=False)
+        # see https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.plot.html
+        a.plot(dataList[0], dataList[1], 'bx-')
+        xplotter.showLegend(headerList[1:])
+        xplotter.show()
 
     def _visualizeGeometryPlot(self, e=None):
-        pass
+        """ Plot rmsBOND,zBOND, rmsANGL, zANGL and rmsCHIRALvs cycle :N:1,7,8,9,10,11:
+                """
+        headerList, dataList, msg, title = self.parseFile.retrieveGeometryPlot()
+        if not dataList:
+            errorWindow(self.getTkRoot(), msg)
+            return
+
+        xplotter = Plotter(windowTitle=title)
+        a = xplotter.createSubPlot(title, headerList[0], 'geometry', yformat=False)
+        # see https://matplotlib.org/api/_as_gen/matplotlib.axes.Axes.plot.html
+        # for plot options
+        a.plot(dataList[0], dataList[1], 'bx-',
+               dataList[0], dataList[2], 'gx-',
+               dataList[0], dataList[3], 'rx-',
+               dataList[0], dataList[4], 'cx-',
+               dataList[0], dataList[5], 'mx-',
+               )  # plot start over line  in blue
+        xplotter.showLegend(headerList[1:])
+        xplotter.show()
