@@ -135,7 +135,8 @@ public:
     void constructSmoothHistogramsByColumnTEST(const float *listOfWeights, int width);
     //***********
     void constructSmoothHistogramsByRowGPU(const float *listOfWeights, int width);
-     void transformGrayValuesColumn(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedColumn);
+    void transformGrayValuesColumn(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedColumn);
+    void transformGrayValuesColumnGPU(const int* d_Iframe, int* d_IframeTransformedColumn)
     void transformGrayValuesRow(const MultidimArray<int> &Iframe, MultidimArray<int> &IframeTransformedRow);
     void computeTransformedHistograms(const MultidimArray<int> &Iframe);
 
@@ -383,7 +384,7 @@ void ProgMovieEstimateGainGPU::run()
 		        gpuErrchk(cudaMemcpy(d_IframeIdeal, Iframe_vecGPU[im], sz_imgINT, cudaMemcpyDeviceToDevice));
 			dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIMH-1))/(TILE_DIMH)),1);
 			dim3 thread( TILE_DIM, TILE_DIMH);
-			mult<<< block, thread >>>(Iframe_vecGPU[im], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
+			Kmult<<< block, thread >>>(Iframe_vecGPU[im], d_ICorrection, d_IframeIdeal, Xdim, Ydim);
 			cudaThreadSynchronize();
 			gpuErrchk(cudaGetLastError());
 
@@ -608,7 +609,7 @@ void ProgMovieEstimateGainGPU::computeHistogramsGPU(const int* d_IframeIdeal)
 		// transpose output (note that the input has Ydim columns!!!)
 		dim3 block(floor((Ydim+(TILE_DIM-1))/TILE_DIM),floor((Xdim+(TILE_DIM-1))/TILE_DIM),1);
 		dim3 thread( TILE_DIM, BLOCK_ROWS);
-		transpose<<< block, thread >>>(d_columnH, d_columnHt, Ydim, Xdim);
+		Ktranspose<<< block, thread >>>(d_columnH, d_columnHt, Ydim, Xdim);
 		cudaThreadSynchronize();
 		gpuErrchk(cudaGetLastError());
 			 	
@@ -692,19 +693,21 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumn(const float *li
 void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnGPU(const float *weights, int width)
 {
 
-//	smoothColumnH.initZeros(columnH);
-	dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+TILE_DIMH-1)/(TILE_DIMH)),1);
+	smoothColumnH.initZeros(columnH);
+/*	dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+TILE_DIMH-1)/(TILE_DIMH)),1);
 	dim3 thread( TILE_DIM, TILE_DIMH);
 	fill<<< block, thread >>>(d_smoothColumnH, 0., Xdim, Ydim);
 	cudaThreadSynchronize();
 	gpuErrchk(cudaGetLastError());
-
-	dim3 block2(floor((Xdim+(TILE_DIM2-1))/TILE_DIM2),floor((Ydim+(TILE_DIM2-1))/(TILE_DIM2)),1);
+*/
+        fillGPU(d_smoothColumnH, (float)0., Xdim, Ydim);
+	
+        dim3 block2(floor((Xdim+(TILE_DIM2-1))/TILE_DIM2),floor((Ydim+(TILE_DIM2-1))/(TILE_DIM2)),1);
 	dim3 thread2( TILE_DIM2, 1, 1);
 	std::cout << block2.x << "," << block2.y << std::endl;
 	std::cout << d_smoothColumnH << " " << d_columnH << " " << weights << std::endl;
 	std::cout <<"width=" << width << std::endl;
-	smooth1<<< block2, thread2>>>(d_smoothColumnH, d_columnH, weights, width, Xdim, Ydim);
+	Ksmooth1<<< block2, thread2>>>(d_smoothColumnH, d_columnH, weights, width, Xdim, Ydim);
 	cudaThreadSynchronize();
 	gpuErrchk(cudaGetLastError());
 
@@ -715,21 +718,21 @@ void ProgMovieEstimateGainGPU::constructSmoothHistogramsByColumnGPU(const float 
 		// transpose smoothColumnH
 		dim3 block3(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+(TILE_DIM-1))/TILE_DIM),1);
 		dim3 thread3( TILE_DIM, BLOCK_ROWS);
-		transpose<<< block3, thread3 >>>(d_smoothT, d_smoothColumnH, Xdim, Ydim);
+		Ktranspose<<< block3, thread3 >>>(d_smoothT, d_smoothColumnH, Xdim, Ydim);
 		cudaThreadSynchronize();
 		gpuErrchk(cudaGetLastError());
 
 		// Average all rows and replicate in all rows
 		dim3 block4(floor((Xdim+(TILE_DIM2-1))/TILE_DIM2),1,1);
 		dim3 thread4( TILE_DIM2, 1);
-		smooth2<<< block4, thread4 >>>(d_smoothT, Ydim, Xdim);
+		Ksmooth2<<< block4, thread4 >>>(d_smoothT, Ydim, Xdim);
 		cudaThreadSynchronize();
 		gpuErrchk(cudaGetLastError());
 
 		// transpose back smoothColumnH
 		dim3 block5(floor((Ydim+(TILE_DIM-1))/TILE_DIM),floor((Xdim+(TILE_DIM-1))/TILE_DIM),1);
 		dim3 thread5( TILE_DIM, BLOCK_ROWS);
-		transpose<<< block5, thread5 >>>(d_smoothColumnH, d_smoothT, Ydim, Xdim);
+		Ktranspose<<< block5, thread5 >>>(d_smoothColumnH, d_smoothT, Ydim, Xdim);
 		cudaThreadSynchronize();
 		gpuErrchk(cudaGetLastError());
 
@@ -811,6 +814,32 @@ void ProgMovieEstimateGainGPU::transformGrayValuesColumn(const MultidimArray<int
 		}
 	}
 
+
+#ifdef NEVER_DEFINED
+	Image<double> save;
+	typeCast(IframeTransformedColumn,save());
+	save.write("PPPIframeTransformedColumn.xmp");
+	typeCast(Iframe,save());
+	save.write("PPPIframe.xmp");
+	std::cout << "Press any key to continue\n";
+	char c; std::cin >> c;
+#endif
+}
+
+void ProgMovieEstimateGainGPU::transformGrayValuesColumnGPU(const int* d_Iframe, int* d_IframeTransformedColumn)
+{
+	//IframeTransformedColumn.initZeros(Ydim,Xdim);
+
+	KfillGPU(d_IframeTransformedColumn, (float)0., Xdim, Ydim);
+
+	//aSingleColumnH.resizeNoCopy(Ydim);
+	//int *aSingleColumnH0=&DIRECT_A1D_ELEM(aSingleColumnH,0);
+	//int *aSingleColumnHF=(&DIRECT_A1D_ELEM(aSingleColumnH,Ydim-1))+1;
+
+	dim3 block1(floor((Xdim+(TILE_DIM2-1))/TILE_DIM2),1,1);
+	dim3 thread1( TILE_DIM2, 1);
+		
+      	KtransformGray<<<block1,thread1>>>(d_Iframe, d_columnH, d_IframeTransformColumn, d_smoothColumn, Xdim, Ydim)
 
 #ifdef NEVER_DEFINED
 	Image<double> save;

@@ -17,7 +17,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line,
  sumall - sum no_imgs images in matrix sumObjs, starting from firstImg
 ****/
 __global__
-void sumall( float* sumObjs, int** array_Img, int no_imgs, int Xdim, int Ydim){
+void Ksumall( float* sumObjs, int** array_Img, int no_imgs, int Xdim, int Ydim){
 
    int x = blockIdx.x*blockDim.x + threadIdx.x;
    int y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -43,7 +43,7 @@ void sumall( float* sumObjs, int** array_Img, int no_imgs, int Xdim, int Ydim){
  mult - c=a+b
 ****/
 __global__
-void mult( int* a, float* b, int* c, int Xdim, int Ydim){
+void Kmult( int* a, float* b, int* c, int Xdim, int Ydim){
 
    int x = blockIdx.x*blockDim.x + threadIdx.x;
    int y = blockIdx.y*blockDim.y + threadIdx.y;
@@ -51,20 +51,6 @@ void mult( int* a, float* b, int* c, int Xdim, int Ydim){
 
    if ((x<Xdim)&&(y<Ydim))
 	c[offset]=int((double)a[offset]*b[offset]);
-}//mult
-
-/****
- fill - fill matrix/array with value
-****/
-__global__
-void fill( float* a, const float val,  int Xdim, int Ydim){
-
-   int x = blockIdx.x*blockDim.x + threadIdx.x;
-   int y = blockIdx.y*blockDim.y + threadIdx.y;
-   int offset = x+y*Xdim;
-
-   if ((x<Xdim)&&(y<Ydim))
-	a[offset]=val;
 }//mult
 
 /****
@@ -78,7 +64,7 @@ void fill( float* a, const float val,  int Xdim, int Ydim){
 
 /*********** IT CAN BE OPTIMIZED ************/
 /*********** adding more threads in the Y dim ************/
-__global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, int width, int Xdim, int Ydim)
+__global__ void Ksmooth1(float *smooth, int *colrow, const float *listOfWeights, int width, int Xdim, int Ydim)
 {
    int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
    int y = blockIdx.y*TILE_DIM2 + threadIdx.y;
@@ -111,7 +97,7 @@ __global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, 
 }
 
 /****
- smooth2: average of rows into the first row
+ Ksmooth2: average of rows into the first row
           There is a thread per column. A thread averages a whole column into the first element
           A thread copies all the values of the first element into the rest of the elements of the column
  	  (Not the best implementation but easy to code)
@@ -120,7 +106,7 @@ __global__ void smooth1(float *smooth, int *colrow, const float *listOfWeights, 
 ****/
 /*********** IT CAN BE OPTIMIZED ************/
 /*********** adding more threads in the Y dim ************/
-__global__ void smooth2(float *smooth, int Xdim, int Ydim)
+__global__ void Ksmooth2(float *smooth, int Xdim, int Ydim)
 {
    int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
 
@@ -135,6 +121,32 @@ __global__ void smooth2(float *smooth, int Xdim, int Ydim)
 		smooth[x+y*Xdim]=(float)sum;
 	  }	
    }//end-if(x<=Xdim) 
+}
+
+/****
+K transformGray: each thread deals with a whole column
+      1. read value from Iframe - pixval
+      2. look for position of first value bigger than pixval - pos
+      3. write in IframeTransformedColRow smoothColRos(pos-1) 
+
+****/
+__global__ void KtransformGray(int *Iframe, int *colrowH, int *IframeTransformColRow, float* smoothColRow, int Xdim, int Ydim)
+{
+   int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
+ 
+   for (size_t y0=0; y0<Ydim; ++y0){
+	   int pixval = Iframe(x+y0*Xdim);
+		// upperbounds
+	   size_t y1;
+   	   for (y1=0; y1<Ydim; ++y1){
+		if (colrowH[x+y1*Xdim]>pixval)
+			break;
+	   } 
+           if (y1==Ydim)
+		y1--;
+	   IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y1*Xdim];
+   }//end-for-y0	
+
 }
 
 // Kernel to transpose a matrix
@@ -166,4 +178,14 @@ __shared__ float tile[TILE_DIM+1][TILE_DIM];
 		if (y+j<Xdim)
 		     odata[(y+j)*Ydim + x] = tile[threadIdx.x][threadIdx.y + j];
 }
+
+
+template <typename T>
+inline void Kfill(T* d_array, T value, int Xdim, int Ydim){
+	dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+TILE_DIMH-1)/(TILE_DIMH)),1);
+	dim3 thread( TILE_DIM, TILE_DIMH);
+	fill<<< block, thread >>>(d_array, value, Xdim, Ydim);
+	cudaThreadSynchronize();
+	gpuErrchk(cudaGetLastError());
+       }
 
