@@ -31,12 +31,11 @@ from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer, Viewe
 from pyworkflow.gui.text import _open_cmd
 from pyworkflow.em.data import EMSet, EMObject
 from pyworkflow.object import Float, String
-from pyworkflow.em.viewer import ObjectView, TableView
+from pyworkflow.em.viewer import ObjectView, TableView, ImageView, ChimeraView
 from tkMessageBox import showerror
 from pyworkflow.gui.plotter import Plotter
 
-from pyworkflow.em.viewer import ImageView, ChimeraView
-import os
+
 
 
 def errorWindow(tkParent, msg):
@@ -261,7 +260,7 @@ class ParseFile():
         with open(self.fileName,"r") as filePointer:
             #LASTITERATION
             self._parseLastIteration(filePointer, lastIteration)
-            #FOMPLOT, LLplot LLfreePLot GeometryPlot
+            #RfactorPlot FOMPLOT, LLplot LLfreePLot GeometryPlot
             self._parseFomPlot(filePointer, lastIteration)
             #FINALRESULTS
             self._parseFinalResults(filePointer)
@@ -331,8 +330,10 @@ and rmsCHIRAL (root mean square of chiral index""")
             'showLogFile': self._visualizeLogFile
         }
 
-    def _visualizeMask(self):
-        pass
+    def _visualizeMask(self, e=None):
+        maskedMapFileName = self.protocol._getExtraPath(self.protocol.maskedMapFileName+'.map')
+        view = ChimeraView(maskedMapFileName)
+        return [view]
 
     def _visualizeFinalResults(self, e=None):
 
@@ -356,9 +357,6 @@ and rmsCHIRAL (root mean square of chiral index""")
                                 viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
         return views
 """
-        #Selection of lines from 'refine.log' file that include Refmac final results.
-        #These lines will be saved in outputLines list
-
         headerList, dataList, msg = self.parseFile.retrievefinalResults()
         if not dataList:
             errorWindow(self.getTkRoot(), msg)
