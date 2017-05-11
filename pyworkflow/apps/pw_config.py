@@ -315,13 +315,14 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
 
     if update:
         if confChanged:
-            print("Changes detected: writing changes and sorting variables into %s. Please check values." % (fpath))
+            print("Changes detected: writing changes into %s. Please check values." % (fpath))
         else:
-            print("Update requested no changes detected: sorting variables only for %s." % (fpath))
+            print("Update requested no changes detected for %s." % (fpath))
 
-        # Order the content of each section alphabetically
-        for section in cf._sections:
-            cf._sections[section] = collections.OrderedDict(
+        if 'PACKAGES' in cf._sections:
+            # Order the content of packages section alphabetically
+            print("Sorting packages section for %s." %(fpath))
+            cf._sections['PACKAGES'] = collections.OrderedDict(
                 sorted(cf._sections[section].items(), key=lambda t: t[0]))
 
         with open(fpath, 'wb') as f:
