@@ -323,7 +323,7 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
             # Order the content of packages section alphabetically
             print("Sorting packages section for %s." %(fpath))
             cf._sections['PACKAGES'] = collections.OrderedDict(
-                sorted(cf._sections[section].items(), key=lambda t: t[0]))
+                sorted(cf._sections['PACKAGES'].items(), key=lambda t: t[0]))
 
         with open(fpath, 'wb') as f:
             cf.write(f)
