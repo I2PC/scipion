@@ -45,6 +45,7 @@ void ProgMonogenicSignalRes::readParams()
 	N_freq = getDoubleParam("--number_frequencies");
 	trimBound = getDoubleParam("--trimmed");
 	exactres = checkParam("--exact");
+	noiseOnlyInHalves = checkParam("--noiseonlyinhalves");
 	fnSpatial = getParam("--filtered_volume");
 	significance = getDoubleParam("--significance");
 	fnMd = getParam("--md_outputdata");
@@ -72,9 +73,10 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("                            : maximum resolution px/A. This parameter determines that number");
 	addParamsLine("  [--minRes <s=30>]         : Minimum resolution (A)");
 	addParamsLine("  [--maxRes <s=1>]          : Maximum resolution (A)");
-	addParamsLine("  [--trimmed <s=0.5>]         : Trimming percentile");
+	addParamsLine("  [--trimmed <s=0.5>]       : Trimming percentile");
 	addParamsLine("  [--exact]                 : The search for resolution will be exact (slower) of approximated (fast).");
 	addParamsLine("                            : Usually there are no difference between both in the resolution map.");
+	addParamsLine("  [--noiseonlyinhalves]     : The noise estimation is only performed inside the mask");
 	addParamsLine("  [--filtered_volume <vol_file=\"\">]       : The input volume is locally filtered at local resolutions.");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--md_outputdata <file=\".\">]  : It is a control file. The provided mask can contain voxels of noise.");
@@ -565,18 +567,41 @@ void ProgMonogenicSignalRes::run()
 		{
 			if (halfMapsGiven)
 			{
-				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				if (noiseOnlyInHalves)
 				{
-					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-					double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
-					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 					{
-						sumS  += amplitudeValue;
-						sumS2 += amplitudeValue*amplitudeValue;
-						sumN  += amplitudeValueN;
-						sumN2 += amplitudeValueN*amplitudeValueN;
-						++NS;
-						++NN;
+						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+						double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
+						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+						{
+							sumS  += amplitudeValue;
+							sumS2 += amplitudeValue*amplitudeValue;
+							++NS;
+							sumN  += amplitudeValueN;
+							sumN2 += amplitudeValueN*amplitudeValueN;
+							++NN;
+						}
+					}
+				}
+				else
+				{
+					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+					{
+						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+						double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
+						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+						{
+							sumS  += amplitudeValue;
+							sumS2 += amplitudeValue*amplitudeValue;
+							++NS;
+						}
+						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=0)
+						{
+							sumN  += amplitudeValueN;
+							sumN2 += amplitudeValueN*amplitudeValueN;
+							++NN;
+						}
 					}
 				}
 			}

@@ -108,6 +108,13 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       help='Sometimes the original volume is masked inside a spherical mask. In this case'
                       'please select yes')
         
+        form.addParam('noiseonlyinhalves', PointerParam, expertLevel=LEVEL_ADVANCED,
+                      default=True,
+                      label="Noise outside the mask?", 
+                      condition = 'halfVolumes',
+                      help='Select yes if the volume present noise outside the mask.'
+                      ' Otherwise, select No.')
+        
         group.addParam('volumeRadius', FloatParam, default=-1,
                       label="Spherical mask radius (px)",
                       condition = 'isPremasked and not halfVolumes', 
@@ -219,6 +226,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         if (self.halfVolumes):
             params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
+            if (self.noiseOnlyInHalves):
+                params += ' --noiseOnlyInHalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --number_frequencies %f' % Nfreqs
