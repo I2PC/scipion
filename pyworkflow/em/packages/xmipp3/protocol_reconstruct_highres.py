@@ -630,11 +630,11 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
         if self.nextMask.hasValue():
             fnMask=join(fnDir,"mask.vol")
             self.prepareMask(self.nextMask.get(), fnMask, TsCurrent, newXdim)
-        TsPrevious=self.readInfoField(fnDirPrevious,"sampling",xmipp.MDL_SAMPLINGRATE)
+        oldXdim=self.readInfoField(fnDirPrevious,"size",xmipp.MDL_XSIZE)
         for i in range(1,3):
             fnPreviousVol=join(fnDirPrevious,"volume%02d.vol"%i)
             fnReferenceVol=join(fnDir,"volumeRef%02d.vol"%i)
-            if TsPrevious!=TsCurrent:
+            if oldXdim!=newXdim:
                 self.runJob("xmipp_image_resize","-i %s -o %s --dim %d"%(fnPreviousVol,fnReferenceVol,newXdim),numberOfMpi=1)
             else:
                 copyFile(fnPreviousVol, fnReferenceVol)

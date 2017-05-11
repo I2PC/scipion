@@ -313,6 +313,10 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
             # Load the new particles mrcs file and reset counter
             if micName != lastMicName:
+                # The following could happens if we are extracting from
+                # a subset of micrographs
+                if not micName in micDict:
+                    continue
                 stackFile, ctfModel = micDict[micName]
                 count = 1
                 lastMicName = micName
