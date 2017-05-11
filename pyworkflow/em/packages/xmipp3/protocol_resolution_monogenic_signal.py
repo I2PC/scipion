@@ -226,7 +226,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         if (self.halfVolumes):
             params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
-            if (self.noiseOnlyInHalves):
+            if (self.noiseonlyinhalves):
                 params += ' --noiseOnlyInHalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
