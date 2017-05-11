@@ -227,7 +227,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         if (self.halfVolumes):
             params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
             if (self.noiseonlyinhalves):
-                params += ' --noiseOnlyInHalves'
+                params += ' --noiseonlyinhalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --number_frequencies %f' % Nfreqs
