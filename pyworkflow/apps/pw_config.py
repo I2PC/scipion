@@ -150,7 +150,7 @@ We understand, of course, that you may not wish to have any
 information collected from you and we respect your privacy.
 """)
 
-        prompt = get_input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        prompt = get_input("Press <enter> if you don't mind to send USAGE data, otherwise press any key followed by <enter>: ")
         if prompt == '':
             Config.set('VARIABLES','SCIPION_NOTIFY','True')
         print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
