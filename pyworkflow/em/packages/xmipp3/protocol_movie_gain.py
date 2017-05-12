@@ -23,6 +23,10 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+
+import numpy as np
+import os
+
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
@@ -30,7 +34,7 @@ from pyworkflow.protocol.params import MultiPointerParam
 from pyworkflow.em.protocol import ProtPreprocessMicrographs, EMProtocol
 import pyworkflow.em as em
 
-
+import xmipp
 
 class XmippProtMovieGain(ProtPreprocessMicrographs):
     """
@@ -99,3 +103,27 @@ class XmippProtMovieGain(ProtPreprocessMicrographs):
                     numberOfMpi=1)
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
     
+    #--------------------------- INFO functions -------------------------------
+    def _summary(self):
+        fnSummary = self._getPath("summary.txt")
+        if not os.path.exists(fnSummary):
+            fhSummary = open(fnSummary,"w")
+            for pointer in self.inputMovies:
+                movie = pointer.get()
+                movieId = movie.getObjId()
+                fnGain = self._getPath("movie_%06d_gain.xmp" % movieId)
+                if os.path.exists(fnGain):
+                    G = xmipp.Image()
+                    G.read(fnGain)
+                    mean, dev, min, max = G.computeStats()
+                    Gnp=G.getData()
+                    p = np.percentile(Gnp,[2.5, 25, 50, 75, 97.5])
+                    fhSummary.write("movie_%06d: mean=%f std=%f [min=%f,max=%f]\n"%(movieId, mean, dev, min, max))
+                    fhSummary.write("            2.5%%=%f 25%%=%f 50%%=%f 75%%=%f 97.5%%=%f\n"%(p[0],p[1],p[2],p[3],p[4]))
+            fhSummary.close()
+        fhSummary = open(fnSummary,"r")
+        summary = []
+        for line in fhSummary.readlines():
+            summary.append(line.rstrip())
+        fhSummary.close()
+        return summary

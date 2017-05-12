@@ -28,6 +28,7 @@ This sub-package contains data and protocol classes
 wrapping Kai Zhang's GCTF program
 """
 from bibtex import _bibtex # Load bibtex dict with references
+from convert import getEnviron
 
 _logo = "gctf_logo.png"
 
@@ -35,3 +36,4 @@ from protocol_gctf import ProtGctf
 from viewer import ProtGctfViewer
 # Wizards
 from wizard import GctfCTFWizard
+_environ = getEnviron()

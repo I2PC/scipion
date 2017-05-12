@@ -101,7 +101,7 @@ class ProtMagDistCorr(ProtProcessMovies):
                       expertLevel=params.LEVEL_ADVANCED,
                       condition='doResample')
 
-        form.addParallelSection(threads=2, mpi=0)
+        form.addParallelSection(threads=2, mpi=1)
 
     # --------------------------- STEPS functions ------------------------------
 

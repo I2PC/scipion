@@ -201,6 +201,10 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
         actions = [addAction(a)
                    for a, cond in self.getActionsFromSelection() if cond]
 
+        if hasattr(obj, 'getActions'):
+            for text, action in obj.getActions():
+                actions.append((text, action, None))
+
         return actions
 
 
