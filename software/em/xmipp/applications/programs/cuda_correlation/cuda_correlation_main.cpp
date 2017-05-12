@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "../../../libraries/reconstruction_adapt_cuda/gpu_correlation.h"
+#include "../../../libraries/reconstruction_adapt_cuda/xmipp_gpu_correlation.h"
 
 
 RUN_XMIPP_PROGRAM(ProgGpuCorrelation)
