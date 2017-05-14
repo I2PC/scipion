@@ -99,7 +99,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         
         group = form.addGroup('Dose Compensation')
 
-        group.addParam('doApplyDoseFilter', params.BooleanParam, default=True,
+        group.addParam('doApplyDoseFilter', params.BooleanParam, default=False,
                        label='Apply Dose filter',
                        help='Apply a dose-dependent filter to frames before '
                             'summing them. Pre-exposure and dose per frame '
@@ -115,7 +115,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                        help="if *True*, you apply dose filter before perform "
                             "the alignment; else will apply after alignment.")
 
-        form.addParallelSection(threads=8, mpi=0)
+        form.addParallelSection(threads=8, mpi=1)
 
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):
@@ -190,14 +190,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 args += ' post'
             
             if self.doSaveUnweightedMic:
-                outUnwtMicFn = self._getExtraPath(self._getOutputMicName(movie))
-                
-                # To save the unweighted aligned micrograph, we must save the
-                # unweighted aligned movie. For now, we save it in tmp movie
-                # folder.
-                uncorrFnBase = self._getMovieRoot(movie) + '_unWt_movie.mrcs'
-                outUnwtMovieFn = self._getFnInMovieFolder(movie, uncorrFnBase)
-                
+                outUnwtMicFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_mic.mrc')
+                outUnwtMovieFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_movie.mrcs')            
                 args += ' --oUnc %s %s' % (outUnwtMicFn, outUnwtMovieFn)
             
         try:

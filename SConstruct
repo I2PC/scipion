@@ -570,7 +570,7 @@ env['CC'] = os.environ.get('CC')
 env['CXX'] = os.environ.get('CXX')
 env['LINKERFORPROGRAMS'] = os.environ.get('LINKERFORPROGRAMS')
 env['CCFLAGS'] = os.environ.get('CCFLAGS', '').split()
-cxxFlags = os.environ.get('CXXFLAGS', '')
+cxxFlags = os.environ.get('CXXFLAGS', '') 
 if os.environ.get('DEBUG', '0') == 'True': #FIXME, use 1, true, yes...
    cxxFlags += ' -g'
 else:

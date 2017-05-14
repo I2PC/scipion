@@ -62,8 +62,6 @@ from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 
 
 
-
-
 class XmippViewer(Viewer):
     """ Wrapper to visualize different type of objects
     with the Xmipp program xmipp_showj
@@ -161,8 +159,7 @@ class XmippViewer(Viewer):
                                                       MODE: MODE_MD, RENDER: "no"}))
 
         elif issubclass(cls, SetOfMicrographs):            
-            fn = obj.getFileName()
-            self._views.append(ObjectView(self._project, obj.strId(), fn, **kwargs))
+            self._views.append(MicrographsView(self._project, obj, **kwargs))
             
         elif issubclass(cls, MicrographsTiltPair):
             labels = 'id enabled _untilted._filename _tilted._filename'

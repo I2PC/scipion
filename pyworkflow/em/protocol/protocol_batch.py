@@ -27,18 +27,19 @@
 import os
 from itertools import izip
 
-from pyworkflow.protocol.params import PointerParam, FileParam, StringParam
+from pyworkflow.protocol.params import PointerParam, \
+    FileParam, StringParam, IntParam
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import (SetOfImages, SetOfCTF, SetOfClasses,
                                 SetOfClasses3D, SetOfVolumes, EMObject, EMSet,
                                 SetOfNormalModes, SetOfParticles, FSC,
-                                Class2D, Class3D, SetOfMicrographs)
+                                Class2D, Class3D, SetOfMicrographs, ALIGN_NONE)
 from pyworkflow.em.data_tiltpairs import (TiltPair, MicrographsTiltPair,
                                           ParticlesTiltPair)
 from pyworkflow.em.data import Mask
 from pyworkflow.utils import moveFile
 
-
+from cPickle import dumps, loads
 
 class BatchProtocol(EMProtocol):
     """ Base class to all protocols that are launched
@@ -248,6 +249,10 @@ class ProtUserSubSet(BatchProtocol):
         count = 0
         output = createFunc()
         output.copyInfo(inputImages)
+        # For now this is to avoid having a wrong alignment.
+        # THis is because is getting the alignment info from the input images and this does not have to match.
+        # This created a error when scaling averages #903
+        output.setAlignment(ALIGN_NONE)
         for cls in modifiedSet:
             if cls.isEnabled():
                 img = cls.getRepresentative()
@@ -487,11 +492,46 @@ class ProtCreateMask(BatchProtocol):
 class ProtCreateFSC(BatchProtocol):
 
     def _defineParams(self, form):
-        pass
-        form.addHidden('inputObj', PointerParam, pointerClass='EMObject')
+        form.addHidden('inputObj', PointerParam,
+                       pointerClass='EMObject')
+        form.addHidden('fscValues', StringParam,
+                       help='String represention of the list with FSC values')
+        form.addHidden('fscLabels', StringParam,
+                       help='String with fsc labels')
 
     def setInputObj(self, obj):
         self.inputObj.set(obj)
+
+    def setInputFscList(self, fscList):
+        fscStr = ''
+        fscLabel = ""
+        numberFsc = 0
+        for fsc in fscList:
+            if numberFsc == 0:
+                numberFsc += 1
+            else:
+                fscStr += "|"
+                fscLabel += "|"
+            fscStr += dumps(fsc.getData())
+            fscLabel += dumps(fsc.getObjLabel())
+        self.fscValues.set(fscStr)
+        self.fscLabels.set(fscLabel)
+
+    def _insertAllSteps(self):
+        self._insertFunctionStep('createOutputStep')
+
+    def createOutputStep(self):
+        from pyworkflow import em
+        fscSet = self._createSetOfFSCs()
+        fscSet.setObjLabel("setOfFSCs")
+        dataStringList = self.fscValues.get().split("|")
+        labelStringList = self.fscLabels.get().split("|")
+        for fsc, label in zip(dataStringList, labelStringList):
+            _fsc = em.data.FSC(objLabel=loads(label))
+            freq, value = loads(fsc)
+            _fsc.setData(freq,value)
+            fscSet.append(_fsc)
+        self._defineOutputs(outputFSCs=fscSet)
 
     def _summary(self):
         summary = []
@@ -502,3 +542,4 @@ class ProtCreateFSC(BatchProtocol):
 
     def _methods(self):
         return self._summary()
+
