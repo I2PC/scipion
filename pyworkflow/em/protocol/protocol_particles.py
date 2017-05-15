@@ -45,7 +45,7 @@ class ProtProcessParticles(ProtParticles):
         form.addSection(label=Message.LABEL_INPUT)
         
         form.addParam('inputParticles', PointerParam,
-                      pointerClass = 'SetOfParticles',
+                      pointerClass='SetOfParticles',
                       label=Message.LABEL_INPUT_PART, important=True)
         # Hook that should be implemented in subclasses
         self._defineProcessParams(form)
@@ -67,13 +67,13 @@ class ProtProcessParticles(ProtParticles):
 
 
 class ProtFilterParticles(ProtProcessParticles):
-    """ Base class for filters on particles of type ProtPreprocessParticles
+    """ Base class for filters on particles of type ProtPreprocessParticles.
     """
     pass
 
 
 class ProtOperateParticles(ProtProcessParticles):
-    """ Base class for operations on particles of type ProtPreprocessParticles
+    """ Base class for operations on particles of type ProtPreprocessParticles.
     """
     def __init__(self, **args):
         ProtProcessParticles.__init__(self, **args)
