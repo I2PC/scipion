@@ -150,7 +150,7 @@ We understand, of course, that you may not wish to have any
 information collected from you and we respect your privacy.
 """)
 
-        prompt = get_input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        prompt = get_input("Press <enter> if you don't mind to send USAGE data, otherwise press any key followed by <enter>: ")
         if prompt == '':
             Config.set('VARIABLES','SCIPION_NOTIFY','True')
         print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
@@ -323,7 +323,7 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
             # Order the content of packages section alphabetically
             print("Sorting packages section for %s." %(fpath))
             cf._sections['PACKAGES'] = collections.OrderedDict(
-                sorted(cf._sections[section].items(), key=lambda t: t[0]))
+                sorted(cf._sections['PACKAGES'].items(), key=lambda t: t[0]))
 
         with open(fpath, 'wb') as f:
             cf.write(f)
