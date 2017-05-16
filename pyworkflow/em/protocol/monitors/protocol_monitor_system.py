@@ -410,7 +410,7 @@ class MonitorSystem(Monitor):
         swap = psutil.swap_memory()
         if self.doGpu:
             free, total = self.cuda.cudaMemGetInfo()
-            print("free, total", free, total)
+            sys.stderr.write("free, total %d %d "% (free, total))
 
         if self.cpuAlert < 100 and cpu > self.cpuAlert:
             self.warning("CPU allocation =%f." % cpu.percent)
