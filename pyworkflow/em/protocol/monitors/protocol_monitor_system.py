@@ -203,7 +203,7 @@ class Cuda(object):
         except OSError, e:
             self._libcudart_error = e
             self._libcudart = None
-
+        sys.stderr.write("self._libcudart" + str(self._libcudart))
     def getDriverVersion(self):
         if self._libcudart is None: return  None
         version = ctypes.c_int()
@@ -409,6 +409,7 @@ class MonitorSystem(Monitor):
         mem = psutil.virtual_memory()
         swap = psutil.swap_memory()
         if self.doGpu:
+            self.cuda = Cuda()
             free, total = self.cuda.cudaMemGetInfo()
             sys.stderr.write("free, total %d %d "% (free, total))
 
