@@ -259,7 +259,7 @@ class ProtMonitorSystem(ProtMonitor):
                                    cpuAlert=self.cpuAlert.get(),
                                    memAlert=self.memAlert.get(),
                                    swapAlert=self.swapAlert.get(),
-                                   doGpu=self.doGPU,
+                                   doGpu=self.doGpu,
                                    gpusToUse = self.gpusToUse.get())
         return sysMonitor
 
