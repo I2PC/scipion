@@ -305,7 +305,8 @@ class MonitorSystem(Monitor):
             sys.stderr.write("Device count: %s\n" % cuda.cudaGetDeviceCount())
             for ii in self.doGpu:
                 props = cuda.getDeviceProperties(ii)
-                sys.stdout.write("\nDevice %d:\n" % ii)
+                sys.stderr.write("\nDevice %d:\n" % ii)
+                sys.stderr.write(props)
                 for f_name, f_type in props._fields_:
                     attr = props.__getattribute__(f_name)
                     sys.stderr.write( "  %s: %s\n" % (f_name, attr))
