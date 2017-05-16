@@ -36,8 +36,162 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
-import sys
 from pyworkflow.em.plotter import EmPlotter
+
+
+#cuda related stuff
+import platform
+import ctypes
+
+class DeviceProp(ctypes.Structure):
+    _fields_ = [
+         ("name", 256*ctypes.c_char), #  < ASCII string identifying device
+         ("totalGlobalMem", ctypes.c_size_t), #  < Global memory available on device in bytes
+         ("sharedMemPerBlock", ctypes.c_size_t), #  < Shared memory available per block in bytes
+         ("regsPerBlock", ctypes.c_int), #  < 32-bit registers available per block
+         ("warpSize", ctypes.c_int), #  < Warp size in threads
+         ("memPitch", ctypes.c_size_t), #  < Maximum pitch in bytes allowed by memory copies
+         ("maxThreadsPerBlock", ctypes.c_int), #  < Maximum number of threads per block
+         ("maxThreadsDim", 3*ctypes.c_int), #  < Maximum size of each dimension of a block
+         ("maxGridSize", 3*ctypes.c_int), #  < Maximum size of each dimension of a grid
+         ("clockRate", ctypes.c_int), #  < Clock frequency in kilohertz
+         ("totalConstMem", ctypes.c_size_t), #  < Constant memory available on device in bytes
+         ("major", ctypes.c_int), #  < Major compute capability
+         ("minor", ctypes.c_int), #  < Minor compute capability
+         ("textureAlignment", ctypes.c_size_t), #  < Alignment requirement for textures
+         ("deviceOverlap", ctypes.c_int), #  < Device can concurrently copy memory and execute a kernel
+         ("multiProcessorCount", ctypes.c_int), #  < Number of multiprocessors on device
+         ("kernelExecTimeoutEnabled", ctypes.c_int), #  < Specified whether there is a run time limit on kernels
+         ("integrated", ctypes.c_int), #  < Device is integrated as opposed to discrete
+         ("canMapHostMemory", ctypes.c_int), #  < Device can map host memory with cudaHostAlloc/cudaHostGetDevicePointer
+         ("computeMode", ctypes.c_int), #  < Compute mode (See ::cudaComputeMode)
+         ("__cudaReserved", 36*ctypes.c_int),
+]
+
+    def __str__(self):
+        return """NVidia GPU Specifications:
+    Name: %s
+    Total global mem: %i
+    Shared mem per block: %i
+    Registers per block: %i
+    Warp size: %i
+    Mem pitch: %i
+    Max threads per block: %i
+    Max treads dim: (%i, %i, %i)
+    Max grid size: (%i, %i, %i)
+    Total const mem: %i
+    Compute capability: %i.%i
+    Clock Rate (GHz): %f
+    Texture alignment: %i
+""" % (self.name, self.totalGlobalMem, self.sharedMemPerBlock,
+       self.regsPerBlock, self.warpSize, self.memPitch,
+       self.maxThreadsPerBlock,
+       self.maxThreadsDim[0], self.maxThreadsDim[1], self.maxThreadsDim[2],
+       self.maxGridSize[0], self.maxGridSize[1], self.maxGridSize[2],
+       self.totalConstMem, self.major, self.minor,
+       float(self.clockRate)/1.0e6, self.textureAlignment)
+
+class Cuda(object):
+    #instead of using pyCuda I am going to access C library through ctypes
+    #may be this should be change in the future
+    cudaSuccess = 0
+    errorDict = {
+        1: 'MissingConfigurationError',
+        2: 'MemoryAllocationError',
+        3: 'InitializationError',
+        4: 'LaunchFailureError',
+        5: 'PriorLaunchFailureError',
+        6: 'LaunchTimeoutError',
+        7: 'LaunchOutOfResourcesError',
+        8: 'InvalidDeviceFunctionError',
+        9: 'InvalidConfigurationError',
+        10: 'InvalidDeviceError',
+        11: 'InvalidValueError',
+        12: 'InvalidPitchValueError',
+        13: 'InvalidSymbolError',
+        14: 'MapBufferObjectFailedError',
+        15: 'UnmapBufferObjectFailedError',
+        16: 'InvalidHostPointerError',
+        17: 'InvalidDevicePointerError',
+        18: 'InvalidTextureError',
+        19: 'InvalidTextureBindingError',
+        20: 'InvalidChannelDescriptorError',
+        21: 'InvalidMemcpyDirectionError',
+        22: 'AddressOfConstantError',
+        23: 'TextureFetchFailedError',
+        24: 'TextureNotBoundError',
+        25: 'SynchronizationError',
+        26: 'InvalidFilterSettingError',
+        27: 'InvalidNormSettingError',
+        28: 'MixedDeviceExecutionError',
+        29: 'CudartUnloadingError',
+        30: 'UnknownError',
+        31: 'NotYetImplementedError',
+        32: 'MemoryValueTooLargeError',
+        33: 'InvalidResourceHandleError',
+        34: 'NotReadyError',
+        0x7f: 'StartupFailureError',
+        10000: 'ApiFailureBaseError'}
+
+    #if there is a cuda library _libcudart will NOT be None
+    def getCudaLib(self):
+        try:
+            if platform.system() == "Microsoft":
+                self._libcudart = ctypes.windll.LoadLibrary('cudart.dll')
+            elif platform.system()=="Darwin":
+                self._libcudart = ctypes.cdll.LoadLibrary('libcudart.dylib')
+            else:
+                self._libcudart = ctypes.cdll.LoadLibrary('libcudart.so')
+            self._libcudart_error = None
+        except OSError, e:
+            self._libcudart_error = e
+            self._libcudart = None
+        #return self._libcudart, self._libcudart_error
+
+    def getDriverVersion(self):
+        if self._libcudart is None: return  None
+        version = ctypes.c_int()
+        self._libcudart.cudaDriverGetVersion(ctypes.byref(version))
+        v = "%d.%d" % (version.value//1000,
+                       version.value%100)
+        return v
+
+    def getRuntimeVersion(self):
+        if self._libcudart is None: return  None
+        version = ctypes.c_int()
+        self._libcudart.cudaRuntimeGetVersion(ctypes.byref(version))
+        v = "%d.%d" % (version.value//1000,
+                       version.value%100)
+        return v
+
+    def _checkCudaStatus(self, status):
+        if status != self.cudaSuccess:
+            eClassString = self.errorDict[status]
+            # Get the class by name from the top level of this module
+            eClass = globals()[eClassString]
+            raise eClass()
+
+    def cudaGetDeviceCount(self):
+        if self._libcudart is None: return  0
+        deviceCount = ctypes.c_int()
+        status = self._libcudart.cudaGetDeviceCount(ctypes.byref(deviceCount))
+        self._checkCudaStatus(status)
+        return deviceCount.value
+
+    def _checkDeviceNumber(self, device):
+        assert isinstance(device, int), "device number must be an int"
+        assert device >= 0, "device number must be greater than 0"
+        assert device < 2**8-1, "device number must be < 255"
+
+    def getDeviceProperties(self, device):
+        if self._libcudart is None: return  None
+        self._checkDeviceNumber(device)
+        props = DeviceProp()
+        status = self._libcudart.cudaGetDeviceProperties(ctypes.byref(props), device)
+        self._checkCudaStatus(status)
+        return props
+
+#end cuda stuff
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
 
@@ -74,6 +228,15 @@ class ProtMonitorSystem(ProtMonitor):
               help="Log during this interval")
 
         ProtMonitor._sendMailParams(self, form)
+        group = form.addGroup('GPU')
+        group.addParam('doGPU', params.BooleanParam, default=False,
+                       label="Check GPU",
+                       help="Set to true if you want to monitor the GPU")
+        group.addParam('gpusToUse', params.StringParam, default='0',
+                          label='Which GPUs to use:', condition='doGpu',
+                          help='Providing a list of which GPUs '
+                               '(0,1,2,3, etc). Default is monitor GPU 0 only')
+
 
     #--------------------------- STEPS functions ------------------------------
 
@@ -95,7 +258,9 @@ class ProtMonitorSystem(ProtMonitor):
                                    stdout=True,
                                    cpuAlert=self.cpuAlert.get(),
                                    memAlert=self.memAlert.get(),
-                                   swapAlert=self.swapAlert.get())
+                                   swapAlert=self.swapAlert.get(),
+                                   doGpu=self.doGPU,
+                                   gpusToUse = self.gpusToUse.get())
         return sysMonitor
 
     #--------------------------- INFO functions --------------------------------
@@ -123,6 +288,25 @@ class MonitorSystem(Monitor):
         self.swapAlert = kwargs['swapAlert']
         self._dataBase = kwargs.get('dbName', SYSTEM_LOG_SQLITE)
         self._tableName = kwargs.get('tableName', 'log')
+        self.doGpu = kwargs['doGpu']
+        if self.doGpu:
+            #get Gpus to monitor
+            self.gpusToUse = [int(n) for n in (kwargs['gpusToUse']).split()]
+            #init GPU
+            cuda = Cuda()
+            #print some general info
+            sys.stdout.write("Driver version: %s\n" % cuda.getDriverVersion())
+            sys.stdout.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
+            nn = cuda.cudaGetDeviceCount()
+            sys.stdout.write("Device count: %s\n" % nn)
+            for ii in range(nn):
+                props = cuda.getDeviceProperties(ii)
+                sys.stdout.write("\nDevice %d:\n" % ii)
+                for f_name, f_type in props._fields_:
+                    attr = props.__getattribute__(f_name)
+                    sys.stdout.write( "  %s: %s\n" % (f_name, attr))
+        else
+            self.gpusToUse = None
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
                                  isolation_level=None)
