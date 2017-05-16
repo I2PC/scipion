@@ -70,19 +70,19 @@ class DeviceProp(ctypes.Structure):
 
     def __str__(self):
         return """NVidia GPU Specifications:
-    Name: %s
-    Total global mem: %i
-    Shared mem per block: %i
-    Registers per block: %i
-    Warp size: %i
-    Mem pitch: %i
-    Max threads per block: %i
-    Max treads dim: (%i, %i, %i)
-    Max grid size: (%i, %i, %i)
-    Total const mem: %i
-    Compute capability: %i.%i
-    Clock Rate (GHz): %f
-    Texture alignment: %i
+      Name: %s
+      Total global mem: %i
+      Shared mem per block: %i
+      Registers per block: %i
+      Warp size: %i
+      Mem pitch: %i
+      Max threads per block: %i
+      Max treads dim: (%i, %i, %i)
+      Max grid size: (%i, %i, %i)
+      Total const mem: %i
+      Compute capability: %i.%i
+      Clock Rate (GHz): %f
+      Texture alignment: %i
 """ % (self.name, self.totalGlobalMem, self.sharedMemPerBlock,
        self.regsPerBlock, self.warpSize, self.memPitch,
        self.maxThreadsPerBlock,
@@ -293,25 +293,22 @@ class MonitorSystem(Monitor):
         self._tableName = kwargs.get('tableName', 'log')
         self.doGpu = kwargs['doGpu']
         if self.doGpu:
-            f = open("/tmp/kk","w")
             #get Gpus to monitor
             self.gpusToUse = [int(n) for n in (kwargs['gpusToUse']).split()]
             #init GPU
             cuda = Cuda()
             #print some general info
-            f.write("Driver version: %s\n" % cuda.getDriverVersion())
-            f.close()
-            
-            sys.stdout.write("Driver version: %s\n" % cuda.getDriverVersion())
-            sys.stdout.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
-            nn = cuda.cudaGetDeviceCount()
-            sys.stdout.write("Device count: %s\n" % nn)
-            for ii in range(nn):
+            #yhis is helpfull for debuging but I do not think should be here
+
+            sys.stderr.write("Driver version: %s\n" % cuda.getDriverVersion())
+            sys.stderr.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
+            sys.stderr.write("Device count: %s\n" % cuda.cudaGetDeviceCount())
+            for ii in self.doGpu:
                 props = cuda.getDeviceProperties(ii)
                 sys.stdout.write("\nDevice %d:\n" % ii)
                 for f_name, f_type in props._fields_:
                     attr = props.__getattribute__(f_name)
-                    sys.stdout.write( "  %s: %s\n" % (f_name, attr))
+                    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
         else:
             self.gpusToUse = None
 
