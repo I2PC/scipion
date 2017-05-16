@@ -71,7 +71,7 @@ class DeviceProp(ctypes.Structure):
     def __str__(self):
         return """NVidia GPU Specifications:
     Name: %s
-""" %self.name
+""" %self._fields_['name']
     """
     Total global mem: %i
     Shared mem per block: %i
