@@ -34,6 +34,7 @@ from protocol.monitors import ProtMonitorSummary, SummaryProvider
 from pyworkflow.gui.tree import BoundTree
 from pyworkflow.gui.widgets import Button, HotButton
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
+from pyworkflow.em.protocol.monitors import CtfMonitorPlotter, MovieGainMonitorPlotter, SystemMonitorPlotter
 
 
 class ViewerMonitorSummary(Viewer):
@@ -120,23 +121,33 @@ class SummaryWindow(pwgui.Window):
 
         ctfBtn = Button(subframe, "CTF Monitor", command=self._monitorCTF)
         ctfBtn.grid(row=0, column=0, sticky='nw', padx=(0, 5))
+        if self.protocol.createCtfMonitor() == None:
+            ctfBtn['state'] = 'disabled'
+
+        movieGainBtn = Button(subframe, "Movie Gain Monitor", command=self._monitorMovieGain)
+        movieGainBtn.grid(row=0, column=1, sticky='nw', padx=(0, 5))
+        if self.protocol.createMovieGainMonitor() == None:
+            movieGainBtn['state'] = 'disabled'
 
         sysBtn = Button(subframe, "System Monitor", command=self._monitorSystem)
-        sysBtn.grid(row=0, column=1, sticky='nw', padx=(0, 5))
+        sysBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
+        if self.protocol.createSystemMonitor() == None:
+            sysBtn['state'] = 'disabled'
 
         htmlBtn = HotButton(subframe, 'Generate HTML Report',
                            command=self._generateHTML)
-        htmlBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
+        htmlBtn.grid(row=0, column=3, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
         closeBtn.grid(row=0, column=1, sticky='ne')
 
     def _monitorCTF(self, e=None):
-        from pyworkflow.em.protocol.monitors import CtfMonitorPlotter
         CtfMonitorPlotter(self.protocol.createCtfMonitor()).show()
 
+    def _monitorMovieGain(self, e=None):
+        MovieGainMonitorPlotter(self.protocol.createMovieGainMonitor()).show()
+
     def _monitorSystem(self, e=None):
-        from pyworkflow.em.protocol.monitors import SystemMonitorPlotter
         SystemMonitorPlotter(self.protocol.createSystemMonitor()).show()
 
     def _updateLabel(self):

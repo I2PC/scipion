@@ -109,10 +109,13 @@ class XmippProtMovieGain(ProtProcessMovies):
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
 
         fnSummary = self._getPath("summary.txt")
+        fnMonitorSummary = self._getPath("summaryForMonitor.txt")
         if not os.path.exists(fnSummary):
             fhSummary = open(fnSummary, "w")
+            fnMonitorSummary = open(fnMonitorSummary, "w")
         else:
             fhSummary = open(fnSummary, "a")
+            fnMonitorSummary = open(fnMonitorSummary, "a")
         fnGain = self._getPath("movie_%06d_gain.xmp" % movieId)
         if os.path.exists(fnGain):
             G = xmipp.Image()
@@ -124,6 +127,8 @@ class XmippProtMovieGain(ProtProcessMovies):
             fhSummary.write(
                 "            2.5%%=%f 25%%=%f 50%%=%f 75%%=%f 97.5%%=%f\n" % (p[0], p[1], p[2], p[3], p[4]))
             fhSummary.close()
+            fnMonitorSummary.write("movie_%06d: %f %f %f %f\n" % (movieId, dev, p[0], p[4], max))
+            fnMonitorSummary.close()
 
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
