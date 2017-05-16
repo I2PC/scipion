@@ -147,12 +147,12 @@ class Cuda(object):
             else:
                 sys.stderr.write("getCudaLib_1")
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.so')
-                sys.stderr.write("getCudaLib_2: " + self._libcudart)
+                sys.stderr.write("getCudaLib_2: " + str(self._libcudart))
             self._libcudart_error = None
         except OSError, e:
             self._libcudart_error = e
             self._libcudart = None
-        sys.stderr.write("getCudaLib_3: " + self._libcudart)
+        sys.stderr.write("getCudaLib_3: " + str(self._libcudart))
         #return self._libcudart, self._libcudart_error
 
     def getDriverVersion(self):
