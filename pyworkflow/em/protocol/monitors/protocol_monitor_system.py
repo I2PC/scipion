@@ -305,7 +305,7 @@ class MonitorSystem(Monitor):
                 for f_name, f_type in props._fields_:
                     attr = props.__getattribute__(f_name)
                     sys.stdout.write( "  %s: %s\n" % (f_name, attr))
-        else
+        else:
             self.gpusToUse = None
 
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
