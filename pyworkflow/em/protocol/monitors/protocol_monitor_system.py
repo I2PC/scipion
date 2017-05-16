@@ -293,11 +293,15 @@ class MonitorSystem(Monitor):
         self._tableName = kwargs.get('tableName', 'log')
         self.doGpu = kwargs['doGpu']
         if self.doGpu:
+            f = open("/tmp/kk","w")
             #get Gpus to monitor
             self.gpusToUse = [int(n) for n in (kwargs['gpusToUse']).split()]
             #init GPU
             cuda = Cuda()
             #print some general info
+            f.write("Driver version: %s\n" % cuda.getDriverVersion())
+            f.close()
+            
             sys.stdout.write("Driver version: %s\n" % cuda.getDriverVersion())
             sys.stdout.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
             nn = cuda.cudaGetDeviceCount()
