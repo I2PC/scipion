@@ -112,7 +112,7 @@ class DeviceProp(ctypes.Structure):
             ('singleToDoublePrecisionPerfRatio', ctypes.c_int),
             ('pageableMemoryAccess', ctypes.c_int),
             ('concurrentManagedAccess', ctypes.c_int),
-            ("__someextraspace just in case", 36*ctypes.c_int),
+            ("__someextraspaceJustInCase", 36*ctypes.c_int),
             ]
 
 
@@ -365,6 +365,7 @@ class MonitorSystem(Monitor):
                 props = cuda.getDeviceProperties(ii)
                 sys.stderr.write("\nDevice %d:\n" % ii)
                 sys.stderr.write(props.__str__())
+                sys.stderr.write(props)
                 #sys.stderr.write(props)
                 #for f_name, f_type in props._fields_:
                 #    attr = props.__getattribute__(f_name)
