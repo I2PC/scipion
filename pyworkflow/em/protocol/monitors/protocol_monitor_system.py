@@ -71,7 +71,7 @@ class DeviceProp(ctypes.Structure):
     def __str__(self):
         return """NVidia GPU Specifications:
     Name: %s
-""" %self.__getattribute__('name')
+""" %self.name
     """
     Total global mem: %i
     Shared mem per block: %i
@@ -310,9 +310,9 @@ class MonitorSystem(Monitor):
                 props = cuda.getDeviceProperties(ii)
                 sys.stderr.write("\nDevice %d:\n" % ii)
                 sys.stderr.write(props.__str__())
-                for f_name, f_type in props._fields_:
-                    attr = props.__getattribute__(f_name)
-                    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
+                #for f_name, f_type in props._fields_:
+                #    attr = props.__getattribute__(f_name)
+                #    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
         else:
             self.gpusToUse = None
 
