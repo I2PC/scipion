@@ -691,7 +691,9 @@ class ProtocolsView(tk.Frame):
                          font=self.windows.fontBold)
         label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
 
-        hView = {'sci-open': self._viewObject}
+        hView = {'sci-open': self._viewObject,
+                 'sci-bib': self._bibExportClicked}
+
         self.summaryText = pwgui.text.TaggedText(dframe, width=40, height=5,
                                                  bg='white', bd=0,
                                                  font=self.windows.font,
@@ -706,14 +708,14 @@ class ProtocolsView(tk.Frame):
                                                 bg='white', handlers=hView)
         self.methodText.grid(row=0, column=0, sticky='news')
         # Reference export button
-        btnExportBib = pwgui.Button(mframe, text=Message.LABEL_BIB_BTN,
-                                    fg='white', bg=Color.RED_COLOR,
-                                    image=self.getImage(Icon.ACTION_BROWSE),
-                                    compound=tk.LEFT,
-                                    activeforeground='white',
-                                    activebackground='#A60C0C',
-                                    command=self._bibExportClicked)
-        btnExportBib.grid(row=2, column=0, sticky='w', padx=0)
+        # btnExportBib = pwgui.Button(mframe, text=Message.LABEL_BIB_BTN,
+        #                             fg='white', bg=Color.RED_COLOR,
+        #                             image=self.getImage(Icon.ACTION_BROWSE),
+        #                             compound=tk.LEFT,
+        #                             activeforeground='white',
+        #                             activebackground='#A60C0C',
+        #                             command=self._bibExportClicked)
+        # btnExportBib.grid(row=2, column=0, sticky='w', padx=0)
 
         # Logs
         ologframe = tk.Frame(tab)
@@ -1597,7 +1599,8 @@ class ProtocolsView(tk.Frame):
                 self.methodText.addLine('')
 
             if cites:
-                self.methodText.addLine('*REFERENCES:*')
+                self.methodText.addLine('*REFERENCES:*   '
+                                        ' [[sci-bib:][<<< Open as bibtex >>>]]')
                 for cite in cites.values():
                     self.methodText.addLine(cite)
 
@@ -1848,6 +1851,9 @@ class ProtocolsView(tk.Frame):
                     # flush so we can see content when opening
                     bibFile.flush()
                     pwgui.text.openTextFileEditor(bibFile.name)
+                    #pwgui.text.showTextFileViewer("References bibtex",
+                    #                              [bibFile.name],
+                    #                              parent=self.windows)
 
         except Exception as ex:
             self.windows.showError(str(ex))
