@@ -372,8 +372,8 @@ class MonitorSystem(Monitor):
             #print some general info
             #yhis is helpfull for debuging but I do not think should be here
 
-            sys.stderr.write("Driver version: %s\n" % cuda.getDriverVersion())
-            sys.stderr.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
+            sys.stderr.write("Driver version: %s\n" % self.cuda.getDriverVersion())
+            sys.stderr.write("Runtime version: %s\n" % self.cuda.getRuntimeVersion())
             nn = self.cuda.cudaGetDeviceCount()
             sys.stderr.write("Device count: %s\n" % nn)
             for ii in self.gpusToUse:
