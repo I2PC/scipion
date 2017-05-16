@@ -84,7 +84,7 @@ class DeviceProp(ctypes.Structure):
     Compute capability: %i.%i
     Clock Rate (GHz): %f
     Texture alignment: %i
-""" % (self.name, self.totalGlobalMem/(1024*1024*1024), self.sharedMemPerBlock,
+""" % (self.name, self.totalGlobalMem/(1024.*1024.*1024.), self.sharedMemPerBlock,
        self.regsPerBlock, self.warpSize, self.memPitch,
        self.maxThreadsPerBlock,
        self.maxThreadsDim[0], self.maxThreadsDim[1], self.maxThreadsDim[2],
