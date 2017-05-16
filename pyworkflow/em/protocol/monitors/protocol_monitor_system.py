@@ -68,11 +68,10 @@ class DeviceProp(ctypes.Structure):
          ("__cudaReserved", 36*ctypes.c_int),
 ]
 
+
     def __str__(self):
         return """NVidia GPU Specifications:
     Name: %s
-""" %self.name
-    """
     Total global mem: %i
     Shared mem per block: %i
     Registers per block: %i
@@ -85,14 +84,14 @@ class DeviceProp(ctypes.Structure):
     Compute capability: %i.%i
     Clock Rate (GHz): %f
     Texture alignment: %i
- % (self.name, self.totalGlobalMem, self.sharedMemPerBlock,
+""" % (self.name, self.totalGlobalMem, self.sharedMemPerBlock,
        self.regsPerBlock, self.warpSize, self.memPitch,
        self.maxThreadsPerBlock,
        self.maxThreadsDim[0], self.maxThreadsDim[1], self.maxThreadsDim[2],
        self.maxGridSize[0], self.maxGridSize[1], self.maxGridSize[2],
        self.totalConstMem, self.major, self.minor,
        float(self.clockRate)/1.0e6, self.textureAlignment)
-"""
+    
 class Cuda(object):
     #instead of using pyCuda I am going to access C library through ctypes
     #may be this should be change in the future
