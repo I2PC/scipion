@@ -229,7 +229,7 @@ class ProtMonitorSystem(ProtMonitor):
 
         ProtMonitor._sendMailParams(self, form)
         group = form.addGroup('GPU')
-        group.addParam('doGPU', params.BooleanParam, default=False,
+        group.addParam('doGpu', params.BooleanParam, default=False,
                        label="Check GPU",
                        help="Set to true if you want to monitor the GPU")
         group.addParam('gpusToUse', params.StringParam, default='0',
@@ -259,7 +259,7 @@ class ProtMonitorSystem(ProtMonitor):
                                    cpuAlert=self.cpuAlert.get(),
                                    memAlert=self.memAlert.get(),
                                    swapAlert=self.swapAlert.get(),
-                                   doGpu=self.doGpu,
+                                   doGpu=self.doGpu.get(),
                                    gpusToUse = self.gpusToUse.get())
         return sysMonitor
 
