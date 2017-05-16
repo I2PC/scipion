@@ -149,6 +149,7 @@ class Cuda(object):
         except OSError, e:
             self._libcudart_error = e
             self._libcudart = None
+        print ("getCudaLib",self._libcudart)
         #return self._libcudart, self._libcudart_error
 
     def getDriverVersion(self):
