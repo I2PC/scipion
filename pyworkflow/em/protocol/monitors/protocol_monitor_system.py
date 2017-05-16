@@ -309,9 +309,9 @@ class MonitorSystem(Monitor):
                 sys.stderr.write("\nDevice %d:\n" % ii)
                 #sys.stderr.write(props.__str__())
                 #sys.stderr.write(props)
-                for f_name, f_type in props._fields_:
-                    attr = props.__getattribute__(f_name)
-                    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
+                #for f_name, f_type in props._fields_:
+                #    attr = props.__getattribute__(f_name)
+                #    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
             sys.sderr.write("Finished printing devices")
         else:
             self.gpusToUse = None
