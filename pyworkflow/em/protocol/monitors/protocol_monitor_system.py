@@ -365,7 +365,7 @@ class MonitorSystem(Monitor):
                 props = cuda.getDeviceProperties(ii)
                 sys.stderr.write("\nDevice %d:\n" % ii)
                 sys.stderr.write(props.__str__())
-                sys.stderr.write(props)
+                sys.stderr.write(str(props))
                 #sys.stderr.write(props)
                 #for f_name, f_type in props._fields_:
                 #    attr = props.__getattribute__(f_name)
