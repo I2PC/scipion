@@ -374,10 +374,10 @@ class MonitorSystem(Monitor):
 
             sys.stderr.write("Driver version: %s\n" % cuda.getDriverVersion())
             sys.stderr.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
-            nn = cuda.cudaGetDeviceCount()
+            nn = self.cuda.cudaGetDeviceCount()
             sys.stderr.write("Device count: %s\n" % nn)
             for ii in self.gpusToUse:
-                props = cuda.getDeviceProperties(ii)
+                props = self.cuda.getDeviceProperties(ii)
                 sys.stderr.write("\nDevice %d:\n" % ii)
                 sys.stderr.write(props.__str__())
         else:
