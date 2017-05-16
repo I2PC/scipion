@@ -70,19 +70,19 @@ class DeviceProp(ctypes.Structure):
 
     def __str__(self):
         return """NVidia GPU Specifications:
-      Name: %s
-      Total global mem: %i
-      Shared mem per block: %i
-      Registers per block: %i
-      Warp size: %i
-      Mem pitch: %i
-      Max threads per block: %i
-      Max treads dim: (%i, %i, %i)
-      Max grid size: (%i, %i, %i)
-      Total const mem: %i
-      Compute capability: %i.%i
-      Clock Rate (GHz): %f
-      Texture alignment: %i
+    Name: %s
+    Total global mem: %i
+    Shared mem per block: %i
+    Registers per block: %i
+    Warp size: %i
+    Mem pitch: %i
+    Max threads per block: %i
+    Max treads dim: (%i, %i, %i)
+    Max grid size: (%i, %i, %i)
+    Total const mem: %i
+    Compute capability: %i.%i
+    Clock Rate (GHz): %f
+    Texture alignment: %i
 """ % (self.name, self.totalGlobalMem, self.sharedMemPerBlock,
        self.regsPerBlock, self.warpSize, self.memPitch,
        self.maxThreadsPerBlock,
@@ -302,11 +302,12 @@ class MonitorSystem(Monitor):
 
             sys.stderr.write("Driver version: %s\n" % cuda.getDriverVersion())
             sys.stderr.write("Runtime version: %s\n" % cuda.getRuntimeVersion())
-            sys.stderr.write("Device count: %s\n" % cuda.cudaGetDeviceCount())
-            for ii in self.doGpu:
+            nn = cuda.cudaGetDeviceCount()
+            sys.stderr.write("Device count: %s\n" % nn)
+            for ii in self.gpusToUse:
                 props = cuda.getDeviceProperties(ii)
-                sys.stderr.write("\nDevice %d:\n" % ii)
-                sys.stderr.write(props)
+                sys.stdout.write("\nDevice %d:\n" % ii)
+                sys.stdout.write(props)
                 for f_name, f_type in props._fields_:
                     attr = props.__getattribute__(f_name)
                     sys.stderr.write( "  %s: %s\n" % (f_name, attr))
