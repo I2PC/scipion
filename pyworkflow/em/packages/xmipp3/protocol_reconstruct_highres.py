@@ -1292,6 +1292,7 @@ class XmippProtReconstructHighRes(ProtRefine3D, HelicalFinder):
             if not exists(fnMask):
                 volXdim = self.readInfoField(fnDirCurrent, "size", xmipp.MDL_XSIZE)
                 self.prepareMask(self.postAdHocMask.get(), fnMask, TsCurrent, volXdim)
+                self.runJob('xmipp_transform_threshold',"-i %s --select below 0.5 --substitute binarize"%fnMask,numberOfMpi=1)
         else:
             fnMask=""
 
