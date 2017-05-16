@@ -145,7 +145,7 @@ class Cuda(object):
             elif platform.system()=="Darwin":
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.dylib')
             else:
-                sys.stderr.write("getCudaLib_1",self._libcudart)
+                sys.stderr.write("getCudaLib_1")
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.so')
                 sys.stderr.write("getCudaLib_2",self._libcudart)
             self._libcudart_error = None
