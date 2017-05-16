@@ -65,8 +65,7 @@ class DeviceProp(ctypes.Structure):
          ("integrated", ctypes.c_int), #  < Device is integrated as opposed to discrete
          ("canMapHostMemory", ctypes.c_int), #  < Device can map host memory with cudaHostAlloc/cudaHostGetDevicePointer
          ("computeMode", ctypes.c_int), #  < Compute mode (See ::cudaComputeMode)
-         ("__cudaReserved", 36*ctypes.c_int),
-]
+         ("__cudaReserved", 36*ctypes.c_int)]
 
 
     def __str__(self):
@@ -308,11 +307,11 @@ class MonitorSystem(Monitor):
             for ii in self.gpusToUse:
                 props = cuda.getDeviceProperties(ii)
                 sys.stderr.write("\nDevice %d:\n" % ii)
-                sys.stderr.write(props.__str__())
+                #sys.stderr.write(props.__str__())
                 #sys.stderr.write(props)
-                #for f_name, f_type in props._fields_:
-                #    attr = props.__getattribute__(f_name)
-                #    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
+                for f_name, f_type in props._fields_:
+                    attr = props.__getattribute__(f_name)
+                    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
             sys.sderr.write("Finished printing devices")
         else:
             self.gpusToUse = None
