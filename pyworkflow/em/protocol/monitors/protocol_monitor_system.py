@@ -138,21 +138,21 @@ class Cuda(object):
 
     #if there is a cuda library _libcudart will NOT be None
     def getCudaLib(self):
-        sys.write.stderr("getCudaLib_0")
+        sys.stderr.write("getCudaLib_0")
         try:
             if platform.system() == "Microsoft":
                 self._libcudart = ctypes.windll.LoadLibrary('cudart.dll')
             elif platform.system()=="Darwin":
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.dylib')
             else:
-                sys.write.stderr("getCudaLib_1",self._libcudart)
+                sys.stderr.write("getCudaLib_1",self._libcudart)
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.so')
-                sys.write.stderr("getCudaLib_2",self._libcudart)
+                sys.stderr.write("getCudaLib_2",self._libcudart)
             self._libcudart_error = None
         except OSError, e:
             self._libcudart_error = e
             self._libcudart = None
-        sys.write.stderr("getCudaLib_3",self._libcudart)
+        sys.stderr.write("getCudaLib_3",self._libcudart)
         #return self._libcudart, self._libcudart_error
 
     def getDriverVersion(self):
