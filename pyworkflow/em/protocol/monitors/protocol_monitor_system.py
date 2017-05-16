@@ -153,7 +153,7 @@ class Cuda(object):
             self._libcudart_error = e
             self._libcudart = None
         sys.stderr.write("getCudaLib_3: " + str(self._libcudart))
-        #return self._libcudart, self._libcudart_error
+        exit()
 
     def getDriverVersion(self):
         if self._libcudart is None: return  None
