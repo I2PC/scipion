@@ -192,21 +192,17 @@ class Cuda(object):
 
     #if there is a cuda library _libcudart will NOT be None
     def getCudaLib(self):
-        sys.stderr.write("getCudaLib_0\n")
         try:
             if platform.system() == "Microsoft":
                 self._libcudart = ctypes.windll.LoadLibrary('cudart.dll')
             elif platform.system()=="Darwin":
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.dylib')
             else:
-                sys.stderr.write("getCudaLib_1\n")
                 self._libcudart = ctypes.cdll.LoadLibrary('libcudart.so')
-                sys.stderr.write("getCudaLib_2: " + str(self._libcudart) + "\n")
             self._libcudart_error = None
         except OSError, e:
             self._libcudart_error = e
             self._libcudart = None
-        sys.stderr.write("getCudaLib_3: " + str(self._libcudart)+"\n")
 
     def getDriverVersion(self):
         if self._libcudart is None: return  None
@@ -250,6 +246,25 @@ class Cuda(object):
         status = self._libcudart.cudaGetDeviceProperties(ctypes.byref(props), device)
         self._checkCudaStatus(status)
         return props
+
+    def cudaMemGetInfo(self, gb=True):
+        """
+        Return (free, total) memory stats for CUDA GPU
+        Default units are bytes. If gb==True, return units in GB
+        """
+        free = ctypes.c_size_t()
+        total = ctypes.c_size_t()
+        ret = self._libcudart.cudaMemGetInfo(ctypes.byref(free), ctypes.byref(total))
+
+        if ret != 0:
+            err = self._libcudart.cudaGetErrorString(ret)
+            raise RuntimeError("CUDA Error (%d): %s" % (ret, err))
+
+        if gb:
+            scale = 1024.0**3
+            return free.value / scale, total.value / scale
+        else:
+            return free.value, total.value
 
 #end cuda stuff
 
@@ -353,7 +368,7 @@ class MonitorSystem(Monitor):
             #get Gpus to monitor
             self.gpusToUse = [int(n) for n in (kwargs['gpusToUse']).split()]
             #init GPU
-            cuda = Cuda()
+            self.cuda = Cuda()
             #print some general info
             #yhis is helpfull for debuging but I do not think should be here
 
@@ -365,12 +380,6 @@ class MonitorSystem(Monitor):
                 props = cuda.getDeviceProperties(ii)
                 sys.stderr.write("\nDevice %d:\n" % ii)
                 sys.stderr.write(props.__str__())
-                sys.stderr.write(str(props))
-                #sys.stderr.write(props)
-                #for f_name, f_type in props._fields_:
-                #    attr = props.__getattribute__(f_name)
-                #    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
-            sys.stderr.write("Finished printing devices")
         else:
             self.gpusToUse = None
 
@@ -399,6 +408,9 @@ class MonitorSystem(Monitor):
         cpu = psutil.cpu_percent(interval=0)
         mem = psutil.virtual_memory()
         swap = psutil.swap_memory()
+        if self.doGpu:
+            free, total = self.cuda.cudaMemGetInfo()
+            print("free, total", free, total)
 
         if self.cpuAlert < 100 and cpu > self.cpuAlert:
             self.warning("CPU allocation =%f." % cpu.percent)
