@@ -133,6 +133,9 @@ class Cuda(object):
         0x7f: 'StartupFailureError',
         10000: 'ApiFailureBaseError'}
 
+    def __init__(self):
+        self.getCudaLib()
+
     #if there is a cuda library _libcudart will NOT be None
     def getCudaLib(self):
         try:
