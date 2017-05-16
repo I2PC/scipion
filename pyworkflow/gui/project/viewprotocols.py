@@ -1416,6 +1416,11 @@ class ProtocolsView(tk.Frame):
             else:
 
                 item.setSelected(True)
+                if len(self._selection) == 1: #repaint first selected item
+                    firstSelectedNode = self.runsGraph.getNode(str(self._selection[0]))
+                    if hasattr(firstSelectedNode, 'item'):
+                        firstSelectedNode.item.setSelected(False)
+                        firstSelectedNode.item.setSelected(True)
                 self._selection.append(prot.getObjId())
 
                 # Select output data too
