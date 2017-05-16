@@ -44,6 +44,8 @@ import platform
 import ctypes
 
 class DeviceProp(ctypes.Structure):
+    #TODO: ROB this is a tricky bussiness, if the struct changes in size the program will
+    #crash with a memory fault error
     _fields_ = [
             ('name', ctypes.c_char * 256),
             ('totalGlobalMem', ctypes.c_size_t),
@@ -110,6 +112,7 @@ class DeviceProp(ctypes.Structure):
             ('singleToDoublePrecisionPerfRatio', ctypes.c_int),
             ('pageableMemoryAccess', ctypes.c_int),
             ('concurrentManagedAccess', ctypes.c_int),
+            ("__someextraspace just in case", 36*ctypes.c_int),
             ]
 
 
@@ -367,7 +370,6 @@ class MonitorSystem(Monitor):
                 #    attr = props.__getattribute__(f_name)
                 #    sys.stderr.write( "  %s: %s\n" % (f_name, attr))
             sys.stderr.write("Finished printing devices")
-            exit()
         else:
             self.gpusToUse = None
 
