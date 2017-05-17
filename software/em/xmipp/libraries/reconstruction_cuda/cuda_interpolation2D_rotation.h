@@ -26,11 +26,9 @@
 #ifndef CUDA_INTERPOLATION2D_H
 #define CUDA_INTERPOLATION2D_H
 
+#include "cuda_utils.h"
 #include "cuda_basic_math.h"
 #include "cuda_bspline_rotation.h"
-#include "cuda_check_errors.h"
-
-
 
 // 2D float texture
 texture<float, cudaTextureType2D, cudaReadModeElementType> texRef;
