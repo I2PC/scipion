@@ -38,7 +38,7 @@
 
 #include "../reconstruction_cuda/cuda_gpu_rotate_image_bspline.h"
 #include "../reconstruction_cuda/cuda_gpu_rotate_image_linear_nearest.h"
-#include "../reconstruction_cuda/cuda_utils.h"
+#include "../reconstruction_cuda/cuda_xmipp_utils.h"
 
 #define CUDA_NEAREST 0 //xmipp NEAREST
 #define CUDA_LINEAR  1 //xmipp linear
