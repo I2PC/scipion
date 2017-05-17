@@ -37,7 +37,7 @@ from convert import (readSetOfCoordinates, writeSetOfCoordinates,
 
 
 
-class ProtGautomatch(em.ProtParticlePicking):
+class ProtGautomatch(em.ProtParticlePickingAuto):
     """
     Gautomatch is a GPU accelerated program for accurate, fast, flexible and fully
     automatic particle picking from cryo-EM micrographs with or without templates.
@@ -227,31 +227,18 @@ class ProtGautomatch(em.ProtParticlePicking):
                       help='Specify to write out the auto-detected mask (ice, '
                            'contamination, aggregation, carbon edges etc.)')
 
-        # --------------------------- INSERT steps functions --------------------------------------------
+        # --------------------------- INSERT steps functions -------------------
 
-    def _insertAllSteps(self):
+    def _insertInitialSteps(self):
         convId = self._insertFunctionStep('convertInputStep')
-        deps = []
-        refStack = None
+        return [convId]
 
-        if self.inputReferences.get():
-            refStack = self._getExtraPath('references.mrcs')
-
-        # Insert one picking step per Micrograph
-        for mic in self.inputMicrographs.get():
-            micName = mic.getFileName()
-            pickId = self._insertFunctionStep('runGautomatchStep',
-                                              micName, refStack,
-                                              self.getArgs(),
-                                              prerequisites=[convId])
-            deps.append(pickId)
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
-    # --------------------------- STEPS functions ---------------------------------------------------
+    # --------------------------- STEPS functions ------------------------------
 
     def convertInputStep(self):
         """ This step will take of the conversions from the inputs.
-        Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
+        Micrographs: they will be linked if are in '.mrc' format,
+            converted otherwise.
         References: will always be converted to '.mrcs' format
         """
         micDir = self.getMicrographsDir()  # put output and mics in extra dir
@@ -261,9 +248,18 @@ class ProtGautomatch(em.ProtParticlePicking):
         # Convert input coords for exclusive picking
         self.convertCoordinates(micDir)
 
-    def runGautomatchStep(self, micName, refStack, args):
+    def _getPickArgs(self):
+        return [self.getArgs()]
+
+    def _pickMicrograph(self, mic, args):
+        micName = mic.getFileName()
+        if self.inputReferences.get():
+            refStack = self._getExtraPath('references.mrcs')
+        else:
+            refStack = None
         # We convert the input micrograph on demand if not in .mrc
-        runGautomatch(micName, refStack, self.getMicrographsDir(), args, env=self._getEnviron())
+        runGautomatch(micName, refStack, self.getMicrographsDir(), args,
+                      env=self._getEnviron())
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
@@ -277,20 +273,26 @@ class ProtGautomatch(em.ProtParticlePicking):
         readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet)
         coordSetAux = self._createSetOfCoordinates(micSet, suffix='_rejected')
         coordSetAux.setBoxSize(coordSet.getBoxSize())
-        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSetAux, suffix='_rejected.star')
+        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSetAux,
+                             suffix='_rejected.star')
         coordSetAux.write()
 
         # debug output
         if self.writeCC:
             self.createDebugOutput(suffix='_ccmax')
+
         if self.writeFilt:
             self.createDebugOutput(suffix='_pref')
+
         if self.writeBg:
             self.createDebugOutput(suffix='_bg')
+
         if self.writeBgSub:
             self.createDebugOutput(suffix='_bgfree')
+
         if self.writeSigma:
             self.createDebugOutput(suffix='_lsigma')
+            
         if self.writeMsk:
             self.createDebugOutput(suffix='_mask')
 
@@ -309,7 +311,7 @@ class ProtGautomatch(em.ProtParticlePicking):
             outputDebugMics.append(mic)
         outputDebugMics.write()
 
-    # --------------------------- INFO functions --------------------------------------------
+    # --------------------------- INFO functions -------------------------------
     def _validate(self):
         errors = []
         # Check that the program exists
