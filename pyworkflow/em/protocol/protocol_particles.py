@@ -24,9 +24,15 @@
 # *
 # **************************************************************************
 
+import os
+from datetime import datetime
+
+from pyworkflow.object import Set
 from pyworkflow.protocol.params import PointerParam
+from pyworkflow.protocol import STATUS_NEW
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.data import EMObject, SetOfCoordinates, Micrograph
+from pyworkflow.em.data import (EMObject, SetOfCoordinates, Micrograph,
+                                SetOfMicrographs)
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 
@@ -161,6 +167,9 @@ class ProtParticlePicking(ProtParticles):
         self._defineOutputs(**outputs)
         self._defineSourceRelation(self.getInputMicrographsPointer(), coordSet)
 
+    def createOutputStep(self):
+        self._createOutput(self._getExtraPath())
+
     def readSetOfCoordinates(self, workingDir, coordSet):
         pass
 
@@ -224,13 +233,11 @@ class ProtParticlePickingAuto(ProtParticlePicking):
     interactive and are also good candidates to be run in streaming. """
 
     def _insertAllSteps(self):
-        initialIds = self._insertInitialSteps()
-        pickMicIds = []
+        self.initialIds = self._insertInitialSteps()
+        self.insertedDict = {}
 
-        for mic in self.getInputMicrographs():
-            pickId = self._insertPickMicrographStep(mic, initialIds,
-                                                    *self._getPickArgs())
-            pickMicIds.append(pickId)
+        pickMicIds = self._insertNewMicsSteps(self.insertedDict,
+                                              self.getInputMicrographs())
 
         self._insertFinalSteps(pickMicIds)
 
@@ -244,7 +251,8 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         """ Override this function to insert some steps after the
         picking micrograph steps.
         Receive the list of step ids of the picking steps. """
-        pass
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=micSteps, wait=True)
 
     def _getPickArgs(self):
         """ Should be implemented in sub-classes to define the argument
@@ -277,7 +285,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         self.info("Picking micrograph: %s " % mic.getFileName())
         self._pickMicrograph(mic, *args)
 
-        # Mark this movie as finished
+        # Mark this mic as finished
         open(self._getMicDone(mic), 'w').close()
 
     def _pickMicrograph(self, mic, *args):
@@ -286,5 +294,155 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         pass
 
     # --------------------------- UTILS functions ----------------------------
+
+    # ------ Methods for Streaming picking --------------
+
+    def _stepsCheck(self):
+        # To allow streaming picking we need to detect:
+        #   1) new micrographs ready to be picked
+        #   2) new output coordinates that have been produced and add then
+        #      to the output set.
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _insertNewMicsSteps(self, insertedDict, inputMics):
+        """ Insert steps to process new mics (from streaming)
+        Params:
+            insertedDict: contains already processed mics
+            inputMics: input mics set to be check
+        """
+        deps = []
+        # For each mic insert the step to process it
+        for mic in inputMics:
+            if mic.getObjId() not in insertedDict:
+                stepId = self._insertPickMicrographStep(mic, self.initialIds,
+                                                        *self._getPickArgs())
+                deps.append(stepId)
+                insertedDict[mic.getObjId()] = stepId
+        return deps
+
+    def _loadInputList(self):
+        """ Load the input set of micrographs and create a list. """
+        micsFile = self.getInputMicrographs().getFileName()
+        self.debug("Loading input db: %s" % micsFile)
+        micSet = SetOfMicrographs(filename=micsFile)
+        micSet.loadAllProperties()
+        self.listOfMics = [m.clone() for m in micSet]
+        self.streamClosed = micSet.isStreamClosed()
+        micSet.close()
+        self.debug("Closed db.")
+
+    def _checkNewInput(self):
+        # Check if there are new micrographs to process from the input set
+        localFile = self.getInputMicrographs().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
+        self.debug('Last check: %s, modification: %s'
+                  % (pwutils.prettyTime(self.lastCheck),
+                     pwutils.prettyTime(mTime)))
+        # If the input micrographs.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfMics'):
+            return None
+
+        self.lastCheck = now
+        # Open input micrographs.sqlite and close it as soon as possible
+        self._loadInputList()
+        newMics = any(m.getObjId() not in self.insertedDict
+                        for m in self.listOfMics)
+        outputStep = self._getFirstJoinStep()
+
+        if newMics:
+            fDeps = self._insertNewMicsSteps(self.insertedDict, self.listOfMics)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+    def _checkNewOutput(self):
+        if getattr(self, 'finished', False):
+            return
+
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+        # Check for newly done items
+        newDone = [m for m in self.listOfMics
+                   if m.getObjId() not in doneList and self._isMicDone(m)]
+
+        # Update the file with the newly done mics
+        # or exit from the function if no new done mics
+        self.debug('_checkNewOutput: ')
+        self.debug('   listOfMics: %s, doneList: %s, newDone: %s'
+                   % (len(self.listOfMics), len(doneList), len(newDone)))
+
+        firstTime = len(doneList) == 0
+        allDone = len(doneList) + len(newDone)
+        # We have finished when there is not more input mics (stream closed)
+        # and the number of processed mics is equal to the number of inputs
+        self.finished = self.streamClosed and allDone == len(self.listOfMics)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        if newDone:
+            self._writeDoneList(newDone)
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+
+        self.debug('   finished: %s ' % self.finished)
+        self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
+        self.debug('        allDone (%s) == len(self.listOfMics (%s)'
+                   % (allDone, len(self.listOfMics)))
+        self.debug('   streamMode: %s' % streamMode)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+
     def _getMicDone(self, mic):
-        return self._getExtraPath('DONE_mic_%06d.TXT' % mic.getObjId())
+        return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
+
+    def _isMicDone(self, mic):
+        """ A mic is done if the marker file exists. """
+        return os.path.exists(self._getMicDone(mic))
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE', 'all.TXT')
+
+    def _readDoneList(self):
+        """ Read from a text file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if os.path.exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+
+        return doneList
+
+    def _writeDoneList(self, micList):
+        """ Write to a text file the items that have been done. """
+        doneFile = self._getAllDone()
+
+        if not os.path.exists(doneFile):
+            pwutils.makeFilePath(doneFile)
+
+        with open(doneFile, 'a') as f:
+            for mic in micList:
+                f.write('%d\n' % mic.getObjId())
+
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overwritten in subclasses
+        # (eg in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None

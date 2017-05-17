@@ -87,12 +87,11 @@ class XmippParticlePickingAutomatic(ProtParticlePickingAuto, XmippProtocol):
 
         return [copyId]
 
-    def _insertFinalSteps(self, deps):
-        self._insertFunctionStep('_createOutput', self._getExtraPath(),
-                                 prerequisites=deps)
-        
     # --------------------------- STEPS functions --------------------------------------------
     def copyInputFilesStep(self):
+        #FIXME: move this to the base class
+        pwutils.makeFilePath(self._getAllDone())
+
         # Copy training model files to current run
         for f in self.filesToCopy:
             copyFile(self.particlePickingRun._getExtraPath(f),
