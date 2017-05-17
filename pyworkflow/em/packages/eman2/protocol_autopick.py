@@ -48,6 +48,7 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         
     def __init__(self, **kwargs):
         ProtParticlePickingAuto.__init__(self, **kwargs)
+        self.extraParams = 'pixel_input=1:pixel_output=1:invert_contrast=True:use_variance=True'
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -73,19 +74,16 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
                                  self.boxSize.get(), self.gaussWidth.get())
         return [initId]
 
-    def _insertFinalSteps(self, deps):
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
     #--------------------------- STEPS functions -------------------------------
     def initSparxDb(self, lowerThreshold, higherThreshold, boxSize, gaussWidth):
         args = {"lowerThreshold": lowerThreshold,
                 "higherThreshold": higherThreshold,
                 "boxSize": boxSize,
-                "gaussWidth": gaussWidth}
+                "gaussWidth": gaussWidth,
+                "extraParams": self.extraParams}
         params = 'demoparms --makedb=thr_low=%(lowerThreshold)s:'
         params += 'thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:'
-        params += 'gauss_width=%(gaussWidth)s:pixel_input=1:'
-        params += 'pixel_output=1:invert_contrast=True:use_variance=True'
+        params += 'gauss_width=%(gaussWidth)s:%(extraParams)s'
 
         self.runJob('sxprocess.py', params % args, cwd=self.getWorkingDir())
 
