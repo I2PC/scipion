@@ -126,7 +126,7 @@ class ProtEthanPicker(ProtParticlePicking):
         # selected by the user
         self.writeConfigFile(os.path.join(micDir, fnMicCfg))
         # Run ethan program with the required arguments
-        program = os.environ.get('ETHAN_BIN')
+        program = self.getProgram()
         args = "%d %s %s %s" % (radius, fnMicBase, fnPosBase, fnMicCfg)
         self.runJob(program, args, cwd=micDir)
 
@@ -141,6 +141,9 @@ class ProtEthanPicker(ProtParticlePicking):
         self._defineSourceRelation(self.inputMicrographs, coordSet)
 
     #--------------------------- UTILS functions -------------------------------
+    def getProgram(self):
+        return os.path.join(os.environ.get('ETHAN_HOME'), 'ethan')
+
     def _getMicDir(self, micFn):
         return self._getExtraPath()
 
@@ -224,4 +227,17 @@ DISTANCE_TEST %(distanceTest)s
     def _methods(self):
         methodsMsgs = []
         return methodsMsgs
+
+    def _validate(self):
+        errors = []
+
+        program = self.getProgram()
+        if not os.path.exists(program):
+            errors.append("Program: '%s' was not found. " % program)
+            errors.append("Check that you have installed ethan picker by: ")
+            errors.append("   ./scipion install ethan ")
+            errors.append("And the configuration file "
+                          "~/.config/scipion/scipion.conf has the proper value "
+                          "of ETHAN_HOME variable.")
+        return errors
 
