@@ -5,11 +5,8 @@
 #include <iostream>
 #include <stdio.h>
 //CUDA includes
-#include <cuda_runtime.h>
-
-#include "cuda_copy_data.h"
+#include "cuda_utils.h"
 #include "cuda_interpolation2D_basic_rotation_parallel.h"
-#include "cuda_check_errors.h"
 
 #define NUM_TEX 5
 cudaTextureObject_t texImage[NUM_TEX];
