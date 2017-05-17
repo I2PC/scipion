@@ -470,7 +470,11 @@ class SubclassesTreeProvider(TreeProvider):
         if parent is None:
             return getObjectLabel(pobj, self.mapper)
         else:  # This is an item coming from a set
-            return 'item %s' % pobj.get().strId()
+            # If the object has label include the label
+            if pobj.get().getObjLabel():
+                return 'item %s - %s' % (pobj.get().strId(), pobj.get().getObjLabel())
+            else:
+                return 'item %s' % pobj.get().strId()
 
     def getObjectActions(self, pobj):
         obj = pobj.get()
@@ -1409,6 +1413,9 @@ class FormWindow(Window):
                                                        func=self._setThreadsOrMpi,
                                                        value=procs)
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
+                else:
+                    # Show an error message
+                    self.showInfo(" If protocol execution is set to STEPS_PARALLEL number of threads and mpi should not be set to zero.")
                     
             else:
                 # ---- THREADS---- 

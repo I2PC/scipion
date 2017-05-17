@@ -163,7 +163,7 @@ class ProtParticlePicking(ProtParticles):
 
     def _summary(self):
         summary = []
-        if self.getInputMicrographs() is  not None:
+        if self.getInputMicrographs() is not None:
             summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
 
         if self.getOutputsSize() >= 1:
@@ -210,5 +210,5 @@ class ProtParticlePicking(ProtParticles):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.inputMicrographs, outputset)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), outputset)
         self._store()

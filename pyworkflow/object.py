@@ -67,10 +67,22 @@ class Object(object):
     
     def getDoc(self):
         return self.__doc__ or ''
-    
+
+    #FIXME: This function should be renamed to hasAttribute when we address that issue
+    def hasAttributeExt(self, attrName):
+        attrList = attrName.split('.')
+        obj = self
+        for partName in attrList:
+            obj = getattr(obj, partName, None)
+            if obj is None:
+                return False
+        return True
+
+    # FIXME: This function is not symmetric with setAttributeValue
     def hasAttribute(self, attrName):
         return hasattr(self, attrName)
-    
+
+    #FIXME: This function is not symmetric with setAttributeValue
     def getAttributeValue(self, attrName, defaultValue=None):
         """ Get the attribute value given its name.
         Equivalent to getattr(self, name).get() 
@@ -1028,7 +1040,15 @@ class Set(OrderedObject):
 
     def getFirstItem(self):
         """ Return the first item in the Set. """
-        return self._getMapper().selectFirst()
+        # This function is used in many contexts where the mapper can be
+        # left open and could be problematic locking other db
+        # So, we looking if the mapper was closed before, in which case
+        # we will close it after that
+        closedMapper = self._mapper is None
+        firstItem = self._getMapper().selectFirst()
+        if closedMapper:
+            self.close()
+        return firstItem
     
     def __iter__(self):
         """ Iterate over the set of images. """
@@ -1084,6 +1104,7 @@ class Set(OrderedObject):
         fn, prefix = self._mapperPath
         self._mapper = self._MapperClass(fn, self._loadClassesDict(), prefix)            
         self._size.set(self._mapper.count())
+        self._idCount = self._mapper.maxId()
            
     def __del__(self):
         # Close connections to db when destroy this object

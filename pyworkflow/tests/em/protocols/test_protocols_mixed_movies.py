@@ -69,7 +69,7 @@ class TestMixedMovies(BaseTest):
                 self.assertEqual(dim, (x, y, n))
 
     def _importMovies(self):
-        args = self.getArgs('ribo/', pattern='*.mrcs')
+        args = self.getArgs('ribo/', pattern='*movie.mrcs')
 
         # Id's should be set increasing from 1 if ### is not in the pattern
         protMovieImport = self.newProtocol(ProtImportMovies, **args)
@@ -91,7 +91,8 @@ class TestMixedMovies(BaseTest):
         for mic1, mic2 in izip(micSet1, micSet2):
             img1.read(mic1.getFileName())
             img2.read(mic2.getFileName())
-            self.assertTrue(img1.equal(img2, 0.001))
+            print("Comparing %s vs %s"%(mic1.getFileName(),mic2.getFileName()))
+            self.assertTrue(img1.equal(img2, 20))
 
     def _sumShifts(self, movieSet):
         """ Sum all shifts a a movie set """
@@ -105,7 +106,7 @@ class TestMixedMovies(BaseTest):
                                objLabel='CC (no-write)',
                                alignFrame0=2, alignFrameN=10,
                                useAlignToSum=True,
-                               splineOrder=XmippProtMovieCorr.INTERP_LINEAR,
+                               splineOrder=XmippProtMovieCorr.INTERP_CUBIC,
                                numberOfThreads=4)
         mc1.inputMovies.set(protMovieImport.outputMovies)
         self.launchProtocol(mc1)
@@ -121,7 +122,7 @@ class TestMixedMovies(BaseTest):
                                objLabel='CC (write)',
                                alignFrame0=2, alignFrameN=10,
                                useAlignToSum=True,
-                               splineOrder=XmippProtMovieCorr.INTERP_LINEAR,
+                               splineOrder=XmippProtMovieCorr.INTERP_CUBIC,
                                doSaveMovie=True,
                                numberOfThreads=4)
         mc2.inputMovies.set(protMovieImport.outputMovies)
@@ -137,7 +138,7 @@ class TestMixedMovies(BaseTest):
         avg1 = self.newProtocol(XmippProtMovieAverage,
                                 objLabel='AVG (1)',
                                 sumFrame0=2, sumFrameN=10,
-                                splineOrder=XmippProtMovieAverage.INTERP_LINEAR,
+                                splineOrder=XmippProtMovieAverage.INTERP_CUBIC,
                                 numberOfThreads=4)
         avg1.inputMovies.set(mc1.outputMovies)
         self.launchProtocol(avg1)
@@ -145,7 +146,7 @@ class TestMixedMovies(BaseTest):
         avg2 = self.newProtocol(XmippProtMovieAverage,
                                 objLabel='AVG (2)',
                                 sumFrame0=2, sumFrameN=10,
-                                splineOrder=XmippProtMovieAverage.INTERP_LINEAR,
+                                splineOrder=XmippProtMovieAverage.INTERP_CUBIC,
                                 numberOfThreads=4)
 
         avg2.inputMovies.set(mc2.outputMovies)

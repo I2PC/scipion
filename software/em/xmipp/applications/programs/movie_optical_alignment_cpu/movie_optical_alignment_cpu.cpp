@@ -227,6 +227,8 @@ public:
         Image<float> frame;
         end=std::min(end,movie.size()-1);
         end=std::min(end,(size_t)nlast);
+        if (begin>end)
+        	return 0;
 //    	std::cout << "Computing average: " << begin << " " << end << std::endl;
 
 		for (size_t i=begin;i<=end;i++)
@@ -236,7 +238,7 @@ public:
 				frame().aliasImageInStack(tempStack,actualIdx);
 			else
 			{
-//                    std::cout << "Reading " << fnTempStack << " " << actualIdx+1 << std::endl;
+//                std::cout << "Reading " << fnTempStack << " " << actualIdx+1 << std::endl;
 				frame.read(fnTempStack,DATA,actualIdx+1);
 			}
 
@@ -246,6 +248,7 @@ public:
 				tempAvg()+=frame();
 		}
         tempAvg()/=float(end-begin+1);
+//        std::cout << "Avg stats: "; tempAvg().printStats(); std::cout << std::endl;
         xmipp2Opencv(tempAvg(), cvAvgImg);
         return end-begin+1;
     }
@@ -398,8 +401,12 @@ public:
                 {
                 	movie.getValue(MDL_SHIFT_X, XX(shift), __iter.objId);
                 	movie.getValue(MDL_SHIFT_Y, YY(shift), __iter.objId);
-                    translate(BSPLINE3, translatedImage(), frameImage(), shift, WRAP);
-                    frameImage()=translatedImage();
+                	if (fabs(XX(shift))>0 || fabs(YY(shift))>0)
+                	{
+//                		std::cout << "Translating " << fnFrame << " by " << shift.transpose() << std::endl;
+						translate(BSPLINE3, translatedImage(), frameImage(), shift, WRAP);
+						frameImage()=translatedImage();
+                	}
                 }
 
                 if (fnMovieUncOut!="")
@@ -412,13 +419,17 @@ public:
 													  dose0+currentFrameInIdx*doseStep, dose0+(currentFrameInIdx+1)*doseStep);
 					transformer.inverseFourierTransform();
                 }
+//                std::cout << "Reading " << fnFrame << " "; frameImage().printStats(); std::cout << std::endl;
                 if (inMemory)
                 {
                 	typeCast(frameImage(),Ifloat);
                 	memcpy(&DIRECT_NZYX_ELEM(tempStack,currentFrameOutIdx,0,0,0),&Ifloat(0,0),MULTIDIM_SIZE(Ifloat)*sizeof(float));
                 }
                 else
+                {
                 	frameImage.write(fnTempStack, currentFrameOutIdx+1, true, WRITE_REPLACE);
+//                	std::cout << "Writing " << currentFrameOutIdx+1 << "@" << fnTempStack << std::endl;
+                }
                 currentFrameOutIdx++;
         	}
         	currentFrameInIdx++;
@@ -485,6 +496,7 @@ public:
 
             cout << "Level " << levelCounter << "/" << levelNum-1
                  << " of the pyramid is under processing" << std::endl;
+            cout << "   Group size: " << currentGroupSize << ", Number of groups: " << numberOfGroups << std::endl;
 
             // Compute time for each level
             clock_t tStart = clock();
@@ -492,6 +504,8 @@ public:
             for (int currentGroup=0; currentGroup<numberOfGroups; currentGroup++)
             {
 				int NimgsInAvg=computeAvg(currentGroup*currentGroupSize+nfirst, (currentGroup+1)*currentGroupSize+nfirst-1, cvCurrentGroupAverage);
+				if (NimgsInAvg==0)
+					continue;
                 convert2Uint8(cvCurrentGroupAverage,cvCurrentGroupAverage8);
 
                 if (numberOfGroups>2)
@@ -559,7 +573,14 @@ public:
 					FileName flowYFileName=fnmovieRoot+fnBaseOut.removeLastExtension()+formatString("flowy_%d_%d.flow",levelCounter,currentGroup);
 					saveMat(flowXFileName.c_str(), flowCurrentGroup[0]);
 					saveMat(flowYFileName.c_str(), flowCurrentGroup[1]);
-//                    std::cout << "Saving flow " << flowXFileName << std::endl;
+//					flowXFileName=fnmovieRoot+fnBaseOut.removeLastExtension()+formatString("flowx_%d_%d.mrc",levelCounter,currentGroup);
+//					flowYFileName=fnmovieRoot+fnBaseOut.removeLastExtension()+formatString("flowy_%d_%d.mrc",levelCounter,currentGroup);
+//                  std::cout << "Saving flows " << flowXFileName << " " << flowYFileName << std::endl;
+//					Image<float> save;
+//					opencv2Xmipp(flowCurrentGroup[0],save());
+//					save.write(flowXFileName);
+//					opencv2Xmipp(flowCurrentGroup[1],save());
+//					save.write(flowYFileName);
                 }
 
                 // Update cvNewReference
@@ -570,6 +591,13 @@ public:
 						flowCurrentGroup[1].at<float>(row,col) += row;
                     }
                 cv::remap(cvCurrentGroupAverage, cvUndeformedGroupAverage, flowCurrentGroup[0], flowCurrentGroup[1], cv::INTER_CUBIC);
+//                Image<float> save;
+//                opencv2Xmipp(cvUndeformedGroupAverage,save());
+//                std::cout << "cvUndeformedGroupAverage stats "; save().printStats(); std::cout << std::endl;
+//                opencv2Xmipp(flowCurrentGroup[0],save());
+//                std::cout << "flowCurrentGroup[0] stats "; save().printStats(); std::cout << std::endl;
+//                opencv2Xmipp(flowCurrentGroup[1],save());
+//                std::cout << "flowCurrentGroup[1] stats "; save().printStats(); std::cout << std::endl;
                 if (lastLevel)
                 {
                     if (compensationMode==POSTCOMPENSATION)
@@ -615,6 +643,9 @@ public:
 #endif
             cvCurrentReference=cvNewReference;
             cvCurrentReference*=1.0/numberOfGroups;
+//            Image<float> save;
+//            opencv2Xmipp(cvCurrentReference,save());
+//            std::cout << "cvCurrentReference stats "; save().printStats(); std::cout << std::endl;
             printf("Processing time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
             numberOfGroups=std::min(2*numberOfGroups,numberOfFrames);
             levelCounter++;
@@ -632,7 +663,10 @@ public:
         }
 
         if (!fnMicUncOut.isEmpty())
+        {
         	uncompensatedMic.write(fnMicUncOut);
+//        	std::cout << "Writing " << fnMicUncOut << std::endl;
+        }
 
         if (!inMemory)
         	deleteFile(fnTempStack);

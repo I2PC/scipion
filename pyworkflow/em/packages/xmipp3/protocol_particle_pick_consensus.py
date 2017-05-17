@@ -27,19 +27,13 @@
 Consensus picking protocol
 """
 import os
-import collections
-from itertools import izip
 from math import sqrt
 
-from pyworkflow.utils.path import cleanPath, removeBaseExt, copyFile
-from pyworkflow.object import Set, Integer, Float, String, Object
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol_particles import ProtParticlePicking
 from pyworkflow.protocol.constants import *
-from pyworkflow.em.data import SetOfCoordinates, Coordinate
+from pyworkflow.em.data import Coordinate
 
-import pyworkflow.em as em
-import convert 
 import numpy as np
 
 
@@ -64,7 +58,7 @@ class XmippProtConsensusPicking(ProtParticlePicking):
     
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)
-        self.stepsExecutionMode = STEPS_PARALLEL
+        self.stepsExecutionMode = STEPS_SERIAL
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -77,6 +71,8 @@ class XmippProtConsensusPicking(ProtParticlePicking):
                       help="How many times need a particle to be selected to be considered as a consensus particle. "\
                            "Set to -1 to indicate that it needs to be selected by all algorithms. Set to 1 to indicate that "\
                            "it suffices that only 1 algorithm selects the particle")
+
+        form.addParallelSection(threads=4, mpi=0)
         
 #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):
@@ -125,26 +121,33 @@ class XmippProtConsensusPicking(ProtParticlePicking):
         
         # Add all coordinates in the first method
         N0 = coords[0].shape[0]
-        if N0==0:
+        inAllMicrographs = self.consensus <= 0 or self.consensus == len(self.inputCoordinates)
+        if N0==0 and inAllMicrographs:
             return
-        allCoords[0:N0,:] = coords[0]
-        votes[0:N0] = 1
+        elif N0>0:
+            allCoords[0:N0,:] = coords[0]
+            votes[0:N0] = 1
         
         # Add the rest of coordinates
         Ncurrent = N0
         for n in range(1, len(self.inputCoordinates)):
             for coord in coords[n]:
-                dist = np.sum((coord - allCoords[0:Ncurrent])**2, axis=1)
-                imin = np.argmin(dist)
-                if sqrt(dist[imin]) < self.consensusRadius:
-                    newCoord = (votes[imin]*allCoords[imin,]+coord)/(votes[imin]+1)
-                    allCoords[imin,] = newCoord
-                    votes[imin] += 1
+                if Ncurrent>0:
+                    dist = np.sum((coord - allCoords[0:Ncurrent])**2, axis=1)
+                    imin = np.argmin(dist)
+                    if sqrt(dist[imin]) < self.consensusRadius:
+                        newCoord = (votes[imin]*allCoords[imin,]+coord)/(votes[imin]+1)
+                        allCoords[imin,] = newCoord
+                        votes[imin] += 1
+                    else:
+                        allCoords[Ncurrent,:] = coord
+                        votes[Ncurrent] = 1
+                        Ncurrent += 1
                 else:
-                    allCoords[Ncurrent,:] = coord
+                    allCoords[Ncurrent, :] = coord
                     votes[Ncurrent] = 1
                     Ncurrent += 1
-        
+
         # Select those in the consensus
         if self.consensus <= 0:
             consensus = len(self.inputCoordinates)
