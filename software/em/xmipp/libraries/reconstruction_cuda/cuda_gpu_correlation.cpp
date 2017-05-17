@@ -9,105 +9,62 @@
 
 
 //CUDA includes
-#include <cufft.h>
-#include <cuComplex.h>
-
 #include "cuda_basic_math.h"
-#include "cuda_copy_data.h"
-#include "cuda_check_errors.h"
 #include "cuda_utils.h"
-#include "cuda_memory_check.h"
 
 #define PI 3.14159265
 
-
-void cuda_check_gpu_memory(float* data){
-	float3 memData = getAvailableMem();
-	//printf("GPU memory usage: used = %f, free = %f MB, total = %f MB\n", memData.z/1024.0/1024.0, memData.y/1024.0/1024.0, memData.x/1024.0/1024.0);
-	data[0]=memData.x; //total
-	data[1]=memData.y; //free
-	data[2]=memData.z; //used
-}
-
-__global__ void complextomodule(cufftDoubleComplex *out, double *module, double *angle, int maxSize)
+__global__ void pointwiseMultiplicationKernel_complex(cufftDoubleComplex *M, cufftDoubleComplex *manyF, cufftDoubleComplex *MmanyF,
+		size_t nzyxdim, size_t yxdim)
 {
-	int x = blockDim.x * blockIdx.x + threadIdx.x;
+	size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
+	size_t idxLow = idx % yxdim;
 
-	if(x>=maxSize)
+	if (idx>=nzyxdim)
 		return;
-
-	module[x] = log(cuCabs(out[x]));
-	angle[x] = atan2(cuCimag(out[x]), cuCreal(out[x]));
+//
+//	int idxDimProj = Xdim*Ydim*numProj;
+//	int idxDim = Xdim*Ydim;
+//	float normFactor = (1.0/(Xdim*Ydim));
+//	int outIdx = 0;
+//	int inIdx = 0;
+//
+//	for(int n=0; n<numExp; n++){
+//		d_out_proj_exp[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projFFT[idx], expFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(projFFT[idx], expFFT[idxLow + inIdx]))*normFactor ) ;
+//		d_out_proj_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projFFT[idx], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(projFFT[idx], maskFFT[idxLow]))*normFactor ) ;
+//		d_out_mask_exp[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], expFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], expFFT[idxLow + inIdx]))*normFactor ) ;
+//		d_out_mask_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], maskFFT[idxLow]))*normFactor ) ;
+//		d_out_projSquared_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projSqFFT[idx], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(projSqFFT[idx], maskFFT[idxLow]))*normFactor ) ;
+//		d_out_mask_expSquared[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], expSqFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], expSqFFT[idxLow + inIdx]))*normFactor ) ;
+//		//d_out_proj_exp[idx + outIdx] = expFFT[idxLow + n*Xdim*Ydim];
+//		outIdx+=idxDimProj;
+//		inIdx+=idxDim;
+//	}
 
 }
 
-std::complex<double>* cuda_fft(double* &d_in_data, double* recovered_image, double *module, double *angle,
-		size_t Xdim, size_t Ydim, size_t Zdim, size_t batch)
+void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<double> > &M, const GpuMultidimArrayAtGpu < std::complex<double> >& manyF,
+		GpuMultidimArrayAtGpu< std::complex<double> > &MmanyF)
 {
+    int numTh = 1024;
+    XmippDim3 blockSize(numTh, 1, 1), gridSize;
+    manyF.calculateGridSizeVectorized(blockSize, gridSize);
 
-	int NX = Ydim;
-	int NY = Xdim;
-	int NRANK = 2;		 			// --- 2D FFTs
-	int BATCH = batch;
-	int n[] = {NX, NY}; 			// --- Size of the Fourier transform
-    int istride = 1;				// --- Distance between two successive input/output elements
-	int ostride = 1;   			
-    int idist = NX*NY;				// --- Distance between batches
-	int odist = NX*((NY/2)+1);
-    int inembed[] = {NX, NY};       // --- Input size with pitch
-    int onembed[] = {NX, ((NY/2)+1)};
-
-    cufftHandle planF, planB;
-
-    cufftDoubleComplex *d_out_data;
-    gpuErrchk(cudaMalloc((void**)&d_out_data, sizeof(cufftDoubleComplex)*NX*((NY/2)+1)*BATCH));
-    GpuMultidimArrayAtGpu<double> d_rec_data;
-    if(recovered_image!=NULL)
-    	d_rec_data.resize(NX, NY, 1, BATCH);
-
-     /* Forward transform */
-    gpuErrchkFFT(cufftPlanMany(&planF, NRANK, n,
-              inembed, istride, idist,
-              onembed, ostride, odist, CUFFT_D2Z, BATCH));
-    gpuErrchkFFT(cufftExecD2Z(planF, (cufftDoubleReal*)d_in_data, d_out_data));
-    gpuErrchk(cudaDeviceSynchronize());
-    cufftDestroy(planF);
-
-    //AJ kernel to calculate the module and angle of the FFT
-    if(module!=NULL & angle!=NULL){
-
-        GpuMultidimArrayAtGpu<double> d_module(NX, ((NY/2)+1), 1, BATCH);
-        GpuMultidimArrayAtGpu<double> d_angle(NX, ((NY/2)+1), 1, BATCH);
-
-        int numTh = 1024;
-        XmippDim3 blockSize(numTh, 1, 1), gridSize;
-        d_module.calculateGridSizeVectorized(blockSize, gridSize);
-    	complextomodule <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-    			(d_out_data, d_module.d_data, d_angle.d_data, (BATCH*NX*((NY/2)+1)));
-    	gpuErrchk(cudaMemcpy(module, d_module.d_data, sizeof(double)*BATCH*NX*((NY/2)+1), cudaMemcpyDeviceToHost));
-    	gpuErrchk(cudaMemcpy(angle, d_angle.d_data, sizeof(double)*BATCH*NX*((NY/2)+1), cudaMemcpyDeviceToHost));
-
-    }
-
-    if(recovered_image!=NULL){
-
-    	/* Backward transform */
-    	gpuErrchkFFT(cufftPlanMany(&planB, NRANK, n,
-    			onembed, ostride, odist,
-				inembed, istride, idist, CUFFT_Z2D, BATCH));
-    	gpuErrchkFFT(cufftExecZ2D(planB, d_out_data, (cufftDoubleReal*)d_rec_data.d_data));
-    	gpuErrchk(cudaDeviceSynchronize());
-    	cufftDestroy(planB);
-
-    	gpuErrchk(cudaMemcpy(recovered_image, d_rec_data.d_data, sizeof(double)*NX*NY*BATCH, cudaMemcpyDeviceToHost));
-    	//recovered_image.copyFromGpu(d_rec_data);
-
-    }
-
-    return (std::complex<double>*)d_out_data;
-
+	pointwiseMultiplicationKernel_complex <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+			((cufftDoubleComplex*)M.d_data, (cufftDoubleComplex*)manyF.d_data, (cufftDoubleComplex*) MmanyF.d_data, manyF.nzyxdim, manyF.yxdim);
 }
 
+void GpuCorrelationAux::produceSideInfo()
+{
+	GpuMultidimArrayAtGpu< std::complex<double> > MF, MF2;
+	MF.resize(d_projFFT);
+	MF2.resize(d_projFFT);
+
+
+	d_projSquaredFFT.clear();
+}
+
+#ifdef NEVERDEFINED
 __global__ void calculate_ncc(double *d_rec_proj_exp, double *d_rec_proj_mask, double *d_rec_mask_exp, double *d_rec_mask_mask,
 		double *d_rec_projSquared_mask, double *d_rec_mask_expSquared, double *NCC, int Xdim, int Ydim, int numProj, int counting)
 {
@@ -159,41 +116,7 @@ __global__ void multiply_kernel(cufftDoubleComplex *projFFT, cufftDoubleComplex 
 
 }
 
-double* cuda_ifft(cufftDoubleComplex* &data, size_t Xdim, size_t Ydim, size_t Zdim, size_t batch)
-{
-
-	int NX = Ydim;
-	int NY = Xdim;
-	int NRANK = 2;		 			// --- 2D FFTs
-	int BATCH = batch;
-	int n[] = {NX, NY}; 			// --- Size of the Fourier transform
-    int istride = 1;				// --- Distance between two successive input/output elements
-	int ostride = 1;
-    int idist = NX*NY;				// --- Distance between batches
-	int odist = NX*((NY/2)+1);
-    int inembed[] = {NX, NY};       // --- Input size with pitch
-    int onembed[] = {NX, ((NY/2)+1)};
-
-    cufftDoubleReal *d_rec_data;
-    cufftHandle planB;
-
-    gpuErrchk(cudaMalloc((void**)&d_rec_data, sizeof(cufftDoubleReal)*NX*NY*BATCH));
-
-	/* Backward transform */
-	gpuErrchkFFT(cufftPlanMany(&planB, NRANK, n,
-			onembed, ostride, odist,
-			inembed, istride, idist, CUFFT_Z2D, BATCH));
-	gpuErrchkFFT(cufftExecZ2D(planB, data, d_rec_data));
-	gpuErrchk(cudaDeviceSynchronize());
-	cufftDestroy(planB);
-
-	gpuErrchk(cudaFree(data));
-
-	return (double*)d_rec_data;
-}
-
-double** cuda_calculate_correlation(std::complex<double>* d_projFFTPointer, std::complex<double>* d_projSquaredFFTPointer, std::complex<double>* d_expFFTPointer, std::complex<double>* d_expSquaredFFTPointer, std::complex<double>* d_maskFFTPointer, size_t Xdim, size_t Ydim, size_t Zdim, size_t numProj, size_t numExp, int counting){
-
+double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux){
 	//Following the formula (21) in Padfiled's paper, proj=F1 and exp=F2
 	cufftDoubleComplex* d_out_proj_exp;
     gpuErrchk(cudaMalloc((void**)&d_out_proj_exp, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
@@ -258,6 +181,7 @@ double** cuda_calculate_correlation(std::complex<double>* d_projFFTPointer, std:
     return NCC;
 
 }
+#endif
 
 __global__ void cart2polar(double *image, double *polar, double *polar2, int maxRadius, int maxAng, int Nimgs, int Ydim, int Xdim, bool rotate)
 {
@@ -323,5 +247,3 @@ void cuda_cart2polar(GpuMultidimArrayAtGpu<double> &image, GpuMultidimArrayAtGpu
     cart2polar <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
     		(image.d_data, polar_image.d_data, polar2_image.d_data, polar_image.Ydim, polar_image.Xdim, polar_image.Ndim, image.Ydim, image.Xdim, rotate);
 }
-
-
