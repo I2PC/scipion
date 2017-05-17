@@ -97,9 +97,6 @@ class XmippParticlePickingAutomatic(ProtParticlePickingAuto, XmippProtocol):
 
     # --------------------------- STEPS functions ------------------------------
     def copyInputFilesStep(self):
-        #FIXME: move this to the base class
-        pwutils.makeFilePath(self._getAllDone())
-
         # Copy training model files to current run
         for f in self.filesToCopy:
             copyFile(self.particlePickingRun._getExtraPath(f),

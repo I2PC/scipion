@@ -235,6 +235,7 @@ class ProtParticlePickingAuto(ProtParticlePicking):
     def _insertAllSteps(self):
         self.initialIds = self._insertInitialSteps()
         self.insertedDict = {}
+        pwutils.makeFilePath(self._getAllDone())
 
         pickMicIds = self._insertNewMicsSteps(self.insertedDict,
                                               self.getInputMicrographs())
