@@ -300,4 +300,5 @@ inline __host__ __device__ float3 reflect(float3 i, float3 n)
 {
 	return i - 2.0f * n * dot(n,i);
 }
+
 #endif
