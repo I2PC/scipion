@@ -36,7 +36,14 @@ import pyworkflow.em.metadata as md
 
 
 class ProtEthanPicker(ProtParticlePicking):
-    """  """
+    """
+    ETHAN is a program for automatic detection of spherical particles from
+    electron micrographs.
+    This protocol wraps the ETHAN command line program.
+
+    The ETHAN software was written at the Department of Computer Science of
+    University of Helsinki, Finland by Teemu Kivioja.
+    """
 
     _label = 'ethan picker'
 
