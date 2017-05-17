@@ -1,36 +1,46 @@
 
 #include "cuda_utils.h"
-#include "cuda_check_errors.h"
-#include <cuda_runtime.h>
 
-
-struct ioTime *mytimes;
-
-void gpuMalloc(void** d_data, size_t Nbytes)
+void gpuAssert(cudaError_t code, const char *file, int line, bool abort)
 {
-	gpuErrchk(cudaMalloc(d_data, Nbytes));
+   if (code != cudaSuccess)
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
 }
 
-void gpuFree(void* d_data)
+void gpuAssertFFT(cufftResult_t code, const char *file, int line, bool abort)
 {
-	gpuErrchk(cudaFree(d_data));
+   if (code != CUFFT_SUCCESS)
+   {
+	   fprintf(stderr, "CUFFT error");
+      if (abort) exit(code);
+   }
 }
 
-void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes)
+cudaPitchedPtr CopyVolumeHostToDevice(const float* host, uint width, uint height, uint depth)
 {
-	gpuErrchk(cudaMemcpy(d_data, data, Nbytes, cudaMemcpyHostToDevice));
+	cudaPitchedPtr device = {0};
+	const cudaExtent extent = make_cudaExtent(width * sizeof(float), height, depth);
+	gpuErrchk(cudaMalloc3D(&device, extent));
+	cudaMemcpy3DParms p = {0};
+	p.srcPtr = make_cudaPitchedPtr((void*)host, width * sizeof(float), width, height);
+	p.dstPtr = device;
+	p.extent = extent;
+	p.kind = cudaMemcpyHostToDevice;
+	gpuErrchk(cudaMemcpy3D(&p));
+	return device;
 }
 
-void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes)
+void CopyVolumeDeviceToHost(float* host, const cudaPitchedPtr device, uint width, uint height, uint depth)
 {
-	gpuErrchk(cudaMemcpy(data, d_data, Nbytes, cudaMemcpyDeviceToHost));
+	const cudaExtent extent = make_cudaExtent(width * sizeof(float), height, depth);
+	cudaMemcpy3DParms p = {0};
+	p.srcPtr = device;
+	p.dstPtr = make_cudaPitchedPtr((void*)host, width * sizeof(float), width, height);
+	p.extent = extent;
+	p.kind = cudaMemcpyDeviceToHost;
+	gpuErrchk(cudaMemcpy3D(&p));
+	gpuErrchk(cudaFree(device.ptr));  //free the GPU volume
 }
-
-int gridFromBlock(int tasks, int Nthreads)
-{
-    int numBlk = tasks/Nthreads;
-    if(tasks%Nthreads>0)
-    	numBlk++;
-    return numBlk;
-}
-
