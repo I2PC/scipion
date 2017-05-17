@@ -27,9 +27,7 @@
 
 #include <data/multidim_array.h>
 #include <reconstruction_cuda/cuda_gpu_correlation.h>
-#include <reconstruction_cuda/cuda_utils.h>
-
-int check_gpu_memory(size_t Xdim, size_t Ydim, int percent);
+#include <reconstruction_cuda/cuda_xmipp_utils.h>
 
 template<typename T>
 class GpuMultidimArrayAtCpu
@@ -46,6 +44,11 @@ public:
 
 	GpuMultidimArrayAtCpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
+		resize(_Xdim, _Ydim, _Zdim, _Ndim);
+    }
+
+	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
+    {
 		Xdim=_Xdim;
 		Ydim=_Ydim;
 		Zdim=_Zdim;
@@ -53,7 +56,10 @@ public:
         yxdim=(size_t)_Ydim*_Xdim;
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
-        data=new T[nzyxdim];
+        if (nzyxdim>0)
+        	data=new T[nzyxdim];
+        else
+        	data=NULL;
     }
 
 	void fillImage(size_t n, const MultidimArray<T> &from)
@@ -79,11 +85,29 @@ public:
 		gpuCopyFromGPUToCPU(gpuArray.d_data, data, nzyxdim*sizeof(T));
 	}
 
-	~GpuMultidimArrayAtCpu()
+	void clear()
 	{
 		delete []data;
 	}
+
+	~GpuMultidimArrayAtCpu()
+	{
+		clear();
+	}
 };
+
+template<class T>
+void fillImage(GpuMultidimArrayAtGpu<T> &to, const MultidimArray<T> &from, size_t n=0)
+{
+	to.resize(XSIZE(from),YSIZE(from),ZSIZE(from),NSIZE(from));
+	gpuCopyFromCPUToGPU(MULTIDIM_ARRAY(from), to.d_data+n*MULTIDIM_SIZE(from), MULTIDIM_SIZE(from)*sizeof(T));
+}
 
 //@}
 #endif
+
+
+
+
+
+
