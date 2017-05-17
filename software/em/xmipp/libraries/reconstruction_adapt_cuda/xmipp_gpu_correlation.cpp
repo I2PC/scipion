@@ -23,35 +23,19 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "xmipp_gpu_correlation.h"
-
 #include <data/xmipp_image.h>
 #include <data/mask.h>
+#include <data/xmipp_fftw.h>
 #include <data/transformations.h>
 #include <data/metadata_extension.h>
 
 #include <algorithm>
 #include "xmipp_gpu_utils.h"
+#include "xmipp_gpu_correlation.h"
+#include <reconstruction_cuda/cuda_gpu_correlation.h>
 
-
-struct GPUCorrelationProjPtr {
-	std::complex<double>* d_projFFTPointer;
-	std::complex<double>* d_projSquaredFFTPointer;
-	std::complex<double>* d_projPolarFFTPointer;
-	std::complex<double>* d_projPolarSquaredFFTPointer;
-	std::complex<double>* d_maskFFTPointer;
-};
-
-struct GPUCorrelationExpPtr {
-	std::complex<double>* d_expFFTPointer;
-	std::complex<double>* d_expSquaredFFTPointer;
-	std::complex<double>* d_expPolarFFTPointer;
-	std::complex<double>* d_expPolarSquaredFFTPointer;
-};
-
-//PROJECTION IMAGES PREPROCESS
-
-void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask, GPUCorrelationProjPtr &d_projPtr)
+void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
+		GpuCorrelationAux &d_correlationAux, bool rotate)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
 	getImageSize(SF,Xdim,Ydim,Zdim,Ndim);
@@ -85,11 +69,17 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask, GPUCo
 
 		SF.getRow(rowIn, objIndex);
 		rowIn.getValue(MDL_IMAGE, fnImg);
-		std::cerr << objIndex << ". Projected image: " << fnImg << std::endl;
+		std::cerr << objIndex << ". Image: " << fnImg << std::endl;
 		Iref.read(fnImg);
 		Iref().setXmippOrigin();
 		mask.apply_mask(Iref(), Iref());
 		original_image_stack.fillImage(n,Iref());
+
+		if (rotate)
+		{
+			Iref().selfReverseX();
+			Iref().selfReverseY();
+		}
 
 		Iref2=Iref();
 		Iref2*=Iref2;
@@ -118,14 +108,14 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask, GPUCo
 	GpuMultidimArrayAtGpu<double> polar_gpu(360,radius,1,numImages);
 	GpuMultidimArrayAtGpu<double> polar2_gpu(360,radius,1,numImages);
 
-	cuda_cart2polar(original_image_gpu, polar_gpu, polar2_gpu, 0);
+	cuda_cart2polar(original_image_gpu, polar_gpu, polar2_gpu, rotate);
 
 	//FFT
-	d_projPtr.d_projFFTPointer = padded_image_gpu.fft();
-	d_projPtr.d_projSquaredFFTPointer = padded_image2_gpu.fft();
-	d_projPtr.d_projPolarFFTPointer = polar_gpu.fft();
-	d_projPtr.d_projPolarSquaredFFTPointer = polar2_gpu.fft();
-	d_projPtr.d_maskFFTPointer = padded_mask_gpu.fft();
+	padded_image_gpu.fft(d_correlationAux.d_projFFT);
+	padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT);
+	polar_gpu.fft(d_correlationAux.d_projPolarFFT);
+	polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
+	padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
 
 	/*/AJ for debugging
 	GpuMultidimArrayAtCpu<double> polar_cpu(360, radius, 1, numImages);
@@ -145,106 +135,6 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask, GPUCo
 	//END AJ/*/
 
 }
-
-
-
-//EXPERIMENTAL IMAGES PREPROCESS
-
-void preprocess_experimental_images(MetaData SF, int numImages, Mask &mask, size_t Xdim, size_t Ydim, GPUCorrelationExpPtr &d_expPtr)
-{
-
-	size_t pad_Xdim=2*Xdim-1;
-	size_t pad_Ydim=2*Ydim-1;
-
-	size_t objIndex = 0;
-	MDRow rowIn;
-	FileName fnImg;
-	Image<double> Iref;
-	MultidimArray<double> Iref2, padIref, padIref2, padMask;
-	padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
-	padIref.setXmippOrigin();
-	size_t radius=(size_t)mask.R1;
-
-	GpuMultidimArrayAtCpu<double> exp_original_image_stack(Xdim,Ydim,1,numImages);
-	GpuMultidimArrayAtCpu<double> exp_rotated_image_stack(Xdim,Ydim,1,numImages);
-	GpuMultidimArrayAtCpu<double> exp_padded_image_stack(pad_Xdim,pad_Ydim,1,numImages);
-	GpuMultidimArrayAtCpu<double> exp_padded_image2_stack(pad_Xdim,pad_Ydim,1,numImages);
-
-	MDIterator *iter = new MDIterator(SF);
-
-	int pointer=0;
-	int pointer_pad=0;
-	int available_images=numImages;
-	size_t n=0;
-	while(available_images && iter->objId!=0){
-
-		objIndex = iter->objId;
-		available_images--;
-
-		SF.getRow(rowIn, objIndex);
-		rowIn.getValue(MDL_IMAGE, fnImg);
-		std::cerr << objIndex << ". Experimental image: " << fnImg << std::endl;
-		Iref.read(fnImg);
-		Iref().setXmippOrigin();
-		mask.apply_mask(Iref(), Iref());
-		exp_original_image_stack.fillImage(n,Iref());
-
-		Iref().selfReverseX();
-		Iref().selfReverseY();
-		exp_rotated_image_stack.fillImage(n,Iref());
-
-		Iref2=Iref();
-		Iref2*=Iref2;
-		Iref().window(padIref, STARTINGY(padIref),STARTINGX(padIref),FINISHINGY(padIref),FINISHINGX(padIref));
-		Iref2 .window(padIref2,STARTINGY(padIref),STARTINGX(padIref),FINISHINGY(padIref),FINISHINGX(padIref));
-		exp_padded_image_stack.fillImage(n,padIref);
-		exp_padded_image2_stack.fillImage(n,padIref2);
-
-		if(iter->hasNext())
-			iter->moveNext();
-
-		n++;
-	}
-	delete iter;
-
-
-	GpuMultidimArrayAtGpu<double> exp_original_image_gpu, exp_padded_image_gpu, exp_padded_image2_gpu;
-	exp_original_image_stack.copyToGpu(exp_original_image_gpu);
-	exp_padded_image_stack.copyToGpu(exp_padded_image_gpu);
-	exp_padded_image2_stack.copyToGpu(exp_padded_image2_gpu);
-
-	//Polar transform of the projected images
-	GpuMultidimArrayAtGpu<double> exp_polar_gpu(360,radius,1,numImages);
-	GpuMultidimArrayAtGpu<double> exp_polar2_gpu(360,radius,1,numImages);
-
-	cuda_cart2polar(exp_original_image_gpu, exp_polar_gpu, exp_polar2_gpu, 1);
-
-	//FFT
-	d_expPtr.d_expFFTPointer = exp_padded_image_gpu.fft();
-	d_expPtr.d_expSquaredFFTPointer = exp_padded_image2_gpu.fft();
-	d_expPtr.d_expPolarFFTPointer = exp_polar_gpu.fft();
-	d_expPtr.d_expPolarSquaredFFTPointer = exp_polar2_gpu.fft();
-
-	/*/AJ for debugging
-	GpuMultidimArrayAtCpu<double> polar_cpu(pad_Xdim, pad_Ydim, 1, numImages);
-	pointer=0;
-	for(int i=0; i<numImages; i++){
-	MultidimArray<double> padded;
-	FileName fnImgPad;
-	Image<double> Ipad;
-	padded.coreAllocate(1, 1, pad_Ydim, pad_Xdim);
-	memcpy(MULTIDIM_ARRAY(padded), &polar_cpu.data[pointer], pad_Ydim*pad_Xdim*sizeof(double));
-	fnImgPad.compose("test", i+1, "jpg");
-	Ipad()=padded;
-	Ipad.write(fnImgPad);
-	padded.coreDeallocate();
-	pointer += pad_Xdim*pad_Ydim;
-	}
-	//END AJ/*/
-
-}
-
-
 
 // Read arguments ==========================================================
 void ProgGpuCorrelation::readParams()
@@ -276,6 +166,12 @@ void ProgGpuCorrelation::defineParams()
 
 }
 
+int check_gpu_memory(size_t Xdim, size_t Ydim, int percent){
+	float data[3]={0, 0, 0};
+	cuda_check_gpu_memory(data);
+	int bytes = 8*(2*((2*Xdim)-1)*((2*Ydim)-1) + 2*(360*(Xdim/2)));
+	return (int)((data[1]*percent/100)/bytes);
+}
 
 //#define DEBUG
 // Compute correlation --------------------------------------------------------
@@ -298,7 +194,11 @@ void ProgGpuCorrelation::run()
 	mask.resize(Ydim,Xdim);
 	mask.get_binary_mask().setXmippOrigin();
 	mask.generate_mask();
-	int counting = mask.get_binary_mask().sum();
+	int maskCount = mask.get_binary_mask().sum();
+
+	MultidimArray<double> dMask, maskAutocorrelation;
+	typeCast(mask.get_binary_mask(),dMask);
+	auto_correlation_matrix(dMask,maskAutocorrelation);
 
 	//AJ check_gpu_memory to know how many images we can copy in the gpu memory
 	int percent = 70;
@@ -310,8 +210,10 @@ void ProgGpuCorrelation::run()
 	else
 		available_images_proj = numImagesProj-1;
 
-	GPUCorrelationProjPtr d_pointersProj;
-	preprocess_projection_images(SF, available_images_proj, mask, d_pointersProj);
+	GpuCorrelationAux d_referenceAux;
+	preprocess_projection_images(SF, available_images_proj, mask, d_referenceAux, false);
+	//fillImage(d_referenceAux.maskAutocorrelation,maskAutocorrelation);
+	d_referenceAux.maskCount=maskCount;
 
 
 	//EXPERIMENTAL IMAGES PART
@@ -327,18 +229,24 @@ void ProgGpuCorrelation::run()
 	else
 		available_images_exp = numImagesExp-1;
 
-	GPUCorrelationExpPtr d_pointersExp;
-	preprocess_experimental_images(SFexp, available_images_exp, mask, Xdim, Ydim, d_pointersExp);
+	GpuCorrelationAux d_experimentalAux;
+	preprocess_projection_images(SFexp, available_images_exp, mask, d_experimentalAux, true);
+	//fillImage(d_referenceAux.maskAutocorrelation,maskAutocorrelation);
+	d_experimentalAux.maskCount=maskCount;
 
 
 	//CORRELATION PART
+	exit(0);
 
 	//Translational part
 	printf("Calculating correlation...\n");
-
 	size_t pad_Xdim=2*Xdim-1;
 	size_t pad_Ydim=2*Ydim-1;
-	double **NCC = cuda_calculate_correlation(d_pointersProj.d_projFFTPointer, d_pointersProj.d_projSquaredFFTPointer, d_pointersExp.d_expFFTPointer, d_pointersExp.d_expSquaredFFTPointer, d_pointersProj.d_maskFFTPointer, pad_Xdim, pad_Ydim, Zdim, available_images_proj, available_images_exp, counting);
+	double **NCC = NULL; //cuda_calculate_correlation(
+//			d_pointersProj.d_projFFTPointer, d_pointersProj.d_projSquaredFFTPointer,
+//			d_pointersExp.d_projFFTPointer, d_pointersExp.d_projSquaredFFTPointer,
+//			d_pointersProj.d_maskFFTPointer, pad_Xdim, pad_Ydim, Zdim,
+//			available_images_proj, available_images_exp, counting);
 
 	MultidimArray<double> MDAncc;
 	MultidimArray<double> NCC_matrix(available_images_exp, available_images_proj);
@@ -351,8 +259,8 @@ void ProgGpuCorrelation::run()
 
 	FileName fnImgPad;
 	Image<double> Ipad;
-	while(available_images_exp && iterExp->objId!=0){
-
+	while(available_images_exp && iterExp->objId!=0)
+	{
 		objIndexExp = iterExp->objId;
 		available_images_exp--;
 
