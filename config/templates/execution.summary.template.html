@@ -322,7 +322,37 @@
         };
 
         function addSystemChart () {
-            
+
+            // Create the fixed system data part
+            seriesData = [{
+                    name: 'Memory',
+                    data: report.systemData.mem,
+                    color: '#24307B'
+
+                }, {
+                    name: 'Swap',
+                    data: report.systemData.swap,
+                    color: '#B4AC22'
+                }, {
+                    name: 'cpu',
+                    data: report.systemData.cpu,
+                    color: '#D14242'
+                }];
+
+            // Create a series for each GPU data
+            for(var serie in report.systemData) {
+                if (serie.startsWith("gpu")) {
+                 gpuData = {
+                    name: serie,
+                    data: report.systemData[serie],
+                    color: '#24307B'
+
+                }
+                seriesData.push(gpuData);
+                }
+
+            }
+
             $('#systemChart').highcharts({
                 title: {
                     text: '',
@@ -361,20 +391,7 @@
                     verticalAlign: 'middle',
                     borderWidth: 0
                 },
-                series: [{
-                    name: 'Memory',
-                    data: report.systemData.mem,
-                    color: '#24307B'
-                    
-                }, {
-                    name: 'Swap',
-                    data: report.systemData.swap,
-                    color: '#B4AC22'
-                }, {
-                    name: 'cpu',
-                    data: report.systemData.cpu,
-                    color: '#D14242'
-                }],
+                series: seriesData,
                 chart:{
                     zoomType: 'x',
                     panning: true,
