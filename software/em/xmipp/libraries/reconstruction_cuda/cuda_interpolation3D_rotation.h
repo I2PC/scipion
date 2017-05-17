@@ -26,9 +26,9 @@
 #ifndef CUDA_INTERPOLATION3D_H
 #define CUDA_INTERPOLATION3D_H
 
+#include "cuda_utils.h"
 #include "cuda_basic_math.h"
 #include "cuda_bspline_rotation.h"
-#include "cuda_check_errors.h"
 
 // 3D float texture
 texture<float, cudaTextureType3D, cudaReadModeElementType> texRefVol;
