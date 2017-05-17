@@ -74,6 +74,13 @@ class ProtMonitorSummary(ProtMonitor):
                       label="Raise Alarm if Swap > XX%",
                       help="Raise alarm if swap allocated is greater "
                            "than given percentage")
+        form.addParam('doGpu', params.BooleanParam, default=False,
+                       label="Check GPU",
+                       help="Set to true if you want to monitor the GPU")
+        form.addParam('gpusToUse', params.StringParam, default='0',
+                          label='Which GPUs to use:', condition='doGpu',
+                          help='Providing a list of which GPUs '
+                               '(0,1,2,3, etc). Default is monitor GPU 0 only')
 
         form.addSection('Mail settings')
         ProtMonitor._sendMailParams(self, form)
@@ -166,7 +173,10 @@ class ProtMonitorSummary(ProtMonitor):
                                    stdout=True,
                                    cpuAlert=self.cpuAlert.get(),
                                    memAlert=self.memAlert.get(),
-                                   swapAlert=self.swapAlert.get())
+                                   swapAlert=self.swapAlert.get(),
+                                   doGpu=self.doGpu.get(),
+                                   gpusToUse = self.gpusToUse.get(),
+                                   )
         return sysMonitor
 
     def createHtmlReport(self, ctfMonitor=None, sysMonitor=None):
