@@ -25,9 +25,3 @@
 
 #include "xmipp_gpu_utils.h"
 
-int check_gpu_memory(size_t Xdim, size_t Ydim, int percent){
-	float data[3]={0, 0, 0};
-	cuda_check_gpu_memory(data);
-	int bytes = 8*(2*((2*Xdim)-1)*((2*Ydim)-1) + 2*(360*(Xdim/2)));
-	return (int)((data[1]*percent/100)/bytes);
-}
