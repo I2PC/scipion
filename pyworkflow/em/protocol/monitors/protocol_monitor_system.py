@@ -37,239 +37,23 @@ from pyworkflow.gui.plotter import plt
 from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.plotter import EmPlotter
+from tkMessageBox import showerror
 
+from pynvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex,\
+nvmlDeviceGetName, nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
+NVMLError
 
-#cuda related stuff
-import platform
-import ctypes
-
-class DeviceProp(ctypes.Structure):
-    #TODO: ROB this is a tricky bussiness, if the struct changes in size the program will
-    #crash with a memory fault error
-    _fields_ = [
-            ('name', ctypes.c_char * 256),
-            ('totalGlobalMem', ctypes.c_size_t),
-            ('sharedMemPerBlock', ctypes.c_size_t),
-            ('regsPerBlock', ctypes.c_int),
-            ('warpSize', ctypes.c_int),
-            ('memPitch', ctypes.c_size_t),
-            ('maxThreadsPerBlock', ctypes.c_int),
-            ('maxThreadsDim', ctypes.c_int * 3),
-            ('maxGridSize', ctypes.c_int * 3),
-            ('clockRate', ctypes.c_int),
-            ('totalConstMem', ctypes.c_size_t),
-            ('major', ctypes.c_int),
-            ('minor', ctypes.c_int),
-            ('textureAlignment', ctypes.c_size_t),
-            ('texturePitchAlignment', ctypes.c_size_t),
-            ('deviceOverlap', ctypes.c_int),
-            ('multiProcessorCount', ctypes.c_int),
-            ('kernelExecTimeoutEnabled', ctypes.c_int),
-            ('integrated', ctypes.c_int),
-            ('canMapHostMemory', ctypes.c_int),
-            ('computeMode', ctypes.c_int),
-            ('maxTexture1D', ctypes.c_int),
-            ('maxTexture1DMipmap', ctypes.c_int),
-            ('maxTexture1DLinear', ctypes.c_int),
-            ('maxTexture2D', ctypes.c_int * 2),
-            ('maxTexture2DMipmap', ctypes.c_int * 2),
-            ('maxTexture2DLinear', ctypes.c_int * 3),
-            ('maxTexture2DGather', ctypes.c_int * 2),
-            ('maxTexture3D', ctypes.c_int * 3),
-            ('maxTexture3DAlt', ctypes.c_int * 3),
-            ('maxTextureCubemap', ctypes.c_int),
-            ('maxTexture1DLayered', ctypes.c_int * 2),
-            ('maxTexture2DLayered', ctypes.c_int * 3),
-            ('maxTextureCubemapLayered', ctypes.c_int * 2),
-            ('maxSurface1D', ctypes.c_int),
-            ('maxSurface2D', ctypes.c_int * 2),
-            ('maxSurface3D', ctypes.c_int * 3),
-            ('maxSurface1DLayered', ctypes.c_int * 2),
-            ('maxSurface2DLayered', ctypes.c_int * 3),
-            ('maxSurfaceCubemap', ctypes.c_int),
-            ('maxSurfaceCubemapLayered', ctypes.c_int * 2),
-            ('surfaceAlignment', ctypes.c_size_t),
-            ('concurrentKernels', ctypes.c_int),
-            ('ECCEnabled', ctypes.c_int),
-            ('pciBusID', ctypes.c_int),
-            ('pciDeviceID', ctypes.c_int),
-            ('pciDomainID', ctypes.c_int),
-            ('tccDriver', ctypes.c_int),
-            ('asyncEngineCount', ctypes.c_int),
-            ('unifiedAddressing', ctypes.c_int),
-            ('memoryClockRate', ctypes.c_int),
-            ('memoryBusWidth', ctypes.c_int),
-            ('l2CacheSize', ctypes.c_int),
-            ('maxThreadsPerMultiProcessor', ctypes.c_int),
-            ('streamPrioritiesSupported', ctypes.c_int),
-            ('globalL1CacheSupported', ctypes.c_int),
-            ('localL1CacheSupported', ctypes.c_int),
-            ('sharedMemPerMultiprocessor', ctypes.c_size_t),
-            ('regsPerMultiprocessor', ctypes.c_int),
-            ('managedMemSupported', ctypes.c_int),
-            ('isMultiGpuBoard', ctypes.c_int),
-            ('multiGpuBoardGroupID', ctypes.c_int),
-            ('singleToDoublePrecisionPerfRatio', ctypes.c_int),
-            ('pageableMemoryAccess', ctypes.c_int),
-            ('concurrentManagedAccess', ctypes.c_int),
-            ("__someextraspaceJustInCase", 36*ctypes.c_int),
-            ]
-
-
-    def __str2__(self):
-        return """NVidia GPU Specifications:
-    Name: %s
-    Total global mem: %f Gb
-    Shared mem per block: %i
-    Registers per block: %i
-    Warp size: %i
-    Mem pitch: %i
-    Max threads per block: %i
-    Max treads dim: (%i, %i, %i)
-    Max grid size: (%i, %i, %i)
-    Total const mem: %i
-    Compute capability: %i.%i
-    Clock Rate (GHz): %f
-    Texture alignment: %i
-""" % (self.name, self.totalGlobalMem/(1073741824.), self.sharedMemPerBlock,
-       self.regsPerBlock, self.warpSize, self.memPitch,
-       self.maxThreadsPerBlock,
-       self.maxThreadsDim[0], self.maxThreadsDim[1], self.maxThreadsDim[2],
-       self.maxGridSize[0], self.maxGridSize[1], self.maxGridSize[2],
-       self.totalConstMem, self.major, self.minor,
-       float(self.clockRate)/1.0e6, self.textureAlignment)
-
-    def __str__(self):
-        return """NVidia GPU Specifications:
-    Name: %s
-    Total global mem: %f Gb
-""" % (self.name, self.totalGlobalMem/(1073741824.))
-
-class Cuda(object):
-    #instead of using pyCuda I am going to access C library through ctypes
-    #may be this should be change in the future
-    cudaSuccess = 0
-    errorDict = {
-        1: 'MissingConfigurationError',
-        2: 'MemoryAllocationError',
-        3: 'InitializationError',
-        4: 'LaunchFailureError',
-        5: 'PriorLaunchFailureError',
-        6: 'LaunchTimeoutError',
-        7: 'LaunchOutOfResourcesError',
-        8: 'InvalidDeviceFunctionError',
-        9: 'InvalidConfigurationError',
-        10: 'InvalidDeviceError',
-        11: 'InvalidValueError',
-        12: 'InvalidPitchValueError',
-        13: 'InvalidSymbolError',
-        14: 'MapBufferObjectFailedError',
-        15: 'UnmapBufferObjectFailedError',
-        16: 'InvalidHostPointerError',
-        17: 'InvalidDevicePointerError',
-        18: 'InvalidTextureError',
-        19: 'InvalidTextureBindingError',
-        20: 'InvalidChannelDescriptorError',
-        21: 'InvalidMemcpyDirectionError',
-        22: 'AddressOfConstantError',
-        23: 'TextureFetchFailedError',
-        24: 'TextureNotBoundError',
-        25: 'SynchronizationError',
-        26: 'InvalidFilterSettingError',
-        27: 'InvalidNormSettingError',
-        28: 'MixedDeviceExecutionError',
-        29: 'CudartUnloadingError',
-        30: 'UnknownError',
-        31: 'NotYetImplementedError',
-        32: 'MemoryValueTooLargeError',
-        33: 'InvalidResourceHandleError',
-        34: 'NotReadyError',
-        0x7f: 'StartupFailureError',
-        10000: 'ApiFailureBaseError'}
-
-    def __init__(self):
-        self.getCudaLib()
-
-    #if there is a cuda library _libcudart will NOT be None
-    def getCudaLib(self):
-        try:
-            if platform.system() == "Microsoft":
-                self._libcudart = ctypes.windll.LoadLibrary('cudart.dll')
-            elif platform.system()=="Darwin":
-                self._libcudart = ctypes.cdll.LoadLibrary('libcudart.dylib')
-            else:
-                self._libcudart = ctypes.cdll.LoadLibrary('libcudart.so')
-            self._libcudart_error = None
-        except OSError, e:
-            self._libcudart_error = e
-            self._libcudart = None
-        sys.stderr.write("self._libcudart" + str(self._libcudart))
-    def getDriverVersion(self):
-        if self._libcudart is None: return  None
-        version = ctypes.c_int()
-        self._libcudart.cudaDriverGetVersion(ctypes.byref(version))
-        v = "%d.%d" % (version.value//1000,
-                       version.value%100)
-        return v
-
-    def getRuntimeVersion(self):
-        if self._libcudart is None: return  None
-        version = ctypes.c_int()
-        self._libcudart.cudaRuntimeGetVersion(ctypes.byref(version))
-        v = "%d.%d" % (version.value//1000,
-                       version.value%100)
-        return v
-
-    def _checkCudaStatus(self, status):
-        if status != self.cudaSuccess:
-            eClassString = self.errorDict[status]
-            # Get the class by name from the top level of this module
-            eClass = globals()[eClassString]
-            raise eClass()
-
-    def cudaGetDeviceCount(self):
-        if self._libcudart is None: return  0
-        deviceCount = ctypes.c_int()
-        status = self._libcudart.cudaGetDeviceCount(ctypes.byref(deviceCount))
-        self._checkCudaStatus(status)
-        return deviceCount.value
-
-    def _checkDeviceNumber(self, device):
-        assert isinstance(device, int), "device number must be an int"
-        assert device >= 0, "device number must be greater than 0"
-        assert device < 2**8-1, "device number must be < 255"
-
-    def getDeviceProperties(self, device):
-        if self._libcudart is None: return  None
-        self._checkDeviceNumber(device)
-        props = DeviceProp()
-        status = self._libcudart.cudaGetDeviceProperties(ctypes.byref(props), device)
-        self._checkCudaStatus(status)
-        return props
-
-    def cudaMemGetInfo(self, gb=True):
-        """
-        Return (free, total) memory stats for CUDA GPU
-        Default units are bytes. If gb==True, return units in GB
-        """
-        free = ctypes.c_size_t()
-        total = ctypes.c_size_t()
-        ret = self._libcudart.cudaMemGetInfo(ctypes.byref(free), ctypes.byref(total))
-
-        if ret != 0:
-            err = self._libcudart.cudaGetErrorString(ret)
-            raise RuntimeError("CUDA Error (%d): %s" % (ret, err))
-
-        if gb:
-            scale = 1024.0**3
-            return free.value / scale, total.value / scale
-        else:
-            return free.value, total.value
-
-#end cuda stuff
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
 
+
+def errorWindow(tkParent, msg):
+    try:
+        showerror("Error",  # bar title
+                  msg,  # message
+                  parent=tkParent)
+    except:
+        print("Error:", msg)
 
 class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
@@ -335,7 +119,8 @@ class ProtMonitorSystem(ProtMonitor):
                                    memAlert=self.memAlert.get(),
                                    swapAlert=self.swapAlert.get(),
                                    doGpu=self.doGpu.get(),
-                                   gpusToUse = self.gpusToUse.get())
+                                   gpusToUse = self.gpusToUse.get(),
+                                    )
         return sysMonitor
 
     #--------------------------- INFO functions --------------------------------
@@ -351,9 +136,9 @@ class ProtMonitorSystem(ProtMonitor):
 
 
 class MonitorSystem(Monitor):
-    """ This will will be monitoring a CTF estimation protocol.
+    """ This will will be monitoring a System  protocol.
     It will internally handle a database to store produced
-    CTF values.
+    system values.
     """
     def __init__(self, protocols, **kwargs):
         Monitor.__init__(self, **kwargs)
@@ -367,22 +152,10 @@ class MonitorSystem(Monitor):
         if self.doGpu:
             #get Gpus to monitor
             self.gpusToUse = [int(n) for n in (kwargs['gpusToUse']).split()]
-            #init GPU
-            self.cuda = Cuda()
-            #print some general info
-            #yhis is helpfull for debuging but I do not think should be here
-
-            sys.stderr.write("Driver version: %s\n" % self.cuda.getDriverVersion())
-            sys.stderr.write("Runtime version: %s\n" % self.cuda.getRuntimeVersion())
-            nn = self.cuda.cudaGetDeviceCount()
-            sys.stderr.write("Device count: %s\n" % nn)
-            for ii in self.gpusToUse:
-                props = self.cuda.getDeviceProperties(ii)
-                sys.stderr.write("\nDevice %d:\n" % ii)
-                sys.stderr.write(props.__str__())
+            #init GPUs
+            nvmlInit()
         else:
             self.gpusToUse = None
-
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
                                  isolation_level=None)
         self.cur = self.conn.cursor()
@@ -405,28 +178,54 @@ class MonitorSystem(Monitor):
         psutil.virtual_memory()
 
     def step(self):
-        cpu = psutil.cpu_percent(interval=0)
-        mem = psutil.virtual_memory()
-        swap = psutil.swap_memory()
+        valuesDict={}
+        valuesDict['table'] = self._tableName
+        cpu  = valuesDict['cpu'] = psutil.cpu_percent(interval=0)
+        mem  = valuesDict['mem'] = psutil.virtual_memory().percent
+        swap = valuesDict['swap'] = psutil.swap_memory().percent
         if self.doGpu:
-            self.cuda = Cuda()
-            free, total = self.cuda.cudaMemGetInfo()
-            sys.stderr.write("free, total %d %d "% (free, total))
+            for i in self.gpusToUse:
+                try:
+                    handle = nvmlDeviceGetHandleByIndex(i)
+                    memInfo = nvmlDeviceGetMemoryInfo(handle)
+                    used, total = memInfo.used, memInfo.total
+                    valuesDict["gpuMem%d"%i] = float(used)*100./float(total)
+                    util = nvmlDeviceGetUtilizationRates(handle)
+                    valuesDict["gpuUtil%d"%i] = util.gpu
+                except NVMLError as err:
+                    handle = nvmlDeviceGetHandleByIndex(i)
+                    msg = "Device %d -> %s not suported\n Remove device %d from FORM"%\
+                          (i,nvmlDeviceGetName(handle),i)
+                    errorWindow(None, msg)
 
         if self.cpuAlert < 100 and cpu > self.cpuAlert:
-            self.warning("CPU allocation =%f." % cpu.percent)
+            self.warning("CPU allocation =%f." % cpu)
             self.cpuAlert = cpu
 
         if self.memAlert < 100 and mem.percent > self.memAlert:
-            self.warning("Memory allocation =%f." % mem.percent)
-            self.memAlert = mem.percent
+            self.warning("Memory allocation =%f." % mem)
+            self.memAlert = mem
 
         if self.swapAlert < 100 and swap.percent > self.swapAlert:
-            self.warning("SWAP allocation =%f." % swap.percent)
-            self.swapAlert = swap.percent
+            self.warning("SWAP allocation =%f." % swap)
+            self.swapAlert = swap
 
-        sql = """INSERT INTO %s(mem,cpu,swap) VALUES(%f,%f,%f);""" % (
-            self._tableName, mem.percent, cpu, swap.percent)
+        sqlInsert = "INSERT INTO %(table)s (mem,cpu,swap"
+        if self.doGpu:
+            gpuAttr = ""
+            for i in self.gpusToUse:
+                gpuAttr += ", gpuMem%d"%i
+                gpuAttr += ", gpuUtil%d"%i
+            sqlInsert += gpuAttr
+        sqlInsert += ") VALUES(%(mem)f,%(cpu)f,%(swap)f"
+        if self.doGpu:
+            gpuAttr = ""
+            for i in self.gpusToUse:
+                gpuAttr += ", %"+"(gpuMem%d)"%i+"f"
+                gpuAttr += ", %"+"(gpuUtil%d)"%i+"f"
+            sqlInsert += gpuAttr
+        sqlInsert += ");"
+        sql = sqlInsert%valuesDict
 
         try:
             self.cur.execute(sql)
@@ -438,13 +237,21 @@ class MonitorSystem(Monitor):
                    for prot in self.protocols)
 
     def _createTable(self):
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS  %s(
+        sqlString = """CREATE TABLE IF NOT EXISTS  %s(
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 timestamp DATE DEFAULT (datetime('now','localtime')),
                                 cpu FLOAT,
                                 mem FLOAT,
-                                swap FLOAT)
-                                """ % self._tableName)
+                                swap FLOAT
+                                """ % self._tableName
+        if self.doGpu:
+            gpuAttr = ""
+            for i in self.gpusToUse:
+                gpuAttr += ", gpuMem%d FLOAT"%i
+                gpuAttr += ", gpuUtil%d FLOAT\n"%i
+            sqlString += gpuAttr
+        sqlString +=")"
+        self.cur.execute(sqlString)
 
     def getData(self):
         cur = self.cur
@@ -473,6 +280,13 @@ class MonitorSystem(Monitor):
                 'mem': get('mem'),
                 'swap': get('swap'),
                 }
+        if self.doGpu:
+            for i in self.gpusToUse:
+                key = "gpuMem%d"%i
+                data[key] = get(key)
+                key = "gpuUtil%d"%i
+                data[key] = get(key)
+
         #conn.close()
         return data
 
@@ -550,13 +364,13 @@ class SystemMonitorPlotter(EmPlotter):
         return fig not in active_fig_managers
 
     def animate(self,i=0): #do NOT remove i
-                                         #FuncAnimation add it as argument
 
         if self.stop:
             return
 
         data = self.monitor.getData()
         self.x = data['idValues']
+
         for k,v in self.lines.iteritems():
             self.y = data[k]
 
@@ -583,5 +397,12 @@ class SystemMonitorPlotter(EmPlotter):
         EmPlotter.show(self)
 
     def show(self):
-        self.paint(['mem','cpu', 'swap'])
+        list = ['mem','cpu', 'swap']
+        if self.monitor.doGpu:
+            for i in self.monitor.gpusToUse:
+                key = "gpuMem%d"%i
+                list.append(key)
+                key = "gpuUtil%d"%i
+                list.append(key)
+        self.paint(list)
 
