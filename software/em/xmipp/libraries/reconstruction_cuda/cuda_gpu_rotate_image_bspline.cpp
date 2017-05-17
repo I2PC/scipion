@@ -5,20 +5,17 @@
 #include <iostream>
 #include <stdio.h>
 #include <math.h>
-#include "cuda_basic_math.h"
 
 //CUDA includes
-#include <cuda_runtime.h>
-#include "cuda_copy_data.h"
+#include "cuda_utils.h"
+#include "cuda_xmipp_utils.h"
+#include "cuda_basic_math.h"
 #include "cuda_prefiltering_rotation.h"
 #include "cuda_interpolation2D_rotation.h"
 #include "cuda_interpolation3D_rotation.h"
-#include "cuda_check_errors.h"
-#include "cuda_utils.h"
 
 
 //CUDA functions
-
 void cuda_rotate_image_bspline(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim,
 		double *ang, int wrap, int first_call, struct ioTime* mytime){
 
