@@ -4,14 +4,12 @@
 
 #include <iostream>
 #include <stdio.h>
-//CUDA includes
-#include <cuda_runtime.h>
 
-#include "cuda_copy_data.h"
+//CUDA includes
+#include "cuda_utils.h"
+#include "cuda_xmipp_utils.h"
 #include "cuda_interpolation2D_basic_rotation.h"
 #include "cuda_interpolation3D_basic_rotation.h"
-#include "cuda_check_errors.h"
-#include "cuda_utils.h"
 
 
 void cuda_rotate_image_linear_nearest(float *image, float *rotated_image, size_t Xdim, size_t Ydim, size_t Zdim,
