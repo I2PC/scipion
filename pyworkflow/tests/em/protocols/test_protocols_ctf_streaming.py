@@ -23,22 +23,24 @@
 
 import time
 import os
+import sys
 
 from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.packages.xmipp3 import XmippProtCTFMicrographsStr
+from pyworkflow.em.packages.xmipp3 import XmippProtCTFMicrographsStr, XmippProtCTFSelection, XmippProtCTFMicrographs
 from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
 
 
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
 
-MICS = os.environ.get('SCIPION_TEST_MICS', 10)
+MICS = os.environ.get('SCIPION_TEST_MICS', 2)
 
 CTF_SQLITE = "ctfs.sqlite"
+MIC_SQLITE = "micrographs.sqlite"
 
 
 class TestCtfStreaming(BaseTest):
@@ -61,8 +63,8 @@ class TestCtfStreaming(BaseTest):
         kwargs = {'xDim': 1024,
                   'yDim': 1024,
                   'nDim': MICS,
-                  'samplingRate': 1.25,
-                  'creationInterval': 15,
+                  'samplingRate': 3.0,
+                  'creationInterval': 30,
                   'delay':0,
                   'setof': 0 # SetOfMicrographs
                   }
@@ -81,7 +83,9 @@ class TestCtfStreaming(BaseTest):
             counter += 1
 
 
-####################################################################################################
+
+
+######################### AJ START NEW STREAMING PROTOCOL #########################################
 
         kwargs = {}
 
@@ -89,21 +93,61 @@ class TestCtfStreaming(BaseTest):
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF)
 
-        while not (protCTF.hasAttribute('outputCTF')):
+####################################################################################################
 
+        while not protCTF.hasAttribute('outputCTF'):
             time.sleep(10)
-            protCTFSel2 = self._updateProtocol(protCTF)
-            if counter > 100:
-                self.assertTrue(False)
-            counter += 1
+            protCTF = self._updateProtocol(protCTF)
+
+        kwargs = {
+            'maxDefocus': 28000,
+            'minDefocus': 1000,
+            'astigmatism': 1000,
+            'resolution': 7
+        }
+
+        protCTFSel = self.newProtocol(XmippProtCTFSelection, **kwargs)
+        protCTFSel.inputCTFs.set(protCTF.outputCTF)
+        self.proj.launchProtocol(protCTFSel)
+
+
+        kwargs = {}
+        protCTF_ref = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
+        protCTF_ref.inputMicrographs.set(protStream.outputMicrographs)
+        self.proj.launchProtocol(protCTF_ref)
+
+
+
+######################### AJ CHECKING OUTPUT OF NEW STREAMING PROTOCOL ##############################
+
+
+        micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
+        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+        ctfSet_ref = SetOfCTF(filename=protCTF_ref._getPath(CTF_SQLITE))
+
+        while not (ctfSet.getSize() == micSet.getSize() and ctfSet_ref.getSize() == micSet.getSize()):
+            time.sleep(10)
+            protCTF = self._updateProtocol(protCTF)
+            protCTF_ref = self._updateProtocol(protCTF_ref)
+            micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
+            ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+            ctfSet_ref = SetOfCTF(filename=protCTF_ref._getPath(CTF_SQLITE))
+
+
+        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+        ctfSet_ref = SetOfCTF(filename=protCTF_ref._getPath(CTF_SQLITE))
 
         baseFn = protCTF._getPath(CTF_SQLITE)
         self.assertTrue(os.path.isfile(baseFn))
 
-        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))  # reading this protocol output
+        self.assertEqual(ctfSet.getSize(), MICS)
 
-        count=0
-        for ctf in zip(ctfSet):
-            count=count+1
+        for ctf, ctfRef in zip(ctfSet, ctfSet_ref):
+            self.assertEqual(ctf._xmipp_ctfCritMaxFreq.get(), ctfRef._xmipp_ctfCritMaxFreq.get())
+            self.assertEqual(ctf.isEnabled(), ctfRef.isEnabled())
+            self.assertEqual(ctf._defocusU.get(), ctfRef._defocusU.get())
+            self.assertEqual(ctf._defocusV.get(), ctfRef._defocusV.get())
+            self.assertEqual(ctf._defocusRatio.get(), ctfRef._defocusRatio.get())
 
-        self.assertEqual(count, MICS)
+
+####################################################################################################
