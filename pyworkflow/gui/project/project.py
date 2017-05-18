@@ -38,6 +38,7 @@ import shlex
 import subprocess
 import uuid
 import SocketServer
+import tempfile
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
@@ -218,7 +219,12 @@ class ProjectWindow(ProjectBaseWindow):
     def onExportTreeGraph(self):
         runsGraph = self.project.getRunsGraph(refresh=True)
         useId = not pwutils.envVarOn('SCIPION_TREE_NAME')
-        runsGraph.printDot(useId=useId)
+        dotStr = runsGraph.printDot(useId=useId)
+        with tempfile.NamedTemporaryFile(suffix='.gv') as dotFile:
+            dotFile.write(dotStr)
+            dotFile.flush()
+            openTextFileEditor(dotFile.name)
+
         if useId:
             print "\nexport SCIPION_TREE_NAME=1 # to use names instead of ids"
         else:
