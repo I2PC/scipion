@@ -40,8 +40,9 @@ from pyworkflow.em.plotter import EmPlotter
 from tkMessageBox import showerror
 
 from pynvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex,\
-nvmlDeviceGetName, nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
-NVMLError
+    nvmlDeviceGetName, nvmlDeviceGetMemoryInfo, nvmlDeviceGetUtilizationRates,\
+    NVMLError, nvmlDeviceGetTemperature, NVML_TEMPERATURE_GPU,\
+    nvmlDeviceGetComputeRunningProcesses
 
 
 SYSTEM_LOG_SQLITE = 'system_log.sqlite'
@@ -55,6 +56,9 @@ def errorWindow(tkParent, msg):
     except:
         print("Error:", msg)
 
+def initGPU():
+    nvmlInit()
+
 class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
     """
@@ -65,6 +69,7 @@ class ProtMonitorSystem(ProtMonitor):
         ProtMonitor.__init__(self, **kwargs)
         self.dataBase = 'log.sqlite'
         self.tableName = 'log'
+
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):    
@@ -129,7 +134,23 @@ class ProtMonitorSystem(ProtMonitor):
         return []  # no errors
 
     def _summary(self):
-        return ['Stores CPU, memory and swap ussage in percentage']
+        summary = []
+        summary.append("GPU running Processes:")
+        initGPU()
+        try:
+            gpusToUse = [int(n) for n in (self.gpusToUse.get()).split()]
+            for i in gpusToUse:
+                handle = nvmlDeviceGetHandleByIndex(i)
+                cps = nvmlDeviceGetComputeRunningProcesses(handle)
+                for ps in cps:
+                    #p_tags['pid'] = ps.pid
+                    msg = "    " + psutil.Process(ps.pid).name()
+                    msg += " (mem =%.2f MB)"%(float(ps.usedGpuMemory)/1048576.)
+                    summary.append(msg)
+        except NVMLError as err:
+                summary.append(str(err))
+
+        return summary
 
     def _methods(self):
         return []
@@ -149,11 +170,18 @@ class MonitorSystem(Monitor):
         self._dataBase = kwargs.get('dbName', SYSTEM_LOG_SQLITE)
         self._tableName = kwargs.get('tableName', 'log')
         self.doGpu = kwargs['doGpu']
+        self.labelList=["cpu","mem","swap"]
         if self.doGpu:
+            self.gpuLabelList=[]
             #get Gpus to monitor
             self.gpusToUse = [int(n) for n in (kwargs['gpusToUse']).split()]
+            for i in self.gpusToUse:
+                self.gpuLabelList.append("gpuMem_%d"%i)
+                self.gpuLabelList.append("gpuUse_%d"%i)
+                self.gpuLabelList.append("gpuTem_%d"%i)
             #init GPUs
             nvmlInit()
+            self.labelList += self.gpuLabelList
         else:
             self.gpusToUse = None
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
@@ -183,15 +211,17 @@ class MonitorSystem(Monitor):
         cpu  = valuesDict['cpu'] = psutil.cpu_percent(interval=0)
         mem  = valuesDict['mem'] = psutil.virtual_memory().percent
         swap = valuesDict['swap'] = psutil.swap_memory().percent
+        #some code examples: https://github.com/ngi644/datadog_nvml/blob/master/nvml.py
         if self.doGpu:
             for i in self.gpusToUse:
                 try:
                     handle = nvmlDeviceGetHandleByIndex(i)
                     memInfo = nvmlDeviceGetMemoryInfo(handle)
-                    used, total = memInfo.used, memInfo.total
-                    valuesDict["gpuMem%d"%i] = float(used)*100./float(total)
+                    valuesDict["gpuMem_%d"%i] = float(memInfo.used)*100./float(memInfo.total)
                     util = nvmlDeviceGetUtilizationRates(handle)
-                    valuesDict["gpuUtil%d"%i] = util.gpu
+                    valuesDict["gpuUse_%d"%i] = util.gpu
+                    temp = nvmlDeviceGetTemperature(handle,NVML_TEMPERATURE_GPU)
+                    valuesDict["gpuTem_%d"%i] = temp
                 except NVMLError as err:
                     handle = nvmlDeviceGetHandleByIndex(i)
                     msg = "Device %d -> %s not suported\n Remove device %d from FORM"%\
@@ -210,22 +240,19 @@ class MonitorSystem(Monitor):
             self.warning("SWAP allocation =%f." % swap)
             self.swapAlert = swap
 
-        sqlInsert = "INSERT INTO %(table)s (mem,cpu,swap"
-        if self.doGpu:
-            gpuAttr = ""
-            for i in self.gpusToUse:
-                gpuAttr += ", gpuMem%d"%i
-                gpuAttr += ", gpuUtil%d"%i
-            sqlInsert += gpuAttr
-        sqlInsert += ") VALUES(%(mem)f,%(cpu)f,%(swap)f"
-        if self.doGpu:
-            gpuAttr = ""
-            for i in self.gpusToUse:
-                gpuAttr += ", %"+"(gpuMem%d)"%i+"f"
-                gpuAttr += ", %"+"(gpuUtil%d)"%i+"f"
-            sqlInsert += gpuAttr
-        sqlInsert += ");"
-        sql = sqlInsert%valuesDict
+        sqlCommand = "INSERT INTO %(table)s ("
+        for label in self.labelList:
+            sqlCommand += "%s, "%label
+        #remove last comma
+        sqlCommand = sqlCommand[:-2]
+        sqlCommand += ") VALUES("
+        for label in self.labelList:
+            sqlCommand += "%"+"(%s)f, "%label
+        #remove last comma
+        sqlCommand = sqlCommand[:-2]
+        sqlCommand += ");"
+        print ("sqlCommand", sqlCommand,valuesDict)
+        sql = sqlCommand%valuesDict
 
         try:
             self.cur.execute(sql)
@@ -237,21 +264,20 @@ class MonitorSystem(Monitor):
                    for prot in self.protocols)
 
     def _createTable(self):
-        sqlString = """CREATE TABLE IF NOT EXISTS  %s(
+        sqlCommand = """CREATE TABLE IF NOT EXISTS  %s(
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 timestamp DATE DEFAULT (datetime('now','localtime')),
-                                cpu FLOAT,
-                                mem FLOAT,
-                                swap FLOAT
                                 """ % self._tableName
-        if self.doGpu:
-            gpuAttr = ""
-            for i in self.gpusToUse:
-                gpuAttr += ", gpuMem%d FLOAT"%i
-                gpuAttr += ", gpuUtil%d FLOAT\n"%i
-            sqlString += gpuAttr
-        sqlString +=")"
-        self.cur.execute(sqlString)
+        for label in self.labelList:
+            sqlCommand += "%s FLOAT,\n"%label
+        #remove last comma and new line
+        sqlCommand = sqlCommand[:-3]
+        sqlCommand +=")"
+        print("sqlCommand",sqlCommand)
+        self.cur.execute(sqlCommand)
+
+    def getLabels(self):
+        return self.labelList
 
     def getData(self):
         cur = self.cur
@@ -275,17 +301,9 @@ class MonitorSystem(Monitor):
 
         data = {'initTime': initTime,
                 'initTimeTitle': initTimeTitle,
-                'idValues': idValues,
-                'cpu': get('cpu'),
-                'mem': get('mem'),
-                'swap': get('swap'),
-                }
-        if self.doGpu:
-            for i in self.gpusToUse:
-                key = "gpuMem%d"%i
-                data[key] = get(key)
-                key = "gpuUtil%d"%i
-                data[key] = get(key)
+                'idValues': idValues}
+        for label in self.labelList:
+            data[label] = get(label)
 
         #conn.close()
         return data
@@ -397,12 +415,5 @@ class SystemMonitorPlotter(EmPlotter):
         EmPlotter.show(self)
 
     def show(self):
-        list = ['mem','cpu', 'swap']
-        if self.monitor.doGpu:
-            for i in self.monitor.gpusToUse:
-                key = "gpuMem%d"%i
-                list.append(key)
-                key = "gpuUtil%d"%i
-                list.append(key)
-        self.paint(list)
+        self.paint(self.monitor.getLabels())
 
