@@ -144,7 +144,7 @@ class ProtMonitorSystem(ProtMonitor):
                 cps = nvmlDeviceGetComputeRunningProcesses(handle)
                 for ps in cps:
                     #p_tags['pid'] = ps.pid
-                    msg = "    " + psutil.Process(ps.pid).name()
+                    msg = " %d) "%i + psutil.Process(ps.pid).name()
                     msg += " (mem =%.2f MB)"%(float(ps.usedGpuMemory)/1048576.)
                     summary.append(msg)
         except NVMLError as err:
