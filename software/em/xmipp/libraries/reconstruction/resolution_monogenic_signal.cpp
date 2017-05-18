@@ -806,7 +806,7 @@ void ProgMonogenicSignalRes::run()
 		pVfiltered=Vfiltered();
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
 		if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
-			DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pOutputResolution,n);
+			DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
 		Vfiltered.write(fnSpatial);
 
 		VresolutionFiltered().clear();
