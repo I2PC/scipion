@@ -43,6 +43,7 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
                   "ctfCritNonAstigmaticValidty>25")
 
     processMicro = {}
+    sortPSDMicro = {}
 
     def __init__(self, **args):
         ProtCTFMicrographs.__init__(self, **args)
@@ -229,23 +230,12 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
             cleanPath(deleteTmp)
 
 
-    def _restimateCTF(self, micId):
-        """ Run the estimate CTF program """
-        ctfModel = self.recalculateSet[micId]
-        self._prepareRecalCommand(ctfModel)
-        # CTF estimation with Xmipp
-        self.runJob(self._program, self._args % self._params)
-
-        mic = ctfModel.getMicrograph()
-        micDir = self._getMicrographDir(mic)
-        self.evaluateSingleMicrograph(mic.getFileName(), micDir)
-
-
     def sortPSDStep(self):
         # Gather all metadatas of all micrographs
         md = xmipp.MetaData()
         for _, micDir, mic in self._iterMicrographs():
-            if mic.getMicName() in self.processMicro: #AJ
+            if mic.getMicName() in self.processMicro and not mic.getObjId() in self.sortPSDMicro: #AJ
+                self.sortPSDMicro[mic.getObjId()] = True #AJ ????????????????????????????????????????????????????????
                 fnCTF = self._getFileName('prefix', micDir=micDir) + ".xmd"
                 enable = 1
                 if not os.path.exists(fnCTF):
