@@ -49,14 +49,21 @@ class ProtMonitorSummary(ProtMonitor):
 
         form.addSection('MovieGain Monitor')
         form.addParam('stddevValue', params.FloatParam, default=0.04,
-                      label="Raise Alarm if residual gain standard deviation >",
-                      help="Raise alarm if residual gain standard deviation is greater than given value")
+                      label="Raise Alarm if residual gain standard "
+                            "deviation >",
+                      help="Raise alarm if residual gain standard deviation "
+                           "is greater than given value")
         form.addParam('ratio1Value', params.FloatParam, default=1.15,
-                      label="Raise Alarm if the ratio between the 97.5 and 2.5 percentiles >",
-                      help="Raise alarm if the ratio between the 97.5 and 2.5 percentiles is greater than given value")
+                      label="Raise Alarm if the ratio between the 97.5 "
+                            "and 2.5 percentiles >",
+                      help="Raise alarm if the ratio between the 97.5 "
+                           "and 2.5 percentiles is greater than given value")
         form.addParam('ratio2Value', params.FloatParam, default=4.5,
-                      label="Raise Alarm if the ratio between the maximum gain value and the 97.5 percentile >",
-                      help="Raise alarm if the ratio between the maximum gain value and the 97.5 percentile is greater than given value")
+                      label="Raise Alarm if the ratio between the maximum "
+                            "gain value and the 97.5 percentile >",
+                      help="Raise alarm if the ratio between the maximum "
+                           "gain value and the 97.5 percentile is greater "
+                           "than given value")
 
         form.addSection('CTF Monitor')
         form.addParam('maxDefocus', params.FloatParam,default=40000,

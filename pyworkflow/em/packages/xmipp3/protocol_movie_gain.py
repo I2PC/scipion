@@ -157,6 +157,9 @@ class XmippProtMovieGain(ProtProcessMovies):
 
         return outputSet
 
+    def _checkNewInput(self):
+        if isinstance(self.inputMovies.get(), SetOfMovies):
+            ProtProcessMovies._checkNewInput(self)
 
     def _checkNewOutput(self):
         if getattr(self, 'finished', False):

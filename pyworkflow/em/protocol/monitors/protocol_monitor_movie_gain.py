@@ -48,14 +48,21 @@ class ProtMonitorMovieGain(ProtMonitor):
                       help="This protocol will be monitorized")
 
         form.addParam('stddevValue', params.FloatParam, default=0.04,
-                      label="Raise Alarm if residual gain standard deviation >",
-                      help="Raise alarm if residual gain standard deviation is greater than given value")
+                      label="Raise Alarm if residual gain standard "
+                            "deviation >",
+                      help="Raise alarm if residual gain standard deviation "
+                           "is greater than given value")
         form.addParam('ratio1Value', params.FloatParam, default=1.15,
-                      label="Raise Alarm if the ratio between the 97.5 and 2.5 percentiles >",
-                      help="Raise alarm if the ratio between the 97.5 and 2.5 percentiles is greater than given value")
+                      label="Raise Alarm if the ratio between the 97.5 and "
+                            "2.5 percentiles >",
+                      help="Raise alarm if the ratio between the 97.5 and "
+                           "2.5 percentiles is greater than given value")
         form.addParam('ratio2Value', params.FloatParam, default=4.5,
-                      label="Raise Alarm if the ratio between the maximum gain value and the 97.5 percentile >",
-                      help="Raise alarm if the ratio between the maximum gain value and the 97.5 percentile is greater than given value")
+                      label="Raise Alarm if the ratio between the maximum "
+                            "gain value and the 97.5 percentile >",
+                      help="Raise alarm if the ratio between the maximum "
+                           "gain value and the 97.5 percentile is greater "
+                           "than given value")
 
         form.addParam('monitorTime', params.FloatParam, default=300,
                       label="Total Logging time (min)",
@@ -141,25 +148,31 @@ class MonitorMovieGain(Monitor):
             fhWarning = open(fnWarning, "a")
 
         line = fhSummary.readlines()[-1]
+        stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
+        movie_name = map(str, line.split()[0])
         values = line.split()
 
         if float(values[1]) > self.stddevValue:
             self.warning("Residual gain standard deviation is %f."
-                         % float(values[1]))
+                         % stddev)
             fhWarning.write("%s: Residual gain standard deviation is %f.\n"
-                         % (values[0], float(values[1])))
+                         % (movie_name, stddev))
 
-        if (float(values[3]) / float(values[2])) > self.ratio1Value:
-            self.warning("The ratio between the 97.5 and 2.5 percentiles is %f."
-                         % (float(values[3]) / float(values[2])))
-            fhWarning.write("%s: The ratio between the 97.5 and 2.5 percentiles is %f.\n"
-                            % (values[0], (float(values[3]) / float(values[2]))))
+        if (perc975 / perc25) > self.ratio1Value:
+            self.warning("The ratio between the 97.5 and 2.5 "
+                         "percentiles is %f."
+                         % (perc975 / perc25))
+            fhWarning.write("%s: The ratio between the 97.5 and 2.5 "
+                            "percentiles is %f.\n"
+                            % (movie_name, (perc975 / perc25)))
 
-        if (float(values[4]) / float(values[3])) > self.ratio2Value:
-            self.warning("The ratio between the maximum gain value and the 97.5 percentile is %f."
-                         % (float(values[4]) / float(values[3])))
-            fhWarning.write("%s: The ratio between the maximum gain value and the 97.5 percentile is %f.\n"
-                            % (values[0], (float(values[4]) / float(values[3]))))
+        if (maxVal / perc975) > self.ratio2Value:
+            self.warning("The ratio between the maximum gain value "
+                         "and the 97.5 percentile is %f."
+                         % (maxVal / perc975))
+            fhWarning.write("%s: The ratio between the maximum gain value "
+                            "and the 97.5 percentile is %f.\n"
+                            % (movie_name, (maxVal / perc975)))
         fhSummary.close()
         fhWarning.close()
         return prot.getStatus() != STATUS_RUNNING
@@ -174,11 +187,11 @@ class MonitorMovieGain(Monitor):
         ratio1Values = []
         ratio2Values = []
         for idx, line in enumerate(fhSummary.readlines()):
-            values = line.split()
+            stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
             idValues.append(idx)
-            stddevValues.append(float(values[1]))
-            ratio1Values.append((float(values[3]) / float(values[2])))
-            ratio2Values.append((float(values[4]) / float(values[3])))
+            stddevValues.append(stddev)
+            ratio1Values.append(perc975 / perc25)
+            ratio2Values.append(maxVal / perc975)
         fhSummary.close()
 
         data = {
@@ -278,7 +291,8 @@ class MovieGainMonitorPlotter(EmPlotter):
             ydata = self.y[imin:lenght]
             v.set_data(xdata,ydata)
 
-        self.ax.set_ylabel('Ratios between specified percentiles', color='b', size=10)
+        self.ax.set_ylabel('Ratios between specified percentiles',
+                           color='b', size=10)
         self.ax.spines['left'].set_color('blue')
         self.ax.spines['right'].set_color('red')
         self.ax.tick_params(axis='y', labelsize=8, colors='blue')
@@ -286,13 +300,15 @@ class MovieGainMonitorPlotter(EmPlotter):
         self.ax.autoscale()
         self.ax.grid(False)
         self.ax.get_xaxis().set_visible(False)
-        self.ax2.set_ylabel('Residual gain standard deviation', color='r', size=10)
+        self.ax2.set_ylabel('Residual gain standard deviation',
+                            color='r', size=10)
         self.ax2.tick_params(axis='y', labelsize=8, colors='red')
         self.ax2.relim()
         self.ax2.autoscale()
         lines, labels = self.ax.get_legend_handles_labels()
         lines2, labels2 = self.ax2.get_legend_handles_labels()
-        self.ax2.legend(lines + lines2, labels + labels2, loc=2, prop={'size':10}).get_frame().set_alpha(0.5)
+        self.ax2.legend(lines + lines2, labels + labels2,
+                        loc=2, prop={'size':10}).get_frame().set_alpha(0.5)
 
 
     def show(self):
@@ -301,11 +317,20 @@ class MovieGainMonitorPlotter(EmPlotter):
     def paint(self, labels):
         for label in labels:
             if (label == 'standard_deviation'):
-                self.lines[label], = self.ax2.plot([], [], '-o',label='Standard deviation', color='r')
+                self.lines[label], = \
+                    self.ax2.plot([], [], '-o',
+                                  label='Standard deviation',
+                                  color='r')
             if (label == 'ratio1'):
-                self.lines[label], = self.ax.plot([], [], '-o', label='97.5/2.5 percentile', color='b')
+                self.lines[label], = \
+                    self.ax.plot([], [], '-o',
+                                 label='97.5/2.5 percentile',
+                                 color='b')
             if (label == 'ratio2'):
-                self.lines[label], = self.ax.plot([], [], '-*', label='max/97.5 percentile', color='b')
+                self.lines[label], = \
+                    self.ax.plot([], [], '-*',
+                                 label='max/97.5 percentile',
+                                 color='b')
 
         anim = animation.FuncAnimation(self.fig, self.animate,
                                        interval=self.monitor.samplingInterval*1000)#miliseconds

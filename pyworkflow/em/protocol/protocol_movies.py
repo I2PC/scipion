@@ -114,32 +114,31 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _checkNewInput(self):
         # Check if there are new movies to process from the input set
-        if isinstance(self.inputMovies.get(), SetOfMovies):
-            localFile = self.inputMovies.get().getFileName()
-            now = datetime.now()
-            self.lastCheck = getattr(self, 'lastCheck', now)
-            mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
-            self.debug('Last check: %s, modification: %s'
-                      % (pwutils.prettyTime(self.lastCheck),
-                         pwutils.prettyTime(mTime)))
-            # If the input movies.sqlite have not changed since our last check,
-            # it does not make sense to check for new input data
-            if self.lastCheck > mTime and hasattr(self, 'listOfMovies'):
-                return None
+        localFile = self.inputMovies.get().getFileName()
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
+        self.debug('Last check: %s, modification: %s'
+                  % (pwutils.prettyTime(self.lastCheck),
+                     pwutils.prettyTime(mTime)))
+        # If the input movies.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfMovies'):
+            return None
 
-            self.lastCheck = now
-            # Open input movies.sqlite and close it as soon as possible
-            self._loadInputList()
-            newMovies = any(m.getObjId() not in self.insertedDict
-                            for m in self.listOfMovies)
-            outputStep = self._getFirstJoinStep()
+        self.lastCheck = now
+        # Open input movies.sqlite and close it as soon as possible
+        self._loadInputList()
+        newMovies = any(m.getObjId() not in self.insertedDict
+                        for m in self.listOfMovies)
+        outputStep = self._getFirstJoinStep()
 
-            if newMovies:
-                fDeps = self._insertNewMoviesSteps(self.insertedDict,
-                                                   self.listOfMovies)
-                if outputStep is not None:
-                    outputStep.addPrerequisites(*fDeps)
-                self.updateSteps()
+        if newMovies:
+            fDeps = self._insertNewMoviesSteps(self.insertedDict,
+                                               self.listOfMovies)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
 
     def _checkNewOutput(self):
         pass # To be implemented in sub-classes

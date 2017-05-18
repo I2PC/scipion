@@ -329,9 +329,11 @@ class CtfMonitorPlotter(EmPlotter):
     def paint(self, labels):
         for label in labels:
             if (label == 'defocusU'):
-                self.lines[label], = self.ax.plot([], [], '-o', label=label, color='b')
+                self.lines[label], = self.ax.plot([], [], '-o',
+                                                  label=label, color='b')
             else:
-                self.lines[label], = self.ax.plot([], [], '-o', label=label, color='r')
+                self.lines[label], = self.ax.plot([], [], '-o',
+                                                  label=label, color='r')
 
         anim = animation.FuncAnimation(self.fig, self.animate,
                                        interval=self.monitor.samplingInterval*1000)#miliseconds
