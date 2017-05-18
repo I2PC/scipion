@@ -348,7 +348,8 @@ class SystemMonitorPlotter(EmPlotter):
 
     def _getTitle(self):
         return ("Use scrool wheel to change view window (win=%d)\n "
-                "S stops, C continues plotting" % self.win)
+                "S stops, C continues plotting. Toggle ON/OFF GPU_X by pressing X\n"
+                "c toggle ON/OFF cpu information" % self.win)
 
     def onscroll(self, event):
 
@@ -365,7 +366,39 @@ class SystemMonitorPlotter(EmPlotter):
         self.animate()
         EmPlotter.show(self)
 
+
     def press(self,event):
+        def numericKey(key):
+            self.colorChanged=True
+            number=int(key)
+            index = 3+number*3
+            if (index + 3) > self.lenPlots:
+                return
+            if self.color['gpuMem_%d'%number] != 'w':
+                self.oldColor['gpuMem_%d'%number] = self.color['gpuMem_%d'%number]
+                self.oldColor['gpuUse_%d'%number] = self.color['gpuUse_%d'%number]
+                self.oldColor['gpuTem_%d'%number] = self.color['gpuTem_%d'%number]
+                self.color['gpuMem_%d'%number]="w"
+                self.color['gpuUse_%d'%number]="w"
+                self.color['gpuTem_%d'%number]="w"
+            else:
+                self.color['gpuMem_%d'%number]=self.oldColor['gpuMem_%d'%number]
+                self.color['gpuUse_%d'%number]=self.oldColor['gpuUse_%d'%number]
+                self.color['gpuTem_%d'%number]=self.oldColor['gpuTem_%d'%number]
+        def cpuKey(key):
+            self.colorChanged=True
+            if self.color['cpu'] != 'w':
+                self.oldColor['cpu'] = self.color['cpu']
+                self.oldColor['mem'] = self.color['mem']
+                self.oldColor['swap'] = self.color['swap']
+                self.color['cpu']="w"
+                self.color['mem']="w"
+                self.color['swap']="w"
+            else:
+                self.color['cpu']=self.oldColor['cpu']
+                self.color['swap']=self.oldColor['swap']
+                self.color['mem']=self.oldColor['mem']
+
         sys.stdout.flush()
         if event.key == 'S':
             self.stop = True
@@ -373,6 +406,12 @@ class SystemMonitorPlotter(EmPlotter):
         elif event.key == 'C':
             self.ax.set_title(self._getTitle())
             self.stop = False
+            self.animate()
+        elif event.key.isdigit():
+            numericKey(event.key)
+            self.animate()
+        elif event.key == 'c':
+            cpuKey(event.key)
             self.animate()
         EmPlotter.show(self)
 
@@ -388,7 +427,6 @@ class SystemMonitorPlotter(EmPlotter):
 
         data = self.monitor.getData()
         self.x = data['idValues']
-
         for k,v in self.lines.iteritems():
             self.y = data[k]
 
@@ -397,7 +435,9 @@ class SystemMonitorPlotter(EmPlotter):
             xdata = self.x[imin:lenght]
             ydata = self.y[imin:lenght]
             v.set_data(xdata,ydata)
-
+            if self.colorChanged:
+                v.set_color(self.color[k])
+        self.colorChanged = False
         self.ax.relim()
         self.ax.autoscale()
         self.ax.grid(True)
@@ -415,5 +455,16 @@ class SystemMonitorPlotter(EmPlotter):
         EmPlotter.show(self)
 
     def show(self):
+        colortypes=["k","b","r","g","y","c","m"]
+        lenColortypes=len(colortypes)
+        self.colorChanged = True
+        self.color={}
+        self.oldColor={}
+        counter=0
+        for key in self.monitor.getLabels():
+            self.color[key]    = colortypes[counter%lenColortypes]
+            self.oldColor[key] = colortypes[counter%lenColortypes]
+            counter += 1
+        self.lenPlots=len(self.color)
         self.paint(self.monitor.getLabels())
 
