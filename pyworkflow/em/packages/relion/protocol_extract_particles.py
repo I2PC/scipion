@@ -351,7 +351,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         return errors
     
     def _citations(self):
-        return ['Vargas2013b']
+        return ['Scheres2012b']
         
     def _summary(self):
         summary = []

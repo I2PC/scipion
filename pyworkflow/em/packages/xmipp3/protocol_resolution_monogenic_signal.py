@@ -330,5 +330,5 @@ class XmippProtMonoRes(ProtAnalysis3D):
         return summary
 
     def _citations(self):
-        return [MONORES_METHOD_URL]
+        return ['Vilas2017']
 
