@@ -671,7 +671,6 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
             # we need to close previous opened file
             if f:
                 f.close()
-                #print "Micrograph %s (%d)" % (lastMicId, c)
                 c = 0
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
@@ -687,28 +686,17 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     
     if f:
         f.close()
-        print "Micrograph %s (%d)" % (lastMicId, c)
-    
+
     state = 'Manual' if ismanual else 'Supervised'
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-#     micName = removeBaseExt(micName)
-#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
-    #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
     md.write('properties@%s' % configFn)
 
-#     # Write filters block
-#     md = xmipp.MetaData()    
-#     objId = md.addObject()
-#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
-    
     return posDict.values()
 
 

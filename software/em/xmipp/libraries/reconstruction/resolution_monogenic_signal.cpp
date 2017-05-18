@@ -31,11 +31,11 @@
 void ProgMonogenicSignalRes::readParams()
 {
 	fnVol = getParam("--vol");
-	//fnVol1 = getParam("--vol1");
 	fnVol2 = getParam("--vol2");
 	fnMeanVol = getParam("--meanVol");
 	fnOut = getParam("-o");
 	fnMask = getParam("--mask");
+	fnMaskOut = getParam("--mask_out");
 	fnchim = getParam("--chimera_volume");
 	sampling = getDoubleParam("--sampling_rate");
 	R = getDoubleParam("--volumeRadius");
@@ -44,10 +44,10 @@ void ProgMonogenicSignalRes::readParams()
 	fnSym = getParam("--sym");
 	N_freq = getDoubleParam("--number_frequencies");
 	trimBound = getDoubleParam("--trimmed");
-	linearchk = checkParam("--linear");
 	exactres = checkParam("--exact");
 	fnSpatial = getParam("--filtered_volume");
 	significance = getDoubleParam("--significance");
+	fnMd = getParam("--md_outputdata");
 }
 
 
@@ -58,6 +58,8 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("  [--mask <vol_file=\"\">]  : Mask defining the macromolecule");
 	addParamsLine("                          :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
+	addParamsLine("  [--mask_out <vol_file=\"\">]  : sometimes the provided mask is not perfect, and contains voxels out of the particle");
+	addParamsLine("                          :+ Thus the algorithm calculated a tight mask to the volume");
 	addParamsLine("  [--vol2 <vol_file=\"\">]: Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--meanVol <vol_file=\"\">]: Mean volume of half1 and half2 (only it is neccesary the two haves are used)");
@@ -71,11 +73,14 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("  [--minRes <s=30>]         : Minimum resolution (A)");
 	addParamsLine("  [--maxRes <s=1>]          : Maximum resolution (A)");
 	addParamsLine("  [--trimmed <s=0.5>]         : Trimming percentile");
-	addParamsLine("  [--linear]                : The search for resolution is linear (equidistance between resolutions).");
 	addParamsLine("  [--exact]                 : The search for resolution will be exact (slower) of approximated (fast).");
 	addParamsLine("                            : Usually there are no difference between both in the resolution map.");
 	addParamsLine("  [--filtered_volume <vol_file=\"\">]       : The input volume is locally filtered at local resolutions.");
-	addParamsLine("  [--significance <s=0.95>]  : The level of confidence for the hypothesis test.");
+	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
+	addParamsLine("  [--md_outputdata <file=\".\">]  : It is a control file. The provided mask can contain voxels of noise.");
+	addParamsLine("                                  : Moreover, voxels inside the mask cannot be measured due to an unsignificant");
+	addParamsLine("                                  : SNR. Thus, a new mask is created. This metadata file, shows, the number of");
+	addParamsLine("                                  : voxels of the original mask, and the created mask");
 }
 
 void ProgMonogenicSignalRes::produceSideInfo()
@@ -134,6 +139,9 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		}
 	}
 
+	Image<double> saveiu;
+	saveiu = 1/iu;
+	saveiu.write("iu.vol");
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
@@ -155,8 +163,11 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		exit(0);
 	}
 
+	NVoxelsOriginalMask = 0;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
 	{
+		if (A3D_ELEM(pMask, k, i, j) == 1)
+			NVoxelsOriginalMask++;
 		if (i*i+j*j+k*k > R*R)
 			A3D_ELEM(pMask, k, i, j) = -1;
 	}
@@ -184,36 +195,46 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	{
 		fftN=&fftV;
 	}
-	
-	
 	V.clear();
 }
 
 
 void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-		double w1, MultidimArray<double> &amplitude, int count, FileName fnDebug)
+		double w1, double w1h, double w1l, MultidimArray<double> &amplitude, int count, FileName fnDebug)
 {
 	fftVRiesz.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
-
+	std::complex<double> J(0,1);
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
-	double iu1=1.0/w1;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	double iwh=1.0/w1h;
+	double iw=1.0/w1;
+	double iwl=1.0/w1l;
+	double ideltal=PI/(w1-w1l);
+	double ideltah=PI/(w1h-w1);
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(myfftV)
 	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+		double un=1.0/iun;
+		if (w1l<=un && un<=w1)
 		{
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
-			{
-				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-				if (iun<=iu1)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-				++n;
-			}
-		}
+			//double H=0.5*(1+cos((un-w1)*ideltal));
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+		} else if (un>w1)
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 	}
+
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
+	#ifdef DEBUG
+	Image<double> filteredvolume;
+	filteredvolume = VRiesz;
+	filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
+	#endif
+
 	if (fnSpatial!="")
 		Vfiltered()=VRiesz;
 
@@ -237,17 +258,29 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	fftVRiesz.initZeros(myfftV);
 	double uz, uy, ux;
 	n=0;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+
+	for(size_t j=0; j<XSIZE(myfftV); ++j)
 	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		FFT_IDX2DIGFREQ(j,YSIZE(amplitude),ux);
+		for(size_t k=0; k<ZSIZE(myfftV); ++k)
 		{
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			for(size_t i=0; i<YSIZE(myfftV); ++i)
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-				if (iun<=iu1)
+				double un=1.0/iun;
+				if (w1l<=un && un<=w1)
 				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//double H=0.5*(1+cos((un-w1)*ideltal));
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=0.5*(1+cos((un-w1)*ideltal));//H;
+					//Next lines are an optimization of the commented ones
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -ux*iun*0.5*(1+cos((un-w1)*ideltal));//H;
+				} else if (un>w1)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
 				}
 				++n;
 			}
@@ -260,16 +293,30 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	// Calculate second component of Riesz vector
 	fftVRiesz.initZeros(myfftV);
 	n=0;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+
+	for(size_t i=0; i<YSIZE(myfftV); ++i)
 	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
+		for(size_t k=0; k<ZSIZE(myfftV); ++k)
 		{
-			FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-				if (iun<=iu1)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+				double un=1.0/iun;
+				if (w1l<=un && un<=w1)
+				{
+					//double H=0.5*(1+cos((un-w1)*ideltal));
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=0.5*(1+cos((un-w1)*ideltal));//H;
+					//Next lines are an optimization of the commented ones
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -uy*iun*0.5*(1+cos((un-w1)*ideltal));//H;
+				} else if (un>w1)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+				}
 				++n;
 			}
 		}
@@ -289,8 +336,21 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-				if (iun<=iu1)
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+				double un=1.0/iun;
+				if (w1l<=un && un<=w1)
+				{
+					//double H=0.5*(1+cos((un-w1)*ideltal));
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+					//Next lines are an optimization of the commented ones
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -uz*iun*0.5*(1+cos((un-w1)*ideltal));//H;
+				} else if (un>w1)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+				}
 				++n;
 			}
 		}
@@ -311,14 +371,13 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	saveImg.clear();
 	}
 	#endif // DEBUG
-
+//
 	// Low pass filter the monogenic amplitude
-	lowPassFilter.w1 = w1;
+	lowPassFilter.w1 = w1h;
 	amplitude.setXmippOrigin();
 	lowPassFilter.applyMaskSpace(amplitude);
 
 	#ifdef DEBUG
-	//Image<double> saveImg2;
 	saveImg2 = amplitude;
 	FileName fnSaveImg2;
 	if (fnDebug.c_str() != "")
@@ -328,6 +387,80 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	}
 	saveImg2.clear(); 
 	#endif // DEBUG
+}
+
+
+void ProgMonogenicSignalRes::postProcessingLocalResolutions(const MultidimArray<double> &resolutionVol,
+		std::vector<double> &list, MultidimArray<double> &resolutionFiltered,
+		 MultidimArray<double> &resolutionChimera)
+{
+	MultidimArray<double> resolutionVol_aux = resolutionVol;
+	double last_resolution_2 = sampling/list[(list.size()-1)];
+
+	// Count number of voxels with resolution
+	size_t N=0;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001)) //the value 0.001 is a tolerance
+			++N;
+
+	// Get all resolution values
+	MultidimArray<double> resolutions(N);
+	size_t N_iter=0;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001))
+			DIRECT_MULTIDIM_ELEM(resolutions,N_iter++)=DIRECT_MULTIDIM_ELEM(resolutionVol, n);
+	// Sort value and get threshold
+	std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
+	double filling_value = A1D_ELEM(resolutions, (int)(0.5*N)); //median value
+
+
+	FourierTransformer transformer;
+	MultidimArray<int> &pMask = mask();
+
+	transformer.FourierTransform(resolutionVol_aux, fftV);
+	resolutionFiltered = resolutionVol;
+
+	double freq, res, init_res, last_res;
+
+	init_res = sampling/list[0];
+	last_res = sampling/list[(list.size()-1)];
+
+	freq = list[(list.size()-1)];
+	res = sampling/freq;
+
+	lowPassFilter.FilterShape = RAISED_COSINE;
+	lowPassFilter.raised_w = 0.01;
+	lowPassFilter.do_generate_3dmask = false;
+	lowPassFilter.FilterBand = LOWPASS;
+	lowPassFilter.w1 = freq;
+	resolutionVol_aux.setXmippOrigin();
+	lowPassFilter.applyMaskFourierSpace(resolutionVol_aux, fftV);
+	transformer_inv.inverseFourierTransform(fftV, resolutionFiltered);
+
+	resolutionChimera = resolutionFiltered;
+
+	Nvoxels = 0;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionFiltered)
+	{
+		if (DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) < last_res)
+			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = last_res;
+		if (DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) > init_res)
+			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = init_res;
+		DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = DIRECT_MULTIDIM_ELEM(resolutionFiltered, n);
+		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) < last_res)
+		{
+			DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
+			DIRECT_MULTIDIM_ELEM(resolutionFiltered, n) = 0;
+			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
+		}
+		else
+		{
+			DIRECT_MULTIDIM_ELEM(pMask,n) = 1;
+			Nvoxels++;
+		}
+	}
+
+	mask.write(fnMaskOut);
 }
 
 
@@ -348,128 +481,134 @@ void ProgMonogenicSignalRes::run()
 	double criticalZ=icdf_gauss(significance);
 	double criticalW=-1;
 	double resolution, last_resolution = 10000;  //A huge value for achieving last_resolution < resolution
-	double freq;
+	double freq, freqH, freqL, resVal, counter;
 	double max_meanS = -1e38;
 
 	double range = maxRes-minRes;
+
 	double R_ = range/N_freq;
+
+	if (R_<0.1)
+		R_=0.1;
 
 	double w0 = sampling/maxRes;
 	double wF = sampling/minRes;
 	double w=w0;
-	double stepW = (wF-w0)/N_freq;
 	bool doNextIteration=true;
 	int iter=0;
 	int count_res = 0;
+	std::vector<double> list;
 
 	std::cout << "Analyzing frequencies" << std::endl;
 	std::vector<double> noiseValues;
 	FileName fnDebug;
 	do
 	{
-		if (linearchk ==true)
-		{
-			resolution = maxRes - count_res*R_;
-			freq = sampling/resolution;
-			++count_res;
-		}
+		resolution = maxRes - count_res*R_;
+		freqL = sampling/(resolution+R_);
+		freq = sampling/resolution;
+		freqH = sampling/(resolution-R_);
+		++count_res;
+		if (count_res<=2)
+			counter = maxRes/R_;
 		else
-		{
-			resolution =  sampling/w;
-			freq = sampling/resolution;
-		}
+			counter = count_res-2;
 
 		std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << resolution << " (A)" << std::endl;
+		//std::cout << "             " << " FreqLOW = " << freqL << " FreqHIGH = " << freqH << std::endl;
 
 		fnDebug = "Signal";
-		amplitudeMonogenicSignal3D(fftV, freq, amplitudeMS, iter, fnDebug);
+		amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
 		if (halfMapsGiven)
 		{
 			fnDebug = "Noise";
-			amplitudeMonogenicSignal3D(*fftN, freq, amplitudeMN, iter, fnDebug);
+			amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, fnDebug);
 		}
+
+		list.push_back(freq);
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 		noiseValues.clear();
+
 		if (exactres)
 		{
 			if (halfMapsGiven)
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								noiseValues.push_back(amplitudeValueN);
-								sumN  += amplitudeValueN;
-								sumN2 += amplitudeValueN*amplitudeValueN;
-								++NS;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						noiseValues.push_back(amplitudeValueN);
+						sumN  += amplitudeValueN;
+						sumN2 += amplitudeValueN*amplitudeValueN;
+						++NS;
+						++NN;
 					}
-					else
+				}
+			}
+			else
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								++NS;
-							}
-							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-							{
-								noiseValues.push_back(amplitudeValue);
-								sumN  += amplitudeValue;
-								sumN2 += amplitudeValue*amplitudeValue;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						++NS;
 					}
+					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+					{
+						noiseValues.push_back(amplitudeValue);
+						sumN  += amplitudeValue;
+						sumN2 += amplitudeValue*amplitudeValue;
+						++NN;
+					}
+				}
+			}
 		}
 		else
 		{
 			if (halfMapsGiven)
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								sumN  += amplitudeValueN;
-								sumN2 += amplitudeValueN*amplitudeValueN;
-								++NS;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						sumN  += amplitudeValueN;
+						sumN2 += amplitudeValueN*amplitudeValueN;
+						++NS;
+						++NN;
 					}
-					else
+				}
+			}
+			else
+			{
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-							if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
-							{
-								sumS  += amplitudeValue;
-								sumS2 += amplitudeValue*amplitudeValue;
-								++NS;
-							}
-							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-							{
-								sumN  += amplitudeValue;
-								sumN2 += amplitudeValue*amplitudeValue;
-								++NN;
-							}
-						}
+						sumS  += amplitudeValue;
+						sumS2 += amplitudeValue*amplitudeValue;
+						++NS;
 					}
+					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+					{
+						sumN  += amplitudeValue;
+						sumN2 += amplitudeValue*amplitudeValue;
+						++NN;
+					}
+				}
+			}
 		}
 
 		if (NS == 0)
@@ -510,70 +649,55 @@ void ProgMonogenicSignalRes::run()
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 		{
-			if (DIRECT_MULTIDIM_ELEM(pMask, n)==1)
+			if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 				if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 				{
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = sampling/freq;
+					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
 					if (fnSpatial!="")
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
-				else
-					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+				else{
+					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
+					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
+					{
+						DIRECT_MULTIDIM_ELEM(pMask, n) = -1;
+						//DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes - counter*R_;
+					}
+				}
 		}
+		#ifdef DEBUG_MASK
+		FileName fnmask_debug;
+		fnmask_debug = formatString("maske_%i.vol", iter);
+		mask.write(fnmask_debug);
+		#endif
 
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
-		if (verbose >=2)
-		{
+		#ifdef DEBUG
 			std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 			std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 			std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 			std::cout << "  z=" << z << " (" << criticalZ << ")" << std::endl;
-		}
+		#endif
 		if (z<criticalZ)
 		{
 			criticalW = freq;
 			doNextIteration=false;
 		}
-
 		if (doNextIteration)
 		{
-			if (linearchk == false)
-			{
-				last_resolution = resolution;
-				w+=stepW;
-				resolution = sampling/w;
-
-
-			if (last_resolution-resolution<0.1)
-			{
-				resolution=last_resolution-0.1;
-				w = sampling/resolution;
-			}
-
-			if (w > wF)
-			{
+			if (resolution <= (minRes-0.001))
 				doNextIteration = false;
-				std::cout << "Search of resolutions stopped due to out of resolution range" << std::endl;
-			}
-			}
-			else
-			{
-				if (resolution == minRes)
-					doNextIteration = false;
-			}
+
 		}
 		iter++;
 	} while (doNextIteration);
 
+	amplitudeMN.clear();
+	amplitudeMS.clear();
 
 	double last_resolution_2 = resolution;
-	std::cout << "last computed resolution = " << last_resolution_2 << std::endl;
-
-	#ifdef DEBUG
-		outputResolution.write("resolution_simple.vol");
-	#endif
-
 	if (fnSym!="c1")
 	{
 		SymList SL;
@@ -581,94 +705,49 @@ void ProgMonogenicSignalRes::run()
 		MultidimArray<double> VSimetrized;
 		symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR, DONT_WRAP);
 		outputResolution() = VSimetrized;
+		VSimetrized.clear();
 	}
 
 	#ifdef DEBUG
 		outputResolution.write("resolution_simple_simmetrized.vol");
 	#endif
 
+	MultidimArray<double> resolutionFiltered, resolutionChimera;
+	postProcessingLocalResolutions(pOutputResolution, list, resolutionFiltered, resolutionChimera);
+
+
+	Image<double> outputResolutionImage;
+	outputResolutionImage() = resolutionFiltered;
+	outputResolutionImage.write(fnOut);
+	outputResolutionImage() = resolutionChimera;
+	outputResolutionImage.write(fnchim);
+
+
+	#ifdef DEBUG
+		outputResolution.write("resolution_simple.vol");
+	#endif
+
 	if (fnSpatial!="")
-		{
-			mask.read(fnMask);
-			mask().setXmippOrigin();
-			Vfiltered.read(fnVol);
-			pVfiltered=Vfiltered();
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
-			if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
-				DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
-			Vfiltered.write(fnSpatial);
+	{
+		mask.read(fnMask);
+		mask().setXmippOrigin();
+		Vfiltered.read(fnVol);
+		pVfiltered=Vfiltered();
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
+		if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
+			DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
+		Vfiltered.write(fnSpatial);
 
-			VresolutionFiltered().clear();
-			Vfiltered().clear();
-		}
+		VresolutionFiltered().clear();
+		Vfiltered().clear();
+	}
 
+	MetaData md;
+	size_t objId;
+	objId = md.addObject();
+	md.setValue(MDL_IMAGE, fnOut, objId);
+	md.setValue(MDL_COUNT, (size_t) NVoxelsOriginalMask, objId);
+	md.setValue(MDL_COUNT2, (size_t) Nvoxels, objId);
 
-		double resValue;
-		if (trimBound>0)
-		{
-			// Count number of voxels with resolution
-			size_t N=0;
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001)) //the value 0.001 is a tolerance
-					++N;
-
-			// Get all resolution values
-			MultidimArray<double> resolutions(N);
-			size_t N_iter=0;
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>(last_resolution_2-0.001))
-					DIRECT_MULTIDIM_ELEM(resolutions,N_iter++)=DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-
-			// Sort value and get threshold
-			std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
-			double threshold=A1D_ELEM(resolutions,(int)(trimBound*N/100));
-			double filling_value = A1D_ELEM(resolutions, (int)(0.5*N));
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-			{
-				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>threshold){
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = filling_value;
-				}
-				if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)<(last_resolution_2-0.001)){
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
-				}
-//				else{
-//					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = 0;
-//				}
-			}
-
-			outputResolution.write(fnOut);
-		}
-		else
-		{
-			outputResolution.write(fnOut);
-		}
-
-
-		// Write volume for Chimera
-		if (fnchim != "")
-		{
-			//Calculating mean
-			double SumRes = 0, Nsum = 0;
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-			{
-				resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-				if (resValue>(last_resolution_2-0.001))
-				{
-					SumRes  += resValue;
-					Nsum += 1;
-				}
-			}
-
-			double meanRes = SumRes/Nsum;
-
-			std::cout << "mean = " << meanRes << std::endl;
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-			{
-				resValue = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-				if (resValue<=(last_resolution_2-0.001))
-					DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = meanRes;
-			}
-
-			outputResolution.write(fnchim);
-		}
+	md.write(fnMd);
 }
