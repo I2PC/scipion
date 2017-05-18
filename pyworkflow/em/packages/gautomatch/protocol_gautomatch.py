@@ -48,7 +48,7 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
 
-        em.ProtParticlePicking._defineParams(self, form)
+        em.ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('inputReferences', params.PointerParam,
                       pointerClass='SetOfAverages',
                       label='Input References', important=True, allowsNull=True,
