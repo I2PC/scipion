@@ -56,15 +56,15 @@ class XmippProtMovieGain(ProtProcessMovies):
         form.addParam('inputMovies', PointerParam, pointerClass='SetOfMovies, Movie',
                       label=Message.LABEL_INPUT_MOVS,
                       help='Select one or several movies. A gain image will '
-                           'be calculated for each one of them')
+                           'be calculated for each one of them.')
         form.addParam('frameStep', IntParam, default=1,
                       label="Frame step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every frame (frameStep=1) is used to compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... frame will be used')
+                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... frame will be used.')
         form.addParam('movieStep', IntParam, default=1,
                       label="Movie step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every movie (movieStep=1) is used to compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... movie will be used')
+                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... movie will be used.')
         form.addParallelSection(threads=1, mpi=1)
 
 
