@@ -197,6 +197,10 @@ class XmippMonoResViewer(ProtocolViewer):
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
 
+
+    def _getAxis(self):
+        return self.getEnumText('sliceAxis')
+
     def _plotVolumeSlices(self, title, volumeData, vminData, vmaxData, cmap, **kwargs):
         """ Helper function to create plots of volumes slices. 
         Params:
