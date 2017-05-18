@@ -52,6 +52,8 @@ void ProgMovieEstimateGain::readParams()
 
 void ProgMovieEstimateGain::produceSideInfo()
 {
+	if (fnIn.getExtension()=="mrc")
+		fnIn+=":mrcs";
 	mdIn.read(fnIn);
 	mdIn.removeDisabled();
 	if (mdIn.size()==0)
