@@ -30,6 +30,7 @@ from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 from pyworkflow.protocol.params import RelationParam
 
+import sys
 
 class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
     """ Protocol to estimate CTF on a set of micrographs using Xmipp. """
