@@ -55,7 +55,6 @@ USER_NAME = "User name"
 SAMPLE_NAME = "Sample name"
 PROJECT_NAME = "Project name"
 FRAMES_RANGE = "FRAMES_RANGE"
-DOSE_RATE_PER_FRAME = "DOSE_RATE_PER_FRAME"
 
 # Protocol's contants
 MOTIONCORR = "MOTIONCORR"
@@ -93,7 +92,6 @@ LABELS = {
     DATA_BACKUP: 'Data Backup Dir',
     PROJECT_NAME: "Project name",
     FRAMES_RANGE: "Frames range",
-    DOSE_RATE_PER_FRAME: "Dose per Frame",
     
     # Protocol's contants
     MOTIONCORR: "MotionCorr",
@@ -264,7 +262,6 @@ class BoxWizardView(tk.Frame):
         labelFrame2.columnconfigure(0, minsize=120)
         
         _addPair(FRAMES_RANGE, 0, labelFrame2)
-        _addPair(DOSE_RATE_PER_FRAME, 1, labelFrame2)
         _addPair(PROTOCOLS, 2, labelFrame2, entry=False)
         _addCheckPair(MOTIONCORR, 2, labelFrame2)
         _addCheckPair(MOTIONCOR2, 2, labelFrame2, col=2)
@@ -396,7 +393,6 @@ class BoxWizardView(tk.Frame):
         doMail = self._getValue(EMAIL_NOTIFICATION)
         doPublish = self._getValue(HTML_REPORT)
         
-        dosePerFrame = self._getValue(DOSE_RATE_PER_FRAME)
         
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
@@ -405,8 +401,6 @@ class BoxWizardView(tk.Frame):
                                          sphericalAberration=self._getConfValue(
                                              CS),
                                          dataStreaming=True)
-        if dosePerFrame:
-            protImport.dosePerFrame.set(float(dosePerFrame))
         # Should I publish html report?
         if doPublish == 1:
             publish = self._getConfValue('HTML_PUBLISH')
