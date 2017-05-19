@@ -430,6 +430,7 @@ void ProgMonogenicSignalRes::postProcessingLocalResolutions(MultidimArray<double
 		{
 			DIRECT_MULTIDIM_ELEM(resolutionChimera, n) = filling_value;
 			DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
+			DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
 		}
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n) >= trimming_value)
 		{
@@ -506,10 +507,7 @@ void ProgMonogenicSignalRes::run()
 		//std::cout << "             " << " FreqLOW = " << freqL << " FreqHIGH = " << freqH << std::endl;
 
 		fnDebug = "Signal";
-//		if (resolution<10)
-//		{
-//		  freqL = freq - 0.01;
-//		}
+
 		amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
 		if (halfMapsGiven)
 		{
@@ -645,12 +643,13 @@ void ProgMonogenicSignalRes::run()
 		  else
 		  {
 		    Nvoxels++;
-		    if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-		    {
-		      DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-		    }
-		    else
-		      DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+		    DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+//		    if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+//		    {
+//		      DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+//		    }
+//		    else
+//		      DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
 		  }
 		}
 		#ifdef DEBUG_MASK
@@ -708,8 +707,6 @@ void ProgMonogenicSignalRes::run()
 						DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 				}
 				else{
-				  //DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-				  //DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution + counter*R_;
 				  
 					DIRECT_MULTIDIM_ELEM(pMask, n) = DIRECT_MULTIDIM_ELEM(pMask, n) + 1;
 					if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
@@ -757,13 +754,22 @@ void ProgMonogenicSignalRes::run()
 	    else
 	    {
 	      Nvoxels++;
-	      if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-		DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-	      else
-		DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+	      DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+//	      if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+//	      {
+//	    	  //DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+//	    	  DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+//	      }
+//	      else
+//	      {
+////	    	  DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+//	    	  DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+//	      }
 	    }
 	  }
-	  mask.write(fnMaskOut);
+	#ifdef DEBUG_MASK
+	  //mask.write(fnMaskOut);
+	#endif
 	}
 	amplitudeMN.clear();
 	amplitudeMS.clear();
