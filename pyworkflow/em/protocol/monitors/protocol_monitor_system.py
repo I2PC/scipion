@@ -251,7 +251,6 @@ class MonitorSystem(Monitor):
         #remove last comma
         sqlCommand = sqlCommand[:-2]
         sqlCommand += ");"
-        print ("sqlCommand", sqlCommand,valuesDict)
         sql = sqlCommand%valuesDict
 
         try:
