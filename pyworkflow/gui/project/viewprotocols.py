@@ -37,6 +37,7 @@ import os
 import pickle
 import json
 import re
+import tempfile
 from collections import OrderedDict
 import Tkinter as tk
 import ttk
@@ -143,7 +144,7 @@ def populateTree(self, tree, treeItems, prefix, obj, subclassedDict, level=0):
                 for k, v in emProtocolsDict.iteritems():
 
                     if (k not in subclassedDict and
-                                v is not prot and issubclass(v, prot)):
+                        v is not prot and issubclass(v, prot)):
                         key = '%s.%s' % (item, k)
                         t = v.getClassLabel()
                         tree.insert(item, 'end', key, text=t, tags=('protocol'))
@@ -333,8 +334,7 @@ class SearchProtocolWindow(pwgui.Window):
     def _createResultsBox(self, content):
         frame = tk.Frame(content, bg=Color.LIGHT_GREY_COLOR, padx=5, pady=5)
         pwgui.configureWeigths(frame)
-        self._resultsTree = self.master.getViewWidget()._createProtocolsTree(
-            frame)
+        self._resultsTree = self.master.getViewWidget()._createProtocolsTree(frame)
         self._resultsTree.grid(row=0, column=0, sticky='news')
         frame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
 
@@ -691,7 +691,9 @@ class ProtocolsView(tk.Frame):
                          font=self.windows.fontBold)
         label.grid(row=1, column=0, sticky='nw', padx=(15, 0))
 
-        hView = {'sci-open': self._viewObject}
+        hView = {'sci-open': self._viewObject,
+                 'sci-bib': self._bibExportClicked}
+
         self.summaryText = pwgui.text.TaggedText(dframe, width=40, height=5,
                                                  bg='white', bd=0,
                                                  font=self.windows.font,
@@ -705,16 +707,15 @@ class ProtocolsView(tk.Frame):
         self.methodText = pwgui.text.TaggedText(mframe, width=40, height=15,
                                                 bg='white', handlers=hView)
         self.methodText.grid(row=0, column=0, sticky='news')
-
         # Reference export button
-        btnExportBib = pwgui.Button(mframe, text=Message.LABEL_BIB_BTN,
-                                    fg='white', bg=Color.RED_COLOR,
-                                    image=self.getImage(Icon.ACTION_BROWSE),
-                                    compound=tk.LEFT,
-                                    activeforeground='white',
-                                    activebackground='#A60C0C',
-                                    command=self._bibExportClicked)
-        btnExportBib.grid(row=2, column=0, sticky='w', padx=0)
+        # btnExportBib = pwgui.Button(mframe, text=Message.LABEL_BIB_BTN,
+        #                             fg='white', bg=Color.RED_COLOR,
+        #                             image=self.getImage(Icon.ACTION_BROWSE),
+        #                             compound=tk.LEFT,
+        #                             activeforeground='white',
+        #                             activebackground='#A60C0C',
+        #                             command=self._bibExportClicked)
+        # btnExportBib.grid(row=2, column=0, sticky='w', padx=0)
 
         # Logs
         ologframe = tk.Frame(tab)
@@ -742,7 +743,7 @@ class ProtocolsView(tk.Frame):
         p.add(leftFrame, padx=0, pady=0, sticky='news')
         p.add(rightFrame, padx=0, pady=0)
         p.paneconfig(leftFrame, minsize=5)
-        leftFrame.config(width=220)
+        leftFrame.config(width=235)
         p.paneconfig(rightFrame, minsize=10)
 
         return p
@@ -900,8 +901,7 @@ class ProtocolsView(tk.Frame):
                 # print action + " not in toolbar."
                 pass
 
-        for i, actionTuple in enumerate(
-                self.provider.getActionsFromSelection()):
+        for i, actionTuple in enumerate(self.provider.getActionsFromSelection()):
             action, cond = actionTuple
             displayAction(action, i, cond)
 
@@ -1416,6 +1416,11 @@ class ProtocolsView(tk.Frame):
             else:
 
                 item.setSelected(True)
+                if len(self._selection) == 1: #repaint first selected item
+                    firstSelectedNode = self.runsGraph.getNode(str(self._selection[0]))
+                    if hasattr(firstSelectedNode, 'item'):
+                        firstSelectedNode.item.setSelected(False)
+                        firstSelectedNode.item.setSelected(True)
                 self._selection.append(prot.getObjId())
 
                 # Select output data too
@@ -1499,8 +1504,7 @@ class ProtocolsView(tk.Frame):
         w = pwgui.form.FormWindow(Message.TITLE_NAME_RUN + prot.getClassName(),
                                   prot, self._executeSaveProtocol, self.windows,
                                   hostList=self.project.getHostNames(),
-                                  updateProtocolCallback=self._updateProtocol(
-                                      prot))
+                                  updateProtocolCallback=self._updateProtocol(prot))
         w.adjustSize()
         w.show(center=True)
 
@@ -1600,14 +1604,14 @@ class ProtocolsView(tk.Frame):
                 self.methodText.addLine('')
 
             if cites:
-                self.methodText.addLine('*REFERENCES:*')
+                self.methodText.addLine('*REFERENCES:*   '
+                                        ' [[sci-bib:][<<< Open as bibtex >>>]]')
                 for cite in cites.values():
                     self.methodText.addLine(cite)
 
             self.methodText.setReadOnly(True)
         except Exception as e:
-            self.methodText.addLine(
-                'Could not load all methods:' + e.getMessage())
+            self.methodText.addLine('Could not load all methods:' + e.getMessage())
 
     def _fillLogs(self):
         prot = self.getSelectedProtocol()
@@ -1829,49 +1833,36 @@ class ProtocolsView(tk.Frame):
             self.windows.showInfo("Selected protocol hasn't been run yet.")
 
     def _bibExportClicked(self, e=None):
+        try:
+            bibTexCites = OrderedDict()
+            for prot in self._iterSelectedProtocols():
+                bibTexCites.update(prot.getCitations(bibTexOutput=True))
+                bibTexCites.update(prot.getPackageCitations(bibTexOutput=True))
 
-        def _exportBib(obj):
-            try:
-                bibTexCites = OrderedDict()
-                fileName = os.path.join(browser.getCurrentDir(),
-                                        browser.getEntryValue())
-                if os.path.exists(fileName):
-                    if not pwgui.dialog.askYesNo("Confirm file name",
-                                                 "This file already exists, do you want to replace it?",
-                                                 self.root):
-                        return
+            if bibTexCites:
+                with tempfile.NamedTemporaryFile(suffix='.bib') as bibFile:
+                    for refId, refDict in bibTexCites.iteritems():
+                        refType = refDict['type']
+                        # remove 'type' and 'id' keys
+                        refDict = {k: v for k, v in refDict.items()
+                                   if k not in ['type', 'id']}
+                        jsonStr = json.dumps(refDict, indent=4,
+                                             ensure_ascii=False)[1:]
+                        jsonStr = jsonStr.replace('": "', '"= "')
+                        jsonStr = re.sub('(?<!= )"(\S*?)"', '\\1', jsonStr)
+                        jsonStr = jsonStr.replace('= "', ' = "')
+                        refStr = '@%s{%s,%s\n\n' % (refType, refId, jsonStr)
+                        bibFile.write(refStr.encode('utf-8'))
+                    # flush so we can see content when opening
+                    bibFile.flush()
+                    pwgui.text.openTextFileEditor(bibFile.name)
+                    #pwgui.text.showTextFileViewer("References bibtex",
+                    #                              [bibFile.name],
+                    #                              parent=self.windows)
 
-                for prot in self._iterSelectedProtocols():
-                    bibTexCites.update(prot.getCitations(bibTexOutput=True))
-                    bibTexCites.update(
-                        prot.getPackageCitations(bibTexOutput=True))
+        except Exception as ex:
+            self.windows.showError(str(ex))
 
-                if bibTexCites:
-                    with open(fileName, 'w') as bibFile:
-                        for refId, refDict in bibTexCites.iteritems():
-                            refType = refDict.pop('type', None)
-                            refDict.pop('id', None)
-                            jsonStr = json.dumps(refDict, indent=4,
-                                                 ensure_ascii=False)[1:]
-                            jsonStr = jsonStr.replace('": "', '"= "')
-                            jsonStr = re.sub('(?<!= )"(\S*?)"', '\\1', jsonStr)
-                            jsonStr = jsonStr.replace('= "', ' = "')
-                            refStr = '@%s{%s,%s\n\n' % (refType, refId, jsonStr)
-                            bibFile.write(refStr.encode('utf-8'))
-                    self.windows.showInfo(
-                        ".bib file successfully saved to '%s'."
-                        % fileName)
-            except Exception as ex:
-                self.windows.showError(str(ex))
-
-        browser = pwgui.browser.FileBrowserWindow(
-            "Choose .bib file to export references",
-            master=self.windows,
-            path=self.project.getPath(''),
-            onSelect=_exportBib,
-            entryLabel='File',
-            entryValue='citations.bib')
-        browser.show()
         return
 
     def _runActionClicked(self, action):
