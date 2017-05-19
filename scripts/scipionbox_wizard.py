@@ -34,7 +34,7 @@ import tkMessageBox
 import ttk
 import tkFont
 from collections import OrderedDict
-from ConfigParser import ConfigParser
+from ConfigParser import SafeConfigParser
 import argparse
 
 import pyworkflow as pw
@@ -331,8 +331,7 @@ class BoxWizardView(tk.Frame):
         projName = self._getProjectName()
         projPath = os.path.join(dataFolder, projName)
 
-        scipionProj = self._getConfValue('SCIPION_PROJECT')#.replace(
-            #'${PROJECT_NAME}', projName)
+        scipionProj = self._getConfValue('SCIPION_PROJECT')#.replace('${PROJECT_NAME}', projName)
         scipionProjPath = os.path.join(projPath, scipionProj)
         # Do more checks only if there are not previous errors
         if not errors:
@@ -544,7 +543,7 @@ def createDictFromConfig():
     confGlobalDict = OrderedDict()
     confDict = OrderedDict()
 
-    cp = ConfigParser()
+    cp = SafeConfigParser()
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
 
     confFile = pw.getConfigPath("scipionbox.conf")
