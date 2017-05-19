@@ -79,7 +79,7 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         cls.protImport = cls.runImportParticles(cls.particlesFn, 1)
     #         cls.protImportVol = cls.runImportVolumes(cls.vol, 1)
 
-    def _runSubparticles(self, checkSize, angles, **kwargs):
+    def _runSubparticles(self, checkSize, angles, defVector=0, **kwargs):
         label = 'localized subpartices ('
         for t in kwargs.iteritems():
             label += '%s=%s' % t
@@ -88,10 +88,16 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         prot = self.newProtocol(ProtLocalizedRecons,
                                  objLabel=label,
                                  symmetryGroup="I3",
-                                 defineVector=0,
+                                 defineVector=defVector,
                                  unique=5, **kwargs)
-        prot.vectorFile.set(self.chimeraFile)
         prot.inputParticles.set(self.protImport.outputParticles)
+        
+        if defVector == 1:
+            prot.vector.set('-0.89,0.016,0.455')
+            prot.length.set(51.06)
+        else:
+            prot.vectorFile.set(self.chimeraFile)
+        
         self.launchProtocol(prot)
         self.assertIsNotNone(prot.outputCoordinates,
                              "There was a problem with localized "
@@ -127,7 +133,7 @@ class TestLocalizedRecons(TestLocalizedReconsBase):
         localSubparticles = self._runSubparticles(120, [-77.3, 65.1, -66.5])
 
         self._runSubparticles(94,[-4.4, 59.6, -139.8], mindist=10)
-        self._runSubparticles(47, [176.3, 65.5, -79.0], side=25)
+        self._runSubparticles(47, [-176.3, 114.5, 101.0], side=25, defVector=1)
         self._runSubparticles(20, [-2.7, 131.0, 177.9], top=50)
 
         localExtraction = self.newProtocol(ProtLocalizedExtraction, boxSize=26)

@@ -249,8 +249,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         for mic in self.getInputMicrographs():
             micDict[mic.getMicName()] = mic.getFileName()
 
-        pwutils.prettyDict(micDict)
-
         def _getCoordsStarFile(mic):
             micName = mic.getMicName()
             if not micName in micDict:
@@ -312,24 +310,27 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
         for coord in inputCoords.iterItems(orderBy='_micId'):
             micName = coordMics[coord.getMicId()].getMicName()
-
-            # Load the new particles mrcs file and reset counter
-            if micName != lastMicName:
-                stackFile, ctfModel = micDict[micName]
-                count = 1
-                lastMicName = micName
-
-            p = em.Particle()
-            p.setLocation(count, stackFile)
-            if hasCTF:
-                p.setCTF(ctfModel)
-            p.setCoordinate(coord)
-
-            if doScale:
-                p.scaleCoordinate(scaleFactor)
-
-            partSet.append(p)
-            count += 1
+            
+            # If Micrograph Source is "other" and extract from a subset
+            # of micrographs, micName key should be checked if it exists.
+            if micName in micDict.keys():
+                # Load the new particles mrcs file and reset counter
+                if micName != lastMicName:
+                    stackFile, ctfModel = micDict[micName]
+                    count = 1
+                    lastMicName = micName
+    
+                p = em.Particle()
+                p.setLocation(count, stackFile)
+                if hasCTF:
+                    p.setCTF(ctfModel)
+                p.setCoordinate(coord)
+    
+                if doScale:
+                    p.scaleCoordinate(scaleFactor)
+    
+                partSet.append(p)
+                count += 1
 
         self._defineOutputs(outputParticles=partSet)
         self._defineSourceRelation(self.inputCoordinates, partSet)
@@ -353,7 +354,7 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
         return errors
     
     def _citations(self):
-        return ['Vargas2013b']
+        return ['Scheres2012b']
         
     def _summary(self):
         summary = []
