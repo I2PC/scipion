@@ -247,6 +247,7 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
                 md.unionAll(mdCTF)
         fnAllMicrographs = self._getPath("micrographs.xmd")
         md.write(fnAllMicrographs)
+        md.write(self._getPath("micrographsBefore.xmd"))
 
         # Now evaluate them
         self.runJob("xmipp_ctf_sort_psds", "-i %s" % fnAllMicrographs)
