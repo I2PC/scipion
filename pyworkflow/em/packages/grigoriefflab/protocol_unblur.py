@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb,csic.es)
+# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -223,7 +223,7 @@ class ProtUnblur(ProtAlignMovies):
                 'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
                 'doRestoreNoisePwr': 'YES' if self.doRestoreNoisePwr else 'NO',
                 'doVerboseOutput': 'YES' if self.doVerboseOutput else 'NO',
-                'exposurePerFrame': movie.getAcquisition().getDosePerFrame()
+                'exposurePerFrame': movie.getAcquisition().getDosePerFrame() or 0.0
                 }
 
         # Avoid threads multiplication

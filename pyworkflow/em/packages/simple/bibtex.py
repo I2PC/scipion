@@ -1,4 +1,4 @@
-# coding: latin-1
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
@@ -73,7 +73,7 @@ _bibtexStr = """
   Pages                    = {1299--1306},
   Volume                   = {21},
 
-  Abstract                 = {Low-dose electron microscopy of cryo-preserved individual biomolecules (single-particle cryo-EM) is a powerful tool for obtaining information about the structure and dynamics of large macromolecular assemblies. Acquiring images with low dose reduces radiation damage, preserves atomic structural details, but results in low signal-to-noise ratio of the individual images. The projection directions of the two-dimensional images are random and unknown. The grand challenge is to achieve the precise three-dimensional (3D) alignment of many (tens of thousands to millions) noisy projection images, which may then be combined to obtain a faithful 3D map. An accurate initial 3D model is critical for obtaining the precise 3D alignment required for high-resolution (<10 Å) map reconstruction. We report a method (PRIME) that, in a single step and without prior structural knowledge, can generate an accurate initial 3D map directly from the noisy images.},
+  Abstract                 = {Low-dose electron microscopy of cryo-preserved individual biomolecules (single-particle cryo-EM) is a powerful tool for obtaining information about the structure and dynamics of large macromolecular assemblies. Acquiring images with low dose reduces radiation damage, preserves atomic structural details, but results in low signal-to-noise ratio of the individual images. The projection directions of the two-dimensional images are random and unknown. The grand challenge is to achieve the precise three-dimensional (3D) alignment of many (tens of thousands to millions) noisy projection images, which may then be combined to obtain a faithful 3D map. An accurate initial 3D model is critical for obtaining the precise 3D alignment required for high-resolution (<10Â Ã…) map reconstruction. We report a method (PRIME) that, in a single step and without prior structural knowledge, can generate an accurate initial 3D map directly from the noisy images.},
   Doi                      = {http://dx.doi.org/10.1016/j.str.2013.07.002},
   Institution              = {Department of Structural Biology, Stanford University Medical School, Fairchild Building, 1st Floor, 299 Campus Drive, Stanford, CA 94305-5126, USA. hael@stanford.edu},
   Keywords                 = {Cryoelectron Microscopy, methods; Imaging, Three-Dimensional, methods; Macromolecular Substances, ultrastructure; Models, Molecular; Models, Statistical; Ribosomes, ultrastructure; Software},
