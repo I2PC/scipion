@@ -671,7 +671,6 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
             # we need to close previous opened file
             if f:
                 f.close()
-                #print "Micrograph %s (%d)" % (lastMicId, c)
                 c = 0
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
@@ -687,28 +686,17 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     
     if f:
         f.close()
-        print "Micrograph %s (%d)" % (lastMicId, c)
-    
+
     state = 'Manual' if ismanual else 'Supervised'
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-#     micName = removeBaseExt(micName)
-#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
-    #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
     md.write('properties@%s' % configFn)
 
-#     # Write filters block
-#     md = xmipp.MetaData()    
-#     objId = md.addObject()
-#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
-    
     return posDict.values()
 
 
@@ -734,24 +722,26 @@ def readSetOfCoordinates(outputDir, micSet, coordSet):
 
     coordSet._xmippMd = String(outputDir)
 
-
-
 def readCoordinates(mic, fileName, coordsSet, outputDir):
         posMd = readPosCoordinates(fileName)
-        posMd.addLabel(xmipp.MDL_ITEM_ID)#TODO: CHECK IF THIS LABEL IS STILL NECESSARY
+        # TODO: CHECK IF THIS LABEL IS STILL NECESSARY
+        posMd.addLabel(md.MDL_ITEM_ID)
 
         for objId in posMd:
+            # When do an union of two metadatas of coordinates and one of
+            # them doesn't has MDL_ENABLED, the default vaule to is 0,
+            # and its not allowed value. Maybe we need to solve this in xmipp
+            # code.
+            if posMd.getValue(md.MDL_ENABLED, objId) == 0:
+                posMd.setValue(md.MDL_ENABLED, 1, objId)
+            
             coord = rowToCoordinate(rowFromMd(posMd, objId))
             coord.setMicrograph(mic)
             coord.setX(coord.getX())
             coord.setY(coord.getY())
             coordsSet.append(coord)
-            # Add an unique ID that will be propagated to particles
-            posMd.setValue(xmipp.MDL_ITEM_ID, long(coord.getObjId()), objId)
-        #if not posMd.isEmpty():
-         #   scipionPosFile = join(outputDir, "scipion_" + replaceBaseExt(mic.getFileName(), 'pos'))
-          #  posMd.write("particles@%s"  % scipionPosFile)
-    
+            posMd.setValue(md.MDL_ITEM_ID, long(coord.getObjId()), objId)
+
 
 def readPosCoordinates(posFile):
     """ Read the coordinates in .pos file and return corresponding metadata.
@@ -760,18 +750,17 @@ def readPosCoordinates(posFile):
     particles_auto: with automatically picked particles.
     If posFile doesn't exist, the metadata will be empty 
     """
-    md = xmipp.MetaData()
+    mData = md.MetaData()
     
     if exists(posFile):
-        blocks = xmipp.getBlocksInMetaDataFile(posFile)
+        blocks = md.getBlocksInMetaDataFile(posFile)
         
         for b in ['particles', 'particles_auto']:
             if b in blocks:
-                mdAux = xmipp.MetaData('%(b)s@%(posFile)s' % locals())
-                md.unionAll(mdAux)
-        md.removeDisabled()
-    
-    return md
+                mdAux = md.MetaData('%(b)s@%(posFile)s' % locals())
+                mData.unionAll(mdAux)
+        mData.removeDisabled()
+    return mData
 
 
 def readSetOfImages(filename, imgSet, rowToFunc, **kwargs):

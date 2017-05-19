@@ -141,7 +141,7 @@ MpiFileMutex::~MpiFileMutex()
 //------------ MPI ---------------------------
 MpiNode::MpiNode(int &argc, char **& argv)
 {
-    MPI::Init(argc, argv);
+    MPI_Init(&argc, &argv);
     int irank, isize;
     MPI_Comm_rank(MPI_COMM_WORLD, &irank);
     MPI_Comm_size(MPI_COMM_WORLD, &isize);
@@ -158,7 +158,7 @@ MpiNode::~MpiNode()
     //active = 0;
     //updateComm();
     //std::cerr << "Send Finalize to: " << rank << std::endl;
-    MPI::Finalize();
+    MPI_Finalize();
 }
 
 bool MpiNode::isMaster() const
@@ -277,7 +277,7 @@ int XmippMpiProgram::tryRun()
     {
         std::cerr << xe;
         errorCode = xe.__errno;
-        MPI::COMM_WORLD.Abort(xe.__errno);
+        MPI_Abort(MPI_COMM_WORLD, xe.__errno);
     }
     return errorCode;
 }
