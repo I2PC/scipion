@@ -37,7 +37,7 @@ from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
 
-from ispyb_proxy import ISPyBProxy
+from ispyb_proxy import ISPyBProxy, ISPyBdb
 
 
 class ProtMonitorISPyB(ProtMonitor):
@@ -92,8 +92,9 @@ class MonitorISPyB(Monitor):
 
         prot = self.protocol
 
-        proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
-                           experimentParams={'visit': prot.visit.get()})
+        # proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
+        #                    experimentParams={'visit': prot.visit.get()})
+
 
 
         runs = [p.get() for p in self.protocol.inputProtocols]
@@ -114,13 +115,16 @@ class MonitorISPyB(Monitor):
             elif isinstance(prot, ProtCTFMicrographs):
                 self.update_ctf_params(prot, allParams)
 
+        ispybDb = ISPyBdb(prot.db.get(), experimentParams={'visit': prot.visit.get()})
+        print('**All params**')
+        print(allParams)
         for itemId, params in allParams.iteritems():
-            ispybId = proxy.sendMovieParams(params)
+            # ispybId = proxy.sendMovieParams(params)
             # Use -1 as a trick when ispyb is not really used and id is None
             self.allIds[itemId] = ispybId or -1
 
         self.info("Closing proxy")
-        proxy.close()
+        # proxy.close()
 
         return False
 

@@ -183,9 +183,9 @@ class ISPyBdb():
         print >> self.f, "ENV : %s" % os.environ
 
         try:
-            from ispyb_api.dbconnection import dbconnection
-            from ispyb_api.core import core
-            from ispyb_api.mxacquisition import mxacquisition
+            from ispybapi.ispyb.dbconnection import dbconnection
+            from ispybapi.ispyb.core import core
+            from ispybapi.ispyb.mxacquisition import mxacquisition
             self.dbconnection = dbconnection
             self.core = core
             self.mxacquisition = mxacquisition
@@ -193,6 +193,7 @@ class ISPyBdb():
             self.dbconnection = None
             self.core = None
             self.mxacquisition = None
+            print('Couldnt connect to db :[')
             print >> self.f, "\n%s: >>> OPENING DB" % timeStamp()
 
         self._loadCursor(db)
@@ -204,8 +205,8 @@ class ISPyBdb():
         self.cursor = None
 
         if self.dbconnection:
-            connect = getattr(self.dbconnection, 'connect_to_' + db)
-            self.cursor = connect()
+            # connect = getattr(self.dbconnection, 'connect' + db)
+            self.cursor = self.dbconnection.connect(conf=db)
 
     def _create_group(self):
         if self.mxacquisition:
