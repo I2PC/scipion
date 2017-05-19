@@ -556,10 +556,20 @@ keywords = ""
   year                     = "2015",
   pages                    = "14290",
   volume                   = "5",
-
   doi                      = "http://dx.doi.org/10.1038/srep14290",
   url                      = "http://dx.doi.org/10.1038/srep14290"
 }
+
+@article{Vilas2017,
+  title                    = {MonoRes: Automatic and unbiased estimation of local resolution for electron microscopy maps.},
+  author                   = {Vilas, J. L. and et al},
+  year                     = "2017",
+  journal                  = "Structure",
+  note                     = "submitted",
+  doi                      = {http://github.com/I2PC/scipion/wiki/XmippProtMonoRes}
+}
+
+
 
 """
 
