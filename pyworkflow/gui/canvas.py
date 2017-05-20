@@ -145,6 +145,20 @@ class Canvas(tk.Canvas, Scrollable):
         self.lastItem = item
         item.setSelected(True)
 
+    def multipleItemsSelected(self):
+        """ Returns True if more than one box selected,
+        False otherwise.
+        TODO: add numItemsSelected as attribute to Canvas
+        class and update when selection changes
+        """
+        selectedItemCounts = 0
+        for k, v in self.items.iteritems():
+            if v.getSelected():
+                selectedItemCounts += 1
+            if selectedItemCounts > 1:
+                return True
+        return False
+
     def _findItem(self, xc, yc):
         """ Find if there is any item in the canvas
         in the mouse event coordinates.
@@ -291,6 +305,7 @@ class Canvas(tk.Canvas, Scrollable):
     def clear(self):
         """ Clear all items from the canvas """
         self.delete(tk.ALL)
+        self.items.clear()
 
     def updateScrollRegion(self):
         self.update_idletasks()
@@ -895,19 +910,23 @@ class Edge():
 
             lineColor = '#ccc'
             lineWidth = 1.
-
-            if self.dest.getSelected():
-                lineColor = '#000'
-                lineWidth = 2.
-            elif self.source.getSelected():
-                lineColor = '#b22222'
-                lineWidth = 2.
+            if not self.canvas.multipleItemsSelected():
+                if self.dest.getSelected():
+                    lineColor = '#000'
+                    lineWidth = 2.
+                elif self.source.getSelected():
+                    lineColor = '#b22222'
+                    lineWidth = 2.
+            else:
+                if self.dest.getSelected() and self.source.getSelected():
+                    lineColor = '#000'
+                    lineWidth = 2.
     
             self.id = self.canvas.create_line(c1Coords[0], c1Coords[1], 
                                               c2Coords[0], c2Coords[1],
                                               width=lineWidth, fill=lineColor)
             self.canvas.tag_lower(self.id)
-        
+
     def updateSrc(self, dx, dy):
         self.srcX += dx
         self.srcY += dy
