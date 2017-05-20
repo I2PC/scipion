@@ -343,7 +343,7 @@ class XmippProtExtractParticlesPairs(XmippProtExtractParticles):
         return errors
 
     def _citations(self):
-        return ['Vargas2013b']
+        return ['delaRosaTrevin2013']
 
     def _summary(self):
         summary = []

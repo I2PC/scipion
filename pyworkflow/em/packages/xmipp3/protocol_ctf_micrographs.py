@@ -288,8 +288,8 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     def _methods(self):
         strMsg = "We calculated the CTF of micrographs %s using Xmipp [Sorzano2007a]" % self.getObjectTag('inputMicrographs')
         if self.doFastDefocus and not self.doInitialCTF:
-            str += " with a fast defocus estimate [Vargas2013a]"
-        str += "."
+            strMsg += " with a fast defocus estimate [Vargas2013a]"
+        strMsg += "."
 
         if self.methodsVar.hasValue():
             strMsg += " " + self.methodsVar.get()

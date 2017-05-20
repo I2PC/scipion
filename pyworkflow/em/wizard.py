@@ -573,12 +573,25 @@ class CtfDialog(DownsampleDialog):
         return PsdPreview(rightFrame, 1.2*self.dim, self.lf, self.hf,
                           label=self.rightPreviewLabel)
 
+    def _showInAngstroms(self):
+        return getattr(self, 'showInAngstroms', False)
+
     def _createControls(self, frame):
         self.freqFrame = ttk.LabelFrame(frame, text="Frequencies",
                                         padding="5 5 5 5")
         self.freqFrame.grid(row=0, column=0)
         self.lfSlider = self.addFreqSlider('Low freq', self.lf, col=0)
         self.hfSlider = self.addFreqSlider('High freq', self.hf, col=1)
+
+        if self._showInAngstroms():
+            self.lfVar = tk.StringVar()
+            self.lfLabel = tk.Label(self.freqFrame, textvariable=self.lfVar)
+            self.lfLabel.grid(row=1, column=0)
+            self.hfVar = tk.StringVar()
+            self.hfLabel = tk.Label(self.freqFrame, textvariable=self.hfVar)
+            self.hfLabel.grid(row=1, column=1)
+            self._updateFreqLabels()
+
     
     def getDownsample(self):
         return 1.0 # Micrograph previously downsample, not taken into account here
@@ -592,6 +605,14 @@ class CtfDialog(DownsampleDialog):
         
     def updateFreqRing(self):
         self.rightPreview.updateFreq(self.getLowFreq(), self.getHighFreq())
+        self._updateFreqLabels()
+
+    def _updateFreqLabels(self):
+        if self._showInAngstroms():
+            s = self.firstItem.getSamplingRate()
+            lowFreq = max(self.getLowFreq(), 0.0001)  # avoid division by zero
+            self.lfVar.set('%0.3f A' % (s / lowFreq))
+            self.hfVar.set('%0.3f A' % (s / self.getHighFreq()))
     
     def getLowFreq(self):
         return self.lfSlider.get()

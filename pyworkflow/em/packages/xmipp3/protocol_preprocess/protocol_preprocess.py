@@ -675,6 +675,10 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     
     def _summary(self):
         summary = []
+
+        if self.inputVolumes.get() is None:
+            return summary
+
         summary.append("Input volumes:  %s" % self.inputVolumes.get().getNameId())
         
         if not hasattr(self, 'outputVol'):
