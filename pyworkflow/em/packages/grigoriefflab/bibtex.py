@@ -1,7 +1,7 @@
-# coding: latin-1
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -75,7 +75,7 @@ keywords = "Three-dimensional reconstruction, Resolution, Depth of field, \{FREA
 }
 
 @article{Grigorieff1998,
-title = "Three-dimensional structure of bovine NADH:ubiquinone oxidoreductase (complex I) at 22 å in ice ",
+title = "Three-dimensional structure of bovine NADH:ubiquinone oxidoreductase (complex I) at 22 Ã¥ in ice ",
 journal = "JSB ",
 volume = "277",
 number = "5",

@@ -1,4 +1,4 @@
-([sp_pixsiz],[r2],[shrange],[prj-radius],[iter1],[iter-end],[sp_lambda],[small-ang],[sp_winsiz],[converg])
+([sp_pixsiz],[r2],[shrange],[prj-radius],[iter1],[iter-end],[sp_lambda],[small-ang],[sp_winsiz],[converg],[nummps])
 ;
 ; <html><head><title>Sets refinement parameters and files</title></head><body><pre>
 ;
@@ -29,6 +29,7 @@
 ;   [small-ang]          Small angle refinement flag (1 = true)
 ;   [sp_winsiz]          Image/window size = volume size
 ;   [converg]            Convergence criterion fraction
+;   [nummps]             Number of threads to use (0=all)
 ;
 ;<b> ============== DO NOT COPY FROM WEB BROWSER ==============</b>
 ;<b> ---------Set Refinement parameters from parameter file ----------</b>
@@ -43,6 +44,9 @@
    [params]           ; Parameter doc. file
 
  UD 17,[sp_winsiz]    ; Get windowsize (pixels), used to find projection radius 
+   [params]           ; Parameter doc. file
+
+ UD 18,[nummps]       ; Get number of threads to use (0=all)
    [params]           ; Parameter doc. file
 
  UD E                 ; End params doc. file usage

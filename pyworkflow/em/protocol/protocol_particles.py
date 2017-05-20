@@ -210,5 +210,5 @@ class ProtParticlePicking(ProtParticles):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.inputMicrographs, outputset)
+        self._defineSourceRelation(self.getInputMicrographsPointer(), outputset)
         self._store()

@@ -51,12 +51,13 @@
    TR OFF                     ; Loop info turned off
  MD
    VB OFF                     ; File info turned off
- MD
-   SET MP                     ; Use all available OMP processors
-   0
 
  ; Input initial parameters & file names
- @refine_settings([pixsiz],[r2],[alignsh],[prj-radius],[iter1],[iter-end],[lambda],[small-ang],[winsize],[converg])
+ @refine_settings([pixsiz],[r2],[alignsh],[prj-radius],[iter1],[iter-end],[lambda],[small-ang],[winsize],[converg],[nummps])
+
+ MD
+   SET MP                     ; Use all available OMP processors
+   [nummps]
 
  ; Redefine [temp_local_dir] location to current work directory for non-PubSub run
  GLO [temp_local_dir] = '[temp_work_dir]'
