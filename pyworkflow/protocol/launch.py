@@ -93,19 +93,10 @@ def _getAppsProgram(prog):
     And also using a different python if configured in SCIPION_PYTHON var.
     """
     return os.environ.get('SCIPION_PYTHON', 'python') + ' ' + pw.join('apps', prog)
-    
-    
+
 def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     # Check first if we need to launch with MPI or not
-#     if (protocol.stepsExecutionMode == STEPS_PARALLEL and
-#         protocol.numberOfMpi > 1):
-#         script = _getAppsProgram('pw_protocol_mpirun.py')
-#         mpi = protocol.numberOfMpi.get() + 1
-#     else:
-#         script = _getAppsProgram('pw_protocol_run.py')
-#         mpi = 1
     protStrId = protocol.strId()
-    #threads = protocol.numberOfThreads.get()
     python = pw.SCIPION_PYTHON
     scipion = pw.getScipionScript()
     command = '%s %s runprotocol pw_protocol_run.py "%s" "%s" %s' % (python, scipion,
@@ -116,7 +107,7 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
     useQueue = protocol.useQueue()
     # Check if need to submit to queue    
     if useQueue:        
-        submitDict = hostConfig.getQueuesDefault()
+        submitDict = dict(hostConfig.getQueuesDefault())
         submitDict.update(protocol.getSubmitDict())
         submitDict['JOB_COMMAND'] = command
         jobId = _submit(hostConfig, submitDict)
@@ -129,19 +120,27 @@ def _launchLocal(protocol, wait, stdin=None, stdout=None, stderr=None):
 def _runRemote(protocol, mode):
     """ Launch remotely 'pw_protocol_remote.py' script to run or stop a protocol. 
     Params:
-    	protocol: the protocol to be ran or stopped.
-	mode: should be either 'run' or 'stop'
+        protocol: the protocol to be ran or stopped.
+        mode: should be either 'run' or 'stop'
     """
     host = protocol.getHostConfig()
-    tpl  = "ssh %(address)s '%(scipion)s/scipion "
+    tpl = "ssh %(address)s '%(scipion)s/scipion "
+
     if host.getScipionConfig() is not None:
         tpl += "--config %(config)s "
-    tpl += "runprotocol pw_protocol_remote.py %(mode)s %(project)s %(protDb)s %(protId)s'"
+
+    tpl += "runprotocol pw_protocol_remote.py %(mode)s "
+    tpl += "%(project)s %(protDb)s %(protId)s' "
+
+    # Use project base name,
+    # in remote SCIPION_USER_DATA/projects should be prepended
+    projectPath = os.path.basename(protocol.getProject().path)
+
     args = {'address': host.getAddress(),
-    	    'mode': mode,
+            'mode': mode,
             'scipion': host.getScipionHome(),
             'config': host.getScipionConfig(),
-            'project': os.path.basename(protocol.getProject().path), # use project base name, in remote SCIPION_USER_DATA/projects should be prepended
+            'project': projectPath,
             'protDb': protocol.getDbPath(),
             'protId': protocol.getObjId()
             }
@@ -178,8 +177,7 @@ def _copyFiles(protocol, rpath):
         ssh: an ssh connection to copy the files.
     """
     remotePath = protocol.getHostConfig().getHostPath()
-    
-    
+
     for f in protocol.getFiles():
         remoteFile = join(remotePath, f)
         rpath.putFile(f, remoteFile)
@@ -227,7 +225,6 @@ def _run(command, wait, stdin=None, stdout=None, stderr=None):
 
     return jobId
 
-
 # ******************************************************************
 # *                 Function related to STOP
 # ******************************************************************
@@ -245,5 +242,4 @@ def _stopLocal(protocol):
 
 def _stopRemote(protocol):
     _runRemote(protocol, 'stop')
-    
     

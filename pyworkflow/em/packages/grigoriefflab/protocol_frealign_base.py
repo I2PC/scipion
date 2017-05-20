@@ -473,7 +473,7 @@ class ProtFrealignBase(EMProtocol):
                            'high values in the FSC curve (se publication #2 above). FREALIGN uses an\n'
                            'automatic weighting scheme and RBFACT should normally be set to 0.0.')
 
-        form.addParallelSection(threads=4, mpi=0)
+        form.addParallelSection(threads=4, mpi=1)
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):

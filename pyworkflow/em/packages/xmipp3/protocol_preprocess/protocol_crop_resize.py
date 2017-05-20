@@ -261,8 +261,8 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             sampling = _getSampling(self.outputParticles)
             size = _getSize(self.outputParticles)
             if self.doResize:
-                summary.append("Output particles have a different sampling "
-                               "rate (pixel size): *%0.3f* Å/px" % sampling)
+                summary.append(u"Output particles have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow:
@@ -274,6 +274,10 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return summary
 
     def _methods(self):
+
+        if not hasattr(self, 'outputParticles'):
+            return []
+
         methods = ["We took input particles %s of size %d " % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()))]
         if self.doWindow:
             if self.getEnumText('windowOperation') == "crop":
@@ -377,8 +381,8 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             sampling = _getSampling(self.outputVol)
             size = _getSize(self.outputVol)
             if self.doResize:
-                summary.append("Output volume(s) have a different sampling "
-                               "rate (pixel size): *%0.3f* Å/px" % sampling)
+                summary.append(u"Output volume(s) have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow.get():
@@ -390,6 +394,9 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         return summary
 
     def _methods(self):
+        if not hasattr(self, 'outputVol'):
+            return []
+
         if self._isSingleInput():
             methods = ["We took one volume"]
             pronoun = "it"
