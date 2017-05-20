@@ -55,6 +55,8 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)
         ProtParticles.__init__(self, **args)
+        self.allowMpi = False
+        self.allowThreads = False
         
     
     #--------------------------- DEFINE param functions -----------------------
@@ -91,8 +93,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
         group.addParam('defineVector',  EnumParam, default=CMM,
                       label='Is vector defined by?',
                       choices=['cmm file', 'string'],
-                      display=EnumParam.DISPLAY_HLIST,
-                      help='')
+                      display=EnumParam.DISPLAY_HLIST)
         group.addParam('vector', NumericRangeParam, default='0,0,1',
                       label='Location vectors', condition="defineVector==1",
                       help='Vector defining the location of the '
@@ -171,9 +172,9 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
             cmmFn = params["vectorFile"]
             vector = " "
         else:
-            cmmFn = " "
+            cmmFn = ""
             vector = params["vector"]
-            
+        
         subpartVectorList = localrec.load_vectors(cmmFn, vector,
                                                   params["length"],
                                                   params["pxSize"])

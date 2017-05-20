@@ -237,34 +237,40 @@ class ProtGctf(em.ProtCTFMicrographs):
         if self.isContinued() and os.path.exists(doneFile):
             return
 
-        # Create micrograph dir
-        pwutils.makePath(micDir)
-        downFactor = self.ctfDownFactor.get()
-        micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
-        micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
-        micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
+        try:
+            # Create micrograph dir
+            pwutils.makePath(micDir)
+            downFactor = self.ctfDownFactor.get()
+            micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
+            micFnCtf = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'ctf'))
+            micFnCtfFit = self._getTmpPath(pwutils.removeBaseExt(micFn) + '_EPA.log')
 
-        if downFactor != 1:
-            # Replace extension by 'mrc' cause there are some formats
-            # that cannot be written (such as dm3)
-            import pyworkflow.em.packages.xmipp3 as xmipp3
-            self.runJob("xmipp_transform_downsample",
-                        "-i %s -o %s --step %f --method fourier"
-                        % (micFn, micFnMrc, downFactor),
-                        env=xmipp3.getEnviron())
-            sps = self.inputMicrographs.get().getScannedPixelSize() * downFactor
-            self._params['scannedPixelSize'] = sps
-        else:
-            ih = em.ImageHandler()
-            if ih.existsLocation(micFn):
-                ih.convert(micFn, micFnMrc, em.DT_FLOAT)
+            if downFactor != 1:
+                # Replace extension by 'mrc' cause there are some formats
+                # that cannot be written (such as dm3)
+                import pyworkflow.em.packages.xmipp3 as xmipp3
+                self.runJob("xmipp_transform_downsample",
+                            "-i %s -o %s --step %f --method fourier"
+                            % (micFn, micFnMrc, downFactor),
+                            env=xmipp3.getEnviron())
+                sps = self.inputMicrographs.get().getScannedPixelSize() * downFactor
+                self._params['scannedPixelSize'] = sps
             else:
-                print >> sys.stderr, "Missing input micrograph %s" % micFn
+                ih = em.ImageHandler()
+                if ih.existsLocation(micFn):
+                    ih.convert(micFn, micFnMrc, em.DT_FLOAT)
+                else:
+                    print >> sys.stderr, "Missing input micrograph %s" % micFn
 
-        # Update _params dictionary
-        self._params['micFn'] = micFnMrc
-        self._params['micDir'] = micDir
-        self._params['gctfOut'] = self._getCtfOutPath(micDir)
+            # Update _params dictionary
+            self._params['micFn'] = micFnMrc
+            self._params['micDir'] = micDir
+            self._params['gctfOut'] = self._getCtfOutPath(micDir)
+
+        except Exception, ex:
+            print >> sys.stderr, "Some error happened: %s" % ex
+            import traceback
+            traceback.print_exc()
 
         try:
             self.runJob(self._getProgram(), self._args % self._params,  env=self._getEnviron())
