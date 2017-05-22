@@ -2,6 +2,8 @@
 #ifndef CUDA_XMIPP_UTILS_H
 #define CUDA_XMIPP_UTILS_H
 
+#include <stdio.h>
+
 void gpuMalloc(void** d_data, size_t Nbytes);
 void gpuFree(void* d_data);
 void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes);
@@ -77,19 +79,23 @@ public:
 
 	GpuMultidimArrayAtGpu(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
-        resize(_Xdim, _Ydim, _Zdim, _Ndim);
+		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
+		d_data=NULL;
+		resize(_Xdim, _Ydim, _Zdim, _Ndim);
     }
 
 	template<typename T1>
 	void resize(const GpuMultidimArrayAtGpu<T1>& array)
 	{
+
 		resize(array.Xdim, array.Ydim, array.Zdim, array.Ndim);
 	}
 
 	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
 		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim)
-			return
+			return;
+
 		clear();
 
 		Xdim=_Xdim;
