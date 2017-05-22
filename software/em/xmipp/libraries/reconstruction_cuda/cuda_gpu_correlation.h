@@ -14,15 +14,17 @@ public:
 	GpuMultidimArrayAtGpu< std::complex<double> > d_projPolarFFT;
 	GpuMultidimArrayAtGpu< std::complex<double> > d_projPolarSquaredFFT;
 	GpuMultidimArrayAtGpu< std::complex<double> > d_maskFFT;
-
-	GpuMultidimArrayAtGpu< std::complex<double> > d_norm;
 	GpuMultidimArrayAtGpu<double> maskAutocorrelation;
 	int maskCount;
+	int Xdim, Ydim;
+
+	GpuMultidimArrayAtGpu< double > d_denom;
+	GpuMultidimArrayAtGpu< double > MFrealSpace;
 
 	void produceSideInfo();
 };
 
-//double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux);
+double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux);
 
 
 #endif
