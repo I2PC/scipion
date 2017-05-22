@@ -696,7 +696,8 @@ class ProtRelionBase(EMProtocol):
         """ Returns the scratch dir value without spaces.
          If none, the empty string will be returned.
         """
-        return self.getAttributeValue('scratchDir', '').strip()
+        scratchDir = self.scratchDir.get() or ''
+        return scratchDir.strip()
 
     def _setComputeArgs(self, args):
         
@@ -834,6 +835,7 @@ class ProtRelionBase(EMProtocol):
         pass # should be implemented in subclasses
     
     #--------------------------- INFO functions --------------------------------
+
     def _validate(self):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
@@ -911,6 +913,7 @@ class ProtRelionBase(EMProtocol):
         return []
     
     #--------------------------- UTILS functions -------------------------------
+    
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
         if self.numberOfMpi > 1:
