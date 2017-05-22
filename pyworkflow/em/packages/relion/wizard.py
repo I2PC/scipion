@@ -256,6 +256,7 @@ class Relion2AutopickParams(EmWizard):
         cmd = '%s relion_autopick ' % pw.getScipionScript()
         cmd += '--i extra/%(micrographName).star '
         cmd += '--threshold %(threshold) --min_distance %(ipd) '
+        cmd += ' --max_stddev_noise %(maxStddevNoise) '
         cmd += ' --read_fom_maps'
         cmd += autopickProt.getAutopickParams()
 
