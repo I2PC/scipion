@@ -146,10 +146,11 @@ def locationToRelion(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Relion.
     """
-    if index != em.NO_INDEX:
-        return "%06d@%s" % (index, filename)
-    
-    return filename
+    return em.ImageHandler.locationToXmipp((index, filename))
+
+
+def getImageLocation(location):
+    return em.ImageHandler.locationToXmipp(location)
 
 
 def relionToLocation(filename):
@@ -897,7 +898,6 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
             (for example when extracting from micrographs with a different
             pixel size than during picking)
     """
-    boxSize = coordSet.getBoxSize() or 100
 
     # Create a dictionary with the pos filenames for each micrograph
     posDict = {}

@@ -42,14 +42,15 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
-from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0, V1_4
-from convert import convertBinaryVol, writeSetOfParticles, getVersion
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0, V1_3
+from convert import (convertBinaryVol, writeSetOfParticles, getVersion,
+                     getImageLocation)
 
 
 class ProtRelionBase(EMProtocol):
     """ This class contains the common functions for all Relion protocols.
-    In subclasses there should be little changes about how to create the command line
-    and the files produced.
+    In subclasses there should be little changes about how to create the command
+    line and the files produced.
     
     Most of the Relion protocols, have two modes: NORMAL or CONTINUE. That's why
     some of the function have a template pattern approach to define the behaviour
@@ -145,7 +146,8 @@ class ProtRelionBase(EMProtocol):
                       help='If you set to *Yes*, you should select a previous'
                       'run of type *%s* class and most of the input parameters'
                       'will be taken from it.' % self.getClassName())
-        form.addParam('inputParticles', PointerParam, pointerClass='SetOfParticles',
+        form.addParam('inputParticles', PointerParam,
+                      pointerClass='SetOfParticles',
                       condition='not doContinue',
                       important=True,
                       label="Input particles",  
@@ -157,31 +159,35 @@ class ProtRelionBase(EMProtocol):
         form.addParam('maskDiameterA', IntParam, default=-1,
                       condition='not doContinue',
                       label='Particle mask diameter (A)',
-                      help='The experimental images will be masked with a soft circular mask '
-                           'with this <diameter>. '
-                           'Make sure this diameter is not set too small because that may mask '
-                           'away part of the signal! If set to a value larger than the image '
-                           'size no masking will be performed.\n\n'
-                           'The same diameter will also be used for a spherical mask of the '
-                           'reference structures if no user-provided mask is specified.')
-        form.addParam('continueRun', PointerParam, pointerClass=self.getClassName(),
+                      help='The experimental images will be masked with a '
+                           'soft circular mask with this <diameter>. '
+                           'Make sure this diameter is not set too small '
+                           'because that may mask away part of the signal! If '
+                           'set to a value larger than the image size no '
+                           'masking will be performed.\n\n'
+                           'The same diameter will also be used for a '
+                           'spherical mask of the reference structures if no '
+                           'user-provided mask is specified.')
+        form.addParam('continueRun', PointerParam,
+                      pointerClass=self.getClassName(),
                       condition='doContinue', allowsNull=True,
                       label='Select previous run',
                       help='Select a previous run to continue from.')
         form.addParam('continueIter', StringParam, default='last',
                       condition='doContinue', 
                       label='Continue from iteration',
-                      help='Select from which iteration do you want to continue.'
-                           'if you use *last*, then the last iteration will be used.'
-                           'otherwise, a valid iteration number should be provided.')        
-        
-        form.addParam('numberOfClasses', IntParam, default=3, 
+                      help='Select from which iteration do you want to '
+                           'continue. If you use *last*, then the last '
+                           'iteration will be used. Otherwise, a valid '
+                           'iteration number should be provided.')
+        form.addParam('numberOfClasses', IntParam, default=3,
                       condition='not doContinue and isClassify',
                       label='Number of classes:',
-                      help='The number of classes (K) for a multi-reference refinement.'
-                           'These classes will be made in an unsupervised manner from a single'
-                           'reference by division of the data into random subsets during the'
-                           'first iteration.')
+                      help='The number of classes (K) for a multi-reference '
+                           'refinement. These classes will be made in an '
+                           'unsupervised manner from a single reference by '
+                           'division of the data into random subsets during '
+                           'the first iteration.')
         group = form.addGroup('Reference 3D map',
                               condition='not doContinue and not is2D')
         group.addParam('referenceVolume', PointerParam, pointerClass='Volume',
@@ -189,22 +195,33 @@ class ProtRelionBase(EMProtocol):
                        label="Input volume",
                        condition='not doContinue and not is2D',
                        help='Initial reference 3D map, it should have the same '
-                           'dimensions and the same pixel size as your input particles.')
+                           'dimensions and the same pixel size as your input '
+                            'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                       label="Is initial 3D map on absolute greyscale?", 
                       help='The probabilities are based on squared differences, '
                            'so that the absolute grey scale is important. \n'
-                           'Probabilities are calculated based on a Gaussian noise model,'
-                           'which contains a squared difference term between the reference and the experimental image. ' 
-                           'This has a consequence that the reference needs to be on the same absolute intensity '
-                           'grey-scale as the experimental images. RELION and XMIPP reconstruct maps at their absolute '
-                           'intensity grey-scale. Other packages may perform internal normalisations of the reference ' 
-                           'density, which will result in incorrect grey-scales. Therefore: if the map was reconstructed '
-                           'in RELION or in XMIPP, set this option to Yes, otherwise set it to No. If set to No, RELION '
-                           'will use a (grey-scale invariant) cross-correlation criterion in the first iteration, and '
-                           'prior to the second iteration the map will be filtered again using the initial low-pass filter. '
-                           'This procedure is relatively quick and typically does not negatively affect the outcome of the '
-                           'subsequent MAP refinement. Therefore, if in doubt it is recommended to set this option to No.')        
+                           'Probabilities are calculated based on a Gaussian '
+                           'noise model, which contains a squared difference '
+                           'term between the reference and the experimental '
+                           'image. This has a consequence that the reference '
+                           'needs to be on the same absolute intensity '
+                           'grey-scale as the experimental images. RELION and '
+                           'XMIPP reconstruct maps at their absolute '
+                           'intensity grey-scale. Other packages may perform '
+                           'internal normalisations of the reference density, '
+                           'which will result in incorrect grey-scales. '
+                           'Therefore: if the map was reconstructed in RELION '
+                           'or in XMIPP, set this option to Yes, otherwise '
+                           'set it to No. If set to No, RELION will use a ('
+                           'grey-scale invariant) cross-correlation criterion '
+                           'in the first iteration, and prior to the second '
+                           'iteration the map will be filtered again using '
+                           'the initial low-pass filter. This procedure is '
+                           'relatively quick and typically does not '
+                           'negatively affect the outcome of the subsequent '
+                           'MAP refinement. Therefore, if in doubt it is '
+                           'recommended to set this option to No.')
         
         self.addSymmetry(group)
 
@@ -293,21 +310,38 @@ class ProtRelionBase(EMProtocol):
         if self.IS_3D:
             form.addParam('referenceMask', PointerParam, pointerClass='VolumeMask',
                           label='Reference mask (optional)', allowsNull=True,
-                          help='A volume mask containing a (soft) mask with the same dimensions ' 
-                               'as the reference(s), and values between 0 and 1, with 1 being 100% protein '
-                               'and 0 being 100% solvent. The reconstructed reference map will be multiplied '
-                               'by this mask. If no mask is given, a soft spherical mask based on the <radius> '
-                               'of the mask for the experimental images will be applied.\n\n'  
-                               'In some cases, for example for non-empty icosahedral viruses, it is also useful ' 
-                               'to use a second mask. Check _Advaced_ level and select another volume mask') 
+                          help='A volume mask containing a (soft) mask with '
+                               'the same dimensions as the reference(s), '
+                               'and values between 0 and 1, with 1 being 100% '
+                               'protein and 0 being 100% solvent. The '
+                               'reconstructed reference map will be multiplied '
+                               'by this mask. If no mask is given, a soft '
+                               'spherical mask based on the <radius> of the '
+                               'mask for the experimental images will be '
+                               'applied.\n\n'
+                               'In some cases, for example for non-empty '
+                               'icosahedral viruses, it is also useful to use '
+                               'a second mask. Check _Advaced_ level and '
+                               'select another volume mask')
             form.addParam('solventMask', PointerParam, pointerClass='VolumeMask',
                           expertLevel=LEVEL_ADVANCED, allowsNull=True,
                           label='Second reference mask (optional)',
-                          help='For all white (value 1) pixels in this second mask the '
-                               'corresponding pixels in the reconstructed map are set to the average value of '
-                               'these pixels. Thereby, for example, the higher density inside the virion may be '
-                               'set to a constant. Note that this second mask should have one-values inside the '
-                               'virion and zero-values in the capsid and the solvent areas.')
+                          help='For all white (value 1) pixels in this second '
+                               'mask the corresponding pixels in the '
+                               'reconstructed map are set to the average value '
+                               'of these pixels. Thereby, for example, the '
+                               'higher density inside the virion may be set to '
+                               'a constant. Note that this second mask should '
+                               'have one-values inside the virion and '
+                               'zero-values in the capsid and the solvent '
+                               'areas.')
+        else:
+            form.addParam('referenceMask', PointerParam, pointerClass='Mask',
+                          label='Reference mask (optional)', allowsNull=True,
+                          expertLevel=LEVEL_ADVANCED,
+                          help='User-provided mask for the references ('
+                               'default is to use spherical mask with '
+                               'particle_diameter)')
         
         if self.IS_CLASSIFY:
             form.addParam('limitResolEStep', FloatParam, default=-1,
@@ -387,38 +421,66 @@ class ProtRelionBase(EMProtocol):
                                    'will get higher weights than those further away.')
                 
             else:
-                form.addParam('localSearchAutoSamplingDeg', EnumParam, default=4,
-                              choices=ANGULAR_SAMPLING_LIST,
+                form.addParam('localSearchAutoSamplingDeg', EnumParam,
+                              default=4, choices=ANGULAR_SAMPLING_LIST,
                               label='Local search from auto-sampling (deg)',
-                              help='In the automated procedure to increase the angular samplings,\n'
-                                   'local angular searches of -6/+6 times the sampling rate will\n'
-                                   'be used from this angular sampling rate onwards.')
+                              help='In the automated procedure to increase the '
+                                   'angular samplings, local angular searches '
+                                   'of -6/+6 times the sampling rate will be '
+                                   'used from this angular sampling rate '
+                                   'onwards.')
                 
                 form.addSection("Movies")
                 form.addParam('realignMovieFrames', BooleanParam, default=False,
                               label='Realign movie frames?',
-                              help='If set to Yes, then running averages of the individual frames '
-                                   'of recorded movies will be aligned as independent particles.')
+                              help='If set to Yes, then running averages of '
+                                   'the individual frames of recorded movies '
+                                   'will be aligned as independent particles.')
                 
                 group = form.addGroup('Movie frames alignment',
                                       condition='realignMovieFrames and doContinue')
-                group.addParam('inputMovieParticles', PointerParam, pointerClass='SetOfMovieParticles',
+                group.addParam('inputMovieParticles', PointerParam,
+                               pointerClass='SetOfMovieParticles',
                                allowsNull=True, important=True,
                                label='Input movie particles')
                 group.addParam('movieAvgWindow', FloatParam, default=5,
                               label='Running average window',
-                              help='The individual movie frames will be averaged using a running average window with the specified width. Use an odd number. The optimal value will depend on the SNR in the individual movie frames. For ribosomes, we used a value of 5, where each movie frame integrated approximately 1 electron per squared Angstrom.')
+                              help='The individual movie frames will be '
+                                   'averaged using a running average window '
+                                   'with the specified width. Use an odd '
+                                   'number. The optimal value will depend on '
+                                   'the SNR in the individual movie frames. '
+                                   'For ribosomes, we used a value of 5, '
+                                   'where each movie frame integrated '
+                                   'approximately 1 electron per squared '
+                                   'Angstrom.')
                 group.addParam('movieStdTrans', FloatParam, default=1,
                               label='Stddev on the translations (px)',
-                              help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 2 pixels. ')
-                group.addParam('movieIncludeRotSearch', BooleanParam, default=False,
+                              help='A Gaussian prior with the specified '
+                                   'standard deviation will be centered at '
+                                   'the rotations determined for the '
+                                   'corresponding particle where all '
+                                   'movie-frames were averaged. For '
+                                   'ribosomes, we used a value of 2 pixels. ')
+                group.addParam('movieIncludeRotSearch', BooleanParam,
+                               default=False,
                               label='Also include rotational searches?',
-                              help='If set to Yes, then running averages of the individual frames of recorded movies will also be aligned rotationally. \n'
-                                   'If one wants to perform particle polishing, then rotational alignments of the movie frames is NOT necessary and will only take more computing time.')
+                              help='If set to Yes, then running averages of '
+                                   'the individual frames of recorded movies '
+                                   'will also be aligned rotationally. \n'
+                                   'If one wants to perform particle '
+                                   'polishing, then rotational alignments of '
+                                   'the movie frames is NOT necessary and '
+                                   'will only take more computing time.')
                 group.addParam('movieStdRot', FloatParam, default=1,
                               condition='movieIncludeRotSearch',
                               label='Stddev on the rotations (deg)',
-                              help='A Gaussian prior with the specified standard deviation will be centered at the rotations determined for the corresponding particle where all movie-frames were averaged. For ribosomes, we used a value of 1 degree')
+                              help='A Gaussian prior with the specified '
+                                   'standard deviation will be centered at '
+                                   'the rotations determined for the '
+                                   'corresponding particle where all '
+                                   'movie-frames were averaged. For '
+                                   'ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
         if getVersion() == V2_0:
@@ -471,7 +533,7 @@ class ProtRelionBase(EMProtocol):
                                'sends those particles through the network to '
                                'the MPI slaves during the refinement '
                                'iterations.')
-            form.addParam('dirPath', PathParam, condition='not allParticlesRam',
+            form.addParam('scratchDir', PathParam, condition='not allParticlesRam',
                           label='Copy particles to scratch directory: ',
                           help='If a directory is provided here, then the job '
                                'will create a sub-directory in it called '
@@ -509,8 +571,8 @@ class ProtRelionBase(EMProtocol):
             form.addParam('gpusToUse', StringParam, default='',
                           label='Which GPUs to use:', condition='doGpu', 
                           help='This argument is not necessary. If left empty, '
-                               'the job itself will try to allocate available GPU '
-                               'resources. You can override the default '
+                               'the job itself will try to allocate available '
+                               'GPU resources. You can override the default '
                                'allocation by providing a list of which GPUs '
                                '(0,1,2,3, etc) to use. MPI-processes are '
                                'separated by ":", threads by ",". '
@@ -540,17 +602,26 @@ class ProtRelionBase(EMProtocol):
     def addSymmetry(self, container):
         container.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry", 
-                      help='If the molecule is asymmetric, set Symmetry group to C1. Note their are multiple possibilities for icosahedral symmetry: \n'
-                         '* I1: No-Crowther 222 (standard in Heymann, Chagoyen & Belnap, JSB, 151 (2005) 196-207)\n'
-                         '* I2: Crowther 222                                                                     \n'
-                         '* I3: 52-setting (as used in SPIDER?)                                                  \n'
-                         '* I4: A different 52 setting                                                           \n'
-                         'The command *relion_refine --sym D2 --print_symmetry_ops* prints a list of all symmetry operators for symmetry group D2. RELION uses XMIPP\'s libraries for symmetry operations. Therefore, look at the XMIPP Wiki for more details:  http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
+                      help='If the molecule is asymmetric, set Symmetry group '
+                           'to C1. Note their are multiple possibilities for '
+                           'icosahedral symmetry: \n'
+                         '* I1: No-Crowther 222 (standard in Heymann,Chagoyen '
+                           '& Belnap, JSB, 151 (2005) 196-207)               \n'
+                         '* I2: Crowther 222                                 \n'
+                         '* I3: 52-setting (as used in SPIDER?)              \n'
+                         '* I4: A different 52 setting                       \n'
+                         'The command *relion_refine --sym D2 '
+                         '--print_symmetry_ops* prints a list of all symmetry '
+                           'operators for symmetry group D2. RELION uses '
+                           'XMIPP\'s libraries for symmetry operations. '
+                           'Therefore, look at the XMIPP Wiki for more details: '
+                           ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
 
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._initialize()
-        self._insertFunctionStep('convertInputStep', self._getInputParticles().getObjId(),
+        self._insertFunctionStep('convertInputStep',
+                                 self._getInputParticles().getObjId(),
                                  self.copyAlignment)
         self._insertRelionStep()
         self._insertFunctionStep('createOutputStep')
@@ -597,7 +668,8 @@ class ProtRelionBase(EMProtocol):
             
         
         if self.IS_3D:
-            args['--ref'] = convertBinaryVol(self.referenceVolume.get(), self._getTmpPath())
+            args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
+                                             self._getTmpPath())
             if not self.isMapAbsoluteGreyScale:
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
@@ -615,9 +687,17 @@ class ProtRelionBase(EMProtocol):
         if self.IS_CLASSIFY:
             self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
-        
-        args['--continue'] = continueRun._getFileName('optimiser', iter=self._getContinueIter())
-    
+
+        continueIter = self._getContinueIter()
+        args['--continue'] = continueRun._getFileName('optimiser',
+                                                      iter=continueIter)
+
+    def _getScratchDir(self):
+        """ Returns the scratch dir value without spaces.
+         If none, the empty string will be returned.
+        """
+        return self.getAttributeValue('scratchDir', '').strip()
+
     def _setComputeArgs(self, args):
         
         if not self.combineItersDisc:
@@ -629,8 +709,8 @@ class ProtRelionBase(EMProtocol):
         if self.allParticlesRam:
             args['--preread_images'] = ''
         else:
-            if self.dirPath.hasValue():
-                args['--scratch_dir'] = self.dirPath.get()
+            if self._getScratchDir():
+                args['--scratch_dir'] = self._getScratchDir()
             
         args['--pool'] = self.pooledParticles.get()
         
@@ -669,14 +749,16 @@ class ProtRelionBase(EMProtocol):
             args['--ctf_intact_first_peak'] = ''
     
     def _setMaskArgs(self, args):
-        if self.IS_3D:
-            if self.referenceMask.hasValue():
-                args['--solvent_mask'] = self.referenceMask.get().getFileName() #FIXE: CHANGE BY LOCATION, convert if necessary
-                
-            if self.solventMask.hasValue():
-                args['--solvent_mask2'] = self.solventMask.get().getFileName() #FIXME: CHANGE BY LOCATION, convert if necessary
+        if self.referenceMask.hasValue():
+            mask = getImageLocation(self.referenceMask.get().getLocation())
+            args['--solvent_mask'] = mask
+            
+        if self.IS_3D and self.solventMask.hasValue():
+            solventMask = getImageLocation(self.solventMask.get().getLocation())
+            args['--solvent_mask2'] = solventMask
+
+    #--------------------------- STEPS functions -------------------------------
     
-    #--------------------------- STEPS functions --------------------------------------------       
     def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
@@ -709,30 +791,38 @@ class ProtRelionBase(EMProtocol):
                 
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
-                # Discard the movie particles that are not present in the refinement set
+                # Discard the movie particles that are not present in the
+                # refinement set
                 for movieParticle in movieParticleSet:
                     particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
                 writeSetOfParticles(auxMovieParticles,
-                                    self._getFileName('movie_particles'), None, originalSet=imgSet,
+                                    self._getFileName('movie_particles'),
+                                    None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
                 mdMovies = md.MetaData(self._getFileName('movie_particles'))
                 mdParts = md.MetaData(self._getFileName('input_star'))
-
-                if getVersion() == V1_4:
-                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_ORI_NAME)
+                
+                if getVersion() == V1_3:
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME,
+                                         md.RLN_PARTICLE_NAME)
                 else:
-                    mdParts.renameColumn(md.RLN_IMAGE_NAME, md.RLN_PARTICLE_NAME)
+                    mdParts.renameColumn(md.RLN_IMAGE_NAME,
+                                         md.RLN_PARTICLE_ORI_NAME)
                 mdParts.removeLabel(md.RLN_MICROGRAPH_NAME)
                 
-                detectorPxSize = movieParticleSet.getAcquisition().getMagnification() * movieParticleSet.getSamplingRate() / 10000
+                mag = movieParticleSet.getAcquisition().getMagnification()
+                movieSamplingRate = movieParticleSet.getSamplingRate()
+                detectorPxSize = mag * movieSamplingRate / 10000
+                
                 mdAux = md.MetaData()
-                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE, detectorPxSize)
-                
-                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID, md.RLN_IMAGE_ID, md.INNER_JOIN)
-                
-                mdAux.write(self._getFileName('movie_particles'), md.MD_OVERWRITE)
+                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE,
+                                      detectorPxSize)
+                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
+                            md.RLN_IMAGE_ID, md.INNER_JOIN)
+                mdAux.write(self._getFileName('movie_particles'),
+                            md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
         
     def runRelionStep(self, params):
@@ -743,7 +833,7 @@ class ProtRelionBase(EMProtocol):
     def createOutputStep(self):
         pass # should be implemented in subclasses
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
@@ -759,7 +849,8 @@ class ProtRelionBase(EMProtocol):
             errors += self._validateContinue()
         else:
             if self._getInputParticles().isOddX():
-                errors.append("Relion only works with even values for the image dimensions!")
+                errors.append("Relion only works with even values for the "
+                              "image dimensions!")
         
             errors += self._validateNormal()
         return errors
@@ -819,7 +910,7 @@ class ProtRelionBase(EMProtocol):
         """
         return []
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
         if self.numberOfMpi > 1:
@@ -881,7 +972,8 @@ class ProtRelionBase(EMProtocol):
         return data_sqlite
     
     def _splitInCTFGroups(self, imgStar):
-        """ Add a new colunm in the image star to separate the particles into ctf groups """
+        """ Add a new colunm in the image star to separate the particles
+        into ctf groups """
         from convert import splitInCTFGroups
         splitInCTFGroups(imgStar
                          , self.defocusRange.get()
@@ -907,10 +999,10 @@ class ProtRelionBase(EMProtocol):
         return self._getContinueIter() + self.numberOfIterations.get()
     
     def _postprocessImageRow(self, img, imgRow):
-#         from convert import locationToRelion
         partId = img.getParticleId()
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
-        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%06d@fake_movie_%06d.mrcs" %(img.getFrameId() + 1, img.getMicId()))
-        
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME,
+                        "%06d@fake_movie_%06d.mrcs"
+                        % (img.getFrameId() + 1, img.getMicId()))

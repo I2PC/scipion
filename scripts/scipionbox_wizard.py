@@ -34,7 +34,7 @@ import tkMessageBox
 import ttk
 import tkFont
 from collections import OrderedDict
-from ConfigParser import ConfigParser
+from ConfigParser import SafeConfigParser
 import argparse
 
 import pyworkflow as pw
@@ -55,7 +55,6 @@ USER_NAME = "User name"
 SAMPLE_NAME = "Sample name"
 PROJECT_NAME = "Project name"
 FRAMES_RANGE = "FRAMES_RANGE"
-DOSE_RATE_PER_FRAME = "DOSE_RATE_PER_FRAME"
 
 # Protocol's contants
 MOTIONCORR = "MOTIONCORR"
@@ -93,7 +92,6 @@ LABELS = {
     DATA_BACKUP: 'Data Backup Dir',
     PROJECT_NAME: "Project name",
     FRAMES_RANGE: "Frames range",
-    DOSE_RATE_PER_FRAME: "Dose per Frame",
     
     # Protocol's contants
     MOTIONCORR: "MotionCorr",
@@ -264,7 +262,6 @@ class BoxWizardView(tk.Frame):
         labelFrame2.columnconfigure(0, minsize=120)
         
         _addPair(FRAMES_RANGE, 0, labelFrame2)
-        _addPair(DOSE_RATE_PER_FRAME, 1, labelFrame2)
         _addPair(PROTOCOLS, 2, labelFrame2, entry=False)
         _addCheckPair(MOTIONCORR, 2, labelFrame2)
         _addCheckPair(MOTIONCOR2, 2, labelFrame2, col=2)
@@ -336,9 +333,8 @@ class BoxWizardView(tk.Frame):
         
         projName = self._getProjectName()
         projPath = os.path.join(dataFolder, projName)
-        
-        scipionProj = self._getConfValue('SCIPION_PROJECT')  # .replace(
-        # '${PROJECT_NAME}', projName)
+
+        scipionProj = self._getConfValue('SCIPION_PROJECT')
         scipionProjPath = os.path.join(projPath, scipionProj)
         # Do more checks only if there are not previous errors
         if not errors:
@@ -397,7 +393,6 @@ class BoxWizardView(tk.Frame):
         doMail = self._getValue(EMAIL_NOTIFICATION)
         doPublish = self._getValue(HTML_REPORT)
         
-        dosePerFrame = self._getValue(DOSE_RATE_PER_FRAME)
         
         protImport = project.newProtocol(em.ProtImportMovies,
                                          objLabel='Import movies',
@@ -406,8 +401,6 @@ class BoxWizardView(tk.Frame):
                                          sphericalAberration=self._getConfValue(
                                              CS),
                                          dataStreaming=True)
-        if dosePerFrame:
-            protImport.dosePerFrame.set(float(dosePerFrame))
         # Should I publish html report?
         if doPublish == 1:
             publish = self._getConfValue('HTML_PUBLISH')
@@ -554,8 +547,8 @@ def createDictFromConfig():
     # Read from users' config file.
     confGlobalDict = OrderedDict()
     confDict = OrderedDict()
-    
-    cp = ConfigParser()
+    cp = SafeConfigParser()
+
     cp.optionxform = str  # keep case (stackoverflow.com/questions/1611799)
     
     confFile = pw.getConfigPath("scipionbox.conf")

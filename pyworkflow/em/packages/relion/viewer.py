@@ -125,7 +125,8 @@ class RelionViewer(ProtocolViewer):
     def _defineParams(self, form):
         self._env = os.environ.copy()
         form.addSection(label='Visualization')
-        form.addParam('viewIter', params.EnumParam, choices=['last', 'selection'], default=ITER_LAST, 
+        form.addParam('viewIter', params.EnumParam,
+                      choices=['last', 'selection'], default=ITER_LAST,
                       display=params.EnumParam.DISPLAY_LIST,
                       label="Iteration to visualize", 
                       help="""
@@ -281,11 +282,17 @@ Examples:
         If the new metadata was already written, it is just shown.
         """
         views = []
-        
-        for it in self._iterations:
-            fn = self.protocol._getIterClasses(it)
+        if (self.viewIter.get() == ITER_LAST and
+            self.protocol.outputClasses is not None):
+            fn = self.protocol.outputClasses.getFileName()
             v = self.createScipionView(fn)
             views.append(v)
+
+        else:
+            for it in self._iterations:
+                fn = self.protocol._getIterClasses(it)
+                v = self.createScipionView(fn)
+                views.append(v)
         
         return views
     
