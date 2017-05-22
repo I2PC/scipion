@@ -533,7 +533,7 @@ class ProtRelionBase(EMProtocol):
                                'sends those particles through the network to '
                                'the MPI slaves during the refinement '
                                'iterations.')
-            form.addParam('dirPath', PathParam, condition='not allParticlesRam',
+            form.addParam('scratchDir', PathParam, condition='not allParticlesRam',
                           label='Copy particles to scratch directory: ',
                           help='If a directory is provided here, then the job '
                                'will create a sub-directory in it called '
@@ -668,7 +668,8 @@ class ProtRelionBase(EMProtocol):
             
         
         if self.IS_3D:
-            args['--ref'] = convertBinaryVol(self.referenceVolume.get(), self._getTmpPath())
+            args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
+                                             self._getTmpPath())
             if not self.isMapAbsoluteGreyScale:
                 args['--firstiter_cc']=''
             args['--ini_high'] = self.initialLowPassFilterA.get()
@@ -686,9 +687,17 @@ class ProtRelionBase(EMProtocol):
         if self.IS_CLASSIFY:
             self.copyAttributes(continueRun, 'regularisationParamT')
         self._setBasicArgs(args)
-        
-        args['--continue'] = continueRun._getFileName('optimiser', iter=self._getContinueIter())
-    
+
+        continueIter = self._getContinueIter()
+        args['--continue'] = continueRun._getFileName('optimiser',
+                                                      iter=continueIter)
+
+    def _getScratchDir(self):
+        """ Returns the scratch dir value without spaces.
+         If none, the empty string will be returned.
+        """
+        return self.getAttributeValue('scratchDir', '').strip()
+
     def _setComputeArgs(self, args):
         
         if not self.combineItersDisc:
@@ -700,11 +709,8 @@ class ProtRelionBase(EMProtocol):
         if self.allParticlesRam:
             args['--preread_images'] = ''
         else:
-            if self.dirPath.hasValue():
-                dirPath = self.dirPath.get()
-                if exists(dirPath):
-                    print  "PATHDIR: ", dirPath
-                    args['--scratch_dir'] = dirPath
+            if self._getScratchDir():
+                args['--scratch_dir'] = self._getScratchDir()
             
         args['--pool'] = self.pooledParticles.get()
         
@@ -752,6 +758,7 @@ class ProtRelionBase(EMProtocol):
             args['--solvent_mask2'] = solventMask
 
     #--------------------------- STEPS functions -------------------------------
+    
     def convertInputStep(self, particlesId, copyAlignment):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
@@ -784,7 +791,8 @@ class ProtRelionBase(EMProtocol):
                 
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
-                # Discard the movie particles that are not present in the refinement set
+                # Discard the movie particles that are not present in the
+                # refinement set
                 for movieParticle in movieParticleSet:
                     particle = imgSet[movieParticle.getParticleId()]
                     if particle is not None:
@@ -809,9 +817,12 @@ class ProtRelionBase(EMProtocol):
                 detectorPxSize = mag * movieSamplingRate / 10000
                 
                 mdAux = md.MetaData()
-                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE, detectorPxSize)
-                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID, md.RLN_IMAGE_ID, md.INNER_JOIN)
-                mdAux.write(self._getFileName('movie_particles'), md.MD_OVERWRITE)
+                mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE,
+                                      detectorPxSize)
+                mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
+                            md.RLN_IMAGE_ID, md.INNER_JOIN)
+                mdAux.write(self._getFileName('movie_particles'),
+                            md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
         
     def runRelionStep(self, params):
@@ -822,7 +833,7 @@ class ProtRelionBase(EMProtocol):
     def createOutputStep(self):
         pass # should be implemented in subclasses
     
-    #--------------------------- INFO functions -------------------------------------------- 
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
@@ -838,7 +849,8 @@ class ProtRelionBase(EMProtocol):
             errors += self._validateContinue()
         else:
             if self._getInputParticles().isOddX():
-                errors.append("Relion only works with even values for the image dimensions!")
+                errors.append("Relion only works with even values for the "
+                              "image dimensions!")
         
             errors += self._validateNormal()
         return errors
@@ -898,7 +910,7 @@ class ProtRelionBase(EMProtocol):
         """
         return []
     
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
         if self.numberOfMpi > 1:
@@ -987,10 +999,10 @@ class ProtRelionBase(EMProtocol):
         return self._getContinueIter() + self.numberOfIterations.get()
     
     def _postprocessImageRow(self, img, imgRow):
-#         from convert import locationToRelion
         partId = img.getParticleId()
         magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
-        imgRow.setValue(md.RLN_MICROGRAPH_NAME, "%06d@fake_movie_%06d.mrcs" %(img.getFrameId() + 1, img.getMicId()))
-        
+        imgRow.setValue(md.RLN_MICROGRAPH_NAME,
+                        "%06d@fake_movie_%06d.mrcs"
+                        % (img.getFrameId() + 1, img.getMicId()))
