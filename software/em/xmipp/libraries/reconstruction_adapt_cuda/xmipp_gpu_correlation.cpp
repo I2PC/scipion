@@ -42,6 +42,9 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 	size_t pad_Xdim=2*Xdim-1;
 	size_t pad_Ydim=2*Ydim-1;
 
+	d_correlationAux.Xdim=pad_Xdim;
+	d_correlationAux.Ydim=pad_Ydim;
+
 	size_t objIndex = 0;
 	MDRow rowIn;
 	FileName fnImg;
@@ -55,6 +58,7 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 	GpuMultidimArrayAtCpu<double> padded_image_stack(pad_Xdim,pad_Ydim,1,numImages);
 	GpuMultidimArrayAtCpu<double> padded_image2_stack(pad_Xdim,pad_Ydim,1,numImages);
 	GpuMultidimArrayAtCpu<double> padded_mask(pad_Xdim,pad_Ydim);
+	GpuMultidimArrayAtCpu<double> autocorrelation_mask(pad_Xdim,pad_Ydim);
 
 	MDIterator *iter = new MDIterator(SF);
 
@@ -97,12 +101,17 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 
 	mask.get_binary_mask().window(padMask, STARTINGY(padIref),STARTINGX(padIref),FINISHINGY(padIref),FINISHINGX(padIref));
 	padded_mask.fillImage(0, padMask);
+	MultidimArray<double> dMask, maskAutocorrelation;
+	typeCast(padMask, dMask);
+	auto_correlation_matrix(dMask, maskAutocorrelation);
+	autocorrelation_mask.fillImage(0, maskAutocorrelation);
 
-	GpuMultidimArrayAtGpu<double> original_image_gpu, padded_image_gpu, padded_image2_gpu, padded_mask_gpu;
+	GpuMultidimArrayAtGpu<double> original_image_gpu, padded_image_gpu, padded_image2_gpu, autocorrelation_mask_gpu, padded_mask_gpu;
 	original_image_stack.copyToGpu(original_image_gpu);
 	padded_image_stack.copyToGpu(padded_image_gpu);
 	padded_image2_stack.copyToGpu(padded_image2_gpu);
 	padded_mask.copyToGpu(padded_mask_gpu);
+	//autocorrelation_mask.copyToGpu(d_correlationAux.maskAutocorrelation);
 
 	//Polar transform of the projected images
 	GpuMultidimArrayAtGpu<double> polar_gpu(360,radius,1,numImages);
@@ -118,19 +127,25 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 	padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
 
 	/*/AJ for debugging
-	GpuMultidimArrayAtCpu<double> polar_cpu(360, radius, 1, numImages);
+	size_t xAux= pad_Xdim;
+	size_t yAux= pad_Ydim;
+	size_t nAux= 1;
+	GpuMultidimArrayAtGpu<double> aux(xAux,yAux,1,numImages);
+	d_correlationAux.d_maskFFT.ifft(aux);
+	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,numImages);
+	auxCpu.copyFromGpu(aux);
 	pointer=0;
-	for(int i=0; i<5; i++){
+	for(int i=0; i<nAux; i++){
 	MultidimArray<double> padded;
 	FileName fnImgPad;
 	Image<double> Ipad;
-	padded.coreAllocate(1, 1, radius, 360);
-	memcpy(MULTIDIM_ARRAY(padded), &polar_cpu.data[pointer], radius*360*sizeof(double));
-	fnImgPad.compose("test", i+1, "jpg");
+	padded.coreAllocate(1, 1, yAux, xAux);
+	memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer], xAux*yAux*sizeof(double));
+	fnImgPad.compose("mask", i+1, "jpg");
 	Ipad()=padded;
 	Ipad.write(fnImgPad);
 	padded.coreDeallocate();
-	pointer += radius*360;
+	pointer += xAux*yAux;
 	}
 	//END AJ/*/
 
@@ -179,7 +194,7 @@ void ProgGpuCorrelation::run()
 {
 
 	//PROJECTION IMAGES PART
-
+	printf("Reference images: \n");
 	//Read input metadataFile for projection images
 	size_t Xdim, Ydim, Zdim, Ndim;
 	SF.read(fn_proj,NULL);
@@ -196,9 +211,9 @@ void ProgGpuCorrelation::run()
 	mask.generate_mask();
 	int maskCount = mask.get_binary_mask().sum();
 
-	MultidimArray<double> dMask, maskAutocorrelation;
-	typeCast(mask.get_binary_mask(),dMask);
-	auto_correlation_matrix(dMask,maskAutocorrelation);
+	//MultidimArray<double> dMask, maskAutocorrelation;
+	//typeCast(mask.get_binary_mask(), dMask);
+	//auto_correlation_matrix(dMask, maskAutocorrelation); //AJ con la padded??????????????
 
 	//AJ check_gpu_memory to know how many images we can copy in the gpu memory
 	int percent = 70;
@@ -212,12 +227,15 @@ void ProgGpuCorrelation::run()
 
 	GpuCorrelationAux d_referenceAux;
 	preprocess_projection_images(SF, available_images_proj, mask, d_referenceAux, false);
-	//fillImage(d_referenceAux.maskAutocorrelation,maskAutocorrelation);
+	//d_referenceAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
+	//fillImage(d_referenceAux.maskAutocorrelation, maskAutocorrelation);
 	d_referenceAux.maskCount=maskCount;
+	d_referenceAux.produceSideInfo();
+
 
 
 	//EXPERIMENTAL IMAGES PART
-
+	printf("Experimental images: \n");
 	SFexp.read(fn_exp,NULL);
 	size_t mdExpSize = SFexp.size();
 
@@ -231,22 +249,40 @@ void ProgGpuCorrelation::run()
 
 	GpuCorrelationAux d_experimentalAux;
 	preprocess_projection_images(SFexp, available_images_exp, mask, d_experimentalAux, true);
-	//fillImage(d_referenceAux.maskAutocorrelation,maskAutocorrelation);
+	//d_experimentalAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
+	//fillImage(d_experimentalAux.maskAutocorrelation, maskAutocorrelation);
 	d_experimentalAux.maskCount=maskCount;
+	d_experimentalAux.produceSideInfo();
+
+	/*/AJ for debugging
+	size_t xAux= d_experimentalAux.d_denom.Xdim;
+	size_t yAux= d_experimentalAux.d_denom.Ydim;
+	size_t nAux= d_experimentalAux.d_denom.Ndim;
+	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
+	auxCpu.copyFromGpu(d_experimentalAux.d_denom);
+	int pointer2=0;
+	for(int i=0; i<nAux; i++){
+	MultidimArray<double> padded;
+	FileName fnImgPad;
+	Image<double> Ipad;
+	padded.coreAllocate(1, 1, yAux, xAux);
+	memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
+	fnImgPad.compose("nuevo", i+1, "jpg");
+	Ipad()=padded;
+	Ipad.write(fnImgPad);
+	padded.coreDeallocate();
+	pointer2 += xAux*yAux;
+	}
+	//END AJ/*/
 
 
 	//CORRELATION PART
-	exit(0);
 
 	//Translational part
 	printf("Calculating correlation...\n");
-	size_t pad_Xdim=2*Xdim-1;
-	size_t pad_Ydim=2*Ydim-1;
-	double **NCC = NULL; //cuda_calculate_correlation(
-//			d_pointersProj.d_projFFTPointer, d_pointersProj.d_projSquaredFFTPointer,
-//			d_pointersExp.d_projFFTPointer, d_pointersExp.d_projSquaredFFTPointer,
-//			d_pointersProj.d_maskFFTPointer, pad_Xdim, pad_Ydim, Zdim,
-//			available_images_proj, available_images_exp, counting);
+	size_t pad_Xdim=d_referenceAux.Xdim;
+	size_t pad_Ydim=d_referenceAux.Ydim;
+	double **NCC = cuda_calculate_correlation(d_referenceAux, d_experimentalAux);
 
 	MultidimArray<double> MDAncc;
 	MultidimArray<double> NCC_matrix(available_images_exp, available_images_proj);
@@ -254,8 +290,8 @@ void ProgGpuCorrelation::run()
 	MDIterator *iterExp = new MDIterator(SF);
 	size_t objIndex = 0;
 	size_t objIndexExp = 0;
-	int pointer=0;
-	int count=0;
+	int	pointer=0;
+	int count=1;
 
 	FileName fnImgPad;
 	Image<double> Ipad;
@@ -277,14 +313,14 @@ void ProgGpuCorrelation::run()
 
 			MDAncc.coreAllocate(Ndim, Zdim, pad_Ydim, pad_Xdim);
 			memcpy(MULTIDIM_ARRAY(MDAncc), &NCC[iterExp->objId-1][pointer], pad_Xdim*pad_Ydim*sizeof(double));
-			//fnImgPad.compose("test", count, "jpg");
-			//Ipad()=MDAncc;
-			//Ipad.write(fnImgPad);
+			fnImgPad.compose("jare", count, "jpg");
+			Ipad()=MDAncc;
+			Ipad.write(fnImgPad);
 
 			pointer += (pad_Ydim*pad_Xdim);
 			double max = MDAncc.computeMax();
 			NCC_matrix(objIndexExp-1, objIndex-1) = max;
-			printf("Max=%f\n",max);
+			printf("Max=%lf\n",max);
 
 			int posX, posY;
 			MDAncc.maxIndex(posY, posX);
