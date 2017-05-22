@@ -30,7 +30,7 @@ fr l
 ;[temp_dir]tmpfilt
 
 ;vm
-;echo "if(! -d [temp_dir]) mkdir -p [temp_dir]"|csh
+;echo "[ ! -d [temp_dir] ] && mkdir -p [temp_dir]"|sh
 
 ;; get pixel-size
 ;ud 5,x15

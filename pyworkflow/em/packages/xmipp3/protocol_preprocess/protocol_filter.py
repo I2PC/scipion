@@ -338,6 +338,8 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
         ProtFilterParticles.__init__(self, **kwargs)
         XmippProcessParticles.__init__(self, **kwargs)
         self._program = "xmipp_transform_filter"
+        self.allowMpi = False
+        self.allowThreads = False
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -423,6 +425,8 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
         ProtFilterVolumes.__init__(self, **kwargs)
         XmippProcessVolumes.__init__(self, **kwargs)
         self._program = "xmipp_transform_filter"
+        self.allowThreads = False
+        self.allowMpi = False
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

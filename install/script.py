@@ -433,8 +433,8 @@ relion_vars = [('FFTW_LIB', SW_LIB),
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
                     ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
-env.addPackage('relion', version='2.0.3',
-               tar='relion-2.0.3.tgz',
+env.addPackage('relion', version='2.0',
+               tar='relion-2.0.4.tgz',
                commands=relion2_commands,
                updateCuda=True,
                vars=relion_vars)
