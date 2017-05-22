@@ -40,6 +40,9 @@ void ProgMovieEstimateGain::defineParams()
     addParamsLine(" [--sigmaStep <s=0.5>]: Step size for sigma");
     addParamsLine(" [--singleRef] : Use a single histogram reference");
     addParamsLine("               :+This assumes that there is no image contamination or carbon holes");
+    addParamsLine(" [--gainImage] : Reference to external gain image");
+    addParamsLine(" [--applyGain] : Flag for using external gain image");
+    addParamsLine("               : applyGain=True will use external gain image");
 }
 
 void ProgMovieEstimateGain::readParams()
@@ -51,6 +54,8 @@ void ProgMovieEstimateGain::readParams()
 	sigmaStep=getDoubleParam("--sigmaStep");
 	singleReference=checkParam("--singleRef");
 	frameStep=getIntParam("--frameStep");
+	fnGain=getParam("--gainImage");
+	applyGain=getParam("--applyGain");
 }
 
 void ProgMovieEstimateGain::produceSideInfo()
@@ -113,6 +118,8 @@ void ProgMovieEstimateGain::show()
 	<< "Sigma step:      " << sigmaStep       << std::endl
 	<< "Single ref:      " << singleReference << std::endl
 	<< "Frame step:      " << frameStep       << std::endl
+	<< "Ext. gain image: " << fnGain          << std::endl
+	<< "Apply ext. gain: " << applyGain       << std::endl
 	;
 }
 
@@ -123,65 +130,83 @@ void ProgMovieEstimateGain::run()
 
 	FileName fnFrame;
 	Image<int> Iframe;
-	MultidimArray<int> IframeTransformed, IframeIdeal;
-	MultidimArray<double> sumIdeal;
+	MultidimArray<int> IframeTransformed, IframeIdeal, IframeMA;
+	MultidimArray<double> sumIdeal, gainMA;
 	MultidimArray<double> &mICorrection=ICorrection();
+    Image<double> gain;
 
-	for (int n=0; n<Niter; n++)
+	if (applyGain && fnGain != "")
 	{
-		std::cout << "Iteration " << n << std::endl;
-		sumIdeal.initZeros(Ydim,Xdim);
-		int iFrame=0;
-		FOR_ALL_OBJECTS_IN_METADATA(mdIn)
-		{
-            if (iFrame%frameStep==0)
-            {
-                mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
-                std::cout << "   Frame " << fnFrame << std::endl;
-                Iframe.read(fnFrame);
-                IframeIdeal = Iframe();
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
-                    DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
-                computeHistograms(IframeIdeal);
+	    gain.read(fnGain);
+	    gainMA = gain();
 
-                size_t bestSigmaCol = selectBestSigmaByColumn(IframeIdeal);
-                std::cout << "      sigmaCol: " << listOfSigmas[bestSigmaCol] << std::endl;
-                size_t bestSigmaRow = selectBestSigmaByRow(IframeIdeal);
-                std::cout << "      sigmaRow: " << listOfSigmas[bestSigmaRow] << std::endl;
-
-                constructSmoothHistogramsByRow(listOfWeights[bestSigmaRow],listOfWidths[bestSigmaRow]);
-                transformGrayValuesRow(IframeIdeal,IframeTransformed);
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
-                    DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
-                constructSmoothHistogramsByColumn(listOfWeights[bestSigmaCol],listOfWidths[bestSigmaCol]);
-                transformGrayValuesColumn(IframeIdeal,IframeTransformed);
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
-                    DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
-             }
-             iFrame++;
-		}
-
-		FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mICorrection)
-		{
-			double den=DIRECT_A2D_ELEM(sumObs,i,j);
-			if (fabs(den)<1e-6)
-				DIRECT_A2D_ELEM(mICorrection,i,j)=1.0;
-			else
-				DIRECT_A2D_ELEM(mICorrection,i,j)=DIRECT_A2D_ELEM(sumIdeal,i,j)/den;
-		}
-		mICorrection/=mICorrection.computeAvg();
-
-#ifdef NEVER_DEFINED
-	ICorrection.write(fnCorr);
-	Image<double> save;
-	typeCast(sumIdeal,save());
-	save.write("PPPSumIdeal.xmp");
-	typeCast(sumObs,save());
-	save.write("PPPSumObs.xmp");
-	//std::cout << "Press any key\n";
-	//char c; std::cin >> c;
-#endif
+        FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+        {
+            mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+            Iframe.read(fnFrame);
+            IframeMA = Iframe();
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IframeMA)
+                DIRECT_MULTIDIM_ELEM(mICorrection,n) = (DIRECT_MULTIDIM_ELEM(IframeMA,n) / DIRECT_MULTIDIM_ELEM(gainMA,n));
+        }
 	}
+    else
+    {
+        for (int n=0; n<Niter; n++)
+        {
+            std::cout << "Iteration " << n << std::endl;
+            sumIdeal.initZeros(Ydim,Xdim);
+            int iFrame=0;
+            FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+            {
+                if (iFrame%frameStep==0)
+                {
+                    mdIn.getValue(MDL_IMAGE,fnFrame,__iter.objId);
+                    std::cout << "   Frame " << fnFrame << std::endl;
+                    Iframe.read(fnFrame);
+                    IframeIdeal = Iframe();
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeIdeal)
+                        DIRECT_A2D_ELEM(IframeIdeal,i,j)=(int)(DIRECT_A2D_ELEM(IframeIdeal,i,j)*DIRECT_A2D_ELEM(mICorrection,i,j));
+                    computeHistograms(IframeIdeal);
+
+                    size_t bestSigmaCol = selectBestSigmaByColumn(IframeIdeal);
+                    std::cout << "      sigmaCol: " << listOfSigmas[bestSigmaCol] << std::endl;
+                    size_t bestSigmaRow = selectBestSigmaByRow(IframeIdeal);
+                    std::cout << "      sigmaRow: " << listOfSigmas[bestSigmaRow] << std::endl;
+
+                    constructSmoothHistogramsByRow(listOfWeights[bestSigmaRow],listOfWidths[bestSigmaRow]);
+                    transformGrayValuesRow(IframeIdeal,IframeTransformed);
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
+                        DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+                    constructSmoothHistogramsByColumn(listOfWeights[bestSigmaCol],listOfWidths[bestSigmaCol]);
+                    transformGrayValuesColumn(IframeIdeal,IframeTransformed);
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(IframeTransformed)
+                        DIRECT_A2D_ELEM(sumIdeal,i,j)+=DIRECT_A2D_ELEM(IframeTransformed,i,j);
+                 }
+                 iFrame++;
+            }
+
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mICorrection)
+            {
+                double den=DIRECT_A2D_ELEM(sumObs,i,j);
+                if (fabs(den)<1e-6)
+                    DIRECT_A2D_ELEM(mICorrection,i,j)=1.0;
+                else
+                    DIRECT_A2D_ELEM(mICorrection,i,j)=DIRECT_A2D_ELEM(sumIdeal,i,j)/den;
+            }
+            mICorrection/=mICorrection.computeAvg();
+
+    #ifdef NEVER_DEFINED
+        ICorrection.write(fnCorr);
+        Image<double> save;
+        typeCast(sumIdeal,save());
+        save.write("PPPSumIdeal.xmp");
+        typeCast(sumObs,save());
+        save.write("PPPSumObs.xmp");
+        //std::cout << "Press any key\n";
+        //char c; std::cin >> c;
+    #endif
+        }
+    }
 	ICorrection.write(fnRoot+"_correction.xmp");
 	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mICorrection)
 		if (DIRECT_A2D_ELEM(mICorrection,i,j)>1e-5)

@@ -26,7 +26,7 @@
 from pyworkflow import VERSION_1_1
 from pyworkflow.utils.properties import Message
 from pyworkflow.utils.path import cleanPath
-from pyworkflow.protocol.params import PointerParam, IntParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import PointerParam, IntParam, BooleanParam, LEVEL_ADVANCED
 from pyworkflow.em.protocol import EMProtocol, ProtProcessMovies
 from pyworkflow.em.data import SetOfMovies, Movie
 from pyworkflow.object import Set
@@ -59,12 +59,21 @@ class XmippProtMovieGain(ProtProcessMovies):
                            'be calculated for each one of them.')
         form.addParam('frameStep', IntParam, default=1,
                       label="Frame step", expertLevel=LEVEL_ADVANCED,
-                      help='By default, every frame (frameStep=1) is used to compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... frame will be used.')
+                      help='By default, every frame (frameStep=1) is used to '
+                           'compute the movie gain. If you set '
+                           'this parameter to 2, 3, ..., then every 2nd, 3rd, '
+                           '... frame will be used.')
         form.addParam('movieStep', IntParam, default=1,
                       label="Movie step", expertLevel=LEVEL_ADVANCED,
-                      help='By default, every movie (movieStep=1) is used to compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then every 2nd, 3rd, ... movie will be used.')
+                      help='By default, every movie (movieStep=1) is used to '
+                           'compute the movie gain. If you set '
+                           'this parameter to 2, 3, ..., then every 2nd, 3rd, '
+                           '... movie will be used.')
+        form.addParam('useExistingGainImage', BooleanParam, default=True,
+                      label="Use existing gain image", expertLevel=LEVEL_ADVANCED,
+                      help='By default, we do not estimate gain image if there '
+                           'is an existing gain image from input movies '
+                           'protocol, we apply it.')
         form.addParallelSection(threads=1, mpi=1)
 
 
@@ -103,9 +112,13 @@ class XmippProtMovieGain(ProtProcessMovies):
     def _processMovie(self, movie):
         movieId = movie.getObjId()
         fnMovie = movie.getFileName()
+        gain = movie.getGain()
         self.runJob("xmipp_movie_estimate_gain",
-                    "-i %s --oroot %s --iter 1 --singleRef --frameStep %d"
-                    % (fnMovie, self._getPath("movie_%06d" % movieId), self.frameStep), numberOfMpi=1)
+                    "-i %s --oroot %s --iter 1 --singleRef --frameStep %d "
+                    "--gainImage %s --applyGain %s"
+                    % (fnMovie, self._getPath("movie_%06d" % movieId),
+                       self.frameStep, gain,
+                       self.useExistingGainImage.get()), numberOfMpi=1)
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
 
         fnSummary = self._getPath("summary.txt")
