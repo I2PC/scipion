@@ -37,7 +37,7 @@ from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
 
-from ispyb_proxy import ISPyBProxy, ISPyBdb
+from ispyb_proxy import ISPyBdb
 
 
 class ProtMonitorISPyB(ProtMonitor):
@@ -92,10 +92,8 @@ class MonitorISPyB(Monitor):
 
         prot = self.protocol
 
-        # proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
-        #                    experimentParams={'visit': prot.visit.get()})
-
-
+        ispybDb = ISPyBdb(["prod", "dev", "test"][prot.db.get()],
+                          experimentParams={'visit': prot.visit.get()})
 
         runs = [p.get() for p in self.protocol.inputProtocols]
         g = self.project.getGraphFromRuns(runs)
@@ -115,16 +113,15 @@ class MonitorISPyB(Monitor):
             elif isinstance(prot, ProtCTFMicrographs):
                 self.update_ctf_params(prot, allParams)
 
-        ispybDb = ISPyBdb(prot.db.get(), experimentParams={'visit': prot.visit.get()})
-        print('**All params**')
-        print(allParams)
         for itemId, params in allParams.iteritems():
-            # ispybId = proxy.sendMovieParams(params)
+            dcParams = ispybDb.get_data_collection_params()
+            dcParams.update(params)
+            ispybId = ispybDb.update_data_collection(dcParams)
+            print(ispybId)
             # Use -1 as a trick when ispyb is not really used and id is None
             self.allIds[itemId] = ispybId or -1
 
-        self.info("Closing proxy")
-        # proxy.close()
+        self.info("Closing ispybDb")
 
         return False
 

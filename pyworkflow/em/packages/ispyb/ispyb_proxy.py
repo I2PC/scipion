@@ -26,11 +26,9 @@
 # *
 # **************************************************************************
 
-import sys
 import os
+import sys
 from collections import OrderedDict
-import json
-import subprocess
 from datetime import datetime
 
 
@@ -43,132 +41,6 @@ def timeStamp(dt=None, format='%Y-%m-%d_%H%M%S'):
     if dt is None:
         dt = datetime.now()
     return dt.strftime(format)
-
-
-class ISPyBProxy():
-    """ This class could be used from Scipion environment. It would be used
-    from the MonitorISPyB to spawn a new process that will communicate with
-    the database. The communication to the process will be through input/output
-    pipes. The data lines will be in json format. """
-    def __init__(self, db, experimentParams):
-        self._createISPyBProcess(db)
-        self._sendDict(experimentParams)
-
-    def _createISPyBProcess(self, db):
-        import pyworkflow.utils as pwutils
-
-        if pwutils.envVarOn('SCIPIONBOX_ISPYB_ON'):
-            cmd = ('source /etc/profile.d/modules.sh;'
-                'module unload python/ana;'
-                'module load python/ana;'
-                'module unload ispyb-api/ana;'
-                'module load ispyb-api/ana;')
-        else:
-            cmd = ''
-
-        cmd += 'python %s %s' % (SCRIPT, db)
-
-
-        print "** Running: '%s'" % cmd
-        self.proc = subprocess.Popen(cmd, shell=True,
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE)
-
-    def _sendLine(self, line):
-        print "Sending line: ", line
-        print >> self.proc.stdin, line
-        self.proc.stdin.flush()
-        r =  self.proc.stdout.readline()
-        print "Recv: ", r
-        return r
-
-    def _sendDict(self, paramsDict):
-        return self._sendLine(json.dumps(paramsDict))
-
-    def sendMovieParams(self, movieParams):
-        r = self._sendDict(movieParams)
-        movieId = int(r.split()[1].strip())
-        return movieId
-
-    def close(self):
-        self._sendLine(INPUT_END)
-        self.proc.kill()
-
-
-class ISPyBProccess():
-    def __init__(self, db):
-        # self.db should be set after this
-        self._loadDb(db, self._readExperimentParams())
-        self.processInputMovies()
-
-    def readLine(self):
-        line = sys.stdin.readline()
-        return line
-
-    def readDict(self, line=None):
-        """ Read a line with json format and convert to a dict. """
-        try:
-            line = line or self.readLine()
-            lineDict = json.loads(line)
-            if not isinstance(lineDict, dict):
-                self.error("Expecting line with json dict. Got: " + line)
-            return lineDict
-        except:
-            self.error("Could not parse line as json dict. Line: " + line)
-
-    def writeLine(self, line):
-        print >> sys.stdout, line
-        sys.stdout.flush()
-
-    def error(self, msg):
-        self.writeLine("ERROR: %s" % msg)
-        sys.exit(1)
-
-    def ok(self, message=''):
-        self.writeLine(OUTPUT_OK + " %s" % message)
-
-    def _loadDb(self, db, experimentParams):
-        # db should be one of: 'prod', 'dev' or 'test'
-        # let's try to connect to db and get a cursor
-        try:
-            self.db = ISPyBdb(db, experimentParams)
-            self.ok(str((self.db.visit_id, self.db.group_id)))
-        except Exception as ex:
-            self.error(str(ex))
-
-    def _readExperimentParams(self):
-        # We should read experiment params
-        # from an input line in json format.
-        # expected values: parentid, visit, sampleid, detectorid
-        experimentParams = self.readDict()
-        for key in ['visit']:
-            if key not in experimentParams:
-                self.error("Missing key '%s' in experiment params" % key)
-        return experimentParams
-
-    def processInputMovies(self):
-        """ Read lines with json dict (per movie) until we find the
-        special line INPUT_END. """
-        try:
-            line = self.readLine()
-
-            while line.strip() != INPUT_END:
-                movieParams = self.readDict(line)
-                params = self.db.get_data_collection_params()
-                params.update(movieParams)
-
-                data_collection_id = self.db.update_data_collection(params)
-                self.ok(data_collection_id)
-
-                line = self.readLine()
-
-            self.db.disconnect()
-            self.ok()
-
-        except Exception as ex:
-            self.db.disconnect()
-            self.error(str(ex))
-
 
 class ISPyBdb():
     """ This is a Facade to provide access to the ispyb_api to store movies.
@@ -193,7 +65,7 @@ class ISPyBdb():
             self.dbconnection = None
             self.core = None
             self.mxacquisition = None
-            print('Couldnt connect to db :[')
+            print('Could not import ispyb api')
             print >> self.f, "\n%s: >>> OPENING DB" % timeStamp()
 
         self._loadCursor(db)
@@ -207,6 +79,8 @@ class ISPyBdb():
         if self.dbconnection:
             # connect = getattr(self.dbconnection, 'connect' + db)
             self.cursor = self.dbconnection.connect(conf=db)
+        else:
+            print ('Couldnt connect to db')
 
     def _create_group(self):
         if self.mxacquisition:
@@ -230,7 +104,7 @@ class ISPyBdb():
     def update_data_collection(self, params):
         if self.mxacquisition:
             return self.mxacquisition.insert_data_collection(self.cursor,
-                                                              params.values())
+                                                             params.values())
         else:
             s = "params = {"
             for k, v in params.iteritems():
@@ -247,8 +121,3 @@ class ISPyBdb():
             print >> self.f, "%s: <<< CLOSING DB\n" % timeStamp()
             self.f.flush()
             self.f.close()
-
-
-if __name__ == "__main__":
-    db = sys.argv[1]
-    ISPyBProccess(db)
