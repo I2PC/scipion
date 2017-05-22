@@ -14,34 +14,93 @@
 
 #define PI 3.14159265
 
-__global__ void pointwiseMultiplicationKernel_complex(cufftDoubleComplex *M, cufftDoubleComplex *manyF, cufftDoubleComplex *MmanyF,
-		size_t nzyxdim, size_t yxdim)
+__global__ void pointwiseMultiplicationComplexOneManyKernel(cufftDoubleComplex *M, cufftDoubleComplex *manyF, cufftDoubleComplex *MmanyF,
+		int nzyxdim, int yxdim)
 {
-	size_t idx = blockDim.x * blockIdx.x + threadIdx.x;
-	size_t idxLow = idx % yxdim;
+	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned long int idxLow = idx % yxdim;
 
 	if (idx>=nzyxdim)
 		return;
-//
-//	int idxDimProj = Xdim*Ydim*numProj;
-//	int idxDim = Xdim*Ydim;
-//	float normFactor = (1.0/(Xdim*Ydim));
-//	int outIdx = 0;
-//	int inIdx = 0;
-//
-//	for(int n=0; n<numExp; n++){
-//		d_out_proj_exp[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projFFT[idx], expFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(projFFT[idx], expFFT[idxLow + inIdx]))*normFactor ) ;
-//		d_out_proj_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projFFT[idx], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(projFFT[idx], maskFFT[idxLow]))*normFactor ) ;
-//		d_out_mask_exp[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], expFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], expFFT[idxLow + inIdx]))*normFactor ) ;
-//		d_out_mask_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], maskFFT[idxLow]))*normFactor ) ;
-//		d_out_projSquared_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projSqFFT[idx], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(projSqFFT[idx], maskFFT[idxLow]))*normFactor ) ;
-//		d_out_mask_expSquared[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], expSqFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], expSqFFT[idxLow + inIdx]))*normFactor ) ;
-//		//d_out_proj_exp[idx + outIdx] = expFFT[idxLow + n*Xdim*Ydim];
-//		outIdx+=idxDimProj;
-//		inIdx+=idxDim;
-//	}
+
+	float normFactor = (1.0/yxdim);
+
+	cuDoubleComplex mulOut = cuCmul(manyF[idx], M[idxLow]);
+
+	MmanyF[idx] = make_cuDoubleComplex( cuCreal(mulOut)*normFactor ,  cuCimag(mulOut)*normFactor ) ;
 
 }
+
+__global__ void calculateDenomFunctionKernel(double *MFrealSpace, double *MF2realSpace, double *maskAutocorrelation, double *out,
+		int nzyxdim, int yxdim)
+{
+	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned long int idxLow = idx%yxdim;
+
+	if (idx>=nzyxdim)
+		return;
+
+	out[idx] = sqrt(MF2realSpace[idx] - (MFrealSpace[idx]*MFrealSpace[idx]/maskAutocorrelation[idxLow]));
+}
+
+
+__global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceRef, double *MFrealSpaceExp, double *denomRef, double *denomExp,
+		double *mask, double *NCC, size_t nzyxdim, size_t yxdim, size_t numExp, size_t maskCount)
+{
+
+	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned long int idxLow = idx % yxdim;
+
+	if(idx>=nzyxdim)
+		return;
+
+	int idxDimProj = 0;
+	int outIdx = 0;
+	int inIdx = 0;
+
+	for(int n=0; n<numExp; n++)
+	{
+		double num = (RefExpRealSpace[idx + idxDimProj] - ((MFrealSpaceRef[idx]*MFrealSpaceExp[idxLow + inIdx])/(mask[idxLow])) );
+		double den1 = denomRef[idx];
+		double den2 = denomExp[idxLow + inIdx];
+
+		if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.1)
+			NCC[idx + idxDimProj] = num/(den1*den2);
+		else
+			NCC[idx + idxDimProj] = -1;
+
+		outIdx+=idxDimProj;
+		inIdx+=yxdim;
+		idxDimProj+=nzyxdim;
+	}
+
+}
+
+
+__global__ void pointwiseMultiplicationComplexKernel(cufftDoubleComplex *reference, cufftDoubleComplex *experimental, cufftDoubleComplex *RefExpFourier,
+		size_t nzyxdim, size_t yxdim, size_t numExp)
+{
+	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned long int idxLow = idx % yxdim;
+
+	if(idx>=nzyxdim)
+		return;
+
+	float normFactor = (1.0/yxdim);
+	int outIdx = 0;
+	int inIdx = 0;
+
+	for(int n=0; n<numExp; n++){
+
+		cuDoubleComplex mulOut = cuCmul(reference[idx], experimental[idxLow + inIdx]);
+		RefExpFourier[idx + outIdx] = make_cuDoubleComplex( cuCreal(mulOut)*normFactor ,  cuCimag(mulOut)*normFactor ) ;
+
+		outIdx+=nzyxdim;
+		inIdx+=yxdim;
+	}
+
+}
+
 
 void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<double> > &M, const GpuMultidimArrayAtGpu < std::complex<double> >& manyF,
 		GpuMultidimArrayAtGpu< std::complex<double> > &MmanyF)
@@ -50,138 +109,94 @@ void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<do
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
     manyF.calculateGridSizeVectorized(blockSize, gridSize);
 
-	pointwiseMultiplicationKernel_complex <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+    pointwiseMultiplicationComplexOneManyKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
 			((cufftDoubleComplex*)M.d_data, (cufftDoubleComplex*)manyF.d_data, (cufftDoubleComplex*) MmanyF.d_data, manyF.nzyxdim, manyF.yxdim);
+
+}
+
+void calculateDenomFunction(const GpuMultidimArrayAtGpu< double > &MFrealSpace, const GpuMultidimArrayAtGpu < double >& MF2realSpace,
+		const GpuMultidimArrayAtGpu < double >& maskAutocorrelation, GpuMultidimArrayAtGpu< double > &out)
+{
+    int numTh = 1024;
+    XmippDim3 blockSize(numTh, 1, 1), gridSize;
+    MFrealSpace.calculateGridSizeVectorized(blockSize, gridSize);
+
+    calculateDenomFunctionKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+			(MFrealSpace.d_data, MF2realSpace.d_data, maskAutocorrelation.d_data, out.d_data, (int)MFrealSpace.nzyxdim, (int)MFrealSpace.yxdim);
+
 }
 
 void GpuCorrelationAux::produceSideInfo()
 {
 	GpuMultidimArrayAtGpu< std::complex<double> > MF, MF2;
 	MF.resize(d_projFFT);
-	MF2.resize(d_projFFT);
-
-
+	MF2.resize(d_projSquaredFFT);
+	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, MF);
+	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, MF2);
 	d_projSquaredFFT.clear();
+
+	GpuMultidimArrayAtGpu<double> MF2realSpace(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	MF.ifft(MFrealSpace);
+	MF2.ifft(MF2realSpace);
+	MF.clear();
+	MF2.clear();
+
+	GpuMultidimArrayAtGpu< std::complex<double> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
+	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux);
+	maskAutocorrelation.resize(Xdim, Ydim);
+	maskAux.ifft(maskAutocorrelation);
+	maskAux.clear();
+	d_denom.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	calculateDenomFunction(MFrealSpace, MF2realSpace, maskAutocorrelation, d_denom);
+	MF2realSpace.clear();
 }
 
-#ifdef NEVERDEFINED
-__global__ void calculate_ncc(double *d_rec_proj_exp, double *d_rec_proj_mask, double *d_rec_mask_exp, double *d_rec_mask_mask,
-		double *d_rec_projSquared_mask, double *d_rec_mask_expSquared, double *NCC, int Xdim, int Ydim, int numProj, int counting)
+
+double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux)
 {
 
-	int idx = blockDim.x * blockIdx.x + threadIdx.x;
-
-	if(idx>=(Xdim*Ydim*numProj))
-		return;
-
-	double num = (d_rec_proj_exp[idx] - ((d_rec_proj_mask[idx]*d_rec_mask_exp[idx])/(d_rec_mask_mask[idx])) );
-	double den1 = sqrt( d_rec_projSquared_mask[idx] - (d_rec_proj_mask[idx]*d_rec_proj_mask[idx]/d_rec_mask_mask[idx]) );
-	double den2 = sqrt( d_rec_mask_expSquared[idx] - (d_rec_mask_exp[idx]*d_rec_mask_exp[idx]/d_rec_mask_mask[idx]) );
-
-	if(den1!=0 && den2!=0 && d_rec_mask_mask[idx]>counting*0.1)
-		NCC[idx] = num/(den1*den2);
-	else
-		NCC[idx] = -1;
-
-}
-
-__global__ void multiply_kernel(cufftDoubleComplex *projFFT, cufftDoubleComplex *projSqFFT, cufftDoubleComplex *expFFT,
-		cufftDoubleComplex *expSqFFT, cufftDoubleComplex *maskFFT, cufftDoubleComplex *d_out_proj_exp, cufftDoubleComplex *d_out_proj_mask,
-		cufftDoubleComplex *d_out_mask_exp, cufftDoubleComplex *d_out_mask_mask, cufftDoubleComplex *d_out_projSquared_mask,
-		cufftDoubleComplex *d_out_mask_expSquared, int Xdim, int Ydim, int numProj, int numExp)
-{
-	int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	int idxLow = fmod((double)idx, (double)Xdim*Ydim);
-
-	if(idx>=(Xdim*Ydim*numProj))
-		return;
-
-	int idxDimProj = Xdim*Ydim*numProj;
-	int idxDim = Xdim*Ydim;
-	float normFactor = (1.0/(Xdim*Ydim));
-	int outIdx = 0;
-	int inIdx = 0;
-
-	for(int n=0; n<numExp; n++){
-		d_out_proj_exp[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projFFT[idx], expFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(projFFT[idx], expFFT[idxLow + inIdx]))*normFactor ) ;
-		d_out_proj_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projFFT[idx], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(projFFT[idx], maskFFT[idxLow]))*normFactor ) ;
-		d_out_mask_exp[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], expFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], expFFT[idxLow + inIdx]))*normFactor ) ;
-		d_out_mask_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], maskFFT[idxLow]))*normFactor ) ;
-		d_out_projSquared_mask[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(projSqFFT[idx], maskFFT[idxLow]))*normFactor ,  cuCimag(cuCmul(projSqFFT[idx], maskFFT[idxLow]))*normFactor ) ;
-		d_out_mask_expSquared[idx + outIdx] = make_cuDoubleComplex( cuCreal(cuCmul(maskFFT[idxLow], expSqFFT[idxLow + inIdx]))*normFactor ,  cuCimag(cuCmul(maskFFT[idxLow], expSqFFT[idxLow + inIdx]))*normFactor ) ;
-		//d_out_proj_exp[idx + outIdx] = expFFT[idxLow + n*Xdim*Ydim];
-		outIdx+=idxDimProj;
-		inIdx+=idxDim;
-	}
-
-}
-
-double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux){
-	//Following the formula (21) in Padfiled's paper, proj=F1 and exp=F2
-	cufftDoubleComplex* d_out_proj_exp;
-    gpuErrchk(cudaMalloc((void**)&d_out_proj_exp, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
-	cufftDoubleComplex* d_out_proj_mask;
-    gpuErrchk(cudaMalloc((void**)&d_out_proj_mask, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
-	cufftDoubleComplex* d_out_mask_exp;
-    gpuErrchk(cudaMalloc((void**)&d_out_mask_exp, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
-	cufftDoubleComplex* d_out_mask_mask;
-    gpuErrchk(cudaMalloc((void**)&d_out_mask_mask, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
-	cufftDoubleComplex* d_out_projSquared_mask;
-    gpuErrchk(cudaMalloc((void**)&d_out_projSquared_mask, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
-	cufftDoubleComplex* d_out_mask_expSquared;
-    gpuErrchk(cudaMalloc((void**)&d_out_mask_expSquared, sizeof(cufftDoubleComplex)*((Xdim/2)+1)*Ydim*numProj*numExp));
+	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
+			referenceAux.d_projFFT.Zdim, referenceAux.d_projFFT.Ndim*experimentalAux.d_projFFT.Ndim);
 
     int numTh = 1024;
-    const dim3 blockSize(numTh, 1, 1);
-    int numBlkx = (int)(((Xdim/2)+1)*Ydim*numProj)/numTh;
-    if((int)(((Xdim/2)+1)*Ydim*numProj)%numTh>0){
-    	numBlkx++;
-    }
-    const dim3 gridSize(numBlkx, 1, 1);
-	multiply_kernel<<< gridSize, blockSize >>>
-			((cufftDoubleComplex*)d_projFFTPointer, (cufftDoubleComplex*)d_projSquaredFFTPointer, (cufftDoubleComplex*)d_expFFTPointer,
-					(cufftDoubleComplex*)d_expSquaredFFTPointer, (cufftDoubleComplex*)d_maskFFTPointer, d_out_proj_exp, d_out_proj_mask,
-					d_out_mask_exp, d_out_mask_mask, d_out_projSquared_mask, d_out_mask_expSquared, ((Xdim/2)+1), Ydim, numProj, numExp);
+    XmippDim3 blockSize(numTh, 1, 1), gridSize;
+    referenceAux.d_projFFT.calculateGridSizeVectorized(blockSize, gridSize);
 
-	double *d_rec_proj_exp = cuda_ifft(d_out_proj_exp, Xdim, Ydim, 1, numProj*numExp);
-	double *d_rec_proj_mask = cuda_ifft(d_out_proj_mask, Xdim, Ydim, 1, numProj*numExp);
-	double *d_rec_mask_exp = cuda_ifft(d_out_mask_exp, Xdim, Ydim, 1, numProj*numExp);
-	double *d_rec_mask_mask = cuda_ifft(d_out_mask_mask, Xdim, Ydim, 1, numProj*numExp);
-	double *d_rec_projSquared_mask = cuda_ifft(d_out_projSquared_mask, Xdim, Ydim, 1, numProj*numExp);
-	double *d_rec_mask_expSquared = cuda_ifft(d_out_mask_expSquared, Xdim, Ydim, 1, numProj*numExp);
+    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+			((cufftDoubleComplex*)referenceAux.d_projFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projFFT.d_data, (cufftDoubleComplex*)RefExpFourier.d_data,
+					referenceAux.d_projFFT.nzyxdim, referenceAux.d_projFFT.yxdim, experimentalAux.d_projFFT.Ndim);
+
+    GpuMultidimArrayAtGpu< double > RefExpRealSpace(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
+    		referenceAux.d_projFFT.Ndim*experimentalAux.d_projFFT.Ndim);
+    RefExpFourier.ifft(RefExpRealSpace);
+    RefExpFourier.clear();
+
+    XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
+	referenceAux.MFrealSpace.calculateGridSizeVectorized(blockSize2, gridSize2); //AJ esto es un lio
+
+	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
+			referenceAux.d_projFFT.Ndim*experimentalAux.d_projFFT.Ndim);
+	double **NCC = new double* [experimentalAux.d_projFFT.Ndim];
+	for(int n=0; n<experimentalAux.d_projFFT.Ndim; n++){
+		NCC[n] = new double [referenceAux.Xdim*referenceAux.Ydim*referenceAux.d_projFFT.Ndim];
+	}
+
+	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
+			(RefExpRealSpace.d_data, referenceAux.MFrealSpace.d_data, experimentalAux.MFrealSpace.d_data, referenceAux.d_denom.d_data,
+					experimentalAux.d_denom.d_data, referenceAux.maskAutocorrelation.d_data, d_NCC.d_data,
+					referenceAux.MFrealSpace.nzyxdim, referenceAux.MFrealSpace.yxdim, experimentalAux.MFrealSpace.Ndim, referenceAux.maskCount);
 
 	int pointer=0;
-	numBlkx = (int)(Xdim*Ydim*numProj)/numTh;
-	if((int)(Xdim*Ydim*numProj)%numTh>0){
-		numBlkx++;
+	for(int n=0; n<experimentalAux.d_projFFT.Ndim; n++){
+		gpuErrchk(cudaMemcpy(NCC[n], &d_NCC.d_data[pointer], sizeof(double)*(referenceAux.MFrealSpace.nzyxdim), cudaMemcpyDeviceToHost));
+		pointer+=referenceAux.MFrealSpace.nzyxdim;
 	}
-	const dim3 gridSize2(numBlkx, 1, 1);
-	double **NCC = new double* [numExp];
-	GpuMultidimArrayAtGpu<double> d_NCC(Xdim, Ydim, 1, numProj);
-	for(int n=0;n<numExp;n++){
-
-		NCC[n] = new double [Xdim*Ydim*numProj];
-
-		calculate_ncc<<< gridSize2, blockSize >>>
-				(&d_rec_proj_exp[pointer], &d_rec_proj_mask[pointer], &d_rec_mask_exp[pointer], &d_rec_mask_mask[pointer],
-						&d_rec_projSquared_mask[pointer], &d_rec_mask_expSquared[pointer], d_NCC.d_data, Xdim, Ydim, numProj, counting);
-
-		gpuErrchk(cudaMemcpy(NCC[n], d_NCC.d_data, sizeof(double)*Ydim*Xdim*numProj, cudaMemcpyDeviceToHost));
-
-		pointer+=Ydim*Xdim*numProj;
-	}
-
-	gpuErrchk(cudaFree(d_rec_proj_exp));
-	gpuErrchk(cudaFree(d_rec_proj_mask));
-	gpuErrchk(cudaFree(d_rec_mask_exp));
-	gpuErrchk(cudaFree(d_rec_mask_mask));
-	gpuErrchk(cudaFree(d_rec_projSquared_mask));
-	gpuErrchk(cudaFree(d_rec_mask_expSquared));
 
     return NCC;
 
 }
-#endif
+
 
 __global__ void cart2polar(double *image, double *polar, double *polar2, int maxRadius, int maxAng, int Nimgs, int Ydim, int Xdim, bool rotate)
 {
