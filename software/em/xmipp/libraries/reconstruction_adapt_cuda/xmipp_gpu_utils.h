@@ -99,7 +99,6 @@ public:
 template<class T>
 void fillImage(GpuMultidimArrayAtGpu<T> &to, const MultidimArray<T> &from, size_t n=0)
 {
-	to.resize(XSIZE(from),YSIZE(from),ZSIZE(from),NSIZE(from));
 	gpuCopyFromCPUToGPU(MULTIDIM_ARRAY(from), to.d_data+n*MULTIDIM_SIZE(from), MULTIDIM_SIZE(from)*sizeof(T));
 }
 
