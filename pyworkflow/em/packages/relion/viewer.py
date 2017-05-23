@@ -271,16 +271,15 @@ Examples:
     def _showImagesInClasses(self, paramName=None):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
-        a 'classes' block and a 'class00000?_images' block per class.
+        a 'classes' block and a 'class00000?_images' block per class.git
         If the new metadata was already written, it is just shown.
         """
         views = []
-        if (self.viewIter.get() == ITER_LAST and
-            self.protocol.outputClasses is not None):
+        if (self.viewIter == ITER_LAST and
+            getattr(self.protocol, 'outputClasses', None) is not None):
             fn = self.protocol.outputClasses.getFileName()
             v = self.createScipionView(fn)
             views.append(v)
-
         else:
             for it in self._iterations:
                 fn = self.protocol._getIterClasses(it)
