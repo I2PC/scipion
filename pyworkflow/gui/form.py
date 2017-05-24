@@ -366,30 +366,34 @@ class SubclassesTreeProvider(TreeProvider):
                             p = pwobj.Pointer(prot, extended=paramName)
                             p._allowsSelection = True
                             objects.append(p)
+
+                        # JMRT: Adding the inner items cause a significant
+                        # performance penalty, anyway, subsets can be selected
+                        # from showj GUI and used as inputs.
                         # If attr is a set, then we should consider its elements
-                        if isinstance(attr, em.EMSet):
-                            # If the ITEM type match any of the desired classes
-                            # we will add some elements from the set
-                            if (attr.ITEM_TYPE is not None and
-                                any(issubclass(attr.ITEM_TYPE, c) for c in classes)):
-                                if p is None: # This means the set have not be added
-                                    p = pwobj.Pointer(prot, extended=paramName)
-                                    p._allowsSelection = False
-                                    objects.append(p)
-                                # Add each item on the set to the list of objects
-                                try:
-                                    for i, item in enumerate(attr):
-                                        if i == self.maxNum: # Only load up to NUM particles
-                                            break
-                                        pi = pwobj.Pointer(prot, extended=paramName)
-                                        pi.addExtended(item.getObjId())
-                                        pi._parentObject = p
-                                        objects.append(pi)
-                                except Exception, ex:
-                                    print "Error loading items from:"
-                                    print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
-                                    print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
-                                    print ex
+                        # if isinstance(attr, em.EMSet):
+                        #     # If the ITEM type match any of the desired classes
+                        #     # we will add some elements from the set
+                        #     if (attr.ITEM_TYPE is not None and
+                        #         any(issubclass(attr.ITEM_TYPE, c) for c in classes)):
+                        #         if p is None: # This means the set have not be added
+                        #             p = pwobj.Pointer(prot, extended=paramName)
+                        #             p._allowsSelection = False
+                        #             objects.append(p)
+                        #         # Add each item on the set to the list of objects
+                        #         try:
+                        #             for i, item in enumerate(attr):
+                        #                 if i == self.maxNum: # Only load up to NUM particles
+                        #                     break
+                        #                 pi = pwobj.Pointer(prot, extended=paramName)
+                        #                 pi.addExtended(item.getObjId())
+                        #                 pi._parentObject = p
+                        #                 objects.append(pi)
+                        #         except Exception, ex:
+                        #             print "Error loading items from:"
+                        #             print "  protocol: %s, attribute: %s" % (prot.getRunName(), paramName)
+                        #             print "  dbfile: ", os.path.join(project.getPath(), attr.getFileName())
+                        #             print ex
                     _checkParam(paramName, attr)
                     # The following is a dirty fix for the RCT case where there
                     # are inner output, maybe we should consider extend this for 
