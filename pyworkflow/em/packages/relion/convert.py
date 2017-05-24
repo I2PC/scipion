@@ -292,7 +292,6 @@ def matrixFromGeometry(shifts, angles, inverseTransform):
     from pyworkflow.em.transformations import euler_matrix
     from numpy import deg2rad
     radAngles = -deg2rad(angles)
-    
     M = euler_matrix(radAngles[0], radAngles[1], radAngles[2], 'szyz')
     if inverseTransform:
         from numpy.linalg import inv
@@ -321,7 +320,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
     
     if is2D:
         angle = angles[0] + angles[2]
-        alignmentRow.setValue(md.RLN_ORIENT_PSI,  angle)
+        alignmentRow.setValue(md.RLN_ORIENT_PSI, -angle)
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
             print "FLIP in 2D not implemented"
@@ -339,8 +338,7 @@ def rowToAlignment(alignmentRow, alignType):
     invTransform == True  -> for xmipp implies projection
     """
     is2D = alignType == em.ALIGN_2D
-    inverseTransform = True#alignType == em.ALIGN_PROJ
-    
+    inverseTransform = alignType == em.ALIGN_PROJ
     if alignmentRow.containsAny(ALIGNMENT_DICT):
         alignment = em.Transform()
         angles = numpy.zeros(3)
@@ -352,7 +350,6 @@ def rowToAlignment(alignmentRow, alignType):
             angles[0] = alignmentRow.getValue(md.RLN_ORIENT_ROT, 0.)
             angles[1] = alignmentRow.getValue(md.RLN_ORIENT_TILT, 0.)
             shifts[2] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_Z, 0.)
-
         M = matrixFromGeometry(shifts, angles, inverseTransform)
         alignment.setMatrix(M)
     else:
