@@ -287,7 +287,9 @@ class ProtRelionBase(EMProtocol):
                                'If continue option is True, you going to do this number of new iterations (e.g. if '
                                '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the '
                                'protocol will be the 28th.')
-            form.addParam('regularisationParamT', IntParam, default=2,
+            # Default T is 2 for 2D but 4 for 3D in Relion GUI
+            form.addParam('regularisationParamT', IntParam,
+                          default=2 if self.IS_2D else 4,
                           label='Regularisation parameter T',
                           help='Bayes law strictly determines the relative weight between the contribution of the '
                                'experimental data and the prior. '
