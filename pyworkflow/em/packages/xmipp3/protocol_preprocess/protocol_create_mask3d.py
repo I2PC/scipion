@@ -273,9 +273,13 @@ class XmippProtCreateMask3D(ProtCreateMask3D, XmippGeometricalMask3D):
             return ['Otsu1979']
 
     def _methods(self):
-        messages = []      
+        messages = []
+
+        if self.inputVolume.get() is None:
+            return messages
+
         messages.append("*Mask creation*")
-        
+
         if self.source == SOURCE_VOLUME:
             messages.append('We processed the volume %s.'%self.inputVolume.get().getNameId())
 

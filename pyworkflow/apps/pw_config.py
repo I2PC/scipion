@@ -150,7 +150,7 @@ We understand, of course, that you may not wish to have any
 information collected from you and we respect your privacy.
 """)
 
-        prompt = get_input("Press <enter> if you want to share data, otherwise press any key followed by <enter>: ")
+        prompt = get_input("Press <enter> if you don't mind to send USAGE data, otherwise press any key followed by <enter>: ")
         if prompt == '':
             Config.set('VARIABLES','SCIPION_NOTIFY','True')
         print(yellow("Statistics Collection has been set to: %s"%Config.get('VARIABLES','SCIPION_NOTIFY')))
@@ -315,14 +315,15 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
 
     if update:
         if confChanged:
-            print("Changes detected: writing changes and sorting variables into %s. Please check values." % (fpath))
+            print("Changes detected: writing changes into %s. Please check values." % (fpath))
         else:
-            print("Update requested no changes detected: sorting variables only for %s." % (fpath))
+            print("Update requested no changes detected for %s." % (fpath))
 
-        # Order the content of each section alphabetically
-        for section in cf._sections:
-            cf._sections[section] = collections.OrderedDict(
-                sorted(cf._sections[section].items(), key=lambda t: t[0]))
+        if 'PACKAGES' in cf._sections:
+            # Order the content of packages section alphabetically
+            print("Sorting packages section for %s." %(fpath))
+            cf._sections['PACKAGES'] = collections.OrderedDict(
+                sorted(cf._sections['PACKAGES'].items(), key=lambda t: t[0]))
 
         with open(fpath, 'wb') as f:
             cf.write(f)
