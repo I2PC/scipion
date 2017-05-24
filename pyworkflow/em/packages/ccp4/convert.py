@@ -72,8 +72,13 @@ def getProgram(progName):
     return os.path.join(os.environ['CCP4_HOME'], 'bin',
                            os.path.basename(progName))
 
-class ccp4Header():
+class Ccp4Header():
     """
+    In spite of the name this is the MRC2014 format no the CCP4.
+    In an MRC EM file the origin is typically in header fields called
+    xorigin, yorigin, zorigin which are specific to EM data (MRC 2000 format)
+    and are not part of the nearly identical CCP4 format used for x-ray maps
+    that Coot is expecting.
         The header is organised as 56 words followed by space for ten 80
     character text labels as follows::
        1      NC              # of Columns    (fastest changing in map)
@@ -137,40 +142,57 @@ class ccp4Header():
 
     def __init__(self, fileName, readHeader= False):
         self._name   = fileName.replace(':mrc', '')# remove mrc ending
-        self._header = None
+        self._header = {}
         self.chain = "< 3i i 3i 3i 3f 36i 3f"
 
         if readHeader:
             self.readHeader()
 
+    def setSampling(self, sampling):
+        self._header['Xlength'] = self._header['NX'] * sampling
+        self._header['Ylength'] = self._header['NY'] * sampling
+        self._header['Zlength'] = self._header['NZ'] * sampling
+        self._header['samplingRateZ'] = sampling
+
+    def setOffset(self,  originMatrix):
+        #TODO: check matrix
+        self._header['NCSTART'] = originMatrix[3][0]
+        self._header['NRSTART'] = originMatrix[3][1]
+        self._header['NSSTART'] = originMatrix[3][2]
+
+    def getOffset(self):
+        return self._header['NCSTART'],\
+               self._header['NRSTART'],\
+               self._header['NSSTART']
+
     def readHeader(self):
         #check file exists
 
         #read header
-        f = open(self.fileName,'rb')
-        s = f.read(13*4)#read header up to angles incluse word 6
+        f = open(self._name,'rb')
+        s = f.read(52*4)#read header from woed 0 to 51
         f.close()
         a = struct.unpack(self.chain, s)
 
         #fill dicionary
-        self.header['empty']=""
-        self.header['NC'] = a[0]
-        self.header['NR'] = a[1]
-        self.header['NS'] = a[2]
-        self.header['Mode'] = a[3]
-        self.header['NCSTART'] = a[4]
-        self.header['NRSTART'] = a[5]
-        self.header['NSSTART'] = a[6]
-        self.header['NX'] = a[7]
-        self.header['NY'] = a[8]
-        self.header['NZ'] = a[9]
-        self.header['Xlength'] = a[10]
-        self.header['Ylength'] = a[11]
-        self.header['Zlength'] = a[12]
-        self.header['originX'] = a[49]
-        self.header['originY'] = a[50]
-        self.header['originZ'] = a[51]
-        self.header['samplingRateZ'] = a[12]/a[9]
+        self._header['empty']=""
+        self._header['NC'] = a[0]
+        self._header['NR'] = a[1]
+        self._header['NS'] = a[2]
+        self._header['Mode'] = a[3]
+        self._header['NCSTART'] = a[4]
+        self._header['NRSTART'] = a[5]
+        self._header['NSSTART'] = a[6]
+        self._header['NX'] = a[7]
+        self._header['NY'] = a[8]
+        self._header['NZ'] = a[9]
+        self._header['Xlength'] = a[10]
+        self._header['Ylength'] = a[11]
+        self._header['Zlength'] = a[12]
+        self._header['originX'] = a[49]
+        self._header['originY'] = a[50]
+        self._header['originZ'] = a[51]
+        self._header['samplingRateZ'] = a[12]/a[9]
 
     def getHeader(self):
         return self._header

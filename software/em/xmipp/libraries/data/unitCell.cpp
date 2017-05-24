@@ -11,7 +11,7 @@
 	#define scale 300//780-use to scale chimera bild files so they fit your actual 3Dmap
 #endif
 UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
-		double offset) {
+		double offset, double sampling) {
     // list of numbers smaller than 10000 which have prime decomposition
     // that does not contain prime number greater than 19
     // This is the greates prime number that can handle ccp4 fft routine
@@ -19,6 +19,7 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 	this->rmin = rmin; //delete voxels closer to the center than this radius
 	this->rmax = rmax; //delete voxels more far away to the center than this radius
 	this->offset = offset; //rotate unit cell this degrees
+	this->sampling = sampling;
 	SL.isSymmetryGroup(sym, symmetry, sym_order); //parse symmetry string
 	if (symmetry == pg_I2) {
 		// golden = (1 + sqrt(5)) / 2
@@ -319,17 +320,14 @@ void UnitCell::maskUnitCell(ImageGeneric & in3Dmap,
 		MD.setValue(MDL_SHIFT_X, -(double)iMinX);
 		MD.setValue(MDL_SHIFT_Y, -(double)iMinY);
 		MD.setValue(MDL_SHIFT_Z, -(double)iMinZ);
-		//MD.setValue(MDL_SHIFT_X, -(double)iMinX);
-		//MD.setValue(MDL_SHIFT_Y, -(double)iMinY);
-		//MD.setValue(MDL_SHIFT_Z, -(double)iMinZ);
-		double sampling;
-		in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
+		//do not read sampling from headers. Most of the time is wrong
+		//in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
 
-		in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_Y, sampling);
+		//in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_Y, sampling);
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, sampling);
 
-		in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_Z, sampling);
+		//in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_Z, sampling);
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_Z, sampling);
 
 		out3DDmap.image->setGeo(MD, 0);
