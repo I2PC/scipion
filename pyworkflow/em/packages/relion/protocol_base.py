@@ -133,7 +133,7 @@ class ProtRelionBase(EMProtocol):
         self._iterRegex = re.compile('_it(\d{3,3})_')
         
         
-    #--------------------------- DEFINE param functions --------------------------------------------   
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         self.IS_3D = not self.IS_2D
         form.addSection(label='Input')
@@ -199,8 +199,8 @@ class ProtRelionBase(EMProtocol):
                             'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
                       label="Is initial 3D map on absolute greyscale?", 
-                      help='The probabilities are based on squared differences, '
-                           'so that the absolute grey scale is important. \n'
+                      help='The probabilities are based on squared differences,'
+                           ' so that the absolute grey scale is important. \n'
                            'Probabilities are calculated based on a Gaussian '
                            'noise model, which contains a squared difference '
                            'term between the reference and the experimental '
@@ -228,51 +228,70 @@ class ProtRelionBase(EMProtocol):
         group.addParam('initialLowPassFilterA', FloatParam, default=60,
                       condition='not is2D',
                       label='Initial low-pass filter (A)',
-                      help='It is recommended to strongly low-pass filter your initial reference map. '
-                           'If it has not yet been low-pass filtered, it may be done internally using this option. ' 
-                           'If set to 0, no low-pass filter will be applied to the initial reference(s).')
+                      help='It is recommended to strongly low-pass filter your '
+                           'initial reference map. If it has not yet been '
+                           'low-pass filtered, it may be done internally using '
+                           'this option. If set to 0, no low-pass filter will '
+                           'be applied to the initial reference(s).')
         
         form.addSection(label='CTF')
         form.addParam('contuinueMsg', LabelParam, default=True,
-                      label='CTF parameters are not available in continue mode', condition='doContinue',)
+                      condition='doContinue',
+                      label='CTF parameters are not available in continue mode')
         form.addParam('doCTF', BooleanParam, default=True,
                       label='Do CTF-correction?', condition='not doContinue',
-                      help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
-                           'The resulting algorithm intrinsically implements the optimal linear, ' 
-                           'or Wiener filter. Note that input particles should contains CTF parameters.')
+                      help='If set to Yes, CTFs will be corrected inside the '
+                           'MAP refinement. The resulting algorithm '
+                           'intrinsically implements the optimal linear, or '
+                           'Wiener filter. Note that input particles should '
+                           'contains CTF parameters.')
         form.addParam('hasReferenceCTFCorrected', BooleanParam, default=False,
                       condition='not is2D and not doContinue',
                       label='Has reference been CTF-corrected?',
-                      help='Set this option to Yes if the reference map represents CTF-unaffected density, '
-                           'e.g. it was created using Wiener filtering inside RELION or from a PDB. If set to No, ' 
-                           'then in the first iteration, the Fourier transforms of the reference projections ' 
-                           'are not multiplied by the CTFs.')
-        form.addParam('haveDataBeenPhaseFlipped', LabelParam, condition='not doContinue',
-                      label='Have data been phase-flipped?      (Don\'t answer, see help)', 
-                      help='The phase-flip status is recorded and managed by Scipion. \n'
-                           'In other words, when you import or extract particles, \n'
-                           'Scipion will record whether or not phase flipping has been done.\n\n'
-                           'Note that CTF-phase flipping is NOT a necessary pre-processing step \n'
-                           'for MAP-refinement in RELION, as this can be done inside the internal\n'
-                           'CTF-correction. However, if the phases have been flipped, the program\n'
-                           'will handle it.')
+                      help='Set this option to Yes if the reference map '
+                           'represents CTF-unaffected density, e.g. it was '
+                           'created using Wiener filtering inside RELION or '
+                           'from a PDB. If set to No, then in the first '
+                           'iteration, the Fourier transforms of the reference '
+                           'projections are not multiplied by the CTFs.')
+        form.addParam('haveDataBeenPhaseFlipped', LabelParam,
+                      condition='not doContinue',
+                      label='Have data been phase-flipped?      '
+                            '(Don\'t answer, see help)',
+                      help='The phase-flip status is recorded and managed by '
+                           'Scipion. \n In other words, when you import or '
+                           'extract particles, \nScipion will record whether '
+                           'or not phase flipping has been done.\n\n'
+                           'Note that CTF-phase flipping is NOT a necessary '
+                           'pre-processing step \nfor MAP-refinement in '
+                           'RELION, as this can be done inside the internal\n'
+                           'CTF-correction. However, if the phases have been '
+                           'flipped, the program will handle it.')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED,
-                      label='Ignore CTFs until first peak?', condition='not doContinue',
-                      help='If set to Yes, then CTF-amplitude correction will only be performed from the first peak ' 
-                           'of each CTF onward. This can be useful if the CTF model is inadequate at the lowest resolution. ' 
-                           'Still, in general using higher amplitude contrast on the CTFs (e.g. 10-20%) often yields better results. '
-                           'Therefore, this option is not generally recommended.')    
+                      label='Ignore CTFs until first peak?',
+                      condition='not doContinue',
+                      help='If set to Yes, then CTF-amplitude correction will '
+                           'only be performed from the first peak '
+                           'of each CTF onward. This can be useful if the CTF '
+                           'model is inadequate at the lowest resolution. '
+                           'Still, in general using higher amplitude contrast '
+                           'on the CTFs (e.g. 10-20%) often yields better '
+                           'results. Therefore, this option is not generally '
+                           'recommended.')
         form.addParam('doCtfManualGroups', BooleanParam, default=False,
-                      label='Do manual grouping ctfs?', condition='not doContinue',
+                      label='Do manual grouping ctfs?',
+                      condition='not doContinue',
                       help='Set this to Yes the CTFs will grouping manually.')
         form.addParam('defocusRange', FloatParam, default=1000,
-                      label='defocus range for group creation (in Angstroms)', condition='doCtfManualGroups and not doContinue',
+                      label='defocus range for group creation (in Angstroms)',
+                      condition='doCtfManualGroups and not doContinue',
                       help='Particles will be grouped by defocus.'
                       'This parameter is the bin for an histogram.'
                       'All particles assigned to a bin form a group')
         form.addParam('numParticles', FloatParam, default=1,
-                      label='minimum size for defocus group', condition='doCtfManualGroups and not doContinue',
+                      label='minimum size for defocus group',
+                      condition='doCtfManualGroups and not doContinue',
                       help='If defocus group is smaller than this value, '
                            'it will be expanded until number of particles '
                            'per defocus group is reached')
@@ -281,36 +300,58 @@ class ProtRelionBase(EMProtocol):
         if self.IS_CLASSIFY:
             form.addParam('numberOfIterations', IntParam, default=25,
                           label='Number of iterations',
-                          help='Number of iterations to be performed. Note that the current implementation does NOT '
-                               'comprise a convergence criterium. Therefore, the calculations will need to be stopped '
-                               'by the user if further iterations do not yield improvements in resolution or classes. '
-                               'If continue option is True, you going to do this number of new iterations (e.g. if '
-                               '*Continue from iteration* is set 3 and this param is set 25, the final iteration of the '
+                          help='Number of iterations to be performed. Note '
+                               'that the current implementation does NOT '
+                               'comprise a convergence criterium. Therefore, '
+                               'the calculations will need to be stopped '
+                               'by the user if further iterations do not yield '
+                               'improvements in resolution or classes. '
+                               'If continue option is True, you going to do '
+                               'this number of new iterations (e.g. if '
+                               '*Continue from iteration* is set 3 and this '
+                               'param is set 25, the final iteration of the '
                                'protocol will be the 28th.')
             # Default T is 2 for 2D but 4 for 3D in Relion GUI
             form.addParam('regularisationParamT', IntParam,
                           default=2 if self.IS_2D else 4,
                           label='Regularisation parameter T',
-                          help='Bayes law strictly determines the relative weight between the contribution of the '
+                          help='Bayes law strictly determines the relative '
+                               'weight between the contribution of the '
                                'experimental data and the prior. '
-                               'However, in practice one may need to adjust this weight to put slightly more weight on the experimental '
-                               'data to allow optimal results. Values greater than 1 for this regularisation parameter '
-                               '(T in the JMB2011 paper) put more weight on the experimental data. Values around 2-4 '
-                               'have been observed to be useful for 3D refinements, values of 1-2 for 2D refinements. '
-                               'Too small values yield too-low resolution structures; too high values result in ' 
+                               'However, in practice one may need to adjust '
+                               'this weight to put slightly more weight on the '
+                               'experimental data to allow optimal results. '
+                               'Values greater than 1 for this regularisation '
+                               'parameter (T in the JMB2011 paper) put more '
+                               'weight on the experimental data. Values around '
+                               '2-4 have been observed to be useful for 3D '
+                               'refinements, values of 1-2 for 2D refinements. '
+                               'Too small values yield too-low resolution '
+                               'structures; too high values result in '
                                'over-estimated resolutions and overfitting.') 
         form.addParam('maskZero', EnumParam, default=0,
-                      choices=['Yes, fill with zeros', 'No, fill with random noise'],
-                      label='Mask particles with zeros?', condition='not doContinue',
-                      help='If set to <Yes>, then in the individual particles, the area outside a circle with the radius '
-                           'of the particle will be set to zeros prior to taking the Fourier transform. '
-                           'This will remove noise and therefore increase sensitivity in the alignment and classification. ' 
-                           'However, it will also introduce correlations between the Fourier components that are not modelled. ' 
-                           'When set to <No>, then the solvent area is filled with random noise, which prevents introducing '
-                           'correlations.High-resolution refinements (e.g. in 3D auto-refine) tend to work better when filling ' 
-                           'the solvent area with random noise, some classifications go better when using zeros.') 
+                      choices=['Yes, fill with zeros',
+                               'No, fill with random noise'],
+                      label='Mask particles with zeros?',
+                      condition='not doContinue',
+                      help='If set to <Yes>, then in the individual particles, '
+                           'the area outside a circle with the radius '
+                           'of the particle will be set to zeros prior to '
+                           'taking the Fourier transform. '
+                           'This will remove noise and therefore increase '
+                           'sensitivity in the alignment and classification. '
+                           'However, it will also introduce correlations '
+                           'between the Fourier components that are not '
+                           'modelled. When set to <No>, then the solvent area '
+                           'is filled with random noise, which prevents '
+                           'introducing correlations.High-resolution '
+                           'refinements (e.g. in 3D auto-refine) tend to work '
+                           'better when filling the solvent area with random '
+                           'noise, some classifications go better when using '
+                           'zeros.')
         if self.IS_3D:
-            form.addParam('referenceMask', PointerParam, pointerClass='VolumeMask',
+            form.addParam('referenceMask', PointerParam,
+                          pointerClass='VolumeMask',
                           label='Reference mask (optional)', allowsNull=True,
                           help='A volume mask containing a (soft) mask with '
                                'the same dimensions as the reference(s), '
@@ -347,16 +388,22 @@ class ProtRelionBase(EMProtocol):
         
         if self.IS_CLASSIFY:
             form.addParam('limitResolEStep', FloatParam, default=-1,
-              label='Limit resolution E-step to (A)', condition="not doContinue",
-              help='If set to a positive number, then the expectation step '
-                   '(i.e. the alignment) will be done only including the Fourier '
-                   'components up to this resolution (in Angstroms). This is useful '
-                   'to prevent overfitting, as the classification runs in RELION are '
-                   'not to be guaranteed to be 100% overfitting-free (unlike the '
-                   '_3D auto-refine_ with its gold-standard FSC). In particular for very '
-                   'difficult data sets, e.g. of very small or featureless particles, '
-                   'this has been shown to give much better class averages. In such '
-                   'cases, values in the range of 7-12 Angstroms have proven useful.')
+                          label='Limit resolution E-step to (A)',
+                          condition="not doContinue",
+                          help='If set to a positive number, then the '
+                               'expectation step (i.e. the alignment) will be '
+                               'done only including the Fourier components up '
+                               'to this resolution (in Angstroms). This is '
+                               'useful to prevent overfitting, as the '
+                               'classification runs in RELION are not to be '
+                               'guaranteed to be 100% overfitting-free (unlike '
+                               'the _3D auto-refine_ with its gold-standard '
+                               'FSC). In particular for very difficult data '
+                               'sets, e.g. of very small or featureless '
+                               'particles, this has been shown to give much '
+                               'better class averages. In such cases, values '
+                               'in the range of 7-12 Angstroms have proven '
+                               'useful.')
         
         # Change the Sampling section name depending if classify or refine 3D
         if self.IS_CLASSIFY:
@@ -364,7 +411,8 @@ class ProtRelionBase(EMProtocol):
         else:
             form.addSection('Auto-Sampling')
             form.addParam('noteAutoSampling', LabelParam,
-                          label='Note that initial sampling rates will be auto-incremented!')
+                          label='Note that initial sampling rates will be '
+                                'auto-incremented!')
         form.addParam('doImageAlignment', BooleanParam, default=True,
               label='Perform image alignment?', condition="isClassify",
               help='If set to No, then rather than performing both alignment '
@@ -374,54 +422,71 @@ class ProtRelionBase(EMProtocol):
                    'calculated.')
         if self.IS_3D:
             form.addParam('angularSamplingDeg', EnumParam, default=2,
-                          choices=ANGULAR_SAMPLING_LIST, 
-                          label='Angular sampling interval (deg)', condition='not isClassify or doImageAlignment',
-                          help='There are only a few discrete angular samplings possible because '
-                           'we use the HealPix library to generate the sampling of the first '
-                           'two Euler angles on the sphere. The samplings are approximate numbers ' 
-                           'and vary slightly over the sphere.')
+                          choices=ANGULAR_SAMPLING_LIST,
+                          label='Angular sampling interval (deg)',
+                          condition='not isClassify or doImageAlignment',
+                          help='There are only a few discrete angular samplings'
+                               ' possible because we use the HealPix library to'
+                               ' generate the sampling of the first two Euler '
+                               'angles on the sphere. The samplings are '
+                               'approximate numbers and vary slightly over '
+                               'the sphere.')
         else:
             form.addParam('inplaneAngularSamplingDeg', FloatParam, default=5,
-                          label='In-plane angular sampling (deg)', condition="doImageAlignment",
-                          help='The sampling rate for the in-plane rotation angle (psi) in degrees.\n'
-                               'Using fine values will slow down the program. Recommended value for\n'
+                          label='In-plane angular sampling (deg)',
+                          condition="doImageAlignment",
+                          help='The sampling rate for the in-plane rotation '
+                               'angle (psi) in degrees.\n'
+                               'Using fine values will slow down the program. '
+                               'Recommended value for\n'
                                'most 2D refinements: 5 degrees. \n\n'
-                               'If auto-sampling is used, this will be the value for the first \n'
-                               'iteration(s) only, and the sampling rate will be increased \n'
+                               'If auto-sampling is used, this will be the '
+                               'value for the first \niteration(s) only, and '
+                               'the sampling rate will be increased \n'
                                'automatically after that.')
         form.addParam('offsetSearchRangePix', FloatParam, default=5,
                       condition='not isClassify or doImageAlignment',
                       label='Offset search range (pix)',
-                      help='Probabilities will be calculated only for translations in a circle '
-                           'with this radius (in pixels). The center of this circle changes at '
-                           'every iteration and is placed at the optimal translation for each '
-                           'image in the previous iteration.')
+                      help='Probabilities will be calculated only for '
+                           'translations in a circle with this radius (in '
+                           'pixels). The center of this circle changes at '
+                           'every iteration and is placed at the optimal '
+                           'translation for each image in the previous '
+                           'iteration.')
         form.addParam('offsetSearchStepPix', FloatParam, default=1.0,
                       condition='not isClassify or doImageAlignment',
                       label='Offset search step (pix)',
-                      help='Translations will be sampled with this step-size (in pixels). '
-                           'Translational sampling is also done using the adaptive approach. '
-                           'Therefore, if adaptive=1, the translations will first be evaluated'
-                           'on a 2x coarser grid.')
+                      help='Translations will be sampled with this step-size '
+                           '(in pixels). Translational sampling is also done '
+                           'using the adaptive approach. Therefore, if '
+                           'adaptive=1, the translations will first be '
+                           'evaluated on a 2x coarser grid.')
         if self.IS_3D: 
             if self.IS_CLASSIFY:
                 form.addParam('localAngularSearch', BooleanParam, default=False,
                               condition='not is2D and doImageAlignment',
                               label='Perform local angular search?',
-                              help='If set to Yes, then rather than performing exhaustive angular searches, '
-                                   'local searches within the range given below will be performed. A prior '
-                                   'Gaussian distribution centered at the optimal orientation in the previous '
-                                   'iteration and with a stddev of 1/3 of the range given below will be enforced.')
-                form.addParam('localAngularSearchRange', FloatParam, default=5.0,
+                              help='If set to Yes, then rather than performing '
+                                   'exhaustive angular searches, local '
+                                   'searches within the range given below will '
+                                   'be performed. A prior Gaussian distribution'
+                                   ' centered at the optimal orientation in the'
+                                   ' previous iteration and with a stddev of '
+                                   '1/3 of the range given below will be '
+                                   'enforced.')
+                form.addParam('localAngularSearchRange', FloatParam,
+                              default=5.0,
                               condition='localAngularSearch',
                               label='Local angular search range',
-                              help='Local angular searches will be performed within +/- '
-                                   'the given amount (in degrees) from the optimal orientation '
-                                   'in the previous iteration. A Gaussian prior (also see '
-                                   'previous option) will be applied, so that orientations '
-                                   'closer to the optimal orientation in the previous iteration '
-                                   'will get higher weights than those further away.')
-                
+                              help='Local angular searches will be performed '
+                                   'within +/- the given amount (in degrees) '
+                                   'from the optimal orientation in the '
+                                   'previous iteration. A Gaussian prior (also '
+                                   'see previous option) will be applied, so '
+                                   'that orientations closer to the optimal '
+                                   'orientation in the previous iteration will '
+                                   'get higher weights than those further away.'
+                              )
             else:
                 form.addParam('localSearchAutoSamplingDeg', EnumParam,
                               default=4, choices=ANGULAR_SAMPLING_LIST,
@@ -440,7 +505,8 @@ class ProtRelionBase(EMProtocol):
                                    'will be aligned as independent particles.')
                 
                 group = form.addGroup('Movie frames alignment',
-                                      condition='realignMovieFrames and doContinue')
+                                      condition='realignMovieFrames and '
+                                                'doContinue')
                 group.addParam('inputMovieParticles', PointerParam,
                                pointerClass='SetOfMovieParticles',
                                allowsNull=True, important=True,
@@ -535,7 +601,8 @@ class ProtRelionBase(EMProtocol):
                                'sends those particles through the network to '
                                'the MPI slaves during the refinement '
                                'iterations.')
-            form.addParam('scratchDir', PathParam, condition='not allParticlesRam',
+            form.addParam('scratchDir', PathParam,
+                          condition='not allParticlesRam',
                           label='Copy particles to scratch directory: ',
                           help='If a directory is provided here, then the job '
                                'will create a sub-directory in it called '
@@ -589,6 +656,7 @@ class ProtRelionBase(EMProtocol):
         
         joinHalves = ("--low_resol_join_halves 40 (only not continue mode)"
                       if not self.IS_CLASSIFY else "")
+
         form.addParam('extraParams', StringParam, default='',
                       label='Additional parameters',
                       help="In this box command-line arguments may be "
@@ -616,8 +684,9 @@ class ProtRelionBase(EMProtocol):
                          '--print_symmetry_ops* prints a list of all symmetry '
                            'operators for symmetry group D2. RELION uses '
                            'XMIPP\'s libraries for symmetry operations. '
-                           'Therefore, look at the XMIPP Wiki for more details: '
-                           ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/WebHome?topic=Symmetry')
+                           'Therefore, look at the XMIPP Wiki for more details:'
+                           ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/'
+                           'WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
