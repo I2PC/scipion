@@ -31,16 +31,16 @@ from pyworkflow.em.constants import SYM_I222r
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em import Volume, Transform
-#TODO: IS OK to write in the header of the mrc file but the same\
-#information should be stored in the volume atribute
-#NOTE1: scipion origin is center volume
-#NOTE2: next wrapper should test input and coherence between header and
-#metadata.
+from pyworkflow.em.packages.ccp4.convert import Ccp4Header
+from pyworkflow.em.data import Transform, Matrix
+
+DEBUG = True
+
 class XmippProtExtractUnit(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
     """
     _label = 'extract unit cell'
-    _program = "" 
+    _program = ""
     _version = VERSION_1_2
 
     def __init__(self, **kwargs):
@@ -93,41 +93,28 @@ class XmippProtExtractUnit(EMProtocol):
     #--------------------------- STEPS functions --------------------------------------------
 
     def extractUnit(self):
-        #        samplingRate = protocol._getSetSampling()
         args = "-i %s -o %s" % (self.inputVolumes.get().getFileName(), self._getOutputVol())
         args += " --unitcell %s "% XMIPP_SYM_NAME[self.symmetryGroup.get()]
         args += " %f "% self.innerRadius.get()
         args += " %f "% self.outerRadius.get()
         args += " %f "% self.expandFactor.get()
         args += " %f "% self.offset.get()
-        #TODO: add sampling
-        print "args", args
+        args += " %f "% self.inputVolumes.get().getSamplingRate()
+        if DEBUG:
+            print "args", args
         self.runJob("xmipp_transform_window", args)
+
     def createOutputStep(self):
         vol = Volume()
-        t = Transform()
-        m = t.getMatrix()
-#        vol.setCoordenateSystem(m)
         vol.setLocation(self._getOutputVol())
-        vol.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-        #TODO: HORROR
-        import struct
-        f = open(self._getOutputVol(),'rb')
-        s = f.read(13*4)#read header up to angles incluse word 6
-        f.close()
-        chain = "< 3i i 3i 3i 3f"
-        a = struct.unpack(chain, s)
-        sampling = a[12]/a[9]
-        if sampling != vol.getSamplingRate():
-            a = self.replace_at_index(a, 12, a[9] * vol.getSamplingRate())
-            a = self.replace_at_index(a, 11, a[8] * vol.getSamplingRate())
-            a = self.replace_at_index(a, 10, a[7] * vol.getSamplingRate())
-            ss=struct.Struct(chain)
-            packed_data = ss.pack(*a)
-            f = open(self._getOutputVol(), 'r+')
-            f.write(packed_data)
-            f.close()
-
+        sampling = self.inputVolumes.get().getSamplingRate()
+        vol.setSamplingRate(sampling)
+        #This only works if outfile is mrc do not change the output file extension
+        ccp4header = Ccp4Header(self._getOutputVol(), readHeader= True)
+        t=Transform()
+        x,y,z = ccp4header.getOffset()
+        t.setShifts(x,y,z)
+        vol.setOrigin(t)
         #
         self._defineOutputs(outputVolume=vol)
         self._defineSourceRelation(self.inputVolumes, self.outputVolume)

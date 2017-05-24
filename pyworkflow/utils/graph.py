@@ -165,12 +165,13 @@ class Graph(object):
                 return node.getName()
             else:
                 return node.getLabel()
+        dotStr = "\ndigraph {\n"
 
-        print "\ndigraph {"
         for node in self.getNodes():
             for child in node.getChilds():
                 nodeLabel = self._escape(getLabel(node))
                 childLabel = self._escape(getLabel(child))
-                print "   %s -> %s; " % (nodeLabel, childLabel)
-        print "}"
-        
+                dotStr += "   %s -> %s;\n" % (nodeLabel, childLabel)
+        dotStr += "}"
+        print dotStr
+        return dotStr

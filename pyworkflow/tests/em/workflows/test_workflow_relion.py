@@ -28,9 +28,8 @@ import unittest, sys
 from pyworkflow.em import *
 from pyworkflow.tests import *
 from pyworkflow.em.packages.xmipp3 import *
-from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING 
+from pyworkflow.em.packages.xmipp3.constants import SAME_AS_PICKING
 from pyworkflow.em.packages.grigoriefflab import *
-from pyworkflow.em.packages.eman2 import *
 from pyworkflow.em.packages.relion import *
 from pyworkflow.em.packages.relion.protocol_autopick_v2 import *
 from test_workflow import TestWorkflow
@@ -68,7 +67,7 @@ class TestWorkflowRelionPick(TestWorkflow):
                              "There was a problem with the downsampling")
 
         # Now estimate CTF on the micrographs with ctffind
-        print "Performing CTFfind..."   
+        print "Performing CTFfind..."
         protCTF = self.newProtocol(ProtCTFFind,
                                    useCtffind4=True,
                                    lowRes=0.02, highRes=0.45,
@@ -184,7 +183,7 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         protExtract.ctfRelations.set(protCTF.outputCTF)
 
         self.launchProtocol(protExtract)
-        self._checkOutput(protExtract, size=size,)
+        self._checkOutput(protExtract, size=size)
 
         # Now test the re-scale option
         protExtract2 = self.proj.copyProtocol(protExtract)
@@ -194,3 +193,24 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         self.launchProtocol(protExtract2)
 
         self._checkOutput(protExtract2, size=size, dim=32, sampling=14.16)
+        
+        # Now test changing micrographs source option
+        protImport = proj.getProtocolsByClass('ProtImportMicrographs')[0]
+
+        subsetProt = self.newProtocol(em.ProtSubSet,
+                                      chooseAtRandom=True,
+                                      nElements=10)
+        subsetProt.inputFullSet.set(protImport.outputMicrographs)
+        self.launchProtocol(subsetProt)
+
+        protExtract3 = self.proj.copyProtocol(protExtract)
+        protExtract3.setObjLabel('extract - Other')
+        protExtract3.downsampleType.set(1)
+        protExtract3.inputMicrographs.set(subsetProt.outputMicrographs)
+        self.launchProtocol(protExtract3)
+        
+        # The size of the set is different every time is executed the test
+        # due to the seleccion of the micrographs is random.
+        
+        partSize = protExtract3.outputParticles.getSize()
+        self._checkOutput(protExtract3, size=partSize)

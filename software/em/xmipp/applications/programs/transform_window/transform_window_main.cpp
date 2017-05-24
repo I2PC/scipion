@@ -38,7 +38,8 @@ public:
 	int x0, y0, z0;
 	int xF, yF, zF;
 	String sym;
-	double rmin, rmax, expand, offset;
+	//unit cell option parameters
+	double rmin, rmax, expand, offset, sampling;
 	double padValue;
 	String padType;
 	WindowMode mode;
@@ -102,15 +103,17 @@ public:
 		addParamsLine(
 				"                                         : are supposed to be the same");
 		addParamsLine(
-				"  or --unitcell <sym> <rmin=0> <rmax=0> <degree=0> <offset=0> : Extract a unit cell from volume");
+				"  or --unitcell <sym> <rmin=0> <rmax=0> <expandFactor=0> <offset=0> <sampling=1.>: Extract a unit cell from volume");
 		addParamsLine(
 				"                                         : sym = particle symmetry");
 		addParamsLine(
-				"                                         : degree = expand unitcell by this angle");
+				"                                         : expandFactor = expand unitcell by this factor");
 		addParamsLine(
-				"                                         : rmax, rmin = cut a shell with these radii");
+				"                                         : rmax, rmin = cut a shell with these radii (pixels)");
 		addParamsLine(
 				"                                         : offset= for CN symmetry rotate unit cell by this angle");
+		addParamsLine(
+				"                                         : sampling=if the output is a mrc file it will use this value to fill the header");
 		addParamsLine(
 				"  [--physical]                           : use physical instead of logical coordinates");
 		addParamsLine("    requires --corners;");
@@ -148,7 +151,7 @@ public:
 				"Enlarge the volume by 10 pixels on each direction (negative crop)",
 				false);
 		addExampleLine("xmipp_transform_window -i g0ta.vol --crop -10");
-		addExampleLine("scipion xmipp_transform_window -i postprocess.mrc:mrc  -o postprocess_win.mrc  --unitcell i2 0 300 20 0");
+		addExampleLine("scipion xmipp_transform_window -i postprocess.mrc:mrc  -o postprocess_win.mrc  --unitcell i2 0 300 20 0 0.34");
 		addKeywords("window, crop, resize, corner, padding");
 	}
 
@@ -194,7 +197,7 @@ public:
 			mode = SIZEMODE;
 			physical_coords = false;
 		}
-		//<sym> <rmin=0> <rmax=0> <degree=0> <offset=0> : Extract a unit cell from volume");
+		//<sym> <rmin=0> <rmax=0> <expandFactor=0> <offset=0> : Extract a unit cell from volume");
 
 		else if (checkParam("--crop")) {
 			cropX = getIntParam("--crop", 0);
@@ -213,6 +216,7 @@ public:
 			rmax = getDoubleParam("--unitcell", 2);
 			expand = getDoubleParam("--unitcell", 3);
 			offset = getDoubleParam("--unitcell", 4);
+			sampling = getDoubleParam("--unitcell", 5);
 			mode = UNITCELLMODE;
 		}
 	}
@@ -238,6 +242,7 @@ public:
 			break;
 		case UNITCELLMODE:
 			std::cout << "Sym: " << sym << " rmin, rmax:" << rmin << ", " << rmax
+			          << " sampling " << sampling
 					  << std::endl;
 			break;
 		}
@@ -259,7 +264,7 @@ public:
 	void unitcell(ImageGeneric &in3Dmap,
 			      ImageGeneric & out3DDmap) {
 		//1) init class and compute auxiliary vectors
-		UnitCell UC(sym, rmin, rmax, expand, offset);
+		UnitCell UC(sym, rmin, rmax, expand, offset, sampling);
 		//2) mask image
 		UC.maskUnitCell(in3Dmap,out3DDmap);
 		//3) shift them
