@@ -311,6 +311,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
                           -> for xmipp implies alignment
     """
     is2D = alignType == em.ALIGN_2D
+    is3D = alignType == em.ALIGN_3D
     inverseTransform = alignType == em.ALIGN_PROJ
     matrix = alignment.getMatrix()
     shifts, angles = geometryFromMatrix(matrix, inverseTransform)
@@ -324,6 +325,8 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
             print "FLIP in 2D not implemented"
+    elif is3D:
+        raise Exception("3D alignment conversion for Relion not implemented.")
     else:
         alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Z, shifts[2])
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
@@ -337,6 +340,9 @@ def rowToAlignment(alignmentRow, alignType):
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
     """
+    if alignType == em.ALIGN_3D:
+        raise Exception("3D alignment conversion for Relion not implemented.")
+
     is2D = alignType == em.ALIGN_2D
     inverseTransform = alignType == em.ALIGN_PROJ
     if alignmentRow.containsAny(ALIGNMENT_DICT):
