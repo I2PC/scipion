@@ -54,19 +54,19 @@
 		//Vectors perpendicular to previous one in the plane of the triangle
 		//defined by 5f 5fp 5fpp
 		testFile << ".color purple\n";
-		t = _5f + vectExpansion[0]/1.;
+		t = _5f + vectExpansion[0]/0.1;
 		t *= scale;
 		testFile << ".arrow " << _5f(0)*scale   << " " << _5f(1)*scale   << " "<< _5f(2)*scale
 		         << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale <<"\n";
-		t = _2f + vectExpansion[1]/1.;
+		t = _2f + vectExpansion[1]/0.1;
 		t *= scale;
 		testFile << ".arrow " << _2f(0)*scale   << " " << _2f(1)*scale   << " "<< _2f(2)*scale;
 		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale <<"\n";
-		t = _3f + vectExpansion[2]/1.;
+		t = _3f + vectExpansion[2]/0.1;
 		t *= scale;
 		testFile << ".arrow " << _3f(0)*scale   << " " << _3f(1)*scale   << " "<< _3f(2)*scale;
 		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale <<"\n";
-		t = _2fp + vectExpansion[3]/1.;
+		t = _2fp + vectExpansion[3]/0.1;
 		t *= scale;
 		testFile << ".arrow " << _2fp(0)*scale   << " " << _2fp(1)*scale   << " "<< _2fp(2)*scale;
 		testFile << " " << t(0)   << " " << t(1)   << " "<< t(2) << " " << .011*scale <<"\n";
