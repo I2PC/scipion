@@ -27,7 +27,7 @@
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam
-from pyworkflow.em.constants import SYM_I222r
+from pyworkflow.em.constants import SYM_I222, SYM_I222r
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em import Volume, Transform
@@ -53,8 +53,11 @@ class XmippProtExtractUnit(EMProtocol):
         form.addParam('inputVolumes', PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
                       help='This volume will be cropped')
-        form.addParam('symmetryGroup', EnumParam, choices=[XMIPP_SYM_NAME[SYM_I222r] +
-                                                           " (" + SCIPION_SYM_NAME[SYM_I222r] + ")"],
+        form.addParam('symmetryGroup', EnumParam, choices=[XMIPP_SYM_NAME[SYM_I222] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_I222] + ")",
+                                                           XMIPP_SYM_NAME[SYM_I222r] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_I222r] + ")"
+                                                           ],
                       default=SYM_I222r,
                       label="Symmetry",
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
