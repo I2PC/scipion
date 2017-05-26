@@ -297,8 +297,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             constraints.anchor = GridBagConstraints.WEST;
             setLayout(new GridBagLayout());
 
-            initToolBar();
             centerparticlebt = new JToggleButton(bundle.getString("center"), XmippResource.getIcon("center.png"));
+            initToolBar();
             centerparticlebt.setSelected(true);
             tb.add(centerparticlebt);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.WEST));
