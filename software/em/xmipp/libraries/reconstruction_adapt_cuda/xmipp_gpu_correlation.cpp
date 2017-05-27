@@ -34,7 +34,7 @@
 #include "xmipp_gpu_correlation.h"
 #include <reconstruction_cuda/cuda_gpu_correlation.h>
 
-void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
+void preprocess_images(MetaData &SF, int numImages, Mask &mask,
 		GpuCorrelationAux &d_correlationAux, bool rotate)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
@@ -49,7 +49,7 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 	MDRow rowIn;
 	FileName fnImg;
 	Image<double> Iref;
-	MultidimArray<double> Iref2, padIref, padIref2, padMask;
+	MultidimArray<double> Iref2, padIref, padIref2, padMask, padMaskPolar;
 	padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
 	padIref.setXmippOrigin();
 	size_t radius=(size_t)mask.R1;
@@ -59,6 +59,9 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 	GpuMultidimArrayAtCpu<double> padded_image2_stack(pad_Xdim,pad_Ydim,1,numImages);
 	GpuMultidimArrayAtCpu<double> padded_mask(pad_Xdim,pad_Ydim);
 	GpuMultidimArrayAtCpu<double> autocorrelation_mask(pad_Xdim,pad_Ydim);
+	GpuMultidimArrayAtCpu<double> padded_maskPolar(360, radius);
+	for (int i=0;i<padded_maskPolar.Xdim*padded_maskPolar.Ydim;i++)
+		padded_maskPolar.data[i]=1.0;
 
 	MDIterator *iter = new MDIterator(SF);
 
@@ -101,19 +104,22 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 
 	mask.get_binary_mask().window(padMask, STARTINGY(padIref),STARTINGX(padIref),FINISHINGY(padIref),FINISHINGX(padIref));
 	padded_mask.fillImage(0, padMask);
-	MultidimArray<double> dMask, maskAutocorrelation;
-	typeCast(padMask, dMask);
-	auto_correlation_matrix(dMask, maskAutocorrelation);
-	autocorrelation_mask.fillImage(0, maskAutocorrelation);
+	//MultidimArray<double> dMask, maskAutocorrelation;
+	//typeCast(padMask, dMask);
+	//auto_correlation_matrix(dMask, maskAutocorrelation);
+	//autocorrelation_mask.fillImage(0, maskAutocorrelation);
 
-	GpuMultidimArrayAtGpu<double> original_image_gpu, padded_image_gpu, padded_image2_gpu, autocorrelation_mask_gpu, padded_mask_gpu;
+	GpuMultidimArrayAtGpu<double> original_image_gpu, padded_image_gpu, padded_image2_gpu, autocorrelation_mask_gpu, padded_mask_gpu, padded_mask_gpuPolar;
 	original_image_stack.copyToGpu(original_image_gpu);
 	padded_image_stack.copyToGpu(padded_image_gpu);
 	padded_image2_stack.copyToGpu(padded_image2_gpu);
 	padded_mask.copyToGpu(padded_mask_gpu);
+	padded_maskPolar.copyToGpu(padded_mask_gpuPolar);
 	//autocorrelation_mask.copyToGpu(d_correlationAux.maskAutocorrelation);
 
 	//Polar transform of the projected images
+	d_correlationAux.XdimPolar=360;
+	d_correlationAux.YdimPolar=radius;
 	GpuMultidimArrayAtGpu<double> polar_gpu(360,radius,1,numImages);
 	GpuMultidimArrayAtGpu<double> polar2_gpu(360,radius,1,numImages);
 
@@ -125,13 +131,14 @@ void preprocess_projection_images(MetaData &SF, int numImages, Mask &mask,
 	polar_gpu.fft(d_correlationAux.d_projPolarFFT);
 	polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
 	padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
+	padded_mask_gpuPolar.fft(d_correlationAux.d_maskFFTPolar);
 
 	/*/AJ for debugging
-	size_t xAux= pad_Xdim;
-	size_t yAux= pad_Ydim;
+	size_t xAux= 360;
+	size_t yAux= radius;
 	size_t nAux= 1;
 	GpuMultidimArrayAtGpu<double> aux(xAux,yAux,1,numImages);
-	d_correlationAux.d_maskFFT.ifft(aux);
+	d_correlationAux.d_maskFFTPolar.ifft(aux);
 	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,numImages);
 	auxCpu.copyFromGpu(aux);
 	pointer=0;
@@ -202,7 +209,7 @@ void ProgGpuCorrelation::run()
 	getImageSize(SF, Xdim, Ydim, Zdim, Ndim);
 
 	// Generate mask
-	Mask mask;
+	Mask mask, maskPolar;
     mask.type = BINARY_CIRCULAR_MASK;
 	mask.mode = INNER_MASK;
 	mask.R1 = std::min(Xdim*0.45, Ydim*0.45);
@@ -210,6 +217,16 @@ void ProgGpuCorrelation::run()
 	mask.get_binary_mask().setXmippOrigin();
 	mask.generate_mask();
 	int maskCount = mask.get_binary_mask().sum();
+
+	maskPolar.type = BINARY_FRAME_MASK;
+	maskPolar.mode = INNER_MASK;
+	maskPolar.Xrect = 5;
+	maskPolar.Yrect = 5;
+	maskPolar.resize(7, 7);
+	maskPolar.get_binary_mask().setXmippOrigin();
+	maskPolar.generate_mask();
+	//std::cout << "maskPolar" << maskPolar.get_binary_mask() << std::endl;
+	//std::cout << "maskCount " << maskPolar.get_binary_mask().sum() << std::endl;
 
 	//MultidimArray<double> dMask, maskAutocorrelation;
 	//typeCast(mask.get_binary_mask(), dMask);
@@ -226,7 +243,7 @@ void ProgGpuCorrelation::run()
 		available_images_proj = numImagesProj-1;
 
 	GpuCorrelationAux d_referenceAux;
-	preprocess_projection_images(SF, available_images_proj, mask, d_referenceAux, false);
+	preprocess_images(SF, available_images_proj, mask, d_referenceAux, false);
 	//d_referenceAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
 	//fillImage(d_referenceAux.maskAutocorrelation, maskAutocorrelation);
 	d_referenceAux.maskCount=maskCount;
@@ -248,7 +265,7 @@ void ProgGpuCorrelation::run()
 		available_images_exp = numImagesExp-1;
 
 	GpuCorrelationAux d_experimentalAux;
-	preprocess_projection_images(SFexp, available_images_exp, mask, d_experimentalAux, true);
+	preprocess_images(SFexp, available_images_exp, mask, d_experimentalAux, true);
 	//d_experimentalAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
 	//fillImage(d_experimentalAux.maskAutocorrelation, maskAutocorrelation);
 	d_experimentalAux.maskCount=maskCount;
@@ -280,18 +297,33 @@ void ProgGpuCorrelation::run()
 
 	//Translational part
 	printf("Calculating correlation...\n");
-	size_t pad_Xdim=d_referenceAux.Xdim;
-	size_t pad_Ydim=d_referenceAux.Ydim;
-	double **NCC = cuda_calculate_correlation(d_referenceAux, d_experimentalAux);
+
+	bool rotation = false;
+
+	double **NCC;
+
+	if (!rotation)
+		NCC = cuda_calculate_correlation(d_referenceAux, d_experimentalAux);
+	else
+		NCC = cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux);
 
 	MultidimArray<double> MDAncc;
 	MultidimArray<double> NCC_matrix(available_images_exp, available_images_proj);
 
-	MDIterator *iterExp = new MDIterator(SF);
+	MDIterator *iterExp = new MDIterator(SFexp);
 	size_t objIndex = 0;
 	size_t objIndexExp = 0;
 	int	pointer=0;
 	int count=1;
+
+	size_t sizeX, sizeY;
+	if (!rotation){
+		sizeX = d_experimentalAux.Xdim;
+		sizeY = d_experimentalAux.Ydim;
+	}else{
+		sizeX = d_experimentalAux.XdimPolar;
+		sizeY = d_experimentalAux.YdimPolar;
+	}
 
 	FileName fnImgPad;
 	Image<double> Ipad;
@@ -311,33 +343,34 @@ void ProgGpuCorrelation::run()
 			objIndex = iterProj->objId;
 			available_images_proj--;
 
-			MDAncc.coreAllocate(Ndim, Zdim, pad_Ydim, pad_Xdim);
-			memcpy(MULTIDIM_ARRAY(MDAncc), &NCC[iterExp->objId-1][pointer], pad_Xdim*pad_Ydim*sizeof(double));
-			fnImgPad.compose("jare", count, "jpg");
+			MDAncc.coreAllocate(Ndim, Zdim, sizeY, sizeX);
+			memcpy(MULTIDIM_ARRAY(MDAncc), &NCC[iterExp->objId-1][pointer], sizeX*sizeY*sizeof(double));
+			fnImgPad.compose("NCC", count, "jpg");
 			Ipad()=MDAncc;
 			Ipad.write(fnImgPad);
 
-			pointer += (pad_Ydim*pad_Xdim);
+			pointer += (sizeY*sizeX);
 			double max = MDAncc.computeMax();
 			NCC_matrix(objIndexExp-1, objIndex-1) = max;
 			printf("Max=%lf\n",max);
 
 			int posX, posY;
 			MDAncc.maxIndex(posY, posX);
-			if(posX>pad_Xdim/2 && posY>pad_Ydim/2){
-				posX = pad_Xdim-1-posX;
-				posY = pad_Ydim-1-posY;
-			}else if(posX<pad_Xdim/2 && posY>pad_Ydim/2){
+			if(posX>sizeX/2 && posY>sizeY/2){
+				posX = sizeX-1-posX;
+				posY = sizeY-1-posY;
+			}else if(posX<sizeX/2 && posY>sizeY/2){
 				posX = -(posX+1);
-				posY = pad_Ydim-1-posY;
-			}else if(posX<pad_Xdim/2 && posY<pad_Ydim/2){
+				posY = sizeY-1-posY;
+			}else if(posX<sizeX/2 && posY<sizeY/2){
 				posX = -(posX+1);
 				posY = -(posY+1);
-			}else if(posX>pad_Xdim/2 && posY<pad_Ydim/2){
-				posX = pad_Xdim-1-posX;
+			}else if(posX>sizeX/2 && posY<sizeY/2){
+				posX = sizeX-1-posX;
 				posY = -(posY+1);
 			}
 			//TODO: be careful with the sign!!!
+			//TODO: los signos en rotacion salen al contrario... hay que establecer una forma de ponerlos...
 			printf("Max x-index=%i\n", posX);
 			printf("Max y-index=%i\n", posY);
 
