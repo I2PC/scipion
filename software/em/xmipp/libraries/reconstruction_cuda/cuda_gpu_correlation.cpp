@@ -77,6 +77,50 @@ __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceR
 }
 
 
+
+__global__ void calculateNccRotationKernel(double *RefExpRealSpace, cufftDoubleComplex *polarFFTRef, cufftDoubleComplex *polarFFTExp,
+		cufftDoubleComplex *polarSquaredFFTRef, cufftDoubleComplex *polarSquaredFFTExp,	cufftDoubleComplex *maskFFTPolar, double *NCC,
+		size_t yxdimFFT, size_t numExp, size_t nzyxdim, size_t yxdim)
+{
+
+	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if(idx>=nzyxdim)
+		return;
+
+	unsigned long int idxRef = (int)(idx/yxdim)*yxdimFFT;
+	unsigned long int idxDimProj = 0;
+	unsigned long int idxExp = 0;
+
+	double normValue = 1.0/yxdimFFT;
+
+	double M1M2Polar = cuCreal(cuCmul(maskFFTPolar[0],maskFFTPolar[0]))*normValue;
+	double polarValRef = cuCreal(cuCmul(polarFFTRef[idxRef],maskFFTPolar[0]))*normValue;
+	double polarSqValRef = cuCreal(cuCmul(polarSquaredFFTRef[idxRef],maskFFTPolar[0]))*normValue;
+
+	for(int n=0; n<numExp; n++)
+	{
+		double polarValExp = cuCreal(cuCmul(polarFFTExp[idxExp],maskFFTPolar[0]))*normValue;
+		double polarSqValExp = cuCreal(cuCmul(polarSquaredFFTExp[idxExp],maskFFTPolar[0]))*normValue;
+
+		double num = (RefExpRealSpace[idx + idxDimProj] - (polarValRef*polarValExp/M1M2Polar) );
+		double den1 = sqrt(polarSqValRef - (polarValRef*polarValRef/M1M2Polar) );
+		double den2 = sqrt(polarSqValExp - (polarValExp*polarValExp/M1M2Polar) );
+
+		if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2))
+			NCC[idx + idxDimProj] = num/(den1*den2);
+		else
+			NCC[idx + idxDimProj] = -1;
+
+		idxExp+=yxdimFFT;
+		idxDimProj+=nzyxdim;
+	}
+
+}
+
+
+
+
 __global__ void pointwiseMultiplicationComplexKernel(cufftDoubleComplex *reference, cufftDoubleComplex *experimental, cufftDoubleComplex *RefExpFourier,
 		size_t nzyxdim, size_t yxdim, size_t numExp)
 {
@@ -86,7 +130,7 @@ __global__ void pointwiseMultiplicationComplexKernel(cufftDoubleComplex *referen
 	if(idx>=nzyxdim)
 		return;
 
-	float normFactor = (1.0/yxdim);
+	double normFactor = (1.0/yxdim);
 	int outIdx = 0;
 	int inIdx = 0;
 
@@ -152,6 +196,59 @@ void GpuCorrelationAux::produceSideInfo()
 	MF2realSpace.clear();
 }
 
+double** cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux)
+{
+	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
+			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim*experimentalAux.d_projPolarFFT.Ndim);
+
+    int numTh = 1024;
+    XmippDim3 blockSize(numTh, 1, 1), gridSize;
+    referenceAux.d_projPolarFFT.calculateGridSizeVectorized(blockSize, gridSize);
+
+    pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
+			((cufftDoubleComplex*)referenceAux.d_projPolarFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarFFT.d_data,
+					(cufftDoubleComplex*)RefExpFourier.d_data, referenceAux.d_projPolarFFT.nzyxdim, referenceAux.d_projPolarFFT.yxdim,
+					experimentalAux.d_projPolarFFT.Ndim);
+
+    GpuMultidimArrayAtGpu< double > RefExpRealSpace(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
+    		referenceAux.d_projPolarFFT.Ndim*experimentalAux.d_projPolarFFT.Ndim);
+    RefExpFourier.ifft(RefExpRealSpace);
+    RefExpFourier.clear();
+
+	unsigned long int tamTotal = referenceAux.XdimPolar*referenceAux.YdimPolar*referenceAux.d_projPolarFFT.Ndim;
+
+ 	//XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
+ 	//referenceAux.MFrealSpacePolar.calculateGridSizeVectorized(blockSize2, gridSize2); //AJ esto es un lio
+
+	const dim3 blockSize2(numTh, 1, 1);
+    int numBlkx = (int)(tamTotal)/numTh;
+    if((int)(tamTotal)%numTh>0){
+    	numBlkx++;
+    }
+    const dim3 gridSize2(numBlkx, 1, 1);
+
+ 	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
+				referenceAux.d_projPolarFFT.Ndim*experimentalAux.d_projPolarFFT.Ndim);
+	double **NCC = new double* [experimentalAux.d_projPolarFFT.Ndim];
+	for(int n=0; n<experimentalAux.d_projPolarFFT.Ndim; n++)
+		NCC[n] = new double [tamTotal];
+
+	calculateNccRotationKernel<<< gridSize2, blockSize2 >>>
+			(RefExpRealSpace.d_data, (cufftDoubleComplex*)referenceAux.d_projPolarFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarFFT.d_data,
+					(cufftDoubleComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
+					(cufftDoubleComplex*)referenceAux.d_maskFFTPolar.d_data, d_NCC.d_data, referenceAux.d_projPolarFFT.yxdim, experimentalAux.d_projPolarFFT.Ndim,
+					referenceAux.XdimPolar*referenceAux.YdimPolar*referenceAux.d_projPolarFFT.Ndim, referenceAux.XdimPolar*referenceAux.YdimPolar);
+
+	int pointer=0;
+	for(int n=0; n<experimentalAux.d_projPolarFFT.Ndim; n++){
+		gpuErrchk(cudaMemcpy(NCC[n], &d_NCC.d_data[pointer], sizeof(double)*(tamTotal), cudaMemcpyDeviceToHost));
+		pointer+=tamTotal;
+	}
+
+	return NCC;
+
+}
+
 
 double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux)
 {
@@ -172,15 +269,15 @@ double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelat
     RefExpFourier.ifft(RefExpRealSpace);
     RefExpFourier.clear();
 
-    XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
+ 	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
 	referenceAux.MFrealSpace.calculateGridSizeVectorized(blockSize2, gridSize2); //AJ esto es un lio
 
 	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
 			referenceAux.d_projFFT.Ndim*experimentalAux.d_projFFT.Ndim);
 	double **NCC = new double* [experimentalAux.d_projFFT.Ndim];
-	for(int n=0; n<experimentalAux.d_projFFT.Ndim; n++){
+	for(int n=0; n<experimentalAux.d_projFFT.Ndim; n++)
 		NCC[n] = new double [referenceAux.Xdim*referenceAux.Ydim*referenceAux.d_projFFT.Ndim];
-	}
+
 
 	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
 			(RefExpRealSpace.d_data, referenceAux.MFrealSpace.d_data, experimentalAux.MFrealSpace.d_data, referenceAux.d_denom.d_data,
@@ -194,7 +291,6 @@ double** cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelat
 	}
 
     return NCC;
-
 }
 
 
