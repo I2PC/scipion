@@ -21,8 +21,6 @@ public:
 	GpuMultidimArrayAtGpu< double > d_denom;
 	GpuMultidimArrayAtGpu< double > MFrealSpace;
 
-	GpuMultidimArrayAtGpu< std::complex<double> > d_maskFFTPolar;
-
 	void produceSideInfo();
 };
 
