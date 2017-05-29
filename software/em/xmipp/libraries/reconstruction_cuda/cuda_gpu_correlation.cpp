@@ -79,7 +79,7 @@ __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceR
 
 
 __global__ void calculateNccRotationKernel(double *RefExpRealSpace, cufftDoubleComplex *polarFFTRef, cufftDoubleComplex *polarFFTExp,
-		cufftDoubleComplex *polarSquaredFFTRef, cufftDoubleComplex *polarSquaredFFTExp,	cufftDoubleComplex *maskFFTPolar, double *NCC,
+		cufftDoubleComplex *polarSquaredFFTRef, cufftDoubleComplex *polarSquaredFFTExp,	double maskFFTPolarReal, double *NCC,
 		size_t yxdimFFT, size_t numExp, size_t nzyxdim, size_t yxdim)
 {
 
@@ -94,14 +94,16 @@ __global__ void calculateNccRotationKernel(double *RefExpRealSpace, cufftDoubleC
 
 	double normValue = 1.0/yxdimFFT;
 
-	double M1M2Polar = cuCreal(cuCmul(maskFFTPolar[0],maskFFTPolar[0]))*normValue;
-	double polarValRef = cuCreal(cuCmul(polarFFTRef[idxRef],maskFFTPolar[0]))*normValue;
-	double polarSqValRef = cuCreal(cuCmul(polarSquaredFFTRef[idxRef],maskFFTPolar[0]))*normValue;
+	cufftDoubleComplex maskFFTPolar = make_cuDoubleComplex(maskFFTPolarReal, 0.0);
+
+	double M1M2Polar = cuCreal(cuCmul(maskFFTPolar,maskFFTPolar))*normValue;
+	double polarValRef = cuCreal(cuCmul(polarFFTRef[idxRef],maskFFTPolar))*normValue;
+	double polarSqValRef = cuCreal(cuCmul(polarSquaredFFTRef[idxRef],maskFFTPolar))*normValue;
 
 	for(int n=0; n<numExp; n++)
 	{
-		double polarValExp = cuCreal(cuCmul(polarFFTExp[idxExp],maskFFTPolar[0]))*normValue;
-		double polarSqValExp = cuCreal(cuCmul(polarSquaredFFTExp[idxExp],maskFFTPolar[0]))*normValue;
+		double polarValExp = cuCreal(cuCmul(polarFFTExp[idxExp],maskFFTPolar))*normValue;
+		double polarSqValExp = cuCreal(cuCmul(polarSquaredFFTExp[idxExp],maskFFTPolar))*normValue;
 
 		double num = (RefExpRealSpace[idx + idxDimProj] - (polarValRef*polarValExp/M1M2Polar) );
 		double den1 = sqrt(polarSqValRef - (polarValRef*polarValRef/M1M2Polar) );
@@ -217,9 +219,6 @@ double** cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, Gp
 
 	unsigned long int tamTotal = referenceAux.XdimPolar*referenceAux.YdimPolar*referenceAux.d_projPolarFFT.Ndim;
 
- 	//XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
- 	//referenceAux.MFrealSpacePolar.calculateGridSizeVectorized(blockSize2, gridSize2); //AJ esto es un lio
-
 	const dim3 blockSize2(numTh, 1, 1);
     int numBlkx = (int)(tamTotal)/numTh;
     if((int)(tamTotal)%numTh>0){
@@ -233,10 +232,11 @@ double** cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, Gp
 	for(int n=0; n<experimentalAux.d_projPolarFFT.Ndim; n++)
 		NCC[n] = new double [tamTotal];
 
+	double maskFFTPolar = (referenceAux.XdimPolar*referenceAux.YdimPolar);
 	calculateNccRotationKernel<<< gridSize2, blockSize2 >>>
 			(RefExpRealSpace.d_data, (cufftDoubleComplex*)referenceAux.d_projPolarFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarFFT.d_data,
 					(cufftDoubleComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
-					(cufftDoubleComplex*)referenceAux.d_maskFFTPolar.d_data, d_NCC.d_data, referenceAux.d_projPolarFFT.yxdim, experimentalAux.d_projPolarFFT.Ndim,
+					maskFFTPolar, d_NCC.d_data, referenceAux.d_projPolarFFT.yxdim, experimentalAux.d_projPolarFFT.Ndim,
 					referenceAux.XdimPolar*referenceAux.YdimPolar*referenceAux.d_projPolarFFT.Ndim, referenceAux.XdimPolar*referenceAux.YdimPolar);
 
 	int pointer=0;
