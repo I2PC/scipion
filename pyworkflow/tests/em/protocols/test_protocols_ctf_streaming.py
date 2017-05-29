@@ -150,4 +150,17 @@ class TestCtfStreaming(BaseTest):
             self.assertEqual(ctf._defocusRatio.get(), ctfRef._defocusRatio.get())
 
 
+        micSet = SetOfMicrographs(filename=protCTF._getPath(MIC_SQLITE))
+        micSet_ref = SetOfMicrographs(filename=protCTF_ref._getPath(MIC_SQLITE))
+
+        baseFn = protCTF._getPath(MIC_SQLITE)
+        self.assertTrue(os.path.isfile(baseFn))
+
+        for mic, micRef in zip(micSet, micSet_ref):
+            self.assertEqual(mic._xmipp_ctfCritMaxFreq.get(), micRef._xmipp_ctfCritMaxFreq.get())
+            self.assertEqual(mic.isEnabled(), micRef.isEnabled())
+            self.assertEqual(mic._defocusU.get(), micRef._defocusU.get())
+            self.assertEqual(mic._defocusV.get(), micRef._defocusV.get())
+            self.assertEqual(mic._defocusRatio.get(), micRef._defocusRatio.get())
+
 ####################################################################################################
