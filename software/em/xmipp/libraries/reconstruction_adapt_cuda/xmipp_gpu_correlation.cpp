@@ -49,7 +49,7 @@ void preprocess_images(MetaData &SF, int numImages, Mask &mask,
 	MDRow rowIn;
 	FileName fnImg;
 	Image<double> Iref;
-	MultidimArray<double> Iref2, padIref, padIref2, padMask, padMaskPolar;
+	MultidimArray<double> Iref2, padIref, padIref2, padMask;
 	padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
 	padIref.setXmippOrigin();
 	size_t radius=(size_t)mask.R1;
@@ -59,9 +59,6 @@ void preprocess_images(MetaData &SF, int numImages, Mask &mask,
 	GpuMultidimArrayAtCpu<double> padded_image2_stack(pad_Xdim,pad_Ydim,1,numImages);
 	GpuMultidimArrayAtCpu<double> padded_mask(pad_Xdim,pad_Ydim);
 	GpuMultidimArrayAtCpu<double> autocorrelation_mask(pad_Xdim,pad_Ydim);
-	GpuMultidimArrayAtCpu<double> padded_maskPolar(360, radius);
-	for (int i=0;i<padded_maskPolar.Xdim*padded_maskPolar.Ydim;i++)
-		padded_maskPolar.data[i]=1.0;
 
 	MDIterator *iter = new MDIterator(SF);
 
@@ -109,12 +106,11 @@ void preprocess_images(MetaData &SF, int numImages, Mask &mask,
 	//auto_correlation_matrix(dMask, maskAutocorrelation);
 	//autocorrelation_mask.fillImage(0, maskAutocorrelation);
 
-	GpuMultidimArrayAtGpu<double> original_image_gpu, padded_image_gpu, padded_image2_gpu, autocorrelation_mask_gpu, padded_mask_gpu, padded_mask_gpuPolar;
+	GpuMultidimArrayAtGpu<double> original_image_gpu, padded_image_gpu, padded_image2_gpu, autocorrelation_mask_gpu, padded_mask_gpu;
 	original_image_stack.copyToGpu(original_image_gpu);
 	padded_image_stack.copyToGpu(padded_image_gpu);
 	padded_image2_stack.copyToGpu(padded_image2_gpu);
 	padded_mask.copyToGpu(padded_mask_gpu);
-	padded_maskPolar.copyToGpu(padded_mask_gpuPolar);
 	//autocorrelation_mask.copyToGpu(d_correlationAux.maskAutocorrelation);
 
 	//Polar transform of the projected images
@@ -131,7 +127,6 @@ void preprocess_images(MetaData &SF, int numImages, Mask &mask,
 	polar_gpu.fft(d_correlationAux.d_projPolarFFT);
 	polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
 	padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
-	padded_mask_gpuPolar.fft(d_correlationAux.d_maskFFTPolar);
 
 	/*/AJ for debugging
 	size_t xAux= 360;
@@ -217,16 +212,6 @@ void ProgGpuCorrelation::run()
 	mask.get_binary_mask().setXmippOrigin();
 	mask.generate_mask();
 	int maskCount = mask.get_binary_mask().sum();
-
-	maskPolar.type = BINARY_FRAME_MASK;
-	maskPolar.mode = INNER_MASK;
-	maskPolar.Xrect = 5;
-	maskPolar.Yrect = 5;
-	maskPolar.resize(7, 7);
-	maskPolar.get_binary_mask().setXmippOrigin();
-	maskPolar.generate_mask();
-	//std::cout << "maskPolar" << maskPolar.get_binary_mask() << std::endl;
-	//std::cout << "maskCount " << maskPolar.get_binary_mask().sum() << std::endl;
 
 	//MultidimArray<double> dMask, maskAutocorrelation;
 	//typeCast(mask.get_binary_mask(), dMask);
