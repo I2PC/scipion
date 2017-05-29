@@ -110,7 +110,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         
         form.addParam('noiseonlyinhalves', BooleanParam, expertLevel=LEVEL_ADVANCED,
                       default=True,
-                      label="Noise outside the mask?", 
+                      label="Use noise outside the mask?", 
                       condition = 'halfVolumes',
                       help='Select yes if the volume present noise outside the mask.'
                       ' Otherwise, select No.')

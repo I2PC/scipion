@@ -138,9 +138,14 @@ class XmippMonoResViewer(ProtocolViewer):
         return [cm]
     
     def _showOriginalVolumeSlices(self, param=None):
-        cm = DataView(self.protocol.inputVolumes.get().getFileName())
+        if self.protocol.halfVolumes.get() is True:
+            cm = DataView(self.protocol.inputVolume.get().getFileName())
+            cm2 = DataView(self.protocol.inputVolume2.get().getFileName())
+            return [cm, cm2]
+        else:
+            cm = DataView(self.protocol.inputVolumes.get().getFileName())
+            return [cm]
         
-        return [cm]
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
