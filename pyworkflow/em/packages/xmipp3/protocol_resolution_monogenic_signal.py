@@ -147,19 +147,25 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def _insertAllSteps(self):
         
         self.micsFn = self._getPath()
-        if (not self.halfVolumes):
-            self.vol0Fn = self.inputVolumes.get().getFileName()
-            self.maskFn = self.Mask.get().getFileName()
 
-        if self.halfVolumes.get() is True:
+        if self.halfVolumes:
             self.vol1Fn = self.inputVolume.get().getFileName()
             self.vol2Fn = self.inputVolume2.get().getFileName()
             self.maskFn = self.Mask.get().getFileName()
 
+            self.inputVolumes.set(None)
+
+        else:
+            self.vol0Fn = self.inputVolumes.get().getFileName()
+            self.maskFn = self.Mask.get().getFileName()
+            self.inputVolume.set(None)
+            self.inputVolume2.set(None)
+
             # Convert input into xmipp Metadata format
         convertId = self._insertFunctionStep('convertInputStep', )
 
-        MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
+        MS = self._insertFunctionStep('resolutionMonogenicSignalStep',
+                                      prerequisites=[convertId])
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
@@ -308,17 +314,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
             else:
                 self._defineSourceRelation(self.inputVolumes, self.volumesSet2)
 
-    # --------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-
-        validateMsgs = []
-        if self.halfVolumes.get() is True:
-            if (not self.inputVolume.get().hasValue()):
-                validateMsgs.append('Please provide input volume.')
-        else:
-            if (not self.inputVolumes.get().hasValue()):
-                validateMsgs.append('Please provide input volume.')
-        return validateMsgs
+    # --------------------------- INFO functions ------------------------------
 
     def _methods(self):
         messages = []
@@ -329,8 +325,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
-        summary.append("Highest resolution %.2f Å,   Lowest resolution %.2f Å. \n" % (self.min_res_init
-                                                                               , self.max_res_init))
+        summary.append("Highest resolution %.2f Å,   "
+                       "Lowest resolution %.2f Å. \n" % (self.min_res_init,
+                                                         self.max_res_init))
         Nvox = self.readMetaDataOutput()
 
         if (Nvox>10):
