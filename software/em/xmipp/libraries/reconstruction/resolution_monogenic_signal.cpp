@@ -162,15 +162,8 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	}
 	else
 	{
-		if (halfMapsGiven)
-		{
-			continue;
-		}
-		else
-		{
-			std::cout << "Error: a mask ought to be provided" << std::endl;
-					exit(0);
-		}
+		std::cout << "Error: a mask ought to be provided" << std::endl;
+		exit(0);
 	}
 
 	NVoxelsOriginalMask = 0;
