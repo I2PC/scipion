@@ -88,7 +88,7 @@ class AtsasProtConvertPdbToSAXS(ProtPreprocessVolumes):
             experimentalSAXS='experimental_SAXS_curve.dat'
         createLink(inputStructure,'pseudoatoms.pdb')
         self.runJob("crysol",
-                    "pseudoatoms.pdb %s /lm %d /sm %f /ns %d %s"
+                    "pseudoatoms.pdb %s -lm %d -sm %f -ns %d %s"
                     %(experimentalSAXS, self.numberOfHarmonics,
                       self.maximumFrequency, self.numberOfSamples,
                       self.otherCrysol))
