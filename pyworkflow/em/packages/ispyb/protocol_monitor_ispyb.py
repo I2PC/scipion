@@ -36,7 +36,7 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
-
+from pyworkflow.protocol.constants import STATUS_FINISHED
 from ispyb_proxy import ISPyBdb
 
 
@@ -65,12 +65,17 @@ class ProtMonitorISPyB(ProtMonitor):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
+        inputProtocols = self._getInputProtocols()
         monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),
-                               monitorTime=100)
+                               monitorTime=100,
+                               inputProtocols=inputProtocols,
+                               visit=self.visit.get(),
+                               dbconf=self.db.get(),
+                               project=self.getProject())
 
         monitor.addNotifier(PrintNotifier())
-        monitor.step()
+        monitor.loop()
 
 
 class MonitorISPyB(Monitor):
@@ -84,46 +89,46 @@ class MonitorISPyB(Monitor):
         self.allIds = OrderedDict()
         self.numberOfFrames = None
         self.imageGenerator = None
-        self.visit = self.protocol.visit.get()
-        self.project = self.protocol.getProject()
+        self.visit = kwargs['visit']
+        self.dbconf = kwargs['dbconf']
+        self.project = kwargs['project']
+        self.inputProtocols = kwargs['inputProtocols']
+        self.ispybDb = ISPyBdb(["prod", "dev", "test"][self.dbconf],
+                               experimentParams={'visit': self.visit})
 
     def step(self):
         self.info("MonitorISPyB: only one step")
 
-        prot = self.protocol
-
-        ispybDb = ISPyBdb(["prod", "dev", "test"][prot.db.get()],
-                          experimentParams={'visit': prot.visit.get()})
-
-        runs = [p.get() for p in self.protocol.inputProtocols]
-        g = self.project.getGraphFromRuns(runs)
-
-        nodes = g.getRoot().iterChildsBreadth()
-
+        prots = [self._getUpdatedProtocol(p) for p in self.inputProtocols]
         allParams = OrderedDict()
+        finished = []
 
-        for n in nodes:
-            prot = n.run
+        for prot in prots:
             self.info("protocol: %s" % prot.getRunName())
-
-            if isinstance(prot, ProtImportMovies):
+            if isinstance(prot, ProtImportMovies) and hasattr(prot, 'outputMovies'):
                 self.create_movie_params(prot, allParams)
             elif isinstance(prot, ProtAlignMovies) and hasattr(prot, 'outputMicrographs'):
                 self.update_align_params(prot, allParams)
-            elif isinstance(prot, ProtCTFMicrographs):
+            elif isinstance(prot, ProtCTFMicrographs) and hasattr(prot, 'outputCTF'):
                 self.update_ctf_params(prot, allParams)
 
+            protStatus = prot.getStatus()
+            finished.append(protStatus == STATUS_FINISHED)
+
         for itemId, params in allParams.iteritems():
-            dcParams = ispybDb.get_data_collection_params()
+            dcParams = self.ispybDb.get_data_collection_params()
             dcParams.update(params)
-            ispybId = ispybDb.update_data_collection(dcParams)
-            print(ispybId)
+            ispybId = self.ispybDb.update_data_collection(dcParams)
+            self.info("item id: %s" % str(itemId))
+            self.info("ispyb id: %s" % str(ispybId))
             # Use -1 as a trick when ispyb is not really used and id is None
             self.allIds[itemId] = ispybId or -1
 
-        self.info("Closing ispybDb")
+        if all(finished):
+            self.info("All finished, closing ISPyBDb connection")
+            self.ispybDb.disconnect()
 
-        return False
+        return all(finished)
 
     def iter_updated_set(self, objSet):
         objSet.load()

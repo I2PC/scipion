@@ -53,7 +53,7 @@ class ProtMonitorCTF(ProtMonitor):
         form.addSection(label='Input')
 
         form.addParam('inputProtocol', params.PointerParam,
-                      label="Input protocols", important=True,
+                      label="Input protocol", important=True,
                       pointerClass='ProtCTFFind, XmippProtCTFMicrographs',
                       help="this protocol will be monitorized")
         form.addParam('samplingInterval', params.IntParam,default=60,
@@ -129,16 +129,6 @@ class MonitorCTF(Monitor):
                                  isolation_level=None)
         self.cur = self.conn.cursor()
 
-    def _getUpdatedProtocol(self):
-        prot = self.protocol
-        prot2 = getProtocolFromDb(self.protocol.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
-        # Close DB connections
-        prot2.getProject().closeMapper()
-        prot2.closeMappers()
-        return prot2
-
     def warning(self, msg):
         self.notify("Scipion CTF Monitor WARNING", msg)
 
@@ -146,7 +136,7 @@ class MonitorCTF(Monitor):
         self._createTable()
 
     def step(self):
-        prot = self._getUpdatedProtocol()
+        prot = self._getUpdatedProtocol(self.protocol)
         # Create set of processed CTF from CTF protocol
         CTFset = prot.outputCTF.getIdSet()
         # find difference

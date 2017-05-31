@@ -81,12 +81,7 @@ class ProtMonitorSystem(ProtMonitor):
         self.createMonitor().loop()
 
     def createMonitor(self):
-        protocols = []
-        for protPointer in self.inputProtocols:
-            prot = protPointer.get()
-            prot.setProject(self.getProject())
-            protocols.append(prot)
-
+        protocols = self._getInputProtocols()
         sysMonitor = MonitorSystem(protocols,
                                    workingDir=self.workingDir.get(),
                                    samplingInterval=self.samplingInterval.get(),
@@ -127,15 +122,6 @@ class MonitorSystem(Monitor):
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
                                  isolation_level=None)
         self.cur = self.conn.cursor()
-
-    def _getUpdatedProtocol(self, prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
-        # Close DB connections
-        prot2.getProject().closeMapper()
-        prot2.closeMappers()
-        return prot2
 
     def warning(self, msg):
         self.notify("Scipion System Monitor WARNING", msg)
