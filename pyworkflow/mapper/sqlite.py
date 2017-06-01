@@ -1182,7 +1182,7 @@ class SqliteFlatDb(SqliteDb):
             separator = ' '
             for groupByLabel in groupByLabels:
                 groupByCol = self._columnsMapping[groupByLabel]
-                selectStr += ", %(groupByCol)s as %(groupByLabel)s" % locals()
+                selectStr += ', %(groupByCol)s as "%(groupByLabel)s"' % locals()
                 groupByStr += "%s %s" % (separator, groupByCol)
                 separator = ', '
         else:
