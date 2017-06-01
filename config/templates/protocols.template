@@ -62,6 +62,7 @@ Protocols SPA = [
 		]},
 		{"tag": "protocol_group", "text": "Extract", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "XmippProtExtractParticles",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionExtractParticles",   "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "XmippProtExtractMovieParticles", "text": "default"},
 				{"tag": "protocol", "value": "XmippProtExtractParticlesPairs", "text": "default"},
