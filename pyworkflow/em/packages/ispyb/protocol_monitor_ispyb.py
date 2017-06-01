@@ -36,7 +36,7 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
-from pyworkflow.protocol.constants import STATUS_FINISHED
+from pyworkflow.protocol.constants import STATUS_RUNNING
 from ispyb_proxy import ISPyBdb
 
 
@@ -113,7 +113,7 @@ class MonitorISPyB(Monitor):
                 self.update_ctf_params(prot, allParams)
 
             protStatus = prot.getStatus()
-            finished.append(protStatus == STATUS_FINISHED)
+            finished.append(protStatus != STATUS_RUNNING)
 
         for itemId, params in allParams.iteritems():
             dcParams = self.ispybDb.get_data_collection_params()
