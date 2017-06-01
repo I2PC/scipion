@@ -3,6 +3,28 @@
 #define TILE_DIM2 (TILE_DIM*2)
 #define BLOCK_ROWS 8
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+
+
+#define FILL_GPU(d_array, value, Xdim, Ydim) { \
+	block.x=floor(((Xdim)+(TILE_DIM-1))/TILE_DIM); block.y=floor(((Ydim)+TILE_DIMH-1)/(TILE_DIMH)); \
+	thread.x=TILE_DIM; thread.y=TILE_DIMH; \
+	Kfill<<< block, thread >>>((d_array), (value), (Xdim), (Ydim));\
+	cudaThreadSynchronize(); \
+	gpuErrchk(cudaGetLastError()); \
+	}
+
+// transpose output (note that the input has Ydim columns!!!)
+#define TRANSPOSE_GPU(d_source, d_dest, Xdim, Ydim) { \
+	block.x=floor(((Xdim)+(TILE_DIM-1))/TILE_DIM); block.y=floor(((Ydim)+(TILE_DIM-1))/TILE_DIM); \
+	thread.x=TILE_DIM; thread.y=BLOCK_ROWS; \
+	Ktranspose<<< block, thread >>>((d_source), (d_dest), (Xdim), (Ydim)); \
+	cudaThreadSynchronize(); \
+	gpuErrchk(cudaGetLastError()); \
+	}
+
+
+
+
 inline void gpuAssert(cudaError_t code, const char *file, int line,
 			 bool abort=true)
 {
@@ -54,6 +76,23 @@ void Kmult( int* a, float* b, int* c, int Xdim, int Ydim){
 }//mult
 
 /****
+ fill - element=value
+****/
+template<typename T>
+__global__
+void Kfill( T* a, T value, int Xdim, int Ydim){
+
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*blockDim.y + threadIdx.y;
+   int offset = x+y*Xdim;
+
+   if ((x<Xdim)&&(y<Ydim))
+	a[offset]=value;
+}//fill
+
+
+
+/****
  smooth1: first kernel of constructSmoothHistogramColumn/Row
           if used for constructSmoothHistogramRow, rowH must be transposed
           before calling the kernel, and smooth after calling it
@@ -77,7 +116,7 @@ __global__ void Ksmooth1(float *smooth, int *colrow, const float *listOfWeights,
 			continue;
 		tmp++;
 	// DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
-			float actualWeightC = (k==0? 1:listOfWeights[abs(k)]);
+			float actualWeightC = listOfWeights[abs(k)];
 		sumWeightsC += actualWeightC;
 		for (size_t i=0; i<TILE_DIM2; ++i){
 			if ((y+i)<Ydim){
@@ -130,12 +169,12 @@ K transformGray: each thread deals with a whole column
       3. write in IframeTransformedColRow smoothColRos(pos-1) 
 
 ****/
-__global__ void KtransformGray(int *Iframe, int *colrowH, int *IframeTransformColRow, float* smoothColRow, int Xdim, int Ydim)
+__global__ void KtransformGray(const int *Iframe, const int *colrowH, int *IframeTransformColRow, const float* smoothColRow, int Xdim, int Ydim)
 {
    int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
  
    for (size_t y0=0; y0<Ydim; ++y0){
-	   int pixval = Iframe(x+y0*Xdim);
+	   int pixval = Iframe[x+y0*Xdim];
 		// upperbounds
 	   size_t y1;
    	   for (y1=0; y1<Ydim; ++y1){
@@ -144,10 +183,13 @@ __global__ void KtransformGray(int *Iframe, int *colrowH, int *IframeTransformCo
 	   } 
            if (y1==Ydim)
 		y1--;
-	   IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y1*Xdim];
+	__syncthreads();   
+	IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y1*Xdim];
    }//end-for-y0	
 
 }
+
+
 
 // Kernel to transpose a matrix
 
@@ -156,7 +198,7 @@ __global__ void KtransformGray(int *Iframe, int *colrowH, int *IframeTransformCo
 // IMPORTANT: The input has Xdim columns X Ydim rows
 //            The output has Ydim columns X Xdim rows
 template <typename T>
-__global__ void transpose(T *odata, const T *idata, int Xdim, int Ydim)
+__global__ void Ktranspose(T *odata, const T *idata, int Xdim, int Ydim)
 {
 __shared__ float tile[TILE_DIM+1][TILE_DIM];
 //__shared__ float tile[TILE_DIM][TILE_DIM];
@@ -180,12 +222,4 @@ __shared__ float tile[TILE_DIM+1][TILE_DIM];
 }
 
 
-template <typename T>
-inline void Kfill(T* d_array, T value, int Xdim, int Ydim){
-	dim3 block(floor((Xdim+(TILE_DIM-1))/TILE_DIM),floor((Ydim+TILE_DIMH-1)/(TILE_DIMH)),1);
-	dim3 thread( TILE_DIM, TILE_DIMH);
-	fill<<< block, thread >>>(d_array, value, Xdim, Ydim);
-	cudaThreadSynchronize();
-	gpuErrchk(cudaGetLastError());
-       }
 
