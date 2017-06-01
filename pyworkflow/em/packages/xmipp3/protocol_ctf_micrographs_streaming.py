@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
-# *              Laura del Cano (ldelcano@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
+# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# *              Amaya Jiménez (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -30,7 +29,8 @@ from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 from pyworkflow.protocol.params import RelationParam
 
-import sys
+#from pyworkflow.utils.path import acquireLock, releaseLock
+from filelock import FileLock
 
 class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
     """ Protocol to estimate CTF on a set of micrographs using Xmipp. """
@@ -42,12 +42,6 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
                   "ctfCritCtfMargin<0 OR ctfCritNonAstigmaticValidty<0.3 OR "
                   "ctfCritNonAstigmaticValidty>25")
 
-    processMicro = {}
-    sortPSDMicro = {}
-    sortPSDMicroEnableFlag = {}
-    mdDefMic = xmipp.MetaData()
-    mdDefCtf = xmipp.MetaData()
-
     def __init__(self, **args):
         ProtCTFMicrographs.__init__(self, **args)
 
@@ -58,7 +52,7 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
             'micrographs': 'micrographs.xmd',
             'prefix': prefix,
             'ctfparam': prefix + '.ctfparam',
-            'ctfErrorParam': prefix + '_error.ctfparam',
+            'ctfErrorParam': prefix + '_error.xmd',
             'psd': prefix + '.psd',
             'enhanced_psd': prefix + '_enhanced_psd.xmp',
             'ctfmodel_quadrant': prefix + '_ctfmodel_quadrant.xmp',
@@ -110,17 +104,11 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
                                                   mic.getMicName(), prerequisites=[])
                 estimDeps.append(stepId)
 
-                #Sort PSD
-                #stepId2 = self._insertFunctionStep('sortPSDStep',
-                #                                  prerequisites=[stepId])
-                #estimDeps.append(stepId2)
-                stepId2 = stepId
-
                 #Create output
-                stepId3 = self._insertFunctionStep('createOutput',
-                                                   prerequisites=[stepId2])
+                stepId2 = self._insertFunctionStep('createOutput',
+                                                   prerequisites=[stepId])
 
-                estimDeps.append(stepId3)
+                estimDeps.append(stepId2)
 
                 insertedDict[mic.getMicName()] = stepId
         return estimDeps
@@ -224,154 +212,64 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
                 break
 
             # Check the quality of the estimation and reject it necessary
-            retVal = self.evaluateSingleMicrograph(micFn, micDir)
-            if retVal:
-                self.sortPSDMicroEnableFlag[micName] = 1
+            if self.evaluateSingleMicrograph(micFn, micDir):
                 break
-            else:
-                self.sortPSDMicroEnableFlag[micName] = -1
 
         if deleteTmp != "":
             cleanPath(deleteTmp)
 
-        fnDone = self._getTmpPath(basename(micName + "_done.txt"))
-        f = open(fnDone, 'w+')
-        f.close()
-
-
-
-
-    def sortPSDStep(self):
-        # Gather all metadatas of all micrographs
-        md = xmipp.MetaData()
-        for _, micDir, mic in self._iterMicrographs():
-            if mic.getMicName() in self.processMicro and not mic.getObjId() in self.sortPSDMicro: #AJ
-                self.sortPSDMicro[mic.getObjId()] = True #AJ ????????????????????????????????????????????????????????
-                fnCTF = self._getFileName('prefix', micDir=micDir) + ".xmd"
-                enable = 1
-                if not os.path.exists(fnCTF):
-                    fnCTF = self._createErrorCtfParam(micDir)
-                    enable = -1
-                mdCTF = xmipp.MetaData(fnCTF)
-                mdCTF.setValue(xmipp.MDL_ENABLED, enable, mdCTF.firstObject())
-                mdCTF.setValue(xmipp.MDL_MICROGRAPH_ID, long(mic.getObjId()), mdCTF.firstObject())
-                md.unionAll(mdCTF)
-        fnAllMicrographs = self._getPath("micrographs.xmd")
-        md.write(fnAllMicrographs)
-
-        # Now evaluate them
-        self.runJob("xmipp_ctf_sort_psds", "-i %s" % fnAllMicrographs)
-
-        # And reject
-        fnRejected = self._getPath("micrographs_rejected.xmd")
-        self.runJob("xmipp_metadata_utilities",
-                    '-i %s --query select "%s" -o %s'
-                    % (fnAllMicrographs, self._criterion, fnRejected))
-        mdRejected = xmipp.MetaData(fnRejected)
-        self.someMicrographsRejected = mdRejected.size() > 0
-
-        if self.someMicrographsRejected:
-            rejectedMicrographs = mdRejected.getColumnValues(xmipp.MDL_MICROGRAPH_ID)
-            for mdid in md:
-                micId = md.getValue(xmipp.MDL_MICROGRAPH_ID, mdid)
-                if micId in rejectedMicrographs:
-                    md.setValue(xmipp.MDL_ENABLED, -1, mdid)
-                else:
-                    md.setValue(xmipp.MDL_ENABLED, 1, mdid)
-        md.write(self._getPath("ctfs_selection.xmd"))
-        cleanPath(fnRejected)
+        fnCTF = self._getFileName('ctf', micDir=micDir)
+        if os.path.exists(fnCTF):
+            fnDone = self._getExtraPath(basename(micName + "_done.txt"))
+            f = open(fnDone, 'w')
+            f.close()
 
 
     def createOutput(self):
         """ Check for already computed CTF and update the output set. """
+        fnOut = self._getPath('ctfs.sqlite')
+        #fhLock = acquireLock(fnOut+".lock")
+        with FileLock(fnOut):
 
-        #AJ
-        # Gather all metadatas of all processed micrographs
-        for _, micDir, mic in self._iterMicrographs():
-            fnDone = self._getTmpPath(basename(mic.getMicName() + "_done.txt"))
-            if os.path.exists(fnDone):
-                fnCTF = self._getFileName('prefix', micDir=micDir) + ".xmd"
-                enable = 1
-                if not os.path.exists(fnCTF):
-                    fnCTF = self._createErrorCtfParam(micDir)
-                    enable = -1
-                mdCTFDef = xmipp.MetaData(fnCTF)
-                mdCTFDef.setValue(xmipp.MDL_ENABLED, enable, mdCTFDef.firstObject())
-                mdCTFDef.setValue(xmipp.MDL_MICROGRAPH_ID, long(mic.getObjId()), mdCTFDef.firstObject())
-                self.mdDefMic.unionAll(mdCTFDef)
+            ctfDict = {}
+            ctfSet = SetOfCTF(filename=fnOut)
+            ctfSet.setMicrographs(self.inputMicrographs.get())
 
-                enable = self.sortPSDMicroEnableFlag[mic.getMicName()]
-                mdCTFDef2 = xmipp.MetaData(fnCTF)
-                mdCTFDef2.setValue(xmipp.MDL_ENABLED, enable, mdCTFDef2.firstObject())
-                mdCTFDef2.setValue(xmipp.MDL_MICROGRAPH_ID, long(mic.getObjId()), mdCTFDef2.firstObject())
-                self.mdDefCtf.unionAll(mdCTFDef2)
+            for ctf in ctfSet:
+                ctfDict[ctf.getObjId()] = True
 
-        self.mdDefMic.write(self._getPath("micrographs.xmd"))
-        self.mdDefCtf.write(self._getPath("ctfs_selection.xmd"))
-        #END AJ
+            if ctfDict: # it means there are previous ctfs computed
+                ctfSet.loadAllProperties()
+                if ctfSet.getSize():
+                    ctfSet.enableAppend()
+            else:
+                ctfSet.setStreamState(ctfSet.STREAM_OPEN)
 
-        newCTFs = []
-        ctfDict = {}
-        ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
-        ctfSet.setMicrographs(self.inputMicrographs.get())
-        inputMics = self.inputMicrographs.get()
+            toClean = []
+            for micFn, micDir, mic in self._iterMicrographs():
+                fnDone = self._getExtraPath(basename(mic.getMicName() + "_done.txt"))
+                if os.path.exists(fnDone) and not mic.getObjId() in ctfDict: #AJ
+                    fnCTF = self._getFileName('ctf', micDir=micDir)
+                    if not exists(fnCTF):
+                        fnError = self._getFileName('ctfErrorParam', micDir=micDir)
+                        if not exists(fnError):
+                            self._createErrorCtfParam(micDir)
+                        mdCTF = md.MetaData(fnError)
+                    else:
+                        mdCTF = md.MetaData(fnCTF)
 
-        defocusList = []
-        if self.doAutomaticRejection:
-            fn = self._getPath("micrographs.xmd")
-        else:
-            fn = self._getPath("micrographs.xmd") #ctfs_selection
-        mdFn = md.MetaData(fn)
-        mdAux = md.MetaData()
+                    ctfModel = mdToCTFModel(mdCTF, mic)
+                    self._setPsdFiles(ctfModel, micDir)
+                    ctfSet.append(ctfModel)
+                    toClean.append(fnDone)
 
-        for ctf in ctfSet:
-            ctfDict[ctf.getObjId()] = True
+            self._defineOutputs(outputCTF=ctfSet)
+            self._defineCtfRelation(self.inputMicrographs.get(), ctfSet)
+            self._computeDefocusRange(ctfSet)
 
-        if ctfDict: # it means there are previous ctfs computed
-            ctfSet.loadAllProperties()
-            if ctfSet.getSize():
-                ctfSet.enableAppend()
-        else:
-            ctfSet.setStreamState(ctfSet.STREAM_OPEN)
-
-        for micFn, micDir, mic in self._iterMicrographs():
-            fnDone = self._getTmpPath(basename(mic.getMicName() + "_done.txt"))
-            if os.path.exists(fnDone) and not mic.getObjId() in ctfDict: #AJ
-                cleanPath(fnDone)
-                if exists(self._getFileName('ctfparam', micDir=micDir)):
-                    mdCTF = md.MetaData(self._getFileName('ctfparam', micDir=micDir))
-                    mdQuality = md.MetaData(self._getFileName('ctf', micDir=micDir))
-                    mdCTF.setValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
-                                   mdQuality.getValue(xmipp.MDL_CTF_CRIT_NONASTIGMATICVALIDITY,
-                                                      mdQuality.firstObject()),
-                                   mdCTF.firstObject())
-                    mdCTF.setValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,
-                                   mdQuality.getValue(xmipp.MDL_CTF_CRIT_FIRSTMINIMUM_FIRSTZERO_DIFF_RATIO,
-                                                      mdQuality.firstObject()),
-                                   mdCTF.firstObject())
-                else:
-                    fnError = self._getFileName('ctfErrorParam', micDir=micDir)
-                    if not exists(fnError):
-                        self._createErrorCtfParam(micDir)
-                    mdCTF = md.MetaData(fnError)
-                mdAux.importObjects(mdFn, md.MDValueEQ(md.MDL_MICROGRAPH_ID, long(mic.getObjId())))
-                mdAux.merge(mdCTF)
-
-                mic.setSamplingRate(mdCTF.getValue(md.MDL_CTF_SAMPLING_RATE, 1))
-
-                ctfModel = mdToCTFModel(mdAux, mic)
-                self._setPsdFiles(ctfModel, micDir)
-                ctfSet.append(ctfModel)
-                newCTFs.append(mic.getObjId())
-
-                # save the values of defocus for each micrograph in a list
-                defocusList.append(ctfModel.getDefocusU())
-                defocusList.append(ctfModel.getDefocusV())
-
-        self._defineOutputs(outputCTF=ctfSet)
-        self._defineCtfRelation(inputMics, ctfSet)
-        self._computeDefocusRange(ctfSet)
-
+        #releaseLock(fhLock)
+        for fnDone in toClean:
+            cleanPath(fnDone)
 
 
     def createOutputStep(self):
@@ -517,31 +415,24 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
         ctfModel._xmipp_ctfmodel_halfplane = String(self._getFileName('ctfmodel_halfplane', micDir=micDir))
 
     def evaluateSingleMicrograph(self, micFn, micDir):
-        mdCTFparam = xmipp.MetaData(self._getFileName('ctfparam', micDir=micDir))
-        ctfDownFactor = mdCTFparam.getValue(xmipp.MDL_CTF_DOWNSAMPLE_PERFORMED, mdCTFparam.firstObject())
+        fnCTF = self._getFileName('ctfparam', micDir=micDir)
+        mdCTFparam = xmipp.MetaData(fnCTF)
+        objId = mdCTFparam.firstObject()
+        mdCTFparam.setValue(md.MDL_MICROGRAPH, micFn, objId)
+        mdCTFparam.setValue(md.MDL_PSD, str(self._getFileName('psd', micDir=micDir)), objId)
+        mdCTFparam.setValue(md.MDL_PSD_ENHANCED, str(self._getFileName('enhanced_psd', micDir=micDir)), objId)
+        mdCTFparam.setValue(md.MDL_CTF_MODEL, str(self._getFileName('ctfparam', micDir=micDir)), objId)
+        mdCTFparam.setValue(md.MDL_IMAGE1, str(self._getFileName('ctfmodel_quadrant', micDir=micDir)), objId)
+        mdCTFparam.setValue(md.MDL_IMAGE2, str(self._getFileName('ctfmodel_halfplane', micDir=micDir)), objId)
 
-        mdEval = md.MetaData()
-        objId = mdEval.addObject()
-
-        mdEval.setValue(md.MDL_MICROGRAPH, micFn, objId)
-
-        mdEval.setValue(md.MDL_PSD, str(self._getFileName('psd', micDir=micDir)), objId)
-        mdEval.setValue(md.MDL_PSD_ENHANCED, str(self._getFileName('enhanced_psd', micDir=micDir)), objId)
-        mdEval.setValue(md.MDL_CTF_MODEL, str(self._getFileName('ctfparam', micDir=micDir)), objId)
-        mdEval.setValue(md.MDL_IMAGE1, str(self._getFileName('ctfmodel_quadrant', micDir=micDir)), objId)
-        mdEval.setValue(md.MDL_IMAGE2, str(self._getFileName('ctfmodel_halfplane', micDir=micDir)), objId)
-        mdEval.setValue(md.MDL_CTF_DOWNSAMPLE_PERFORMED, float(ctfDownFactor), objId)
         fnEval = self._getFileName('ctf', micDir=micDir)
-        mdEval.write(fnEval)
+        mdCTFparam.write(fnEval)
 
         # Evaluate if estimated ctf is good enough
-        # self.runJob("xmipp_ctf_sort_psds","-i %s --downsampling %f"%(fnEval,ctfDownFactor))
         try:
             self.runJob("xmipp_ctf_sort_psds", "-i %s" % (fnEval))
         except Exception:
             pass
-        # print >> sys.stderr, "xmipp_ctf_sort_psds has been Failed!"
-        #             raise ex
 
         # Check if it is a good micrograph
         fnRejected = self._getTmpPath(basename(micFn + "_rejected.xmd"))
@@ -550,9 +441,9 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
 
         retval = True
         if not isMdEmpty(fnRejected):
-            mdCTF = md.MetaData(fnEval)
-            mdCTF.setValue(md.MDL_ENABLED, -1, mdCTF.firstObject())
-            mdCTF.write(fnEval)
+            mdCTFparam = md.MetaData(fnEval)
+            mdCTFparam.setValue(md.MDL_ENABLED, -1, mdCTFparam.firstObject())
+            mdCTFparam.write(fnEval)
             retval = False
 
         cleanPath(fnRejected)
@@ -587,6 +478,9 @@ data_fullMicrograph
  _ctfTransversalDisplacement -999
  _ctfQ0 -999
  _ctfK -999
+ _ctfEnvR0 -999
+ _ctfEnvR1 -999
+ _ctfEnvR2 -999
  _ctfBgGaussianK -999
  _ctfBgGaussianSigmaU -999
  _ctfBgGaussianSigmaV -999
@@ -604,6 +498,9 @@ data_fullMicrograph
  _ctfBgGaussian2CU -999
  _ctfBgGaussian2CV -999
  _ctfBgGaussian2Angle -999
+ _ctfBgR1 -999
+ _ctfBgR2 -999
+ _ctfBgR3 -999
  _ctfX0 -999
  _ctfXF -999
  _ctfY0 -999
@@ -614,6 +511,24 @@ data_fullMicrograph
  _ctfCritPsdStdQ -999
  _ctfCritPsdPCA1 -999
  _ctfCritPsdPCARuns -999
+ _micrograph NULL
+ _psd NULL
+ _psdEnhanced NULL
+ _ctfModel NULL
+ _image1 NULL
+ _image2 NULL
+ _enabled -1
+ _ctfCritFirstZero -999
+ _ctfCritMaxFreq -999
+ _ctfCritDamping -999
+ _ctfCritfirstZeroRatio -999
+ _ctfEnvelopePlot -999
+ _ctfCritFirstMinFirstZeroRatio -999
+ _ctfCritCtfMargin -999
+ _ctfCritNonAstigmaticValidty -999
+ _ctfCritPsdCorr90 -999
+ _ctfCritPsdInt -999
+ _ctfCritNormality -999
 """
         f.write(lines)
         f.close()
