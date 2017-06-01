@@ -82,7 +82,8 @@ class XmippFilterHelper():
                            '_high pass_: components above *Low freq.* are preserved.\n '
                            '_band pass_: components between *Low freq.* and *High freq.* '
                            'are preserved. \n'
-                           'ctf: apply first CTF in CTFset to all the particles'
+                           'ctf: apply first CTF in CTFset to all the particles. This is normally for simulated data.\n'
+                           '   : This is not a CTF correction.'
         )
 
         form.addParam('filterModeReal', EnumParam, choices=['median'],
@@ -164,7 +165,8 @@ class XmippFilterHelper():
                       condition='filterModeFourier == %d' % cls.FM_CTF,
                       label='CTF Object',
                       pointerClass='CTFModel',
-                      help='Object with CTF information if empty it will take the CTF information related with the first particle')
+                      help='Object with CTF information if empty it will take the CTF information related with the first particle.\n'
+                           'Note that this is normally used with simulated data.')
 
         #wavelets
         form.addParam('waveletMode',  EnumParam, choices=['remove_scale',
