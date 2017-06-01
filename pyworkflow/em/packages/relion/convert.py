@@ -146,7 +146,10 @@ def locationToRelion(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Relion.
     """
-    return em.ImageHandler.locationToXmipp((index, filename))
+    if index != em.NO_INDEX:
+        return "%06d@%s" % (index, filename)
+    
+    return filename
 
 
 def getImageLocation(location):
@@ -666,28 +669,7 @@ def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     mdCount.aggregate(mdAll, md.AGGR_COUNT, md.RLN_MLMODEL_GROUP_NAME, md.RLN_MLMODEL_GROUP_NAME, md.MDL_COUNT)
     print "number of particles per group: ", mdCount
 
-
-    # for objId in mdAll:
-    #     partDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
-    #     currDef = minDef + increment
-    #
-    #     if partDef <= currDef:
-    #         part = part + 1
-    #         mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-    #     else:
-    #         if part < 100:
-    #             increment = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) - minDef
-    #             part = part + 1
-    #             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-    #         else:
-    #             part = 1
-    #             minDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
-    #             counter = counter + 1
-    #             increment = (maxDef - minDef) / (groups - counter)
-    #             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-    # mdAll.write(imgStar)
-    
-        
+       
 def prependToFileName(imgRow, prefixPath):
     """ Prepend some root name to imageRow filename. """
     index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
