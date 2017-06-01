@@ -270,7 +270,7 @@ Examples:
     def _showImagesInClasses(self, paramName=None):
         """ Read Relion _data.star images file and 
         generate a new metadata with the Xmipp classification standard:
-        a 'classes' block and a 'class00000?_images' block per class.git
+        a 'classes' block and a 'class00000?_images' block per class.
         If the new metadata was already written, it is just shown.
         """
         views = []
