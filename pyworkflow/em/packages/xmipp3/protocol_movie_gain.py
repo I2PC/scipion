@@ -112,13 +112,15 @@ class XmippProtMovieGain(ProtProcessMovies):
     def _processMovie(self, movie):
         movieId = movie.getObjId()
         fnMovie = movie.getFileName()
-        gain = movie.getGain()
-        self.runJob("xmipp_movie_estimate_gain",
-                    "-i %s --oroot %s --iter 1 --singleRef --frameStep %d "
-                    "--gainImage %s --applyGain %s"
-                    % (fnMovie, self._getPath("movie_%06d" % movieId),
-                       self.frameStep, gain,
-                       self.useExistingGainImage.get()), numberOfMpi=1)
+        gain = self.inputMovies.get().getGain()
+        args = "-i %s --oroot %s --iter 1 --singleRef --frameStep %d " \
+               "--gainImage %s" % \
+               (fnMovie, self._getPath("movie_%06d" % movieId),
+                self.frameStep, gain)
+        if self.useExistingGainImage.get():
+            args += " --applyGain"
+
+        self.runJob("xmipp_movie_estimate_gain", args, numberOfMpi=1)
         cleanPath(self._getPath("movie_%06d_correction.xmp" % movieId))
 
         fnSummary = self._getPath("summary.txt")

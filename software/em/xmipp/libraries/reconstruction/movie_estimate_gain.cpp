@@ -40,7 +40,7 @@ void ProgMovieEstimateGain::defineParams()
     addParamsLine(" [--sigmaStep <s=0.5>]: Step size for sigma");
     addParamsLine(" [--singleRef] : Use a single histogram reference");
     addParamsLine("               :+This assumes that there is no image contamination or carbon holes");
-    addParamsLine(" [--gainImage] : Reference to external gain image");
+    addParamsLine(" [--gainImage <fn=\"\">] : Reference to external gain image");
     addParamsLine(" [--applyGain] : Flag for using external gain image");
     addParamsLine("               : applyGain=True will use external gain image");
 }
@@ -55,7 +55,7 @@ void ProgMovieEstimateGain::readParams()
 	singleReference=checkParam("--singleRef");
 	frameStep=getIntParam("--frameStep");
 	fnGain=getParam("--gainImage");
-	applyGain=getParam("--applyGain");
+	applyGain=checkParam("--applyGain");
 }
 
 void ProgMovieEstimateGain::produceSideInfo()
