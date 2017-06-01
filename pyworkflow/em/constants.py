@@ -69,10 +69,14 @@ SYM_I222  = 1 # (no crowther 222 and standard in heyman et al 2005 article).
               # 2-fold axes on x,y,z axes. With the positive z-axis pointing at
               # the viewer, the front-most 5-fold vertices are in yz plane,
               #  and the front-most 3-fold axes are in the xz plane.
-SYM_2n5   = 2 #  with two-fold symmetry along X and 5-fold along Z
+SYM_I2n5   = 2 #  with two-fold symmetry along X and 5-fold along Z
+SYM_I2n5r   = 3 # '2n5' with 180 degree rotation about y
+SYM_In25   = 4 # 2-fold symmetry along y and 5-fold along z
 
 #Diccionario sym
 SCIPION_SYM_NAME={}
 SCIPION_SYM_NAME[SYM_I222]  = 'I222'
 SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
-SCIPION_SYM_NAME[SYM_2n5]   = 'SYM_2n5'
+SCIPION_SYM_NAME[SYM_I2n5]   = 'I2n5'
+SCIPION_SYM_NAME[SYM_I2n5r]   = 'I2n5r'
+SCIPION_SYM_NAME[SYM_In25]   = 'In25'
