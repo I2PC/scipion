@@ -833,6 +833,26 @@ def convertBinaryVol(vol, outputDir):
     return fn
 
 
+def convertMask(img, outputDir):
+    """ Convert binary mask to a format read by Relion and truncate the
+    values between 0-1 values, due to Relion only support masks with this
+    values (0-1).
+    Params:
+        img: input image to be converted.
+        outputDir: where to put the converted file(s)
+    Return:
+        new file name of the mask.
+    """
+    
+    ih = em.ImageHandler()
+    imgFn = getImageLocation(img.getLocation())
+    newFn = join(outputDir, replaceBaseExt(imgFn, 'mrc'))
+    
+    ih.truncateMask(imgFn, newFn)
+    
+    return newFn
+
+
 def createItemMatrix(item, row, align):
     item.setTransform(rowToAlignment(row, alignType=align))
 

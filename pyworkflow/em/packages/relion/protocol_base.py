@@ -44,7 +44,7 @@ from pyworkflow.em.protocol import EMProtocol
 
 from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0, V1_3
 from convert import (convertBinaryVol, writeSetOfParticles, getVersion,
-                     getImageLocation)
+                     getImageLocation, convertMask)
 
 
 class ProtRelionBase(EMProtocol):
@@ -656,7 +656,6 @@ class ProtRelionBase(EMProtocol):
         
         joinHalves = ("--low_resol_join_halves 40 (only not continue mode)"
                       if not self.IS_CLASSIFY else "")
-
         form.addParam('extraParams', StringParam, default='',
                       label='Additional parameters',
                       help="In this box command-line arguments may be "
@@ -715,120 +714,7 @@ class ProtRelionBase(EMProtocol):
             params += ' ' + self.extraParams.get()
         
         self._insertFunctionStep('runRelionStep', params)
-        
-    def _setNormalArgs(self, args):
-        
-        maskDiameter = self.maskDiameterA.get()
-        if maskDiameter <= 0:
-            x, _, _ = self._getInputParticles().getDim()
-            maskDiameter = self._getInputParticles().getSamplingRate() * x
-        
-        args.update({'--i': self._getFileName('input_star'),
-                     '--particle_diameter': maskDiameter,
-                     '--angpix': self._getInputParticles().getSamplingRate(),
-                    })
-        self._setCTFArgs(args)
-        
-        if self.maskZero == MASK_FILL_ZERO:
-            args['--zero_mask'] = ''
-            
-        if self.IS_CLASSIFY:
-            args['--K'] = self.numberOfClasses.get()
-            if self.limitResolEStep > 0:
-                args['--strict_highres_exp'] = self.limitResolEStep.get()
-            
-        
-        if self.IS_3D:
-            args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
-                                             self._getTmpPath())
-            if not self.isMapAbsoluteGreyScale:
-                args['--firstiter_cc']=''
-            args['--ini_high'] = self.initialLowPassFilterA.get()
-            args['--sym'] = self.symmetryGroup.get()
-        
-        if not getVersion() == V2_0:
-            args['--memory_per_thread'] = self.memoryPreThreads.get()
-        
-        self._setBasicArgs(args)
-        
-    def _setContinueArgs(self, args):
-        continueRun = self.continueRun.get()
-        continueRun._initialize()
-        
-        if self.IS_CLASSIFY:
-            self.copyAttributes(continueRun, 'regularisationParamT')
-        self._setBasicArgs(args)
-
-        continueIter = self._getContinueIter()
-        args['--continue'] = continueRun._getFileName('optimiser',
-                                                      iter=continueIter)
-
-    def _getScratchDir(self):
-        """ Returns the scratch dir value without spaces.
-         If none, the empty string will be returned.
-        """
-        scratchDir = self.scratchDir.get() or ''
-        return scratchDir.strip()
-
-    def _setComputeArgs(self, args):
-        
-        if not self.combineItersDisc:
-            args['--dont_combine_weights_via_disc'] = ''
-        
-        if not self.useParallelDisk:
-            args['--no_parallel_disc_io'] = ''
-        
-        if self.allParticlesRam:
-            args['--preread_images'] = ''
-        else:
-            if self._getScratchDir():
-                args['--scratch_dir'] = self._getScratchDir()
-            
-        args['--pool'] = self.pooledParticles.get()
-        
-        if self.doGpu:
-            args['--gpu'] = self.gpusToUse.get()
     
-    def _setBasicArgs(self, args):
-        """ Return a dictionary with basic arguments. """
-        args.update({'--flatten_solvent': '',
-                     '--norm': '',
-                     '--scale': '',
-                     '--o': self._getExtraPath('relion'),
-                     '--oversampling': '1'
-                    })
-
-        if self.IS_CLASSIFY:
-            args['--tau2_fudge'] = self.regularisationParamT.get()
-            args['--iter'] = self._getnumberOfIters()
-            
-        self._setSamplingArgs(args)
-        self._setMaskArgs(args)
-    
-    def _setCTFArgs(self, args):        
-        # CTF stuff
-        if self.doCTF:
-            args['--ctf'] = ''
-        
-        # this only can be true if is 3D.
-        if self.hasReferenceCTFCorrected:
-            args['--ctf_corrected_ref'] = ''
-            
-        if self._getInputParticles().isPhaseFlipped():
-            args['--ctf_phase_flipped'] = ''
-            
-        if self.ignoreCTFUntilFirstPeak:
-            args['--ctf_intact_first_peak'] = ''
-    
-    def _setMaskArgs(self, args):
-        if self.referenceMask.hasValue():
-            mask = getImageLocation(self.referenceMask.get().getLocation())
-            args['--solvent_mask'] = mask
-            
-        if self.IS_3D and self.solventMask.hasValue():
-            solventMask = getImageLocation(self.solventMask.get().getLocation())
-            args['--solvent_mask2'] = solventMask
-
     #--------------------------- STEPS functions -------------------------------
     
     def convertInputStep(self, particlesId, copyAlignment):
@@ -896,7 +782,7 @@ class ProtRelionBase(EMProtocol):
                 mdAux.write(self._getFileName('movie_particles'),
                             md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
-        
+    
     def runRelionStep(self, params):
         """ Execute the relion steps with the give params. """
         params += ' --j %d' % self.numberOfThreads.get()
@@ -984,7 +870,116 @@ class ProtRelionBase(EMProtocol):
         return []
     
     #--------------------------- UTILS functions -------------------------------
+    def _setNormalArgs(self, args):
+        maskDiameter = self.maskDiameterA.get()
+        if maskDiameter <= 0:
+            x, _, _ = self._getInputParticles().getDim()
+            maskDiameter = self._getInputParticles().getSamplingRate() * x
     
+        args.update({'--i': self._getFileName('input_star'),
+                     '--particle_diameter': maskDiameter,
+                     '--angpix': self._getInputParticles().getSamplingRate(),
+                     })
+        self._setCTFArgs(args)
+    
+        if self.maskZero == MASK_FILL_ZERO:
+            args['--zero_mask'] = ''
+    
+        if self.IS_CLASSIFY:
+            args['--K'] = self.numberOfClasses.get()
+            if self.limitResolEStep > 0:
+                args['--strict_highres_exp'] = self.limitResolEStep.get()
+    
+        if self.IS_3D:
+            args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
+                                             self._getTmpPath())
+            if not self.isMapAbsoluteGreyScale:
+                args['--firstiter_cc'] = ''
+            args['--ini_high'] = self.initialLowPassFilterA.get()
+            args['--sym'] = self.symmetryGroup.get()
+        
+        if not getVersion() == V2_0:
+            args['--memory_per_thread'] = self.memoryPreThreads.get()
+    
+        self._setBasicArgs(args)
+
+    def _setContinueArgs(self, args):
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+    
+        if self.IS_CLASSIFY:
+            self.copyAttributes(continueRun, 'regularisationParamT')
+        self._setBasicArgs(args)
+    
+        continueIter = self._getContinueIter()
+        args['--continue'] = continueRun._getFileName('optimiser',
+                                                      iter=continueIter)
+
+    def _getScratchDir(self):
+        """ Returns the scratch dir value without spaces.
+         If none, the empty string will be returned.
+        """
+        scratchDir = self.scratchDir.get() or ''
+        return scratchDir.strip()
+
+    def _setComputeArgs(self, args):
+        if not self.combineItersDisc:
+            args['--dont_combine_weights_via_disc'] = ''
+    
+        if not self.useParallelDisk:
+            args['--no_parallel_disc_io'] = ''
+    
+        if self.allParticlesRam:
+            args['--preread_images'] = ''
+        else:
+            if self._getScratchDir():
+                args['--scratch_dir'] = self._getScratchDir()
+    
+        args['--pool'] = self.pooledParticles.get()
+    
+        if self.doGpu:
+            args['--gpu'] = self.gpusToUse.get()
+
+    def _setBasicArgs(self, args):
+        """ Return a dictionary with basic arguments. """
+        args.update({'--flatten_solvent': '',
+                     '--norm': '',
+                     '--scale': '',
+                     '--o': self._getExtraPath('relion'),
+                     '--oversampling': '1'
+                     })
+    
+        if self.IS_CLASSIFY:
+            args['--tau2_fudge'] = self.regularisationParamT.get()
+            args['--iter'] = self._getnumberOfIters()
+    
+        self._setSamplingArgs(args)
+        self._setMaskArgs(args)
+
+    def _setCTFArgs(self, args):
+        # CTF stuff
+        if self.doCTF:
+            args['--ctf'] = ''
+    
+        # this only can be true if is 3D.
+        if self.hasReferenceCTFCorrected:
+            args['--ctf_corrected_ref'] = ''
+    
+        if self._getInputParticles().isPhaseFlipped():
+            args['--ctf_phase_flipped'] = ''
+    
+        if self.ignoreCTFUntilFirstPeak:
+            args['--ctf_intact_first_peak'] = ''
+
+    def _setMaskArgs(self, args):
+        if self.referenceMask.hasValue():
+            mask = convertMask(self.referenceMask.get(), self._getTmpPath())
+            args['--solvent_mask'] = mask
+    
+        if self.IS_3D and self.solventMask.hasValue():
+            solventMask = convertMask(self.solventMask, self._getTmpPath())
+            args['--solvent_mask2'] = solventMask
+
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
         if self.numberOfMpi > 1:
