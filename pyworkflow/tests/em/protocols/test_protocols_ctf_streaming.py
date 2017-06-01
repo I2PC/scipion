@@ -37,7 +37,7 @@ from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
 
-MICS = os.environ.get('SCIPION_TEST_MICS', 2)
+MICS = os.environ.get('SCIPION_TEST_MICS', 10)
 
 CTF_SQLITE = "ctfs.sqlite"
 MIC_SQLITE = "micrographs.sqlite"
@@ -87,7 +87,8 @@ class TestCtfStreaming(BaseTest):
 
 ######################### AJ START NEW STREAMING PROTOCOL #########################################
 
-        kwargs = {}
+        kwargs = {
+            'numberOfThreads': 5}
 
         protCTF = self.newProtocol(XmippProtCTFMicrographsStr, **kwargs)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
@@ -99,19 +100,26 @@ class TestCtfStreaming(BaseTest):
             time.sleep(10)
             protCTF = self._updateProtocol(protCTF)
 
+        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+        while not ctfSet.getSize()>0:
+            time.sleep(10)
+            protCTF = self._updateProtocol(protCTF)
+            ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+
+        #kwargs = {
+        #    'maxDefocus': 28000,
+        #    'minDefocus': 1000,
+        #    'astigmatism': 1000,
+        #    'resolution': 7
+        #}
+
+        #protCTFSel = self.newProtocol(XmippProtCTFSelection, **kwargs)
+        #protCTFSel.inputCTFs.set(protCTF.outputCTF)
+        #self.proj.launchProtocol(protCTFSel)
+
+
         kwargs = {
-            'maxDefocus': 28000,
-            'minDefocus': 1000,
-            'astigmatism': 1000,
-            'resolution': 7
-        }
-
-        protCTFSel = self.newProtocol(XmippProtCTFSelection, **kwargs)
-        protCTFSel.inputCTFs.set(protCTF.outputCTF)
-        self.proj.launchProtocol(protCTFSel)
-
-
-        kwargs = {}
+            'numberOfThreads': 5}
         protCTF_ref = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
         protCTF_ref.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF_ref)
@@ -148,19 +156,5 @@ class TestCtfStreaming(BaseTest):
             self.assertEqual(ctf._defocusU.get(), ctfRef._defocusU.get())
             self.assertEqual(ctf._defocusV.get(), ctfRef._defocusV.get())
             self.assertEqual(ctf._defocusRatio.get(), ctfRef._defocusRatio.get())
-
-
-        micSet = SetOfMicrographs(filename=protCTF._getPath(MIC_SQLITE))
-        micSet_ref = SetOfMicrographs(filename=protCTF_ref._getPath(MIC_SQLITE))
-
-        baseFn = protCTF._getPath(MIC_SQLITE)
-        self.assertTrue(os.path.isfile(baseFn))
-
-        for mic, micRef in zip(micSet, micSet_ref):
-            self.assertEqual(mic._xmipp_ctfCritMaxFreq.get(), micRef._xmipp_ctfCritMaxFreq.get())
-            self.assertEqual(mic.isEnabled(), micRef.isEnabled())
-            self.assertEqual(mic._defocusU.get(), micRef._defocusU.get())
-            self.assertEqual(mic._defocusV.get(), micRef._defocusV.get())
-            self.assertEqual(mic._defocusRatio.get(), micRef._defocusRatio.get())
 
 ####################################################################################################
