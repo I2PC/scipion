@@ -31,22 +31,27 @@ from os.path import join, exists, basename
 from pyworkflow.object import Integer
 from pyworkflow.utils.path import copyFile, createLink, makePath, moveFile
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
-from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam, PointerParam,
-                                        EnumParam, FloatParam, TextParam)
+from pyworkflow.protocol.params import (StringParam, BooleanParam, IntParam,
+                                        PointerParam, EnumParam, FloatParam,
+                                        TextParam)
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.convert import ImageHandler
 
-from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT, EWA_DISABLE, FSC_CALC, MEM_0,
-                       INTERPOLATION_1, REF_ALL, MOD_RECONSTRUCTION, MOD_RANDOM_SEARCH_REFINEMENT,
-                       MOD_SIMPLE_SEARCH_REFINEMENT, EWA_REFERENCE, EWA_SIMPLE_HAND, EWA_SIMPLE,
-                       FSC_3DR_ODD, FSC_3DR_EVEN, FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0, REF_ANGLES, REF_SHIFTS)
+from constants import (MOD2_SIMPLE_SEARCH_REFINEMENT, MOD_REFINEMENT,
+                       EWA_DISABLE, FSC_CALC, MEM_0, INTERPOLATION_1,
+                       REF_ALL, MOD_RECONSTRUCTION,
+                       MOD_RANDOM_SEARCH_REFINEMENT,
+                       MOD_SIMPLE_SEARCH_REFINEMENT, EWA_REFERENCE,
+                       EWA_SIMPLE_HAND, EWA_SIMPLE, FSC_3DR_ODD, FSC_3DR_EVEN,
+                       FSC_3DR_ALL, MEM_1, MEM_2, INTERPOLATION_0,
+                       REF_ANGLES, REF_SHIFTS)
 from grigoriefflab import FREALIGN, FREALIGN_PATH, FREALIGNMP_PATH
-
 
 
 class ProtFrealignBase(EMProtocol):
     """ This class contains the common functions for all Frealign protocols.
-    In subclasses there should be little changes about the steps to execute and several parameters
+    In subclasses there should be little changes about the steps to execute
+    and several parameters
     """
     IS_REFINE = True
 
@@ -475,7 +480,7 @@ class ProtFrealignBase(EMProtocol):
 
         form.addParallelSection(threads=4, mpi=1)
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         """Insert the steps to refine orientations and shifts of the SetOfParticles
         """
@@ -536,7 +541,7 @@ class ProtFrealignBase(EMProtocol):
                 depsRefine.append(refineId)
         return depsRefine
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def continueStep(self, iterN):
         """Create a symbolic link of a previous iteration from a previous run."""
         iterN = iterN - 1
@@ -625,10 +630,9 @@ class ProtFrealignBase(EMProtocol):
     def writeInitialAnglesStep(self):
         """This function write a .par file with all necessary information for a refinement"""
 
-        micIdList = self._getInputParticles().aggregate(['count'],'_micId',['_micId'])
         self.micIdMap={}
         counter = 0;
-        for mic in micIdList:
+        for mic in self._micList:
             self.micIdMap[mic['_micId']]=counter
             counter = counter +1
 
@@ -711,7 +715,7 @@ class ProtFrealignBase(EMProtocol):
     def createOutputStep(self):
         pass # should be implemented in subclasses
 
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
         imgSet = self._getInputParticles()
@@ -758,7 +762,7 @@ class ProtFrealignBase(EMProtocol):
         # ToDo: implement this method
         return self._summary()
 
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getParamsIteration(self, iterN):
         """ Defining the current iteration """
         imgSet = self._getInputParticles()
@@ -1124,7 +1128,7 @@ eot
 
     def _initFinalBlockParticles(self, block):
         """ return initial and final particle number for a determined block """
-        sortedMicIdList = sorted(self._getMicIdList(), key=lambda k: k['_micId'])
+        sortedMicIdList = sorted(self._micList, key=lambda k: k['_micId'])
         finalPart = 0
         particlesPerBlock = self._particlesPerBlock(self.numberOfBlocks, sortedMicIdList)
         for i in range(block):
@@ -1190,8 +1194,10 @@ eot
         acquisition = img.getAcquisition()
         mag = acquisition.getMagnification()
 
-        filePar.write("%(counter)7d %(psi)7.2f %(theta)7.2f %(phi)7.2f %(shiftX)9.2f %(shiftY)9.2f"
-                      " %(mag)7.0f %(objId)5d %(defU)8.1f %(defV)8.1f %(defAngle)7.2f  100.00      0000     0.5000   00.00   00.00\n" % locals())
+        filePar.write("%(counter)7d %(psi)7.2f %(theta)7.2f %(phi)7.2f "
+                      "%(shiftX)9.2f %(shiftY)9.2f %(mag)7.0f %(objId)5d %("
+                      "defU)8.1f %(defV)8.1f %(defAngle)7.2f  100.00      0000"
+                      "     0.5000   00.00   00.00\n" % locals())
 
     def iterParticlesByMic(self):
         """ Iterate the particles ordered by micrograph """
@@ -1214,29 +1220,27 @@ eot
         imgHasmicId = imgSet.getFirstItem().hasMicId()
         if self._micList == [] and imgHasmicId:
             if imgSet.getFirstItem()._micId.hasValue():
-                self._micList = self._getInputParticles().aggregate(['count'],
-                                                                    '_micId',
-                                                                    ['_micId'])
+                self._micList = imgSet.aggregate(['count'], '_micId',['_micId'])
             else:
-                # Fixes problem when micId comes from the coordinate,
-                # but this case should be avoided. Review why the micIds are obtained
-                # from the coordinate and not from the particle if you reach this code.
-                micList = self._getInputParticles().aggregate(['count'],
-                                                              '_coordinate._micId',
-                                                              ['_coordinate._micId'])
+                # Fixes problem when micId comes from the coordinate, but this
+                # case should be avoided. Review why the micIds are obtained
+                # from the coordinate and not from the particle if you reach
+                # this code.
+                micList = imgSet.aggregate(['count'], '_coordinate._micId',
+                                           ['_coordinate._micId'])
 
                 self._micList = [{'count': d['count'],
-                                  '_micId': d['_coordinate._micId']} for d in micList]
+                                 '_micId': d['_coordinate._micId']} for d in
+                                 micList]
 
         elif not imgHasmicId:
-            self._micList = [{'count': self._getInputParticles().getSize(), '_micId': 0}]
-        return self._micList
+            self._micList = [{'count': imgSet.getSize(), '_micId': 0}]
 
     def _getMicCounter(self):
         # frealign need to have a numeric micId not longer than 5 digits
         micIdMap = {}
         counter = 0
-        for mic in self._getMicIdList():
+        for mic in self._micList:
             micIdMap[mic['_micId']] = counter
             counter = counter + 1
         return micIdMap
@@ -1252,6 +1256,7 @@ eot
 
     def _defNumberOfCPUs(self):
         self._micList = []
+        self._getMicIdList()
         cpus = max(self.numberOfMpi.get() - 1, self.numberOfThreads.get() - 1, 1)
-        numberOfMics = len(self._getMicIdList())
+        numberOfMics = len(self._micList)
         return min(cpus, numberOfMics)
