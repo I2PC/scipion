@@ -201,7 +201,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
   
         if (self.halfVolumes):
             if (self.isPremasked):
-                if (self.volumeRadiusHalf.get() is -1):
+                if (self.volumeRadiusHalf.get() == -1):
                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                     xdim = xdim*0.5
                 else:
@@ -211,7 +211,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 xdim = xdim*0.5
         else:
             if (self.isPremasked):
-                if (self.volumeRadius.get() is -1):
+                if (self.volumeRadius.get() == -1):
                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                     xdim = xdim*0.5
                 else:
