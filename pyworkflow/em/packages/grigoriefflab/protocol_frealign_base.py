@@ -602,7 +602,14 @@ class ProtFrealignBase(EMProtocol):
             # (as many threads as you have)
             micIdMap = self._getMicCounter()
             for i, img in self.iterParticlesByMic():
-                film = micIdMap[img.getMicId()]
+                if img.hasMicId():
+                    micId = img.getMicId()
+                elif img.hasCoordinate():
+                    micId = img.getCoordinate().getMicId()
+                else:
+                    micId = 0
+                
+                film = micIdMap[micId]
                 ctf = img.getCTF()
                 defocusU, defocusV, astig = ctf.getDefocusU(), ctf.getDefocusV(), ctf.getDefocusAngle()
                 partCounter = i + 1
