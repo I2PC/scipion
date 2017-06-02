@@ -66,6 +66,7 @@ class ProtMonitorISPyB(ProtMonitor):
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
         inputProtocols = self._getInputProtocols()
+
         monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),
                                monitorTime=100,
@@ -86,43 +87,57 @@ class MonitorISPyB(Monitor):
     def __init__(self, protocol, **kwargs):
         Monitor.__init__(self, **kwargs)
         self.protocol = protocol
-        self.allIds = OrderedDict()
+        self.allParams = OrderedDict()
         self.numberOfFrames = None
         self.imageGenerator = None
         self.visit = kwargs['visit']
         self.dbconf = kwargs['dbconf']
         self.project = kwargs['project']
-        self.inputProtocols = kwargs['inputProtocols']
+        self.inputProtocols = self._sortInputProtocols(kwargs['inputProtocols'])
         self.ispybDb = ISPyBdb(["prod", "dev", "test"][self.dbconf],
                                experimentParams={'visit': self.visit})
+    @staticmethod
+    def _sortInputProtocols(protList):
+        # we need sorted input protocols in order to process objects correctly
+        movieProts = []
+        alignProts = []
+        ctfProts   = []
+        for p in protList:
+            if isinstance(p, ProtImportMovies):
+                movieProts.append(p)
+            elif isinstance(p, ProtAlignMovies):
+                alignProts.append(p)
+            elif isinstance(p, ProtCTFMicrographs):
+                ctfProts.append(p)
+        sortedProts = movieProts + alignProts + ctfProts
+        return sortedProts
 
     def step(self):
         self.info("MonitorISPyB: only one step")
 
         prots = [self._getUpdatedProtocol(p) for p in self.inputProtocols]
-        allParams = OrderedDict()
-        finished = []
+        finished = [] # store True if protocol not running
+        updateIds = [] # Store obj ids that have changes
 
         for prot in prots:
             self.info("protocol: %s" % prot.getRunName())
             if isinstance(prot, ProtImportMovies) and hasattr(prot, 'outputMovies'):
-                self.create_movie_params(prot, allParams)
+                self.create_movie_params(prot, updateIds)
             elif isinstance(prot, ProtAlignMovies) and hasattr(prot, 'outputMicrographs'):
-                self.update_align_params(prot, allParams)
+                self.update_align_params(prot, updateIds)
             elif isinstance(prot, ProtCTFMicrographs) and hasattr(prot, 'outputCTF'):
-                self.update_ctf_params(prot, allParams)
+                self.update_ctf_params(prot, updateIds)
 
-            protStatus = prot.getStatus()
-            finished.append(protStatus != STATUS_RUNNING)
+            finished.append(prot.getStatus() != STATUS_RUNNING)
 
-        for itemId, params in allParams.iteritems():
+        for itemId in set(updateIds):
             dcParams = self.ispybDb.get_data_collection_params()
-            dcParams.update(params)
+            dcParams.update(self.allParams[itemId])
             ispybId = self.ispybDb.update_data_collection(dcParams)
             self.info("item id: %s" % str(itemId))
             self.info("ispyb id: %s" % str(ispybId))
-            # Use -1 as a trick when ispyb is not really used and id is None
-            self.allIds[itemId] = ispybId or -1
+            # Use -1 as a trick when ISPyB is not really used and id is None
+            self.allParams[itemId]['id'] = ispybId or -1
 
         if all(finished):
             self.info("All finished, closing ISPyBDb connection")
@@ -147,9 +162,12 @@ class MonitorISPyB(Monitor):
         else:
             return self.protocol._getExtraPath()
 
-    def create_movie_params(self, prot, allParams):
+    def create_movie_params(self, prot, updateIds):
 
         for movie in self.iter_updated_set(prot.outputMovies):
+            movieId = movie.getObjId()
+            if movieId in self.allParams:  # this movie has been processed, skip
+                continue
             movieFn = movie.getFileName()
             if self.numberOfFrames is None:
                 self.numberOfFrames = movie.getNumberOfFrames()
@@ -158,39 +176,48 @@ class MonitorISPyB(Monitor):
                                                      images_path,
                                                      smallThumb=512)
 
-            movieId = movie.getObjId()
-
-            allParams[movieId] = {
-                'id': self.allIds.get(movieId, None),
+            self.allParams[movieId] = {
                 'imgdir': dirname(movieFn),
                 'imgprefix': pwutils.removeBaseExt(movieFn),
                 'imgsuffix': pwutils.getExt(movieFn),
                 'file_template': movieFn,
                 'n_images': self.numberOfFrames
              }
+            updateIds.append(movieId)
 
-
-    def update_align_params(self, prot, allParams):
+    def update_align_params(self, prot, updateIds):
         for mic in self.iter_updated_set(prot.outputMicrographs):
-            micFn = mic.getFileName()
-            renderable_image = self.imageGenerator.generate_image(micFn, micFn)
+            micId = mic.getObjId()
+            if self.allParams.get(micId, None) is not None:
+                if 'comments' in self.allParams[micId]:  # skip if we already have align info
+                    continue
+                micFn = mic.getFileName()
+                renderable_image = self.imageGenerator.generate_image(micFn, micFn)
 
-            allParams[mic.getObjId()].update({
-                'comments': 'aligned',
-                'xtal_snapshot1':renderable_image
-            })
+                self.allParams[micId].update({
+                    'comments': 'aligned',
+                    'xtal_snapshot1':renderable_image
+                })
+                print('%d has new align info' % micId)
+                updateIds.append(micId)
 
-    def update_ctf_params(self, prot, allParams):
+    def update_ctf_params(self, prot, updateIds):
         for ctf in self.iter_updated_set(prot.outputCTF):
-            micFn = ctf.getMicrograph().getFileName()
-            psdName = pwutils.replaceBaseExt(micFn, 'psd.png')
-            psdFn = ctf.getPsdFile()
-            psdPng = self.imageGenerator.generate_image(psdFn, psdName)
-            allParams[ctf.getObjId()].update({
-            'min_defocus': ctf.getDefocusU(),
-            'max_defocus': ctf.getDefocusV(),
-            'amount_astigmatism': ctf.getDefocusRatio()
-            })
+            micId = ctf.getObjId()
+            if self.allParams.get(micId, None) is not None:
+                if 'min_defocus' in self.allParams[micId]:  # skip if we already have ctf info
+                    continue
+                micFn = ctf.getMicrograph().getFileName()
+                psdName = pwutils.replaceBaseExt(micFn, 'psd.png')
+                psdFn = ctf.getPsdFile()
+                psdPng = self.imageGenerator.generate_image(psdFn, psdName)
+                self.allParams[micId].update({
+                'min_defocus': ctf.getDefocusU(),
+                'max_defocus': ctf.getDefocusV(),
+                'amount_astigmatism': ctf.getDefocusRatio()
+                })
+                print('%d has new ctf info' % micId)
+                updateIds.append(micId)
 
 
 class ImageGenerator:
