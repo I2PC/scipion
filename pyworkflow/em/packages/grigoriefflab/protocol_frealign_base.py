@@ -1175,7 +1175,13 @@ eot
         return particlesPerBlock
 
     def writeAnglesLines(self, counter, img, filePar):
-        objId = self.micIdMap[img.getMicId()]
+        if img.hasMicId():
+            micId = img.getMicId()
+        elif img.hasCoordinate():
+            micId = img.getCoordinate().getMicId()
+        else:
+            micId = 0
+        objId = self.micIdMap[micId]
 
         # get alignment parameters for each particle
         from convert import geometryFromMatrix
