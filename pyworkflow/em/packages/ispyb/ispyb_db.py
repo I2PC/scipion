@@ -27,7 +27,6 @@
 # **************************************************************************
 
 import os
-import sys
 from collections import OrderedDict
 from datetime import datetime
 

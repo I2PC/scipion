@@ -37,7 +37,7 @@ from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
 from pyworkflow.protocol.constants import STATUS_RUNNING
-from ispyb_proxy import ISPyBdb
+from ispyb_db import ISPyBdb
 
 
 class ProtMonitorISPyB(ProtMonitor):
