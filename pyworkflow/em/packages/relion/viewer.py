@@ -275,10 +275,16 @@ Examples:
         """
         views = []
         
-        for it in self._iterations:
-            fn = self.protocol._getIterClasses(it)
+        if (self.viewIter == ITER_LAST and
+            getattr(self.protocol, 'outputClasses', None) is not None):
+            fn = self.protocol.outputClasses.getFileName()
             v = self.createScipionView(fn)
             views.append(v)
+        else:
+            for it in self._iterations:
+                fn = self.protocol._getIterClasses(it)
+                v = self.createScipionView(fn)
+                views.append(v)
         
         return views
     
