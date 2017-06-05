@@ -82,7 +82,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
                         label="Group Size",
                         help="The number of frames in each group at the "
                              "last step")
-        group.addParam('useAlignment', params.BooleanParam, default=None,
+        group.addParam('useAlignment', params.BooleanParam, default=True,
                        label="Use previous movie alignment to SUM frames?",
                        help="Input movies could have alignment information from"
                             "a previous protocol. If you select *Yes*, the "
