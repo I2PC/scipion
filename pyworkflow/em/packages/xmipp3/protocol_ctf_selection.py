@@ -32,6 +32,8 @@ import pyworkflow.em as em
 from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
 from pyworkflow.protocol.constants import (STATUS_NEW)
 
+import sys
+
 
 class XmippProtCTFSelection(em.ProtCTFMicrographs):
     """
@@ -163,7 +165,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                     micToAdd.setEnabled(True)
                 #By default each micrograph has the sampling rate used in the CTF find protocol
                 #We set the sampling rate to that from the original input set
-                micToAdd.setSamplingRate(self.micSetSampling)
+                micToAdd.setSamplingRate(ctf.getMicrograph().getSamplingRate()) #(self.micSetSampling) #AAJJ
                 micSet.append(micToAdd)
                 newCTF = True
 
@@ -174,21 +176,17 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _stepsCheck(self):
         #check if there are new CTFs
         ctfFn = self.inputCTFs.get().getFileName()
+        sys.stdout.flush()
         ctfSet = SetOfCTF(filename=ctfFn)
+        sys.stdout.flush()
         ctfSet.loadAllProperties()
         streamClosed = ctfSet.isStreamClosed()
         outputStep = self._getFirstJoinStep()
 
-        self.micSet = self.inputCTFs.get().getMicrographs()
-        ctfSet.setMicrographs(self.micSet)
-        self.micSetSampling =  self.micSet.getSamplingRate()
-
         #check if there are new ctfs and process them
         #return number of processed ctfs
         newCTF, ctfOutSet, microOutSet = self._checkNewCTFs(ctfSet)
-        #ctfOutSet.setMicrographs(self.micSet)
-        #ctfOutSet.getMicrographs().copyInfo(self.micSet)
-        microOutSet.copyInfo(self.micSet)
+        microOutSet.copyInfo(self.inputCTFs.get().getMicrographs()) #copyInfo(self.micSet) #AAJJ
 
         if newCTF:
             # Check if it is the first time we are registering CTF
