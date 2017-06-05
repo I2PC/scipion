@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
-# *              Amaya Jiménez (ajimenez@cnb.csic.es)
+# *              Amaya Jimenez (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -29,8 +29,7 @@ from convert import *
 from pyworkflow.em.packages.xmipp3.utils import isMdEmpty
 from pyworkflow.protocol.params import RelationParam
 
-#from pyworkflow.utils.path import acquireLock, releaseLock
-from filelock import FileLock
+from pyworkflow.utils.path import FileLock
 
 class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
     """ Protocol to estimate CTF on a set of micrographs using Xmipp. """
@@ -228,7 +227,6 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
     def createOutput(self):
         """ Check for already computed CTF and update the output set. """
         fnOut = self._getPath('ctfs.sqlite')
-        #fhLock = acquireLock(fnOut+".lock")
         with FileLock(fnOut):
 
             ctfDict = {}
@@ -267,7 +265,6 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
             self._defineCtfRelation(self.inputMicrographs.get(), ctfSet)
             self._computeDefocusRange(ctfSet)
 
-        #releaseLock(fhLock)
         for fnDone in toClean:
             cleanPath(fnDone)
 
@@ -275,6 +272,7 @@ class XmippProtCTFMicrographsStr(ProtCTFMicrographs):
     def createOutputStep(self):
         # Closing all the streams (input and output)
         ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
+        ctfSet.setMicrographs(self.inputMicrographs.get())
         micFn = self.inputMicrographs.get().getFileName()
         micSet = SetOfMicrographs(filename=micFn)
         micSet.close()
