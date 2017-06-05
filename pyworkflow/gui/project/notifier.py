@@ -39,14 +39,15 @@ class ProjectNotifier(object):
     """ Implement different types of notifications about a given
     project. Currently, the protocols in a workflow will be sent.
     """
+
     def __init__(self, project):
         self.project = project
 
     def _getUuidFileName(self):
         return self.project.getLogPath("uuid.log")
 
-    def _getDataFileName(self):
-        return self.project.getLogPath("data.log")
+    def _getDataFileName(self, fileName="data.log"):
+        return self.project.getLogPath(fileName)
 
     def _getUuid(self):
         # Load (or create if not exits) a file
@@ -116,13 +117,19 @@ class ProjectNotifier(object):
             #print "No change: Do not send new data"
             return
         else:
-            with open(self._getDataFileName(),'w') as f:
+            # For compatibility with version 1.0 check 
+            # if Log directory exists. If it does not 
+            # create it
+            #TODO REMOVE this check in scipion 1.3
+            dataFile = self._getDataFileName()
+            pwutils.makeFilePath(dataFile) # create the folder of the file path if not exists
+            with open(dataFile,'w') as f:
                 f.write(projectWorfklow)
             #print "change send new data"
         dataDict = {'project_uuid': self._getUuid(),
                     'project_workflow': projectWorfklow}
 
-        urlName = os.environ.get('SCIPION_NOTIFY_URL', '').strip()
+        urlName = os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
         urlName += "addOrUpdateWorkflow/"
         t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
         t.start() # will execute function in a separate thread

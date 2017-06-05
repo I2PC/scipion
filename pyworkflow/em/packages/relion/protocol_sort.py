@@ -74,40 +74,54 @@ class ProtRelionSortParticles(ProtParticles):
 
         form.addParam('maskDiameterA', IntParam, default=-1,
                       label='Particle mask diameter (A)',
-                      help='The experimental images will be masked with a soft circular mask '
-                           'with this <diameter>. '
-                           'Make sure this diameter is not set too small because that may mask '
-                           'away part of the signal! If set to a value larger than the image '
-                           'size no masking will be performed.\n\n'
-                           'The same diameter will also be used for a spherical mask of the '
-                           'reference structures if no user-provided mask is specified.')
+                      help='The experimental images will be masked with a '
+                           'soft circular mask with this <diameter>. Make '
+                           'sure this diameter is not set too small because '
+                           'that may mask away part of the signal! If set to '
+                           'a value larger than the image  size no masking '
+                           'will be performed.\n\n'
+                           'The same diameter will also be used for a '
+                           'spherical mask of the reference structures if no '
+                           'user-provided mask is specified.')
         form.addParam('doLowPass', IntParam, default=-1,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Low pass filter references to (A):',
-                      help='Lowpass filter in Angstroms for the references (prevent Einstein-from-noise!)')
-        form.addParam('doInvert', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+                      help='Lowpass filter in Angstroms for the references '
+                           '(prevent Einstein-from-noise!)')
+        form.addParam('doInvert', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Invert contrast of references?',
-                      help='Density in particles is inverted compared to the density in references')
-        form.addParam('doCTF', BooleanParam, default=False, expertLevel=LEVEL_ADVANCED,
+                      help='Density in particles is inverted compared to the '
+                           'density in references')
+        form.addParam('doCTF', BooleanParam, default=False,
+                      expertLevel=LEVEL_ADVANCED,
                       label='Do CTF-correction?',
-                      help='If set to Yes, CTFs will be corrected inside the MAP refinement. '
-                           'The resulting algorithm intrinsically implements the optimal linear, '
-                           'or Wiener filter. Note that input particles should contains CTF parameters.')
+                      help='If set to Yes, CTFs will be corrected inside the '
+                           'MAP refinement.  The resulting algorithm '
+                           'intrinsically implements the optimal linear,  '
+                           'or Wiener filter. Note that input particles '
+                           'should contains CTF parameters.')
         form.addParam('ignoreCTFUntilFirstPeak', BooleanParam, default=False,
                       expertLevel=LEVEL_ADVANCED, condition='doCTF',
                       label='Ignore CTFs until their first peak?',
-                      help='If set to Yes, then CTF-amplitude correction will only be performed from the '
-                           'first peak of each CTF onward. This can be useful if the CTF model is '
-                           'inadequate at the lowest resolution. Still, in general using higher '
-                           'amplitude contrast on the CTFs (e.g. 10-20%) often yields better results. '
-                           'Therefore, this option is not generally recommended.')
+                      help='If set to Yes, then CTF-amplitude correction will '
+                           'only be performed from the first peak of each CTF '
+                           'onward. This can be useful if the CTF model is '
+                           'inadequate at the lowest resolution. Still, in '
+                           'general using higher amplitude contrast on the '
+                           'CTFs (e.g. 10-20%) often yields better results. '
+                           'Therefore, this option is not generally '
+                           'recommended.')
         form.addParam('minZ', FloatParam, default=0, expertLevel=LEVEL_ADVANCED,
                       label='Min Z-value?',
-                      help='Minimum Z-value to count in the sorting of outliers')
-        form.addParam('extraParams', StringParam, default='', expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help='In this box command-line arguments may be provided that '
-                           'are not generated by the GUI. This may be useful for testing '
-                           'developmental options and/or expert use of the program, e.g: \n'
+                      help='Minimum Z-value to count in the sorting of '
+                           'outliers')
+        form.addParam('extraParams', StringParam, default='',
+                      expertLevel=LEVEL_ADVANCED, label='Additional parameters',
+                      help='In this box command-line arguments may be '
+                           'provided that are not generated by the GUI. This '
+                           'may be useful for testing  developmental options '
+                           'and/or expert use of the program, e.g: \n'
                            '--verb 1\n')
 
         form.addParallelSection(threads=0, mpi=1)
@@ -279,6 +293,7 @@ class ProtRelionSortParticles(ProtParticles):
             return self.inputSet.get()
 
     def _setArgs(self, args):
+        from pyworkflow.em.packages.relion.convert import getVersion
         particles = self._sampleParticles()
 
         if self.maskDiameterA <= 0:
@@ -289,9 +304,14 @@ class ProtRelionSortParticles(ProtParticles):
         args.update({'--i': self._getFileName('input_particles'),
                      '--particle_diameter': maskDiameter,
                      '--angpix': particles.getSamplingRate(),
-                     '--min_z': self.minZ.get(),
-                     '--o': 'sorted'
+                     '--min_z': self.minZ.get()
                      })
+        
+        if getVersion() == "2.0":
+            args['--o'] = self._getFileName('output_star')
+        else:
+            args['--o'] = 'sorted'
+            
         #if inputReferences is a volume, convert it to mrc here
         if self.isInputAutoRefine():
             args['--ref'] = self._getFileName('input_refvol')
@@ -315,8 +335,15 @@ class ProtRelionSortParticles(ProtParticles):
 
     def _postProcessImageRow(self, img, imgRow):
         if self.classDict:
-            classId = img.getClassId() or imgRow.getValue(md.RLN_PARTICLE_CLASS)
-            newClassId = self.classDict[classId]
+            classId = img.getClassId()
+
+            if classId is not None:
+                if not classId in self.classDict:
+                    raise Exception("Class Id %s from particle %s is not found"
+                                    % (classId, img.getObjId()))
+                newClassId = self.classDict[classId]
+            else:
+                newClassId = imgRow.getValue(md.RLN_PARTICLE_CLASS)
         else:
             newClassId = 1
 

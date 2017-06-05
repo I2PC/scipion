@@ -138,7 +138,23 @@ class BaseTest(unittest.TestCase):
                 item1.printAll()
                 item2.printAll()
             test.assertTrue(areEqual)
- 
+
+    def assertSetSize(self, object, size=None, msg=None):
+        """ Check if a pyworkflow Set is not None nor is empty"""
+        self.assertIsNotNone(object, msg)
+
+        if size is None:
+            # Test is not empty
+            self.assertNotEqual(object.getSize(), 0, msg)
+        else:
+            self.assertEqual(object.getSize(), size)
+
+    def assertIsNotEmpty(self, object, msg=None):
+        """ Check if the pworkflow object is not None nor is empty"""
+        self.assertIsNotNone(object, msg)
+
+        self.assertIsNotNone(object.get(), msg)
+
 def setupTestOutput(cls):
     """ Create the output folder for a give Test class. """
     cls.outputPath = join(TESTS_OUTPUT, cls.__name__)

@@ -981,7 +981,7 @@ class TestXmippPdbConvert(TestXmippBase):
         self.assertAlmostEqual(protConvert.outputVolume.getDim()[0], 48, places=1, msg="wrong size")
 
 
-class TEstXmippValidateNonTilt(TestXmippBase):
+class TestXmippValidateNonTilt(TestXmippBase):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)

@@ -1,4 +1,4 @@
-# **************************************************************************
+    # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
@@ -185,200 +185,18 @@ class EditLabelDialog(dialog.Dialog):
             self.colorBox.config(bg=hexColor)
             self.colorVar.set(hexColor)
 
-# class TableDialogButtonDefinition:
-#     """
-#     TableDialog button definition: text, value, handler and icon
-#     """
-#
-#     def __init__(self, text, value, icon=None, handler= None):
-#         self.text = text
-#         self.value = value
-#         self.icon = icon
-#         self.handler = handler
-#
-#
-# class TableDialogConfiguration:
-#     """
-#     Configuration to be passed to a Table Dialog
-#      It holds button definitions (text, icons,..) and handlers
-#     """
-#     def __init__(self, unloadButtonsList=None, onOkHandler=None, selectmode='extended', title='Table', message='', onDoubleClickHandler = None):
-#
-#         self.unloadButtons = unloadButtonsList or []
-#         self.toolBarButtons = []
-#         self.onOkHandler = onOkHandler
-#         self.onDoubleClickHandler = onDoubleClickHandler
-#         self.selectmode = selectmode
-#         self.title = title
-#         self.message = message
-#
-#     def addUnloadButton(self, tableButton):
-#
-#         self.unloadButtons.append(tableButton)
-#
-#     def addToolBarButton(self, tableButton):
-#         self.toolBarButtons.append(tableButton)
-#
-#
-# def createDefaultTableDialogConfiguration(okHandler, doubleClickHandler=None):
-#
-#     conf = TableDialogConfiguration(onDoubleClickHandler=doubleClickHandler)
-#
-#     btnDefYes = TableDialogButtonDefinition('Select', RESULT_YES)
-#     conf.addUnloadButton(btnDefYes)
-#
-#     btnDefCancel = TableDialogButtonDefinition('Cancel', RESULT_CANCEL)
-#     conf.addUnloadButton(btnDefCancel)
-#
-#     conf.onOkHandler = okHandler or defaultOkHandler
-#
-#
-#     return conf
-#
-#
-# def defaultOkHandler(values):
-#
-#     if not values:
-#         return "Please select an element"
-#     else:
-#         return ''
-#
-#
-# def emptyOkHandler(values):
-#     return ''
-#
-#
-# class TableDialog(Dialog):
-#     """
-#     Dialog to show a table (It is implemented using a Tree widget.)
-#     it has 2 modes:
-#         'select': It will show the table and will allow you to select elements from the list (1 or more)
-#         'edit': In this case it will show buttons to perform GUI CUD actions (Create, Update and Delete).
-#     """
-#     EVENT_ON_DOUBLE_CLICK = 'onDoubleClick'
-#     IS_SELECTED = 'isSelected'
-#
-#     def __init__(self, parent, provider=None, conf=None):
-#         """ From kwargs:
-#                 message: message tooltip to show when browsing.
-#                 selected: the item that should be selected.
-#                 validateSelectionCallback: a callback function to validate selected items.
-#         """
-#         self.values = []
-#         self.provider = provider
-#
-#         if conf is None:
-#             conf = createDefaultTableDialogConfiguration()
-#
-#         self.conf = conf
-#         self._selectmode = self.conf.selectmode
-#         self.message = conf.message
-#         Dialog.__init__(self, parent, conf.title,
-#                         buttons=self._getUnloadButtons())
-#
-#
-#     def _getUnloadButtons(self):
-#
-#         buttons = []
-#
-#         for buttonDef in self.conf.unloadButtons:
-#
-#             buttons.append((buttonDef.text, buttonDef.value))
-#
-#         return buttons
-#
-#     def _createButton(self, frame, text, buttonId):
-#         icon = self.icons[buttonId]
-#
-#         # Get the handler
-#         handler = self._getHandler(buttonId)
-#
-#         return tk.Button(frame, text=text, image=self.getImage(icon), compound=tk.LEFT,
-#                          command=handler)
-#
-#     def _getHandler(self, buttonId):
-#
-#         return lambda: self._handleResult(buttonId)
-#
-#     def body(self, bodyFrame):
-#         bodyFrame.config(bg='white')
-#         gui.configureWeigths(bodyFrame)
-#
-#         # Create the table (Tree widget)
-#         self._createTree(bodyFrame)
-#
-#         # Add the message
-#         self.addMessage(bodyFrame)
-#
-#         #Add a tool bar
-#         self.addToolbar(bodyFrame)
-#
-#         # Set the focus
-#         self.initial_focus = self.tree
-#
-#     def addMessage(self, bodyFrame):
-#         if self.message:
-#             label = tk.Label(bodyFrame, text=self.message, bg='white',
-#                              image=self.getImage(Icon.LIGHTBULB), compound=tk.LEFT)
-#             label.grid(row=2, column=0, sticky='nw', padx=5, pady=5)
-#
-#     def addToolbar(self, bodyFrame):
-#
-#         if self.conf.toolBarButtons:
-#
-#             # Create the Action Buttons TOOLBAR
-#             toolbar = tk.Frame(self, bg='white')
-#             toolbar.grid(row=2, column=0, sticky='nw')
-#             gui.configureWeigths(toolbar)
-#             innerToolbar = tk.Frame(toolbar, bg='white')
-#             innerToolbar.grid(row=0, column=0, sticky='sw')
-#
-#             def addToolbarButton(tableButton):
-#                 btn = tk.Label(innerToolbar, text=tableButton.text,
-#                                image=self.getImage(tableButton.icon or None),
-#                                compound=tk.LEFT, cursor='hand2', bg='white')
-#                 btn.bind('<Button-1>', lambda e: self._toolbarButtonHandler(tableButton.value))
-#                 return btn
-#
-#             index = 1
-#             # For each toolbar button
-#             for tbButton in self.conf.toolBarButtons:
-#
-#
-#                 button = addToolbarButton(tbButton)
-#                 button.grid(row=0, column=index, sticky='ns')
-#                 index += 1
-#
-#     def _toolbarButtonHandler(self, value):
-#
-#         handler = self._getToolBarHandlerByValue(value)
-#
-#         if handler is not None:
-#             handler(self)
-#
-#     def _getToolBarHandlerByValue(self, value):
-#
-#         for button in self.conf.toolBarButtons:
-#             if button.value == value:
-#                 return button.handler
-#
-#     def _createTree(self, parent):
-#         self.tree = BoundTree(parent, self.provider, selectmode=self._selectmode)
-#
-#     def apply(self):
-#         self.values = self.tree.getSelectedObjects()
-#
-#     def validate(self):
-#         self.apply()  # load self.values with selected items
-#         err = ''
-#
-#         if self.conf.onOkHandler:
-#             err = self.conf.onOkHandler(self.values)
-#
-#         if err:
-#             showError("Validation error", err, self)
-#             return False
-#
-#         return True
+    def validate(self):
+
+        validationMsg = None
+
+        if len(self.textVar.get().strip()) == 0:
+            validationMsg = "Label name can't be empty.\n"
+
+        if validationMsg is not None:
+            dialog.showError("Validation error", validationMsg, self)
+            return False
+
+        return True
+
 
 

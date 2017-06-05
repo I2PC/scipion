@@ -30,6 +30,7 @@ import re
 from datetime import datetime
 import traceback
 import numpy as np
+from os.path import join
 
 
 def prettyDate(time=False):
@@ -543,19 +544,19 @@ class Environ(dict):
     BEGIN = 1
     END = 2
 
-    def getWithDeprecated(self, varName, deprecatedVarName, defaultValue=None):
-        """ Get a variable environment, and use a second name as a backup for
-        deprecated names"""
+    def getFirst(self, keys, mandatory=False):
+        """ Return the value of the first key present in the environment.
+        If none is found, returns the 'defaultValue' parameter.
+        """
+        for k in keys:
+            if k in self:
+                return self.get(k)
 
-        if self.has_key(varName):
-            return self.get(varName)
+        if mandatory:
+            print ("None of the variables: %s found in the Environment. "
+                   "Please check scipion.conf files." % (str(keys)))
 
-        elif self.has_key(deprecatedVarName):
-            # Use the deprecated variable. In the future this could be a list
-            print ('Environment variable %s not found. Trying with %s (DEPRECATED)' % (varName, deprecatedVarName))
-            return self.get(deprecatedVarName)
-        else:
-            return defaultValue
+        return None
 
     def set(self, varName, varValue, position=REPLACE):
         """ Modify the value for some variable.
@@ -575,14 +576,32 @@ class Environ(dict):
                 self[varName] = self[varName] + os.pathsep + varValue
         else:
             self[varName] = varValue
-                
             
     def update(self, valuesDict, position=REPLACE):
         """ Use set for each key, value pair in valuesDict. """
         for k, v in valuesDict.iteritems():
             self.set(k, v, position)
-            
-            
+
+    def addLibrary(self, libraryPath, position=BEGIN):
+        """ Adds a path to LD_LIBRARY_PATH at the requested position
+        if the provided paths exist. """
+
+        if libraryPath is None:
+            return
+
+        if existsVariablePaths(libraryPath):
+            self.update({'LD_LIBRARY_PATH': libraryPath}, position=position)
+        else:
+            print "Some paths do not exist in: % s" % libraryPath
+
+
+def existsVariablePaths(variableValue):
+    """ Check if the path (or paths) in variableValue exists.
+    Multiple paths are allowed if separated by os."""
+    return all(os.path.exists(p)
+               for p in variableValue.split(os.pathsep) if p.split())
+
+
 def environAdd(varName, newValue, valueFirst=False):
     """ Add a new value to some environ variable.
     If valueFirst is true, the new value will be at the beginning.
@@ -676,3 +695,19 @@ def formatExceptionInfo(level = 6):
 def printTraceBack():
     import traceback
     traceback.print_stack()
+
+
+def getEnvVariable(variableName, exceptionMsg=None):
+    """ Returns the value of an environment variable or raise an exception message.
+    Useful when adding variable to the config file and report accurate messages"""
+    value = os.getenv(variableName)
+
+    if exceptionMsg is None:
+        exceptionMsg = "Environment variable %s not found. Please check scipion configuration. Try running : scipion " \
+                       "config." % variableName
+
+    if value is None:
+        raise Exception(exceptionMsg)
+
+    else:
+        return value

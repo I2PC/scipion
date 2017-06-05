@@ -38,7 +38,7 @@ from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-
+from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
@@ -107,12 +107,22 @@ def getEnviron():
     """ Setup the environment variables needed to launch Relion. """
     
     environ = Environ(os.environ)
-    relPath = join(os.environ['RELION_HOME'], 'bin')
-    if not relPath in environ['PATH']:
-        environ.update({'PATH': join(os.environ['RELION_HOME'], 'bin'),
-                        'LD_LIBRARY_PATH': join(os.environ['RELION_HOME'], 'lib') + ":" + join(os.environ['RELION_HOME'], 'lib64'),
+
+    relionHome = os.environ['RELION_HOME']
+    
+    binPath = join(relionHome, 'bin')
+    libPath = join(relionHome, 'lib') + ":" + join(relionHome, 'lib64')
+    
+    if not binPath in environ['PATH']:
+        environ.update({'PATH': binPath,
+                        'LD_LIBRARY_PATH': libPath,
                         'SCIPION_MPI_FLAGS': os.environ.get('RELION_MPI_FLAGS', ''),
                         }, position=Environ.BEGIN)
+    
+    # Take Scipion CUDA library path
+    cudaLib = environ.getFirst(('RELION_CUDA_LIB', 'CUDA_LIB'))
+    environ.addLibrary(cudaLib)
+
     return environ
 
 
@@ -124,8 +134,12 @@ def getVersion():
     return ''
 
 
+def isVersion2():
+    return getVersion().startswith(V2_0)
+
+
 def getSupportedVersions():
-    return ['1.3', '1.4', '2.0']
+    return [V1_3, V1_4, V2_0]
 
 
 def locationToRelion(index, filename):
@@ -829,7 +843,12 @@ def readSetOfCoordinates(coordSet, coordFiles):
     micSet = coordSet.getMicrographs()
     
     for mic, coordFn in izip(micSet, coordFiles):
-        readCoordinates(mic, coordFn, coordSet)
+        if not os.path.exists(coordFn):
+            print "WARNING: Missing coordinates star file: ", coordFn
+        try:
+            readCoordinates(mic, coordFn, coordSet)
+        except Exception:
+            print "WARNING: Error reading coordinates star file: ", coordFn
         
 
 def readCoordinates(mic, fileName, coordsSet):
@@ -840,3 +859,97 @@ def readCoordinates(mic, fileName, coordsSet):
         coord.setMicrograph(mic)
         coordsSet.append(coord)
 
+
+def writeSetOfCoordinates(coordSet, outputDir):
+    pass
+
+
+def writeCoordinates(mic, fileName):
+    pass
+
+
+def openStar(fn, extraLabels=False):
+    # We are going to write metadata directy to file to do it faster
+    f = open(fn, 'w')
+    s = """
+data_
+
+loop_
+_rlnCoordinateX
+_rlnCoordinateY
+"""
+    if extraLabels:
+        s += "_rlnClassNumber\n"
+        s += "_rlnAutopickFigureOfMerit\n"
+        s += "_rlnAnglePsi\n"
+    f.write(s)
+    return f
+
+
+def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
+    """ Convert a SetOfCoordinates to Relion star files.
+    Params:
+        posDir: the output directory where to generate the files.
+        coordSet: the input SetOfCoordinates that will be converted.
+         getStarFileFunc: function object that receives the micrograph name
+            and return the coordinates star file (only the base filename).
+        scale: pass a value if the coordinates have a different scale.
+            (for example when extracting from micrographs with a different
+            pixel size than during picking)
+    """
+    boxSize = coordSet.getBoxSize() or 100
+
+    # Create a dictionary with the pos filenames for each micrograph
+    posDict = {}
+    for mic in coordSet.iterMicrographs():
+        starFile = getStarFileFunc(mic)
+        if starFile is not None:
+            posFn = os.path.basename(starFile)
+            posDict[mic.getObjId()] = join(posDir, posFn)
+
+    f = None
+    lastMicId = None
+    c = 0
+
+    extraLabels = coordSet.getFirstItem().hasAttribute('_rlnClassNumber')
+    doScale = abs(scale - 1) > 0.001
+
+    print "Scaling: %s, factor: %s" % (doScale, scale)
+
+    for coord in coordSet.iterItems(orderBy='_micId'):
+        micId = coord.getMicId()
+        if not micId in posDict:
+            print "micId %s not found" % micId
+            continue
+
+        if micId != lastMicId:
+            # we need to close previous opened file
+            if f:
+                f.close()
+                c = 0
+            f = openStar(posDict[micId], extraLabels)
+            lastMicId = micId
+        c += 1
+
+        if doScale:
+            x = coord.getX() * scale
+            y = coord.getY() * scale
+            print "coord: %s %s, new: %s %s" % (coord.getX(), coord.getY(),
+                                                x, y)
+        else:
+            x = coord.getX()
+            y = coord.getY()
+
+        if not extraLabels:
+            f.write("%d %d \n" % (x, y))
+        else:
+            f.write("%d %d %d %0.6f %0.6f\n"
+                    % (x, y,
+                       coord._rlnClassNumber,
+                       coord._rlnAutopickFigureOfMerit,
+                       coord._rlnAnglePsi))
+
+    if f:
+        f.close()
+
+    return posDict.values()

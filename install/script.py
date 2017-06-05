@@ -36,6 +36,20 @@ noOpencv = '--no-opencv' in sys.argv or not get('OPENCV')
 noScipy = '--no-scipy' in sys.argv or not get('SCIPY')
 
 
+#  *******************************
+#  *  PATHS
+#  *******************************
+# GET the real path where scipion is installed
+SCIPION = env._args[0]
+SCIPION = os.path.realpath(SCIPION)
+SCIPION = os.path.dirname(SCIPION)
+SCIPION = os.path.abspath(SCIPION)
+
+SW = SCIPION + '/software'
+SW_BIN = SW + '/bin'
+SW_LIB = SW + '/lib'
+SW_INC = SW + '/include'
+
 #  ************************************************************************
 #  *                                                                      *
 #  *                              Libraries                               *
@@ -206,7 +220,6 @@ nfft3 = env.addLibrary(
     tar='nfft-3.2.3.tgz',
     deps=[fftw3],
     default=False)
-
 
 #  ************************************************************************
 #  *                                                                      *
@@ -384,7 +397,7 @@ env.addPackage('unblur', version='1.0.2',
                tar='unblur_1.0.2.tgz')
 
 eman2_commands = [('./eman2-installer',
-                   'eman2.bashrc')]
+                   'eman2.*rc')]
 
 env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
@@ -401,6 +414,10 @@ relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
 
+env.addPackage('relion', version='1.3',
+               tar='relion-1.3.tgz',
+               commands=relion_commands)
+
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
                commands=relion_commands)
@@ -409,16 +426,24 @@ env.addPackage('relion', version='1.4f',
                tar='relion-1.4_float.tgz',
                commands=relion_commands)
 
-env.addPackage('relion', version='1.3',
-               tar='relion-1.3.tgz',
-               commands=relion_commands)
+# Define FFTW3 path variables
+relion_vars = [('FFTW_LIB', SW_LIB),
+               ('FFTW_INCLUDE', SW_INC)]
+
+relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
+                    ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
 env.addPackage('relion', version='2.0',
-               tar='relion-2.0.tgz',
-               commands=relion_commands)
+               tar='relion-2.0.4.tgz',
+               commands=relion2_commands,
+               updateCuda=True,
+               vars=relion_vars)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
+
+env.addPackage('localrec', version='1.2.0',
+               tar='localrec-1.2.0.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
@@ -431,14 +456,14 @@ env.addPackage('spider', version='21.13',
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
 
-env.addPackage('motioncorr', version='2.1.cuda.7.5',
-               tar='motioncorr_v2.1.cuda.7.5.tgz')
-
 env.addPackage('motioncor2', version='16.03.16',
                tar='motioncor2_03162016.tgz')
 
 env.addPackage('motioncor2', version='16.10.19',
                tar='motioncor2_10192016.tgz')
+
+env.addPackage('motioncor2', version='17.01.30',
+               tar='motioncor2_01302017.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
@@ -477,6 +502,6 @@ env.addPackage('Gautomatch', version='0.53',
                tar='Gautomatch_v0.53.tgz')
 
 env.addPackage('mag_distortion', version='1.0.1',
-               tar='mag_distortion_v1.0.1.tgz')
+               tar='mag_distortion-1.0.1.tgz')
 
 env.execute()
