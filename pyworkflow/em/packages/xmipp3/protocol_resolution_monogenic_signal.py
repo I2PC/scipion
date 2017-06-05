@@ -193,15 +193,15 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def resolutionMonogenicSignalStep(self):
 
-#         #Number of frequencies
-        if (self.stepSize.hasValue()):
+        # Number of frequencies
+        if self.stepSize.hasValue():
             Nfreqs = round((self.maxRes.get() - self.minRes.get())/self.stepSize.get())
         else:
             Nfreqs = 50
   
-        if (self.halfVolumes):
-            if (self.isPremasked):
-                if (self.volumeRadiusHalf.get() == -1):
+        if self.halfVolumes:
+            if self.isPremasked:
+                if self.volumeRadiusHalf == -1:
                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                     xdim = xdim*0.5
                 else:
@@ -210,8 +210,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                 xdim = xdim*0.5
         else:
-            if (self.isPremasked):
-                if (self.volumeRadius.get() == -1):
+            if self.isPremasked:
+                if self.volumeRadius == -1:
                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                     xdim = xdim*0.5
                 else:
