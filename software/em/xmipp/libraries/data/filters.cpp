@@ -3387,12 +3387,6 @@ void RetinexFilter::laplacian(const MultidimArray<double> &img,
 /** Apply the filter to an image or volume*/
 void RetinexFilter::apply(MultidimArray<double> &img)
 {
-    double mean, std;
-    if (mask==NULL)
-       img.computeAvgStdev(mean,std);
-    else
-       img.computeAvgStdev_within_binary_mask((*mask)(),mean,std);
-
     FourierTransformer fft;
     MultidimArray< std::complex<double> > fimg;
 
