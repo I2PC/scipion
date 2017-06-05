@@ -25,20 +25,24 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 	double phi = (1. + sqrt(5.)) / 2.;
 	Matrix1D<double> _5f, _5fp, _5fpp;
 	if (symmetry == pg_I1) {
-		_5f = vectorR3(phi, 0., +1.);
-		_5fp = vectorR3(0., -1., phi);
-		_5fpp = vectorR3(0., 1., phi);
+		_5f = vectorR3(0.        , -0.52573111,  0.85065081);
+		_5fp = vectorR3(0.        ,  0.52573111,  0.85065081);
+		_5fpp = vectorR3( -8.50650808e-01,  -5.55111512e-17,   5.25731112e-01);
 	} else if (symmetry == pg_I2) {
-		_5f = vectorR3(1., 0., phi);
-		_5fp = vectorR3(0., phi, +1.);
-		_5fpp = vectorR3(-1., 0., phi);
-
+		_5f = vectorR3(-0.52573111,  0.        ,  0.85065081);
+		_5fp = vectorR3(0.52573111,  0.        ,  0.85065081);
+		_5fpp = vectorR3(-5.55111512e-17,   8.50650808e-01,   5.25731112e-01);
+	} else if (symmetry == pg_I3) {
+		_5f = vectorR3(0.,  0., -1.);
+		_5fp = vectorR3(0.89442719,  0.        , -0.4472136);
+		_5fpp = vectorR3(0.2763932 , -0.85065081, -0.4472136);
+	} else if (symmetry == pg_I4) {
+		_5f = vectorR3(0., 0., 1.);
+		_5fp = vectorR3(0.89442719,  0.        ,  0.4472136);
+		_5fpp = vectorR3(0.2763932 ,  0.85065081,  0.4472136 );
 	} else
 		REPORT_ERROR(ERR_ARG_INCORRECT, "Symmetry not implemented");
 	unitCellPoint = _5f;
-	_5f.selfNormalize();
-	_5fp.selfNormalize();
-	_5fpp.selfNormalize();
 	icoSymmetry(_5f, _5fp, _5fpp, expanded);
 
 	#ifdef DEBUG
@@ -89,8 +93,7 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 	//vectors perpendicular to the unit cell edges
 	//the "positive version" are the same vectors
 	//but pointing in a direction that makes
-	//easier to know if a vector is enclosed by the poly-
-	//hedron that defines the unit cell
+	//easier to know if a vector is enclosed by the polyhedron that defines the unit cell
 	vectExpansion.push_back(expanded * vectorProduct(planeVector, _5f_to_2f));
 	vectExpansion.push_back(expanded * vectorProduct(planeVector, _2f_to_3f));
 	vectExpansion.push_back(expanded * vectorProduct(planeVector, _3f_to_2fp));
@@ -198,28 +201,13 @@ void UnitCell::maskUnitCell(ImageGeneric & in3Dmap,
 			maxZ = std::max(maxZ, minVector(2));
 			maxZ = std::max(maxZ, maxVector(2));
 		}
-		std::cout << "minX" << minX << std::endl;
-		std::cout << "minY" << minY << std::endl;
-		std::cout << "minZ" << minZ << std::endl;
-		std::cout << "maxX" << maxX << std::endl;
-		std::cout << "maxY" << maxY << std::endl;
-		std::cout << "maxZ" << maxZ << std::endl;
-		std::cout << "expandedUnitCellMin" << expandedUnitCellMin[0]
-				<< std::endl;
-		std::cout << "expandedUnitCellMax" << expandedUnitCellMax[0]
-				<< std::endl;
-		std::cout << "expandedUnitCellMin" << expandedUnitCellMin[1]
-				<< std::endl;
-		std::cout << "expandedUnitCellMax" << expandedUnitCellMax[1]
-				<< std::endl;
-		std::cout << "expandedUnitCellMin" << expandedUnitCellMin[2]
-				<< std::endl;
-		std::cout << "expandedUnitCellMax" << expandedUnitCellMax[2]
-				<< std::endl;
-		std::cout << "expandedUnitCellMin" << expandedUnitCellMin[3]
-				<< std::endl;
-		std::cout << "expandedUnitCellMax" << expandedUnitCellMax[3]
-				<< std::endl;
+		std::cout << "minX " << minX << std::endl;
+		std::cout << "minY " << minY << std::endl;
+		std::cout << "minZ " << minZ << std::endl;
+		std::cout << "maxX " << maxX << std::endl;
+		std::cout << "maxY " << maxY << std::endl;
+		std::cout << "maxZ " << maxZ << std::endl;
+
 #ifdef DEBUG
 		//draw real unitcell
 		{
@@ -476,7 +464,6 @@ void UnitCell::maskUnitCell(ImageGeneric & in3Dmap,
 						if (doIt)
 							{
 							A3D_ELEM(*imageMap2,k,i,j) = A3D_ELEM(*map, k, i, j);
-							std::cerr << "doIt";
 							}
 					}
 				}
