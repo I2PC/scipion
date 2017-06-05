@@ -31,13 +31,13 @@ from pyworkflow.em.packages.xmipp3 import getEnviron
 from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
 from pyworkflow.em.protocol import ProtImportVolumes
 from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell import XmippProtExtractUnit
-from pyworkflow.em.constants import SYM_I222r, SYM_I222
+from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, SYM_In25, SYM_In25r
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import NMA_MASK_THRE
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
-from icosahedron import Icosahedron, PHI
+from icosahedron import *
 
-def generate(kernel, mode='xmipp',suffix="_i2"):
+def generate(sym='2n5', mode='xmipp',suffix="_i2"):
 
     if mode=='xmipp':
         suffix += ".feat"
@@ -68,14 +68,14 @@ def generate(kernel, mode='xmipp',suffix="_i2"):
 .comment vertices
 .color red
 """)
-    icosahedron = Icosahedron(point=kernel)
+    icosahedron = Icosahedron(orientation=sym)
 
     #print 5fold points
-    for key, value in icosahedron.getVertices().iteritems():
+    for vertice in icosahedron.get_vertices():
         if mode=='xmipp':
-            f.write("sph  + 1. %.3f %.3f %.3f .15\n"%(key[0], key[1], key[2]) )
+            f.write("sph  + 1. %.3f %.3f %.3f .15\n"%(vertice[0], vertice[1], vertice[2]))
         else:
-            f.write('.sphere %.3f %.3f %.3f .15\n'% (key[0], key[1], key[2]))
+            f.write('.sphere %.3f %.3f %.3f .15\n'% (vertice[0], vertice[1], vertice[2]))
 
     #print 3fold points
     if mode == 'xmipp':
@@ -85,13 +85,10 @@ def generate(kernel, mode='xmipp',suffix="_i2"):
 .color yellow
 """)
 
-    for key, value in icosahedron.getFaces().iteritems():
-        x = (key[0][0] + key[1][0] + key[2][0])/3.
-        y = (key[0][1] + key[1][1] + key[2][1])/3.
-        z = (key[0][2] + key[1][2] + key[2][2])/3.
-
+    for _3fold in icosahedron.get_3foldAxis():
+        x,y,z = _3fold
         if mode=='xmipp':
-            f.write("sph  + 1. %.3f %.3f %.3f .10\n"%(x,y,z ))
+            f.write("sph  + 1. %.3f %.3f %.3f .10\n"%(x,y,z))
         else:
             f.write('.sphere %.3f %.3f %.3f .10\n'% (x,y,z))
 
@@ -102,30 +99,13 @@ def generate(kernel, mode='xmipp',suffix="_i2"):
         f.write(""".comment 2fold
 .color green
 """)
-    _2FoldList = []
-    def newPoint(newPoint):
-        for point in _2FoldList:
-            distance =  abs(point[0]-newPoint[0]) +\
-                        abs(point[1]-newPoint[1]) +\
-                        abs(point[2]-newPoint[2])
-            if distance < 0.01:
-                return False
-        return True
+    for _2fold in icosahedron.get_2foldAxis():
+        x, y, z = _2fold
 
-    for key, aux in icosahedron.getPairs().iteritems():
-        for value in aux:
-            point =  ( (key[0] + value[0]) / 2.,
-                       (key[1] + value[1]) / 2.,
-                       (key[2] + value[2]) / 2.)
-            if not newPoint(point):
-                continue
-            else:
-                _2FoldList.append(point)
-
-            if mode == 'xmipp':
-                f.write("sph  + 1. %.3f %.3f %.3f .09\n" % point)
-            else:
-                f.write('.sphere %.3f %.3f %.3f .09\n' % point)
+        if mode == 'xmipp':
+            f.write("sph  + 1. %.3f %.3f %.3f .09\n" %(x,y,z))
+        else:
+            f.write('.sphere %.3f %.3f %.3f .09\n' %(x,y,z))
 
     f.close()
     return filename
@@ -134,21 +114,23 @@ class TestProtModelBuilding(BaseTest):
     @classmethod
     def setUpClass(cls):
         setupTestProject(cls)
-        Kernel = {}
         cls.filename = {}
         cls.box = {}
+        cls.filename[SYM_I222] = generate(SCIPION_SYM_NAME[SYM_I222][1:] , 'xmipp', XMIPP_SYM_NAME[SYM_I222])
+        cls.box[SYM_I222] = (93,91,53)
+        cls.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r][1:] , 'xmipp', XMIPP_SYM_NAME[SYM_I222r])
+        cls.box[SYM_I222r] = (91,68,53)
+        cls.filename[SYM_In25] = generate(SCIPION_SYM_NAME[SYM_In25][1:], 'xmipp', XMIPP_SYM_NAME[SYM_In25])
+        cls.box[SYM_In25] = (67,93,116)
+        cls.filename[SYM_In25r] = generate(SCIPION_SYM_NAME[SYM_In25r][1:], 'xmipp', XMIPP_SYM_NAME[SYM_In25r])
+        cls.box[SYM_In25r] = (67,68,54)
 
-        Kernel[SYM_I222] = np.array([0, 1, PHI], dtype=np.float64)
-        cls.filename[SYM_I222] = generate(Kernel[SYM_I222] , 'xmipp',XMIPP_SYM_NAME[SYM_I222])
-        cls.box[SYM_I222] = (71,84,67)
-
-        Kernel[SYM_I222r] = np.array([-1, 0, PHI], dtype=np.float64)
-        cls.filename[SYM_I222r] = generate(Kernel[SYM_I222r] , 'xmipp',XMIPP_SYM_NAME[SYM_I222r])
-        cls.box[SYM_I222r] = (69,68,53)
 
     def test_extractunitCell(self):
         self.extractunitCell(SYM_I222)#no crowther 222
         self.extractunitCell(SYM_I222r)#crowther 222
+        self.extractunitCell(SYM_In25)
+        self.extractunitCell(SYM_In25r)
 
     def extractunitCell(self, sym):
 
