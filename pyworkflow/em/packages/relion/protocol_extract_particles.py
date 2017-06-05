@@ -330,6 +330,9 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                 if hasCTF:
                     p.setCTF(ctfModel)
                 p.setCoordinate(coord)
+                # Copy objId and micId from the coordinate
+                p.copyObjId(coord)
+                p.setMicId(coord.getMicId())
     
                 if doScale:
                     p.scaleCoordinate(scaleFactor)
