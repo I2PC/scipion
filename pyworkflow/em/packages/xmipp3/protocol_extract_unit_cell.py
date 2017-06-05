@@ -26,8 +26,8 @@
 
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam
-from pyworkflow.em.constants import SYM_I222, SYM_I222r
+from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam, IntParam
+from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, SYM_CYCLIC
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em import Volume, Transform
@@ -53,10 +53,16 @@ class XmippProtExtractUnit(EMProtocol):
         form.addParam('inputVolumes', PointerParam, label="Input Volume", important=True,
                       pointerClass='Volume',
                       help='This volume will be cropped')
-        form.addParam('symmetryGroup', EnumParam, choices=[XMIPP_SYM_NAME[SYM_I222] +
+        form.addParam('symmetryGroup', EnumParam, choices=[XMIPP_SYM_NAME[SYM_CYCLIC] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_CYCLIC] + ")",
+                                                           XMIPP_SYM_NAME[SYM_I222] +
                                                            " (" + SCIPION_SYM_NAME[SYM_I222] + ")",
                                                            XMIPP_SYM_NAME[SYM_I222r] +
-                                                           " (" + SCIPION_SYM_NAME[SYM_I222r] + ")"
+                                                           " (" + SCIPION_SYM_NAME[SYM_I222r] + ")",
+                                                           XMIPP_SYM_NAME[SYM_In25] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_In25] + ")",
+                                                           XMIPP_SYM_NAME[SYM_In25r] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_In25r] + ")"
                                                            ],
                       default=SYM_I222r,
                       label="Symmetry",
@@ -64,6 +70,14 @@ class XmippProtExtractUnit(EMProtocol):
                            " for a description of the symmetry groups format in Xmipp.\n"
                            "If no symmetry is present, use _c1_."
                       )
+        form.addParam('symmetryOrder', IntParam, default=1,
+                      condition='symmetryGroup==%d' % SYM_CYCLIC ,
+                      label='Symmetry Order',
+                      help='Order of cyclic symmetry.')
+        form.addParam('offset', FloatParam, default=0.,
+                      condition='symmetryGroup==%d' % SYM_CYCLIC ,
+                      label="offset", help="rotate unit cell around z-axis by offset degrees")
+
 #form.addParam('symmetry', TextParam, default='C1',
 #                      label='Point group symmetry:',
 #                      condition='not doContinue',
@@ -84,8 +98,6 @@ class XmippProtExtractUnit(EMProtocol):
                       label="Outer Radius (px)", help="outer Mask radius, if -1, the radius will be volume_size/2")
         form.addParam('expandFactor', FloatParam, default=0.,
                       label="Expand Factor", help="Increment cropped region by this factor")
-        form.addParam('offset', FloatParam, default=0.,
-                      label="offset", help="to be defined")
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
