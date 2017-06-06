@@ -31,7 +31,8 @@ from pyworkflow.protocol.constants import STATUS_FINISHED
 import pyworkflow.protocol.params as params
 import pyworkflow.em as em
 
-from convert import writeSetOfCoordinates, writeSetOfMicrographs, rowToParticle
+from convert import writeSetOfCoordinates, writeSetOfMicrographs, rowToParticle, \
+    isVersion2
 from protocol_base import ProtRelionBase
 
 
@@ -48,7 +49,11 @@ OTHER = 1
 class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'particles extraction'
-    
+
+    @classmethod
+    def isDisabled(cls):
+        return not isVersion2()
+
     def __init__(self, **kwargs):
         em.ProtExtractParticles.__init__(self, **kwargs)
 
@@ -324,6 +329,9 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
                 if hasCTF:
                     p.setCTF(ctfModel)
                 p.setCoordinate(coord)
+                # Copy objId and micId from the coordinate
+                p.copyObjId(coord)
+                p.setMicId(coord.getMicId())
     
                 if doScale:
                     p.scaleCoordinate(scaleFactor)
