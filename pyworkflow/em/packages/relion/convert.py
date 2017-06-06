@@ -146,7 +146,10 @@ def locationToRelion(index, filename):
     """ Convert an index and filename location
     to a string with @ as expected in Relion.
     """
-    return em.ImageHandler.locationToXmipp((index, filename))
+    if index != em.NO_INDEX:
+        return "%06d@%s" % (index, filename)
+    
+    return filename
 
 
 def getImageLocation(location):
@@ -311,6 +314,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
                           -> for xmipp implies alignment
     """
     is2D = alignType == em.ALIGN_2D
+    is3D = alignType == em.ALIGN_3D
     inverseTransform = alignType == em.ALIGN_PROJ
     matrix = alignment.getMatrix()
     shifts, angles = geometryFromMatrix(matrix, inverseTransform)
@@ -324,6 +328,8 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         flip = bool(numpy.linalg.det(matrix[0:2,0:2]) < 0)
         if flip:
             print "FLIP in 2D not implemented"
+    elif is3D:
+        raise Exception("3D alignment conversion for Relion not implemented.")
     else:
         alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Z, shifts[2])
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
@@ -337,6 +343,9 @@ def rowToAlignment(alignmentRow, alignType):
             otherwise matrix is 3D (3D volume alignment or projection)
     invTransform == True  -> for xmipp implies projection
     """
+    if alignType == em.ALIGN_3D:
+        raise Exception("3D alignment conversion for Relion not implemented.")
+
     is2D = alignType == em.ALIGN_2D
     inverseTransform = alignType == em.ALIGN_PROJ
     if alignmentRow.containsAny(ALIGNMENT_DICT):
@@ -660,28 +669,7 @@ def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
     mdCount.aggregate(mdAll, md.AGGR_COUNT, md.RLN_MLMODEL_GROUP_NAME, md.RLN_MLMODEL_GROUP_NAME, md.MDL_COUNT)
     print "number of particles per group: ", mdCount
 
-
-    # for objId in mdAll:
-    #     partDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
-    #     currDef = minDef + increment
-    #
-    #     if partDef <= currDef:
-    #         part = part + 1
-    #         mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-    #     else:
-    #         if part < 100:
-    #             increment = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId) - minDef
-    #             part = part + 1
-    #             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-    #         else:
-    #             part = 1
-    #             minDef = mdAll.getValue(md.RLN_CTF_DEFOCUSU, objId)
-    #             counter = counter + 1
-    #             increment = (maxDef - minDef) / (groups - counter)
-    #             mdAll.setValue(md.RLN_MLMODEL_GROUP_NAME, "ctfgroup_%05d" % counter, objId)
-    # mdAll.write(imgStar)
-    
-        
+       
 def prependToFileName(imgRow, prefixPath):
     """ Prepend some root name to imageRow filename. """
     index, imgPath = relionToLocation(imgRow.getValue(md.RLN_IMAGE_NAME))
@@ -825,6 +813,26 @@ def convertBinaryVol(vol, outputDir):
     else:
         fn = vol.getFileName()
     return fn
+
+
+def convertMask(img, outputDir):
+    """ Convert binary mask to a format read by Relion and truncate the
+    values between 0-1 values, due to Relion only support masks with this
+    values (0-1).
+    Params:
+        img: input image to be converted.
+        outputDir: where to put the converted file(s)
+    Return:
+        new file name of the mask.
+    """
+    
+    ih = em.ImageHandler()
+    imgFn = getImageLocation(img.getLocation())
+    newFn = join(outputDir, replaceBaseExt(imgFn, 'mrc'))
+    
+    ih.truncateMask(imgFn, newFn)
+    
+    return newFn
 
 
 def createItemMatrix(item, row, align):
