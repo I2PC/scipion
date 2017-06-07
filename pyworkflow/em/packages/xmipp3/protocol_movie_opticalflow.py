@@ -50,7 +50,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
     Wrapper protocol to Xmipp Movie Alignment by Optical Flow
     """
     _label = 'optical alignment'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
 
 
