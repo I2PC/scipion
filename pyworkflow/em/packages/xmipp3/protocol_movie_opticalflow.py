@@ -121,11 +121,12 @@ class XmippProtOFAlignment(ProtAlignMovies):
     def _processMovie(self, movie):
         inputMovies = self.inputMovies.get()
         
-        outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         if self.doApplyDoseFilter:
             outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
+            outMovieFn = self._getExtraPath(self._getOutputMovieWtName(movie))
         else:
             outMicFn = self._getExtraPath(self._getOutputMicName(movie))
+            outMovieFn = self._getExtraPath(self._getOutputMovieName(movie))
         
         aveMic = self._getFnInMovieFolder(movie, "uncorrected_mic.mrc")
         dark = inputMovies.getDark()
@@ -178,6 +179,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         if self.memory:
             args += ' --inmemory'
         
+        toDelete=[]
         if self.doApplyDoseFilter:
             pxSize = movie.getSamplingRate()
             vol = movie.getAcquisition().getVoltage()
@@ -190,9 +192,10 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 args += ' post'
             
             if self.doSaveUnweightedMic:
-                outUnwtMicFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_mic.mrc')
-                outUnwtMovieFn = self._getFnInMovieFolder(movie,self._getMovieRoot(movie) + '_unWt_movie.mrcs')            
+                outUnwtMicFn = self._getExtraPath(self._getOutputMicName(movie))
+                outUnwtMovieFn = self._getExtraPath(self._getOutputMovieName(movie))            
                 args += ' --oUnc %s %s' % (outUnwtMicFn, outUnwtMovieFn)
+                toDelete.append(outUnwtMovieFn)
             
         try:
             self.runJob(program, args)
@@ -220,6 +223,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
                 # we can remove it
                 if not self.doSaveAveMic:
                     pwutils.cleanPath(outMicFn)
+                for fn in toDelete:
+                    pwutils.cleanPath(fn)
             
             self._saveAlignmentPlots(movie)
 
