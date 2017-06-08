@@ -49,7 +49,7 @@ class XmippProtSolidAngles(ProtAnalysis3D):
     """
 
     _label = 'solid angles'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, *args, **kwargs):
         ProtAnalysis3D.__init__(self, *args, **kwargs)
