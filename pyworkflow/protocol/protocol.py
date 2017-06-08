@@ -298,7 +298,7 @@ class Protocol(Step):
     """
 
     # Version where protocol appeared first time
-    _version = "v1.0"
+    _lastUpdateVersion = pw.VERSION_1
 
     def __init__(self, **kwargs):
         Step.__init__(self, **kwargs)        
@@ -463,12 +463,12 @@ class Protocol(Step):
         return hasattr(cls, '_definition')
 
     @classmethod
-    def getVersion(cls):
-        return cls._version
+    def getLastUpdateVersion(cls):
+        return cls._lastUpdateVersion
 
     @classmethod
     def isNew(cls):
-        version = cls.getVersion()
+        version = cls.getLastUpdateVersion()
         return version not in pw.OLD_VERSIONS
 
     def getDefinition(self):
