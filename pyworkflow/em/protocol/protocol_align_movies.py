@@ -377,12 +377,6 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         return self._getMovieRoot(movie) + '_aligned_movie.mrcs'
 
-    def _getOutputMovieWtName(self, movie):
-        """ Returns the name of the output dose-weighted movie.
-        (relative to micFolder)
-        """
-        return self._getMovieRoot(movie) + '_aligned_movie_DW.mrcs'
-
     def _getOutputMicName(self, movie):
         """ Returns the name of the output micrograph
         (relative to micFolder)

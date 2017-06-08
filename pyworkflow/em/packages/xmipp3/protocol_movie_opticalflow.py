@@ -370,6 +370,13 @@ class XmippProtOFAlignment(ProtAlignMovies):
     
     def _createOutputWeightedMicrographs(self):
         return (self.doSaveAveMic and self.doApplyDoseFilter)
+    
+    def _getOutputMovieWtName(self, movie):
+        """ Returns the name of the output dose-weighted movie.
+        (relative to micFolder)
+        """
+        return self._getMovieRoot(movie) + '_aligned_movie_DW.mrcs'
+
 
 
 def showCartesianShiftsPlot(inputSet, itemId):
