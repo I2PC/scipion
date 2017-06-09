@@ -42,7 +42,7 @@ class ProtMagDistEst(ProtPreprocessMicrographs):
     grating
     """    
     _label = 'magnification distortion estimation'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **args):
         ProtPreprocessMicrographs.__init__(self, **args)

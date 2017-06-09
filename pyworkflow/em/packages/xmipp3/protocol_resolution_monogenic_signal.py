@@ -50,7 +50,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
     Given a map the protocol assigns local resolutions to each voxel of the map.
     """
     _label = 'local MonoRes'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)
@@ -193,15 +193,15 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def resolutionMonogenicSignalStep(self):
 
-#         #Number of frequencies
-        if (self.stepSize.hasValue()):
+        # Number of frequencies
+        if self.stepSize.hasValue():
             Nfreqs = round((self.maxRes.get() - self.minRes.get())/self.stepSize.get())
         else:
             Nfreqs = 50
   
-        if (self.halfVolumes):
-            if (self.isPremasked):
-                if (self.volumeRadiusHalf.get() is -1):
+        if self.halfVolumes:
+            if self.isPremasked:
+                if self.volumeRadiusHalf == -1:
                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                     xdim = xdim*0.5
                 else:
@@ -210,8 +210,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                 xdim = xdim*0.5
         else:
-            if (self.isPremasked):
-                if (self.volumeRadius.get() is -1):
+            if self.isPremasked:
+                if self.volumeRadius == -1:
                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                     xdim = xdim*0.5
                 else:

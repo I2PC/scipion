@@ -43,7 +43,7 @@ class ProtRelionSubtract(ProtOperateParticles):
     properly generate volume projections.
     """
     _label = 'subtract projection'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def _initialize(self):
         self._createFilenameTemplates()
