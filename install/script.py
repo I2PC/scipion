@@ -361,6 +361,11 @@ sklearn = env.addModule(
     default=False,
     deps=[scipy, numpy, cython])
 
+powerfit = env.addModule(
+    'powerfit',
+    tar='powerfit.tgz',
+    default=False,
+    deps=[scipy, numpy, fftw3])
 
 
 #  ************************************************************************
