@@ -28,7 +28,7 @@ _logo = None
 
 from bibtex import _bibtex
 from protocol_ethan_picking import ProtEthanPicker
-from wizard import DogPickerWizard
+# from wizard import DogPickerWizard    --> Not ready yet: uncomment when ready.
 
 
 _references = ['Kivioja2000']
