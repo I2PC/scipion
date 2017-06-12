@@ -256,7 +256,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
-            if self.resamplePix:  # ctffind v4.1.5
+            if self.resamplePix:  # ctffind >= v4.1.5
                 self._params['resamplePix'] = "yes"
             else:
                 self._params['resamplePix'] = "no"
@@ -294,7 +294,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
-            if self.resamplePix:  # ctffind v4.1.5
+            if self.resamplePix:  # ctffind >= v4.1.5
                 self._params['resamplePix'] = "yes"
             else:
                 self._params['resamplePix'] = "no"
@@ -335,7 +335,7 @@ eof
 %(maxDefocus)f
 %(step_focus)f"""
 
-        if getVersion('CTFFIND4') == '4.1.5':
+        if getVersion('CTFFIND4') in ['4.1.5', '4.1.8']:
             if self.findPhaseShift:
                 self._args += """
 no
@@ -402,7 +402,7 @@ eof
 
     def _summary(self):
         summary = em.ProtCTFMicrographs._summary(self)
-        if self.useCtffind4:
+        if self.useCtffind4 and getVersion('CTFFIND4') == '4.1.5':
             summary.append("NOTE: ctffind4.1.5 finishes correctly (all output is generated properly),"
                            " but returns an error code. Disregard error messages until this is fixed."
                            "http://grigoriefflab.janelia.org/node/5421")
