@@ -37,7 +37,7 @@ for emp in EMPACK_DIRS_CONVERT:
     print "Check if %s exists" % emp[RELEASE_ORI]
     if os.path.exists(emp[RELEASE_ORI]):
         print "Create symlink between %s and %s" % (emp[RELEASE_END], emp[RELEASE_ORI])
-        #os.symlink(emp[RELEASE_ORI], emp[RELEASE_END])
+        os.symlink(emp[RELEASE_ORI], emp[RELEASE_END])
 
 # Move to back Scipion home
 os.chdir("../..")
