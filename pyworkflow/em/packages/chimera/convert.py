@@ -34,7 +34,7 @@ import os
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
 from pyworkflow.em.viewer import getChimeraEnviron
-from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
+from pyworkflow.em.constants import SYM_CYCLIC, SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
 
 #
 chimeraPdbTemplateFileName= "scipionOut%04d.pdb"
@@ -42,6 +42,7 @@ chimeraMapTemplateFileName= "scipionOut%04d.mrc"
 chimeraScriptFileName = "chimeraScript.py"
 
 symMapperScipionchimera = {}
+symMapperScipionchimera[SYM_CYCLIC]="Cn"
 symMapperScipionchimera[SYM_I222]="222"
 symMapperScipionchimera[SYM_I222r]="222r"
 symMapperScipionchimera[SYM_In25]="n25"
