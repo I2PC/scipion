@@ -33,6 +33,7 @@ private:
 	//sampling rate
 	double sampling;
 	//vectors defining expansion direction
+	double expanded;
 	std::vector<Matrix1D<double> > vectExpansion;
 	// normal vector to the polyhedron that define a unit cell.
 	std::vector<Matrix1D<double> > planeVectors;
@@ -51,6 +52,18 @@ private:
 	                 const Matrix1D<double> & _5fp,
 	                 const Matrix1D<double> & _5fpp,
 	                 const double expanded);
+	//handle cyclic symmetry (Cn)
+	//input 3 five fold vertices that form a triangle
+	//the function fills the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
+	void cyclicSymmetry(const Matrix1D<double> & _centre,
+			            const Matrix1D<double> & _1f,
+			            const Matrix1D<double> & _1fp,
+			            const int order,
+			            const double expanded,
+			            const double offset);
+private:
+        //maxmimum/minimm zvalue
+        double _minZ, _maxZ;
 public:
 	/** set to zero everything that is not the unit cell */
 	void maskUnitCell(ImageGeneric & in3DDmap,
@@ -60,6 +73,11 @@ public:
 	/** unit auxiliary vectors */
 	UnitCell(String sym, double rmin, double rmax, double expanded,
 			double offset,double sampling);
+	/** process CN symmetry */
+	void doCyclic(int order=1);
+	/** process IN symmetry */
+	void doIcosahedral(int symmetry=pg_I1);
+
 };//end unitcell class
 
 #endif
