@@ -29,8 +29,14 @@ import os
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor
 import sqlite3 as lite
-import psutil
-import time, sys
+import getnifs
+try:
+   import psutil
+except ImportError:
+   print "Cannot import psutil module - this is needed for this application.";
+   print "Exiting..."
+   sys.exit();
+import sys, time
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
@@ -59,17 +65,20 @@ def errorWindow(tkParent, msg):
 def initGPU():
     nvmlInit()
 
+
 class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
     """
     _label = 'system_monitor'
     _version = VERSION_1_1
+    #get list with network interfaces
+    nifs = getnifs.get_network_interfaces()
+    nifsNameList = [nif.getName() for nif in nifs]
 
     def __init__(self, **kwargs):
         ProtMonitor.__init__(self, **kwargs)
         self.dataBase = 'log.sqlite'
         self.tableName = 'log'
-
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):    
@@ -101,6 +110,31 @@ class ProtMonitorSystem(ProtMonitor):
                           help='Providing a list of which GPUs '
                                '(0,1,2,3, etc). Default is monitor GPU 0 only')
 
+        group = form.addGroup('GPU')
+        group.addParam('doGpu', params.BooleanParam, default=False,
+                       label="Check GPU",
+                       help="Set to true if you want to monitor the GPU")
+        group.addParam('gpusToUse', params.StringParam, default='0',
+                          label='Which GPUs to use:', condition='doGpu',
+                          help='Providing a list of which GPUs '
+                               '(0,1,2,3, etc). Default is monitor GPU 0 only')
+
+        group = form.addGroup('NETWORK')
+        group.addParam('doNetwork', params.BooleanParam, default=False,
+                       label="Check Network",
+                       help="Set to true if you want to monitor the Network")
+        group.addParam('netInterfaces', params.EnumParam, choices=self.nifsNameList,
+                      default=1,#usually 0 is the loopback
+                      label="Interface", condition='doNetwork',
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
+                           " for a description of the symmetry groups format in Xmipp.\n"
+                           "If no symmetry is present, use _c1_."
+                      )
+
+        group = form.addGroup('Disk')
+        group.addParam('doDiskIO', params.BooleanParam, default=False,
+                       label="Check Disk IO",
+                       help="Set to true if you want to monitor the Disk Acces")
 
     #--------------------------- STEPS functions ------------------------------
 
@@ -113,7 +147,6 @@ class ProtMonitorSystem(ProtMonitor):
             prot = protPointer.get()
             prot.setProject(self.getProject())
             protocols.append(prot)
-
         sysMonitor = MonitorSystem(protocols,
                                    workingDir=self.workingDir.get(),
                                    samplingInterval=self.samplingInterval.get(),
@@ -124,6 +157,9 @@ class ProtMonitorSystem(ProtMonitor):
                                    memAlert=self.memAlert.get(),
                                    swapAlert=self.swapAlert.get(),
                                    doGpu=self.doGpu.get(),
+                                   doNetwork=self.doNetwork.get(),
+                                   doDiskIO=self.doDiskIO.get(),
+                                   nif=self.nifsNameList[self.netInterfaces.get()],
                                    gpusToUse = self.gpusToUse.get(),
                                     )
         return sysMonitor
@@ -170,6 +206,10 @@ class MonitorSystem(Monitor):
         self._dataBase = kwargs.get('dbName', SYSTEM_LOG_SQLITE)
         self._tableName = kwargs.get('tableName', 'log')
         self.doGpu = kwargs['doGpu']
+        self.doNetwork = kwargs['doNetwork']
+        self.doDiskIO = kwargs['doDiskIO']
+        self.samplingTime = 1. #seconds
+
         self.labelList=["cpu","mem","swap"]
         if self.doGpu:
             self.gpuLabelList=[]
@@ -184,6 +224,23 @@ class MonitorSystem(Monitor):
             self.labelList += self.gpuLabelList
         else:
             self.gpusToUse = None
+        if self.doNetwork:
+            self.nif = kwargs['nif']
+            self.netLabelList=[] # in the future we may display all the network interfaces
+            self.netLabelList.append("%s_send"%self.nif)
+            self.netLabelList.append("%s_recv"%self.nif)
+            self.labelList += self.netLabelList
+        else:
+            self.nif = None
+        if self.doDiskIO:
+            self.netLabelList=[] # in the future we may display all the network interfaces
+            self.netLabelList.append("disk_read")
+            self.netLabelList.append("disk_write")
+            self.labelList += self.netLabelList
+        else:
+            pass
+
+
         self.conn = lite.connect(os.path.join(self.workingDir, self._dataBase),
                                  isolation_level=None)
         self.cur = self.conn.cursor()
@@ -227,6 +284,31 @@ class MonitorSystem(Monitor):
                     msg = "Device %d -> %s not suported\n Remove device %d from FORM"%\
                           (i,nvmlDeviceGetName(handle),i)
                     errorWindow(None, msg)
+        if self.doNetwork:
+            try:
+                #measure a sort interval
+                pnic_before = psutil.net_io_counters(pernic=True)[self.nif]
+                time.sleep(self.samplingTime)# sec
+                pnic_after = psutil.net_io_counters(pernic=True)[self.nif]
+                bytes_sent = pnic_after.bytes_sent - pnic_before.bytes_sent
+                bytes_recv = pnic_after.bytes_recv - pnic_before.bytes_recv
+                valuesDict["%s_send"%self.nif] = bytes_sent * self.samplingTime / 1048576
+                valuesDict["%s_recv"%self.nif] = bytes_recv * self.samplingTime / 1048576
+            except:
+                msg = "cannot get information of network interface %s"%self.nif
+
+        if self.doDiskIO:
+            try:
+                #measure a sort interval
+                disk_before = psutil.disk_io_counters(perdisk=False)
+                time.sleep(self.samplingTime)#  sec
+                disk_after = psutil.disk_io_counters(perdisk=False)
+                bytes_read  = disk_after.read_bytes - disk_before.read_bytes
+                bytes_write = disk_after.write_bytes - disk_before.write_bytes
+                valuesDict["disk_read"]  = self.samplingTime * bytes_read   / 1048576.
+                valuesDict["disk_write"] = self.samplingTime * bytes_write  / 1048576.
+            except:
+                msg = "cannot get information of disk usage "
 
         if self.cpuAlert < 100 and cpu > self.cpuAlert:
             self.warning("CPU allocation =%f." % cpu)
@@ -251,6 +333,7 @@ class MonitorSystem(Monitor):
         #remove last comma
         sqlCommand = sqlCommand[:-2]
         sqlCommand += ");"
+
         sql = sqlCommand%valuesDict
 
         try:
@@ -270,7 +353,7 @@ class MonitorSystem(Monitor):
         for label in self.labelList:
             sqlCommand += "%s FLOAT,\n"%label
         #remove last comma and new line
-        sqlCommand = sqlCommand[:-3]
+        sqlCommand = sqlCommand[:-2]
         sqlCommand +=")"
         print("sqlCommand",sqlCommand)
         self.cur.execute(sqlCommand)
@@ -317,8 +400,14 @@ class ProtMonitorSystemViewer(Viewer):
     _label = 'system monitor'
     _targets = [ProtMonitorSystem]
 
+    def __init__(self, **args):
+        Viewer.__init__(self, **args)
+
     def _visualize(self, obj, **kwargs):
-        return [SystemMonitorPlotter(obj.createMonitor())]
+        return [SystemMonitorPlotter(obj.createMonitor(),
+                                     nifName=self.protocol.nifsNameList[self.protocol.netInterfaces.get()]
+                                     )
+                ]
 
 
 class SystemMonitorPlotter(EmPlotter):
@@ -326,7 +415,7 @@ class SystemMonitorPlotter(EmPlotter):
     _label = 'System Monitor'
     _targets = [ProtMonitorSystem]
 
-    def __init__(self, monitor):
+    def __init__(self, monitor, nifName=None):
         EmPlotter.__init__(self, windowTitle="system Monitor")
         self.monitor = monitor
         self.y2 = 0.
@@ -334,7 +423,7 @@ class SystemMonitorPlotter(EmPlotter):
         self.win = 250 # number of samples to be ploted
         self.step = 50 # self.win  will be modified in steps of this size
         self.createSubPlot(self._getTitle(),
-                           "time (hours)", "percentage (or Mb for IO)")
+                           "time (hours)", "percentage (or MB for IO or NetWork)")
         self.fig = self.getFigure()
         self.ax = self.getLastSubPlot()
         self.ax.margins(0.05)
@@ -345,10 +434,13 @@ class SystemMonitorPlotter(EmPlotter):
         self.init = True
         self.stop = False
 
+        self.nifName = nifName
+
+
     def _getTitle(self):
         return ("Use scrool wheel to change view window (win=%d)\n "
                 "S stops, C continues plotting. Toggle ON/OFF GPU_X by pressing X\n"
-                "c toggle ON/OFF cpu information" % self.win)
+                "c/n/d toggle ON-OFF cpu/network/disk usage\n" % self.win)
 
     def onscroll(self, event):
 
@@ -384,6 +476,7 @@ class SystemMonitorPlotter(EmPlotter):
                 self.color['gpuMem_%d'%number]=self.oldColor['gpuMem_%d'%number]
                 self.color['gpuUse_%d'%number]=self.oldColor['gpuUse_%d'%number]
                 self.color['gpuTem_%d'%number]=self.oldColor['gpuTem_%d'%number]
+
         def cpuKey(key):
             self.colorChanged=True
             if self.color['cpu'] != 'w':
@@ -398,10 +491,32 @@ class SystemMonitorPlotter(EmPlotter):
                 self.color['swap']=self.oldColor['swap']
                 self.color['mem']=self.oldColor['mem']
 
+        def netKey(key):
+            self.colorChanged=True
+            if self.color['%s_send'%self.nifName] != 'w':
+                self.oldColor['%s_send'%self.nifName] = self.color['%s_send'%self.nifName]
+                self.oldColor['%s_recv'%self.nifName] = self.color['%s_recv'%self.nifName]
+                self.color['%s_send'%self.nifName]="w"
+                self.color['%s_recv'%self.nifName]="w"
+            else:
+                self.color['%s_send'%self.nifName] = self.oldColor['%s_send'%self.nifName]
+                self.color['%s_recv'%self.nifName] = self.oldColor['%s_recv'%self.nifName]
+
+        def diskKey(key):
+            self.colorChanged=True
+            if self.color['disk_read'] != 'w':
+                self.oldColor['disk_read' ] = self.color['disk_read']
+                self.oldColor['disk_write'] = self.color['disk_write']
+                self.color['disk_read']="w"
+                self.color['disk_write']="w"
+            else:
+                self.color['disk_read'] = self.oldColor['disk_read']
+                self.color['disk_write'] = self.oldColor['disk_write']
+
         sys.stdout.flush()
         if event.key == 'S':
             self.stop = True
-            self.ax.set_title('Plot is Stopped. Press C to continue plotting')
+            self.ax.set_title('Plot has been Stopped. Press C to continue plotting')
         elif event.key == 'C':
             self.ax.set_title(self._getTitle())
             self.stop = False
@@ -411,6 +526,12 @@ class SystemMonitorPlotter(EmPlotter):
             self.animate()
         elif event.key == 'c':
             cpuKey(event.key)
+            self.animate()
+        elif event.key == 'n':
+            netKey(event.key)
+            self.animate()
+        elif event.key == 'd':
+            diskKey(event.key)
             self.animate()
         EmPlotter.show(self)
 
