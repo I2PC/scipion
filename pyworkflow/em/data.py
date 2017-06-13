@@ -375,7 +375,7 @@ class Image(EMObject):
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
         # _origin is an object of the class Transform
-        self._origin = None
+        self._origin = Transform()
         if location:
             self.setLocation(location)
 

@@ -30,6 +30,7 @@ TODO:
 2. Read/Write CCP4 specific files
 """
 
+import collections
 import os
 import pyworkflow.em as em
 import pyworkflow.utils as pwutils
@@ -142,8 +143,8 @@ class Ccp4Header():
 
     def __init__(self, fileName, readHeader= False):
         self._name   = fileName.replace(':mrc', '')# remove mrc ending
-        self._header = {}
-        self.chain = "< 3i i 3i 3i 3f 36i 3f"
+        self._header = collections.OrderedDict()
+        self.chain = "< 3i i 3i 3i 3f 144s 3f"
 
         if readHeader:
             self.readHeader()
@@ -152,9 +153,9 @@ class Ccp4Header():
         self._header['Xlength'] = self._header['NX'] * sampling
         self._header['Ylength'] = self._header['NY'] * sampling
         self._header['Zlength'] = self._header['NZ'] * sampling
-        self._header['samplingRateZ'] = sampling
 
-    def setOffset(self,  originMatrix):
+    def setOffset(self,  originTransform):
+        originMatrix = originTransform.getMatrix()
         #TODO: check matrix
         self._header['NCSTART'] = originMatrix[3][0]
         self._header['NRSTART'] = originMatrix[3][1]
@@ -175,7 +176,7 @@ class Ccp4Header():
         a = struct.unpack(self.chain, s)
 
         #fill dicionary
-        self._header['empty']=""
+        #self._header['empty']=""
         self._header['NC'] = a[0]
         self._header['NR'] = a[1]
         self._header['NS'] = a[2]
@@ -189,10 +190,10 @@ class Ccp4Header():
         self._header['Xlength'] = a[10]
         self._header['Ylength'] = a[11]
         self._header['Zlength'] = a[12]
-        self._header['originX'] = a[49]
-        self._header['originY'] = a[50]
-        self._header['originZ'] = a[51]
-        self._header['samplingRateZ'] = a[12]/a[9]
+        self._header['dummy1'] = a[13] # "< 3i i 3i 3i 3f 36s 3f"
+        self._header['originX'] = a[14]
+        self._header['originY'] = a[15]
+        self._header['originZ'] = a[16]
 
     def getHeader(self):
         return self._header
@@ -201,7 +202,6 @@ class Ccp4Header():
         self._header = newHeader
 
     def writeHeader(self):
-        pass
         ss=struct.Struct(self.chain)
         t=tuple(self._header.values())
         packed_data = ss.pack(*t)
