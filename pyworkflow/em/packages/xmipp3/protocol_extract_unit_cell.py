@@ -108,8 +108,13 @@ class XmippProtExtractUnit(EMProtocol):
     #--------------------------- STEPS functions --------------------------------------------
 
     def extractUnit(self):
+        sym = self.symmetryGroup.get()
+        if sym == SYM_CYCLIC:
+            sym = "%s%d"%(XMIPP_SYM_NAME[SYM_CYCLIC][:1],self.symmetryOrder)
+        elif sym >= SYM_I222 and sym <= SYM_In25r:
+            sym = XMIPP_SYM_NAME[self.symmetryGroup.get()]
         args = "-i %s -o %s" % (self.inputVolumes.get().getFileName(), self._getOutputVol())
-        args += " --unitcell %s "% XMIPP_SYM_NAME[self.symmetryGroup.get()]
+        args += " --unitcell %s "% sym
         args += " %f "% self.innerRadius.get()
         args += " %f "% self.outerRadius.get()
         args += " %f "% self.expandFactor.get()
