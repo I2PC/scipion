@@ -13,11 +13,11 @@
 	gpuErrchk(cudaGetLastError()); \
 	}
 
-// transpose output (note that the input has Ydim columns!!!)
-#define TRANSPOSE_GPU(d_source, d_dest, Xdim, Ydim) { \
+// transpose output (note that the desination has Ydim columns!!!)
+#define TRANSPOSE_GPU(d_dest, d_source, Xdim, Ydim) { \
 	block.x=floor(((Xdim)+(TILE_DIM-1))/TILE_DIM); block.y=floor(((Ydim)+(TILE_DIM-1))/TILE_DIM); \
 	thread.x=TILE_DIM; thread.y=BLOCK_ROWS; \
-	Ktranspose<<< block, thread >>>((d_source), (d_dest), (Xdim), (Ydim)); \
+	Ktranspose<<< block, thread >>>((d_dest), (d_source), (Xdim), (Ydim)); \
 	cudaThreadSynchronize(); \
 	gpuErrchk(cudaGetLastError()); \
 	}
@@ -94,15 +94,15 @@ void Kfill( T* a, T value, int Xdim, int Ydim){
 
 /****
  smooth1: first kernel of constructSmoothHistogramColumn/Row
-          if used for constructSmoothHistogramRow, rowH must be transposed
-          before calling the kernel, and smooth after calling it
-          Each thread computes a semicolumn
+          * if used for constructSmoothHistogramByRow, rowH (colrow) 
+            must be transposed before calling the kernel, and smooth 
+            after calling it
+	  * Each thread computes a semicolumn
 
-          For constructSmoothHistogramsByRow, the colrow must be first transposed
 ****/
 
 /*********** IT CAN BE OPTIMIZED ************/
-/*********** adding more threads in the Y dim ************/
+/*********** by adding more threads in the Y dim ************/
 __global__ void Ksmooth1(float *smooth, int *colrow, const float *listOfWeights, int width, int Xdim, int Ydim)
 {
    int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
@@ -137,10 +137,15 @@ __global__ void Ksmooth1(float *smooth, int *colrow, const float *listOfWeights,
 
 /****
  Ksmooth2: average of rows into the first row
-          There is a thread per column. A thread averages a whole column into the first element
-          A thread copies all the values of the first element into the rest of the elements of the column
+          * There is a thread per column. 
+            A thread averages a whole column into the first element
+
+            A thread copies all the values of the first element into 
+            the rest of the elements of the column
  	  (Not the best implementation but easy to code)
-          For constructSmoothHistogramsByCol, the smooth matrix must be first transposed
+
+          * For constructSmoothHistogramsByCol, 
+            the smooth matrix must be first transposed
 
 ****/
 /*********** IT CAN BE OPTIMIZED ************/
@@ -173,20 +178,25 @@ __global__ void KtransformGray(const int *Iframe, const int *colrowH, int *Ifram
 {
    int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
  
-   for (size_t y0=0; y0<Ydim; ++y0){
+   if (x<Xdim){
+	for (size_t y0=0; y0<Ydim; ++y0){
 	   int pixval = Iframe[x+y0*Xdim];
 		// upperbounds
-	   size_t y1;
+	   size_t y1, y2;
+	   y2=Ydim-1; // It fails if Ydim==1
    	   for (y1=0; y1<Ydim; ++y1){
-		if (colrowH[x+y1*Xdim]>pixval)
+		if (colrowH[x+y1*Xdim]>pixval){
+			y2=y1-1;
 			break;
+		}
 	   } 
-           if (y1==Ydim)
-		y1--;
-	__syncthreads();   
-	IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y1*Xdim];
-   }//end-for-y0	
+           if (y2<0)
+		y2=0;
 
+//	__syncthreads();   
+	   IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y2*Xdim];
+   	}//end-for-y0	
+   }//end-if-Xdim
 }
 
 
@@ -197,6 +207,10 @@ __global__ void KtransformGray(const int *Iframe, const int *colrowH, int *Ifram
 // each block has 32x8 threads 
 // IMPORTANT: The input has Xdim columns X Ydim rows
 //            The output has Ydim columns X Xdim rows
+//
+//	Optimization: move conditional outside the loop
+//
+ 
 template <typename T>
 __global__ void Ktranspose(T *odata, const T *idata, int Xdim, int Ydim)
 {
@@ -222,4 +236,62 @@ __shared__ float tile[TILE_DIM+1][TILE_DIM];
 }
 
 
+/***************************
+	KcomputeTVCols
+
+	Each block has 64x1 threads, but is linked to a 64x64 tile 
+							(TILE_DIM2xTILE_DIM2)
+	* Each thread deals with  two columns in a tile
+        * The column-wise partial accumulations are stored in shared memory
+        * Eventually, the block-wise partial accumulation is performed 
+	  by reduction
+	  The reduction assumes that the number of threads is multiple of 2	
+          Thus, the shared memory array is filled with zeros for
+          threads with idx outside the image
+	  The block-wise partial acc. is stored in global memory (d_avgTV)
+          The final reduction is perfomed in C
+	
+	* Note that shared memory is dynamic, so it is necessary to pass 
+          the size of partialACC using a third parameter in the kernal 
+          configuration: <<grid, block, size_of_partialACC_in_bytes>>Kcompute...
+
+	* Optimization: move conditional outside the loop
+*****************************/
+template <typename T>
+__global__ void KcomputeTVcolumns(T* array,  double* avgTV, int Xdim, int Ydim)
+{
+	extern __shared__ double partACC[];
+	
+	int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
+	int y = blockIdx.y*TILE_DIM2 + threadIdx.y;
+        int tileDim = blockDim.x;
+        
+	double retvalC=0;
+	if (x<Xdim-1){ //two consecutive conlumns are accessed
+		for (int j = 0; j < tileDim; ++j)
+			if (y+j<Ydim)
+		     		retvalC+=abs(array[(y+j)*Xdim + x]-array[(y+j)*Xdim +(x+1)]);
+		     	//	retvalC+=abs(((y+j)*Xdim + x)-((y+j)*Xdim +(x+1)));
+	}
+	partACC[threadIdx.x]=retvalC;
+/*	if (blockIdx.x==3 && blockIdx.y==3)
+		printf("retvalC=%f",retvalC);
+*/
+	__syncthreads();
+	
+	for (int st=tileDim/2; st>0; st>>=1){
+		if (threadIdx.x<st)
+		    partACC[threadIdx.x] += partACC[threadIdx.x+st];
+		__syncthreads();
+	}
+//	__syncthreads();
+
+	if (threadIdx.x==0){
+		avgTV[blockIdx.x+blockIdx.y*gridDim.x]=partACC[0];
+//		if (blockIdx.x==3 && blockIdx.y==3)
+//			printf("partACC=%f",partACC[0]);
+	}
+		
+	return;
+}
 
