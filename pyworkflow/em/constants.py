@@ -67,14 +67,14 @@ counter = 0
 SYM_CYCLIC  = counter # symmetry Cn around axis
 counter += 1
 #icosahedric IXXX
-SYM_I222r = counter # (crowther) 2-fold axes on x,y,z axes. With the positive z-axis
-              # pointing at the viewer, the front-most 5-fold vertices are in xz plane,
-              # and the front-most 3-fold axes are in the yz plane.
-counter += 1
 SYM_I222  = counter # (no crowther 222 and standard in heyman et al 2005 article).
               # 2-fold axes on x,y,z axes. With the positive z-axis pointing at
               # the viewer, the front-most 5-fold vertices are in yz plane,
               #  and the front-most 3-fold axes are in the xz plane.
+counter += 1
+SYM_I222r = counter # (crowther) 2-fold axes on x,y,z axes. With the positive z-axis
+              # pointing at the viewer, the front-most 5-fold vertices are in xz plane,
+              # and the front-most 3-fold axes are in the yz plane.
 counter += 1
 SYM_In25   = counter # '2-fold symmetry along y and 5-fold along z
 counter += 1
