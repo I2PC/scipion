@@ -148,9 +148,9 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 	expandedUnitCell.push_back(_1fp + vectExpansion[1]);
 	std::cout << "expandedUnitCell_2 " << expandedUnitCell[2] << std::endl;
 //vectors normal to faces of the expanded polyhedra
-	planeVectors.push_back((-1) * vp_0);
+	planeVectors.push_back((-1) * vp_0 - expandedUnitCell[0]);
 	std::cout << "planeVectors_0 " << planeVectors[0] << std::endl;
-	planeVectors.push_back((-1) * vp_1);
+	planeVectors.push_back((-1) * vp_1 - expandedUnitCell[0]);
 	std::cout << "planeVectors_1 " << planeVectors[1] << std::endl;
 #include "chimeraTesterC.txt" //draws all vectors using chimera
 }
