@@ -215,7 +215,7 @@ public:
 			rmin = getDoubleParam("--unitcell", 1);
 			rmax = getDoubleParam("--unitcell", 2);
 			expand = getDoubleParam("--unitcell", 3);
-			offset = getDoubleParam("--unitcell", 4);
+			offset = DEG2RAD(getDoubleParam("--unitcell", 4));
 			sampling = getDoubleParam("--unitcell", 5);
 			mode = UNITCELLMODE;
 		}
