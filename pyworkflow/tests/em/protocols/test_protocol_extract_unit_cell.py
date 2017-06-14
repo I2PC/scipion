@@ -37,6 +37,10 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import NMA_MASK_THRE
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
 from icosahedron import *
+from pyworkflow.em.packages.ccp4.convert import Ccp4Header
+from pyworkflow.em.data import Transform
+
+OFFSET = 22.5
 
 def generate_ico(sym, mode, f, ):
     icosahedron = Icosahedron(orientation=sym)
@@ -88,7 +92,15 @@ def generate_ico(sym, mode, f, ):
 
 def generate_cyclic(order, offset, mode, f, ):
     center = []
-    z_value = [-.45, 0, .45]
+    z_value = [-.45, 0]
+    if mode == 'xmipp':
+        f.write("cyl  +  1. 0 0 +.45 1.0 1.0 .2 0 0 0\n")
+        f.write("cyl  + -1. 0 0 +.45 0.8 0.8 .2 0 0 0\n")
+        f.write("cyl  +  1. 0 0 +.45 0.5 0.5 .2 0 0 0\n")
+        f.write("cyl  + -1. 0 0 +.45 0.5 0.5 .2 0 0 0\n")
+    else:
+        f.write('.cylinder 0 0 +.46 0 0 +.44 1 open\n')
+        f.write('.cylinder 0 0 +.46 0 0 +.44 .5 open\n')
     for z in z_value:
         x = 0.
         y = 0.
@@ -121,7 +133,7 @@ def generate_cyclic(order, offset, mode, f, ):
 
 
 def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
-
+    offset = math.radians(offset)
     symPreffix = sym[:1]
     symSuffix  = sym[1:]
     if mode=='xmipp':
@@ -182,6 +194,10 @@ class TestProtModelBuilding(BaseTest):
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
         self.box[SYM_CYCLIC] = (76,49,81)
         self.extractunitCell(SYM_CYCLIC)
+        self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
+                                             'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),OFFSET)
+        self.box[SYM_CYCLIC] = (68,68,81)
+        self.extractunitCell(SYM_CYCLIC, OFFSET)
 
     def test_extractunitCellIco(self):
         self.innerRadius = 37.
@@ -200,22 +216,30 @@ class TestProtModelBuilding(BaseTest):
         self.extractunitCell(SYM_In25)
         self.extractunitCell(SYM_In25r)
 
-    def extractunitCell(self, sym):
+    def extractunitCell(self, sym, offset=0):
 
         """ extract unit cell from icosahedral pahntom
             using xmipp_i2 symmetry
         """
         # create phantom (3D map)
-        _, outputFile = mkstemp(suffix=".vol")
+        _samplingRate = 1.34
+        _, outputFile = mkstemp(suffix=".mrc")
         command = "xmipp_phantom_create "
         args    = " -i %s"% self.filename[sym]
         args += " -o %s"%outputFile
         runJob(None, command, args,env=getEnviron())
+        ccp4header = Ccp4Header(outputFile, readHeader= True)
+        ccp4header.setSampling(_samplingRate)
+        x,y,z = ccp4header.getDims()
+        t=Transform()
+        t.setShifts(-x/2, -y/2, -z/2)
+        ccp4header.setOffset(t)
+        ccp4header.writeHeader()
 
         #import volume
         args = {'filesPath': outputFile,
                 'filesPattern': '',
-                'samplingRate': 1.34,
+                'samplingRate': _samplingRate,
                 'copyFiles': True,
                 }
         prot = self.newProtocol(ProtImportVolumes, **args)
@@ -229,7 +253,7 @@ class TestProtModelBuilding(BaseTest):
                 'innerRadius': self.innerRadius,
                 'outerRadius': self.outerRadius,
                 'expandFactor': .2,
-                'offset': 0.
+                'offset': offset
                 }
         prot = self.newProtocol(XmippProtExtractUnit, **args)
         prot.setObjLabel('extract unit cell')
