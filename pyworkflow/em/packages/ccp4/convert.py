@@ -166,6 +166,11 @@ class Ccp4Header():
                self._header['NRSTART'],\
                self._header['NSSTART']
 
+    def getDims(self):
+        return self._header['NC'],\
+               self._header['NR'],\
+               self._header['NS']
+
     def readHeader(self):
         #check file exists
 
