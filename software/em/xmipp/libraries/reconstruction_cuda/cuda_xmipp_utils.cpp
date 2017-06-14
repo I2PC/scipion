@@ -5,6 +5,11 @@
 #include <cufft.h>
 #include <cuComplex.h>
 
+#include <thrust/extrema.h>
+#include <thrust/device_ptr.h>
+
+#define PI 3.14159265
+
 struct ioTime *mytimes;
 
 void gpuMalloc(void** d_data, size_t Nbytes)
@@ -17,6 +22,27 @@ void gpuFree(void* d_data)
 	gpuErrchk(cudaFree(d_data));
 }
 
+
+void initializeIdentity(float* d_data, size_t Ndim)
+{
+	float identity[9] = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+	for(int i=0; i<Ndim; i++)
+		gpuErrchk(cudaMemcpy((void*)&d_data[i*9], &identity[0], 9*sizeof(float), cudaMemcpyHostToDevice));
+}
+
+void setTranslationMatrix(float* d_data, float posX, float posY, int n)
+{
+	float matrix[9] = {1, 0, posX, 0, 1, posY, 0, 0, 1};
+	gpuErrchk(cudaMemcpy((void*)&d_data[n*9], &matrix[0], 9*sizeof(float), cudaMemcpyHostToDevice));
+}
+
+void setRotationMatrix(float* d_data, float ang, int n)
+{
+	float rad = (float)(ang*PI/180);
+	float matrix[9] = {cosf(rad), -sinf(rad), 0, sinf(rad), cosf(rad), 0, 0, 0, 1};
+	gpuErrchk(cudaMemcpy((void*)&d_data[n*9], &matrix[0], 9*sizeof(float), cudaMemcpyHostToDevice));
+}
+
 void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes)
 {
 	gpuErrchk(cudaMemcpy(d_data, data, Nbytes, cudaMemcpyHostToDevice));
@@ -25,6 +51,11 @@ void gpuCopyFromCPUToGPU(void* data, void* d_data, size_t Nbytes)
 void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes)
 {
 	gpuErrchk(cudaMemcpy(data, d_data, Nbytes, cudaMemcpyDeviceToHost));
+}
+
+void gpuCopyFromGPUToGPU(void* d_dataFrom, void* d_dataTo, size_t Nbytes)
+{
+	gpuErrchk(cudaMemcpy(d_dataTo, d_dataFrom, Nbytes, cudaMemcpyDeviceToDevice));
 }
 
 int gridFromBlock(int tasks, int Nthreads)
@@ -139,4 +170,44 @@ void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<d
 	gpuErrchk(cudaDeviceSynchronize());
 	cufftDestroy(planB);
 }
+
+
+template<>
+void GpuMultidimArrayAtGpu<double>::calculateMax(double *max_values, float *posX, float *posY){
+
+	int index = 0;
+
+	for(int i=0; i<Ndim; i++){
+		thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(&d_data[index]);
+		thrust::device_ptr<double> max_ptr = thrust::max_element(dev_ptr, dev_ptr + (int)yxdim);
+		unsigned int position = &max_ptr[0] - &dev_ptr[0];
+		max_values[i] = max_ptr[0];
+		printf("max_thrust %lf \n", max_values[i]);
+
+		float posX_aux = (float)(position%Xdim);
+		float posY_aux = (float)(position/Xdim);
+		float Xdim2 = (float)(Xdim/2);
+		float Ydim2 = (float)(Ydim/2);
+
+		if(posX_aux>Xdim2 && posY_aux>Ydim2){
+			posX[i] = Xdim-1-posX_aux;
+			posY[i] = Ydim-1-posY_aux;
+		}else if(posX_aux<Xdim2 && posY_aux>Ydim2){
+			posX[i] = -(posX_aux+1);
+			posY[i] = Ydim-1-posY_aux;
+		}else if(posX_aux<Xdim2 && posY_aux<Ydim2){
+			posX[i] = -(posX_aux+1);
+			posY[i] = -(posY_aux+1);
+		}else if(posX_aux>Xdim2 && posY_aux<Ydim2){
+			posX[i] = Xdim-1-posX_aux;
+			posY[i] = -(posY_aux+1);
+		}
+		printf("Max x-thr=%f\n", posX[i]);
+		printf("Max y-thr=%f\n", posY[i]);
+
+		index = index+(int)yxdim;
+	}
+
+}
+
 
