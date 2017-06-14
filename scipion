@@ -41,7 +41,7 @@ except ImportError:
 
 __version__ = 'v1.1'
 __nickname__ = 'Balbino'
-__releasedate__ = '2017-06-09'
+__releasedate__ = '2017-06-14'
 
 
 # This script tries to run ok with any python version. So we cannot
