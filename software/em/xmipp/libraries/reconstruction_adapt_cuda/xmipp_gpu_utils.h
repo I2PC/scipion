@@ -85,6 +85,18 @@ public:
 		gpuCopyFromGPUToCPU(gpuArray.d_data, data, nzyxdim*sizeof(T));
 	}
 
+	void copyToGpuMultiple(GpuMultidimArrayAtGpu<T> &gpuArray, int numCopy)
+	{
+		if (gpuArray.isEmpty())
+			gpuArray.resize(Xdim,Ydim,Zdim,numCopy);
+
+		int index = 0;
+		for(int i=0; i<numCopy; i++){
+			gpuCopyFromCPUToGPU(data, &gpuArray.d_data[index], nzyxdim*sizeof(T));
+			index=index+nzyxdim;
+		}
+	}
+
 	void clear()
 	{
 		delete []data;
