@@ -189,27 +189,6 @@ void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
 	pointer += xAux*yAux;
 	}
 	//END AJ/*/
-	/*/AJ for debugging
-	xAux= 360;
-	yAux= radius;
-	//GpuMultidimArrayAtGpu<double> aux(xAux,yAux,1,nAux);
-	//d_correlationAux.d_projFFT.ifft(aux);
-	GpuMultidimArrayAtCpu<double> auxCpu2(xAux,yAux,1,nAux);
-	auxCpu2.copyFromGpu(polar_gpu);
-	pointer=0;
-	for(int i=0; i<nAux; i++){
-	MultidimArray<double> padded2;
-	FileName fnImgPad2;
-	Image<double> Ipad2;
-	padded2.coreAllocate(1, 1, yAux, xAux);
-	memcpy(MULTIDIM_ARRAY(padded2), &auxCpu2.data[pointer], xAux*yAux*sizeof(double));
-	fnImgPad2.compose("polarRef", i+1, "jpg");
-	Ipad2()=padded2;
-	Ipad2.write(fnImgPad2);
-	padded2.coreDeallocate();
-	pointer += xAux*yAux;
-	}
-	//END AJ/*/
 
 }
 
@@ -415,14 +394,15 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 		//FFT
 		polar_gpu.fft(d_correlationAux.d_projPolarFFT);
 		polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
+
 	}
 
 	/*/AJ for debugging
-	size_t xAux= pad_Xdim;
-	size_t yAux= pad_Ydim;
+	size_t xAux= 360;
+	size_t yAux= radius;
 	size_t nAux= 5;
 	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-	auxCpu.copyFromGpu(padded_image_gpu);
+	auxCpu.copyFromGpu(polar_gpu);
 	int pointer2=0;
 	for(int i=0; i<nAux; i++){
 	MultidimArray<double> padded;
@@ -437,6 +417,7 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 	pointer2 += xAux*yAux;
 	}
 	//END AJ/*/
+
 
 }
 
@@ -548,52 +529,62 @@ void ProgGpuCorrelation::run()
 		d_experimentalAux.produceSideInfo();
 	}
 
-
-	//CORRELATION PART
-	//TRANSFORMATION MATRIX CALCULATION
-	printf("Calculating correlation...\n");
 	TransformMatrix<float> transMat(available_images_proj);
-	if(!rotation)
-		cuda_calculate_correlation(d_referenceAux, d_experimentalAux, transMat);
-	else
-		cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, transMat);
+
+	for(int step=0; step<6; step++){
+
+		//CORRELATION PART
+		//TRANSFORMATION MATRIX CALCULATION
+		printf("Calculating correlation...\n");
+		if(!rotation)
+			cuda_calculate_correlation(d_referenceAux, d_experimentalAux, transMat);
+		else
+			cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, transMat);
 
 
-	//APPLY TRANSFORMATION
-	printf("Applying transformation...\n");
-	d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
-	apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, transMat);
+		//APPLY TRANSFORMATION
+		printf("Applying transformation...\n");
+		d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
+		apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, transMat);
 
-	/*/AJ for debugging
-	size_t xAux= Xdim;
-	size_t yAux= Ydim;
-	size_t nAux= available_images_proj;
-	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-	auxCpu.copyFromGpu(d_experimentalAux.d_transform_image);
-	int pointer2=0;
-	for(int i=0; i<nAux; i++){
-	MultidimArray<double> padded;
-	FileName fnImgPad;
-	Image<double> Ipad;
-	padded.coreAllocate(1, 1, yAux, xAux);
-	memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
-	fnImgPad.compose("check", i+1, "jpg");
-	Ipad()=padded;
-	Ipad.write(fnImgPad);
-	padded.coreDeallocate();
-	pointer2 += xAux*yAux;
+		//AJ for debugging
+		char numstr[21];
+		sprintf(numstr, "%d", step);
+		String stepStr = "step";
+		String name = stepStr + numstr;
+		size_t xAux= d_experimentalAux.MFrealSpace.Xdim;
+		size_t yAux= d_experimentalAux.MFrealSpace.Ydim;
+		size_t nAux= available_images_proj;
+		GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
+		auxCpu.copyFromGpu(d_experimentalAux.MFrealSpace);
+		int pointer2=0;
+		for(int i=0; i<nAux; i++){
+		MultidimArray<double> padded;
+		FileName fnImgPad;
+		Image<double> Ipad;
+		padded.coreAllocate(1, 1, yAux, xAux);
+		memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
+		fnImgPad.compose("NCC", i+1, "jpg");
+		Ipad()=padded;
+		Ipad.write(fnImgPad);
+		padded.coreDeallocate();
+		pointer2 += xAux*yAux;
+		}
+		//END AJ//
+
+
+		//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
+		printf("Processing experimental images again...\n");
+		rotation = !rotation;
+		preprocess_images_experimental_transform(d_experimentalAux, mask, rotation);
+		if(!rotation){
+			d_experimentalAux.maskCount=maskCount;
+			d_experimentalAux.produceSideInfo();
+		}
+
 	}
-	//END AJ/*/
 
-	//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
-	printf("Processing experimental images again...\n");
-	rotation = !rotation;
-	preprocess_images_experimental_transform(d_experimentalAux, mask, rotation);
-	if(!rotation){
-		d_experimentalAux.maskCount=maskCount;
-		d_experimentalAux.produceSideInfo();
-	}
-
+	/*
 	//CORRELATION PART
 	//TRANSFORMATION MATRIX CALCULATION
 	printf("Calculating correlation...\n");
@@ -601,6 +592,7 @@ void ProgGpuCorrelation::run()
 		cuda_calculate_correlation(d_referenceAux, d_experimentalAux, transMat);
 	else
 		cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, transMat);
+	*/
 
 	/*/AJ for debugging
 	size_t xAux= d_experimentalAux.MFrealSpace.Xdim;
