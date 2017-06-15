@@ -72,7 +72,6 @@ class XmippViewer(Viewer):
                 Image,
                 MicrographsTiltPair,
                 ParticlesTiltPair,
-                ProtExtractParticles,
                 SetOfClasses2D,
                 SetOfClasses3D,
                 SetOfCoordinates,
@@ -270,8 +269,7 @@ class XmippViewer(Viewer):
 
 
         elif (issubclass(cls, XmippProtExtractParticles) or
-              issubclass(cls, XmippProtScreenParticles) or
-             issubclass(cls, ProtExtractParticles)):
+              issubclass(cls, XmippProtScreenParticles)):
             particles = obj.outputParticles
             self._visualize(particles)
 

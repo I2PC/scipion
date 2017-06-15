@@ -142,12 +142,12 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                             self._getPath('input_references'), useBasename=True)
 
     def _pickMicrograph(self, micStarFile, params, threshold,
-                               minDistance, fom):
+                               minDistance, maxStddevNoise, fom):
         """ Launch the 'relion_autopick' for all micrographs. """
         params += ' --i %s' % relpath(micStarFile, self.getWorkingDir())
-        params += ' --threshold %0.3f --min_distance %0.3f %s' % (threshold,
-                                                                  minDistance,
-                                                                  fom)
+        params += ' --max_stddev_noise %0.3f' % maxStddevNoise
+        params += ' --threshold %0.3f ' % threshold
+        params += ' --min_distance %0.3f %s' % (minDistance, fom)
 
         self.runJob(self._getProgram('relion_autopick'), params,
                     cwd=self.getWorkingDir())
@@ -448,12 +448,15 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     # -------------------------- INSERT steps functions ------------------------
 
     def getAutopickParams(self):
+        # Return the autopicking parameters except for the interative ones:
+        # - threshold
+        # - minDistance
+        # - maxStd
         params = ' --pickname autopick'
         params += ' --odir ""'
         params += ' --particle_diameter %d' % self.particleDiameter
         params += ' --angpix %0.3f' % self.getInputMicrographs().getSamplingRate()
         params += ' --shrink %0.3f' % self.shrinkFactor
-        params += ' --max_stddev_noise %0.3f' % self.maxStddevNoise
 
         if self.doGpu:
             params += ' --gpu "%s"' % self.gpusToUse
@@ -492,13 +495,16 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                                         self.getAutopickParams(),
                                         self.pickingThreshold.get(),
                                         self.interParticleDistance.get(),
+                                        self.maxStddevNoise.get(),
                                         fomParam,
                                         prerequisites=[convertId])
 
     # -------------------------- STEPS functions -------------------------------
-    def autopickStep(self, micStarFile, params, threshold, minDistance, fom):
+    def autopickStep(self, micStarFile, params, threshold,
+                     minDistance, maxStddevNoise, fom):
         """ This method is used from the wizard to optimize the parameters. """
-        self._pickMicrograph(micStarFile, params, threshold, minDistance, fom)
+        self._pickMicrograph(micStarFile, params, threshold,
+                             minDistance, maxStddevNoise, fom)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()

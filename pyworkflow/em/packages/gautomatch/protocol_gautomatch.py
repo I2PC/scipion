@@ -43,7 +43,7 @@ class ProtGautomatch(em.ProtParticlePicking):
     automatic particle picking from cryo-EM micrographs with or without templates.
     """
     _label = 'auto-picking'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     # --------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
