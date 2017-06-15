@@ -63,7 +63,7 @@ class XmippProtReconstructSwarm(ProtRefine3D):
        the correlation between the volumes and the set of particles. This is an stochastic maximization
        and only a fraction of the particles are used to update the volumes and evaluate them.
     """
-    _label = 'swarm'
+    _label = 'swarm consensus'
     _version = VERSION_1_1
     
     #--------------------------- DEFINE param functions --------------------------------------------
