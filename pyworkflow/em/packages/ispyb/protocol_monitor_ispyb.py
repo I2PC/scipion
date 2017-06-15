@@ -44,7 +44,7 @@ class ProtMonitorISPyB(ProtMonitor):
     """ Monitor to communicated with ISPyB system at Diamond.
     """
     _label = 'monitor to ISPyB'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def _defineParams(self, form):
         ProtMonitor._defineParams(self, form)
