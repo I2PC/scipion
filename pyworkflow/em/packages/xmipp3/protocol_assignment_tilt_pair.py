@@ -47,7 +47,7 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
     the affine transformation between these sets.
     """
     _label = 'assignment tiltpair'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     def __init__(self, *args, **kwargs):
         XmippProtParticlePickingPairs.__init__(self, *args, **kwargs)
         self.stepsExecutionMode = params.STEPS_PARALLEL

@@ -138,9 +138,14 @@ class XmippMonoResViewer(ProtocolViewer):
         return [cm]
     
     def _showOriginalVolumeSlices(self, param=None):
-        cm = DataView(self.protocol.inputVolumes.get().getFileName())
+        if self.protocol.halfVolumes.get() is True:
+            cm = DataView(self.protocol.inputVolume.get().getFileName())
+            cm2 = DataView(self.protocol.inputVolume2.get().getFileName())
+            return [cm, cm2]
+        else:
+            cm = DataView(self.protocol.inputVolumes.get().getFileName())
+            return [cm]
         
-        return [cm]
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_FILE)
@@ -151,7 +156,7 @@ class XmippMonoResViewer(ProtocolViewer):
         #  This is to generate figures for the paper
         # min_Res = np.amin(imgData)
         # imgData2 = imgData
-        imgData2 = np.ma.masked_where(imgData < 0.01, imgData, copy=True)
+        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoRes slices', imgData2,
@@ -178,13 +183,9 @@ class XmippMonoResViewer(ProtocolViewer):
             y_axis_ = md.getValue(MDL_COUNT, idx)
 
             i+=1
-            if (y_axis_== 0):
-                continue
             x_axis.append(x_axis_)
             y_axis.append(y_axis_)
         delta = x1-x0
-        for ii in range(len(x_axis)):
-            x_axis[ii] = x_axis[ii]-0.5*delta
         plt.figure()
         plt.bar(x_axis, y_axis, width = delta)
         plt.title("Resolutions Histogram")
