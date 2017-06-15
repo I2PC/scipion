@@ -671,7 +671,6 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
             # we need to close previous opened file
             if f:
                 f.close()
-                #print "Micrograph %s (%d)" % (lastMicId, c)
                 c = 0
             f = openMd(posDict[micId], ismanual=ismanual)
             lastMicId = micId
@@ -687,28 +686,17 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     
     if f:
         f.close()
-        print "Micrograph %s (%d)" % (lastMicId, c)
-    
+
     state = 'Manual' if ismanual else 'Supervised'
     # Write config.xmd metadata
     configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
-#     micName = removeBaseExt(micName)
-#     md.setValue(xmipp.MDL_MICROGRAPH, str(micName), objId)
-    #md.setValue(xmipp.MDL_COLOR, int(-16776961), objId)
     md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
     md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
     md.write('properties@%s' % configFn)
 
-#     # Write filters block
-#     md = xmipp.MetaData()    
-#     objId = md.addObject()
-#     md.setValue(xmipp.MDL_MACRO_CMD, 'Gaussian_Blur...', objId)
-#     md.setValue(xmipp.MDL_MACRO_CMD_ARGS, 'sigma=2', objId)
-#     md.write('filters@%s' % configFn, xmipp.MD_APPEND)
-    
     return posDict.values()
 
 
@@ -1235,8 +1223,9 @@ def rowToAlignment(alignmentRow, alignType):
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
-                angles[0] = - angles[0] # rot = -rot
-                angles[1] = 180 + angles[1] # tilt = tilt + 180
+                angles[1] =  angles[1]+180 # tilt + 180
+                angles[2] = 180 - angles[2] # 180 - psi
+                shifts[0] = -shifts[0] # -x
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
@@ -1244,7 +1233,7 @@ def rowToAlignment(alignmentRow, alignType):
                 print "HORROR rot and psi are different from zero in 2D case"
             angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) + \
                         alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
-        #if alignment
+        
         matrix = matrixFromGeometry(shifts, angles, inverseTransform)
 
         if flip:
@@ -1256,8 +1245,7 @@ def rowToAlignment(alignmentRow, alignType):
                 matrix[3,3] *= -1.
             elif alignType==ALIGN_PROJ:
                 pass
-                #matrix[0,:4] *= -1.#now, invert first line including x
-##
+        
         alignment.setMatrix(matrix)
         
         #FIXME: now are also storing the alignment parameters since
@@ -1306,10 +1294,11 @@ def alignmentToRow(alignment, alignmentRow, alignType):
             pass
 
     else:
-        pass
-        #flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
-        #if flip:
-        #    matrix[0,:4] *= -1.#now, invert first line including x
+        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        if flip:
+            raise Exception("the det of the transformation matrix is "
+                            "negative. This is not a valid transformation "
+                            "matrix for Scipion.")
     shifts, angles = geometryFromMatrix(matrix, inverseTransform)
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])

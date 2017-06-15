@@ -297,8 +297,8 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
             constraints.anchor = GridBagConstraints.WEST;
             setLayout(new GridBagLayout());
 
-            initToolBar();
             centerparticlebt = new JToggleButton(bundle.getString("center"), XmippResource.getIcon("center.png"));
+            initToolBar();
             centerparticlebt.setSelected(true);
             tb.add(centerparticlebt);
             add(tb, XmippWindowUtil.getConstraints(constraints, 0, 0, 2, 1, GridBagConstraints.WEST));
@@ -871,9 +871,12 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
     	List<Classifier.Parameter> parameters = ppicker.getClassifier().getParams();
     	paramtfs = new HashMap<JTextField, Classifier.Parameter>();
     	JTextField tf;
+    	JLabel lb;
     	for(Classifier.Parameter param: parameters)
     	{
-    		gpickerpn.add(new JLabel(param.label));
+    		lb = new JLabel(param.label);
+    		lb.setToolTipText(param.help);
+    		gpickerpn.add(lb);
     		tf = new JTextField(3);
     		tf.setToolTipText(param.help);
     		tf.setText(param.value);
@@ -905,6 +908,9 @@ public class SupervisedPickerJFrame extends ParticlePickerJFrame {
 				{
 					JTextField tf = (JTextField)e.getSource();
 					updateParam(tf);
+					for(SupervisedPickerMicrograph m: ppicker.getMicrographs())
+						ppicker.resetMicrograph(m);
+					ppicker.autopick(SupervisedPickerJFrame.this, getMicrograph());
 					
 				}
 			});
