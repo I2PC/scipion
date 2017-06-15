@@ -124,7 +124,6 @@ class XmippCL2DViewer(ProtocolViewer):
         if self.doShowLastLevel == LEVEL_LAST:
             fn = self.protocol._getFileName("final_classes", sub=fnSubset)
             if os.path.exists(fn):
-                print "Esto es cierto, ", fn
                 viewFinalClasses = True
             levList = [self.protocol._lastLevel()]
         else:
