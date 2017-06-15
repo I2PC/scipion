@@ -58,6 +58,7 @@ from viewer_validate_overfitting import XmippValidateOverfittingViewer
 from viewer_volume_strain import XmippVolumeStrainViewer
 from viewer_reconstruct_highres import XmippReconstructHighResViewer
 from viewer_solid_angles import SolidAnglesViewer
+from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
@@ -81,6 +82,7 @@ from protocol_denoise_particles import XmippProtDenoiseParticles
 from protocol_extract_particles import XmippProtExtractParticles
 from protocol_extract_particles_movies import XmippProtExtractMovieParticles
 from protocol_extract_particles_pairs import XmippProtExtractParticlesPairs
+from protocol_extract_unit_cell import XmippProtExtractUnit
 from protocol_helical_parameters import XmippProtHelicalParameters
 from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D

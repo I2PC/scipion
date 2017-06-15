@@ -1,0 +1,7 @@
+1) add origin to import, in general pass orgin as metadata and check with wrapper
+2) fix chimera when playing with PDB, which is the right id?
+3) refmaz viewer show in and out pdb
+4) coot do not save normalize in the second execution (and check if it is created two times)
+5) refmac missing parameters
+6) add symmetries to  xmipp_image_window
+

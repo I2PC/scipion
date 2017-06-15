@@ -37,12 +37,9 @@ from data_tiltpairs import *
 from protocol import *
 from constants import *
 from convert import *
-#from pyworkflow.viewer import Viewer
 from pyworkflow.wizard import Wizard
 from viewer import *
-#from pprint import pprint
 import transformations
-#from packages import *
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
 _emPackagesDict = None

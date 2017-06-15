@@ -1,6 +1,7 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:    Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,30 +25,25 @@
 # *
 # **************************************************************************
 """
-In this module are protocol base classes related to EM.
-There should be sub-classes in the different packages from
-each EM-software package.
+Bibtex string file for Powerfit package.
 """
-from protocol import *
-from protocol_import import *
-from protocol_micrographs import *
-from protocol_movies import *
-from protocol_align_movies import ProtAlignMovies
-from protocol_particles import *
-from protocol_2d import *
-from protocol_3d import *
-from protocol_sets import *
-from protocol_pdf_report import *
-from protocol_tiltpairs import *
-from protocol_ctf_assign import ProtCTFAssign
-from protocol_alignment_assign import ProtAlignmentAssign
-from protocol_batch import *
-from protocol_classes_consensus import ProtClassesConsensus, ViewerClassesConsensus
-from protocol_extract_coordinates import ProtExtractCoords
-from protocol_stress import ProtStress
-from protocol_create_stream_data import ProtCreateStreamData
-from parallel import ProtTestParallel
 
-from monitors import *
-from protocol_export import *
-#from protocol_export.protocol_export_emdb import ProtExportEMDB
+_bibtexStr = """
+
+
+@article{vanZundert2015,
+title = "Fast and sensitive rigid-body fitting into cryo-EM density maps with PowerFit",
+journal = "AIMS Biophysics",
+volume = "2",
+pages = "73 - 87",
+year = "2015",
+doi = "http://dx.doi.org/10.3934/biophy.2015.2.73",
+url = "http://www.aimspress.com/article/10.3934/biophy.2015.2.73/pdf",
+author = "van Zundert, G. C. P.  and Bonvin, A. M. J. J.",
+keywords = "Rigid fitting"
+}
+"""
+
+from pyworkflow.utils import parseBibTex
+
+_bibtex = parseBibTex(_bibtexStr)  

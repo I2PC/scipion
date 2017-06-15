@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,17 +22,16 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+This EM module contains Gautomatch auto-picking protocol 
+"""
 
-from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from pyworkflow.gui.text import _open_cmd
+from bibtex import _bibtex # Load bibtex dict with references
+from convert import getEnviron
 
-from protocol.protocol_pdf_report import ProtPDFReport
+_logo = "ccp4_200.png"
 
-
-class PDFReportViewer(Viewer):
-    """ Wrapper to visualize PDF objects. """
-    _environments = [DESKTOP_TKINTER]
-    _targets = [ProtPDFReport]
-
-    def visualize(self, obj, **kwargs):
-        _open_cmd(obj._getPath("report.pdf"), self.getTkRoot())
+from protocol_coot import CCP4ProtCoot
+from protocol_refmac import CCP4ProtRunRefmac
+from viewer_refmac import CCP4ProtRunRefmacViewer
+_environ = getEnviron()

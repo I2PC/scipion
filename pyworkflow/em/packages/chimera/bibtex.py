@@ -1,8 +1,9 @@
+# coding: latin-1
 # **************************************************************************
 # *
-# * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,17 +24,24 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+Bibtex string file for Gautomatch package.
+"""
 
-from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-from pyworkflow.gui.text import _open_cmd
+_bibtexStr = """
+@Article{Pettersen2004,
+   Author="Pettersen, E. F.  and Goddard, T. D.  and Huang, C. C.  and Couch, G. S.  and Greenblatt, D. M.  and Meng, E. C.  and Ferrin, T. E. ",
+   Title="{{U}{C}{S}{F} {C}himera--a visualization system for exploratory research and analysis}",
+   Journal="J Comput Chem",
+   Year="2004",
+   Volume="25",
+   Number="13",
+   Pages="1605--1612",
+   Month="Oct",
+   doi="https://doi.org/10.1002/jcc.20084"
+}
+"""
 
-from protocol.protocol_pdf_report import ProtPDFReport
+from pyworkflow.utils import parseBibTex
 
-
-class PDFReportViewer(Viewer):
-    """ Wrapper to visualize PDF objects. """
-    _environments = [DESKTOP_TKINTER]
-    _targets = [ProtPDFReport]
-
-    def visualize(self, obj, **kwargs):
-        _open_cmd(obj._getPath("report.pdf"), self.getTkRoot())
+_bibtex = parseBibTex(_bibtexStr)  

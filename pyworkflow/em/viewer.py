@@ -34,6 +34,14 @@ from threading import Thread
 from multiprocessing.connection import Client
 from numpy import flipud
 import socket
+try:#python 2
+    import Tkinter as tk
+    import tkFont
+    import ttk
+except ImportError:  # Python 3
+    import tkinter as tk
+    import tkinter.font as tkFont
+    import tkinter.ttk as ttk
 
 import pyworkflow as pw
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
@@ -132,7 +140,6 @@ class DataView(View):
         params = {}
         
         for key, value in self._viewParams.items():
-            print (str(key), ":",str(value))
             if key in parameters:
                 if key == 'mode' and value == 'metadata':
                     value = 'table'
@@ -299,8 +306,151 @@ class ImageView(View):
         
     def getImagePath(self):
         return self._imagePath
+#TODO: delete class TextFileView
+        '''
+class TextFileView(View):
 
-        
+    def __init__(self, path, tkRoot):
+        self.path = path
+        self.tkRoot=tkRoot#message box will be painted ABOVE this window
+
+    def show(self):
+        """Show text file in default editor, If file does not exists return error message"""
+        if not os.path.isfile(self.path):
+            tkMessageBox.showerror("Refamc Viewer Error",#bar title
+                                   "refmac log file not found\n(%s)"%self.path,#message
+                                   parent=self.tkRoot)
+            return
+        editor = os.getenv('EDITOR')
+        if editor:
+            os.system(editor + ' ' + self.path)
+        else:
+            webbrowser.open(self.path)
+'''
+
+class TableView(View):
+    """ show table, pass values as:
+        headerList = ['name', 'surname']
+        dataList = [
+        ('John', 'Smith') ,
+        ('Larry', 'Black') ,
+        ('Walter', 'White') ,
+        ('Fred', 'Becker')
+        ].
+        msg = message to be shown at the table top
+        title= window title
+        height: Specifies the number of rows which should be visible
+        width: minimum width in pixels
+        fontSize= font size
+        padding: cell extra width
+        ---------------------
+        Alternative way to create a table using showj
+        views = []
+        labels = '_1 _2'
+        emSet = EMSet(filename="/tmp/kk.sqlite")
+        emObject = EMObject()
+        emObject._1 = String('first parameter')
+        emObject._2 = Float(12.)
+        emSet.append(emObject)
+        emObject = EMObject()
+        emObject._1 = String('second parameter')
+        emObject._2 = Float(22.)
+        emSet.append(emObject)
+        emSet.write()
+        views.append(ObjectView(self._project,
+                                self.protocol.strId(),
+                                "/tmp/kk.sqlite",
+                                viewParams={MODE: MODE_MD, ORDER: labels, VISIBLE: labels}))
+        return views
+"""
+
+    def __init__(self, headerList, dataList,
+                      mesg=None, title=None,
+                      height=10, width=400,
+                      fontSize=16, padding=10):
+        #get new widget that has as parent the top level window and set title
+        win = tk.Toplevel()
+        if title:
+            win.wm_title(title)
+
+        #frame to place all other widgets
+        frame = tk.Frame(win)
+
+        #make font a little bigger
+        #TODO: font size should be general
+        font=tkFont.Font(family='fixed', size=fontSize)
+        font.metrics()
+        fontheight=font.metrics()['linespace']
+        style=ttk.Style()
+        style.configure('Calendar.Treeview', font=font, rowheight=fontheight)
+
+
+        #create treeview to store multi list with data
+        tree = ttk.Treeview(columns=headerList,
+                            show="headings",master=win,
+                            style='Calendar.Treeview', height=height
+                            )
+
+        #define scrollbars to be added
+        if len(dataList)>height:
+            ysb = ttk.Scrollbar(orient=tk.VERTICAL, command= tree.yview, master=win)
+            ##xsb = ttk.Scrollbar(orient=tk.HORIZONTAL, command= tree.xview, master=win)
+            #add them to three view
+            tree.configure(yscroll=ysb.set)#, xscroll=xsb.set)
+
+        #create rows and columns
+        counterRow = 1
+        colWidths=[]#list with maximum width per column
+        #create headers
+        for col in headerList:
+            tree.heading(col, text=col.title())
+            #save neede width for this cell
+            (w,h) = (font.measure(col.title()),font.metrics("linespace"))
+            colWidths.append(w)
+
+        #insert other rows
+        #tag rows as odd or even so they may have different background colors
+        for item in dataList:
+            if counterRow%2:
+                tree.insert('', 'end', values=item, tags = ('evenrow',))
+            else:
+                tree.insert('', 'end', values=item, tags = ('oddrow',))
+            counterRow += 1
+            counterCol=0
+            for i in item:
+                (w,h) = (font.measure(i),font.metrics("linespace"))
+                if colWidths[counterCol]< w:
+                    colWidths[counterCol] = w
+                counterCol += 1
+
+        #if width less than sum of column widths expand them
+        sumColWid = sum(colWidths) + 20
+        if sumColWid < width:
+            sumColWid = width
+            factor = int(width/sumColWid)+1
+            colWidths = [i * factor for i in colWidths]
+
+        for col,colWidth in zip(headerList,colWidths):
+            tree.column(col,width=colWidth+padding)
+
+        #color by rows
+        tree.tag_configure('evenrow', background='white')
+        tree.tag_configure('oddrow', background='light grey')
+
+        #message placed at the window top
+        msg = ttk.Label(wraplength=sumColWid , justify="left", anchor="n",
+            padding=(10, 2, 10, 6), text=(mesg),master=win, font=font)
+
+        #set mg in grid 0,0
+        msg.grid(row=0,column=0)
+        #set tree in grid 1,0
+        tree.grid(row=1,column=0)
+        #set ysg in grid 1 1
+        #but only if number of elements is larger than height
+        if len(dataList)>height:
+            ysb.grid(row=1, column=1, sticky='ns')
+            ##xsb.grid(row=2, column=0, sticky='ew')
+
 #------------------------ Some views and  viewers ------------------------
         
 def getChimeraEnviron(): 
@@ -382,6 +532,13 @@ class ChimeraViewer(Viewer):
 
 class ChimeraClient:
     
+    def openVolumeOnServer(self, volume, sendEnd=True):
+        self.send('open_volume', volume)
+        if not self.voxelSize is None:
+            self.send('voxel_size', self.voxelSize)
+        if sendEnd:
+            self.client.send('end')
+
     def __init__(self, volfile, sendEnd=True,**kwargs):
         if volfile.endswith('.mrc'):
             volfile += ':mrc'
@@ -413,20 +570,14 @@ class ChimeraClient:
         self.authkey = 'test'
         self.client = Client((self.address, self.port), authkey=self.authkey)
         self.initVolumeData()
-        self.openVolumeOnServer(self.vol,sendEnd)
+        #self.openVolumeOnServer(self.vol,sendEnd)
+        self.openVolumeOnServer(self.vol)
         self.initListenThread()
             
     def send(self, cmd, data):
         self.client.send(cmd)
         self.client.send(data)
         
-    def openVolumeOnServer(self, volume, sendEnd=True):
-        self.send('open_volume', volume)
-        if not self.voxelSize is None:
-            self.send('voxel_size', self.voxelSize)
-        if sendEnd:
-            self.client.send('end')
-
     def initListenThread(self):
             self.listen_thread = Thread(target=self.listen)
             #self.listen_thread.daemon = True
@@ -533,15 +684,32 @@ class ChimeraVirusClient(ChimeraClient):
 
     def __init__(self, volfile, **kwargs):
         self.h = kwargs.get('h', 5)
+        if self.h is None:
+                self.h = 5
         self.k = kwargs.get('k', 0)
-        self.sym = kwargs.get('sym','n25')
-        self.radius = kwargs.get('radius', 100)
+        if self.k is None:
+                self.k = 0
+        self.sym = kwargs.get('sym','i222r')
+        if self.sym is None:
+                self.sym = 'i222r'
+        self.radius = kwargs.get('radius', 100.)
+        if self.radius is None:
+                self.radius = 100.
         self.spheRadius = kwargs.get('spheRadius',1.5)
-        print("spheRadius1",self.spheRadius)
+        if self.spheRadius is None:
+                self.spheRadius = 1.5
         self.color = kwargs.get('color', 'red')
+        if self.color is None:
+                self.color = 'red'
         self.linewidth = kwargs.get('linewidth', 1)
+        if self.linewidth is None:
+                self.linewidth = 1
         self.sphere = kwargs.get('sphere', 0)
+        if self.sphere is None:
+                self.sphere = 0
         self.shellRadius = kwargs.get('shellRadius',self.spheRadius)
+        if self.shellRadius is None:
+                self.shellRadius = self.spheRadius
         kwargs['ChimeraServer']='ChimeraVirusServer'
         ChimeraClient.__init__(self, volfile, **kwargs)
 
@@ -559,7 +727,6 @@ class ChimeraVirusClient(ChimeraClient):
     def openVolumeOnServer(self, volume):
         ChimeraClient.openVolumeOnServer(self, volume, sendEnd=False)
         commandList=[self.hkcageCommand()]
-        print("spheRadius2",self.spheRadius)
         self.send('hk_icosahedron_lattice',(self.h,
                                           self.k,
                                           self.radius,
@@ -570,6 +737,10 @@ class ChimeraVirusClient(ChimeraClient):
                                           self.color))
         #get here the list of vertexes, info will be pass by id later
         self.send('command_list', commandList)
+        #endhere
+        self.client.send('end')
+        return
+
         #get va with sphere centers
 
         #va coordinates of  vertex of the triangles inside de canonical triangle
@@ -751,7 +922,7 @@ class VmdView(CommandView):
 class VmdViewer(Viewer):
     """ Wrapper to visualize PDB objects with VMD viewer. """
     _environments = [DESKTOP_TKINTER]
-    _targets = [PdbFile]
+    #_targets = [PdbFile]
     
     def __init__(self, **args):
         Viewer.__init__(self, **args)

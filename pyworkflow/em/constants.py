@@ -60,3 +60,30 @@ ALIGN_3D   = '3D'         # 3D map alignment
 ALIGN_PROJ = 'Projection' # relate projections with 3d map
 
 ALIGNMENTS = [ALIGN_NONE, ALIGN_2D, ALIGN_3D, ALIGN_PROJ]
+
+#SYMMETRY, follows chimera conventions https://www.cgl.ucsf.edu/chimera/docs/UsersGuide/midas/sym.html
+counter = 0
+#cyclic CN
+SYM_CYCLIC  = counter # symmetry Cn around axis
+counter += 1
+#icosahedric IXXX
+SYM_I222  = counter # (no crowther 222 and standard in heyman et al 2005 article).
+              # 2-fold axes on x,y,z axes. With the positive z-axis pointing at
+              # the viewer, the front-most 5-fold vertices are in yz plane,
+              #  and the front-most 3-fold axes are in the xz plane.
+counter += 1
+SYM_I222r = counter # (crowther) 2-fold axes on x,y,z axes. With the positive z-axis
+              # pointing at the viewer, the front-most 5-fold vertices are in xz plane,
+              # and the front-most 3-fold axes are in the yz plane.
+counter += 1
+SYM_In25   = counter # '2-fold symmetry along y and 5-fold along z
+counter += 1
+SYM_In25r   = counter # 'n25' with 180 degree rotation about x
+
+#Diccionario sym
+SCIPION_SYM_NAME={}
+SCIPION_SYM_NAME[SYM_CYCLIC]  = 'Cn'
+SCIPION_SYM_NAME[SYM_I222]  = 'I222'
+SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
+SCIPION_SYM_NAME[SYM_In25]   = 'In25'
+SCIPION_SYM_NAME[SYM_In25r]   = 'In25r'

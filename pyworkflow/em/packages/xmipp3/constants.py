@@ -93,3 +93,12 @@ SAME_AS_PICKING = 0
 OTHER = 1
 
 SYM_URL = "[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"
+
+#Diccionario sym
+from pyworkflow.em.constants import SYM_CYCLIC, SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
+XMIPP_SYM_NAME={}
+XMIPP_SYM_NAME[SYM_CYCLIC] = 'Cn'
+XMIPP_SYM_NAME[SYM_I222]   = 'I1'
+XMIPP_SYM_NAME[SYM_I222r]  = 'I2'
+XMIPP_SYM_NAME[SYM_In25]   = 'I3'
+XMIPP_SYM_NAME[SYM_In25r]  = 'I4'

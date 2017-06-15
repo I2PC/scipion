@@ -32,7 +32,6 @@ def main():
     splineDegreeDict = {'NEAREST': xmipp.NEAREST, 'LINEAR': xmipp.LINEAR, 'BSPLINE3': xmipp.BSPLINE3}
 
     args = parentParser.parse_args()
-    #print args
     volfile = args.input
     voxelSize= args.samplingRate if hasattr(args, 'samplingRate') else None
     angularDistFile = args.angDistFile if hasattr(args, 'angDistFile') else None

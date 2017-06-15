@@ -40,6 +40,7 @@
 
 /** MRC Old Header
   * @ingroup MRC
+  * see: http://www.ccpem.ac.uk/mrc_format/mrc2014.php for details
 */
 struct MRCheadold
 {          // file header for MRC data
@@ -67,9 +68,13 @@ struct MRCheadold
     float amean;         // 21           average density value
     int ispg;            // 22           space group number
     int nsymbt;          // 23           bytes used for sym. ops. table
-    float extra[29];     // 24           user-defined info
-    float xOrigin;       // 53           phase origin in pixels
-    float yOrigin;       // 54
+    float extra[25];     // 24           user-defined info
+    float xOrigin;       // 49           phase origin (pixels) or origin of subvolume (A)
+    float yOrigin;       // 50
+    float zOrigin;       // 51
+    char map[4];         // 52           character string 'MAP ' to identify file type
+	int machst;          // 53           machine stamp encoding byte ordering of data
+	float rms;           // 54           rms deviation of map from mean density
     int nlabl;           // 55           number of labels used
     char labels[10][80]; // 56-255       10 80-character labels
 } ;
