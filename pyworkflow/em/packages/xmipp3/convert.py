@@ -1223,8 +1223,9 @@ def rowToAlignment(alignmentRow, alignType):
             shifts[2] = alignmentRow.getValue(xmipp.MDL_SHIFT_Z, 0.)
             angles[2] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             if flip:
-                angles[0] = - angles[0] # rot = -rot
-                angles[1] = 180 + angles[1] # tilt = tilt + 180
+                angles[1] =  angles[1]+180 # tilt + 180
+                angles[2] = 180 - angles[2] # 180 - psi
+                shifts[0] = -shifts[0] # -x
         else:
             psi = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.)
             rot = alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
@@ -1232,7 +1233,7 @@ def rowToAlignment(alignmentRow, alignType):
                 print "HORROR rot and psi are different from zero in 2D case"
             angles[0] = alignmentRow.getValue(xmipp.MDL_ANGLE_PSI, 0.) + \
                         alignmentRow.getValue(xmipp.MDL_ANGLE_ROT, 0.)
-        #if alignment
+        
         matrix = matrixFromGeometry(shifts, angles, inverseTransform)
 
         if flip:
@@ -1244,8 +1245,7 @@ def rowToAlignment(alignmentRow, alignType):
                 matrix[3,3] *= -1.
             elif alignType==ALIGN_PROJ:
                 pass
-                #matrix[0,:4] *= -1.#now, invert first line including x
-##
+        
         alignment.setMatrix(matrix)
         
         #FIXME: now are also storing the alignment parameters since
@@ -1294,10 +1294,11 @@ def alignmentToRow(alignment, alignmentRow, alignType):
             pass
 
     else:
-        pass
-        #flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
-        #if flip:
-        #    matrix[0,:4] *= -1.#now, invert first line including x
+        flip = bool(numpy.linalg.det(matrix[0:3,0:3]) < 0)
+        if flip:
+            raise Exception("the det of the transformation matrix is "
+                            "negative. This is not a valid transformation "
+                            "matrix for Scipion.")
     shifts, angles = geometryFromMatrix(matrix, inverseTransform)
     alignmentRow.setValue(xmipp.MDL_SHIFT_X, shifts[0])
     alignmentRow.setValue(xmipp.MDL_SHIFT_Y, shifts[1])

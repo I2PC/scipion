@@ -50,7 +50,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
     Given a map the protocol assigns local resolutions to each voxel of the map.
     """
     _label = 'local MonoRes'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)
@@ -108,8 +108,15 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       help='Sometimes the original volume is masked inside a spherical mask. In this case'
                       'please select yes')
         
+        form.addParam('noiseonlyinhalves', BooleanParam, expertLevel=LEVEL_ADVANCED,
+                      default=True,
+                      label="Use noise outside the mask?", 
+                      condition = 'halfVolumes',
+                      help='Select yes if the volume present noise outside the mask.'
+                      ' Otherwise, select No.')
+        
         group.addParam('volumeRadius', FloatParam, default=-1,
-                      label="Spherical mask radius",
+                      label="Spherical mask radius (px)",
                       condition = 'isPremasked and not halfVolumes', 
                       help='When the original volume is originally premasked, the noise estimation ought'
                       'to be performed inside that premask, and out of the provieded mask asked in the previus'
@@ -117,12 +124,14 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'radius = -1 use the half of the volume size as radius')
         
         group.addParam('volumeRadiusHalf', FloatParam, default=-1,
-                      label="Spherical mask radius",
+                      label="Spherical mask radius (px)",
                       condition = 'halfVolumes and isPremasked',
-                      help='When the origianl volume is originally premasked, the noise estimation ought'
-                      'to be performed inside that premask, and out of the provieded mask asked in the previus'
-                      'box. The radius value, determines the radius of the spherical premask. By default'
-                      'radius = -1 use the half of the volume size as radius')
+                      help='When the origianl volume is originally premasked,'
+                      'the noise estimation ought to be performed inside that'
+                      'premask, and out of the provieded mask asked in the previus'
+                      'box. The radius value, determines the radius in pixels of '
+                      'the spherical premask. By default radius = -1 use the half'
+                      'of the volume size as radius')
 
         line.addParam('minRes', FloatParam, default=1, label='High')
         line.addParam('maxRes', FloatParam, default=30, label='Low')
@@ -138,19 +147,25 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def _insertAllSteps(self):
         
         self.micsFn = self._getPath()
-        if (not self.halfVolumes):
-            self.vol0Fn = self.inputVolumes.get().getFileName()
-            self.maskFn = self.Mask.get().getFileName()
 
-        if self.halfVolumes.get() is True:
+        if self.halfVolumes:
             self.vol1Fn = self.inputVolume.get().getFileName()
             self.vol2Fn = self.inputVolume2.get().getFileName()
             self.maskFn = self.Mask.get().getFileName()
 
+            self.inputVolumes.set(None)
+
+        else:
+            self.vol0Fn = self.inputVolumes.get().getFileName()
+            self.maskFn = self.Mask.get().getFileName()
+            self.inputVolume.set(None)
+            self.inputVolume2.set(None)
+
             # Convert input into xmipp Metadata format
         convertId = self._insertFunctionStep('convertInputStep', )
 
-        MS = self._insertFunctionStep('resolutionMonogenicSignalStep', prerequisites=[convertId])
+        MS = self._insertFunctionStep('resolutionMonogenicSignalStep',
+                                      prerequisites=[convertId])
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
@@ -178,15 +193,15 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def resolutionMonogenicSignalStep(self):
 
-#         #Number of frequencies
-        if (self.stepSize.hasValue()):
+        # Number of frequencies
+        if self.stepSize.hasValue():
             Nfreqs = round((self.maxRes.get() - self.minRes.get())/self.stepSize.get())
         else:
             Nfreqs = 50
   
-        if (self.halfVolumes):
-            if (self.isPremasked):
-                if (self.volumeRadiusHalf.get() is -1):
+        if self.halfVolumes:
+            if self.isPremasked:
+                if self.volumeRadiusHalf == -1:
                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                     xdim = xdim*0.5
                 else:
@@ -195,8 +210,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                 xdim = xdim*0.5
         else:
-            if (self.isPremasked):
-                if (self.volumeRadius.get() is -1):
+            if self.isPremasked:
+                if self.volumeRadius == -1:
                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                     xdim = xdim*0.5
                 else:
@@ -217,6 +232,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         if (self.halfVolumes):
             params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
+            if (self.noiseonlyinhalves is False):
+                params += ' --noiseonlyinhalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --number_frequencies %f' % Nfreqs
@@ -240,7 +257,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params = ' -i %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --mask binary_file %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' --steps %f' % 30
-        params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())
+        params += ' --range %f %f' % (self.min_res_init, self.max_res_init)#(self.minRes.get(), self.maxRes.get())
         params += ' -o %s' % self._getExtraPath('hist.xmd')
 
         self.runJob('xmipp_image_histogram', params)
@@ -297,17 +314,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
             else:
                 self._defineSourceRelation(self.inputVolumes, self.volumesSet2)
 
-    # --------------------------- INFO functions --------------------------------------------
-    def _validate(self):
-
-        validateMsgs = []
-        if self.halfVolumes.get() is True:
-            if (not self.inputVolume.get().hasValue()):
-                validateMsgs.append('Please provide input volume.')
-        else:
-            if (not self.inputVolumes.get().hasValue()):
-                validateMsgs.append('Please provide input volume.')
-        return validateMsgs
+    # --------------------------- INFO functions ------------------------------
 
     def _methods(self):
         messages = []
@@ -318,8 +325,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
-        summary.append("Highest resolution %.2f Å,   Lowest resolution %.2f Å. \n" % (self.min_res_init
-                                                                               , self.max_res_init))
+        summary.append("Highest resolution %.2f Å,   "
+                       "Lowest resolution %.2f Å. \n" % (self.min_res_init,
+                                                         self.max_res_init))
         Nvox = self.readMetaDataOutput()
 
         if (Nvox>10):

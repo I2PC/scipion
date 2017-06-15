@@ -43,7 +43,7 @@ class XmippProtMovieGain(ProtProcessMovies):
     Estimate the gain image of a camera, directly analyzing one of its movies.
     """
     _label = 'movie gain'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)

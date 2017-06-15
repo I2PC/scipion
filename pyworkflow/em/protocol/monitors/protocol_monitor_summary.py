@@ -42,7 +42,7 @@ class ProtMonitorSummary(ProtMonitor):
     - Movie gain estimation.
     """
     _label = 'monitor summary'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def _defineParams(self, form):
         ProtMonitor._defineParams(self, form)
