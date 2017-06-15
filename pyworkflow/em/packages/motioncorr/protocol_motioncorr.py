@@ -56,7 +56,7 @@ class ProtMotionCorr(ProtAlignMovies):
     """
 
     _label = 'motioncorr alignment'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrc'
 
     def __init__(self, **args):

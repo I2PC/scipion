@@ -43,7 +43,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     """
     
     _label = 'volume homogenizer'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions --------------------------------------------   
    
     def _defineParams(self, form):

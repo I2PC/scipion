@@ -837,6 +837,8 @@ public abstract class ParticlePickerJFrame extends JFrame implements ActionListe
         // Add step
         if (steppn != null)  tb.add(steppn);
 
+        this.showHideModeParameters();
+
 	}
 
 	public boolean isEraserMode(MouseEvent e)

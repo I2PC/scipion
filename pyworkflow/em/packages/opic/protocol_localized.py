@@ -50,7 +50,7 @@ class ProtLocalizedRecons(ProtParticlePicking, ProtParticles):
     single particles.
     """
     _label = 'localized subparticles'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, **args):
         ProtParticlePicking.__init__(self, **args)

@@ -46,7 +46,7 @@ class ProtMagDistCorr(ProtProcessMovies):
     """
     CONVERT_TO_MRC = 'mrc'
     _label = 'mag distortion correction'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     doSaveAveMic = False
     doSaveMovie = True
 
