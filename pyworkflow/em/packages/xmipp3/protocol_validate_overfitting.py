@@ -58,7 +58,7 @@ class XmippProtValidateOverfitting(ProtReconstruct3D):
     (see References)
     """
     _label = 'validate overfitting'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions --------------------------------------------   
    
     def _defineParams(self, form):

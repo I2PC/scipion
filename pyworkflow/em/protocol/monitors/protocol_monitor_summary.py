@@ -40,7 +40,8 @@ class ProtMonitorSummary(ProtMonitor):
     - CTF estimation.
     """
     _label = 'monitor summary'
-    _version = VERSION_1_1
+
+    _lastUpdateVersion = VERSION_1_1
     nifs = getnifs.get_network_interfaces()
     nifsNameList = [nif.getName() for nif in nifs]
 
