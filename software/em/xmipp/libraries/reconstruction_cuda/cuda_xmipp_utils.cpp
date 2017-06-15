@@ -189,6 +189,8 @@ void GpuMultidimArrayAtGpu<double>::calculateMax(double *max_values, float *posX
 		float Xdim2 = (float)(Xdim/2);
 		float Ydim2 = (float)(Ydim/2);
 
+		printf("posX_aux %f posY_aux %f \n", posX_aux, posY_aux);
+
 		if(posX_aux>Xdim2 && posY_aux>Ydim2){
 			posX[i] = Xdim-1-posX_aux;
 			posY[i] = Ydim-1-posY_aux;
