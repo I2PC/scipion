@@ -49,7 +49,7 @@ class ProtGctf(em.ProtCTFMicrographs):
     http://www.mrc-lmb.cam.ac.uk/kzhang
     """
     _label = 'CTF estimation on GPU'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_CTF_ESTI)

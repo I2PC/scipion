@@ -24,9 +24,12 @@
 # *
 # **************************************************************************
 
-from bibtex import _bibtex # Load bibtex dict with references
-#_logo = "motioncorr_logo.png"
-_references = ['Li2013', 'Zheng2017']
+_logo = None
 
-from protocol_motioncorr import ProtMotionCorr
-from viewer import ProtMotioncorrViewer
+from bibtex import _bibtex
+from protocol_ethan_picking import ProtEthanPicker
+# from wizard import DogPickerWizard    --> Not ready yet: uncomment when ready.
+
+
+_references = ['Kivioja2000']
+

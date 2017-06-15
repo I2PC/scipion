@@ -45,7 +45,7 @@ class XmippProtAddNoise(ProtRefine3D):
     GAUSSIAN_NOISE = 0
     STUDENT_NOISE = 1
     UNIFORM_NOISE = 2
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
