@@ -121,6 +121,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "EmanProtInitModel",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtRansac",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
+			{"tag": "protocol", "value": "XmippProtReconstructSwarm",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtConvertPdb",  "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtPrime", "text": "default"},
