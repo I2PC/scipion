@@ -58,13 +58,14 @@ class TestWorkflowRelionPick(TestWorkflow):
                              "There was a problem with the import")
         
         print "Preprocessing the micrographs..."
-        protPreprocess = self.newProtocol(XmippProtPreprocessMicrographs,
+        protCropMics = self.newProtocol(XmippProtPreprocessMicrographs,
                                           doCrop=True, cropPixels=25)
-        protPreprocess.inputMicrographs.set(protImport.outputMicrographs)
-        protPreprocess.setObjLabel('crop 50px')
-        self.launchProtocol(protPreprocess)
-        self.assertIsNotNone(protPreprocess.outputMicrographs,
+        protCropMics.inputMicrographs.set(protImport.outputMicrographs)
+        protCropMics.setObjLabel('crop 50px')
+        self.launchProtocol(protCropMics)
+        self.assertIsNotNone(protCropMics.outputMicrographs,
                              "There was a problem with the downsampling")
+        self.protCropMics = protCropMics
 
         # Now estimate CTF on the micrographs with ctffind
         print "Performing CTFfind..."
@@ -74,8 +75,9 @@ class TestWorkflowRelionPick(TestWorkflow):
                                    minDefocus=1.2, maxDefocus=3,
                                    runMode=1,
                                    numberOfMpi=1, numberOfThreads=3)
-        protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protCTF.inputMicrographs.set(protCropMics.outputMicrographs)
         protCTF.setObjLabel('CTF ctffind')
+        self.protCTF = protCTF
         self.launchProtocol(protCTF)
 
         print "Importing 2D averages (subset of 4)"
@@ -109,7 +111,7 @@ class TestWorkflowRelionPick(TestWorkflow):
                                      particleDiameter=380
                                      )
 
-        protPick1.inputMicrographs.set(protPreprocess.outputMicrographs)
+        protPick1.inputMicrographs.set(protCropMics.outputMicrographs)
         protPick1.ctfRelations.set(protCTF.outputCTF)
         protPick1.inputReferences.set(protAvgs.outputAverages)
 
@@ -136,7 +138,7 @@ class TestWorkflowRelionPick(TestWorkflow):
         # Launch the same picking run but now in 1 GPU.
         protPick4 = self.proj.copyProtocol(protPick1)
         protPick4.setObjLabel('autopick refs (optimize) 1 GPU')
-        protPick4.gpusToUse.set('0')
+        protPick4.gpusToUse.set('0:0:0:0')
         self.launchProtocol(protPick4)
 
 
@@ -169,8 +171,6 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         """ Reimplement this test to run several extract cases. """
         protPick1 = self._runPickWorkflow()
         proj = protPick1.getProject()
-        protCTF = proj.getProtocolsByClass('ProtCTFFind')[0]
-
         size = protPick1.outputCoordinates.getSize()
 
         protExtract = self.newProtocol(ProtRelionExtractParticles,
@@ -180,7 +180,7 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
                                        )
 
         protExtract.inputCoordinates.set(protPick1.outputCoordinates)
-        protExtract.ctfRelations.set(protCTF.outputCTF)
+        protExtract.ctfRelations.set(self.protCTF.outputCTF)
 
         self.launchProtocol(protExtract)
         self._checkOutput(protExtract, size=size)
@@ -195,12 +195,10 @@ class TestWorkflowRelionExtract(TestWorkflowRelionPick):
         self._checkOutput(protExtract2, size=size, dim=32, sampling=14.16)
         
         # Now test changing micrographs source option
-        protImport = proj.getProtocolsByClass('ProtImportMicrographs')[0]
-
         subsetProt = self.newProtocol(em.ProtSubSet,
                                       chooseAtRandom=True,
                                       nElements=10)
-        subsetProt.inputFullSet.set(protImport.outputMicrographs)
+        subsetProt.inputFullSet.set(self.protCropMics.outputMicrographs)
         self.launchProtocol(subsetProt)
 
         protExtract3 = self.proj.copyProtocol(protExtract)

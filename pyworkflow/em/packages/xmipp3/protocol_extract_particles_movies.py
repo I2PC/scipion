@@ -425,26 +425,20 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
             return True
     
     def _filterMovie(self, movie):
-        """ Check if process or not this movie.
-        In this case if there are not coordinates, do not process it.
+        """ Check if process or not this movie. If there are coordinates or
+        not to this movie, is cheked in _processMovie step.
         """
+        
         movieId = movie.getObjId()
         coordinates = self.inputCoordinates.get()
         micrograph = coordinates.getMicrographs()[movieId]
-         
-        if micrograph is None:
+        
+        if micrograph is not None:
+            return True
+        else:
             self.warning("Micrograph with id %d was not found in "
                          "SetOfCoordinates!!!" % movieId)
             return False
-         
-        n = len([coord for coord in coordinates.iterCoordinates(micrograph)])
-         
-        if n == 0:
-            self.warning("Skipping micrograph with id %d, not coordinates "
-                         "found!!!" % movieId)
-            return False
-         
-        return True
     
     def _postprocessImageRow(self, img, imgRow):
         img.setFrameId(imgRow.getValue(md.MDL_FRAME_ID))

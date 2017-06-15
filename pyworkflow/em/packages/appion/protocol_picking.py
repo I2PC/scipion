@@ -44,36 +44,29 @@ class DogPickerProtPicking(ProtParticlePicking):
         ProtParticlePicking.__init__(self, **args)
 
 
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
 
         ProtParticlePicking._defineParams(self, form)
         form.addParam('diameter', IntParam, default=100,
                    label='Diameter of particle')
         form.addParam('invert', BooleanParam, default=False,
-                   label='Invert', help = "Invert image before picking, DoG normally picks white particles.")
+                   label='Invert', help = "Invert image before picking, "
+                                          "DoG normally picks white particles.")
         form.addParam('threshold', FloatParam, default=0.5,
-                    label='Threshold', help = "Threshold in standard deviations above the mean, e.g. --thresh=0.7")
-        # form.addParam('numberSizes', IntParam, expertLevel=LEVEL_ADVANCED,
-        #            label='Number of sizes', help = "Number of different sizes to try.")
-        # form.addParam('sizeRange', IntParam, expertLevel=LEVEL_ADVANCED,
-        #            label='Size range', help = "Size range in pixels about diam to search.")
-        # form.addParam('maxThreshold', FloatParam, expertLevel=LEVEL_ADVANCED,
-        #            label='Max threshold', help = "Threshold in standard deviations above the mean, e.g. --thresh=0.7")
-        # form.addParam('maxArea', FloatParam, expertLevel=LEVEL_ADVANCED,
-        #            label='Max area', help = "When thresholded the peak must be less than maxarea*pi*r^2.")
-        # form.addParam('maxPeaks', FloatParam, expertLevel=LEVEL_ADVANCED,
-        #            label='Max peaks', help = "Maximum number of allowed peaks.")
+                    label='Threshold', help = "Threshold in standard "
+                                              "deviations above the mean, "
+                                              "e.g. --thresh=0.7")
         form.addParam('extraParams', StringParam, expertLevel=LEVEL_ADVANCED,
               label='Additional parameters',
-              help='Additional parameters for dogpicker: \n  --numberSizes, --sizeRange, --threshold,...')
+              help='Additional parameters for dogpicker: \n  --numberSizes, '
+                   '--sizeRange, --threshold,...')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
 
         self._params = {}
-        # diameter must be passed in Angstrongs and therefore should be converted
-        self._params['diam'] = self.diameter.get() * self.getInputMicrographs().getSamplingRate()
+        self._params['diam'] = self.diameter.get()
         # self._params['num-slices'] = self.numberSizes.get()
         # self._params['size-range'] = self.sizeRange.get()
         self._params['apix'] = self.inputMicrographs.get().getSamplingRate()
@@ -90,8 +83,9 @@ class DogPickerProtPicking(ProtParticlePicking):
             args += " --invert"
 
         args += " " + self.extraParams.get('')
-
-        deps = [] # Store all steps ids, final step createOutput depends on all of them
+        
+        # Store all steps ids, final step createOutput depends on all of them
+        deps = []
 
         ih = ImageHandler()
 
@@ -111,7 +105,8 @@ class DogPickerProtPicking(ProtParticlePicking):
                 createLink(micName, inputMic)
 
             # Insert step to execute program
-            stepId = self._insertFunctionStep('executeDogpickerStep', inputMic, args)
+            stepId = self._insertFunctionStep('executeDogpickerStep',
+                                              inputMic, args)
             deps.append(stepId)
 
 
@@ -123,7 +118,7 @@ class DogPickerProtPicking(ProtParticlePicking):
         self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
 
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def executeDogpickerStep(self, inputMic, args):
 
         # Program to execute and it arguments
@@ -146,9 +141,10 @@ class DogPickerProtPicking(ProtParticlePicking):
         self._defineSourceRelation(self.inputMicrographs, coordSet)
 
     
-    #--------------------------- UTILS functions --------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def getFiles(self):
-        filePaths = self.inputMicrographs.get().getFiles() | ProtParticlePicking.getFiles(self)
+        filePaths = (self.inputMicrographs.get().getFiles() |
+                     ProtParticlePicking.getFiles(self))
         return filePaths
 
 
@@ -157,9 +153,11 @@ class DogPickerProtPicking(ProtParticlePicking):
 
     def _summary(self):
         summary = []
-        summary.append("Number of input micrographs: %d" % self.getInputMicrographs().getSize())
+        summary.append("Number of input micrographs: %d"
+                       % self.getInputMicrographs().getSize())
         if(self.getOutputsSize() > 0):
-            summary.append("Number of particles picked: %d" % self.getCoords().getSize())
+            summary.append("Number of particles picked: %d"
+                           % self.getCoords().getSize())
             summary.append("Particle size: %d" % self.getCoords().getBoxSize())
             summary.append("Threshold: %0.2f" % self.threshold)
             if self.extraParams.hasValue():
@@ -175,12 +173,16 @@ class DogPickerProtPicking(ProtParticlePicking):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
-        methodsMsgs.append("Input micrographs %s of size %d." % (self.getObjectTag(self.getInputMicrographs()), self.getInputMicrographs().getSize()))
+        methodsMsgs.append("Input micrographs %s of size %d." %
+                           (self.getObjectTag(self.getInputMicrographs()),
+                            self.getInputMicrographs().getSize()))
 
         if self.getOutputsSize() > 0:
             output = self.getCoords()
-            methodsMsgs.append('%s: User picked %d particles with a particle size of %d and threshold %0.2f.'
-                               % (self.getObjectTag(output), output.getSize(), output.getBoxSize(), self.threshold.get()))
+            methodsMsgs.append('%s: User picked %d particles with a particle '
+                               'size of %d and threshold %0.2f.'
+                               % (self.getObjectTag(output), output.getSize(),
+                                  output.getBoxSize(), self.threshold.get()))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
