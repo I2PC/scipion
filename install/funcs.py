@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -123,7 +123,7 @@ class Command:
                 if not self._env.showOnly:
                     os.chdir(self._cwd)
                 print(cyan("cd %s" % self._cwd))
-
+    
             # Actually allow self._cmd to be a list or a
             # '\n'-separated list of commands, and run them all.
             if isinstance(self._cmd, basestring):
@@ -132,17 +132,17 @@ class Command:
                 cmds = [self._cmd]  # a function call
             else:
                 cmds = self._cmd  # already a list of whatever
-
+    
             for cmd in cmds:
                 if self._out is not None:
                     cmd += ' > %s 2>&1' % self._out
                     # TODO: more general, this only works for bash.
-
+        
                 print(cyan(cmd))
-
+        
                 if self._env.showOnly:
                     continue  # we don't really execute the command here
-
+        
                 if callable(cmd):  # cmd could be a function: call it
                     cmd()
                 else:  # if not, it's a command: make a system call
@@ -175,6 +175,7 @@ class Target:
         else:
             c = Command(self._env, cmd, **kwargs)
         self._commandList.append(c)
+
         if kwargs.get('final', False):
             self._finalCommands.append(c)
         return c
@@ -226,7 +227,7 @@ class Environment:
         # We need a targetList which has the targetDict.keys() in order
         # (OrderedDict is not available in python < 2.7)
 
-        self._packages = []  # list of available packages (to show in --help)
+        self._packages = {}  # dict of available packages (to show in --help)
 
         self._args = kwargs.get('args', [])
         self.showOnly = '--show' in self._args
@@ -272,6 +273,17 @@ class Environment:
         self._targetDict[name] = t
 
         return t
+
+    def addTargetAlias(self, name, alias):
+        """ Add an alias to an existing target.
+        This function will be used for installing the last version of each
+        package.
+        """
+        if name not in self._targetDict:
+            raise Exception("Can't add alias, target name '%s' not found. "
+                            % name)
+
+        self._targetDict[alias] = self._targetDict[name]
     
     def getTarget(self, name):
         return self._targetDict[name]
@@ -511,16 +523,36 @@ class Environment:
             commands: a list with actions to be executed to install the package
         """
         # Add to the list of available packages, for reference (used in --help).
-        self._packages.append(name)
+        if name not in self._packages:
+            self._packages[name] = []
+
+        # Get the version from the kwargs
+        if 'version' in kwargs:
+            version = kwargs['version']
+            extName = self._getExtName(name, version)
+        else:
+            version = ''
+            extName = name
+
+        self._packages[name].append((name, version))
 
         # Special case: our "package" is a python module that we want to use
         # from elsewhere.
         if kwargs.get('pythonMod', False):
             return self.addModule(name, **kwargs)
+        
+        environ = (self.updateCudaEnviron(name)
+                   if kwargs.get('updateCuda', False) else None)
+
+        # Set environment
+        variables = kwargs.get('vars',[])
+        for var,value in variables:
+            environ.update({var: value})
+
 
         # We reuse the download and untar from the addLibrary method
         # and pass the createLink as a new command 
-        tar = kwargs.get('tar', '%s.tgz' % name)
+        tar = kwargs.get('tar', '%s.tgz' % extName)
         buildDir = kwargs.get('buildDir',
                               tar.rsplit('.tar.gz', 1)[0].rsplit('.tgz', 1)[0])
         targetDir = kwargs.get('targetDir', buildDir)
@@ -530,22 +562,29 @@ class Environment:
                    'default': False} # This will be updated with value in kwargs
         libArgs.update(kwargs)
 
-        target = self._addDownloadUntar(name, **libArgs)
+        target = self._addDownloadUntar(extName, **libArgs)
         commands = kwargs.get('commands', [])
         for cmd, tgt in commands:
             if isinstance(tgt, basestring):
                 tgt = [tgt]
             # Take all package targets relative to package build dir
+
             target.addCommand(
                 cmd, targets=[join(target.targetPath, t) for t in tgt],
-                cwd=target.buildPath, final=True)
-        target.addCommand(Command(self, Link(name, targetDir),
-                                targets=[self.getEm(name),
-                                         self.getEm(targetDir)],
+                cwd=target.buildPath, final=True, environ=environ)
+        
+        target.addCommand(Command(self, Link(extName, targetDir),
+                                  targets=[self.getEm(extName),
+                                           self.getEm(targetDir)],
                                   cwd=self.getEm('')),
                           final=True)
- 
-            
+        
+        # Create an alias with the name for that version
+        # this imply that the last package version added will be
+        # the one installed by default, so the last versions should
+        # be the last ones to be inserted
+        self.addTargetAlias(extName, name)
+
         return target
 
     def _showTargetGraph(self, targetList):
@@ -597,23 +636,38 @@ class Environment:
                 executed.add(tgt.getName())
                 exploring.discard(tgt.getName())
 
+    def _getExtName(self, name, version):
+        """ Return folder name for a given package-version """
+        return '%s-%s' % (name, version)
+
+    def _isInstalled(self, name, version):
+        """ Return true if the package-version seems to be installed. """
+        pydir = join('software', 'lib', 'python2.7', 'site-packages')
+        extName = self._getExtName(name, version)
+        return (exists(join('software', 'em', extName)) or
+                extName in [x[:len(extName)] for x in os.listdir(pydir)])
+
     def execute(self):
         if '--help' in self._args[2:]:
             if self._packages:
-                print("Available packages (*: seems already installed)")
-                pydir = join('software', 'lib', 'python2.7', 'site-packages')
-                for p in sorted(self._packages):
-                    if (exists(join('software', 'em', p)) or
-                        p in [x[:len(p)] for x in os.listdir(pydir)]):
-                        print("  %s (*)" % p)
-                    else:
-                        print("  %s" % p)
+                print("Available packages: "
+                      "([ ] not installed, [X] seems already installed)")
+
+                keys = sorted(self._packages.keys())
+                for k in keys:
+                    pVersions = self._packages[k]
+                    sys.stdout.write("%15s " % k)
+                    for name, version in pVersions:
+                        installed = self._isInstalled(name, version)
+                        vInfo = '%s [%s]' % (version, 'X' if installed else ' ')
+                        sys.stdout.write('%13s' % vInfo)
+                    sys.stdout.write("\n")
             sys.exit()
 
         # Check if there are explicit targets and only install
         # the selected ones, ignore starting with 'xmipp'
-        cmdTargets = [a for a in self._args[2:] if a[0].isalpha() and not a.startswith('xmipp')]
-
+        cmdTargets = [a for a in self._args[2:]
+                      if a[0].isalpha() and not a.startswith('xmipp')]
         if cmdTargets:
             # Check that they are all command targets
             for t in cmdTargets:
@@ -632,8 +686,43 @@ class Environment:
                 self._showTargetTree(targetList)
         else:
             self._executeTargets(targetList)
-            
         
+    def updateCudaEnviron(self, package):
+        """ Update the environment adding CUDA_LIB and/or CUDA_BIN to support
+        packages that uses CUDA.
+        package: package that needs CUDA to compile.
+        """
+        packUpper = package.upper()
+        cudaLib = os.environ.get(packUpper + '_CUDA_LIB')
+        cudaBin = os.environ.get(packUpper + '_CUDA_BIN')
+    
+        if cudaLib is None:
+            cudaLib = os.environ.get('CUDA_LIB')
+            cudaBin = os.environ.get('CUDA_BIN')
+
+        environ = os.environ.copy()
+
+        # If there isn't any CUDA in the environment
+        if cudaLib is None and cudaBin is None:
+            # Exit ...do not update the environment
+            return environ
+
+        elif cudaLib is not None and cudaBin is None:
+            raise Exception("CUDA_LIB (or %s_CUDA_LIB) is defined, but not "
+                            "CUDA_BIN (or %s_CUDA_BIN), please excecute "
+                            "scipion config --update" % (packUpper, packUpper))
+        elif cudaBin is not None and cudaLib is None:
+            raise Exception("CUDA_BIN (or %s_CUDA_BIN) is defined, but not "
+                            "CUDA_LIB (or %s_CUDA_LIB), please excecute "
+                            "scipion config --update" % (packUpper, packUpper))
+        elif os.path.exists(cudaLib) and os.path.exists(cudaBin):
+            environ.update({'LD_LIBRARY_PATH': cudaLib + ":" +
+                                               environ['LD_LIBRARY_PATH']})
+            environ.update({'PATH': cudaBin + ":" + environ['PATH']})
+
+        return environ
+
+
 class Link:
     def __init__(self, packageLink, packageFolder):
         self._packageLink = packageLink

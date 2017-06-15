@@ -23,7 +23,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -35,7 +35,7 @@ from protocol_volume_strain import XmippProtVolumeStrain
 
 class XmippVolumeStrainViewer(XmippViewer):
     """ Visualize the output of protocol volume strain """
-    _label = 'viewer split volume'
+    _label = 'viewer volume strain'
     _targets = [XmippProtVolumeStrain]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     

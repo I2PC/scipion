@@ -94,7 +94,8 @@ void ProgCorrectWiener2D::postProcess()
 
 void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTFDescription & ctf)
 {
-	int paddim = Ydim*pad;
+	int paddimY = Ydim*pad;
+	int paddimX = Xdim*pad;
 	ctf.enable_CTF = true;
 	ctf.enable_CTFnoise = false;
 	ctf.produceSideInfo();
@@ -102,9 +103,8 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 	MultidimArray<std::complex<double> > ctfComplex;
 	MultidimArray<double> ctfIm;
 
-	Mwien.resize(paddim,paddim);
+	Mwien.resize(paddimY,paddimX);
 
-	//NO entiendo esto:
 	ctf.Tm = sampling_rate;
 	//ctf.Tm /= pad;
 
@@ -116,14 +116,14 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 	}
 
 
-	ctfIm.resize(1, 1, paddim, paddim,false);
+	ctfIm.resize(1, 1, paddimY, paddimX,false);
 	//Esto puede estar mal. Cuidado con el sampling de la ctf!!!
 
 	if (correct_envelope)
-		ctf.generateCTF(paddim, paddim, ctfComplex);
+		ctf.generateCTF(paddimY, paddimX, ctfComplex);
 
 	else
-		ctf.generateCTFWithoutDamping(paddim, paddim, ctfComplex);
+		ctf.generateCTFWithoutDamping(paddimY, paddimX, ctfComplex);
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctfIm)
 	{
@@ -133,12 +133,13 @@ void ProgCorrectWiener2D::generateWienerFilter(MultidimArray<double> &Mwien, CTF
 			dAij(ctfIm, i, j) = dAij(ctfComplex, i, j).real();
 	}
 
+//#define DEBUG
 #ifdef DEBUG
 	{
 		Image<double> save;
 		save()=ctfIm;
-		save.write("ctf2.spi");
-		exit(1);
+		save.write("PPPctf2.spi");
+		//exit(1);
 		//std::cout << "Press any key\n";
 		//char c;
 		//std::cin >> c;
@@ -197,6 +198,7 @@ else
 
 }
 
+//#define DEBUG
 void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fnImgOut, const MDRow &rowIn, MDRow &rowOut)
 {
 
@@ -206,43 +208,52 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 	ctf.readFromMdRow(rowIn);
 	img().setXmippOrigin();
 	Ydim = YSIZE(img());
-	Xdim = YSIZE(img());
-	int paddim = Ydim*pad;
+	Xdim = XSIZE(img());
+	int paddimY = Ydim*pad;
+	int paddimX = Xdim*pad;
 	MultidimArray<std::complex<double> > Faux;
 
-	 generateWienerFilter(Mwien,ctf);
+	generateWienerFilter(Mwien,ctf);
 
 #ifdef DEBUG
 
 {
+	std::cout << ctf << std::endl;
+
 	Image<double> save;
-	save()=img;
-	save.write("img.spi");
+	save()=Mwien;
+	save.write("PPPMwien.spi");
+	std::cout << "Press any key"<< std::endl;
+	char c; std::cin >> c;
 }
 #endif
 #undef DEBUG
 
-    if (paddim > Xdim)
+    if (paddimX >= Xdim)
     {
         // pad real-space image
-        int x0 = FIRST_XMIPP_INDEX(paddim);
-        int xF = LAST_XMIPP_INDEX(paddim);
-        img().selfWindow(x0, x0, xF, xF);
+        int x0 = FIRST_XMIPP_INDEX(paddimX);
+        int xF = LAST_XMIPP_INDEX(paddimX);
+        int y0 = FIRST_XMIPP_INDEX(paddimY);
+        int yF = LAST_XMIPP_INDEX(paddimY);
+        img().selfWindow(y0, x0, yF, xF);
     }
 
-    FourierTransform(img(), Faux);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
+    transformer.FourierTransform(img(), Faux);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
     {
         dAij(Faux,i,j) *= dAij(Mwien,i,j);
     }
 
-    InverseFourierTransform(Faux, img());
-    if (paddim > Xdim)
+    transformer.inverseFourierTransform(Faux, img());
+	if (paddimX >= Xdim)
     {
         // de-pad real-space image
         int x0 = FIRST_XMIPP_INDEX(Xdim);
+        int y0 = FIRST_XMIPP_INDEX(Ydim);
         int xF = LAST_XMIPP_INDEX(Xdim);
-        img().selfWindow(x0, x0, xF, xF);
+        int yF = LAST_XMIPP_INDEX(Ydim);
+        img().selfWindow(y0, x0, yF, xF);
     }
 
     img.write(fnImgOut);
@@ -259,9 +270,3 @@ void ProgCorrectWiener2D::processImage(const FileName &fnImg, const FileName &fn
 #undef DEBUG
 
 }
-
-
-
-
-
-

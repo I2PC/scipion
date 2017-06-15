@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -45,6 +45,7 @@ from pyworkflow.em.protocol.protocol_sets import (
 # Used by Roberto's test, where he creates the particles "by hand"
 from pyworkflow.em.data import Particle, SetOfParticles, Acquisition
 from pyworkflow.utils.utils import prettyDict
+from pyworkflow.object import Float
 
 
 class TestSets(BaseTest):
@@ -103,6 +104,7 @@ class TestSets(BaseTest):
 
         # Coordinates
         # Oh, I don't know of any example of coordinates imported :(
+
 
     #
     # Helper functions
@@ -242,6 +244,166 @@ class TestSets(BaseTest):
         check(self.movies)
         check(self.particles)
 
+    def testMergeAlternateColumn(self):
+        """Test that the union operation works as expected.
+        Even if the order of the columns do not match.
+        That is, M1(a,b,c) U M2(a,c,b)"""
+
+        #create two set of particles
+        inFileNameMetadata1 = self.proj.getTmpPath('particles1.sqlite')
+        inFileNameMetadata2 = self.proj.getTmpPath('particles2.sqlite')
+        imgSet1 = SetOfParticles(filename=inFileNameMetadata1)
+        imgSet2 = SetOfParticles(filename=inFileNameMetadata2)
+
+        inFileNameData = self.proj.getTmpPath('particles.stk')
+        img1 = Particle()
+        img2 = Particle()
+        attrb1=[11,12,13,14]
+        attrb2=[21,22,23,24]
+        counter=0
+        for i in range(1, 3):
+            img1.cleanObjId()
+            img1.setLocation(i, inFileNameData)
+            img1.setMicId(i%3)
+            img1.setClassId(i%5)
+            img1.setSamplingRate(1.)
+            img1._attrb1= Float(attrb1[counter])
+            img1._attrb2= Float(attrb2[counter])
+            imgSet1.append(img1)
+            counter +=1
+
+        for i in range(1, 3):
+            img2.cleanObjId()
+            img2.setLocation(i, inFileNameData)
+            img2.setClassId(i%5)
+            img2.setMicId(i%3)
+            img2.setSamplingRate(2.)
+            img2._attrb2= Float(attrb2[counter])
+            img2._attrb1= Float(attrb1[counter])
+            imgSet2.append(img2)
+            counter +=1
+
+        imgSet1.write()
+        imgSet2.write()
+
+        #import them
+        protImport1 = self.newProtocol(ProtImportParticles,
+                                      objLabel='import set1',
+                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                      sqliteFile=inFileNameMetadata1,
+                                      magnification=10000,
+                                      samplingRate=7.08,
+                                      haveDataBeenPhaseFlipped=True
+                                      )
+        self.launchProtocol(protImport1)
+
+        protImport2 = self.newProtocol(ProtImportParticles,
+                                      objLabel='import set2',
+                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                      sqliteFile=inFileNameMetadata2,
+                                      magnification=10000,
+                                      samplingRate=7.08,
+                                      haveDataBeenPhaseFlipped=True
+                                      )
+        self.launchProtocol(protImport2)
+
+        #create merge protocol
+        p_union = self.newProtocol(ProtUnionSet,
+                       objLabel='join diff column order',
+                       ignoreExtraAttributes=True)
+        p_union.inputSets.append(protImport1.outputParticles)
+        p_union.inputSets.append(protImport2.outputParticles)
+        self.proj.launchProtocol(p_union, wait=True)
+        #assert
+        counter=0
+        for img in p_union.outputSet:
+            self.assertAlmostEqual(attrb1[counter],img._attrb1,4)
+            self.assertAlmostEqual(attrb2[counter],img._attrb2,4)
+            counter += 1
+
+    def testMergeDifferentAttrs(self):
+        """ Test merge from subsets with different attritubes.
+        That is, M1(a,b,c) U M2(a,b,c,d)"""
+
+        #create two set of particles
+        inFileNameMetadata1 = self.proj.getTmpPath('particles11.sqlite')
+        inFileNameMetadata2 = self.proj.getTmpPath('particles22.sqlite')
+        imgSet1 = SetOfParticles(filename=inFileNameMetadata1)
+        imgSet2 = SetOfParticles(filename=inFileNameMetadata2)
+
+        inFileNameData = self.proj.getTmpPath('particles.stk')
+        img1 = Particle()
+        img2 = Particle()
+        attrb1=[11,12,13,14]
+        attrb2=[21,22,23,24]
+        attrb3=[31,32]
+        counter=0
+        for i in range(1, 3):
+            img1.cleanObjId()
+            img1.setLocation(i, inFileNameData)
+            img1.setMicId(i%3)
+            img1.setClassId(i%5)
+            img1.setSamplingRate(1.)
+            img1._attrb1= Float(attrb1[counter])
+            img1._attrb2= Float(attrb2[counter])
+            img1._attrb3= Float(attrb3[counter])
+            imgSet1.append(img1)
+            counter +=1
+
+        for i in range(1, 3):
+            img2.cleanObjId()
+            img2.setLocation(i, inFileNameData)
+            img2.setClassId(i%5)
+            img2.setMicId(i%3)
+            img2.setSamplingRate(2.)
+            img2._attrb1= Float(attrb1[counter])
+            img2._attrb2= Float(attrb2[counter])
+            imgSet2.append(img2)
+            counter +=1
+
+        imgSet1.write()
+        imgSet2.write()
+
+        #import them
+        protImport1 = self.newProtocol(ProtImportParticles,
+                                      objLabel='import set1',
+                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                      sqliteFile=inFileNameMetadata1,
+                                      magnification=10000,
+                                      samplingRate=7.08,
+                                      haveDataBeenPhaseFlipped=True
+                                      )
+        self.launchProtocol(protImport1)
+
+        protImport2 = self.newProtocol(ProtImportParticles,
+                                      objLabel='import set2',
+                                      importFrom=ProtImportParticles.IMPORT_FROM_SCIPION,
+                                      sqliteFile=inFileNameMetadata2,
+                                      magnification=10000,
+                                      samplingRate=7.08,
+                                      haveDataBeenPhaseFlipped=True
+                                      )
+        self.launchProtocol(protImport2)
+
+        #create merge protocol
+        p_union = self.newProtocol(ProtUnionSet,
+                       objLabel='join diff column order',
+                       ignoreExtraAttributes=True)
+        p_union.inputSets.append(protImport1.outputParticles)
+        p_union.inputSets.append(protImport2.outputParticles)
+        self.proj.launchProtocol(p_union, wait=True)
+        #assert
+        counter=0
+        for img in p_union.outputSet:
+            self.assertAlmostEqual(attrb1[counter],img._attrb1,4)
+            self.assertAlmostEqual(attrb2[counter],img._attrb2,4)
+            if hasattr(img, '_attrb3'):
+                self.assertTrue(False,"join should not have attrb3")
+            if not hasattr(img, '_attrb2'):
+                self.assertTrue(False,"join should have attrb2")
+            counter += 1
+
+
     def testOrderBy(self):
         """ create set of particles and orderby a given attribute
         """
@@ -304,7 +466,10 @@ class TestSets(BaseTest):
                 prettyDict(item2.getObjDict())
             self.assertTrue(item1.equalAttributes(item2),  )
 
+    def testEmptiness(self):
 
+        self.assertSetSize(TestSets.particles)
+        self.assertSetSize(TestSets.particles, 76)
 
 if __name__ == '__main__':
     unittest.main()

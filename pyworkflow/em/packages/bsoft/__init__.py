@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -41,3 +41,7 @@ from wizard import BsoftFilterParticlesWizard
 
 from convert import getEnviron, getVersion
 _environ = getEnviron()
+
+# Since bsoft is not installed by default,
+# remove for now the viewer
+#from viewer import BsoftViewer

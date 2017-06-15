@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ***************************************************************************
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -19,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
 from itertools import izip
@@ -91,8 +92,8 @@ class TestEmxWeb(tests.BaseTest):
                                        downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
-                                       doFlip=False,
-                                       downFactor=1)
+                                       doInvert=False,
+                                       doFlip=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -142,9 +143,9 @@ class TestEmxWeb(tests.BaseTest):
                                        downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False,
-                                       doSort=False,
-                                       downFactor=1)
+                                       doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -183,9 +184,9 @@ class TestEmxWeb(tests.BaseTest):
                                        downsampleType=0,
                                        doRemoveDust=False,
                                        doNormalize = False,
+                                       doInvert=False,
                                        doFlip=False,
-                                       doSort=False,
-                                       downFactor=1)
+                                       doSort=False)
         protExtract.inputCoordinates.set(protEmxImport.outputCoordinates)
         protExtract.inputMicrographs.set(protEmxImport.outputMicrographs)
 
@@ -204,7 +205,7 @@ class TestEmxWeb(tests.BaseTest):
         This test requires:
 
         Download a file with two parametric CTFs in EMX exchange format.
-        Download a file with two test images in CCP4 format (these images are zero valued except at the central pixel). The sampling rate of these test image is 2 A/px.
+        Download a file with two test images in CCP4 format (these images are zero valued except at the central pixel). The sampling rate of these test image is 2 Å/px.
         Convert the CTFs to your package format.
         Convert the test images to your package format.
         Apply each CTFs to the corresponding test image (the resulting images are the microscope PSF). Conceptually, the steps required to apply the CTF to each test image are:
@@ -218,7 +219,7 @@ class TestEmxWeb(tests.BaseTest):
         Three galleries of images will be displayed: the gold standard, the one just uploaded and the differences between them. The test has been successful if the gold standard and the images updated are identical.
         As extra check, the Web Site will make a pixel by pixel comparison between images belonging to both galleries. A green tick will appear if both images are identical and a red cross if any pair of pixels differ more than 10-2.
 
-        Note: both CTFs as well as the test image have different sampling rate . The sampling rate of the output image should be 2 A/px.
+        Note: both CTFs as well as the test image have different sampling rate . The sampling rate of the output image should be 2 Å/px.
         """
         #download data
         self.url = "CTF/Test1/"
@@ -287,7 +288,7 @@ class TestEmxWeb(tests.BaseTest):
         This test requires:
 
             Download a file with one parametric CTF in EMX exchange format.
-            Download a file with two test images in CCP4 format (these images are zero valued except in a single pixel). Their sampling rate is 2A/px
+            Download a file with two test images in CCP4 format (these images are zero valued except in a single pixel). Their sampling rate is 2Å/px
             Convert them to your package format.
             Apply the CTF to the corresponding image.
             Create a 2D CCP4 stack file with the two images resulting from applying the CTF to the test image
@@ -296,7 +297,7 @@ class TestEmxWeb(tests.BaseTest):
             Three galleries of images will be displayed: the gold standard, the one just uploaded and the differences between them. The test has been successful if the gold standard and the images updated are identical.
             As extra check, the Web Site will make a pixel by pixel comparison between images belonging to both galleries. A green tick will appear if both images are identical and a red cross if any pair of pixels differ more than 10-2.
 
-        Note: both CTFs as well as the test image have different sampling rate . The sampling rate of the output image should be 2 A/px.
+        Note: both CTFs as well as the test image have different sampling rate . The sampling rate of the output image should be 2 Å/px.
         """
         #download data
         self.url = "CTF/Test2/"

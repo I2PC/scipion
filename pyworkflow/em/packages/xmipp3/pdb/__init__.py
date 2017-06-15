@@ -20,11 +20,13 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from protocol_convert_pdb import XmippProtConvertPdb
+from protocol_combine_pdb import XmippProtCombinePdb
 from protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
 
 from viewer_pseudoatoms import XmippPseudoAtomsViewer
+from viewer_combine_pdb import XmippProtCombinePdbViewer

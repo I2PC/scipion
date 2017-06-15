@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -36,6 +36,7 @@ import ttk
 
 import gui
 from widgets import Scrollable, IconButton
+import pyworkflow as pw
 from pyworkflow.utils import (HYPER_BOLD, HYPER_ITALIC, HYPER_LINK1, HYPER_LINK2,
                               parseHyperText, renderLine, renderTextFile, colorName,
                               which, envVarOn, expandPattern)
@@ -217,12 +218,11 @@ class Text(tk.Text, Scrollable):
         "Try to open the selected path"
         path = expandPattern(path)
 
-        # If the path is a dir, open it with   scipion browser dir <path>
+        # If the path is a dir, open it with scipion browser dir <path>
         if os.path.isdir(path):
             dpath = (path if os.path.isabs(path)
                      else os.path.join(os.getcwd(), path))
-            subprocess.Popen(['%s/scipion' % os.environ['SCIPION_HOME'],
-                              'browser', 'dir', dpath])
+            subprocess.Popen(pw.getScipionScript(), ['browser', 'dir', dpath])
             return
 
         # If it is a file, interpret it correctly and open it with DataView
@@ -301,7 +301,7 @@ class TaggedText(Text):
     Implement a Text that will recognize some basic tags
     *some_text* will display some_text in bold
     _some_text_ will display some_text in italic
-    some_link or [[some_link][some_label]] will display some_link as hiperlink or some_label as hiperlink to some_link
+    some_link or [[some_link][some_label]] will display some_link as hyperlink or some_label as hyperlink to some_link
     also colors are recognized if set option colors=True
     """           
     def __init__(self, master, colors=True, **opts):  
@@ -321,8 +321,13 @@ class TaggedText(Text):
         if self.colors:            
             self.colors = configureColorTags(self) # Color can be unavailable, so disable use of colors    
         
-    def openLink(self, link):
+    @staticmethod
+    def openLink(link):
         webbrowser.open_new_tab(link)  # Open in the same browser, new tab
+
+    @staticmethod
+    def mailTo(email):
+        webbrowser.open("mailto:" + email)
 
     def matchHyperText(self, match, tag):
         """ Process when a match a found and store indexes inside string."""
@@ -337,6 +342,8 @@ class TaggedText(Text):
             label = match.group('link2_label')
             if g1.startswith('http:'):
                 self.insert(tk.END, label, self.hm.add(lambda: self.openLink(g1)))
+            elif g1.startswith('mailto:'):
+                self.insert(tk.END, label, self.hm.add(lambda: self.mailTo(g1)))
             else:
                 self.insert(tk.END, label, self.hm.add(lambda: self.openPath(g1)))
         self.lastIndex = match.end()

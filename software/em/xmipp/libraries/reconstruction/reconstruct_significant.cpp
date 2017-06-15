@@ -32,6 +32,7 @@ ProgReconstructSignificant::ProgReconstructSignificant()
 	rank=0;
 	Nprocessors=1;
 	randomize_random_generator();
+	deltaAlpha2=0;
 }
 
 void ProgReconstructSignificant::defineParams()
@@ -60,6 +61,8 @@ void ProgReconstructSignificant::defineParams()
     addParamsLine("  [--dontApplyFisher]          : Do not select directions using Fisher");
     addParamsLine("  [--dontReconstruct]          : Do not reconstruct");
     addParamsLine("  [--useForValidation <numOrientationsPerParticle=10>] : Use the program for validation. This number defines the number of possible orientations per particle");
+    addParamsLine("  [--dontCheckMirrors]         : Don't check mirrors in the alignment process");
+
 }
 
 // Read arguments ==========================================================
@@ -86,6 +89,7 @@ void ProgReconstructSignificant::readParams()
     doReconstruct=!checkParam("--dontReconstruct");
     useForValidation=checkParam("--useForValidation");
     numOrientationsPerParticle = getIntParam("--useForValidation");
+    dontCheckMirrors = checkParam("--dontCheckMirrors");
 
     if (!doReconstruct)
     {
@@ -115,6 +119,8 @@ void ProgReconstructSignificant::show()
         std::cout << "Apply Fisher                : "  << applyFisher << std::endl;
         std::cout << "Reconstruct                 : "  << doReconstruct << std::endl;
         std::cout << "useForValidation            : "  << useForValidation << std::endl;
+        std::cout << "dontCheckMirrors            : "  << dontCheckMirrors << std::endl;
+
 
         if (fnSym != "")
             std::cout << "Symmetry for projections    : "  << fnSym << std::endl;
@@ -198,26 +204,32 @@ void ProgReconstructSignificant::alignImagesToGallery()
 					mCurrentImageAligned=mCurrentImage;
 					mGalleryProjection.aliasImageInStack(gallery[nVolume](),nDir);
 					mGalleryProjection.setXmippOrigin();
-					double corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
-							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					double corr;
+					if (! dontCheckMirrors)
+						corr=alignImagesConsideringMirrors(mGalleryProjection,transforms[nDir],
+								mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
+					else
+						corr = alignImages(mGalleryProjection, mCurrentImageAligned,
+						                   M, DONT_WRAP);
+
 //					double corr=alignImagesConsideringMirrors(mGalleryProjection,
 //							mCurrentImageAligned,M,aux,aux2,aux3,DONT_WRAP);
 					M=M.inv();
 					double imed=imedDistance(mGalleryProjection, mCurrentImageAligned);
 
-//					if (corr>0.99)
-//					{
-//					std::cout << prm.mdGallery[nVolume][nDir].fnImg << " corr= " << corr << " imed= " << imed << std::endl;
-//					std::cout << "Matrix=" << M << std::endl;
-//					Image<double> save;
-//					save()=mGalleryProjection;
-//					save.write("PPPgallery.xmp");
-//					save()=mCurrentImage;
-//					save.write("PPPcurrentImage.xmp");
-//					save()=mCurrentImageAligned;
-//					save.write("PPPcurrentImageAligned.xmp");
-//					char c; std::cin >> c;
-//					}
+//					//if (corr>0.99)
+//					//{
+//					//std::cout << prm.mdGallery[nVolume][nDir].fnImg << " corr= " << corr << " imed= " << imed << std::endl;
+//					//std::cout << "Matrix=" << M << std::endl;
+//					//Image<double> save;
+//					//save()=mGalleryProjection;
+//					//save.write("PPPgallery.xmp");
+//					//save()=mCurrentImage;
+//					//save.write("PPPcurrentImage.xmp");
+//					//save()=mCurrentImageAligned;
+//					//save.write("PPPcurrentImageAligned.xmp");
+//					//char c; std::cin >> c;
+//					//}
 
 					DIRECT_A3D_ELEM(cc,nImg,nVolume,nDir)=corr;
 					// For the paper plot: std::cout << corr << " " << imed << std::endl;
@@ -248,6 +260,8 @@ void ProgReconstructSignificant::alignImagesToGallery()
 			double scale, shiftX, shiftY, anglePsi;
 			bool flip;
 			transformationMatrix2Parameters2D(bestM,flip,scale,shiftX,shiftY,anglePsi);
+			if (useForValidation && dontCheckMirrors)
+				flip = false;
 
 			if (maxShift<0 || (maxShift>0 && fabs(shiftX)<maxShift && fabs(shiftY)<maxShift))
 			{
@@ -301,6 +315,9 @@ void ProgReconstructSignificant::alignImagesToGallery()
 //						std::cout << fnImg << " is selected for dir=" << nDir << std::endl;
 						double imed=DIRECT_A1D_ELEM(imgimed,idx);
 						transformationMatrix2Parameters2D(allM[nVolume*Ndirs+nDir],flip,scale,shiftX,shiftY,anglePsi);
+						if (useForValidation && dontCheckMirrors)
+							flip = false;
+
 						if (maxShift>0)
 							if (fabs(shiftX)>maxShift || fabs(shiftY)>maxShift)
 								continue;
@@ -397,7 +414,7 @@ void ProgReconstructSignificant::run()
     	size_t Ndirs=mdGallery[0].size();
     	cc.initZeros(Nimgs,Nvols,Ndirs);
     	weight=cc;
-    	double oneAlpha=1-currentAlpha;
+    	double oneAlpha=1-currentAlpha-deltaAlpha2;
 
     	// Align the input images to the projections
     	alignImagesToGallery();
@@ -700,6 +717,7 @@ void ProgReconstructSignificant::numberOfProjections()
 
 	alpha0 = numOrientationsPerParticle/number_of_projections;
 	alphaF = alpha0;
+	deltaAlpha2 = 1/(2*number_of_projections);
 
     if (rank==0)
     {
@@ -770,16 +788,16 @@ void ProgReconstructSignificant::produceSideinfo()
 						deleteFile(fnAngles);
 
 					// Symmetrize with many different possibilities to have a spherical volume
-					args=formatString("-i %s --sym i1 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i1 --spline 1 -v 0",fnVolume.c_str());
 					cmd=(String)"xmipp_transform_symmetrize "+args;
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-					args=formatString("-i %s --sym i3 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i3 --spline 1 -v 0",fnVolume.c_str());
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 
-					args=formatString("-i %s --sym i2 -v 0",fnVolume.c_str());
+					args=formatString("-i %s --sym i2 --spline 1 -v 0",fnVolume.c_str());
 					if (system(cmd.c_str())==-1)
 						REPORT_ERROR(ERR_UNCLASSIFIED,"Cannot open shell");
 					deleteFile(fnAngles);

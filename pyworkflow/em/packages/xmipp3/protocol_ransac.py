@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -355,7 +355,7 @@ class XmippProtRansac(ProtInitialVolume):
             fnGallery=self._getTmpPath('gallery_'+fnBase+'.stk')
             fnOutputReducedClass = self._getExtraPath("reducedClasses.xmd") 
             
-            AngularSampling=int(max(floor(self.angularSampling.get()/2.0),2));
+            AngularSampling=max(self.angularSampling.get()/2.0,7.5);
             self.runJob("xmipp_angular_project_library", "-i %s.vol -o %s --sampling_rate %f --sym %s --method fourier 1 0.25 bspline --compute_neighbors --angular_distance -1 --experimental_images %s"\
                                   %(fnRoot,fnGallery,float(AngularSampling),self.symmetryGroup.get(),fnOutputReducedClass))
         

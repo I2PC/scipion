@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -82,7 +82,8 @@ class XmippFilterHelper():
                            '_high pass_: components above *Low freq.* are preserved.\n '
                            '_band pass_: components between *Low freq.* and *High freq.* '
                            'are preserved. \n'
-                           'ctf: apply first CTF in CTFset to all the particles'
+                           'ctf: apply first CTF in CTFset to all the particles. This is normally for simulated data.\n'
+                           '   : This is not a CTF correction.'
         )
 
         form.addParam('filterModeReal', EnumParam, choices=['median'],
@@ -164,7 +165,8 @@ class XmippFilterHelper():
                       condition='filterModeFourier == %d' % cls.FM_CTF,
                       label='CTF Object',
                       pointerClass='CTFModel',
-                      help='Object with CTF information if empty it will take the CTF information related with the first particle')
+                      help='Object with CTF information if empty it will take the CTF information related with the first particle.\n'
+                           'Note that this is normally used with simulated data.')
 
         #wavelets
         form.addParam('waveletMode',  EnumParam, choices=['remove_scale',
@@ -277,24 +279,29 @@ class XmippFilterHelper():
         def add(x): summary.append('  ' + x)  # short notation
         if protocol.filterSpace == FILTER_SPACE_FOURIER:
             add('Space: *Fourier*')
+            Ts = protocol.getInputSampling()
             inA = protocol.freqInAngstrom  # short notation
             lowA, highA = protocol.lowFreqA.get(), protocol.highFreqA.get()
+            lowAN = Ts/lowA
+            highAN = Ts/highA
             lowN, highN = protocol.lowFreqDig.get(), protocol.highFreqDig.get()
+            lowNA = Ts/lowN
+            highNA = Ts/highN
             mode = protocol.filterModeFourier.get()
             decayStr = ('*%g* A' % protocol.freqDecayA.get() if inA else
                         '*%g*' % protocol.freqDecayDig.get())
             if mode == cls.FM_LOW_PASS:
                 add('Mode: *Low-pass* ( %s, decay at %s )' %
-                    ('resolution > *%g* A' % highA if inA else
-                     'normalized frequency < *%g*' % highN, decayStr))
+                    ('resolution > *%g* A (normalized freq. %g)' % (highA,highAN) if inA else
+                     'normalized frequency < *%g* (%g A)' % (highN,highNA), decayStr))
             elif mode == cls.FM_HIGH_PASS:
                 add('Mode: *High-pass* ( %s, decay at %s )' %
-                    ('resolution < *%g* A' % lowA if inA else
-                     'normalized frequency > *%g*' % lowN, decayStr))
+                    ('resolution < *%g* A (normalized freq. %g)' % (lowA,lowAN) if inA else
+                     'normalized frequency > *%g* (%g A)' % (lowN,lowNA), decayStr))
             elif mode == cls.FM_BAND_PASS:
                 add('Mode: *Band-pass* ( %s, decay at %s )' %
-                    ('*%g* A < resolution < *%g* A' % (highA, lowA) if inA else
-                     '*%g* < normalized frequency < *%g*' % (lowN, highN),
+                    ('*%g* A (normalized freq. %g) < resolution < *%g* A (normalized freq. %g)' % (highA, highAN, lowA, lowAN) if inA else
+                     '*%g* (%g A) < normalized frequency < *%g* (%g A)' % (lowN, lowNA, highN, highNA),
                      decayStr))
         elif protocol.filterSpace == FILTER_SPACE_REAL:
             add('Mode: *Median*')
@@ -333,6 +340,8 @@ class XmippProtFilterParticles(ProtFilterParticles, XmippProcessParticles):
         ProtFilterParticles.__init__(self, **kwargs)
         XmippProcessParticles.__init__(self, **kwargs)
         self._program = "xmipp_transform_filter"
+        self.allowMpi = False
+        self.allowThreads = False
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -418,6 +427,8 @@ class XmippProtFilterVolumes(ProtFilterVolumes, XmippProcessVolumes):
         ProtFilterVolumes.__init__(self, **kwargs)
         XmippProcessVolumes.__init__(self, **kwargs)
         self._program = "xmipp_transform_filter"
+        self.allowThreads = False
+        self.allowMpi = False
 
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

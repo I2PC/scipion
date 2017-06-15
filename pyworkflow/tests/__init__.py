@@ -22,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 import os, sys
@@ -268,4 +268,9 @@ DataSet(name='resmap',  folder='resmap',
                'betagal_half1': 'betaGal_half01.mrc',
                'betagal_half2': 'betaGal_half02.mrc',
                'betagal_mask': 'betaGal_mask.mrc',
+               })
+
+DataSet(name='10010',  folder='10010',
+        files={'initialVolume': 'initialVolume.vol',
+               'particles': 'particles.sqlite',
                })

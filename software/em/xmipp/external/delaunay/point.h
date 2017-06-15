@@ -7,7 +7,7 @@
 * Data types definition
 **************************************************************************/
 // Type of turn of three points line.
-enum Turn_T {COLINEAR=1, LEFT_TURN=2, RIGHT=3};
+enum Turn_T {COLINEAR=1, LEFT_TURN=2, RIGHT_TURN=3};
 
 struct Point_T
 {
@@ -35,7 +35,7 @@ TYPE		signed_Area(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3);
 // Location interface.
 enum Turn_T	check_Turn(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3);
 int			in_Circle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3, struct Point_T *q);
-int			interior_Triangle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3, struct Point_T *q);
+bool		interior_Triangle(struct Point_T *p1, struct Point_T *p2, struct Point_T *p3, struct Point_T *q);
 int			has_Extreme_Coordinates(struct Point_T *p);
 
 // I/O interface

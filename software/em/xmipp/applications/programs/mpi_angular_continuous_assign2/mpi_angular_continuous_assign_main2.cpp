@@ -23,10 +23,82 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 
+#include <mpi.h>
 #include <parallel/xmipp_mpi.h>
 #include <reconstruction/angular_continuous_assign2.h>
 
 
-CREATE_MPI_METADATA_PROGRAM(ProgAngularContinuousAssign2, MpiProgAngularContinuousAssign2)
+class MpiProgAngularContinuousAssign2: public ProgAngularContinuousAssign2, public MpiMetadataProgram
+{
+public:
+	int Nsimul;
+
+    void defineParams()
+    {
+        ProgAngularContinuousAssign2::defineParams();
+        MpiMetadataProgram::defineParams();
+        addParamsLine("  [--Nsimultaneous <N=1>]     : Number of simultaneous processes that can enter in preprocessing");
+    }
+    void readParams()
+    {
+        MpiMetadataProgram::readParams();
+        ProgAngularContinuousAssign2::readParams();
+        Nsimul = getIntParam("--Nsimultaneous");
+    }
+    void read(int argc, char **argv, bool reportErrors = true)
+    {
+        MpiMetadataProgram::read(argc,argv);
+    }
+    void preProcess()
+    {
+        int Nturns = (int)ceil(node->size/Nsimul);
+        int myTurn = (int)floor(node->rank/Nsimul);
+        for (int turn=0; turn<=Nturns; turn++)
+        {
+        	if (turn==myTurn)
+        		ProgAngularContinuousAssign2::preProcess();
+    		node->barrierWait();
+        }
+        MetaData &mdIn = *getInputMd();
+        mdIn.addLabel(MDL_GATHER_ID);
+        mdIn.fillLinear(MDL_GATHER_ID,1,1);
+        createTaskDistributor(mdIn, blockSize);
+    }
+    void startProcessing()
+    {
+        if (node->rank==1)
+        {
+        	verbose=1;
+            ProgAngularContinuousAssign2::startProcessing();
+        }
+        node->barrierWait();
+    }
+    void showProgress()
+    {
+        if (node->rank==1)
+        {
+            time_bar_done=first+1;
+            ProgAngularContinuousAssign2::showProgress();
+        }
+    }
+    bool getImageToProcess(size_t &objId, size_t &objIndex)
+    {
+        return getTaskToProcess(objId, objIndex);
+    }
+    void finishProcessing()
+    {
+        node->gatherMetadatas(*getOutputMd(), fn_out);
+    	MetaData MDaux;
+    	MDaux.sort(*getOutputMd(), MDL_GATHER_ID);
+        MDaux.removeLabel(MDL_GATHER_ID);
+        *getOutputMd()=MDaux;
+        if (node->isMaster())
+            ProgAngularContinuousAssign2::finishProcessing();
+    }
+    void wait()
+    {
+		distributor->wait();
+    }
+};
 
 RUN_XMIPP_PROGRAM(MpiProgAngularContinuousAssign2)

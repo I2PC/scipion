@@ -20,9 +20,11 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from __future__ import print_function
+
 """
 This module contains some sqlite basic tools to handle Databases.
 """
@@ -76,16 +78,13 @@ class SqliteDb():
         
     def _debugExecute(self, *args):
         try:
+            print("COMMAND: ", args[0], self._dbName)
+            print("ARGUMENTS: ", args[1:])
             return self.cursor.execute(*args)
-        except Exception, ex:
-            print ">>>> FAILED cursor.execute on db: '%s'" % self._dbName
-            print "COMMAND: ", args[0]
-            print "ARGUMENTS: ", args[1:]
+        except Exception as ex:
+            print(">>>> FAILED cursor.execute on db: '%s'" % self._dbName)
             raise ex
-            
-        
-        #return self.cursor.fetchone()
-    
+
     def _iterResults(self):
         row = self.cursor.fetchone()
         while row is not None:
@@ -94,7 +93,7 @@ class SqliteDb():
         
     def _results(self, iterate=False):
         """ Return the results to which cursor, point to. 
-        If iterates=True, iterate yielding each result independenly"""
+        If iterates=True, iterate yielding each result independently"""
         if not iterate:
             return self.cursor.fetchall()
         else:
@@ -125,4 +124,4 @@ class SqliteDb():
     def setVersion(self, version):
         self.executeCommand('PRAGMA user_version=%d' % version)
         self.commit()
-        
+

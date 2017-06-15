@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -113,3 +113,13 @@ def killWithChilds(pid):
         c.kill()
     print "Terminating process pid: %d" % pid
     proc.kill()
+
+def isProcessAlive(pid):
+
+    import psutil
+    try:
+        proc = psutil.Process(pid)
+        return proc.is_running()
+    except psutil.NoSuchProcess, e:
+        return False
+

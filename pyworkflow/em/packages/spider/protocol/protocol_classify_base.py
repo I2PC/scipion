@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -45,6 +45,8 @@ class SpiderProtClassify(ProtClassify2D, SpiderProtocol):
     def __init__(self, script, classDir, **kwargs):
         ProtClassify2D.__init__(self, **kwargs)
         SpiderProtocol.__init__(self, **kwargs)
+        # To avoid showing MPI box due to duplicated init
+        self.allowMpi = False
         self._script = script
         self._classDir = classDir
         

@@ -31,6 +31,7 @@
 /**@defgroup MovieAlignmentCorrelation Movie alignment by correlation
    @ingroup ReconsLibrary */
 //@{
+
 /** Movie alignment correlation Parameters. */
 class ProgMovieAlignmentCorrelation: public XmippProgram
 {
@@ -51,10 +52,25 @@ public:
     FileName fnAligned;
     /** Aligned micrograph */
     FileName fnAvg;
+    /** Aligned micrograph */
+    FileName fnInitialAvg;
     /** Metadata with shifts */
     FileName fnOut;
     /** First and last frame*/
     int nfirst, nlast;
+    /** First and last frame*/
+    int nfirstSum, nlastSum;
+    /** Do not calculate and use the input shifts */
+    bool useInputShifts;
+    /** Binning factor */
+    double bin;
+    /** Bspline order */
+    int BsplineOrder;
+    /** Outside mode */
+    int outsideMode;
+    /** Outside value */
+    double outsideValue;
+
     /*****************************/
     /** crop corner **/
     /*****************************/

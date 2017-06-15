@@ -20,13 +20,14 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 from itertools import izip
 
 import pyworkflow.protocol.params as params
+from pyworkflow import VERSION_1_1
 from pyworkflow.utils.path import makePath, removeBaseExt
 from pyworkflow.em.data import SetOfParticles
 from pyworkflow.em.data_tiltpairs import TiltPair, CoordinatesTiltPair
@@ -46,7 +47,7 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
     the affine transformation between these sets.
     """
     _label = 'assignment tiltpair'
-
+    _lastUpdateVersion = VERSION_1_1
     def __init__(self, *args, **kwargs):
         XmippProtParticlePickingPairs.__init__(self, *args, **kwargs)
         self.stepsExecutionMode = params.STEPS_PARALLEL
@@ -60,6 +61,9 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
             self.getParam('tiltedSet').setPointerClass(pointerClass)
 
         self.inputType.trace(onChangeInputType)
+
+        # Force callback function
+        onChangeInputType()
 
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -227,9 +231,9 @@ class XmippProtAssignmentTiltPair(XmippProtParticlePickingPairs):
         messages = []
         if hasattr(self,'outputCoordinatesTiltPair'):
             messages.append('The assignment has been performed using and '
-                            'affinity transformation [Publication: Not yet]')
+                            'affinity transformation [Publication: Vilas2016]')
         return messages
 
     def _citations(self):
-        return ['Not yet']
+        return ['Vilas2016']
 

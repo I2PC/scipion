@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -36,7 +36,7 @@ import xmipp
 import pyworkflow.dataset as ds
 from pyworkflow.object import ObjectWrap
 
-from pyworkflow.utils import Environ
+from pyworkflow.utils import Environ, runJob
 from pyworkflow.dataset import COL_RENDER_CHECKBOX, COL_RENDER_TEXT, COL_RENDER_IMAGE,\
     COL_RENDER_VOLUME
 
@@ -60,6 +60,10 @@ def getEnviron(xmippFirst=True):
             'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib')
             }, position=pos)
     return environ
+
+def runXmippProgram(program, args=""):
+    """ Internal shortcut function to launch a Xmipp program. """
+    runJob(None, program, args, env=getEnviron())
     
 def getLabelPythonType(label):
     """ From xmipp label to python variable type """
@@ -571,7 +575,7 @@ class HelicalFinder():
             args+=" --mask cylinder %d %d"%(-cylinderOuterRadius,-height)
         elif cylinderOuterRadius>0 and cylinderInnerRadius>0:
             args+=" --mask tube %d %d %d"%(-cylinderInnerRadius,-cylinderOuterRadius,-height)
-        self.runJob('xmipp_volume_find_symmetry',args)
+        self.runJob('xmipp_volume_find_symmetry',args, numberOfMpi=1)
 
     def runFineSearch(self, fnVol, dihedral, fnCoarse, fnFine, heightFraction, z0, zF, rot0, rotF, cylinderInnerRadius, cylinderOuterRadius, height, Ts):
         md=MetaData(fnCoarse)
@@ -584,7 +588,7 @@ class HelicalFinder():
             args+=" --mask cylinder %d %d"%(-cylinderOuterRadius,-height)
         elif cylinderOuterRadius>0 and cylinderInnerRadius>0:
             args+=" --mask tube %d %d %d"%(-cylinderInnerRadius,-cylinderOuterRadius,-height)
-        self.runJob('xmipp_volume_find_symmetry',args)
+        self.runJob('xmipp_volume_find_symmetry',args, numberOfMpi=1)
 
     def runSymmetrize(self, fnVol, dihedral, fnParams, fnOut, heightFraction, cylinderInnerRadius, cylinderOuterRadius, height, Ts):
         md=MetaData(fnParams)
@@ -592,7 +596,7 @@ class HelicalFinder():
         rot0=md.getValue(MDL_ANGLE_ROT,objId)
         z0=md.getValue(MDL_SHIFT_Z,objId)
         args="-i %s --sym %s --helixParams %f %f --heightFraction %f -o %s --sampling %f"%(fnVol,self.getSymmetry(dihedral),z0,rot0,heightFraction,fnOut,Ts)
-        self.runJob('xmipp_transform_symmetrize',args)
+        self.runJob('xmipp_transform_symmetrize',args,numberOfMpi=1)
         doMask=False
         if cylinderOuterRadius>0 and cylinderInnerRadius<0:
             args="-i %s --mask cylinder %d %d"%(fnVol,-cylinderOuterRadius,-height)
@@ -601,7 +605,7 @@ class HelicalFinder():
             args="-i %s --mask tube %d %d %d"%(fnVol,-cylinderInnerRadius,-cylinderOuterRadius,-height)
             doMask=True
         if doMask:
-            self.runJob('xmipp_transform_mask',args)
+            self.runJob('xmipp_transform_mask',args,numberOfMpi=1)
             
 
 # ---------------- Legacy code from 'protlib_xmipp.py' ----------------------

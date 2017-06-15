@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -88,7 +88,8 @@ FILL_AVG = 2
 RECONSTRUCT_FOURIER = 0
 RECONSTRUCT_WSLART = 1
 
-# Normalization type constants
+# Micrograph type constants for particle extraction
 SAME_AS_PICKING = 0
 OTHER = 1
-ORIGINAL = 2
+
+SYM_URL = "[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"

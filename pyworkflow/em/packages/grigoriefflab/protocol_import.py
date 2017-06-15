@@ -20,20 +20,21 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-
-
 from pyworkflow.protocol.params import PathParam, PointerParam
 from pyworkflow.em.data import CTFModel
-
 from pyworkflow.em.protocol import ProtImportFiles, ProtCTFMicrographs
 
 
+
 class ProtImportCTF(ProtImportFiles, ProtCTFMicrographs):
-    """Protocol to import a set of movies (from direct detector cameras) to the project"""
+    """ Protocol to import results from CTFfind.
+    Select the micrographs to associate the computed CTFs and
+    the path pattern where to find the CTF files, that should
+    contains the micrograph id in the name. """
     _label = 'import ctf'
     
     #--------------------------- DEFINE param functions --------------------------------------------
@@ -99,3 +100,7 @@ class ProtImportCTF(ProtImportFiles, ProtCTFMicrographs):
     
     def _methods(self):
         return []
+    
+    def _stepsCheck(self):
+        # Just to avoid the stream checking inherited from ProtCTFMicrographs
+        pass

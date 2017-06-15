@@ -23,7 +23,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -41,5 +41,5 @@ class XmippPseudoAtomsViewer(XmippViewer):
     
     def _visualize(self, obj, **args):
         self._views.append(ChimeraView(obj.outputPdb._chimeraScript))
-        self._views.append(DataView(obj._getExtraPath('pseudoatoms_approximation.vol')))
+        self._views.append(DataView(obj._getExtraPath('pseudoatoms_approximation.mrc')))
 

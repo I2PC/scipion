@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -109,7 +109,9 @@ class SpiderProtCAPCA(SpiderProtocol):
                       help='If -1, the entire image (in pixels) will be considered.')
         form.addParam('maskImage', PointerParam, label="Mask image", condition='maskType==1',
                       pointerClass='Mask', 
-                      help="Select a mask file")       
+                      help="Select a mask file")
+
+        form.addParallelSection(threads=1, mpi=0)
         
     #--------------------------- INSERT steps functions --------------------------------------------  
     
@@ -154,7 +156,8 @@ class SpiderProtCAPCA(SpiderProtocol):
                              '[custom_mask]': self._params['mask'] + '@1',
                              '[ca_dir]': self._caDir,
                              '[eigen_img]': self._params['eigenimages'], 
-                             '[reconstituted_img]': self._params['reconstituted']
+                             '[reconstituted_img]': self._params['reconstituted'],
+                             '[nummps]': self.numberOfThreads.get()
                              })
                    
         self.runTemplate('mda/ca-pca.msa', self.getExt(), self._params)

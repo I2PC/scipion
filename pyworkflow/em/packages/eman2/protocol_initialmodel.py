@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jgomez@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -153,7 +153,7 @@ class EmanProtInitModel(ProtInitialVolume):
             summary.append("Output volumes not ready yet.")
         else:
             summary.append("Input Images: %s" % self.inputSet.get().getNameId())
-            summary.append("Output initials volumes: %s" % self.outputVolumes.get())
+            summary.append("Output initial volumes: %s" % self.outputVolumes.getSize())
         return summary
     
     #--------------------------- UTILS functions --------------------------------------------

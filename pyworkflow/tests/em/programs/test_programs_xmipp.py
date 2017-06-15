@@ -18,7 +18,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
 
@@ -281,6 +281,7 @@ class CtfEstimateFromMicrograph(XmippProgramTest):
         self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf",
                 outputs=["micrograph.psd"])
     def test_case2(self):
+        self.setTimeOut(400)
         self.runCase("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --pieceDim 256 --downSamplingPerformed 2.5 --ctfmodelSize 256  --defocusU 14900 --defocusV 14900 --min_freq 0.01 --max_freq 0.3 --defocus_range 1000",
                 postruns=["xmipp_metadata_utilities -i %o/micrograph.ctfparam --operate keep_column 'ctfDefocusU ctfDefocusV' -o %o/Defocus.xmd" ,'xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusU = round(ctfDefocusU/100.0)" ','xmipp_metadata_utilities -i %o/Defocus.xmd --operate  modify_values "ctfDefocusV = round(ctfDefocusV/100.0)" '],
                 outputs=["micrograph.psd","micrograph_enhanced_psd.xmp","micrograph.ctfparam","Defocus.xmd"])
@@ -1360,7 +1361,7 @@ class PhantomProject(XmippProgramTest):
                 outputs=["projections.stk","projections.xmd"])
     def test_case5(self):
         self.runCase("-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/uniformProjection_xmd.param --method fourier 2 0.5 bspline",
-                outputs=["projections.stk","projections.xmd"])
+                outputs=["projections.stk","projections.xmd"], errorthreshold=0.0021)
 
 
 class MlAlign2d(XmippProgramTest):

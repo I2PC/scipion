@@ -18,10 +18,11 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'xmipp@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
 
 import os
+import tempfile
 from itertools import izip
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
@@ -84,13 +85,32 @@ class TestImportMicrographs(TestImportBase):
         protMicImport.setObjLabel('from files')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1, 2, 3], size=3)
-        
-        # Id's should be taken from filename    
+
+        # Id's should be taken from filename
         args['filesPattern'] = 'BPV_####.mrc'
         protMicImport = self.newProtocol(ProtImportMicrographs, **args)
         protMicImport.setObjLabel('from files (with id)')
         self.launchProtocol(protMicImport)
         _checkOutput(protMicImport, [1386, 1387, 1388], size=3)
+
+        # Combine * and #
+        args['filesPattern'] = '*_####.mrc'
+        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport.setObjLabel('from files (* with id)')
+        self.launchProtocol(protMicImport)
+        _checkOutput(protMicImport, [1386, 1387, 1388], size=3)
+
+        # Id from folder
+        parentFolder = tempfile.gettempdir()
+        symlinkFolder = os.path.join(parentFolder, 'testId4')
+        if not os.path.exists(symlinkFolder):
+            os.symlink(args['filesPath'], symlinkFolder)
+        args['filesPath'] = os.path.join(parentFolder,'testId#')
+        args['filesPattern'] = '*_?387.mrc'
+        protMicImport = self.newProtocol(ProtImportMicrographs, **args)
+        protMicImport.setObjLabel('from files (id from folder)')
+        self.launchProtocol(protMicImport)
+        _checkOutput(protMicImport, [4], size=1)
 
         # Import some micrographs from EMX        
         emxFn = self.dsEmx.getFile('coordinatesT1')

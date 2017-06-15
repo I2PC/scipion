@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 from pyworkflow.em.packages.eman2.viewer import ANGDIST_CHIMERA
@@ -181,7 +181,7 @@ Examples:
         self.createVolumesSqlite(self.getVolumeNames(), 
                                  volSqlite, samplingRate)
         
-        return [self.getObjectView(volSqlite)]
+        return [self.objectView(volSqlite)]
         
     def getVolumeNames(self, it=None):
         """ If it is not none, return the volume of this iteration only. """

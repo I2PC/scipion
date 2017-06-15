@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -21,7 +22,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 from itertools import izip
@@ -34,7 +35,7 @@ from os.path import basename
 from glob import glob
 
 from pyworkflow.utils.properties import Message
-from pyworkflow.utils.path import copyFile, createLink, expandPattern, cleanPath
+from pyworkflow.utils.path import copyFile, createLink, expandPattern, cleanPath, commonPath
 from pyworkflow.protocol.params import PathParam, FloatParam, BooleanParam, EnumParam, IntParam
 from pyworkflow.em.constants import SAMPLING_FROM_IMAGE, SAMPLING_FROM_SCANNER
 from pyworkflow.em.convert import ImageHandler
@@ -135,6 +136,8 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
             else:
                 img.cleanObjId()
                 img.setFileName(dst)
+                # Fill the micName if img is a Micrograph.
+                self._fillMicName(img, fn, pattern)
                 imgSet.append(img)
             outFiles.append(dst)
             
@@ -192,7 +195,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         else:
             summary.append("Import of %d " % output.getTilted().getSize() + self._className + "s tilted from %s" % self.patternTilted.get())
             summary.append("Import of %d " % output.getUntilted().getSize() + self._className + "s untilted from %s" % self.patternUntilted.get())
-            summary.append("Sampling rate : %0.2f A/px" % self.samplingRate.get())
+            summary.append("Sampling rate : %0.2f Å/px" % self.samplingRate.get())
         
         return summary
     
@@ -201,7 +204,7 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         output = self._getOutput()
         if output:
             methods.append("Imported %d micrographs tilted pairs %s " % (output.getTilted().getSize(), self.getObjectTag(output)))
-            methods.append("with a sampling rate : %0.2f A/px." % self.samplingRate.get())
+            methods.append("with a sampling rate : %0.2f Å/px." % self.samplingRate.get())
             
         return methods
     
@@ -220,4 +223,10 @@ class ProtImportMicrographsTiltPairs(ProtImportFiles):
         else:
             micSet.setScannedPixelSize(self.scannedPixelSize.get())
             
-    
+    def _fillMicName(self, img, filename, pattern):
+        from pyworkflow.em import Micrograph
+        if isinstance(img, Micrograph):
+            filePaths = self.getMatchFiles(pattern=pattern)
+            commPath = commonPath(filePaths)
+            micName = filename.replace(commPath + "/", "").replace("/", "_")
+            img.setMicName(micName)

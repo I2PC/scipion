@@ -2,8 +2,6 @@
 # *
 # * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
-# *
-# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -22,21 +20,21 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
 This module contains converter functions that will serve to:
 1. Write from base classes to Grigorieff packages specific files
-2. Read from Grigo packs files to base classes
+2. Read from Grigorieff packages files to base classes
 """
 
-import os
+import os, re
 
 from itertools import izip
 import numpy
 from collections import OrderedDict
-from numpy import rad2deg
+from numpy import rad2deg, deg2rad
 from numpy.linalg import inv
 
 from pyworkflow.object import Float
@@ -161,7 +159,7 @@ def parseCtffindOutput(filename):
 
 def parseCtffind4Output(filename):
     """ Retrieve defocus U, V and angle from the
-    output file of the ctffind3 execution.
+    output file of the ctffind4 execution.
     """
     result = None
     if os.path.exists(filename):
@@ -211,9 +209,8 @@ def readCtfModel(ctfModel, filename, ctf4=False):
         ctfModel._ctffind4_ctfPhaseShift = Float(ctfPhaseShift)
 
 
-def geometryFromMatrix(matrix):
+def geometryFromMatrix(matrix, inverseTransform=True):
     from pyworkflow.em.transformations import translation_from_matrix, euler_from_matrix
-    inverseTransform = True
 
     if inverseTransform:
         matrix = inv(matrix)
@@ -225,7 +222,7 @@ def geometryFromMatrix(matrix):
 
 
 def geometryFromAligment(alignment):
-    shifts, angles = geometryFromMatrix(alignment.getMatrix(),True)#####
+    shifts, angles = geometryFromMatrix(alignment.getMatrix(), True)
 
     return shifts, angles
 
@@ -240,8 +237,146 @@ def _createErrorCtf4Fn(self, filename):
 
 
 def _createErrorCtf3Fn(self, filename):
-            f = open(filename, 'w+')
-            lines = """-999    -999       -999     -999  Final Values"""
-            f.write(lines)
-            f.close()
+    f = open(filename, 'w+')
+    lines = """-999    -999       -999     -999  Final Values"""
+    f.write(lines)
+    f.close()
 
+
+def readShiftsMovieAlignment(shiftFn):
+    f = open(shiftFn)
+    xshifts = []
+    yshifts = []
+
+    for line in f:
+        l = line.strip()
+        if not l.startswith('#'):
+            parts = l.split()
+            if len(xshifts) == 0:
+                xshifts = [float(i) for i in parts]
+            else:
+                yshifts = [float(i) for i in parts]
+    f.close()
+    return xshifts, yshifts
+
+
+def writeShiftsMovieAlignment(movie, shiftsFn, s0, sN):
+    movieAlignment=movie.getAlignment()
+    shiftListX, shiftListY = movieAlignment.getShifts()
+    
+    # Generating metadata for global shifts
+    a0, aN = movieAlignment.getRange()
+    alFrame = a0
+    
+    if s0 < a0:
+        diff = a0 - s0
+        initShifts = "0.0000 " * diff
+    else:
+        initShifts = ""
+    
+    if sN > aN:
+        diff = sN - aN
+        finalShifts = "0.0000 " * diff
+    else:
+        finalShifts = ""
+    
+    shiftsX = ""
+    shiftsY = ""
+    for shiftX, shiftY in izip(shiftListX, shiftListY):
+        if alFrame >= s0 and alFrame <= sN:
+            shiftsX = shiftsX + "%0.4f " % shiftX
+            shiftsY = shiftsY + "%0.4f " % shiftY
+        alFrame += 1
+    
+    f=open(shiftsFn,'w')
+    shifts = (initShifts + shiftsX + " " + finalShifts + "\n" 
+              + initShifts + shiftsY + " " + finalShifts)
+    f.write(shifts)
+    f.close()
+
+
+def parseMagEstOutput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("The following distortion parameters were found"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = False
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+            if 'The Total Distortion =' in line:
+                result.append(float(line.split()[4]))
+        f.close()
+
+    return result
+
+
+def parseMagCorrInput(filename):
+    result = []
+    ansi_escape = re.compile(r'\x1b[^m]*m')
+    if os.path.exists(filename):
+        f = open(filename)
+        parsing = False
+        for line in f:
+            l = ansi_escape.sub('', line)
+            line = re.sub('[%]', '', l).strip()
+            if line.startswith("Stretch only parameters would be as follows"):
+                parsing = True
+            if parsing:
+                if 'Distortion Angle' in line:
+                    result.append(float(line.split()[3]))
+                if 'Major Scale' in line:
+                    result.append(float(line.split()[3]))
+                if 'Minor Scale' in line:
+                    result.append(float(line.split()[3]))
+            if 'Corrected Pixel Size' in line:
+                result.append(float(line.split()[4]))
+        f.close()
+
+    return result
+
+
+def unDistortCoord(params):
+    # http://grigoriefflab.janelia.org/node/5140#comment-1238
+    # no need to invert Y-axis since we calculate relative to
+    # the center of mic
+
+    if len(params) != 7:
+        raise Exception("Not enough params for undistorting!")
+    x_original, y_original, mic_x, mic_y, ang, major_scale, minor_scale = params
+    angle_rad = rad2deg(ang)
+
+    # pixel location relative to center of micrograph
+    x = float(x_original) - float(mic_x) / 2.0
+    y = float(y_original) - float(mic_y) / 2.0
+
+    # rotate
+    r = numpy.sqrt(x ** 2 + y ** 2)
+    phi = numpy.arctan2(y, x) + angle_rad
+
+    # scale
+    x = r * numpy.cos(phi) * major_scale
+    y = r * numpy.sin(phi) * minor_scale
+
+    # rotate back
+    r = numpy.sqrt(x ** 2 + y ** 2)
+    phi = numpy.arctan2(y, x) - angle_rad
+
+    # pixel location relative to edge of micrograph
+    x_correct = r * numpy.cos(phi) + float(mic_x) / 2.0
+    y_correct = r * numpy.sin(phi) + float(mic_y) / 2.0
+
+    return x_correct, y_correct

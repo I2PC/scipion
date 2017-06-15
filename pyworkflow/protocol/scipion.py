@@ -20,9 +20,10 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-
+from bibtex import _bibtex
 _logo = 'scipion_logo.png'
+_references = ['delaRosaTrevin201693']

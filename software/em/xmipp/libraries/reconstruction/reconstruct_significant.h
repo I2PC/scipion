@@ -47,6 +47,9 @@ public:
     /** Last significance */
     double alphaF;
 
+    /** deltaAlpha/2 */
+    double deltaAlpha2;
+
     /** Total number of iterations */
     int Niter;
 
@@ -87,6 +90,8 @@ public:
     bool useForValidation;
 
     size_t numOrientationsPerParticle;
+
+    bool dontCheckMirrors;
 
 
 public: // Internal members

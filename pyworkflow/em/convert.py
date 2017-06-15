@@ -20,40 +20,84 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This module contains several conversion utilities
-"""
 
 import os
 import sys
+from itertools import izip
 import PIL
 
-from constants import NO_INDEX
 import xmipp
-from constants import *
-from pyworkflow.utils import runJob, getExt
+import pyworkflow.utils as pwutils
 
-# TODO: remove dependency from Xmipp
-DT_FLOAT = xmipp.DT_FLOAT
+from constants import *
+
 
 
 class ImageHandler(object):
     """ Class to provide several Image manipulation utilities. """
+    # TODO: remove dependency from Xmipp
+    DT_DEFAULT = xmipp.DT_DEFAULT
+    DT_UNKNOWN = xmipp.DT_UNKNOWN
+    DT_UCHAR = xmipp.DT_UCHAR
+    DT_SCHAR = xmipp.DT_SCHAR
+    DT_USHORT = xmipp.DT_USHORT
+    DT_SHORT = xmipp.DT_SHORT
+    DT_UINT = xmipp.DT_UINT
+    DT_INT = xmipp.DT_INT
+    DT_LONG = xmipp.DT_LONG
+    DT_FLOAT = xmipp.DT_FLOAT
+    DT_DOUBLE = xmipp.DT_DOUBLE
+    DT_COMPLEXSHORT = xmipp.DT_COMPLEXSHORT
+    DT_COMPLEXINT = xmipp.DT_COMPLEXINT
+    DT_COMPLEXFLOAT = xmipp.DT_COMPLEXFLOAT
+    DT_COMPLEXDOUBLE = xmipp.DT_COMPLEXDOUBLE
+    DT_BOOL = xmipp.DT_BOOL
+    DT_LASTENTRY = xmipp.DT_LASTENTRY
+    
     def __init__(self):
         # Now it will use Xmipp image library
         # to read and write most of formats, in the future
-        # if we want to be indepent of Xmipp, we should have
+        # if we want to be independent of Xmipp, we should have
         # our own image library
-        from packages.xmipp3 import fixVolumeFileName
-        
         self._img = xmipp.Image()
         self._imgClass = xmipp.Image
-        self._fixVolumeFileName = fixVolumeFileName
-
-    def _convertToLocation(self, location):
+    
+    @classmethod
+    def fixXmippVolumeFileName(cls, image):
+        """ This method will add :mrc to .mrc volumes
+        because for mrc format is not possible to distinguish
+        between 3D volumes and 2D stacks.
+        """
+        # We can not import Volume from top level since
+        # data depends on this module
+        from data import Volume, Movie
+        fn = image.getFileName()
+        if isinstance(image, Volume):
+            if fn.endswith('.mrc') or fn.endswith('.map'):
+                fn += ':mrc'
+        elif isinstance(image, Movie):
+            if fn.endswith('.mrc'):
+                fn += ':mrcs'
+            elif fn.endswith('.em'):
+                fn += ':ems'
+        
+        return fn
+    
+    @classmethod
+    def locationToXmipp(cls, location):
+        """ Convert an index and filename location
+        to a string with @ as expected in Xmipp.
+        """
+        index, filename = cls._convertToLocation(location)
+        if index != NO_INDEX:
+            return "%06d@%s" % (index, filename)
+        return filename
+    
+    @classmethod
+    def _convertToLocation(cls, location):
         """ Get a location in a tuple format (index, filename).
         location could be:
             tuple -> (index, filename)
@@ -65,92 +109,149 @@ class ImageHandler(object):
         
         elif isinstance(location, basestring):
             outLocation = (NO_INDEX, location)
-            
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
-            outLocation = (location.getIndex(), self._fixVolumeFileName(location))
-            
+        
+        elif hasattr(location, 'getLocation'):
+            # This case includes Image and its subclasses
+            outLocation = (location.getIndex(),
+                           cls.fixXmippVolumeFileName(location))
         else:
-            raise Exception('Can not convert object %s to (index, location)' % type(location))
+            raise Exception('Can not convert object %s to (index, location)'
+                            % type(location))
         
         return outLocation
     
-    def existsLocation(self, location):
+    @classmethod
+    def existsLocation(cls, locationObj):
         """ Return True if a given location exists. 
         Location have the same meaning than in _convertToLocation.
         """
-        if isinstance(location, tuple):
-            fn = location[1]
-        elif isinstance(location, basestring):
-            fn = location
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
-            fn = location.getLocation()[1]
+        if locationObj is None:
+            fn = None
+        elif isinstance(locationObj, tuple):
+            fn = locationObj[1]
+        elif isinstance(locationObj, basestring):
+            fn = locationObj
+        elif hasattr(locationObj, 'getLocation'):
+            # This case includes Image and its subclasses
+            fn = locationObj.getLocation()[1]
         else:
-            raise Exception('Can not match object %s to (index, location)' % type(location))
-
+            raise Exception('Can not match object %s to '
+                            '(index, location)' % type(locationObj))
+        
+        # If either the location is None or location
+        if fn is None:
+            return False
+        
         # Remove filename format specification such as :mrc, :mrcs or :ems
         if ':' in fn:
             fn = fn.split(':')[0]
-
-        return os.path.exists(fn)
         
+        return os.path.exists(fn)
+    
     def convert(self, inputObj, outputObj, dataType=None, transform=None):
         """ Convert from one image to another.
         inputObj and outputObj can be: tuple, string, or Image subclass 
         (see self._convertToLocation)
         transform: if not None, apply this transformation
         """
-        # Read from input
-        self._img.read(self._convertToLocation(inputObj))
+        inputLoc = self._convertToLocation(inputObj)
+        outputLoc = self._convertToLocation(outputObj)
         
-        if dataType is not None:
-            self._img.convert2DataType(dataType)
-
-        if transform is not None:
-            self._img.applyTransforMatScipion(transform.getMatrixAsList())
-        # Write to output
-        self._img.write(self._convertToLocation(outputObj))
-        
-    def convertStack(self, inputFn, outputFn, inFormat=None, outFormat=None):
-        """ convert format of stack file. Output/input format is
-        specified by outFormat/inFormat. If outFormat/inFomat=None then
-        there will be inferred from extension
+        if (inputLoc[1].lower().endswith('dm4') or
+                outputLoc[1].lower().endswith('.img')):
+            # FIXME Since now we can not read dm4 format in Scipion natively
+            # we are opening an Eman2 process to read the dm4 file
+            from pyworkflow.em.packages.eman2.convert import convertImage
+            convertImage(inputLoc, outputLoc)
+        else:
+            # Read from input
+            self._img.read(inputLoc)
+            
+            if dataType is not None:
+                self._img.convert2DataType(dataType)
+            if transform is not None:
+                self._img.applyTransforMatScipion(transform.getMatrixAsList())
+            # Write to output
+            self._img.write(outputLoc)
+    
+    def convertStack(self, inputFn, outputFn, firstImg=None, lastImg=None,
+                     inFormat=None, outFormat=None):
+        """ Convert an input stack file into another.
+        It is possible to only use a subset of frames to be written in the
+            output stack.
+        If outFormat/inFomat=None then there will be
+        inferred from extension.If firstFrame/lastFrame are not None, the output
+        stack will be a subset of input stack. If it are none, the conversion is
+        over the whole stack. If the input format is ".dm4" or  ".img" only is
+        allowed the conversion of the whole stack.
         """
-        #get input dim
-        (x,y,z,n) = xmipp.getImageSize(inputFn)
-        #Create empty output stack for efficiency
-        xmipp.createEmptyFile(outputFn,x,y,z,n)
-        # handle image formats
-        for i in range(1, n+1):
-            self.convert((i, inputFn), (i, outputFn))
-        
+        if (inputFn.lower().endswith('.dm4') or
+            outputFn.lower().endswith('.img')):
+            if (firstImg and lastImg) is None:
+                # FIXME Since now we can not read dm4 format in Scipion natively
+                # or writing recent .img format
+                # we are opening an Eman2 process to read the dm4 file
+                from pyworkflow.em.packages.eman2.convert import convertImage
+                convertImage(inputFn, outputFn)
+            else:
+                ext = os.path.splitext(outputFn)[1]
+                raise Exception("if convert from %s, firstImg and lastImg "
+                                "must be None" % ext)
+        else:
+            # get input dim
+            (x, y, z, n) = xmipp.getImageSize(inputFn)
+            
+            location = self._convertToLocation(inputFn)
+            self._img.read(location, xmipp.HEADER)
+            dataType = self._img.getDataType()
+            
+            if (firstImg and lastImg) is None:
+                n = max(z, n)
+                firstImg = 1
+                lastImg = n
+            else:
+                n = lastImg - firstImg + 1
+            
+            # Create empty output stack file to reserve desired space
+            xmipp.createEmptyFile(outputFn,x,y,1,n, dataType)
+            for i, j in izip(range(firstImg, lastImg + 1), range(1, n+1)):
+                self.convert((i, inputFn), (j, outputFn))
+    
     def getDimensions(self, locationObj):
         """ It will return a tuple with the images dimensions.
         The tuple will contains:
             (x, y, z, n) where x, y, z are image dimensions (z=1 for 2D) and 
             n is the number of elements if stack.
         """
-        
         if self.existsLocation(locationObj):
-            
             location = self._convertToLocation(locationObj)
             fn = location[1]
-            ext = getExt(fn).lower()
+            ext = pwutils.getExt(fn).lower()
             
             if ext == '.png' or ext == '.jpg':
                 im = PIL.Image.open(fn)
                 x, y = im.size # (width,height) tuple
                 return x, y, 1, 1
-            
+            elif ext == '.dm4' or ext == '.img':
+                # FIXME Since now we can not read dm4 format in Scipion natively
+                # or recent .img format
+                # we are opening an Eman2 process to read the dm4 file
+                from pyworkflow.em.packages.eman2.convert import getImageDimensions
+                return getImageDimensions(fn) # we are ignoring index here
             else:
                 self._img.read(location, xmipp.HEADER)
-                x, y, z, n = self._img.getDimensions()
-                return x, y, z, n
-        
-        else: 
+                return self._img.getDimensions()
+        else:
             return None, None, None, None
-        
+    
+    def getDataType(self, locationObj):
+        if self.existsLocation(locationObj):
+            location = self._convertToLocation(locationObj)
+            self._img.read(location, xmipp.HEADER)
+            return self._img.getDataType()
+        else:
+            return None
+    
     def read(self, inputObj):
         """ Create a new Image class from inputObj 
         (inputObj can be tuple, str or Image subclass). """
@@ -166,7 +267,7 @@ class ImageHandler(object):
         (outputObj can be tuple, str or Image subclass). """
         location = self._convertToLocation(outputObj)
         image.write(location)
-        
+    
     def compareData(self, locationObj1, locationObj2, tolerance=0.0001):
         """ Compare if two locations have the same binary data.
         """
@@ -174,7 +275,7 @@ class ImageHandler(object):
         loc2 = self._convertToLocation(locationObj2)
         
         return xmipp.compareTwoImageTolerance(loc1, loc2, tolerance)
-
+    
     def computeAverage(self, inputSet):
         """ Compute the average image either from filename or set.
         If inputSet is a filename, we will read the whole stack
@@ -199,16 +300,16 @@ class ImageHandler(object):
                 imageIter = iter(inputSet)
                 img = imageIter.next()
                 avgImage = self.read(img)
-    
+                
                 for img in imageIter:
                     self._img.read(self._convertToLocation(img))
                     avgImage.inplaceAdd(self._img)
-    
+                
                 avgImage.inplaceDivide(n)
                 return avgImage
-
-        return None
         
+        return None
+    
     def invertStack(self, inputFn, outputFn):
         #get input dim
         (x,y,z,n) = xmipp.getImageSize(inputFn)
@@ -228,57 +329,78 @@ class ImageHandler(object):
         self._img.inplaceMultiply(-1)
         # Write to output
         self._img.write(self._convertToLocation(outputObj))
-        
+    
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        xmippEnv = xmipp3.getEnviron()
-        runJob(None, program, args, env=xmippEnv)        
-        
+        xmipp3.runXmippProgram(program, args)
+    
     def createCircularMask(self, radius, refImage, outputFile):
         """ Create a circular mask with the given radius (pixels)
         and with the same dimensions of the refImage.
         The radius should be less or equal dim(refImage)/2
         The mask will be stored in 'outputFile'
         """
-        #TODO: right now we need to call an xmipp program to create 
-        # the spherical mask, it would be nicer to have such utility in the binding
+        #TODO: right now we need to call a Xmipp program to create
+        # the spherical mask, it would be nicer to have such utility
+        # in the binding
         import pyworkflow.em.packages.xmipp3 as xmipp3
         inputRef = xmipp3.getImageLocation(refImage)
-        self.__runXmippProgram('xmipp_transform_mask', 
-                               '-i %s --create_mask  %s --mask circular -%d' % (inputRef, outputFile, radius))
-        
+        self.__runXmippProgram('xmipp_transform_mask',
+                               '-i %s --create_mask  %s --mask circular -%d'
+                               % (inputRef, outputFile, radius))
+    
     def addNoise(self, inputFile, outputFile, std=1., avg=0.):
-        """ Add Gaussian noise to an input image (or stack) and produce noisy images.
+        """ Add Gaussian noise to an input image (or stack)
+        to produce noisy images.
         Params:
             inputFile: the filename of the input images
             outputFile: the filename of the output noisy images
             noiseStd: standard deviation for the Gaussian noise.
         """
-        self.__runXmippProgram('xmipp_transform_add_noise', 
-                               '-i %s -o %s --type gaussian %f %f' % (inputFile, outputFile, std, avg))
+        self.__runXmippProgram('xmipp_transform_add_noise',
+                               '-i %s -o %s --type gaussian %f %f'
+                               % (inputFile, outputFile, std, avg))
+
+    def truncateMask(self, inputFile, outputFile):
+        """ Forces the values of a mask to be between 0 and 1
+        Params:
+            inputFile: the filename of the input either image or volume
+            outputFile: the filename of the output either image or volume
+        """
+        self.__runXmippProgram('xmipp_transform_threshold',
+                               '-i %s -o %s --select below 0 --substitute '
+                               'value 1' % (inputFile, outputFile))
         
+        self.__runXmippProgram('xmipp_transform_threshold',
+                               '-i %s --select above 1 --substitute '
+                               'value 1' % (outputFile))
+    
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function
-        is implemented in the xmipp binding."""
+        is implemented in the Xmipp binding.
+        """
         return xmipp.FileName(imgFn).isImage()
-
+    
     @classmethod
     def getVolFileName(cls, location):
         if isinstance(location, tuple):
             fn = location[1]
         elif isinstance(location, basestring):
             fn = location
-        elif hasattr(location, 'getLocation'): #this include Image and subclasses
-            # In this case inputLoc should be a subclass of Image
+        elif hasattr(location, 'getLocation'):
             fn = location.getLocation()[1]
         else:
-            raise Exception('Can not match object %s to (index, location)' % type(location))
-
+            raise Exception('Can not match object %s to (index, location)'
+                            % type(location))
+        
         if fn.endswith('.mrc') or fn.endswith('.map'):
             fn += ':mrc'
-
+        
         return fn
+
+
+DT_FLOAT = ImageHandler.DT_FLOAT
 
 
 def downloadPdb(pdbId, pdbFile, log=None):

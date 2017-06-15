@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -50,37 +50,35 @@ class TestXmippWorkflow(TestWorkflow):
         protImport = self.newProtocol(ProtImportMicrographs,
                                       filesPath=self.micsFn, samplingRate=1.237, voltage=300)
         self.launchProtocol(protImport)
+        self.assertSetSize(protImport.outputMicrographs,3)
         self.assertIsNotNone(protImport.outputMicrographs.getFileName(), "There was a problem with the import")
         self.validateFiles('protImport', protImport)      
 
         #Import a set of volumes        
         print "Import Volume"
         protImportVol = self.newProtocol(ProtImportVolumes,
-                                         filesPath=self.vol1, samplingRate=9.896)
+                                         filesPath=self.vol1,
+                                         samplingRate=9.896)
         self.launchProtocol(protImportVol)
-        self.assertIsNotNone(protImportVol.getFiles(), "There was a problem with the import")
+        self.assertIsNotNone(protImportVol.getFiles(),
+                             "There was a problem with the import")
 #        self.validateFiles('protImportVol', protImportVol)        
 
         # Perform a downsampling on the micrographs
         print "Downsampling..."
         protDownsampling = self.newProtocol(XmippProtPreprocessMicrographs,
-                                            doDownsample=True, downFactor=5, doCrop=False, runMode=1)
+                                            doDownsample=True,
+                                            downFactor=5,
+                                            doCrop=False,
+                                            runMode=1)
         protDownsampling.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protDownsampling)
-        self.assertIsNotNone(protDownsampling.outputMicrographs, "There was a problem with the downsampling")
+        self.assertSetSize(protDownsampling.outputMicrographs,3)
+        self.assertIsNotNone(protDownsampling.outputMicrographs,
+                             "There was a problem with the downsampling")
         self.validateFiles('protDownsampling', protDownsampling)
-        
-        # Now estimate CTF on the downsampled micrographs 
-        print "Performing CTF..."   
-        protCTF = self.newProtocol(XmippProtCTFMicrographs,
-                                   numberOfThreads=4, minDefocus=2.2, maxDefocus=2.5)
-        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)        
-        self.launchProtocol(protCTF)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF estimation")
-        # After CTF estimation, the output micrograph should have CTF info
-        self.validateFiles('protCTF', protCTF)
-        
 
+        print "Importing coordinates"
         protPP = self.newProtocol(ProtImportCoordinates,
                                   importFrom=ProtImportCoordinates.IMPORT_FROM_XMIPP,
                                   filesPath=self.allCrdsDir,
@@ -89,17 +87,36 @@ class TestXmippWorkflow(TestWorkflow):
         protPP.inputMicrographs.set(protDownsampling.outputMicrographs)
         self.launchProtocol(protPP)
         self.protDict['protPicking'] = protPP
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the import of coordinates")
+        self.assertSetSize(protPP.outputCoordinates, 143+138+122+110+138+122,
+                           "There was a problem with the import of coordinates")
+
+        # Now estimate CTF on the downsampled micrographs
+        print "Performing CTF..."
+        protCTF = self.newProtocol(XmippProtCTFMicrographs,
+                                   numberOfThreads=4,
+                                   minDefocus=2.2,
+                                   maxDefocus=2.5)
+        protCTF.inputMicrographs.set(protDownsampling.outputMicrographs)
+        self.launchProtocol(protCTF)
+        self.assertSetSize(protCTF.outputCTF,3)
+        self.assertIsNotNone(protCTF.outputCTF,
+                             "There was a problem with the CTF estimation")
+        # After CTF estimation, the output micrograph should have CTF info
+        self.validateFiles('protCTF', protCTF)
+
+
 
         print "Run extract particles with other downsampling factor"
         protExtract = self.newProtocol(XmippProtExtractParticles,
-                                       boxSize=64, downsampleType=OTHER, doFlip=True,
-                                       downFactor=8, runMode=1, doInvert=True)
+                                       boxSize=64, downsampleType=OTHER,
+                                       doFlip=True, downFactor=8,
+                                       runMode=1, doInvert=True)
         protExtract.inputCoordinates.set(protPP.outputCoordinates)
         protExtract.ctfRelations.set(protCTF.outputCTF)
         protExtract.inputMicrographs.set(protImport.outputMicrographs)
         self.launchProtocol(protExtract)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        self.assertIsNotNone(protExtract.outputParticles,
+                             "There was a problem with the extract particles")
         self.validateFiles('protExtract', protExtract)
         
         print "Run Screen Particles"
@@ -107,19 +124,27 @@ class TestXmippWorkflow(TestWorkflow):
                                       autoParRejection=XmippProtScreenParticles.REJ_MAXZSCORE, maxZscore=3.0)
         protScreen.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protScreen)
-        self.assertIsNotNone(protScreen.outputParticles, "There was a problem with Screen Particles")
+        self.assertSetSize(protScreen.outputParticles,
+                           msg="There was a problem with Screen Particles")
         
         print "Run ML2D"
-        protML2D = self.newProtocol(XmippProtML2D, numberOfClasses=1, maxIters=4, doMlf=True,
-                                 numberOfMpi=2, numberOfThreads=1)
+        protML2D = self.newProtocol(XmippProtML2D,
+                                    numberOfClasses=1,
+                                    maxIters=4,
+                                    doMlf=True,
+                                    numberOfMpi=2,
+                                    numberOfThreads=1)
         protML2D.inputParticles.set(protScreen.outputParticles)
         self.launchProtocol(protML2D)        
-        self.assertIsNotNone(protML2D.outputClasses, "There was a problem with ML2D") 
+        self.assertIsNotNone(protML2D.outputClasses,
+                             "There was a problem with ML2D")
         self.validateFiles('protML2D', protML2D)
         
         print "Run CL2D"
-        protCL2D = self.newProtocol(XmippProtCL2D, numberOfClasses=2, numberOfInitialClasses=1,
-                                 numberOfIterations=4, numberOfMpi=2)
+        protCL2D = self.newProtocol(XmippProtCL2D,
+                                    numberOfClasses=2,
+                                    numberOfInitialClasses=1,
+                                    numberOfIterations=4, numberOfMpi=2)
         protCL2D.inputParticles.set(protExtract.outputParticles)
         self.launchProtocol(protCL2D)        
         self.assertIsNotNone(protCL2D.outputClasses, "There was a problem with CL2D")

@@ -46,8 +46,12 @@ void PCAMahalanobisAnalyzer::subtractAvg()
     // Subtract average and compute stddev
     MultidimArray<float> avgF;
     typeCast(avg,avgF);
+
     for (int n=0; n<N; n++)
+    {
         v[n]-=avgF;
+
+    }
 }
 
 /* Standardize variables -------------------------------------------------- */
@@ -142,12 +146,35 @@ void PCAMahalanobisAnalyzer::projectOnPCABasis(Matrix2D<double> &CtY)
     }
 }
 
+/* Add vector ------------------------------------------------------------- */
+void PCAMahalanobisAnalyzer::reconsFromPCA(const Matrix2D<double> &CtY, std::vector< MultidimArray<float> > &recons)
+{
+
+    int N=recons.size();
+    int NPCA=PCAbasis.size();
+
+    for (int ii=0; ii<N; ii++)
+    {
+        const MultidimArray<float> &Iii=v[ii];
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(recons[ii])
+        for (int jj=0; jj<NPCA; jj++)
+        {
+            const MultidimArray<double> &Ijj=PCAbasis[jj];
+            DIRECT_A1D_ELEM(recons[ii],i)= DIRECT_A1D_ELEM(Ijj,i)*MAT_ELEM(CtY,jj,ii)+(float)DIRECT_A1D_ELEM(avg,i);
+        }
+
+
+    }
+}
+
 void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 {
     // Take the first vectors for the PCA basis
     MultidimArray<double> vPCA;
     NPCA=XMIPP_MIN(NPCA,v.size());
     std::vector<size_t> used;
+    PCAbasis.clear();
     for (size_t n=0; n<NPCA; n++)
     {
     	size_t nRandom;
@@ -178,6 +205,7 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 
                 if (ii!=jj)
                     CtC(jj,ii)=CtC(ii,jj);
+
             }
         }
 
@@ -219,9 +247,11 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
 
     //Generate a Matrix for true PCA and compute the average C'*data
     Matrix2D<double> data;
+    double *refData;
     MultidimArray<double> average;
     data.initZeros(NPCA,v.size());
     average.initZeros(NPCA);
+    refData = &MAT_ELEM(data,0,0);
     for (size_t ii=0;ii<NPCA;ii++)
     {
         MultidimArray<double> &C=PCAbasis[ii];
@@ -229,8 +259,8 @@ void PCAMahalanobisAnalyzer::learnPCABasis(size_t NPCA, size_t Niter)
         {
             MultidimArray<float> &D=v[jj];
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(C)
-            MAT_ELEM(data,ii,jj)+=DIRECT_A1D_ELEM(C,i)*DIRECT_A1D_ELEM(D,i);
-            DIRECT_A1D_ELEM(average,ii)+=MAT_ELEM(data,ii,jj);
+            (*refData) += DIRECT_A1D_ELEM(C,i)*DIRECT_A1D_ELEM(D,i);
+            DIRECT_A1D_ELEM(average,ii)+=(*refData)++;
         }
     }
     average/=v.size();
@@ -349,6 +379,7 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 //#define DEBUG
 void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
 {
+
     int N=v.size();
     if (N==0)
     {
@@ -363,6 +394,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
         return;
     }
 
+
 #ifdef DEBUG
     std::cout << "Input vectors\n";
     for (int n=0; n<N; n++)
@@ -373,6 +405,8 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
     }
 #endif
     subtractAvg();
+
+
 #ifdef DEBUG
 
     std::cout << "\n\nInput vectors after normalization\n";
@@ -384,7 +418,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
     }
 #endif
 
-    if (~trained)
+    if (!trained)
     	learnPCABasis(NPCA, Niter);
 
 #ifdef DEBUG
@@ -400,6 +434,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
 
     Matrix2D<double> proj;
     projectOnPCABasis(proj);
+
 
 #ifdef DEBUG
 
@@ -443,3 +478,61 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter, bool trained)
     Zscore.indexSort(idx);
 }
 #undef DEBUG
+
+// Empty constructor
+PCAonline::PCAonline()
+{
+	N=0;
+}
+
+// Add a new vector
+void PCAonline::addVector(MultidimArray<double> &y)
+{
+	if (N==0)
+	{
+		ysum=y;
+		yxt.resizeNoCopy(y);
+		c1.resizeNoCopy(y);
+		ycentered.resizeNoCopy(y);
+		N=1;
+		zn=0;
+	}
+	else if (N==1)
+	{
+		xxt=0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(y)
+		{
+			double yval=DIRECT_MULTIDIM_ELEM(y,n);
+			DIRECT_MULTIDIM_ELEM(yxt,n)=DIRECT_MULTIDIM_ELEM(c1,n)=yval-0.5*DIRECT_MULTIDIM_ELEM(ysum,n);// c1=y-ysum/2
+			xxt+=DIRECT_MULTIDIM_ELEM(c1,n)*DIRECT_MULTIDIM_ELEM(c1,n);
+		}
+		c1/=sqrt(xxt); // Normalize c1
+		zn=1;
+		N=2;
+	}
+	else
+	{
+		double iN=1.0/N;
+		zn=0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(y)
+		{
+			DIRECT_MULTIDIM_ELEM(ycentered,n)=DIRECT_MULTIDIM_ELEM(y,n)-iN*DIRECT_MULTIDIM_ELEM(ysum,n);// ycentered=y-ysum/N
+			zn+=DIRECT_MULTIDIM_ELEM(c1,n)*DIRECT_MULTIDIM_ELEM(ycentered,n); // zn = ycentered^T c1
+		}
+		if (fabs(zn)>maxzn)
+			return;
+
+		xxt+=zn*zn;
+		double ixxt=1.0/xxt;
+		double c1norm=0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(y)
+		{
+			DIRECT_MULTIDIM_ELEM(ysum,n)+=DIRECT_MULTIDIM_ELEM(y,n); // ysum+=y
+			DIRECT_MULTIDIM_ELEM(yxt,n)+=zn*DIRECT_MULTIDIM_ELEM(ycentered,n); // yxt+=zn*ycentered
+			DIRECT_MULTIDIM_ELEM(c1,n)=ixxt*DIRECT_MULTIDIM_ELEM(yxt,n); // c1=yxt/xxt
+			c1norm+=DIRECT_MULTIDIM_ELEM(c1,n)*DIRECT_MULTIDIM_ELEM(c1,n);
+		}
+		c1/=sqrt(c1norm);
+		N++;
+	}
+}

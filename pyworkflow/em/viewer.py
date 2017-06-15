@@ -21,13 +21,10 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
-"""
-This module implement viewers for some type of common objects.
-"""
 from __future__ import print_function
 import os
 import sys
@@ -38,6 +35,7 @@ from multiprocessing.connection import Client
 from numpy import flipud
 import socket
 
+import pyworkflow as pw
 from pyworkflow.viewer import View, Viewer, CommandView, DESKTOP_TKINTER
 from pyworkflow.utils import Environ, runJob
 from pyworkflow.utils import getFreePort
@@ -46,9 +44,16 @@ from pyworkflow.gui.matplotlib_image import ImageWindow
 # From pyworkflow.em level
 import showj
 import metadata as md
-import xmipp
 from data import PdbFile
+from convert import ImageHandler
 
+import xmipp
+
+from viewer_fsc import FscViewer
+from viewer_pdf import PDFReportViewer
+from viewer_monitor_summary import ViewerMonitorSummary
+from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
+from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
 
 #------------------------ Some common Views ------------------
 
@@ -62,14 +67,23 @@ class DataView(View):
         self._viewParams = viewParams
             
     def _loadPath(self, path):
+        self._tableName = None
+
+        # If path is a tuple, we will convert to the filename format
+        # as expected by Showj
+        if isinstance(path, tuple):
+            self._path = ImageHandler.locationToXmipp(path)
         # Check if there is a table name with @ in path
         # in that case split table name and path
         # table names can never starts with a number
         # this is considering an image inside an stack
-        if '@' in path and path[0] not in '0123456789':
-            self._tableName, self._path = path.split('@')
+        elif isinstance(path, basestring):
+            if '@' in path and path[0] not in '0123456789':
+                self._tableName, self._path = path.split('@')
+            else:
+                self._path = path
         else:
-            self._tableName, self._path = None, path
+            raise Exception("Invalid input path, should be 'string' or 'tuple'")
             
     def show(self):        
         showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
@@ -79,7 +93,7 @@ class DataView(View):
         tableName = '%s@' % self._tableName if self._tableName else ''
         params = '-i "%s%s"' % (tableName, self._path)
         for key, value in self._viewParams.items():
-            params = "%s --%s %s"%(params, key, value)
+            params = "%s --%s %s" % (params, key, value)
         
         return params
     
@@ -135,7 +149,8 @@ class DataView(View):
         
 class ObjectView(DataView):
     """ Wrapper to DataView but for displaying Scipion objects. """
-    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='', viewParams={},
+                 **kwargs):
         DataView.__init__(self, path, viewParams, **kwargs)
         self.type = type
         self.port = project.port
@@ -143,20 +158,55 @@ class ObjectView(DataView):
         self.other = other
         
     def getShowJParams(self):
-        # mandatory to provide scipion params
-        params = DataView.getShowJParams(self) + ' --scipion %s %s %s' % (self.port, self.inputid, self.other)
-        return params
+        # Add the scipion parameters over the normal showj params
+        return '%s --scipion %s %s %s' % (DataView.getShowJParams(self),
+                                          self.port, self.inputid, self.other)
     
     def show(self):
         showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
                            self.getShowJParams(), env=self._env)
-        
+
+
+class MicrographsView(ObjectView):
+    """ Customized ObjectView for SetOfCTF objects . """
+    # All extra labels that we want to show if present in the CTF results
+    RENDER_LABELS = ['thumbnail._filename', 'psdCorr._filename',
+                     'plotGlobal._filename']
+    EXTRA_LABELS = ['_filename']
+
+    def __init__(self, project, micSet, other='', **kwargs):
+        first = micSet.getFirstItem()
+
+        first.printAll()
+
+        def existingLabels(labelList):
+            print("labelList: ", labelList)
+            return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
+
+        renderLabels = existingLabels(self.RENDER_LABELS)
+        extraLabels = existingLabels(self.EXTRA_LABELS)
+        labels = 'id enabled %s %s' % (renderLabels, extraLabels)
+
+        viewParams = {showj.MODE: showj.MODE_MD,
+                      showj.ORDER: labels,
+                      showj.VISIBLE: labels,
+                      showj.ZOOM: 50
+                      }
+
+        if renderLabels:
+            viewParams[showj.RENDER] = renderLabels
+
+        inputId = micSet.getObjId() or micSet.getFileName()
+        ObjectView.__init__(self, project,
+                            inputId, micSet.getFileName(), other,
+                            viewParams, **kwargs)
 
 class CtfView(ObjectView):
     """ Customized ObjectView for SetOfCTF objects . """
     # All extra labels that we want to show if present in the CTF results
-    PSD_LABELS = ['_psdFile', '_xmipp_enhanced_psd',
-                  '_xmipp_ctfmodel_quadrant', '_xmipp_ctfmodel_halfplane'
+    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile', '_xmipp_enhanced_psd',
+                  '_xmipp_ctfmodel_quadrant', '_xmipp_ctfmodel_halfplane',
+                  '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_xmipp_ctfCritFirstZero',
                     ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
@@ -167,12 +217,13 @@ class CtfView(ObjectView):
         first = ctfSet.getFirstItem()
 
         def existingLabels(labelList):
-            return ' '.join([l for l in labelList if first.hasAttribute(l)])
+            return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels =  'id enabled comment %s _defocusU _defocusV ' % psdLabels
+        labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
         labels += '_defocusAngle _defocusRatio %s  _micObj._filename' % extraLabels
+
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
@@ -182,8 +233,12 @@ class CtfView(ObjectView):
         if psdLabels:
             viewParams[showj.RENDER] = psdLabels
 
+        if ctfSet.isStreamOpen():
+            viewParams['dont_recalc_ctf'] = ''
+
         if first.hasAttribute('_ctffind4_ctfResolution'):
-            viewParams[showj.OBJCMDS] = "'%s'" % showj.OBJCMD_CTFFIND4
+            import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
+            viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
@@ -193,7 +248,8 @@ class CtfView(ObjectView):
 
 class ClassesView(ObjectView):
     """ Customized ObjectView for SetOfClasses. """
-    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='',
+                 viewParams={}, **kwargs):
         labels =  'enabled id _size _representative._filename'
         defaultViewParams = {showj.ORDER:labels,
                              showj.VISIBLE: labels, 
@@ -208,7 +264,8 @@ class ClassesView(ObjectView):
         
 class Classes3DView(ClassesView):
     """ Customized ObjectView for SetOfClasses. """
-    def __init__(self, project, inputid, path, other='', viewParams={}, **kwargs):
+    def __init__(self, project, inputid, path, other='',
+                 viewParams={}, **kwargs):
         defaultViewParams = {showj.ZOOM: '99', 
                              showj.MODE: 'metadata'}
         defaultViewParams.update(viewParams)
@@ -322,6 +379,7 @@ class ChimeraViewer(Viewer):
             raise Exception('ChimeraViewer.visualize: can not visualize class: %s'
                             % obj.getClassName())
 
+
 class ChimeraClient:
     
     def __init__(self, volfile, sendEnd=True,**kwargs):
@@ -348,8 +406,7 @@ class ChimeraClient:
         self.address = ''
         self.port = getFreePort()
 
-        serverfile = os.path.join(os.environ['SCIPION_HOME'],
-                                  'pyworkflow', 'em', 'chimera_server.py')
+        serverfile = pw.join('em', 'chimera_server.py')
         command = CommandView("chimera --script '%s %s %s' &" %
                               (serverfile, self.port,serverName),
                              env=getChimeraEnviron(),).show()
@@ -589,7 +646,7 @@ class ChimeraProjectionClient(ChimeraAngDistClient):
         self.size = size if size else defaultSize
         paddingFactor = self.kwargs.get('paddingFactor', 1)
         maxFreq = self.kwargs.get('maxFreq', 0.5)
-        splineDegree = self.kwargs.get('splineDegree', 2)
+        splineDegree = self.kwargs.get('splineDegree', 3)
         self.fourierprojector = xmipp.FourierProjector(self.image, paddingFactor,
                                                        maxFreq, splineDegree)
         self.fourierprojector.projectVolume(self.projection, 0, 0, 0)
@@ -704,11 +761,10 @@ class VmdViewer(Viewer):
         
         if issubclass(cls, PdbFile):
             VmdView(obj.getFileName()).show()
-            #FIXME: there is an asymetry between ProtocolViewer and Viewer
-            # for the first, the visualize method return a list of View's (that are shown)
-            # for the second, the visualize directly shows the objects. 
-            # the first approach is better 
+            #FIXME: there is an asymetry between ProtocolViewer and Viewer.
+            # For the first, the visualize method return a list of View's,
+            # while for the second, the visualize method directly shows
+            # the objects. (the first approach is preferable)
         else:
             raise Exception('VmdViewer.visualize: can not visualize class: %s'
                             % obj.getClassName())
-        

@@ -36,26 +36,4 @@ if not os.path.exists(searchDir):
     
 project = manager.loadProject(projName)
 
-runs = project.getRuns()
-
-for prot in runs:
-    broken = False
-    if isinstance(prot, em.ProtImport):
-        for _, attr in prot.iterOutputEM():
-            fn = attr.getFiles()
-            for f in attr.getFiles():
-                if ':' in f:
-                    f = f.split(':')[0]
-
-                if not os.path.exists(f):                    
-                    if not broken:
-                        broken = True
-                        print "Found broken links in run: ", pwutils.magenta(prot.getRunName())
-                    print "  Missing: ", pwutils.magenta(f)
-                    if os.path.islink(f):
-                        print "    -> ", pwutils.red(os.path.realpath(f))
-                    newFile = pwutils.findFile(os.path.basename(f), searchDir, recursive=True)
-                    if newFile:
-                        print "  Found file %s, creating link..." % newFile
-                        print pwutils.green("   %s -> %s" % (f, newFile))
-                        pwutils.createAbsLink(newFile, f)
+project.fixLinks(searchDir)

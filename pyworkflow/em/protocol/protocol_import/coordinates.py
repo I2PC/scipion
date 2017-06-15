@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -67,9 +67,12 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
+
+
         ProtImportFiles._defineParams(self, form)
 
-        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs', 
+    def _defineImportParams(self, form):
+        form.addParam('inputMicrographs', PointerParam, pointerClass='SetOfMicrographs',
                           label='Input micrographs',
                           help='Select the micrographs for which you want to import coordinates.')
 
@@ -94,7 +97,6 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         coordsSet = self._createSetOfCoordinates(inputMics)
         coordsSet.setBoxSize(self.boxSize.get())
         ci = self.getImportClass()
-        
         for coordFile, fileId in self.iterFiles():
             mic = self.getMatchingMic(coordFile,fileId)
             if mic is not None:
@@ -117,7 +119,7 @@ class ProtImportCoordinates(ProtImportFiles, ProtParticlePicking):
         else:
             msg = "%s  coordinates from micrographs %s were imported using %s format."%(self.outputCoordinates.getSize(), self.getObjectTag('inputMicrographs'), self._getImportChoices()[self.getImportFrom()])
             if self.scale.get() != 1.:
-                msg += " Scale factor %d was applied." % self.scale
+                msg += " Scale factor %0.2f was applied." % self.scale
             if self.invertX.get():
                 msg += " X coordinate was inverted."
             if self.invertY.get():

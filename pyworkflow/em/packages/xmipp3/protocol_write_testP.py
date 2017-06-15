@@ -20,13 +20,15 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
 import pyworkflow.protocol.params as params
 from xmipp import *
 import os
+
+from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtProcessParticles
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from pyworkflow.protocol.params import IntParam
@@ -36,7 +38,8 @@ class XmippProtWriteTestP(ProtProcessParticles):
     """    
     using mpi write data to a large file (python level)
     """
-    _label = 'write_test_P'
+    _label = None
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, *args, **kwargs):
         ProtProcessParticles.__init__(self, *args, **kwargs)

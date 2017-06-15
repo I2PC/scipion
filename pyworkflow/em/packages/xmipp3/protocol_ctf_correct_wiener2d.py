@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -103,6 +103,7 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         imgFn = self._getPath('corrected_ctf_particles.xmd')
         
         partSet.copyInfo(imgSet)
+        partSet.setIsPhaseFlipped(True)
         partSet.copyItems(imgSet,
                             updateItemCallback=self._updateLocation,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
@@ -121,7 +122,7 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         return messages
     
     def _citations(self):
-        return ['Vargas2014a']
+        return []
     
     #--------------------------- UTILS functions -------------------------------------------- 
     def _updateLocation(self, item, row):

@@ -7,19 +7,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
-/**************************************************************************
+/*****************************************************************************
 * Public function bodies
-**************************************************************************/
-/***************************************************************************
+*****************************************************************************/
+/*****************************************************************************
 * Name: initialize_Graph
 * IN:		size			# nodes to allocate
 * OUT:		graph			graph data
 * IN/OUT:	N/A
 * RETURN:	SUCCESS if graph allocated. FAILURE i.o.c
 * Description: 	allocates structures to store "size" nodes.
-***************************************************************************/
+*****************************************************************************/
 int  initialize_Graph(struct Graph_T *graph, int  size)
 {
     int     ret=SUCCESS;        // Return value.
@@ -149,6 +147,7 @@ void get_Vertex_Of_Node( struct Graph_T *graph, int node_Index, int *index1,
 }
 
 
+
 /***************************************************************************
 * Name: is_Graph_Full
 * IN:	graph			graph data
@@ -220,13 +219,15 @@ int insert_Node(struct Graph_T *graph, struct Node_T *node)
 		// Set current node as assigned to face_ID.
 		graph->face_Node_Assign[node->face_ID] = graph->nElements;
 
+#ifdef DEBUG_INSERT_NODE
+        printf("New node %d. Node points are %d,%d,%d. Face %d\n", graph->nElements,
+														node->points_Index[0],
+														node->points_Index[1],
+														node->points_Index[2],
+														graph->nodes[graph->nElements].face_ID);
+#endif
         // Increase number of elements.
         graph->nElements++;
-#ifdef DEBUG_INSERT_NODE
-        printf("New node points are %d,%d,%d\n", node->points_Index[0],
-        									node->points_Index[1],
-											node->points_Index[2]);
-#endif
     }
 
     return(ret);
@@ -294,10 +295,12 @@ void update_Node(struct Graph_T *graph, int index, int  nChildren, struct Node_T
 		graph->nodes[index].face_ID = node->face_ID;
 
 #ifdef DEBUG_UPDATE_NODE
-		printf("Updated node %d. Points are %d, %d and %d\n", index+1,
+		printf("Updated node %d. Points are %d, %d and %d. Face %d. # children %d\n", index,
 													node->points_Index[0],
 													node->points_Index[1],
-													node->points_Index[2]);
+													node->points_Index[2],
+													graph->nodes[index].face_ID,
+													nChildren);
 #endif
 	}
 }
@@ -567,3 +570,4 @@ void print_Graph(struct Graph_T *graph)
         print_Node( get_Node( graph, i));
     }
 }
+

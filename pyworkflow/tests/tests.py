@@ -17,6 +17,23 @@ TESTS_INPUT = join(os.environ['SCIPION_HOME'], 'data', 'tests')
 TESTS_OUTPUT = join(os.environ['SCIPION_USER_DATA'], 'Tests')
 
 
+SMALL = 'small'
+PULL_REQUEST = 'pull'
+DAILY = 'daily'
+WEEKLY = 'weekly'
+
+
+# Procedure to check if a test class has an attribute called _labels and if so
+# then it checks if the class test matches any of the labels in input label parameter.
+def hasLabel(TestClass, labels):
+    
+    # Get _labels attributes in class if any.
+    classLabels = getattr(TestClass, '_labels', None)
+
+    # Check if no label in test class.    
+    return classLabels is not None and any(l in classLabels for l in labels)
+
+
 class DataSet:
 
     _datasetDict = {} # store all created datasets
@@ -58,6 +75,8 @@ class DataSet:
 
 class BaseTest(unittest.TestCase):
     
+    _labels = [WEEKLY]
+     
     @classmethod
     def getOutputPath(cls, *filenames):
         """Return the path to the SCIPION_HOME/tests/output dir
@@ -119,7 +138,23 @@ class BaseTest(unittest.TestCase):
                 item1.printAll()
                 item2.printAll()
             test.assertTrue(areEqual)
- 
+
+    def assertSetSize(self, object, size=None, msg=None):
+        """ Check if a pyworkflow Set is not None nor is empty"""
+        self.assertIsNotNone(object, msg)
+
+        if size is None:
+            # Test is not empty
+            self.assertNotEqual(object.getSize(), 0, msg)
+        else:
+            self.assertEqual(object.getSize(), size)
+
+    def assertIsNotEmpty(self, object, msg=None):
+        """ Check if the pworkflow object is not None nor is empty"""
+        self.assertIsNotNone(object, msg)
+
+        self.assertIsNotNone(object.get(), msg)
+
 def setupTestOutput(cls):
     """ Create the output folder for a give Test class. """
     cls.outputPath = join(TESTS_OUTPUT, cls.__name__)
@@ -169,6 +204,7 @@ class Complex(Object):
         c.imag.set(cls.cGold.imag)
         c.real.set(cls.cGold.real)
         return c
+       
     
         
 class GTestResult(unittest.TestResult):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     Josue Gomez Blanco   (jgomez@cnb.csic.es)
@@ -22,7 +23,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -34,7 +35,8 @@ from protocol_process import XmippProcessParticles, XmippProcessVolumes
 
 
 class XmippResizeHelper():
-    """ Common features to change dimensions of either SetOfParticles, Volume or SetOfVolumes objects.
+    """ Common features to change dimensions of either SetOfParticles,
+    Volume or SetOfVolumes objects.
     """
 
     RESIZE_SAMPLINGRATE = 0
@@ -64,7 +66,7 @@ class XmippResizeHelper():
                       '_Pyramid_: Use positive level value to expand and negative to reduce. \n')
         form.addParam('resizeSamplingRate', FloatParam, default=1.0,
                       condition='doResize and resizeOption==%d' % cls.RESIZE_SAMPLINGRATE,
-                      label='Resize sampling rate (A/px)',
+                      label='Resize sampling rate (Å/px)',
                       help='Set the new output sampling rate.')
         form.addParam('doFourier', BooleanParam, default=False,
                       condition='doResize and resizeOption==%d' % cls.RESIZE_DIMENSIONS,
@@ -108,7 +110,7 @@ class XmippResizeHelper():
                            'expanded or cutted in all directions such that the '
                            'origin remains the same.')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     @classmethod
     def _insertProcessStep(cls, protocol):
         isFirstStep = True
@@ -122,27 +124,28 @@ class XmippResizeHelper():
             args = protocol._windowArgs(isFirstStep)
             protocol._insertFunctionStep("windowStep", args)
     
-    #--------------------------- STEPS functions ---------------------------------------------------
+    #--------------------------- STEPS functions -------------------------------
     def resizeStep(self, args):
         self.runJob("xmipp_image_resize", args)
     
     def windowStep(self, args):
-        self.runJob("xmipp_transform_window", args)
-    
-    #--------------------------- INFO functions ----------------------------------------------------
+        self.runJob("xmipp_transform_window", args, numberOfMpi=1)
+        
+    #--------------------------- INFO functions --------------------------------
     @classmethod
     def _validate(cls, protocol):
         errors = []
         
-        if protocol.doResize and protocol.resizeOption == cls.RESIZE_SAMPLINGRATE and protocol.doFourier:
-#             imgSet = self.inputParticles.get()
+        if (protocol.doResize and protocol.doFourier and
+            protocol.resizeOption == cls.RESIZE_SAMPLINGRATE):
             size = protocol._getSetSize()
             if protocol.resizeDim > size:
-                errors.append('Fourier resize method cannot be used to increase the dimensions')
+                errors.append('Fourier resize method cannot be used to '
+                              'increase the dimensions')
                 
         return errors
     
-    #--------------------------- UTILS functions ---------------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     @classmethod
     def _resizeCommonArgs(cls, protocol):
         samplingRate = protocol._getSetSampling()
@@ -215,6 +218,7 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
         XmippResizeHelper._defineProcessParams(self, form)
+        form.addParallelSection(threads=0, mpi=8)
         
     def _insertProcessStep(self):
         XmippResizeHelper._insertProcessStep(self)
@@ -224,7 +228,7 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         self.runJob("xmipp_image_resize", args)
     
     def windowStep(self, args):
-        self.runJob("xmipp_transform_window", args)
+        self.runJob("xmipp_transform_window", args, numberOfMpi=1)
         
     def _preprocessOutput(self, output):
         """ We need to update the sampling rate of the 
@@ -257,8 +261,8 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
             sampling = _getSampling(self.outputParticles)
             size = _getSize(self.outputParticles)
             if self.doResize:
-                summary.append("Output particles have a different sampling "
-                               "rate (pixel size): *%0.3f* A/px" % sampling)
+                summary.append(u"Output particles have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow:
@@ -270,6 +274,10 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         return summary
 
     def _methods(self):
+
+        if not hasattr(self, 'outputParticles'):
+            return []
+
         methods = ["We took input particles %s of size %d " % (self.getObjectTag('inputParticles'), len(self.inputParticles.get()))]
         if self.doWindow:
             if self.getEnumText('windowOperation') == "crop":
@@ -318,6 +326,13 @@ class XmippProtCropResizeParticles(XmippProcessParticles):
         imgSet = self.inputParticles.get()
         samplingRate = _getSampling(imgSet)
         return samplingRate
+    
+    def _getDefaultParallel(self):
+        """ Return the default value for thread and MPI
+        for the parallel section definition.
+        """
+        return (0, 1)
+
 
 
 class XmippProtCropResizeVolumes(XmippProcessVolumes):
@@ -338,10 +353,10 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
     #--------------------------- STEPS functions ---------------------------------------------------
     def resizeStep(self, args):
         self.runJob("xmipp_image_resize", args)
-
+    
     def windowStep(self, args):
-        self.runJob("xmipp_transform_window", args)
-
+        self.runJob("xmipp_transform_window", args, numberOfMpi=1)
+        
     def _preprocessOutput(self, volumes):
         # We use the preprocess only whne input is a set
         # we do not use postprocess to setup correctly
@@ -366,8 +381,8 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
             sampling = _getSampling(self.outputVol)
             size = _getSize(self.outputVol)
             if self.doResize:
-                summary.append("Output volume(s) have a different sampling "
-                               "rate (pixel size): *%0.3f* A/px" % sampling)
+                summary.append(u"Output volume(s) have a different sampling "
+                               u"rate (pixel size): *%0.3f* Å/px" % sampling)
                 summary.append("Resizing method: *%s*" %
                                self.getEnumText('resizeOption'))
             if self.doWindow.get():
@@ -379,6 +394,9 @@ class XmippProtCropResizeVolumes(XmippProcessVolumes):
         return summary
 
     def _methods(self):
+        if not hasattr(self, 'outputVol'):
+            return []
+
         if self._isSingleInput():
             methods = ["We took one volume"]
             pronoun = "it"

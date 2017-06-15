@@ -89,8 +89,15 @@ public:
     /** Default constructor */
     FourierTransformer();
 
-    /* Constructor setting the sign of normalization application*/
+    /** Copy constructor */
+    FourierTransformer(const FourierTransformer& fTransform);
+
+    /** Constructor setting the sign of normalization application*/
     FourierTransformer(int _normSign);
+
+    /** Assignment operator */
+    FourierTransformer & operator= (const FourierTransformer & other);
+
     /** Destructor */
     ~FourierTransformer();
 
@@ -211,6 +218,7 @@ public:
         memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
                MULTIDIM_SIZE(fFourier)*2*sizeof(double));
     }
+
 
     /** Return a complete Fourier transform (two halves).
     */
@@ -607,7 +615,11 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
              MultidimArray< double >& error_l2,
-             bool skipdpr=false);
+             bool skipdpr=false,
+			 bool doRfactor = false,
+			 double minFreq = -1,
+			 double maxFreq = 0.5,
+                         double * rFactor= NULL);
 
 /** Scale matrix using Fourier transform
  * @ingroup FourierOperations

@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -31,9 +31,10 @@ Launch main project window
 import sys
 import os
 
+import time
+
 from pyworkflow.manager import Manager
 from pyworkflow.gui.project import ProjectWindow
-
 
 
 if __name__ == '__main__':
@@ -49,7 +50,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         manager = Manager()
         projName = os.path.basename(sys.argv[1])
-        if projName == 'last': # Get last project
+        if projName == 'last':  # Get last project
             projects = manager.listProjects()
             if not projects:
                 sys.exit("No projects yet, cannot open the last one.")

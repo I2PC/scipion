@@ -20,33 +20,57 @@ SCIPION_URL_TESTDATA = %(SCIPION_URL)s/data/tests
 EM_ROOT = software/em
 
 BSOFT_HOME = %(EM_ROOT)s/bsoft-1.9.0
-CTFFIND_HOME = %(EM_ROOT)s/ctffind
-CTFFIND4_HOME = %(EM_ROOT)s/ctffind4
-DOGPICKER_HOME = %(EM_ROOT)s/dogpicker
-EMAN2DIR = %(EM_ROOT)s/eman2.12
-FREALIGN_HOME = %(EM_ROOT)s/frealign
-GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker_v1.1
+CTFFIND_HOME = %(EM_ROOT)s/ctffind-3.6
+CTFFIND4_HOME = %(EM_ROOT)s/ctffind4-4.1.8
+DOGPICKER_HOME = %(EM_ROOT)s/dogpicker-0.2.1
+EMAN2DIR = %(EM_ROOT)s/eman-2.12
+ETHAN_HOME = %(EM_ROOT)s/ethan-1.2
+FREALIGN_HOME = %(EM_ROOT)s/frealign-9.07
+GAUTOMATCH_HOME = %(EM_ROOT)s/Gautomatch-0.53
+GAUTOMATCH = Gautomatch-v0.53_sm_20_cu7.5_x86_64
+# GAUTOMATCH_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
+GEMPICKER_HOME = %(EM_ROOT)s/gEMpicker-1.1
 GEMPICKER = gEMpicker_nocuda_Ubuntu_14.04.x64
-GEMPICKER_CUDA = None # gEMpicker_cuda_55.x64
+GEMPICKER_CUDA = None # gEMpicker_cuda_75.x64
+GCTF_HOME = %(EM_ROOT)s/Gctf-1.06
+GCTF = Gctf-v1.06_sm_20_cu7.5_x86_64
+# GCTF_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
+IMAGIC_HOME = %(EM_ROOT)s/imagic
+LOCALREC_HOME = %(EM_ROOT)s/localrec-1.2.0
+LOCALREC_RELION_HOME = %(EM_ROOT)s/relion-1.4
+MAGDIST_HOME = %(EM_ROOT)s/mag_distortion-1.0.1
 MATLAB_BINDIR = None
 MATLAB_LIBDIR = None
-MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr
-MOTIONCORR_CUDA_LIB = None
+MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
+MOTIONCORR = dosefgpu_driftcorr_7.5
+# MOTIONCORR_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
+MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-17.01.30
+# MOTIONCOR2_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 NMA_HOME = %(EM_ROOT)s/nma
 PYTOM_HOME = %(EM_ROOT)s/pytom
-RELION_HOME = %(EM_ROOT)s/relion-1.4
-RESMAP_HOME = %(EM_ROOT)s/resmap
-SIMPLE_HOME = %(EM_ROOT)s/simple
-SPIDER_DIR = %(EM_ROOT)s/spider/spider
-SUMMOVIE_HOME = %(EM_ROOT)s/summovie
-UNBLUR_HOME = %(EM_ROOT)s/unblur
+RELION_HOME = %(EM_ROOT)s/relion-2.0
+# Uncomment the following line to define a different CUDA path for Relion
+# RELION_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
+# RELION_CUDA_BIN = None # Only for compiling purposes
+RESMAP_HOME = %(EM_ROOT)s/resmap-1.1.5s2
+SIMPLE_HOME = %(EM_ROOT)s/simple-2.1
+SPIDER_HOME = %(EM_ROOT)s/spider-21.13/spider
+SUMMOVIE_HOME = %(EM_ROOT)s/summovie-1.0.2
+UNBLUR_HOME = %(EM_ROOT)s/unblur-1.0.2
 XMIPP_HOME = %(EM_ROOT)s/xmipp
 
 # Some visualization packages
-CHIMERA_HOME = %(EM_ROOT)s/chimera
+CHIMERA_HOME = %(EM_ROOT)s/chimera-1.10.1
 CHIMERA_HEADLESS_HOME = %(EM_ROOT)s/chimera_headless
 VMD_HOME = %(EM_ROOT)s/vmd
 
+[VARIABLES]
+#editor
+SCIPION_NOTES_PROGRAM = 
+SCIPION_NOTES_ARGS =
+SCIPION_NOTES_FILE =  notes.txt
+#protocol usage statistics
+SCIPION_NOTIFY = False
 
 # This section of the configuration file is used to setup variables to
 # compile from sources. Most of them you won't want to change.
@@ -68,6 +92,11 @@ MPI_LIB = mpi
 MPI_LIBDIR = /usr/lib64/mpi/gcc/openmpi/lib
 MPI_INCLUDE = /usr/lib64/mpi/gcc/openmpi/include
 MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
+
+# NVCC (CUDA) variables
+# Default CUDA path if not defined for a certain package
+CUDA_LIB = /usr/local/cuda-7.5/lib64
+CUDA_BIN = /usr/local/cuda-7.5/bin
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 

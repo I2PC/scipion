@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -33,8 +33,7 @@ from time import time, sleep
 from cPickle import dumps, loads
 from process import buildRunCommand, runCommand
 
-from pyworkflow.utils.utils import envVarOn, getLocalHostName
-
+from pyworkflow.utils.utils import envVarOn, getLocalHostName, formatExceptionInfo
 
 TIMEOUT = 60  # seconds trying to send/receive data through a socket
 
@@ -96,6 +95,9 @@ def runJobMPISlave(mpiComm):
     hostname = getLocalHostName()
     print "Running runJobMPISlave: ", rank
 
+    exitResult = 0
+    msg = "Timeout in process %d, cannot send result to master."
+
     # Listen for commands until we get 'None'
     cwd = None  # We run without changing directory by default
     env = None  # And we don't change the environment either!
@@ -130,22 +132,15 @@ def runJobMPISlave(mpiComm):
                 cwd = None  # unset directory
                 env = None  # unset environment
         except Exception as e:
-            req_send = mpiComm.isend(str(e), dest=0, tag=TAG_RUN_JOB+rank)
-            t0 = time()
-            while not req_send.test()[0]:
-                sleep(1)
-                if time() - t0 > TIMEOUT:
-                    print ("Timeout in process %d, cannot send error "
-                           "message to master." % os.getpid())
-                    return
-            return
 
-        # Send 0 (it worked!) in a non-blocking way.
-        req_send = mpiComm.isend(0, dest=0, tag=TAG_RUN_JOB+rank)
+            msg = "Timeout in process %d, cannot send error message to master."
+            exitResult = str(e)
+
+        # Communicate to master, either error os success
+        req_send = mpiComm.isend(exitResult, dest=0, tag=TAG_RUN_JOB+rank)
         t0 = time()
         while not req_send.test()[0]:
             sleep(1)
             if time() - t0 > TIMEOUT:
-                print ("Timeout in process %d, cannot send result "
-                       "to master." % os.getpid())
-                return
+                print (msg % os.getpid())
+                break

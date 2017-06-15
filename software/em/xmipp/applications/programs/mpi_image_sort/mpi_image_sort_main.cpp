@@ -46,6 +46,9 @@ public:
     /** Filename of the output stack */
     FileName fnStack;
 
+    /** Center */
+    bool center;
+
     // Output selfile
     MetaData SFout;
 
@@ -80,6 +83,7 @@ public:
     {
         fnSel  = getParam("-i");
         fnRoot = getParam("--oroot");
+        center = !checkParam("--dont_center");
     }
 
     /// Show
@@ -89,6 +93,7 @@ public:
             return;
         std::cerr << "Input selfile:    " << fnSel           << std::endl
         << "Output rootname:  " << fnRoot          << std::endl
+		<< "Center: " << center << std::endl
         ;
     }
 
@@ -110,6 +115,7 @@ public:
         addParamsLine("                       : and the original images as well as the correlation coefficient ");
         addParamsLine("                       : between the aligned image and its predecessor in the list of ");
         addParamsLine("                       : aligned images.");
+        addParamsLine("   [--dont_center]     : Do not center images as they are sorted");
         addExampleLine("mpirun -np 8 `which xmipp_mpi_image_sort` -i images.xmd --oroot sorted");
     }
 
@@ -151,7 +157,8 @@ public:
                 {
                     row.getValue(MDL_IMAGE,fnImg);
                     lastImage.read(fnImg);
-                    centerImage(lastImage(),aux,aux2);
+                    if (center)
+                    	centerImage(lastImage(),aux,aux2);
                     if (rank==0)
                         lastImage.write(fnStack,0,true,WRITE_APPEND);
                     fnImageStack.compose(1,fnStack);
@@ -202,7 +209,8 @@ public:
             I.read(fnImg);
             I().setXmippOrigin();
             double corr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
-            centerImage(I(),aux2,aux3);
+            if (center)
+            	centerImage(I(),aux2,aux3);
             if (corr>bestCorr)
             {
                 bestCorr=corr;
@@ -252,9 +260,9 @@ public:
         I.read(fnImg);
         I().setXmippOrigin();
         bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,aux,aux2,aux3,&mask);
-        centerImage(I(),aux2,aux3);
-        bestImage()=I();
-        lastImage()=bestImage();
+        if (center)
+        	centerImage(I(),aux2,aux3);
+        lastImage()=bestImage()=I();
 
         if (rank==0)
         {

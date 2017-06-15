@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 
@@ -187,7 +187,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         args = '-i %s ' % volPath
         pixelSize = vol.getSamplingRate()
         args += '--sampling %f ' % pixelSize
-        args += '--maxres %d ' % maxres
+        args += '--maxres %f ' % maxres
         args += '--adhoc %f ' % -values[4]
         volName = os.path.basename(volPath)
         volOut = self.protocol._getPath(volName) 
@@ -204,7 +204,7 @@ class XmippResolution3DViewer(ProtocolViewer):
         volSet.append(newVol)
         volSet.write()
         
-        self.getObjectView(volSet.getFileName()).show()
+        self.objectView(volSet).show()
         
 
 STATE_NO_POINTS = 0 # on points have been selected, double-click will add first one

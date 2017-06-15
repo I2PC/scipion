@@ -10,6 +10,7 @@ import unittest
 from tempfile import NamedTemporaryFile
 from time import time
 
+from pyworkflow.tests import *
 from xmipp import *
 from pyworkflow.em.packages.xmipp3 import getXmippPath
 import pyworkflow.utils as pwutils
@@ -40,6 +41,9 @@ def binaryFileComparison(nameo, namet):
 
 
 class TestXmippPythonInterface(unittest.TestCase):
+    
+    _labels = [WEEKLY]
+    
     testsPath = getXmippPath("resources", "test")
     # Temporary filenames used
 
@@ -306,6 +310,12 @@ class TestXmippPythonInterface(unittest.TestCase):
         img1.inplaceMultiply(3.)
         self.assertEqual(img1, img3)
 
+        img1 = _createImage(array([[2., 0., 0.],
+                                   [2., 0., 0.],
+                                   [2., 0., 0.]]))
+        img1.inplaceMultiply(img2)
+        self.assertEqual(img1, img3)
+
     def test_Image_compare(self):
         imgPath = testFile("singleImage.spi")
         img1 = Image()
@@ -334,8 +344,8 @@ class TestXmippPythonInterface(unittest.TestCase):
         img2.setDataType(DT_FLOAT)
         img.resize(3, 3)
         img2.resize(3, 3)
-        img.setPixel(1, 1, 1.)
-        img2.setPixel(1, 1, 1.01)
+        img.setPixel(0, 0, 1, 1, 1.)
+        img2.setPixel(0, 0, 1, 1, 1.01)
 
         self.assertFalse(img.equal(img2, 0.005))
         self.assertTrue(img.equal(img2, 0.1))
@@ -355,7 +365,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         img.initConstant(1.)
         for i in range(0, 3):
             for j in range (0, 3):
-                p = img.getPixel(i, j)
+                p = img.getPixel(0, 0, i, j)
                 self.assertAlmostEquals(p, 1.0)
 
     def test_Image_initRandom(self):
@@ -407,7 +417,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         count = 0.
         for i in range(0, 3):
             for j in range (0, 3):
-                p = img.getPixel(i, j)
+                p = img.getPixel(0, 0, i, j)
                 self.assertAlmostEquals(p, count)
                 count += 1.
 
@@ -439,7 +449,7 @@ class TestXmippPythonInterface(unittest.TestCase):
         img = Image()
         img.setDataType(DT_FLOAT)
         img.resize(3, 3)
-        img.setPixel(1, 1, 1.)
+        img.setPixel(0, 0, 1, 1, 1.)
         img.computeStats()
         mean, dev, min, max = img.computeStats()
         self.assertAlmostEqual(mean, 0.111111, 5)
@@ -457,11 +467,11 @@ class TestXmippPythonInterface(unittest.TestCase):
         imgY.resize(dim, dim)
         for i in range(0,dim):
             for j in range(0,dim):
-                img.setPixel(i, j, 1.*dim*i+j)
+                img.setPixel(0, 0, i, j, 1.*dim*i+j)
         img.mirrorY();
         for i in range(0,dim):
             for j in range(0,dim):
-                imgY.setPixel(dim -1 -i, j, 1.*dim*i+j)
+                imgY.setPixel(0, 0, dim -1 -i, j, 1.*dim*i+j)
         self.assertEquals(img, imgY)
 
     def test_Image_applyTransforMatScipion(self):
@@ -474,40 +484,29 @@ class TestXmippPythonInterface(unittest.TestCase):
         img2.resize(dim, dim)
         for i in range(0,dim):
             for j in range(0,dim):
-                img.setPixel(dim -1 -i, j, 1.*dim*i+j)
+                img.setPixel(0, 0, dim -1 -i, j, 1.*dim*i+j)
         A=[0.,-1.,0.,0.,
            1.,0.,0.,0.,
            0.,0.,1.,1.]
-        img2.setPixel(0,0,0)
-        img2.setPixel(0,1,3.)
-        img2.setPixel(0,2,6.)
+        img2.setPixel(0, 0, 0,0,0)
+        img2.setPixel(0, 0, 0,1,3.)
+        img2.setPixel(0, 0, 0,2,6.)
 
-        img2.setPixel(1,0,1.)
-        img2.setPixel(1,1,4.)
-        img2.setPixel(1,2,7.)
+        img2.setPixel(0, 0, 1,0,1.)
+        img2.setPixel(0, 0, 1,1,4.)
+        img2.setPixel(0, 0, 1,2,7.)
 
-        img2.setPixel(2,0,2.)
-        img2.setPixel(2,1,5.)
-        img2.setPixel(2,2,8.)
+        img2.setPixel(0, 0, 2,0,2.)
+        img2.setPixel(0, 0, 2,1,5.)
+        img2.setPixel(0, 0, 2,2,8.)
 
         img.applyTransforMatScipion(A)
         #print img.getData(),"\n", img2.getData()
         for i in range(0, dim):
             for j in range (0, dim):
-                p1 = img.getPixel(i, j)
-                p2 = img2.getPixel(i, j)
+                p1 = img.getPixel(0, 0, i, j)
+                p2 = img2.getPixel(0, 0, i, j)
                 self.assertAlmostEquals(p1, p2)
-
-    def test_createEmptyFile(self):
-        x, y, z, n = 10, 10, 1, 100
-        img = Image()
-
-        for ext in ['stk', 'mrcs']:
-            imgPath = testFile('empty_100.%s' % ext)
-            createEmptyFile(imgPath, x, y, z, n)
-            img.read(imgPath, HEADER)
-            self.assertEqual(img.getDimensions(), (x, y, z, n))
-            pwutils.cleanPath(imgPath)
 
     def test_Metadata_getValue(self):
         '''MetaData_GetValues'''
@@ -1210,3 +1209,14 @@ _rlnDefocusU #2
         total = md.getValue(MDL_ANGLE_DIFF, id)
         self.assertAlmostEqual(total, 5.23652, 4)
 
+    def test_SymList_getSymmetryMatrices(self):
+        try:
+            SL = SymList()
+            _symList = SL.getSymmetryMatrices("C4")
+        except Exception as e:
+            print e.message
+        m = _symList[1]
+        l = [[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
+        self.assertAlmostEqual(m[1][1],l[1][1])
+        self.assertAlmostEqual(m[0][0],l[0][0])
+        self.assertAlmostEqual(m[1][1],0.)

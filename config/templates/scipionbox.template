@@ -1,0 +1,54 @@
+[GLOBAL]
+# Defaults to have checked/uncheck each protocol
+MOTIONCORR = 0
+MOTIONCOR2 = 1
+OPTICALFLOW = 0
+SUMMOVIE = 0
+CTFFIND4 = 1
+GCTF = 0
+
+# Create grids folders?
+GRIDS = 1
+
+# Email notification settings
+EMAIL_NOTIFICATION = 0
+SMTP_SERVER = localhost
+SMTP_FROM = noreply-biocomp@cnb.csic.es
+SMTP_TO = user@domain
+
+# HTML report settings
+HTML_REPORT = 0
+HTML_PUBLISH = rsync -av %%(REPORT_FOLDER)s scipionbox@nolan:/home/scipionbox/public_html/
+
+# Pattern to be used when importing movies
+PATTERN = GRID_??/DATA/Images-Disc?/GridSquare_*/Data/FoilHole_*frames.mrc
+
+# Name for the Scipion project inside the session folder
+SCIPION_PROJECT = ScipionUserData/projects
+# SCIPION_PROJECT = ScipionUserData/projects/${PROJECT_NAME}
+
+
+# Default backup directory (usually usb mount point
+DATA_BACKUP = /mnt
+
+
+# ------- MICROSCOPES ----------------
+[MICROSCOPE:Talos-D3558]
+DATA_FOLDER = /home/inbox
+CS = 2.7
+MAG = 
+
+[MICROSCOPE:Krios-K2]
+DATA_FOLDER = ~/work/data/inbox/Krios-K2
+CS = 2.3
+GRIDS = 0
+PATTERN = FoilHole_*frames.mrc
+SCIPION_PROJECT = ${PROJECT_NAME}_SCIPION
+EMAIL_NOTIFICATION = 0
+HTML_REPORT = 0
+
+
+[MICROSCOPE:Krios-Falcon2]
+DATA_FOLDER = ~/work/data/inbox/Krios-Falcon2
+CS = 2.7
+

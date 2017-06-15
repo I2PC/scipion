@@ -1,4 +1,4 @@
-# coding: latin-1
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -21,7 +21,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -31,7 +31,7 @@ Bibtex string file for Xmipp package.
 _bibtexStr = """
 
 @article{Abrishami2013,
-author = {Abrishami, V. and ZaldÌvar-Peraza, A. and de la Rosa-TrevÌn, J. M. and Vargas, J. and OtÛn, J. and Marabini, R. and Shkolnisky, Y. and Carazo, J. M. and Sorzano, C. O. S.},
+author = {Abrishami, V. and Zald√≠var-Peraza, A. and de la Rosa-Trev√≠n, J. M. and Vargas, J. and Ot√≥n, J. and Marabini, R. and Shkolnisky, Y. and Carazo, J. M. and Sorzano, C. O. S.},
 title = {A pattern matching approach to the automatic selection of particles from low-contrast electron micrographs},
 volume = {29},
 number = {19},
@@ -53,7 +53,7 @@ note = "",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2015.02.001",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847715000313",
-author = "Vahid Abrishami and Javier Vargas and Xueming Li and Yifan Cheng and Roberto Marabini and Carlos ”scar S·nchez Sorzano and JosÈ MarÌa Carazo",
+author = "Vahid Abrishami and Javier Vargas and Xueming Li and Yifan Cheng and Roberto Marabini and Carlos √ìscar S√°nchez Sorzano and Jos√© Mar√≠a Carazo",
 keywords = "Direct detection devices",
 keywords = "Beam induced motion",
 keywords = "Single particle analysis",
@@ -71,10 +71,21 @@ note = "",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2013.03.002",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713000737",
-author = "Yuxiang Chen and Stefan Pfeffer and Thomas Hrabe and Jan Michael Schuller and Friedrich Fˆrster",
+author = "Yuxiang Chen and Stefan Pfeffer and Thomas Hrabe and Jan Michael Schuller and Friedrich F√∂rster",
 keywords = "Cryo-electron tomography",
 keywords = "Subtomogram averaging",
 keywords = "Spherical harmonics "
+}
+
+@article{Cherian2013,
+title = "Jensen-Bregman LogDet divergence with application to efficient similarity search for covariance matrices ",
+journal = "IEEE Trans Pattern Anal Mach Intell ",
+volume = "35",
+pages = "2161-2174",
+year = "2013",
+doi = "http://dx.doi.org/10.1109/TPAMI.2012.259",
+url = "http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6378374",
+author = "Cherian, A. and Sra, S. and Banerjee, A. and Papanikolopoulos, N."
 }
 
 @article{delaRosaTrevin2013,
@@ -87,7 +98,7 @@ year = "2013",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2013.09.015",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713002566",
-author = "de la Rosa-Trevi≠n, J.M.  and Oton, J. and R. Marabini and A. Zaldi≠var and J. Vargas and J.M. Carazo and Sorzano, C.O.S.",
+author = "de la Rosa-Trev√≠n, J.M.  and Oton, J. and R. Marabini and A. Zald√≠var and J. Vargas and J.M. Carazo and Sorzano, C.O.S.",
 keywords = "Electron microscopy, Single particles analysis, Image processing, Software package "
 }
 
@@ -99,7 +110,7 @@ pages = "1 - 11",
 year = "2014",
 doi = "http://dx.doi.org/10.1016/j.str.2014.01.004",
 url = "http://www.ncbi.nlm.nih.gov/pubmed/24508340",
-author = "Jin, Q. and Sorzano, C. O. S. and de la Rosa-Trevin, J. M. and Bilbao-Castro, J. R. and NuÒez-Ramirez, R. and Llorca, O. and Tama, F. and Jonic, S.",
+author = "Jin, Q. and Sorzano, C. O. S. and de la Rosa-Trev√≠n, J. M. and Bilbao-Castro, J. R. and N√∫√±ez-Ramirez, R. and Llorca, O. and Tama, F. and Jonic, S.",
 keywords = "Normal mode analysis, NMA "
 }
 
@@ -161,7 +172,7 @@ note = "",
 issn = "0304-3991",
 doi = "http://dx.doi.org/10.1016/S0304-3991(00)00022-X",
 url = "http://www.sciencedirect.com/science/article/pii/S030439910000022X",
-author = "Pascual-Montano, A and Montserrat B·rcena and J.J Merelo and JosÈ-MarÌa Carazo",
+author = "Pascual-Montano, A and Montserrat B√°rcena and J.J Merelo and Jos√©-Mar√≠a Carazo",
 keywords = "Image processing, Cluster analysis, Neural networks, Self-organizing maps, Fuzzy logic "
 }
 
@@ -175,7 +186,7 @@ year = "2001",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1006/jsbi.2001.4369",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847701943692",
-author = "Pascual-Montano, A and L.E Donate and M Valle and M B·rcena and R.D Pascual-Marqui and J.M Carazo",
+author = "Pascual-Montano, A and L.E Donate and M Valle and M B√°rcena and R.D Pascual-Marqui and J.M Carazo",
 keywords = "classification, cryo-EM, image processing, neural networks, self-organizing maps, probability density function, kernel functions",
 }
 
@@ -218,12 +229,12 @@ year = "2005",
 issn = "0022-2836",
 doi = "http://dx.doi.org/10.1016/j.jmb.2005.02.031",
 url = "http://www.sciencedirect.com/science/article/pii/S0022283605001932",
-author = "Scheres, Sjors H.W. and Valle, Mikel and Rafael NuÒez and Carlos O.S. Sorzano and Roberto Marabini and Gabor T. Herman and Jose-Maria Carazo",
+author = "Scheres, Sjors H.W. and Valle, Mikel and Rafael N√∫√±ez and Carlos O.S. Sorzano and Roberto Marabini and Gabor T. Herman and Jose-Maria Carazo",
 keywords = "maximum-likelihood, multi-reference refinement, single-particles, 2D-alignment, classification "
 }
 
 @article{Scheres2005b,
-author = {Scheres, Sjors H.W. and Valle, Mikel and Carazo, JosÈ-MarÌa},
+author = {Scheres, Sjors H.W. and Valle, Mikel and Carazo, Jos√©-Mar√≠a},
 title = {Fast maximum-likelihood refinement of electron microscopy images.},
 journal = {Bioinformatics},
 year = {2005},
@@ -257,9 +268,9 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
 }
 
 @article{Scheres2007b,
-  author = {Scheres, Sjors H. W. and N˙Òez-RamÌrez, Rafael and GÛmez-Llorente,
-    Yacob and {San MartÌn}, Carmen and Eggermont, Paul P B. and Carazo,
-    JosÈ MarÌa},
+  author = {Scheres, Sjors H. W. and N√∫√±ez-Ram√≠rez, Rafael and G√≥mez-Llorente,
+    Yacob and {San Mart√≠n}, Carmen and Eggermont, Paul P B. and Carazo,
+    Jos√© Mar√≠a},
   title = {Modeling experimental image formation for likelihood-based classification
     of electron microscopy data.},
   journal = {Structure},
@@ -279,7 +290,7 @@ keywords = {Algorithms; Cryoelectron Microscopy, methods; Image Enhancement, met
 }
 
 @article{Scheres2009b,
-  author = {Scheres, Sjors H W. and Carazo, JosÈ MarÌa},
+  author = {Scheres, Sjors H W. and Carazo, Jos√© Mar√≠a},
   title = {Introducing robustness to maximum-likelihood refinement of electron-microscopy
     data.},
   journal = {Acta Crystallogr D Biol Crystallogr},
@@ -344,7 +355,7 @@ note = "",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2010.03.011",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847710000882",
-author = "C.O.S. Sorzano and J.R. Bilbao-Castro and Y. Shkolnisky and M. Alcorlo and R. Melero and G. Caffarena-Fern·ndez and M. Li and G. Xu and R. Marabini and J.M. Carazo",
+author = "C.O.S. Sorzano and J.R. Bilbao-Castro and Y. Shkolnisky and M. Alcorlo and R. Melero and G. Caffarena-Fern√°ndez and M. Li and G. Xu and R. Marabini and J.M. Carazo",
 keywords = "Single-particle analysis, 2D analysis, Multireference analysis, Electron microscopy "
 }
 
@@ -359,13 +370,13 @@ editor = "Sousa, Alioscka A. and Kruhlak, Michael J.",
 doi = "http://dx.doi.org/10.1007/978-1-62703-137-0_11",
 publisher = "Humana Press",
 keywords = "Single particle analysis; Electron microscopy; Image processing; 3D reconstruction; Workflows",
-author = "Sorzano, C.O.S. and de la Rosa-Trevin, J.M. and Oton, J. and Vega, J.J. and Cuenca, J. and Zaldivar-Peraza, A. and G√≥mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, Jos√©Mar√≠a",
+author = "Sorzano, C.O.S. and de la Rosa-Trev√≠n, J.M. and Ot√≥n, J. and Vega, J.J. and Cuenca, J. and Zald√≠var-Peraza, A. and G√≥mez-Blanco, J. and Vargas, J. and Quintana, A. and Marabini, Roberto and Carazo, Jos√© Mar√≠a",
 pages = "171-193",
 }
 
 @InProceedings{Sorzano2014,
   title                    = {Outlier detection for single particle analysis in Electron Microscopy},
-  author                   = {Sorzano, C. O. S. and Vargas, J. and de la Rosa-TrevÌn, J. M. and ZaldÌvar-Peraza, A. and OtÛn, J. and Abrishami, V. and Foche, I. and Marabini, R. and Caffarena, G. and Carazo, J. M.},
+  author                   = {Sorzano, C. O. S. and Vargas, J. and de la Rosa-Trev√≠n, J. M. and Zald√≠var-Peraza, A. and Ot√≥n, J. and Abrishami, V. and Foche, I. and Marabini, R. and Caffarena, G. and Carazo, J. M.},
   journal                  = {Proc. Intl. Work-Conference on Bioinformatics and Biomedical Engineering, IWBBIO},
   year                     = {2014},
   pages                    = {950},
@@ -383,8 +394,8 @@ doi = "http://dx.doi.org/10.1016/j.jsb.2015.01.009"
 }
 
 @article{Vargas2013a,
-author = {Vargas, J. and OtÛn, J. and Marabini, R. and Jonic, S. and {de la
-  Rosa-TrevÌn}, J. M. and et.al.},
+author = {Vargas, J. and Ot√≥n, J. and Marabini, R. and Jonic, S. and {de la
+  Rosa-Trev√≠n}, J. M. and et.al.},
 title = {{FASTDEF}: Fast defocus and astigmatism estimation for high-throughput
   transmission electron microscopy.},
 journal = "J. Structural Biology",
@@ -407,12 +418,12 @@ note = "",
 issn = "1047-8477",
 doi = "http://dx.doi.org/10.1016/j.jsb.2013.07.015",
 url = "http://www.sciencedirect.com/science/article/pii/S1047847713001950",
-author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-TrevÌn and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
+author = "J. Vargas and V. Abrishami and R. Marabini and J.M. de la Rosa-Trev√≠n and A. Zaldivar and J.M. Carazo and C.O.S. Sorzano",
 keywords = "Electron microscopy, Particle picking, Machine learning, Single particle analysis "
 }
 
 @article{Vargas2014,
-author = {Vargas, Javier and ¡lvarez-Cabrera, Ana-Lucia and Marabini, Roberto and Carazo, Jose M. and Sorzano, C. O. S.}, 
+author = {Vargas, Javier and √Ålvarez-Cabrera, Ana-Lucia and Marabini, Roberto and Carazo, Jose M. and Sorzano, C. O. S.}, 
 title = {Efficient initial volume determination from electron microscopy images of single particles},
 volume = {30}, 
 number = {20}, 
@@ -423,6 +434,17 @@ abstract ={Motivation: Structural information of macromolecular complexes provid
 URL = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.abstract}, 
 eprint = {http://bioinformatics.oxfordjournals.org/content/30/20/2891.full.pdf+html}, 
 journal = {Bioinformatics} 
+}
+
+@article{Vilas2016,
+  title                    = "Fast and automatic identification of particle tilt pairs based on Delaunay triangulation.",
+  author                   = "Vilas, J. L. and Navas, J. and Gomez-Blanco, J. and de la Rosa-Trevin, J. M. and Melero, and Peschiera, I. and Ferlenghi. I and Cuenca, J. and Marabini, R. and Carazo, J. M. and Vargas, J. and Sorzano, C. O. S.",
+  journal                  = "Journal of Structural Biology",
+  year                     = "2016",
+  pages                    = "525-533",
+  volume                   = "196",
+  doi                      = "http://dx.doi.org/10.1016/j.jsb.2016.10.007",
+  url                      = "http://www.sciencedirect.com/science/article/pii/S104784771630212X"
 }
 
 @article{zhao2013,
@@ -468,46 +490,86 @@ journal = {Journal of Microscopy}
 }
 
 @article{Vargas2014a,
-title = "A general validation approach for cryoEM ",
-journal = "Nature Methods",
+title = {Particle alignment reliability in single particle electron cryomicroscopy: a general approach},
+journal = {Scientific reports},
 volume = "",
 number = "",
 pages = "",
-year = "",
-note = "submitted",
+year = "2014",
+note = "",
 issn = "",
-doi = "",
-url = "",
-author = "Vargas",
-keywords = "Validation"
+doi = {http://dx.doi.org/10.1038/srep21626},
+url = {http://dx.doi.org/10.1038/srep21626},
+author = {Vargas},
+keywords = {Validation}
 }
 
 @article{Marabini2014a,
-title = "CTF Challenge... ",
+title = "CTF Challenge: Result summary",
 journal = "J. Structural Biology",
 volume = "",
 number = "",
 pages = "",
+year = "2015",
+note = "",
+issn = "",
+doi = "http://doi.org/10.1016/j.jsb.2015.04.003",
+url = "http://doi.org/10.1016/j.jsb.2015.04.003",
+author = "Marabini",
+keywords = "Contrast transfer function"
+}
+
+@article{B.Heymann2015,
+title = {Validation of 3D of 3DEM Reconstructions: The phantom in the noise},
+journal = {AIMS Biophys},
+volume = {2},
+number = {1},
+pages = {21-35},
+year = {2015},
+note = "",
+issn = "",
+doi = {10.3934/biophy.2015.1.21},
+url = {http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4440490/},
+author = "B. Heymann",
+keywords = ""
+}
+
+@article{C.O.S.Sorzano2015,
+title = "StructMap:... ",
+journal = "",
+volume = "",
+number = "",
+pages = "",
 year = "",
 note = "submitted",
 issn = "",
 doi = "",
 url = "",
-author = "Marabini et al.",
-keywords = "Contrast transfer function"
+author = "C.O.S.Sorzano et al.",
+keywords = ""
 }
 
 @article{Sorzano2015b,
   title                    = "Cryo-EM and the elucidation of new macromolecular structures: Random Conical Tilt revisited.",
-  author                   = "Sorzano, C O S. and Alcorlo, M. and de la Rosa-Trevin, J. M. and Melero, R. and Foche, I. and Zaldivar-Peraza, A. and del Cano, L. and Vargas, J. and Abrishami, V. and Oton, J. and Marabini, R. and Carazo, J. M.",
+  author                   = "Sorzano, C O S. and Alcorlo, M. and de la Rosa-Trev√≠n, J. M. and Melero, R. and Foche, I. and Zald√≠var-Peraza, A. and del Cano, L. and Vargas, J. and Abrishami, V. and Ot√≥n, J. and Marabini, R. and Carazo, J. M.",
   journal                  = "Scientific Reports",
   year                     = "2015",
   pages                    = "14290",
   volume                   = "5",
-
   doi                      = "http://dx.doi.org/10.1038/srep14290",
   url                      = "http://dx.doi.org/10.1038/srep14290"
 }
+
+@article{Vilas2017,
+  title                    = {MonoRes: Automatic and unbiased estimation of local resolution for electron microscopy maps.},
+  author                   = {Vilas, J. L. and et al},
+  year                     = "2017",
+  journal                  = "Structure",
+  note                     = "submitted",
+  doi                      = {http://github.com/I2PC/scipion/wiki/XmippProtMonoRes}
+}
+
+
 
 """
 

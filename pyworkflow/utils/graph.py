@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -87,9 +87,21 @@ class Node(object):
                 yield c
         
         yield self
-        
+
+    def iterChildsBreadth(self):
+        """ Iter child nodes in a breadth-first order
+        """
+        for child in self._childs:
+            yield child
+
+        for child in self._childs:
+            for child2 in child.iterChildsBreadth():
+                yield child2
+
     def __str__(self):
-        return "Node (id=%s, label=%s, root=%s)" % (self._name, self.getLabel(), self.isRoot())
+        return "Node (id=%s, label=%s, root=%s)" % (self._name,
+                                                    self.getLabel(),
+                                                    self.isRoot())
     
     
 class Graph(object):
@@ -153,12 +165,13 @@ class Graph(object):
                 return node.getName()
             else:
                 return node.getLabel()
+        dotStr = "\ndigraph {\n"
 
-        print "\ndigraph {"
         for node in self.getNodes():
             for child in node.getChilds():
                 nodeLabel = self._escape(getLabel(node))
                 childLabel = self._escape(getLabel(child))
-                print "   %s -> %s; " % (nodeLabel, childLabel)
-        print "}"
-        
+                dotStr += "   %s -> %s;\n" % (nodeLabel, childLabel)
+        dotStr += "}"
+        print dotStr
+        return dotStr

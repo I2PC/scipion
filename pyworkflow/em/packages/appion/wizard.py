@@ -20,7 +20,7 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
@@ -28,21 +28,23 @@ This module implement some wizards
 """
 
 import os
+
+import pyworkflow as pw
 from pyworkflow.em.wizard import EmWizard
-from protocol_picking import DogPickerProtPicking
 from pyworkflow.em import CoordinatesObjectView
-from pyworkflow.em.showj import CLASSIFIER
-from pyworkflow.em.packages.xmipp3 import writeSetOfMicrographs
-from pyworkflow.utils import makePath, cleanPath
-from pyworkflow.utils.utils import readProperties
+from pyworkflow.utils import makePath, cleanPath, readProperties
+
+from protocol_picking import DogPickerProtPicking
+
+
 #===============================================================================
 # PICKER
 #===============================================================================
 
 class DogPickerWizard(EmWizard):
     _targets = [(DogPickerProtPicking, ['diameter', 'threshold'])]
-    
-    
+
+
     def show(self, form):
         autopickProt = form.protocol
         micSet = autopickProt.getInputMicrographs()
@@ -62,8 +64,8 @@ class DogPickerWizard(EmWizard):
 
         args = {
           "dogpicker" : os.path.join(os.environ['DOGPICKER_HOME'], "ApDogPicker.py"),
-          "convert" : os.path.join(os.environ['SCIPION_HOME'], os.path.join('pyworkflow','apps', 'pw_convert.py')),
-          'coordsDir':coordsDir,
+          "convert" : pw.join('apps', 'pw_convert.py'),
+          'coordsDir': coordsDir,
           'micsSqlite': micSet.getFileName(),
           "diameter": autopickProt.diameter,
           "threshold": autopickProt.threshold,
@@ -85,7 +87,11 @@ class DogPickerWizard(EmWizard):
         f.close()
         process = CoordinatesObjectView(project, micfn, coordsDir, autopickProt, pickerProps=dogpickerProps).show()
         process.wait()
+        # Check if the wizard changes were accepted or just canceled
+
         myprops = readProperties(dogpickerProps)
-        form.setVar('diameter', myprops['diameter.value'])
-        form.setVar('threshold', myprops['threshold.value'])
+
+        if myprops['applyChanges'] == 'true':
+            form.setVar('diameter', myprops['diameter.value'])
+            form.setVar('threshold', myprops['threshold.value'])
 

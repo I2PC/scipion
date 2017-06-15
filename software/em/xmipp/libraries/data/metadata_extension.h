@@ -99,6 +99,7 @@ void bsoftRestoreLoopBlock(const FileName &_inFile, const FileName &block);
 
 Matrix2D<double> getMatrix(char* matrix);
 
+MDRow firstRow(const FileName &fnMetadata);
 //@}
 
 #endif /* METADATA_EXTENSION_H_ */

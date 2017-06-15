@@ -1,7 +1,7 @@
-# coding: latin-1
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:    J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -21,11 +21,11 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'jmdelarosa@cnb.csic.es'
+# *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
 """
-Bibtex string file for Xmipp package.
+Bibtex string file for packages from Grigorieff lab.
 """
 
 _bibtexStr = """
@@ -75,7 +75,7 @@ keywords = "Three-dimensional reconstruction, Resolution, Depth of field, \{FREA
 }
 
 @article{Grigorieff1998,
-title = "Three-dimensional structure of bovine NADH:ubiquinone oxidoreductase (complex I) at 22 å in ice ",
+title = "Three-dimensional structure of bovine NADH:ubiquinone oxidoreductase (complex I) at 22 Ã¥ in ice ",
 journal = "JSB ",
 volume = "277",
 number = "5",
@@ -145,6 +145,20 @@ keywords = "Electron microscopy, Maximum likelihood, Classification, Single part
    Month="Nov",
    doi = "http://dx.doi.org/10.1016/j.jsb.2015.08.008",
    url = "http://www.sciencedirect.com/science/article/pii/S1047847715300460"
+}
+
+@article{Grant2015,
+title = "Automatic estimation and correction of anisotropic magnification distortion in electron microscopes ",
+journal = "JSB ",
+volume = "192",
+number = "2",
+pages = "204 - 208",
+year = "2015",
+note = "",
+doi = "http://dx.doi.org/10.1016/j.jsb.2015.08.006",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847715300447",
+author = "Grant, Timothy and Grigorieff, Nikolaus",
+keywords = "Electron cryo-microscopy, Resolution, Magnification anisotropy, Image correction "
 }
 """
 
