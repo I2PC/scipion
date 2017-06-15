@@ -560,6 +560,8 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 					referenceAux.MFrealSpace.nzyxdim, referenceAux.MFrealSpace.yxdim, referenceAux.maskCount);
 
 
+	//d_NCC.copyGpuToGpu(experimentalAux.MFrealSpace);
+
 	double *max_values = new double[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
 	float *posY = new float[d_NCC.Ndim];
