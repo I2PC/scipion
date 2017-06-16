@@ -95,7 +95,7 @@ class HighThroughputTest(TestWorkflow):
         protCAPCA.inputParticles.set(protOnlyAlign.outputParticles)
         protCAPCA.setObjLabel('spi PCA')
         self.proj.launchProtocol(protCAPCA, wait=True)
-        self.assertSetSize(protCAPCA.imcFile, msg="There was a problem with Spider Dimension Reduction")
+        self.assertIsNotNone(protCAPCA.imcFile, "There was a problem with Spider Dimension Reduction")
         
         print "Running Spider Ward Classification"
         protWard = SpiderProtClassifyWard()

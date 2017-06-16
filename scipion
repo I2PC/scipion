@@ -44,6 +44,7 @@ __nickname__ = 'devel'
 __releasedate__ = ''
 
 
+
 # This script tries to run ok with any python version. So we cannot
 # use some of the cool syntax of modern Python (no "with" statement,
 # no inline "if ... else ...", etc.), and we better avoid things like

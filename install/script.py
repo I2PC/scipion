@@ -387,6 +387,9 @@ env.addPackage('ctffind4', version='4.0.15',
 env.addPackage('ctffind4', version='4.1.5',
                tar='ctffind_V4.1.5.tgz')
 
+env.addPackage('ctffind4', version='4.1.8',
+               tar='ctffind_V4.1.8.tgz')
+
 env.addPackage('summovie', version='1.0.2',
                tar='summovie_1.0.2.tgz')
 
