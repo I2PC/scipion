@@ -38,8 +38,8 @@ class ProtExportEMDB(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
     """
     _label = 'export emdb'
-    _program = "" 
-    #_version = VERSION_1_2
+    _program = ""
+    _lastUpdateVersion = VERSION_1_2
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
