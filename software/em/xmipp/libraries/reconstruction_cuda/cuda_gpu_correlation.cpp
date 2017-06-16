@@ -107,7 +107,7 @@ __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceR
 	double den1 = denomRef[idx];
 	double den2 = denomExp[idx];
 
-	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.1)
+	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.9)
 		NCC[idx] = num/(den1*den2);
 	else
 		NCC[idx] = -1;
