@@ -205,7 +205,7 @@ void preprocess_images_experimental(MetaData &SF, int numImages, int numImagesRe
 
 	GpuMultidimArrayAtGpu<double> image_stack_gpu(Xdim,Ydim,1,numImagesRef);
 
-	//if(firstStep==0){
+	if(firstStep==0){
 
 		d_correlationAux.Xdim=pad_Xdim;
 		d_correlationAux.Ydim=pad_Ydim;
@@ -254,9 +254,9 @@ void preprocess_images_experimental(MetaData &SF, int numImages, int numImagesRe
 
 		//Iref().setXmippOrigin();
 
-	/*}else{
+	}else{
 		d_correlationAux.d_original_image.copyGpuToGpu(image_stack_gpu);
-	}*/
+	}
 
 	//AJ new masking and padding
 	MultidimArray<int> maskArray = mask.get_binary_mask();
@@ -538,6 +538,7 @@ void ProgGpuCorrelation::run()
 
 	bool rotation;
 
+	GpuCorrelationAux d_experimentalAux;
 	for(int firstStep=0; firstStep<2; firstStep++){
 
 		if (firstStep==0){
@@ -561,7 +562,6 @@ void ProgGpuCorrelation::run()
 		else
 			available_images_exp = numImagesExp-1;
 
-		GpuCorrelationAux d_experimentalAux;
 		preprocess_images_experimental(SFexp, 1, available_images_proj, mask, d_experimentalAux, rotation, firstStep);
 		//d_experimentalAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
 		//fillImage(d_experimentalAux.maskAutocorrelation, maskAutocorrelation);
