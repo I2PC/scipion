@@ -56,7 +56,7 @@ class ProtMotionCorr(ProtAlignMovies):
     """
 
     _label = 'motioncorr alignment'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrc'
 
     def __init__(self, **args):
@@ -301,7 +301,7 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
-            if self.doMagCor and self._supportsMagCorrection():
+            if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
                     input_params = parseMagCorrInput(inputEst)

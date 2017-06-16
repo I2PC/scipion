@@ -41,8 +41,11 @@ from protocol_postprocess import ProtRelionPostprocess
 from protocol_preprocess import ProtRelionPreprocessParticles
 from protocol_polish import ProtRelionPolish
 from protocol_sort import ProtRelionSortParticles
-from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
 from protocol_subtract import ProtRelionSubtract
+
+from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
+from protocol_autopick_v2 import ProtRelion2Autopick
+from protocol_extract_particles import ProtRelionExtractParticles
 
 from protocol_export_ctf import ProtRelionExportCtf
 

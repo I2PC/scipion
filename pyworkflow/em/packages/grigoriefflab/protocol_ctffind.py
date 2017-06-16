@@ -100,33 +100,40 @@ class ProtCTFFind(em.ProtCTFMicrographs):
         if self.isContinued() and os.path.exists(doneFile):
             return
 
-        # Create micrograph dir
-        pwutils.makePath(micDir)
-        downFactor = self.ctfDownFactor.get()
-        scannedPixelSize = self.inputMicrographs.get().getScannedPixelSize()
-        micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
+        try:
+            # Create micrograph dir
+            pwutils.makePath(micDir)
+            downFactor = self.ctfDownFactor.get()
+            scannedPixelSize = self.inputMicrographs.get().getScannedPixelSize()
+            micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, 'mrc'))
 
-        if downFactor != 1:
-            # Replace extension by 'mrc' because there are some formats
-            # that cannot be written (such as dm3)
-            import pyworkflow.em.packages.xmipp3 as xmipp3
-            args = "-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor)
-            self.runJob("xmipp_transform_downsample",
-                        args, env=xmipp3.getEnviron())
-            self._params['scannedPixelSize'] =  scannedPixelSize * downFactor
-        else:
-            ih = em.ImageHandler()
-            if ih.existsLocation(micFn):
-                micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
-                ih.convert(micFn, micFnMrc, em.DT_FLOAT)
+            if downFactor != 1:
+                # Replace extension by 'mrc' because there are some formats
+                # that cannot be written (such as dm3)
+                import pyworkflow.em.packages.xmipp3 as xmipp3
+                args = "-i %s -o %s --step %f --method fourier" % (micFn, micFnMrc, downFactor)
+                self.runJob("xmipp_transform_downsample",
+                            args, env=xmipp3.getEnviron())
+                self._params['scannedPixelSize'] =  scannedPixelSize * downFactor
             else:
-                print >> sys.stderr, "Missing input micrograph %s" % micFn
+                ih = em.ImageHandler()
+                if ih.existsLocation(micFn):
+                    micFnMrc = self._getTmpPath(pwutils.replaceBaseExt(micFn, "mrc"))
+                    ih.convert(micFn, micFnMrc, em.DT_FLOAT)
+                else:
+                    print >> sys.stderr, "Missing input micrograph %s" % micFn
 
-        # Update _params dictionary
-        self._params['micFn'] = micFnMrc
-        self._params['micDir'] = micDir
-        self._params['ctffindOut'] = self._getCtfOutPath(micDir)
-        self._params['ctffindPSD'] = self._getPsdPath(micDir)
+            # Update _params dictionary
+            self._params['micFn'] = micFnMrc
+            self._params['micDir'] = micDir
+            self._params['ctffindOut'] = self._getCtfOutPath(micDir)
+            self._params['ctffindPSD'] = self._getPsdPath(micDir)
+
+        except Exception, ex:
+            print >> sys.stderr, "Some error happened: %s" % ex
+            import traceback
+            traceback.print_exc()
+
         try:
             self.runJob(self._program, self._args % self._params)
         except Exception, ex:
@@ -249,7 +256,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
-            if self.resamplePix:  # ctffind v4.1.5
+            if self.resamplePix:  # ctffind >= v4.1.5
                 self._params['resamplePix'] = "yes"
             else:
                 self._params['resamplePix'] = "no"
@@ -287,7 +294,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
                 self._params['stepPhaseShift'] = self.stepPhaseShift.get()
             else:
                 self._params['phaseShift'] = "no"
-            if self.resamplePix:  # ctffind v4.1.5
+            if self.resamplePix:  # ctffind >= v4.1.5
                 self._params['resamplePix'] = "yes"
             else:
                 self._params['resamplePix'] = "no"
@@ -328,7 +335,7 @@ eof
 %(maxDefocus)f
 %(step_focus)f"""
 
-        if getVersion('CTFFIND4') == '4.1.5':
+        if getVersion('CTFFIND4') in ['4.1.5', '4.1.8']:
             if self.findPhaseShift:
                 self._args += """
 no
@@ -395,7 +402,7 @@ eof
 
     def _summary(self):
         summary = em.ProtCTFMicrographs._summary(self)
-        if self.useCtffind4:
+        if self.useCtffind4 and getVersion('CTFFIND4') == '4.1.5':
             summary.append("NOTE: ctffind4.1.5 finishes correctly (all output is generated properly),"
                            " but returns an error code. Disregard error messages until this is fixed."
                            "http://grigoriefflab.janelia.org/node/5421")

@@ -33,15 +33,18 @@ import os
 from os.path import join, exists, dirname
 import subprocess
 
+DEVEL = 'devel'
+
 try:
     from ConfigParser import ConfigParser, ParsingError
 except ImportError:
     from configparser import ConfigParser, ParsingError  # Python 3
 
 
-__version__ = 'devel'
-__nickname__ = 'devel'
-__releasedate__ = 'devel'
+# Update this values before any new release
+__version__ = DEVEL
+__nickname__ = ''
+__releasedate__ = ''
 
 
 # This script tries to run ok with any python version. So we cannot
@@ -99,7 +102,7 @@ any doubt.
 # Check the version if in devel mode
 #
 
-if __version__ == 'devel':
+if __version__ == DEVEL:
     # Find out if the is a .git directory
     if exists(join(SCIPION_HOME, '.git')):
         def call(cmd):
@@ -117,7 +120,7 @@ if __version__ == 'devel':
                __nickname__=__nickname__[2:]
 
 
-    # If in a future we release a nightly build, we could add the .devel_version
+    # If in a future we release  a nightly build, we could add the .devel_version
 
 
 def getVersion(long=True):

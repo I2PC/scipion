@@ -141,7 +141,11 @@ class XmippProtMask():
         return messages    
 
     def _methods(self, geoClass):
-        messages = []      
+        messages = []
+
+        if self.inputMask.get() is None:
+            return messages
+
         messages.append("*Mask application*")
         
         if self.source.get() == SOURCE_GEOMETRY:
@@ -184,6 +188,8 @@ class XmippProtMaskParticles(ProtMaskParticles, XmippProcessParticles, XmippProt
         ProtMaskParticles.__init__(self, **kwargs)
         XmippProcessParticles.__init__(self, **kwargs)
         XmippProtMask.__init__(self, **kwargs)
+        self.allowThreads = False
+        self.allowMpi = False
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):
@@ -228,6 +234,8 @@ class XmippProtMaskVolumes(ProtMaskVolumes, XmippProcessVolumes, XmippProtMask, 
         ProtMaskVolumes.__init__(self, **kwargs)
         XmippProcessVolumes.__init__(self, **kwargs)
         XmippProtMask.__init__(self, **kwargs)
+        self.allowMpi = False
+        self.allowThreads = False
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineProcessParams(self, form):

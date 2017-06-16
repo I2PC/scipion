@@ -392,7 +392,7 @@ eot
     
     def _particlesInBlock(self, block, numberOfBlocks):
         """calculate the initial and final particles that belongs to this block"""
-        sortedMicIdList = sorted(self._getMicIdList(), key=lambda k: k['_micId'])
+        sortedMicIdList = sorted(self._micList, key=lambda k: k['_micId'])
         blockParticles = self._particlesPerBlock(numberOfBlocks, sortedMicIdList)
         initPart = 0
         lastPart = 0

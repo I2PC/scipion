@@ -126,5 +126,7 @@ class GemPickerWizard(emwiz.EmWizard):
                                         pickerProps=pickerConfig).show()
         process.wait()
         myprops = pwutils.readProperties(pickerConfig)
-        form.setVar('thresholdLow', myprops['thresholdLow.value'])
-        form.setVar('thresholdHigh', myprops['thresholdHigh.value'])
+
+        if myprops['applyChanges'] == 'true':
+            form.setVar('thresholdLow', myprops['thresholdLow.value'])
+            form.setVar('thresholdHigh', myprops['thresholdHigh.value'])

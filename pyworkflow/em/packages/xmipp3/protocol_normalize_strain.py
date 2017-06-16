@@ -39,7 +39,7 @@ class XmippProtNormalizeStrain(ProtAnalysis3D):
     Normalize the local strain and rotations amongst several runs
     """
     _label = 'normalize strain'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)
