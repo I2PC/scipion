@@ -434,16 +434,16 @@ class XmippProtReconstructSwarm(ProtRefine3D):
         fnAvg = self._getExtraPath("volumeAvg.vol")
         N=0
         for i in range(self.inputVolumes.get().getSize()):
-            fnVol = self._getExtraPath("volume%03d.vol"%i)
-            if i==0:
-                copyFile(fnVol,fnAvg)
+            if iteration<=2:
+                fnVol = self._getExtraPath("volume%03d.vol"%i)
+                if i==0:
+                    copyFile(fnVol,fnAvg)
+                else:
+                    self.runJob("xmipp_image_operate","-i %s --plus %s"%(fnAvg,fnVol),numberOfMpi=1)
             else:
-                self.runJob("xmipp_image_operate","-i %s --plus %s"%(fnAvg,fnVol),numberOfMpi=1)
-            N+=1
-            if iteration>2:
                 fnVol = self._getExtraPath("volume%03d_best.vol"%i)
                 self.runJob("xmipp_image_operate","-i %s --plus %s"%(fnAvg,fnVol),numberOfMpi=1)
-                N+=1
+            N+=1
         if iteration>0:
             self.runJob("xmipp_image_operate","-i %s --plus %s"%(fnAvg,self._getExtraPath("volumeBest.vol")),numberOfMpi=1)
             N+=1
