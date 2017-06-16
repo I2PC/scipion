@@ -547,7 +547,7 @@ void ProgGpuCorrelation::run()
 		d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
 		apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, transMat);
 
-		//AJ for debugging
+		/*/AJ for debugging
 		char numstr[21];
 		sprintf(numstr, "%d", step);
 		String stepStr = "step";
@@ -564,13 +564,13 @@ void ProgGpuCorrelation::run()
 		Image<double> Ipad;
 		padded.coreAllocate(1, 1, yAux, xAux);
 		memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
-		fnImgPad.compose("NCC", i+1, "jpg");
+		fnImgPad.compose("NCCNew", i+1, "mrc");
 		Ipad()=padded;
 		Ipad.write(fnImgPad);
 		padded.coreDeallocate();
 		pointer2 += xAux*yAux;
 		}
-		//END AJ//
+		//END AJ/*/
 
 
 		//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
@@ -583,16 +583,6 @@ void ProgGpuCorrelation::run()
 		}
 
 	}
-
-	/*
-	//CORRELATION PART
-	//TRANSFORMATION MATRIX CALCULATION
-	printf("Calculating correlation...\n");
-	if(!rotation)
-		cuda_calculate_correlation(d_referenceAux, d_experimentalAux, transMat);
-	else
-		cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, transMat);
-	*/
 
 	/*/AJ for debugging
 	size_t xAux= d_experimentalAux.MFrealSpace.Xdim;
