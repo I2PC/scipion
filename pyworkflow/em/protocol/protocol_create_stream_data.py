@@ -42,7 +42,7 @@ class ProtCreateStreamData(EMProtocol):
     """ create  setofXXXX in streaming mode.
     """
     _label="create stream data"
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200

@@ -1,6 +1,6 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -24,9 +24,4 @@
 # *
 # **************************************************************************
 
-from bibtex import _bibtex # Load bibtex dict with references
-#_logo = "motioncorr_logo.png"
-_references = ['Li2013', 'Zheng2017']
-
-from protocol_motioncorr import ProtMotionCorr
-from viewer import ProtMotioncorrViewer
+from protocol_export_emdb import ProtExportEMDB

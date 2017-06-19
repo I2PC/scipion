@@ -36,6 +36,7 @@ import optparse
 import collections
 
 UPDATE_PARAM = '--update'
+COMPARE_PARAM = '--compare'
 
 try:
     from ConfigParser import ConfigParser, Error
@@ -63,8 +64,12 @@ def main():
     add(UPDATE_PARAM, action='store_true',
         help=("Updates you local config files with the values in the template, only for those missing values."))
     add('--notify', action='store_true',
-        help=("allow Scipion to notify  usage data (skips user question)"))
+        help=("Allow Scipion to notify usage data (skips user question)"))
+    add(COMPARE_PARAM, action='store_true',
+        help="Check that the configurations seems reasonably well set up.")
+
     options, args = parser.parse_args()
+
 
     if args:  # no args which aren't options
         sys.exit(parser.format_help())
@@ -103,7 +108,8 @@ def main():
                 checkConf(os.environ['SCIPION_LOCAL_CONFIG'],
                           join(templatesDir, 'scipion.template'),
                           keep=localSections, update=options.update,
-                          notify=options.notify)
+                          notify=options.notify,
+                          compare=options.compare)
 
         # After all, check some extra things are fine in scipion.conf
         checkPaths(os.environ['SCIPION_CONFIG'])
@@ -242,7 +248,7 @@ def checkPaths(conf):
               "can run: scipion config --overwrite")
 
 
-def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
+def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False, compare=False):
     """Check that all the variables in the template are in the config file too"""
     # Remove from the checks the sections in "remove", and if "keep"
     # is used only check those sections.
@@ -267,6 +273,10 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
     df = dict([(s, set(cf.options(s))) for s in cf.sections()])
     dt = dict([(s, set(ct.options(s))) for s in ct.sections()])
     # That funny syntax to create the dictionaries works with old pythons.
+
+    if compare:
+        compareConfig(cf, ct, fpath, ftemplate)
+        return
 
     confChanged = False
 
@@ -327,6 +337,41 @@ def checkConf(fpath, ftemplate, remove=[], keep=[], update=False,notify=False):
 
         with open(fpath, 'wb') as f:
             cf.write(f)
+
+
+def compareConfig(cf, ct,fPath, fTemplate):
+    """ Compare configuration against template values"""
+
+    print(magenta("COMPARING %s to %s" % (fPath, fTemplate)))
+    print(magenta("We expect values to follow the <package>-<version> pattern."
+                  " If you see any value not following this pattern please "
+                  "update it."))
+    # loop through the config
+    for s in cf.sections():
+        # Get the section
+        for variable in cf._sections[s]:
+            # Get values
+            valueInConfig = getConfigVariable(cf, s, variable)
+            valueInTemplate = getConfigVariable(ct, s, variable)
+
+            # Compare value with template
+            compareConfigVariable(s, variable, valueInConfig, valueInTemplate)
+
+
+def getConfigVariable(config, section, variableName):
+    return config._sections[section].get(variableName)
+
+
+def compareConfigVariable(section, variableName, valueInConfig, valueInTemplate):
+
+    if valueInTemplate is None:
+        return
+
+    if valueInConfig != valueInTemplate:
+        print("%s at %s section (%s) differs from the default value in the "
+              "template: %s" % (red(variableName), section, red(valueInConfig),
+                                yellow(valueInTemplate)))
+
 
 def guessJava():
     "Guess the system's Java installation, return a dict with the Java keys"
