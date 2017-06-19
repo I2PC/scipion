@@ -836,6 +836,68 @@ class TestXmippRansacGroel(TestXmippRansacMda):
         cls.maxFreq = 12
 
 
+class TestXmippSwarmMda(TestXmippBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('mda')
+        cls.averages = cls.dataset.getFile('averages')
+        cls.particles = cls.dataset.getFile('particles')
+        cls.samplingRate = 3.5
+        cls.symmetryGroup = 'd6'
+        cls.angularSampling = 15
+        cls.nRansac = 25
+        cls.numSamples = 5
+        cls.dimRed = False
+        cls.numVolumes = 2
+        cls.maxFreq = 30
+
+    def test_swarm(self):
+        #Import a set of averages
+        print "Import Set of averages"
+        protImportAvg = self.newProtocol(ProtImportAverages, 
+                                         filesPath=self.averages, 
+                                         checkStack=True,
+                                         samplingRate=self.samplingRate)
+        self.launchProtocol(protImportAvg)
+        self.assertIsNotNone(protImportAvg.getFiles(), "There was a problem with the import")
+        
+        #Import a set of particles
+        print "Import Set of particles"
+        protImportParticles = self.newProtocol(ProtImportParticles, 
+                                         filesPath=self.particles, 
+                                         checkStack=True,
+                                         samplingRate=self.samplingRate)
+        self.launchProtocol(protImportParticles)
+        self.assertIsNotNone(protImportParticles.getFiles(), "There was a problem with the import")
+
+        print "Run Ransac"
+        protRansac = self.newProtocol(XmippProtRansac,
+                                      symmetryGroup=self.symmetryGroup, 
+                                      angularSampling=self.angularSampling,
+                                      nRansac=self.nRansac, 
+                                      numSamples=self.numSamples, 
+                                      dimRed=self.dimRed,
+                                      numVolumes=self.numVolumes, 
+                                      maxFreq=self.maxFreq, useAll=True, 
+                                      numberOfThreads=4)
+        protRansac.inputSet.set(protImportAvg.outputAverages)
+        self.launchProtocol(protRansac)
+        self.assertIsNotNone(protRansac.outputVolumes, "There was a problem with ransac protocol")
+
+        print "Run Swarm"
+        protSwarm = self.newProtocol(XmippProtReconstructSwarm,
+                                      symmetryGroup=self.symmetryGroup,
+                                      numberOfIterations=5,
+                                      targetResolution=15,
+                                      NimgTrain=20,
+                                      NimgTest=10,
+                                      numberOfMpi=4)
+        protSwarm.inputParticles.set(protImportParticles.outputParticles)
+        protSwarm.inputVolumes.set(protRansac.outputVolumes)
+        self.launchProtocol(protSwarm)
+        self.assertIsNotNone(protSwarm.outputVolumes, "There was a problem with ransac protocol")
+
 class TestXmippRotationalSymmetry(TestXmippBase):
     @classmethod
     def setUpClass(cls):
