@@ -34,6 +34,9 @@
 #include "xmipp_gpu_correlation.h"
 #include <reconstruction_cuda/cuda_gpu_correlation.h>
 
+#include <math.h>
+
+
 void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
 		GpuCorrelationAux &d_correlationAux)
 {
@@ -49,9 +52,9 @@ void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
 	MDRow rowIn;
 	FileName fnImg;
 	Image<double> Iref;
-	MultidimArray<double> Iref2, padIref, padIref2, padMask;
-	padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
-	padIref.setXmippOrigin();
+	//MultidimArray<double> Iref2, padIref, padIref2, padMask;
+	//padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
+	//padIref.setXmippOrigin();
 	size_t radius=(size_t)mask.R1;
 
 	GpuMultidimArrayAtCpu<double> original_image_stack(Xdim,Ydim,1,numImages);
@@ -71,8 +74,8 @@ void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
 
 	MDIterator *iter = new MDIterator(SF);
 
-	int pointer=0;
-	int pointer_pad=0;
+	//int pointer=0;
+	//int pointer_pad=0;
 	int available_images=numImages;
 	size_t n=0;
 	while(available_images && iter->objId!=0){
@@ -194,7 +197,7 @@ void preprocess_images_reference(MetaData &SF, int numImages, Mask &mask,
 
 
 
-void preprocess_images_experimental(MetaData &SF, int numImages, int numImagesRef, Mask &mask,
+void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesRef, Mask &mask,
 		GpuCorrelationAux &d_correlationAux, bool rotation, int firstStep)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
@@ -210,13 +213,13 @@ void preprocess_images_experimental(MetaData &SF, int numImages, int numImagesRe
 		d_correlationAux.Xdim=pad_Xdim;
 		d_correlationAux.Ydim=pad_Ydim;
 
-		size_t objIndex = 0;
+		/*size_t objIndex = 0;
 		MDRow rowIn;
-		FileName fnImg;
+		FileName fnImg;*/
 		Image<double> Iref;
-		MultidimArray<double> Iref2, padIref, padIref2, padMask;
-		padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
-		padIref.setXmippOrigin();
+		//MultidimArray<double> Iref2, padIref, padIref2, padMask;
+		//padIref.resizeNoCopy(pad_Ydim,pad_Xdim);
+		//padIref.setXmippOrigin();
 
 		GpuMultidimArrayAtCpu<double> original_image_stack(Xdim,Ydim,1,numImagesRef);
 
@@ -233,19 +236,23 @@ void preprocess_images_experimental(MetaData &SF, int numImages, int numImagesRe
 			//autocorrelation_mask.resize(pad_Xdim,pad_Ydim);
 		}*/
 
-		MDIterator *iter = new MDIterator(SF);
+		/*MDIterator *iter = new MDIterator(SF);*/
 
-		int pointer=0;
-		int pointer_pad=0;
-		int available_images=numImages;
+		//int pointer=0;
+		//int pointer_pad=0;
+		//int available_images=numImages;
 
-		objIndex = iter->objId;
+		/*objIndex = iter->objId;
 		//available_images--;
 
 		SF.getRow(rowIn, objIndex);
 		rowIn.getValue(MDL_IMAGE, fnImg);
-		std::cerr << objIndex << ". Image: " << fnImg << std::endl;
+		std::cerr << objIndex << ". Image: " << fnImg << std::endl;*/
 		Iref.read(fnImg);
+
+		//AJ adding noise to the image
+		Iref().addNoise(0, 300, "gaussian");
+		//END AJ adding noise
 
 		for(size_t i=0; i<numImagesRef; i++)
 			original_image_stack.fillImage(i,Iref());
@@ -331,28 +338,28 @@ void preprocess_images_experimental(MetaData &SF, int numImages, int numImagesRe
 		polar2_gpu.fft(d_correlationAux.d_projPolarSquaredFFT);
 	}
 
-	/*/AJ for debugging
-	size_t xAux= pad_Xdim;
-	size_t yAux= pad_Ydim;
-	size_t nAux= 1;
+	//AJ for debugging
+	size_t xAux= d_correlationAux.d_original_image.Xdim;
+	size_t yAux= d_correlationAux.d_original_image.Ydim;
+	size_t nAux= d_correlationAux.d_original_image.Ndim;
 	//GpuMultidimArrayAtGpu<double> aux(xAux,yAux,1,nAux);
 	//d_correlationAux.d_maskFFT.ifft(aux);
 	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-	auxCpu.copyFromGpu(padded_mask_gpu);
-	pointer=0;
+	auxCpu.copyFromGpu(d_correlationAux.d_original_image);
+	int pointer=0;
 	for(int i=0; i<nAux; i++){
 	MultidimArray<double> padded;
 	FileName fnImgPad;
 	Image<double> Ipad;
 	padded.coreAllocate(1, 1, yAux, xAux);
 	memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer], xAux*yAux*sizeof(double));
-	fnImgPad.compose("paddedMaskBien", i+1, "jpg");
+	fnImgPad.compose("noisy", i+1, "jpg");
 	Ipad()=padded;
 	Ipad.write(fnImgPad);
 	padded.coreDeallocate();
 	pointer += xAux*yAux;
 	}
-	//END AJ/*/
+	//END AJ//
 
 }
 
@@ -538,75 +545,160 @@ void ProgGpuCorrelation::run()
 
 	bool rotation;
 
-	GpuCorrelationAux d_experimentalAux;
-	for(int firstStep=0; firstStep<2; firstStep++){
 
-		if (firstStep==0){
-			rotation = false;
-			printf("First step\n");
-		}else{
-			rotation = true;
-			printf("Second step\n");
+	//EXPERIMENTAL IMAGES PART
+	printf("Experimental image: \n");
+	SFexp.read(fn_exp,NULL);
+	size_t mdExpSize = SFexp.size();
+
+	int numImagesExp = check_gpu_memory(Xdim, Ydim, percent);
+	//printf("%i experimental images can be copied in the GPU memory \n", numImagesExp);
+	int available_images_exp;
+	if(numImagesExp>mdExpSize)
+		available_images_exp = mdExpSize;
+	else
+		available_images_exp = numImagesExp-1;
+
+	size_t expIndex = 0;
+	MDRow rowExp;
+	FileName fnImgExp;
+
+	MDIterator *iterExp = new MDIterator(SFexp);
+
+	int available_images=numImagesExp;
+	size_t n=0;
+
+	MultidimArray<float> *matrixTransCpu = new MultidimArray<float> [numImagesExp];
+	for(int i=0; i<numImagesExp; i++)
+		matrixTransCpu[i].coreAllocate(1, available_images_proj, 3, 3);
+	MultidimArray<double> matrixCorrCpu;
+	matrixCorrCpu.coreAllocate(1, 1, mdExpSize, mdInSize);
+
+	double *max_vector_rt = new double [available_images_proj];
+	double *max_vector_tr = new double [available_images_proj];
+	double *max_vector;
+
+	while(available_images && iterExp->objId!=0){
+
+		GpuCorrelationAux d_experimentalAux;
+
+		TransformMatrix<float> transMat_tr(available_images_proj);
+		TransformMatrix<float> transMat_rt(available_images_proj);
+		TransformMatrix<float> *transMat;
+
+		//memset(max_vector_rt, 0, available_images_proj*sizeof(double));
+		//memset(max_vector_tr, 0, available_images_proj*sizeof(double));
+		for(int i=0; i<available_images_proj; i++){
+			max_vector_tr[i]=-1;
+			max_vector_rt[i]=-1;
 		}
 
-		//EXPERIMENTAL IMAGES PART
-		printf("Experimental images: \n");
-		SFexp.read(fn_exp,NULL);
-		size_t mdExpSize = SFexp.size();
+		expIndex = iterExp->objId;
+		available_images--;
 
-		int numImagesExp = check_gpu_memory(Xdim, Ydim, percent);
-		//printf("%i experimental images can be copied in the GPU memory \n", numImagesExp);
-		int available_images_exp;
-		if(numImagesExp>mdExpSize)
-			available_images_exp = mdExpSize;
-		else
-			available_images_exp = numImagesExp-1;
+		SFexp.getRow(rowExp, expIndex);
+		rowExp.getValue(MDL_IMAGE, fnImgExp);
+		std::cerr << expIndex << ". Image: " << fnImgExp << std::endl;
 
-		preprocess_images_experimental(SFexp, 1, available_images_proj, mask, d_experimentalAux, rotation, firstStep);
-		//d_experimentalAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
-		//fillImage(d_experimentalAux.maskAutocorrelation, maskAutocorrelation);
-		if(!rotation){
-			d_experimentalAux.maskCount=maskCount;
-			d_experimentalAux.produceSideInfo();
-		}
+		for(int firstStep=0; firstStep<2; firstStep++){ //2
 
-		TransformMatrix<float> transMat(available_images_proj);
-
-		char stepchar[6]="";
-		for(int step=0; step<6; step++){ //loop over consecutive translations and rotations
-
-			if(!rotation){
-				stepchar[step]='T';
-				printf("%s\n",stepchar);
+			if (firstStep==0){
+				rotation = false;
+				printf("First step\n");
+				max_vector = max_vector_tr;
 			}else{
-				stepchar[step]='R';
-				printf("%s\n",stepchar);
+				rotation = true;
+				printf("Second step\n");
+				max_vector = max_vector_rt;
 			}
 
-			//CORRELATION PART
-			//TRANSFORMATION MATRIX CALCULATION
-			printf("Calculating correlation...\n");
-			if(!rotation)
-				cuda_calculate_correlation(d_referenceAux, d_experimentalAux, transMat);
+			preprocess_images_experimental(SFexp, fnImgExp, available_images_proj, mask, d_experimentalAux, rotation, firstStep);
+			//d_experimentalAux.maskAutocorrelation.resize(XSIZE(maskAutocorrelation),YSIZE(maskAutocorrelation),ZSIZE(maskAutocorrelation),1);
+			//fillImage(d_experimentalAux.maskAutocorrelation, maskAutocorrelation);
+			if(!rotation){
+				d_experimentalAux.maskCount=maskCount;
+				d_experimentalAux.produceSideInfo();
+			}
+
+			if(firstStep==0)
+				transMat = &transMat_tr;
 			else
-				cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, transMat);
+				transMat = &transMat_rt;
+
+			char stepchar[6]="";
+			for(int step=0; step<6; step++){ //loop over consecutive translations and rotations (TRTRTR or RTRTRT) 6
+
+				if(!rotation){
+					stepchar[step]='T';
+					printf("%s\n",stepchar);
+				}else{
+					stepchar[step]='R';
+					printf("%s\n",stepchar);
+				}
+
+				//CORRELATION PART
+				//TRANSFORMATION MATRIX CALCULATION
+				printf("Calculating correlation...\n");
+				if(!rotation)
+					cuda_calculate_correlation(d_referenceAux, d_experimentalAux, *transMat, max_vector);
+				else
+					cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, *transMat, max_vector);
 
 
-			//APPLY TRANSFORMATION
-			printf("Applying transformation...\n");
-			d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
-			apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, transMat);
+				//APPLY TRANSFORMATION
+				printf("Applying transformation...\n");
+				d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
+				apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, *transMat);
 
-			/*/AJ for debugging
-			char numstr[21];
-			sprintf(numstr, "%d", step);
-			String stepStr = "step";
+				/*/AJ for debugging
+				char numstr[21];
+				sprintf(numstr, "%d", step);
+				String stepStr = "step";
+				String name = stepStr + numstr;
+				size_t xAux= d_experimentalAux.MFrealSpace.Xdim;
+				size_t yAux= d_experimentalAux.MFrealSpace.Ydim;
+				size_t nAux= available_images_proj;
+				GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
+				auxCpu.copyFromGpu(d_experimentalAux.MFrealSpace);
+				int pointer2=0;
+				for(int i=0; i<nAux; i++){
+				MultidimArray<double> padded;
+				FileName fnImgPad;
+				Image<double> Ipad;
+				padded.coreAllocate(1, 1, yAux, xAux);
+				memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
+				fnImgPad.compose("NCCMaxShift", i+1, "mrc");
+				Ipad()=padded;
+				Ipad.write(fnImgPad);
+				padded.coreDeallocate();
+				pointer2 += xAux*yAux;
+				}
+				//END AJ/*/
+
+
+				//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
+				if(step!=5){
+					printf("Re-processing experimental images...\n");
+					rotation = !rotation;
+					preprocess_images_experimental_transform(d_experimentalAux, mask, rotation);
+					if(!rotation){
+						d_experimentalAux.maskCount=maskCount;
+						d_experimentalAux.produceSideInfo();
+					}
+				}
+
+			}//end for(int step=0; step<6; step++)
+
+			//AJ for debugging
+			char numstr[5];
+			sprintf(numstr, "%d", firstStep);
+			String stepStr = "outputExp";
 			String name = stepStr + numstr;
-			size_t xAux= d_experimentalAux.MFrealSpace.Xdim;
-			size_t yAux= d_experimentalAux.MFrealSpace.Ydim;
-			size_t nAux= available_images_proj;
+			size_t xAux= d_experimentalAux.d_transform_image.Xdim;
+			size_t yAux= d_experimentalAux.d_transform_image.Ydim;
+			size_t nAux= 5;
 			GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-			auxCpu.copyFromGpu(d_experimentalAux.MFrealSpace);
+			auxCpu.copyFromGpu(d_experimentalAux.d_transform_image);
 			int pointer2=0;
 			for(int i=0; i<nAux; i++){
 			MultidimArray<double> padded;
@@ -614,51 +706,42 @@ void ProgGpuCorrelation::run()
 			Image<double> Ipad;
 			padded.coreAllocate(1, 1, yAux, xAux);
 			memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
-			fnImgPad.compose("NCCNew", i+1, "mrc");
+			fnImgPad.compose(name, i+1, "mrc");
 			Ipad()=padded;
 			Ipad.write(fnImgPad);
 			padded.coreDeallocate();
 			pointer2 += xAux*yAux;
 			}
-			//END AJ/*/
+			//END AJ//
 
+		}//end for(int firstStep=0; firstStep<2; firstStep++)
 
-			//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
-			if(step!=5){
-				printf("Re-processing experimental images...\n");
-				rotation = !rotation;
-				preprocess_images_experimental_transform(d_experimentalAux, mask, rotation);
-				if(!rotation){
-					d_experimentalAux.maskCount=maskCount;
-					d_experimentalAux.produceSideInfo();
-				}
+		//AJ to check the best transformation among all the evaluated
+		for(int i=0; i<available_images_proj; i++){
+			if(max_vector_tr[i]>max_vector_rt[i]){
+				transMat_tr.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu[n]), i);
+				A2D_ELEM(matrixCorrCpu, n, i) = max_vector_tr[i];
+			}else{
+				transMat_rt.copyOneMatrixToCpu(MULTIDIM_ARRAY(matrixTransCpu[n]), i);
+				A2D_ELEM(matrixCorrCpu, n, i) = max_vector_rt[i];
 			}
-
-		}//end for(int step=0; step<6; step++)
-
-		//AJ for debugging
-		size_t xAux= d_experimentalAux.d_transform_image.Xdim;
-		size_t yAux= d_experimentalAux.d_transform_image.Ydim;
-		size_t nAux= 5;
-		GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-		auxCpu.copyFromGpu(d_experimentalAux.d_transform_image);
-		int pointer2=0;
-		for(int i=0; i<nAux; i++){
-		MultidimArray<double> padded;
-		FileName fnImgPad;
-		Image<double> Ipad;
-		padded.coreAllocate(1, 1, yAux, xAux);
-		memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
-		fnImgPad.compose("output", i+1, "mrc");
-		Ipad()=padded;
-		Ipad.write(fnImgPad);
-		padded.coreDeallocate();
-		pointer2 += xAux*yAux;
 		}
-		//END AJ//
+		std::cerr << "Trans Matrix = " << matrixTransCpu[n] << std::endl;
+		std::cerr << "Corr Matrix = " << matrixCorrCpu << std::endl;
 
-	}//end for(int firstStep=0; firstStep<2; firstStep++)
+		if(iterExp->hasNext())
+			iterExp->moveNext();
 
+		n++;
+
+	}//end while experimental images
+
+	delete iterExp;
+	matrixCorrCpu.coreDeallocate();
+	for(int i=0; i<numImagesExp; i++)
+		matrixTransCpu[i].coreDeallocate();
+	delete []max_vector_tr;
+	delete []max_vector_rt;
 
 
 }
