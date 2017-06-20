@@ -94,7 +94,7 @@ __global__ void calculateDenomFunctionKernel(double *MFrealSpace, double *MF2rea
 
 
 __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceRef, double *MFrealSpaceExp, double *denomRef, double *denomExp,
-		double *mask, double *NCC, size_t nzyxdim, size_t yxdim, size_t maskCount)
+		double *mask, double *NCC, size_t nzyxdim, size_t yxdim, size_t xdim, size_t ydim, size_t maskCount, int max_shift)
 {
 
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -103,14 +103,27 @@ __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceR
 	if(idx>=nzyxdim)
 		return;
 
-	double num = (RefExpRealSpace[idx] - ((MFrealSpaceRef[idx]*MFrealSpaceExp[idx])/(mask[idxLow])) );
+	int idx_x = idxLow%xdim;
+	int idx_y=idxLow/xdim;
+	if(idx_x>max_shift && idx_x<xdim-max_shift){
+		NCC[idx] = -1;
+		return;
+	}
+	if(idx_y>max_shift && idx_y<ydim-max_shift){
+		NCC[idx] = -1;
+		return;
+	}
+
 	double den1 = denomRef[idx];
 	double den2 = denomExp[idx];
 
-	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.9)
+	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.9){
+		double num = (RefExpRealSpace[idx] - ((MFrealSpaceRef[idx]*MFrealSpaceExp[idx])/(mask[idxLow])) );
 		NCC[idx] = num/(den1*den2);
-	else
+	}else
 		NCC[idx] = -1;
+
+
 
 }
 
@@ -433,7 +446,8 @@ void GpuCorrelationAux::produceSideInfo()
 
 }
 
-void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat)
+void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
+		double *max_vector)
 {
 	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
 			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim);
@@ -510,6 +524,13 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 	float *posY = new float[d_NCC.Ndim];
 	d_NCC.calculateMax(max_values, posX, posY);
 
+	for(int i=0; i<d_NCC.Ndim; i++){
+		if(max_values[i]<max_vector[i])
+			posX[i]=0;
+		else
+			max_vector[i]=max_values[i];
+	}
+
 	TransformMatrix<float> result(transMat.Ndim);
 	TransformMatrix<float> newMat(transMat.Ndim);
 	newMat.setRotation(posX);
@@ -522,6 +543,11 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 	result.copyMatrix(transMat);
 
+	/*float *matrix_aux = new float[9*transMat.Ndim];
+	transMat.copyMatrixToCpu(matrix_aux);
+	for(int i=0; i<9*transMat.Ndim; i++)
+		printf("Trans Matrix R[%i] = %f\n", i, matrix_aux[i]);*/
+
 	delete[] max_values;
 	delete[] posX;
 	delete[] posY;
@@ -529,7 +555,8 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 }
 
 
-void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat)
+void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
+		double *max_vector)
 {
 
 	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
@@ -554,18 +581,27 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
 			referenceAux.d_projFFT.Ndim);
 
+	int max_shift=20;
 	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
 			(RefExpRealSpace.d_data, referenceAux.MFrealSpace.d_data, experimentalAux.MFrealSpace.d_data, referenceAux.d_denom.d_data,
 					experimentalAux.d_denom.d_data, referenceAux.maskAutocorrelation.d_data, d_NCC.d_data,
-					referenceAux.MFrealSpace.nzyxdim, referenceAux.MFrealSpace.yxdim, referenceAux.maskCount);
+					referenceAux.MFrealSpace.nzyxdim, referenceAux.MFrealSpace.yxdim, referenceAux.MFrealSpace.Xdim, referenceAux.MFrealSpace.Ydim,
+					referenceAux.maskCount, max_shift);
 
-
-	//d_NCC.copyGpuToGpu(experimentalAux.MFrealSpace);
 
 	double *max_values = new double[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
 	float *posY = new float[d_NCC.Ndim];
 	d_NCC.calculateMax(max_values, posX, posY);
+
+	for(int i=0; i<d_NCC.Ndim; i++){
+		if(max_values[i]<max_vector[i]){
+			posX[i]=0;
+			posY[i]=0;
+		}else{
+			max_vector[i]=max_values[i];
+		}
+	}
 
 	TransformMatrix<float> result(transMat.Ndim);
 	TransformMatrix<float> newMat(transMat.Ndim);
@@ -577,6 +613,12 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 		numBlk++;
 	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim);
 	result.copyMatrix(transMat);
+
+	/*float *matrix_aux = new float[9*transMat.Ndim];
+	transMat.copyMatrixToCpu(matrix_aux);
+	for(int i=0; i<9*transMat.Ndim; i++)
+		printf("Trans Matrix T[%i] = %f\n", i, matrix_aux[i]);*/
+
 
 	delete[] max_values;
 	delete[] posX;
