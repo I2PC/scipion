@@ -151,6 +151,16 @@ public:
 		gpuCopyFromGPUToGPU(d_data, lastMatrix.d_data, nzyxdim*sizeof(float));
 	}
 
+	void copyMatrixToCpu(float* &matrixCpu)
+	{
+		gpuCopyFromGPUToCPU(d_data, matrixCpu, nzyxdim*sizeof(float));
+	}
+
+	void copyOneMatrixToCpu(float* &matrixCpu, int i)
+	{
+		gpuCopyFromGPUToCPU(&d_data[9*i], &matrixCpu[9*i], 9*sizeof(float));
+	}
+
 };
 
 
