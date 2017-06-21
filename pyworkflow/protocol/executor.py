@@ -83,7 +83,7 @@ class StepExecutor():
         # Even if this will run the steps in a single thread
         # let's follow a similar approach than the parallel one
         # In this way we can take into account the steps graph
-        # dependency and also the case when using streamming
+        # dependency and also the case when using streaming
 
         delta = datetime.timedelta(seconds=stepsCheckSecs)
         lastCheck = datetime.datetime.now()
