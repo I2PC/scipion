@@ -177,6 +177,7 @@ class ProtUnblur(ProtAlignMovies):
 
     # --------------------------- INFO functions -------------------------------
     def _citations(self):
+        #TODO: add references
         return []
 
     def _summary(self):
