@@ -625,8 +625,9 @@ void ProgGpuCorrelation::run()
 			else
 				transMat = &transMat_rt;
 
-			char stepchar[6]="";
-			for(int step=0; step<6; step++){ //loop over consecutive translations and rotations (TRTRTR or RTRTRT) 6
+			int max_step=6;
+			char stepchar[20]="";
+			for(int step=0; step<max_step; step++){ //loop over consecutive translations and rotations (TRTRTR or RTRTRT) 6
 
 				if(!rotation){
 					stepchar[step]='T';
@@ -677,7 +678,7 @@ void ProgGpuCorrelation::run()
 
 
 				//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
-				if(step!=5){
+				if(step<max_step-1){
 					printf("Re-processing experimental images...\n");
 					rotation = !rotation;
 					preprocess_images_experimental_transform(d_experimentalAux, mask, rotation);
