@@ -74,7 +74,7 @@ class TestCtfSelection(BaseTest):
 
         counter=1
         while not protStream.hasAttribute('outputMicrographs'):
-            time.sleep(10)
+            time.sleep(2)
             protStream = self._updateProtocol(protStream)
             if counter > 100:
                 break
@@ -93,7 +93,7 @@ class TestCtfSelection(BaseTest):
 
         while not protCTF.hasAttribute('outputCTF'):
 
-            time.sleep(10)
+            time.sleep(2)
             protCTF = self._updateProtocol(protCTF)
             if counter > 100:
                 break
@@ -107,14 +107,14 @@ class TestCtfSelection(BaseTest):
         }
 
         protCTFSel = self.newProtocol(XmippProtCTFSelection, **kwargs)
-        protCTFSel.inputCTFs.set(protCTF.outputCTF)
+        protCTFSel.inputCTF.set(protCTF.outputCTF)
         self.proj.launchProtocol(protCTFSel,  wait=False)
 
         counter = 1
 
         while not protCTFSel.hasAttribute('outputCTF'):
 
-            time.sleep(10)
+            time.sleep(2)
             protCTFSel = self._updateProtocol(protCTFSel)
             if counter > 100:
                 break
@@ -128,14 +128,14 @@ class TestCtfSelection(BaseTest):
         }
 
         protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
-        protCTFSel2.inputCTFs.set(protCTFSel.outputCTF)
+        protCTFSel2.inputCTF.set(protCTFSel.outputCTF)
         self.proj.launchProtocol(protCTFSel2)
 
         counter=1
 
         while not (protCTFSel2.hasAttribute('outputCTF') and protCTFSel2.hasAttribute('outputMicrograph')):
 
-            time.sleep(10)
+            time.sleep(2)
             protCTFSel2 = self._updateProtocol(protCTFSel2)
             if counter > 100:
                 self.assertTrue(False)
@@ -147,10 +147,10 @@ class TestCtfSelection(BaseTest):
         self.assertTrue(os.path.isfile(baseFn))
 
         micSet = SetOfMicrographs(filename=protCTFSel2._getPath(MIC_SQLITE))
-        ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))  # reading this protocol output
+        ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))
         counter = 1
         while not (ctfSet.getSize()==10 and micSet.getSize()==10):
-            time.sleep(10)
+            time.sleep(2)
             micSet = SetOfMicrographs(filename=protCTFSel2._getPath(MIC_SQLITE))
             ctfSet = SetOfCTF(filename=protCTFSel2._getPath(CTF_SQLITE))
             if counter > 100:
@@ -163,7 +163,7 @@ class TestCtfSelection(BaseTest):
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             astigm = defocusU - defocusV
-            resol = ctf._ctffind4_ctfResolution.get()  # PENDIENTEEEEEEEEEEEEEEEEEE
+            resol = ctf._ctffind4_ctfResolution.get() # TODO
             if defocusU > 1000 and defocusU < 28000 and \
             defocusV > 1000 and defocusV < 28000 and \
             astigm < 1000 and resol < 4:
