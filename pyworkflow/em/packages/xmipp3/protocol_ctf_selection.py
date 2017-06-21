@@ -221,7 +221,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     
         self._updateOutputSet('outputCTF', ctfSet, streamMode)
         self._updateOutputSet('outputMicrograph', micSet, streamMode)
-        print "outCTF: ", self.outputCTF.printAll()
     
         if firstTime:
             # define relation just once
@@ -249,30 +248,25 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _selectCTF(self, ctfId):
         # Depending on the flags selected by the user, we set the values of
         # the params to compare with
-        if not self.useDefocus:
-            self.minDefocus.set(0)
-            self.maxDefocus.set(1000000)
-        if not self.useAstigmatism:
-            self.astigmatism.set(1000000)
-        if not self.useResolution:
-            self.resolution.set(1000000)
-            
         
+        minDef, maxDef = self._getDefociValues()
+        maxAstig = self._getMaxAstisgmatism()
+        minResol = self._getMinResol()
+
         # TODO: Change this way to get the ctf.
         ctf = self.inputCTF.get()[ctfId]
         
         defocusU = ctf.getDefocusU()
         defocusV = ctf.getDefocusV()
         astigm = defocusU - defocusV
-        
         resol = self._getCtfResol(ctf)
 
         """ Write to a text file the items that have been done. """
         fn = self._getCtfSelecFile()
         with open(fn, 'a') as f:
-            if ((defocusU < self.minDefocus) or (defocusU > self.maxDefocus) or
-                (defocusV < self.minDefocus) or (defocusV > self.maxDefocus) or
-                (astigm > self.astigmatism) or (resol > self.resolution)):
+            if ((defocusU < minDef) or (defocusU > maxDef) or
+                (defocusV < minDef) or (defocusV > maxDef) or
+                (astigm > maxAstig) or (resol > minResol)):
                 
                 f.write('%d F\n' % ctf.getObjId())
             else:
@@ -406,3 +400,22 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         ctfSet = em.SetOfCTF(filename=ctfFile)
         ctfSet.loadAllProperties()
         return ctfSet
+    
+    def _getDefociValues(self):
+        if not self.useDefocus:
+            return 0, 1000000
+        else:
+            return self.minDefocus.get(), self.maxDefocus.get()
+    
+    def _getMaxAstisgmatism(self):
+        if not self.useAstigmatism:
+            return 10000000
+        else:
+            return self.astigmatism.get()
+        
+    def _getMinResol(self):
+        if not self.useResolution:
+            return 1000000
+        else:
+            return self.resolution.get()
+    
