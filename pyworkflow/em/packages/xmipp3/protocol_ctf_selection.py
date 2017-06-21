@@ -26,17 +26,21 @@
 # **************************************************************************
 
 
-import pyworkflow.protocol.params as params
-import pyworkflow.em as em
+import os
+from datetime import datetime
 
-from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
+import pyworkflow.em as em
+import pyworkflow.protocol.params as params
+import pyworkflow.utils as pwutils
+
+from pyworkflow.object import Set
 from pyworkflow.protocol.constants import (STATUS_NEW)
 
 
 class XmippProtCTFSelection(em.ProtCTFMicrographs):
     """
-    Protocol to make a selection of meaningful CTFs in basis of the defocus values,
-    the astigmatism, and the resolution.
+    Protocol to make a selection of meaningful CTFs in basis of the defocus
+    values, the astigmatism, and the resolution.
     """
     _label = 'ctf selection'
     
@@ -47,35 +51,204 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     def _defineParams(self, form):
         form.addSection(label='Input')
         # Read a ctf estimation
-        form.addParam('inputCTFs', params.PointerParam, pointerClass='SetOfCTF',
+        form.addParam('inputCTF', params.PointerParam,
+                      pointerClass='SetOfCTF',
+                      label="Input CTF",
                       important=True,
-                      label="Set of CTFs",
-                      help='Estimated CTF to evaluate.')
+                      help='Select the estimated CTF to evaluate')
         form.addParam('useDefocus', params.BooleanParam, default=True,
                       label='Use Defocus for selection',
-                      help='Use this button to decide if carry out the selection taking into account or not the defocus values.')
+                      help='Use this button to decide if carry out the '
+                           'selection taking into account or not the defocus '
+                           'values.')
+        
         line = form.addLine('Defocus (A)',
-                            help='Minimum and maximum values for defocus in Angstroms')
+                            help='Minimum and maximum values for defocus in '
+                                 'Angstroms')
         line.addParam('minDefocus', params.FloatParam, default=0, label='Min')
-        line.addParam('maxDefocus', params.FloatParam, default=40000, label='Max')
+        line.addParam('maxDefocus', params.FloatParam,
+                      default=40000, label='Max')
+        
         form.addParam('useAstigmatism', params.BooleanParam, default=True,
                       label='Use Astigmatism for selection',
-                      help='Use this button to decide if carry out the selection taking into account or not the astigmatism value.')
+                      help='Use this button to decide if carry out the '
+                           'selection taking into account or not the '
+                           'astigmatism value.')
         form.addParam('astigmatism', params.FloatParam, default=1000,
                       label='Astigmatism (A)',
-                      help='Maximum value allowed for astigmatism in Angstroms. '
-                           'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
+                      help='Maximum value allowed for astigmatism in Angstroms.'
+                           ' If the evaluated CTF does not fulfill this '
+                           'requirement, it will be discarded.')
         form.addParam('useResolution', params.BooleanParam, default=True,
                       label='Use Resolution for selection',
-                      help='Use this button to decide if carry out the selection taking into account or not the resolution value.')
+                      help='Use this button to decide if carry out the '
+                           'selection taking into account or not the '
+                           'resolution value.')
         form.addParam('resolution', params.FloatParam, default=7,
                   label='Resolution (A)',
                   help='Minimum value for resolution in Angstroms. '
-                       'If the evaluated CTF does not fulfill this requirement, it will be discarded.')
+                       'If the evaluated CTF does not fulfill this '
+                       'requirement, it will be discarded.')
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        # Depending on the flags selected by the user, we set the values of the params to compare with
+    
+        fDeps = []
+        self.insertedDict = {}
+
+        fDeps = self._insertNewSelectionSteps(self.insertedDict,
+                                              self.inputCTF.get())
+        # For the streaming mode, the steps function have a 'wait' flag
+        # that can be turned on/off. For example, here we insert the
+        # createOutputStep but it wait=True, which means that can not be
+        # executed until it is set to False
+        # (when the input micrographs stream is closed)
+        self._insertFunctionStep('createOutputStep', prerequisites=fDeps,
+                                 wait=True)
+    
+    def _insertNewSelectionSteps(self, insertedDict, inputCtfs):
+        """ Insert steps to process new ctfs (from streaming)
+        Params:
+            insertedDict: contains already processed ctfs
+            inputCtfs: input ctfs set to be check
+        """
+        deps = []
+        # For each ctf insert the step to process it
+        for ctf in inputCtfs:
+            ctfId = ctf.getObjId()
+            if ctfId not in insertedDict:
+                stepId = self._insertCtfSelectionStep(ctfId)
+                deps.append(stepId)
+                insertedDict[ctfId] = stepId
+        return deps
+    
+    def _insertCtfSelectionStep(self, ctfId):
+        """ Insert the processMovieStep for a given movie. """
+        # Note1: At this point is safe to pass the movie, since this
+        # is not executed in parallel, here we get the params
+        # to pass to the actual step that is gone to be executed later on
+        # Note2: We are serializing the Movie as a dict that can be passed
+        # as parameter for a functionStep
+        stepId = self._insertFunctionStep('_selectCTF', ctfId,
+                                          prerequisites=[])
+        return stepId
+
+    # --------------------------- STEPS functions ------------------------------
+    def _stepsCheck(self):
+        
+        #check if there are new ctfs and process them
+        self._checkNewInput()
+        self._checkNewOutput()
+        
+    def _checkNewInput(self):
+        """ Check if there are new ctf to be processed and add the necessary
+        steps."""
+        ctfFile = self.inputCTF.get().getFileName()
+        
+        now = datetime.now()
+        self.lastCheck = getattr(self, 'lastCheck', now)
+        mTime = datetime.fromtimestamp(os.path.getmtime(ctfFile))
+        self.debug('Last check: %s, modification: %s'
+                   % (pwutils.prettyTime(self.lastCheck),
+                      pwutils.prettyTime(mTime)))
+
+        # Open input ctfs.sqlite and close it as soon as possible
+        self._loadInputList()
+        # If the input ctfs.sqlite have not changed since our last check,
+        # it does not make sense to check for new input data
+        if self.lastCheck > mTime and hasattr(self, 'listOfCtf'):
+            return None
+
+        self.lastCheck = now
+        newCtf = any(ctf.getObjId() not in self.insertedDict
+                        for ctf in self.listOfCtf)
+        outputStep = self._getFirstJoinStep()
+
+        if newCtf:
+            fDeps = self._insertNewSelectionSteps(self.insertedDict,
+                                                  self.listOfCtf)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+    def _checkNewOutput(self):
+        """ Check for already selected CTF and update the output set. """
+    
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+    
+        # Check for newly done items
+        ctfListId = self._readtCtfId()
+    
+        newDone = [ctfId for ctfId in ctfListId
+                   if ctfId not in doneList]
+        firstTime = len(doneList) == 0
+        allDone = len(doneList) + len(newDone)
+    
+        # We have finished when there is not more input ctf (stream closed)
+        # and the number of processed ctf is equal to the number of inputs
+        self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
+                         and allDone == len(self.listOfCtf))
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+    
+        # reading the outputs
+        ctfSet = self._loadOutputSet(em.SetOfCTF, 'ctfs.sqlite')
+        micSet = self._loadOutputSet(em.SetOfMicrographs, 'micrographs.sqlite')
+        
+       
+        
+        if newDone:
+            inputCtfSet = self._loadInputCtfSet()
+            for ctfId in newDone:
+                ctf = inputCtfSet[ctfId].clone()
+                mic = ctf.getMicrograph().clone()
+        
+                ctf.setEnabled(self._getEnable(ctfId))
+                mic.setEnabled(self._getEnable(ctfId))
+        
+                ctfSet.append(ctf)
+                micSet.append(mic)
+    
+            self._writeDoneList(newDone)
+            inputCtfSet.close()
+
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+        
+    
+        self._updateOutputSet('outputCTF', ctfSet, streamMode)
+        self._updateOutputSet('outputMicrograph', micSet, streamMode)
+        print "outCTF: ", self.outputCTF.printAll()
+    
+        if firstTime:
+            # define relation just once
+            self._defineSourceRelation(self.inputCTF.get().getMicrographs(),
+                                       micSet)
+            self._defineSourceRelation(ctfSet, micSet)
+            self._defineSourceRelation(self.inputCTF, ctfSet)
+            self._defineCtfRelation(micSet, ctfSet)
+        else:
+            ctfSet.close()
+            micSet.close()
+    
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(STATUS_NEW)
+    
+        ctfSet.close()
+        micSet.close()
+
+    def createOutputStep(self):
+        # Do nothing now, the output should be ready.
+        pass
+    
+    def _selectCTF(self, ctfId):
+        # Depending on the flags selected by the user, we set the values of
+        # the params to compare with
         if not self.useDefocus:
             self.minDefocus.set(0)
             self.maxDefocus.set(1000000)
@@ -83,151 +256,153 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             self.astigmatism.set(1000000)
         if not self.useResolution:
             self.resolution.set(1000000)
+            
+        
+        # TODO: Change this way to get the ctf.
+        ctf = self.inputCTF.get()[ctfId]
+        
+        defocusU = ctf.getDefocusU()
+        defocusV = ctf.getDefocusV()
+        astigm = defocusU - defocusV
+        
+        resol = self._getCtfResol(ctf)
 
-        #This is a very easy program, the createOutputStep function is a dummy function
-        #There is a loop that calls the function stepsCheck that will be broken when the
-        #status associated to createOutputStep change from wait=True to wait=False
-
-        # lastly function to be executed when streaming is done
-        # it will be executed when waitCondition is set to True
-        self._insertFunctionStep('createOutputStep', wait=True)
-
-   # --------------------------- STEPS functions -------------------------------
-
-    def createOutputStep(self):
-        # Do nothing now, the output should be ready.
-        pass
-
-
-    def _getFirstJoinStepName(self):
-        # This function will be used for streaming, to check which is
-        # the first function that need to wait for all micrographs
-        # to have completed, this can be overriden in subclasses
-        # (e.g., in Xmipp 'sortPSDStep')
-        return 'createOutputStep'
-
-
-    def _getFirstJoinStep(self):
-        for s in self._steps:
-            if s.funcName == self._getFirstJoinStepName():
-                return s
-        return None
-
-
-    def _checkNewCTFs(self, ctfInSet):
-        """ Check for already computed CTF and update the output set. """
-        ctfDict = {}
-        newCTF = False
-        micSet = SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
-        ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite')) #reading this protocol output
-        ctfSet.setMicrographs(ctfInSet.getMicrographs())
-
-        #Create a dict with the processed CTFs
-        for ctf in ctfSet:
-            ctfDict[ctf.getObjId()] = True
-
-        if ctfDict: # it means there are previous ctfs computed
-            ctfSet.loadAllProperties()
-            ctfSet.enableAppend()
-            micSet.loadAllProperties()
-            micSet.enableAppend()
-        else:
-            ctfSet.setStreamState(ctfSet.STREAM_OPEN)
-            micSet.setStreamState(micSet.STREAM_OPEN)
-
-        for ctf in ctfInSet:
-
-            if not ctf.getObjId() in ctfDict:
-                defocusU = ctf.getDefocusU()
-                defocusV = ctf.getDefocusV()
-                astigm = defocusU - defocusV
-                #this is an awful hack to read freq either from ctffid/gctf or xmipp
-                #labels assigned to max resolution are different
-                try:
-                    resol = ctf._ctffind4_ctfResolution.get()
-                except:
-                    resol = ctf._xmipp_ctfCritMaxFreq.get()
-                if defocusU > self.minDefocus and defocusU < self.maxDefocus and \
-                defocusV > self.minDefocus and defocusV < self.maxDefocus and \
-                astigm < self.astigmatism and resol < self.resolution:
-                    pass
-                else:
-                    ctf.setEnabled(False)
-
-                ctfSet.append(ctf)
-                micToAdd = ctf.getMicrograph()
-                micToAdd.copyInfo(ctf.getMicrograph())
-                if not ctf.isEnabled():
-                    micToAdd.setEnabled(False)
-                else:
-                    micToAdd.setEnabled(True)
-                #By default each micrograph has the sampling rate used in the CTF find protocol
-                #We set the sampling rate to that from the original input set
-                micToAdd.setSamplingRate(self.micSetSampling)
-                micSet.append(micToAdd)
-                newCTF = True
-
-        return newCTF, ctfSet, micSet
-
-
-
-    def _stepsCheck(self):
-        #check if there are new CTFs
-        ctfFn = self.inputCTFs.get().getFileName()
-        ctfSet = SetOfCTF(filename=ctfFn)
-        ctfSet.loadAllProperties()
-        streamClosed = ctfSet.isStreamClosed()
-        outputStep = self._getFirstJoinStep()
-
-        self.micSet = self.inputCTFs.get().getMicrographs()
-        ctfSet.setMicrographs(self.micSet)
-        self.micSetSampling =  self.micSet.getSamplingRate()
-
-        #check if there are new ctfs and process them
-        #return number of processed ctfs
-        newCTF, ctfOutSet, microOutSet = self._checkNewCTFs(ctfSet)
-        #ctfOutSet.setMicrographs(self.micSet)
-        #ctfOutSet.getMicrographs().copyInfo(self.micSet)
-        microOutSet.copyInfo(self.micSet)
-
-        if newCTF:
-            # Check if it is the first time we are registering CTF
-            firstTime = not self.hasAttribute('outputCTF')
-
-            if streamClosed:
-                streamMode = ctfSet.STREAM_CLOSED
+        """ Write to a text file the items that have been done. """
+        fn = self._getCtfSelecFile()
+        with open(fn, 'a') as f:
+            if ((defocusU < self.minDefocus) or (defocusU > self.maxDefocus) or
+                (defocusV < self.minDefocus) or (defocusV > self.maxDefocus) or
+                (astigm > self.astigmatism) or (resol > self.resolution)):
+                
+                f.write('%d F\n' % ctf.getObjId())
             else:
-                streamMode = ctfSet.STREAM_OPEN
-            self._updateOutputSet('outputCTF', ctfOutSet, streamMode)
-            self._updateOutputSet('outputMicrograph', microOutSet, streamMode)
-            if firstTime:  # define relation just once
-                self._defineCtfRelation(self.inputCTFs, ctfOutSet)
-
-        else:
-            ctfSet.close()
-
-        if outputStep and outputStep.isWaiting() and streamClosed:
-            outputStep.setStatus(STATUS_NEW)
-
-        ctfSet.close()
-
-
+                f.write('%d T\n' % ctf.getObjId())
+        
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
         message = []
         return message
     
     def _methods(self):
-        pass#nothing here
+        #nothing here
+        pass
     
     def _validate(self):
-        """ The function of this hook is to add some validation before the protocol
-        is launched to be executed. It should return a list of errors. If the list is
-        empty the protocol can be executed.
+        """ The function of this hook is to add some validation before the
+        protocol is launched to be executed. It should return a list of
+        errors. If the list is empty the protocol can be executed.
         """
         message = [ ]
-        fileCTF = self.inputCTFs.get()
-        if fileCTF == None:
-            message.append("You must specify a set of CTFs.")
         return message
 
+    #--------------------------- UTILS functions --------------------------------
+    def _iterCTFs(self, inputCtfs=None):
+        """ Iterate over setOfCtf and yield a CTFModel"""
+        if inputCtfs is None:
+            inputCtfs = self.inputCTF
+        for ctf in inputCtfs:
+            yield ctf
+
+    def _getCtfResol(self, ctf):
+        # this is an awful hack to read freq either from ctffid/gctf or xmipp
+        # labels assigned to max resolution are different
+        if ctf._ctffind4_ctfResolution:
+            return ctf._ctffind4_ctfResolution.get()
+        elif ctf._gctf_ctfResolution:
+            return ctf._gctf_ctfResolution.get()
+        elif ctf._xmipp_ctfCritMaxFreq:
+            return ctf._xmipp_ctfCritMaxFreq.get()
+        else:
+            # if 0, the protocol does not select by ctf resolution.
+            return 0
+    
+    def _getCtfSet(self, path):
+        return em.SetOfCTF(filename=path)
+
+    def _getMicSet(self, path):
+        return em.SetOfMicrographs(filename=path)
+
+    def _readDoneList(self):
+        """ Read from a text file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if os.path.exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+
+        return doneList
+
+    def _writeDoneList(self, ctfIdList):
+        """ Write to a text file the items that have been done. """
+        doneFile = self._getAllDone()
+        with open(doneFile, 'a') as f:
+            for ctfId in ctfIdList:
+                f.write('%d\n' % ctfId)
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE_all.TXT')
+
+    def _getCtfSelecFile(self):
+        return self._getExtraPath('selection-ctf.txt')
+
+
+    def _loadInputList(self):
+        """ Load the input set of ctfs and create a list. """
+        ctfSet = self._loadInputCtfSet()
+        self.isStreamClosed = ctfSet.getStreamState()
+        self.listOfCtf = [m.clone() for m in ctfSet]
+        ctfSet.close()
+        self.debug("Closed db.")
+        
+    def _loadOutputSet(self, SetClass, baseName):
+        """
+        Load the output set if it exists or create a new one.
+        """
+        setFile = self._getPath(baseName)
+
+        if os.path.exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            outputSet.loadAllProperties()
+            outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+            
+        micSet = self.inputCTF.get().getMicrographs()
+
+        if isinstance(outputSet, em.SetOfMicrographs):
+            outputSet.copyInfo(micSet)
+        elif isinstance(outputSet, em.SetOfCTF):
+            outputSet.setMicrographs(micSet)
+        
+        return outputSet
+
+    def _readtCtfId(self):
+        fn = self._getCtfSelecFile()
+        ctfList = []
+        # Check what items have been previously done
+        if os.path.exists(fn):
+            with open(fn) as f:
+                ctfList += [int(line.strip().split()[0]) for line in f]
+        return ctfList
+
+    def _getEnable(self, ctfId):
+        fn = self._getCtfSelecFile()
+        ctfList = []
+        # Check what items have been previously done
+        if os.path.exists(fn):
+            with open(fn) as f:
+                for line in f:
+                    if ctfId == int(line.strip().split()[0]):
+                        if line.strip().split()[1] == 'T':
+                            return True
+                        else:
+                            return False
+    
+    def _loadInputCtfSet(self):
+        ctfFile = self.inputCTF.get().getFileName()
+        self.debug("Loading input db: %s" % ctfFile)
+        ctfSet = em.SetOfCTF(filename=ctfFile)
+        ctfSet.loadAllProperties()
+        return ctfSet
