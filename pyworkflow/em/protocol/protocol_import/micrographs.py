@@ -382,11 +382,75 @@ class ProtImportMovies(ProtImportMicBase):
             decompress('tar', 'jxf %s', '.tbz', '.mrc')
 
         dim = dimMovie.getDim()
+
         range = [1, dim[2], 1]
 
         movie.setFramesRange(range)
         imgSet.setDim(dim)
         imgSet.setFramesRange(range)
+
+    def iterFiles(self):
+        if not (self.inputIndividualFrames and self.stackFrames):
+            for fileName, fileId in ProtImportMicBase.iterFiles(self):
+                yield fileName, fileId
+            return
+
+        filePaths = self.getMatchFiles()
+
+        frameRegex = re.compile("(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
+        #  Group all frames for each movie
+        # Key of the dictionary will be the common prefix and the value
+        # will be a list with all frames in that movie
+        frameDict = {}
+
+        if not hasattr(self, "createdStacks"):
+            self.createdStacks = set()
+
+        for fileName in filePaths:
+            fnNoExt = pwutils.removeExt(fileName)
+
+            match = frameRegex.match(fnNoExt)
+
+            if match is None:
+                raise Exception("Incorrect match of frame files pattern!")
+
+            d = match.groupdict()
+            prefix = d['prefix']
+            frameid = int(d['frameid'])
+
+            if prefix not in frameDict:
+                frameDict[prefix] = []
+
+            frameDict[prefix].append((frameid, fileName))
+
+        suffix = self.movieSuffix.get()
+        ih = ImageHandler()
+
+        for k, v in frameDict.iteritems():
+            movieFn = k + suffix
+
+            if self.writeMoviesInProject:
+                movieFn = self._getExtraPath(os.path.basename(movieFn))
+
+                if movieFn not in self.createdStacks:
+                    movieOut = movieFn
+
+                    if movieOut.endswith("mrc"):
+                        movieOut += ":mrcs"
+
+                    pwutils.makeFilePath(movieFn)
+
+                    for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
+                        frameFn = frame[1]  # Frame name stored previously
+                        ih.convert(frameFn, (i + 1, movieOut))
+
+                        if self.deleteFrames:
+                            pwutils.cleanPath(frameFn)
+
+                    self.createdStacks.add(movieFn)
+
+                yield movieFn, None
+
 
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method

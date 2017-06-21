@@ -70,7 +70,7 @@ class ProtMonitorISPyB(ProtMonitor):
                                monitorTime=100)
 
         monitor.addNotifier(PrintNotifier())
-        monitor.loop()
+        monitor.step()
 
 
 class MonitorISPyB(Monitor):
@@ -134,7 +134,7 @@ class MonitorISPyB(Monitor):
     def find_ispyb_path(self, input_file):
         """ Given a visit, find the path where png images should be stored. """
         if pwutils.envVarOn('SCIPIONBOX_ISPYB_ON'):
-            p = realpath(join(self.project_path, input_file))
+            p = realpath(join(self.project.path, input_file))
             while p and not p.endswith(self.visit):
                 p = dirname(p)
             return join(p, '.ispyb')
