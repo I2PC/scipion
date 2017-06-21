@@ -24,9 +24,8 @@
 import time
 import os
 
-from pyworkflow.em.protocol.monitors.protocol_monitor_ctf import CTF_LOG_SQLITE
 from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
+from pyworkflow.em.protocol import ProtCreateStreamData
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
 from pyworkflow.em.packages.xmipp3 import XmippProtCTFSelection
@@ -133,7 +132,8 @@ class TestCtfSelection(BaseTest):
 
         counter=1
 
-        while not (protCTFSel2.hasAttribute('outputCTF') and protCTFSel2.hasAttribute('outputMicrograph')):
+        while not (protCTFSel2.hasAttribute('outputCTF') and
+                   protCTFSel2.hasAttribute('outputMicrograph')):
 
             time.sleep(2)
             protCTFSel2 = self._updateProtocol(protCTFSel2)
@@ -157,7 +157,6 @@ class TestCtfSelection(BaseTest):
                 self.assertTrue(False)
             counter += 1
 
-
         ctfSetIn = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
         for ctf, ctfOut in zip(ctfSetIn, ctfSet):
             defocusU = ctf.getDefocusU()
@@ -167,6 +166,10 @@ class TestCtfSelection(BaseTest):
             if defocusU > 1000 and defocusU < 28000 and \
             defocusV > 1000 and defocusV < 28000 and \
             astigm < 1000 and resol < 4:
-                self.assertTrue(ctfOut.isEnabled())
+                self.assertTrue(ctfOut.isEnabled(),
+                                "ctf with id %d enabled is "
+                                "False and should be True")
             else:
-                self.assertFalse(ctfOut.isEnabled())
+                self.assertFalse(ctfOut.isEnabled(),
+                                 "ctf with id %d enabled is "
+                                 "True and should be False")
