@@ -47,7 +47,7 @@ class ProtRelionSortParticles(ProtParticles):
 
     """
     _label = 'sort particles'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):

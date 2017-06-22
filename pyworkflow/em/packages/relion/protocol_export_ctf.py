@@ -41,7 +41,7 @@ class ProtRelionExportCtf(EMProtocol):
     Export a SetOfCTF to the expected Relion STAR file.
     """
     _label = 'export ctf'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CTF_STAR_FILE = 'micrographs_ctf_%06d.star'
     
     #--------------------------- DEFINE param functions ------------------------
