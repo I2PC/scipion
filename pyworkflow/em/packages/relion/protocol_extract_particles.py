@@ -315,7 +315,6 @@ class ProtRelionExtractParticles(em.ProtExtractParticles, ProtRelionBase):
 
         for coord in inputCoords.iterItems(orderBy='_micId'):
             micName = coordMics[coord.getMicId()].getMicName()
-            
             # If Micrograph Source is "other" and extract from a subset
             # of micrographs, micName key should be checked if it exists.
             if micName in micDict.keys():
