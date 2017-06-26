@@ -251,7 +251,7 @@ void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesR
 		Iref.read(fnImg);
 
 		//AJ adding noise to the image
-		Iref().addNoise(0, 300, "gaussian");
+		Iref().addNoise(0, 1000, "gaussian");
 		//END AJ adding noise
 
 		for(size_t i=0; i<numImagesRef; i++)
@@ -277,10 +277,11 @@ void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesR
 		padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, numImagesRef);
 		padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, numImagesRef);
 		padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
-	}
 
-	padding_masking(image_stack_gpu, mask_device, padded_image_gpu, padded_image2_gpu,
+		padding_masking(image_stack_gpu, mask_device, padded_image_gpu, padded_image2_gpu,
 			padded_mask_gpu, rotation, true);
+
+	}
 	//END AJ//
 
 	/*
@@ -326,12 +327,13 @@ void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesR
 
 	//Polar transform of the projected images
 	//GpuMultidimArrayAtGpu<double> original_image_gpu;
+	GpuMultidimArrayAtGpu<double> polar_gpu, polar2_gpu;
 	if(rotation){
 		//original_image_stack.copyToGpuMultiple(original_image_gpu, numImagesRef);
 		d_correlationAux.XdimPolar=360;
 		d_correlationAux.YdimPolar=radius;
-		GpuMultidimArrayAtGpu<double> polar_gpu(360,radius,1,numImagesRef);
-		GpuMultidimArrayAtGpu<double> polar2_gpu(360,radius,1,numImagesRef);
+		polar_gpu.resize(360,radius,1,numImagesRef);
+		polar2_gpu.resize(360,radius,1,numImagesRef);
 		cuda_cart2polar(d_correlationAux.d_original_image, polar_gpu, polar2_gpu, true); // original_image_gpu
 		//FFT
 		polar_gpu.fft(d_correlationAux.d_projPolarFFT);
@@ -339,13 +341,35 @@ void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesR
 	}
 
 	//AJ for debugging
-	size_t xAux= d_correlationAux.d_original_image.Xdim;
-	size_t yAux= d_correlationAux.d_original_image.Ydim;
-	size_t nAux= d_correlationAux.d_original_image.Ndim;
+	size_t xAux1= d_correlationAux.d_original_image.Xdim;
+	size_t yAux1= d_correlationAux.d_original_image.Ydim;
+	size_t nAux1= 5;
+	GpuMultidimArrayAtCpu<double> auxCpu1(xAux1,yAux1,1,nAux1);
+	auxCpu1.copyFromGpu(d_correlationAux.d_original_image);
+	int pointer1=0;
+	for(int i=0; i<nAux1; i++){
+	MultidimArray<double> padded1;
+	FileName fnImgPad1;
+	Image<double> Ipad1;
+	padded1.coreAllocate(1, 1, yAux1, xAux1);
+	memcpy(MULTIDIM_ARRAY(padded1), &auxCpu1.data[pointer1], xAux1*yAux1*sizeof(double));
+	fnImgPad1.compose("noisy", i+1, "mrc");
+	Ipad1()=padded1;
+	Ipad1.write(fnImgPad1);
+	padded1.coreDeallocate();
+	pointer1 += xAux1*yAux1;
+	}
+	//END AJ//
+
+	/*/AJ for debugging
+	if(rotation){
+	size_t xAux= 360;
+	size_t yAux= radius;
+	size_t nAux= 1;
 	//GpuMultidimArrayAtGpu<double> aux(xAux,yAux,1,nAux);
-	//d_correlationAux.d_maskFFT.ifft(aux);
+	//d_correlationAux.d_projPolarFFT.ifft(aux);
 	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-	auxCpu.copyFromGpu(d_correlationAux.d_original_image);
+	auxCpu.copyFromGpu(polar_gpu);
 	int pointer=0;
 	for(int i=0; i<nAux; i++){
 	MultidimArray<double> padded;
@@ -353,27 +377,31 @@ void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesR
 	Image<double> Ipad;
 	padded.coreAllocate(1, 1, yAux, xAux);
 	memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer], xAux*yAux*sizeof(double));
-	fnImgPad.compose("noisy", i+1, "jpg");
+	fnImgPad.compose("polarPrimerAntes", i+1, "mrc");
 	Ipad()=padded;
 	Ipad.write(fnImgPad);
 	padded.coreDeallocate();
 	pointer += xAux*yAux;
 	}
-	//END AJ//
+	}
+	//END AJ/*/
 
 }
 
 
-void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAux, Mask &mask, bool rotation)
+void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAux, Mask &mask, bool rotation, int step)
 {
 
-	size_t Xdim = d_correlationAux.d_original_image.Xdim;
-	size_t Ydim = d_correlationAux.d_original_image.Ydim;
-	size_t Zdim = d_correlationAux.d_original_image.Zdim;
-	size_t Ndim = d_correlationAux.d_original_image.Ndim;
+	size_t Xdim = d_correlationAux.d_transform_image.Xdim;
+	size_t Ydim = d_correlationAux.d_transform_image.Ydim;
+	size_t Zdim = d_correlationAux.d_transform_image.Zdim;
+	size_t Ndim = d_correlationAux.d_transform_image.Ndim;
 	size_t pad_Xdim=2*Xdim-1;
 	size_t pad_Ydim=2*Ydim-1;
 	size_t radius=(size_t)mask.R1;
+
+	GpuMultidimArrayAtGpu<double> image_stack_gpu(Xdim,Ydim,1,Ndim);
+	d_correlationAux.d_transform_image.copyGpuToGpu(image_stack_gpu);
 
 	MultidimArray<int> maskArray = mask.get_binary_mask();
 	MultidimArray<double> dMask;
@@ -386,12 +414,10 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 		padded_image_gpu.resize(pad_Xdim, pad_Ydim, 1, Ndim);
 		padded_image2_gpu.resize(pad_Xdim, pad_Ydim, 1, Ndim);
 		padded_mask_gpu.resize(pad_Xdim, pad_Ydim, 1, 1);
-	}
 
-	padding_masking(d_correlationAux.d_transform_image, mask_device, padded_image_gpu, padded_image2_gpu,
-			padded_mask_gpu, rotation, true);
+		padding_masking(image_stack_gpu, mask_device, padded_image_gpu, padded_image2_gpu,
+				padded_mask_gpu, rotation, true);
 
-	if(!rotation){
 		padded_image_gpu.fft(d_correlationAux.d_projFFT);
 		padded_image2_gpu.fft(d_correlationAux.d_projSquaredFFT);
 		padded_mask_gpu.fft(d_correlationAux.d_maskFFT);
@@ -412,9 +438,33 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 	}
 
 	/*/AJ for debugging
+	size_t xAux1= d_correlationAux.d_transform_image.Xdim;
+	size_t yAux1= d_correlationAux.d_transform_image.Ydim;
+	size_t nAux1= 1;
+	GpuMultidimArrayAtCpu<double> auxCpu1(xAux1,yAux1,1,nAux1);
+	auxCpu1.copyFromGpu(d_correlationAux.d_transform_image);
+	int pointer1=0;
+	for(int i=0; i<nAux1; i++){
+	MultidimArray<double> padded1;
+	FileName fnImgPad1;
+	Image<double> Ipad1;
+	padded1.coreAllocate(1, 1, yAux1, xAux1);
+	memcpy(MULTIDIM_ARRAY(padded1), &auxCpu1.data[pointer1], xAux1*yAux1*sizeof(double));
+	fnImgPad1.compose("transDentroOtra", step+1, "mrc");
+	Ipad1()=padded1;
+	Ipad1.write(fnImgPad1);
+	padded1.coreDeallocate();
+	pointer1 += xAux1*yAux1;
+	}
+	//END AJ/*/
+
+	/*/AJ for debugging
+	if(rotation){
 	size_t xAux= 360;
 	size_t yAux= radius;
-	size_t nAux= 5;
+	size_t nAux= 1;
+	//GpuMultidimArrayAtGpu<double> aux(xAux,yAux,1,nAux);
+	//d_correlationAux.d_projPolarFFT.ifft(aux);
 	GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
 	auxCpu.copyFromGpu(polar_gpu);
 	int pointer2=0;
@@ -424,11 +474,12 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 	Image<double> Ipad;
 	padded.coreAllocate(1, 1, yAux, xAux);
 	memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
-	fnImgPad.compose("new", i+1, "jpg");
+	fnImgPad.compose("polarBad", step+1, "mrc");
 	Ipad()=padded;
 	Ipad.write(fnImgPad);
 	padded.coreDeallocate();
 	pointer2 += xAux*yAux;
+	}
 	}
 	//END AJ/*/
 
@@ -631,10 +682,10 @@ void ProgGpuCorrelation::run()
 
 				if(!rotation){
 					stepchar[step]='T';
-					printf("%s\n",stepchar);
+					printf("step %i of %i %s\n",step, max_step, stepchar);
 				}else{
 					stepchar[step]='R';
-					printf("%s\n",stepchar);
+					printf("step %i of %i %s\n",step, max_step, stepchar);
 				}
 
 				//CORRELATION PART
@@ -651,16 +702,18 @@ void ProgGpuCorrelation::run()
 				d_experimentalAux.d_transform_image.resize(d_experimentalAux.d_original_image);
 				apply_transform(d_experimentalAux.d_original_image, d_experimentalAux.d_transform_image, *transMat);
 
-				/*/AJ for debugging
+
+				//AJ for debugging
+				if(firstStep==0){
 				char numstr[21];
 				sprintf(numstr, "%d", step);
 				String stepStr = "step";
 				String name = stepStr + numstr;
-				size_t xAux= d_experimentalAux.MFrealSpace.Xdim;
-				size_t yAux= d_experimentalAux.MFrealSpace.Ydim;
-				size_t nAux= available_images_proj;
+				size_t xAux= d_experimentalAux.d_transform_image.Xdim;
+				size_t yAux= d_experimentalAux.d_transform_image.Ydim;
+				size_t nAux= 5;
 				GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
-				auxCpu.copyFromGpu(d_experimentalAux.MFrealSpace);
+				auxCpu.copyFromGpu(d_experimentalAux.d_transform_image);
 				int pointer2=0;
 				for(int i=0; i<nAux; i++){
 				MultidimArray<double> padded;
@@ -668,20 +721,46 @@ void ProgGpuCorrelation::run()
 				Image<double> Ipad;
 				padded.coreAllocate(1, 1, yAux, xAux);
 				memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
-				fnImgPad.compose("NCCMaxShift", i+1, "mrc");
+				fnImgPad.compose("finalT", i+1, "mrc");
 				Ipad()=padded;
 				Ipad.write(fnImgPad);
 				padded.coreDeallocate();
 				pointer2 += xAux*yAux;
 				}
-				//END AJ/*/
+				}//
+
+				if(firstStep==1){
+				char numstr[21];
+				sprintf(numstr, "%d", step);
+				String stepStr = "step";
+				String name = stepStr + numstr;
+				size_t xAux= d_experimentalAux.d_transform_image.Xdim;
+				size_t yAux= d_experimentalAux.d_transform_image.Ydim;
+				size_t nAux= 5;
+				GpuMultidimArrayAtCpu<double> auxCpu(xAux,yAux,1,nAux);
+				auxCpu.copyFromGpu(d_experimentalAux.d_transform_image);
+				int pointer2=0;
+				for(int i=0; i<nAux; i++){
+				MultidimArray<double> padded;
+				FileName fnImgPad;
+				Image<double> Ipad;
+				padded.coreAllocate(1, 1, yAux, xAux);
+				memcpy(MULTIDIM_ARRAY(padded), &auxCpu.data[pointer2], xAux*yAux*sizeof(double));
+				fnImgPad.compose("finalR", i+1, "mrc");
+				Ipad()=padded;
+				Ipad.write(fnImgPad);
+				padded.coreDeallocate();
+				pointer2 += xAux*yAux;
+				}
+				}
+				//END AJ//
 
 
 				//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
 				if(step<max_step-1){
 					printf("Re-processing experimental images...\n");
 					rotation = !rotation;
-					preprocess_images_experimental_transform(d_experimentalAux, mask, rotation);
+					preprocess_images_experimental_transform(d_experimentalAux, mask, rotation, step);
 					if(!rotation){
 						d_experimentalAux.maskCount=maskCount;
 						d_experimentalAux.produceSideInfo();
@@ -690,10 +769,10 @@ void ProgGpuCorrelation::run()
 
 			}//end for(int step=0; step<6; step++)
 
-			//AJ for debugging
+			/*/AJ for debugging
 			char numstr[5];
 			sprintf(numstr, "%d", firstStep);
-			String stepStr = "outputExp";
+			String stepStr = "badNew";
 			String name = stepStr + numstr;
 			size_t xAux= d_experimentalAux.d_transform_image.Xdim;
 			size_t yAux= d_experimentalAux.d_transform_image.Ydim;
@@ -713,7 +792,7 @@ void ProgGpuCorrelation::run()
 			padded.coreDeallocate();
 			pointer2 += xAux*yAux;
 			}
-			//END AJ//
+			//END AJ/*/
 
 		}//end for(int firstStep=0; firstStep<2; firstStep++)
 
