@@ -134,13 +134,13 @@ public:
 	void setTranslation(const float* posX, const float* posY)
 	{
 		for(int i=0; i<Ndim; i++)
-			setTranslationMatrix(d_data, posX[i], posY[i], i);
+			setTranslationMatrix(d_data, -posX[i], -posY[i], i);
 	}
 
 	void setRotation(const float* ang)
 	{
 		for(int i=0; i<Ndim; i++)
-			setRotationMatrix(d_data, ang[i], i);
+			setRotationMatrix(d_data, -ang[i], i);
 	}
 
 	void copyMatrix(TransformMatrix<float> &lastMatrix)
