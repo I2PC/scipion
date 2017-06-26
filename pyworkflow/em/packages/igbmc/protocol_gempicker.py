@@ -54,7 +54,7 @@ class ProtGemPicker(em.ProtParticlePicking):
     """
     _label = 'auto-picking'
         
-    #--------------------------- DEFINE param functions --------------------------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
         em.ProtParticlePicking._defineParams(self, form)
@@ -150,7 +150,8 @@ class ProtGemPicker(em.ProtParticlePicking):
         self.convertInputs(self._getExtraPath())
 
     def runGempickerStep(self, micName, args):
-        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args)
+        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args,
+                     log=self._log)
 
     def createOutputStep(self):
         micSet = self.getInputMicrographs()

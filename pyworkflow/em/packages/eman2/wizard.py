@@ -43,7 +43,9 @@ from pyworkflow.utils.utils import readProperties
 #===============================================================================
 
 class SparxGaussianPickerWizard(EmWizard):
-    _targets = [(SparxGaussianProtPicking, ['boxSize', 'lowerThreshold', 'higherThreshold', 'gaussWidth'])]
+    _targets = [(SparxGaussianProtPicking, ['boxSize',
+                                            'lowerThreshold', 'higherThreshold',
+                                            'gaussWidth'])]
     
     
     def show(self, form):
