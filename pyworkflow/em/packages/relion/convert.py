@@ -329,7 +329,12 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         if flip:
             print "FLIP in 2D not implemented"
     elif is3D:
-        raise Exception("3D alignment conversion for Relion not implemented.")
+        raise Exception("3D alignment conversion for Relion not implemented. "
+                        "It seems the particles were generated with an "
+                        "incorrect alignment type. You may either re-launch "
+                        "the protocol that generates the paticles "
+                        "with angles or set 'Consider previous alignment?' "
+                        "to No")
     else:
         alignmentRow.setValue(md.RLN_ORIENT_ORIGIN_Z, shifts[2])
         alignmentRow.setValue(md.RLN_ORIENT_ROT,  angles[0])
