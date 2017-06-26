@@ -39,7 +39,8 @@ Protocols SPA = [
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
 				{"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"},
-				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"}
+				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtCTFSelection", "text": "default"}
 			]}
 		]}
 	]},
