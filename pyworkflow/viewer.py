@@ -209,22 +209,17 @@ class Viewer(object):
         from pyworkflow.em import ObjectView
         fn = None
 
-        def getProtocolId(obj):
-            if not hasattr(obj, 'protocol'):
-                raise Exception("self.protocol is not defined for this Viewer.")
-            return obj.protocol.strId()
-
         if isinstance(filenameOrObject, basestring):
             # If the input is a string filename, we should take the object id
             # from the protocol. This assumes that self.protocol have been
             # previously set
             fn = filenameOrObject
-            strId = getProtocolId(filenameOrObject)
+            strId = self.getProtocolId()
 
         elif isinstance(filenameOrObject, Object):
 
             if filenameOrObject.getObjId() is None:
-                strId = getProtocolId(filenameOrObject)
+                strId = self.getProtocolId()
             else:
                 strId = filenameOrObject.strId()
 
@@ -242,6 +237,13 @@ class Viewer(object):
                             "methods).")
 
         return ObjectView(self._project, strId, fn, **kwargs)
+
+    def getProtocolId(self):
+
+        if not hasattr(self, 'protocol'):
+            raise Exception("self.protocol is not defined for this Viewer.")
+        return self.protocol.strId()
+
 
 class ProtocolViewer(Protocol, Viewer):
     """ Special kind of viewer that have a Form to organize better
