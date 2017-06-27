@@ -446,7 +446,7 @@ class Project(object):
         self.mapper.commit()
 
     def _updateProtocol(self, protocol, tries=0, checkPid=False,
-                        skipUpdatedProtocols=True):
+                        skipUpdatedProtocols=False):
 
         # If this is read only exit
         if self.isReadOnly(): return
