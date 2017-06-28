@@ -251,7 +251,7 @@ void preprocess_images_experimental(MetaData &SF, FileName fnImg, int numImagesR
 		Iref.read(fnImg);
 
 		//AJ adding noise to the image
-		Iref().addNoise(0, 1000, "gaussian");
+		//Iref().addNoise(0, 2000, "gaussian");
 		//END AJ adding noise
 
 		for(size_t i=0; i<numImagesRef; i++)
@@ -708,6 +708,7 @@ void ProgGpuCorrelation::run()
 				}
 				}//
 
+#ifdef DEBUG
 				if(firstStep==1){
 				char numstr[21];
 				sprintf(numstr, "%d", step);
@@ -733,7 +734,7 @@ void ProgGpuCorrelation::run()
 				}
 				}
 				//END AJ//
-
+#endif
 
 				//PREPROCESS TO PREPARE DATA TO THE NEXT STEP
 				if(step<max_step-1){
