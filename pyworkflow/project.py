@@ -462,6 +462,10 @@ class Project(object):
             label = protocol.getObjLabel()
             comment = protocol.getObjComment()
 
+            # Capture the db timestamp before loading.
+            lastUpdateTime = pwutils.getFileLastModificationDate(
+                                                        protocol.getDbPath())
+
             # If the protocol database has ....
             #  Comparing date will not work unless we have a reliable
             # lastModificationDate of a protocol in the project.sqlite
@@ -481,7 +485,10 @@ class Project(object):
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)
             protocol.setObjComment(comment)
-            protocol.lastUpdateTimeStamp.set(datetime.datetime.now())
+            # Use the run.db timestamp instead of the system TS to prevent
+            # possible inconsistencies
+            # protocol.lastUpdateTimeStamp.set(datetime.datetime.now())
+            protocol.lastUpdateTimeStamp.set(lastUpdateTime)
 
             self.mapper.store(protocol)
 
