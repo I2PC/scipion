@@ -95,34 +95,6 @@ class TestCtfStreaming(BaseTest):
 
 
 
-        while not protCTF.hasAttribute('outputCTF'):
-            time.sleep(10)
-            protCTF = self._updateProtocol(protCTF)
-
-        #ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
-
-        #while not (ctfSet.getSize() >0):
-        #    time.sleep(10)
-        #    protCTF = self._updateProtocol(protCTF)
-        #    ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
-
-        #kwargs = {
-        #    'maxDefocus': 40000,
-        #    'minDefocus': 1000,
-        #    'astigmatism': 1000,
-        #    'resolution': 4
-        #}
-
-        #protCTFSel = self.newProtocol(XmippProtCTFSelection, **kwargs)
-        #protCTFSel.inputCTFs.set(protCTF.outputCTF)
-        #self.proj.launchProtocol(protCTFSel)
-
-        #while not (protCTFSel.hasAttribute('outputCTF') and protCTFSel.hasAttribute('outputMicrograph')):
-        #    time.sleep(10)
-        #    protCTFSel = self._updateProtocol(protCTFSel)
-
-
-
 ######################### AJ CHECKING OUTPUT OF NEW STREAMING PROTOCOL ##############################
 
 
