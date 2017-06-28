@@ -176,11 +176,6 @@ class ProtAlignMovies(ProtProcessMovies):
             movieSet = self._loadOutputSet(SetOfMovies, 'movies.sqlite',
                                            fixSampling=saveMovie)
 
-            # If the movies are not written out, then dimensions can be
-            # copied from the input movies
-            if not saveMovie and firstTime:
-                movieSet.setDim(self.inputMovies.get().getDim())
-
             for movie in newDone:
                 newMovie = self._createOutputMovie(movie)
                 movieSet.append(newMovie)
@@ -191,6 +186,10 @@ class ProtAlignMovies(ProtProcessMovies):
                 # Probably is a good idea to store a cached summary for the
                 # first resulting movie of the processing.
                 self._storeSummary(newDone[0])
+                # If the movies are not written out, then dimensions can be
+                # copied from the input movies
+                if not saveMovie:
+                    movieSet.setDim(self.inputMovies.get().getDim())
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
