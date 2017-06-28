@@ -438,27 +438,6 @@ void preprocess_images_experimental_transform(GpuCorrelationAux &d_correlationAu
 	}
 
 	/*/AJ for debugging
-	size_t xAux1= d_correlationAux.d_transform_image.Xdim;
-	size_t yAux1= d_correlationAux.d_transform_image.Ydim;
-	size_t nAux1= 1;
-	GpuMultidimArrayAtCpu<double> auxCpu1(xAux1,yAux1,1,nAux1);
-	auxCpu1.copyFromGpu(d_correlationAux.d_transform_image);
-	int pointer1=0;
-	for(int i=0; i<nAux1; i++){
-	MultidimArray<double> padded1;
-	FileName fnImgPad1;
-	Image<double> Ipad1;
-	padded1.coreAllocate(1, 1, yAux1, xAux1);
-	memcpy(MULTIDIM_ARRAY(padded1), &auxCpu1.data[pointer1], xAux1*yAux1*sizeof(double));
-	fnImgPad1.compose("transDentroOtra", step+1, "mrc");
-	Ipad1()=padded1;
-	Ipad1.write(fnImgPad1);
-	padded1.coreDeallocate();
-	pointer1 += xAux1*yAux1;
-	}
-	//END AJ/*/
-
-	/*/AJ for debugging
 	if(rotation){
 	size_t xAux= 360;
 	size_t yAux= radius;
