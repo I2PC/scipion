@@ -32,6 +32,7 @@ import re
 from datetime import timedelta
 import socket
 import select
+import shlex
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -374,6 +375,7 @@ class ProtImportMovies(ProtImportMicBase):
                                   label="Socket port",
                                   help="Port to use for the streaming socket.\n")
 
+    # --------------------------- INSERT functions ---------------------------------------------------
     def _insertAllSteps(self):
         # Only the import movies has property 'inputIndividualFrames'
         # so let's query in a non-intrusive manner
@@ -392,6 +394,16 @@ class ProtImportMovies(ProtImportMicBase):
                                  self.amplitudeContrast.get(),
                                  self.magnification.get())
 
+    # --------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        """Overwriting to skip file validation if streaming with socket"""
+        if self.streamingSocket:
+            errors = []
+        else:
+            errors = ProtImportMicBase._validate(self)
+        return errors
+
+    # --------------------------- UTILS functions -------------------------------
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
@@ -433,14 +445,15 @@ class ProtImportMovies(ProtImportMicBase):
         serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         serverSocket.bind((host, self.socketPort))
         serverSocket.listen(10)
+        serverSocket.setblocking(0)
         self.serverSocket = serverSocket
         self.connectionList = [serverSocket]
-        self.debug("Socket started on port " + str(self.socketPort))
+        self.info("Socket started on port " + str(self.socketPort))
         return serverSocket
 
-    def getFilenamesFromSocket(self):
-        RECV_BUFFER = 4096  # Advisable to keep it as an exponent of 2
-        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [])
+    def iterFilenamesFromSocket(self):
+        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
+        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
         for sock in read_sockets:
             if sock is self.serverSocket:
                 # New connection received through self.serverSocket
@@ -454,28 +467,32 @@ class ProtImportMovies(ProtImportMicBase):
                 try:
                     # In Windows, sometimes when a TCP program closes abruptly,
                     # a "Connection reset by peer" exception will be thrown
-                    data = sock.recv(RECV_BUFFER)
+                    data = sock.recv(recv_buffer)
                     if data:
-                        fileName = data.strip()
-                        if os.path.exists(fileName):
-                            if fileName in self.importedFiles:
-                                sock.send('WARNING: Not importing, already imported file %s \n' % fileName)
-                                continue
+                        files = shlex.split(data)
+                        self.debug("Data received in socket:")
+                        self.debug(files)
+                        for fileName in files:
+                            if os.path.exists(fileName):
+                                if fileName in self.importedFiles:
+                                    sock.send('WARNING: Not importing, already imported file %s \n' % fileName)
+                                    self.debug('WARNING: Not importing, already imported file %s \n' % fileName)
+                                    continue
+                                else:
+                                    sock.send('OK: Importing file %s \n' % fileName)
+                                    self.debug('OK: Importing file %s \n' % fileName)
+                                    fileId = None
+                                    yield fileName, fileId
                             else:
-                                sock.send('OK: Importing file %s \n' % fileName)
-                                fileName = data.strip()
-                                fileId = None
-                                yield fileName, fileId
-                        else:
-                            sock.send('WARNING: Not importing, path does not exist %s \n' % fileName)
-                            self.debug(repr(data.strip()))
-                            continue
+                                sock.send('WARNING: Not importing, path does not exist %s \n' % fileName)
+                                self.debug('WARNING: Not importing, path does not exist %s \n' % fileName)
+                                self.debug(fileName)
+                                continue
                     else:
                         continue
-
                 # client disconnected, remove from socket list
                 except Exception as e:
-                    self.debug("Client (%s, %s) is offline" % addr)
+                    self.debug("Exception reading socket!!")
                     self.debug(str(e))
                     sock.close()
                     self.connectionList.remove(sock)
@@ -493,7 +510,7 @@ class ProtImportMovies(ProtImportMicBase):
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
             if self.streamingSocket:
-                for fileName, fileId in self.getFilenamesFromSocket():
+                for fileName, fileId in self.iterFilenamesFromSocket():
                     yield fileName, fileId
             else:
                 for fileName, fileId in ProtImportMicBase.iterNewInputFiles(self):
@@ -502,7 +519,7 @@ class ProtImportMovies(ProtImportMicBase):
 
         if self.dataStreaming:
             if self.streamingSocket:
-                filePaths = [f for f in self.getFilenamesFromSocket()]
+                filePaths = [f[0] for f in self.iterFilenamesFromSocket()]
             else:
                 # Consider only the files that are not changed in the fileTime delta
                 # if processing data in streaming

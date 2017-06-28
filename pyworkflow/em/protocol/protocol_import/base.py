@@ -126,7 +126,10 @@ class ProtImportFiles(ProtImport):
               help="Interval of time (in seconds) after which, if no new \n"
                    "file is detected, the protocol will end.\n"
                    "When finished, the output Set will be closed and\n"
-                   "no more data will be added to it. \n")
+                   "no more data will be added to it. \n"
+                   "Note: If you're using individual frames when importing\n"
+                   "movies, the timeout won't be refreshed until a whole \n"
+                   "movie is stacked. \n")
 
         form.addParam('fileTimeout', params.IntParam, default=30,
               condition='dataStreaming',
