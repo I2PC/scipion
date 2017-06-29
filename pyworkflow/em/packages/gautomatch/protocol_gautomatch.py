@@ -251,6 +251,12 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
     def _getPickArgs(self):
         return [self.getArgs()]
 
+    def _getBoxSize(self):
+        if self.boxSize and self.boxSize > 0:
+            return  self.boxSize.get()
+        else:
+            return self.inputReferences.get().getXDim() or 100
+
     def _pickMicrograph(self, mic, args):
         micName = mic.getFileName()
         if self.inputReferences.get():
@@ -261,18 +267,17 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
         runGautomatch(micName, refStack, self.getMicrographsDir(), args,
                       env=self._getEnviron())
 
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        readSetOfCoordinates(self.getMicrographsDir(), micList, coordSet)
+
+        if coordSet.getBoxSize() is None:
+            coordSet.setBoxSize(self._getBoxSize())
+
     def createOutputStep(self):
         micSet = self.getInputMicrographs()
-        ih = em.ImageHandler()
-        coordSet = self._createSetOfCoordinates(micSet)
-        if self.boxSize and self.boxSize > 0:
-            coordSet.setBoxSize(self.boxSize.get())
-        else:
-            coordSet.setBoxSize(self.inputReferences.get().getXDim or 100)
 
-        readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSet)
         coordSetAux = self._createSetOfCoordinates(micSet, suffix='_rejected')
-        coordSetAux.setBoxSize(coordSet.getBoxSize())
+        coordSetAux.setBoxSize(self._getBoxSize())
         readSetOfCoordinates(self.getMicrographsDir(), micSet, coordSetAux,
                              suffix='_rejected.star')
         coordSetAux.write()
@@ -295,9 +300,6 @@ class ProtGautomatch(em.ProtParticlePickingAuto):
             
         if self.writeMsk:
             self.createDebugOutput(suffix='_mask')
-
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(micSet, coordSet)
 
     def createDebugOutput(self, suffix):
         micSet = self.getInputMicrographs()
