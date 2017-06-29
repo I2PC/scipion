@@ -1512,6 +1512,10 @@ void logFilter(MultidimArray< T > &V, double a, double b, double c)
     }
 }
 
+/** Compute denoising */
+void denoiseFilter(MultidimArray<double> &V, int maxIter);
+
+
 /** Compute edges with Sobel */
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
 
@@ -1570,6 +1574,18 @@ public:
     //4.431-0.4018*LN(ABS(P1+336.6))
     //a-b*ln(x+c)
     double a,b,c;
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+class DenoiseFilter: public XmippFilter
+{
+public:
+    int maxIter;
     /** Define the parameters for use inside an Xmipp program */
     static void defineParams(XmippProgram * program);
     /** Read from program command line */
