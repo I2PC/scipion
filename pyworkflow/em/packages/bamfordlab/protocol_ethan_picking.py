@@ -140,6 +140,31 @@ class ProtEthanPicker(ProtParticlePickingAuto):
         # coordSet.setBoxSize(self.radius.get() * 2)
         # self._defineOutputs(outputCoordinates=coordSet)
         # self._defineSourceRelation(self.inputMicrographs, coordSet)
+    
+    # --------------------------- INFO functions -------------------------------
+    def _summary(self):
+        summary = []
+        return summary
+
+    def _citations(self):
+        return []
+
+    def _methods(self):
+        methodsMsgs = []
+        return methodsMsgs
+
+    def _validate(self):
+        errors = []
+
+        program = self.getProgram()
+        if not os.path.exists(program):
+            errors.append("Program: '%s' was not found. " % program)
+            errors.append("Check that you have installed ethan picker by: ")
+            errors.append("   ./scipion install ethan ")
+            errors.append("And the configuration file "
+                          "~/.config/scipion/scipion.conf has the proper value "
+                          "of ETHAN_HOME variable.")
+        return errors
 
     #--------------------------- UTILS functions -------------------------------
     def getProgram(self):
@@ -156,9 +181,9 @@ class ProtEthanPicker(ProtParticlePickingAuto):
         """
         return [self.radius.get()]
     
-    def readSetOfCoordinates(self, workingDir, coordSet):
+    def readCoordsFromMics(self,workingDir, micList, coordSet):
 
-        for mic in self.getInputMicrographs():
+        for mic in micList:
             micFn = mic.getFileName()
             micDir = self._getMicDir(micFn)
             coordFile = os.path.join(micDir, self._getMicPosFn(micFn))
@@ -223,27 +248,4 @@ DISTANCE_TEST %(distanceTest)s
         """ % argsDict)
         f.close()
 
-    def _summary(self):
-        summary = []
-        return summary
-
-    def _citations(self):
-        return []
-
-    def _methods(self):
-        methodsMsgs = []
-        return methodsMsgs
-
-    def _validate(self):
-        errors = []
-
-        program = self.getProgram()
-        if not os.path.exists(program):
-            errors.append("Program: '%s' was not found. " % program)
-            errors.append("Check that you have installed ethan picker by: ")
-            errors.append("   ./scipion install ethan ")
-            errors.append("And the configuration file "
-                          "~/.config/scipion/scipion.conf has the proper value "
-                          "of ETHAN_HOME variable.")
-        return errors
 
