@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# * Authors:     J.M. de la Rosa Trevin (delarosatrevin@scilifelab.se) [1]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Science for Life Laboratory, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -29,13 +29,13 @@ import os
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
 from pyworkflow.em.data import Coordinate
-from pyworkflow.em.protocol import ProtParticlePicking
+from pyworkflow.em.protocol import ProtParticlePickingAuto
 from pyworkflow.em.convert import ImageHandler
 import pyworkflow.em.metadata as md
 
 
 
-class ProtEthanPicker(ProtParticlePicking):
+class ProtEthanPicker(ProtParticlePickingAuto):
     """
     ETHAN is a program for automatic detection of spherical particles from
     electron micrographs.
@@ -49,8 +49,8 @@ class ProtEthanPicker(ProtParticlePicking):
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
-
-        ProtParticlePicking._defineParams(self, form)
+    
+        ProtParticlePickingAuto._defineParams(self, form)
         form.addParam('radius', params.IntParam,
                       label='Radius of particle (px)')
 
@@ -96,49 +96,50 @@ class ProtEthanPicker(ProtParticlePicking):
                       help='')
 
     #--------------------------- INSERT steps functions ------------------------
-    def _insertAllSteps(self):
-        deps = []
-
-        for mic in self.getInputMicrographs():
-            stepId = self._insertFunctionStep('pickMicrographStep',
-                                              self.radius.get(),
-                                              mic.getFileName())
-            deps.append(stepId)
-
-        self._insertFunctionStep('createOutputStep', prerequisites=deps)
+    
+    
+    # def _insertAllSteps(self):
+    #     deps = []
+    #
+    #     for mic in self.getInputMicrographs():
+    #         stepId = self._insertFunctionStep('pickMicrographStep',
+    #                                           self.radius.get(),
+    #                                           mic.getFileName())
+    #         deps.append(stepId)
+    #
+    #     self._insertFunctionStep('createOutputStep', prerequisites=deps)
 
     #--------------------------- STEPS functions -------------------------------
-    def pickMicrographStep(self, radius, micFn):
+    def _pickMicrograph(self, mic, radius):
+        micFn = mic.getFileName()
         micDir = self._getMicDir(micFn)
-        # Convert micrographs to mrc (uint8) as required by ETHAN program
         fnMicBase = pwutils.replaceBaseExt(micFn, 'mrc')
         fnMicCfg = pwutils.replaceBaseExt(micFn, 'cfg')
         fnMicFull = os.path.join(micDir, fnMicBase)
         fnPosBase = self._getMicPosFn(micFn)
 
-        # FIXME: Right now we can not define the depth (8, 16 or 32 bits)
-        # from the ImageHandler API
-        from pyworkflow.em.packages.xmipp3 import runProgram
-        args = '-i %s -o %s --depth uint8' % (micFn, fnMicFull)
-        runProgram('xmipp_image_convert', args)
+        # Convert micrographs to mrc (uint8) as required by ETHAN program
+        ih = ImageHandler()
+        ih.convert(micFn, fnMicFull, md.DT_UCHAR)
 
         # Create a configuration file to be used by ETHAN with the parameters
         # selected by the user
         self.writeConfigFile(os.path.join(micDir, fnMicCfg))
         # Run ethan program with the required arguments
         program = self.getProgram()
-        args = "%d %s %s %s" % (radius, fnMicBase, fnPosBase, fnMicCfg)
+        args = "%s %s %s %s" % (radius, fnMicBase, fnPosBase, fnMicCfg)
         self.runJob(program, args, cwd=micDir)
 
         # Clean temporary micrograph
         pwutils.cleanPath(fnMicFull)
 
     def createOutputStep(self):
-        coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-        coordSet.setBoxSize(self.radius.get() * 2)
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.inputMicrographs, coordSet)
+        pass
+        # coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
+        # self.readSetOfCoordinates(self._getExtraPath(), coordSet)
+        # coordSet.setBoxSize(self.radius.get() * 2)
+        # self._defineOutputs(outputCoordinates=coordSet)
+        # self._defineSourceRelation(self.inputMicrographs, coordSet)
 
     #--------------------------- UTILS functions -------------------------------
     def getProgram(self):
@@ -149,7 +150,12 @@ class ProtEthanPicker(ProtParticlePicking):
 
     def _getMicPosFn(self, micFn):
         return pwutils.replaceBaseExt(micFn, 'txt')
-
+    
+    def _getPickArgs(self):
+        """ In this case, only return the radius as argument.
+        """
+        return [self.radius.get()]
+    
     def readSetOfCoordinates(self, workingDir, coordSet):
 
         for mic in self.getInputMicrographs():
