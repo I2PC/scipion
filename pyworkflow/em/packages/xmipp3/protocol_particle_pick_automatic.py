@@ -138,6 +138,9 @@ class XmippParticlePickingAutomatic(ProtParticlePickingAuto, XmippProtocol):
 
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
+
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        readSetOfCoordinates(workingDir, micList, coordSet)
         
     # --------------------------- INFO functions -------------------------------
     def _validate(self):

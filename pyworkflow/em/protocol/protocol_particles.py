@@ -384,7 +384,8 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if newDone:
-            self._writeDoneList(newDone)
+            newDoneUpdated = self._updateOutputCoordSet(newDone, streamMode)
+            self._writeDoneList(newDoneUpdated)
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -401,6 +402,45 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
+
+    def _micIsReady(self, mic):
+        """ Function to check if a micrograph (although reported done)
+        is ready to update the coordinates from it. An practical use of this
+        function will be for protocols that need to wait for the CTF of that
+        micrograph to be ready as well.
+        """
+        return True
+
+    def readCoordsFromMics(self, outputDir, micDoneList, outputCoords):
+        """ This method should be implemented in subclasses to read
+        the coordinates from a given list of micrographs.
+        """
+        pass
+
+    def _updateOutputCoordSet(self, micList, streamMode):
+        micDoneList = [mic for mic in micList if self._micIsReady(mic)]
+
+        # Do no proceed if there is not micrograph ready
+        if not micDoneList:
+            return []
+
+        outputName = 'outputCoordinates'
+        outputDir = self.getCoordsDir()
+        outputCoords = getattr(self, outputName, None)
+        micSet = self.getInputMicrographs()
+
+        # If there are not outputCoordinates yet, it means that is the first
+        # time we are updating output coordinates, so we need to first create
+        # the output set
+        if outputCoords is None:
+            outputCoords = self._createSetOfCoordinates(micSet)
+        else:
+            outputCoords.enableAppend()
+
+        self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
+        self._updateOutputSet(outputName, outputCoords, streamMode)
+
+        return micDoneList
 
     def _getMicDone(self, mic):
         return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
@@ -434,7 +474,6 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             for mic in micList:
                 f.write('%d\n' % mic.getObjId())
 
-
     def _getFirstJoinStepName(self):
         # This function will be used for streaming, to check which is
         # the first function that need to wait for all micrographs
@@ -447,3 +486,6 @@ class ProtParticlePickingAuto(ProtParticlePicking):
             if s.funcName == self._getFirstJoinStepName():
                 return s
         return None
+
+    def createOutputStep(self):
+        self._createOutput(self._getExtraPath())
