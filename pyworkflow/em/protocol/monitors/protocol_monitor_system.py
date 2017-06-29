@@ -310,7 +310,15 @@ class SystemMonitorPlotter(EmPlotter):
 
     def paint(self,labels):
         for label in labels:
-            self.lines[label],=self.ax.plot([], [], '-',label=label)
+            if (label == 'mem'):
+                self.lines[label], = self.ax.plot([], [], '-',
+                                                  label=label, color='r')
+            if (label == 'cpu'):
+                self.lines[label], = self.ax.plot([], [], '-',
+                                                  label=label, color='g')
+            if (label == 'swap'):
+                self.lines[label], = self.ax.plot([], [], '-',
+                                                  label=label, color='b')
 
         anim = animation.FuncAnimation(self.fig, self.animate,
                                        interval=self.monitor.samplingInterval * 1000)#miliseconds

@@ -461,10 +461,7 @@ class TestEstimateGain(BaseTest):
     def test_estimate(self):
         protGain = self.newProtocol(XmippProtMovieGain,
                                     objLabel='estimate gain')
-
-        p = Pointer(self.protImport.outputMovies, extended=1)
-        protGain.inputMovies.append(p)
-
+        protGain.inputMovies.set(self.protImport.outputMovies)
         self.launchProtocol(protGain)
 
 
