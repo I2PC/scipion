@@ -66,6 +66,15 @@ counter = 0
 #cyclic CN
 SYM_CYCLIC  = counter # symmetry Cn around axis
 counter += 1
+#dihedral DN
+SYM_DIHEDRAL = counter
+counter += 1
+#tetrahedral T
+SYM_TETRAHEDRAL = counter
+counter += 1
+#octahedral O
+SYM_OCTAHEDRAL = counter
+counter += 1
 #icosahedric IXXX
 SYM_I222  = counter # (no crowther 222 and standard in heyman et al 2005 article).
               # 2-fold axes on x,y,z axes. With the positive z-axis pointing at
@@ -83,6 +92,9 @@ SYM_In25r   = counter # 'n25' with 180 degree rotation about x
 #Diccionario sym
 SCIPION_SYM_NAME={}
 SCIPION_SYM_NAME[SYM_CYCLIC]  = 'Cn'
+SCIPION_SYM_NAME[SYM_DIHEDRAL]  = 'Dn'
+SCIPION_SYM_NAME[SYM_TETRAHEDRAL]  = 'T'
+SCIPION_SYM_NAME[SYM_OCTAHEDRAL]  = 'O'
 SCIPION_SYM_NAME[SYM_I222]  = 'I222'
 SCIPION_SYM_NAME[SYM_I222r] = 'I222r'
 SCIPION_SYM_NAME[SYM_In25]   = 'In25'
