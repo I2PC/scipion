@@ -36,7 +36,7 @@ from pyworkflow import VERSION_1_1
 class XmippProtCombinePdb(em.ProtImportFiles):
     """ Combine two PDB files into a single one.  """
     _label = 'combine PDBs'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     IMPORT_FROM_ID = 0
     IMPORT_OBJ = 1
     IMPORT_FROM_FILES = 2 

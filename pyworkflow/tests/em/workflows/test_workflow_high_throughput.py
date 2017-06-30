@@ -24,7 +24,7 @@ class HighThroughputTest(TestWorkflow):
                                       voltage=300, sphericalAberration=2.0)
         protImport.setObjLabel('import movies - Day1')
         self.proj.launchProtocol(protImport, wait=True)
-        self.assertIsNotNone(protImport.outputMovies, "There was a problem importing movies")
+        self.assertSetSize(protImport.outputMovies,msg="There was a problem importing movies")
         
         print "Aligning the movies..."
         protAlignMov = XmippProtOFAlignment(useAlignment=False,
@@ -33,14 +33,14 @@ class HighThroughputTest(TestWorkflow):
         protAlignMov.inputMovies.set(protImport.outputMovies)
         protAlignMov.setObjLabel('align movies - Day1')
         self.proj.launchProtocol(protAlignMov, wait=True)
-        self.assertIsNotNone(protAlignMov.outputMicrographs, "There was a problem aligning movies")
+        self.assertSetSize(protAlignMov.outputMicrographs, msg="There was a problem aligning movies")
         
         print "Preprocessing the micrographs..."
         protPreprocess = XmippProtPreprocessMicrographs(doCrop=True, cropPixels=50)
         protPreprocess.inputMicrographs.set(protAlignMov.outputMicrographs)
         protPreprocess.setObjLabel('crop mics 50px')
         self.proj.launchProtocol(protPreprocess, wait=True)
-        self.assertIsNotNone(protPreprocess.outputMicrographs, "There was a problem with the crop")
+        self.assertSetSize(protPreprocess.outputMicrographs, msg="There was a problem with the crop")
         
         # Now estimate CTF on the micrographs
         print "Performing CTF Micrographs..."
@@ -48,7 +48,7 @@ class HighThroughputTest(TestWorkflow):
         protCTF.inputMicrographs.set(protPreprocess.outputMicrographs)
         protCTF.setObjLabel('ctf - Day1')
         self.proj.launchProtocol(protCTF, wait=True)
-        self.assertIsNotNone(protCTF.outputCTF, "There was a problem with the CTF")
+        self.assertSetSize(protCTF.outputCTF, msg="There was a problem with the CTF")
 
         print "Running Xmipp Import Coordinates"
         protPP = self.newProtocol(ProtImportCoordinates,
@@ -58,7 +58,7 @@ class HighThroughputTest(TestWorkflow):
         protPP.inputMicrographs.set(protPreprocess.outputMicrographs)
         protPP.setObjLabel('Picking - Day1')
         self.launchProtocol(protPP)
-        self.assertIsNotNone(protPP.outputCoordinates, "There was a problem with the Xmipp import coordinates")
+        self.assertSetSize(protPP.outputCoordinates, msg="There was a problem with the Xmipp import coordinates")
 
 
         print "Run extract particles with <Other> option"
@@ -73,14 +73,14 @@ class HighThroughputTest(TestWorkflow):
         protExtract.inputMicrographs.set(protPreprocess.outputMicrographs)
         protExtract.setObjLabel('extract particles')
         self.proj.launchProtocol(protExtract, wait=True)
-        self.assertIsNotNone(protExtract.outputParticles, "There was a problem with the extract particles")
+        self.assertSetSize(protExtract.outputParticles, msg="There was a problem with the extract particles")
         
         print "Running Spider Filter"
         protFilter = SpiderProtFilter(lowFreq=0.07, highFreq=0.43)
         protFilter.inputParticles.set(protExtract.outputParticles)
         protFilter.setObjLabel('spi filter')
         self.proj.launchProtocol(protFilter, wait=True)
-        self.assertIsNotNone(protFilter.outputParticles, "There was a problem with the Spider filter")
+        self.assertSetSize(protFilter.outputParticles, msg="There was a problem with the Spider filter")
         
         print "Run Only Align2d"
         protOnlyAlign = XmippProtCL2DAlign(maximumShift=5, numberOfIterations=10, 
@@ -88,7 +88,7 @@ class HighThroughputTest(TestWorkflow):
         protOnlyAlign.inputParticles.set(protFilter.outputParticles)
         protOnlyAlign.setObjLabel('cl2d align')
         self.proj.launchProtocol(protOnlyAlign, wait=True)        
-        self.assertIsNotNone(protOnlyAlign.outputParticles, "There was a problem with Only align2d")
+        self.assertSetSize(protOnlyAlign.outputParticles, msg="There was a problem with Only align2d")
         
         print "Running Spider Dimension Reduction"
         protCAPCA = SpiderProtCAPCA()

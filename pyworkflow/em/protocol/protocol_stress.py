@@ -44,7 +44,7 @@ class ProtStress(EMProtocol):
     """
     _label = 'stress'
     _program = STRESS_NG
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
