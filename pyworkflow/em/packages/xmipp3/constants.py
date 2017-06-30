@@ -95,9 +95,12 @@ OTHER = 1
 SYM_URL = "[[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]"
 
 #Diccionario sym
-from pyworkflow.em.constants import SYM_CYCLIC, SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
+from pyworkflow.em.constants import SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL, SYM_I222, SYM_I222r, SYM_In25, SYM_In25r
 XMIPP_SYM_NAME={}
 XMIPP_SYM_NAME[SYM_CYCLIC] = 'Cn'
+XMIPP_SYM_NAME[SYM_DIHEDRAL] = 'Dn'
+XMIPP_SYM_NAME[SYM_TETRAHEDRAL] = 'T'
+XMIPP_SYM_NAME[SYM_OCTAHEDRAL] = 'O'
 XMIPP_SYM_NAME[SYM_I222]   = 'I1'
 XMIPP_SYM_NAME[SYM_I222r]  = 'I2'
 XMIPP_SYM_NAME[SYM_In25]   = 'I3'
