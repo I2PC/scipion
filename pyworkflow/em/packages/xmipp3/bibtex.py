@@ -534,18 +534,18 @@ author = "B. Heymann",
 keywords = ""
 }
 
-@article{C.O.S.Sorzano2015,
-title = "StructMap:... ",
-journal = "",
-volume = "",
+@article{Sorzano2016,
+title = "StructMap: Elastic distance analysis of electron microscopy maps for studying conformational changes",
+journal = "Biophysical J.",
+volume = "110",
 number = "",
-pages = "",
-year = "",
-note = "submitted",
+pages = "1753-1765",
+year = "2016",
+note = "",
 issn = "",
-doi = "",
-url = "",
-author = "C.O.S.Sorzano et al.",
+doi = "http://doi.org/10.1016/j.bpj.2016.03.019",
+url = "http://doi.org/10.1016/j.bpj.2016.03.019",
+author = "C.O.S. Sorzano, A.L. Álvarez-Cabrera, M. Kazemi, J.M. Carazo, S. Jonic",
 keywords = ""
 }
 
