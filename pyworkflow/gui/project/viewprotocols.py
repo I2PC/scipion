@@ -178,13 +178,15 @@ class RunsTreeProvider(pwgui.tree.ProjectRunsTreeProvider):
         else:
             status = None
 
+        stoppable = status in [pwprot.STATUS_RUNNING, pwprot.STATUS_SCHEDULED]
+
         return [(ACTION_EDIT, single),
                 (ACTION_COPY, True),
                 (ACTION_DELETE, status != pwprot.STATUS_RUNNING),
                 (ACTION_STEPS, single),
                 (ACTION_BROWSE, single),
                 (ACTION_DB, single),
-                (ACTION_STOP, status == pwprot.STATUS_RUNNING and single),
+                (ACTION_STOP, stoppable and single),
                 (ACTION_EXPORT, not single),
                 (ACTION_COLLAPSE, single and status and expanded),
                 (ACTION_EXPAND, single and status and not expanded),
@@ -1652,14 +1654,17 @@ class ProtocolsView(tk.Frame):
         # to be executed in the same thread
         self.windows.enqueue(lambda: self._executeSaveProtocol(prot))
 
-    def _executeSaveProtocol(self, prot, onlySave=False):
+    def _executeSaveProtocol(self, prot, onlySave=False, doSchedule=False):
         if onlySave:
             self.project.saveProtocol(prot)
             msg = Message.LABEL_SAVED_FORM
             # msg = "Protocol successfully saved."
 
         else:
-            self.project.launchProtocol(prot)
+            if doSchedule:
+                self.project.scheduleProtocol(prot)
+            else:
+                self.project.launchProtocol(prot)
             # Select the launched protocol to display its summary, methods..etc
             self._selection.clear()
             self._selection.append(prot.getObjId())
