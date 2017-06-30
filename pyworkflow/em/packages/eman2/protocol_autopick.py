@@ -48,7 +48,8 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         
     def __init__(self, **kwargs):
         ProtParticlePickingAuto.__init__(self, **kwargs)
-        self.extraParams = 'pixel_input=1:pixel_output=1:invert_contrast=True:use_variance=True'
+        self.extraParams = ('pixel_input=1:pixel_output=1:invert_contrast'
+                            '=True:use_variance=True')
 
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
@@ -94,11 +95,12 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
         
     def createOutputStep(self):
-        coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        self.readSetOfCoordinates(self.workingDir.get(), coordSet)
-        coordSet.setBoxSize(self.boxSize.get())
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.inputMicrographs, coordSet)
+        pass
+        # coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
+        # self.readSetOfCoordinates(self.workingDir.get(), coordSet)
+        # coordSet.setBoxSize(self.boxSize.get())
+        # self._defineOutputs(outputCoordinates=coordSet)
+        # self._defineSourceRelation(self.inputMicrographs, coordSet)
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -111,6 +113,5 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         return (self.inputMicrographs.get().getFiles() |
                 ProtParticlePickingAuto.getFiles(self))
 
-    def readSetOfCoordinates(self, workingDir, coordSet):
-        readSetOfCoordinates(workingDir, self.inputMicrographs.get(), coordSet)
-
+    def readCoordsFromMics(self,workingDir, micList, coordSet):
+        readSetOfCoordinates(workingDir, micList, coordSet)
