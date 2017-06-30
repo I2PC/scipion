@@ -54,6 +54,7 @@ from viewer_pdf import PDFReportViewer
 from viewer_monitor_summary import ViewerMonitorSummary
 from protocol.monitors.protocol_monitor_ctf import ProtMonitorCTFViewer
 from protocol.monitors.protocol_monitor_system import ProtMonitorSystemViewer
+from protocol.monitors.protocol_monitor_movie_gain import ProtMonitorMovieGainViewer
 
 #------------------------ Some common Views ------------------
 
@@ -180,6 +181,7 @@ class MicrographsView(ObjectView):
         first.printAll()
 
         def existingLabels(labelList):
+            print("labelList: ", labelList)
             return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         renderLabels = existingLabels(self.RENDER_LABELS)
