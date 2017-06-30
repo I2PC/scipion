@@ -22,6 +22,102 @@
 	gpuErrchk(cudaGetLastError()); \
 	}
 
+#define CHECK_ARRAY(destCPU, sourceGPU, size, Xd, Yd, originalCPU) {\
+	gpuErrchk(cudaMemcpy((destCPU), (sourceGPU), (size), cudaMemcpyDeviceToHost)); \
+	if (!isequal(&DIRECT_A2D_ELEM( (originalCPU),0,0), (destCPU), (Xd)*(Yd)))	\
+		 	std::cout << #originalCPU << " is not equal!!!!!!!!!!!!" << std::endl; \
+   	}  
+
+#define CHECK_ARRAYT(destCPU, sourceGPU, size, Xd, Yd, originalCPU) {\
+	gpuErrchk(cudaMemcpy((destCPU), (sourceGPU), (size), cudaMemcpyDeviceToHost)); \
+	if (!isequalT(&DIRECT_A2D_ELEM( (originalCPU),0,0), (destCPU), (Xd), (Yd)))	\
+		 	std::cout << #originalCPU << " is not equal!!!!!!!!!!!!" << std::endl; \
+   	}  
+
+
+
+template <typename T>
+ bool isequal(const T* A, const T* B, int size, int show=10, float th_perc=.1)  { 
+	bool ok=true;
+	double max_perc=0.;
+	int max_i=0;
+	double tmp_perc;
+	show=(size/sizeof(T)>show?show:size/sizeof(T));
+	for (int i=0; i<size; i++){
+		if (A[i]!=B[i]){
+			if (A[i]==0.){
+				ok=false;
+				std::cout << "A[i]=0!!!" << std::endl;
+				break;
+			}
+			tmp_perc = 100.*fabs(((double)B[i]-(double)A[i])/(double)A[i]);
+			if (tmp_perc>max_perc){
+				max_perc=tmp_perc;
+				max_i=i;
+			
+			}	
+			if (max_perc > th_perc){
+				ok=false;
+				//	std::cout << "A[" << i << "]=" << A[i];
+		        }
+			if (tmp_perc > th_perc){
+				std::cout << "A[" << i << "]=" << A[i];
+				std::cout << " B=" << B[i] <<  std::endl;
+				//	std::cout << "A[" << i << "]=" << A[i];
+		        }
+		}	
+	}	
+
+	if (!ok){
+		std::cout << "MAX ERR = " << max_perc << "\% >" << th_perc << "\%" << std::endl;
+		std::cout << "A[" <<max_i<<"]="<< A[max_i];
+		std::cout << " B[" <<max_i<<"]="<< B[max_i] << std::endl;
+			for (int i=0; i<show; i++){
+			std::cout << "(" << tmp_perc << ") A[" <<i<<"]="<< A[i];
+			std::cout << " B[" <<i<<"]="<< B[i] << std::endl;
+		}
+        }
+	return ok;
+}
+
+// Check if matrix A with Xdim columns is the transposed of B (with Ydim columns)
+template <typename T>
+ bool isequalT(const T* A, const T* B, int xdim, int ydim, int show=10, float th_perc=.1)  { 
+	bool ok=true;
+	double max_perc=0.;
+	double tmp_perc;
+		for (int i=0; i<ydim; i++){
+		for (int j=0; j<xdim; j++){
+			if (A[j+i*xdim]!=B[i+j*ydim]){
+				if (A[j+i*xdim]==0.){
+					ok=false;
+					std::cout << "A[j+i*ydim]=0!!!" << std::endl;
+					break;
+				}
+				tmp_perc = 100.*fabs(((double)B[i+j*ydim]-(double)A[j+i*xdim])/(double)A[j+i*xdim]);
+				if (tmp_perc>max_perc)
+					max_perc=tmp_perc;
+				if (max_perc > th_perc)
+					ok=false;
+					
+				if (tmp_perc > th_perc){
+					std::cout << "(" << tmp_perc <<  ") A="  << A[j+i*xdim];
+					std::cout << " B=" << B[i+j*ydim] <<  std::endl;
+	
+				}	
+			}
+		}	
+		}
+
+	if (!ok){
+		std::cout << "MAX ERR = " << max_perc << "\%" << std::endl;
+		for (int i=0; i<show; i++){
+			std::cout << "A[" <<i<<"]="<< A[i];
+			std::cout << " B'[" <<i<<"]="<< B[i*ydim] << std::endl;
+		}
+        }
+	return ok;
+} 
 
 
 
@@ -62,7 +158,21 @@ void Ksumall( float* sumObjs, int** array_Img, int no_imgs, int Xdim, int Ydim){
 }//sumall
 
 /****
- mult - c=a+b
+ sum - c=a+b
+****/
+__global__
+void Ksum( float* a, int* b, float* c, int Xdim, int Ydim){
+
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*blockDim.y + threadIdx.y;
+   int offset = x+y*Xdim;
+
+   if ((x<Xdim)&&(y<Ydim))
+	c[offset]=int((double)a[offset]+b[offset]);
+}//mult
+
+/****
+ mult - c=a*b
 ****/
 __global__
 void Kmult( int* a, float* b, int* c, int Xdim, int Ydim){
@@ -72,8 +182,23 @@ void Kmult( int* a, float* b, int* c, int Xdim, int Ydim){
    int offset = x+y*Xdim;
 
    if ((x<Xdim)&&(y<Ydim))
-	c[offset]=int((double)a[offset]*b[offset]);
+	c[offset]=int((float)a[offset]*b[offset]);
 }//mult
+
+/****
+ divConst - c=c/const
+****/
+
+__global__ void KdivC( float* a, float b, int Xdim, int Ydim){
+
+   int x = blockIdx.x*blockDim.x + threadIdx.x;
+   int y = blockIdx.y*blockDim.y + threadIdx.y;
+   int offset = x+y*Xdim;
+
+   if ((x<Xdim)&&(y<Ydim))
+	a[offset]=a[offset]/b;
+}//KdivC
+
 
 /****
  fill - element=value
@@ -116,19 +241,19 @@ __global__ void Ksmooth1(float *smooth, int *colrow, const float *listOfWeights,
 			continue;
 		tmp++;
 	// DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
-			float actualWeightC = listOfWeights[abs(k)];
+		float actualWeightC = listOfWeights[abs(k)];
 		sumWeightsC += actualWeightC;
 		for (size_t i=0; i<TILE_DIM2; ++i){
 			if ((y+i)<Ydim){
 				smooth[x+(y+i)*Xdim] += actualWeightC * (colrow[(x+k)+(y+i)*Xdim]);
 			}	
 		}	
-	  }	
-	  if ((width==0)&&(sumWeightsC==0)){
+	  }//for-k	
+/*	  if ((width==0)&&(sumWeightsC==0)){
 		printf("tmp=%d sumWeightsC=%f width=%d\n", tmp, sumWeightsC, width);	
   		printf("BLK(%d,%d), TH(%d,%d)\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y);
 	  }
-	 double iSumWeightsC=1./sumWeightsC;
+*/	 double iSumWeightsC=1./sumWeightsC;
 	  for (size_t i=0; i<TILE_DIM2; ++i)
 		if ((y+i)<Ydim)
 			smooth[x+(y+i)*Xdim] *= (float)iSumWeightsC;
@@ -171,7 +296,7 @@ __global__ void Ksmooth2(float *smooth, int Xdim, int Ydim)
 K transformGray: each thread deals with a whole column
       1. read value from Iframe - pixval
       2. look for position of first value bigger than pixval - pos
-      3. write in IframeTransformedColRow smoothColRos(pos-1) 
+      3. write in IframeTransformedColRow smoothColRow(pos-1) 
 
 ****/
 __global__ void KtransformGray(const int *Iframe, const int *colrowH, int *IframeTransformColRow, const float* smoothColRow, int Xdim, int Ydim)
@@ -193,13 +318,66 @@ __global__ void KtransformGray(const int *Iframe, const int *colrowH, int *Ifram
            if (y2<0)
 		y2=0;
 
-//	__syncthreads();   
+	//__syncthreads();   
 	   IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y2*Xdim];
    	}//end-for-y0	
    }//end-if-Xdim
 }
 
+__global__ void KtransformGray2(const int *Iframe, const int *colrowH, int *IframeTransformColRow, const float* smoothColRow, int Xdim, int Ydim)
+{
 
+
+   int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
+ 
+   int pixval;
+	for (size_t y0=0; y0<Ydim; ++y0){
+		   	   size_t y1, y2;
+	  // y2=Ydim-1; // It fails if Ydim==1
+	   y2=Ydim-1;
+   	   if (x<Xdim){
+   	      pixval = Iframe[x+y0*Xdim];
+		// upperbounds
+	      for (y1=0; y1<Ydim; ++y1){
+	  	if (colrowH[x+y1*Xdim]>pixval){
+			y2=y1-1;
+			break;
+		}
+	      } 
+              if (y2<0)
+	         y2=0;
+            }//if-Xdim 
+	   //__syncthreads();   
+	   if (x<Xdim)
+	        IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y2*Xdim];
+
+   	}//end-for-y0	
+}
+
+__global__ void KtransformGray3(const int *Iframe, const int *colrowH, int *IframeTransformColRow, const float* smoothColRow, int Xdim, int Ydim)
+{
+   int x = blockIdx.x*TILE_DIM + threadIdx.x;
+   int y0 = blockIdx.y*TILE_DIMH + threadIdx.y;
+
+ 
+   if ((x<Xdim)&&(y0<Ydim)){
+	   int pixval = Iframe[x+y0*Xdim];
+		// upperbounds
+	   size_t y1, y2;
+	   y2=Ydim-1; // It fails if Ydim==1
+   	   for (y1=0; y1<Ydim; ++y1){
+		if (colrowH[x+y1*Xdim]>pixval){
+			y2=y1-1;
+			break;
+		}
+	   } 
+           if (y2<0)
+		y2=0;
+
+	//__syncthreads();   
+	   IframeTransformColRow[x+y0*Xdim]=(int)smoothColRow[x+y2*Xdim];
+   }//end-if-Xdim
+}
 
 // Kernel to transpose a matrix
 
@@ -260,23 +438,75 @@ __shared__ float tile[TILE_DIM+1][TILE_DIM];
 template <typename T>
 __global__ void KcomputeTVcolumns(T* array,  double* avgTV, int Xdim, int Ydim)
 {
+//	return; //REMOVE	
+	extern __shared__ double partACC2[];
+
+	int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
+	int y = blockIdx.y*TILE_DIM2 + threadIdx.y;
+        int tileDim = blockDim.x;
+        
+	double retvalC=0.;
+	if (x<Xdim-1){ //two consecutive columns are accessed
+		for (int j = 0; j < tileDim; ++j)
+			if (y+j<Ydim)
+		     		retvalC+=abs(array[(y+j)*Xdim + x]-array[(y+j)*Xdim +(x+1)]);
+		     	//	retvalC+=abs(((y+j)*Xdim + x)-((y+j)*Xdim +(x+1)));
+	}
+	partACC2[threadIdx.x]=retvalC;
+/*	if (blockIdx.x==3 && blockIdx.y==3)
+		printf("retvalC=%f",retvalC);
+*/
+	__syncthreads();
+	
+// UNCOMMENT LATER
+	for (int st=tileDim/2; st>0; st>>=1){
+		if (threadIdx.x<st)
+		    partACC2[threadIdx.x] += partACC2[threadIdx.x+st];
+		__syncthreads();
+	}
+
+//	__syncthreads();
+
+//UNCOMMENT LATER
+	if (threadIdx.x==0){
+		avgTV[blockIdx.x+blockIdx.y*gridDim.x]=partACC2[0];
+//		if (blockIdx.x==3 && blockIdx.y==3)
+//			printf("partACC=%f",partACC22[0]);
+	}
+		
+}
+
+
+/****
+ avg1: first kernel to normalize mICorrection (second kernel is KdivConstant)
+	* Each threads normalize a column from the block and do the column partial average
+        * after that the column partial average is reducted
+****/
+
+/*********** IT CAN BE OPTIMIZED ************/
+/*********** by adding more threads in the Y dim ************/
+__global__ void Kavg1(float *Icorrection, float *sumObs, float *sumIdeal, double *avg, int Xdim, int Ydim)
+{
 	extern __shared__ double partACC[];
 	
 	int x = blockIdx.x*TILE_DIM2 + threadIdx.x;
 	int y = blockIdx.y*TILE_DIM2 + threadIdx.y;
         int tileDim = blockDim.x;
         
-	double retvalC=0;
-	if (x<Xdim-1){ //two consecutive conlumns are accessed
+	double avgTmp=0.;
+	if (x<Xdim){ 
 		for (int j = 0; j < tileDim; ++j)
-			if (y+j<Ydim)
-		     		retvalC+=abs(array[(y+j)*Xdim + x]-array[(y+j)*Xdim +(x+1)]);
-		     	//	retvalC+=abs(((y+j)*Xdim + x)-((y+j)*Xdim +(x+1)));
+			if (y+j<Ydim){
+				float den = sumObs[(y+j)*Xdim + x]; 	
+			     		if (fabs(den)<1e-6)
+						Icorrection[(y+j)*Xdim +x] = 1.0;
+					else
+						Icorrection[(y+j)*Xdim +x] = sumIdeal[(y+j)*Xdim +x]/den ;
+				avgTmp += Icorrection[(y+j)*Xdim +x];	
+			}
 	}
-	partACC[threadIdx.x]=retvalC;
-/*	if (blockIdx.x==3 && blockIdx.y==3)
-		printf("retvalC=%f",retvalC);
-*/
+	partACC[threadIdx.x]=avgTmp;
+
 	__syncthreads();
 	
 	for (int st=tileDim/2; st>0; st>>=1){
@@ -287,11 +517,11 @@ __global__ void KcomputeTVcolumns(T* array,  double* avgTV, int Xdim, int Ydim)
 //	__syncthreads();
 
 	if (threadIdx.x==0){
-		avgTV[blockIdx.x+blockIdx.y*gridDim.x]=partACC[0];
+		avg[blockIdx.x+blockIdx.y*gridDim.x]=partACC[0];
 //		if (blockIdx.x==3 && blockIdx.y==3)
 //			printf("partACC=%f",partACC[0]);
 	}
 		
-	return;
 }
+
 
