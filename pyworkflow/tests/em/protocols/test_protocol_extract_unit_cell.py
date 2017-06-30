@@ -32,7 +32,7 @@ from pyworkflow.em.packages.xmipp3.constants import XMIPP_SYM_NAME
 from pyworkflow.em.protocol import ProtImportVolumes
 from pyworkflow.em.packages.xmipp3.protocol_extract_unit_cell import XmippProtExtractUnit
 from pyworkflow.em.constants import SYM_I222r, SYM_I222, SCIPION_SYM_NAME, SYM_In25, SYM_In25r,\
-     SYM_CYCLIC
+     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import NMA_MASK_THRE
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms import XmippProtConvertToPseudoAtoms
@@ -130,6 +130,55 @@ def generate_cyclic(order, offset, mode, f, ):
             else:
                 f.write('.sphere %.3f %.3f %.3f .05\n' % (x,y,z))
 
+def generate_dihedral(order, offset, mode, f, ):
+    center = []
+    z_value = [-.45, 0., .45]
+    for z in z_value:
+        x = 0.
+        y = 0.
+        if mode == 'xmipp':
+            f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x, y, z))
+        else:
+            f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
+        for point in range(order):
+            x= math.cos(2*point*math.pi/order + offset)
+            y= math.sin(2*point*math.pi/order + offset)
+            if mode == 'xmipp':
+                f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x,y,z))
+            else:
+                f.write('.sphere %.3f %.3f %.3f .15\n' % (x,y,z))
+        for point in range(order):
+            x= math.cos(2*point*math.pi/order + offset)/2
+            y= math.sin(2*point*math.pi/order + offset)/2
+            if mode == 'xmipp':
+                f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (x,y,z))
+            else:
+                f.write('.sphere %.3f %.3f %.3f .10\n' % (x,y,z))
+        for point in range(order):
+            x= math.cos(2*point*math.pi/order + offset)/4
+            y= math.sin(2*point*math.pi/order + offset)/4
+            if mode == 'xmipp':
+                f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (x,y,z))
+            else:
+                f.write('.sphere %.3f %.3f %.3f .05\n' % (x,y,z))
+
+def generate_tetrahedral(mode, f, ):
+    centroid = [0.,0.,0.]
+    rmax = 1.;
+    _3f = [0., 0., 1.]
+    _3fp = [0., 0.94281, - 0.33333]
+    _3fpp = [0.81650, - 0.47140, - 0.33333]
+    _3fppp = [-0.81650, - 0.47140, - 0.33333]
+    points = [centroid, _3f, _3fp, _3fpp, _3fppp]
+    for point in points:
+        print point, type(point)
+        x = point[0] * rmax
+        y = point[1] * rmax
+        z = point[2] * rmax
+        if mode == 'xmipp':
+            f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x, y, z))
+        else:
+            f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
 
 
 def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
@@ -169,6 +218,10 @@ def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
         generate_ico(symSuffix, mode, f)
     elif symPreffix == 'C':
         generate_cyclic(int(symSuffix), offset,  mode, f)
+    elif symPreffix == 'D':
+        generate_dihedral(int(symSuffix), offset,  mode, f)
+    elif symPreffix == 'T':
+        generate_tetrahedral(mode, f)
 
     f.close()
     return filename
@@ -192,24 +245,52 @@ class TestProtModelBuilding(BaseTest):
         self.outerRadius = 40.
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
-        self.box[SYM_CYCLIC] = (76,49,81)
+        self.box[SYM_CYCLIC] = (60, 42, 81)
         self.extractunitCell(SYM_CYCLIC)
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),OFFSET)
-        self.box[SYM_CYCLIC] = (68,68,81)
+        self.box[SYM_CYCLIC] = (52, 52, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
+
+    def test_extractunitCelldihedral(self):
+        self.innerRadius = 0.
+        self.outerRadius = 40.
+        self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
+                                                 'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder))
+        self.box[SYM_DIHEDRAL] = (60, 42, 81)
+        self.extractunitCell(SYM_DIHEDRAL)
+        self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
+                                                 'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), OFFSET)
+        self.box[SYM_DIHEDRAL] = (52, 52, 81)
+        self.extractunitCell(SYM_DIHEDRAL, OFFSET)
+
+    def test_extractunitCelltetrahedral(self):
+        self.innerRadius = 0.
+        self.outerRadius = 90.
+        self.filename[SYM_TETRAHEDRAL] = generate(SCIPION_SYM_NAME[SYM_TETRAHEDRAL],
+                                               'xmipp', XMIPP_SYM_NAME[SYM_TETRAHEDRAL])
+        self.box[SYM_TETRAHEDRAL] = (76, 127, 181)
+        self.extractunitCell(SYM_TETRAHEDRAL)
+
+    def test_extractunitCelloctahedral(self):
+        self.innerRadius = 0.
+        self.outerRadius = 90.
+        self.filename[SYM_OCTAHEDRAL] = generate(SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
+                                               'xmipp', XMIPP_SYM_NAME[SYM_OCTAHEDRAL])
+        self.box[SYM_OCTAHEDRAL] = (76, 127, 181)
+        self.extractunitCell(SYM_OCTAHEDRAL)
 
     def test_extractunitCellIco(self):
         self.innerRadius = 37.
         self.outerRadius = 79.
         self.filename[SYM_I222] = generate(SCIPION_SYM_NAME[SYM_I222] , 'xmipp', XMIPP_SYM_NAME[SYM_I222])
-        self.box[SYM_I222] = (93,91,53)
+        self.box[SYM_I222] = (85,86,52)
         self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r] , 'xmipp', XMIPP_SYM_NAME[SYM_I222r])
-        self.box[SYM_I222r] = (91,68,53)
+        self.box[SYM_I222r] = (86,57,52)
         self.filename[SYM_In25] = generate(SCIPION_SYM_NAME[SYM_In25], 'xmipp', XMIPP_SYM_NAME[SYM_In25])
-        self.box[SYM_In25] = (67,93,116)
+        self.box[SYM_In25] = (54,85,117)
         self.filename[SYM_In25r] = generate(SCIPION_SYM_NAME[SYM_In25r], 'xmipp', XMIPP_SYM_NAME[SYM_In25r])
-        self.box[SYM_In25r] = (67,68,54)
+        self.box[SYM_In25r] = (54,57,51)
 
         self.extractunitCell(SYM_I222)#no crowther 222
         self.extractunitCell(SYM_I222r)#crowther 222
