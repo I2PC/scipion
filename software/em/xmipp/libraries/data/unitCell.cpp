@@ -6,18 +6,41 @@
 #define sin60  0.8660254
 #define DEBUG
 #ifdef DEBUG
-#define scale 300//780-use to scale chimera bild files so they fit your actual 3Dmap
+#define scale 1.//780-use to scale chimera bild files so they fit your actual 3Dmap
 #endif
 
 void UnitCell::doCyclic(int order){ //check offset is in radians
-	Matrix1D<double> _centre, _1f, _1fp;
+	Matrix1D<double> _centre, _2f, _2fp;
 	_centre = vectorR3(0., 0., 0.);
-	_1f = vectorR3(cos(offset), sin(offset), 0.);
-	_1fp = vectorR3(cos(TWOPI / order + offset), sin(TWOPI / order + offset), 0.);
+	_2f = vectorR3(cos(offset), sin(offset), 0.) * rmax;
+	_2fp = vectorR3(cos(TWOPI / order + offset), sin(TWOPI / order + offset), 0.) * rmax;
 	_minZ = -rmax;
 	_maxZ = +rmax;
 
-	cyclicSymmetry(_centre, _1f, _1fp, order, expanded, offset);
+	cyclicSymmetry(_centre, _2f, _2fp, order, expanded, offset);
+}
+
+void UnitCell::doDihedral(int order){
+	Matrix1D<double> _centre, _2f, _2fp;
+	_centre = vectorR3(0., 0., 0.);
+	_2f = vectorR3(cos(offset), sin(offset), 0.) * rmax;
+	_2fp = vectorR3(cos(TWOPI / order + offset), sin(TWOPI / order + offset), 0.) * rmax;
+	_minZ = -rmax;
+	_maxZ = +rmax;
+
+	dihedralSymmetry(_centre, _2f, _2fp, order, expanded, offset);
+}
+
+void UnitCell::doTetrahedral(int symmetry){
+	Matrix1D<double> _centroid, _3f, _3fp, _3fpp;
+	_centroid = vectorR3(0., 0., 0.);
+	_3f = vectorR3(0., 0., 1.) * rmax;
+	_3fp = vectorR3(0., 0.94281,  -0.33333) * rmax;
+	_3fpp = vectorR3(0.81650,  -0.47140,  -0.33333) * rmax;
+	_minZ = -rmax;
+	_maxZ = +rmax;
+
+	tetrahedralSymmetry(_centroid, _3f, _3fp, _3fpp, expanded);
 }
 
 void UnitCell::doIcosahedral(int symmetry) {
@@ -61,8 +84,13 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 	this->expanded = expanded;
 	this->sampling = sampling;
 	SL.isSymmetryGroup(sym, symmetry, sym_order); //parse symmetry string
+        std::cerr << "symmetry: " << symmetry << std::endl;
 	if (symmetry == pg_CN)
 		doCyclic(sym_order);
+	else if (symmetry == pg_DN)
+		doDihedral(sym_order);
+	else if (symmetry == pg_T)
+		doTetrahedral();
 	else if (symmetry >= pg_I1 || symmetry <= pg_I4)
 		doIcosahedral(symmetry);
 
@@ -80,6 +108,19 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 					continue;
 				t = expandedUnitCell[i];
 				tt = expandedUnitCell[i] + planeVectors[i-1];
+			}else if (symmetry == pg_DN){
+				if (i == 0){
+					t = expandedUnitCell[i];
+					tt = expandedUnitCell[i] + planeVectors[expandedUnitCell.size()-1];
+				}else if (i != 0){
+					t = expandedUnitCell[i];
+					tt = expandedUnitCell[i] + planeVectors[i-1];
+				}
+			}else if (symmetry == pg_T){
+				if (i == (expandedUnitCell.size()-1)  )
+					continue;
+				t = expandedUnitCell[i];
+				tt = expandedUnitCell[i] + planeVectors[i];
 			}else if (symmetry >= pg_I1 || symmetry <= pg_I4){
 				t = expandedUnitCell[i];
 				tt = expandedUnitCell[i] + planeVectors[i];
@@ -93,66 +134,240 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 		testFile.close();
 	}
 #endif
+	std::cout << "UnitCellendDEBUG" << std::endl;
+
 }
 
 //FUNCTION cyclicSymmetry fill the variable planeVectors
 //(normal vectors to the flat faces of the cheese wedge that defines a unit cell)
 void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
-		const Matrix1D<double> & _1f,
-		const Matrix1D<double> & _1fp,
+		const Matrix1D<double> & _2f,
+		const Matrix1D<double> & _2fp,
 		int order,
 		double expanded,
 		double offset) {
-//The plane is defined by _centre_to_1f x _1f_to_1fp
-// where x is the vector product
-	Matrix1D<double> _centre_to_1f = _1f - _centre;
-	_centre_to_1f.selfNormalize();
-	Matrix1D<double> _1f_to_1fp = _1fp - _1f;
-	_1f_to_1fp.selfNormalize();
-//perpendicular vector  to the triangle face, oriented in the positive sense of z axis
-	Matrix1D<double> planeVector = vectorProduct(_centre_to_1f, _1f_to_1fp);
+    //The plane is defined by _centre_to_2f x _2f_to_2fp
+    // where x is the vector product
+	Matrix1D<double> _centre_to_2f = _2f - _centre;
+	Matrix1D<double> _centre_to_2fp = _2fp - _centre;
+	//_centre_to_2f.selfNormalize();
+	Matrix1D<double> _2f_to_2fp = _2fp - _2f;
+	_2f_to_2fp.selfNormalize();
+    //perpendicular vector  to the triangle face, oriented in the positive sense of z axis
+	Matrix1D<double> planeVector = vectorProduct(_centre_to_2f, _2f_to_2fp);
+	planeVector.selfNormalize();
 	std::cout << " order " <<  order << std::endl;
 	std::cout << " offset " <<  offset << std::endl;
 	std::cout << " expanded " <<  expanded << std::endl;
 	std::cout << " _centre " <<  _centre << std::endl;
-	std::cout << " _1f " <<  _1f << std::endl;
-	std::cout << " _1fp " <<  _1fp << std::endl;
-	std::cout << " _centre_to_1f " <<  _centre_to_1f << std::endl;
-	std::cout << " _1f_to_1fp " <<  _1f_to_1fp << std::endl;
+	std::cout << " _2f " <<  _2f << std::endl;
+	std::cout << " _2fp " <<  _2fp << std::endl;
+	std::cout << " _centre_to_2f " <<  _centre_to_2f << std::endl;
+	std::cout << " _2f_to_2fp " <<  _2f_to_2fp << std::endl;
 	std::cout << "planeVector " << planeVector << std::endl;
 //vectors perpendicular to the unit cell edges
 //the "positive version" are the same vectors
 //but pointing in a direction that makes
 //easier to know if a vector is enclosed by the polyhedron that defines the unit cell
-	Matrix1D<double> vp_0 = vectorProduct(_centre_to_1f, planeVector);
+	Matrix1D<double> vp_0 = vectorProduct(_centre_to_2f, planeVector);
 	std::cout << "vp_0 " << vp_0 << std::endl;
-	vp_0.selfNormalize();
+	////vp_0.selfNormalize();
 	std::cout << "vp_0_norm " << vp_0 << std::endl;
 	vectExpansion.push_back(expanded * vp_0);
 	std::cout << "vectExpansion_0 " << vectExpansion[0] << std::endl;
-	Matrix1D<double> vp_1 = vectorProduct(planeVector, _1fp);
+	Matrix1D<double> vp_1 = vectorProduct(planeVector, _centre_to_2fp);
 	std::cout << "vp_1 " << vp_1 << std::endl;
-	vp_1.selfNormalize();
+	////vp_1.selfNormalize();
 	std::cout << "vp_1_norm " << vp_1 << std::endl;
 	vectExpansion.push_back(expanded * vp_1);
 	std::cout << "vectExpansion_1 " << vectExpansion[1] << std::endl;
-	Matrix1D<double> d_1f  = (expanded / sin(TWOPI / order + offset) ) * (-1) * _1fp ;
-	Matrix1D<double> d_1fp = (expanded / sin(TWOPI / order + offset) ) * (-1) * _1f;
-//expandedUnitCell[0] = _centre + d_1f + d_1fp
-	expandedUnitCell.push_back(_centre + d_1f + d_1fp);
+	Matrix1D<double> d_2f  = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2fp ;
+	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2f;
+//expandedUnitCell[0] = _centre + d_2f + d_2fp
+	expandedUnitCell.push_back(_centre + d_2f + d_2fp);
 	std::cout << "expandedUnitCell_0 " << expandedUnitCell[0] << std::endl;
-//expandedUnitCell[1] = _1f + vectExpansion[0]
-	expandedUnitCell.push_back(_1f + vectExpansion[0]);
+//expandedUnitCell[1] = _2f + vectExpansion[0]
+	expandedUnitCell.push_back(_2f + vectExpansion[0]);
 	std::cout << "expandedUnitCell_1 " << expandedUnitCell[1] << std::endl;
-//expandedUnitCell[2] = _1fp + vectExpansion[1]
-	expandedUnitCell.push_back(_1fp + vectExpansion[1]);
+//expandedUnitCell[2] = _2fp + vectExpansion[1]
+	expandedUnitCell.push_back(_2fp + vectExpansion[1]);
 	std::cout << "expandedUnitCell_2 " << expandedUnitCell[2] << std::endl;
 //vectors normal to faces of the expanded polyhedra
-	planeVectors.push_back((-1) * vp_0 - expandedUnitCell[0]);
+	//planeVectors.push_back((-1) * vp_0 - expandedUnitCell[0]);
+	Matrix1D<double> new_centre_to_new_2f =  expandedUnitCell[1] - expandedUnitCell[0];
+	Matrix1D<double> new_centre_to_new_2fp =  expandedUnitCell[2] - expandedUnitCell[0];
+	planeVectors.push_back((-1) * vectorProduct(new_centre_to_new_2f, planeVector));
 	std::cout << "planeVectors_0 " << planeVectors[0] << std::endl;
-	planeVectors.push_back((-1) * vp_1 - expandedUnitCell[0]);
+	//planeVectors.push_back((-1) * vp_1 - expandedUnitCell[0]);
+	planeVectors.push_back((-1) * vectorProduct(planeVector, new_centre_to_new_2fp));
 	std::cout << "planeVectors_1 " << planeVectors[1] << std::endl;
 #include "chimeraTesterC.txt" //draws all vectors using chimera
+}
+
+//FUNCTION dihedralSymmetry fill the variable planeVectors
+//(normal vectors to the two flat faces of the cheese wedge that defines a unit cell)
+void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
+		const Matrix1D<double> & _2f,
+		const Matrix1D<double> & _2fp,
+		int order,
+		double expanded,
+		double offset) {
+//The plane is defined by _centre_to_2f x _2f_to_2fp
+// where x is the vector product
+	Matrix1D<double> _centre_to_2f = _2f - _centre;
+	Matrix1D<double> _centre_to_2fp = _2fp - _centre;
+	//_centre_to_2f.selfNormalize();
+	Matrix1D<double> _2f_to_2fp = _2fp - _2f;
+	_2f_to_2fp.selfNormalize();
+//perpendicular vector  to the triangle face, oriented in the positive sense of z axis
+	Matrix1D<double> planeVector = vectorProduct(_centre_to_2f, _2f_to_2fp);
+	planeVector.selfNormalize();
+	std::cout << " order " <<  order << std::endl;
+	std::cout << " offset " <<  offset << std::endl;
+	std::cout << " expanded " <<  expanded << std::endl;
+	std::cout << " _centre " <<  _centre << std::endl;
+	std::cout << " _2f " <<  _2f << std::endl;
+	std::cout << " _2fp " <<  _2fp << std::endl;
+	std::cout << " _centre_to_2f " <<  _centre_to_2f << std::endl;
+	std::cout << " _2f_to_2fp " <<  _2f_to_2fp << std::endl;
+	std::cout << "planeVector_up " << planeVector << std::endl;
+	Matrix1D<double> planeVector_down = (-1) * vectorProduct(_centre_to_2f, _2f_to_2fp);
+//vectors perpendicular to the unit cell edges
+//the "positive version" are the same vectors
+//but pointing in a direction that makes
+//easier to know if a vector is enclosed by the polyhedron that defines the unit cell
+	Matrix1D<double> vp_0 = vectorProduct(_centre_to_2f, planeVector);
+	std::cout << "vp_0 " << vp_0 << std::endl;
+	//vp_0.selfNormalize();
+	//std::cout << "vp_0_norm " << vp_0 << std::endl;
+	vectExpansion.push_back(expanded * vp_0);
+	std::cout << "vectExpansion_0 " << vectExpansion[0] << std::endl;
+	Matrix1D<double> vp_1 = vectorProduct(planeVector, _centre_to_2fp);
+	std::cout << "vp_1 " << vp_1 << std::endl;
+	//vp_1.selfNormalize();
+	//std::cout << "vp_1_norm " << vp_1 << std::endl;
+	vectExpansion.push_back(expanded * vp_1);
+	std::cout << "vectExpansion_1 " << vectExpansion[1] << std::endl;
+	Matrix1D<double> vp_2 = planeVector_down;
+	std::cout << "vp_2 " << vp_2 << std::endl;
+	//vp_2.selfNormalize();
+	//std::cout << "vp_2_norm " << vp_2 << std::endl;
+	vectExpansion.push_back(expanded * vp_2);
+	std::cout << "vectExpansion_2 " << vectExpansion[2] << std::endl;
+	Matrix1D<double> d_2f  = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2fp ;
+	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2f;
+//expandedUnitCell[0] = _centre + d_2f + d_2fp + vectExpansion_2
+	expandedUnitCell.push_back(_centre + d_2f + d_2fp + vectExpansion[2]);
+	std::cout << "expandedUnitCell_0 " << expandedUnitCell[0] << std::endl;
+//expandedUnitCell[1] = _2f + vectExpansion[0] + vectExpansion[2]
+	expandedUnitCell.push_back(_2f + vectExpansion[0] + vectExpansion[2]);
+	std::cout << "expandedUnitCell_1 " << expandedUnitCell[1] << std::endl;
+//expandedUnitCell[2] = _2fp + vectExpansion[1] + vectExpansion[2]
+	expandedUnitCell.push_back(_2fp + vectExpansion[1] + vectExpansion[2]);
+	std::cout << "expandedUnitCell_2 " << expandedUnitCell[2] << std::endl;
+//expandedUnitCell[0_z] = _centre_z + d_2f + d_2fp
+	//Matrix1D<double> _centre_z = vectorR3(0., 0., _maxZ);
+	//expandedUnitCell.push_back(_centre_z + d_2f + d_2fp);
+	//std::cout << "expandedUnitCell_3 " << expandedUnitCell[3] << std::endl;
+//expandedUnitCell[1_z] = _2f_z + vectExpansion[0]
+	//Matrix1D<double> _2f_z = vectorR3(cos(offset), sin(offset), _maxZ);
+	//expandedUnitCell.push_back(_2f_z + vectExpansion[0]);
+	//std::cout << "expandedUnitCell_4 " << expandedUnitCell[4] << std::endl;
+//expandedUnitCell[2_z] = _2fp_z + vectExpansion[1]
+	//Matrix1D<double> _2fp_z = vectorR3(cos(TWOPI / order + offset), sin(TWOPI / order + offset), _maxZ);
+	//expandedUnitCell.push_back(_2fp_z + vectExpansion[1]);
+	//std::cout << "expandedUnitCell_5 " << expandedUnitCell[5] << std::endl;
+//vectors normal to faces of the expanded polyhedra
+	//planeVectors.push_back((-1) * vp_0 - expandedUnitCell[0]);
+	//planeVectors.push_back((-1) * vp_0);
+	Matrix1D<double> new_centre_to_new_2f =  expandedUnitCell[1] - expandedUnitCell[0];
+	Matrix1D<double> new_centre_to_new_2fp =  expandedUnitCell[2] - expandedUnitCell[0];
+	planeVectors.push_back((-1) * vectorProduct(new_centre_to_new_2f, planeVector));
+	std::cout << "planeVectors_0 " << planeVectors[0] << std::endl;
+	//planeVectors.push_back((-1) * vp_1 - expandedUnitCell[0]);
+	//planeVectors.push_back((-1) * vp_1);
+	planeVectors.push_back((-1) * vectorProduct(planeVector, new_centre_to_new_2fp));
+	std::cout << "planeVectors_1 " << planeVectors[1] << std::endl;
+	//planeVectors.push_back((-1) * vp_2 - expandedUnitCell[0]);
+	//planeVectors.push_back((-1) * vp_2);
+	planeVectors.push_back(vectorProduct(new_centre_to_new_2f, new_centre_to_new_2fp));
+	std::cout << "planeVectors_2 " << planeVectors[2] << std::endl;
+#include "chimeraTesterD.txt" //draws all vectors using chimera
+}
+
+//FUNCTION tetrahedralSymmetry fill the variable planeVectors
+// (normal vectors to the polyhedron that define a unit cell)
+void UnitCell::tetrahedralSymmetry(const Matrix1D<double> & _centre,
+		const Matrix1D<double> & _3f, const Matrix1D<double> & _3fp,
+		const Matrix1D<double> & _3fpp, const double expanded) {
+//vectors that join a symmetry axis with the next only.
+//all the points defined by the vectors are in the same
+// plane
+//The plane is defined by _3f_to_3fp x _3f_to_3fpp
+// where x is the vector product
+	Matrix1D<double> _3f_to_3fp = _3fp - _3f;
+	//_3f_to_3fp.selfNormalize();
+	Matrix1D<double> _3f_to_3fpp = _3fpp - _3f;
+	//_3f_to_3fpp.selfNormalize();
+
+// vector perpendicular to the triangle face.
+	Matrix1D<double> planeVector = vectorProduct(_3f_to_3fpp, _3f_to_3fp);
+	planeVector.selfNormalize();
+	std::cout << " expanded " <<  expanded << std::endl;
+	std::cout << " _3f " <<  _3f << std::endl;
+	std::cout << " _3fp " <<  _3fp << std::endl;
+	std::cout << " _3fpp " <<  _3fpp << std::endl;
+	std::cout << " _3f_to_3fp " <<  _3f_to_3fp << std::endl;
+	std::cout << " _3f_to_3fpp " <<  _3f_to_3fpp << std::endl;
+	std::cout << "planeVector " << planeVector << std::endl;
+//vectors perpendicular to the unit cell edges
+//the "positive version" are the same vectors
+//but pointing in a direction that makes
+//easier to know if a vector is enclosed by the polyhedron that defines the unit cell
+	Matrix1D<double>vectorPlane_0 = vectorProduct(_3f, _3fp);
+	vectorPlane_0.selfNormalize();
+	vectExpansion.push_back(expanded * vectorPlane_0);
+	Matrix1D<double>vectorPlane_1 = vectorProduct(_3fp, _3fpp);
+	vectorPlane_1.selfNormalize();
+	vectExpansion.push_back(expanded * vectorPlane_1);
+	Matrix1D<double>vectorPlane_2 = vectorProduct(_3fpp, _3f);
+	vectorPlane_2.selfNormalize();
+	vectExpansion.push_back(expanded * vectorPlane_2);
+	std::cout << "vectExpansion_0 " <<  vectExpansion[0] << std::endl;
+	std::cout << "vectExpansion_1 " <<  vectExpansion[1] << std::endl;
+	std::cout << "vectExpansion_2 " <<  vectExpansion[2] << std::endl;
+//vertex for an expanded unitCell
+//expandedUnitCell[0] = _3f + vectExpansion[0] + vectExpansion[0] + vectExpansion[2]
+	expandedUnitCell.push_back(_3f + vectExpansion[0] + vectExpansion[2]);
+	std::cout << "expandedUnitCell_0 " <<  expandedUnitCell[0] << std::endl;
+//expandedUnitCell[1] = _3fp + vectExpansion[0] + vectExpansion[1]
+	expandedUnitCell.push_back(_3fp + vectExpansion[0] + vectExpansion[1]);
+	std::cout << "expandedUnitCell_1 " <<  expandedUnitCell[1] << std::endl;
+//expandedUnitCell[2] = _3fpp + vectExpansion[1] + vectExpansion[2]
+	expandedUnitCell.push_back(_3fpp + vectExpansion[1] + vectExpansion[2]);
+	std::cout << "expandedUnitCell_2 " <<  expandedUnitCell[2] << std::endl;
+//expandedUnitCell[3] = intersection of the three planes (computation of coordinates)
+	double x;
+	x = expandedUnitCell[0](0);
+	double y;
+	y = expandedUnitCell[2](1) - (vectExpansion[2](0)/vectExpansion[2](1))*(x - expandedUnitCell[2](0));
+	double z;
+	z = expandedUnitCell[1](2) - (vectExpansion[1](1)/vectExpansion[1](2))*(y - expandedUnitCell[1](1));
+	expandedUnitCell.push_back(_centre + vectorR3(x, y, z));
+	std::cout << "expandedUnitCell_3 " <<  expandedUnitCell[3] << std::endl;
+
+//vectors normal to faces of the expanded polyhedra
+	Matrix1D<double> new_centre_to_new_3f =  expandedUnitCell[0] - expandedUnitCell[3];
+	Matrix1D<double> new_centre_to_new_3fp =  expandedUnitCell[1] - expandedUnitCell[3];
+	Matrix1D<double> new_centre_to_new_3fpp =  expandedUnitCell[2] - expandedUnitCell[3];
+	planeVectors.push_back((-1) * vectorProduct(new_centre_to_new_3f, new_centre_to_new_3fp));
+	planeVectors.push_back((-1) * vectorProduct(new_centre_to_new_3fpp, new_centre_to_new_3fp));
+	planeVectors.push_back((-1) * vectorProduct(new_centre_to_new_3fpp, new_centre_to_new_3f));
+	for (int i = 0; i < 3; i++) {
+		std::cout << "planeVectors " << planeVectors[i] << std::endl;
+	}
+#include "chimeraTesterT.txt" //draws all vectors using chimera
+
 }
 
 //FUNCTION icoSymmetry fill the variable planeVectors
@@ -169,15 +384,24 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 //The plane is defined by _5f_to_2f x _2f_to_5f
 // where x is the vector product
 	Matrix1D<double> _5f_to_2f = _2f - _5f;
-	_5f_to_2f.selfNormalize();
+	//_5f_to_2f.selfNormalize();
 	Matrix1D<double> _2f_to_3f = _3f - _2f;
-	_2f_to_3f.selfNormalize();
+	//_2f_to_3f.selfNormalize();
 	Matrix1D<double> _3f_to_2fp = _2fp - _3f;
-	_3f_to_2fp.selfNormalize();
+	//_3f_to_2fp.selfNormalize();
 	Matrix1D<double> _2fp_to_5f = _5f - _2fp;
-	_2fp_to_5f.selfNormalize();
+	//_2fp_to_5f.selfNormalize();
 // vector perpendicular to the triangle face.
 	Matrix1D<double> planeVector = vectorProduct(_5f_to_2f, _2fp_to_5f);
+	planeVector.selfNormalize();
+	std::cout << " expanded " <<  expanded << std::endl;
+	std::cout << " _5f " <<  _5f << std::endl;
+	std::cout << " _5fp " <<  _5fp << std::endl;
+	std::cout << " _5fpp " <<  _5fpp << std::endl;
+	std::cout << " _2f " <<  _2f << std::endl;
+	std::cout << " _2fp " <<  _2fp << std::endl;
+	std::cout << " _3f " <<  _3f << std::endl;
+	std::cout << "planeVector " << planeVector << std::endl;
 //vectors perpendicular to the unit cell edges
 //the "positive version" are the same vectors
 //but pointing in a direction that makes
@@ -186,6 +410,10 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 	vectExpansion.push_back(expanded * vectorProduct(planeVector, _2f_to_3f));
 	vectExpansion.push_back(expanded * vectorProduct(planeVector, _3f_to_2fp));
 	vectExpansion.push_back(expanded * vectorProduct(planeVector, _2fp_to_5f));
+	std::cout << "vectExpansion_0 " <<  vectExpansion[0] << std::endl;
+	std::cout << "vectExpansion_1 " <<  vectExpansion[1] << std::endl;
+	std::cout << "vectExpansion_2 " <<  vectExpansion[2] << std::endl;
+	std::cout << "vectExpansion_3 " <<  vectExpansion[3] << std::endl;
 //vertex for an expanded unitCell
 //60 is the angle between _5f_to_2f and _2fp_to_5f
 // sin60 * expanded ==  vectExpansion[0].module()
@@ -213,25 +441,19 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 //expandedUnitCell[3] =_2fp + vectExpansion[2] + vectExpansion[3]);
 	expandedUnitCell.push_back(_2fp + vectExpansion[2] + vectExpansion[3]);
 
+	std::cout << "expandedUnitCell_0 " <<  expandedUnitCell[0] << std::endl;
+	std::cout << "expandedUnitCell_1 " <<  expandedUnitCell[1] << std::endl;
+	std::cout << "expandedUnitCell_2 " <<  expandedUnitCell[2] << std::endl;
+	std::cout << "expandedUnitCell_3 " <<  expandedUnitCell[3] << std::endl;
+
 //vectors normal to faces of the expanded polyhedra
-	//for (int i = 0; i < 4; i++) {
-		//planeVectors.push_back(
-				//vectorProduct(expandedUnitCell[i],
-						//expandedUnitCell[(i + 1) % 4]));
-		//std::cout << "planeVectors " << planeVectors[i] << std::endl;
-
-	planeVectors.push_back(vectorProduct(expandedUnitCell[0], expandedUnitCell[1]));
-	std::cout << "planeVectors_0 " << planeVectors[0] << std::endl;
-	planeVectors.push_back(vectorProduct(expandedUnitCell[1], expandedUnitCell[2]));
-	std::cout << "planeVectors_1 " << planeVectors[1] << std::endl;
-	planeVectors.push_back(vectorProduct(expandedUnitCell[2], expandedUnitCell[3]));
-	std::cout << "planeVectors_2 " << planeVectors[2] << std::endl;
-	planeVectors.push_back(vectorProduct(expandedUnitCell[3], expandedUnitCell[0]));
-	std::cout << "planeVectors_3 " << planeVectors[3] << std::endl;
-
-	//}
+	for (int i = 0; i < 4; i++) {
+		planeVectors.push_back(
+				vectorProduct(expandedUnitCell[i],
+						expandedUnitCell[(i + 1) % 4]));
+		std::cout << "planeVectors " << planeVectors[i] << std::endl;
+	}
 #include "chimeraTesterI2.txt" //draws all vectors using chimera
-
 
 }void UnitCell::maskUnitCell(ImageGeneric & in3Dmap, ImageGeneric & out3DDmap) {
 	//1) get dimensions
@@ -270,14 +492,20 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 
 		std::cout << "rmax " << rmax << std::endl;
 		std::cout << "rmin " << rmin << std::endl;
+		double m;
 
 		Matrix1D<double> minVector, maxVector;
 		for (std::vector<Matrix1D<double> >::iterator it =
 				expandedUnitCell.begin(); it != expandedUnitCell.end(); ++it) {
-			(*it).selfNormalize();
-			minVector = (*it) * rmin;
-			maxVector = (*it) * std::min(rmax, (double) xDim / 2.);
-
+			m = (*it).module();
+			if (symmetry == pg_CN || symmetry == pg_DN || symmetry == pg_T){
+				minVector = (*it) ;
+				maxVector = (*it);
+			} else if (symmetry >= pg_I1 || symmetry <= pg_I4){
+				(*it).selfNormalize();
+				minVector = (*it) * rmin;
+				maxVector = (*it) * std::min(rmax, (double) xDim / 2.);
+			}
 			expandedUnitCellMin.push_back(minVector);
 			expandedUnitCellMax.push_back(maxVector);
 
@@ -340,18 +568,23 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 					<< " " << tt(0) << " " << tt(1) << " " << tt(2) << " " << th
 					<< "\n";
 			for (int i = 0; i < (expandedUnitCell.size() - 1); i++) {
+				if (symmetry == pg_DN)
+					continue;
 				t = expandedUnitCellMin[i];
 				tt = expandedUnitCellMin[i + 1];
 				testFile << ".cylinder " << t(0) << " " << t(1) << " " << t(2)
 						<< " " << tt(0) << " " << tt(1) << " " << tt(2) << " "
 						<< th << "\n";
 			}
+			if (symmetry != pg_DN)
+			{
 			t = expandedUnitCellMin[expandedUnitCell.size() - 1];
 			tt = expandedUnitCellMin[0];
 			testFile << ".cylinder " << t(0) << " " << t(1) << " " << t(2)
 					<< " " << tt(0) << " " << tt(1) << " " << tt(2) << " " << th
 					<< "\n";
 			testFile.close();
+			}
 			//draw box
 			testFile.open("ico3.bild");
 			t = vectorR3(minX, minY, minZ);
@@ -556,7 +789,7 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 						for (std::vector<Matrix1D<double> >::iterator it1 =
 								planeVectors.begin(); it1 != planeVectors.end();
 								++it1) {
-							ii =
+
 							dotproduct = dotProduct(*it1,
 									vectorR3(
 											 ((double) j) - expandedUnitCell[0](0),
@@ -564,6 +797,9 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _5f,
 											 ((double) k) - expandedUnitCell[0](2)
 											)
 										);
+							 if (i==0 && j==0 && k==00)
+								 std::cout << "dotproduct" << dotproduct << " " <<  planeVectors.size() << std::endl;
+
 							//std::cout << "i " << i << std::endl;
 							//std::cout << "j " << j << std::endl;
 							//std::cout << "k " << k << std::endl;
