@@ -108,17 +108,10 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
 
         self.runJob(program, args)
 
-    def createOutputStep(self):
-        coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-        coordSet.setBoxSize(self.diameter.get())
-        self._defineOutputs(outputCoordinates=coordSet)
-        self._defineSourceRelation(self.inputMicrographs, coordSet)
-
-    
     #--------------------------- UTILS functions -------------------------------
-    def readSetOfCoordinates(self, workingDir, coordSet):
-        readSetOfCoordinates(workingDir, self.inputMicrographs.get(), coordSet)
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        coordSet.setBoxSize(self.diameter.get())
+        readSetOfCoordinates(workingDir, micList, coordSet)
 
     def _summary(self):
         summary = []
