@@ -93,14 +93,6 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         params = ('--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s'
                   % (self.boxSize, micFile))
         self.runJob('e2boxer.py', params, cwd=self.getCoordsDir())
-        
-    def createOutputStep(self):
-        pass
-        # coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        # self.readSetOfCoordinates(self.workingDir.get(), coordSet)
-        # coordSet.setBoxSize(self.boxSize.get())
-        # self._defineOutputs(outputCoordinates=coordSet)
-        # self._defineSourceRelation(self.inputMicrographs, coordSet)
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -117,4 +109,5 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
                 ProtParticlePickingAuto.getFiles(self))
 
     def readCoordsFromMics(self, workingDir, micList, coordSet):
+        coordSet.setBoxSize(self.boxSize.get())
         readSetOfCoordinates(workingDir, micList, coordSet)

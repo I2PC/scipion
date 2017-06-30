@@ -182,7 +182,7 @@ class ProtEthanPicker(ProtParticlePickingAuto):
         return [self.radius.get()]
     
     def readCoordsFromMics(self, workingDir, micList, coordSet):
-
+        coordSet.setBoxSize(self.radius.get() * 2)
         for mic in micList:
             micFn = mic.getFileName()
             micDir = self._getMicDir(micFn)
