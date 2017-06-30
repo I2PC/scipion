@@ -27,7 +27,7 @@
 from pyworkflow import VERSION_1_2
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.protocol.params import  PointerParam, FloatParam, EnumParam, IntParam
-from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, SYM_CYCLIC
+from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em import Volume, Transform
@@ -55,6 +55,12 @@ class XmippProtExtractUnit(EMProtocol):
                       help='This volume will be cropped')
         form.addParam('symmetryGroup', EnumParam, choices=[XMIPP_SYM_NAME[SYM_CYCLIC] +
                                                            " (" + SCIPION_SYM_NAME[SYM_CYCLIC] + ")",
+                                                           XMIPP_SYM_NAME[SYM_DIHEDRAL] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_DIHEDRAL] + ")",
+                                                           XMIPP_SYM_NAME[SYM_TETRAHEDRAL] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_TETRAHEDRAL] + ")",
+                                                           XMIPP_SYM_NAME[SYM_OCTAHEDRAL] +
+                                                           " (" + SCIPION_SYM_NAME[SYM_OCTAHEDRAL] + ")",
                                                            XMIPP_SYM_NAME[SYM_I222] +
                                                            " (" + SCIPION_SYM_NAME[SYM_I222] + ")",
                                                            XMIPP_SYM_NAME[SYM_I222r] +
@@ -71,11 +77,11 @@ class XmippProtExtractUnit(EMProtocol):
                            "If no symmetry is present, use _c1_."
                       )
         form.addParam('symmetryOrder', IntParam, default=1,
-                      condition='symmetryGroup==%d' % SYM_CYCLIC ,
+                      condition='symmetryGroup==%d or %d' % (SYM_CYCLIC, SYM_DIHEDRAL) ,
                       label='Symmetry Order',
                       help='Order of cyclic symmetry.')
         form.addParam('offset', FloatParam, default=0.,
-                      condition='symmetryGroup==%d' % SYM_CYCLIC ,
+                      condition='symmetryGroup==%d or %d' % (SYM_CYCLIC, SYM_DIHEDRAL) ,
                       label="offset", help="rotate unit cell around z-axis by offset degrees")
 
 #form.addParam('symmetry', TextParam, default='C1',
@@ -111,6 +117,12 @@ class XmippProtExtractUnit(EMProtocol):
         sym = self.symmetryGroup.get()
         if sym == SYM_CYCLIC:
             sym = "%s%d"%(XMIPP_SYM_NAME[SYM_CYCLIC][:1],self.symmetryOrder)
+        elif sym == SYM_DIHEDRAL:
+            sym = "%s%d"%(XMIPP_SYM_NAME[SYM_DIHEDRAL][:1],self.symmetryOrder)
+        elif sym == SYM_TETRAHEDRAL:
+            sym = "%s" % (XMIPP_SYM_NAME[SYM_TETRAHEDRAL])
+        elif sym == SYM_OCTAHEDRAL:
+            sym = "%s" % (XMIPP_SYM_NAME[SYM_OCTAHEDRAL])
         elif sym >= SYM_I222 and sym <= SYM_In25r:
             sym = XMIPP_SYM_NAME[self.symmetryGroup.get()]
         args = "-i %s -o %s" % (self.inputVolumes.get().getFileName(), self._getOutputVol())
