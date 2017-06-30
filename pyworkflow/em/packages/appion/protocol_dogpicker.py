@@ -149,3 +149,6 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
+    
+    def getCoordsDir(self):
+        return self._getExtraPath()
