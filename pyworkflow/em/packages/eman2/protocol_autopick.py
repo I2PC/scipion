@@ -86,13 +86,13 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         params += 'thr_hi=%(higherThreshold)s:boxsize=%(boxSize)s:'
         params += 'gauss_width=%(gaussWidth)s:%(extraParams)s'
 
-        self.runJob('sxprocess.py', params % args, cwd=self.getWorkingDir())
+        self.runJob('sxprocess.py', params % args, cwd=self.getCoordsDir())
 
     def _pickMicrograph(self, mic, *args):
-        micFile = os.path.relpath(mic.getFileName(), self.workingDir.get())
+        micFile = os.path.relpath(mic.getFileName(), self.getCoordsDir())
         params = ('--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s'
                   % (self.boxSize, micFile))
-        self.runJob('e2boxer.py', params, cwd=self.getWorkingDir()) 
+        self.runJob('e2boxer.py', params, cwd=self.getCoordsDir())
         
     def createOutputStep(self):
         pass
@@ -109,9 +109,12 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         return errors
 
     #--------------------------- UTILS functions -------------------------------
+    def getCoordsDir(self):
+        return self._getExtraPath()
+
     def getFiles(self):
         return (self.inputMicrographs.get().getFiles() |
                 ProtParticlePickingAuto.getFiles(self))
 
-    def readCoordsFromMics(self,workingDir, micList, coordSet):
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
         readSetOfCoordinates(workingDir, micList, coordSet)
