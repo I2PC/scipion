@@ -462,6 +462,7 @@ class TestEstimateGain(BaseTest):
         protGain = self.newProtocol(XmippProtMovieGain,
                                     objLabel='estimate gain')
         protGain.inputMovies.set(self.protImport.outputMovies)
+        protGain.useExistingGainImage.set(False)
         self.launchProtocol(protGain)
 
 

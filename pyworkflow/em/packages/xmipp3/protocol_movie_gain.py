@@ -69,7 +69,7 @@ class XmippProtMovieGain(ProtProcessMovies):
                            'compute the movie gain. If you set '
                            'this parameter to 2, 3, ..., then every 2nd, 3rd, '
                            '... movie will be used.')
-        form.addParam('useExistingGainImage', BooleanParam, default=True,
+        form.addParam('useExistingGainImage', BooleanParam, default=None,
                       label="Use existing gain image", expertLevel=LEVEL_ADVANCED,
                       help='By default, we do not estimate gain image if there '
                            'is an existing gain image from input movies '
