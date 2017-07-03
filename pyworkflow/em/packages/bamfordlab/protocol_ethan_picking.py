@@ -118,7 +118,10 @@ class ProtEthanPicker(ProtParticlePickingAuto):
 
         # Clean temporary micrograph
         pwutils.cleanPath(fnMicFull)
-
+    
+    def createOutputStep(self):
+        pass
+    
     # --------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
