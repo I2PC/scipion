@@ -800,12 +800,12 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 					SPEED_UP_temps012;
 					M3x3_BY_V3x1(freq, *A_SL, freq);
 
-//			std::cout << "pred " << freq[0]
-//					<< " "
-//					<< freq[1]
-//					<< " "
-//					<< freq[2]
-//					<< std::endl;
+			std::cout << "pred " << freq[0]
+					<< " "
+					<< freq[1]
+					<< " "
+					<< freq[2]
+					<< std::endl;
 
 					// Look for the corresponding index in the volume Fourier transform
 					DIGFREQ2FFT_IDX_DOUBLE(freq[0], parent->volPadSizeX,
@@ -977,16 +977,24 @@ BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl
 }
 
 template <typename T>
-inline bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
+bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
 //	x = fmod((offsetX + fmod(x, offsetX)), offsetX); // cycle X axis // FIXME optimize
-	if (x > (float)offsetX) {
+	if (x > (float)(offsetX-1)) {
 		x -= (float)offsetX;
 	}
+
+    if ((x < 0.0f) && (y < 0.0f)) {
+        x = -x;
+        y = -y;
+    }
+
 	if (x < 0.f) {
-		x += (float)offsetX;
+		//x += (float)offsetX;
+        x = -x;
+        y = offsetY-1 - y;
 	}
 //	y = fmod((offsetY + fmod(y, offsetY)), offsetY); // cycle Y axis // FIXME optimize
-	if (y > (float)offsetY) {
+	if (y > (float)(offsetY-1)) {
 		y -= (float)offsetY;
 	}
 	if (y < 0.f) {
@@ -1036,7 +1044,7 @@ getPixelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY, 
 }
 
 template <typename T>
-inline std::complex<T>
+std::complex<T>
 getVoxelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY,
 		float x, float y, float z,
 		blobtype blob, T& weight,
@@ -1048,7 +1056,7 @@ getVoxelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY,
 			k, l, m, blobTableSqrt, iDeltaSqrt);
 }
 
-inline std::complex<float>
+std::complex<float>
 getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 		float x, float y, float z,
 		float blobRadius, float& weight,
@@ -1056,6 +1064,12 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 		float k, float l, float m,
 		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt)
 {
+    bool dumpujeme = false;
+    //std::cout << "YYY " << k << " " << l << " " << m << std::endl;
+    if ((fabsf(k-0.0f) < 0.00005) && (fabsf(l-0.0f) < 0.00005) && (fabsf(m-0.0f) < 0.00005)) {
+        std::cout << "XXX dumpujeme\n";
+        dumpujeme = true;
+    }
 	weight = 0.;
 	float radiusSqr = blobRadius * blobRadius;
 	std::complex<float> result = (0, 0);
@@ -1085,15 +1099,18 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 			float tmpWeight = blobTableSqrt[aux];
 
 //			T tmpWeight = blob_val(std::sqrt(distanceSqr), blob);
-			bool conjugate = pad(64, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
+			bool conjugate = pad(65, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
 			float conj = conjugate ? -1. : 1.;
-			if (tmpX >= 64 || tmpX <0 || tmpY >=128 || tmpY<0 ) {
+			if (tmpX >= 65 || tmpX <0 || tmpY >=127 || tmpY<0 ) {
 //				std::cout << "OoB"; // FIXME reading garbage
 			}
 			std::complex<float> pixVal = img[tmpY][tmpX];
 			result.real() += tmpWeight * pixVal.real();
 			result.imag() += tmpWeight * conj * pixVal.imag();
 			weight += tmpWeight;
+            if (dumpujeme) {
+                std::cout << "XXX " << j << " " << i << ", " << tmpX << " " << tmpY << ", " << pixVal << " " << tmpWeight << std::endl;
+            }
 
 
 //			float dest[3];
@@ -1406,20 +1423,20 @@ void druhyPokus(std::complex<float>*** outputVolume,
 //															<< z
 //															<< std::endl;
 
-					//									std::cout << k
-					//											<< " "
-					//											<< l
-					//											<< " "
-					//											<< m
-					//											<< " -> "
-					//											<< img_pos[0]
-					//											<< " "
-					//											<< img_pos[1]
-					//											<< " "
-					//											<< 1.0
+														std::cout << x
+																<< " "
+    															<< y
+																<< " "
+																<< z
+																<< " -> "
+																<< img_pos[0]
+																<< " "
+																<< img_pos[1]
+																<< " "
+																<< img_pos[2]
 					//											<< " "
 					//											<< (conjugate ? "conjugate" : "no_conjugate")
-					//											<< std::endl;
+																<< std::endl;
 
 						float weight;
 
@@ -1430,6 +1447,8 @@ void druhyPokus(std::complex<float>*** outputVolume,
 								img_pos[2], blobRadius, weight, paddedVolumeSize,
 								paddedVolumeSize, maxResolutionSqr, x, y, z,
 								blobTableSqrt, iDeltaSqrt);
+                        if ((m == l == 64) && (k == 63)) std::cout << "YYY " << val << " " << weight << " " << outputVolume[m][l][k] << std::endl;
+                        //if (val.imag() < 100.0) std::cout << "XXX " << m << " " << l << " " << k << std::endl;
 
 						outputWeight[m][l][k] += weight;
 						outputVolume[m][l][k] += val;
@@ -1609,6 +1628,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                 }
 
 
+                std::cout << "Image dimmensions: " << paddedFourier->xdim << " " << paddedFourier->ydim << std::cout;
+
+
 //                std::cout<< "symmetries: " << SSTR(R_repository.size()) << std::endl;
 
 
@@ -1624,9 +1646,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
  ////////////////////////////////////////////////
 
-//                    if (isym > 0 || current_index > 0) {
-//                    	continue;
-//                    }
+                    if (isym > 0 || current_index > 0) {
+                    	continue;
+                    }
 
 //////////////////////////////////////////////////
 
@@ -1681,7 +1703,8 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 								   outputVolume[i][j] = new std::complex<float>[size];
 								   outputWeight[i][j] = new float[size];
 								   for(int k = 0; k<size;k++){
-									  outputVolume[i][j][k] = 0;
+									  outputVolume[i][j][k].real() = 0.0f;
+                                      outputVolume[i][j][k].imag() = 0.0f;
 									  outputWeight[i][j][k] = 0;
 								   }
 							   }
@@ -1814,10 +1837,10 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
 
 //                    // Awaking sleeping threads
-//                    barrier_wait( &barrier );
+                    barrier_wait( &barrier );
 //                    // Threads are working now, wait for them to finish
 //                    // processing current projection
-//                    barrier_wait( &barrier );
+                    barrier_wait( &barrier );
 
 //                    print(VoutFourier);
 
@@ -1908,6 +1931,12 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 				val.real() = outputVolume[m][l][k].real();
 				val.imag() = outputVolume[m][l][k].imag();
 
+                if ((int)tmp[0] == 1 && (int)tmp[1] == 0 && (int)tmp[2] == 0) {
+                    std::cout << "XXX going to 1 0 0 from " << m << ", " << l << ", " << k << std::endl;
+                    std::cout << "XXX " << DIRECT_A3D_ELEM(VoutFourier_muj, (int)tmp[2], (int)tmp[1], (int)tmp[0]) << " += " << val << std::endl;
+                }
+
+
 				DIRECT_A3D_ELEM(VoutFourier_muj, (int)tmp[2], (int)tmp[1], (int)tmp[0]) += val;
 				DIRECT_A3D_ELEM(FourierWrights_moje,(int)tmp[2], (int)tmp[1], (int)tmp[0]) += outputWeight[m][l][k];
 			}
@@ -1915,8 +1944,8 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 		}
    }
 
-//    print(VoutFourier, true);
-//    print(VoutFourier_muj, true);
+    print(VoutFourier, true);
+    print(VoutFourier_muj, true);
     VoutFourier = VoutFourier_muj;
     FourierWeights = FourierWrights_moje;
 
