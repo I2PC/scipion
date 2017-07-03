@@ -1085,9 +1085,9 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 			float tmpWeight = blobTableSqrt[aux];
 
 //			T tmpWeight = blob_val(std::sqrt(distanceSqr), blob);
-			bool conjugate = pad(65, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
+			bool conjugate = pad(64, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
 			float conj = conjugate ? -1. : 1.;
-			if (tmpX >= 65 || tmpX <0 || tmpY >=130 || tmpY<0 ) {
+			if (tmpX >= 64 || tmpX <0 || tmpY >=128 || tmpY<0 ) {
 //				std::cout << "OoB"; // FIXME reading garbage
 			}
 			std::complex<float> pixVal = img[tmpY][tmpX];
@@ -1360,8 +1360,8 @@ void druhyPokus(std::complex<float>*** outputVolume,
 	maxX = ceil((AABB[1].x + upperIndex) * paddedVolumeSize);
     minX = std::max(0, minX);
     minY = std::max(0, minY);
-    maxX = std::min((int)paddedVolumeSize-1, maxX);
-    maxY = std::min((int)paddedVolumeSize-1, maxY);
+    maxX = std::min((int)size-1, maxX);
+    maxY = std::min((int)size-1, maxY);
     
 
 //	for (int m = 0; m < size; m++ ) {
@@ -1377,7 +1377,7 @@ void druhyPokus(std::complex<float>*** outputVolume,
 					float mLower = (std::min(z1, z2) + upperIndex) * paddedVolumeSize ;
                     mLower = std::max(0.0f, mLower);
 					float mUpper = (std::max(z1, z2) + upperIndex) * paddedVolumeSize ;
-                    mUpper = std::min(127.0f, mUpper); //FIXME hardcoded value
+                    mUpper = std::min((float)(size-1), mUpper); //FIXME hardcoded value
 //					float tmp = std::pow(ceil(blobRadius), 1/3.)( *  / (float)paddedVolumeSize;
 					for (int m = floor(mLower); m <= ceil(mUpper); m++) {
 						float z = m*step - upperIndex;
