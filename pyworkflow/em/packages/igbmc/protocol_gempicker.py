@@ -55,12 +55,12 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
     processors (GPUs).
     """
     _label = 'auto-picking'
-        
+    
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         
         em.ProtParticlePickingAuto._defineParams(self, form)
-        form.addParam('inputReferences', params.PointerParam, 
+        form.addParam('inputReferences', params.PointerParam,
                       pointerClass='SetOfAverages',
                       label='Input References', important=True,
                       help="Template images (2D class averages or reprojections "
@@ -83,7 +83,7 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
                       label='Low')
         line.addParam('thresholdHigh', params.FloatParam, default=0.5,
                       label='High')
-
+        
         form.addParam('maxPeaks', params.IntParam, default=0,
                       label='Max particles per micrograph',
                       expertLevel=LEVEL_ADVANCED,
@@ -101,11 +101,11 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
                       label='Min distance from micrograph border (pix)',
                       expertLevel=LEVEL_ADVANCED,
                       help="Minimal distance between box edge and "
-                           "micrograph border")                           
-        form.addParam('maskType', params.EnumParam, 
-                      choices=['circular', 'object'], default=0, 
+                           "micrograph border")
+        form.addParam('maskType', params.EnumParam,
+                      choices=['circular', 'object'], default=0,
                       display=params.EnumParam.DISPLAY_HLIST,
-                      label='Mask type', 
+                      label='Mask type',
                       help='Select which type of mask do you want to apply. '
                            'Only the pixels beneath this mask will be analyzed. '
                            'In the simplest case, a circular mask can be used. '
@@ -114,22 +114,22 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
                            '(but not too tightly).')
         form.addParam('maskRadius', params.IntParam, default=-1,
                       condition='maskType==%d' % MASK_CIRCULAR,
-                      label='Mask radius (px)', 
+                      label='Mask radius (px)',
                       help='If -1, the entire image (in pixels) will be '
                            'considered.')
         form.addParam('inputMasks', params.MultiPointerParam,
                       pointerClass='Mask',
-                      condition='maskType==%d' % MASK_OBJECT, 
-                      label="Mask objects", 
+                      condition='maskType==%d' % MASK_OBJECT,
+                      label="Mask objects",
                       help="Select a mask file")
         form.addParam('useGPU', params.BooleanParam, default=True,
                       label='Use GPU',
                       help='Set to Yes to use GPU as well as CPU')
         form.addParam('numberOfGPUs', params.IntParam, default=1,
                       label='GPUs per process', condition='useGPU',
-                      help='Select number of GPUs per process')               
+                      help='Select number of GPUs per process')
         form.addParallelSection(threads=1, mpi=0)
-        
+    
     #--------------------------- INSERT steps functions ------------------------
     def _insertInitialSteps(self):
         convId = self._insertFunctionStep('convertInputStep',
@@ -152,9 +152,9 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
     #                                           prerequisites=[convId])
     #         deps.append(pickId)
     #     self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
+    
     #--------------------------- STEPS functions -------------------------------
-
+    
     def convertInputStep(self, micsId, refsId):
         """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted
@@ -164,11 +164,18 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
         """
         
         self.convertInputs(self._getExtraPath())
-
-    def runGempickerStep(self, micName, args):
-        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args,
+    
+    def _pickMicrograph(self, mic, *args):
+        print "args: ", args[0]
+        micName = mic.getFileName()
+        runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args[0],
                      log=self._log)
-
+    
+    def runGempickerStep(self, micName, args):
+        pass
+    
+    
+    
     # def createOutputStep(self):
     #     micSet = self.getInputMicrographs()
     #     coordSet = self._createSetOfCoordinates(micSet)
@@ -180,7 +187,7 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
     #     self.readSetOfCoordinates(self._getExtraPath(), coordSet)
     #     self._defineOutputs(outputCoordinates=coordSet)
     #     self._defineSourceRelation(micSet, coordSet)
-
+    
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
@@ -202,18 +209,18 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
                 errors.append('If the number of input masks is greater than '
                               'one, it should be equal to the number of '
                               'references.')
-
+        
         value1 = round(self.thresholdLow,1)
         value2 = round(self.thresholdHigh,1)
         
-        if (self.thresholdLow < self.thresholdHigh and 
+        if (self.thresholdLow < self.thresholdHigh and
                         0.0 <= value1 <= 1.0 and 0.0 <= value2 <= 1.0):
             pass
         else:
             errors.append('Wrong threshold values!')
-
-        return errors
         
+        return errors
+    
     def _summary(self):
         summary = []
         summary.append("Number of input micrographs: %d"
@@ -228,35 +235,35 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
         else:
             summary.append(Message.TEXT_NO_OUTPUT_CO)
         return summary
-
+    
     def _methods(self):
         methodsMsgs = []
         if self.getInputMicrographs() is None:
             return ['Input micrographs not available yet.']
         methodsMsgs.append("Input micrographs %s."
                            % (self.getObjectTag(self.getInputMicrographs())))
-
+        
         if self.getOutputsSize() > 0:
             output = self.getCoords()
             methodsMsgs.append("%s: User picked %d particles with a particle size of %d px and threshold range %0.3f - %0.3f."
                                % (self.getObjectTag(output), output.getSize(), output.getBoxSize(),
-                                 self.thresholdLow.get(), self.thresholdHigh.get()))
+                                  self.thresholdLow.get(), self.thresholdHigh.get()))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
-
+        
         return methodsMsgs
     
     def _citations(self):
         return ['Hoang2013']
     
     #--------------------------- UTILS functions -------------------------------
-    def getArgs(self, threshold=True, workingDir=None):
+    def _getPickArgs(self, threshold=True, workingDir=None):
         """ Return the Gempicker parameters for picking one micrograph.
          The command line will depends on the protocol selected parameters.
         """
         nGPUs = self.numberOfGPUs.get() if self.useGPU else 0
         nThreads = self.numberOfThreads.get()
-
+        
         args = ' --nGPU=%d' % nGPUs
         args += ' --nCPU=%d' % nThreads
         # Put the output in the extra dir by default
@@ -270,9 +277,9 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
         args += ' --boxSize=%d' % self.boxSize
         args += ' --boxDist=%d' % self.boxDist
         args += ' --boxBorder=%d' % self.boxBorder
-
-        return args
-
+        
+        return [args]
+    
     def convertInputs(self, workingDir):
         """ This step will take of the conversions from the inputs.
         Micrographs: they will be linked if are in '.mrc' format, converted otherwise.
@@ -285,25 +292,25 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
             pwutils.cleanPath(p)
             pwutils.makePath(p)
             return p
-
+        
         makePath('micrographs')
-
+        
         refDir = makePath('templates')
         inputRefs = self.inputReferences.get()
         for i, ref in enumerate(inputRefs):
             outRef = join(refDir, 'ref%02d.mrc' % (i + 1))
             em.ImageHandler().convert(ref, outRef)
-
+        
         maskSchDir = makePath('maskSch')
         self.createInputMasks(inputRefs, maskSchDir)
-
+    
     def createInputMasks(self, inputRefs, maskSchDir):
         """ Create the needed mask for picking.
         We should either generate a circular mask,
         or convert the inputs (one or just one per reference 2d)
         """
         ih = em.ImageHandler()
-
+        
         if self.maskType == MASK_CIRCULAR:
             if self.maskRadius < 0:  # usually -1
                 radius = inputRefs.getDim()[0] / 2  # use half of input dim
@@ -315,6 +322,6 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
             for i, mask in enumerate(self.inputMasks):
                 outMask = join(maskSchDir, 'ref%02d.tif' % (i + 1))
                 ih.convert(mask.get(), outMask)
-
+    
     def readSetOfCoordinates(self, workingDir, coordSet):
         readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
