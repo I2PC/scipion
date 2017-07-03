@@ -84,7 +84,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         form.addParam('Mask', PointerParam, pointerClass='VolumeMask', 
                       condition='(halfVolumes) or (not halfVolumes)',
-                      label="Binary Mask", important=True,
+                      label="Binary Mask", allowsNull=True,
                       help='The mask determines which points are specimen and which ones not')
 
         group = form.addGroup('Extra parameters')
@@ -157,12 +157,16 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         else:
             self.vol0Fn = self.inputVolumes.get().getFileName()
-            self.maskFn = self.Mask.get().getFileName()
+            if self.Mask.hasValue():
+                self.maskFn = self.Mask.get().getFileName()
             self.inputVolume.set(None)
             self.inputVolume2.set(None)
 
             # Convert input into xmipp Metadata format
         convertId = self._insertFunctionStep('convertInputStep', )
+        
+        if self.Mask.hasValue() is False:
+            self._insertFunctionStep('createMaskStep', prerequisites=[convertId])
 
         MS = self._insertFunctionStep('resolutionMonogenicSignalStep',
                                       prerequisites=[convertId])
@@ -187,9 +191,30 @@ class XmippProtMonoRes(ProtAnalysis3D):
             if (extVol2 == '.mrc') or (extVol2 == '.map'):
                 self.vol2Fn = self.vol2Fn + ':mrc'
 
-        extMask = getExt(self.maskFn)
-        if (extMask == '.mrc') or (extMask == '.map'):
-            self.maskFn = self.maskFn + ':mrc'
+        if self.Mask.hasValue():
+            extMask = getExt(self.maskFn)
+            if (extMask == '.mrc') or (extMask == '.map'):
+                self.maskFn = self.maskFn + ':mrc'
+        else:
+            self.maskFn = 'created_mask.vol'
+
+
+    def createMaskStep(self):
+
+        params = ' -i %s' % self.vol0Fn
+        params += ' --method otsu '
+        params += ' -o %s' % self.maskFn
+
+        self.runJob('xmipp_volume_segment', params)
+        
+        params =  ' -i %s' % self.maskFn
+        params += ' --select below 0.5'
+        params += ' --substitute binarize'
+        params += ' -o %s' % self.maskFn
+
+        self.runJob('xmipp_transform_threshold', params)
+        
+
 
     def resolutionMonogenicSignalStep(self):
 
@@ -228,6 +253,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
             params += ' --vol2 %s' % self.vol2Fn
             params += ' --meanVol %s' % self._getExtraPath(FN_MEAN_VOL)
             params += ' --mask %s' % self.maskFn
+        if self.Mask.hasValue() is False:
+            params += ' --nonmanual_mask '
         params += ' --mask_out %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         if (self.halfVolumes):

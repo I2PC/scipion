@@ -39,6 +39,7 @@ void ProgMonogenicSignalRes::readParams()
 	fnchim = getParam("--chimera_volume");
 	sampling = getDoubleParam("--sampling_rate");
 	R = getDoubleParam("--volumeRadius");
+	nonmanual_mask = checkParam("--nonmanual_mask");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
 	fnSym = getParam("--sym");
@@ -61,6 +62,7 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [--mask_out <vol_file=\"\">]  : sometimes the provided mask is not perfect, and contains voxels out of the particle");
 	addParamsLine("                          :+ Thus the algorithm calculated a tight mask to the volume");
+	addParamsLine("  [--nonmanual_mask    ]  : If the mask has been generated in a manual way, for example by an automatic method (Otsu)..");
 	addParamsLine("  [--vol2 <vol_file=\"\">]: Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--meanVol <vol_file=\"\">]: Mean volume of half1 and half2 (only it is neccesary the two haves are used)");
@@ -479,7 +481,11 @@ void ProgMonogenicSignalRes::run()
 	double w=w0;
 	bool doNextIteration=true;
 	bool lefttrimming = false;
-	int iter=0;
+	int iter;
+	if (nonmanual_mask)
+		iter = -1;
+	else
+		iter = 0;
 	int count_res = 0;
 	std::vector<double> list;
 
@@ -488,17 +494,32 @@ void ProgMonogenicSignalRes::run()
 	FileName fnDebug;
 	do
 	{
-		resolution = maxRes - count_res*R_;
-		freqL = sampling/(resolution+R_);
-		freq = sampling/resolution;
-		freqH = sampling/(resolution-R_);
+		if (iter == -1)
+		{
+			resolution = 3*maxRes*0.5; //(3/2)*maxRes;
+			freqL = sampling/(resolution+0.5);
+			freq = sampling/resolution;
+			freqH = sampling/(resolution-0.5);
+			std::cout << "entro en if " << resolution << std::endl;
+		}
+		else
+		{
+			resolution = maxRes - count_res*R_;
+			freqL = sampling/(resolution+R_);
+			freq = sampling/resolution;
+			freqH = sampling/(resolution-R_);
+		}
+		std::cout << "resolution =  " << resolution << std::endl;
 		if (freq > 0.5)
 		{
 		  std::cout << "search stopped due to Nyquist limit has been reached" << std::endl;
 		  break;
 		}
+
 		++count_res;
-		if (count_res<=2)
+		if (nonmanual_mask)
+
+		if (count_res<=1)
 			counter = 0; //maxRes/R_;
 		else
 			counter = 2;//count_res-2;
@@ -773,6 +794,12 @@ void ProgMonogenicSignalRes::run()
 	}
 	amplitudeMN.clear();
 	amplitudeMS.clear();
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+	{
+	if (DIRECT_MULTIDIM_ELEM(pOutputResolution,n) > maxRes)
+		DIRECT_MULTIDIM_ELEM(pOutputResolution,n) = 0;
+	}
 
 	double last_resolution_2 = resolution;
 	if (fnSym!="c1")
