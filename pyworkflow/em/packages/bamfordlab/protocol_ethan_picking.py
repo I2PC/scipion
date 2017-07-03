@@ -133,14 +133,6 @@ class ProtEthanPicker(ProtParticlePickingAuto):
         # Clean temporary micrograph
         pwutils.cleanPath(fnMicFull)
 
-    def createOutputStep(self):
-        pass
-        # coordSet = self._createSetOfCoordinates(self.getInputMicrographs())
-        # self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-        # coordSet.setBoxSize(self.radius.get() * 2)
-        # self._defineOutputs(outputCoordinates=coordSet)
-        # self._defineSourceRelation(self.inputMicrographs, coordSet)
-    
     # --------------------------- INFO functions -------------------------------
     def _summary(self):
         summary = []
