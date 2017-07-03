@@ -1358,6 +1358,11 @@ void druhyPokus(std::complex<float>*** outputVolume,
 	minX = floor((AABB[0].x + upperIndex) * paddedVolumeSize);
 	maxY = ceil((AABB[1].y + upperIndex) * paddedVolumeSize);
 	maxX = ceil((AABB[1].x + upperIndex) * paddedVolumeSize);
+    minX = std::max(0, minX);
+    minY = std::max(0, minY);
+    maxX = std::min((int)paddedVolumeSize-1, maxX);
+    maxY = std::min((int)paddedVolumeSize-1, maxY);
+    
 
 //	for (int m = 0; m < size; m++ ) {
 		for (int l = minY; l < maxY; l++) {
@@ -1370,7 +1375,9 @@ void druhyPokus(std::complex<float>*** outputVolume,
 				bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4));
 				if (hit1 || hit2) {
 					float mLower = (std::min(z1, z2) + upperIndex) * paddedVolumeSize ;
+                    mLower = std::max(0.0f, mLower);
 					float mUpper = (std::max(z1, z2) + upperIndex) * paddedVolumeSize ;
+                    mUpper = std::min(127.0f, mUpper); //FIXME hardcoded value
 //					float tmp = std::pow(ceil(blobRadius), 1/3.)( *  / (float)paddedVolumeSize;
 					for (int m = floor(mLower); m <= ceil(mUpper); m++) {
 						float z = m*step - upperIndex;
