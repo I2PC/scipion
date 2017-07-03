@@ -245,9 +245,11 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
         
         if self.getOutputsSize() > 0:
             output = self.getCoords()
-            methodsMsgs.append("%s: User picked %d particles with a particle size of %d px and threshold range %0.3f - %0.3f."
-                               % (self.getObjectTag(output), output.getSize(), output.getBoxSize(),
-                                  self.thresholdLow.get(), self.thresholdHigh.get()))
+            methodsMsgs.append("%s: User picked %d particles with a particle "
+                               "size of %d px and threshold range %0.3f - %0.3f."
+                               % (self.getObjectTag(output), output.getSize(),
+                                  output.getBoxSize(), self.thresholdLow.get(),
+                                  self.thresholdHigh.get()))
         else:
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
         
