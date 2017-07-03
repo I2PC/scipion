@@ -95,20 +95,6 @@ class ProtEthanPicker(ProtParticlePickingAuto):
                       label="Perform peak pair distance test?",
                       help='')
 
-    #--------------------------- INSERT steps functions ------------------------
-    
-    
-    # def _insertAllSteps(self):
-    #     deps = []
-    #
-    #     for mic in self.getInputMicrographs():
-    #         stepId = self._insertFunctionStep('pickMicrographStep',
-    #                                           self.radius.get(),
-    #                                           mic.getFileName())
-    #         deps.append(stepId)
-    #
-    #     self._insertFunctionStep('createOutputStep', prerequisites=deps)
-
     #--------------------------- STEPS functions -------------------------------
     def _pickMicrograph(self, mic, radius):
         micFn = mic.getFileName()
