@@ -1085,9 +1085,9 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 			float tmpWeight = blobTableSqrt[aux];
 
 //			T tmpWeight = blob_val(std::sqrt(distanceSqr), blob);
-			bool conjugate = pad(361, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
+			bool conjugate = pad(65, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
 			float conj = conjugate ? -1. : 1.;
-			if (tmpX >= 361 || tmpX <0 || tmpY >=720 || tmpY<0 ) {
+			if (tmpX >= 65 || tmpX <0 || tmpY >=130 || tmpY<0 ) {
 //				std::cout << "OoB"; // FIXME reading garbage
 			}
 			std::complex<float> pixVal = img[tmpY][tmpX];
@@ -1578,11 +1578,13 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                 // the user can avoid to explore at certain resolutions
                 conserveRows=(size_t)ceil((double)paddedFourier->ydim * maxResolution * 2.0);
                 conserveRows=(size_t)ceil((double)conserveRows/2.0);
+				
 
 
                 myPaddedFourier = new std::complex<float>*[paddedFourier->ydim+1];
                 double tempMyPadd[2];
                 std::complex<float> myPadVal;
+				std::cout<<"allocating myPaddedFourier" << std::endl;
                 for (size_t i = 0; i <= paddedFourier->ydim; i++) {
                 	myPaddedFourier[i] = new std::complex<float>[paddedFourier->xdim+1];
                 	for (size_t j = 0; j <= paddedFourier->xdim; j++) {
@@ -1660,6 +1662,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
 
 		                if (!initialized) {
+							std::cout << "initializing output arrays" << std::endl;
 		                	initialized = true;
 		                	size = 2*conserveRows;
 							outputVolume = new std::complex<float>**[size];
