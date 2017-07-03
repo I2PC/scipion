@@ -190,10 +190,10 @@ public: // Internal members
     FourierTransformer transformerImg;
 
     // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
-    MultidimArray< std::complex<double> > VoutFourier, VoutFourierTmp;
+    MultidimArray< std::complex<double> > VoutFourier, VoutFourier_muj, VoutFourierTmp;
 
     // Volume of Fourier weights
-    MultidimArray<double> FourierWeights;
+    MultidimArray<double> FourierWeights, FourierWrights_moje;
 
     // Padded image
     MultidimArray<double> paddedImg;
@@ -230,6 +230,36 @@ public:
 
     ///Functions of common reconstruction interface
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
+
+private:
+	static void processCube(
+			int i,
+			int j,
+			const Matrix1D<int>& corner1,
+			const Matrix1D<int>& corner2,
+			const MultidimArray<float>& z2precalculated,
+			const MultidimArray<int>& zWrapped,
+			const MultidimArray<int>& zNegWrapped,
+			const MultidimArray<float>& y2precalculated,
+			float blobRadiusSquared,
+			const MultidimArray<int>& yWrapped,
+			const MultidimArray<int>& yNegWrapped,
+			const MultidimArray<float>& x2precalculated,
+			float iDeltaSqrt,
+			float wModulator,
+			const MultidimArray<int>& xWrapped,
+			int xsize_1,
+			const MultidimArray<int>& xNegWrapped,
+			bool reprocessFlag,
+			float wCTF,
+			MultidimArray<std::complex<double> >& VoutFourier,
+			Matrix1D<double>& blobTableSqrt,
+			ImageThreadParams* threadParams,
+			MultidimArray<double>& fourierWeights,
+			double* ptrIn,
+			float weight,
+			ProgRecFourier * parent,
+			Matrix1D<double>& real_position);
 };
 //@}
 #endif
