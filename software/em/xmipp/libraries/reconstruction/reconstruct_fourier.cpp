@@ -800,12 +800,12 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 					SPEED_UP_temps012;
 					M3x3_BY_V3x1(freq, *A_SL, freq);
 
-			std::cout << "pred " << freq[0]
+/*			std::cout << "pred " << freq[0]
 					<< " "
 					<< freq[1]
 					<< " "
 					<< freq[2]
-					<< std::endl;
+					<< std::endl;*/
 
 					// Look for the corresponding index in the volume Fourier transform
 					DIGFREQ2FFT_IDX_DOUBLE(freq[0], parent->volPadSizeX,
@@ -978,8 +978,23 @@ BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl
 
 template <typename T>
 bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
-//	x = fmod((offsetX + fmod(x, offsetX)), offsetX); // cycle X axis // FIXME optimize
-	if (x > (float)(offsetX-1)) {
+/*    if (y < (float)(offsetY)/2.0f)
+        y += (float)(offsetY)/2.0f;
+    else
+        y -= (float)(offsetY)/2.0f;
+
+    if (x > (float)(offsetX-1)/2.0f)
+        x -= (float)(offsetX-1);
+    if (x < 0.0f) {
+        x = -x;
+        y = (float)(offsetY-1) - y;
+        if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+        return true;
+    }
+    if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+    return false;*/
+	//x = fmod((offsetX + fmod(x, offsetX)), offsetX); // cycle X axis // FIXME optimize
+	if (x > (float)(offsetX/2-1)) {
 		x -= (float)offsetX;
 	}
 
@@ -993,7 +1008,7 @@ bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
         x = -x;
         y = offsetY-1 - y;
 	}
-//	y = fmod((offsetY + fmod(y, offsetY)), offsetY); // cycle Y axis // FIXME optimize
+    //y = fmod((offsetY + fmod(y, offsetY)), offsetY); // cycle Y axis // FIXME optimize
 	if (y > (float)(offsetY-1)) {
 		y -= (float)offsetY;
 	}
@@ -1001,7 +1016,7 @@ bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
 		y += (float)offsetY;
 	}
 	if ((int)x >= maxX) { // Careful here, we must not get under -1. -0.9999 is fine, as cast to int will convert it to zero(0)
-		x = - x + offsetX;
+		x = - x + offsetX/2;
 		y = - y + offsetY;
 
 	}
@@ -1066,10 +1081,10 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 {
     bool dumpujeme = false;
     //std::cout << "YYY " << k << " " << l << " " << m << std::endl;
-    if ((fabsf(k-0.0f) < 0.00005) && (fabsf(l-0.0f) < 0.00005) && (fabsf(m-0.0f) < 0.00005)) {
+    /*if ((fabsf(k-0.0f) < 0.00005) && (fabsf(l-0.0f) < 0.00005) && (fabsf(m-0.0f) < 0.00005)) {
         std::cout << "XXX dumpujeme\n";
         dumpujeme = true;
-    }
+    }*/
 	weight = 0.;
 	float radiusSqr = blobRadius * blobRadius;
 	std::complex<float> result = (0, 0);
@@ -1108,9 +1123,9 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 			result.real() += tmpWeight * pixVal.real();
 			result.imag() += tmpWeight * conj * pixVal.imag();
 			weight += tmpWeight;
-            if (dumpujeme) {
+            /*if (dumpujeme) {
                 std::cout << "XXX " << j << " " << i << ", " << tmpX << " " << tmpY << ", " << pixVal << " " << tmpWeight << std::endl;
-            }
+            }*/
 
 
 //			float dest[3];
@@ -1423,7 +1438,7 @@ void druhyPokus(std::complex<float>*** outputVolume,
 //															<< z
 //															<< std::endl;
 
-														std::cout << x
+/*														std::cout << x
 																<< " "
     															<< y
 																<< " "
@@ -1436,7 +1451,7 @@ void druhyPokus(std::complex<float>*** outputVolume,
 																<< img_pos[2]
 					//											<< " "
 					//											<< (conjugate ? "conjugate" : "no_conjugate")
-																<< std::endl;
+																<< std::endl;*/
 
 						float weight;
 
@@ -1447,7 +1462,7 @@ void druhyPokus(std::complex<float>*** outputVolume,
 								img_pos[2], blobRadius, weight, paddedVolumeSize,
 								paddedVolumeSize, maxResolutionSqr, x, y, z,
 								blobTableSqrt, iDeltaSqrt);
-                        if ((m == l == 64) && (k == 63)) std::cout << "YYY " << val << " " << weight << " " << outputVolume[m][l][k] << std::endl;
+                        //if ((m == l == 64) && (k == 63)) std::cout << "YYY " << val << " " << weight << " " << outputVolume[m][l][k] << std::endl;
                         //if (val.imag() < 100.0) std::cout << "XXX " << m << " " << l << " " << k << std::endl;
 
 						outputWeight[m][l][k] += weight;
@@ -1646,9 +1661,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
  ////////////////////////////////////////////////
 
-                    if (isym > 0 || current_index > 0) {
-                    	continue;
-                    }
+//                    if (isym > 0 || current_index > 0) {
+//                   	continue;
+//                    }
 
 //////////////////////////////////////////////////
 
@@ -1931,10 +1946,10 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 				val.real() = outputVolume[m][l][k].real();
 				val.imag() = outputVolume[m][l][k].imag();
 
-                if ((int)tmp[0] == 1 && (int)tmp[1] == 0 && (int)tmp[2] == 0) {
+                /*if ((int)tmp[0] == 1 && (int)tmp[1] == 0 && (int)tmp[2] == 0) {
                     std::cout << "XXX going to 1 0 0 from " << m << ", " << l << ", " << k << std::endl;
                     std::cout << "XXX " << DIRECT_A3D_ELEM(VoutFourier_muj, (int)tmp[2], (int)tmp[1], (int)tmp[0]) << " += " << val << std::endl;
-                }
+                }*/
 
 
 				DIRECT_A3D_ELEM(VoutFourier_muj, (int)tmp[2], (int)tmp[1], (int)tmp[0]) += val;
