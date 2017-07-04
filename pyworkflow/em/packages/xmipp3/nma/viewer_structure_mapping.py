@@ -132,8 +132,8 @@ class XmippProtStructureMappingViewer(ProtocolViewer):
                 x2, y2, _ = proj3d.proj_transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], ax.get_proj())
                 for i in range(len(coordinates[:, 0])):
                     label = Labels[i]
-                    label.xy = x2[i],y2[i]
-                    label.update_positions(fig.canvas.renderer)
+                    label.xytext = (x2[i],y2[i])
+                    label.update_positions(fig.canvas.get_renderer())
                 fig.canvas.draw()
             fig.canvas.mpl_connect('button_release_event', update_position)
             plt.show()
