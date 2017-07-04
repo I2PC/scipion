@@ -30,6 +30,9 @@ import os
 from os.path import join, basename
 import re
 from datetime import timedelta
+import socket
+import select
+import shlex
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -278,7 +281,12 @@ class ProtImportMovies(ProtImportMicBase):
     """
     _label = 'import movies'
     _outputClassName = 'SetOfMovies'
-        
+
+    def __init__(self, **kwargs):
+        ProtImportMicBase.__init__(self, **kwargs)
+        self.serverSocket = None
+        self.connectionList = None
+
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
 
@@ -353,6 +361,49 @@ class ProtImportMovies(ProtImportMicBase):
                       help="Select Yes if you want to remove the individual "
                            "frame files after creating the movie stack. ")
 
+        streamingSection = form.getSection('Streaming')
+        streamingSection.addParam('streamingSocket', params.BooleanParam, default=False,
+                                  condition=streamingConditioned,
+                                  expertLevel=params.LEVEL_ADVANCED,
+                                  label="Use streaming socket",
+                                  help="Use a socket to discover new files instead of polling\n"
+                                       "your directory.\n")
+
+        streamingSection.addParam('socketPort', params.IntParam, default=5000,
+                                  condition=streamingConditioned + ' and streamingSocket',
+                                  expertLevel=params.LEVEL_ADVANCED,
+                                  label="Socket port",
+                                  help="Port to use for the streaming socket.\n")
+
+    # --------------------------- INSERT functions ---------------------------------------------------
+    def _insertAllSteps(self):
+        # Only the import movies has property 'inputIndividualFrames'
+        # so let's query in a non-intrusive manner
+        inputIndividualFrames = getattr(self, 'inputIndividualFrames', False)
+
+        if self.dataStreaming or inputIndividualFrames:
+            if self.streamingSocket:
+                self.launchSocket()
+            funcName = 'importImagesStreamStep'
+        else:
+            funcName = 'importImagesStep'
+
+        self._insertFunctionStep(funcName, self.getPattern(),
+                                 self.voltage.get(),
+                                 self.sphericalAberration.get(),
+                                 self.amplitudeContrast.get(),
+                                 self.magnification.get())
+
+    # --------------------------- INFO functions ----------------------------------------------------
+    def _validate(self):
+        """Overwriting to skip file validation if streaming with socket"""
+        if self.streamingSocket:
+            errors = []
+        else:
+            errors = ProtImportMicBase._validate(self)
+        return errors
+
+    # --------------------------- UTILS functions -------------------------------
     def setSamplingRate(self, movieSet):
         ProtImportMicBase.setSamplingRate(self, movieSet)
         movieSet.setGain(self.gainFile.get())
@@ -388,6 +439,66 @@ class ProtImportMovies(ProtImportMicBase):
         imgSet.setDim(dim)
         imgSet.setFramesRange(range)
 
+    def launchSocket(self):
+        host = ''  # Where do we get this?!!
+        serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        serverSocket.bind((host, self.socketPort))
+        serverSocket.listen(10)
+        serverSocket.setblocking(0)
+        self.serverSocket = serverSocket
+        self.connectionList = [serverSocket]
+        self.info("Socket started on port " + str(self.socketPort))
+        return serverSocket
+
+    def iterFilenamesFromSocket(self):
+        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
+        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
+        for sock in read_sockets:
+            if sock is self.serverSocket:
+                # New connection received through self.serverSocket
+                sockfd, addr = self.serverSocket.accept()
+                sockfd.setblocking(0)
+                self.connectionList.append(sockfd)
+                self.debug("Client (%s, %s) connected" % addr)
+                continue
+            else:
+                # Data received from a client, process it
+                try:
+                    # In Windows, sometimes when a TCP program closes abruptly,
+                    # a "Connection reset by peer" exception will be thrown
+                    data = sock.recv(recv_buffer)
+                    if data:
+                        files = shlex.split(data)
+                        self.debug("Data received in socket:")
+                        self.debug(files)
+                        for fileName in files:
+                            if os.path.exists(fileName):
+                                if fileName in self.importedFiles:
+                                    sock.send('WARNING: Not importing, already imported file %s \n' % fileName)
+                                    self.debug('WARNING: Not importing, already imported file %s \n' % fileName)
+                                    continue
+                                else:
+                                    sock.send('OK: Importing file %s \n' % fileName)
+                                    self.debug('OK: Importing file %s \n' % fileName)
+                                    fileId = None
+                                    yield fileName, fileId
+                            else:
+                                sock.send('WARNING: Not importing, path does not exist %s \n' % fileName)
+                                self.debug('WARNING: Not importing, path does not exist %s \n' % fileName)
+                                self.debug(fileName)
+                                continue
+                    else:
+                        continue
+                # client disconnected, remove from socket list
+                except Exception as e:
+                    self.debug("Exception reading socket!!")
+                    self.debug(str(e))
+                    sock.close()
+                    self.connectionList.remove(sock)
+                    continue
+        return
+
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
         for the case when input are individual frames and we want to create
@@ -398,22 +509,28 @@ class ProtImportMovies(ProtImportMicBase):
 
         if not (self.inputIndividualFrames and self.stackFrames):
             # In this case behave just as
-            for fileName, fileId in  ProtImportMicBase.iterNewInputFiles(self):
-                yield fileName, fileId
-
+            if self.streamingSocket:
+                for fileName, fileId in self.iterFilenamesFromSocket():
+                    yield fileName, fileId
+            else:
+                for fileName, fileId in ProtImportMicBase.iterNewInputFiles(self):
+                    yield fileName, fileId
             return
 
         if self.dataStreaming:
-            fileTimeout = timedelta(seconds=self.fileTimeout.get())
-            # Consider only the files that are not changed in the fileTime delta
-            # if processing data in streaming
-            filePaths = [f for f in self.getMatchFiles()
-                         if not self.fileModified(f, fileTimeout)]
+            if self.streamingSocket:
+                filePaths = [f[0] for f in self.iterFilenamesFromSocket()]
+            else:
+                # Consider only the files that are not changed in the fileTime delta
+                # if processing data in streaming
+                fileTimeout = timedelta(seconds=self.fileTimeout.get())
+                filePaths = [f for f in self.getMatchFiles()
+                             if not self.fileModified(f, fileTimeout)]
         else:
             filePaths = self.getMatchFiles()
 
         frameRegex = re.compile("(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
-        #  Group all frames for each movie
+        # Group all frames for each movie
         # Key of the dictionary will be the common prefix and the value
         # will be a list with all frames in that movie
         frameDict = {}
@@ -482,7 +599,6 @@ class ProtImportMovies(ProtImportMicBase):
                     return
         checkMovie()
 
-
     def ignoreCopy(self, source, dest):
         pass
 
@@ -492,3 +608,9 @@ class ProtImportMovies(ProtImportMicBase):
             return self.ignoreCopy
         else:
             return ProtImportMicBase.getCopyOrLink(self)
+
+    def _cleanUp(self):
+        if self.streamingSocket:
+            self.debug('Closing socket...')
+            self.serverSocket.shutdown(socket.SHUT_RDWR)
+            self.serverSocket.close()
