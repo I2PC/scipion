@@ -203,9 +203,8 @@ class XmippResolution3DViewer(ProtocolViewer):
         newVol.setLocation(volOut)
         volSet.append(newVol)
         volSet.write()
-        
+
         self.objectView(volSet).show()
-        
 
 STATE_NO_POINTS = 0 # on points have been selected, double-click will add first one
 STATE_DRAW_POINTS = 1 # still adding points, double-click will set the last one
