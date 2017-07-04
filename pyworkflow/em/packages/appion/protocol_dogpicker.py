@@ -93,6 +93,9 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
         args += " --image=%s --outfile=%s" % (inputMic, outputFile)
 
         self.runJob(program, args)
+    
+    def createOutputStep(self):
+        pass
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
