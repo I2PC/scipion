@@ -69,20 +69,6 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
                       help='Additional parameters for dogpicker: \n  '
                            '--numberSizes, --sizeRange, --threshold,...')
 
-    #--------------------------- INSERT steps functions ------------------------
-    def _getPickArgs(self):
-        inputSampling = self.getInputMicrographs().getSamplingRate()
-        args = "--diam=%0.3f " % (inputSampling * self.diameter.get())
-        args += "--apix=%0.3f " % inputSampling
-        args += "--thresh=%f" % self.threshold
-
-        if self.invert:
-            args += " --invert"
-
-        args += " " + self.extraParams.get('')
-
-        return [args]
-
     #--------------------------- STEPS functions -------------------------------
     def _pickMicrograph(self, mic, args):
         # Prepare mic folder and convert if needed
@@ -108,11 +94,7 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
 
         self.runJob(program, args)
 
-    #--------------------------- UTILS functions -------------------------------
-    def readCoordsFromMics(self, workingDir, micList, coordSet):
-        coordSet.setBoxSize(self.diameter.get())
-        readSetOfCoordinates(workingDir, micList, coordSet)
-
+    #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
         summary.append("Number of input micrographs: %d"
@@ -149,6 +131,25 @@ class DogPickerProtPicking(ProtParticlePickingAuto):
             methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
 
         return methodsMsgs
+
+    #--------------------------- UTILS functions -------------------------------
+    def _getPickArgs(self):
+        inputSampling = self.getInputMicrographs().getSamplingRate()
+        args = "--diam=%0.3f " % (inputSampling * self.diameter.get())
+        args += "--apix=%0.3f " % inputSampling
+        args += "--thresh=%f" % self.threshold
+
+        if self.invert:
+            args += " --invert"
+
+        args += " " + self.extraParams.get('')
+
+        return [args]
+
+    def readCoordsFromMics(self, workingDir, micList, coordSet):
+        coordSet.setBoxSize(self.diameter.get())
+        readSetOfCoordinates(workingDir, micList, coordSet)
     
     def getCoordsDir(self):
         return self._getExtraPath()
+ 
