@@ -27,6 +27,7 @@
 
 import os
 from glob import glob
+import numpy as np
 import pyworkflow.em.metadata as md
 import pyworkflow.em as em
 from pyworkflow.em.protocol import EMProtocol
@@ -43,6 +44,28 @@ import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
 from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
 
+def mds(d, dimensions = 2):
+    """
+    Multidimensional Scaling - Given a matrix of interpoint distances,
+    find a set of low dimensional points that have similar interpoint
+    distances.
+    """
+
+    (n,n) = d.shape
+    E = (-0.5 * d**2)
+
+    # Use mat to get column and row means to act as column and row means.
+    Er = np.mat(np.mean(E,1))
+    Es = np.mat(np.mean(E,0))
+
+    # From Principles of Multivariate Analysis: A User's Perspective (page 107).
+    F = np.array(E - np.transpose(Er) - Es + np.mean(E))
+
+    [U, S, V] = np.linalg.svd(F)
+
+    Y = U * np.sqrt(S)
+
+    return (Y[:,0:dimensions], S)
 
 class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                                 XmippProtNMABase, 
@@ -219,48 +242,29 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
             fh.close()
             nVoli += 1                     
         
-        from sklearn import manifold
-               
+        distance = np.asarray(distance)
         for i in range(1, 4):
-               
-            mds = manifold.MDS(n_components=i, metric=True, max_iter=3000,
-                               eps=1e-9, random_state=0, dissimilarity="precomputed", n_jobs=1)
-            embed3d = mds.fit(distance).embedding_ 
-                                      
-            nVoli = 1
-            for x in volList:
-                for y in range(i):
-                    fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
-                    fh.write("%f\t"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()
-                    fh = open(self._getExtraPath ("CoordinateMatrixColumnF%d.txt"%i),"a")
-                    fh.write("%f\n"%embed3d[(nVoli - 1)][(y)])
-                    fh.close()
-                fh = open(self._getExtraPath ("CoordinateMatrix%d.txt"%i),"a")
-                fh.write("\n")
-                fh.close()
-                nVoli += 1 
+            embed,_ = mds(distance,i)
+            embedExtended = np.pad(embed,((0,0),(0,i-embed.shape[1])),"constant",constant_values=0.0)
+            print(embedExtended)
+            np.savetxt(self._defineResultsName(i),embedExtended)        
        
     def managingOutputFilesStep(self): 
-        copyFile (self._getExtraPath ("CoordinateMatrixColumnF1.txt"),
-                  self._defineResultsName1())
-        copyFile (self._getExtraPath ("CoordinateMatrixColumnF2.txt"),
-                  self._defineResultsName2())
-        copyFile (self._getExtraPath ("CoordinateMatrixColumnF3.txt"),
-                  self._defineResultsName3())             
-        cleanPattern(self._getExtraPath('pseudoatoms*'))
+        cleanPattern(self._getPath('pseudoatoms*'))
+        cleanPattern(self._getPath('modes'))
         cleanPattern(self._getExtraPath('vec_ani.pkl'))  
-        cleanPattern(self._getExtraPath('CoordinateMatrixColumnF*'))  
-        cleanPattern(self._getPath('modes/vec*'))
-        cleanPath(self._getPath('modes'))
         
         if not self.keepingOutputFiles.get():
             cleanPattern(self._getPath('warnings*'))
             cleanPattern(self._getPath('outputRigid*'))
+            cleanPattern(self._getPath('modes*.xmd'))
             cleanPattern(self._getExtraPath('RigidAlign*'))
+            cleanPattern(self._getExtraPath('pseudoatoms*'))
             cleanPattern(self._getExtraPath('Pseudoatoms*'))
             cleanPattern(self._getExtraPath('comp*'))
             cleanPattern(self._getExtraPath('Deform*'))
+            cleanPattern(self._getExtraPath('transformation-matrix*'))
+            cleanPattern(self._getExtraPath('modes*'))
                                       
     #--------------------------- INFO functions --------------------------------------------
     def _validate(self):
@@ -269,16 +273,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
             if pointer.pointsNone():
                 errors.append('Invalid input, pointer: %s' % pointer.getObjValue())
                 errors.append('              extended: %s' % pointer.getExtended())                
-        import imp
-        try:
-            imp.find_module('sklearn')
-            found = True
-        except ImportError:
-            found = False
-        if not found:
-            errors.append("**<You need to install sklearn library>**\n"
-                          "use following script to fix this: scipion install sklearn")   
-        
         return errors 
            
     def _summary(self):
@@ -330,13 +324,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
             alignArgs += " --dontScale"                    
         return alignArgs
         
-    def _defineResultsName1(self):
-        return self._getExtraPath('CoordinateMatrixColumn1.txt')
-    
-    def _defineResultsName2(self):
-        return self._getExtraPath('CoordinateMatrixColumn2.txt')
-    
-    def _defineResultsName3(self):
-        return self._getExtraPath('CoordinateMatrixColumn3.txt')
-     
+    def _defineResultsName(self,i):
+        return self._getExtraPath('CoordinateMatrix%d.txt'%i)
+        
     
