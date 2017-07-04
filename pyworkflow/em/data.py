@@ -271,7 +271,8 @@ class SetOfDefocusGroups():
         self.__createGroups(inputSet, groupRange, groupMinSize)
         
     def __createGroups(self, inputSet, groupRange, groupMinSize):
-        iterSet = iter(inputSet.iterItems(orderBy=['_ctfModel._defocusU', 'id'], direction='ASC'))
+        iterSet = iter(inputSet.iterItems(orderBy=['_ctfModel._defocusU', 'id'],
+                                          direction='ASC'))
         first = iterSet.next()
         self.__addNewGroup(first.getCTF())
         
@@ -356,7 +357,8 @@ class Image(EMObject):
     def __init__(self, location=None, **kwargs):
         """
          Params:
-        :param location: Could be a valid location: (index, filename) or  filename
+        :param location: Could be a valid location: (index, filename)
+        or  filename
         """
         EMObject.__init__(self, **kwargs)
         # Image location is composed by an index and a filename
@@ -880,7 +882,8 @@ class SetOfImages(EMSet):
         sampling = self.getSamplingRate()
         
         if not sampling:
-            print "FATAL ERROR: Object %s has no sampling rate!!!" % self.getName()
+            print("FATAL ERROR: Object %s has no sampling rate!!!"
+                  % self.getName())
             sampling = -999.0
 
         s = "%s (%d items, %s, %0.2f Å/px)" % (self.getClassName(),
@@ -931,8 +934,8 @@ class SetOfMicrographsBase(SetOfImages):
         self._scannedPixelSize = Float()
     
     def copyInfo(self, other):
-        """ Copy basic information (voltage, spherical aberration and sampling rate)
-        from other set of micrographs to current one.
+        """ Copy basic information (voltage, spherical aberration and
+        sampling rate) from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
         self._scannedPixelSize.set(other.getScannedPixelSize())
@@ -953,7 +956,8 @@ class SetOfMicrographsBase(SetOfImages):
         """ Set scannedPixelSize and update samplingRate. """
         mag = self._acquisition.getMagnification()
         if mag is None:
-            raise Exception("SetOfMicrographs: cannot set scanned pixel size if Magnification is not set.")
+            raise Exception("SetOfMicrographs: cannot set scanned pixel size "
+                            "if Magnification is not set.")
         self._scannedPixelSize.set(scannedPixelSize)
         self._samplingRate.set((1e+4 * scannedPixelSize) / mag)
         
@@ -991,8 +995,8 @@ class SetOfParticles(SetOfImages):
         self._coordsPointer.set(coordinates)    
         
     def copyInfo(self, other):
-        """ Copy basic information (voltage, spherical aberration and sampling rate)
-        from other set of micrographs to current one.
+        """ Copy basic information (voltage, spherical aberration and
+        sampling rate) from other set of micrographs to current one.
         """
         SetOfImages.copyInfo(self, other)
         self.setHasCTF(other.hasCTF())
@@ -1174,12 +1178,14 @@ class SetOfCoordinates(EMSet):
         return self.getMicrographs()
     
     def iterMicrographCoordinates(self, micrograph):
-        """ Iterates over the set of coordinates belonging to that micrograph. """
+        """ Iterates over the set of coordinates belonging to that micrograph.
+        """
         pass
     
     def iterCoordinates(self, micrograph=None):
         """ Iterate over the coordinates associated with a micrograph.
-        If micrograph=None, the iteration is performed over the whole set of coordinates.
+        If micrograph=None, the iteration is performed over the whole
+        set of coordinates.
         """
         if micrograph is None:
             micId = None
@@ -1188,7 +1194,8 @@ class SetOfCoordinates(EMSet):
         elif isinstance(micrograph, Micrograph):
             micId = micrograph.getObjId()
         else:
-            raise Exception('Invalid input micrograph of type %s' % type(micrograph))
+            raise Exception('Invalid input micrograph of type %s'
+                            % type(micrograph))
         
         #Iterate over all coordinates if micId is None,
         #otherwise use micId to filter the where selection
@@ -1307,8 +1314,8 @@ class Class2D(SetOfParticles):
     to the class) 
     """
     def copyInfo(self, other):
-        """ Copy basic information (id and other properties) but not _mapperPath or _size
-        from other set of micrographs to current one.
+        """ Copy basic information (id and other properties) but
+        not _mapperPath or _size from other set of micrographs to current one.
         """
         self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
@@ -1330,8 +1337,8 @@ class Class3D(SetOfParticles):
     REP_TYPE = Volume
     
     def copyInfo(self, other):
-        """ Copy basic information (id and other properties) but not _mapperPath or _size
-        from other set of micrographs to current one.
+        """ Copy basic information (id and other properties) but not
+        _mapperPath or _size from other set of micrographs to current one.
         """
         self.copy(other, copyId=False, ignoreAttrs=['_mapperPath', '_size'])
         
@@ -1361,7 +1368,8 @@ class SetOfClasses(EMSet):
     
     def __init__(self, **kwargs):
         EMSet.__init__(self, **kwargs)
-        self._representatives = Boolean(False) # Store the average images of each class(SetOfParticles)
+        # Store the average images of each class(SetOfParticles)
+        self._representatives = Boolean(False)
         self._imagesPointer = Pointer()
 
     def iterClassItems(self, iterDisabled=False):
@@ -1422,7 +1430,8 @@ class SetOfClasses(EMSet):
         return classItem
 
     def iterItems(self, orderBy='id', direction='ASC'):
-        for classItem in EMSet.iterItems(self, orderBy=orderBy, direction=direction):
+        for classItem in EMSet.iterItems(self, orderBy=orderBy,
+                                         direction=direction):
             self._setItemMapperPath(classItem)
             yield classItem
 
@@ -1509,9 +1518,10 @@ class SetOfClasses(EMSet):
                         continue
                 ref = newItem.getClassId()
                 if ref is None:
-                    raise Exception('Particle classId is None!!!')                    
-                
-                if not ref in clsDict: # Register a new class set if the ref was not found.
+                    raise Exception('Particle classId is None!!!')
+
+                # Register a new class set if the ref was not found.
+                if not ref in clsDict:
                     classItem = self.ITEM_TYPE(objId=ref)
                     rep = self.REP_TYPE()
                     classItem.setRepresentative(rep)            
@@ -1540,8 +1550,10 @@ class SetOfClasses2D(SetOfClasses):
     def writeStack(self, fnStack):
         """ Write an stack with the classes averages. """
         if not self.hasRepresentatives():
-            raise Exception('Could not write Averages stack if not hasRepresentatives!!!')
+            raise Exception('Could not write Averages stack '
+                            'if not hasRepresentatives!!!')
         ih = ImageHandler()
+
         for i, class2D in enumerate(self):
             img = class2D.getRepresentative()
             ih.convert(img, (i+1, fnStack))
@@ -1784,7 +1796,6 @@ class SetOfMovies(SetOfMicrographsBase):
         if self._firstDim.isEmpty():
             self._firstDim.set(image.getDim())
             self._firstFramesRange.set(image.getFramesRange())
-            print "setting framesRange: ", self.getFramesRange()
 
     def _dimStr(self):
         """ Return the string representing the dimensions. """
