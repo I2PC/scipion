@@ -508,6 +508,7 @@ void ProgMonogenicSignalRes::run()
 			freqL = sampling/(resolution+R_);
 			freq = sampling/resolution;
 			freqH = sampling/(resolution-R_);
+			++count_res;
 		}
 		std::cout << "resolution =  " << resolution << std::endl;
 		if (freq > 0.5)
@@ -516,7 +517,7 @@ void ProgMonogenicSignalRes::run()
 		  break;
 		}
 
-		++count_res;
+
 		if (nonmanual_mask)
 
 		if (count_res<=1)
