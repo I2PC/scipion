@@ -32,10 +32,13 @@
 #include <sstream>
 #include <math.h>
 #include <limits>
+#include <data/xmipp_fft.h>
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
 
+
+#define DEBUG_DUMP 0
 
 //MultidimArray< std::complex<float> >* convertToFloat(MultidimArray< std::complex<double> >* input) {
 //	MultidimArray< std::complex<float> > *result=new MultidimArray< std::complex<float> >;
@@ -638,10 +641,20 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                         // COSS A2D_ELEM(localPaddedImg,i,j)=weight*A2D_ELEM(mProj,i,j);
                         CenterFFT(localPaddedImg,true);
 
+                        /*localPaddedImg.initZeros(6,6);
+                            DIRECT_A2D_ELEM(localPaddedImg,1,0)=1;
+                        std::cout << localPaddedImg << std::endl;*/
+
                         // Fourier transformer for the images
                         localTransformerImg.setReal(localPaddedImg);
                         localTransformerImg.FourierTransform();
                         localTransformerImg.getFourierAlias(localPaddedFourier);
+                        /*std::cout << localPaddedFourier << std::endl;
+                        MultidimArray< std::complex<double> > intermediate;
+                        FourierTransform(localPaddedImg,intermediate);
+                        std::cout << intermediate << std::endl;
+                        CenterFFT(intermediate,true);
+                        std::cout << intermediate << std::endl;*/
                     }
 
                     // Compute the coordinate axes associated to this image
@@ -761,9 +774,9 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 					FFT_IDX2DIGFREQ(i, parent->paddedImg.ydim, freq[1]);
 					freq[2] = 0;
 
-					if (freq[0] * freq[0] + freq[1] * freq[1] > parent->maxResolution2) {
-						continue;
-					}
+					//if (freq[0] * freq[0] + freq[1] * freq[1] > parent->maxResolution2) {
+					//	continue;
+					//}
 					wModulator = 1.0;
 					if (hasCTF && !reprocessFlag) {
 						contFreq[0] = freq[0] * iTs;
@@ -800,12 +813,20 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 					SPEED_UP_temps012;
 					M3x3_BY_V3x1(freq, *A_SL, freq);
 
-/*			std::cout << "pred " << freq[0]
+//                    if (!((freq[0] > 0.0f) && (freq[1] > 0.0f) && (freq[2] > 0.0f)))
+//                        continue;
+#if DEBUG_DUMP >= 1
+			std::cout << "pred " << freq[0]
 					<< " "
 					<< freq[1]
 					<< " "
 					<< freq[2]
-					<< std::endl;*/
+                    << " x "
+                    << j 
+                    << " "
+                    << i
+					<< std::endl;
+#endif
 
 					// Look for the corresponding index in the volume Fourier transform
 					DIGFREQ2FFT_IDX_DOUBLE(freq[0], parent->volPadSizeX,
@@ -976,55 +997,130 @@ BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl
 	return (T)y * (top - bottom) + bottom;
 }
 
+#if 0
 template <typename T>
 bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
-/*    if (y < (float)(offsetY)/2.0f)
+    /*int ox = x;
+    int oy = y;
+    if (y < (float)(offsetY)/2.0f)
         y += (float)(offsetY)/2.0f;
     else
         y -= (float)(offsetY)/2.0f;
 
     if (x > (float)(offsetX-1)/2.0f)
         x -= (float)(offsetX-1);
+    bool ret = false;
     if (x < 0.0f) {
         x = -x;
         y = (float)(offsetY-1) - y;
-        if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
-        return true;
+        //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+        ret = true;
     }
-    if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
-    return false;*/
-	//x = fmod((offsetX + fmod(x, offsetX)), offsetX); // cycle X axis // FIXME optimize
+    //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+    if (y < (float)(offsetY)/2.0f)
+        y += (float)(offsetY)/2.0f;
+    else
+        y -= (float)(offsetY)/2.0f;
+
+    if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) 
+        std::cout << "HAF HAF << " << ox << " " << oy << " -> " << x << " " << y << "\n";
+
+    return ret;*/
+
 	if (x > (float)(offsetX/2-1)) {
-		x -= (float)offsetX;
+        std::cout << "A\n";
+		x = (float)offsetX - x;
+        y = (float)offsetY - y;
 	}
 
     if ((x < 0.0f) && (y < 0.0f)) {
+        std::cout << "B\n";
         x = -x;
         y = -y;
     }
 
 	if (x < 0.f) {
+        std::cout << "C\n";
 		//x += (float)offsetX;
         x = -x;
         y = offsetY-1 - y;
 	}
-    //y = fmod((offsetY + fmod(y, offsetY)), offsetY); // cycle Y axis // FIXME optimize
 	if (y > (float)(offsetY-1)) {
+        std::cout << "D\n";
 		y -= (float)offsetY;
 	}
 	if (y < 0.f) {
+        std::cout << "A\n";
 		y += (float)offsetY;
 	}
 	if ((int)x >= maxX) { // Careful here, we must not get under -1. -0.9999 is fine, as cast to int will convert it to zero(0)
+        std::cout << "(int)x >= maxX\n";
 		x = - x + offsetX/2;
 		y = - y + offsetY;
-
+        return true;
 	}
-	if (y > maxX) // FIXME this is probably wrong
+	if (y > maxX) {// FIXME this is probably wrong
+        std::cout << "(y > maxX)\n";
 		return true;
+    }
 	return false;
 }
+#endif
 
+template <typename T>
+bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
+    bool conjugate = false;
+    float halfX = (float)offsetX/2.0f;
+    float halfY = (float)offsetY/2.0f;
+
+    if (x > halfX-1) {
+#if DEBUG_DUMP >= 2
+        std::cout << "x > halfX-1\n";
+#endif
+        x = (float)offsetX - x;
+        y = (float)offsetY - y;
+        conjugate = true;
+    }
+
+    if ((x < 0.0f) && (y < 0.0f)) {
+#if DEBUG_DUMP >= 2
+        std::cout << "x < 0 && y < 0\n";
+#endif
+        x = -x;
+        y = -y;
+        conjugate = true;
+    }
+    if (x < 0.f && y > offsetY-1) {
+#if DEBUG_DUMP >= 2
+        std::cout << "x < 0 && y > offsetY-1\n";
+#endif
+        x = -x;
+        y = 2*(offsetY-1) - y;
+        conjugate = true;
+    }
+    if (x < 0.f && y >= 0.f) {
+#if DEBUG_DUMP >= 2
+        std::cout << "x < 0 && y > 0\n";
+#endif
+        //x += (float)offsetX;
+        x = -x;
+        y = offsetY-1 - y;
+        conjugate = true;
+    }
+    if (x >= 0.f && y < 0.f) {
+#if DEBUG_DUMP >= 2
+        std::cout << "x > 0 && y < 0\n";
+#endif
+        y += (float)offsetY;
+    }
+    if (y > (float)(offsetY-1)) {
+#if DEBUG_DUMP >= 2
+        std::cout << "y > offsetY-1\n";
+#endif
+        y -= (float)offsetY;
+    }
+    return conjugate;
+}
 
 inline void multiply(Matrix2D<double>& transform, float inOut[3]) {
 	float tmp0 = transform(0, 0) * inOut[0] + transform(0, 1) * inOut[1] + transform(0, 2) * inOut[2];
@@ -1092,6 +1188,9 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 	int maxX = FLOOR(x + blobRadius);
 	int minY = CEIL(y - blobRadius);
 	int maxY = FLOOR(y + blobRadius);
+#if DEBUG_DUMP >= 2
+    std::cout << "center: " << x << " " << y << std::endl;
+#endif
 	float zSqr = z * z;
 	for (int i = minY; i <= maxY; i++) {
 		float ySqr = (y - i) * (y - i);
@@ -1112,7 +1211,7 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 			int tmpY = i;
 			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
 			float tmpWeight = blobTableSqrt[aux];
-
+    //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
 //			T tmpWeight = blob_val(std::sqrt(distanceSqr), blob);
 			bool conjugate = pad(65, offsetX, offsetY, tmpX, tmpY); // FIXME use X dimension of the image
 			float conj = conjugate ? -1. : 1.;
@@ -1135,7 +1234,7 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 //				dest[2] = -m;
 //			}
 
-//			float tmp[3];
+			float tmp[3];
 //			          				if (k < 0) {
 //			          					tmp[0] = -k;
 //			          					tmp[1] = -l;
@@ -1150,26 +1249,28 @@ getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
 //			          				DIGFREQ2FFT_IDX(tmp[2], 720, tmp[2]);
 
 
-//			std::cout << tmp[0]
-//					<< " "
-//					<< tmp[1]
-//					<< " "
-//					<< tmp[2]
-//					<< " -> "
-//					<< k
-//					<< " "
-//					<< l
-//					<< " "
-//					<< m
-//					<< " -> "
-//					<< tmpX
-//					<< " "
-//					<< tmpY
-//					<< " "
-//					<< tmpWeight
-//					<< " "
-//					<< (conjugate ? "conjugate" : "no_conjugate")
-//					<< std::endl;
+#if DEBUG_DUMP >= 1
+			std::cout << tmp[0]
+					<< " "
+					<< tmp[1]
+					<< " "
+					<< tmp[2]
+					<< " -> "
+					<< k
+					<< " "
+					<< l
+					<< " "
+					<< m
+					<< " -> "
+					<< tmpX
+					<< " "
+					<< tmpY
+					<< " "
+					<< tmpWeight
+					<< " "
+					<< (conjugate ? "conjugate" : "no_conjugate")
+					<< std::endl;
+#endif
 		}
 	}
 	return result;
@@ -1417,6 +1518,9 @@ void druhyPokus(std::complex<float>*** outputVolume,
 						freq[1] = y;
 						freq[2] = z;
 
+                        //if (!((x > 0) && (y > 0) && (z >0)))
+                        //    continue;
+
 					// invert map
 						multiply(transfInv, freq);
 
@@ -1661,9 +1765,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
  ////////////////////////////////////////////////
 
-//                    if (isym > 0 || current_index > 0) {
-//                   	continue;
-//                    }
+#if DEBUG_DUMP > 0
+                    if (isym > 0 || current_index > 0) {
+                       	continue;
+                    }
+#endif
 
 //////////////////////////////////////////////////
 
@@ -1945,6 +2051,8 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 				std::complex<double> val;
 				val.real() = outputVolume[m][l][k].real();
 				val.imag() = outputVolume[m][l][k].imag();
+                if (mirror)
+                    val.imag() *= -1.0f;
 
                 /*if ((int)tmp[0] == 1 && (int)tmp[1] == 0 && (int)tmp[2] == 0) {
                     std::cout << "XXX going to 1 0 0 from " << m << ", " << l << ", " << k << std::endl;
