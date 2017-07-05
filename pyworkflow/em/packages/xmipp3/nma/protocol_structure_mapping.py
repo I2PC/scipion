@@ -163,16 +163,19 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                     else:
                         outVolFn = inVolFn
                         stepId = stepQualify
-                    deps.append(self._insertFunctionStep('elasticAlignmentStep', nVoli, voli, nVolj, inVolFn, prerequisites=[stepId]))
+                    deps.append(self._insertFunctionStep('elasticAlignmentStep', nVoli, voli.getSamplingRate(), nVolj, inVolFn, prerequisites=[stepId]))
                 nVolj += 1
-            self._insertFunctionStep('gatherSingleVolumeStep',prerequisites=deps)
+            self._insertFunctionStep('gatherSingleVolumeStep',prerequisites=deps) # This is a synchronization step, does not do any real work
             nVoli += 1
                
         self._insertFunctionStep('gatherResultsStep')
         self._insertFunctionStep('managingOutputFilesStep')
                                         
     #--------------------------- STEPS functions --------------------------------------------
-    def elasticAlignmentStep(self, nVoli, voli, nVolj, fnAlignedVolj):
+    def elasticAlignmentStep(self, nVoli, Ts, nVolj, fnAlignedVolj):
+        fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d' % (nVolj, nVoli))
+        if os.path.exists(fnVolOut+".pdb"):
+            return
         
         makePath(self._getExtraPath("modes%d"%nVoli))
         
@@ -189,7 +192,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                                               
         fnPseudo = self._getPath("pseudoatoms_%d.pdb"%nVoli)
         fnModes = self._getPath("modes_%d.xmd"%nVoli)
-        Ts = voli.getSamplingRate()
         fnDeform = self._getExtraPath('compDeformVol_%d_To_Vol_%d.xmd' % (nVolj, nVoli))
         sigma = Ts * self.pseudoAtomRadius.get()
         fnPseudoOut = self._getExtraPath('PseudoatomsDeformedPDB_Vol_%d_To_Vol_%d.pdb' % 
@@ -198,7 +200,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                     "-i %s --pdb %s --modes %s --sampling_rate %s -o %s --fixed_Gaussian %s --opdb %s"%\
                    (fnOutMeta, fnPseudo, fnModes, Ts, fnDeform, sigma, fnPseudoOut))
         
-        fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d' % (nVolj, nVoli))
         self.runJob('xmipp_volume_from_pdb', "-i %s -o %s --sampling %s --fixed_Gaussian %s" % 
                     (fnPseudoOut, fnVolOut, Ts, sigma))
     
