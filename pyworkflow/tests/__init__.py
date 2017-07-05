@@ -100,6 +100,10 @@ DataSet(name='nma', folder='nma',
                'vol': 'volumes/AK_LP10.vol',
                'particles': 'particles/img.stk'})
 
+DataSet(name='powerfit', folder='powerfit', 
+        files={
+               'pdb': '3j79-pdb-bundle1.pdb',
+               'vol': 'ribosome_4.vol'})
 
 DataSet(name='tomo', folder='xmipp_tomo_test', 
         files={
