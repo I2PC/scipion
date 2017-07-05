@@ -136,22 +136,6 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
                                           self.getInputMicrographs().strId(),
                                           self.inputReferences.get().strId())
         return [convId]
-    #
-    #
-    # def _insertAllSteps(self):
-    #     convId = self._insertFunctionStep('convertInputStep',
-    #                                       self.getInputMicrographs().strId(),
-    #                                       self.inputReferences.get().strId())
-    #     deps = []
-    #     # Insert one picking step per Micrograph
-    #     for mic in self.inputMicrographs.get():
-    #         micName = mic.getFileName()
-    #         pickId = self._insertFunctionStep('runGempickerStep',
-    #                                           micName,
-    #                                           self.getArgs(),
-    #                                           prerequisites=[convId])
-    #         deps.append(pickId)
-    #     self._insertFunctionStep('createOutputStep', prerequisites=deps)
     
     #--------------------------- STEPS functions -------------------------------
     
