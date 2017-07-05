@@ -166,27 +166,12 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
         self.convertInputs(self._getExtraPath())
     
     def _pickMicrograph(self, mic, *args):
-        print "args: ", args[0]
         micName = mic.getFileName()
         runGempicker(micName, self._getExtraPath(), self.useGPU.get(), args[0],
                      log=self._log)
     
-    def runGempickerStep(self, micName, args):
+    def createOutputStep(self):
         pass
-    
-    
-    
-    # def createOutputStep(self):
-    #     micSet = self.getInputMicrographs()
-    #     coordSet = self._createSetOfCoordinates(micSet)
-    #     if self.boxSize and self.boxSize > 0:
-    #         coordSet.setBoxSize(self.boxSize.get())
-    #     else:
-    #         coordSet.setBoxSize(self.inputReferences.get().getDim()[0])
-    #
-    #     self.readSetOfCoordinates(self._getExtraPath(), coordSet)
-    #     self._defineOutputs(outputCoordinates=coordSet)
-    #     self._defineSourceRelation(micSet, coordSet)
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -324,6 +309,16 @@ class ProtGemPicker(em.ProtParticlePickingAuto):
             for i, mask in enumerate(self.inputMasks):
                 outMask = join(maskSchDir, 'ref%02d.tif' % (i + 1))
                 ih.convert(mask.get(), outMask)
-    
-    def readSetOfCoordinates(self, workingDir, coordSet):
-        readSetOfCoordinates(workingDir, self.getInputMicrographs(), coordSet)
+
+    def readCoordsFromMics(self, workingDir, micDoneList,
+                           outputCoords):
+        if self.boxSize and self.boxSize > 0:
+            outputCoords.setBoxSize(self.boxSize.get())
+        else:
+            outputCoords.setBoxSize(
+                self.inputReferences.get().getDim()[0])
+
+        readSetOfCoordinates(workingDir, micDoneList, outputCoords)
+
+    def getCoordsDir(self):
+        return self._getExtraPath()
