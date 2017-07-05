@@ -31,9 +31,13 @@ class ProgGpuCorrelation: public XmippProgram
 {
 private:
     //Input file
-	FileName fn_proj, fn_exp;
-	//Output file
-    //FileName fn_out;
+	FileName fn_ref, fn_exp;
+
+	bool generate_out;
+
+	int n_keep;
+	bool significance, keepN;
+	double alpha;
 
 public:
 
