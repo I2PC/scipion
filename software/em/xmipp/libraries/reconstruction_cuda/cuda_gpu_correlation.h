@@ -23,7 +23,7 @@ public:
 	GpuMultidimArrayAtGpu< double > d_denom;
 	GpuMultidimArrayAtGpu< double > MFrealSpace;
 	GpuMultidimArrayAtGpu<double> debug;
-	GpuMultidimArrayAtGpu< std::complex<double> > debug_complex;
+	//GpuMultidimArrayAtGpu< std::complex<double> > debug_complex;
 
 	void produceSideInfo();
 };
