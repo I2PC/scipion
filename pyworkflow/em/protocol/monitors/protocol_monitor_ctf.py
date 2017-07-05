@@ -160,6 +160,8 @@ class MonitorCTF(Monitor):
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             defocusAngle = ctf.getDefocusAngle()
+            psdPath = os.path.abspath(ctf.getPsdFile())
+            micPath = os.path.abspath(ctf.getMicrograph().getFileName())
 
             if defocusU < defocusV:
                 aux = defocusV
@@ -171,13 +173,14 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio) VALUES(%f,%f,%f,%f);""" \
-                  % (self._tableName, defocusU, defocusV, defocusAngle,
-                     defocusU / defocusV)
+            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath)
+                     VALUES(%f,%f,%f,%f,"%s","%s");""" % (self._tableName, defocusU,
+                     defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
                 print("ERROR: saving one data point (CTF monitor). I continue")
+                print e
 
             if (defocusU / defocusV) > (1. + astigmatism):
                 self.warning("Defocus ratio (defocusU / defocusV)  = %f."
@@ -205,7 +208,9 @@ class MonitorCTF(Monitor):
                                 defocusV FLOAT,
                                 defocus FLOAT,
                                 astigmatism FLOAT,
-                                ratio FLOAT)
+                                ratio FLOAT, 
+                                micPath STRING,
+                                psdPath STRING)
                                 """ % self._tableName)
 
     def getData(self):
@@ -222,7 +227,9 @@ class MonitorCTF(Monitor):
             'defocusV': get('defocusV'),
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
-            'idValues': get('id')
+            'idValues': get('id'),
+            'imgMicPath': get('micPath'),
+            'imgPsdPath': get('psdPath')
         }
         # conn.close()
         return data

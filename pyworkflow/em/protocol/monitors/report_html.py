@@ -32,6 +32,8 @@ from os.path import join, exists, abspath
 from pyworkflow import getTemplatePath
 import pyworkflow.utils as pwutils
 from summary_provider import SummaryProvider
+from pyworkflow.em.convert import ImageHandler
+
 
 
 class ReportHtml:
@@ -65,6 +67,21 @@ class ReportHtml:
             self.protocol.info(msg)
         else:
             print msg
+
+    @staticmethod
+    def generateThumbs(imgPathList, targetDir, scaleFactor=6, relPath=None):
+        outputThumbs = []
+        ih = ImageHandler()
+
+        for imgPath in imgPathList:
+            thumbPath = os.path.join(targetDir, pwutils.replaceExt(os.path.basename(imgPath), "thumb.png"))
+            thumb = ih.computeThumbnail(imgPath, thumbPath, scaleFactor=scaleFactor)
+            if relPath is not None:
+                outputThumbs.append(os.path.relpath(thumb, relPath))
+            else:
+                outputThumbs.append(thumb)
+
+        return outputThumbs
 
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
@@ -116,7 +133,13 @@ class ReportHtml:
 
         # Ctf monitor chart data
         data = [] if self.ctfMonitor is None else self.ctfMonitor.getData()
-
+        if data:
+            thumbsDir = os.path.join(reportDir, 'imgMicThumbs')
+            pwutils.makePath(thumbsDir)
+            data['imgMicThumbs'] = self.generateThumbs(data['imgMicPath'], thumbsDir, relPath=reportDir)
+            # data['imgPsdThumbs'] = self.generateThumbs(data['imgPsdPath'], reportDir)
+            print('To be ctf data:')
+            print(data)
         ctfData = json.dumps(data)
 
         # system monitor chart data

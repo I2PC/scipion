@@ -1,5 +1,17 @@
 <HTML>
     <HEAD>
+        <!-- jquery-->
+        <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
+        <!--highcharts-->
+        <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
+        <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
+        <!--bootstrap-->
+        <SCRIPT src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></SCRIPT>
+        <LINK rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <!--data tables-->
+        <LINK rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
+        <SCRIPT src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></SCRIPT>
+
         <TITLE>Scipion execution summary for %(projectName)s </TITLE>
         %(refresh)s
     </HEAD>
@@ -31,17 +43,18 @@
         }
         LABEL {
             font-weight: bold;
-            margin: 8px;
+            margin: 0px;
         }
         .propertyline {
             margin-top: 3px;
             margin-bottom: 4px;
+            margin-left: 8px;
         }
         FOOTER {
             text-align: center;
             font-style: italic;
             font-size: small;
-            margin-top: 20px;
+            margin: 20px 0px;
                 
         }
         .icon {
@@ -72,7 +85,58 @@
         .center {
             text-align: center;
         }
-        
+        a:focus, a:hover {
+            color: firebrick;
+        }
+        .pager .active a{
+            background-color : firebrick;
+            color: #FFF;
+            border: 0px;
+        }
+
+        .pagination>.active>a, .pagination>.active>a:focus, .pagination>.active>a:hover, .pagination>.active>span, .pagination>.active>span:focus, .pagination>.active>span:hover {
+            background-color: firebrick;
+            border-color: firebrick;
+        }
+
+        .pagination>li>a:hover, .pagination>li>span {
+            color: firebrick;
+        }
+
+        .pagination>li>a, .pagination>li>span {
+            color: firebrick;
+
+        }
+
+        .pager .active a:hover{
+            color: firebrick;
+            border: 0px;
+        }
+
+        .pager li>a, .pager li>span {
+            color: firebrick;
+        }
+
+        .pager .next>a, .pager .next>span {
+            float: none;
+        }
+
+        .pager .previous>a, .pager .previous>span {
+            float: none;
+        }
+
+        .gallery-item{
+            margin-bottom: 30px;
+
+        }
+        .modal-footer{
+            text-align: center;
+
+        }
+        .pagination{
+            margin: 0;
+        }
+
         /* Grid layout classes */
         /* Taken from https://www.sitepoint.com/understanding-css-grid-systems/ */
         .row, 
@@ -166,20 +230,17 @@
             }
         }
     </STYLE>
-    <SCRIPT src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></SCRIPT>
-    <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
-    <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
-    <BODY>
-        <DIV id="content">
+        <BODY>
+        <DIV id="content" class="clearfix">
             <H1><img class="valign" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo_small.png">&nbsp;&nbsp; Project %(projectName)s </H1>
             <DIV class="row">
                 <DIV class="column column-5">
                     <H2>Project properties</H2>
-                    <P class="propertyline"><label>Start time:</label> %(startTime)s</P>
-                    <P class="propertyline"><label>Last update:</label> %(dateStr)s</P>
-                    <P class="propertyline"><label>Duration:</label> %(projectDuration)s</P>
-                    <P class="propertyline"><label>Status:</label> %(projectStatus)s</P>
-                    <P class="propertyline"><label>Scipion version:</label> %(scipionVersion)s</P>
+                    <P class="propertyline"><label>Start time:</label> <span>%(startTime)s</span></P>
+                    <P class="propertyline"><label>Last update:</label> <span>%(dateStr)s</span></P>
+                    <P class="propertyline"><label>Duration:</label> <span>%(projectDuration)s</span></P>
+                    <P class="propertyline"><label>Status:</label> <span>%(projectStatus)s</span></P>
+                    <P class="propertyline"><label>Scipion version:</label> <span>%(scipionVersion)s</span></P>
 
                     <DIV id="acquisition">
                         <H2>Acquisition</H2>
@@ -206,6 +267,45 @@
                 <H2>System monitor</H2>
                 <DIV id="systemChart"></DIV>
             </SECTION>
+            <SECTION id="mics">
+                <H2>Micrographs</H2>
+                <!--<TABLE id="micTable" class="display"></TABLE>-->
+                <DIV id="micThumbs" class="gallery">
+                    <div class="row" id="gallery-pagination">
+                        <nav aria-label="...">
+                            <ul class="pager" role="tablist">
+                                <li class="previous" onclick="goTo(1);"><a><span aria-hidden="true">←</span> Previous</a></li>
+                                <li class="active" id="first">
+                                    <a aria-controls="tab1" data-toggle="tab" href="#tab1" role="tab">1</a>
+                                </li>
+
+                                <li class="next" onclick="goTo(2);"><a>Next <span aria-hidden="true">→</span></a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="tab-content">
+                    </div>
+                </DIV>
+                <div class="modal fade" id="modalGallery" tabindex="-1" role="dialog" aria-labelledby="modalGalleryLabel" aria-hidden="true">
+                     <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                    <h4 class="modal-title" id="modalGalleryLabel">Gallery</h4>
+                            </div> <!-- /.modal-header -->
+                            <div class="modal-body">
+                                <div id="carouselGallery" class="carousel slide" data-ride="carousel" data-interval="false">
+                                     <div class="carousel-inner"> </div> <!-- /.carousel-inner -->
+                                </div> <!-- /.carousel -->
+                            </div> <!-- /.modal-body -->
+                            <div class="modal-footer">
+                                 <ul class="pagination"> </ul>
+                            </div> <!-- /.modal-footer -->
+                        </div> <!-- /.modal-content -->
+                    </div> <!-- /.modal-dialog -->
+                </div> <!-- /.modal -->
+
+            </SECTION>
         </DIV>
         
         <FOOTER>
@@ -227,7 +327,36 @@
             ctfData: %(ctfData)s,
             systemData: %(systemData)s
         }
-        
+
+        String.prototype.format = function() {
+            var formatted = this;
+            for (var i = 0; i < arguments.length; i++) {
+                var regexp = new RegExp('\\{'+i+'\\}', 'gi');
+                formatted = formatted.replace(regexp, arguments[i]);
+            }
+            return formatted;
+        };
+
+        function goTo(number){
+           $('ul.pager li:eq('+number+') a').tab('show');
+           upgradePreNext(number);
+        }
+
+        function upgradePreNext(number){
+           if (number>1){
+               $('ul.pager li:eq(0)').attr("onclick","goTo("+(number-1)+")");
+               $('ul.pager li:eq(0)').attr("class", "previous");
+           } else {
+               $('ul.pager li:eq(0)').attr("class", "disabled");
+           }
+            if (number<5){
+               $('ul.pager li:eq(6)').attr("onclick","goTo("+(number+1)+")");
+               $('ul.pager li:eq(6)').attr("class", "next");
+           } else {
+               $('ul.pager li:eq(6)').attr("class", "disabled");
+           }
+        }
+
         function addAcquisition(){
             // Get the acquisition section
             var acquisitionSection = $('#acquisition');
@@ -243,8 +372,8 @@
         function addRuns(){
             // Get the runs table
             var runsTable = $('#runsTable');
-            
-            
+
+
             // For each protocol property
             $.each(report.runs, function(index, value){
                 var line = "<TR class='protocolLine'><TD>" + value.protocolName + "</TD><TD colspan='2'></TD></TR>";
@@ -257,7 +386,122 @@
                 });
             });
         };
-        
+
+        function createGallery(galleryId, currentSlideIndex){
+            var galleryBox = $(galleryId + ' .carousel-inner');
+            $('a[data-target="'+ galleryId +'"]').each(function(){
+                var img = $(this).html();
+                var galleryItem = $('<div class="item">'+ img +'</div>');
+                galleryItem.appendTo(galleryBox); });
+                galleryBox.children('.item').eq(currentSlideIndex).addClass('active');
+                setTitle(galleryId, currentSlideIndex);
+
+        }
+
+        function destroyGallry(galleryId){
+            $(galleryId + ' .carousel-inner').html("");
+
+        }
+
+        function createPagination(galleryId, currentSlideIndex){
+            var pagination = $(galleryId + ' .pagination');
+            var carouselId = $(galleryId).find('.carousel').attr('id');
+            var prevLink = $('<li><a href="#'+ carouselId +'" data-slide="prev">«</a></li>');
+            var nextLink = $('<li><a href="#'+ carouselId +'" data-slide="next">»</a></li>');
+            prevLink.appendTo(pagination); nextLink.appendTo(pagination);
+            $('a[data-target="'+ galleryId +'"]').each(function(){
+                var linkIndex = $(this).index('a[data-target="'+ galleryId +'"]');
+                var paginationLink = $('<li><a data-target="#carouselGallery" data-slide-to="'+ linkIndex +'">'+ (linkIndex+1) +'</a></li>');
+                paginationLink.insertBefore('.pagination li:last-child'); });
+                setPagination(++currentSlideIndex);
+
+        }
+
+        function setPagination(currentSlideIndex, reset = false){
+            if (reset){
+                $('.pagination li').removeClass('active');
+            }
+            $('.pagination li').eq(currentSlideIndex).addClass('active');
+        }
+
+        function destroyPagination(galleryId){
+            $(galleryId + ' .pagination').html("");
+
+        }
+
+        function setTitle(galleryId, currentSlideIndex){
+            var imgAlt = $(galleryId + ' .item').eq(currentSlideIndex).find('img').attr('alt');
+            $('.modal-title').text(imgAlt);
+        }
+
+        function addMicGallery(){
+            // Add pager
+            var pager = $('.pager #first');
+            var gridSize = 9; // our grid will be 3x3
+            var numMics = report.ctfData.imgMicThumbs.length;
+            var numPages = Math.ceil(numMics / gridSize);
+            var imgIndex = 0;
+
+            for (i=1; i<=numPages; i++) {
+                if(i ==1){
+                    $('.tab-content').append('<div class="tab-pane active" id="tab1" role="tabpanel"></div>');
+                }else{
+                    pager.after('<li> <a aria-controls="tab{0}" \
+                                 data-toggle="tab" href="#tab{0}" role="tab">{0}</a></li>'.format(i));
+                    $('.tab-content').append('<div class="tab-pane" id="tab{0}" role="tabpanel"></div>'.format(i));
+                };
+                for(j=1; j<=gridSize; j++){
+                    imgIndex = gridSize*(i-1)+(j-1);
+                    var imgThumbPath = report.ctfData.imgMicThumbs[imgIndex];
+                    var imgPath = report.ctfData.imgMicPath[imgIndex];
+                    var imgDescription = imgPath.split("/").pop()
+                    
+                    $('.tab-pane#tab{0}'.format(i)).append('<div class="col-sm-3"> \
+                                                                <div class="thumbnail"> \
+                                                                    <a href="#galleryImg{0}" class="link-gallery" data-toggle="modal" data-target="#modalGallery"> \
+                                                                        <img class="img-responsive img-gallery" alt={3} src={2}> \
+                                                                    </a> \
+                                                                    <div class="caption"> \
+                                                                        <h3>Micrograph {1}</h3>\
+                                                                    </div> \
+                                                                <\div>\
+                                                            </div>'.format(imgIndex, imgIndex+1, imgThumbPath, imgDescription));
+                    if (imgIndex+1 === numMics) {
+                        break;
+                    };
+                };
+            };
+
+
+        };
+
+//        function addMicTable(){
+//            var dataset = [];
+//            $.each(report.ctfData.imgMicThumbs, function(index, value) {
+//                var rowValues = ["<img src="+ value +">", value];
+//                dataset.push(rowValues)
+//            });
+//
+//            $('#micTable').DataTable( {
+//                data: dataset,
+//                columns: [
+//                    {title: "Mic"},
+//                    {title: "Mic Path"}
+//                ]
+//            });
+//
+//        };
+
+//        function addMicThumbs(){
+//            var imgTabCount = 0;
+//            var micThumbDiv = $('#micThumbs');
+//            var nTabs = 0;
+//            var firstTab = '<div class="tab-pane" id="tab1" role="tabpanel">' +
+//                           '</div>'
+//
+//
+//        };
+
         function addCTFChart () {
             
             $('#ctfChart').highcharts({
@@ -395,9 +639,33 @@
             addRuns();
             addCTFChart();
             addSystemChart();
+            addMicGallery();
         };
         
         populateReport();
+
+        $(document).ready(function(){
+            // gallery pagination things
+            $('li a').on('click',function(e){
+                goTo((e.target.innerHTML)-0);
+            });
+            $('.link-gallery').click(function(){
+                var galleryId = $(this).attr('data-target');
+                var currentLinkIndex = $(this).index('a[data-target="'+ galleryId +'"]');
+                createGallery(galleryId, currentLinkIndex); createPagination(galleryId, currentLinkIndex);
+                $(galleryId).on('hidden.bs.modal', function (){
+                    destroyGallry(galleryId);
+                    destroyPagination(galleryId);
+                });
+                $(galleryId +' .carousel').on('slid.bs.carousel', function (){
+                    var currentSlide = $(galleryId +' .carousel .item.active');
+                    var currentSlideIndex = currentSlide.index(galleryId +' .carousel .item');
+                    setTitle(galleryId, currentSlideIndex);
+                    setPagination(++currentSlideIndex, true);
+                })
+
+            });
+        });
         
         
     </SCRIPT>
