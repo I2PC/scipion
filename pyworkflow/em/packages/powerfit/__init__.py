@@ -33,5 +33,5 @@ _logo = "powerfit_logo.gif"
 from bibtex import _bibtex # Load bibtex dict with references
 from powerfit import *
 from protocol_powerfit import PowerfitProtRigidFit
-from viewer import PowerfitViewer
+from viewer_powerfit import PowerfitProtRigidFitViewer
 
