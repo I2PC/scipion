@@ -131,6 +131,11 @@ public:
 		clear();
 	}
 
+	void initialize()
+	{
+		initializeIdentity(d_data, Ndim);
+	}
+
 	void setTranslation(const float* posX, const float* posY)
 	{
 		for(int i=0; i<Ndim; i++)
