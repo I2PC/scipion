@@ -15,38 +15,6 @@
 #define PI 3.14159265
 
 
-/*
-__global__ void compute_max(double *d_in, double *d_out, double *d_out_pos, int size)
-{
-	extern __shared__ double sdata[];
-
-	unsigned int myId = threadIdx.x + (blockDim.x*blockIdx.x);
-	unsigned int tid = threadIdx.x;
-
-	sdata[tid]= d_in[myId];
-	sdata[tid+blockDim.x] = myId;
-
-	__syncthreads();
-
-	if(myId >= size)
-		sdata[tid] = -1;
-	__syncthreads();
-
-	for (unsigned int s= blockDim.x/2; s>0; s>>=1){
-		if(tid<s){
-			sdata[tid]=max(sdata[tid], sdata[tid+s]);
-			sdata[tid+blockDim.x]=(sdata[tid], sdata[tid+s])?myId:myId+s;
-		}
-		__syncthreads();
-	}
-
-	if(tid==0){
-		d_out[blockIdx.x]=sdata[0];
-		d_out_pos[blockIdx.x]=sdata[blockDim.x];
-	}
-}
-*/
-
 __global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, size_t n){
 
 	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -169,7 +137,7 @@ __global__ void applyTransformKernel(double *d_in, double *d_out, float *transMa
 	unsigned int numIm = idx/yxdim;
 
 	//AJ wrapping type: 0 image copies, 1 mirror, 2 last pixel copies
-	int wrap = 2;
+	int wrap = 0;
 
 	if(idx>=nzyxdim)
 		return;
@@ -187,11 +155,6 @@ __global__ void applyTransformKernel(double *d_in, double *d_out, float *transMa
 
 	x_orig += transMat[(numIm*9)]*x - transMat[1+(numIm*9)]*y + xdim/2;
 	y_orig += -transMat[3+(numIm*9)]*x + transMat[4+(numIm*9)]*y + ydim/2;
-
-	/*x = x - xdim/2;
-	y = y - ydim/2;
-	x_orig = transMat[(numIm*9)]*x - transMat[1+(numIm*9)]*y - transMat[2+(numIm*9)] + xdim/2;
-	y_orig = -transMat[3+(numIm*9)]*x + transMat[4+(numIm*9)]*y - transMat[5+(numIm*9)] + ydim/2;*/
 
 	int x_orig00 = (int)floorf(x_orig);
 	int y_orig00 = (int)floorf(y_orig);
@@ -365,27 +328,9 @@ void padding_masking(GpuMultidimArrayAtGpu<double> &d_orig_image, GpuMultidimArr
 	image_gpu.copyGpuToGpu(d_orig_image);
 
 	if(!rotation || !experimental){
-	/*	int xdim2 = (int)floor((padded_image_gpu.Xdim-d_orig_image.Xdim)/2);
-		int ydim2 = (int)floor((padded_image_gpu.Ydim-d_orig_image.Ydim)/2);
-
-		for(int j=0; j<d_orig_image.Ndim; j++){
-
-			int offsetSmall=(int)(d_orig_image.yxdim*j);
-			int offsetLarge=(int)((padded_image_gpu.yxdim*j) + (ydim2*padded_image_gpu.Xdim) + xdim2);
-
-			for(int i=0; i<d_orig_image.Ydim; i++){
-				gpuErrchk(cudaMemcpy((void*)&padded_image_gpu.d_data[offsetLarge], (const void*)&d_orig_image.d_data[offsetSmall], sizeof(double)*d_orig_image.Xdim, cudaMemcpyDeviceToDevice));
-				gpuErrchk(cudaMemcpy((void*)&padded_image2_gpu.d_data[offsetLarge], (const void*)&image2_gpu.d_data[offsetSmall], sizeof(double)*d_orig_image.Xdim, cudaMemcpyDeviceToDevice));
-				if(j==0)
-					gpuErrchk(cudaMemcpy((void*)&padded_mask_gpu.d_data[offsetLarge], (const void*)&mask.d_data[offsetSmall], sizeof(double)*d_orig_image.Xdim, cudaMemcpyDeviceToDevice));
-				offsetSmall += d_orig_image.Xdim;
-				offsetLarge += padded_image_gpu.Xdim;
-			}
-		}*/
 		gpuErrchk(cudaMemset(padded_image_gpu.d_data, 0, padded_image_gpu.nzyxdim*sizeof(double)));
 		gpuErrchk(cudaMemset(padded_image2_gpu.d_data, 0, padded_image2_gpu.nzyxdim*sizeof(double)));
 		gpuErrchk(cudaMemset(padded_mask_gpu.d_data, 0, padded_mask_gpu.nzyxdim*sizeof(double)));
-
 
 		paddingKernel<<< numBlk, numTh >>>(d_orig_image.d_data, image2_gpu.d_data, mask.d_data,
 				padded_image_gpu.d_data, padded_image2_gpu.d_data, padded_mask_gpu.d_data,
@@ -481,51 +426,6 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 					(cufftDoubleComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
 					maskFFTPolar, d_NCC.d_data, referenceAux.d_projPolarFFT.yxdim, RefExpRealSpace.nzyxdim, RefExpRealSpace.yxdim);
 
-	//AJ para calcular el maximo
-	/*numTh = 1024;
-	int numBlk = d_NCC.yxdim/numTh;
-	if(d_NCC.yxdim%numTh > 0)
-		numBlk++;
-
-	double *d_NCC_aux;
-	gpuErrchk(cudaMalloc((void**)&d_NCC_aux, numBlk * numTh * sizeof(double)));
-	gpuErrchk(cudaMemcpy(d_NCC_aux, d_NCC.d_data, sizeof(double)*(d_NCC.yxdim), cudaMemcpyDeviceToDevice));
-
-	double *d_out_max, *d_in_aux, *d_out_max_pos;
-	gpuErrchk(cudaMalloc((void**)&d_out_max, numBlk * sizeof(double)));
-	gpuErrchk(cudaMalloc((void**)&d_out_max_pos, numBlk * sizeof(double)));
-
-	compute_max<<<numBlk, numTh, 2 * numTh * sizeof(double)>>> (d_NCC_aux, d_out_max, d_out_max_pos, (int)d_NCC.yxdim);
-
-	int numBlk3=numBlk;
-	int size_aux3=numBlk;
-	while(1){
-		if(numBlk3>numTh){
-			numBlk3=(int)(numBlk3/numTh);
-			if((numBlk3%numTh)>0)
-				numBlk3++;
-		}else{
-			numBlk3=1;
-		}
-		gpuErrchk(cudaMalloc((void**)&d_in_aux, numBlk3 * numTh * sizeof(double)));
-		gpuErrchk(cudaMemcpy(d_in_aux, d_out_max, sizeof(double)*size_aux3, cudaMemcpyDeviceToDevice));
-
-		compute_max<<<numBlk3, numTh, 2 * numTh * sizeof(double)>>> (d_in_aux, d_out_max, d_out_max_pos, size_aux3);
-		size_aux3=numBlk3;
-		if(numBlk3==1)
-			break;
-	}
-	double max_NCC;
-	double position;
-	gpuErrchk(cudaMemcpy(&max_NCC, &d_out_max[0], sizeof(double), cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(&position, &d_out_max_pos[0], sizeof(double), cudaMemcpyDeviceToHost));
-	printf("max_NCC %lf \n", max_NCC);
-	printf("position %lf \n", position);*/
-	//FIN AJ
-
-	/*experimentalAux.debug.clear();
-	experimentalAux.debug.resize(d_NCC);
-	d_NCC.copyGpuToGpu(experimentalAux.debug);*/
 
 	double *max_values = new double[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
