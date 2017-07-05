@@ -79,6 +79,7 @@ class XmippViewer(Viewer):
                 SetOfImages,
                 SetOfMovies,
                 SetOfNormalModes,
+                SetOfPDBs,
                 XmippProtCompareReprojections,
                 XmippParticlePickingAutomatic,
                 XmippProtExtractParticlesPairs,
@@ -147,6 +148,14 @@ class XmippViewer(Viewer):
                                           fn, obj.strId(),
                                           viewParams={OBJCMDS: objCommands},
                                           **kwargs))
+
+        elif issubclass(cls, SetOfPDBs):
+            fn = obj.getFileName()
+            labels = 'id _filename '
+            self._views.append(ObjectView(self._project, obj.strId(), fn,
+                                          viewParams={ORDER: labels,
+                                                      VISIBLE: labels,
+                                                      MODE: MODE_MD, RENDER: "no"}))
 
         elif issubclass(cls, SetOfMovies):
             fn = obj.getFileName()
