@@ -49,7 +49,7 @@ class XmippProtMovieGain(ProtProcessMovies):
         EMProtocol.__init__(self, **args)
         self.stepsExecutionMode = em.STEPS_PARALLEL
 
-    #--------------------------- DEFINE param functions ------------------------
+    #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
  
@@ -61,19 +61,21 @@ class XmippProtMovieGain(ProtProcessMovies):
                       label="Frame step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every frame (frameStep=1) is used to '
                            'compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then every 2nd, 3rd, '
-                           '... frame will be used.')
+                           'this parameter to 2, 3, ..., then only every 2nd, '
+                           '3rd, ... frame will be used.')
         form.addParam('movieStep', IntParam, default=1,
                       label="Movie step", expertLevel=LEVEL_ADVANCED,
                       help='By default, every movie (movieStep=1) is used to '
                            'compute the movie gain. If you set '
-                           'this parameter to 2, 3, ..., then every 2nd, 3rd, '
-                           '... movie will be used.')
+                           'this parameter to 2, 3, ..., then only every 2nd, '
+                           '3rd, ... movie will be used.')
         form.addParam('useExistingGainImage', BooleanParam, default=None,
                       label="Use existing gain image", expertLevel=LEVEL_ADVANCED,
-                      help='By default, we do not estimate gain image if there '
-                           'is an existing gain image from input movies '
-                           'protocol, we apply it.')
+                      help='If there is a gain image associated with input '
+                           'movies, you can decide to use it instead of '
+                           'estimating raw/residual gain image. Location of '
+                           'this gain image needs to be indicated in import '
+                           'movies protocol.')
         form.addParallelSection(threads=1, mpi=1)
 
 
