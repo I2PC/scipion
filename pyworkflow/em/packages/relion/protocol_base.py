@@ -843,9 +843,9 @@ class ProtRelionBase(EMProtocol):
             iterMsg = 'No iteration finished yet.'
         summary = [iterMsg]
 
-        flip = '' if self._getInputParticles().isPhaseFlipped() else 'not '
-        flipMsg = "Your images have %sbeen ctf-phase corrected" % flip
-        summary.append(flipMsg)
+        if self._getInputParticles().isPhaseFlipped():
+            flipMsg = "Your input images are ctf-phase flipped"
+            summary.append(flipMsg)
         
         if self.doContinue:
             summary += self._summaryContinue()
