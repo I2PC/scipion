@@ -433,7 +433,8 @@ class ProjectTCPRequestHandler(SocketServer.BaseRequestHandler):
             else:
                 answer = 'no answer available'
                 self.request.sendall(answer + '\n')
-        except:
+        except Exception as e:
+            print e
             import traceback
             traceback.print_stack()
 
