@@ -375,7 +375,7 @@ class Image(EMObject):
         # provides  the position of the actual origin in the system of
         # coordinates of the default origin.
         # _origin is an object of the class Transform
-        self._origin = Transform()
+        self._origin = None
         if location:
             self.setLocation(location)
 
@@ -497,7 +497,10 @@ class Image(EMObject):
         return self._origin is not None
 
     def getOrigin(self):
-        return self._origin
+        if self.hasOrigin():
+            return self._origin
+        else:
+            return Transform() # The identity matrix
 
     def setOrigin(self, newOrigin):
         self._origin = newOrigin
@@ -1077,6 +1080,10 @@ class SetOfDefocusGroup(EMSet):
     def setAvgSet(self, value):
         self._avgSet.set(value)
 
+class SetOfPDBs(EMSet):
+    """ Set containing PDB items. """
+    ITEM_TYPE = PdbFile
+    
 
 class Coordinate(EMObject):
     """This class holds the (x,y) position and other information
