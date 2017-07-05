@@ -93,7 +93,10 @@ class SparxGaussianProtPicking(ProtParticlePickingAuto):
         params = ('--gauss_autoboxer=demoparms --write_dbbox --boxsize=%d %s'
                   % (self.boxSize, micFile))
         self.runJob('e2boxer.py', params, cwd=self.getCoordsDir())
-    
+
+    def createOutputStep(self):
+        pass
+
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
