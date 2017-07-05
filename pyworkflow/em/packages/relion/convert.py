@@ -38,7 +38,7 @@ from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0
+from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
@@ -139,7 +139,7 @@ def isVersion2():
 
 
 def getSupportedVersions():
-    return [V1_3, V1_4, V2_0]
+    return [V1_3, V1_4, V2_0, V2_1]
 
 
 def locationToRelion(index, filename):
