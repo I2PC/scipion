@@ -27,6 +27,7 @@
 import math
 from glob import glob
 import numpy
+from os.path import exists
 
 from pyworkflow.em import *  
 from pyworkflow.utils import * 
@@ -56,6 +57,8 @@ class PowerfitProtRigidFit(ProtFitting3D):
                       label="Resolution (A)", important=True, help="Resolution for the fitting. The PDB is filtered to this frequency.")
         form.addParam('angleStep',FloatParam, label="Angular step", default=10.0, expertLevel=LEVEL_ADVANCED,
                       help='Angular step for the alignment search')
+        form.addParam('nModels',IntParam, label="Number of models", default=10, expertLevel=LEVEL_ADVANCED,
+                      help='Number of models to estimate')
         form.addParam('doLaplacian',BooleanParam, label="Apply Laplacian", default=False, expertLevel=LEVEL_ADVANCED,
                       help='Apply a Laplacian to the volume to highlight borders')
         form.addParam('doCoreWeight',BooleanParam, label="Apply core weight", default=False, expertLevel=LEVEL_ADVANCED,
@@ -68,6 +71,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('powerfitWrapper')
+        self._insertFunctionStep('createOutputStep')
         
     #--------------------------- STEPS functions -------------------------------
     def powerfitWrapper(self):
@@ -81,18 +85,57 @@ class PowerfitProtRigidFit(ProtFitting3D):
         ccp4header.setSampling(vol.getSamplingRate())
         ccp4header.writeHeader()
 
-        args = "%s %f %s -d %s -p %d -a %f"%(fnVol,self.resolution,self.inputPDB.get().getFileName(), self._getExtraPath(),self.numberOfThreads,
-                                             self.angleStep)
+        args = "%s %f %s -d %s -p %d -a %f -n %d"%(fnVol,self.resolution,self.inputPDB.get().getFileName(), self._getExtraPath(),self.numberOfThreads,
+                                                   self.angleStep, self.nModels)
         if self.doLaplacian:
             args+=" -l"
         if self.doCoreWeight:
             args+=" -cw"
         self.runJob("powerfit",args)
         
+        # Construct the chimera viewers
+        for n in range(self.nModels.get()):
+            fnPdb = self._getExtraPath("fit_%d.pdb"%n)
+            if exists(fnPdb):
+                fnCmd = self._getExtraPath("chimera_%d.cmd"%n)
+                fhCmd = open(fnCmd, 'w')
+                fhCmd.write("open volume.mrc\n")
+                fhCmd.write("open lcc.mrc\n")
+                fhCmd.write("open fit_%d.pdb\n" % n)
+                fhCmd.write("vol #1 hide\n")
+                fhCmd.write("scolor #0 volume #1 cmap rainbow\n")
+                fhCmd.close()
+
+    def createOutputStep(self):
+        fnOutput = self._getExtraPath("solutions.out")
+        qualifiers = {}
+        if exists(fnOutput):
+            lineCounter = 0
+            for line in open(fnOutput,"r").readlines():
+                if lineCounter>0:
+                    tokens = line.split()
+                    fnPdb = self._getExtraPath("fit_%d.pdb"%int(tokens[0]))
+                    qualifiers[fnPdb] = (Float(tokens[1]),Float(tokens[2]),Float(tokens[3]))
+                lineCounter += 1
+        
+        setOfPDBs = self._createSetOfPDBs()
+        for n in range(self.nModels.get()):
+            fnPdb = self._getExtraPath("fit_%d.pdb"%(n+1))
+            if exists(fnPdb):
+                pdb = PdbFile(fnPdb)
+                pdb._powerfit_cc = qualifiers[fnPdb][0]
+                pdb._powerfit_Fish_z = qualifiers[fnPdb][1]
+                pdb._powerfit_rel_z = qualifiers[fnPdb][2]
+                setOfPDBs.append(pdb)
+                
+        self._defineOutputs(outputPDBs=setOfPDBs)
+        self._defineSourceRelation(self.inputVol, setOfPDBs)
+        self._defineSourceRelation(self.inputPDB, setOfPDBs)
+        
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
         summary = []
-        summary.append('Angular step: %d' % self.angleStep)
+        summary.append('Angular step: %f' % self.angleStep.get())
         if self.doLaplacian:
             summary.append("Apply Laplacian")
         if self.doLaplacian:
