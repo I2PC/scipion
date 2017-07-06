@@ -27,7 +27,7 @@ import os
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.packages.xmipp3 import XmippProtCTFMicrographs, XmippProtCTFSelection
+from pyworkflow.em.packages.xmipp3 import XmippProtCTFMicrographs
 from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
 
 
@@ -82,7 +82,7 @@ class TestCtfStreaming(BaseTest):
 
 
 
-######################### AJ START NEW STREAMING PROTOCOL #########################################
+######################### AJ START NEW STREAMING PROTOCOL ######################
 
         kwargs = {
             'numberOfThreads': 5}
@@ -91,11 +91,11 @@ class TestCtfStreaming(BaseTest):
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF)
 
-####################################################################################################
+################################################################################
 
 
 
-######################### AJ CHECKING OUTPUT OF NEW STREAMING PROTOCOL ##############################
+######################### AJ CHECKING OUTPUT OF NEW STREAMING PROTOCOL #########
 
 
         micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
@@ -121,4 +121,4 @@ class TestCtfStreaming(BaseTest):
             self.assertNotEqual(ctf._defocusV.get(), None)
             self.assertNotEqual(ctf._defocusRatio.get(), None)
 
-####################################################################################################
+################################################################################
