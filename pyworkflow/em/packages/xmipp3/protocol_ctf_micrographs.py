@@ -100,23 +100,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                            'suspicious.')
 
     # --------------------------- INSERT steps functions -----------------------
-    def _insertEstimationSteps(self, insertedDict, inputMics):
-
-        estimDeps = []
-        self._defineValues()
-        self._prepareCommand()
-        # For each micrograph insert the steps to process it
-        for micFn, micDir, mic in self._iterMicrographs(inputMics):
-            if mic.getMicName() not in insertedDict:
-                # CTF estimation
-                stepId = self._insertFunctionStep('_estimateCTF', micFn, micDir,
-                                                  mic.getMicName(),
-                                                  prerequisites=[])
-                estimDeps.append(stepId)
-
-                insertedDict[mic.getMicName()] = stepId
-        return estimDeps
-
     def _stepsCheck(self):
         # The streaming is not allowed for recalculate CTF
         if self.recalculate:
@@ -186,12 +169,11 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
 
         if newDone:
             for micName in newDone:
-
                 for m in self.listOfMic:
-                    if m.getMicName()==micName:
+                    if m.getMicName() == micName:
                         self.mic = m
                         break
-                micDir = self._getMicDir(micName)
+                micDir = self._getMicrographDir(self.mic)
                 fnCTF = self._getFileName('ctf', micDir=micDir)
                 if not exists(fnCTF):
                     fnError = self._getFileName('ctfErrorParam', micDir=micDir)
@@ -260,8 +242,7 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
                     downsampleList.append((ctfDownFactor + 1) / 2)
 
         deleteTmp = ""
-
-
+        
         for downFactor in downsampleList:
             # Downsample if necessary
             if downFactor != 1:
@@ -385,10 +366,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         return papers
 
     # --------------------------- UTILS functions ------------------------------
-    def _getMicDir(self, micName):
-        """ Return an unique dir name for results of the micrograph. """
-        return self._getExtraPath(pwutils.path.removeBaseExt(micName))
-
     def _prepareArgs(self, params):
         self._args = ("--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate "
                       "%(samplingRate)s --defocusU %(defocusU)f --defocus_range "
