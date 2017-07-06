@@ -32,7 +32,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, FileParam,
 from pyworkflow.em.data import Volume, VolumeMask
 from pyworkflow.em.protocol import ProtAnalysis3D, ImageHandler
 import pyworkflow.em.metadata as md
-from convert import getVersion
+from convert import isVersion2
 import pyworkflow.utils.path as putils
 
 
@@ -148,7 +148,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
                            'using a resolution that is higher than the '
                            'gold-standard FSC-reported resolution, take care '
                            'not to interpret noise in the map for signal...')
-        if getVersion() == "2.0":
+        if isVersion2():
             pass
         form.addParam('filterEdgeWidth', IntParam, default=2,
                       expertLevel=LEVEL_ADVANCED,

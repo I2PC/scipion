@@ -293,7 +293,7 @@ class ProtRelionSortParticles(ProtParticles):
             return self.inputSet.get()
 
     def _setArgs(self, args):
-        from pyworkflow.em.packages.relion.convert import getVersion
+        from pyworkflow.em.packages.relion.convert import isVersion2
         particles = self._sampleParticles()
 
         if self.maskDiameterA <= 0:
@@ -307,7 +307,7 @@ class ProtRelionSortParticles(ProtParticles):
                      '--min_z': self.minZ.get()
                      })
         
-        if getVersion() == "2.0":
+        if isVersion2():
             args['--o'] = self._getFileName('output_star')
         else:
             args['--o'] = 'sorted'
