@@ -36,7 +36,6 @@ from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import powerfit
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
 
-# TODO: Move to 3D Tools
 class PowerfitProtRigidFit(ProtFitting3D):
     """ Protocol for fitting a PDB into a 3D volume
     
@@ -107,6 +106,12 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 fhCmd.close()
 
     def createOutputStep(self):
+        volume=Volume()
+        volume.setFileName(self._getExtraPath('volume.mrc'))
+        volume.setSamplingRate(self.inputVol.get().getSamplingRate())
+        self._defineOutputs(outputVolume=volume)
+        self._defineSourceRelation(self.inputVol.get(),volume)
+        
         fnOutput = self._getExtraPath("solutions.out")
         qualifiers = {}
         if exists(fnOutput):
@@ -123,6 +128,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
             fnPdb = self._getExtraPath("fit_%d.pdb"%(n+1))
             if exists(fnPdb):
                 pdb = PdbFile(fnPdb)
+                pdb.setVolume(volume)
                 pdb._powerfit_cc = qualifiers[fnPdb][0]
                 pdb._powerfit_Fish_z = qualifiers[fnPdb][1]
                 pdb._powerfit_rel_z = qualifiers[fnPdb][2]
