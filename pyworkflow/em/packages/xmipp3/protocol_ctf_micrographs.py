@@ -185,14 +185,12 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         ctfSet = self._loadOutputSet(em.SetOfCTF, fnOut)
 
         if newDone:
-            self._loadInputList()
             for micName in newDone:
 
                 for m in self.listOfMic:
                     if m.getMicName()==micName:
                         self.mic = m
                         break
-
                 micDir = self._getMicDir(micName)
                 fnCTF = self._getFileName('ctf', micDir=micDir)
                 if not exists(fnCTF):
