@@ -156,7 +156,7 @@ class BoxWizardView(tk.Frame):
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
         def _addPair(key, r, lf, widget='entry', traceCallback=None,
-                     mouseBind=False):
+                     mouseBind=False, value=None):
             t = LABELS.get(key, key)
             label = tk.Label(lf, text=t, bg='white',
                              font=self.bigFont)
@@ -166,6 +166,9 @@ class BoxWizardView(tk.Frame):
                 return
 
             var = tk.StringVar()
+
+            if value is not None:
+                var.set(value)
 
             if widget == 'entry':
                 widget = tk.Entry(lf, width=30, font=self.bigFont,
@@ -325,6 +328,9 @@ class BoxWizardView(tk.Frame):
         # Check/uncheck different options
         for key in self.checkvars:
             self.vars[key].set(int(self._getConfValue(key, 0)))
+
+        self._setValue(DOSE, self._getConfValue(DOSE))
+        self._setValue(PIXEL_SIZE, self._getConfValue(PIXEL_SIZE))
 
         self._onInputChange()
 
