@@ -661,6 +661,7 @@ class PdbFile(EMFile):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
+        self._volume = None
         
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
@@ -668,6 +669,12 @@ class PdbFile(EMFile):
     def setPseudoAtoms(self, value):
         self._pseudoatoms.set(value)
         
+    def getVolume(self):
+        return self._volume
+    
+    def setVolume(self, value):
+        self._volume = value
+
     def __str__(self):
         return "%s (pseudoatoms=%s)" % (self.getClassName(), self.getPseudoAtoms())
     
