@@ -24,13 +24,9 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 import os
-import sys
 import re
 import Tkinter as tk
-import tkFileDialog
-import tkMessageBox
 import ttk
 import tkFont
 from collections import OrderedDict
@@ -38,77 +34,39 @@ from ConfigParser import ConfigParser
 
 import pyworkflow as pw
 import pyworkflow.utils as pwutils
-from pyworkflow.manager import Manager
 from pyworkflow.gui import Message, Icon
 from pyworkflow.config import ProjectSettings
-import pyworkflow.em as em
 
 import pyworkflow.gui as pwgui
 from pyworkflow.gui.project.base import ProjectBaseWindow
 from pyworkflow.gui.widgets import HotButton, Button
-import subprocess
 
 VIEW_WIZARD = 'wizardview'
 
-# Protocol's contants
-MOTIONCORR = "MOTIONCORR"
-MOTIONCOR2 = "MOTIONCOR2"
-OPTICAL_FLOW = "OPTICAL_FLOW"
-SUMMOVIE = "SUMMOVIE"
-CTFFIND4 = "CTFFIND4"
-GCTF = "GCTF"
-EMAIL_NOTIFICATION = "EMAIL_NOTIFICATION"
-HTML_REPORT = "HTML_REPORT"
-GRIDS = "GRIDS"
-CS = "CS"
-MAG = "MAG"
-
-# Some related environment variables
-DATA_FOLDER = 'DATA_FOLDER'
-USER_NAME = 'USER_NAME'
-SAMPLE_NAME = 'SAMPLE_NAME'
+# Session id
 PROJECT_NAME = 'PROJECT_NAME'
-SCIPION_PROJECT = 'SCIPION_PROJECT'
-FRAMES_RANGE = 'FRAMES_RANGE'
+# Where the json template is
+SCIPION_WORKFLOW_TEMPLATE = 'SCIPION_WORKFLOW_TEMPLATE'
+# Where to save the new custimized workflow
+JSON_DESTINATION = 'JSON_DESTINATION'
+
+# Variables to enter and write in the template
 DOSE = 'DOSE'
 PIXEL_SIZE = 'PIXEL_SIZE'
-MICROSCOPE = 'MICROSCOPE'
-DATA_BACKUP = 'DATA_BACKUP'
-PATTERN = 'PATTERN'
-PUBLISH = 'PUBLISH'
-SMTP_SERVER = 'SMTP_SERVER'
-SMTP_FROM = 'SMTP_FROM'
-SMTP_TO = 'SMTP_TO'
 
-PROTOCOLS = "Protocols"
-MONITORS = "Monitors"
-MICROSCOPE = "Microscope"
-MESSAGE = 'Message'
+vars2Use = [DOSE, PIXEL_SIZE]
 
 # Define some string constants
 LABELS = {
-    DATA_FOLDER: "Data folder",
-    USER_NAME: "User name",
-    SAMPLE_NAME: "Sample name",
-    DATA_BACKUP: 'Data Backup Dir',
     PROJECT_NAME: "Session id",
-    SCIPION_PROJECT: "Scipion project",
-    FRAMES_RANGE: "Frames range",
     DOSE: "Dose",
     PIXEL_SIZE: "Pixel size",
-
-    # Protocol's contants
-    MOTIONCORR: "MotionCorr",
-    MOTIONCOR2: "Use MotionCor2",
-    OPTICAL_FLOW: "Optical Flow",
-    SUMMOVIE: "Summovie (dose compensation)",
-    CTFFIND4: "Ctffind4",
-    GCTF: "GCtf",
-    EMAIL_NOTIFICATION: "Email notification",
-    HTML_REPORT: "HTML Report"
 }
 
-# Project regex to validate the project name
+MICROSCOPE = "Microscope"
+MESSAGE = 'Message'
+
+# Project regex to validate the session id name
 PROJECT_PATTERN = "em\d{5}-\d$"
 PROJECT_REGEX = re.compile(PROJECT_PATTERN)
 
@@ -118,7 +76,7 @@ class BoxWizardWindow(ProjectBaseWindow):
 
     def __init__(self, config, **kwargs):
         try:
-            title = '%s (%s on %s)' % (Message.LABEL_PROJECTS,
+            title = '%s (%s on %s)' % ('Workflow template customizer',
                                        pwutils.getLocalUserName(),
                                        pwutils.getLocalHostName())
         except Exception:
@@ -130,7 +88,6 @@ class BoxWizardWindow(ProjectBaseWindow):
         self.config = config
         ProjectBaseWindow.__init__(self, title, minsize=(400, 550), **kwargs)
         self.viewFuncs = {VIEW_WIZARD: BoxWizardView}
-        self.manager = Manager()
         self.switchView(VIEW_WIZARD)
 
 
@@ -138,7 +95,6 @@ class BoxWizardView(tk.Frame):
     def __init__(self, parent, windows, **kwargs):
         tk.Frame.__init__(self, parent, bg='white', **kwargs)
         self.windows = windows
-        self.manager = windows.manager
         self.root = windows.root
         self.vars = {}
         self.checkvars = []
@@ -158,14 +114,10 @@ class BoxWizardView(tk.Frame):
         self.projDateFont = tkFont.Font(size=smallSize, family=fontName)
         self.projDelFont = tkFont.Font(size=smallSize, family=fontName,
                                        weight='bold')
-        self.manager = Manager()
-
         # Header section
         headerFrame = tk.Frame(self, bg='white')
         headerFrame.grid(row=0, column=0, sticky='new')
-        headerText = "Create New Session"
-
-        headerText += "  %s" % pwutils.prettyTime(dateFormat='%Y-%m-%d')
+        headerText = "Enter your desired values"
 
         label = tk.Label(headerFrame, text=headerText,
                          font=self.bigFontBold,
@@ -180,7 +132,7 @@ class BoxWizardView(tk.Frame):
 
         # Add the create project button
         btnFrame = tk.Frame(self, bg='white')
-        btn = HotButton(btnFrame, text="Create New Session",
+        btn = HotButton(btnFrame, text="Create template",
                         font=self.bigFontBold,
                         command=self._onAction)
         btn.grid(row=0, column=1, sticky='ne', padx=10, pady=10)
@@ -203,7 +155,8 @@ class BoxWizardView(tk.Frame):
                                    font=self.bigFontBold)
         labelFrame.grid(row=0, column=0, sticky='nw', padx=20)
 
-        def _addPair(key, r, lf, widget='entry', traceCallback=None, mouseBind=False):
+        def _addPair(key, r, lf, widget='entry', traceCallback=None,
+                     mouseBind=False):
             t = LABELS.get(key, key)
             label = tk.Label(lf, text=t, bg='white',
                              font=self.bigFont)
@@ -216,27 +169,17 @@ class BoxWizardView(tk.Frame):
 
             if widget == 'entry':
                 widget = tk.Entry(lf, width=30, font=self.bigFont,
-                                 textvariable=var)
+                                  textvariable=var)
                 if traceCallback:
-                    if mouseBind: #call callback on click
+                    if mouseBind:  # call callback on click
                         widget.bind("<Button-1>", traceCallback, "eee")
-                    else:#call callback on type
+                    else:  # call callback on type
                         var.trace('w', traceCallback)
             elif widget == 'label':
                 widget = tk.Label(lf, font=self.bigFont, textvariable=var)
 
             self.vars[key] = var
             widget.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
-
-        def _addCheckPair(key, r, lf, col=1):
-            t = LABELS.get(key, key)
-            var = tk.IntVar()
-
-            cb = tk.Checkbutton(lf, text=t, font=self.bigFont, bg='white',
-                                variable=var)
-            self.vars[key] = var
-            self.checkvars.append(key)
-            cb.grid(row=r, column=col, padx=5, sticky='nw')
 
         def _addComboPair(key, r, lf, traceCallback=None):
             t = LABELS.get(key, key)
@@ -258,10 +201,7 @@ class BoxWizardView(tk.Frame):
         self.micCombo = _addComboPair(MICROSCOPE, 0, labelFrame,
                                       traceCallback=self._onMicroscopeChanged)
         _addPair(PROJECT_NAME, 1, labelFrame, traceCallback=self._onInputChange)
-        _addPair(DATA_FOLDER, 2, labelFrame, widget='label')
-        _addPair(SCIPION_PROJECT, 3, labelFrame, widget='label')
         _addPair(MESSAGE, 4, labelFrame, widget='label')
-
 
         labelFrame.columnconfigure(0, weight=1)
         labelFrame.columnconfigure(0, minsize=120)
@@ -273,19 +213,8 @@ class BoxWizardView(tk.Frame):
         labelFrame2.grid(row=1, column=0, sticky='nw', padx=20, pady=10)
         labelFrame2.columnconfigure(0, minsize=120)
 
-        #_addPair(FRAMES_RANGE, 0, labelFrame2)
         _addPair(DOSE, 1, labelFrame2)
         _addPair(PIXEL_SIZE, 2, labelFrame2)
-        # _addPair(PROTOCOLS, 1, labelFrame2, widget=False)
-        # _addCheckPair(MOTIONCORR, 1, labelFrame2)
-        # _addCheckPair(MOTIONCOR2, 1, labelFrame2, col=2)
-        # _addCheckPair(OPTICAL_FLOW, 2, labelFrame2)
-        # _addCheckPair(SUMMOVIE, 3, labelFrame2)
-        # _addCheckPair(CTFFIND4, 4, labelFrame2)
-        # _addCheckPair(GCTF, 4, labelFrame2, col=2)
-        # _addPair("Monitors", 5, labelFrame2, widget=False)
-        # _addCheckPair(EMAIL_NOTIFICATION, 5, labelFrame2)
-        # _addCheckPair(HTML_REPORT, 5, labelFrame2, col=2)
 
         frame.columnconfigure(0, weight=1)
 
@@ -306,175 +235,70 @@ class BoxWizardView(tk.Frame):
     def _setValue(self, varKey, value):
         return self.vars[varKey].set(value)
 
+    # noinspection PyUnusedLocal
     def _onAction(self, e=None):
         errors = []
-        doBackup = True
-        # Check the Data folder exists
-        dataFolder = self._getDataFolder()
-        projName = self._getProjectName()
-        projPath = dataFolder
-        scipionProj = self._getScipionProject()
-        scipionProjPath = os.path.join(projPath, scipionProj)
+        # Check the entered data
         # Do more checks only if there are not previous errors
+
         if not self._validProjectName():
             errors.append("Session ID should start with em "
                           "followed by five digits, a - and a final number."
                           "Examples: \n   em12345-1\n   em55555-1\n")
-        if not errors:
-            if os.path.exists(scipionProjPath):
-                errors.append("Scipion Project path '%s' already exists."
-                              % scipionProjPath)
-
-        # if not errors:
-        #     if not (self._getValue(MOTIONCORR) or self._getValue(MOTIONCOR2)
-        #             or self._getValue(OPTICAL_FLOW)):
-        #         errors.append("You should use at least one alignment method."
-        #                       "(%s or %s)" % (MOTIONCORR, OPTICAL_FLOW))
 
         if errors:
             errors.insert(0, "*Errors*:")
             self.windows.showError("\n  - ".join(errors))
         else:
-            print ["projectPath", projPath, "scipion path", scipionProjPath]
-            self._createDataFolder(projPath, scipionProjPath)
-            self._createScipionProject(projName, projPath, scipionProjPath)
-            self.windows.close()
-            return
+            if self._createTemplate():
+                self.windows.close()
+                return
 
-    def _createDataFolder(self, projPath, scipionProjPath):
-        def _createPath(p):
-            # Create the project path
-            sys.stdout.write("Creating path '%s' ... " % p)
-            pwutils.makePath(p)
-            sys.stdout.write("DONE\n")
+    def _createTemplate(self):
 
-        _createPath(projPath)
-        _createPath(scipionProjPath)
+        try:
+            # Compose the destination using the session id (
+            destination = self._getConfValue(JSON_DESTINATION)
+            sessionId = self._getValue(PROJECT_NAME)
+            destination = destination.format(sessionId)
 
-    def _createScipionProject(self, projName, projPath, scipionProjPath):
-        manager = Manager()
-        project = manager.createProject(projName, location=scipionProjPath)
-        self.lastProt = None
-        pattern = self._getConfValue(PATTERN)
+            if not self._validateDestination(destination): return False
 
-        smtpServer = self._getConfValue(SMTP_SERVER, '')
-        smtpFrom = self._getConfValue(SMTP_FROM, '')
-        smtpTo = self._getConfValue(SMTP_TO, '')
-        doMail = self._getValue(EMAIL_NOTIFICATION)
-        doPublish = self._getValue(HTML_REPORT)
+            # Get a dictionary with only the values to write in the template
+            replacementDict = self._vars2Dict()
 
-        protImport = project.newProtocol(em.ProtImportMovies,
-                                         objLabel='Import movies',
-                                         filesPath=projPath,
-                                         filesPattern=pattern,
-                                         sphericalAberration=self._getConfValue(CS),
-                                         dataStreaming=True)
+            # Get the template and open it
+            template = self._getConfValue(SCIPION_WORKFLOW_TEMPLATE)
+            templateStr = open(template, 'r').read()
 
-        # Should I publish html report?       
-        if doPublish == 1:
-            publish = self._getConfValue('HTML_PUBLISH')
-            print("\n\nReport available at URL: %s/%s\n\n"
-                  %('http://scipion.cnb.csic.es/scipionbox',projName))
-        else:
-            publish = ''
+            # Replace values
+            workflowStr = templateStr.format(**replacementDict)
 
-        protMonitor = project.newProtocol(em.ProtMonitorSummary,
-                                          objLabel='Summary Monitor',
-                                          doMail=doMail,
-                                          emailFrom=smtpFrom,
-                                          emailTo=smtpTo,
-                                          smtp=smtpServer,
-                                          publishCmd=publish)
+            text_file = open(destination, "w")
+            text_file.write(workflowStr)
+            text_file.close()
 
-        def _saveProtocol(prot, movies=True, monitor=True):
-            if movies:
-                prot.inputMovies.set(self.lastProt)
-                prot.inputMovies.setExtended('outputMovies')
-            project.saveProtocol(prot)
-            self.lastProt = prot
-            if monitor:
-                protMonitor.inputProtocols.append(prot)
+            self.windows.showInfo("New workflow saved at " + destination)
 
-        _saveProtocol(protImport, movies=False)
+        except Exception as e:
+            self.windows.showError(
+                "Couldn't create the template.\n" + e.message)
+            return False
 
-        useMC2 = True
-        useGCTF = True
-        # useMC2 = self._getValue(MOTIONCOR2)
-        # useMC = self._getValue(MOTIONCORR) or useMC2
-        # useOF = self._getValue(OPTICAL_FLOW)
-        # useSM = self._getValue(SUMMOVIE)
-        # useCTF = self._getValue(CTFFIND4)
-        # useGCTF = self._getValue(GCTF)
-        kwargs = {}
-        frames = self._getValue(FRAMES_RANGE).split()
-        if frames:
-            kwargs['alignFrame0'] = kwargs['sumFrame0'] = frames[0]
-            kwargs['alignFrameN'] = kwargs['sumFrameN'] = frames[1]
+        return True
 
-        if useMC:
-            # Create motioncorr
-            from pyworkflow.em.packages.motioncorr import ProtMotionCorr
-            protMC = project.newProtocol(ProtMotionCorr,
-                                         objLabel='Motioncorr',
-                                         useMotioncor2=useMC2,
-                                         **kwargs)
-            _saveProtocol(protMC)
+    def _vars2Dict(self):
 
-        if useOF:
-            # Create Optical Flow protocol
-            from pyworkflow.em.packages.xmipp3 import XmippProtOFAlignment
+        replacementDict = {}
+        for varName in vars2Use:
+            self._var2Dict(varName, replacementDict)
 
-            protOF = project.newProtocol(XmippProtOFAlignment,
-                                         objLabel='Optical Flow',
-                                         doSaveMovie=useSM,
-                                         **kwargs)
-            _saveProtocol(protOF)
+        return replacementDict
 
-        if useSM:
-            # If OF write the movie, then we need to reset frames count
-            if frames and useOF:
-                kwargs['alignFrame0'] = kwargs['sumFrame0'] = 1
-                kwargs['alignFrameN'] = kwargs['sumFrameN'] = 0
+    def _var2Dict(self, varName, replacementDict):
 
-            from pyworkflow.em.packages.grigoriefflab import ProtSummovie
-            protSM = project.newProtocol(ProtSummovie,
-                                         objLabel='Summovie',
-                                         cleanInputMovies=useOF,
-                                         numberOfThreads=1,
-                                         **kwargs)
-            _saveProtocol(protSM)
-
-        lastBeforeCTF = self.lastProt
-
-        if useCTF:
-            from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
-            protCTF = project.newProtocol(ProtCTFFind,
-                                          objLabel='Ctffind',
-                                          numberOfThreads=1)
-            protCTF.inputMicrographs.set(lastBeforeCTF)
-            protCTF.inputMicrographs.setExtended('outputMicrographs')
-            _saveProtocol(protCTF, movies=False)
-
-        if useGCTF:
-            from pyworkflow.em.packages.gctf import ProtGctf
-            protGCTF = project.newProtocol(ProtGctf,
-                                           objLabel='Gctf')
-            protGCTF.inputMicrographs.set(lastBeforeCTF)
-            protGCTF.inputMicrographs.setExtended('outputMicrographs')
-            _saveProtocol(protGCTF, movies=False)
-
-        project.saveProtocol(protMonitor)
-
-        os.system('%s project %s &' % (pw.getScipionScript(), projName))
-
-        self.windows.close()
-
-    def _replaceVars(self, value):
-        newValue = value
-        for v in [USER_NAME, SAMPLE_NAME]:
-            newValue = newValue.replace('${%s}' % v, self._getValue(v))
-
-        return newValue
+        value = self._getValue(varName)
+        replacementDict[varName] = value
 
     def _getProjectName(self):
         return self._getValue(PROJECT_NAME)
@@ -485,49 +309,15 @@ class BoxWizardView(tk.Frame):
     def _isInputReady(self):
         return self.microscope is not None and self._validProjectName()
 
-    def _getDataFolder(self):
-        if not self._isInputReady():
-            return ''
-        dataFolder = self._getConfValue(DATA_FOLDER)
-        projName = self._getProjectName()
-
-        dataFolder = os.path.join(dataFolder, projName)
-        return dataFolder
-
-    def _getScipionProject(self):
-        if not self._isInputReady():
-            return ''
-        scipionProj = self._getConfValue(SCIPION_PROJECT)
-        return scipionProj.replace('${PROJECT_NAME}', self._getProjectName())
-
-    def _checkInput(self, varKey):
-        value = self._getValue(varKey)
-
-    def fileDialog(self, * args):
-        """callback that display a directory dialog window"""
-        try:
-             initialdir = self._getConfValue(DATA_BACKUP, '')
-        except:
-            tkMessageBox.showerror("Error","Please select Microscope first")
-            return
-        backupFolder = tkFileDialog.askdirectory(parent=self.root,
-                                                 initialdir=initialdir,
-                                                 title='Choose Backup directory')
-        self._setValue(DATA_BACKUP, backupFolder)
-
     def _onInputChange(self, *args):
         if self.microscope is None:
             msg = 'Select microscope'
         elif not self._validProjectName():
-            msg = ('Invalid project name. Not matching ' + PROJECT_PATTERN)
+            msg = ('Invalid session id. Not matching ' + PROJECT_PATTERN)
         else:
             msg = ''
-            self._setValue(DOSE, self._getConfValue(DOSE))
-            self._setValue(PIXEL_SIZE, self._getConfValue(PIXEL_SIZE))
 
         self._setValue(MESSAGE, msg)
-        self._setValue(DATA_FOLDER, self._getDataFolder())
-        self._setValue(SCIPION_PROJECT, self._getScipionProject())
 
     def _onMicroscopeChanged(self, *args):
         self.microscope = self._getValue(MICROSCOPE)
@@ -537,6 +327,28 @@ class BoxWizardView(tk.Frame):
             self.vars[key].set(int(self._getConfValue(key, 0)))
 
         self._onInputChange()
+
+    def _validateDestination(self, destination):
+
+        destinationDir = os.path.dirname(destination)
+
+        print destinationDir
+
+        if os.path.exists(destination):
+            answer = self.windows.askYesNo("Replace?",
+                                           "There is already a customized workflow at " +
+                                           destination +"\n Do you want to replace it?")
+            if answer:
+                return True
+            else:
+                return False
+
+        elif not os.path.exists(destinationDir):
+            self.windows.showError("The destination folder does not exists:\n" +
+                                   destinationDir, "Folder missing")
+            return False
+
+        return True
 
 
 def createDictFromConfig():
