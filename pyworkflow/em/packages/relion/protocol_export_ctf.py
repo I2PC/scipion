@@ -148,5 +148,23 @@ class ProtRelionExportCtf(EMProtocol):
     
     #--------------------------- UTILS functions -------------------------------
     def preprocessMicrograph(self, mic, micRow):
-        micRow.setValue('rlnSamplingRate', mic.getSamplingRate())
+        sampling = mic.getSamplingRate()
+        mag = mic.getAcquisition().getMagnification()
+
+        micRow.setValue('rlnSamplingRate', sampling)
+        micRow.setValue('rlnMagnification', mag)
+        micRow.setValue('rlnDetectorPixelSize', 1e-4 * sampling * mag)
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
+
+        ctf = mic.getCTF()
+
+        def _setIf(label, attributes):
+            for a in attributes:
+                if ctf.hasAttribute(a):
+                    micRow.setValue(label, ctf.getAttributeValue(a))
+
+        # Check if there is maximum resolution information
+        _setIf('rlnCtfMaxResolution', ['_ctffind4_ctfResolution',
+                                       '_gctf_ctfResolution'])
+        _setIf('rlnCtfFigureOfMerit', ['_ctffind4_crossCorrelation',
+                                       '_gctf_crossCorrelation'])

@@ -49,13 +49,11 @@ from pyworkflow.em.packages.xmipp3 import coordinateToRow, XmippMdRow
 class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
-    _label = 'movie extract particles'
+    _label = 'extract movie particles'
 
     def __init__(self, **kwargs):
         ProtExtractMovieParticles.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
-    
-    
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -115,7 +113,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                            'For high-contrast negative stain, the signal '
                            'itself may be affected so that a higher value may '
                            'be preferable.')
-        form.addParam('doInvert', BooleanParam, default=False,
+        form.addParam('doInvert', BooleanParam, default=None,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black '
                            'over a white background.')
@@ -146,9 +144,9 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     #--------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
+
         #ROB: deal with the case in which sampling rate use for picking and
         #  movies is different
-        
         inputCoords = self.inputCoordinates.get()
         #coordinates sampling mic used for picking
         samplingCoords = inputCoords.getMicrographs().getSamplingRate()
@@ -210,7 +208,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         imgh = ImageHandler()
         for frame in range(frame0, frameN+1):
             indx = frame-iniFrame
-            print  "Index: ", indx, shiftX, shiftY
             frameName = self._getFnRelated('frameMic',movId, frame)
             frameMdFile = self._getFnRelated('frameMdFile',movId, frame)
             coordinatesName = self._getFnRelated('frameCoords',movId, frame)
@@ -225,8 +222,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 #TODO: there is no need to write the frame and then operate
                 #the input of the first operation should be the movie
                 movieName = imgh.fixXmippVolumeFileName(movie)
-                print "Passing Ih: ", frame, movieName, frameName
-                imgh.convert(tuple([frame-1, movieName]), frameName)
+                imgh.convert((frame, movieName), frameName)
                 
                 if self.doRemoveDust:
                     self.info("Removing Dust")
@@ -428,10 +424,10 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         """ Check if process or not this movie. If there are coordinates or
         not to this movie, is cheked in _processMovie step.
         """
-        
         movieId = movie.getObjId()
         coordinates = self.inputCoordinates.get()
-        micrograph = coordinates.getMicrographs()[movieId]
+        micSet = coordinates.getMicrographs()
+        micrograph = micSet[movieId]
         
         if micrograph is not None:
             return True
