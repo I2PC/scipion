@@ -582,7 +582,7 @@ def addProgram(env, name, src=None, pattern=None, installDir=None,
     cxxflagsCopy = cxxflags + env['CXXFLAGS']
     linkflagsCopy = linkflags + env['LINKFLAGS']
     ldLibraryPathCopy = [env['LIBPATH']]
-    appendUnique(libPathsCopy, env.get('LIBPATH', ''))
+    appendUnique(libPathsCopy, env.get('LIBPATH', '').split(":"))
     env2 = Environment()
     if mpi:
         appendUnique(incsCopy, env['MPI_INCLUDE'])

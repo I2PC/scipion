@@ -214,6 +214,8 @@ class XmippProtImageOperateParticles(ProtOperateParticles,
         ProtOperateParticles.__init__(self, **args)
         XmippProcessParticles.__init__(self)
         XmippOperateHelper.__init__(self, **args)
+        self.allowMpi = False
+        self.allowThreads = False
 
     #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):
@@ -302,6 +304,9 @@ class XmippProtImageOperateVolumes(ProtOperateVolumes,
         ProtOperateVolumes.__init__(self, **args)
         XmippProcessVolumes.__init__(self)
         XmippOperateHelper.__init__(self, **args)
+        self.allowMpi = False
+        self.allowThreads = False
+
     
     #--------------------------- DEFINE param functions -----------------------
     def _defineProcessParams(self, form):

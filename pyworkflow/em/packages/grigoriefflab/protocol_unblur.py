@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *              Josue Gomez Blanco (jgomez@cnb,csic.es)
+# *              Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -109,7 +109,7 @@ class ProtUnblur(ProtAlignMovies):
                       label='Verbose Output?',
                       help='Verbose Output?',
                       expertLevel=params.LEVEL_ADVANCED)
-        form.addParallelSection(threads=1, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
 
     #
     #Input stack filename                [my_movie.mrc] : kk.mrc
@@ -223,7 +223,7 @@ class ProtUnblur(ProtAlignMovies):
                 'doApplyDoseFilter': 'YES' if self.doApplyDoseFilter else 'NO',
                 'doRestoreNoisePwr': 'YES' if self.doRestoreNoisePwr else 'NO',
                 'doVerboseOutput': 'YES' if self.doVerboseOutput else 'NO',
-                'exposurePerFrame': movie.getAcquisition().getDosePerFrame()
+                'exposurePerFrame': movie.getAcquisition().getDosePerFrame() or 0.0
                 }
 
         # Avoid threads multiplication
