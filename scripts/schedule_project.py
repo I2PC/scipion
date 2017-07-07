@@ -27,6 +27,7 @@
 
 import sys, os
 from pyworkflow.manager import Manager
+from pyworkflow.project import Project
 import pyworkflow.utils as pwutils
 
 
@@ -58,7 +59,14 @@ if not manager.hasProject(projName):
     usage("There is no project with this name: %s"
           % pwutils.red(projName))
 
-project = manager.loadProject(projName)
+# the project may be a soft link which may be unavailable to the cluster so get the real path
+try:
+    projectPath = os.readlink(manager.getProjectPath(projName))
+except:
+    projectPath = manager.getProjectPath(projName)
+
+project = Project(projectPath)
+project.load()
 
 runs = project.getRuns()
 
