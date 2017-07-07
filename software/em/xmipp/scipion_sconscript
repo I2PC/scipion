@@ -205,13 +205,13 @@ addLib('XmippRecons',
 
 # AJ - Reconstruction CUDA
 if cuda:
-	addLib('XmippReconsCuda',
+       addLib('XmippReconsCuda',
        dirs=['libraries'],
        patterns=['reconstruction_cuda/*.cpp'],
        incs=bilib_incs, cuda=True,
        libs=['pthread'])
        
-	addLib('XmippReconsAdaptCuda',
+       addLib('XmippReconsAdaptCuda',
        dirs=['libraries'],
        patterns=['reconstruction_adapt_cuda/*.cpp'],
        incs=bilib_incs,
@@ -541,6 +541,11 @@ for p in ['angular_break_symmetry',
           'ctf_show',
           'ctf_sort_psds',
 
+          'cuda_reconstruct_fourier',
+          'cuda_rotate_image',
+          'cuda_rotate_image_parallel',
+          'cuda_rotate_image_threads',
+
           'idr_xray_tomo',
 
           'flexible_alignment',
@@ -625,10 +630,7 @@ for p in ['angular_break_symmetry',
           'transform_randomize_phases',
           'transform_range_adjust',
           'transform_symmetrize',
-          'cuda_rotate_image',
-          'cuda_rotate_image_parallel',
-          'cuda_rotate_image_threads',
-	      'transform_threshold',
+	  'transform_threshold',
           'transform_window',
           'tomo_align_dual_tilt_series',
           'tomo_align_refinement',
