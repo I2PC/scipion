@@ -26,7 +26,7 @@
 
 from bibtex import _bibtex # Load bibtex dict with references
 #_logo = "motioncorr_logo.png"
-_references = ['Li2013', 'Zheng2016']
+_references = ['Li2013', 'Zheng2017']
 
 from protocol_motioncorr import ProtMotionCorr
 from viewer import ProtMotioncorrViewer

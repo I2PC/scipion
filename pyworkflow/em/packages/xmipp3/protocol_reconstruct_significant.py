@@ -273,11 +273,7 @@ class XmippProtReconstructSignificant(ProtInitialVolume):
                 retval += " IMED weighting was used."
             if self.strictDir:
                 retval += " The strict direction criterion was employed." 
-        
-        if self.getNumberOfVolumes() > 1:
-            if self.hasAttribute('outputVolumes'):
-                retval += " The set of reconstructed volumes was %s." % self.getObjectTag('outputVolumes')
-        else:
+
             if self.hasAttribute('outputVolume'):
                 retval+=" The reconstructed volume was %s." % self.getObjectTag('outputVolume')
         return [retval]

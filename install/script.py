@@ -387,6 +387,9 @@ env.addPackage('ctffind4', version='4.0.15',
 env.addPackage('ctffind4', version='4.1.5',
                tar='ctffind_V4.1.5.tgz')
 
+env.addPackage('ctffind4', version='4.1.8',
+               tar='ctffind_V4.1.8.tgz')
+
 env.addPackage('summovie', version='1.0.2',
                tar='summovie_1.0.2.tgz')
 
@@ -433,8 +436,8 @@ relion_vars = [('FFTW_LIB', SW_LIB),
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
                     ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
-env.addPackage('relion', version='2.0.3',
-               tar='relion-2.0.3.tgz',
+env.addPackage('relion', version='2.0',
+               tar='relion-2.0.4.tgz',
                commands=relion2_commands,
                updateCuda=True,
                vars=relion_vars)
@@ -503,5 +506,9 @@ env.addPackage('Gautomatch', version='0.53',
 
 env.addPackage('mag_distortion', version='1.0.1',
                tar='mag_distortion-1.0.1.tgz')
+
+env.addPackage('ethan', version='1.2',
+               tar='ethan-1.2.tgz',
+               commands=[('make', 'ethan')])
 
 env.execute()
