@@ -212,10 +212,11 @@ Protocols SPA = [
     ]},
 	{"tag": "section", "text": "Model Building", "openItem": "False", "children": [
         {"tag": "protocol", "value": "XmippProtExtractUnit",   "text": "default"},
-        {"tag": "protocol", "value": "ChimeraProtRigidFit",   "text": "default"},
         {"tag": "protocol", "value": "PowerfitProtRigidFit",   "text": "default"},
+        {"tag": "protocol", "value": "ChimeraProtRigidFit",   "text": "default"},
         {"tag": "protocol", "value": "CCP4ProtCoot",   "text": "default"},
-        {"tag": "protocol", "value": "CCP4ProtRunRefmac",   "text": "default"}
+        {"tag": "protocol", "value": "CCP4ProtRunRefmac",   "text": "default"},
+        {"tag": "protocol", "value": "XmippProt3DBionotes",   "text": "default"}
     ]}
 
     ]
