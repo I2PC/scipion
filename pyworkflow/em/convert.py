@@ -156,7 +156,6 @@ class ImageHandler(object):
         """
         inputLoc = self._convertToLocation(inputObj)
         outputLoc = self._convertToLocation(outputObj)
-        print "Input Ih: ", inputLoc, "Output Ih: ", outputLoc
         
         if (inputLoc[1].lower().endswith('dm4') or
                 outputLoc[1].lower().endswith('.img')):
