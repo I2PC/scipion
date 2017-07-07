@@ -49,13 +49,11 @@ from pyworkflow.em.packages.xmipp3 import coordinateToRow, XmippMdRow
 class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     """ Extract a set of Particles from each frame of a set of Movies.
     """
-    _label = 'movie extract particles'
+    _label = 'extract movie particles'
 
     def __init__(self, **kwargs):
         ProtExtractMovieParticles.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
-    
-    
     
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
@@ -115,7 +113,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                            'For high-contrast negative stain, the signal '
                            'itself may be affected so that a higher value may '
                            'be preferable.')
-        form.addParam('doInvert', BooleanParam, default=False,
+        form.addParam('doInvert', BooleanParam, default=None,
                       label='Invert contrast', 
                       help='Invert the contrast if your particles are black '
                            'over a white background.')
@@ -146,9 +144,9 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
     #--------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
+
         #ROB: deal with the case in which sampling rate use for picking and
         #  movies is different
-        
         inputCoords = self.inputCoordinates.get()
         #coordinates sampling mic used for picking
         samplingCoords = inputCoords.getMicrographs().getSamplingRate()
@@ -226,7 +224,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 #the input of the first operation should be the movie
                 movieName = imgh.fixXmippVolumeFileName(movie)
                 print "Passing Ih: ", frame, movieName, frameName
-                imgh.convert(tuple([frame-1, movieName]), frameName)
+                imgh.convert(tuple([frame, movieName]), frameName)
                 
                 if self.doRemoveDust:
                     self.info("Removing Dust")
