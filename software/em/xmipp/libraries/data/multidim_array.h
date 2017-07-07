@@ -2043,6 +2043,11 @@ public:
         return A1D_ELEM(*this, i);
     }
 
+    inline T& operator[](int i) const
+     {
+         return data[i];
+     }
+
 
     /** Return the void pointer to the internal data array
      */

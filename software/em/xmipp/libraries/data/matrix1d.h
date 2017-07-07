@@ -1172,6 +1172,14 @@ public:
     }
     //@}
 
+    inline T& operator [](int idx) {
+        return vdata[idx];
+    }
+
+    inline T operator [](int idx) const {
+        return vdata[idx];
+    }
+
     /// @name Utilities for Matrix1D
     //@{
 
