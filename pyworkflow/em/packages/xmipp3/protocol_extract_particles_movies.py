@@ -222,7 +222,7 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 #TODO: there is no need to write the frame and then operate
                 #the input of the first operation should be the movie
                 movieName = imgh.fixXmippVolumeFileName(movie)
-                imgh.convert(tuple([frame, movieName]), frameName)
+                imgh.convert((frame, movieName), frameName)
                 
                 if self.doRemoveDust:
                     self.info("Removing Dust")
