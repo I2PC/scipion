@@ -27,7 +27,7 @@
 
 import json
 import os
-from os.path import join, exists, abspath
+from os.path import join, exists, abspath, basename
 
 from pyworkflow import getTemplatePath
 import pyworkflow.utils as pwutils
@@ -69,19 +69,39 @@ class ReportHtml:
             print msg
 
     @staticmethod
-    def generateThumbs(imgPathList, targetDir, scaleFactor=6, relPath=None):
-        outputThumbs = []
+    def generateReportImages(imgPathList, targetDir, imageType, relPath=None, ext="png", **kwargs):
+        outputPaths = []
         ih = ImageHandler()
+        if not exists(targetDir):
+            pwutils.makePath(targetDir)
 
         for imgPath in imgPathList:
-            thumbPath = os.path.join(targetDir, pwutils.replaceExt(os.path.basename(imgPath), "thumb.png"))
-            thumb = ih.computeThumbnail(imgPath, thumbPath, scaleFactor=scaleFactor)
-            if relPath is not None:
-                outputThumbs.append(os.path.relpath(thumb, relPath))
-            else:
-                outputThumbs.append(thumb)
+            if imageType == "psd":
+                movie = basename(os.path.dirname(imgPath))
+                imgOutPath = join(targetDir,
+                                  "%s_%s" % (movie, pwutils.replaceExt(basename(imgPath), ext)))
+                if not exists(imgOutPath):
+                    ih.computeThumbnail(imgPath, imgOutPath, scaleFactor=1)
 
-        return outputThumbs
+            elif imageType == "mic":
+                imgOutPath = join(targetDir, pwutils.replaceExt(basename(imgPath), ext))
+                if not exists(imgOutPath):
+                    scaleFactor = kwargs.get('scaleFactor', 6)
+                    ih.computeThumbnail(imgPath, imgOutPath, scaleFactor=scaleFactor)
+
+            elif imageType == "shift":
+                imgOutPath = join(targetDir,  pwutils.replaceExt(basename(imgPath), ext))
+                if not exists(imgOutPath):
+                    pwutils.copyFile(imgPath, targetDir)
+
+            if relPath is not None:
+                # append path relative to relPath
+                outputPaths.append(os.path.relpath(imgOutPath, relPath))
+            else:
+                # append absolute path
+                outputPaths.append(imgOutPath)
+
+        return outputPaths
 
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
@@ -97,10 +117,11 @@ class ReportHtml:
         reportDir = abspath(self.protocol._getExtraPath(projName))
 
         self.info("Creating report directory: %s" % reportDir)
-        pwutils.cleanPath(reportDir)
-        pwutils.makePath(reportDir)
+        if not exists(reportDir):
+            pwutils.makePath(reportDir)
 
         reportPath = join(reportDir, reportName)
+        pwutils.cleanPath(reportPath)
 
         acquisitionLines = ''
         self.provider.refreshObjects()
@@ -134,12 +155,23 @@ class ReportHtml:
         # Ctf monitor chart data
         data = [] if self.ctfMonitor is None else self.ctfMonitor.getData()
         if data:
-            thumbsDir = os.path.join(reportDir, 'imgMicThumbs')
-            pwutils.makePath(thumbsDir)
-            data['imgMicThumbs'] = self.generateThumbs(data['imgMicPath'], thumbsDir, relPath=reportDir)
-            # data['imgPsdThumbs'] = self.generateThumbs(data['imgPsdPath'], reportDir)
-            print('To be ctf data:')
-            print(data)
+            # generate mic thumbnails
+            micThumbsDir = join(reportDir, 'imgMicThumbs')
+            data['imgMicThumbs'] = self.generateReportImages(data['imgMicPath'], micThumbsDir,
+                                                             'mic', relPath=reportDir)
+            # generate psd thumbnails
+            psdThumbsDir = join(reportDir, 'imgPsdThumbs')
+            data['imgPsdThumbs'] = self.generateReportImages(data['imgPsdPath'], psdThumbsDir,
+                                                             'psd', relPath=reportDir)
+
+            # copy shift plots
+            if data['imgShiftPath'][0] != "":
+                shiftPlotsDir = join(reportDir, 'imgShiftPlots')
+                data['imgShiftCopyPath'] = self.generateReportImages(data['imgShiftPath'], shiftPlotsDir,
+                                                                     'shift', relPath=reportDir)
+            else:
+                data['imgShiftCopyPath'] = []
+
         ctfData = json.dumps(data)
 
         # system monitor chart data
@@ -156,7 +188,7 @@ class ReportHtml:
                 'runLines': runLines,
                 'ctfData': ctfData,
                 'systemData': systemData,
-                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else ''
+                'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else '',
                 }
 
         self.info("Writing report html to: %s" % abspath(reportPath))

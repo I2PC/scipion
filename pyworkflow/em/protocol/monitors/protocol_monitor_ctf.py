@@ -162,6 +162,12 @@ class MonitorCTF(Monitor):
             defocusAngle = ctf.getDefocusAngle()
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
+            shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
+                         or getattr(ctf.getMicrograph(), 'plotGlobal', None))
+            if shiftPlot is not None:
+                shiftPlotPath = os.path.abspath(shiftPlot.getFileName())
+            else:
+                shiftPlotPath = ""
 
             if defocusU < defocusV:
                 aux = defocusV
@@ -173,9 +179,9 @@ class MonitorCTF(Monitor):
 
             # get CTFs with this ids a fill table
             # do not forget to compute astigmatism
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath)
-                     VALUES(%f,%f,%f,%f,"%s","%s");""" % (self._tableName, defocusU,
-                     defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath)
+            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath,shiftPlotPath )
+                     VALUES(%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
+                     defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
@@ -210,7 +216,8 @@ class MonitorCTF(Monitor):
                                 astigmatism FLOAT,
                                 ratio FLOAT, 
                                 micPath STRING,
-                                psdPath STRING)
+                                psdPath STRING,
+                                shiftPlotPath STRING)
                                 """ % self._tableName)
 
     def getData(self):
@@ -229,7 +236,8 @@ class MonitorCTF(Monitor):
             'ratio': get('ratio'),
             'idValues': get('id'),
             'imgMicPath': get('micPath'),
-            'imgPsdPath': get('psdPath')
+            'imgPsdPath': get('psdPath'),
+            'imgShiftPath': get('shiftPlotPath')
         }
         # conn.close()
         return data
