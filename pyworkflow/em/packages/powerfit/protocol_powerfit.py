@@ -48,10 +48,10 @@ class PowerfitProtRigidFit(ProtFitting3D):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
-        form.addParam('inputVol', PointerParam, pointerClass='Volume',
-                      label="Input volume", important=True)
         form.addParam('inputPDB', PointerParam, pointerClass='PdbFile',
                       label="Input PDB", important=True)
+        form.addParam('inputVol', PointerParam, pointerClass='Volume',
+                      label="Input volume", important=True)
         form.addParam('resolution', FloatParam, default=6,
                       label="Resolution (A)", important=True, help="Resolution for the fitting. The PDB is filtered to this frequency.")
         form.addParam('angleStep',FloatParam, label="Angular step", default=10.0, expertLevel=LEVEL_ADVANCED,
