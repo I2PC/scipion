@@ -62,6 +62,7 @@ from viewer_extract_unit_cell import viewerXmippProtExtractUnit
 
 from plotter import XmippPlotter
 
+from protocol_3dbionotes import XmippProt3DBionotes
 from protocol_assignment_tilt_pair import XmippProtAssignmentTiltPair
 from protocol_align_volume import XmippProtAlignVolume, XmippProtAlignVolumeForWeb
 from pyworkflow.em.packages.xmipp3.protocol_preprocess.protocol_add_noise import XmippProtAddNoiseVolumes, XmippProtAddNoiseParticles
