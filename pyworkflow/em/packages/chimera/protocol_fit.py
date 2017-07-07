@@ -48,7 +48,7 @@ class ChimeraProtRigidFit(EMProtocol):
         line in order to transferm fitted pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel=0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
-    _label = 'Rigid Fit'
+    _label = 'rigid fit'
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------------------------------
