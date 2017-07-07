@@ -426,7 +426,8 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         """
         movieId = movie.getObjId()
         coordinates = self.inputCoordinates.get()
-        micrograph = coordinates.getMicrographs()[movieId]
+        micSet = coordinates.getMicrographs()
+        micrograph = micSet[movieId]
         
         if micrograph is not None:
             return True
