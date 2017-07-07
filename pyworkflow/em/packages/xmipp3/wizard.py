@@ -137,7 +137,7 @@ class XmippBoxSizeWizard(Wizard):
 
 
 #===============================================================================
-# BOXSIZE
+# CONSENSUS RADIUS
 #===============================================================================
 class XmippParticleConsensusRadiusWizard(Wizard):
     _targets = [(XmippProtConsensusPicking, ['consensusRadius'])]
