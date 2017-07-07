@@ -24,6 +24,25 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+"""
+Creates a scipion workflow file (json formatted) base on a template.
+The template may have some ~placeholders~ that will be overwritten with values
+Template may look like this, separator is "~":
+
+[
+    {
+        "object.className": "ProtImportMovies",
+        "object.id": "2",
+        "samplingRate": ~PIXEL_SIZE~,
+        ...
+        ...
+    },
+    {
+        "object.className": "ProtMotionCorr",
+        ...
+    }
+]
+"""
 import os
 import re
 import Tkinter as tk
@@ -275,7 +294,7 @@ class BoxWizardView(tk.Frame):
             templateStr = open(template, 'r').read()
 
             # Replace values
-            workflowStr = templateStr.format(**replacementDict)
+            workflowStr = self.replaceValues(replacementDict, templateStr)
 
             text_file = open(destination, "w")
             text_file.write(workflowStr)
@@ -289,6 +308,19 @@ class BoxWizardView(tk.Frame):
             return False
 
         return True
+
+    def replaceValues(self, replacementDict, templateStr):
+
+        labelSep = "~"
+        workflowStr = templateStr
+        for label, value in replacementDict.iteritems():
+            target = labelSep + label + labelSep
+            workflowStr = workflowStr.replace(target, value)
+
+
+        # This does not work, since json has {} and confuses the format function.
+        # workflowStr = templateStr.format(**replacementDict)
+        return workflowStr
 
     def _vars2Dict(self):
 
