@@ -208,7 +208,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         imgh = ImageHandler()
         for frame in range(frame0, frameN+1):
             indx = frame-iniFrame
-            print  "Index: ", indx, shiftX, shiftY
             frameName = self._getFnRelated('frameMic',movId, frame)
             frameMdFile = self._getFnRelated('frameMdFile',movId, frame)
             coordinatesName = self._getFnRelated('frameCoords',movId, frame)
@@ -223,7 +222,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 #TODO: there is no need to write the frame and then operate
                 #the input of the first operation should be the movie
                 movieName = imgh.fixXmippVolumeFileName(movie)
-                print "Passing Ih: ", frame, movieName, frameName
                 imgh.convert(tuple([frame, movieName]), frameName)
                 
                 if self.doRemoveDust:
@@ -426,7 +424,6 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         """ Check if process or not this movie. If there are coordinates or
         not to this movie, is cheked in _processMovie step.
         """
-        
         movieId = movie.getObjId()
         coordinates = self.inputCoordinates.get()
         micrograph = coordinates.getMicrographs()[movieId]
