@@ -40,8 +40,10 @@ def _getHome(key, default):
     """
     return os.environ.get(key, join(os.environ['EM_ROOT'], default))
 
-
-MOTIONCORR = getEnvVariable('MOTIONCORR')
+try:
+    MOTIONCORR = getEnvVariable('MOTIONCORR')
+except:
+    MOTIONCORR = 'dosefgpu_driftcorr_7.5'
 MOTIONCORR = os.path.basename(MOTIONCORR)
 MOTIONCOR2 = 'motioncor2'
 
