@@ -246,7 +246,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         distance = np.asarray(distance)
         for i in range(1, 4):
             embed,_ = mds(distance,i)
-            embedExtended = np.pad(embed,((0,0),(0,i-embed.shape[1])),"constant",constant_values=0.0)
+            embedExtended = np.pad(embed,((0,0),(0,i-embed.shape[1])),"constant",constant_values=0)
             print(embedExtended)
             np.savetxt(self._defineResultsName(i),embedExtended)        
        
