@@ -2,7 +2,7 @@
 # *
 # * Authors:     Carlos Oscar Sorzano (coss@cnb.csic.es)
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * Unidad de Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -24,15 +24,16 @@
 # *
 # **************************************************************************
 """
-This sub-package contains data and protocol classes
-wrapping Powerfit programs https://github.com/haddocking/powerfit
+This module implement some wizards
 """
 
-_logo = "powerfit_logo.gif"
 
-from bibtex import _bibtex # Load bibtex dict with references
-from powerfit import *
-from protocol_powerfit import PowerfitProtRigidFit
-from viewer_powerfit import PowerfitProtRigidFitViewer
+from pyworkflow.em.wizard import *
+from pyworkflow.em.packages.powerfit.protocol_powerfit import PowerfitProtRigidFit
 
-from wizard import PowerFitPDBVolumeWizard
+#===============================================================================
+# DOWNSAMPLING
+#===============================================================================
+
+class PowerFitPDBVolumeWizard(PDBVolumeWizard):
+    _targets = [(PowerfitProtRigidFit, ['inputVol'])]
