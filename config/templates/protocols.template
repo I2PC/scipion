@@ -120,6 +120,7 @@ Protocols SPA = [
 	{"tag": "section", "text": "3D", "children": [
 		{"tag": "protocol_group", "text": "Initial volume", "openItem": "False", "children": [
 			{"tag": "protocol", "value": "EmanProtInitModel",   "text": "default"},
+			{"tag": "protocol", "value": "ProtRelionInitialModel",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtRansac",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtConvertPdb",  "text": "default"},

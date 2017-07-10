@@ -27,7 +27,7 @@
 This module contains the protocol for 3d refinement with Relion.
 """
 import pyworkflow.em.metadata as md
-from pyworkflow.em.data import(Volume,FSC)
+from pyworkflow.em.data import Volume, FSC
 from pyworkflow.em.protocol import ProtRefine3D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
@@ -74,7 +74,7 @@ leads to objective and high-quality results.
             joinHalves = "--low_resol_join_halves"
             if not joinHalves in self.extraParams.get():
                 args['--low_resol_join_halves'] = 40
-        
+
         # Set movie refinement arguments
         if self.realignMovieFrames:
             args['--realign_movie_frames'] = self._getFileName('movie_particles')
@@ -85,7 +85,7 @@ leads to objective and high-quality results.
                 args['--skip_maximize'] = ''
             else:
                 args['--sigma_ang'] = self.movieStdRot.get()
-        
+
     #--------------------------- STEPS functions --------------------------------------------     
     def createOutputStep(self):
         

@@ -43,6 +43,7 @@ from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
 from protocol_sort import ProtRelionSortParticles
+from protocol_initialmodel import ProtRelionInitialModel
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -117,7 +118,8 @@ class RelionViewer(ProtocolViewer):
     The visualization tools follow the recommendations of Relion 1.3 tutorial:
     http://www2.mrc-lmb.cam.ac.uk/groups/scheres/relion13_tutorial.pdf
     """
-    _targets = [ProtRelionClassify2D, ProtRelionClassify3D, ProtRelionRefine3D]
+    _targets = [ProtRelionClassify2D, ProtRelionClassify3D,
+                ProtRelionRefine3D, ProtRelionInitialModel]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
     _label = 'viewer relion'

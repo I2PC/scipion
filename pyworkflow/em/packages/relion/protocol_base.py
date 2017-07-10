@@ -42,9 +42,9 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import SetOfClasses3D
 from pyworkflow.em.protocol import EMProtocol
 
-from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V2_0, V1_3
-from convert import (convertBinaryVol, writeSetOfParticles, getVersion,
-                     getImageLocation, convertMask)
+from constants import ANGULAR_SAMPLING_LIST, MASK_FILL_ZERO, V1_3
+from convert import (convertBinaryVol, writeSetOfParticles, isVersion2,
+                     getVersion, getImageLocation, convertMask)
 
 
 class ProtRelionBase(EMProtocol):
@@ -58,6 +58,7 @@ class ProtRelionBase(EMProtocol):
     """
     IS_CLASSIFY = True
     IS_2D = False
+    IS_3D_INIT = False
     OUTPUT_TYPE = SetOfClasses3D
     FILE_KEYS = ['data', 'optimiser', 'sampling'] 
     CLASS_LABEL = md.RLN_PARTICLE_CLASS
@@ -551,7 +552,7 @@ class ProtRelionBase(EMProtocol):
                                    'ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
-        if getVersion() == V2_0:
+        if isVersion2():
             form.addParam('useParallelDisk', BooleanParam, default=True,
                           label='Use parallel disc I/O?',
                           help='If set to Yes, all MPI slaves will read '
@@ -705,11 +706,11 @@ class ProtRelionBase(EMProtocol):
             self._setContinueArgs(args)
         else:
             self._setNormalArgs(args)
-        if getVersion() == V2_0:
+        if isVersion2():
             self._setComputeArgs(args)
         
         params = ' '.join(['%s %s' % (k, str(v)) for k, v in args.iteritems()])
-        
+
         if self.extraParams.hasValue():
             params += ' ' + self.extraParams.get()
         
@@ -891,14 +892,15 @@ class ProtRelionBase(EMProtocol):
                 args['--strict_highres_exp'] = self.limitResolEStep.get()
     
         if self.IS_3D:
-            args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
-                                             self._getTmpPath())
-            if not self.isMapAbsoluteGreyScale:
-                args['--firstiter_cc'] = ''
-            args['--ini_high'] = self.initialLowPassFilterA.get()
-            args['--sym'] = self.symmetryGroup.get()
+            if not self.IS_3D_INIT:
+                args['--ref'] = convertBinaryVol(self.referenceVolume.get(),
+                                                 self._getTmpPath())
+                if not self.isMapAbsoluteGreyScale:
+                    args['--firstiter_cc'] = ''
+                args['--ini_high'] = self.initialLowPassFilterA.get()
+                args['--sym'] = self.symmetryGroup.get()
         
-        if not getVersion() == V2_0:
+        if not isVersion2():
             args['--memory_per_thread'] = self.memoryPreThreads.get()
     
         self._setBasicArgs(args)

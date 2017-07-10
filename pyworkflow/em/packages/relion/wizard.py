@@ -36,6 +36,7 @@ from protocol_preprocess import ProtRelionPreprocessParticles
 from protocol_autopick import ProtRelionAutopickFom, ProtRelionAutopick
 from protocol_autopick_v2 import ProtRelion2Autopick, RUN_COMPUTE
 from protocol_sort import ProtRelionSortParticles
+from protocol_initialmodel import ProtRelionInitialModel
 from pyworkflow.utils.utils import readProperties
 
 #===============================================================================
@@ -74,7 +75,8 @@ class RelionPartMaskDiameterWizard(RelionBackRadiusWizard):
     _targets = [(ProtRelionClassify2D, ['maskDiameterA']),
                 (ProtRelionRefine3D, ['maskDiameterA']),
                 (ProtRelionClassify3D, ['maskDiameterA']),
-                (ProtRelionClassify2D, ['maskDiameterA'])]
+                (ProtRelionClassify2D, ['maskDiameterA']),
+                (ProtRelionInitialModel, ['maskDiameterA'])]
     _unit = UNIT_ANGSTROM
 
     def _getParameters(self, protocol):
