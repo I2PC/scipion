@@ -205,7 +205,7 @@ def runGautomatch(micName, refStack, workDir, args, env=None):
         args = ' %s --T %s %s' % (outMic, refStack, args)
     else:
         args = ' %s %s' % (outMic, args)
-
-    pwutils.runJob(None, getProgram(), args, env=env)
+    environ = env if env is not None else getEnviron()
+    pwutils.runJob(None, getProgram(), args, env=environ)
     # After picking we can remove the temporary file.
     pwutils.cleanPath(outMic)
