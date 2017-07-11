@@ -105,14 +105,15 @@ class ProtRelionBase(EMProtocol):
                   'guinier_frame': self.extraIter + 'data_shiny_frame%(frame)03d_guinier.star',
                   'fsc_shiny': self.extraIter + 'data_shiny_post.star',
                   'bfactors': self.extraIter + 'data_shiny_bfactors.star',
-                  'dataFinal' : self._getExtraPath("relion_data.star"),
-                  'modelFinal' : self._getExtraPath("relion_model.star"),
-                  'finalvolume' : self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc"),
+                  'dataFinal': self._getExtraPath("relion_data.star"),
+                  'modelFinal': self._getExtraPath("relion_model.star"),
+                  'finalvolume': self._getExtraPath("relion_class%(ref3d)03d.mrc:mrc"),
                   'final_half1_volume': self._getExtraPath("relion_half1_class%(ref3d)03d_unfil.mrc:mrc"),
                   'final_half2_volume': self._getExtraPath("relion_half2_class%(ref3d)03d_unfil.mrc:mrc"),
-                  'preprocess_particles' : self._getPath("preprocess_particles.mrcs"),
-                  'preprocess_particles_star' : self._getPath("preprocess_particles.star"),
-                  'preprocess_particles_preffix' : "preprocess_particles"
+                  'finalSGDvolume': self._getExtraPath("relion_it%(iter)03d_class%(ref3d)03d.mrc:mrc"),
+                  'preprocess_particles': self._getPath("preprocess_particles.mrcs"),
+                  'preprocess_particles_star': self._getPath("preprocess_particles.star"),
+                  'preprocess_particles_preffix': "preprocess_particles"
                   }
         # add to keys, data.star, optimiser.star and sampling.star
         for key in self.FILE_KEYS:
@@ -236,7 +237,7 @@ class ProtRelionBase(EMProtocol):
                            'be applied to the initial reference(s).')
         
         form.addSection(label='CTF')
-        form.addParam('contuinueMsg', LabelParam, default=True,
+        form.addParam('continueMsg', LabelParam, default=True,
                       condition='doContinue',
                       label='CTF parameters are not available in continue mode')
         form.addParam('doCTF', BooleanParam, default=True,

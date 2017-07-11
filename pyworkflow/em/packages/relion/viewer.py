@@ -68,14 +68,14 @@ FSC_ALL = 4
 
 
 class RelionPlotter(EmPlotter):
-    ''' Class to create several plots with Xmipp utilities'''
+    """ Class to create several plots with Xmipp utilities"""
     def __init__(self, x=1, y=1, mainTitle="", **kwargs):
         EmPlotter.__init__(self, x, y, mainTitle, **kwargs)
     
     def plotMdAngularDistribution(self, title, angularMd, color='blue'):
-        '''Create an special type of subplot, representing the angular
+        """Create an special type of subplot, representing the angular
         distribution of weight projections. A metadata should be provided containing
-        labels: RLN_ORIENT_ROT, RLN_ORIENT_TILT, MDL_WEIGHT '''
+        labels: RLN_ORIENT_ROT, RLN_ORIENT_TILT, MDL_WEIGHT """
         from math import radians
         
         rot = [radians(angularMd.getValue(md.RLN_ORIENT_ROT, objId)) for objId in angularMd]
@@ -114,7 +114,7 @@ class RelionPlotter(EmPlotter):
 
 class RelionViewer(ProtocolViewer):
     """ This protocol serve to analyze the results of Relion runs.
-    (for protocols classify 2d/3d and 3d auto-refine)
+    (for protocols classify 2d/3d, 3d auto-refine and initial model)
     The visualization tools follow the recommendations of Relion 1.3 tutorial:
     http://www2.mrc-lmb.cam.ac.uk/groups/scheres/relion13_tutorial.pdf
     """
@@ -150,16 +150,16 @@ Examples:
         if self.protocol.IS_CLASSIFY:
 
             group.addParam('showImagesInClasses', params.LabelParam, 
-                          label='Show classification in Scipion', important=True,
-                          help='Display each class with the number of particles assigned. \n'
-                               '*Note1*: The images of one class can be shown by \n'
-                               'right-click on the class and select "Open images".\n'
-                               '*Note2*: This option convert the Relion star file to\n'
-                               'Scipion format and can take several minutes if the \n'
-                               'number of particles is high.')
+                           label='Show classification in Scipion', important=True,
+                           help='Display each class with the number of particles assigned. \n'
+                                '*Note1*: The images of one class can be shown by \n'
+                                'right-click on the class and select "Open images".\n'
+                                '*Note2*: This option convert the Relion star file to\n'
+                                'Scipion format and can take several minutes if the \n'
+                                'number of particles is high.')
             group.addParam('showClassesOnly', params.LabelParam, 
-                          label='Show classes only (*_model.star)',
-                          help='Display the classes directly form the *_model.star file.')            
+                           label='Show classes only (*_model.star)',
+                           help='Display the classes directly form the *_model.star file.')
             changesLabel = 'Changes in Offset, Angles and Classes'
         else:
             group.addParam('showImagesAngularAssignment', params.LabelParam, 
@@ -177,45 +177,48 @@ Examples:
                                label='3D Class to visualize',
                                help='')
                 group.addParam('class3DSelection', params.NumericRangeParam, default='1',
-                              condition='showClasses3D == %d' % CLASSES_SEL,
-                              label='Classes list',
-                              help='')
+                               condition='showClasses3D == %d' % CLASSES_SEL,
+                               label='Classes list',
+                               help='')
             else:
-                group.addParam('showHalves', params.EnumParam, default=0,
-                               choices=['half1', 'half2', 'both', 'final'], 
-                               label='Volume to visualize',
-                               help='Select which half do you want to visualize.')
+                if self.protocol.IS_3D_INIT:
+                    group.addHidden('showHalves', params.IntParam, default=3)
+                else:
+                    group.addParam('showHalves', params.EnumParam, default=0,
+                                   choices=['half1', 'half2', 'both', 'final'],
+                                   label='Volume to visualize',
+                                   help='Select which half do you want to visualize.')
             
             group.addParam('displayVol', params.EnumParam, choices=['slices', 'chimera'], 
-                          default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
-                          label='Display volume with',
-                          help='*slices*: display volumes as 2D slices along z axis.\n'
-                               '*chimera*: display volumes as surface with Chimera.')
+                           default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST,
+                           label='Display volume with',
+                           help='*slices*: display volumes as 2D slices along z axis.\n'
+                                '*chimera*: display volumes as surface with Chimera.')
             group.addParam('displayAngDist', params.EnumParam, choices=['2D plot', 'chimera'], 
-                          default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST, 
-                          label='Display angular distribution',
-                          help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                               '*chimera*: display angular distribution using Chimera with red spheres.') 
+                           default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST,
+                           label='Display angular distribution',
+                           help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
+                                '*chimera*: display angular distribution using Chimera with red spheres.')
             group.addParam('spheresScale', params.IntParam, default=100, 
-                          expertLevel=LEVEL_ADVANCED,
-                          label='Spheres size',
-                          help='')
+                           expertLevel=LEVEL_ADVANCED,
+                           label='Spheres size',
+                           help='')
 
             group = form.addGroup('Resolution')
             group.addParam('figure', params.EnumParam, default=0,
                            choices=['new', 'active'],
                            label='Figure', display=params.EnumParam.DISPLAY_HLIST)
             group.addParam('resolutionPlotsSSNR', params.LabelParam, default=True,
-                          label='Display SSNR plots',
-                          help='Display signal to noise ratio plots (SSNR) ')
-            if not self.protocol.IS_CLASSIFY:
+                           label='Display SSNR plots',
+                           help='Display signal to noise ratio plots (SSNR)')
+            if not self.protocol.IS_CLASSIFY and not self.protocol.IS_3D_INIT:
                 group.addParam('resolutionPlotsFSC', params.LabelParam, default=True,
-                              label='Display resolution plots (FSC)',
-                              help='')
+                               label='Display resolution plots (FSC)',
+                               help='')
                 group.addParam('resolutionThresholdFSC', params.FloatParam, default=0.143, 
-                              expertLevel=LEVEL_ADVANCED,
-                              label='Threshold in resolution plots',
-                              help='')
+                               expertLevel=LEVEL_ADVANCED,
+                               label='Threshold in resolution plots',
+                               help='')
             
         form.addSection('Overall')      
         form.addParam('showPMax', params.LabelParam, default=True,
@@ -230,7 +233,7 @@ Examples:
         visualizeDict = {
                 'showImagesInClasses': self._showImagesInClasses,
                 'showClassesOnly': self._showClassesOnly,
-                'showImagesAngularAssignment' : self._showImagesAngularAssignment,
+                'showImagesAngularAssignment': self._showImagesAngularAssignment,
                 'showOptimiserFile': self._showOptimiserFile,
                 'showLL': self._showLL,
                 'showPMax': self._showPMax,
@@ -346,11 +349,11 @@ Examples:
         mdIters = md.MetaData()
         iterations = range(self.firstIter, self.lastIter+1)
         
-        for it in iterations: # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
+        for it in iterations:  # range (firstIter,self._visualizeLastIteration+1): #alwaya list all iteration
             objId = mdIters.addObject()
             mdIters.setValue(md.MDL_ITER, it, objId)
             for i, prefix in enumerate(self.protocol.PREFIXES):
-                fn = 'model_general@'+ self.protocol._getFileName(prefix + 'model', iter=it)
+                fn = 'model_general@' + self.protocol._getFileName(prefix + 'model', iter=it)
                 mdModel = md.RowMetaData(fn)
                 pmax = mdModel.getValue(md.RLN_MLMODEL_AVE_PMAX)
                 mdIters.setValue(labels[i], pmax, objId)
@@ -467,7 +470,7 @@ Examples:
             # If just one reference we can show the angular distribution
             ref3d = self._refsList[0]
             volFn = self._getVolumeNames()[0]
-            if exists(volFn.replace(":mrc","")):
+            if exists(volFn.replace(":mrc", "")):
                 for prefix in prefixes:
                     sqliteFn = self.protocol._getFileName('projections', iter=it, ref3d=ref3d, half=prefix)
                     if not exists(sqliteFn):
@@ -631,15 +634,15 @@ Examples:
     def createScipionPartView(self, filename, viewParams={}):
         inputParticlesId = self.protocol._getInputParticles().strId()
         
-        labels =  'enabled id _size _filename _transform._matrix'
+        labels = 'enabled id _size _filename _transform._matrix'
         viewParams = {showj.ORDER:labels,
                       showj.VISIBLE: labels, showj.RENDER:'_filename',
                       'labels': 'id',
                       }
         return em.ObjectView(self._project, 
-                          self.protocol.strId(), filename, other=inputParticlesId,
-                          env=self._env,
-                          viewParams=viewParams)
+                             self.protocol.strId(), filename, other=inputParticlesId,
+                             env=self._env,
+                             viewParams=viewParams)
 
     def _getRange(self, var, label):
         """ Check if the range is not empty.
@@ -722,6 +725,8 @@ Examples:
         prefixes = self._getPrefixes()
         if prefixes[0] == 'final':
             prefixes += ['final_half1_', 'final_half2_']
+        if prefixes[0] == 'final' and self.protocol.IS_3D_INIT:
+            prefixes = ['finalSGD']
         return prefixes
 
     def _getVolumeNames(self):
@@ -751,14 +756,16 @@ Examples:
     
     def _getDataStar(self, prefix, it):
         randomSet = self._getRandomSet(prefix)
-        if randomSet > 0 :
+        if randomSet > 0 or self.protocol.IS_3D_INIT:
             return self.protocol._getFileName('data', iter=it)
         else:
             return self.protocol._getFileName('dataFinal')
     
     def _getModelStar(self, prefix, it):
         randomSet = self._getRandomSet(prefix)
-        if randomSet > 0 :
+        if self.protocol.IS_3D_INIT:
+            return self.protocol._getFileName('model', iter=it)
+        if randomSet > 0:
             return self.protocol._getFileName(prefix + 'model', iter=it)
         else:
             return self.protocol._getFileName('modelFinal')
@@ -827,7 +834,6 @@ class PostprocessViewer(ProtocolViewer):
               default=True, label='Display guinier plots',
               help='')
 
-    
     def _getVisualizeDict(self):
         self._load()
         return {'displayVol': self._showVolume,
@@ -1033,12 +1039,12 @@ class RelionPolishViewer(ProtocolViewer):
         group = form.addGroup('Volumes')
         
         group.addParam('showHalves', params.EnumParam, choices=['half1', 'half2', 'both', 'final shiny'], default=0,
-                      label='Volume to visualize',
-                      help='Select which half do you want to visualize.')
+                       label='Volume to visualize',
+                       help='Select which half do you want to visualize.')
         group.addParam('viewFrame', params.EnumParam, choices=['all', 'selection'], default=0, 
-                      display=params.EnumParam.DISPLAY_HLIST, condition="showHalves<3",
-                      label="Frame to visualize", 
-                      help="""
+                       display=params.EnumParam.DISPLAY_HLIST, condition="showHalves<3",
+                       label="Frame to visualize",
+                       help="""
 *all*: all frames volumes will be visualized.
 *selection*: you may specify a range of frames.
 Examples:
@@ -1047,41 +1053,41 @@ Examples:
 "2 5, 6-8" -> [2,5,6,7,8]                      
                            """)
         group.addParam('frameSelection', params.NumericRangeParam, 
-                      condition='showHalves<3 and viewFrame==1' , 
-                      label="Frames list", default = 1,
-                      help="Write the frame list to visualize.")
+                       condition='showHalves<3 and viewFrame==1' ,
+                       label="Frames list", default = 1,
+                       help="Write the frame list to visualize.")
         group.addParam('displayVol', params.EnumParam, choices=['slices', 'chimera'], 
-                      default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST, 
-                      label='Display volume with',
-                      help='*slices*: display volumes as 2D slices along z axis.\n'
-                           '*chimera*: display volumes as surface with Chimera.')
+                       default=VOLUME_SLICES, display=params.EnumParam.DISPLAY_HLIST,
+                       label='Display volume with',
+                       help='*slices*: display volumes as 2D slices along z axis.\n'
+                            '*chimera*: display volumes as surface with Chimera.')
         group.addParam('displayAngDist', params.EnumParam, choices=['2D plot', 'chimera'], 
-                      default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST, 
-                      label='Display angular distribution',condition="showHalves==3",
-                      help='*2D plot*: display angular distribution as interative 2D in matplotlib.\n'
-                           '*chimera*: display angular distribution using Chimera with red spheres.') 
+                       default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST,
+                       label='Display angular distribution',condition="showHalves==3",
+                       help='*2D plot*: display angular distribution as interactive 2D in matplotlib.\n'
+                            '*chimera*: display angular distribution using Chimera with red spheres.')
         group.addParam('spheresScale', params.IntParam, default=100, 
-                      expertLevel=LEVEL_ADVANCED,condition="showHalves==3 and displayAngDist==%d" % ANGDIST_CHIMERA,
-                      label='Spheres size',
-                      help='')
+                       expertLevel=LEVEL_ADVANCED,condition="showHalves==3 and displayAngDist==%d" % ANGDIST_CHIMERA,
+                       label='Spheres size',
+                       help='')
         group = form.addGroup('Plots')
         group.addParam('resolutionPlotsFSC', params.EnumParam,
-                      choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
-                      default=FSC_CORRECTED, display=params.EnumParam.DISPLAY_COMBO, 
-                      label='Display resolution plots (FSC)',
-                      help='') 
+                       choices=['Corrected', 'Unmasked Maps', 'Masked Maps', 'Phase Randomized Masked Maps', 'all'],
+                       default=FSC_CORRECTED, display=params.EnumParam.DISPLAY_COMBO,
+                       label='Display resolution plots (FSC)',
+                       help='')
         group.addParam('resolutionThresholdFSC', params.FloatParam, default=0.143, 
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Threshold in resolution plots',
-                      help='')
+                       expertLevel=LEVEL_ADVANCED,
+                       label='Threshold in resolution plots',
+                       help='')
         group.addParam('guinierPlots', params.LabelParam,
-                      default=True, condition="showHalves<3",
-                      label='Display guinier plots',
-                      help='')
+                       default=True, condition="showHalves<3",
+                       label='Display guinier plots',
+                       help='')
         group.addParam('bfactorsPlot', params.LabelParam,
-                      default=True,
-                      label='Display bfactors plot',
-                      help='')
+                       default=True,
+                       label='Display bfactors plot',
+                       help='')
     
     def _getVisualizeDict(self):
         self._load()
@@ -1229,7 +1235,7 @@ Examples:
                 legends.append(self._getLegend(label))
         xplotter.showLegend(legends)
         if threshold < self.maxfsc:
-            a.plot([self.minInv, self.maxInv],[threshold, threshold], color='black', linestyle='--')
+            a.plot([self.minInv, self.maxInv], [threshold, threshold], color='black', linestyle='--')
         a.grid(True)
         
         return [xplotter]
@@ -1306,7 +1312,7 @@ Examples:
 # Utils Functions
 #===============================================================================
     def _load(self):
-        self.protocol._initialize() # Load filename templates
+        self.protocol._initialize()  # Load filename templates
         self._errors = []
         self.lastIter = self.protocol._lastIter()
         halves = getattr(self, 'showHalves', None)
@@ -1327,15 +1333,15 @@ Examples:
         self._plotFormatter = FuncFormatter(self._formatFreq) 
         
     def createScipionPartView(self, filename, partsId, viewParams={}):
-        labels =  'enabled id _filename _transform._matrix'
+        labels = 'enabled id _filename _transform._matrix'
         viewParams = {showj.ORDER:labels,
                       showj.VISIBLE: labels, showj.RENDER:'_filename',
                       'labels': 'id',
                       }
         return em.ObjectView(self._project, 
-                          self.protocol.strId(), filename, other=partsId,
-                          env=self._env,
-                          viewParams=viewParams)
+                             self.protocol.strId(), filename, other=partsId,
+                             env=self._env,
+                             viewParams=viewParams)
     
     def _getPrefixes(self):
         prefixes = self.protocol.PREFIXES
@@ -1426,7 +1432,7 @@ class RelionSortViewer(Viewer):
     def _visualize(self, obj, **kwargs):
         views = []
 
-        if obj.hasAttribute('outputParticles'): # Protocol finished
+        if obj.hasAttribute('outputParticles'):  # Protocol finished
             particles = obj.outputParticles
             labels = ('id enabled _index _filename _rlnSelectParticlesZscore '
                       '_coordinate._rlnAutopickFigureOfMerit _sampling '
@@ -1439,7 +1445,7 @@ class RelionSortViewer(Viewer):
                                        viewParams={showj.ORDER: labels,
                                                    showj.VISIBLE: labels,
                                                    showj.SORT_BY: sortBy,
-                                                   showj.RENDER:'_filename'}))
+                                                   showj.RENDER: '_filename'}))
 
             fn = obj._getExtraPath('input_particles_sorted.star')
             mdFn = md.MetaData(fn)

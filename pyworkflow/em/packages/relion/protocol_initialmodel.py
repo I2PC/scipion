@@ -2,7 +2,7 @@
 # *
 # * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
-# * MRC Laboratory of Molecular Biology
+# * MRC Laboratory of Molecular Biology, MRC-LMB
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -39,17 +39,15 @@ from constants import ANGULAR_SAMPLING_LIST
 
 class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
     """    
-    Generate a 3D initial model _de novo_ from 2D particles using Relion
-    Stochastic Gradient Descent (SGD) algorithm.
+    Generate a 3D initial model _de novo_ from 2D particles using
+    Relion Stochastic Gradient Descent (SGD) algorithm.
     """
     _label = '3D initial model'
     IS_CLASSIFY = False
-    IS_3D = True
     IS_3D_INIT = True
     IS_2D = False
     CHANGE_LABELS = [md.RLN_OPTIMISER_CHANGES_OPTIMAL_ORIENTS,
                      md.RLN_OPTIMISER_CHANGES_OPTIMAL_OFFSETS]
-    ##doContinue = False
 
     @classmethod
     def isDisabled(cls):
@@ -60,20 +58,21 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
 
     def _initialize(self):
         """ This function is mean to be called after the
-        working dir for the protocol have been set. (maybe after recovery from mapper)
+        working dir for the protocol have been set.
+        (maybe after recovery from mapper)
         """
         ProtRelionBase._initialize(self)
-        self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_class001.mrc'
-        self.maskZero = 2  # set it to 2 so it is not defined
+        #self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_class001.mrc'
+        self.maskZero = False
         self.copyAlignment = False
         self.hasReferenceCTFCorrected = False
         self.doCtfManualGroups = False
         self.realignMovieFrames = False
-        #self.numberOfClasses.set(1)  # For refinement we only need just one "class"
 
 
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
+        self.IS_3D = not self.IS_2D
         form.addSection(label='Input')
         form.addParam('doContinue', BooleanParam, default=False,
                       label='Continue from a previous run?',
@@ -114,7 +113,7 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
         self.addSymmetry(form)
 
         form.addSection(label='CTF')
-        form.addParam('contuinueMsg', LabelParam, default=True,
+        form.addParam('continueMsg', LabelParam, default=True,
                       condition='doContinue',
                       label='CTF parameters are not available in continue mode')
         form.addParam('doCTF', BooleanParam, default=True,
@@ -345,17 +344,15 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
                                 'WebHome?topic=Symmetry')
 
 
-    #--------------------------- INSERT steps functions --------------------------------------------  
+    #--------------------------- INSERT steps functions -------------------------------------
 
     #--------------------------- STEPS functions --------------------------------------------
     def createOutputStep(self):
         imgSet = self._getInputParticles()
         vol = Volume()
-        vol.setFileName(self._getExtraPath('relion_class001.mrc'))
+        fnVol = self._getExtraPath('relion_it%s_class001.mrc') % self._lastIter()
+        vol.setFileName(fnVol)
         vol.setSamplingRate(imgSet.getSamplingRate())
-        half1 = self._getFileName("final_half1_volume", ref3d=1)
-        half2 = self._getFileName("final_half2_volume", ref3d=1)
-        vol.setHalfMaps([half1, half2])
 
         outImgSet = self._createSetOfParticles()
         outImgSet.copyInfo(imgSet)
@@ -368,7 +365,7 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
@@ -376,7 +373,7 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return []
@@ -399,6 +396,7 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
         args['--subset_size'] = self.sgdSubsetSize.get()
         args['--strict_highres_sgd'] = self.sgdResLimit.get()
         args['--write_subsets'] = self.writeSubsets.get()
+        args['--sgd_sigma2fudge_halflife'] = self.sgdNoiseVar.get()
 
     def _setSamplingArgs(self, args):
         """ Set sampling related params"""
