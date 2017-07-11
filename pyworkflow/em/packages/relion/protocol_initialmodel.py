@@ -61,8 +61,10 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
         working dir for the protocol have been set.
         (maybe after recovery from mapper)
         """
-        ProtRelionBase._initialize(self)
-        #self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_class001.mrc'
+        self._createFilenameTemplates()
+        self._createIterTemplates()
+        if not self.doContinue:
+            self.continueRun.set(None)
         self.maskZero = False
         self.copyAlignment = False
         self.hasReferenceCTFCorrected = False
@@ -350,7 +352,7 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
     def createOutputStep(self):
         imgSet = self._getInputParticles()
         vol = Volume()
-        fnVol = self._getExtraPath('relion_it%s_class001.mrc') % self._lastIter()
+        fnVol = self._getExtraPath('relion_it%03d_class001.mrc') % self._lastIter()
         vol.setFileName(fnVol)
         vol.setSamplingRate(imgSet.getSamplingRate())
 
@@ -364,39 +366,76 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
         self._defineTransformRelation(self.inputParticles, outImgSet)
     
     #--------------------------- INFO functions -------------------------------------------- 
-    def _validate(self):
+    def _validateNormal(self):
         """ Should be overwritten in subclasses to
-        return summary message for NORMAL EXECUTION. 
+        return summary message for NORMAL EXECUTION.
         """
         errors = []
-        self.validatePackageVersion('RELION_HOME', errors)
         return errors
-    
-    def _summary(self):
+
+    def _validateContinue(self):
         """ Should be overwritten in subclasses to
-        return summary message for NORMAL EXECUTION. 
+        return summary messages for CONTINUE EXECUTION.
         """
-        return []
-    
+        errors = []
+        continueRun = self.continueRun.get()
+        continueRun._initialize()
+        lastIter = continueRun._lastIter()
+
+        if self.continueIter.get() == 'last':
+            continueIter = lastIter
+        else:
+            continueIter = int(self.continueIter.get())
+
+        if continueIter > lastIter:
+            errors += ["The iteration from you want to continue must be %01d or less" % lastIter]
+
+        return errors
+
+    def _summaryNormal(self):
+        """ Should be overwritten in subclasses to
+        return summary message for NORMAL EXECUTION.
+        """
+        summary = []
+        it = self._lastIter()
+        if it >= 1:
+            row = md.getFirstRow('model_general@' + self._getFileName('model', iter=it))
+            resol = row.getValue("rlnCurrentResolution")
+            summary.append("Current resolution: *%0.2f*" % resol)
+        return summary
+
+    def _summaryContinue(self):
+        """ Should be overwritten in subclasses to
+        return summary messages for CONTINUE EXECUTION.
+        """
+        summary = []
+        summary.append("Continue from iteration %01d" % self._getContinueIter())
+        return summary
+
+
     #--------------------------- UTILS functions --------------------------------------------
     def _setBasicArgs(self, args):
         """ Return a dictionary with basic arguments. """
         args.update({'--o': self._getExtraPath('relion'),
                      '--oversampling': '1',
-                     '--iter': self._getnumberOfIters(),
-                     '--sym': self.symmetryGroup.get()
+                     '--iter': self._getnumberOfIters()
                      })
+
+        if not self.doContinue:
+            args.update({'--sym': self.symmetryGroup.get()})
 
         self._setSGDArgs(args)
         self._setSamplingArgs(args)
 
     def _setSGDArgs(self, args):
         args['--sgd'] = ''
-        args['--denovo_3dref'] = ''
         args['--subset_size'] = self.sgdSubsetSize.get()
         args['--strict_highres_sgd'] = self.sgdResLimit.get()
         args['--write_subsets'] = self.writeSubsets.get()
-        args['--sgd_sigma2fudge_halflife'] = self.sgdNoiseVar.get()
+
+        if not self.doContinue:
+            args['--denovo_3dref'] = ''
+            args['--sgd_sigma2fudge_halflife'] = self.sgdNoiseVar.get()
 
     def _setSamplingArgs(self, args):
         """ Set sampling related params"""
