@@ -38,6 +38,7 @@ import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.gui.plotter import Plotter
+from pyworkflow.utils import exists
 
 
 
@@ -74,7 +75,7 @@ class ProtResMap(ProtAnalysis3D):
         form.addSection(label='Input')
         form.addParam('useSplitVolume', params.BooleanParam, default=False,
                       label="Use half volumes?",
-                      help='Use to split volumes for gold-standard FSC.')
+                      help='Use split volumes for gold-standard FSC.')
         form.addParam('inputVolume', params.PointerParam,
                       pointerClass='Volume', condition="not useSplitVolume",
                       label="Input volume", important=True,
@@ -205,6 +206,14 @@ class ProtResMap(ProtAnalysis3D):
     
     def _summary(self):
         summary = []
+
+        if exists(self._getExtraPath('histogram.png')):
+            results = self._parseOutput()
+            summary.append('Mean resolution: %0.2f A' % results[0])
+            summary.append('Median resolution: %0.2f A' % results[1])
+        else:
+            summary.append("Output is not ready yet.")
+
         return summary
     
     def _validate(self):
@@ -308,3 +317,14 @@ class ProtResMap(ProtAnalysis3D):
         fig = plotResolutionHistogram(histogramData)
         return Plotter(figure=fig)    
 
+    def _parseOutput(self):
+        meanRes, medianRes = 0, 0
+        f = open(self.getLogPaths()[0], 'r')
+        for line in f.readlines():
+            if 'MEAN RESOLUTION in MASK' in line:
+                meanRes = line.strip().split('=')[1]
+            elif 'MEDIAN RESOLUTION in MASK' in line:
+                medianRes = line.strip().split('=')[1]
+        f.close()
+
+        return tuple(map(float, (meanRes, medianRes)))
