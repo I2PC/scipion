@@ -1011,18 +1011,22 @@ getPixelValue(std::complex<float>** img, float x, float y, int imgSizeX, int img
 	fractX = std::modf(x , &posX);
 	fractY = std::modf(y , &posY);
 	std::complex<float> bl,br,tl,tr;
-	bl = br = tl = tr = 0;
-	if (posY >= 0 && posX >= 0) {
-		bl = img[(int)posY][(int)posX];
+	bl = br = tl = tr = 0; // values outside of the boundaries will be zero
+	if (posY >= 0) {
+		if (posX >= 0) {
+			bl = img[(int)posY][(int)posX];
+		}
+		if ((posX + 1)< imgSizeX) {
+			br = img[(int)posY][(int)posX + 1];
+		}
 	}
-	if (posY >= 0 && (posX + 1)< imgSizeX) {
-		br = img[(int)posY][(int)posX + 1];
-	}
-	if ((posY+1) < imgSizeY && posX >= 0) {
-		tl = img[(int)posY+1][(int)posX];
-	}
-	if ((posY+1) < imgSizeY && (posX + 1) < imgSizeX) {
-		tr = img[(int)posY+1][(int)posX + 1];
+	if ((posY+1) < imgSizeY) {
+		if (posX >= 0) {
+			tl = img[(int)posY+1][(int)posX];
+		}
+		if ((posX + 1) < imgSizeX) {
+			tr = img[(int)posY+1][(int)posX + 1];
+		}
 	}
 	return BilinearInterpolation(bl, br, tl, tr, 1. - fractX, 1. - fractY);
 }
@@ -1871,9 +1875,9 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 }	
 
-template<typename T>
-inline T clamp(T val, T min, T max) {
-	T res = val;
+template<typename T, typename U>
+inline U clamp(U val, T min, T max) {
+	U res = val;
 	res = (res > max) ? max : res;
 	res = (res < min) ? min : res;
 	return res;
@@ -1905,85 +1909,29 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 	minX = floor(AABB[0].x);
 	maxY = ceil(AABB[1].y);
 	maxX = ceil(AABB[1].x);
-
-// LOGGING
-/*
-	std::cout << "output: " << outputVolumeSize <<"\n" << "img " << imgSizeX << "x" << imgSizeY << std::endl; 
-	std::cout << "expected output space" << std::endl;
-	printPlane(plane);
-	std::cout << "traverse space" << std::endl;
-	printAABB(AABB);
-	std::cout << "-------------" << std::endl;
-*/
-// LOGGING
 	
 	for(int y = minY; y <= maxY; y++) {
 		for(int x = minX; x <= maxX; x++) {
 			float hitZ;
 			if (getZ(x, y, hitZ, u, v, *plane)) {
 				int z = (int)(hitZ + 0.5f); // rounding
-				z = clamp(z, 0, maxOutputIndex); // FIXME probably not necessary
 				// transform current point to center
 				imgPos[0] = x - halfOutVolSize;
 				imgPos[1] = y - halfOutVolSize;
 				imgPos[2] = z - halfOutVolSize;
-				// rotate around center
-				multiply(transfInv, imgPos);
 				if (imgPos[0]*imgPos[0] + imgPos[1]*imgPos[1] + imgPos[2]*imgPos[2] > maxDistanceSqr) {
 					continue; // discard iterations that would access pixel with too high frequency
 				}
+				// rotate around center
+				multiply(transfInv, imgPos);
 				// transform back
 				imgPos[1] += halfOutVolSize; // just Y coordinate, since X now match to picture and Z is irrelevant
 
-				// round and clamp
-//				std::complex<float>bl =
-//				imgPos[0] = clamp((int)(imgPos[0] - 0.5f), 0, imgSizeX - 1);
-//				imgPos[1] = clamp((int)(imgPos[1] + 0.5f), 0, imgSizeY - 1);
-
 				outputVolume[z][y][x] += getPixelValue(inputImage, imgPos[0], imgPos[1], imgSizeX, imgSizeY);
 				outputWeights[z][y][x] += 1.f;
-// LOGGING				
-/*
-				int tmp[3];
-    			bool conjugate = false;
-    			tmp[0] = x;
-    			tmp[1] = y;
-    			tmp[2] = z;
-    			if (x < imgSizeX) {
-    				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
-    				// it cannot be done separately, as it would 'tear' the continuity of the mapping
-    				tmp[0] = imgSizeY - x;
-    				tmp[1] = imgSizeY - y;
-    				tmp[2] = imgSizeY - z;
-					conjugate = true;
-    			}
-
-    			// shift FFT from center to corners
-    			tmp[0] = tmp[0] - imgSizeX;
-    			std::cout << std::boolalpha;
-    			tmp[1] = (tmp[1] < imgSizeX) ? 128 - imgSizeX + tmp[1] - 1 : tmp[1] - imgSizeX ;
-    			tmp[2] = (tmp[2] < imgSizeX) ? 128 - imgSizeX + tmp[2] - 1 : tmp[2] - imgSizeX ;
-    			if (tmp[1] > imgSizeX) {
-    				tmp[1] += 1; // no idea why
-    			}
-
-//    			if (tmp[1] > imgSizeX) {
-				std::cout
-					<< x << " " << y << " " << z
-					<< " -> "
-					<< tmp[0] << " " << tmp[1] << " " << tmp[2]
-					<< " -> "
-					<< imgPos[0] << " " << imgPos[1] << " " << conjugate << std::endl;
-//    			}
-*/
-// LOGGING
-
-
 			}
 		}
 	}
-	
-	
 }
 	
 
@@ -2059,11 +2007,6 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                 current_index = th_args[nt].imageIndex;
                 Matrix2D<double> *Ainv = th_args[nt].localAInv;
 
-
-
-
-
-
                 //#define DEBUG22
 #ifdef DEBUG22
 
@@ -2094,7 +2037,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
 				size = 2 * conserveRows;
 
-				std::cout << "about to alocate myPaddedFourier " << conserveRows << "x" << size << std::endl;
+//				std::cout << "about to alocate myPaddedFourier " << conserveRows << "x" << size << std::endl;
 				myPaddedFourier = new std::complex<float>*[size];
 				for (size_t i = 0; i < size; i++) {
 					myPaddedFourier[i] = new std::complex<float>[conserveRows];
@@ -2103,7 +2046,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 					}
 				}
 
-				std::cout << "about to convert input image\n";
+//				std::cout << "about to convert input image\n";
 				std::complex<double> paddedFourierTmp;
 				int halfY = paddedFourier->ydim / 2;
 				double tempMyPadd[2];
@@ -2123,15 +2066,6 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 					}
 				}
 
-
-
-                //std::cout << "Image dimmensions: " << paddedFourier->xdim << " " << paddedFourier->ydim << std::cout;
-
-
-//                std::cout<< "symmetries: " << SSTR(R_repository.size()) << std::endl;
-
-
-
                 // Loop over all symmetries
                 for (size_t isym = 0; isym < R_repository.size(); isym++)
                 {
@@ -2144,16 +2078,13 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
  ////////////////////////////////////////////////
 
 #if DEBUG_DUMP > 0
+					std::cout << "Img " << imgIndex << " symmetry " << isym << std::endl;
                     if (isym > 0 || current_index != 1) {
                        	continue;
                     }
 #endif
 
 //////////////////////////////////////////////////
-
-
-
-
 
                     // Fill the thread arguments for each thread
                     for ( int th = 0 ; th < numThreads ; th ++ )
@@ -2182,7 +2113,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
 
 //                    if (isym == 0 && current_index == 0) {
-                    	std::cout << "Img " << imgIndex << " symmetry " << isym << std::endl;
+
                     	bool conjugate;
 						Matrix1D<float> coords(3), freq(3), img_pos(3);
 						Matrix2D<double> A_SL_inv = A_SL.inv();
@@ -2211,147 +2142,15 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 							}
 		                }
 
-
-
-//						float hlp[3];
-//
-//
-//						for(size_t m = 0; m < VoutFourier_muj.zdim; m++) { // plate index
-//							if (inRange(m, conserveRows, VoutFourier_muj.zdim - conserveRows)) {
-//								continue;
-//							}
-//							FFT_IDX2DIGFREQ_DOUBLE(m, volPadSizeZ, coords[2]);
-//							for(size_t l = 0; l < VoutFourier_muj.ydim; l++) { // original i, line index
-//								if (inRange(l, conserveRows, VoutFourier_muj.ydim - conserveRows)) {
-//									continue;
-//								}
-//								FFT_IDX2DIGFREQ_DOUBLE(l, volPadSizeY, coords[1]);
-//								for(size_t k = 0; k < conserveRows; k++) { // original j, pixel index, cannot be bigger than max picture freq
-//									FFT_IDX2DIGFREQ_DOUBLE(k, volPadSizeX, coords[0]);
-//
-//									freq[0] = coords[0];
-//									freq[1] = coords[1];
-//									freq[2] = coords[2];
-//
-//									// invert map
-//									M3x3_BY_V3x1(freq, A_SL_inv, freq);
-//									DIGFREQ2FFT_IDX_DOUBLE(freq[0], paddedImg.xdim, img_pos[0]); // pixel index
-//									DIGFREQ2FFT_IDX_DOUBLE(freq[1], paddedImg.ydim, img_pos[1]); // line index
-//									img_pos[2] = std::abs(freq[2] * volPadSizeZ); // XXX HACK store transformed Z value
-//
-//									// check restrictions
-//									if (
-//										((int)img_pos[1] >= conserveRows) // or the line has too high frequencies
-//										|| (img_pos[2] > blob.radius) // or projection plane is too far
-//										|| ((freq[0] * freq[0] + freq[1]*freq[1]) > maxResolution2) // or the pixel frequency is too high
-//									){
-//										continue;
-//									}
-//
-////								std::cout << coords[0]
-////										<< " "
-////										<< coords[1]
-////										<< " "
-////										<< coords[2]
-////										<< std::endl;
-//
-////									std::cout << k
-////											<< " "
-////											<< l
-////											<< " "
-////											<< m
-////											<< " -> "
-////											<< img_pos[0]
-////											<< " "
-////											<< img_pos[1]
-////											<< " "
-////											<< 1.0
-////											<< " "
-////											<< (conjugate ? "conjugate" : "no_conjugate")
-////											<< std::endl;
-//
-//									double weight;
-//
-//									std::complex<double> val = getVoxelValue(paddedFourier, volPadSizeX, volPadSizeY,
-//											img_pos[0], img_pos[1], img_pos[2],
-//											blob, weight,
-//											paddedImg.xdim, paddedImg.ydim, maxResolution2,
-//											k, l, m,
-//											blobTableSqrt, iDeltaSqrt);
-//
-//									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k) += val;
-////									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k).real() += weight * val.real();
-////									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k).imag() += weight * conj * val.imag();
-//									DIRECT_A3D_ELEM(FourierWrights_moje, m, l, k) += weight;
-//								}
-//							}
-////						}
-////						std::cout << "done with reverse" << std::endl << std::endl;
-//
-////						print(VoutFourier_muj);
-//
-//                    }
-//
-//					printPlane(transformPlane(createProjectionPlane(volPadSizeX, conserveRows, blob.radius), A_SL));
-//					Point3D* plane = transformPlane(createProjectionPlane(volPadSizeX, conserveRows, blob.radius), A_SL);
-//					printPlane(plane);
-//					float x0 = plane[0].x;
-//					float y0 = plane[0].y;
-//					float z0 = plane[0].z;
-//					Point3D a = { plane[1].x - x0, plane[1].y - y0, plane[1].z - z0 };
-//					Point3D b = { plane[3].x - x0, plane[3].y - y0, plane[3].z - z0 };
-//					float z;
-//					for (float t = 0.f; t < 1.1f; t += 0.1f ) {
-//						for (float u = 0.f; u < 1.1f; u += 0.1f ) {
-//							float x = x0 + t*a.x + u*b.x;
-//							float y = y0 + t*a.y + u*b.y;
-//							float tmp = z0 + t*a.z + u*b.z;
-//							getZ(x, y, z, plane);
-//							std::cout << x << " " << y << " " << z << std::endl;
-//						}
-//					}
-
-
-
-//					for (size_t y = 0; y < paddedFourier->ydim; y++) { // for each line
-//						if (inRange(y, conserveRows, paddedFourier->ydim - conserveRows)) {
-//							continue; // process only lines with small frequencies
-//						}
-//						// otherwise process current line
-//						for (int x = 0;	x < conserveRows; x++) { // for each pixel (with low frequency)
-//							// Compute the frequency of this coefficient in the
-//							// universal coordinate system
-//							FFT_IDX2DIGFREQ(x, volPadSizeX, freq[0]);
-//							FFT_IDX2DIGFREQ(y, volPadSizeX, freq[1]);
-//
-//
-//						}
-//					}
-
-
-thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
-	myPaddedFourier, conserveRows, size,
-	A_SL,
-	blobTableSqrt, iDeltaSqrt,
-	blob.radius);
-
-
-					// druhyPokus(outputVolume, outputWeight, conserveRows, myPaddedFourier,
-							// volPadSizeX, maxResolution2, blob.radius, A_SL
-					// ,blobTableSqrt, iDeltaSqrt,
-           				// paddedFourier->xdim, paddedFourier->ydim);
-
-
-
+					thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
+							myPaddedFourier, conserveRows, size, A_SL,
+							blobTableSqrt, iDeltaSqrt, blob.radius);
 
 //                    // Awaking sleeping threads
 //                    barrier_wait( &barrier );
 //                    // Threads are working now, wait for them to finish
 //                    // processing current projection
 //                    barrier_wait( &barrier );
-
-//                    print(VoutFourier);
-
 
                     //#define DEBUG2
 #ifdef DEBUG2
@@ -2407,41 +2206,9 @@ thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
 
     }
     while ( processed );
-
-//std::cout <<"padding took " << (long double)ticks_pad/CLOCKS_PER_SEC << std::endl;
-// LOGGING
-		std::cout << "about to conjugate" << std::endl;
-
-// LOGGING
-//    // 'merge left and right side'
-//    for (int x = 0; x < conserveRows; x++) {
-//    	for (int y=0; y < size; y++) {
-//    		for (int z = 0; z < size; z++) {
-//    			int newPos[3];
-//    			// mirror agains center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
-//    			newPos[0] = size - x - 1;
-//    			newPos[1] = size - y - 1;
-//    			newPos[2] = size - z - 1;
-//// LOGGING
-///*
-//    			std::cout << x << " " << y << " " << z
-//				<< " -> "
-//				<< newPos[0] << " " << newPos[1] << " " << newPos[2] << std::endl;
-//*/
-//// LOGGING
-//    			outputVolume[newPos[2]][newPos[1]][newPos[0]].real() += outputVolume[z][y][x].real();
-//    			outputVolume[newPos[2]][newPos[1]][newPos[0]].imag() -= outputVolume[z][y][x].imag();
-//    			outputWeight[newPos[2]][newPos[1]][newPos[0]] += outputWeight[z][y][x];
-//
-//    		}
-//    	}
-//    }
-
-// LOGGING
-		std::cout << "about to convert to expected format" << std::endl;
-
-// LOGGING
-
+#if DEBUG_DUMP > 0
+    std::cout << "about to convert to expected format" << std::endl;
+#endif
 	for (int z = 0; z < size; z++) {
     	for (int y = 0; y < size; y++) {
 			for (int x = 0; x < size; x++) {
@@ -2463,26 +2230,10 @@ thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
     			}
     			// shift FFT from center to corners
     			newPos[0] = newPos[0] - conserveRows;
-    			newPos[1] = (newPos[1] < conserveRows) ? VoutFourier_muj.ydim - conserveRows + newPos[1] - 1 : newPos[1] - conserveRows ;
-    			newPos[2] = (newPos[2] < conserveRows) ? VoutFourier_muj.zdim - conserveRows + newPos[2] - 1 : newPos[2] - conserveRows ;
-    			if (newPos[1] > conserveRows) {
-    				newPos[1] += 1; // no idea why
-    				if (newPos[2] > conserveRows) {
-    					newPos[2] += 1; // no idea why
-    				}
+    			newPos[1] = (newPos[1] < conserveRows) ? VoutFourier_muj.ydim - conserveRows + newPos[1] : newPos[1] - conserveRows ;
+    			newPos[2] = (newPos[2] < conserveRows) ? VoutFourier_muj.zdim - conserveRows + newPos[2] : newPos[2] - conserveRows ;
 
-    			}
-    			if (newPos[1] < conserveRows && newPos[2] >= conserveRows) {
-    				newPos[2] += 1; // no idea why
-    			}
-    			// LOGGING
-
-/*
-    			std::cout << x << " " << y << " " << z
-				<< " -> "
-				<< newPos[0] << " " << newPos[1] << " " << newPos[2] << std::endl;
-*/
-// LOGGING
+    			// store to output array
 				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).real() += outputVolume[z][y][x].real();
     			if (conjugate) {
     				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).imag() -= outputVolume[z][y][x].imag();
@@ -2493,65 +2244,13 @@ thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
     		}
     	}
     }
-
-
-
-//    // convert to proper space
-//	float upperIndex = (float)conserveRows / (float)volPadSizeX;
-//	float step = upperIndex / (float)(conserveRows);
-//	bool mirror = false;
-//	for (int m = 0; m < size; m++) {
-//		float z = m*step - upperIndex;
-//		for (int l = 0; l < size; l++) {
-//			float y = l*step - upperIndex;
-//			for (int k = 0; k < size; k++) {
-//				float x = k*step - upperIndex;
-//				float tmp[3];
-//				if (x < 0) {
-//					mirror = true;
-//					tmp[0] = -x;
-//					tmp[1] = -y;
-//					tmp[2] = -z;
-//				} else {
-//					mirror = false;
-//					tmp[0] = x;
-//					tmp[1] = y;
-//					tmp[2] = z;
-//				}
-//
-//				DIGFREQ2FFT_IDX(tmp[0], volPadSizeX, tmp[0]);
-//				DIGFREQ2FFT_IDX(tmp[1], volPadSizeX, tmp[1]);
-//				DIGFREQ2FFT_IDX(tmp[2], volPadSizeX, tmp[2]);
-//
-//				std::complex<double> val;
-//				val.real() = outputVolume[m][l][k].real();
-//				val.imag() = outputVolume[m][l][k].imag();
-//                if (mirror)
-//                    val.imag() *= -1.0f;
-//
-//                /*if ((int)tmp[0] == 1 && (int)tmp[1] == 0 && (int)tmp[2] == 0) {
-//                    std::cout << "XXX going to 1 0 0 from " << m << ", " << l << ", " << k << std::endl;
-//                    std::cout << "XXX " << DIRECT_A3D_ELEM(VoutFourier_muj, (int)tmp[2], (int)tmp[1], (int)tmp[0]) << " += " << val << std::endl;
-//                }*/
-//
-//
-//				DIRECT_A3D_ELEM(VoutFourier_muj, (int)tmp[2], (int)tmp[1], (int)tmp[0]) += val;
-//				DIRECT_A3D_ELEM(FourierWrights_moje,(int)tmp[2], (int)tmp[1], (int)tmp[0]) += outputWeight[m][l][k];
-//			}
-//
-//		}
-//   }
-
-//    print(VoutFourier, true);
-//    print(VoutFourier_muj, true);
+#if DEBUG_DUMP > 0
+	std::cout << "done" << std::endl;
+    print(VoutFourier, true);
+    print(VoutFourier_muj, true);
+#endif
     VoutFourier = VoutFourier_muj;
     FourierWeights = FourierWrights_moje;
-
-    // LOGGING
-    		std::cout << "done" << std::endl;
-
-    // LOGGING
-
 
     if( saveFSC )
     {
