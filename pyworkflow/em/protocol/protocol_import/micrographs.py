@@ -452,7 +452,7 @@ class ProtImportMovies(ProtImportMicBase):
         return serverSocket
 
     def iterFilenamesFromSocket(self):
-        recv_buffer = 4096  # Advisable to keep it as an exponent of 2
+        recv_buffer = 8192  # Advisable to keep it as an exponent of 2
         read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
         for sock in read_sockets:
             if sock is self.serverSocket:
@@ -470,8 +470,8 @@ class ProtImportMovies(ProtImportMicBase):
                     data = sock.recv(recv_buffer)
                     if data:
                         files = shlex.split(data)
-                        self.debug("Data received in socket:")
-                        self.debug(files)
+                        self.info("Data received in socket:")
+                        self.info(files)
                         for fileName in files:
                             if os.path.exists(fileName):
                                 if fileName in self.importedFiles:
