@@ -98,13 +98,13 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         
     #--------------------------- INFO functions --------------------------------
     def _validateNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return []
     
     def _validateContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         errors = []
@@ -123,7 +123,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return errors
     
     def _summaryNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
@@ -134,7 +134,7 @@ class ProtRelionClassify2D(ProtRelionBase, ProtClassify2D):
         return summary
     
     def _summaryContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         summary = []

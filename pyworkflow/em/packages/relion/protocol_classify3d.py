@@ -98,7 +98,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
@@ -107,7 +107,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return errors
     
     def _validateContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         errors = []
@@ -126,7 +126,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return errors
     
     def _summaryNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
@@ -134,7 +134,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         if it >= 1:
             row = md.getFirstRow('model_general@' + self._getFileName('model', iter=it))
             resol = row.getValue("rlnCurrentResolution")
-            summary.append("Current resolution: *%0.2f*" % resol)
+            summary.append("Current resolution: *%0.2f A*" % resol)
         
         summary.append("Input Particles: *%d*\nClassified into *%d* 3D classes\n" % (self.inputParticles.get().getSize(),
                                                                               self.numberOfClasses.get()))
@@ -142,7 +142,7 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         return summary
     
     def _summaryContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         summary = []

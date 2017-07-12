@@ -198,7 +198,7 @@ class ProtRelionPreprocessParticles(ProtProcessParticles, ProtRelionBase):
     
     # --------------------------- INFO functions -------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         validateMsgs = []

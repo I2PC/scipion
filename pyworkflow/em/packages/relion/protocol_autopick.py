@@ -274,7 +274,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
@@ -292,7 +292,7 @@ class ProtRelionAutopickFom(ProtRelionAutopickBase):
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         summary = ['This protocol does not generate any output.',
@@ -385,7 +385,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
     
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
@@ -393,7 +393,7 @@ class ProtRelionAutopick(ProtRelionAutopickBase):
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return [self.summaryVar.get('')]

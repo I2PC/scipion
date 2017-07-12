@@ -584,8 +584,7 @@ Examples:
                     model_star = self._getModelStar(prefix, it)
 
                     if exists(model_star):
-                        #fnFSC=\
-                        blockName + model_star
+                        #fnFSC = blockName + model_star
                         fsc = self._plotFSC(None, blockName + model_star, 'iter %d' % it)
                         fscSet.append(fsc)
         fscViewer.visualize(fscSet)
@@ -597,7 +596,7 @@ Examples:
         frc = [mdStar.getValue(md.RLN_MLMODEL_FSC_HALVES_REF, id) for id in mdStar]
 
         fsc = em.data.FSC(objLabel=label)
-        fsc.setData(resolution_inv,frc)
+        fsc.setData(resolution_inv, frc)
 
         return fsc
 
@@ -883,7 +882,7 @@ class PostprocessViewer(ProtocolViewer):
 
         n = 1
         gridsize = [1, 1]
-        
+
         md.activateMathExtensions()
         fscViewer = em.FscViewer(project=self.protocol.getProject(),
                                  threshold=threshold,
@@ -896,19 +895,20 @@ class PostprocessViewer(ProtocolViewer):
         for label in self._getFSCLabels():
             if exists(modelStar):
                 model = 'fsc@' + modelStar
-                fsc = self._plotFSC(None, model, label)
+                legend = self._getLegend(label)
+                fsc = self._plotFSC(None, model, label, legend)
                 fscSet.append(fsc)
         fscViewer.visualize(fscSet)
         return [fscViewer]
 
     #ROB this function is duplicated
-    def _plotFSC(self, a, model_star, label):
+    def _plotFSC(self, a, model_star, label, legend):
         mdStar = md.MetaData(model_star)
         resolution_inv = [mdStar.getValue(md.RLN_RESOLUTION, id) for id in mdStar]
         frc = [mdStar.getValue(label, id) for id in mdStar]
 
-        fsc = em.data.FSC(objLabel=label)
-        fsc.setData(resolution_inv,frc)
+        fsc = em.data.FSC(objLabel=legend)
+        fsc.setData(resolution_inv, frc)
 
         return fsc
 
@@ -986,7 +986,8 @@ class PostprocessViewer(ProtocolViewer):
         return [md.RLN_POSTPROCESS_GUINIER_VALUE_IN,
                 md.RLN_POSTPROCESS_GUINIER_VALUE_WEIGHTED,
                 md.RLN_POSTPROCESS_GUINIER_VALUE_SHARPENED,
-                md.RLN_POSTPROCESS_GUINIER_VALUE_INTERCEPT,]
+                md.RLN_POSTPROCESS_GUINIER_VALUE_INVMTF,
+                md.RLN_POSTPROCESS_GUINIER_VALUE_INTERCEPT]
     
     def _getGuinerLegend(self, label):
         if label == md.RLN_POSTPROCESS_GUINIER_VALUE_IN:
@@ -995,6 +996,8 @@ class PostprocessViewer(ProtocolViewer):
             return 'log(Amplitudes) Weighted'
         elif label == md.RLN_POSTPROCESS_GUINIER_VALUE_SHARPENED:
             return 'log(Amplitudes) Sharpened'
+        elif label == md.RLN_POSTPROCESS_GUINIER_VALUE_INVMTF:
+            return 'log(Amplitudes) MTF Corrected'
         else:
             return 'log(Amplitudes) Intercept'
         

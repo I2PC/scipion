@@ -261,7 +261,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
@@ -274,7 +274,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return []

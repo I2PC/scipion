@@ -31,6 +31,7 @@ from pyworkflow.em.data import Volume, FSC
 from pyworkflow.em.protocol import ProtRefine3D
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
+from convert import isVersion2
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
@@ -123,16 +124,21 @@ leads to objective and high-quality results.
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         errors = []
         self._validateDim(self._getInputParticles(), self.referenceVolume.get(),
                           errors, 'Input particles', 'Reference volume')
+
+        if isVersion2() and self.IS_3D:
+            if self.solventFscMask and not self.referenceMask.get():
+                errors.append('When using solvent-corrected FSCs, please provide a reference mask.')
+
         return errors
     
     def _validateContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         errors = []
@@ -151,30 +157,31 @@ leads to objective and high-quality results.
         return errors
     
     def _summaryNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to 
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
-        it = self._lastIter()
-        if it >= 1:
-            row = md.getFirstRow('model_general@' + self._getFileName('half1_model', iter=it))
+        if not hasattr(self, 'outputVolume'):
+            summary.append("Output volume not ready yet.")
+            it = self._lastIter()
+            if it >= 1:
+                row = md.getFirstRow('model_general@' + self._getFileName('half1_model', iter=it))
+                resol = row.getValue("rlnCurrentResolution")
+                summary.append("Current resolution: *%0.2f A*" % resol)
+        else:
+            row = md.getFirstRow('model_general@' + self._getFileName('modelFinal'))
             resol = row.getValue("rlnCurrentResolution")
-            summary.append("Current resolution: *%0.2f*" % resol)
+            summary.append("Final resolution: *%0.2f A*" % resol)
+
         return summary
     
     def _summaryContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         summary = []
         summary.append("Continue from iteration %01d" % self._getContinueIter())
         return summary
-
-    def _summary(self):
-        if not hasattr(self, 'outputVolume'):
-            return ["Output volume not ready yet."]
-        else:
-            return ProtRelionBase._summary(self)
 
     #--------------------------- UTILS functions --------------------------------------------
     def _fillDataFromIter(self, imgSet, iteration):
@@ -189,4 +196,3 @@ leads to objective and high-quality results.
         from pyworkflow.em import ALIGN_PROJ
         
         createItemMatrix(item, row, align=ALIGN_PROJ)
-        

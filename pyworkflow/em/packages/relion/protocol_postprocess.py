@@ -239,21 +239,21 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         volume.setFileName(self._getExtraPath('postprocess.mrc'))
         vol = self.protRefine.get().outputVolume
         pxSize = vol.getSamplingRate()
-        
         volume.setSamplingRate(pxSize)
-        mask = VolumeMask()
-        mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
-        mask.setSamplingRate(pxSize)
-        
         self._defineOutputs(outputVolume=volume)
-        self._defineOutputs(outputMask=mask)
         self._defineSourceRelation(vol, volume)
-        self._defineSourceRelation(vol, mask)
-    
+
+        if self.doAutoMask:
+            mask = VolumeMask()
+            mask.setFileName(self._getExtraPath('postprocess_automask.mrc'))
+            mask.setSamplingRate(pxSize)
+            self._defineOutputs(outputMask=mask)
+            self._defineSourceRelation(vol, mask)
+
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
-        """ Should be overriden in subclasses to
-        return summary message for NORMAL EXECUTION. 
+        """ Should be overwritten in subclasses to
+        return summary message for NORMAL EXECUTION.
         """
         errors = []
         mtfFile = self.mtf.get()
@@ -272,7 +272,7 @@ class ProtRelionPostprocess(ProtAnalysis3D):
         return errors
     
     def _summary(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         summary = []

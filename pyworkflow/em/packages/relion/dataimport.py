@@ -128,7 +128,7 @@ class RelionImport():
 
     #--------------------------- INFO functions -------------------------------------------- 
     def validateParticles(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         errors = []

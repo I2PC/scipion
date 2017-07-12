@@ -380,6 +380,21 @@ class ProtRelionBase(EMProtocol):
                                'have one-values inside the virion and '
                                'zero-values in the capsid and the solvent '
                                'areas.')
+            if isVersion2():
+                form.addParam('solventFscMask', BooleanParam, default=False,
+                              expertLevel=LEVEL_ADVANCED,
+                              label='Use solvent-flattened FSCs?',
+                              help='If set to Yes, then instead of using '
+                                   'unmasked maps to calculate the gold-standard '
+                                   'FSCs during refinement, masked half-maps '
+                                   'are used and a post-processing-like '
+                                   'correction of the FSC curves (with '
+                                   'phase-randomisation) is performed every '
+                                   'iteration. This only works when a reference '
+                                   'mask is provided on the I/O tab. This may '
+                                   'yield higher-resolution maps, especially '
+                                   'when the mask contains only a relatively '
+                                   'small volume inside the box.')
         else:
             form.addParam('referenceMask', PointerParam, pointerClass='Mask',
                           label='Reference mask (optional)', allowsNull=True,
@@ -817,13 +832,13 @@ class ProtRelionBase(EMProtocol):
         return errors
     
     def _validateNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return []
     
     def _validateContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         return []
@@ -855,19 +870,19 @@ class ProtRelionBase(EMProtocol):
         return summary
     
     def _summaryNormal(self):
-        """ Should be overriden in subclasses to 
+        """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
         return []
     
     def _summaryContinue(self):
-        """ Should be overriden in subclasses to
+        """ Should be overwritten in subclasses to
         return summary messages for CONTINUE EXECUTION.
         """
         return []
     
     def _methods(self):
-        """ Should be overriden in each protocol.
+        """ Should be overwritten in each protocol.
         """
         return []
     
@@ -982,6 +997,9 @@ class ProtRelionBase(EMProtocol):
         if self.IS_3D and self.solventMask.hasValue():
             solventMask = convertMask(self.solventMask, self._getTmpPath())
             args['--solvent_mask2'] = solventMask
+
+        if isVersion2() and self.IS_3D and self.referenceMask.hasValue():
+            args['--solvent_correct_fsc'] = ''
 
     def _getProgram(self, program='relion_refine'):
         """ Get the program name depending on the MPI use or not. """
