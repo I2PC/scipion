@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
 # * Authors:     J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
@@ -28,6 +29,8 @@
 import json
 import os
 from os.path import join, exists, abspath, basename
+from numpy import histogram
+from operator import itemgetter
 
 from pyworkflow import getTemplatePath
 import pyworkflow.utils as pwutils
@@ -103,6 +106,26 @@ class ReportHtml:
 
         return outputPaths
 
+    def processDefocusValues(self, defocusList, numSlices=8):
+        maxDefocus = self.protocol.maxDefocus.get()
+        minDefocus = self.protocol.minDefocus.get()
+        values, binEdges = histogram(defocusList, bins=numSlices, range=(minDefocus, maxDefocus))
+        belowThresh = 0
+        aboveThresh = 0
+        labels = ["%d-%d" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
+        for v in defocusList:
+            if v < minDefocus:
+                belowThresh += 1
+            elif v > maxDefocus:
+                aboveThresh += 1
+        zipped = zip(values, labels)
+        zipped.extend([(3, "l.t. %d" % minDefocus),
+                       (2, "g.t. %d" % maxDefocus)])
+        zipped.sort(key=itemgetter(0), reverse=True)
+        defocusCoverage = [{'name': z[1], 'y': z[0]*100/len(zipped)} for z in zipped]
+
+        return defocusCoverage
+
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
 
@@ -171,6 +194,8 @@ class ReportHtml:
                                                                      'shift', relPath=reportDir)
             else:
                 data['imgShiftCopyPath'] = []
+
+            data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
 
         ctfData = json.dumps(data)
 

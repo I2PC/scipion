@@ -9,8 +9,8 @@
         <SCRIPT src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></SCRIPT>
         <LINK rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <!--data tables-->
-        <LINK rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css">
-        <SCRIPT src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></SCRIPT>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-print-1.3.1/r-2.1.1/sc-1.4.2/datatables.min.css"/>
+        <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/b-1.3.1/b-print-1.3.1/r-2.1.1/sc-1.4.2/datatables.min.js"></script>
 
         <TITLE>Scipion execution summary for %(projectName)s </TITLE>
         %(refresh)s
@@ -78,13 +78,18 @@
         TD {
             padding: 5px;
         }
+        th, td {
+            white-space: nowrap;
+        }
         .protocolLine {
             background: #F2F2F2;
         }
         .center {
             text-align: center;
         }
-
+        .thumbnail {
+            margin-bottom: 0px;
+        }
         .modal-title {
             float: left;
         }
@@ -185,7 +190,7 @@
         }
     </STYLE>
         <BODY>
-        <DIV id="content" class="clearfix">
+        <DIV id="content" class="clearfix container">
             <H1><img class="valign" src="https://cdn.rawgit.com/I2PC/scipion/master/pyworkflow/resources/scipion_logo_small.png">&nbsp;&nbsp; Project %(projectName)s </H1>
             <DIV class="row">
                 <DIV class="column column-5">
@@ -215,7 +220,10 @@
 
             <SECTION id="ctf">
                 <H2>CTF monitor</H2>
-                <DIV id="ctfChart"></DIV>
+                <div class="row">
+                    <DIV id="ctfChart" class="column column-7"></DIV>
+                    <DIV id="defocusPie" class="column column-5"></DIV>
+                </div>
             </SECTION>
             <SECTION id="system">
                 <H2>System monitor</H2>
@@ -361,6 +369,64 @@
 
         };
 
+        function addCTFDefocusChart(){
+            // Make monochrome colors and set them as default for all pies
+            Highcharts.getOptions().plotOptions.pie.colors = (function () {
+                var colors = [],
+                    base = Highcharts.getOptions().colors[0], i;
+
+                for (i = 0; i < 10; i += 1) {
+                    // Start out with a darkened base color (negative brighten), and end
+                    // up with a much brighter color
+                    colors.push(Highcharts.Color(base).brighten((i - 3) / 7).get());
+                }
+                return colors;
+            }());
+
+            // find index of the out of range slices, set their color to red-ish
+            for(i=0; i<report.ctfData.defocusCoverage.length; i++){
+                if (report.ctfData.defocusCoverage[i]['name'].indexOf("l.") === 0){
+                    Highcharts.getOptions().plotOptions.pie.colors[i] ='#f45b5b';
+                }else if (report.ctfData.defocusCoverage[i]['name'].indexOf("g.") === 0){
+                    Highcharts.getOptions().plotOptions.pie.colors[i] = '#ad4040';
+                }
+            }
+
+            // Build the chart
+            Highcharts.chart('defocusPie', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: 'Defocus coverage'
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%%</b>'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %%',
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Defocus coverage',
+                    data: report.ctfData.defocusCoverage
+                }]
+            });
+
+        };
+
         function addSystemChart () {
             
             $('#systemChart').highcharts({
@@ -442,7 +508,7 @@
                                  report.ctfData.defocusV[index], report.ctfData.ratio[index],
                                  report.ctfData.astigmatism[index]
                                 ];
-                dataset.push(rowValues)
+                dataset.unshift(rowValues);
             });
 
             $('#micTable').DataTable( {
@@ -465,6 +531,7 @@
             addAcquisition();
             addRuns();
             addCTFChart();
+            addCTFDefocusChart();
             addSystemChart();
             addMicTable();
         };
