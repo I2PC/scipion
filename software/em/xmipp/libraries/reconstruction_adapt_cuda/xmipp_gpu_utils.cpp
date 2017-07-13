@@ -23,5 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+
 #include "xmipp_gpu_utils.h"
 
