@@ -70,37 +70,48 @@ void cuda_check_gpu_memory(float* data)
 	size_t free_byte, total_byte;
 	gpuErrchk(cudaMemGetInfo( &free_byte, &total_byte ));
 
-	double free_db = (double)free_byte;
-	double total_db = (double)total_byte;
-	double used_db = total_db - free_db;
+	float free_db = (float)free_byte;
+	float total_db = (float)total_byte;
+	float used_db = total_db - free_db;
 
 	data[0]=total_db;
 	data[1]=free_db;
 	data[2]=used_db;
 }
 
+void cuda_check_gpu_properties(int* grid)
+{
+	cudaDeviceProp prop;
+	cudaGetDeviceProperties(&prop, 0);
+	grid[0] = prop.maxGridSize[0];
+	grid[1] = prop.maxGridSize[1];
+	grid[2] = prop.maxGridSize[2];
+}
 
 template<>
 template<>
 void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<double> > &fourierTransform)
 {
 
-	//printf("EN FFT\n");
+	//printf("FFT \n");
 
 	int Xfdim=(Xdim/2)+1;
 	fourierTransform.resize(Xfdim,Ydim,Zdim,Ndim);
 
-	//TODO AJ check the size of the data to avoid exceed the CUDA FFT size
-	//TODO depende de como de llena este la GPU
-	int maxPoints=51000000;
+	//AJ check the size of the data to avoid exceed the CUDA FFT size
+	float memory[3]={0, 0, 0}; //total, free, used
+	cuda_check_gpu_memory(memory);
+
 	int positionReal=0;
 	int positionFFT=0;
 	size_t NdimNew;
-	if(Xdim*Ydim*Ndim>maxPoints){
-		NdimNew=floor(maxPoints/(Xdim*Ydim));
+	if(Xdim*Ydim*Ndim*64>memory[1]*0.8){
+		float sizeAuxIm = Xdim*Ydim*Zdim*sizeof(cufftDoubleReal) + Xfdim*Ydim*Zdim*sizeof(cufftDoubleComplex);
+		NdimNew=floor((memory[1]*0.6)/(64*Xdim*Ydim + sizeAuxIm));
 	}else
 		NdimNew = Ndim;
 	size_t aux=Ndim;
+
 
 	int nr1[] = {Xdim};   // --- Size of the image in real space
 	int nr2[] = {Ydim, Xdim};   // --- Size of the image in real space
@@ -135,27 +146,56 @@ void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<doub
 	int rdist = Xdim*Ydim*Zdim;	    // --- Distance between batches
 	int fdist = Xfdim*Ydim*Zdim;
 
-	while(aux){
+	while(aux>0){
 
 		//printf("NdimNew EN FFT %i\n",(int)NdimNew);
 		//printf("Number of points %i \n",(int)NdimNew*Xdim*Ydim);
 		//printf("%i %i %i %i %i %i %i \n",NRANK, *nr, rstride, rdist, *nf, fstride, fdist);
 		//printf("positionReal EN FFT %i\n",(int)positionReal);
 		//printf("positionFFT EN FFT %i\n",(int)positionFFT);
+		//printf("free %f\n", (float)memory[1]);
+
+		GpuMultidimArrayAtGpu<cufftDoubleReal> auxInFFT;
+		GpuMultidimArrayAtGpu<cufftDoubleComplex> auxOutFFT;
+		if(NdimNew!=Ndim){
+			auxInFFT.resize(Xdim,Ydim,Zdim,NdimNew);
+			gpuCopyFromGPUToGPU((cufftDoubleReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftDoubleReal));
+			auxOutFFT.resize(Xfdim,Ydim,Zdim,NdimNew);
+		}
+		cuda_check_gpu_memory(memory);
+		//printf("required %f\n",(float)(Xdim*Ydim*NdimNew*64));
+		//printf("free %f\n", (float)memory[1]);
+
 
 		cufftHandle planF;
 		gpuErrchkFFT(cufftPlanMany(&planF, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_D2Z, NdimNew));
-		gpuErrchkFFT(cufftExecD2Z(planF, (cufftDoubleReal*)&d_data[positionReal], (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT]));
+
+		if(NdimNew!=Ndim){
+			gpuErrchkFFT(cufftExecD2Z(planF, auxInFFT.d_data, auxOutFFT.d_data));
+		}else{
+			gpuErrchkFFT(cufftExecD2Z(planF, (cufftDoubleReal*)&d_data[positionReal], (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT]));
+		}
+
 		gpuErrchk(cudaDeviceSynchronize());
 		cufftDestroy(planF);
+
+		if(NdimNew!=Ndim){
+			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftDoubleComplex));
+			auxOutFFT.clear();
+			auxInFFT.clear();
+		}
 
 		positionReal+=(NdimNew*Xdim*Ydim*Zdim);
 		positionFFT+=(NdimNew*Xfdim*Ydim*Zdim);
 		aux-=NdimNew;
-		if(aux*Xdim*Ydim <= maxPoints){
+		/*if(aux*Xdim*Ydim*64 <= memory[1]*0.9){
 			NdimNew=aux;
-		}
+		}*/
+		if(aux<NdimNew)
+			NdimNew=aux;
+
 	}//AJ end while
+
 }
 
 template<>
@@ -163,25 +203,27 @@ template<>
 void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<double> &realSpace)
 {
 
-	//printf("EN IFFT\n");
+	//printf("IFFT \n");
+	int Xfdim=(realSpace.Xdim/2)+1;
 
-	//TODO AJ check the size of the data to avoid exceed the CUDA FFT size
-	int maxPoints=51000000;
+	//AJ check the size of the data to avoid exceed the CUDA FFT size
+	float memory[3]={0, 0, 0}; //total, free, used
+	cuda_check_gpu_memory(memory);
+
 	int positionReal=0;
 	int positionFFT=0;
 	size_t NdimNew;
-	if(realSpace.Xdim*realSpace.Ydim*realSpace.Ndim>maxPoints){
-		NdimNew=floor(maxPoints/(realSpace.Xdim*realSpace.Ydim));
+	if(realSpace.Xdim*realSpace.Ydim*realSpace.Ndim*64>memory[1]*0.8){
+		float sizeAuxIm = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftDoubleReal) + Xfdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftDoubleComplex);
+		NdimNew=floor((memory[1]*0.6)/(64*realSpace.Xdim*realSpace.Ydim + sizeAuxIm));
 	}else
 		NdimNew = realSpace.Ndim;
 	size_t aux=realSpace.Ndim;
-
 
 	int nr1[] = {realSpace.Xdim};   // --- Size of the image in real space
 	int nr2[] = {realSpace.Ydim, realSpace.Xdim};   // --- Size of the image in real space
 	int nr3[] = {realSpace.Zdim, realSpace.Ydim, realSpace.Xdim};   // --- Size of the image in real space
 
-	int Xfdim=(realSpace.Xdim/2)+1;
 	int nf1[] = {Xfdim};   // --- Size of the Fourier transform
 	int nf2[] = {realSpace.Ydim, Xfdim};   // --- Size of the Fourier transform
 	int nf3[] = {realSpace.Zdim, realSpace.Ydim, Xfdim};   // --- Size of the Fourier transform
@@ -211,24 +253,54 @@ void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<d
     int rdist = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim;	    // --- Distance between batches
 	int fdist = Xfdim*realSpace.Ydim*realSpace.Zdim;
 
-	while(aux){
+	while(aux>0){
 
 		//printf("NdimNew EN IFFT %i\n",(int)NdimNew);
-		//printf("Number of points %i \n",(int)NdimNew*realSpace.Xdim*realSpace.Ydim);
+		//printf("Number of points %i \n",(int)NdimNew*Xdim*Ydim);
+		//printf("positionReal EN IFFT %i\n",(int)positionReal);
+		//printf("positionFFT EN IFFT %i\n",(int)positionFFT);
+		//printf("free %f\n", (float)memory[1]);
+
+		GpuMultidimArrayAtGpu<cufftDoubleComplex> auxInFFT;
+		GpuMultidimArrayAtGpu<cufftDoubleReal> auxOutFFT;
+		if(NdimNew!=Ndim){
+			auxInFFT.resize(Xfdim,realSpace.Ydim,realSpace.Zdim,NdimNew);
+			gpuCopyFromGPUToGPU((cufftDoubleComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftDoubleComplex));
+			auxOutFFT.resize(realSpace.Xdim,realSpace.Ydim,realSpace.Zdim,NdimNew);
+		}
+		cuda_check_gpu_memory(memory);
+		//printf("required %f\n",(float)(Xdim*Ydim*NdimNew*64));
+		//printf("free %f\n", (float)memory[1]);
+
 		cufftHandle planB;
 		gpuErrchkFFT(cufftPlanMany(&planB, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_Z2D, NdimNew));
-		gpuErrchkFFT(cufftExecZ2D(planB, (cufftDoubleComplex *)&d_data[positionFFT], (cufftDoubleReal*)&realSpace.d_data[positionReal]));
+
+		if(NdimNew!=Ndim){
+			gpuErrchkFFT(cufftExecZ2D(planB, auxInFFT.d_data, auxOutFFT.d_data));
+		}else{
+			gpuErrchkFFT(cufftExecZ2D(planB, (cufftDoubleComplex *)&d_data[positionFFT], (cufftDoubleReal*)&realSpace.d_data[positionReal]));
+		}
+
 		gpuErrchk(cudaDeviceSynchronize());
 		cufftDestroy(planB);
+
+		if(NdimNew!=Ndim){
+			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftDoubleReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftDoubleReal));
+			auxOutFFT.clear();
+			auxInFFT.clear();
+		}
 
 		positionReal+=(NdimNew*realSpace.Xdim*realSpace.Ydim*realSpace.Zdim);
 		positionFFT+=(NdimNew*Xfdim*realSpace.Ydim*realSpace.Zdim);
 		aux-=NdimNew;
-		if(aux*realSpace.Xdim*realSpace.Ydim <= maxPoints){
+		/*if(aux*realSpace.Xdim*realSpace.Ydim*64 <= memory[1]*0.9){
 			NdimNew=aux;
-		}
+		}*/
+		if(aux<NdimNew)
+			NdimNew=aux;
 
 	}//AJ end while
+
 }
 
 
