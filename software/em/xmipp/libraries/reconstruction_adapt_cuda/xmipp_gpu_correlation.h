@@ -31,16 +31,15 @@ class ProgGpuCorrelation: public XmippProgram
 {
 private:
     //Input file
-	FileName fn_ref, fn_exp;
+	FileName fn_ref, fn_exp, fn_out, fnDir;
 
 	bool generate_out;
 
 	int n_keep;
 	bool significance, keepN;
-	double alpha;
+	double alpha, maxShift;
 
 public:
-
     //Input metadata file
     MetaData SF, SFexp;
 
