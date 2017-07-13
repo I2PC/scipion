@@ -46,6 +46,7 @@ inline double timeval_diff(struct timeval *a, struct timeval *b)
 extern struct ioTime *mytimes;
 
 void cuda_check_gpu_memory(float* data);
+void cuda_check_gpu_properties(int* maxGridSize);
 
 class XmippDim3 {
 public:
@@ -161,9 +162,10 @@ public:
 		gpuCopyFromGPUToCPU(d_data, matrixCpu, nzyxdim*sizeof(float));
 	}
 
-	void copyOneMatrixToCpu(float* &matrixCpu, int i)
+	void copyOneMatrixToCpu(float* &matrixCpu, int idxCpu, int idxGpu)
 	{
-		gpuCopyFromGPUToCPU(&d_data[9*i], &matrixCpu[9*i], 9*sizeof(float));
+		gpuCopyFromGPUToCPU(&d_data[9*idxGpu], &matrixCpu[9*idxCpu], 9*sizeof(float));
+		//printf("matrixCpu[9*i] %f\n", matrixCpu[9*idxCpu]);
 	}
 
 };
