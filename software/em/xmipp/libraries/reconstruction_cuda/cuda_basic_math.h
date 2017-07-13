@@ -36,6 +36,7 @@ typedef signed char schar;
 // float2 functions
 ////////////////////////////////////////////////////////////////////////////////
 
+
 // additional constructors
 inline __host__ __device__ float2 make_float2(float s)
 {
