@@ -33,10 +33,10 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 }
 
 __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftDoubleComplex *M, cufftDoubleComplex *manyF, cufftDoubleComplex *MmanyF,
-		int nzyxdim, int yxdim)
+		size_t nzyxdim, size_t yxdim)
 {
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
-	unsigned long int idxLow = idx%(int)yxdim;
+	unsigned long int idxLow = idx%yxdim;
 
 	if (idx>=nzyxdim)
 		return;
@@ -49,7 +49,7 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftDoubleComplex *
 }
 
 __global__ void calculateDenomFunctionKernel(double *MFrealSpace, double *MF2realSpace, double *maskAutocorrelation, double *out,
-		int nzyxdim, int yxdim)
+		size_t nzyxdim, size_t yxdim)
 {
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	unsigned long int idxLow = idx%yxdim;
@@ -58,6 +58,7 @@ __global__ void calculateDenomFunctionKernel(double *MFrealSpace, double *MF2rea
 		return;
 
 	out[idx] = sqrt(MF2realSpace[idx] - (MFrealSpace[idx]*MFrealSpace[idx]/maskAutocorrelation[idxLow]));
+
 }
 
 
@@ -95,9 +96,9 @@ __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceR
 
 }
 
-__device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim, int wrap){
+__device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
 
-	if(wrap==0){ //image copies
+	/*if(wrap==0){ //image copies
 		if(x<0)
 			x=xdim+x;
 		else if(x>=xdim)
@@ -105,8 +106,8 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim, int wrap){
 		if(y<0)
 			y=ydim+y;
 		else if(y>=ydim)
-			y=y-ydim;
-	}else if(wrap==1){ //mirror
+			y=y-ydim;*/
+	//}else if(wrap==1){ //mirror
 		if(x<0)
 			x=-x;
 		else if(x>=xdim)
@@ -115,7 +116,7 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim, int wrap){
 			y=-y;
 		else if(y>=ydim)
 			y=ydim-(y-ydim)-1;
-	}else if(wrap==2){ //last pixel copies
+	/*}else if(wrap==2){ //last pixel copies
 		if(x<0)
 			x=0;
 		else if(x>=xdim)
@@ -124,7 +125,7 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim, int wrap){
 			y=0;
 		else if(y>=ydim)
 			y=ydim-1;
-	}
+	}*/
 
 }
 
@@ -137,7 +138,7 @@ __global__ void applyTransformKernel(double *d_in, double *d_out, float *transMa
 	unsigned int numIm = idx/yxdim;
 
 	//AJ wrapping type: 0 image copies, 1 mirror, 2 last pixel copies
-	int wrap = 0;
+	//int wrap = 0;
 
 	if(idx>=nzyxdim)
 		return;
@@ -174,10 +175,10 @@ __global__ void applyTransformKernel(double *d_in, double *d_out, float *transMa
 	float w10=y_y_low*one_x;
 	float w11=y_y_low*x_x_low;
 
-	wrapping (x_orig00, y_orig00, xdim, ydim, wrap);
-	wrapping (x_orig01, y_orig01, xdim, ydim, wrap);
-	wrapping (x_orig10, y_orig10, xdim, ydim, wrap);
-	wrapping (x_orig11, y_orig11, xdim, ydim, wrap);
+	wrapping (x_orig00, y_orig00, xdim, ydim);
+	wrapping (x_orig01, y_orig01, xdim, ydim);
+	wrapping (x_orig10, y_orig10, xdim, ydim);
+	wrapping (x_orig11, y_orig11, xdim, ydim);
 
 	int imgIdx00=y_orig00 * xdim + x_orig00;
 	int imgIdx01=y_orig01 * xdim + x_orig01;
@@ -362,7 +363,7 @@ void calculateDenomFunction(const GpuMultidimArrayAtGpu< double > &MFrealSpace, 
     MFrealSpace.calculateGridSizeVectorized(blockSize, gridSize);
 
     calculateDenomFunctionKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			(MFrealSpace.d_data, MF2realSpace.d_data, maskAutocorrelation.d_data, out.d_data, (int)MFrealSpace.nzyxdim, (int)MFrealSpace.yxdim);
+			(MFrealSpace.d_data, MF2realSpace.d_data, maskAutocorrelation.d_data, out.d_data, MFrealSpace.nzyxdim, MFrealSpace.yxdim);
 
 }
 
@@ -426,7 +427,6 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 					(cufftDoubleComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
 					maskFFTPolar, d_NCC.d_data, referenceAux.d_projPolarFFT.yxdim, RefExpRealSpace.nzyxdim, RefExpRealSpace.yxdim);
 
-
 	double *max_values = new double[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
 	float *posY = new float[d_NCC.Ndim];
@@ -464,7 +464,7 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 
 void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		double *max_vector)
+		double *max_vector, double maxShift)
 {
 
 	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
@@ -489,16 +489,15 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
 			referenceAux.d_projFFT.Ndim);
 
-	int max_shift=20;
 	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
 			(RefExpRealSpace.d_data, referenceAux.MFrealSpace.d_data, experimentalAux.MFrealSpace.d_data, referenceAux.d_denom.d_data,
 					experimentalAux.d_denom.d_data, referenceAux.maskAutocorrelation.d_data, d_NCC.d_data,
 					referenceAux.MFrealSpace.nzyxdim, referenceAux.MFrealSpace.yxdim, referenceAux.MFrealSpace.Xdim, referenceAux.MFrealSpace.Ydim,
-					referenceAux.maskCount, max_shift);
+					referenceAux.maskCount, maxShift);
 
-	/*experimentalAux.debug.clear();
-	experimentalAux.debug.resize(d_NCC);
-	d_NCC.copyGpuToGpu(experimentalAux.debug);*/
+	//experimentalAux.debug.resize(d_NCC);
+	//d_NCC.copyGpuToGpu(experimentalAux.debug);
+
 
 	double *max_values = new double[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
