@@ -513,8 +513,6 @@ class Project(object):
                 time.sleep(0.5)
                 self._updateProtocol(protocol, tries + 1)
 
-
-
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
         try:
