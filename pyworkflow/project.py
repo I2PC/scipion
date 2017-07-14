@@ -497,28 +497,23 @@ class Project(object):
             prot2.getProject().closeMapper()
             prot2.closeMappers()
 
-        except OperationalError as ex:
-            print("ERROR: %s, tries=%d" % (ex, tries))
-            print("Opening project as read only...")
-            self.setReadOnly(True)
-            if tries < 3:
-                time.sleep(0.5)
-                self._updateProtocol(protocol, tries + 1)
-
         except Exception as ex:
             print("Error trying to update protocol: %s(jobId=%s)\n "
                   "ERROR: %s, tries=%d"
                   % (protocol.getObjName(), jobId, ex, tries))
-            if tries < 3:
+            if tries == 3:  # 3 tries have been failed
+                traceback.print_exc()
+                # If any problem happens, the protocol will be marked
+                # with a FAILED status
+                protocol.setFailed(str(ex))
+                self.mapper.store(protocol)
+            else:
+                if isinstance(ex, OperationalError):
+                    self.setReadOnly(True)
                 time.sleep(0.5)
                 self._updateProtocol(protocol, tries + 1)
 
-        if tries == 3:  # 3 tries have been failed
-            traceback.print_exc()
-            # If any problem happens, the protocol will be marked
-            # with a FAILED status
-            protocol.setFailed(str(ex))
-            self.mapper.store(protocol)
+
 
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
