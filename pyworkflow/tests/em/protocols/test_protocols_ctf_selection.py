@@ -123,7 +123,7 @@ class TestCtfSelection(BaseTest):
             'maxDefocus': 40000,
             'minDefocus': 1000,
             'astigmatism': 1000,
-            'resolution': 4
+            'resolution': 3.7
         }
 
         protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
@@ -165,11 +165,11 @@ class TestCtfSelection(BaseTest):
             resol = ctf._ctffind4_ctfResolution.get() # TODO
             if defocusU > 1000 and defocusU < 28000 and \
             defocusV > 1000 and defocusV < 28000 and \
-            astigm < 1000 and resol < 4:
+            astigm < 1000 and resol < 3.7:
                 self.assertTrue(ctfOut.isEnabled(),
                                 "ctf with id %d enabled is "
-                                "False and should be True")
+                                "False and should be True" % ctfOut.getObjId())
             else:
                 self.assertFalse(ctfOut.isEnabled(),
                                  "ctf with id %d enabled is "
-                                 "True and should be False")
+                                 "True and should be False" % ctfOut.getObjId())
