@@ -391,10 +391,12 @@ class PDBVolumeWizard(EmWizard):
     def show(self, form):
         if form.protocol.inputPDB.hasValue():
             pdb = form.protocol.inputPDB.get()
-            if pdb.getVolume():
+            print("pdb ptr ",pdb._volumePointer)
+            if pdb._volumePointer:
                 print("Setting ",str(pdb.getVolume()))
                 ptr = Pointer()
-                ptr.set(pdb.getVolume())
+                ptr.copy(pdb._volumePointer)
+#                 ptr.set(pdb.getVolume())
                 print(ptr)
                 print(str(ptr))
                 form.setVar('inputVol', ptr)

@@ -661,7 +661,7 @@ class PdbFile(EMFile):
     def __init__(self, filename=None, pseudoatoms=False, **kwargs):
         EMFile.__init__(self, filename, **kwargs)
         self._pseudoatoms = Boolean(pseudoatoms)
-        self._volume = None
+        self._volumePointer = Pointer()
         
     def getPseudoAtoms(self):
         return self._pseudoatoms.get()
@@ -670,10 +670,14 @@ class PdbFile(EMFile):
         self._pseudoatoms.set(value)
         
     def getVolume(self):
-        return self._volume
+        return self._volumePointer.get()
     
-    def setVolume(self, value):
-        self._volume = value
+    def setVolume(self, volume):
+        self._volumePointer.set(volume)
+        print("Setting pointer to",volume,self._volumePointer,str(self._volumePointer.get()))
+        
+    def copyInfo(self, other):
+        self._volumePointer.copy(other._volumePointer, copyId=False)
 
     def __str__(self):
         return "%s (pseudoatoms=%s)" % (self.getClassName(), self.getPseudoAtoms())
