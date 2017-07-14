@@ -15,20 +15,32 @@
 #define PI 3.14159265
 
 
-__global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, size_t n){
+__global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, size_t n, double maxShift, bool *accepted){
 
 	unsigned int idx = blockDim.x * blockIdx.x + threadIdx.x;
 	if(idx>=n)
 		return;
 
 	int idx9 = idx*9;
-	result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3];
-	result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4];
-	result[idx9+2] = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2];
-
-	result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3];
-	result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4];
-	result[idx9+5] = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5];
+	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2];
+	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5];
+	if(abs(shiftx)>maxShift || abs(shifty)>maxShift){
+		accepted[idx] = false;
+		result[idx9] = lastMat[idx9];
+		result[idx9+1] = lastMat[idx9+1];
+		result[idx9+2] = lastMat[idx9+2];
+		result[idx9+3] = lastMat[idx9+3];
+		result[idx9+4] = lastMat[idx9+4];
+		result[idx9+5] = lastMat[idx9+5];
+	}else{
+		accepted[idx] = true;
+		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3];
+		result[idx9+2] = shiftx;
+		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4];
+		result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3];
+		result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4];
+		result[idx9+5] = shifty;
+	}
 
 }
 
@@ -396,7 +408,7 @@ void GpuCorrelationAux::produceSideInfo()
 }
 
 void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		double *max_vector)
+		double *max_vector, double maxShift)
 {
 	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
 			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim);
@@ -432,13 +444,6 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 	float *posY = new float[d_NCC.Ndim];
 	d_NCC.calculateMax(max_values, posX, posY);
 
-	for(int i=0; i<d_NCC.Ndim; i++){
-		//if(max_values[i]<max_vector[i])
-			//posX[i]=0;
-		//else
-			max_vector[i]=max_values[i];
-	}
-
 	TransformMatrix<float> result(transMat.Ndim);
 	TransformMatrix<float> newMat(transMat.Ndim);
 	newMat.setRotation(posX);
@@ -447,9 +452,19 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 	int numBlk = transMat.Ndim/numTh;
 	if(transMat.Ndim%numTh > 0)
 		numBlk++;
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim);
 
+	GpuMultidimArrayAtGpu<bool> accepted(transMat.Ndim);
+	bool *acceptedCpu = new bool[transMat.Ndim];
+	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift, accepted.d_data);
 	result.copyMatrix(transMat);
+	gpuErrchk(cudaMemcpy(acceptedCpu, accepted.d_data, transMat.Ndim*sizeof(bool), cudaMemcpyDeviceToHost));
+	for(int i=0; i<d_NCC.Ndim; i++)
+	{
+		if(acceptedCpu[i])
+			max_vector[i]=max_values[i];
+		else
+			gpuErrchk(cudaMemcpy(&max_vector[i], &d_NCC.d_data[i*d_NCC.yxdim], sizeof(double), cudaMemcpyDeviceToHost));
+	}
 
 	/*float *matrix_aux = new float[9*transMat.Ndim];
 	transMat.copyMatrixToCpu(matrix_aux);
@@ -498,20 +513,10 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	//experimentalAux.debug.resize(d_NCC);
 	//d_NCC.copyGpuToGpu(experimentalAux.debug);
 
-
 	double *max_values = new double[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
 	float *posY = new float[d_NCC.Ndim];
 	d_NCC.calculateMax(max_values, posX, posY);
-
-	for(int i=0; i<d_NCC.Ndim; i++){
-		//if(max_values[i]<max_vector[i]){
-			//posX[i]=0;
-			//posY[i]=0;
-		//}else{
-			max_vector[i]=max_values[i];
-		//}
-	}
 
 	TransformMatrix<float> result(transMat.Ndim);
 	TransformMatrix<float> newMat(transMat.Ndim);
@@ -521,8 +526,19 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	int numBlk = transMat.Ndim/numTh;
 	if(transMat.Ndim%numTh > 0)
 		numBlk++;
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim);
+
+	GpuMultidimArrayAtGpu<bool> accepted(transMat.Ndim);
+	bool *acceptedCpu = new bool[transMat.Ndim];
+	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift, accepted.d_data);
 	result.copyMatrix(transMat);
+	gpuErrchk(cudaMemcpy(acceptedCpu, accepted.d_data, transMat.Ndim*sizeof(bool), cudaMemcpyDeviceToHost));
+	for(int i=0; i<d_NCC.Ndim; i++)
+	{
+		if(acceptedCpu[i])
+			max_vector[i]=max_values[i];
+		else
+			gpuErrchk(cudaMemcpy(&max_vector[i], &d_NCC.d_data[i*d_NCC.yxdim], sizeof(double), cudaMemcpyDeviceToHost));
+	}
 
 	/*float *matrix_aux = new float[9*transMat.Ndim];
 	transMat.copyMatrixToCpu(matrix_aux);
