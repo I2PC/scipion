@@ -28,6 +28,7 @@
 #include <data/xmipp_fftw.h>
 #include <data/transformations.h>
 #include <data/metadata_extension.h>
+#include <data/filters.h>
 
 #include <algorithm>
 #include "xmipp_gpu_utils.h"
@@ -292,11 +293,11 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 
 		if (firstStep==0){
 			rotation = false;
-			printf("First step\n");
+			//printf("First step\n");
 			max_vector = max_vector_tr;
 		}else{
 			rotation = true;
-			printf("Second step\n");
+			//printf("Second step\n");
 			max_vector = max_vector_rt;
 		}
 
@@ -316,13 +317,13 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 		char stepchar[20]="";
 		for(int step=0; step<max_step; step++){ //loop over consecutive translations and rotations (TRTRTR or RTRTRT) 6
 
-			if(!rotation){
+			/*if(!rotation){
 				stepchar[step]='T';
 				printf("step %i of %i %s\n",step+1, max_step, stepchar);
 			}else{
 				stepchar[step]='R';
 				printf("step %i of %i %s\n",step+1, max_step, stepchar);
-			}
+			}*/
 
 			//CORRELATION PART
 			//TRANSFORMATION MATRIX CALCULATION
@@ -330,7 +331,7 @@ void align_experimental_image(FileName &fnImgExp, GpuCorrelationAux &d_reference
 			if(!rotation)
 				cuda_calculate_correlation(d_referenceAux, d_experimentalAux, *transMat, max_vector, maxShift);
 			else
-				cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, *transMat, max_vector);
+				cuda_calculate_correlation_rotation(d_referenceAux, d_experimentalAux, *transMat, max_vector, maxShift);
 
 
 			//APPLY TRANSFORMATION
@@ -479,14 +480,14 @@ void ProgGpuCorrelation::run()
 
 	//AJ check_gpu_memory to know how many images we can copy in the gpu memory
 	int available_images_proj = mdInSize;
-	if(Xdim*Ydim*mdInSize*8*100/memory[1]>2.4){ //TODO debe depender de la memoria disponible en la GPU
+	if(Xdim*Ydim*mdInSize*8*100/memory[1]>2.4){ //TODO revisar en otras GPUs
 		available_images_proj = floor(memory[1]*0.024/(Xdim*Ydim*8));
 	}
 	if(Xdim*2*Ydim*2*mdInSize>maxGridSize[0]){
 		available_images_proj = floor((round(maxGridSize[0]*0.9))/(Xdim*Ydim));
 	}
 	//available_images_proj=2;
-	printf("available_images_proj %i\n",available_images_proj);
+	//printf("available_images_proj %i\n",available_images_proj);
 
 	SFexp.read(fn_exp,NULL);
 	size_t mdExpSize = SFexp.size();
@@ -573,7 +574,7 @@ void ProgGpuCorrelation::run()
 					max_vector_tr, max_vector_rt, SFexp, available_images_proj, mask, mirror, maxShift);
 
 
-			printf("Repeating process with mirror image...\n");
+			//printf("Repeating process with mirror image...\n");
 			mirror=true;
 			align_experimental_image(fnImgExp, d_referenceAux, d_experimentalAux, transMat_tr_mirror, transMat_rt_mirror,
 							max_vector_tr_mirror, max_vector_rt_mirror, SFexp, available_images_proj, mask, mirror, maxShift);
@@ -596,7 +597,6 @@ void ProgGpuCorrelation::run()
 					A2D_ELEM(matrixCorrCpu_mirror, n, firstIdx+i) = max_vector_rt_mirror[i];
 				}
 			}
-			std::cerr << "Trans Matrix = " << matrixTransCpu[n] << std::endl;
 			/*std::cerr << "Trans Matrix = " << matrixTransCpu[n] << std::endl;
 			std::cerr << "Corr Matrix = " << matrixCorrCpu << std::endl;
 			std::cerr << "Mirror image - Trans Matrix = " << matrixTransCpu_mirror[n] << std::endl;
@@ -756,11 +756,15 @@ void ProgGpuCorrelation::run()
 	if(generate_out){
 		size_t xAux, yAux, zAux, nAux;
 		getImageSize(SF,xAux,yAux,zAux,nAux);
-		String fnImgNew, fnExpNew;
+		FileName fnImgNew, fnExpNew, fnRoot, fnStackOut;
 		Image<double> Inew, Iexp_aux;
 		Matrix2D<double> E(3,3);
 		MultidimArray<float> auxtr(3,3);
 		MultidimArray<double> refSum(1, 1, yAux, xAux);
+		bool firstTime=true;
+
+		CorrelationAux auxCenter;
+		RotationalCorrelationAux auxCenter2;
 
 		for(int i=0; i<mdInSize; i++){
 			bool change=false;
@@ -768,9 +772,15 @@ void ProgGpuCorrelation::run()
 			SF.getValue(MDL_IMAGE,fnImgNew,i+1);
 			refSum.initZeros();
 
+			fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
+			fnStackOut=formatString("%s/%s_aligned.stk",fnDir.c_str(),fnRoot.c_str());
+			if(fnStackOut.exists() && firstTime)
+				fnStackOut.deleteFile();
+
+			firstTime=false;
 			for(int j=0; j<mdExpSize; j++){
-				int pointer1=i*xAux*yAux;
-				int pointer2=i*xAux*yAux;
+				long int pointer1=i*xAux*yAux;
+				long int pointer2=i*xAux*yAux;
 
 				if(DIRECT_A2D_ELEM(weights,j,i)!=0){
 					SFexp.getValue(MDL_IMAGE,fnExpNew,j+1);
@@ -782,6 +792,8 @@ void ProgGpuCorrelation::run()
 
 					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,WRAP,0.0);
 
+					centerImage(Iexp_aux(), auxCenter, auxCenter2);
+					Iexp_aux().resetOrigin();
 					refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i);
 					change=true;
 					normWeight+=DIRECT_A2D_ELEM(weights,j,i);
@@ -790,7 +802,7 @@ void ProgGpuCorrelation::run()
 					SFexp.getValue(MDL_IMAGE,fnExpNew,j+1);
 					Iexp_aux.read(fnExpNew);
 					Iexp_aux().selfReverseX();
-					Iexp_aux().resetOrigin(); //TODO AJ preguntar esto
+					//Iexp_aux().resetOrigin();
 
 					matrixTransCpu_mirror[j].getSlice(i, auxtr);
 					for(int n=0; n<9; n++)
@@ -798,6 +810,8 @@ void ProgGpuCorrelation::run()
 
 					selfApplyGeometry(LINEAR,Iexp_aux(),E,IS_NOT_INV,WRAP,0.0);
 
+					centerImage(Iexp_aux(), auxCenter, auxCenter2);
+					Iexp_aux().resetOrigin();
 					refSum += Iexp_aux()*DIRECT_A2D_ELEM(weights,j,i+mdInSize);
 					change=true;
 					normWeight+=DIRECT_A2D_ELEM(weights,j,i+mdInSize);
@@ -806,9 +820,7 @@ void ProgGpuCorrelation::run()
 			if(change){
 				refSum/=normWeight;
 				Inew()=refSum;
-				fnImgNew.insert(fnImgNew.rfind("."),"_aligned");
-				String fnImFinal=formatString("%s/%s",fnDir.c_str(),fnImgNew.substr(fnImgNew.rfind("/")).c_str());
-				Inew.write(fnImFinal);
+				Inew.write(fnStackOut,i+1,true,WRITE_APPEND);
 			}
 		}
 	}
