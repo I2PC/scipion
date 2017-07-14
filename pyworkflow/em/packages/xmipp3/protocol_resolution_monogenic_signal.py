@@ -43,6 +43,7 @@ OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 OUTPUT_MASK_FILE = 'output_Mask.vol'
 FN_MEAN_VOL = 'mean_volume.vol'
 METADATA_MASK_FILE = 'mask_data.xmd'
+FN_CREATED_MASK = 'created_mask.vol'
 
 
 class XmippProtMonoRes(ProtAnalysis3D):
@@ -196,7 +197,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
             if (extMask == '.mrc') or (extMask == '.map'):
                 self.maskFn = self.maskFn + ':mrc'
         else:
-            self.maskFn = 'created_mask.vol'
+            self.maskFn = self._getExtraPath(FN_CREATED_MASK)
 
 
     def createMaskStep(self):

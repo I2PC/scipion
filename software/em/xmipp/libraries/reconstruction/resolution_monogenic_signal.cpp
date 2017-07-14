@@ -500,7 +500,6 @@ void ProgMonogenicSignalRes::run()
 			freqL = sampling/(resolution+0.5);
 			freq = sampling/resolution;
 			freqH = sampling/(resolution-0.5);
-			std::cout << "entro en if " << resolution << std::endl;
 		}
 		else
 		{
@@ -510,17 +509,14 @@ void ProgMonogenicSignalRes::run()
 			freqH = sampling/(resolution-R_);
 			++count_res;
 		}
-		std::cout << "resolution =  " << resolution << std::endl;
+
 		if (freq > 0.5)
 		{
 		  std::cout << "search stopped due to Nyquist limit has been reached" << std::endl;
 		  break;
 		}
 
-
-		if (nonmanual_mask)
-
-		if (count_res<=1)
+		if (count_res<=2)
 			counter = 0; //maxRes/R_;
 		else
 			counter = 2;//count_res-2;
