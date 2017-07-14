@@ -35,7 +35,7 @@ import time
 from collections import OrderedDict
 import datetime as dt
 
-import datetime
+from sqlite3 import OperationalError
 
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
@@ -449,7 +449,8 @@ class Project(object):
                         skipUpdatedProtocols=True):
 
         # If this is read only exit
-        if self.isReadOnly(): return
+        if self.isReadOnly():
+            return
 
         if skipUpdatedProtocols:
             # If we are already updated, comparing timestamps
@@ -496,19 +497,28 @@ class Project(object):
             prot2.getProject().closeMapper()
             prot2.closeMappers()
 
-        except Exception, ex:
+        except OperationalError as ex:
+            print("ERROR: %s, tries=%d" % (ex, tries))
+            print("Opening project as read only...")
+            self.setReadOnly(True)
+            if tries < 3:
+                time.sleep(0.5)
+                self._updateProtocol(protocol, tries + 1)
+
+        except Exception as ex:
             print("Error trying to update protocol: %s(jobId=%s)\n "
                   "ERROR: %s, tries=%d"
                   % (protocol.getObjName(), jobId, ex, tries))
-            if tries == 3:  # 3 tries have been failed
-                traceback.print_exc()
-                # If any problem happens, the protocol will be marked
-                # with a FAILED status
-                protocol.setFailed(str(ex))
-                self.mapper.store(protocol)
-            else:
+            if tries < 3:
                 time.sleep(0.5)
                 self._updateProtocol(protocol, tries + 1)
+
+        if tries == 3:  # 3 tries have been failed
+            traceback.print_exc()
+            # If any problem happens, the protocol will be marked
+            # with a FAILED status
+            protocol.setFailed(str(ex))
+            self.mapper.store(protocol)
 
     def stopProtocol(self, protocol):
         """ Stop a running protocol """
