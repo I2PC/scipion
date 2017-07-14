@@ -1183,6 +1183,24 @@ inline void multiply(Matrix2D<double>& transform, Point3D& inOut) {
 	inOut.z = tmp2;
 }
 
+inline void multiply(float transform[3][3], Point3D& inOut) {
+	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
+	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
+	float tmp2 = transform[2][0] * inOut.x + transform[2][1] * inOut.y + transform[2][2] * inOut.z;
+	inOut.x = tmp0;
+	inOut.y = tmp1;
+	inOut.z = tmp2;
+}
+
+inline void multiply(float transform[3][3], float inOut[3]) {
+	float tmp0 = transform[0][0] * inOut[0] + transform[0][1] * inOut[1] + transform[0][2] * inOut[2];
+	float tmp1 = transform[1][0] * inOut[0] + transform[1][1] * inOut[1] + transform[1][2] * inOut[2];
+	float tmp2 = transform[2][0] * inOut[0] + transform[2][1] * inOut[1] + transform[2][2] * inOut[2];
+	inOut[0] = tmp0;
+	inOut[1] = tmp1;
+	inOut[2] = tmp2;
+}
+
 
 template <typename T>
 inline std::complex<T>
@@ -1458,6 +1476,31 @@ inline bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b,
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
+inline bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+	// from parametric eq. of the plane
+	float x0 = p0.x;
+	float y0 = p0.y;
+	float z0 = p0.z;
+
+	float u = ((z-z0)*a.x + (x0-x)*a.z) / (a.x * b.z - b.x * a.z);
+	float t = (-x0 + x - u*b.x) / (a.x);
+
+	y = y0 + t*a.y + u*b.y;
+	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+}
+
+inline bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+	// from parametric eq. of the plane
+	float x0 = p0.x;
+	float y0 = p0.y;
+	float z0 = p0.z;
+
+	float u = ((z-z0)*a.y + (y0-y)*a.z) / (a.y * b.z - b.y * a.z);
+	float t = (-y0 + y - u*b.y) / (a.y);
+
+	x = x0 + t*a.x + u*b.x;
+	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+}
 
 Point3D* pad(Point3D* cuboid) {
 	for (int i = 0; i < 8; i++) {
@@ -1562,7 +1605,7 @@ Point3D* transformPlane(Point3D* plane, Matrix2D<double>& transform) {
 	return plane;
 }
 
-Point3D* rotatePlane(Point3D* plane, Matrix2D<double>& transform) {
+Point3D* rotatePlane(Point3D* plane, float transform[3][3]) {
 	for (int i = 0; i < 4; i++) {
 		multiply(transform, plane[i]);
 	}
@@ -1883,9 +1926,36 @@ inline U clamp(U val, T min, T max) {
 	return res;
 }
 
+inline void processVoxel(int x, int y, int z, int halfVolSize, float imgPos[3], float transform[3][3], float maxDistanceSqr,
+		std::complex<float>*** outputVolume, float*** outputWeights, std::complex<float>** inputImage, int imgSizeX, int imgSizeY) {
+	// transform current point to center
+	imgPos[0] = x - halfVolSize;
+	imgPos[1] = y - halfVolSize;
+	imgPos[2] = z - halfVolSize;
+	if (imgPos[0]*imgPos[0] + imgPos[1]*imgPos[1] + imgPos[2]*imgPos[2] > maxDistanceSqr) {
+		return; // discard iterations that would access pixel with too high frequency
+	}
+	// rotate around center
+	multiply(transform, imgPos);
+	// transform back
+	imgPos[1] += halfVolSize; // just Y coordinate, since X now match to picture and Z is irrelevant
+
+	outputVolume[z][y][x] += getPixelValue(inputImage, imgPos[0], imgPos[1], imgSizeX, imgSizeY);
+	outputWeights[z][y][x] += 1.f;
+}
+
+inline void convert(Matrix2D<double>& in, float out[3][3]) {
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			out[i][j] = in(i, j);
+		}
+	}
+}
+
 void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, int outputVolumeSize,
 	std::complex<float>** inputImage, int imgSizeX, int imgSizeY,
-	Matrix2D<double>& transform,
+	float transform[3][3],
+	float transformInv[3][3],
 	Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
 	float blobRadius)
 {
@@ -1894,43 +1964,58 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 	const float maxDistanceSqr = imgSizeX * imgSizeX;
 	Point3D origin = {halfOutVolSize, halfOutVolSize, halfOutVolSize};
 	float imgPos[3];
-	Matrix2D<double> transfInv = transform.inv();
 	// prepare traversing
 	Point3D* plane = createProjectionPlane(imgSizeX, imgSizeY);
 	plane = rotatePlane(plane, transform);
 	plane = translatePlane(plane, origin);
-	Point3D u;
-	Point3D v;
+	Point3D u, v;
 	getVectors(plane, u, v);
 	Point3D* AABB = getPlaneAABB(plane, 0, 0, 0, maxOutputIndex, maxOutputIndex, maxOutputIndex);
-	int minY, minX;
-	int maxY, maxX;
+	int minY, minX, minZ;
+	int maxY, maxX, maxZ;
+	minZ = floor(AABB[0].z);
 	minY = floor(AABB[0].y);
 	minX = floor(AABB[0].x);
+	maxZ = ceil(AABB[1].z);
 	maxY = ceil(AABB[1].y);
 	maxX = ceil(AABB[1].x);
-	
-	for(int y = minY; y <= maxY; y++) {
-		for(int x = minX; x <= maxX; x++) {
-			float hitZ;
-			if (getZ(x, y, hitZ, u, v, *plane)) {
-				int z = (int)(hitZ + 0.5f); // rounding
-				// transform current point to center
-				imgPos[0] = x - halfOutVolSize;
-				imgPos[1] = y - halfOutVolSize;
-				imgPos[2] = z - halfOutVolSize;
-				if (imgPos[0]*imgPos[0] + imgPos[1]*imgPos[1] + imgPos[2]*imgPos[2] > maxDistanceSqr) {
-					continue; // discard iterations that would access pixel with too high frequency
-				}
-				// rotate around center
-				multiply(transfInv, imgPos);
-				// transform back
-				imgPos[1] += halfOutVolSize; // just Y coordinate, since X now match to picture and Z is irrelevant
+	int dX, dY, dZ;
+	dX = maxX - minX;
+	dY = maxY - minY;
+	dZ = maxZ - minZ;
 
-				outputVolume[z][y][x] += getPixelValue(inputImage, imgPos[0], imgPos[1], imgSizeX, imgSizeY);
-				outputWeights[z][y][x] += 1.f;
+	if (dZ <= dX && dZ <= dY) { // iterate XY plane
+		for(int y = minY; y <= maxY; y++) {
+			for(int x = minX; x <= maxX; x++) {
+				float hitZ;
+				if (getZ(x, y, hitZ, u, v, *plane)) {
+					int z = (int)(hitZ + 0.5f); // rounding
+					processVoxel(x, y, z, halfOutVolSize, imgPos, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
+				}
 			}
 		}
+	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
+		for(int x = minX; x <= maxX; x++) {
+			for(int z = minZ; z <= maxZ; z++) {
+				float hitY;
+				if (getY(x, hitY, z, u, v, *plane)) {
+					int y = (int)(hitY + 0.5f); // rounding
+					processVoxel(x, y, z, halfOutVolSize, imgPos, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
+				}
+			}
+		}
+	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
+		for(int y = minY; y <= maxY; y++) {
+			for(int z = minZ; z <= maxZ; z++) {
+				float hitX;
+				if (getX(hitX, y, z, u, v, *plane)) {
+					int x = (int)(hitX + 0.5f); // rounding
+					processVoxel(x, y, z, halfOutVolSize, imgPos, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
+				}
+			}
+		}
+	} else {
+		std::cout << "ALERT" << std::endl;
 	}
 }
 	
@@ -2073,7 +2158,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
 					// Compute the coordinate axes of the symmetrized projection
 					Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
-
+					Matrix2D<double> A_SLInv=A_SL.inv();
+					float transf[3][3];
+					float transfInv[3][3];
+					convert(A_SL, transf);
+					convert(A_SLInv, transfInv);
 
  ////////////////////////////////////////////////
 
@@ -2143,7 +2232,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 		                }
 
 					thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
-							myPaddedFourier, conserveRows, size, A_SL,
+							myPaddedFourier, conserveRows, size, transf, transfInv,
 							blobTableSqrt, iDeltaSqrt, blob.radius);
 
 //                    // Awaking sleeping threads
