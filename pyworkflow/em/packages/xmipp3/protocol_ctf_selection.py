@@ -231,11 +231,11 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         micSet = self._loadOutputSet(em.SetOfMicrographs, 'micrographs.sqlite')
 
         #AJ new subsets of mics with accepted and discarded ctfs
-        micSetDiscarded = self._loadOutputSet(em.SetOfMicrographs,
+        micSetDiscarded = self._loadSecondaryOutputSet(em.SetOfMicrographs,
                                              'micrographsDiscarded.sqlite')
-        micSetAccepted = self._loadOutputSet(em.SetOfMicrographs,
+        micSetAccepted = self._loadSecondaryOutputSet(em.SetOfMicrographs,
                                              'micrographsAccepted.sqlite')
-        
+
 
         if newDone:
             inputCtfSet = self._loadInputCtfSet()
@@ -267,8 +267,10 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         self._updateOutputSet('outputCTF', ctfSet, streamMode)
         self._updateOutputSet('outputMicrograph', micSet, streamMode)
         # AJ new subsets of mics with accepted and discarded ctfs
-        self._updateOutputSet('outputMicrographAccepted', micSetAccepted, streamMode)
-        self._updateOutputSet('outputMicrographDiscarded', micSetDiscarded, streamMode)
+        self._updateOutputSet('outputMicrographAccepted',
+                              micSetAccepted, streamMode)
+        self._updateOutputSet('outputMicrographDiscarded',
+                              micSetDiscarded, streamMode)
     
         if firstTime:
             # define relation just once
@@ -448,7 +450,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         else:
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
-            
+
         micSet = self.inputCTF.get().getMicrographs()
 
         if isinstance(outputSet, em.SetOfMicrographs):
@@ -456,6 +458,32 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         elif isinstance(outputSet, em.SetOfCTF):
             outputSet.setMicrographs(micSet)
         
+        return outputSet
+
+    def _loadSecondaryOutputSet(self, SetClass, baseName):
+        """
+        Load the output set if it exists or create a new one.
+        """
+        setFile = self._getPath(baseName)
+
+        if exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            if(outputSet.__len__() is not 0):
+                outputSet.loadAllProperties()
+                outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+
+        micSet = self.inputCTF.get().getMicrographs()
+
+        if (isinstance(outputSet, em.SetOfMicrographs)
+            and (outputSet.__len__() is not 0)):
+            outputSet.copyInfo(micSet)
+        elif (isinstance(outputSet, em.SetOfCTF)
+              and (outputSet.__len__() is not 0)):
+            outputSet.setMicrographs(micSet)
+
         return outputSet
 
     def _readtCtfId(self):
