@@ -745,7 +745,7 @@ class ProtRelionBase(EMProtocol):
         imgStar = self._getFileName('input_star')
 
         self.info("Converting set from '%s' into '%s'" %
-                           (imgSet.getFileName(), imgStar))
+                  (imgSet.getFileName(), imgStar))
 
         # Pass stack file as None to avoid write the images files
         # If copyAlignmet is set to False pass alignType to ALIGN_NONE
@@ -755,7 +755,8 @@ class ProtRelionBase(EMProtocol):
             alignType = em.ALIGN_NONE
 
         writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
-                            alignType=alignType)
+                            alignType=alignType,
+                            postprocessImageRow=self._postprocessParticleRow)
         
         if self.doCtfManualGroups:
             self._splitInCTFGroups(imgStar)
@@ -813,6 +814,10 @@ class ProtRelionBase(EMProtocol):
     def _validate(self):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
+        if getVersion() == V1_3 and not self.doContinue and self.copyAlignment:
+            errors.append('In RELION v1.3 a new refinement always starts '
+                          'from global search. You cannot consider previous'
+                          'alignment unless you run in Continue mode.')
 
         if self.doContinue:
             continueProtocol = self.continueRun.get()
@@ -1062,12 +1067,12 @@ class ProtRelionBase(EMProtocol):
         return data_sqlite
     
     def _splitInCTFGroups(self, imgStar):
-        """ Add a new colunm in the image star to separate the particles
+        """ Add a new column in the image star to separate the particles
         into ctf groups """
         from convert import splitInCTFGroups
-        splitInCTFGroups(imgStar
-                         , self.defocusRange.get()
-                         , self.numParticles.get())
+        splitInCTFGroups(imgStar,
+                         self.defocusRange.get(),
+                         self.numParticles.get())
     
     def _getContinueIter(self):
         continueRun = self.continueRun.get()
@@ -1096,3 +1101,11 @@ class ProtRelionBase(EMProtocol):
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@fake_movie_%06d.mrcs"
                         % (img.getFrameId() + 1, img.getMicId()))
+
+    def _postprocessParticleRow(self, part, partRow):
+        if part.hasAttribute('_rlnGroupName'):
+            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
+                             '%s' % part.getAttributeValue('_rlnGroupName'))
+        else:
+            partRow.setValue(md.RLN_MLMODEL_GROUP_NAME,
+                             '%s' % part.getMicId())

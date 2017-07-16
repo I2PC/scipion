@@ -68,7 +68,7 @@ leads to objective and high-quality results.
         if not self.doContinue:
             args['--healpix_order'] = self.angularSamplingDeg.get()
             args['--offset_range'] = self.offsetSearchRangePix.get()
-            args['--offset_step']  = self.offsetSearchStepPix.get() * 2
+            args['--offset_step'] = self.offsetSearchStepPix.get() * 2
             args['--auto_refine'] = ''
             args['--split_random_halves'] = ''
             
@@ -109,12 +109,12 @@ leads to objective and high-quality results.
             self._defineTransformRelation(self.inputParticles, outImgSet)
 
             fsc = FSC(objLabel=self.getRunName())
-            blockName = 'model_class_%d@'%1
+            blockName = 'model_class_%d@' % 1
             fn = blockName + self._getExtraPath("relion_model.star")
             mData = md.MetaData(fn)
             fsc.loadFromMd(mData,
-                       md.RLN_RESOLUTION,
-                       md.RLN_MLMODEL_FSC_HALVES_REF)
+                           md.RLN_RESOLUTION,
+                           md.RLN_MLMODEL_FSC_HALVES_REF)
             self._defineOutputs(outputFSC=fsc)
             self._defineSourceRelation(vol,fsc)
 

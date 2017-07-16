@@ -185,10 +185,11 @@ class ProtRelionClassify3D(ProtClassify3D, ProtRelionBase):
         
         item._rlnLogLikeliContribution = em.Float(row.getValue('rlnLogLikeliContribution'))
         item._rlnMaxValueProbDistribution = em.Float(row.getValue('rlnMaxValueProbDistribution'))
-        
+        item._rlnGroupName = em.String(row.getValue('rlnGroupName'))
+
     def _updateClass(self, item):
         classId = item.getObjId()
-        if  classId in self._classesInfo:
+        if classId in self._classesInfo:
             index, fn, row = self._classesInfo[classId]
             fn = fn + ":mrc"
             item.setAlignmentProj()

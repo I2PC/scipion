@@ -210,12 +210,12 @@ class ProtRelionLocalRes(ProtAnalysis3D):
         return summary message for NORMAL EXECUTION. 
         """
         summary = []
-        outStarFn = self._getExtraPath("relion_locres_fscs.star")
-        #if exists(outStarFn):
-        #    mdResol = md.RowMetaData(outStarFn)
-        #    resol = mdResol.getValue(md.RLN_POSTPROCESS_FINAL_RESOLUTION)
-        #    summary.append("Final resolution: *%0.2f A*" % resol)
-        
+        if not hasattr(self, 'outputVolume'):
+            summary.append("Output volume not ready yet.")
+        else:
+            output = self.outputVolume
+            summary.append("%s: Output volume was locally filtered and sharpened" % self.getObjectTag(output))
+
         return summary
         
     #--------------------------- UTILS functions -------------------------------
