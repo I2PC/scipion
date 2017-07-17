@@ -128,6 +128,9 @@ class ProjectWindow(ProjectBaseWindow):
         from notifier import ProjectNotifier
         ProjectNotifier(self.project).notifyWorkflow()
 
+        if self.project.isReadOnlyFilesystem:
+            print("Warning: dont have write permissions for project folder. Opening as READ-ONLY.")
+
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
         header = ProjectBaseWindow.createHeaderFrame(self, parent)

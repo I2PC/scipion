@@ -220,9 +220,6 @@ class Project(object):
                 "Cannot load project, path doesn't exist: %s" % self.path)
 
         self.isReadOnlyFilesystem = not os.access(self.path, os.W_OK)
-        if self.isReadOnlyFilesystem:
-            print("PROJECT: Warning, don't have write permissions for project folder.")
-            print("Opening in READ-ONLY mode.")
 
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
