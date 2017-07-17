@@ -2031,34 +2031,36 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 	}
 }
 
+
 template<typename T>
 T*** blobify(T*** input, int size, float blobSize,
 		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
 	float blobSizeSqr = blobSize * blobSize;
+	int xSize = size/2 + 1; // just half of the space is necessary, the rest is complex conjugate
 	// create new storage
 	T*** output = new T**[size+1];
 	for (int i = 0; i <= size; i++) {
 		output[i] = new T*[size+1];
 		for (int j = 0; j <= size; j++) {
-			output[i][j] = new T[size+1];
-			for (int k = 0; k <= size; k++) {
+			output[i][j] = new T[xSize];
+			for (int k = 0; k < xSize; k++) {
 				output[i][j][k] = (T) 0;
 			}
 		}
 	}
-	T tmp = (T) 0;
-	int blob = floor(blobSize);
+	T tmp;
+	int blob = floor(blobSize); // we are using integer coordinates, so we cannot hit anything further
 	// traverse new storage
 	for (int i = 0; i <= size; i++) {
 		for (int j = 0; j <= size; j++) {
-			for (int k = 0; k <= size; k++) {
+			for (int k = 0; k < xSize; k++) {
 				// traverse input storage
 				tmp = (T) 0;
 				for (int z = std::max(0, i-blob); z < std::min(size+1, i+blob); z++) {
 					float dZSqr = (i - z) * (i - z);
 					for (int y = std::max(0, j-blob); y < std::min(size+1, j+blob); y++) {
 						float dYSqr = (j - y) * (j - y);
-						for (int x = std::max(0, k-blob); x < std::min(size+1, k+blob); x++) {
+						for (int x = std::max(0, k-blob); x < std::min(xSize, k+blob); x++) {
 							float dXSqr = (k - x) * (k - x);
 							float distanceSqr = dZSqr + dYSqr + dXSqr;
 							if (distanceSqr > blobSizeSqr) {
@@ -2066,7 +2068,7 @@ T*** blobify(T*** input, int size, float blobSize,
 							}
 							int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
 							float tmpWeight = blobTableSqrt[aux];
-							tmp += tmpWeight * input[z][y][x];
+							tmp += tmpWeight * input[z][y][x+size/2];
 						}
 					}
 				}
@@ -2076,6 +2078,75 @@ T*** blobify(T*** input, int size, float blobSize,
 	}
 	return output;
 }
+
+void convertToExpectedSpace(std::complex<float>*** outputVolume, float*** outputWeight, int size,
+	MultidimArray< std::complex<double> >& VoutFourier,
+	MultidimArray<double>& FourierWeights) {
+	int halfSize = size / 2;
+	for (int z = 0; z <= size; z++) {
+    	for (int y = 0; y <= size; y++) {
+			for (int x = 0; x <= halfSize; x++) {
+				if (outputWeight[z][y][x] == 0.f) {
+					continue;
+				}
+    			int newPos[3];
+    			// shift FFT from center to corners
+				newPos[0] = x; // no need to move
+    			newPos[1] = (y < halfSize) ? VoutFourier.ydim - halfSize + y : y - halfSize ;
+    			newPos[2] = (z < halfSize) ? VoutFourier.zdim - halfSize + z : z - halfSize ;
+    			// store to output array
+				DIRECT_A3D_ELEM(VoutFourier, newPos[2], newPos[1], newPos[0]).real() += outputVolume[z][y][x].real();
+				DIRECT_A3D_ELEM(VoutFourier, newPos[2], newPos[1], newPos[0]).imag() += outputVolume[z][y][x].imag();
+    			DIRECT_A3D_ELEM(FourierWeights, newPos[2], newPos[1], newPos[0]) += outputWeight[z][y][x];
+    		}
+    	}
+    }
+}
+
+void applyBlob(std::complex<float>**** outputVolume, float**** outputWeight, int size,float blobSize,
+		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
+	// apply blob to output volume. Result does not contain 'negative' X coordinates
+	std::complex<float>*** tmpOutVol = blobify(*outputVolume, size, blobSize, blobTableSqrt, iDeltaSqrt);
+	// free original data
+	for(int i = 0; i <= size; i++) {
+		for(int j = 0; j <= size; j++) {
+			delete (*outputVolume)[i][j];
+		}
+		delete (*outputVolume)[i];
+	}
+	delete *outputVolume;
+	*outputVolume = tmpOutVol; // replace original data by new one
+
+	// do the same for weight
+	float*** tmpWeight = blobify(*outputWeight, size, blobSize, blobTableSqrt, iDeltaSqrt);
+	for(int i = 0; i <= size; i++) {
+		for(int j = 0; j <= size; j++) {
+			delete (*outputWeight)[i][j];
+		}
+		delete (*outputWeight)[i];
+	}
+	delete *outputWeight;
+	*outputWeight = tmpWeight;
+}
+
+void mirror(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
+	for (int z = 0; z < size; z++) {
+		for (int y = 0; y < size; y++) {
+			for (int x = 0; x < size/2; x++) {
+				int newPos[3];
+				// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel biger
+				newPos[0] = size - x;
+				newPos[1] = size - y;
+				newPos[2] = size - z;
+
+				outputVolume[newPos[2]][newPos[1]][newPos[0]].real() += outputVolume[z][y][x].real();
+				outputVolume[newPos[2]][newPos[1]][newPos[0]].imag() -= outputVolume[z][y][x].imag();
+				outputWeight[newPos[2]][newPos[1]][newPos[0]] += outputWeight[z][y][x];
+			}
+		}
+	}
+}
+
 
 //#define DEBUG
 void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC, bool reprocessFlag)
@@ -2354,113 +2425,23 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
     while ( processed );
 
 #if DEBUG_DUMP > 0
-#endif
-
-
     std::cout << "about to mirror" << std::endl;
-    for (int z = 0; z < size; z++) {
-		for (int y = 0; y < size; y++) {
-			for (int x = 0; x < conserveRows; x++) {
-				int newPos[3];
-				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
-				newPos[0] = size - x;
-				newPos[1] = size - y;
-				newPos[2] = size - z;
-
-				outputVolume[newPos[2]][newPos[1]][newPos[0]].real() += outputVolume[z][y][x].real();
-				outputVolume[newPos[2]][newPos[1]][newPos[0]].imag() -= outputVolume[z][y][x].imag();
-				outputWeight[newPos[2]][newPos[1]][newPos[0]] += outputWeight[z][y][x];
-			}
-		}
-	}
-    std::cout << "mirror back" << std::endl;
-    for (int z = 0; z < size; z++) {
-		for (int y = 0; y < size; y++) {
-			for (int x = 0; x < conserveRows; x++) {
-				int newPos[3];
-				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
-				newPos[0] = size - x;
-				newPos[1] = size - y;
-				newPos[2] = size - z;
-
-				outputWeight[z][y][x] = outputWeight[newPos[2]][newPos[1]][newPos[0]];
-				outputVolume[z][y][x].real() = outputVolume[newPos[2]][newPos[1]][newPos[0]].real();
-				outputVolume[z][y][x].imag() = -outputVolume[newPos[2]][newPos[1]][newPos[0]].imag();
-			}
-		}
-	}
-    std::cout << "about to blobify with radius " << blob.radius << std::endl;
-        std::cout << "about to blobify outputVolume data" << std::endl;
-        std::complex<float>*** tmpOutVol = blobify(outputVolume, outputVolumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
-        std::cout << "about to clear old outputVolume data" << std::endl;
-        for(int i = 0; i <= outputVolumeSize; i++) {
-        	for(int j = 0; j <= outputVolumeSize; j++) {
-        		delete outputVolume[i][j];
-        	}
-        	delete outputVolume[i];
-        }
-        delete outputVolume;
-        outputVolume = tmpOutVol;
-
-
-    	std::cout << "about to blobify outputWeight data" << std::endl;
-    	float*** tmpWeight = blobify(outputWeight, outputVolumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
-    	std::cout << "about to clear old outputWeight data" << std::endl;
-    	for(int i = 0; i <= outputVolumeSize; i++) {
-    		for(int j = 0; j <= outputVolumeSize; j++) {
-    			delete outputWeight[i][j];
-    		}
-    		delete outputWeight[i];
-    	}
-    	delete outputWeight;
-    	outputWeight = tmpWeight;
-
-
-    std::cout << "about to convert to expected format" << std::endl;
-#if DEBUG_DUMP > 0
 #endif
-	for (int z = 0; z <= size; z++) {
-    	for (int y = 0; y <= size; y++) {
-			for (int x = conserveRows; x <= size; x++) {
-				if (outputWeight[z][y][x] == 0.f) {
-					continue;
-				}
-    			int newPos[3];
-//    			bool conjugate = false;
-				newPos[0] = x;
-				newPos[1] = y;
-				newPos[2] = z;
-//    			if (x < conserveRows) {
-    				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
-    				// it cannot be done separately, as it would 'tear' the continuity of the mapping
-//					newPos[0] = size - x;
-//					newPos[1] = size - y;
-//					newPos[2] = size - z;
-//					conjugate = true;
-//    			}
-    			// shift FFT from center to corners
-    			newPos[0] = newPos[0] - conserveRows;
-    			newPos[1] = (newPos[1] < conserveRows) ? VoutFourier_muj.ydim - conserveRows + newPos[1] : newPos[1] - conserveRows ;
-    			newPos[2] = (newPos[2] < conserveRows) ? VoutFourier_muj.zdim - conserveRows + newPos[2] : newPos[2] - conserveRows ;
-
-    			// store to output array
-				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).real() += outputVolume[z][y][x].real();
-//    			if (conjugate) {
-//    				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).imag() -= outputVolume[z][y][x].imag();
-//    			} else {
-    				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).imag() += outputVolume[z][y][x].imag();
-//    			}
-    			DIRECT_A3D_ELEM(FourierWrights_moje, newPos[2], newPos[1], newPos[0]) += outputWeight[z][y][x];
-    		}
-    	}
-    }
+    // get rid of the replicated data
+    mirror(outputVolume, outputWeight, size);
+#if DEBUG_DUMP > 0
+    std::cout << "about to apply blob" << std::endl;
+#endif
+    applyBlob(&outputVolume, &outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+#if DEBUG_DUMP > 0
+    std::cout << "about to convert to expected format" << std::endl;
+#endif
+    convertToExpectedSpace(outputVolume, outputWeight, size, VoutFourier, FourierWeights);
 #if DEBUG_DUMP > 0
 	std::cout << "done" << std::endl;
     print(VoutFourier, true);
     print(VoutFourier_muj, true);
 #endif
-    VoutFourier = VoutFourier_muj;
-    FourierWeights = FourierWrights_moje;
 
     if( saveFSC )
     {
