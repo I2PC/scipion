@@ -1003,8 +1003,16 @@ BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl
 	return (T)y * (top - bottom) + bottom;
 }
 
+template<typename T, typename U>
+inline U clamp(U val, T min, T max) {
+	U res = val;
+	res = (res > max) ? max : res;
+	res = (res < min) ? min : res;
+	return res;
+}
+
 inline std::complex<float>
-getPixelValue(std::complex<float>** img, float x, float y, int imgSizeX, int imgSizeY)
+getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int imgSizeY)
 {
 	float posX, posY;
 	float fractX, fractY;
@@ -1029,6 +1037,14 @@ getPixelValue(std::complex<float>** img, float x, float y, int imgSizeX, int img
 		}
 	}
 	return BilinearInterpolation(bl, br, tl, tr, 1. - fractX, 1. - fractY);
+}
+
+inline std::complex<float>
+getPixelClamped(std::complex<float>** img, float x, float y, int imgSizeX, int imgSizeY)
+{
+	int imgX = clamp((int)(x + 0.5f), 0, imgSizeX - 1);
+	int imgY = clamp((int)(y + 0.5f), 0, imgSizeY - 1);
+	return img[imgY][imgX];
 }
 
 
@@ -1918,16 +1934,12 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 }	
 
-template<typename T, typename U>
-inline U clamp(U val, T min, T max) {
-	U res = val;
-	res = (res > max) ? max : res;
-	res = (res < min) ? min : res;
-	return res;
-}
 
-inline void processVoxel(int x, int y, int z, int halfVolSize, float imgPos[3], float transform[3][3], float maxDistanceSqr,
+
+inline void processVoxel(int x, int y, int z, int halfVolSize, float transform[3][3], float maxDistanceSqr,
 		std::complex<float>*** outputVolume, float*** outputWeights, std::complex<float>** inputImage, int imgSizeX, int imgSizeY) {
+	float imgPos[3];
+	int imgX, imgY;
 	// transform current point to center
 	imgPos[0] = x - halfVolSize;
 	imgPos[1] = y - halfVolSize;
@@ -1940,7 +1952,7 @@ inline void processVoxel(int x, int y, int z, int halfVolSize, float imgPos[3], 
 	// transform back
 	imgPos[1] += halfVolSize; // just Y coordinate, since X now match to picture and Z is irrelevant
 
-	outputVolume[z][y][x] += getPixelValue(inputImage, imgPos[0], imgPos[1], imgSizeX, imgSizeY);
+	outputVolume[z][y][x] += getPixelClamped(inputImage, imgPos[0], imgPos[1], imgSizeX, imgSizeY);
 	outputWeights[z][y][x] += 1.f;
 }
 
@@ -1963,7 +1975,7 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 	const int maxOutputIndex = outputVolumeSize-1;
 	const float maxDistanceSqr = imgSizeX * imgSizeX;
 	Point3D origin = {halfOutVolSize, halfOutVolSize, halfOutVolSize};
-	float imgPos[3];
+
 	// prepare traversing
 	Point3D* plane = createProjectionPlane(imgSizeX, imgSizeY);
 	plane = rotatePlane(plane, transform);
@@ -1990,27 +2002,27 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 				float hitZ;
 				if (getZ(x, y, hitZ, u, v, *plane)) {
 					int z = (int)(hitZ + 0.5f); // rounding
-					processVoxel(x, y, z, halfOutVolSize, imgPos, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
+					processVoxel(x, y, z, halfOutVolSize, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
 				}
 			}
 		}
 	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
-		for(int x = minX; x <= maxX; x++) {
-			for(int z = minZ; z <= maxZ; z++) {
+		for(int z = minZ; z <= maxZ; z++) {
+			for(int x = minX; x <= maxX; x++) {
 				float hitY;
 				if (getY(x, hitY, z, u, v, *plane)) {
 					int y = (int)(hitY + 0.5f); // rounding
-					processVoxel(x, y, z, halfOutVolSize, imgPos, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
+					processVoxel(x, y, z, halfOutVolSize, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
 				}
 			}
 		}
 	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
-		for(int y = minY; y <= maxY; y++) {
-			for(int z = minZ; z <= maxZ; z++) {
+		for(int z = minZ; z <= maxZ; z++) {
+			for(int y = minY; y <= maxY; y++) {
 				float hitX;
 				if (getX(hitX, y, z, u, v, *plane)) {
 					int x = (int)(hitX + 0.5f); // rounding
-					processVoxel(x, y, z, halfOutVolSize, imgPos, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
+					processVoxel(x, y, z, halfOutVolSize, transformInv, maxDistanceSqr, outputVolume, outputWeights, inputImage, imgSizeX, imgSizeY);
 				}
 			}
 		}
@@ -2018,7 +2030,52 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 		std::cout << "ALERT" << std::endl;
 	}
 }
-	
+
+template<typename T>
+T*** blobify(T*** input, int size, float blobSize,
+		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
+	float blobSizeSqr = blobSize * blobSize;
+	// create new storage
+	T*** output = new T**[size+1];
+	for (int i = 0; i <= size; i++) {
+		output[i] = new T*[size+1];
+		for (int j = 0; j <= size; j++) {
+			output[i][j] = new T[size+1];
+			for (int k = 0; k <= size; k++) {
+				output[i][j][k] = (T) 0;
+			}
+		}
+	}
+	T tmp = (T) 0;
+	int blob = floor(blobSize);
+	// traverse new storage
+	for (int i = 0; i <= size; i++) {
+		for (int j = 0; j <= size; j++) {
+			for (int k = 0; k <= size; k++) {
+				// traverse input storage
+				tmp = (T) 0;
+				for (int z = std::max(0, i-blob); z < std::min(size+1, i+blob); z++) {
+					float dZSqr = (i - z) * (i - z);
+					for (int y = std::max(0, j-blob); y < std::min(size+1, j+blob); y++) {
+						float dYSqr = (j - y) * (j - y);
+						for (int x = std::max(0, k-blob); x < std::min(size+1, k+blob); x++) {
+							float dXSqr = (k - x) * (k - x);
+							float distanceSqr = dZSqr + dYSqr + dXSqr;
+							if (distanceSqr > blobSizeSqr) {
+								continue;
+							}
+							int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+							float tmpWeight = blobTableSqrt[aux];
+							tmp += tmpWeight * input[z][y][x];
+						}
+					}
+				}
+				output[i][j][k] = tmp;
+			}
+		}
+	}
+	return output;
+}
 
 //#define DEBUG
 void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC, bool reprocessFlag)
@@ -2214,15 +2271,15 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 		                	initialized = true;
 							outputVolumeSize = size;
 		                	//size = 2*conserveRows;
-							outputVolume = new std::complex<float>**[outputVolumeSize];
-							outputWeight = new float**[outputVolumeSize];
-							for(int i =0; i<outputVolumeSize; i++){
-							   outputVolume[i] = new std::complex<float>*[outputVolumeSize];
-							   outputWeight[i] = new float* [outputVolumeSize];
-							   for(int j =0; j<outputVolumeSize; j++){
-								   outputVolume[i][j] = new std::complex<float>[outputVolumeSize];
-								   outputWeight[i][j] = new float[outputVolumeSize];
-								   for(int k = 0; k<outputVolumeSize;k++){
+							outputVolume = new std::complex<float>**[outputVolumeSize+1];
+							outputWeight = new float**[outputVolumeSize+1];
+							for(int i =0; i<=outputVolumeSize; i++){
+							   outputVolume[i] = new std::complex<float>*[outputVolumeSize+1];
+							   outputWeight[i] = new float* [outputVolumeSize+1];
+							   for(int j =0; j<=outputVolumeSize; j++){
+								   outputVolume[i][j] = new std::complex<float>[outputVolumeSize+1];
+								   outputWeight[i][j] = new float[outputVolumeSize+1];
+								   for(int k = 0; k<=outputVolumeSize;k++){
 									  outputVolume[i][j][k].real() = 0.0f;
                                       outputVolume[i][j][k].imag() = 0.0f;
 									  outputWeight[i][j][k] = 0;
@@ -2295,28 +2352,92 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
     }
     while ( processed );
+
 #if DEBUG_DUMP > 0
-    std::cout << "about to convert to expected format" << std::endl;
 #endif
-	for (int z = 0; z < size; z++) {
-    	for (int y = 0; y < size; y++) {
-			for (int x = 0; x < size; x++) {
+
+
+    std::cout << "about to mirror" << std::endl;
+    for (int z = 0; z < size; z++) {
+		for (int y = 0; y < size; y++) {
+			for (int x = 0; x < conserveRows; x++) {
+				int newPos[3];
+				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
+				newPos[0] = size - x;
+				newPos[1] = size - y;
+				newPos[2] = size - z;
+
+				outputVolume[newPos[2]][newPos[1]][newPos[0]].real() += outputVolume[z][y][x].real();
+				outputVolume[newPos[2]][newPos[1]][newPos[0]].imag() -= outputVolume[z][y][x].imag();
+				outputWeight[newPos[2]][newPos[1]][newPos[0]] += outputWeight[z][y][x];
+			}
+		}
+	}
+    std::cout << "mirror back" << std::endl;
+    for (int z = 0; z < size; z++) {
+		for (int y = 0; y < size; y++) {
+			for (int x = 0; x < conserveRows; x++) {
+				int newPos[3];
+				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
+				newPos[0] = size - x;
+				newPos[1] = size - y;
+				newPos[2] = size - z;
+
+				outputWeight[z][y][x] = outputWeight[newPos[2]][newPos[1]][newPos[0]];
+				outputVolume[z][y][x].real() = outputVolume[newPos[2]][newPos[1]][newPos[0]].real();
+				outputVolume[z][y][x].imag() = -outputVolume[newPos[2]][newPos[1]][newPos[0]].imag();
+			}
+		}
+	}
+    std::cout << "about to blobify with radius " << blob.radius << std::endl;
+        std::cout << "about to blobify outputVolume data" << std::endl;
+        std::complex<float>*** tmpOutVol = blobify(outputVolume, outputVolumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+        std::cout << "about to clear old outputVolume data" << std::endl;
+        for(int i = 0; i <= outputVolumeSize; i++) {
+        	for(int j = 0; j <= outputVolumeSize; j++) {
+        		delete outputVolume[i][j];
+        	}
+        	delete outputVolume[i];
+        }
+        delete outputVolume;
+        outputVolume = tmpOutVol;
+
+
+    	std::cout << "about to blobify outputWeight data" << std::endl;
+    	float*** tmpWeight = blobify(outputWeight, outputVolumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+    	std::cout << "about to clear old outputWeight data" << std::endl;
+    	for(int i = 0; i <= outputVolumeSize; i++) {
+    		for(int j = 0; j <= outputVolumeSize; j++) {
+    			delete outputWeight[i][j];
+    		}
+    		delete outputWeight[i];
+    	}
+    	delete outputWeight;
+    	outputWeight = tmpWeight;
+
+
+    std::cout << "about to convert to expected format" << std::endl;
+#if DEBUG_DUMP > 0
+#endif
+	for (int z = 0; z <= size; z++) {
+    	for (int y = 0; y <= size; y++) {
+			for (int x = conserveRows; x <= size; x++) {
 				if (outputWeight[z][y][x] == 0.f) {
 					continue;
 				}
     			int newPos[3];
-    			bool conjugate = false;
+//    			bool conjugate = false;
 				newPos[0] = x;
 				newPos[1] = y;
 				newPos[2] = z;
-    			if (x < conserveRows) {
+//    			if (x < conserveRows) {
     				// mirror against center of the volume, e.g. [0,0,0]->[size-1,size-1,size-1]
     				// it cannot be done separately, as it would 'tear' the continuity of the mapping
-					newPos[0] = size - x;
-					newPos[1] = size - y;
-					newPos[2] = size - z;
-					conjugate = true;
-    			}
+//					newPos[0] = size - x;
+//					newPos[1] = size - y;
+//					newPos[2] = size - z;
+//					conjugate = true;
+//    			}
     			// shift FFT from center to corners
     			newPos[0] = newPos[0] - conserveRows;
     			newPos[1] = (newPos[1] < conserveRows) ? VoutFourier_muj.ydim - conserveRows + newPos[1] : newPos[1] - conserveRows ;
@@ -2324,11 +2445,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
     			// store to output array
 				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).real() += outputVolume[z][y][x].real();
-    			if (conjugate) {
-    				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).imag() -= outputVolume[z][y][x].imag();
-    			} else {
+//    			if (conjugate) {
+//    				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).imag() -= outputVolume[z][y][x].imag();
+//    			} else {
     				DIRECT_A3D_ELEM(VoutFourier_muj, newPos[2], newPos[1], newPos[0]).imag() += outputVolume[z][y][x].imag();
-    			}
+//    			}
     			DIRECT_A3D_ELEM(FourierWrights_moje, newPos[2], newPos[1], newPos[0]) += outputWeight[z][y][x];
     		}
     	}
