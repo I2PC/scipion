@@ -35,8 +35,6 @@ import time
 from collections import OrderedDict
 import datetime as dt
 
-from sqlite3 import OperationalError
-
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
 import pyworkflow.hosts as pwhosts
@@ -508,7 +506,8 @@ class Project(object):
                 protocol.setFailed(str(ex))
                 self.mapper.store(protocol)
             else:
-                if isinstance(ex, OperationalError):
+                if str(ex) == 'attempt to write a readonly database':
+                    print("Trying to open project as read-only...")
                     self.setReadOnly(True)
                 time.sleep(0.5)
                 self._updateProtocol(protocol, tries + 1)
