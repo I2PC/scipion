@@ -312,10 +312,6 @@ def micrographToCTFParam(mic, ctfparam):
     will be returned, if not, the new file. 
     """
     ctf = mic.getCTF()
-    
-    if hasattr(ctf, '_xmippMd'):
-        return ctf._xmippMd.get()
-    
     md = xmipp.MetaData()
     md.setColumnFormat(False)
     row = XmippMdRow()
@@ -324,9 +320,7 @@ def micrographToCTFParam(mic, ctfparam):
     row.writeToMd(md, md.addObject())
     md.write(ctfparam)
     
-    return ctfparam
 
-    
 def imageToRow(img, imgRow, imgLabel, **kwargs):
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
