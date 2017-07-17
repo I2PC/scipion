@@ -142,9 +142,10 @@ class ProjectWindow(ProjectBaseWindow):
         
     def _onClosing(self):
         try:
-            self.saveSettings()
-        except Exception, ex:
-            print Message.NO_SAVE_SETTINGS + str(ex) 
+            if not self.project.openAsReadOnly():
+                self.saveSettings()
+        except Exception as ex:
+            print("%s %s" %(Message.NO_SAVE_SETTINGS, str(ex)) )
         ProjectBaseWindow._onClosing(self)
      
     def loadProject(self):
