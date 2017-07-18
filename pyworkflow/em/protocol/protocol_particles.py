@@ -514,7 +514,7 @@ class ProtExtractParticles(ProtParticles):
 
     def _insertInitialSteps(self):
         """ Override this function to insert some steps before the
-        picking micrograph steps.
+        extract micrograph steps.
         Should return a list of ids of the initial steps. """
         return []
 
@@ -538,6 +538,22 @@ class ProtExtractParticles(ProtParticles):
                                              prerequisites=prerequisites)
 
         return micStepId
+
+    def _insertConvertCoordsStep(self, coordSet, mic, prerequisites):
+        """ Basic method to insert convertion step for a given micrograph
+        with coordinates. """
+        
+        micDict = mic.getObjDict(includeBasic=True)
+        micStepId = self._insertFunctionStep('convertCoordinatesStep',
+                                             coordSet, micDict,
+                                             prerequisites=prerequisites)
+
+        return micStepId
+
+    def convertCoordinatesStep(self, coordSet, micDict):
+        mic = Micrograph()
+        mic.setAttributesFromDict(micDict, setBasic=True, ignoreMissing=True)
+        self._convertCoordinates(coordSet, mic)
 
     def extractMicrographStep(self, micKey, *args):
         """ Step function that will be common for all extraction protocols.
@@ -567,8 +583,18 @@ class ProtExtractParticles(ProtParticles):
         to picking the given micrograph. """
         pass
 
+    def _convertCoordinates(self, mic):
+        """ This function should be implemented by subclasses"""
+        pass
     # --------------------------- UTILS functions ----------------------------
-
+    def _loadCoords(self, mic):
+        """This funtion returns the coordinates that belongs to a specific
+        micrograph"""
+        coordSetList = [coord.clone() for coord in
+                        self.getCoords().iterItems(where='_micName="%s"' %
+                                                         mic.getMicName())]
+        return coordSetList
+        
     # ------ Methods for Streaming extraction --------------
 
     def _stepsCheck(self):
@@ -585,11 +611,18 @@ class ProtExtractParticles(ProtParticles):
             inputMics: input mics set to be check
         """
         deps = []
+        #  TODO: We must check if the new inserted micrographs has associated
+        #  coordinates. If not, we cannot extract particles. This is mandatory
+        # if the inputMics are from "other" option.
+        
         # For each mic insert the step to process it
         for mic in inputMics:
             micKey = mic.getMicName()
             if micKey not in self.micDict:
-                stepId = self.insertExtractMicrographStep(mic, self.initialIds,
+                coordList = self._loadCoords(mic)
+                convStep = self._insertConvertCoordsStep(coordList, mic,
+                                                         self.initialIds)
+                stepId = self._insertExtractMicrographStep(mic, [convStep],
                                                         *self._getExtractArgs())
                 deps.append(stepId)
                 self.micDict[micKey] = mic

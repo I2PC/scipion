@@ -694,6 +694,45 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     return posDict.values()
 
 
+def writeCoordinatesByMic(posDir, coordSet, mic, boxSize=100, ismanual=True, scale=1):
+    
+    micIndex, micFileName = mic.getLocation()
+    micName = os.path.basename(micFileName)
+    
+    if micIndex != NO_INDEX:
+        micName = '%06d_at_%s' % (micIndex, micName)
+    
+    posFn = join(posDir, replaceBaseExt(micName, "pos"))
+    
+    f = None
+    lastMicId = None
+    c = 0
+    
+    f = openMd(posFn, ismanual=ismanual)
+    for coord in coordSet:
+        c += 1
+        if scale != 1:
+            x = coord.getX() * scale
+            y = coord.getY() * scale
+        else:
+            x = coord.getX()
+            y = coord.getY()
+        f.write(" %06d   1   %d  %d  %d   %06d\n"
+                % (coord.getObjId(), x, y, 1, mic.getObjId()))
+    
+    f.close()
+    
+    state = 'Manual' if ismanual else 'Supervised'
+    # Write config.xmd metadata
+    configFn = join(posDir, 'config.xmd')
+    md = xmipp.MetaData()
+    # Write properties block
+    objId = md.addObject()
+    md.setValue(xmipp.MDL_PICKING_PARTICLE_SIZE, int(boxSize), objId)
+    md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
+    md.write('properties@%s' % configFn)
+
+
 def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Xmipp .pos files.
     Params:
