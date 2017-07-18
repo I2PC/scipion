@@ -173,9 +173,13 @@ void ProgRecFourier::run()
 
     // Waiting for threads to finish
     barrier_wait( &barrier );
-    for ( int nt = 0 ; nt < numThreads ; nt ++ )
+    for ( int nt = 0 ; nt < numThreads ; nt ++ ) {
+    	delete th_args[nt].selFile;
         pthread_join(*(th_ids+nt), NULL);
+    }
     barrier_destroy( &barrier );
+    free(th_ids);
+    free(th_args);
 }
 
 
@@ -2045,29 +2049,29 @@ T** allocate(T**& where, int xSize, int ySize) {
 }
 
 template<typename T>
-void release(T***& array, int xSize, int ySize) {
-	for(int y = 0; y < ySize; y++) {
-		for(int x = 0; x < xSize; x++) {
-			delete[] array[y][x];
+void release(T***& array, int ySize, int zSize) {
+	for(int z = 0; z < zSize; z++) {
+		for(int y = 0; y < ySize; y++) {
+			delete[] array[z][y];
 		}
+		delete[] array[z];
+	}
+	delete[] array;
+	array = NULL;
+}
+
+template<typename T>
+void release(T**& array, int ySize) {
+	for(int y = 0; y < ySize; y++) {
 		delete[] array[y];
 	}
 	delete[] array;
 	array = NULL;
 }
 
-template<typename T>
-void release(T**& array, int xSize) {
-	for(int x = 0; x < xSize; x++) {
-		delete[] array[x];
-	}
-	delete[] array;
-	array = NULL;
-}
-
 
 template<typename T>
-T*** applyBlob(T***& input, int size, float blobSize,
+T*** cropAndApplyBlob(T***& input, int size, float blobSize,
 		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
 	float blobSizeSqr = blobSize * blobSize;
 	int xSize = size/2 + 1; // just half of the space is necessary, the rest is complex conjugate
@@ -2399,14 +2403,18 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 #if DEBUG_DUMP > 0
     std::cout << "about to apply blob" << std::endl;
 #endif
-    outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-    outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+    outputVolume = cropAndApplyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+    outputWeight = cropAndApplyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
 #if DEBUG_DUMP > 0
     std::cout << "about to convert to expected format" << std::endl;
 #endif
     convertToExpectedSpace(outputVolume, outputWeight, size, VoutFourier, FourierWeights);
-    release(outputVolume, size/2 + 1, size);
-    release(outputWeight, size/2 + 1, size);
+#if DEBUG_DUMP > 0
+    std::cout << "releasing memory" << std::endl;
+#endif
+    release(outputVolume, size+1, size+1);
+    release(outputWeight, size+1, size+1);
+    free(statusArray);
 #if DEBUG_DUMP > 0
 	std::cout << "done" << std::endl;
     print(VoutFourier, true);
