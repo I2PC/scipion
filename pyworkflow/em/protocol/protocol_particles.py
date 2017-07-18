@@ -539,24 +539,7 @@ class ProtExtractParticles(ProtParticles):
         micStepId = self._insertFunctionStep('extractMicrographStep',
                                              mic.getMicName(), *args,
                                              prerequisites=prerequisites)
-
         return micStepId
-
-    def _insertConvertCoordsStep(self, coordSet, mic, prerequisites):
-        """ Basic method to insert convertion step for a given micrograph
-        with coordinates. """
-        
-        micDict = mic.getObjDict(includeBasic=True)
-        micStepId = self._insertFunctionStep('convertCoordinatesStep',
-                                             coordSet, micDict,
-                                             prerequisites=prerequisites)
-
-        return micStepId
-
-    def convertCoordinatesStep(self, coordSet, micDict):
-        mic = Micrograph()
-        mic.setAttributesFromDict(micDict, setBasic=True, ignoreMissing=True)
-        self._convertCoordinates(coordSet, mic)
 
     def extractMicrographStep(self, micKey, *args):
         """ Step function that will be common for all extraction protocols.
@@ -565,6 +548,7 @@ class ProtExtractParticles(ProtParticles):
         function.
         """
         mic = self.micDict[micKey]
+        self._convertCoordinates(coordSet, mic)
         micDoneFn = self._getMicDone(mic)
         micFn = mic.getFileName()
 
@@ -603,14 +587,6 @@ class ProtExtractParticles(ProtParticles):
         """
         return False
 
-    def _loadCoords(self, mic):
-        """This funtion returns the coordinates that belongs to a specific
-        micrograph"""
-        coordSetList = [coord.clone() for coord in
-                        self.getCoords().iterItems(where='_micName="%s"' %
-                                                         mic.getMicName())]
-        return coordSetList
-        
     # ------ Methods for Streaming extraction --------------
 
     def _stepsCheck(self):
@@ -637,9 +613,7 @@ class ProtExtractParticles(ProtParticles):
             if micKey not in self.micDict:
                 args = self._getExtractArgs()
                 coordList = self._loadCoords(mic)
-                convStep = self._insertConvertCoordsStep(coordList, mic,
-                                                         self.initialIds)
-                stepId = self._insertExtractMicrographStep(mic, [convStep],
+                stepId = self._insertExtractMicrographStep(mic, self.initialIds,
                                                            *args)
                 deps.append(stepId)
                 self.micDict[micKey] = mic
@@ -706,7 +680,33 @@ class ProtExtractParticles(ProtParticles):
                 else:
                     del micDict[micKey]
 
+        # Now load the coordinates for the newly detected micrographs
+        self._loadCoords()
+
         return micDict, closed
+
+    def _loadCoords(self, micList):
+        """ Iterates the SetOfCoordinates and stores the (x,y) positions for
+         for a given list of micrographs.
+        """
+        coordsFn = self.getCoords().getFileName()
+        self.debug("Loading input db: %s" % coordsFn)
+        coordSet = SetOfCoordinates(filename=coordsFn)
+        coordSet.loadAllProperties()
+
+        for mic in micList:
+            micId = mic.getObjId()
+            coordList = []
+            for coord in coordSet.iterItems(where='_micId=%s' % micId):
+                coordList.append(coord.getPosition())
+            self.coordsDict[micId] = coordList
+
+        streamClosed = coordSet.isStreamClosed()
+        coordSet.close()
+        self.debug("Closed db.")
+
+        return streamClosed
+
 
     def _checkNewInput(self):
 
