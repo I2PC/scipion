@@ -196,13 +196,14 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFolder = self._getOutputMovieFolder(movie)
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
+        movieDoneFn = self._getMovieDone(movie)
 
-        if (self.isContinued() and os.path.exists(self._getMovieDone(movie))):
+        if (self.isContinued() and os.path.exists(movieDoneFn)):
             self.info("Skipping movie: %s, seems to be done" % movieFn)
             return
 
         # Clean old finished files
-        pwutils.cleanPath(self._getMovieDone(movie))
+        pwutils.cleanPath(movieDoneFn)
 
         if self._filterMovie(movie):
             pwutils.makePath(movieFolder)
@@ -275,7 +276,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 # cleanPath(movieFolder)
 
         # Mark this movie as finished
-        open(self._getMovieDone(movie), 'w').close()
+        open(movieDoneFn, 'w').close()
         
     #--------------------------- UTILS functions ----------------------------
     def _getOutputMovieFolder(self, movie):
