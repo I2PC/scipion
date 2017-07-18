@@ -42,16 +42,6 @@
 
 #define DEBUG_DUMP 0
 
-//MultidimArray< std::complex<float> >* convertToFloat(MultidimArray< std::complex<double> >* input) {
-//	MultidimArray< std::complex<float> > *result=new MultidimArray< std::complex<float> >;
-//	result->resizeNoCopy(*input);
-////	for (int i = 0; i < input->zyxdim; i++) {
-////		result->data[i] = std::complex<float> ((float)input->data[i].real(), (float)input->data[i].imag());
-////	}
-//	return result;
-//}
-
-
 // Define params
 void ProgRecFourier::defineParams()
 {
@@ -220,11 +210,7 @@ void ProgRecFourier::produceSideinfo()
     Vout().clear(); // Free the memory so that it is available for FourierWeights
     transformerVol.getFourierAlias(VoutFourier);
     VoutFourier.initZeros();
-    transformerVol.getFourierCopy(VoutFourier_muj);
-    VoutFourier_muj.initZeros();
     FourierWeights.initZeros(VoutFourier);
-    FourierWrights_moje.copyShape(FourierWeights);
-    FourierWrights_moje.initZeros(VoutFourier);
 
 
     // Ask for memory for the padded images
@@ -2031,25 +2017,66 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 	}
 }
 
-
 template<typename T>
-T*** blobify(T*** input, int size, float blobSize,
-		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
-	float blobSizeSqr = blobSize * blobSize;
-	int xSize = size/2 + 1; // just half of the space is necessary, the rest is complex conjugate
-	// create new storage
-	T*** output = new T**[size+1];
-	for (int i = 0; i <= size; i++) {
-		output[i] = new T*[size+1];
-		for (int j = 0; j <= size; j++) {
-			output[i][j] = new T[xSize];
-			for (int k = 0; k < xSize; k++) {
-				output[i][j][k] = (T) 0;
+T*** allocate(T***& where, int xSize, int ySize, int zSize) {
+	where = new T**[zSize];
+	for (int z = 0; z < zSize; z++) {
+		where[z] = new T*[ySize];
+		for (int y = 0; y < ySize; y++) {
+			where[z][y] = new T[xSize];
+			for (int x = 0; x < xSize; x++) {
+				where[z][y][x] = (T) 0;
 			}
 		}
 	}
-	T tmp;
+	return where;
+}
+
+template<typename T>
+T** allocate(T**& where, int xSize, int ySize) {
+	where = new T*[ySize];
+	for (int y = 0; y < ySize; y++) {
+		where[y] = new T[xSize];
+		for (int x = 0; x < xSize; x++) {
+			where[y][x] = (T) 0;
+		}
+	}
+	return where;
+}
+
+template<typename T>
+void release(T***& array, int xSize, int ySize) {
+	for(int y = 0; y < ySize; y++) {
+		for(int x = 0; x < xSize; x++) {
+			delete[] array[y][x];
+		}
+		delete[] array[y];
+	}
+	delete[] array;
+	array = NULL;
+}
+
+template<typename T>
+void release(T**& array, int xSize) {
+	for(int x = 0; x < xSize; x++) {
+		delete[] array[x];
+	}
+	delete[] array;
+	array = NULL;
+}
+
+
+template<typename T>
+T*** applyBlob(T***& input, int size, float blobSize,
+		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
+	float blobSizeSqr = blobSize * blobSize;
+	int xSize = size/2 + 1; // just half of the space is necessary, the rest is complex conjugate
 	int blob = floor(blobSize); // we are using integer coordinates, so we cannot hit anything further
+	T tmp;
+	T*** output;
+	// create new storage, notice that just 'right hand side' of the input will be used
+	allocate(output, xSize, size+1, size+1);
+
 	// traverse new storage
 	for (int i = 0; i <= size; i++) {
 		for (int j = 0; j <= size; j++) {
@@ -2076,6 +2103,8 @@ T*** blobify(T*** input, int size, float blobSize,
 			}
 		}
 	}
+	// free original data
+	release(input, size+1, size+1);
 	return output;
 }
 
@@ -2101,32 +2130,6 @@ void convertToExpectedSpace(std::complex<float>*** outputVolume, float*** output
     		}
     	}
     }
-}
-
-void applyBlob(std::complex<float>**** outputVolume, float**** outputWeight, int size,float blobSize,
-		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
-	// apply blob to output volume. Result does not contain 'negative' X coordinates
-	std::complex<float>*** tmpOutVol = blobify(*outputVolume, size, blobSize, blobTableSqrt, iDeltaSqrt);
-	// free original data
-	for(int i = 0; i <= size; i++) {
-		for(int j = 0; j <= size; j++) {
-			delete (*outputVolume)[i][j];
-		}
-		delete (*outputVolume)[i];
-	}
-	delete *outputVolume;
-	*outputVolume = tmpOutVol; // replace original data by new one
-
-	// do the same for weight
-	float*** tmpWeight = blobify(*outputWeight, size, blobSize, blobTableSqrt, iDeltaSqrt);
-	for(int i = 0; i <= size; i++) {
-		for(int j = 0; j <= size; j++) {
-			delete (*outputWeight)[i][j];
-		}
-		delete (*outputWeight)[i];
-	}
-	delete *outputWeight;
-	*outputWeight = tmpWeight;
 }
 
 void mirror(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
@@ -2169,7 +2172,6 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 	float*** outputWeight;
 	std::complex<float>** myPaddedFourier;
 	size_t size;
-	size_t outputVolumeSize;
 	size_t conserveRows;
     bool initialized = false;
 
@@ -2250,16 +2252,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
 				size = 2 * conserveRows;
 
-//				std::cout << "about to alocate myPaddedFourier " << conserveRows << "x" << size << std::endl;
-				myPaddedFourier = new std::complex<float>*[size];
-				for (size_t i = 0; i < size; i++) {
-					myPaddedFourier[i] = new std::complex<float>[conserveRows];
-					for (size_t j = 0; j < conserveRows; j++) {
-						myPaddedFourier[i][j] = 0;
-					}
-				}
-
-//				std::cout << "about to convert input image\n";
+				// allocate space for input image
+				allocate(myPaddedFourier, conserveRows, size);
+				// convert image (shift to center and remove high frequencies)
 				std::complex<double> paddedFourierTmp;
 				int halfY = paddedFourier->ydim / 2;
 				double tempMyPadd[2];
@@ -2278,6 +2273,13 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 						}
 					}
 				}
+
+                if (!initialized) {
+                	initialized = true;
+					// the +1 is to prevent outOfBound reading when mirroring the result (later)
+					allocate(outputVolume, size+1, size+1, size+1);
+					allocate(outputWeight, size+1, size+1, size+1);
+                }
 
                 // Loop over all symmetries
                 for (size_t isym = 0; isym < R_repository.size(); isym++)
@@ -2328,38 +2330,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                         }
                     }
 
-
-//                    if (isym == 0 && current_index == 0) {
-
-                    	bool conjugate;
-						Matrix1D<float> coords(3), freq(3), img_pos(3);
-						Matrix2D<double> A_SL_inv = A_SL.inv();
-						SPEED_UP_temps012;
-
-
-		                if (!initialized) {
-							//std::cout << "initializing output arrays" << std::endl;
-		                	initialized = true;
-							outputVolumeSize = size;
-		                	//size = 2*conserveRows;
-							outputVolume = new std::complex<float>**[outputVolumeSize+1];
-							outputWeight = new float**[outputVolumeSize+1];
-							for(int i =0; i<=outputVolumeSize; i++){
-							   outputVolume[i] = new std::complex<float>*[outputVolumeSize+1];
-							   outputWeight[i] = new float* [outputVolumeSize+1];
-							   for(int j =0; j<=outputVolumeSize; j++){
-								   outputVolume[i][j] = new std::complex<float>[outputVolumeSize+1];
-								   outputWeight[i][j] = new float[outputVolumeSize+1];
-								   for(int k = 0; k<=outputVolumeSize;k++){
-									  outputVolume[i][j][k].real() = 0.0f;
-                                      outputVolume[i][j][k].imag() = 0.0f;
-									  outputWeight[i][j][k] = 0;
-								   }
-							   }
-							}
-		                }
-
-					thirdAttempt(outputVolume, outputWeight, outputVolumeSize,
+					thirdAttempt(outputVolume, outputWeight, size,
 							myPaddedFourier, conserveRows, size, transf, transfInv,
 							blobTableSqrt, iDeltaSqrt, blob.radius);
 
@@ -2411,11 +2382,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                     VoutFourier.initZeros();
                 }
 
-                for (size_t i = 0; i < size; i++) {
-					delete myPaddedFourier[i];
-				}
-                delete myPaddedFourier;
-
+                release(myPaddedFourier, size);
             }
         }
 
@@ -2432,11 +2399,14 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 #if DEBUG_DUMP > 0
     std::cout << "about to apply blob" << std::endl;
 #endif
-    applyBlob(&outputVolume, &outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+    outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+    outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
 #if DEBUG_DUMP > 0
     std::cout << "about to convert to expected format" << std::endl;
 #endif
     convertToExpectedSpace(outputVolume, outputWeight, size, VoutFourier, FourierWeights);
+    release(outputVolume, size/2 + 1, size);
+    release(outputWeight, size/2 + 1, size);
 #if DEBUG_DUMP > 0
 	std::cout << "done" << std::endl;
     print(VoutFourier, true);
