@@ -1,8 +1,10 @@
 # **************************************************************************
 # *
-# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es)
+# * Authors:     Airen Zaldivar Peraza (azaldivar@cnb.csic.es) [1]
+# *              J.M. De la Rosa Trevin (delarosatrevin@scilifelab.se) [2]
 # *
-# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [1] Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# * [2] SciLifeLab, Stockholm University
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -26,13 +28,14 @@
 
 import os
 from datetime import datetime
+from collections import OrderedDict
 
 from pyworkflow.object import Set
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.protocol import STATUS_NEW
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.data import (EMObject, SetOfCoordinates, Micrograph,
-                                SetOfMicrographs)
+                                SetOfMicrographs, SetOfCTF)
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 
@@ -496,11 +499,10 @@ class ProtExtractParticles(ProtParticles):
 
     def _insertAllSteps(self):
         self.initialIds = self._insertInitialSteps()
-        self.insertedDict = {}
         pwutils.makeFilePath(self._getAllDone())
+        self.micDict = OrderedDict()
 
-        pickMicIds = self._insertNewMicsSteps(self.insertedDict,
-                                              self.getInputMicrographs())
+        pickMicIds = self._insertNewMicsSteps(self.getInputMicrographs())
 
         self._insertFinalSteps(pickMicIds)
 
@@ -526,18 +528,18 @@ class ProtExtractParticles(ProtParticles):
     def _insertExtractMicrographStep(self, mic, prerequisites, *args):
         """ Basic method to insert a picking step for a given micrograph. """
         micStepId = self._insertFunctionStep('extractMicrographStep',
-                                             micId, *args,
+                                             mic.getMicName(), *args,
                                              prerequisites=prerequisites)
 
         return micStepId
 
-    def extractMicrographStep(self, micId, *args):
+    def extractMicrographStep(self, micKey, *args):
         """ Step function that will be common for all extraction protocols.
         It will take an id and will grab the micrograph from a micDict map.
         The micrograph will be passed as input to the _extractMicrograph
         function.
         """
-        mic = self.micDict[micId]
+        mic = self.micDict[micKey]
 
         # Clean old finished files
         pwutils.cleanPath(self._getMicDone(mic))
@@ -565,59 +567,121 @@ class ProtExtractParticles(ProtParticles):
         self._checkNewInput()
         self._checkNewOutput()
 
-    def _insertNewMicsSteps(self, insertedDict, inputMics):
+    def _insertNewMicsSteps(self, inputMics):
         """ Insert steps to process new mics (from streaming)
         Params:
-            insertedDict: contains already processed mics
             inputMics: input mics set to be check
         """
         deps = []
         # For each mic insert the step to process it
         for mic in inputMics:
-            if mic.getObjId() not in insertedDict:
+            micKey = mic.getMicName()
+            if micKey not in self.micDict:
                 stepId = self.insertExtractMicrographStep(mic, self.initialIds,
                                                         *self._getExtractArgs())
                 deps.append(stepId)
-                insertedDict[mic.getObjId()] = stepId
+                self.micDict[micKey] = mic
         return deps
 
     def _loadInputList(self):
-        """ Load the input set of micrographs and create a list. """
-        micsFile = self.getInputMicrographs().getFileName()
-        self.debug("Loading input db: %s" % micsFile)
-        micSet = SetOfMicrographs(filename=micsFile)
-        micSet.loadAllProperties()
-        # Clone new micrographs and store them in a map
-        for mic in micSet:
-            if mic.getObjId() not in self.micDict:
-                self.micDict[mic.getObjId()] = mic.clone()
-        self.streamClosed = micSet.isStreamClosed()
-        micSet.close()
-        self.debug("Closed db.")
+        """ Load the input set of micrographs and create a dictionary.
+        The dictionary self.micDict, will contain all the micrographs
+        from which particles have been extracted and also ones that
+        are ready to be extracted.
+        For creating this dictionary, we need to inspect:
+        1) Input micrographs coming from coordinates, to know that a given
+        micrographs has been picked.
+        2) Micrographs to be extracted (in case it is different from 1)
+        3) New computed CTF (in case it is associated with the particles)
+        """
+        def _loadSet(inputSet, SetClass, getKeyFunc):
+            setFn = inputSet.getFileName()
+            self.debug("Loading input db: %s" % setFn)
+            updatedSet = SetClass(filename=setFn)
+            updatedSet.loadAllProperties()
+            newItemDict = OrderedDict()
+            for item in updatedSet:
+                micKey = getKeyFunc(item)
+                if micKey not in self.micDict:
+                    newItemDict[micKey] = item.clone()
+            streamClosed = updatedSet.isStreamClosed()
+            updatedSet.close()
+            self.debug("Closed db.")
+            return newItemDict, streamClosed
+
+        def _loadMics(micSet):
+            return _loadMics(micSet, SetOfMicrographs,
+                             lambda mic: mic.getMicName())
+
+        def _loadCTFs(ctfSet):
+            return _loadMics(ctfSet, SetOfCTF,
+                             lambda ctf: ctf.getMicrograph().getMicName())
+
+        # Load new micrographs coming from the coordinates
+        micDict, closed = _loadMics(self.inputCoordinates.get().getMicrographs())
+        # If we are extracting from other micrographs, then we will use
+        # the other micrographs and filter those that
+        if self._micsOther():
+            oMicDict, oMicClosed = _loadMics(self.inputMicrographs.get())
+            closed = closed and oMicClosed
+            for micKey, mic in micDict.iteritems():
+                if micKey in oMicDict:
+                    oMic = oMicDict[micKey]
+                    # Let's fix the id in case it does not correspond
+                    # we want to have the id coming from the coordinates
+                    # to match each coordinate to its micrograph
+                    oMic.copyObjId(mic)
+                    micDict[micKey] = oMic
+                else:
+                    del micDict[micKey]
+
+        if self.useCTF():
+            ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
+            closed = closed and ctfClosed
+            for micKey, mic in micDict.iteritems():
+                if micKey in ctfDict:
+                    mic.setCTF(ctfDict[micKey])
+                else:
+                    del micDict[micKey]
+
+        return micDict, closed
 
     def _checkNewInput(self):
-        # Check if there are new micrographs to process from the input set
-        localFile = self.getInputMicrographs().getFileName()
+
+        def _modificationTime():
+            """ Check the last modification time of any of the three possible
+             input files. """
+            items = [self.inputCoordinates.get().getMicrographs()]
+
+            if self._micsOther():
+                items.append(self.inputMicrographs.get())
+
+            if self.useCTF():
+                items.append(self.ctfRelations.get())
+
+            def _mTime(fn):
+                return datetime.fromtimestamp(os.path.getmtime(fn))
+
+            return max([_mTime(i.getFileName()) for i in items])
+
+        mTime = _modificationTime()
         now = datetime.now()
         self.lastCheck = getattr(self, 'lastCheck', now)
-        mTime = datetime.fromtimestamp(os.path.getmtime(localFile))
         self.debug('Last check: %s, modification: %s'
                   % (pwutils.prettyTime(self.lastCheck),
                      pwutils.prettyTime(mTime)))
         # If the input micrographs.sqlite have not changed since our last check,
         # it does not make sense to check for new input data
-        if self.lastCheck > mTime and hasattr(self, 'listOfMics'):
+        if self.lastCheck > mTime and hasattr(self, 'micDict'):
             return None
 
         self.lastCheck = now
         # Open input micrographs.sqlite and close it as soon as possible
-        self._loadInputList()
-        newMics = any(m.getObjId() not in self.insertedDict
-                        for m in self.listOfMics)
+        newMics, self.streamClosed = self._loadInputList()
         outputStep = self._getFirstJoinStep()
 
         if newMics:
-            fDeps = self._insertNewMicsSteps(self.insertedDict, self.listOfMics)
+            fDeps = self._insertNewMicsSteps(newMics.values())
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
@@ -646,7 +710,7 @@ class ProtExtractParticles(ProtParticles):
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if newDone:
-            newDoneUpdated = self._updateOutputCoordSet(newDone, streamMode)
+            newDoneUpdated = self._updateOutputPartSet(newDone, streamMode)
             self._writeDoneList(newDoneUpdated)
         elif not self.finished:
             # If we are not finished and no new output have been produced
@@ -679,12 +743,15 @@ class ProtExtractParticles(ProtParticles):
         """
         pass
 
-    def _updateOutputCoordSet(self, micList, streamMode):
+    def _updateOutputPartSet(self, micList, streamMode):
         micDoneList = [mic for mic in micList if self._micIsReady(mic)]
 
         # Do no proceed if there is not micrograph ready
         if not micDoneList:
             return []
+
+        # TODO: Read particles from output coordinates and update output
+        return
 
         outputName = 'outputCoordinates'
         outputDir = self.getCoordsDir()
