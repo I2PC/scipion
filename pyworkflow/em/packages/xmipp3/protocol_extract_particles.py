@@ -59,7 +59,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         ProtExtractParticles.__init__(self, **kwargs)
         self.stepsExecutionMode = STEPS_PARALLEL
 
-    # --------------------------- DEFINE param functions ------------------------
+    #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         form.addSection(label='Input')
         
@@ -68,7 +68,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       important=True,
                       label="Input coordinates",
                       help='Select the SetOfCoordinates ')
-        
+
         # The name for the following param is because historical reasons
         # now it should be named better 'micsSource' rather than
         # 'downsampleType', but this could make inconsistent previous executions
@@ -87,13 +87,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'micrographs and coordinates are related '
                            'by micName or by micId. Difference in pixel size '
                            'will be handled automatically.')
-        
+
         form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       condition='downsampleType != %s' % SAME_AS_PICKING,
                       important=True, label='Input micrographs',
                       help='Select the SetOfMicrographs from which to extract.')
-        
+
         form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
                       relationName=RELATION_CTF,
                       attributeName='getInputMicrographs',
@@ -102,11 +102,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'micrographs. \n CTF estimation is needed if you '
                            'want to do phase flipping or you want to '
                            'associate CTF information to the particles.')
-        
+
         # downFactor should always be 1.0 or greater
         geOne = params.GE(1.0,
                           error='Value should be greater or equal than 1.0')
-        
+
         form.addParam('downFactor', params.FloatParam, default=1.0,
                       validators=[geOne],
                       label='Downsampling factor',
@@ -114,7 +114,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'of micrographs before extracting the particles. '
                            'If 1.0 is used, no downsample is applied. '
                            'Non-integer downsample factors are possible. ')
-        
+
         form.addParam('boxSize', params.IntParam,
                       label='Particle box size (px)',
                       validators=[params.Positive],
@@ -123,7 +123,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'particles are boxed out after downsampling. '
                            'Use the wizard to check boxSize changes after '
                            'downsampling or using a different pixel size. ')
-        
+
         form.addParam('doBorders', params.BooleanParam, default=False,
                       label='Fill pixels outside borders',
                       help='Xmipp by default skips particles whose boxes fall '
@@ -131,14 +131,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'option to True if you want those pixels outside '
                            'the borders to be filled with the closest pixel '
                            'value available')
-        
+
         form.addParam('doSort', params.BooleanParam, default=True,
                       label='Perform sort by statistics',
                       help='Perform sort by statistics to compute a zscore '
                            'for each particle.')
-        
+
         form.addParam('rejectionMethod', params.EnumParam,
-                      choices=['None', 'MaxZscore', 'Percentage'],
+                      choices=['None','MaxZscore', 'Percentage'],
                       default=REJECT_NONE, condition='doSort',
                       display=params.EnumParam.DISPLAY_COMBO,
                       label='Automatic particle rejection',
@@ -149,7 +149,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            '             larger than this value), '
                            '*Percentage*: reject a given percentage in each '
                            '             one of the screening criteria).')
-        
+
         form.addParam('maxZscore', params.IntParam, default=3,
                       expertLevel=LEVEL_ADVANCED,
                       condition='doSort and rejectionMethod==%d' % REJECT_MAXZSCORE,
@@ -163,13 +163,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                       help='Percentage of particles to reject')
         
         form.addSection(label='Preprocess')
-        
+
         form.addParam('doRemoveDust', params.BooleanParam, default=True,
                       label='Dust removal (Recommended)', important=True,
                       help='Sets pixels with unusually large values to random '
                            'values from a Gaussian with zero-mean and '
                            'unity-standard deviation.')
-        
+
         form.addParam('thresholdDust', params.FloatParam, default=5,
                       condition='doRemoveDust', expertLevel=LEVEL_ADVANCED,
                       label='Threshold for dust removal',
@@ -179,9 +179,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'For high-contrast negative stain, the signal '
                            'itself may be affected so that a higher value may '
                            'be preferable.')
-        
+
         form.addParam('doInvert', params.BooleanParam, default=None,
-                      label='Invert contrast',
+                      label='Invert contrast', 
                       help='Invert the contrast if your particles are black '
                            'over a white background.  Xmipp, Spider, Relion '
                            'and Eman require white particles over a black '
@@ -197,17 +197,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'recommended for obtaining better 2D classes)\n'
                            'Otherwise (Frealign, Relion, Spider, ...), '
                            'phase flip is not recommended.')
-        
+
         form.addParam('doNormalize', params.BooleanParam, default=True,
-                      label='Normalize (Recommended)',
+                      label='Normalize (Recommended)', 
                       help='It subtract a ramp in the gray values and '
                            'normalizes so that in the background there is 0 '
                            'mean and standard deviation 1.')
         form.addParam('normType', params.EnumParam,
-                      choices=['OldXmipp', 'NewXmipp', 'Ramp'], default=2,
+                      choices=['OldXmipp','NewXmipp','Ramp'], default=2,
                       condition='doNormalize', expertLevel=LEVEL_ADVANCED,
                       display=params.EnumParam.DISPLAY_COMBO,
-                      label='Normalization type',
+                      label='Normalization type', 
                       help='OldXmipp (mean(Image)=0, stddev(Image)=1). \n'
                            'NewXmipp (mean(background)=0, '
                            'stddev(background)=1) \n  '
@@ -219,10 +219,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
                            'value is 0, then half the box size is used.')
-        
-        form.addParallelSection(threads=4, mpi=1)
 
-    # --------------------------- INSERT steps functions ------------------------
+        form.addParallelSection(threads=4, mpi=1)
+    
+    #--------------------------- INSERT steps functions ------------------------
     # def _insertAllSteps(self):
     #     """for each micrograph insert the steps to preprocess it"""
     #     self._setupBasicProperties()
@@ -261,7 +261,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     #
     #     self._insertFunctionStep('createOutputStep', prerequisites=finalDeps)
 
-    # --------------------------- STEPS functions -------------------------------
+    #--------------------------- STEPS functions -------------------------------
+
     # def writePosFilesStep(self):
     #     """ Write the pos file for each micrograph on metadata format. """
     #     writeSetOfCoordinates(self._getExtraPath(), self.inputCoords,
@@ -299,8 +300,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     #                     if micPos != micPosCoord:
     #                         self.info('Moving %s -> %s' % (micPosCoord, micPos))
     #                         pwutils.moveFile(micPosCoord, micPos)
-    
-    
+
+
     def _getExtractArgs(self):
         """ Should be implemented in sub-classes to define the argument
         list that should be passed to the picking step function.
@@ -308,45 +309,55 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return [self.doInvert.get(),
                 self._getNormalizeArgs(),
                 self.doBorders.get()]
-    
+
     def _extractMicrograph(self, mic, doInvert, normalizeArgs, doBorders):
         """ Extract particles from one micrograph """
+
+        print("DEBUG: Extracting mic: ", mic.getFileName())
+        print("DEBUG:       doInvert: ", doInvert)
+        print("DEBUG:  normalizeArgs: ", normalizeArgs)
+        print("DEBUG:      doBorders: ", doBorders)
+
+        import time
+        time.sleep(3)
+        return
+
         fnLast = mic.getFileName()
         baseMicName = pwutils.removeBaseExt(fnLast)
         outputRoot = str(self._getExtraPath(baseMicName))
         fnPosFile = self._getExtraPath(baseMicName + ".pos")
-        
+
         # If it has coordinates extract the particles
         particlesMd = 'particles@%s' % fnPosFile
         boxSize = self.boxSize.get()
         boxScale = self.getBoxScale()
-        
+
         if exists(fnPosFile):
             # Create a list with micrographs operations (programs in xmipp) and
             # the required command line parameters (except input/ouput files)
             micOps = []
-            
+
             # Check if it is required to downsample your micrographs
             downFactor = self.downFactor.get()
-            
+
             def getMicTmp(suffix):
                 return self._getTmpPath(baseMicName + suffix)
-            
+
             if self.notOne(downFactor):
                 fnDownsampled = getMicTmp("_downsampled.xmp")
                 args = "-i %s -o %s --step %f --method fourier"
                 self.runJob('xmipp_transform_downsample',
                             args % (fnLast, fnDownsampled, downFactor))
                 fnLast = fnDownsampled
-            
+
             if self.doRemoveDust:
                 fnNoDust = getMicTmp("_noDust.xmp")
                 args = " -i %s -o %s --bad_pixels outliers %f"
                 self.runJob('xmipp_transform_filter',
                             args % (fnLast, fnNoDust, self.thresholdDust))
                 fnLast = fnNoDust
-            
-            if self.ctfRelations.hasValue():
+
+            if self._useCTF():
                 # We need to write a Xmipp ctfparam file
                 # to perform the phase flip on the micrograph
                 fnCTF = self._getTmpPath("%s.ctfParam" % baseMicName)
@@ -361,21 +372,21 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     fnLast = fnFlipped
             else:
                 fnCTF = None
-            
+
             args = " -i %s --pos %s" % (fnLast, particlesMd)
             args += " -o %s --Xdim %d" % (outputRoot, boxSize)
-            
+
             if doInvert:
                 args += " --invert"
-            
+
             if fnCTF:
                 args += " --ctfparam " + fnCTF
             
             if doBorders:
                 args += " --fillBorders"
-            
+
             self.runJob("xmipp_micrograph_scissor", args)
-            
+
             # Normalize
             if normalizeArgs:
                 self.runJob('xmipp_transform_normalize',
@@ -384,39 +395,39 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.warning("The micrograph %s hasn't coordinate file! "
                          % baseMicName)
             self.warning("Maybe you picked over a subset of micrographs")
-        
+
         # Let's clean the temporary mrc micrographs
         if not pwutils.envVarOn("SCIPION_DEBUG_NOCLEAN"):
             pwutils.cleanPattern(self._getTmpPath(baseMicName) + '*')
-    
+
     def _getNormalizeArgs(self):
         if not self.doNormalize:
             return ''
-        
+
         normType = self.getEnumText("normType")
         args = "--method %s " % normType
-        
+
         if normType != "OldXmipp":
             bgRadius = self.backRadius.get()
             if bgRadius <= 0:
                 bgRadius = int(self.boxSize.get() / 2)
             args += " --background circle %d" % bgRadius
-        
+
         return args
-    
+
     def createMetadataImageStep(self):
         # TODO: This step can be avoided (if not doing screening)
         # because particles can be added directly to the output set
-        # Create images.xmd metadata
+        #Create images.xmd metadata
         fnImages = self._getOutputImgMd()
         imgsXmd = md.MetaData()
-        posFiles = glob(self._getExtraPath('*.pos'))
+        posFiles = glob(self._getExtraPath('*.pos')) 
         for posFn in posFiles:
             xmdFn = self._getExtraPath(pwutils.replaceBaseExt(posFn, "xmd"))
             if exists(xmdFn):
                 mdFn = md.MetaData(xmdFn)
                 mdPos = md.MetaData('particles@%s' % posFn)
-                mdPos.merge(mdFn)
+                mdPos.merge(mdFn) 
                 imgsXmd.unionAll(mdPos)
             else:
                 self.warning("The coord file %s wasn't used for extraction! "
@@ -424,7 +435,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 self.warning("Maybe you are extracting over a subset of "
                              "micrographs")
         imgsXmd.write(fnImages)
-    
+
     def screenParticlesStep(self):
         # If selected run xmipp_image_sort_by_statistics
         # to add zscore info to images.xmd
@@ -438,7 +449,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     def createOutputStep(self):
         # TODO: Maybe this can be generalized into the base function.
-        
         # Create the SetOfImages object on the database
         fnImages = self._getOutputImgMd()
         # Create output SetOfParticles
@@ -447,13 +457,13 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # set coords from the input, will update later if needed
         self.imgSet.setCoordinates(self.inputCoords)
         coords2 = SetOfCoordinates()
-        
+
         if self.doFlip:
             self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
-        
+
         self.imgSet.setSamplingRate(self._getNewSampling())
-        self.imgSet.setHasCTF(self.ctfRelations.hasValue())
-        
+        self.imgSet.setHasCTF(self._useCTF())
+    
         # a SetMdIterator is needed because in some cases, the number of
         # items in SetOfCoordinates and in the metadata could be different.
         iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
@@ -467,29 +477,29 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         coordsAux.copyItems(self.inputCoords,
                             updateItemCallback=iterator.updateItem,
                             copyDisabled=True)
-        
+
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=self.imgSet)
         self._defineSourceRelation(self.inputCoordinates, self.imgSet)
-        if self.ctfRelations.hasValue():
+        if self._useCTF():
             self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
 
-    # --------------------------- INFO functions --------------------------------
+    #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
-        # # doFlip can only be selected if CTF information
-        # # is available on picked micrographs
-        # if self.doFlip and not self.ctfRelations.hasValue():
-        #     errors.append('Phase flipping cannot be performed unless '
-        #                   'CTF information is provided.')
-        #
-        # if self.doNormalize:
-        #     if self.backRadius > int(self.boxSize.get() / 2):
-        #         errors.append("Background radius for normalization should be "
-        #                       "equal or less than half of the box size.")
-        #
-        # self._setupCtfProperties() # setup self.micKey among others
-        # if self.ctfRelations.hasValue() and self.micKey is None:
+        # doFlip can only be selected if CTF information
+        # is available on picked micrographs
+        if self.doFlip and not self._useCTF():
+            errors.append('Phase flipping cannot be performed unless '
+                          'CTF information is provided.')
+
+        if self.doNormalize:
+            if self.backRadius > int(self.boxSize.get() / 2):
+                errors.append("Background radius for normalization should be "
+                              "equal or less than half of the box size.")
+
+        #self._setupCtfProperties() # setup self.micKey among others
+        # if self._useCTF() and self.micKey is None:
         #     errors.append('Some problem occurs matching micrographs and CTF.\n'
         #                   'There were micrographs for which CTF was not found '
         #                   'either using micName or micId.\n')
@@ -505,7 +515,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         summary.append("Particle box size: %d" % self.boxSize)
         
         if not hasattr(self, 'outputParticles'):
-            summary.append("Output images not ready yet.")
+            summary.append("Output images not ready yet.") 
         else:
             summary.append("Particles extracted: %d" %
                            self.outputParticles.getSize())
@@ -514,7 +524,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     def _methods(self):
         methodsMsgs = []
-        
+
         if self.getStatus() == STATUS_FINISHED:
             msg = ("A total of %d particles of size %d were extracted"
                    % (self.getOutput().getSize(), self.boxSize))
@@ -523,11 +533,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 msg += (" from another set of micrographs: %s"
                         % self.getObjectTag('inputMicrographs'))
             
-            msg += " using coordinates %s" % self.getObjectTag(
-                'inputCoordinates')
+            msg += " using coordinates %s" % self.getObjectTag('inputCoordinates')
             msg += self.methodsVar.get('')
             methodsMsgs.append(msg)
-            
+
             if self.doRemoveDust:
                 methodsMsgs.append("Removed dust over a threshold of %s."
                                    % self.thresholdDust)
@@ -539,7 +548,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             if self.doNormalize:
                 methodsMsgs.append("Normalization: %s."
                                    % self.getEnumText('normType'))
-        
+
         return methodsMsgs
 
     # --------------------------- UTILS functions -------------------------------
@@ -551,23 +560,26 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
         return self.downsampleType == OTHER
-    
+
+    def _useCTF(self):
+        return self.ctfRelations.hasValue()
+
     def _doDownsample(self):
         return self.downFactor > 1.0
-    
+
     def notOne(self, value):
         return abs(value - 1) > 0.0001
-    
+
     def _getNewSampling(self):
         newSampling = self.samplingMics
-        
+
         if self._doDownsample():
             # Set new sampling, it should be the input sampling of the used
             # micrographs multiplied by the downFactor
             newSampling *= self.downFactor.get()
-        
+
         return newSampling
-    
+
     def _setupBasicProperties(self):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
@@ -575,7 +587,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
-    
+
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
         Other micrographs. """
@@ -583,7 +595,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             return self.inputCoordinates.get().getMicrographs()
         else:
             return self.inputMicrographs.get()
-    
+
     def _storeMethodsInfo(self, fnImages):
         """ Store some information when the protocol finishes. """
         mdImgs = md.MetaData(fnImages)
@@ -593,33 +605,33 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         numEnabled = mdImgs.size()
         numRejected = total - numEnabled
         msg = ""
-        
+
         if self.doSort:
             if self.rejectionMethod != REJECT_NONE:
                 msg = " %d of them were rejected " % numRejected
                 msg += "with Zscore greater than %.2f." % zScoreMax
-        
+
         if self.doFlip:
             msg += "\nPhase flipping was performed."
-        
+
         self.methodsVar.set(msg)
-    
+
     def getCoords(self):
         return self.inputCoordinates.get()
-    
+
     def getOutput(self):
         if (self.hasAttribute('outputParticles') and
-                self.outputParticles.hasValue()):
+            self.outputParticles.hasValue()):
             return self.outputParticles
         else:
             return None
-    
+
     def getCoordSampling(self):
         return self.getCoords().getMicrographs().getSamplingRate()
-    
+
     def getMicSampling(self):
         return self.getInputMicrographs().getSamplingRate()
-    
+
     def getBoxScale(self):
         """ Computing the sampling factor between input and output.
         We should take into account the differences in sampling rate between
@@ -630,18 +642,18 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         samplingExtract = self.getMicSampling()
         f = samplingPicking / samplingExtract
         return f / self.downFactor.get() if self._doDownsample() else f
-    
+
     def getBoxSize(self):
         # This function is needed by the wizard
         return int(self.getCoords().getBoxSize() * self.getBoxScale())
-    
+
     def _getOutputImgMd(self):
         return self._getPath('images.xmd')
-    
+
     def createParticles(self, item, row):
         from pyworkflow.em.packages.xmipp3.convert import rowToParticle
         
-        particle = rowToParticle(row, readCtf=self.ctfRelations.hasValue())
+        particle = rowToParticle(row, readCtf=self._useCTF())
         coord = particle.getCoordinate()
         item.setY(coord.getY())
         item.setX(coord.getX())
