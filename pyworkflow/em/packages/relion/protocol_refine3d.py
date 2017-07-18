@@ -32,7 +32,7 @@ from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em import ALIGN_PROJ
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-from convert import isVersion2, readSetOfParticles, IMAGE_EXTRA_LABELS
+from convert import isVersion2, readSetOfParticles, MOVIE_EXTRA_LABELS
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
@@ -133,11 +133,11 @@ leads to objective and high-quality results.
                 self._defineSourceRelation(self.inputParticles, vol)
                 self._defineSourceRelation(self.inputMovieParticles, vol)
 
-            fnOut = self._getFileName('data', iter=self._lastIter())
+            fnOut = self._getFileName('dataFinal', iter=self._lastIter())
             outMovieSet = self._createSetOfMovieParticles()
             outMovieSet.copyInfo(movieSet)
             readSetOfParticles(fnOut, outMovieSet, alignType=ALIGN_PROJ,
-                               extraLabels=IMAGE_EXTRA_LABELS)
+                               extraLabels=MOVIE_EXTRA_LABELS)
 
             self._defineOutputs(outputParticles=outMovieSet)
             self._defineTransformRelation(self.inputParticles, outMovieSet)
@@ -214,10 +214,10 @@ leads to objective and high-quality results.
         return summary
 
     #--------------------------- UTILS functions --------------------------------------------
-    def _fillDataFromIter(self, ImgSet, iteration):
+    def _fillDataFromIter(self, imgSet, iteration):
         outImgsFn = self._getFileName('data', iter=iteration)
-        ImgSet.setAlignmentProj()
-        ImgSet.copyItems(self._getInputParticles(),
+        imgSet.setAlignmentProj()
+        imgSet.copyItems(self._getInputParticles(),
                          updateItemCallback=self._createItemMatrix,
                          itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
     

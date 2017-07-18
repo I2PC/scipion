@@ -84,17 +84,19 @@ CTF_EXTRA_LABELS = [
 # Some extra labels
 IMAGE_EXTRA_LABELS = [
     md.RLN_SELECT_PARTICLES_ZSCORE,
-    md.RLN_IMAGE_FRAME_NR,
+    md.RLN_IMAGE_FRAME_NR
+    ]
+
+# Extra labels for movie refinement & polishing
+MOVIE_EXTRA_LABELS = [
     md.RLN_PARTICLE_NR_FRAMES,
     md.RLN_PARTICLE_NR_FRAMES_AVG,
     md.RLN_PARTICLE_MOVIE_RUNNING_AVG,
     md.RLN_PARTICLE_ORI_NAME,
     md.RLN_MLMODEL_GROUP_NAME,
-    md.RLN_ORIENT_ORIGIN_X_PRIOR,
-    md.RLN_ORIENT_ORIGIN_Y_PRIOR,
-    md.RLN_ORIENT_PSI_PRIOR,
-    md.RLN_ORIENT_ROT_PRIOR,
-    md.RLN_ORIENT_TILT_PRIOR
+    md.RLN_PARTICLE_DLL,
+    md.RLN_PARTICLE_PMAX,
+    md.RLN_PARTICLE_NR_SIGNIFICANT_SAMPLES
     ]
 
 # ANGLES_DICT = OrderedDict([
@@ -439,7 +441,8 @@ def imageToRow(img, imgRow, imgLabel=md.RLN_IMAGE_NAME, **kwargs):
         acquisitionToRow(img.getAcquisition(), imgRow)
     
     # Write all extra labels to the row    
-    objectToRow(img, imgRow, {}, extraLabels=IMAGE_EXTRA_LABELS)
+    objectToRow(img, imgRow, {},
+                extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -500,7 +503,7 @@ def rowToParticle(partRow, **kwargs):
     
     setObjId(img, partRow)
     # Read some extra labels
-    rowToObject(partRow, img, {}, 
+    rowToObject(partRow, img, {},
                 extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
     img.setCoordinate(rowToCoordinate(partRow))

@@ -35,7 +35,7 @@ from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtProcessParticles
 
 from protocol_base import ProtRelionBase
-from convert import isVersion2, writeSetOfParticles
+from convert import isVersion2, writeSetOfParticles, MOVIE_EXTRA_LABELS
 
 
 class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
@@ -252,14 +252,10 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                   (imgSet.getFileName(), imgStar))
 
         writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
-                            alignType=imgSet.getAlignment())
+                            alignType=imgSet.getAlignment(),
+                            extraLabels=MOVIE_EXTRA_LABELS)
 
     def polishStep(self, params):
-        """ Create the input file in STAR format as expected by Relion.
-        If the input particles comes from Relion, just link the file.
-        """
-        #from pyworkflow.utils.path import copyTree
-        #copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
         self.runJob(self._getProgram('relion_particle_polish'), params)
     
     def organizeDataStep(self):
