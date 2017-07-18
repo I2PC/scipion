@@ -508,7 +508,10 @@ class ProtExtractParticles(ProtParticles):
         pwutils.makeFilePath(self._getAllDone())
         self.micDict = OrderedDict()
 
-        pickMicIds = self._insertNewMicsSteps(self.getInputMicrographs())
+        # We need to clone the each individual micrograph from the input
+        # to have them as separated instances
+        micList = [mic.clone() for mic in self.getInputMicrographs()]
+        pickMicIds = self._insertNewMicsSteps(micList)
 
         self._insertFinalSteps(pickMicIds)
 
@@ -568,6 +571,18 @@ class ProtExtractParticles(ProtParticles):
         pass
 
     # --------------------------- UTILS functions ----------------------------
+    def _micsOther(self):
+        """ Return True if other micrographs are used for extract.
+        Should be implemented in derived classes.
+        """
+        return False
+
+    def _useCTF(self):
+        """ Return True if a SetOfCTF is associated with the extracted
+        particles.
+         Should be implemented in derived classes.
+        """
+        return False
 
     # ------ Methods for Streaming extraction --------------
 
@@ -589,8 +604,9 @@ class ProtExtractParticles(ProtParticles):
         for mic in inputMics:
             micKey = mic.getMicName()
             if micKey not in self.micDict:
-                stepId = self.insertExtractMicrographStep(mic, self.initialIds,
-                                                        *self._getExtractArgs())
+                args = self._getExtractArgs()
+                stepId = self._insertExtractMicrographStep(mic, self.initialIds,
+                                                           *args)
                 deps.append(stepId)
                 self.micDict[micKey] = mic
         return deps
@@ -622,11 +638,11 @@ class ProtExtractParticles(ProtParticles):
             return newItemDict, streamClosed
 
         def _loadMics(micSet):
-            return _loadMics(micSet, SetOfMicrographs,
+            return _loadSet(micSet, SetOfMicrographs,
                              lambda mic: mic.getMicName())
 
         def _loadCTFs(ctfSet):
-            return _loadMics(ctfSet, SetOfCTF,
+            return _loadSet(ctfSet, SetOfCTF,
                              lambda ctf: ctf.getMicrograph().getMicName())
 
         # Load new micrographs coming from the coordinates
@@ -647,7 +663,7 @@ class ProtExtractParticles(ProtParticles):
                 else:
                     del micDict[micKey]
 
-        if self.useCTF():
+        if self._useCTF():
             ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
             closed = closed and ctfClosed
             for micKey, mic in micDict.iteritems():
@@ -668,7 +684,7 @@ class ProtExtractParticles(ProtParticles):
             if self._micsOther():
                 items.append(self.inputMicrographs.get())
 
-            if self.useCTF():
+            if self._useCTF():
                 items.append(self.ctfRelations.get())
 
             def _mTime(fn):
@@ -699,6 +715,10 @@ class ProtExtractParticles(ProtParticles):
             self.updateSteps()
 
     def _checkNewOutput(self):
+        # FIXME: Implement the real check new output
+        return
+
+
         if getattr(self, 'finished', False):
             return
 
