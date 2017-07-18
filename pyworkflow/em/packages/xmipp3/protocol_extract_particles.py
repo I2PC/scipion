@@ -223,90 +223,95 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         form.addParallelSection(threads=4, mpi=1)
     
     #--------------------------- INSERT steps functions ------------------------
-    def _insertAllSteps(self):
-        """for each micrograph insert the steps to preprocess it"""
-        self._setupBasicProperties()
-        # Write pos files for each micrograph
-        firstStepId = self._insertFunctionStep('writePosFilesStep')
-        
-        # For each micrograph insert the steps, run in parallel
-        deps = []
-        self.micDict = {}
-
-        for mic in self.inputMics:
-            if self.ctfRelations.hasValue():
-                micKey = self.micKey(mic)
-                mic.setCTF(self.ctfDict[micKey])
-
-            # Actually extract
-            self.micDict[mic.getObjId()] = mic.clone()
-
-            localDeps = [firstStepId]
-
-            deps.append(self._insertFunctionStep('extractParticlesStep',
-                                                 mic.getObjId(),
-                                                 self.doInvert.get(),
-                                                 self._getNormalizeArgs(),
-                                                 self.doBorders.get(),
-                                                 prerequisites=localDeps))
-
-        # Insert step to create output objects
-        metaDeps = self._insertFunctionStep('createMetadataImageStep',
-                                            prerequisites=deps)
-        
-        if self.doSort:
-            screenDep = self._insertFunctionStep('screenParticlesStep',
-                                                 prerequisites=[metaDeps])
-            finalDeps = [screenDep]
-        else:
-            finalDeps = [metaDeps]
-        
-        self._insertFunctionStep('createOutputStep', prerequisites=finalDeps)
+    # def _insertAllSteps(self):
+    #     """for each micrograph insert the steps to preprocess it"""
+    #     self._setupBasicProperties()
+    #     # Write pos files for each micrograph
+    #     firstStepId = self._insertFunctionStep('writePosFilesStep')
+    #
+    #     # For each micrograph insert the steps, run in parallel
+    #     deps = []
+    #     self.micDict = {}
+    #
+    #     for mic in self.inputMics:
+    #         if self.ctfRelations.hasValue():
+    #             micKey = self.micKey(mic)
+    #             mic.setCTF(self.ctfDict[micKey])
+    #
+    #         # Actually extract
+    #         self.micDict[mic.getObjId()] = mic.clone()
+    #
+    #         localDeps = [firstStepId]
+    #
+    #         deps.append(self._insertFunctionStep('extractParticlesStep',
+    #                                              mic.getObjId(),
+    #                                              ,
+    #                                              prerequisites=localDeps))
+    #
+    #     # Insert step to create output objects
+    #     metaDeps = self._insertFunctionStep('createMetadataImageStep',
+    #                                         prerequisites=deps)
+    #
+    #     if self.doSort:
+    #         screenDep = self._insertFunctionStep('screenParticlesStep',
+    #                                              prerequisites=[metaDeps])
+    #         finalDeps = [screenDep]
+    #     else:
+    #         finalDeps = [metaDeps]
+    #
+    #     self._insertFunctionStep('createOutputStep', prerequisites=finalDeps)
 
     #--------------------------- STEPS functions -------------------------------
 
-    def writePosFilesStep(self):
-        """ Write the pos file for each micrograph on metadata format. """
-        writeSetOfCoordinates(self._getExtraPath(), self.inputCoords,
-                              scale=self.getBoxScale())
-        # We need to find the mapping (either by micName (without ext) or micId)
-        # between the micrographs in the SetOfCoordinates and
-        # the Other micrographs if necessary
-        if self._micsOther():
-            micDict = {}
-            coordMics = self.inputCoords.getMicrographs()
-            for mic in coordMics:
-                micBase = pwutils.removeBaseExt(mic.getFileName())
-                micPos = self._getExtraPath(micBase + ".pos")
-                micDict[pwutils.removeBaseExt(mic.getMicName())] = micPos
-                micDict[mic.getObjId()] = micPos
-                
-            if any(pwutils.removeBaseExt(mic.getMicName()) in micDict
-                   for mic in self.inputMics):
-                micKey = lambda mic: pwutils.removeBaseExt(mic.getMicName())
-            elif any(mic.getObjId() in micDict for mic in self.inputMics):
-                self.warning('Could not match input micrographs and coordinates'
-                             ' micrographs by micName, using micId.')
-                micKey = lambda mic: mic.getObjId()
-            else:
-                raise Exception('Could not match input micrographs and '
-                                'coordinates neither by micName or micId.')
-            
-            for mic in self.inputMics: # micrograph from input (other)
-                mk = micKey(mic)
-                if mk in micDict:
-                    micPosCoord = micDict[mk]
-                    if exists(micPosCoord):
-                        micBase = pwutils.removeBaseExt(mic.getFileName())
-                        micPos = self._getExtraPath(micBase + ".pos")
-                        if micPos != micPosCoord:
-                            self.info('Moving %s -> %s' % (micPosCoord, micPos))
-                            pwutils.moveFile(micPosCoord, micPos)
-                        
-    def extractParticlesStep(self, micId, doInvert, normalizeArgs, doBorders):
-        """ Extract particles from one micrograph """
-        mic = self.micDict[micId]
+    # def writePosFilesStep(self):
+    #     """ Write the pos file for each micrograph on metadata format. """
+    #     writeSetOfCoordinates(self._getExtraPath(), self.inputCoords,
+    #                           scale=self.getBoxScale())
+    #     # We need to find the mapping (either by micName (without ext) or micId)
+    #     # between the micrographs in the SetOfCoordinates and
+    #     # the Other micrographs if necessary
+    #     if self._micsOther():
+    #         micDict = {}
+    #         coordMics = self.inputCoords.getMicrographs()
+    #         for mic in coordMics:
+    #             micBase = pwutils.removeBaseExt(mic.getFileName())
+    #             micPos = self._getExtraPath(micBase + ".pos")
+    #             micDict[pwutils.removeBaseExt(mic.getMicName())] = micPos
+    #             micDict[mic.getObjId()] = micPos
+    #
+    #         if any(pwutils.removeBaseExt(mic.getMicName()) in micDict
+    #                for mic in self.inputMics):
+    #             micKey = lambda mic: pwutils.removeBaseExt(mic.getMicName())
+    #         elif any(mic.getObjId() in micDict for mic in self.inputMics):
+    #             self.warning('Could not match input micrographs and coordinates'
+    #                          ' micrographs by micName, using micId.')
+    #             micKey = lambda mic: mic.getObjId()
+    #         else:
+    #             raise Exception('Could not match input micrographs and '
+    #                             'coordinates neither by micName or micId.')
+    #
+    #         for mic in self.inputMics: # micrograph from input (other)
+    #             mk = micKey(mic)
+    #             if mk in micDict:
+    #                 micPosCoord = micDict[mk]
+    #                 if exists(micPosCoord):
+    #                     micBase = pwutils.removeBaseExt(mic.getFileName())
+    #                     micPos = self._getExtraPath(micBase + ".pos")
+    #                     if micPos != micPosCoord:
+    #                         self.info('Moving %s -> %s' % (micPosCoord, micPos))
+    #                         pwutils.moveFile(micPosCoord, micPos)
 
+
+    def _getExtractArgs(self):
+        """ Should be implemented in sub-classes to define the argument
+        list that should be passed to the picking step function.
+        """
+        return [self.doInvert.get(),
+                self._getNormalizeArgs(),
+                self.doBorders.get()]
+
+    def _extractMicrograph(self, mic, doInvert, normalizeArgs, doBorders):
+        """ Extract particles from one micrograph """
         fnLast = mic.getFileName()
         baseMicName = pwutils.removeBaseExt(fnLast)
         outputRoot = str(self._getExtraPath(baseMicName))
@@ -401,6 +406,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return args
 
     def createMetadataImageStep(self):
+        # TODO: This step can be avoided (if not doing screening)
+        # because particles can be added directly to the output set
         #Create images.xmd metadata
         fnImages = self._getOutputImgMd()
         imgsXmd = md.MetaData()
@@ -431,6 +438,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.runJob("xmipp_image_sort_by_statistics", args)
     
     def createOutputStep(self):
+        #TODO: Maybe this can be generalized into the base function.
+        
         # Create the SetOfImages object on the database
         fnImages = self._getOutputImgMd()
         # Create output SetOfParticles
@@ -558,32 +567,10 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
         self.inputCoords = self.getCoords()
-        self.inputMics = self.getInputMicrographs()
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
-        self.samplingMics = self.inputMics.getSamplingRate()
+        self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
-        self._setupCtfProperties()
-        
-    def _setupCtfProperties(self):
-        inputMics = self.getInputMicrographs()
-        if self.ctfRelations.hasValue():
-            # Load CTF dictionary for all micrographs, all CTF should be present
-            self.ctfDict = {}
-            
-            for ctf in self.ctfRelations.get():
-                ctfMic = ctf.getMicrograph()
-                newCTF = ctf.clone()
-                self.ctfDict[ctfMic.getMicName()] = newCTF
-                self.ctfDict[ctfMic.getObjId()] = newCTF
-            
-            if all(mic.getMicName() in self.ctfDict for mic in inputMics):
-                self.micKey = lambda mic: mic.getMicName()
-            elif all(mic.getObjId() in self.ctfDict for mic in inputMics):
-                self.micKey = lambda mic: mic.getObjId()
-            else:
-                self.micKey = None # some problem matching CTF
-            
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
         Other micrographs. """
@@ -604,7 +591,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         if self.doSort:
             if self.rejectionMethod != REJECT_NONE:
-                msg = " %d of them were rejected with Zscore greater than %.2f." % (numRejected, zScoreMax)
+                msg = " %d of them were rejected " % numRejected
+                msg += "with Zscore greater than %.2f." % zScoreMax
+
         if self.doFlip:
             msg += "\nPhase flipping was performed."
 
