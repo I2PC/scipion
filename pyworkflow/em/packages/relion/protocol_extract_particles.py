@@ -36,11 +36,6 @@ from convert import writeSetOfCoordinates, writeSetOfMicrographs, rowToParticle,
 from protocol_base import ProtRelionBase
 
 
-# Rejection method constants
-REJECT_NONE = 0
-REJECT_MAXZSCORE = 1
-REJECT_PERCENTAGE = 2
-
 # Micrograph type constants for particle extraction
 SAME_AS_PICKING = 0
 OTHER = 1
