@@ -27,6 +27,7 @@
 # **************************************************************************
 
 from os.path import realpath, join, dirname, exists, basename
+import os
 from collections import OrderedDict
 
 import pyworkflow.utils as pwutils
@@ -36,8 +37,6 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
-
-from ispyb_proxy import ISPyBProxy
 
 
 class ProtMonitorISPyB(ProtMonitor):
@@ -92,8 +91,7 @@ class MonitorISPyB(Monitor):
 
         prot = self.protocol
 
-        proxy = ISPyBProxy(["prod", "dev", "test"][prot.db.get()],
-                           experimentParams={'visit': prot.visit.get()})
+        database = ISPyBdb(["prod", "dev", "test"][prot.db.get()], experimentParams={'visit': prot.visit.get()})
 
 
         runs = [p.get() for p in self.protocol.inputProtocols]
@@ -115,12 +113,15 @@ class MonitorISPyB(Monitor):
                 self.update_ctf_params(prot, allParams)
 
         for itemId, params in allParams.iteritems():
-            ispybId = proxy.sendMovieParams(params)
-            # Use -1 as a trick when ispyb is not really used and id is None
-            self.allIds[itemId] = ispybId or -1
+            dc_params = database.get_data_collection_params()
+            dc_params.update(params)
 
-        self.info("Closing proxy")
-        proxy.close()
+            ispybId = database.update_data_collection(dc_params)
+
+            self.allIds[itemId] = ispybId
+
+        self.info("Closing database")
+        database.disconnect()
 
         return False
 
@@ -270,10 +271,42 @@ def createAlignmentPlot(meanX, meanY):
     return plotter
 
 
-class FileNotifier():
-    def __init__(self, filename):
-        self.f = open(filename, 'w')
+class ISPyBdb:
+    """ This is a Facade to provide access to the ispyb_api to store movies."""
+    def __init__(self, db, experimentParams):
+        self.experimentParams = experimentParams
 
-    def notify(self, title, message):
-        print >> self.f, title, message
-        self.f.flush()
+        from ispyb.dbconnection import dbconnection
+        from ispyb.core import core
+        from ispyb.mxacquisition import mxacquisition
+        self.dbconnection = dbconnection
+        self.core = core
+        self.mxacquisition = mxacquisition
+
+        self._loadCursor(db)
+        self._create_group()
+
+    def _loadCursor(self, db):
+        # db should be one of: 'prod', 'dev' or 'test'
+        # let's try to connect to db and get a cursor
+        if self.dbconnection:
+            self.cursor = self.dbconnection.connect(db)
+
+    def _create_group(self):
+        self.visit_id = self.core.retrieve_visit_id(self.cursor, self.experimentParams['visit'])
+        params = self.mxacquisition.get_data_collection_group_params()
+        params['parentid'] = self.visit_id
+        self.group_id = self.mxacquisition.insert_data_collection_group(self.cursor, params.values())
+
+    def get_data_collection_params(self):
+        params = self.mxacquisition.get_data_collection_params()
+        params['parentid'] = self.group_id
+        params['visitid'] = self.visit_id
+        return params
+
+    def update_data_collection(self, params):
+        return self.mxacquisition.insert_data_collection(self.cursor, params.values())
+
+    def disconnect(self):
+        if self.dbconnection:
+            self.dbconnection.disconnect()
