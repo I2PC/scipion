@@ -35,52 +35,60 @@ from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtProcessParticles
 
 from protocol_base import ProtRelionBase
-from convert import getEnviron
+from convert import isVersion2, writeSetOfParticles
+
 
 class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     """
-    This Relion protocol tracks particle movement in movie frames,
-    applies a resolution and dose-dependent weighting scheme
-    for each frame and finally sums them together.
+    This Relion protocol tracks particle movement in movie frames
+    (from previous movie refinement run), applies a resolution
+    and dose-dependent weighting scheme for each frame
+    and finally sums them together, producing so-called
+    shiny, or polished particles.
     """
     _label = 'particle polishing'
     
     PREFIXES = ['half1_', 'half2_']
 
     def _initialize(self):
-        """ This function is mean to be called after the 
+        """ This function is meant to be called after the
         working dir for the protocol have been set.
         (maybe after recovery from mapper)
         """
-        refineRun = self.refineRun.get()
-        refineRun._initialize() # load filenames stuff
+        #refineRun = self.refineRun.get()
+        #refineRun._initialize()  # load filenames stuff
         self._createFilenameTemplates()
         self._createIterTemplates()
-        self._createFrameTemplates(refineRun)
+        #self._createFrameTemplates(refineRun)
     
-    def _createFrameTemplates(self, refineRun):
-        """ Setup the regex on how to find iterations. """
-        self._frameTemplate = self._getFileName('guinier_frame', frame=0, iter=refineRun._lastIter()).replace('000','???')
-        # Frames will be identify by _frameXXX_ where XXX is the frame number
-        # and is restricted to only 3 digits.
-        self._frameRegex = re.compile('_frame(\d{3,3})_')
+    #def _createFrameTemplates(self, refineRun):
+    #    """ Setup the regex on how to find iterations. """
+    #    self._frameTemplate = self._getFileName('guinier_frame', frame=0,
+    #                                            iter=refineRun._lastIter()).replace('000', '???')
+    #    # Frames will be identified by _frameXXX_ where XXX is the frame number
+    #    # restricted to only 3 digits.
+    #    self._frameRegex = re.compile('_frame(\d{3,3})_')
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('refineRun', PointerParam,
-                      pointerClass='ProtRelionRefine3D',
-                      label='Movie particles refine run',
-                      help='Select the Relion 3D auto-refine run where \n'
-                           'the movie particles where refined.')
+        form.addParam('inputMovieParticles', PointerParam,
+                      pointerClass='SetOfMovieParticles',
+                      label='Input refined movie particles',
+                      help='Select the refined movie particles '
+                           'from Relion 3D auto-refine run.')
         form.addParam('maskRadius', IntParam, default=100,
                       label='Particle mask RADIUS (px)',
                       help='Radius of the circular mask that will be used '
-                           'to define the background area.') 
+                           'to define the background area.')
+        form.addParam('extraParams', StringParam, default='',
+                      expertLevel=LEVEL_ADVANCED,
+                      label='Additional parameters',
+                      help='')
 
-        group = form.addGroup('Movement')
-        group.addParam('linerFitParticleMovements', BooleanParam, default=True,
+        form.addSection('Movement')
+        form.addParam('linerFitParticleMovements', BooleanParam, default=True,
                       label='Linear fit particle movements?',
                       help='If set to Yes, then the program will fit linear '
                            'tracks (in X-Y and in time) through the estimated '
@@ -93,25 +101,35 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                            'also be included in the fitting of each particle. '
                            'Again, in particular for smaller particles this '
                            'may improve the robustness of the fits.')
-        #NOTE: we do not need to ask for running average windows as in relion
-        # gui we can take it from the previous run
-        group.addParam('stddevParticleDistance', IntParam, default=100,
-                       condition='linerFitParticleMovements',
-                       label='Stddev on particle distance (px)',
-                       help='This value determines how much neighbouring '
-                            'particles contribute to the fit of the movements '
-                            'of each particle. This value is the standard '
-                            'deviation of a Gaussian on the inter-particle '
-                            'distance. Larger values mean that particles that '
-                            'are further away still contribute more. Particles '
-                            'beyond 3 standard deviations are excluded from '
-                            'the fit. Very large values will lead to all '
-                            'fitted tracks pointing in the same direction. '
-                            'A value of zero means that each particle is '
-                            'fitted independently.')
+        if not isVersion2():
+            form.addParam('movieAvgWindow', IntParam, default=5,
+                          label='Running average window',
+                          help='The individual movie frames will be '
+                               'averaged using a running average window '
+                               'with the specified width. Use an odd '
+                               'number. The optimal value will depend on '
+                               'the SNR in the individual movie frames. '
+                               'For ribosomes, we used a value of 5, '
+                               'where each movie frame integrated '
+                               'approximately 1 electron per squared '
+                               'Angstrom.')
+        form.addParam('stddevParticleDistance', IntParam, default=100,
+                      condition='linerFitParticleMovements',
+                      label='Stddev on particle distance (px)',
+                      help='This value determines how much neighbouring '
+                           'particles contribute to the fit of the movements '
+                           'of each particle. This value is the standard '
+                           'deviation of a Gaussian on the inter-particle '
+                           'distance. Larger values mean that particles that '
+                           'are further away still contribute more. Particles '
+                           'beyond 3 standard deviations are excluded from '
+                           'the fit. Very large values will lead to all '
+                           'fitted tracks pointing in the same direction. '
+                           'A value of zero means that each particle is '
+                           'fitted independently.')
     
-        group = form.addGroup('Damage')
-        group.addParam('performBfactorWeighting', BooleanParam, default=True,
+        form.addSection('Damage')
+        form.addParam('performBfactorWeighting', BooleanParam, default=True,
                       label='Perform B-factor weighting?',
                       help='If set to Yes, then running averages of the '
                            'individual frames of recorded movies will also be '
@@ -119,78 +137,93 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                            'particle polishing, then rotational alignments of '
                            'the movie frames is NOT necessary and will only '
                            'take more computing time.')
-        #NOTE: we do not need to ask for running average windows as in relion
-        # gui we can take it from the previous run
-        group.addParam('highresLimitPerFrameMaps', FloatParam, default=5,
-                       condition='performBfactorWeighting',
-                       label='Highres-limit per-frame maps (A)',
-                       help='To estimate the resolution and dose dependency of '
-                            'the radiation damage, the program will calculate '
-                            'reconstructions from all first movie frames, '
-                            'second movie frames, etc. These per-frame '
-                            'reconstructions will have lower resolution than '
-                            'the reconstruction from all-frames. To speed up '
-                            'the calculations (and reduce memory '
-                            'requirements), the per-frame reconstructions may '
-                            'be limited in resolution using this parameter. '
-                            'One can inspect the output STAR files of the '
-                            'per-frame reconstructions to check afterwards '
-                            'that this value was not chosen lower than the '
-                            'actual resolution of these reconstruction')
-        group.addParam('lowresLimitBfactorEstimation', FloatParam, default=20,
-                       condition='performBfactorWeighting',
-                       label='Lowres-limit B-factor estimation (A)',
-                       help='This value describes the lowest resolution that '
-                            'is included in the B-factor estimation of the '
-                            'per-frame reconstructions. Because the power '
-                            'spectrum of per-frame reconstructions is compared '
-                            'to the power spectrum of the reconstruction from '
-                            'all frames, a much lower value than the 10A '
-                            'described in the Rosenthal and Henderson (2003) '
-                            'paper in JMB can be used. Probably a value around '
-                            '20A is still OK.')
+        form.addParam('highresLimitPerFrameMaps', FloatParam, default=5,
+                      condition='performBfactorWeighting',
+                      label='Highres-limit per-frame maps (A)',
+                      help='To estimate the resolution and dose dependency of '
+                           'the radiation damage, the program will calculate '
+                           'reconstructions from all first movie frames, '
+                           'second movie frames, etc. These per-frame '
+                           'reconstructions will have lower resolution than '
+                           'the reconstruction from all-frames. To speed up '
+                           'the calculations (and reduce memory '
+                           'requirements), the per-frame reconstructions may '
+                           'be limited in resolution using this parameter. '
+                           'One can inspect the output STAR files of the '
+                           'per-frame reconstructions to check afterwards '
+                           'that this value was not chosen lower than the '
+                           'actual resolution of these reconstruction')
+        form.addParam('lowresLimitBfactorEstimation', FloatParam, default=20,
+                      condition='performBfactorWeighting',
+                      label='Lowres-limit B-factor estimation (A)',
+                      help='This value describes the lowest resolution that '
+                           'is included in the B-factor estimation of the '
+                           'per-frame reconstructions. Because the power '
+                           'spectrum of per-frame reconstructions is compared '
+                           'to the power spectrum of the reconstruction from '
+                           'all frames, a much lower value than the 10A '
+                           'described in the Rosenthal and Henderson (2003) '
+                           'paper in JMB can be used. Probably a value around '
+                           '20A is still OK.')
+        if isVersion2():
+            form.addParam('avgFramesBfac', IntParam, default=1,
+                          condition='performBfactorWeighting',
+                          label='Average frames B-factor estimation',
+                          help='B-factors for each movie frame will be estimated '
+                               'from reconstructions of all particles for that '
+                               'movie frame. Single-frame reconstructions '
+                               'sometimes give not enough signal to estimate '
+                               'reliable B-factors. This option allows one to '
+                               'calculate the B-factors from running averages of '
+                               'movie frames. The value specified should be an '
+                               'odd number. Calculating B-factors from multiple '
+                               'movie frames improves the SNR in the reconstructions, '
+                               'but limits the estimation of sudden changes in '
+                               'B-factors throughout the movie, for example in '
+                               'the first few frames when beam-induced movement '
+                               'is very rapid. Therefore, one should not use '
+                               'higher values than strictly necessary.')
            
-        group.addParam('maskForReconstructions', PointerParam,
-                       pointerClass='VolumeMask',
-                       label='Mask for the reconstructions', allowsNull=True,
-                       help='A continuous mask with values between 0 (solvent) '
-                            'and 1 (protein). You may provide the same map '
-                            'that was obtained in the post-processing of the '
-                            'corresponding auto-refine jobs before the movie '
-                            'processing.')
-        self.addSymmetry(group)
-        
-        form.addParam('extraParams', StringParam, default='',
-                      expertLevel=LEVEL_ADVANCED,
-                      label='Additional parameters',
-                      help='')
-        
-        form.addParallelSection(threads=0, mpi=3) 
+        form.addParam('maskForReconstructions', PointerParam,
+                      pointerClass='VolumeMask',
+                      label='Mask for the reconstructions', allowsNull=True,
+                      help='A continuous mask with values between 0 (solvent) '
+                           'and 1 (protein). You may provide the same mask '
+                           'that was used in the post-processing of the '
+                           'corresponding 3D auto-refine jobs before the movie '
+                           'processing.')
+        self.addSymmetry(form)
+
+        form.addParallelSection(threads=0, mpi=3)
     
     #--------------------------- INSERT steps functions --------------------------------------------  
 
     def _insertAllSteps(self): 
         self._initialize()
+        self._insertFunctionStep('convertInputStep',
+                                 self._getInputParticles().getObjId())
         self._insertPolishStep()
         self._insertFunctionStep('organizeDataStep')
         self._insertFunctionStep('createOutputStep')
         
     def _insertPolishStep(self):
-        refineRun = self.refineRun.get()
-        imgSet = refineRun._getInputParticles()
-        
-        imgStar = self._getFileName('data', iter=refineRun._lastIter())
+        imgSet = self._getInputParticles()
+        imgStar = self._getFileName('movie_particles')
         
         params = ' --i %s' % imgStar
         params += ' --o shiny'
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
-        params += ' --movie_frames_running_avg %d' % refineRun.movieAvgWindow.get()
-        params += ' --dont_read_old_files'
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --sigma_nb %d' % self.stddevParticleDistance.get()
         params += ' --perframe_highres %0.3f' % self.highresLimitPerFrameMaps.get()
         params += ' --autob_lowres %0.3f' % self.lowresLimitBfactorEstimation.get()
-        
+
+        if not isVersion2():
+            params += ' --movie_frames_running_avg %d' % self.movieAvgWindow.get()
+            params += ' --dont_read_old_files'
+        else:
+            params += ' --bfactor_running_avg %d' % self.avgFramesBfac.get()
+
         x, _, _ = imgSet.getDimensions()
         if self.maskRadius.get() >= x/2 or self.maskRadius.get() < 0:
             params += ' --bg_radius %d' % (x/2)
@@ -202,16 +235,31 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         else:
             params += ' --skip_bfactor_weighting'
         params += ' ' + self.extraParams.get()
-        
+
         self._insertFunctionStep('polishStep', params)
         
     #--------------------------- STEPS functions --------------------------------------------
+    def convertInputStep(self, particlesId):
+        """ Create the input file in STAR format as expected by Relion.
+        If the input particles comes from Relion, just link the file.
+        Params:
+            particlesId: use this parameters just to force redo of convert if
+                the input particles are changed.
+        """
+        imgSet = self._getInputParticles()
+        imgStar = self._getFileName('movie_particles')
+        self.info("Converting set from '%s' into '%s'" %
+                  (imgSet.getFileName(), imgStar))
+
+        writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
+                            alignType=imgSet.getAlignment())
+
     def polishStep(self, params):
         """ Create the input file in STAR format as expected by Relion.
-        If the input particles comes from Relion, just link the file. 
+        If the input particles comes from Relion, just link the file.
         """
-        from pyworkflow.utils.path import copyTree
-        copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
+        #from pyworkflow.utils.path import copyTree
+        #copyTree(self.refineRun.get()._getExtraPath(), self._getExtraPath())
         self.runJob(self._getProgram('relion_particle_polish'), params)
     
     def organizeDataStep(self):
@@ -241,11 +289,10 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def createOutputStep(self):
         from pyworkflow.em import ALIGN_PROJ
         from pyworkflow.em.packages.relion.convert import readSetOfParticles
-        refineRun = self.refineRun.get()
-        
-        imgSet = refineRun._getInputParticles()
+
+        imgSet = self._getInputParticles()
         vol = Volume()
-        vol.setFileName(self._getFileName('volume_shiny', iter=refineRun._lastIter()))
+        vol.setFileName(self._getFileName('volume_shiny'))
         vol.setSamplingRate(imgSet.getSamplingRate())
         shinyPartSet = self._createSetOfParticles()
         shinyPartSet.copyInfo(imgSet)
@@ -254,11 +301,9 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         self._defineOutputs(outputParticles=shinyPartSet)
         self._defineOutputs(outputVolume=vol)
         
-        self._defineSourceRelation(refineRun.inputParticles, shinyPartSet)
-        self._defineSourceRelation(refineRun.inputMovieParticles, shinyPartSet)
-        self._defineSourceRelation(refineRun.inputParticles, vol)
-        self._defineSourceRelation(refineRun.inputMovieParticles, vol)
-    
+        self._defineSourceRelation(imgSet, shinyPartSet)
+        self._defineSourceRelation(imgSet, vol)
+
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         """ Should be overwritten in subclasses to
@@ -269,7 +314,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
 
         if self.performBfactorWeighting:
             if self.maskForReconstructions.get() is None:
-                errors.append('You should select a *mask* if performing b-factor weighting.')
+                errors.append('You should provide a *mask* when performing B-factor weighting.')
 
         return errors
     
@@ -280,16 +325,5 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         return []
     
     #--------------------------- UTILS functions --------------------------------------------
-    def _getFrameNumber(self, index):
-        """ Return the list of iteration files, give the iterTemplate. """
-        result = None
-        files = sorted(glob(self._frameTemplate))
-        if files:
-            f = files[index]
-            s = self._frameRegex.search(f)
-            if s:
-                result = int(s.group(1)) # group 1 is 3 digits frame number
-        return result
-        
-    def _lastFrame(self):
-        return self._getIterNumber(-1)
+    def _getInputParticles(self):
+        return self.inputMovieParticles.get()

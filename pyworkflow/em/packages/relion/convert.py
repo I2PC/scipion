@@ -81,12 +81,22 @@ CTF_EXTRA_LABELS = [
     md.RLN_CTF_DETECTOR_PIXEL_SIZE
     ]
 
-# Some extra labels to take into account the zscore
+# Some extra labels
 IMAGE_EXTRA_LABELS = [
     md.RLN_SELECT_PARTICLES_ZSCORE,
     md.RLN_IMAGE_FRAME_NR,
+    md.RLN_PARTICLE_NR_FRAMES,
+    md.RLN_PARTICLE_NR_FRAMES_AVG,
+    md.RLN_PARTICLE_MOVIE_RUNNING_AVG,
+    md.RLN_PARTICLE_ORI_NAME,
+    md.RLN_MLMODEL_GROUP_NAME,
+    md.RLN_ORIENT_ORIGIN_X_PRIOR,
+    md.RLN_ORIENT_ORIGIN_Y_PRIOR,
+    md.RLN_ORIENT_PSI_PRIOR,
+    md.RLN_ORIENT_ROT_PRIOR,
+    md.RLN_ORIENT_TILT_PRIOR
     ]
- 
+
 # ANGLES_DICT = OrderedDict([
 #        ("_angleY", md.RLN_ANGLE_Y),
 #        ("_angleY2", md.RLN_ANGLE_Y2),

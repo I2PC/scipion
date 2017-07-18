@@ -200,41 +200,41 @@ class ProtRelionBase(EMProtocol):
                            'dimensions and the same pixel size as your input '
                             'particles.')
         group.addParam('isMapAbsoluteGreyScale', BooleanParam, default=False,
-                      label="Is initial 3D map on absolute greyscale?", 
-                      help='The probabilities are based on squared differences,'
-                           ' so that the absolute grey scale is important. \n'
-                           'Probabilities are calculated based on a Gaussian '
-                           'noise model, which contains a squared difference '
-                           'term between the reference and the experimental '
-                           'image. This has a consequence that the reference '
-                           'needs to be on the same absolute intensity '
-                           'grey-scale as the experimental images. RELION and '
-                           'XMIPP reconstruct maps at their absolute '
-                           'intensity grey-scale. Other packages may perform '
-                           'internal normalisations of the reference density, '
-                           'which will result in incorrect grey-scales. '
-                           'Therefore: if the map was reconstructed in RELION '
-                           'or in XMIPP, set this option to Yes, otherwise '
-                           'set it to No. If set to No, RELION will use a ('
-                           'grey-scale invariant) cross-correlation criterion '
-                           'in the first iteration, and prior to the second '
-                           'iteration the map will be filtered again using '
-                           'the initial low-pass filter. This procedure is '
-                           'relatively quick and typically does not '
-                           'negatively affect the outcome of the subsequent '
-                           'MAP refinement. Therefore, if in doubt it is '
-                           'recommended to set this option to No.')
+                       label="Is initial 3D map on absolute greyscale?",
+                       help='The probabilities are based on squared differences,'
+                            ' so that the absolute grey scale is important. \n'
+                            'Probabilities are calculated based on a Gaussian '
+                            'noise model, which contains a squared difference '
+                            'term between the reference and the experimental '
+                            'image. This has a consequence that the reference '
+                            'needs to be on the same absolute intensity '
+                            'grey-scale as the experimental images. RELION and '
+                            'XMIPP reconstruct maps at their absolute '
+                            'intensity grey-scale. Other packages may perform '
+                            'internal normalisations of the reference density, '
+                            'which will result in incorrect grey-scales. '
+                            'Therefore: if the map was reconstructed in RELION '
+                            'or in XMIPP, set this option to Yes, otherwise '
+                            'set it to No. If set to No, RELION will use a ('
+                            'grey-scale invariant) cross-correlation criterion '
+                            'in the first iteration, and prior to the second '
+                            'iteration the map will be filtered again using '
+                            'the initial low-pass filter. This procedure is '
+                            'relatively quick and typically does not '
+                            'negatively affect the outcome of the subsequent '
+                            'MAP refinement. Therefore, if in doubt it is '
+                            'recommended to set this option to No.')
         
         self.addSymmetry(group)
 
         group.addParam('initialLowPassFilterA', FloatParam, default=60,
-                      condition='not is2D',
-                      label='Initial low-pass filter (A)',
-                      help='It is recommended to strongly low-pass filter your '
-                           'initial reference map. If it has not yet been '
-                           'low-pass filtered, it may be done internally using '
-                           'this option. If set to 0, no low-pass filter will '
-                           'be applied to the initial reference(s).')
+                       condition='not is2D',
+                       label='Initial low-pass filter (A)',
+                       help='It is recommended to strongly low-pass filter your '
+                            'initial reference map. If it has not yet been '
+                            'low-pass filtered, it may be done internally using '
+                            'this option. If set to 0, no low-pass filter will '
+                            'be applied to the initial reference(s).')
         
         form.addSection(label='CTF')
         form.addParam('continueMsg', LabelParam, default=True,
@@ -431,12 +431,12 @@ class ProtRelionBase(EMProtocol):
                           label='Note that initial sampling rates will be '
                                 'auto-incremented!')
         form.addParam('doImageAlignment', BooleanParam, default=True,
-              label='Perform image alignment?', condition="isClassify",
-              help='If set to No, then rather than performing both alignment '
-                   'and classification, only classification will be performed. '
-                   'This allows the use of very focused masks.This requires '
-                   'that the optimal orientations of all particles are already '
-                   'calculated.')
+                      label='Perform image alignment?', condition="isClassify",
+                      help='If set to No, then rather than performing both alignment '
+                           'and classification, only classification will be performed. '
+                           'This allows the use of very focused masks.This requires '
+                           'that the optimal orientations of all particles are already '
+                           'calculated.')
         if self.IS_3D:
             form.addParam('angularSamplingDeg', EnumParam, default=2,
                           choices=ANGULAR_SAMPLING_LIST,
@@ -516,10 +516,11 @@ class ProtRelionBase(EMProtocol):
                 
                 form.addSection("Movies")
                 form.addParam('realignMovieFrames', BooleanParam, default=False,
-                              label='Realign movie frames?',
+                              label='Refine movie particles?',
                               help='If set to Yes, then running averages of '
-                                   'the individual frames of recorded movies '
-                                   'will be aligned as independent particles.')
+                                   'the particles from individual frames of '
+                                   'recorded movies will be aligned to the '
+                                   '3D reference.')
                 
                 group = form.addGroup('Movie frames alignment',
                                       condition='realignMovieFrames and '
@@ -528,44 +529,44 @@ class ProtRelionBase(EMProtocol):
                                pointerClass='SetOfMovieParticles',
                                allowsNull=True, important=True,
                                label='Input movie particles')
-                group.addParam('movieAvgWindow', FloatParam, default=5,
-                              label='Running average window',
-                              help='The individual movie frames will be '
-                                   'averaged using a running average window '
-                                   'with the specified width. Use an odd '
-                                   'number. The optimal value will depend on '
-                                   'the SNR in the individual movie frames. '
-                                   'For ribosomes, we used a value of 5, '
-                                   'where each movie frame integrated '
-                                   'approximately 1 electron per squared '
-                                   'Angstrom.')
+                group.addParam('movieAvgWindow', IntParam, default=5,
+                               label='Running average window',
+                               help='The individual movie frames will be '
+                                    'averaged using a running average window '
+                                    'with the specified width. Use an odd '
+                                    'number. The optimal value will depend on '
+                                    'the SNR in the individual movie frames. '
+                                    'For ribosomes, we used a value of 5, '
+                                    'where each movie frame integrated '
+                                    'approximately 1 electron per squared '
+                                    'Angstrom.')
                 group.addParam('movieStdTrans', FloatParam, default=1,
-                              label='Stddev on the translations (px)',
-                              help='A Gaussian prior with the specified '
-                                   'standard deviation will be centered at '
-                                   'the rotations determined for the '
-                                   'corresponding particle where all '
-                                   'movie-frames were averaged. For '
-                                   'ribosomes, we used a value of 2 pixels. ')
+                               label='Stddev on the translations (px)',
+                               help='A Gaussian prior with the specified '
+                                    'standard deviation will be centered at '
+                                    'the rotations determined for the '
+                                    'corresponding particle where all '
+                                    'movie-frames were averaged. For '
+                                    'ribosomes, we used a value of 2 pixels. ')
                 group.addParam('movieIncludeRotSearch', BooleanParam,
                                default=False,
-                              label='Also include rotational searches?',
-                              help='If set to Yes, then running averages of '
-                                   'the individual frames of recorded movies '
-                                   'will also be aligned rotationally. \n'
-                                   'If one wants to perform particle '
-                                   'polishing, then rotational alignments of '
-                                   'the movie frames is NOT necessary and '
-                                   'will only take more computing time.')
+                               label='Also include rotational searches?',
+                               help='If set to Yes, then running averages of '
+                                    'the individual frames of recorded movies '
+                                    'will also be aligned rotationally. \n'
+                                    'If one wants to perform particle '
+                                    'polishing, then rotational alignments of '
+                                    'the movie frames is NOT necessary and '
+                                    'will only take more computing time.')
                 group.addParam('movieStdRot', FloatParam, default=1,
-                              condition='movieIncludeRotSearch',
-                              label='Stddev on the rotations (deg)',
-                              help='A Gaussian prior with the specified '
-                                   'standard deviation will be centered at '
-                                   'the rotations determined for the '
-                                   'corresponding particle where all '
-                                   'movie-frames were averaged. For '
-                                   'ribosomes, we used a value of 1 degree')
+                               condition='movieIncludeRotSearch',
+                               label='Stddev on the rotations (deg)',
+                               help='A Gaussian prior with the specified '
+                                    'standard deviation will be centered at '
+                                    'the rotations determined for the '
+                                    'corresponding particle where all '
+                                    'movie-frames were averaged. For '
+                                    'ribosomes, we used a value of 1 degree')
         
         form.addSection('Additional')
         if isVersion2():
@@ -687,22 +688,22 @@ class ProtRelionBase(EMProtocol):
     
     def addSymmetry(self, container):
         container.addParam('symmetryGroup', StringParam, default='c1',
-                      label="Symmetry", 
-                      help='If the molecule is asymmetric, set Symmetry group '
-                           'to C1. Note their are multiple possibilities for '
-                           'icosahedral symmetry: \n'
-                         '* I1: No-Crowther 222 (standard in Heymann,Chagoyen '
-                           '& Belnap, JSB, 151 (2005) 196-207)               \n'
-                         '* I2: Crowther 222                                 \n'
-                         '* I3: 52-setting (as used in SPIDER?)              \n'
-                         '* I4: A different 52 setting                       \n'
-                         'The command *relion_refine --sym D2 '
-                         '--print_symmetry_ops* prints a list of all symmetry '
-                           'operators for symmetry group D2. RELION uses '
-                           'XMIPP\'s libraries for symmetry operations. '
-                           'Therefore, look at the XMIPP Wiki for more details:'
-                           ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/'
-                           'WebHome?topic=Symmetry')
+                           label="Symmetry",
+                           help='If the molecule is asymmetric, set Symmetry group '
+                                'to C1. Note their are multiple possibilities for '
+                                'icosahedral symmetry: \n'
+                                '* I1: No-Crowther 222 (standard in Heymann,Chagoyen '
+                                '& Belnap, JSB, 151 (2005) 196-207)               \n'
+                                '* I2: Crowther 222                                 \n'
+                                '* I3: 52-setting (as used in SPIDER?)              \n'
+                                '* I4: A different 52 setting                       \n'
+                                'The command *relion_refine --sym D2 '
+                                '--print_symmetry_ops* prints a list of all symmetry '
+                                'operators for symmetry group D2. RELION uses '
+                                'XMIPP\'s libraries for symmetry operations. '
+                                'Therefore, look at the XMIPP Wiki for more details:'
+                                ' http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/'
+                                'WebHome?topic=Symmetry')
 
     #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
@@ -807,7 +808,7 @@ class ProtRelionBase(EMProtocol):
         self.runJob(self._getProgram(), params)
     
     def createOutputStep(self):
-        pass # should be implemented in subclasses
+        pass  # should be implemented in subclasses
     
     #--------------------------- INFO functions --------------------------------
 

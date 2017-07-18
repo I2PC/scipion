@@ -29,9 +29,10 @@ This module contains the protocol for 3d refinement with Relion.
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume, FSC
 from pyworkflow.em.protocol import ProtRefine3D
+from pyworkflow.em import ALIGN_PROJ
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-from convert import isVersion2
+from convert import isVersion2, readSetOfParticles, IMAGE_EXTRA_LABELS
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
@@ -57,7 +58,7 @@ leads to objective and high-quality results.
         """
         ProtRelionBase._initialize(self)
         self.ClassFnTemplate = '%(ref)03d@%(rootDir)s/relion_it%(iter)03d_classes.mrcs'
-        self.numberOfClasses.set(1) # For refinement we only need just one "class"
+        self.numberOfClasses.set(1)  # For refinement we only need just one "class"
     
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _setSamplingArgs(self, args):
@@ -116,12 +117,34 @@ leads to objective and high-quality results.
                            md.RLN_RESOLUTION,
                            md.RLN_MLMODEL_FSC_HALVES_REF)
             self._defineOutputs(outputFSC=fsc)
-            self._defineSourceRelation(vol,fsc)
-
+            self._defineSourceRelation(vol, fsc)
 
         else:
-            pass
-    
+            movieSet = self.inputMovieParticles.get()
+            if self.movieIncludeRotSearch:
+                vol = Volume()
+                vol.setFileName(self._getExtraPath('relion_class001.mrc'))
+                vol.setSamplingRate(movieSet.getSamplingRate())
+                half1 = self._getFileName("final_half1_volume", ref3d=1)
+                half2 = self._getFileName("final_half2_volume", ref3d=1)
+                vol.setHalfMaps([half1, half2])
+
+                self._defineOutputs(outputVolume=vol)
+                self._defineSourceRelation(self.inputParticles, vol)
+                self._defineSourceRelation(self.inputMovieParticles, vol)
+
+            fnOut = self._getFileName('data', iter=self._lastIter())
+            outMovieSet = self._createSetOfMovieParticles()
+            outMovieSet.copyInfo(movieSet)
+            readSetOfParticles(fnOut, outMovieSet, alignType=ALIGN_PROJ,
+                               extraLabels=IMAGE_EXTRA_LABELS)
+
+            self._defineOutputs(outputParticles=outMovieSet)
+            self._defineTransformRelation(self.inputParticles, outMovieSet)
+            self._defineTransformRelation(self.inputMovieParticles, outMovieSet)
+
+
+
     #--------------------------- INFO functions -------------------------------------------- 
     def _validateNormal(self):
         """ Should be overwritten in subclasses to 
@@ -173,6 +196,13 @@ leads to objective and high-quality results.
             resol = row.getValue("rlnCurrentResolution")
             summary.append("Final resolution: *%0.2f A*" % resol)
 
+        if self.realignMovieFrames:
+            summary.append('\nMovie refinement:')
+            summary.append('    Running average window: %d frames' % self.movieAvgWindow)
+            summary.append('    Stddev on the translations: %0.2f px' % self.movieStdTrans)
+            if self.movieIncludeRotSearch:
+                summary.append('    Stddev on the rotations: %0.2f deg' % self.movieStdRot)
+
         return summary
     
     def _summaryContinue(self):
@@ -184,15 +214,13 @@ leads to objective and high-quality results.
         return summary
 
     #--------------------------- UTILS functions --------------------------------------------
-    def _fillDataFromIter(self, imgSet, iteration):
+    def _fillDataFromIter(self, ImgSet, iteration):
         outImgsFn = self._getFileName('data', iter=iteration)
-        imgSet.setAlignmentProj()
-        imgSet.copyItems(self._getInputParticles(),
+        ImgSet.setAlignmentProj()
+        ImgSet.copyItems(self._getInputParticles(),
                          updateItemCallback=self._createItemMatrix,
                          itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
     
     def _createItemMatrix(self, item, row):
         from pyworkflow.em.packages.relion.convert import createItemMatrix
-        from pyworkflow.em import ALIGN_PROJ
-        
         createItemMatrix(item, row, align=ALIGN_PROJ)
