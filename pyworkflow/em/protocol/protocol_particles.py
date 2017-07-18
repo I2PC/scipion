@@ -278,15 +278,21 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         """
         mic = Micrograph()
         mic.setAttributesFromDict(micDict, setBasic=True, ignoreMissing=True)
+        micDoneFn = self._getMicDone(mic)
+        micFn = mic.getFileName()
+
+        if (self.isContinued() and os.path.exists(micDoneFn)):
+            self.info("Skipping micrograph: %s, seems to be done" % micFn)
+            return
 
         # Clean old finished files
-        pwutils.cleanPath(self._getMicDone(mic))
+        pwutils.cleanPath(micDoneFn)
 
-        self.info("Picking micrograph: %s " % mic.getFileName())
+        self.info("Picking micrograph: %s " % micFn)
         self._pickMicrograph(mic, *args)
 
         # Mark this mic as finished
-        open(self._getMicDone(mic), 'w').close()
+        open(micDoneFn, 'w').close()
 
     def _pickMicrograph(self, mic, *args):
         """ This function should be implemented by subclasses in order
@@ -540,15 +546,21 @@ class ProtExtractParticles(ProtParticles):
         function.
         """
         mic = self.micDict[micKey]
+        micDoneFn = self._getMicDone(mic)
+        micFn = mic.getFileName()
+
+        if (self.isContinued() and os.path.exists(micDoneFn)):
+            self.info("Skipping micrograph: %s, seems to be done" % micFn)
+            return
 
         # Clean old finished files
-        pwutils.cleanPath(self._getMicDone(mic))
+        pwutils.cleanPath(micDoneFn)
 
-        self.info("Extracting micrograph: %s " % mic.getFileName())
+        self.info("Extracting micrograph: %s " % micFn)
         self._extractMicrograph(mic, *args)
 
         # Mark this mic as finished
-        open(self._getMicDone(mic), 'w').close()
+        open(micDoneFn, 'w').close()
 
     def _extractMicrograph(self, mic, *args):
         """ This function should be implemented by subclasses in order
