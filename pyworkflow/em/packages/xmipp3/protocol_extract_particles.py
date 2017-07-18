@@ -312,6 +312,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     def _extractMicrograph(self, mic, doInvert, normalizeArgs, doBorders):
         """ Extract particles from one micrograph """
+
+        print("DEBUG: Extracting mic: ", mic.getFileName())
+        print("DEBUG:       doInvert: ", doInvert)
+        print("DEBUG:  normalizeArgs: ", normalizeArgs)
+        print("DEBUG:      doBorders: ", doBorders)
+
+        import time
+        time.sleep(3)
+        return
+
         fnLast = mic.getFileName()
         baseMicName = pwutils.removeBaseExt(fnLast)
         outputRoot = str(self._getExtraPath(baseMicName))
@@ -347,7 +357,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                             args % (fnLast, fnNoDust, self.thresholdDust))
                 fnLast = fnNoDust
 
-            if self.ctfRelations.hasValue():
+            if self._useCTF():
                 # We need to write a Xmipp ctfparam file
                 # to perform the phase flip on the micrograph
                 fnCTF = self._getTmpPath("%s.ctfParam" % baseMicName)
@@ -439,7 +449,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     
     def createOutputStep(self):
         #TODO: Maybe this can be generalized into the base function.
-        
+
         # Create the SetOfImages object on the database
         fnImages = self._getOutputImgMd()
         # Create output SetOfParticles
@@ -453,7 +463,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
 
         self.imgSet.setSamplingRate(self._getNewSampling())
-        self.imgSet.setHasCTF(self.ctfRelations.hasValue())
+        self.imgSet.setHasCTF(self._useCTF())
 
         # a SetMdIterator is needed because in some cases, the number of
         # items in SetOfCoordinates and in the metadata could be different.
@@ -472,7 +482,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self._storeMethodsInfo(fnImages)
         self._defineOutputs(outputParticles=self.imgSet)
         self._defineSourceRelation(self.inputCoordinates, self.imgSet)
-        if self.ctfRelations.hasValue():
+        if self._useCTF():
             self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
 
     #--------------------------- INFO functions --------------------------------
@@ -480,7 +490,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         errors = []
         # doFlip can only be selected if CTF information
         # is available on picked micrographs
-        if self.doFlip and not self.ctfRelations.hasValue():
+        if self.doFlip and not self._useCTF():
             errors.append('Phase flipping cannot be performed unless '
                           'CTF information is provided.')
 
@@ -489,11 +499,11 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 errors.append("Background radius for normalization should be "
                               "equal or less than half of the box size.")
 
-        self._setupCtfProperties() # setup self.micKey among others
-        if self.ctfRelations.hasValue() and self.micKey is None:
-            errors.append('Some problem occurs matching micrographs and CTF.\n'
-                          'There were micrographs for which CTF was not found '
-                          'either using micName or micId.\n')
+        #self._setupCtfProperties() # setup self.micKey among others
+        # if self._useCTF() and self.micKey is None:
+        #     errors.append('Some problem occurs matching micrographs and CTF.\n'
+        #                   'There were micrographs for which CTF was not found '
+        #                   'either using micName or micId.\n')
         return errors
     
     def _citations(self):
@@ -546,6 +556,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
         return self.downsampleType == OTHER
+
+    def _useCTF(self):
+        return self.ctfRelations.hasValue()
 
     def _doDownsample(self):
         return self.downFactor > 1.0
@@ -636,7 +649,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def createParticles(self, item, row):
         from pyworkflow.em.packages.xmipp3.convert import rowToParticle
         
-        particle = rowToParticle(row, readCtf=self.ctfRelations.hasValue())
+        particle = rowToParticle(row, readCtf=self._useCTF())
         coord = particle.getCoordinate()
         item.setY(coord.getY())
         item.setX(coord.getX())
