@@ -475,18 +475,16 @@ class ProtImportMovies(ProtImportMicBase):
                         for fileName in files:
                             if os.path.exists(fileName):
                                 if fileName in self.importedFiles:
-                                    sock.send('WARNING: Not importing, already imported file %s \n' % fileName)
-                                    self.debug('WARNING: Not importing, already imported file %s \n' % fileName)
+                                    self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName,
+                                                        sock)
                                     continue
                                 else:
-                                    sock.send('OK: Importing file %s \n' % fileName)
-                                    self.debug('OK: Importing file %s \n' % fileName)
+                                    self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
                                     fileId = None
                                     yield fileName, fileId
                             else:
-                                sock.send('WARNING: Not importing, path does not exist %s \n' % fileName)
-                                self.debug('WARNING: Not importing, path does not exist %s \n' % fileName)
-                                self.debug(fileName)
+                                self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName,
+                                                    sock)
                                 continue
                     else:
                         continue
@@ -498,6 +496,14 @@ class ProtImportMovies(ProtImportMicBase):
                     self.connectionList.remove(sock)
                     continue
         return
+
+    def _spreadMessage(self, message, sock):
+        try:
+            if sock is not None:
+                sock.send(message)
+            self.debug(message)
+        except:
+            pass
 
     def iterNewInputFiles(self):
         """ In the case of importing movies, we want to override this method
