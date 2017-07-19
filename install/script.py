@@ -364,6 +364,7 @@ sklearn = env.addModule(
 powerfit = env.addModule(
     'powerfit',
     tar='powerfit.tgz',
+    targets=['powerfit-2.0*'],
     default=False,
     deps=[scipy, numpy, fftw3])
 
