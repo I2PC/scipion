@@ -832,12 +832,12 @@ class ProtExtractParticles(ProtParticles):
         firstTime = True
 
         if outputParts is None:
+            inputMics = self.getInputMicrographs()
             outputParts = self._createSetOfParticles()
-            outputParts.copyInfo(self.getInputMicrographs())
+            outputParts.copyInfo(inputMics)
             outputParts.setCoordinates(self.getCoords())
             if self.doFlip:
-                outputParts.setIsPhaseFlipped(
-                    not self.inputMics.isPhaseFlipped())
+                outputParts.setIsPhaseFlipped(not inputMics.isPhaseFlipped())
 
             outputParts.setSamplingRate(self._getNewSampling())
             outputParts.setHasCTF(self._useCTF())

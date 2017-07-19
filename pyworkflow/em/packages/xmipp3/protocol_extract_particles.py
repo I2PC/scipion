@@ -678,6 +678,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                     p.setLocation(xmippToLocation(row.getValue(md.MDL_IMAGE)))
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
+                    p.setCTF(mic.getCTF())
                     outputParts.append(p)
 
             # Release the list of coordinates for this micrograph since it
