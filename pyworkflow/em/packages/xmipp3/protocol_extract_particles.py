@@ -315,24 +315,23 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _extractMicrograph(self, mic, doInvert, normalizeArgs, doBorders):
         """ Extract particles from one micrograph """
 
-        print("DEBUG: Extracting mic: ", mic.getFileName())
-        print("DEBUG:       doInvert: ", doInvert)
-        print("DEBUG:  normalizeArgs: ", normalizeArgs)
-        print("DEBUG:      doBorders: ", doBorders)
-
-        import time
-        time.sleep(3)
-        return
+        # print("DEBUG: Extracting mic: ", mic.getFileName())
+        # print("DEBUG:       doInvert: ", doInvert)
+        # print("DEBUG:  normalizeArgs: ", normalizeArgs)
+        # print("DEBUG:      doBorders: ", doBorders)
+        #
+        # import time
+        # time.sleep(3)
+        # return
 
         fnLast = mic.getFileName()
         baseMicName = pwutils.removeBaseExt(fnLast)
         outputRoot = str(self._getExtraPath(baseMicName))
-        fnPosFile = self._getExtraPath(baseMicName + ".pos")
+        fnPosFile = self._getMicPos(mic)
 
         # If it has coordinates extract the particles
         particlesMd = 'particles@%s' % fnPosFile
         boxSize = self.boxSize.get()
-        boxScale = self.getBoxScale()
 
         if exists(fnPosFile):
             # Create a list with micrographs operations (programs in xmipp) and
@@ -555,7 +554,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     # --------------------------- UTILS functions -------------------------------
     def _convertCoordinates(self, mic, coordList):
-        writeMicCoordinates(mic, coordList, scale=self.getBoxScale())
+        writeMicCoordinates(mic, coordList, self._getMicPos(mic),
+                            scale=self.getBoxScale())
     
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
@@ -660,3 +660,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         particle.setCoordinate(item)
         self.imgSet.append(particle)
         item._appendItem = False
+
+    def _getMicPos(self, mic):
+        """ Return the corresponding .pos file for a given micrograph. """
+        micBase = pwutils.removeBaseExt(mic.getFileName())
+        return self._getExtraPath(micBase + ".pos")

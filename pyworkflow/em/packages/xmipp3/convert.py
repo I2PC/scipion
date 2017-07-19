@@ -312,6 +312,9 @@ def micrographToCTFParam(mic, ctfparam):
     will be returned, if not, the new file. 
     """
     ctf = mic.getCTF()
+    print('DEBUG: micrographToCTFParam')
+    print('DEBUG:   Mic: ', mic.getObjId(), mic.getMicName())
+    print('DEBUG:   CTF: ', ctf)
     md = xmipp.MetaData()
     md.setColumnFormat(False)
     row = XmippMdRow()

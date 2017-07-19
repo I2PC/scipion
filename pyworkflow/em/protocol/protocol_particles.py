@@ -507,11 +507,17 @@ class ProtExtractParticles(ProtParticles):
         self.initialIds = self._insertInitialSteps()
         pwutils.makeFilePath(self._getAllDone())
         self.micDict = OrderedDict()
+        self.coordDict = {}
 
         # We need to clone the each individual micrograph from the input
         # to have them as separated instances
         micList = [mic.clone() for mic in self.getInputMicrographs()]
-        pickMicIds = self._insertNewMicsSteps(micList)
+        # Let's load coordinates for the already existing micrographs
+        # before the streaming
+        micDict, _ = self._loadInputList()
+        # self._loadCoords(micList, self.inputCoordinates.get())
+
+        pickMicIds = self._insertNewMicsSteps(micDict.values())
 
         self._insertFinalSteps(pickMicIds)
 
@@ -689,19 +695,14 @@ class ProtExtractParticles(ProtParticles):
                     del micDict[micKey]
 
         # Now load the coordinates for the newly detected micrographs
-        self._loadCoords()
+        self._loadInputCoords(micDict.values())
 
         return micDict, closed
 
-    def _loadCoords(self, micList):
-        """ Iterates the SetOfCoordinates and stores the (x,y) positions for
-         for a given list of micrographs.
+    def _loadCoords(self, micList, coordSet):
+        """ For each micrograph in micList, stores it corresponding
+        coordinates from the provided SetOfCoordinates.
         """
-        coordsFn = self.getCoords().getFileName()
-        self.debug("Loading input db: %s" % coordsFn)
-        coordSet = SetOfCoordinates(filename=coordsFn)
-        coordSet.loadAllProperties()
-
         for mic in micList:
             micId = mic.getObjId()
             coordList = []
@@ -709,6 +710,14 @@ class ProtExtractParticles(ProtParticles):
                 coordList.append(coord.clone()) # TODO: Check performance penalty of using this clone
             self.coordDict[micId] = coordList
 
+    def _loadInputCoords(self, micList):
+        """ Load coordinates from the input streaming.
+        """
+        coordsFn = self.getCoords().getFileName()
+        self.debug("Loading input db: %s" % coordsFn)
+        coordSet = SetOfCoordinates(filename=coordsFn)
+        coordSet.loadAllProperties()
+        self._loadCoords(micList, coordSet)
         streamClosed = coordSet.isStreamClosed()
         coordSet.close()
         self.debug("Closed db.")
