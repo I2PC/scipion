@@ -303,6 +303,12 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     #                         self.info('Moving %s -> %s' % (micPosCoord, micPos))
     #                         pwutils.moveFile(micPosCoord, micPos)
 
+    def _insertInitialSteps(self):
+        # Just overwrite this function to load some info
+        # before the actual processing
+        self._setupBasicProperties()
+
+        return []
 
     def _getExtractArgs(self):
         """ Should be implemented in sub-classes to define the argument
@@ -584,6 +590,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
         self.inputCoords = self.getCoords()
+        print("DEBUG: inputCoords", self.inputCoords, "class: ", self.inputCoords.getClassName())
+        mics = self.inputCoords.getMicrographs()
+        print("DEBUG: inputMics", mics, "class: ", mics.getClassName())
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)

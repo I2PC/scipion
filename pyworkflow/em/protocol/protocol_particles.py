@@ -30,7 +30,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from pyworkflow.object import Set
+from pyworkflow.object import Set, String
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.protocol import STATUS_NEW
 from pyworkflow.em.protocol import EMProtocol
@@ -504,18 +504,14 @@ class ProtExtractParticles(ProtParticles):
      """
 
     def _insertAllSteps(self):
+        # Let's load input data for the already existing micrographs
+        # before the streaming
+        micDict, _ = self._loadInputList()
+
         self.initialIds = self._insertInitialSteps()
         pwutils.makeFilePath(self._getAllDone())
         self.micDict = OrderedDict()
         self.coordDict = {}
-
-        # We need to clone the each individual micrograph from the input
-        # to have them as separated instances
-        micList = [mic.clone() for mic in self.getInputMicrographs()]
-        # Let's load coordinates for the already existing micrographs
-        # before the streaming
-        micDict, _ = self._loadInputList()
-        # self._loadCoords(micList, self.inputCoordinates.get())
 
         pickMicIds = self._insertNewMicsSteps(micDict.values())
 
@@ -716,6 +712,8 @@ class ProtExtractParticles(ProtParticles):
         coordsFn = self.getCoords().getFileName()
         self.debug("Loading input db: %s" % coordsFn)
         coordSet = SetOfCoordinates(filename=coordsFn)
+        # FIXME: Temporary to avoid loadAllPropertiesFail
+        coordSet._xmippMd = String()
         coordSet.loadAllProperties()
         self._loadCoords(micList, coordSet)
         streamClosed = coordSet.isStreamClosed()
