@@ -42,9 +42,9 @@ class PowerfitProtRigidFitViewer(ProtocolViewer):
         
     def _defineParams(self, form):
         form.addSection(label='Show Powerfit')
+        form.addParam('doShowFitTable', params.LabelParam, label="Display fitting quality")
         form.addParam('modelNumber', params.IntParam, default=1, label="Model to visualize")
         form.addParam('doShowFit', params.LabelParam, label="Display the fitting")
-        form.addParam('doShowFitTable', params.LabelParam, label="Display fitting quality")
     
     def _getVisualizeDict(self):
         return {'doShowFit': self._visualizeFit, 'doShowFitTable': self._visualizeFitTable}
