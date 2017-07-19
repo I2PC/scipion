@@ -731,10 +731,12 @@ class ProtExtractParticles(ProtParticles):
         def _modificationTime():
             """ Check the last modification time of any of the three possible
              input files. """
-            items = [self.inputCoordinates.get().getMicrographs()]
-
+            items = [self.inputCoordinates.get()]
+            
             if self._micsOther():
                 items.append(self.inputMicrographs.get())
+            else:
+                items.append(self.inputCoordinates.get().getMicrographs())
 
             if self._useCTF():
                 items.append(self.ctfRelations.get())
