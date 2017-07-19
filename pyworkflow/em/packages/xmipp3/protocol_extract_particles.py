@@ -42,8 +42,10 @@ from pyworkflow.em.protocol import ProtExtractParticles
 from pyworkflow.em.data import SetOfCoordinates
 from pyworkflow.em.constants import RELATION_CTF
 
-from convert import writeSetOfCoordinates, micrographToCTFParam
+from convert import (writeSetOfCoordinates, micrographToCTFParam,
+                     writeMicCoordinates)
 from xmipp3 import XmippProtocol
+
 
 # Rejection method constants
 REJECT_NONE = 0
@@ -552,10 +554,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return methodsMsgs
 
     # --------------------------- UTILS functions -------------------------------
-    def _convertCoordinates(self, coordSet, mic):
-        from pyworkflow.em.packages.xmipp3.convert import writeCoordinatesByMic
-        writeCoordinatesByMic(self._getExtraPath(), coordSet, mic,
-                              scale=self.getBoxScale())
+    def _convertCoordinates(self, mic, coordList):
+        writeMicCoordinates(mic, coordList, scale=self.getBoxScale())
     
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """

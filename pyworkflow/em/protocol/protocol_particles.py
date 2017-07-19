@@ -547,8 +547,15 @@ class ProtExtractParticles(ProtParticles):
         The micrograph will be passed as input to the _extractMicrograph
         function.
         """
+        # Retrieve the corresponding micrograph with this key and the
+        # associated list of coordinates
         mic = self.micDict[micKey]
-        self._convertCoordinates(coordSet, mic)
+        coordList = self.coordDict[mic.getObjId()]
+        self._convertCoordinates(mic, coordList)
+        # Release the list of coordinates for this micrograph since it
+        # will not be longer needed
+        del self.coordDict[mic.getObjId()]
+
         micDoneFn = self._getMicDone(mic)
         micFn = mic.getFileName()
 
@@ -565,14 +572,16 @@ class ProtExtractParticles(ProtParticles):
         # Mark this mic as finished
         open(micDoneFn, 'w').close()
 
+
     def _extractMicrograph(self, mic, *args):
         """ This function should be implemented by subclasses in order
         to picking the given micrograph. """
         pass
 
-    def _convertCoordinates(self, mic):
-        """ This function should be implemented by subclasses"""
+    def _convertCoordinates(self, mic, coordList):
+        """ This function should be implemented by subclasses. """
         pass
+
     # --------------------------- UTILS functions ----------------------------
     def _micsOther(self):
         """ Return True if other micrographs are used for extract.
@@ -612,7 +621,6 @@ class ProtExtractParticles(ProtParticles):
             micKey = mic.getMicName()
             if micKey not in self.micDict:
                 args = self._getExtractArgs()
-                coordList = self._loadCoords(mic)
                 stepId = self._insertExtractMicrographStep(mic, self.initialIds,
                                                            *args)
                 deps.append(stepId)
@@ -698,8 +706,8 @@ class ProtExtractParticles(ProtParticles):
             micId = mic.getObjId()
             coordList = []
             for coord in coordSet.iterItems(where='_micId=%s' % micId):
-                coordList.append(coord.getPosition())
-            self.coordsDict[micId] = coordList
+                coordList.append(coord.clone()) # TODO: Check performance penalty of using this clone
+            self.coordDict[micId] = coordList
 
         streamClosed = coordSet.isStreamClosed()
         coordSet.close()

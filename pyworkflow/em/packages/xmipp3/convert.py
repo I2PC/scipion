@@ -632,6 +632,7 @@ loop_
     f.write(s)
     return f
 
+
 def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     """ Write a pos file on metadata format for each micrograph 
     on the coordSet. 
@@ -694,37 +695,15 @@ def writeSetOfCoordinates(posDir, coordSet, ismanual=True, scale=1):
     return posDict.values()
 
 
-def writeCoordinatesByMic(posDir, coordSet, mic, boxSize=100, ismanual=True, scale=1):
-    
-    micIndex, micFileName = mic.getLocation()
-    micName = os.path.basename(micFileName)
-    
-    if micIndex != NO_INDEX:
-        micName = '%06d_at_%s' % (micIndex, micName)
-    
-    posFn = join(posDir, replaceBaseExt(micName, "pos"))
-    
-    f = None
-    lastMicId = None
-    c = 0
-    
-    f = openMd(posFn, ismanual=ismanual)
-    for coord in coordSet:
-        c += 1
-        if scale != 1:
-            x = coord.getX() * scale
-            y = coord.getY() * scale
-        else:
-            x = coord.getX()
-            y = coord.getY()
-        f.write(" %06d   1   %d  %d  %d   %06d\n"
-                % (coord.getObjId(), x, y, 1, mic.getObjId()))
-    
-    f.close()
-    
-    state = 'Manual' if ismanual else 'Supervised'
+def writeCoordsConfig(configFn, boxSize=100, isManual=True):
+    """ Write the config.xmd file needed for Xmipp extraction.
+    Params:
+        configFn: The filename were to store the configuration.
+        boxSize: the box size in pixels for extraction.
+        isManual: if particles are in 'Manual' or 'Supervised' state
+    """
+    state = 'Manual' if isManual else 'Supervised'
     # Write config.xmd metadata
-    configFn = join(posDir, 'config.xmd')
     md = xmipp.MetaData()
     # Write properties block
     objId = md.addObject()
@@ -732,6 +711,30 @@ def writeCoordinatesByMic(posDir, coordSet, mic, boxSize=100, ismanual=True, sca
     md.setValue(xmipp.MDL_PICKING_STATE, state, objId)
     md.write('properties@%s' % configFn)
 
+
+def writeMicCoordinates(mic, coordList, outputFn, isManual=True, scale=1):
+    """ Write the pos file as expected by Xmipp with the coordinates
+    of a given micrograph.
+    Params:
+        mic: input micrograph.
+        coordList: list of (x, y) pairs of the mic coordinates.
+        outputFn: output filename for the pos file .
+        isManual: if the coordinates are 'Manual' or 'Supervised'
+        scale: if we need to scale the coordinates to adjust to the mic.
+    """
+
+    f = openMd(outputFn, ismanual=isManual)
+
+    for coord in coordList:
+        x, y = coord.getPosition()
+        if scale != 1:
+            x *= scale
+            y *= scale
+        f.write(" %06d   1   %d  %d  %d   %06d\n"
+                % (coord.getObjId(), x, y, 1, mic.getObjId()))
+    
+    f.close()
+    
 
 def readSetOfCoordinates(outputDir, micSet, coordSet):
     """ Read from Xmipp .pos files.
