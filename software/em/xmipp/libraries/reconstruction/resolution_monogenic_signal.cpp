@@ -262,7 +262,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 
 	for(size_t j=0; j<XSIZE(myfftV); ++j)
 	{
-		FFT_IDX2DIGFREQ(j,YSIZE(amplitude),ux);
+		FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
 		for(size_t k=0; k<ZSIZE(myfftV); ++k)
 		{
 			for(size_t i=0; i<YSIZE(myfftV); ++i)
