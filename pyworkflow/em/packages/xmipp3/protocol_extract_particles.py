@@ -39,11 +39,11 @@ from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_FINISHED)
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtExtractParticles
-from pyworkflow.em.data import SetOfCoordinates
+from pyworkflow.em.data import SetOfCoordinates, Particle
 from pyworkflow.em.constants import RELATION_CTF
 
 from convert import (writeSetOfCoordinates, micrographToCTFParam,
-                     writeMicCoordinates)
+                     writeMicCoordinates, xmippToLocation)
 from xmipp3 import XmippProtocol
 
 
@@ -320,16 +320,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
     def _extractMicrograph(self, mic, doInvert, normalizeArgs, doBorders):
         """ Extract particles from one micrograph """
-
-        # print("DEBUG: Extracting mic: ", mic.getFileName())
-        # print("DEBUG:       doInvert: ", doInvert)
-        # print("DEBUG:  normalizeArgs: ", normalizeArgs)
-        # print("DEBUG:      doBorders: ", doBorders)
-        #
-        # import time
-        # time.sleep(3)
-        # return
-
         fnLast = mic.getFileName()
         baseMicName = pwutils.removeBaseExt(fnLast)
         outputRoot = str(self._getExtraPath(baseMicName))
@@ -454,42 +444,42 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         
         self.runJob("xmipp_image_sort_by_statistics", args)
     
-    def createOutputStep(self):
-        # TODO: Maybe this can be generalized into the base function.
-        # Create the SetOfImages object on the database
-        fnImages = self._getOutputImgMd()
-        # Create output SetOfParticles
-        self.imgSet = self._createSetOfParticles()
-        self.imgSet.copyInfo(self.inputMics)
-        # set coords from the input, will update later if needed
-        self.imgSet.setCoordinates(self.inputCoords)
-        coords2 = SetOfCoordinates()
-
-        if self.doFlip:
-            self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
-
-        self.imgSet.setSamplingRate(self._getNewSampling())
-        self.imgSet.setHasCTF(self._useCTF())
-    
-        # a SetMdIterator is needed because in some cases, the number of
-        # items in SetOfCoordinates and in the metadata could be different.
-        iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
-                                    updateItemCallback=self.createParticles,
-                                    skipDisabled=True)
-        # THis use case is special, because copyItems method is designed to
-        # modified the same type of object of the input set. Here, a new type
-        #  (SetOfParticles) is generated, and its needed an auxiliary set of
-        # coordinates and it not stored.
-        coordsAux = SetOfCoordinates()
-        coordsAux.copyItems(self.inputCoords,
-                            updateItemCallback=iterator.updateItem,
-                            copyDisabled=True)
-
-        self._storeMethodsInfo(fnImages)
-        self._defineOutputs(outputParticles=self.imgSet)
-        self._defineSourceRelation(self.inputCoordinates, self.imgSet)
-        if self._useCTF():
-            self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
+    # def createOutputStep(self):
+    #     # TODO: Maybe this can be generalized into the base function.
+    #     # Create the SetOfImages object on the database
+    #     fnImages = self._getOutputImgMd()
+    #     # Create output SetOfParticles
+    #     self.imgSet = self._createSetOfParticles()
+    #     self.imgSet.copyInfo(self.inputMics)
+    #     # set coords from the input, will update later if needed
+    #     self.imgSet.setCoordinates(self.inputCoords)
+    #     coords2 = SetOfCoordinates()
+    #
+    #     if self.doFlip:
+    #         self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
+    #
+    #     self.imgSet.setSamplingRate(self._getNewSampling())
+    #     self.imgSet.setHasCTF(self._useCTF())
+    #
+    #     # a SetMdIterator is needed because in some cases, the number of
+    #     # items in SetOfCoordinates and in the metadata could be different.
+    #     iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
+    #                                 updateItemCallback=self.createParticles,
+    #                                 skipDisabled=True)
+    #     # THis use case is special, because copyItems method is designed to
+    #     # modified the same type of object of the input set. Here, a new type
+    #     #  (SetOfParticles) is generated, and its needed an auxiliary set of
+    #     # coordinates and it not stored.
+    #     coordsAux = SetOfCoordinates()
+    #     coordsAux.copyItems(self.inputCoords,
+    #                         updateItemCallback=iterator.updateItem,
+    #                         copyDisabled=True)
+    #
+    #     self._storeMethodsInfo(fnImages)
+    #     self._defineOutputs(outputParticles=self.imgSet)
+    #     self._defineSourceRelation(self.inputCoordinates, self.imgSet)
+    #     if self._useCTF():
+    #         self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -590,9 +580,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
         self.inputCoords = self.getCoords()
-        print("DEBUG: inputCoords", self.inputCoords, "class: ", self.inputCoords.getClassName())
         mics = self.inputCoords.getMicrographs()
-        print("DEBUG: inputMics", mics, "class: ", mics.getClassName())
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
@@ -670,7 +658,39 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.imgSet.append(particle)
         item._appendItem = False
 
+    def readPartsFromMics(self, micList, outputParts):
+        """ Read the particles extract for the given list of micrographs
+        and update the outputParts set with new items.
+        """
+        p = Particle()
+
+        for mic in micList:
+            # We need to make this dict because there is no ID in the .xmd file
+            coordDict = {}
+            for coord in self.coordDict[mic.getObjId()]:
+                coordDict[coord.getPosition()] = coord
+
+            for row in md.iterRows(self._getMicXmd(mic)):
+                pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
+                coord = coordDict.get(pos, None)
+                if coord is not None:
+                    p.copyObjId(coord)
+                    p.setLocation(xmippToLocation(row.getValue(md.MDL_IMAGE)))
+                    p.setCoordinate(coord)
+                    p.setMicId(mic.getObjId())
+                    outputParts.append(p)
+
+            # Release the list of coordinates for this micrograph since it
+            # will not be longer needed
+            del self.coordDict[mic.getObjId()]
+
     def _getMicPos(self, mic):
         """ Return the corresponding .pos file for a given micrograph. """
         micBase = pwutils.removeBaseExt(mic.getFileName())
         return self._getExtraPath(micBase + ".pos")
+
+    def _getMicXmd(self, mic):
+        """ Return the corresponding .xmd with extracted particles
+        for this micrograph. """
+        micBase = pwutils.removeBaseExt(mic.getFileName())
+        return self._getExtraPath(micBase + ".xmd")

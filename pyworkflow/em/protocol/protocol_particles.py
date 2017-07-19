@@ -512,7 +512,7 @@ class ProtExtractParticles(ProtParticles):
         self.micDict = OrderedDict()
         self.coordDict = {}
 
-        micDict, _ = self._loadInputList()
+        micDict, self.streamClosed = self._loadInputList()
 
         self.initialIds = self._insertInitialSteps()
 
@@ -557,9 +557,6 @@ class ProtExtractParticles(ProtParticles):
         mic = self.micDict[micKey]
         coordList = self.coordDict[mic.getObjId()]
         self._convertCoordinates(mic, coordList)
-        # Release the list of coordinates for this micrograph since it
-        # will not be longer needed
-        del self.coordDict[mic.getObjId()]
 
         micDoneFn = self._getMicDone(mic)
         micFn = mic.getFileName()
@@ -667,7 +664,8 @@ class ProtExtractParticles(ProtParticles):
                              lambda ctf: ctf.getMicrograph().getMicName())
 
         # Load new micrographs coming from the coordinates
-        micDict, closed = _loadMics(self.inputCoordinates.get().getMicrographs())
+        coordMics = self.inputCoordinates.get().getMicrographs()
+        micDict, closed = _loadMics(coordMics)
         # If we are extracting from other micrographs, then we will use
         # the other micrographs and filter those that
         if self._micsOther():
@@ -694,22 +692,11 @@ class ProtExtractParticles(ProtParticles):
                     del micDict[micKey]
 
         # Now load the coordinates for the newly detected micrographs
-        self._loadInputCoords(micDict.values())
+        closed = closed and self._loadInputCoords(micDict)
 
         return micDict, closed
 
-    def _loadCoords(self, micList, coordSet):
-        """ For each micrograph in micList, stores it corresponding
-        coordinates from the provided SetOfCoordinates.
-        """
-        for mic in micList:
-            micId = mic.getObjId()
-            coordList = []
-            for coord in coordSet.iterItems(where='_micId=%s' % micId):
-                coordList.append(coord.clone()) # TODO: Check performance penalty of using this clone
-            self.coordDict[micId] = coordList
-
-    def _loadInputCoords(self, micList):
+    def _loadInputCoords(self, micDict):
         """ Load coordinates from the input streaming.
         """
         coordsFn = self.getCoords().getFileName()
@@ -718,7 +705,16 @@ class ProtExtractParticles(ProtParticles):
         # FIXME: Temporary to avoid loadAllPropertiesFail
         coordSet._xmippMd = String()
         coordSet.loadAllProperties()
-        self._loadCoords(micList, coordSet)
+        for micKey, mic in micDict.iteritems():
+            micId = mic.getObjId()
+            coordList = []
+            for coord in coordSet.iterItems(where='_micId=%s' % micId):
+                # TODO: Check performance penalty of using this clone
+                coordList.append(coord.clone())
+            if coordList:
+                self.coordDict[micId] = coordList
+            else:
+                del micDict[micKey]
         streamClosed = coordSet.isStreamClosed()
         coordSet.close()
         self.debug("Closed db.")
@@ -769,35 +765,33 @@ class ProtExtractParticles(ProtParticles):
             self.updateSteps()
 
     def _checkNewOutput(self):
-        # FIXME: Implement the real check new output
-        return
-
-
         if getattr(self, 'finished', False):
             return
 
         # Load previously done items (from text file)
         doneList = self._readDoneList()
         # Check for newly done items
-        newDone = [m for m in self.listOfMics
+        newDone = [m for m in self.micDict.values()
                    if m.getObjId() not in doneList and self._isMicDone(m)]
 
         # Update the file with the newly done mics
         # or exit from the function if no new done mics
+        inputLen = len(self.micDict)
         self.debug('_checkNewOutput: ')
-        self.debug('   listOfMics: %s, doneList: %s, newDone: %s'
-                   % (len(self.listOfMics), len(doneList), len(newDone)))
+        self.debug('   input: %s, doneList: %s, newDone: %s'
+                   % (inputLen, len(doneList), len(newDone)))
 
         firstTime = len(doneList) == 0
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
-        self.finished = self.streamClosed and allDone == len(self.listOfMics)
+        self.finished = self.streamClosed and allDone == inputLen
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
         if newDone:
-            newDoneUpdated = self._updateOutputPartSet(newDone, streamMode)
-            self._writeDoneList(newDoneUpdated)
+            self._updateOutputPartSet(newDone, streamMode)
+
+            self._writeDoneList(newDone)
         elif not self.finished:
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
@@ -807,21 +801,13 @@ class ProtExtractParticles(ProtParticles):
         self.debug('   finished: %s ' % self.finished)
         self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
         self.debug('        allDone (%s) == len(self.listOfMics (%s)'
-                   % (allDone, len(self.listOfMics)))
+                   % (allDone, inputLen))
         self.debug('   streamMode: %s' % streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(STATUS_NEW)
-
-    def _micIsReady(self, mic):
-        """ Function to check if a micrograph (although reported done)
-        is ready to update the coordinates from it. An practical use of this
-        function will be for protocols that need to wait for the CTF of that
-        micrograph to be ready as well.
-        """
-        return True
 
     def readCoordsFromMics(self, outputDir, micDoneList, outputCoords):
         """ This method should be implemented in subclasses to read
@@ -830,32 +816,34 @@ class ProtExtractParticles(ProtParticles):
         pass
 
     def _updateOutputPartSet(self, micList, streamMode):
-        micDoneList = [mic for mic in micList if self._micIsReady(mic)]
+        outputName = 'outputParticles'
+        outputParts = getattr(self, outputName, None)
+        firstTime = True
 
-        # Do no proceed if there is not micrograph ready
-        if not micDoneList:
-            return []
+        if outputParts is None:
+            outputParts = self._createSetOfParticles()
+            outputParts.copyInfo(self.getInputMicrographs())
+            outputParts.setCoordinates(self.getCoords())
+            if self.doFlip:
+                outputParts.setIsPhaseFlipped(
+                    not self.inputMics.isPhaseFlipped())
 
-        # TODO: Read particles from output coordinates and update output
-        return
-
-        outputName = 'outputCoordinates'
-        outputDir = self.getCoordsDir()
-        outputCoords = getattr(self, outputName, None)
-        micSet = self.getInputMicrographs()
-
-        # If there are not outputCoordinates yet, it means that is the first
-        # time we are updating output coordinates, so we need to first create
-        # the output set
-        if outputCoords is None:
-            outputCoords = self._createSetOfCoordinates(micSet)
+            outputParts.setSamplingRate(self._getNewSampling())
+            outputParts.setHasCTF(self._useCTF())
         else:
-            outputCoords.enableAppend()
+            firstTime = False
+            outputParts.enableAppend()
 
-        self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
-        self._updateOutputSet(outputName, outputCoords, streamMode)
+        self.readPartsFromMics(micList, outputParts)
+        self._updateOutputSet(outputName, outputParts, streamMode)
 
-        return micDoneList
+        if firstTime:
+            # self._storeMethodsInfo(fnImages)
+            self._defineSourceRelation(self.inputCoordinates, outputParts)
+            if self._useCTF():
+                self._defineSourceRelation(self.ctfRelations, outputParts)
+            if self._micsOther():
+                self._defineSourceRelation(self.inputMicrographs, outputParts)
 
     def _getMicDone(self, mic):
         return self._getExtraPath('DONE', 'mic_%06d.TXT' % mic.getObjId())
@@ -903,4 +891,5 @@ class ProtExtractParticles(ProtParticles):
         return None
 
     def createOutputStep(self):
-        self._createOutput(self._getExtraPath())
+        pass # Nothing to do now
+        #self._createOutput(self._getExtraPath())
