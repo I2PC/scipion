@@ -493,7 +493,9 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         return None
 
     def createOutputStep(self):
-        self._createOutput(self._getExtraPath())
+        # Not really required now
+        #self._createOutput(self._getExtraPath())
+        pass
 
 
 
@@ -506,12 +508,13 @@ class ProtExtractParticles(ProtParticles):
     def _insertAllSteps(self):
         # Let's load input data for the already existing micrographs
         # before the streaming
-        micDict, _ = self._loadInputList()
-
-        self.initialIds = self._insertInitialSteps()
         pwutils.makeFilePath(self._getAllDone())
         self.micDict = OrderedDict()
         self.coordDict = {}
+
+        micDict, _ = self._loadInputList()
+
+        self.initialIds = self._insertInitialSteps()
 
         pickMicIds = self._insertNewMicsSteps(micDict.values())
 
