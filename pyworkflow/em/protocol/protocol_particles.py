@@ -508,6 +508,7 @@ class ProtExtractParticles(ProtParticles):
     def _insertAllSteps(self):
         # Let's load input data for the already existing micrographs
         # before the streaming
+        self.debug(">>> _insertAllSteps ")
         pwutils.makeFilePath(self._getAllDone())
         self.micDict = OrderedDict()
         self.coordDict = {}
@@ -664,11 +665,13 @@ class ProtExtractParticles(ProtParticles):
                              lambda ctf: ctf.getMicrograph().getMicName())
 
         # Load new micrographs coming from the coordinates
+        self.debug("Loading Mics from Coords.")
         coordMics = self.inputCoordinates.get().getMicrographs()
         micDict, closed = _loadMics(coordMics)
         # If we are extracting from other micrographs, then we will use
         # the other micrographs and filter those that
         if self._micsOther():
+            self.debug("Loading other Mics.")
             oMicDict, oMicClosed = _loadMics(self.inputMicrographs.get())
             closed = closed and oMicClosed
             for micKey, mic in micDict.iteritems():
@@ -683,6 +686,7 @@ class ProtExtractParticles(ProtParticles):
                     del micDict[micKey]
 
         if self._useCTF():
+            self.debug("Loading CTFs.")
             ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
             closed = closed and ctfClosed
             for micKey, mic in micDict.iteritems():
@@ -691,8 +695,10 @@ class ProtExtractParticles(ProtParticles):
                 else:
                     del micDict[micKey]
 
+        self.debug("Loading Coords.")
         # Now load the coordinates for the newly detected micrographs
-        closed = closed and self._loadInputCoords(micDict)
+        coordClosed = self._loadInputCoords(micDict)
+        closed = closed and coordClosed
 
         return micDict, closed
 
@@ -705,12 +711,16 @@ class ProtExtractParticles(ProtParticles):
         # FIXME: Temporary to avoid loadAllPropertiesFail
         coordSet._xmippMd = String()
         coordSet.loadAllProperties()
+
         for micKey, mic in micDict.iteritems():
             micId = mic.getObjId()
             coordList = []
+            self.debug("Loading coords for mic: %s (%s)" % (micId, micKey))
             for coord in coordSet.iterItems(where='_micId=%s' % micId):
                 # TODO: Check performance penalty of using this clone
                 coordList.append(coord.clone())
+            self.debug("   Coords found: %s" % len(coordList))
+
             if coordList:
                 self.coordDict[micId] = coordList
             else:
@@ -723,6 +733,7 @@ class ProtExtractParticles(ProtParticles):
 
 
     def _checkNewInput(self):
+        self.debug(">>> _checkNewInput ")
 
         def _modificationTime():
             """ Check the last modification time of any of the three possible
