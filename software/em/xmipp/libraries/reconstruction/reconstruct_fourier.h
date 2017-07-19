@@ -168,7 +168,7 @@ public: // Internal members
     Matrix1D<double>  Fourier_blob_table;
 
     // Table with blob values, squared samplinf
-    Matrix1D<double> blobTableSqrt, fourierBlobTableSqrt;
+    Matrix1D<double> blobTableSqrt;
 
     // Inverse of the delta and deltaFourier used in the tables
     //double iDelta,

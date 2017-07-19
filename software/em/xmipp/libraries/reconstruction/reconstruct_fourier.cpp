@@ -225,7 +225,6 @@ void ProgRecFourier::produceSideinfo()
 
     // Build a table of blob values
     blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
-    fourierBlobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
     Fourier_blob_table.resize(BLOB_TABLE_SIZE_SQRT);
 
     struct blobtype blobFourier,blobnormalized;
@@ -2415,6 +2414,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
     release(outputVolume, size+1, size+1);
     release(outputWeight, size+1, size+1);
     free(statusArray);
+    blobTableSqrt.clear();
 #if DEBUG_DUMP > 0
 	std::cout << "done" << std::endl;
     print(VoutFourier, true);
@@ -2552,6 +2552,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     barrier_wait( &barrier );
 
     transformerVol.inverseFourierTransform();
+    transformerVol.clear();
     CenterFFT(Vout(),false);
 
     // Correct by the Fourier transform of the blob
