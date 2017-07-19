@@ -110,7 +110,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
         volume.setFileName(self._getExtraPath('volume.mrc'))
         volume.setSamplingRate(self.inputVol.get().getSamplingRate())
         self._defineOutputs(outputVolume=volume)
-        self._defineSourceRelation(self.inputVol.get(),volume)
+        self._defineSourceRelation(self.inputVol,volume)
         
         fnOutput = self._getExtraPath("solutions.out")
         qualifiers = {}
@@ -133,6 +133,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
                 pdb._powerfit_Fish_z = qualifiers[fnPdb][1]
                 pdb._powerfit_rel_z = qualifiers[fnPdb][2]
                 setOfPDBs.append(pdb)
+        
                 
         self._defineOutputs(outputPDBs=setOfPDBs)
         self._defineSourceRelation(self.inputVol, setOfPDBs)
