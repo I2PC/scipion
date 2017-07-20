@@ -470,64 +470,6 @@
 
         };
 
-//        function addCTFDefocusChart(){
-//            // Make monochrome colors and set them as default for all pies
-//            Highcharts.getOptions().plotOptions.pie.colors = (function () {
-//                var colors = [],
-//                    base = Highcharts.getOptions().colors[0], i;
-//
-//                for (i = 0; i < 10; i += 1) {
-//                    // Start out with a darkened base color (negative brighten), and end
-//                    // up with a much brighter color
-//                    colors.push(Highcharts.Color(base).brighten((i - 3) / 7).get());
-//                }
-//                return colors;
-//            }());
-//
-//            // find index of the out of range slices, set their color to red-ish
-//            for(i=0; i<report.ctfData.defocusCoverage.length; i++){
-//                if (report.ctfData.defocusCoverage[i]['name'].indexOf("l.") === 0){
-//                    Highcharts.getOptions().plotOptions.pie.colors[i] ='#f45b5b';
-//                }else if (report.ctfData.defocusCoverage[i]['name'].indexOf("g.") === 0){
-//                    Highcharts.getOptions().plotOptions.pie.colors[i] = '#ad4040';
-//                }
-//            }
-//
-//            // Build the chart
-//            Highcharts.chart('defocusPie', {
-//                chart: {
-//                    plotBackgroundColor: null,
-//                    plotBorderWidth: null,
-//                    plotShadow: false,
-//                    type: 'pie'
-//                },
-//                title: {
-//                    text: 'Defocus coverage'
-//                },
-//                tooltip: {
-//                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%%</b>'
-//                },
-//                plotOptions: {
-//                    pie: {
-//                        allowPointSelect: true,
-//                        cursor: 'pointer',
-//                        dataLabels: {
-//                            enabled: true,
-//                            format: '<b>{point.name}</b>: {point.percentage:.1f} %%',
-//                            style: {
-//                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-//                            }
-//                        }
-//                    }
-//                },
-//                series: [{
-//                    name: 'Defocus coverage',
-//                    data: report.ctfData.defocusCoverage
-//                }]
-//            });
-//
-//        };
-
         function addSystemChart () {
             
             $('#systemChart').highcharts({
