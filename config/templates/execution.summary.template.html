@@ -5,6 +5,7 @@
         <!--highcharts-->
         <SCRIPT src="http://code.highcharts.com/highcharts.js"></SCRIPT>
         <SCRIPT src="https://code.highcharts.com/modules/exporting.js"></SCRIPT>
+        <SCRIPT src="https://code.highcharts.com/modules/heatmap.js"></SCRIPT>
         <!--bootstrap-->
         <SCRIPT src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></SCRIPT>
         <LINK rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -369,63 +370,163 @@
 
         };
 
-        function addCTFDefocusChart(){
-            // Make monochrome colors and set them as default for all pies
-            Highcharts.getOptions().plotOptions.pie.colors = (function () {
-                var colors = [],
-                    base = Highcharts.getOptions().colors[0], i;
 
+
+        function addDefocusCoverage(){
+            var defocusData = [];
+            var counts      = [];
+            var red         = '#f45b5b';
+            var blue        = '#7cb5ec';
+            var white       = '#FFFFFF';
+            function getShades (baseColor){
+                var colors = []
                 for (i = 0; i < 10; i += 1) {
                     // Start out with a darkened base color (negative brighten), and end
                     // up with a much brighter color
-                    colors.push(Highcharts.Color(base).brighten((i - 3) / 7).get());
+                    colors.unshift(Highcharts.Color(baseColor).brighten((i - 3) / 7).get());
                 }
                 return colors;
-            }());
-
-            // find index of the out of range slices, set their color to red-ish
-            for(i=0; i<report.ctfData.defocusCoverage.length; i++){
-                if (report.ctfData.defocusCoverage[i]['name'].indexOf("l.") === 0){
-                    Highcharts.getOptions().plotOptions.pie.colors[i] ='#f45b5b';
-                }else if (report.ctfData.defocusCoverage[i]['name'].indexOf("g.") === 0){
-                    Highcharts.getOptions().plotOptions.pie.colors[i] = '#ad4040';
-                }
             }
+            var redShades   = getShades(red);
+            var blueShades  = getShades(blue);
+            var maxCount = Math.max.apply(Math, report.ctfData.defocusCoverage.map(function(v) {
+                                                                                      return v[0];
+                                                                                    }));
+            var minCount = Math.min.apply(Math, report.ctfData.defocusCoverage.map(function(v) {
+                                                                                      return v[0];
+                                                                                    }));
+            function getColor(countValue){
+                var colorIndex = 0;
+                var color;
+                if (countValue<0){
+                    colorIndex = Math.ceil(countValue * redShades.length / minCount)-1;
+                    color = redShades[colorIndex];
+                }else if (countValue > 0){
+                    colorIndex = Math.ceil(countValue * blueShades.length / maxCount)-1;
+                    color = blueShades[colorIndex];
+                }else if (countValue === 0){
+                    color = white;
+                }
+                return color
+            }
+            $.each(report.ctfData.defocusCoverage, function(index, defocusTuple){
+                defocusData.push({x: 0,
+                                  y: index,
+                                  value: defocusTuple[0],
+                                  name:  defocusTuple[1],
+                                  color: getColor(defocusTuple[0])
+                                    });
+                counts.push(defocusTuple[0]);
+            });
 
-            // Build the chart
             Highcharts.chart('defocusPie', {
+
                 chart: {
-                    plotBackgroundColor: null,
-                    plotBorderWidth: null,
-                    plotShadow: false,
-                    type: 'pie'
+                    type: 'heatmap',
+                    marginTop: 40,
+                    marginBottom: 80,
+                    plotBorderWidth: 1
                 },
+
                 title: {
-                    text: 'Defocus coverage'
+                    text: 'Defocus Coverage'
                 },
+
+                xAxis: {
+                    categories: ['DefocusU counts']
+                },
+
+                yAxis: {
+                    categories: report.ctfData.defocusCoverage.map(function(value) { return value[1]; }),
+                    title: null
+                },
+
                 tooltip: {
-                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%%</b>'
-                },
-                plotOptions: {
-                    pie: {
-                        allowPointSelect: true,
-                        cursor: 'pointer',
-                        dataLabels: {
-                            enabled: true,
-                            format: '<b>{point.name}</b>: {point.percentage:.1f} %%',
-                            style: {
-                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-                            }
-                        }
+                    formatter: function () {
+                        return '<b>' + this.series.xAxis.categories[this.point.x] + '</b><br><b>' +
+                            this.point.value + '</b> mics on range <br><b>' + this.series.yAxis.categories[this.point.y] + '</b>';
                     }
                 },
+
                 series: [{
-                    name: 'Defocus coverage',
-                    data: report.ctfData.defocusCoverage
-                }]
+                    name: 'Defocus Coverage',
+                    borderWidth: 1,
+                    data: defocusData,
+                    dataLabels: {
+                        enabled: true,
+                        color: '#000000',
+                        formatter: function ()  {
+                                    if(this.point.value>=0){
+                                        return this.point.value
+                                    }else{
+                                        return -this.point.value
+                                    }
+                                  }
+                   }
+                    }
+                ]
+
             });
 
         };
+
+//        function addCTFDefocusChart(){
+//            // Make monochrome colors and set them as default for all pies
+//            Highcharts.getOptions().plotOptions.pie.colors = (function () {
+//                var colors = [],
+//                    base = Highcharts.getOptions().colors[0], i;
+//
+//                for (i = 0; i < 10; i += 1) {
+//                    // Start out with a darkened base color (negative brighten), and end
+//                    // up with a much brighter color
+//                    colors.push(Highcharts.Color(base).brighten((i - 3) / 7).get());
+//                }
+//                return colors;
+//            }());
+//
+//            // find index of the out of range slices, set their color to red-ish
+//            for(i=0; i<report.ctfData.defocusCoverage.length; i++){
+//                if (report.ctfData.defocusCoverage[i]['name'].indexOf("l.") === 0){
+//                    Highcharts.getOptions().plotOptions.pie.colors[i] ='#f45b5b';
+//                }else if (report.ctfData.defocusCoverage[i]['name'].indexOf("g.") === 0){
+//                    Highcharts.getOptions().plotOptions.pie.colors[i] = '#ad4040';
+//                }
+//            }
+//
+//            // Build the chart
+//            Highcharts.chart('defocusPie', {
+//                chart: {
+//                    plotBackgroundColor: null,
+//                    plotBorderWidth: null,
+//                    plotShadow: false,
+//                    type: 'pie'
+//                },
+//                title: {
+//                    text: 'Defocus coverage'
+//                },
+//                tooltip: {
+//                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%%</b>'
+//                },
+//                plotOptions: {
+//                    pie: {
+//                        allowPointSelect: true,
+//                        cursor: 'pointer',
+//                        dataLabels: {
+//                            enabled: true,
+//                            format: '<b>{point.name}</b>: {point.percentage:.1f} %%',
+//                            style: {
+//                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+//                            }
+//                        }
+//                    }
+//                },
+//                series: [{
+//                    name: 'Defocus coverage',
+//                    data: report.ctfData.defocusCoverage
+//                }]
+//            });
+//
+//        };
 
         function addSystemChart () {
             
@@ -492,8 +593,7 @@
             // we force it
             var systemChart = $('#systemChart').highcharts()
             systemChart.showResetZoom();
-            
-            
+
         };
 
         function addMicTable(){
@@ -502,9 +602,10 @@
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
                 var psdPath = report.ctfData.imgPsdThumbs[index];
                 var shiftPlotPath = report.ctfData.imgShiftCopyPath[index];
-                var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img src={0} alt="{0}"></a></div>'
-                var rowValues = [imgHtml.format(imgMicPath), imgHtml.format(psdPath),
-                                 imgHtml.format(shiftPlotPath),report.ctfData.defocusU[index],
+                var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img width={1} src={0} alt="{0}"></a></div>'
+                var imgWidth = Math.floor($('#content').width() * 0.2);
+                var rowValues = [imgHtml.format(imgMicPath, imgWidth), imgHtml.format(psdPath,imgWidth),
+                                 imgHtml.format(shiftPlotPath,imgWidth),report.ctfData.defocusU[index],
                                  report.ctfData.defocusV[index], report.ctfData.ratio[index],
                                  report.ctfData.astigmatism[index]
                                 ];
@@ -513,6 +614,7 @@
 
             $('#micTable').DataTable( {
                 data: dataset,
+                "scrollX": true,
                 columns: [
                     {title: "Micrograph"},
                     {title: "PsdFile"},
@@ -523,7 +625,6 @@
                     {title: "Astigmatism"}
                 ]
             });
-            $(".thumbnail").width(Math.floor($('#content').width() * 0.2));
 
         };
 
@@ -531,7 +632,7 @@
             addAcquisition();
             addRuns();
             addCTFChart();
-            addCTFDefocusChart();
+            addDefocusCoverage();
             addSystemChart();
             addMicTable();
         };

@@ -29,7 +29,7 @@
 import json
 import os
 from os.path import join, exists, abspath, basename
-from numpy import histogram
+from numpy import histogram, array, insert
 from operator import itemgetter
 
 from pyworkflow import getTemplatePath
@@ -69,7 +69,7 @@ class ReportHtml:
         if self.protocol._log is not None:
             self.protocol.info(msg)
         else:
-            print msg
+            print(msg)
 
     @staticmethod
     def generateReportImages(imgPathList, targetDir, imageType, relPath=None, ext="png", **kwargs):
@@ -106,10 +106,12 @@ class ReportHtml:
 
         return outputPaths
 
-    def processDefocusValues(self, defocusList, numSlices=8):
+    def processDefocusValues(self, defocusList):
         maxDefocus = self.protocol.maxDefocus.get()
         minDefocus = self.protocol.minDefocus.get()
-        values, binEdges = histogram(defocusList, bins=numSlices, range=(minDefocus, maxDefocus))
+        edges = array(range(0, int(maxDefocus)+1, 2500))
+        edges = insert(edges[edges > minDefocus], 0, minDefocus)
+        values, binEdges = histogram(defocusList, bins=edges, range=(minDefocus, maxDefocus))
         belowThresh = 0
         aboveThresh = 0
         labels = ["%d-%d" % (x[0], x[1]) for x in zip(binEdges, binEdges[1:])]
@@ -119,12 +121,10 @@ class ReportHtml:
             elif v > maxDefocus:
                 aboveThresh += 1
         zipped = zip(values, labels)
-        zipped.extend([(3, "l.t. %d" % minDefocus),
-                       (2, "g.t. %d" % maxDefocus)])
-        zipped.sort(key=itemgetter(0), reverse=True)
-        defocusCoverage = [{'name': z[1], 'y': z[0]*100/len(zipped)} for z in zipped]
+        zipped[:0] = [(-belowThresh, "< %d" % minDefocus)]  # Negative values for highcharts heatmap color scale
+        zipped.append((-aboveThresh, "> %d" % maxDefocus))
 
-        return defocusCoverage
+        return zipped
 
     def generate(self, finished):
         reportTemplate = self.getHTMLReportText()
