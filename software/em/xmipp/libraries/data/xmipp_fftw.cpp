@@ -124,60 +124,65 @@ const MultidimArray<std::complex<double> > &FourierTransformer::getComplex() con
 
 void FourierTransformer::setReal(MultidimArray<double> &input)
 {
-    bool recomputePlan=false;
+    bool updatePlan=false;
     if (fReal==NULL)
-        recomputePlan=true;
+    	updatePlan=true;
     else if (dataPtr!=MULTIDIM_ARRAY(input))
-        recomputePlan=true;
+    	updatePlan=true;
     else
-        recomputePlan=!(fReal->sameShape(input));
+    	updatePlan=!(fReal->sameShape(input));
     fFourier.resizeNoCopy(ZSIZE(input),YSIZE(input),XSIZE(input)/2+1);
     fReal=&input;
 
-    if (recomputePlan)
+    if (updatePlan)
     {
-        int ndim=3;
-        if (ZSIZE(input)==1)
-        {
-            ndim=2;
-            if (YSIZE(input)==1)
-                ndim=1;
-        }
-        int N[3];
-        switch (ndim)
-        {
-        case 1:
-            N[0]=XSIZE(input);
-            break;
-        case 2:
-            N[0]=YSIZE(input);
-            N[1]=XSIZE(input);
-            break;
-        case 3:
-            N[0]=ZSIZE(input);
-            N[1]=YSIZE(input);
-            N[2]=XSIZE(input);
-            break;
-        }
-
-        pthread_mutex_lock(&fftw_plan_mutex);
-        if (fPlanForward!=NULL)
-            fftw_destroy_plan(fPlanForward);
-        fPlanForward=NULL;
-        fPlanForward = fftw_plan_dft_r2c(ndim, N, MULTIDIM_ARRAY(*fReal),
-                                         (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_ESTIMATE);
-        if (fPlanBackward!=NULL)
-            fftw_destroy_plan(fPlanBackward);
-        fPlanBackward=NULL;
-        fPlanBackward = fftw_plan_dft_c2r(ndim, N,
-                                          (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
-                                          FFTW_ESTIMATE);
-        if (fPlanForward == NULL || fPlanBackward == NULL)
-            REPORT_ERROR(ERR_PLANS_NOCREATE, "FFTW plans cannot be created");
-        dataPtr=MULTIDIM_ARRAY(*fReal);
-        planCreated = true;
-        pthread_mutex_unlock(&fftw_plan_mutex);
+        recomputePlanR2C();
     }
+}
+
+void FourierTransformer::recomputePlanR2C()
+{
+	int ndim=3;
+	if (ZSIZE(*fReal)==1)
+	{
+		ndim=2;
+		if (YSIZE(*fReal)==1)
+			ndim=1;
+	}
+	int N[3];
+	switch (ndim)
+	{
+	case 1:
+		N[0]=XSIZE(*fReal);
+		break;
+	case 2:
+		N[0]=YSIZE(*fReal);
+		N[1]=XSIZE(*fReal);
+		break;
+	case 3:
+		N[0]=ZSIZE(*fReal);
+		N[1]=YSIZE(*fReal);
+		N[2]=XSIZE(*fReal);
+		break;
+	}
+
+	pthread_mutex_lock(&fftw_plan_mutex);
+	if (fPlanForward!=NULL)
+		fftw_destroy_plan(fPlanForward);
+	fPlanForward=NULL;
+	fPlanForward = fftw_plan_dft_r2c(ndim, N, MULTIDIM_ARRAY(*fReal),
+									 (fftw_complex*) MULTIDIM_ARRAY(fFourier), FFTW_ESTIMATE);
+	if (fPlanBackward!=NULL)
+		fftw_destroy_plan(fPlanBackward);
+	fPlanBackward=NULL;
+	fPlanBackward = fftw_plan_dft_c2r(ndim, N,
+									  (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
+									  FFTW_ESTIMATE);
+	if (fPlanForward == NULL || fPlanBackward == NULL)
+		REPORT_ERROR(ERR_PLANS_NOCREATE, "FFTW plans cannot be created");
+	dataPtr=MULTIDIM_ARRAY(*fReal);
+	planCreated = true;
+	pthread_mutex_unlock(&fftw_plan_mutex);
 }
 
 void FourierTransformer::setReal(MultidimArray<std::complex<double> > &input)

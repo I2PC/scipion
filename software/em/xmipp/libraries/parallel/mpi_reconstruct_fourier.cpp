@@ -86,7 +86,7 @@ void ProgMPIRecFourier::preRun()
     }
     else
     {
-        produceSideinfo();
+        produceSideinfo(!fn_fsc.empty());
         SF.firstObject();
     }
 
@@ -396,7 +396,7 @@ void ProgMPIRecFourier::run()
                         // Normalize global volume and store data
                         finishComputations(FileName((std::string) fn_fsc + "_split_1.vol"));
 
-                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                        Vout().initZeros(paddedImgSize, paddedImgSize, paddedImgSize);
 
                         transformerVol.setReal(Vout());
                         Vout().clear();
@@ -413,7 +413,7 @@ void ProgMPIRecFourier::run()
 
                         MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 
-                        Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                        Vout().initZeros(paddedImgSize, paddedImgSize, paddedImgSize);
                         transformerVol.setReal(Vout());
                         Vout().clear();
                         transformerVol.getFourierAlias(VoutFourier);
@@ -513,6 +513,7 @@ void ProgMPIRecFourier::run()
                         }
 
                         free( recBuffer );
+                        MultidimArray< std::complex<double> > VoutFourierTmp;
                         if (iter==0)
                         {
                             VoutFourierTmp=VoutFourier;
@@ -548,7 +549,7 @@ void ProgMPIRecFourier::run()
                             // Normalize global volume and store data
                             finishComputations(FileName((std::string) fn_fsc + "_split_2.vol"));
 
-                            Vout().initZeros(volPadSizeZ, volPadSizeY, volPadSizeX);
+                            Vout().initZeros(paddedImgSize, paddedImgSize, paddedImgSize);
                             transformerVol.setReal(Vout());
                             Vout().clear();
                             transformerVol.getFourierAlias(VoutFourier);

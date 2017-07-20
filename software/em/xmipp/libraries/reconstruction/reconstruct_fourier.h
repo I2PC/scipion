@@ -70,8 +70,7 @@ struct ImageThreadParams
 {
     int myThreadID;
     ProgRecFourier * parent;
-    MultidimArray< std::complex<double> > *paddedFourier;
-    MultidimArray< std::complex<double> > *localPaddedFourier;
+    std::complex<float>** localPaddedFourier;
     CTFDescription ctf;
     Matrix2D<double> * symmetry;
     int read;
@@ -159,11 +158,6 @@ public: // Internal members
     // Size of the original images
     int imgSize;
 
-    // Padded volume size
-    int volPadSizeX;
-    int volPadSizeY;
-    int volPadSizeZ;
-
     // Table with blob values, lineal sampling
     Matrix1D<double>  Fourier_blob_table;
 
@@ -186,17 +180,13 @@ public: // Internal members
     // Fourier transformer for the volume
     FourierTransformer transformerVol;
 
-    // Fourier transformer for the images
-    FourierTransformer transformerImg;
-
     // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
-    MultidimArray< std::complex<double> > VoutFourier, VoutFourierTmp;
+    MultidimArray< std::complex<double> > VoutFourier;
 
     // Volume of Fourier weights
     MultidimArray<double> FourierWeights;
 
-    // Padded image
-    MultidimArray<double> paddedImg;
+    int paddedImgSize;
 
     // Output volume
     Image<double> Vout;
@@ -215,7 +205,7 @@ public:
     void run();
 
     /// Produce side info: fill arrays with relevant transformation matrices
-    void produceSideinfo();
+    void produceSideinfo(bool saveFSC);
 
     void finishComputations( const FileName &out_name );
 
@@ -232,6 +222,19 @@ public:
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
 
 private:
+    template<typename T>
+    static T** allocate(T**& where, int xSize, int ySize);
+
+    template<typename T>
+    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
+
+    static std::complex<float>** clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+    		ProgRecFourier * parent);
+
+    template<typename T>
+    T*** cropAndApplyBlob(T***& input, int size, float blobSize,
+    		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt);
+
 	static void processCube(
 			int i,
 			int j,
