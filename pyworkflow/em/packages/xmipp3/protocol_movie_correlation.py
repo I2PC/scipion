@@ -115,8 +115,8 @@ class XmippProtMovieCorr(ProtAlignMovies):
         inputMd = os.path.join(movieFolder, 'input_movie.xmd')
         writeMovieMd(movie, inputMd, a0, aN, useAlignment=False)
 
-        args  = '-i %s ' % inputMd
-        args += '-o %s ' % self._getShiftsFile(movie)
+        args  = '-i "%s" ' % inputMd
+        args += '-o "%s" ' % self._getShiftsFile(movie)
         args += '--sampling %f ' % movie.getSamplingRate()
         args += '--max_freq %f ' % self.maxFreq
         args += '--Bspline %d ' % self.INTERP_MAP[self.splineOrder.get()]
@@ -157,10 +157,10 @@ class XmippProtMovieCorr(ProtAlignMovies):
 
         if self.doSaveAveMic or self.doComputePSD:
             fnAvg = self._getExtraPath(self._getOutputMicName(movie))
-            args += ' --oavg %s' % fnAvg
+            args += ' --oavg "%s"' % fnAvg
 
         if self.doComputePSD:
-            fnInitial = os.path.join(movieFolder,"initialMic.mrc")
+            fnInitial = os.path.join(movieFolder, "initialMic.mrc")
             args  += ' --oavgInitial %s' % fnInitial
 
         if self.doSaveMovie:
