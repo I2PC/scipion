@@ -77,27 +77,12 @@ class XmippProtExtractUnit(EMProtocol):
                            "If no symmetry is present, use _c1_."
                       )
         form.addParam('symmetryOrder', IntParam, default=1,
-                      condition='symmetryGroup==%d or %d' % (SYM_CYCLIC, SYM_DIHEDRAL) ,
+                      condition='symmetryGroup<=%d' % (SYM_DIHEDRAL) ,
                       label='Symmetry Order',
                       help='Order of cyclic symmetry.')
         form.addParam('offset', FloatParam, default=0.,
-                      condition='symmetryGroup==%d or %d' % (SYM_CYCLIC, SYM_DIHEDRAL) ,
+                      condition='symmetryGroup<=%d' % (SYM_DIHEDRAL) ,
                       label="offset", help="rotate unit cell around z-axis by offset degrees")
-
-#form.addParam('symmetry', TextParam, default='C1',
-#                      label='Point group symmetry:',
-#                      condition='not doContinue',
-#                      help='Parameter *ASYM* in FREALIGN\n\n'
-#                           'Specify the symmetry.Choices are: Cn,Dn,T,O,I,I1,I2,N or H (can be zero)\n'
-#                           'n  = rotational symmetry required in pointgroup C(n) or D(n)\n'
-#                           'N  = number of symmetry matrices to read in.\n'
-#                           'T  = tetrahedral pointgroup 23\n'
-#                           'O  = octahedral pointgroup 432\n'
-#                           'I  = icosahedral 532 symmetry in setting 1 (5fold is on X)\n'
-#                           'I1 = also in setting 1 (X) - as used by Imagic\n'
-#                           'I2 = in setting 2 (Y) - as used by Crowther et. al\n'
-#~/scipion/pyworkflow/em/packages/grigoriefflab/protocol_frealign_base.py
-
         form.addParam('innerRadius', FloatParam, default=-1,
                       label="Inner Radius (px)", help="inner Mask radius, if -1, the radius will be 0")
         form.addParam('outerRadius', FloatParam, default=-1,
@@ -132,8 +117,7 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f "% self.expandFactor.get()
         args += " %f "% self.offset.get()
         args += " %f "% self.inputVolumes.get().getSamplingRate()
-        if DEBUG:
-            print "args", args
+
         self.runJob("xmipp_transform_window", args)
 
     def createOutputStep(self):
@@ -141,7 +125,7 @@ class XmippProtExtractUnit(EMProtocol):
         vol.setLocation(self._getOutputVol())
         sampling = self.inputVolumes.get().getSamplingRate()
         vol.setSamplingRate(sampling)
-        #This only works if outfile is mrc do not change the output file extension
+        #
         ccp4header = Ccp4Header(self._getOutputVol(), readHeader= True)
         t=Transform()
         x,y,z = ccp4header.getOffset()
