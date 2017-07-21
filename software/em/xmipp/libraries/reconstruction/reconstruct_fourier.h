@@ -232,7 +232,10 @@ private:
     		ProgRecFourier * parent);
 
     template<typename T>
-    T*** cropAndApplyBlob(T***& input, int size, float blobSize,
+    void crop(T***& inOut, int size);
+
+    template<typename T>
+    T*** applyBlob(T***& input, int size, float blobSize,
     		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt);
 
     inline void allocateVoutFourier() {

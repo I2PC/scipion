@@ -2091,27 +2091,27 @@ void release(T**& array, int ySize) {
 
 
 template<typename T>
-T*** ProgRecFourier::cropAndApplyBlob(T***& input, int size, float blobSize,
+T*** ProgRecFourier::applyBlob(T***& input, int size, float blobSize,
 		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
 	float blobSizeSqr = blobSize * blobSize;
-	int xSize = size/2 + 1; // just half of the space is necessary, the rest is complex conjugate
+	int halfSize = size/2;
 	int blob = floor(blobSize); // we are using integer coordinates, so we cannot hit anything further
 	T tmp;
 	T*** output;
-	// create new storage, notice that just 'right hand side' of the input will be used
-	allocate(output, xSize, size+1, size+1);
+	// create new storage
+	allocate(output, halfSize+1, size+1, size+1);
 
 	// traverse new storage
 	for (int i = 0; i <= size; i++) {
 		for (int j = 0; j <= size; j++) {
-			for (int k = 0; k < xSize; k++) {
+			for (int k = 0; k <= halfSize; k++) {
 				// traverse input storage
 				tmp = (T) 0;
-				for (int z = std::max(0, i-blob); z < std::min(size+1, i+blob); z++) {
+				for (int z = std::max(0, i-blob); z <= std::min(size, i+blob); z++) {
 					float dZSqr = (i - z) * (i - z);
-					for (int y = std::max(0, j-blob); y < std::min(size+1, j+blob); y++) {
+					for (int y = std::max(0, j-blob); y <= std::min(size, j+blob); y++) {
 						float dYSqr = (j - y) * (j - y);
-						for (int x = std::max(0, k-blob); x < std::min(xSize, k+blob); x++) {
+						for (int x = std::max(0, k-blob); x <= std::min(halfSize, k+blob); x++) {
 							float dXSqr = (k - x) * (k - x);
 							float distanceSqr = dZSqr + dYSqr + dXSqr;
 							if (distanceSqr > blobSizeSqr) {
@@ -2119,7 +2119,7 @@ T*** ProgRecFourier::cropAndApplyBlob(T***& input, int size, float blobSize,
 							}
 							int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
 							float tmpWeight = blobTableSqrt[aux];
-							tmp += tmpWeight * input[z][y][x+size/2];
+							tmp += tmpWeight * input[z][y][x];
 						}
 					}
 				}
@@ -2169,9 +2169,28 @@ void mirror(std::complex<float>*** outputVolume, float*** outputWeight, int size
 	}
 }
 
+template<typename T>
+void ProgRecFourier::crop(T***& inOut, int size) {
+	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
+	T*** output;
+	// create new storage, notice that just 'right hand side' of the input will be used
+	allocate(output, halfSize+1, size+1, size+1);
+	// traverse old storage
+	for (int z = 0; z <= size; z++) {
+		for (int y = 0; y <= size; y++) {
+			for (int x = halfSize; x <= size; x++) {
+				output[z][y][x-halfSize] = inOut[z][y][x];
+			}
+		}
+	}
+	// free original data
+	release(inOut, size+1, size+1);
+	inOut = output;
+}
+
 void forceHermitianSymmetry(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
 	int x = 0;
-	for (int z = 0; z < size; z++) {
+	for (int z = 0; z <= size; z++) {
 		for (int y = 0; y <= size/2; y++) {
 			int newPos[3];
 			// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel biger
@@ -2473,8 +2492,10 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
                 {
 					// get rid of the replicated data
 					mirror(outputVolume, outputWeight, size);
-					outputVolume = cropAndApplyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-					outputWeight = cropAndApplyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+					crop(outputVolume, size);
+					crop(outputWeight, size);
+					outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+					outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
 					saveIntermediateFSC(outputVolume, outputWeight, size,
 							(std::string)fn_fsc + "_1_Weights.vol",
 							(std::string) fn_fsc + "_1_Fourier.vol",
@@ -2500,11 +2521,13 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 #endif
     // get rid of the replicated data
     mirror(outputVolume, outputWeight, size);
+    crop(outputVolume, size);
+    crop(outputWeight, size);
 #if DEBUG_DUMP > 0
     std::cout << "about to apply blob" << std::endl;
 #endif
-    outputVolume = cropAndApplyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-    outputWeight = cropAndApplyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+    outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+    outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
 
     if( saveFSC ) {
 		saveFinalFSC(outputVolume, outputWeight, size);
