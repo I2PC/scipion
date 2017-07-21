@@ -34,6 +34,9 @@ private:
 	double sampling;
 	//vectors defining expansion direction
 	double expanded;
+	//new origin after expansion
+	Matrix1D<double>  newOriginAfterExpansion;
+	//
 	std::vector<Matrix1D<double> > vectExpansion;
 	// normal vector to the polyhedron that define a unit cell.
 	std::vector<Matrix1D<double> > planeVectors;
@@ -45,16 +48,10 @@ private:
 	std::vector<Matrix1D<double> > expandedUnitCellMax;
 	//reference point always inside the unitcell
 	Matrix1D<double> unitCellPoint;
-	//handle icosahedral case.
-	//input 3 five fold vertices that form a triangle
-	//the function fills the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
-	void icoSymmetry(const Matrix1D<double> & _5f,
-	                 const Matrix1D<double> & _5fp,
-	                 const Matrix1D<double> & _5fpp,
-	                 const double expanded);
+
 	//handle cyclic symmetry (Cn)
 	//input 3 vertices that form a triangle
-	//the function fills the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
+	//the function fills out the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
 	void cyclicSymmetry(const Matrix1D<double> & _centre,
 			            const Matrix1D<double> & _2f,
 			            const Matrix1D<double> & _2fp,
@@ -63,7 +60,7 @@ private:
 			            const double offset);
 	//handle dihedral symmetry (Dn)
 	//input 3 vertices that form the triangle
-	//the function fills the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
+	//the function fills out the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
 	void dihedralSymmetry(const Matrix1D<double> & _centre,
 			              const Matrix1D<double> & _2f,
 			              const Matrix1D<double> & _2fp,
@@ -72,12 +69,28 @@ private:
 			              const double offset);
 	//handle tetrahedral symmetry (T)
 	//input centroid and 3 vertices that form the unit cell
-	//the function fills the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
+	//the function fills out the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
 	void tetrahedralSymmetry(const Matrix1D<double> & _centroid,
-				              const Matrix1D<double> & _3f,
-				              const Matrix1D<double> & _3fp,
-				              const Matrix1D<double> & _3fpp,
-				              const double expanded);
+				             const Matrix1D<double> & _3f,
+				             const Matrix1D<double> & _3fp,
+				             const Matrix1D<double> & _3fpp,
+				             const double expanded);
+	//handle tetrahedral symmetry (T)
+	//input centre and 3 vertices that form the unit cell
+	//the function fills out the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
+	void octahedralSymmetry(const Matrix1D<double> & _centre,
+					        const Matrix1D<double> & _4f,
+					        const Matrix1D<double> & _4fp,
+					        const Matrix1D<double> & _4fpp,
+					        const double expanded);
+	//handle icosahedral case.
+	//input centre plus 3 five fold vertices that form a triangle
+	//the function fills out the variable planeVectors (normal vectors to the polyhedron that define a unit cell)
+	void icoSymmetry(const Matrix1D<double> & _centre,
+					 const Matrix1D<double> & _5f,
+		             const Matrix1D<double> & _5fp,
+		             const Matrix1D<double> & _5fpp,
+		             const double expanded);
 private:
         //maxmimum/minimm zvalue
         double _minZ, _maxZ;
@@ -96,6 +109,8 @@ public:
 	void doDihedral(int order=1);
 	/** process T symmetry */
 	void doTetrahedral(int symmetry=pg_T);
+	/** process O symmetry */
+	void doOctahedral(int symmetry=pg_O);
 	/** process IN symmetry */
 	void doIcosahedral(int symmetry=pg_I1);
 
