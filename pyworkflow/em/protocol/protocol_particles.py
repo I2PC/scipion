@@ -439,11 +439,17 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         # the output set
         if outputCoords is None:
             outputCoords = self._createSetOfCoordinates(micSet)
+            firstTime = True
         else:
             outputCoords.enableAppend()
+            irstTime = False
 
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
         self._updateOutputSet(outputName, outputCoords, streamMode)
+
+        if firstTime:
+            self._defineSourceRelation(self.getInputMicrographsPointer(),
+                                       outputCoords)
 
         return micDoneList
 
