@@ -63,6 +63,11 @@ COLOR_CHOICES[COLOR_OTHER] = 'other'
 
 binaryCondition = ('(colorMap == %d) ' % (COLOR_OTHER))
 
+#Axis code
+AX_X = 0
+AX_Y = 1
+AX_Z = 2
+
 class localResolutionViewer(ProtocolViewer):
     """
     Visualization tools for local resolution results.
@@ -89,6 +94,9 @@ class localResolutionViewer(ProtocolViewer):
         
         form.addParam('doShowVolumeSlices', LabelParam,
                       label="Show resolution slices")
+        
+        form.addParam('doShowOriginalVolumeSlices', LabelParam,
+                      label="Show original volume slices")
 
         form.addParam('doShowResHistogram', LabelParam,
                       label="Show resolution histogram")
@@ -106,6 +114,11 @@ class localResolutionViewer(ProtocolViewer):
                       help='Name of a color map to apply to the resolution map.'
                       'Valid names can be found at '
                       'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
+        
+        group.addParam('sliceAxis', EnumParam, default=AX_Z,
+                       choices=['x', 'y', 'z'],
+                       display=EnumParam.DISPLAY_HLIST,
+                       label='Slice axis')
 
         group.addParam('doShowVolumeColorSlices', LabelParam,
               label="Show colored slices")
@@ -116,7 +129,8 @@ class localResolutionViewer(ProtocolViewer):
 
         
     def _getVisualizeDict(self):
-        return {'doShowVolumeSlices': self._showVolumeSlices,
+        return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
+                'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
                 'doShowResHistogram': self._plotHistogram,
                 'doShowChimera': self._showChimera,
@@ -126,6 +140,15 @@ class localResolutionViewer(ProtocolViewer):
         cm = DataView(self.protocol.outputVolume.getFileName())
         
         return [cm]
+    
+    def _showOriginalVolumeSlices(self, param=None):
+        if self.protocol.halfVolumes is True:
+            cm = DataView(self.protocol.inputVolume.get().getFileName())
+            cm2 = DataView(self.protocol.inputVolume2.get().getFileName())
+            return [cm, cm2]
+        else:
+            cm = DataView(self.protocol.inputVolumes.get().getFileName())
+            return [cm]
     
     def _showVolumeColorSlices(self, param=None):
         imageFile = self.protocol._getExtraPath(
@@ -143,12 +166,12 @@ class localResolutionViewer(ProtocolViewer):
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('Resolution slices', imgData2,
-                                         min_Res, max_Res, self.getColorMap())
+                                         min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
 
-        return [Plotter(figure=fig)]
+        return plt.show(fig)
 
     def _plotHistogram(self, param=None):
         # check if a histogram has been generated
@@ -157,6 +180,7 @@ class localResolutionViewer(ProtocolViewer):
             md.read(self.protocol._getExtraPath(OUTPUT_HISTOGRAM))
             x_axis = []
             y_axis = []
+            
             i = 0
             for idx in md:
                 x_axis_ = md.getValue(MDL_X, idx)
@@ -165,15 +189,11 @@ class localResolutionViewer(ProtocolViewer):
                 elif i==1:
                     x1 = x_axis_
                 y_axis_ = md.getValue(MDL_COUNT, idx)
-     
+                    
                 i+=1
-                if (y_axis_== 0):
-                    continue
                 x_axis.append(x_axis_)
                 y_axis.append(y_axis_)
             stepSize = x1 - x0
-            for ii in range(len(x_axis)):
-                x_axis[ii] = x_axis[ii]-0.5*stepSize
         else: 
             imageFile = self.protocol._getExtraPath(
                             localResolutionViewer.OUTPUT_RESOLUTION_FILE)
@@ -195,12 +215,17 @@ class localResolutionViewer(ProtocolViewer):
                 length = len(auxRes2)
                 y_axis_aux = int(length)
                 y_axis.append(y_axis_aux)
+        plt.figure()        
         plt.bar(x_axis, y_axis, width = stepSize)    
         plt.title("Resolutions Histogram")
         plt.xlabel("Resolution (A)")
         plt.ylabel("Counts")    
         
-        return [plt.show()]
+        return plt.show()
+    
+    def _getAxis(self):
+        return self.getEnumText('sliceAxis')
+
 
     def _plotVolumeSlices(self, title, volumeData, vminData, vmaxData, 
                           cmap, **kwargs):
