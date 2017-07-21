@@ -68,13 +68,13 @@ class CCP4ProtRunRefmac(EMProtocol):
                       label='Number of refinement iterations:',
                       help='Specify the number of cycles of refinement.\n')
         form.addParam('weightMatrix', FloatParam, default=0.01, expertLevel=const.LEVEL_ADVANCED, label= 'Matrix refinement weight:',
-                      help='Weight between density map and chemical constrain. Smaller means less weight for EM map.\n')
+                      help='Weight between the density map and the chemical constraints. Smaller means less weight for the EM map.\n')
         form.addParam('generateMaskedVolume', BooleanParam, default=True, label="Generate masked volume",
                       expertLevel=const.LEVEL_ADVANCED, important=True, help='If set to True, the masked volume will be generated')
         form.addParam('SFCALCmapradius', FloatParam, default=3, expertLevel=const.LEVEL_ADVANCED,
                       label='SFCALC mapradius:', help='Specify how much around molecule should be cut (Angstroms)')
         form.addParam('SFCALCmradius', FloatParam, default=3, expertLevel=const.LEVEL_ADVANCED,
-                      label='SFCALC mradius:', help='Specify the radius (Angstroms)to claculate the mask around molecule')
+                      label='SFCALC mradius:', help='Specify the radius (Angstroms)to calculate the mask around molecule')
         form.addParam('BFactorSet', FloatParam, default=0, expertLevel=const.LEVEL_ADVANCED,
                       label='B Factor:', help='Specify the B factor value prior to refinement')
         form.addParam('RefiSharpen', FloatParam, default=0, expertLevel=const.LEVEL_ADVANCED,
