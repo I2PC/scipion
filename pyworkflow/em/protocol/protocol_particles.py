@@ -513,7 +513,7 @@ class ProtExtractParticles(ProtParticles):
         self.micDict = OrderedDict()
         self.coordDict = {}
 
-        micDict, self.streamClosed = self._loadInputList()
+        micDict = self._loadInputList()
 
         self.initialIds = self._insertInitialSteps()
 
@@ -598,7 +598,9 @@ class ProtExtractParticles(ProtParticles):
          Should be implemented in derived classes.
         """
         return False
-
+    
+    def _isStreamClosed(self):
+        return self.micsClosed and self.ctfsClosed and self.coordsClosed
     # ------ Methods for Streaming extraction --------------
 
     def _stepsCheck(self):
@@ -668,13 +670,13 @@ class ProtExtractParticles(ProtParticles):
         # Load new micrographs coming from the coordinates
         self.debug("Loading Mics from Coords.")
         coordMics = self.inputCoordinates.get().getMicrographs()
-        micDict, closed = _loadMics(coordMics)
+        micDict, self.micsClosed = _loadMics(coordMics)
         # If we are extracting from other micrographs, then we will use
         # the other micrographs and filter those that
         if self._micsOther():
             self.debug("Loading other Mics.")
             oMicDict, oMicClosed = _loadMics(self.inputMicrographs.get())
-            closed = closed and oMicClosed
+            self.micsClosed = self.micsClosed and oMicClosed
             for micKey, mic in micDict.iteritems():
                 if micKey in oMicDict:
                     oMic = oMicDict[micKey]
@@ -686,23 +688,25 @@ class ProtExtractParticles(ProtParticles):
                 else:
                     del micDict[micKey]
 
+        self.debug("Mics are closed? %s" % self.micsClosed)
         if self._useCTF():
             self.debug("Loading CTFs.")
             ctfDict, ctfClosed = _loadCTFs(self.ctfRelations.get())
-            closed = closed and ctfClosed
             for micKey, mic in micDict.iteritems():
                 if micKey in ctfDict:
                     mic.setCTF(ctfDict[micKey])
                 else:
                     del micDict[micKey]
+        # if not use CTF, self.ctfsClosed is True
+        self.ctfsClosed = ctfClosed if self._useCTF() else True
+        self.debug("CTFs are closed? %s" % self.ctfsClosed)
 
         self.debug("Loading Coords.")
         # Now load the coordinates for the newly detected micrographs. If
         # microgrpahs does not have coordinates, is not processed.
-        micDict, coordClosed = self._loadInputCoords(micDict)
-        closed = closed and coordClosed
+        micDict = self._loadInputCoords(micDict)
 
-        return micDict, closed
+        return micDict
 
     def _loadInputCoords(self, micDict):
         """ Load coordinates from the input streaming.
@@ -727,11 +731,12 @@ class ProtExtractParticles(ProtParticles):
                 self.coordDict[micId] = coordList
             else:
                 del micDict[micKey]
-        streamClosed = coordSet.isStreamClosed()
+        self.coordsClosed = coordSet.isStreamClosed()
         coordSet.close()
+        self.debug("Coords are closed? %s" % self.coordsClosed)
         self.debug("Closed db.")
 
-        return micDict, streamClosed
+        return micDict
 
     def _checkNewInput(self):
         self.debug(">>> _checkNewInput ")
@@ -765,13 +770,12 @@ class ProtExtractParticles(ProtParticles):
         # check if sets are closed.
         self.debug("self.lastCheck > mTime %s , hasattr(self, 'micDict') %s"
                    % (self.lastCheck > mTime, hasattr(self, 'micDict')))
-
-        # Open input micrographs.sqlite and close it as soon as possible
-        newMics, self.streamClosed = self._loadInputList()
-
         if self.lastCheck > mTime and hasattr(self, 'micDict'):
             return None
-    
+        
+        # Open input micrographs.sqlite and close it as soon as possible
+        newMics = self._loadInputList()
+        
         self.lastCheck = now
         outputStep = self._getFirstJoinStep()
     
@@ -802,10 +806,9 @@ class ProtExtractParticles(ProtParticles):
         allDone = len(doneList) + len(newDone)
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
-        self.finished = self.streamClosed and allDone == inputLen
-        print "Is finished? ", self.finished, allDone, inputLen, self.streamClosed
+        streamClosed = self._isStreamClosed()
+        self.finished = streamClosed and allDone == inputLen
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-        print "stream mode: ", streamMode
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
 
@@ -817,7 +820,7 @@ class ProtExtractParticles(ProtParticles):
             return
 
         self.debug('   finished: %s ' % self.finished)
-        self.debug('        self.streamClosed (%s) AND' % self.streamClosed)
+        self.debug('        self.streamClosed (%s) AND' % streamClosed)
         self.debug('        allDone (%s) == len(self.listOfMics (%s)'
                    % (allDone, inputLen))
         self.debug('   streamMode: %s' % streamMode)
