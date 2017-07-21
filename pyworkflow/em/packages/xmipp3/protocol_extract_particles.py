@@ -512,7 +512,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         if self.notOne(scale):
             # If we need to scale the box, then we need to scale the coordinates
-            getPos = lambda coord: (coord.getX() * scale, coord.getY() * scale)
+            getPos = lambda coord: (int(coord.getX() * scale),
+                                    int(coord.getY() * scale))
         else:
             getPos = lambda coord: coord.getPosition()
         # Store the function to be used for scaling coordinates
