@@ -201,8 +201,6 @@ class BsoftProtBlocres(ProtAnalysis3D):
 
         convertId = self._insertFunctionStep('convertInputStep')
         ResId = self._insertFunctionStep('resolutionStep', prerequisites=[convertId])
-#         histId = self._insertFunctionStep('createHistrogram', prerequisites=[ResId])
-#         histId = self._insertFunctionStep('createHistrogram', prerequisites=[ResId])        
         self._insertFunctionStep('createOutputStep', prerequisites=[ResId])
 
     #--------------------------- STEPS functions --------------------------------------------   
@@ -260,39 +258,6 @@ class BsoftProtBlocres(ProtAnalysis3D):
         params += ' %s %s %s' % (self.fnvol1, self.fnvol2, self._getExtraPath(OUTPUT_RESOLUTION_FILE))
 
         self.runJob('blocres', params)
-
-
-    def createHistrogram(self):
-        if self.fill.get()=='':
-            backgroundValue = 0
-        else:
-            backgroundValue = self.fill.get()
-        imageFile = self._getExtraPath(OUTPUT_RESOLUTION_FILE)
-        img = ImageHandler().read(imageFile)
-        imgData = img.getData()
-        Res = imgData[imgData!=backgroundValue]
-        minres = np.amin(Res)
-        maxres = np.amax(Res)
-        steps = 30
-        stepSize = (maxres - minres)/steps
-        counts=np.zeros(steps)
- 
-        for idx in range(0,steps):
-            auxRes = Res[Res<(minres+(idx+1)*stepSize)]
-            auxRes2 = auxRes[auxRes>=(minres+(idx*stepSize))]
-            length = len(auxRes2)
-            counts[idx] = int(length)
-   
-        mdcounts = md.MetaData()
-        for mdid in range(steps):
-            print mdid
-            print counts[mdid]
-            auxInt = int(counts[mdid])
-            print auxInt
-            objId = mdcounts.addObject()
-            mdcounts.setValue(md.MDL_X, float(mdid), objId)
-            mdcounts.setValue(md.MDL_COUNT, auxInt, objId)
-        mdcounts.write(self._getExtraPath('hist.xmd'))
 
 
     def createOutputStep(self):
