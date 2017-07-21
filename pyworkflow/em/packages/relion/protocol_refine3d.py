@@ -148,8 +148,8 @@ leads to objective and high-quality results.
             # in the metadata produced than in the input set
             iterator = md.SetMdIterator(fnOut, sortByLabel=md.RLN_IMAGE_ID,
                                         updateItemCallback=self._updateParticle)
-            outMovieSet.copyItems(movieSet, updateItemCallback=iterator.updateItem,
-                                  itemDataIterator=iterator.iterMd)
+            outMovieSet.copyItems(movieSet,
+                                  updateItemCallback=iterator.updateItem)
 
             self._defineOutputs(outputParticles=outMovieSet)
             self._defineTransformRelation(self.inputParticles, outMovieSet)
