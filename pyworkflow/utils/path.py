@@ -419,6 +419,7 @@ def getFileLastModificationDate(fn):
         ts = os.path.getmtime(fn)
         return datetime.datetime.fromtimestamp(ts)
     else:
+        print (fn + " does not exist!!. Can't check last modification date.")
         return None
 
 

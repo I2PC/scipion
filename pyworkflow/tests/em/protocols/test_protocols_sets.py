@@ -105,6 +105,7 @@ class TestSets(BaseTest):
         # Coordinates
         # Oh, I don't know of any example of coordinates imported :(
 
+
     #
     # Helper functions
     #
@@ -465,7 +466,10 @@ class TestSets(BaseTest):
                 prettyDict(item2.getObjDict())
             self.assertTrue(item1.equalAttributes(item2),  )
 
+    def testEmptiness(self):
 
+        self.assertSetSize(TestSets.particles)
+        self.assertSetSize(TestSets.particles, 76)
 
 if __name__ == '__main__':
     unittest.main()

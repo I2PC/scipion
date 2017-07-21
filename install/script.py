@@ -387,6 +387,9 @@ env.addPackage('ctffind4', version='4.0.15',
 env.addPackage('ctffind4', version='4.1.5',
                tar='ctffind_V4.1.5.tgz')
 
+env.addPackage('ctffind4', version='4.1.8',
+               tar='ctffind_V4.1.8.tgz')
+
 env.addPackage('summovie', version='1.0.2',
                tar='summovie_1.0.2.tgz')
 
@@ -397,7 +400,7 @@ env.addPackage('unblur', version='1.0.2',
                tar='unblur_1.0.2.tgz')
 
 eman2_commands = [('./eman2-installer',
-                   'eman2.bashrc')]
+                   'eman2.*rc')]
 
 env.addPackage('eman', version='2.11',
                tar='eman2.11.linux64.tgz',
@@ -433,14 +436,17 @@ relion_vars = [('FFTW_LIB', SW_LIB),
 relion2_commands = [('cmake -DGUI=OFF -DCMAKE_INSTALL_PREFIX=./ .', []),
                     ('make -j %d' % env.getProcessors(), ['bin/relion_refine'])]
 
-env.addPackage('relion', version='2.0.3',
-               tar='relion-2.0.3.tgz',
+env.addPackage('relion', version='2.0',
+               tar='relion-2.0.4.tgz',
                commands=relion2_commands,
                updateCuda=True,
                vars=relion_vars)
 
 env.addPackage('localrec', version='1.1.0',
                tar='localrec-1.1.0.tgz')
+
+env.addPackage('localrec', version='1.2.0',
+               tar='localrec-1.2.0.tgz')
 
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
@@ -453,14 +459,14 @@ env.addPackage('spider', version='21.13',
 env.addPackage('motioncorr', version='2.1',
                tar='motioncorr_v2.1.tgz')
 
-env.addPackage('motioncorr', version='2.1.cuda.7.5',
-               tar='motioncorr_v2.1.cuda.7.5.tgz')
-
 env.addPackage('motioncor2', version='16.03.16',
                tar='motioncor2_03162016.tgz')
 
 env.addPackage('motioncor2', version='16.10.19',
                tar='motioncor2_10192016.tgz')
+
+env.addPackage('motioncor2', version='17.01.30',
+               tar='motioncor2_01302017.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
@@ -500,5 +506,9 @@ env.addPackage('Gautomatch', version='0.53',
 
 env.addPackage('mag_distortion', version='1.0.1',
                tar='mag_distortion-1.0.1.tgz')
+
+env.addPackage('ethan', version='1.2',
+               tar='ethan-1.2.tgz',
+               commands=[('make', 'ethan')])
 
 env.execute()

@@ -51,7 +51,7 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
         cgOption = form.getParam('cgOption')
         cgOption.config(condition='False')
 
-        form.addParallelSection(threads=0, mpi=0)
+        form.addParallelSection(threads=1, mpi=0)
         
     def alignParticlesStep(self, innerRadius, outerRadius):
         """ Apply the selected filter to particles. 
@@ -63,6 +63,7 @@ class SpiderProtAlignAPSR(SpiderProtAlign):
                              '[group_particles]': self._params['particlesSel'],
                              '[unaligned]': self._params['particles'] + '@******',
                              '[aligned_stack]': self._params['particlesAligned'],
+                             '[nummps]': self.numberOfThreads.get()
                             })
         
         self.runTemplate(self.getScript(), self.getExt(), self._params)

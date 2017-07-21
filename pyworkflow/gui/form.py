@@ -1413,6 +1413,9 @@ class FormWindow(Window):
                                                        func=self._setThreadsOrMpi,
                                                        value=procs)
                     procEntry.grid(row=0, column=1, padx=(0, 5), sticky='nw')
+                else:
+                    # Show an error message
+                    self.showInfo(" If protocol execution is set to STEPS_PARALLEL number of threads and mpi should not be set to zero.")
                     
             else:
                 # ---- THREADS---- 
@@ -1489,7 +1492,7 @@ class FormWindow(Window):
         # Grab the host config from the project, since it 
         # have not been set in the protocol
         hostConfig = self._getHostConfig()
-        queues = hostConfig.queueSystem.queues
+        queues = OrderedDict(sorted(hostConfig.queueSystem.queues.items()))
         # If there is only one Queue and it has not parameters
         # don't bother to showing the QueueDialog
         noQueueChoices = len(queues) == 1 and len(queues.values()[0]) == 0

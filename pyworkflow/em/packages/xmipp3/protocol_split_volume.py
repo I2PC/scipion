@@ -46,7 +46,7 @@ class XmippProtSplitvolume(ProtClassify3D):
         form.addSection(label='Input')
         
         form.addParam('directionalClasses', PointerParam, label="Directional classes", important=True, 
-                      pointerClass='SetOfParticles', pointerCondition='hasAlignmentProj',
+                      pointerClass='SetOfAverages', pointerCondition='hasAlignmentProj',
                       help='Select a set of particles with angles. Preferrably the output of a run of directional classes')
         form.addParam('symmetryGroup', StringParam, default='c1',
                       label="Symmetry group", 

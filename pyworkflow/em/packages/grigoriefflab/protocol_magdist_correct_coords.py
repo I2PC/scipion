@@ -37,7 +37,7 @@ class ProtMagDistCorrCoord(EMProtocol):
     It works on a set of coordinates.
     """
     _label = 'mag distortion correction (coords)'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     # --------------------------- DEFINE params functions ----------------------
 
     def _defineParams(self, form):

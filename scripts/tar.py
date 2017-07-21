@@ -30,6 +30,7 @@ def _parseVersionDate():
             version = line.split("'")[1]
         elif '__releasedate__ =' in line:
             date = line.split("'")[1]
+            break
 
     return version, date
 

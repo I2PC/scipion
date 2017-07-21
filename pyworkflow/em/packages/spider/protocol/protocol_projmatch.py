@@ -205,8 +205,8 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
                   '[sel_group_orig]': path('sel_group'),
                   '[sel_particles_orig]': path('group{***[grp]}_selfile'),
                   '[group_align_orig]': path('group{***[grp]}_align'),
-                  '[unaligned_images_orig]': path('group{***[grp]}_stack'),
-                  }        
+                  '[unaligned_images_orig]': path('group{***[grp]}_stack')
+                  }
         script('refine_settings.pam', params)
         for s in ['refine', 'prepare', 'grploop', 'mergegroups', 
                   'enhance', 'endmerge', 'smangloop', 'endrefine']:
@@ -218,7 +218,9 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
                   'pixelSize': partSet.getSamplingRate(),
                   'voltage': acq.getVoltage(),
                   'sphericalAberration': acq.getSphericalAberration(),
-                  'windowSize': partSet.getDimensions()[0]}
+                  'windowSize': partSet.getDimensions()[0],
+                  'nummps': self.numberOfThreads.get()
+                  }
         
         paramFile = open(self._getExtraPath('params.stk'), 'w+')
         paramFile.write("""
@@ -227,6 +229,7 @@ class SpiderProtRefinement(ProtRefine3D, SpiderProtocol):
     6 1    %(voltage)f             ; electron energy (kV)
     7 1    %(sphericalAberration)f ; spherical aberration (mm)
    17 1    %(windowSize)f          ; window size (pixels)
+   18 1    %(nummps)d              ; number of threads to use
                         """ % params)
         paramFile.close()        
         

@@ -51,6 +51,7 @@ class XmippProtCTFDiscrepancy(em.ProtCTFMicrographs):
     def __init__(self, **args):
         em.ProtCTFMicrographs.__init__(self, **args)
         self._freqResol = {}
+        self.stepsExecutionMode = params.STEPS_SERIAL
 
     def _defineParams(self, form):
         form.addSection(label='Input')

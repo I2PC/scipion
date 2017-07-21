@@ -63,6 +63,7 @@ class ProtUnionSet(ProtSets):
         # of the 'inputSets' parameter
         def onChangeInputType():
             inputText = self.getEnumText('inputType')
+
             if  inputText == 'All':
                 pointerClass = 'EMSet'
 #             elif inputText == 'CTFs + Micrographs':
@@ -72,11 +73,11 @@ class ProtUnionSet(ProtSets):
             # For relatively small set we usually want to include
             # the single element type, this will allow, for example
             # to union SetOfVolumes and Volumes in the final set
-            if inputText in ['Volumes', 'Averages']:
+            if inputText in ['Volumes']:
                 pointerClass += ',%s' % inputText[:-1] # remove last 's'
             elif inputText in ['CTFs']:
                 pointerClass = '%s,CTFModel' % pointerClass[:-1] # remove last 's'
-                
+
             self.inputSetsParam.setPointerClass(pointerClass)
         
         self.inputType.trace(onChangeInputType)

@@ -180,7 +180,7 @@ void ProgSortByStatistics::processInprocessInputPrepareSPTH(MetaData &SF, bool t
         }
 
         img.readApplyGeo(SF,__iter.objId);
-        if (targetXdim!=-1 && targetXdim!=XSIZE(img()))
+        if (targetXdim!=-1 && targetXdim<XSIZE(img()))
         	selfScaleToSize(LINEAR,img(),targetXdim,targetXdim,1);
 
         MultidimArray<double> &mI=img();

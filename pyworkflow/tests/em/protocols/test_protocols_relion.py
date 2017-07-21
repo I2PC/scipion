@@ -176,7 +176,7 @@ class TestRelionClassify3D(TestRelionBase):
                                                               "Relion 3D classify")
 
             for class3D in relionProt.outputClasses:
-                self.assertTrue(class3D.hasAlignment3D())
+                self.assertTrue(class3D.hasAlignmentProj())
 
         if getVersion() == "2.0":
             relionNoGpu = _runRelionClassify3D(False, "Relion classify3D No GPU")

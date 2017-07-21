@@ -282,7 +282,7 @@ double restorationSigmaCost(double *x, void *_prm)
 	ProgVolumeHalvesRestoration *prm=(ProgVolumeHalvesRestoration *) _prm;
 	double sigma1=x[1];
 	double sigma2=x[2];
-	if (sigma1<0 || sigma2<0)
+	if (sigma1<0 || sigma2<0 || sigma1>2 || sigma2>2)
 		return 1e38;
     double K1=-0.5/(sigma1*sigma1);
     double K2=-0.5/(sigma2*sigma2);

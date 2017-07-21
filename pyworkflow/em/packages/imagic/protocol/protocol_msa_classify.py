@@ -41,7 +41,7 @@ class ImagicProtMSAClassify(ProtClassify2D, ImagicProtocol):
         (an enhanced Ward-type algorithm).
     """
     _label = 'msa-classify'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CLASS_DIR = 'MSA-cls'
 
     def __init__(self, **kwargs):

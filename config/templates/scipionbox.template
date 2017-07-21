@@ -11,30 +11,32 @@ GCTF = 0
 GRIDS = 1
 
 # Email notification settings
-EMAIL_NOTIFICATION = 1
-SMTP_SERVER = localhost 
+EMAIL_NOTIFICATION = 0
+SMTP_SERVER = localhost
 SMTP_FROM = noreply-biocomp@cnb.csic.es
-SMTP_TO = user@domain 
+SMTP_TO = user@domain
 
 # HTML report settings
-HTML_REPORT = 1
-HTML_PUBLISH = rsync -av $REPORT_FOLDER scipionbox@nolan:/home/scipionbox/public_html/
-
+HTML_REPORT = 0
+HTML_PUBLISH = rsync -av %%(REPORT_FOLDER)s scipionbox@nolan:/home/scipionbox/public_html/
 
 # Pattern to be used when importing movies
 PATTERN = GRID_??/DATA/Images-Disc?/GridSquare_*/Data/FoilHole_*frames.mrc
 
 # Name for the Scipion project inside the session folder
-SCIPION_PROJECT = ScipionUserData/projects/${PROJECT_NAME}
+SCIPION_PROJECT = ScipionUserData/projects
+# SCIPION_PROJECT = ScipionUserData/projects/${PROJECT_NAME}
+
 
 # Default backup directory (usually usb mount point
 DATA_BACKUP = /mnt
 
+
 # ------- MICROSCOPES ----------------
-[MICROSCOPE:Talos]
+[MICROSCOPE:Talos-D3558]
 DATA_FOLDER = /home/inbox
 CS = 2.7
-MAG = 72000
+MAG = 
 
 [MICROSCOPE:Krios-K2]
 DATA_FOLDER = ~/work/data/inbox/Krios-K2
@@ -49,3 +51,4 @@ HTML_REPORT = 0
 [MICROSCOPE:Krios-Falcon2]
 DATA_FOLDER = ~/work/data/inbox/Krios-Falcon2
 CS = 2.7
+

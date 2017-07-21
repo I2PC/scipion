@@ -31,6 +31,7 @@ from protocol_resolution_monogenic_signal import (XmippProtMonoRes,
 from pyworkflow.em.viewer_local_resolution import localResolutionViewer
 
 class XmippMonoResViewer(localResolutionViewer):
+
     """
     Visualization tools for MonoRes results.
     
@@ -48,4 +49,3 @@ class XmippMonoResViewer(localResolutionViewer):
         localResolutionViewer.OUTPUT_RESOLUTION_FILE_CHIMERA = OUTPUT_RESOLUTION_FILE_CHIMERA
         localResolutionViewer.halves = self.protocol.halfVolumes.get()
         localResolutionViewer.backgroundValue = 0
-

@@ -166,7 +166,7 @@ ud n [num-particles]
 vm
 echo "Preparing pairing docs"; date
 vm
-echo "if(! -d [pair_dir]) mkdir [pair_dir]"|csh
+echo "[ ! -d [pair_dir] ] && mkdir [pair_dir]"|sh
 
 de
 [pair_doc][pair-depth]
@@ -216,7 +216,7 @@ sd e
 
 ; ALIGNMENT
 
-; use all processors
+; use nummps processors
 md
 set mp
 [nummps]
@@ -299,7 +299,7 @@ SD /    PAIR_DEPTH   FIRST_PAIR   SECOND_PAIR    CCROT       IN_PLANE     X_SHIF
 vm
 echo "Depth=001"
 vm
-echo "if(! -d [depth_dir]{***[pair-depth]}) mkdir [depth_dir]{***[pair-depth]}"|csh
+echo "[ ! -d [depth_dir]{***[pair-depth]} ] && mkdir [depth_dir]{***[pair-depth]}"|sh
 
 de
 [depth_dir]{***[pair-depth]}/[intermed_avg_stack]@
@@ -376,7 +376,7 @@ do lb8 [pair-depth] = 1,[last-depth]
     vm
     echo "Depth={***[next-depth]}"
     vm
-    echo "if(! -d [depth_dir]{***[next-depth]}) mkdir [depth_dir]{***[next-depth]}"|csh
+    echo "[ ! -d [depth_dir]{***[next-depth]} ] && mkdir [depth_dir]{***[next-depth]}"|sh
     
 ;    de
 ;    [depth_dir]{***[pair-depth]}/[intermed_avg]@
@@ -520,7 +520,7 @@ ap sh
 ;[final_align_doc]           ; OUTPUT: alignment doc
 
 ;vm
-;echo "if(! -d [aligned_dir]) mkdir [aligned_dir]"|csh
+;echo "[ ! -d [aligned_dir] ] && mkdir [aligned_dir]"|sh
 de
 [aligned_stack]@
 

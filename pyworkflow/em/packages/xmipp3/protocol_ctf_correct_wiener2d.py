@@ -122,7 +122,7 @@ class XmippProtCTFCorrectWiener2D(ProtProcessParticles):
         return messages
     
     def _citations(self):
-        return ['Vargas2014a']
+        return []
     
     #--------------------------- UTILS functions -------------------------------------------- 
     def _updateLocation(self, item, row):

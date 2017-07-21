@@ -25,10 +25,10 @@
 # *
 # **************************************************************************
 
-import unittest, sys
 from pyworkflow.em import ProtImportMovies
 from pyworkflow.tests import *
 from pyworkflow.em.packages.motioncorr import ProtMotionCorr
+from pyworkflow.em.packages.motioncorr.convert import MOTIONCORR
 
 
 # Some utility functions to import movies that are used
@@ -41,7 +41,8 @@ class TestMotioncorrAlignMovies(BaseTest):
     @classmethod
     def runImportMovies(cls, pattern, **kwargs):
         """ Run an Import micrograph protocol. """
-        # We have two options: passe the SamplingRate or the ScannedPixelSize + microscope magnification
+        # We have two options: passe the SamplingRate or the
+        # ScannedPixelSize + microscope magnification
         params = {'samplingRate': 1.14,
                   'voltage': 300,
                   'sphericalAberration': 2.7,
@@ -126,6 +127,10 @@ class TestMotioncorrAlignMovies(BaseTest):
         self.launchProtocol(prot)
 
         self._checkMicrographs(prot)
+
+        expected = ([0.0, 0.3646, 0.2604], [0.0, -0.1354, -0.3958])
+
+        if "7.5" in MOTIONCORR:
+            expected = ([0.0, 0.3333, 0.2292], [0.0, -0.2187, -0.4688])
         self._checkAlignment(prot.outputMovies[1],
-                             (3, 5), [10, 10, 0, 0], ([0.0, 0.3646, 0.2604],
-                                                      [0.0, -0.1354, -0.3958]))
+                             (3, 5), [10, 10, 0, 0], expected)

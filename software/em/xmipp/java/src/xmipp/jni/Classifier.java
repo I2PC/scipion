@@ -9,6 +9,17 @@ public abstract class Classifier
 	public abstract int getTrainingParticlesMinimum();
 	
 	public abstract void setSize(int psize);
+	protected boolean applyChanges;
+
+	public boolean isApplyChanges() {
+		return applyChanges;
+	}
+
+
+	public void setApplyChanges(boolean applyChanges) {
+		this.applyChanges = applyChanges;
+	}
+
 	
 	
 	public class Parameter

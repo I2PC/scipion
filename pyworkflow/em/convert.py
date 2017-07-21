@@ -361,6 +361,20 @@ class ImageHandler(object):
         self.__runXmippProgram('xmipp_transform_add_noise',
                                '-i %s -o %s --type gaussian %f %f'
                                % (inputFile, outputFile, std, avg))
+
+    def truncateMask(self, inputFile, outputFile):
+        """ Forces the values of a mask to be between 0 and 1
+        Params:
+            inputFile: the filename of the input either image or volume
+            outputFile: the filename of the output either image or volume
+        """
+        self.__runXmippProgram('xmipp_transform_threshold',
+                               '-i %s -o %s --select below 0 --substitute '
+                               'value 1' % (inputFile, outputFile))
+        
+        self.__runXmippProgram('xmipp_transform_threshold',
+                               '-i %s --select above 1 --substitute '
+                               'value 1' % (outputFile))
     
     def isImageFile(self, imgFn):
         """ Check if imgFn has an image extension. The function

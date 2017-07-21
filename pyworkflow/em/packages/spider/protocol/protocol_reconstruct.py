@@ -31,6 +31,7 @@ import pyworkflow.em as em
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em.constants import ALIGN_PROJ
+from pyworkflow.em.data import Volume
 
 from ..spider import SpiderDocFile, writeScript, runScript
 from ..convert import ANGLE_PHI, ANGLE_PSI, ANGLE_THE, SHIFTX, SHIFTY, convertEndian, alignmentToRow
@@ -55,14 +56,15 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                       pointerClass='SetOfParticles', 
                       pointerCondition='hasAlignmentProj',
                       label="Input particles", important=True,
-                      help='Select the input particles.\n')  
+                      help='Select the input particles.\n')
+        form.addParallelSection(threads=1, mpi=0)
         
     #--------------------------- INSERT steps functions --------------------------------------------  
     def _insertAllSteps(self):        
         # Create new stacks and selfiles per defocus groups
         self._insertFunctionStep('convertInputStep', self.inputParticles.get().getObjId())
 
-        self._insertFunctionStep('runScriptStep', 'refine.pam')
+        self._insertFunctionStep('runScriptStep', 'recons_fourier.txt')
                 
         self._insertFunctionStep('createOutputStep')
     
@@ -106,15 +108,22 @@ class SpiderProtReconstruct(ProtRefine3D, SpiderProtocol):
                 
     def runScriptStep(self, script):
         params = {'[unaligned_images]': "'particles'",
-                  '[next_group_align]': "'docfile'"
+                  '[next_group_align]': "'docfile'",
+                  '[nummps]': self.numberOfThreads.get()
                   }     
-        writeScript('recons_fourier.txt', 
-                    self._getPath('recons_fourier.txt'), params)
-        runScript('recons_fourier.txt', 'txt/stk', log=self._log,
+        writeScript(script, self._getPath('recons_fourier.txt'), params)
+        runScript(script, 'txt/stk', log=self._log,
                          cwd=self.getWorkingDir())
         
     def createOutputStep(self):
-        pass
+        imgSet = self.inputParticles.get()
+        vol = Volume()
+        # FIXME: return two half-volumes as well
+        vol.setFileName(self._getPath('volume.stk'))
+        vol.setSamplingRate(imgSet.getSamplingRate())
+
+        self._defineOutputs(outputVolume=vol)
+        self._defineSourceRelation(self.inputParticles, vol)
     
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):

@@ -52,7 +52,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D, ProjMatcher):
     its determinant [Cherian2013]. The extremes of this score (called zScoreResCov), that is
     values particularly low or high, may indicate outliers."""
     _label = 'compare reprojections'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)

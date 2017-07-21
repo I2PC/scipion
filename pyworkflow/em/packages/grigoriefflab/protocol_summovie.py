@@ -86,7 +86,7 @@ class ProtSummovie(ProtAlignMovies):
                            'previous alignment protocol, you save *only* the '
                            'alignment, you *MUST* set *NO*')
         
-        form.addParallelSection(threads=1, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):

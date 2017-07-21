@@ -186,6 +186,10 @@ class ProtAlignMovies(ProtProcessMovies):
                 # Probably is a good idea to store a cached summary for the
                 # first resulting movie of the processing.
                 self._storeSummary(newDone[0])
+                # If the movies are not written out, then dimensions can be
+                # copied from the input movies
+                if not saveMovie:
+                    movieSet.setDim(self.inputMovies.get().getDim())
                 self._defineTransformRelation(self.inputMovies, movieSet)
 
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
@@ -200,6 +204,10 @@ class ProtAlignMovies(ProtProcessMovies):
                 # micrograph file in the extra path with the required name
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
+                if not os.path.exists(extraMicFn):
+                    print("Micrograph %s was not producing, not added to "
+                          "output set." % extraMicFn)
+                    continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
@@ -227,7 +235,7 @@ class ProtAlignMovies(ProtProcessMovies):
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
-    # --------------------------- INFO functions --------------------------------
+    # --------------------------- INFO functions ------------------------------
 
     def _validate(self):
         errors = []
@@ -243,7 +251,8 @@ class ProtAlignMovies(ProtProcessMovies):
         # self.inputMovies.get().close()
         # frames = movie.getNumberOfFrames()
 
-        # Do not continue if there ar no movies. Validation message will take place since attribute is a Pointer.
+        # Do not continue if there ar no movies. Validation message will
+        # take place since attribute is a Pointer.
         if self.inputMovies.get() is None:
             return errors
 
@@ -365,7 +374,19 @@ class ProtAlignMovies(ProtProcessMovies):
         return self.getAttributeValue('binFactor', 1.0)
 
     def _getMovieRoot(self, movie):
-        return pwutils.removeBaseExt(movie.getFileName())
+        # Try to use the 'original' fileName in case it is present
+        # the original could be different from the current filename if
+        # we are dealing with compressed movies (e.g., movie.mrc.bz2)
+        fn = movie.getAttributeValue('_originalFileName',
+                                     movie.getFileName())
+        # Remove the first extension
+        fnRoot = pwutils.removeBaseExt(fn)
+        # Check if there is a second extension
+        # (Assuming is is only a dot and 3 or 4 characters after it
+        if fnRoot[-4] == '.' or fnRoot[-5] == '.':
+            fnRoot = pwutils.removeExt(fnRoot)
+
+        return fnRoot
 
     def _getOutputMovieName(self, movie):
         """ Returns the name of the output movie.
@@ -384,6 +405,9 @@ class ProtAlignMovies(ProtProcessMovies):
         (relative to micFolder)
         """
         return self._getMovieRoot(movie) + '_aligned_mic_DW.mrc'
+
+    def _getOutputMicThumbnail(self, movie):
+        return self._getExtraPath(self._getMovieRoot(movie) + '_thumbnail.png')
 
     def _getMovieShifts(self, movie):
         """ Returns the x and y shifts for the alignment of this movie.
@@ -432,12 +456,17 @@ class ProtAlignMovies(ProtProcessMovies):
         
         return preExp, dose
         
-        
-    
     def __runXmippProgram(self, program, args):
         """ Internal shortcut function to launch a Xmipp program. """
         import pyworkflow.em.packages.xmipp3 as xmipp3
         xmipp3.runXmippProgram(program, args)
+
+    def __runEman2Program(self, program, args):
+        """ Internal workaround to launch an EMAN2 program. """
+        import pyworkflow.em.packages.eman2 as eman2
+        from pyworkflow.utils.process import runJob
+        runJob(self._log, eman2.getEmanProgram(program), args,
+               env=eman2.getEnviron())
 
     def averageMovie(self, movie, inputFn, outputMicFn, binFactor=1, roi=None,
                      dark=None, gain=None, splineOrder=None):
@@ -509,6 +538,19 @@ class ProtAlignMovies(ProtProcessMovies):
         data1[:, m:] = data2[:, m:]
         psd.setData(data1)
         psd.write(outputFn)
+
+    def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
+        outputFn = outputFn or self.getThumbnailFn(inputFn)
+        args = "%s %s " % (inputFn, outputFn)
+        args += "--fouriershrink %s --process normalize" % scaleFactor
+
+        self.__runEman2Program('e2proc2d.py', args)
+
+        return outputFn
+
+    def getThumbnailFn(self, inputFn):
+        return pwutils.replaceExt(inputFn, "thumb.png")
+
 
 def createAlignmentPlot(meanX, meanY):
     """ Create a plotter with the cumulative shift per frame. """

@@ -39,7 +39,7 @@ class XmippProtWriteTestP(ProtProcessParticles):
     using mpi write data to a large file (python level)
     """
     _label = None
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, *args, **kwargs):
         ProtProcessParticles.__init__(self, *args, **kwargs)

@@ -52,6 +52,8 @@ void ProgMovieEstimateGain::readParams()
 
 void ProgMovieEstimateGain::produceSideInfo()
 {
+	if (fnIn.getExtension()=="mrc")
+		fnIn+=":mrcs";
 	mdIn.read(fnIn);
 	mdIn.removeDisabled();
 	if (mdIn.size()==0)
@@ -85,10 +87,12 @@ void ProgMovieEstimateGain::produceSideInfo()
 	{
 		int jmax=ceil(3*listOfSigmas[i]);
 		listOfWidths.push_back(jmax);
-		double *weights=new double[jmax];
-		double K=-0.5/(listOfSigmas[i]*listOfSigmas[i]);
-		for (int j=1; j<=jmax; ++j)
-			weights[j-1]=exp(K*j*j);
+		double *weights=new double[jmax+1];
+		double K=1;
+                if (listOfSigmas[i]>0)
+                   K=-0.5/(listOfSigmas[i]*listOfSigmas[i]);
+		for (int j=0; j<=jmax; ++j)
+			weights[j]=exp(K*j*j);
 		listOfWeights.push_back(weights);
 	}
 }
@@ -222,7 +226,7 @@ void ProgMovieEstimateGain::constructSmoothHistogramsByColumn(const double *list
 		{
 			if (j+k<0 || j+k>=XSIZE(columnH))
 				continue;
-			double actualWeightC = k==0? 1:listOfWeights[abs(k)];
+			double actualWeightC = listOfWeights[abs(k)];
 			sumWeightsC += actualWeightC;
 			for (size_t i=0; i<Ydim; ++i)
 				DIRECT_A2D_ELEM(smoothColumnH,i,j) += actualWeightC * DIRECT_A2D_ELEM(columnH,i,j+k);
@@ -266,7 +270,7 @@ void ProgMovieEstimateGain::constructSmoothHistogramsByRow(const double *listOfW
 		{
 			if (i+k<0 || i+k>=YSIZE(rowH))
 				continue;
-			double actualWeightR = k==0? 1:listOfWeights[abs(k)];
+			double actualWeightR = listOfWeights[abs(k)];
 			sumWeightsR += actualWeightR;
 			for (size_t j=0; j< Xdim; ++j)
 				DIRECT_A2D_ELEM(smoothRowH,i,j) += actualWeightR * DIRECT_A2D_ELEM(rowH,i+k,j);

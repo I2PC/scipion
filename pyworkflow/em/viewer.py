@@ -165,13 +165,48 @@ class ObjectView(DataView):
     def show(self):
         showj.runJavaIJapp(self._memory, 'xmipp.viewer.scipion.ScipionViewer',
                            self.getShowJParams(), env=self._env)
-        
+
+
+class MicrographsView(ObjectView):
+    """ Customized ObjectView for SetOfCTF objects . """
+    # All extra labels that we want to show if present in the CTF results
+    RENDER_LABELS = ['thumbnail._filename', 'psdCorr._filename',
+                     'plotGlobal._filename']
+    EXTRA_LABELS = ['_filename']
+
+    def __init__(self, project, micSet, other='', **kwargs):
+        first = micSet.getFirstItem()
+
+        first.printAll()
+
+        def existingLabels(labelList):
+            print("labelList: ", labelList)
+            return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
+
+        renderLabels = existingLabels(self.RENDER_LABELS)
+        extraLabels = existingLabels(self.EXTRA_LABELS)
+        labels = 'id enabled %s %s' % (renderLabels, extraLabels)
+
+        viewParams = {showj.MODE: showj.MODE_MD,
+                      showj.ORDER: labels,
+                      showj.VISIBLE: labels,
+                      showj.ZOOM: 50
+                      }
+
+        if renderLabels:
+            viewParams[showj.RENDER] = renderLabels
+
+        inputId = micSet.getObjId() or micSet.getFileName()
+        ObjectView.__init__(self, project,
+                            inputId, micSet.getFileName(), other,
+                            viewParams, **kwargs)
 
 class CtfView(ObjectView):
     """ Customized ObjectView for SetOfCTF objects . """
     # All extra labels that we want to show if present in the CTF results
-    PSD_LABELS = ['_psdFile', '_xmipp_enhanced_psd',
-                  '_xmipp_ctfmodel_quadrant', '_xmipp_ctfmodel_halfplane'
+    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile', '_xmipp_enhanced_psd',
+                  '_xmipp_ctfmodel_quadrant', '_xmipp_ctfmodel_halfplane',
+                  '_micObj.plotGlobal._filename'
                  ]
     EXTRA_LABELS = ['_ctffind4_ctfResolution', '_xmipp_ctfCritFirstZero',
                     ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
@@ -182,12 +217,13 @@ class CtfView(ObjectView):
         first = ctfSet.getFirstItem()
 
         def existingLabels(labelList):
-            return ' '.join([l for l in labelList if first.hasAttribute(l)])
+            return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
-        labels =  'id enabled comment %s _defocusU _defocusV ' % psdLabels
+        labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
         labels += '_defocusAngle _defocusRatio %s  _micObj._filename' % extraLabels
+
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,

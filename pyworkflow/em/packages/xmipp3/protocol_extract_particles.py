@@ -453,29 +453,37 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         # Create the SetOfImages object on the database
         fnImages = self._getOutputImgMd()
         # Create output SetOfParticles
-        imgSet = self._createSetOfParticles()
-        imgSet.copyInfo(self.inputMics)
+        self.imgSet = self._createSetOfParticles()
+        self.imgSet.copyInfo(self.inputMics)
         # set coords from the input, will update later if needed
-        imgSet.setCoordinates(self.inputCoords)
+        self.imgSet.setCoordinates(self.inputCoords)
         coords2 = SetOfCoordinates()
 
         if self.doFlip:
-            imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
-        
-        imgSet.generateItems(self.inputCoords,
-                             updateItemCallback=self.createParticles,
-                             itemDataIterator=md.iterRows(fnImages,
-                                                          sortByLabel=md.MDL_ITEM_ID))
-        
-        imgSet.setSamplingRate(self._getNewSampling())
+            self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
 
-        imgSet.setHasCTF(self.ctfRelations.hasValue())
-        
+        self.imgSet.setSamplingRate(self._getNewSampling())
+        self.imgSet.setHasCTF(self.ctfRelations.hasValue())
+
+        # a SetMdIterator is needed because in some cases, the number of
+        # items in SetOfCoordinates and in the metadata could be different.
+        iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
+                                    updateItemCallback=self.createParticles,
+                                    skipDisabled=True)
+        # THis use case is special, because copyItems method is designed to
+        # modified the same type of object of the input set. Here, a new type
+        #  (SetOfParticles) is generated, and its needed an auxiliary set of
+        # coordinates and it not stored.
+        coordsAux = SetOfCoordinates()
+        coordsAux.copyItems(self.inputCoords,
+                            updateItemCallback=iterator.updateItem,
+                            copyDisabled=True)
+
         self._storeMethodsInfo(fnImages)
-        self._defineOutputs(outputParticles=imgSet)
-        self._defineSourceRelation(self.inputCoordinates, imgSet)
+        self._defineOutputs(outputParticles=self.imgSet)
+        self._defineSourceRelation(self.inputCoordinates, self.imgSet)
         if self.ctfRelations.hasValue():
-            self._defineSourceRelation(self.ctfRelations.get(), imgSet)
+            self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
 
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
@@ -663,5 +671,5 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         item.setY(coord.getY())
         item.setX(coord.getX())
         particle.setCoordinate(item)
-        
-        return particle
+        self.imgSet.append(particle)
+        item._appendItem = False

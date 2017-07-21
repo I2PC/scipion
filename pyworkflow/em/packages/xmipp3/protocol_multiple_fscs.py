@@ -38,7 +38,7 @@ class XmippProtMultipleFSCs(em.ProtAnalysis3D):
     A mask can be provided and the volumes are aligned by default.
     """
     _label = 'multiple fscs'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **args):
         em.ProtAnalysis3D.__init__(self, **args)

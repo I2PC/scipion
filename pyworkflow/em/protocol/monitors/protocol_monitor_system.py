@@ -46,7 +46,7 @@ class ProtMonitorSystem(ProtMonitor):
     """ check CPU, mem and IO usage.
     """
     _label = 'system_monitor'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtMonitor.__init__(self, **kwargs)

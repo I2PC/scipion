@@ -42,7 +42,7 @@ class SparxGaussianProtPicking(ProtParticlePicking):
     For more information see http://sparx-em.org/sparxwiki/e2boxer
     """
     _label = 'sparx gaussian picker'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
         
     def __init__(self, **args):     
         ProtParticlePicking.__init__(self, **args)

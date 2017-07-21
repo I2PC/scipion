@@ -33,9 +33,9 @@ from datetime import datetime
 
 import pyworkflow.object as pwobj
 from pyworkflow import VERSION_1_1
-from pyworkflow.protocol.params import PointerParam, BooleanParam, LEVEL_ADVANCED
+from pyworkflow.protocol.params import PointerParam
 
-from pyworkflow.protocol.constants import STEPS_PARALLEL, STATUS_NEW
+from pyworkflow.protocol.constants import STEPS_PARALLEL, MODE_RESUME
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 from pyworkflow.em.data import SetOfMovies, Movie, MovieAlignment, Acquisition
@@ -197,6 +197,10 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         movieFn = movie.getFileName()
         movieName = basename(movieFn)
 
+        if (self.isContinued() and os.path.exists(self._getMovieDone(movie))):
+            self.info("Skipping movie: %s, seems to be done" % movieFn)
+            return
+
         # Clean old finished files
         pwutils.cleanPath(self._getMovieDone(movie))
 
@@ -352,7 +356,7 @@ class ProtMovieAssignGain(ProtPreprocessMicrographs):
     """ Assign a gain image to a set of movies
     """
     _label = 'assign gain to movies'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
 
     def __init__(self, **kwargs):
         ProtPreprocessMicrographs.__init__(self, **kwargs)

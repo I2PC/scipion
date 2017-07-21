@@ -42,7 +42,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
     Protocol to average movies
     """
     _label = 'movie average'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     CONVERT_TO_MRC = 'mrcs'
     doSaveAveMic = True
 
@@ -113,7 +113,7 @@ class XmippProtMovieAverage(ProtAlignMovies):
                       help="linear (faster but lower quality), "
                            "cubic (slower but more accurate).")
 
-        form.addParallelSection(threads=1, mpi=0)
+        form.addParallelSection(threads=1, mpi=1)
     
     #--------------------------- STEPS functions -------------------------------
     def _processMovie(self, movie):

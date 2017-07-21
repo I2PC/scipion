@@ -192,8 +192,10 @@ class GautomatchPickerWizard(emwiz.EmWizard):
                                         pickerProps=pickerConfig).show()
         process.wait()
         myprops = pwutils.readProperties(pickerConfig)
-        form.setVar('threshold', myprops['threshold.value'])
-        if not prot.advanced:
-            form.setVar('minDist', myprops['mindist.value'])
-        else:
-            pass  # TODO: We could even in future parse the 'guessed' params
+
+        if myprops['applyChanges'] == 'true':
+            form.setVar('threshold', myprops['threshold.value'])
+            if not prot.advanced:
+                form.setVar('minDist', myprops['mindist.value'])
+            else:
+                pass  # TODO: We could even in future parse the 'guessed' params

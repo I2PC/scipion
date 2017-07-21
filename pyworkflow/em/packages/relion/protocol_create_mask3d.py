@@ -40,7 +40,7 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
     The mask is created from a 3d volume or by comparing two input volumes.
     """
     _label = 'create 3d mask'
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     
     # --------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
