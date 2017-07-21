@@ -26,13 +26,15 @@
 """
 This module contains the protocol for 3d refinement with Relion.
 """
+import pyworkflow.em as em
 import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume, FSC
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em import ALIGN_PROJ
+from pyworkflow.em.packages.relion.convert import createItemMatrix
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-from convert import isVersion2, readSetOfParticles, MOVIE_EXTRA_LABELS
+from convert import isVersion2
 
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
@@ -136,8 +138,18 @@ leads to objective and high-quality results.
             fnOut = self._getFileName('dataFinal', iter=self._lastIter())
             outMovieSet = self._createSetOfMovieParticles()
             outMovieSet.copyInfo(movieSet)
-            readSetOfParticles(fnOut, outMovieSet, alignType=ALIGN_PROJ,
-                               extraLabels=MOVIE_EXTRA_LABELS)
+            outMovieSet.setAlignmentProj()
+            # the following works, but only if both sets are equal in size
+            # outMovieSet.copyItems(movieSet,
+            #                      updateItemCallback=self._updateParticle,
+            #                      itemDataIterator=md.iterRows(fnOut, sortByLabel=md.RLN_IMAGE_ID))
+
+            # Use a SetMdIterator because it could be less movie particles
+            # in the metadata produced than in the input set
+            iterator = md.SetMdIterator(fnOut, sortByLabel=md.RLN_IMAGE_ID,
+                                        updateItemCallback=self._updateParticle)
+            outMovieSet.copyItems(movieSet, updateItemCallback=iterator.updateItem,
+                                  itemDataIterator=iterator.iterMd)
 
             self._defineOutputs(outputParticles=outMovieSet)
             self._defineTransformRelation(self.inputParticles, outMovieSet)
@@ -222,5 +234,10 @@ leads to objective and high-quality results.
                          itemDataIterator=md.iterRows(outImgsFn, sortByLabel=md.RLN_IMAGE_ID))
     
     def _createItemMatrix(self, item, row):
-        from pyworkflow.em.packages.relion.convert import createItemMatrix
         createItemMatrix(item, row, align=ALIGN_PROJ)
+
+    def _updateParticle(self, item, row):
+        createItemMatrix(item, row, align=ALIGN_PROJ)
+        item._rlnGroupName = em.String(row.getValue('rlnGroupName'))
+        item._rlnMovieFramesRunningAverage = em.Integer(row.getValue('rlnMovieFramesRunningAverage'))
+        item._rlnOriginalParticleName = em.String(row.getValue('rlnOriginalParticleName'))

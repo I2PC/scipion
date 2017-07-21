@@ -32,6 +32,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
 from pyworkflow.em.data import Volume
 import pyworkflow.em.metadata as md
 from pyworkflow.em.protocol import ProtProcessParticles
+from pyworkflow.em.packages.relion.convert import createItemMatrix
 
 from protocol_base import ProtRelionBase
 from convert import isVersion2, writeSetOfParticles, MOVIE_EXTRA_LABELS
@@ -272,17 +273,17 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         mdShiny.write(pathFixedShiny)
     
     def createOutputStep(self):
-        from pyworkflow.em import ALIGN_PROJ
-        from pyworkflow.em.packages.relion.convert import readSetOfParticles
-
         imgSet = self._getInputParticles()
         vol = Volume()
         vol.setFileName(self._getFileName('volume_shiny'))
         vol.setSamplingRate(imgSet.getSamplingRate())
         shinyPartSet = self._createSetOfParticles()
         shinyPartSet.copyInfo(imgSet)
-        readSetOfParticles(self._getFileName('shiny'), shinyPartSet, alignType=ALIGN_PROJ)
-        
+        shinyPartSet.setAlignmentProj()
+        shinyPartSet.copyItems(imgSet, updateItemCallback=self._createItemMatrix,
+                               itemDataIterator=md.iterRows(self._getFileName('shiny'),
+                                                            sortByLabel=md.RLN_IMAGE_ID))
+
         self._defineOutputs(outputParticles=shinyPartSet)
         self._defineOutputs(outputVolume=vol)
         
@@ -318,3 +319,8 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         nrOfFrames = mdFn.getValue(md.RLN_PARTICLE_NR_FRAMES, mdFn.firstObject())
 
         return nrOfFrames
+
+    def _createItemMatrix(self, item, row):
+        from pyworkflow.em import ALIGN_PROJ
+        createItemMatrix(item, row, align=ALIGN_PROJ)
+
