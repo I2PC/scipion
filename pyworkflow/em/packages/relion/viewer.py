@@ -34,7 +34,8 @@ from pyworkflow.em.data import SetOfParticles, SetOfImages
 from pyworkflow.em.plotter import EmPlotter
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 import pyworkflow.protocol.params as params
-from pyworkflow.viewer import Viewer, ProtocolViewer, DESKTOP_TKINTER, WEB_DJANGO
+from pyworkflow.viewer import (Viewer, ProtocolViewer, DESKTOP_TKINTER,
+                               WEB_DJANGO)
 
 from protocol_classify2d import ProtRelionClassify2D
 from protocol_classify3d import ProtRelionClassify3D
@@ -43,6 +44,7 @@ from protocol_polish import ProtRelionPolish
 from protocol_postprocess import ProtRelionPostprocess
 from protocol_autopick import ProtRelionAutopick, ProtRelionAutopickFom
 from protocol_sort import ProtRelionSortParticles
+from convert import relionToLocation
 
 ITER_LAST = 0
 ITER_SELECTION = 1
@@ -67,14 +69,14 @@ FSC_ALL = 4
 
 
 class RelionPlotter(EmPlotter):
-    ''' Class to create several plots with Xmipp utilities'''
+    """ Class to create several plots with Xmipp utilities"""
     def __init__(self, x=1, y=1, mainTitle="", **kwargs):
         EmPlotter.__init__(self, x, y, mainTitle, **kwargs)
     
     def plotMdAngularDistribution(self, title, angularMd, color='blue'):
-        '''Create an special type of subplot, representing the angular
+        """Create an special type of subplot, representing the angular
         distribution of weight projections. A metadata should be provided containing
-        labels: RLN_ORIENT_ROT, RLN_ORIENT_TILT, MDL_WEIGHT '''
+        labels: RLN_ORIENT_ROT, RLN_ORIENT_TILT, MDL_WEIGHT """
         from math import radians
         
         rot = [radians(angularMd.getValue(md.RLN_ORIENT_ROT, objId)) for objId in angularMd]
@@ -389,8 +391,16 @@ Examples:
             modelStar = self.protocol._getFileName('model', iter=it)
 
             for row in md.iterRows('%s@%s' % ('model_classes', modelStar)):
-                i, fn = row.getValue('rlnReferenceImage').split('@')
-                index = int(i)
+                i, fn = relionToLocation(row.getValue('rlnReferenceImage'))
+                if i == em.NO_INDEX: # the case for 3D classes
+                    # NOTE: Since there is not an proper ID value in
+                    #  the clases metadata, we are assuming that class X
+                    # has a filename *_classXXX.mrc (as it is in Relion)
+                    # and we take the ID from there
+                    index = int(fn[-7:-4])
+                else:
+                    index = i
+
                 if index not in classInfo:
                     classInfo[index] = {}
                     for l in labels:
@@ -421,8 +431,8 @@ Examples:
         def get_cmap(N):
             import matplotlib.cm as cmx
             import matplotlib.colors as colors
-            '''Returns a function that maps each index in 0, 1, ... N-1 to a distinct
-            RGB color.'''
+            """Returns a function that maps each index in 0, 1, ... N-1 to a distinct
+            RGB color."""
             color_norm = colors.Normalize(vmin=0, vmax=N - 1)
             scalar_map = cmx.ScalarMappable(norm=color_norm, cmap='hsv')
 
