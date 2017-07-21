@@ -1026,6 +1026,7 @@ class RelionAutopickViewer(Viewer):
 
 
 class RelionPolishViewer(ProtocolViewer):
+    """ Viewer for Relion polishing protocol"""
     _targets = [ProtRelionPolish]
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     
@@ -1066,11 +1067,11 @@ Examples:
                             '*chimera*: display volumes as surface with Chimera.')
         group.addParam('displayAngDist', params.EnumParam, choices=['2D plot', 'chimera'], 
                        default=ANGDIST_2DPLOT, display=params.EnumParam.DISPLAY_HLIST,
-                       label='Display angular distribution',condition="showHalves==3",
+                       label='Display angular distribution', condition="showHalves==3",
                        help='*2D plot*: display angular distribution as interactive 2D in matplotlib.\n'
                             '*chimera*: display angular distribution using Chimera with red spheres.')
         group.addParam('spheresScale', params.IntParam, default=100, 
-                       expertLevel=LEVEL_ADVANCED,condition="showHalves==3 and displayAngDist==%d" % ANGDIST_CHIMERA,
+                       expertLevel=LEVEL_ADVANCED, condition="showHalves==3 and displayAngDist==%d" % ANGDIST_CHIMERA,
                        label='Spheres size',
                        help='')
         group = form.addGroup('Plots')
@@ -1191,8 +1192,8 @@ Examples:
             radius = self.protocol.maskDiameterA.get()/2
             
         volFn = self._getVolumeNames()[0]
-        if exists(volFn.replace(":mrc","")):
-            sqliteFn = self.protocol._getFileName('projections', iter=1, half="shiny_")
+        if exists(volFn.replace(":mrc", "")):
+            sqliteFn = self.protocol._getFileName('projections', iter=1, half="shiny_", ref3d=1)
             if not exists(sqliteFn):
                 self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(self.protocol._getFileName('shiny')))
             return em.ChimeraClientView(volFn, angularDistFile=sqliteFn, spheresDistance=radius)
@@ -1209,7 +1210,7 @@ Examples:
                                  mainTitle="Shiny Particles", windowTitle="Angular Distribution")
         dataStar = self.protocol._getFileName('shiny')
         if exists(dataStar):
-            sqliteFn = self.protocol._getFileName('projections', iter=1, half="shiny_")
+            sqliteFn = self.protocol._getFileName('projections', iter=1, half="shiny_", ref3d=1)
             if not exists(sqliteFn):
                 self.createAngDistributionSqlite(sqliteFn, nparts, itemDataIterator=self._iterAngles(dataStar))
             plotter.plotAngularDistributionFromMd(sqliteFn, "")
@@ -1230,7 +1231,7 @@ Examples:
         xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Resolution FSC')
         a = xplotter.createSubPlot("FSC Shiny Particles", 'Angstroms^-1', 'FSC', yformat=False)
         legends = []
-        modelStar = self.protocol._getFileName('fsc_shiny', iter=self.protocol._lastIter())
+        modelStar = self.protocol._getFileName('fsc_shiny')
         for label in self._getFSCLabels():
             if exists(modelStar):
                 model = 'fsc@' + modelStar
@@ -1265,11 +1266,11 @@ Examples:
         a = xplotter.createSubPlot("", 'Angstroms^-2', 'log(Amplitude)', yformat=False)
         legends = []
         for frame in self._frames:
-            modelStar = self.protocol._getFileName('guinier_frame', iter=self.protocol._lastIter(), frame=frame)
+            modelStar = self.protocol._getFileName('guinier_frame', frame=frame)
             if exists(modelStar):
                 model = 'relative_guinier@' + modelStar
                 self._plotGuinier(a, model)
-                legends.append("guinier frame %d " % frame)
+                legends.append("frame %d" % frame)
         xplotter.showLegend(legends)
         a.grid(True)
         
@@ -1292,12 +1293,12 @@ Examples:
         gridsize = self._getGridSize(2)
         md.activateMathExtensions()
         
-        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Per Frames Bfactors')
-        modelStar = self.protocol._getFileName('bfactors', iter=self.protocol._lastIter())
+        xplotter = RelionPlotter(x=gridsize[0], y=gridsize[1], windowTitle='Per Frame B-factors')
+        modelStar = self.protocol._getFileName('bfactors')
         model = 'perframe_bfactors@' + modelStar
-        for title in ['Bfactor', 'Intercept']:
+        for title in ['B-factor', 'Scale factor']:
             a = xplotter.createSubPlot(title, 'Frame', title, yformat=False)
-            if title == "Bfactor":
+            if title == "B-factor":
                 label = md.RLN_POSTPROCESS_BFACTOR
             else:
                 label = md.RLN_POSTPROCESS_GUINIER_FIT_INTERCEPT
@@ -1362,13 +1363,13 @@ Examples:
         vols = []
         prefixes = self._getPrefixes()
         if prefixes == ["shiny"]:
-            volFn = self.protocol._getFileName('volume_shiny', iter=self.lastIter)
+            volFn = self.protocol._getFileName('volume_shiny')
             if exists(volFn.replace(':mrc', '')):
                 vols.append(volFn)
         else:
             for frm in self._frames:
                 for prefix in prefixes:
-                    volFn = self.protocol._getFileName('volume_frame', halve=prefix, frame=frm, iter=self.lastIter, ref3d=1)
+                    volFn = self.protocol._getFileName('volume_frame', halve=prefix, frame=frm, ref3d=1)
                     if exists(volFn.replace(':mrc', '')):
                         vols.append(volFn)
         return vols

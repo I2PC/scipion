@@ -26,12 +26,11 @@
 # **************************************************************************
 
 import os
-import re
-from glob import glob
 from os.path import exists
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED)
-from pyworkflow.em.data import Volume 
+from pyworkflow.em.data import Volume
+import pyworkflow.em.metadata as md
 from pyworkflow.em.protocol import ProtProcessParticles
 
 from protocol_base import ProtRelionBase
@@ -55,19 +54,9 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         working dir for the protocol have been set.
         (maybe after recovery from mapper)
         """
-        #refineRun = self.refineRun.get()
-        #refineRun._initialize()  # load filenames stuff
         self._createFilenameTemplates()
         self._createIterTemplates()
-        #self._createFrameTemplates(refineRun)
-    
-    #def _createFrameTemplates(self, refineRun):
-    #    """ Setup the regex on how to find iterations. """
-    #    self._frameTemplate = self._getFileName('guinier_frame', frame=0,
-    #                                            iter=refineRun._lastIter()).replace('000', '???')
-    #    # Frames will be identified by _frameXXX_ where XXX is the frame number
-    #    # restricted to only 3 digits.
-    #    self._frameRegex = re.compile('_frame(\d{3,3})_')
+
     
     #--------------------------- DEFINE param functions --------------------------------------------   
     def _defineParams(self, form):
@@ -203,7 +192,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         self._insertFunctionStep('convertInputStep',
                                  self._getInputParticles().getObjId())
         self._insertPolishStep()
-        self._insertFunctionStep('organizeDataStep')
+        #self._insertFunctionStep('organizeDataStep')
         self._insertFunctionStep('createOutputStep')
         
     def _insertPolishStep(self):
@@ -211,7 +200,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         imgStar = self._getFileName('movie_particles')
         
         params = ' --i %s' % imgStar
-        params += ' --o shiny'
+        params += ' --o %s/shiny' % self._getExtraPath()
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --sigma_nb %d' % self.stddevParticleDistance.get()
@@ -323,3 +312,9 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     #--------------------------- UTILS functions --------------------------------------------
     def _getInputParticles(self):
         return self.inputMovieParticles.get()
+
+    def _lastFrame(self):
+        mdFn = md.MetaData(self._getFileName('shiny'))
+        nrOfFrames = mdFn.getValue(md.RLN_PARTICLE_NR_FRAMES, mdFn.firstObject())
+
+        return nrOfFrames
