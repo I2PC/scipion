@@ -308,6 +308,9 @@ class ProtImportImages(ProtImportFiles):
 
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
+
+        self._cleanUp()
+
         return outFiles
 
     @classmethod
@@ -393,6 +396,11 @@ class ProtImportImages(ProtImportFiles):
         return methods
     
     #--------------------------- UTILS functions -------------------------------
+    def _cleanUp(self):
+        """Empty method to override in child classes. E.g. to close socket in
+        ProtImportMovies with streamingSocket."""
+        pass
+
     def getFiles(self):
         outputSet = self._getOutputSet()
         if outputSet is not None:
