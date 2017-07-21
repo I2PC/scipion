@@ -139,15 +139,15 @@ leads to objective and high-quality results.
             outMovieSet = self._createSetOfMovieParticles()
             outMovieSet.copyInfo(movieSet)
             outMovieSet.setAlignmentProj()
-            #outMovieSet.copyItems(movieSet,
+            # the following works, but only if both sets are equal in size
+            # outMovieSet.copyItems(movieSet,
             #                      updateItemCallback=self._updateParticle,
             #                      itemDataIterator=md.iterRows(fnOut, sortByLabel=md.RLN_IMAGE_ID))
 
             # Use a SetMdIterator because it could be less movie particles
             # in the metadata produced than in the input set
             iterator = md.SetMdIterator(fnOut, sortByLabel=md.RLN_IMAGE_ID,
-                                        updateItemCallback=self._updateParticle,
-                                        skipDisabled=True)
+                                        updateItemCallback=self._updateParticle)
             outMovieSet.copyItems(movieSet, updateItemCallback=iterator.updateItem)
 
             self._defineOutputs(outputParticles=outMovieSet)
