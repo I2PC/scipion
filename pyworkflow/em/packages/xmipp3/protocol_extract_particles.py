@@ -29,7 +29,6 @@
 # **************************************************************************
 
 from glob import glob
-from itertools import izip
 from os.path import exists, basename
 
 import pyworkflow.em.metadata as md
@@ -39,11 +38,10 @@ from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_FINISHED)
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol import ProtExtractParticles
-from pyworkflow.em.data import SetOfCoordinates, Particle
+from pyworkflow.em.data import Particle
 from pyworkflow.em.constants import RELATION_CTF
 
-from convert import (writeSetOfCoordinates, micrographToCTFParam,
-                     writeMicCoordinates, xmippToLocation)
+from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation)
 from xmipp3 import XmippProtocol
 
 
@@ -133,7 +131,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'option to True if you want those pixels outside '
                            'the borders to be filled with the closest pixel '
                            'value available')
-
+        
+        # TODO: Particle sorting is not possible to execute in streaming,
+        # so we should remove its parameters.
         form.addParam('doSort', params.BooleanParam, default=True,
                       label='Perform sort by statistics',
                       help='Perform sort by statistics to compute a zscore '
@@ -225,84 +225,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         form.addParallelSection(threads=4, mpi=1)
     
     #--------------------------- INSERT steps functions ------------------------
-    # def _insertAllSteps(self):
-    #     """for each micrograph insert the steps to preprocess it"""
-    #     self._setupBasicProperties()
-    #     # Write pos files for each micrograph
-    #     firstStepId = self._insertFunctionStep('writePosFilesStep')
-    #
-    #     # For each micrograph insert the steps, run in parallel
-    #     deps = []
-    #     self.micDict = {}
-    #
-    #     for mic in self.inputMics:
-    #         if self.ctfRelations.hasValue():
-    #             micKey = self.micKey(mic)
-    #             mic.setCTF(self.ctfDict[micKey])
-    #
-    #         # Actually extract
-    #         self.micDict[mic.getObjId()] = mic.clone()
-    #
-    #         localDeps = [firstStepId]
-    #
-    #         deps.append(self._insertFunctionStep('extractParticlesStep',
-    #                                              mic.getObjId(),
-    #                                              ,
-    #                                              prerequisites=localDeps))
-    #
-    #     # Insert step to create output objects
-    #     metaDeps = self._insertFunctionStep('createMetadataImageStep',
-    #                                         prerequisites=deps)
-    #
-    #     if self.doSort:
-    #         screenDep = self._insertFunctionStep('screenParticlesStep',
-    #                                              prerequisites=[metaDeps])
-    #         finalDeps = [screenDep]
-    #     else:
-    #         finalDeps = [metaDeps]
-    #
-    #     self._insertFunctionStep('createOutputStep', prerequisites=finalDeps)
-
-    #--------------------------- STEPS functions -------------------------------
-
-    # def writePosFilesStep(self):
-    #     """ Write the pos file for each micrograph on metadata format. """
-    #     writeSetOfCoordinates(self._getExtraPath(), self.inputCoords,
-    #                           scale=self.getBoxScale())
-    #     # We need to find the mapping (either by micName (without ext) or micId)
-    #     # between the micrographs in the SetOfCoordinates and
-    #     # the Other micrographs if necessary
-    #     if self._micsOther():
-    #         micDict = {}
-    #         coordMics = self.inputCoords.getMicrographs()
-    #         for mic in coordMics:
-    #             micBase = pwutils.removeBaseExt(mic.getFileName())
-    #             micPos = self._getExtraPath(micBase + ".pos")
-    #             micDict[pwutils.removeBaseExt(mic.getMicName())] = micPos
-    #             micDict[mic.getObjId()] = micPos
-    #
-    #         if any(pwutils.removeBaseExt(mic.getMicName()) in micDict
-    #                for mic in self.inputMics):
-    #             micKey = lambda mic: pwutils.removeBaseExt(mic.getMicName())
-    #         elif any(mic.getObjId() in micDict for mic in self.inputMics):
-    #             self.warning('Could not match input micrographs and coordinates'
-    #                          ' micrographs by micName, using micId.')
-    #             micKey = lambda mic: mic.getObjId()
-    #         else:
-    #             raise Exception('Could not match input micrographs and '
-    #                             'coordinates neither by micName or micId.')
-    #
-    #         for mic in self.inputMics: # micrograph from input (other)
-    #             mk = micKey(mic)
-    #             if mk in micDict:
-    #                 micPosCoord = micDict[mk]
-    #                 if exists(micPosCoord):
-    #                     micBase = pwutils.removeBaseExt(mic.getFileName())
-    #                     micPos = self._getExtraPath(micBase + ".pos")
-    #                     if micPos != micPosCoord:
-    #                         self.info('Moving %s -> %s' % (micPosCoord, micPos))
-    #                         pwutils.moveFile(micPosCoord, micPos)
-
     def _insertInitialSteps(self):
         # Just overwrite this function to load some info
         # before the actual processing
@@ -317,7 +239,8 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         return [self.doInvert.get(),
                 self._getNormalizeArgs(),
                 self.doBorders.get()]
-
+    
+    #--------------------------- STEPS functions -------------------------------
     def _extractMicrograph(self, mic, doInvert, normalizeArgs, doBorders):
         """ Extract particles from one micrograph """
         fnLast = mic.getFileName()
@@ -663,13 +586,14 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         and update the outputParts set with new items.
         """
         p = Particle()
-
         for mic in micList:
             # We need to make this dict because there is no ID in the .xmd file
             coordDict = {}
             for coord in self.coordDict[mic.getObjId()]:
-                coordDict[coord.getPosition()] = coord
-
+                scaledCoord = tuple(map(lambda x: int(x*self.getBoxScale()),
+                                      coord.getPosition()))
+                coordDict[scaledCoord] = coord
+            
             for row in md.iterRows(self._getMicXmd(mic)):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
                 coord = coordDict.get(pos, None)

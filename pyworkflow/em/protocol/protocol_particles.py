@@ -606,6 +606,7 @@ class ProtExtractParticles(ProtParticles):
         #   1) new micrographs ready to be picked
         #   2) new output coordinates that have been produced and add then
         #      to the output set.
+        print "Checking"
         self._checkNewInput()
         self._checkNewOutput()
 
@@ -696,8 +697,9 @@ class ProtExtractParticles(ProtParticles):
                     del micDict[micKey]
 
         self.debug("Loading Coords.")
-        # Now load the coordinates for the newly detected micrographs
-        coordClosed = self._loadInputCoords(micDict)
+        # Now load the coordinates for the newly detected micrographs. If
+        # microgrpahs does not have coordinates, is not processed.
+        micDict, coordClosed = self._loadInputCoords(micDict)
         closed = closed and coordClosed
 
         return micDict, closed
@@ -729,46 +731,50 @@ class ProtExtractParticles(ProtParticles):
         coordSet.close()
         self.debug("Closed db.")
 
-        return streamClosed
-
+        return micDict, streamClosed
 
     def _checkNewInput(self):
         self.debug(">>> _checkNewInput ")
-
+    
         def _modificationTime():
             """ Check the last modification time of any of the three possible
              input files. """
             items = [self.inputCoordinates.get()]
-            
+        
             if self._micsOther():
                 items.append(self.inputMicrographs.get())
             else:
                 items.append(self.inputCoordinates.get().getMicrographs())
-
+        
             if self._useCTF():
                 items.append(self.ctfRelations.get())
-
+        
             def _mTime(fn):
                 return datetime.fromtimestamp(os.path.getmtime(fn))
-
+        
             return max([_mTime(i.getFileName()) for i in items])
-
+    
         mTime = _modificationTime()
         now = datetime.now()
         self.lastCheck = getattr(self, 'lastCheck', now)
         self.debug('Last check: %s, modification: %s'
-                  % (pwutils.prettyTime(self.lastCheck),
-                     pwutils.prettyTime(mTime)))
+                   % (pwutils.prettyTime(self.lastCheck),
+                      pwutils.prettyTime(mTime)))
         # If the input micrographs.sqlite have not changed since our last check,
-        # it does not make sense to check for new input data
-        if self.lastCheck > mTime and hasattr(self, 'micDict'):
-            return None
+        # it does not make sense to check for new input data, but we must
+        # check if sets are closed.
+        self.debug("self.lastCheck > mTime %s , hasattr(self, 'micDict') %s"
+                   % (self.lastCheck > mTime, hasattr(self, 'micDict')))
 
-        self.lastCheck = now
         # Open input micrographs.sqlite and close it as soon as possible
         newMics, self.streamClosed = self._loadInputList()
-        outputStep = self._getFirstJoinStep()
 
+        if self.lastCheck > mTime and hasattr(self, 'micDict'):
+            return None
+    
+        self.lastCheck = now
+        outputStep = self._getFirstJoinStep()
+    
         if newMics:
             fDeps = self._insertNewMicsSteps(newMics.values())
             if outputStep is not None:
@@ -797,8 +803,9 @@ class ProtExtractParticles(ProtParticles):
         # We have finished when there is not more input mics (stream closed)
         # and the number of processed mics is equal to the number of inputs
         self.finished = self.streamClosed and allDone == inputLen
+        print "Is finished? ", self.finished, allDone, inputLen, self.streamClosed
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-
+        print "stream mode: ", streamMode
         if newDone:
             self._updateOutputPartSet(newDone, streamMode)
 
