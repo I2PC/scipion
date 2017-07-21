@@ -86,7 +86,7 @@ void ProgMPIRecFourier::preRun()
     }
     else
     {
-        produceSideinfo(!fn_fsc.empty());
+        produceSideinfo();
         SF.firstObject();
     }
 

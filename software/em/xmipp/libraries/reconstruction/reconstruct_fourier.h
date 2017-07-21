@@ -205,7 +205,7 @@ public:
     void run();
 
     /// Produce side info: fill arrays with relevant transformation matrices
-    void produceSideinfo(bool saveFSC);
+    void produceSideinfo();
 
     void finishComputations( const FileName &out_name );
 
@@ -234,6 +234,23 @@ private:
     template<typename T>
     T*** cropAndApplyBlob(T***& input, int size, float blobSize,
     		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt);
+
+    inline void allocateVoutFourier() {
+    	if (NULL == VoutFourier.data) {
+    		VoutFourier.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
+    	}
+    }
+
+    inline void allocateFourierWeights() {
+    	if (NULL == FourierWeights.data) {
+    		FourierWeights.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
+    	}
+    }
+
+    void saveIntermediateFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
+    		const std::string &weightsFileName, const std::string &fourierFileName, const FileName &resultFileName,
+			bool storeResult);
+    void saveFinalFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize);
 
 	static void processCube(
 			int i,
