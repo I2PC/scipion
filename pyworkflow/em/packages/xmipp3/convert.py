@@ -712,7 +712,7 @@ def writeCoordsConfig(configFn, boxSize=100, isManual=True):
     md.write('properties@%s' % configFn)
 
 
-def writeMicCoordinates(mic, coordList, outputFn, isManual=True, scale=1):
+def writeMicCoordinates(mic, coordList, outputFn, isManual=True, getPosFunc=None):
     """ Write the pos file as expected by Xmipp with the coordinates
     of a given micrograph.
     Params:
@@ -720,16 +720,16 @@ def writeMicCoordinates(mic, coordList, outputFn, isManual=True, scale=1):
         coordList: list of (x, y) pairs of the mic coordinates.
         outputFn: output filename for the pos file .
         isManual: if the coordinates are 'Manual' or 'Supervised'
-        scale: if we need to scale the coordinates to adjust to the mic.
+        getPosFunc: a function to get the positions from the coordinate,
+            it can be useful for scaling the coordinates if needed.
     """
+    if getPosFunc is None:
+        getPosFunc = lambda coord: coord.getPostion()
 
     f = openMd(outputFn, ismanual=isManual)
 
     for coord in coordList:
-        x, y = coord.getPosition()
-        if scale != 1:
-            x *= scale
-            y *= scale
+        x, y = getPosFunc(coord)
         f.write(" %06d   1   %d  %d  %d   %06d\n"
                 % (coord.getObjId(), x, y, 1, mic.getObjId()))
     

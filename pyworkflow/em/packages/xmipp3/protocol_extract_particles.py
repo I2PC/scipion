@@ -474,7 +474,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     # --------------------------- UTILS functions -------------------------------
     def _convertCoordinates(self, mic, coordList):
         writeMicCoordinates(mic, coordList, self._getMicPos(mic),
-                            scale=self.getBoxScale())
+                            getPosFunc=self._getPos)
     
     def _micsOther(self):
         """ Return True if other micrographs are used for extract. """
@@ -507,6 +507,16 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
         self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
+
+        scale = self.getBoxScale()
+
+        if self.notOne(scale):
+            # If we need to scale the box, then we need to scale the coordinates
+            getPos = lambda coord: (coord.getX() * scale, coord.getY() * scale)
+        else:
+            getPos = lambda coord: coord.getPosition()
+        # Store the function to be used for scaling coordinates
+        self._getPos = getPos
 
     def getInputMicrographs(self):
         """ Return the micrographs associated to the SetOfCoordinates or
@@ -590,9 +600,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
             # We need to make this dict because there is no ID in the .xmd file
             coordDict = {}
             for coord in self.coordDict[mic.getObjId()]:
-                scaledCoord = tuple(map(lambda x: int(x*self.getBoxScale()),
-                                      coord.getPosition()))
-                coordDict[scaledCoord] = coord
+                coordDict[self._getPos(coord)] = coord
             
             for row in md.iterRows(self._getMicXmd(mic)):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
