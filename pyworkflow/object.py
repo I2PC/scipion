@@ -657,11 +657,20 @@ class String(Scalar):
             fs: Use femto seconds or not, only when format=None
         """
         if formatStr is None:
-            formatStr = self.DATETIME_FORMAT
-            if fs:
-                formatStr += self.FS
+            try:
+                formatStr = self.DATETIME_FORMAT
+                if fs:
+                    formatStr += self.FS
+                datetime = dt.datetime.strptime(self._objValue, formatStr)
+            except Exception as ex:
+                # Maybe the %f (femtoseconds) is not working
+                # let's try to format without it
+                datetime = dt.datetime.strptime(self._objValue,
+                                                self.DATETIME_FORMAT)
+        else:
+            datetime = dt.datetime.strptime(self._objValue, formatStr)
 
-        return dt.datetime.strptime(self._objValue, formatStr)
+        return datetime
 
 
 class Float(Scalar):
