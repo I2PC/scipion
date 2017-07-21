@@ -49,7 +49,7 @@ class ProtRelionCreateMask3D(ProtCreateMask3D):
                       label="Input volume",
                       help="Select the volume that will be used to create the mask")
         if isVersion2():
-            form.addParam('initialLowPassFilterA', params.IntParam, default=-1,
+            form.addParam('initialLowPassFilterA', params.FloatParam, default=-1,
                           label='Lowpass filter map by (A)',
                           help='Lowpass filter that will be applied to the input map, '
                                'prior to binarization. To calculate solvent masks, a '

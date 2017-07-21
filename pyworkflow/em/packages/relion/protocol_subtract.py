@@ -71,9 +71,9 @@ class ProtRelionSubtract(ProtOperateParticles):
                       help='Select the input volume. Is desirable that the '
                            'volume was generated with the input particles.')
         form.addParam('refMask', PointerParam, pointerClass='VolumeMask',
-              label='Reference mask (optional)', allowsNull=True,
-              help="The volume will be masked once the volume has been "
-                   "applied the CTF of the particles.")
+                      label='Reference mask (optional)', allowsNull=True,
+                      help="The volume will be masked once the volume has been "
+                           "applied the CTF of the particles.")
         
         form.addParallelSection(threads=0, mpi=0)
     
@@ -102,7 +102,7 @@ class ProtRelionSubtract(ProtOperateParticles):
     
     def applyMaskStep(self):
         import pyworkflow.em.packages.xmipp3 as xmipp3
-        from pyworkflow.em.packages.xmipp3.convert  import getImageLocation
+        from pyworkflow.em.packages.xmipp3.convert import getImageLocation
         
         params = ' -i %s --mult %s -o %s' % (getImageLocation(self.inputVolume.get()),
                                              getImageLocation(self.refMask.get()),
@@ -130,7 +130,6 @@ class ProtRelionSubtract(ProtOperateParticles):
             else:
                 sys.stderr.write('----Everything OK-----\n')
 
-    
     def createOutputStep(self):
         imgSet = self.inputParticles.get()
         outImgSet = self._createSetOfParticles()

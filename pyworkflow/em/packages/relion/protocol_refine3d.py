@@ -135,21 +135,20 @@ leads to objective and high-quality results.
                 self._defineSourceRelation(self.inputParticles, vol)
                 self._defineSourceRelation(self.inputMovieParticles, vol)
 
-            fnOut = self._getFileName('dataFinal', iter=self._lastIter())
+            fnOut = self._getFileName('dataFinal')
             outMovieSet = self._createSetOfMovieParticles()
             outMovieSet.copyInfo(movieSet)
             outMovieSet.setAlignmentProj()
-            # the following works, but only if both sets are equal in size
-            # outMovieSet.copyItems(movieSet,
+            #outMovieSet.copyItems(movieSet,
             #                      updateItemCallback=self._updateParticle,
             #                      itemDataIterator=md.iterRows(fnOut, sortByLabel=md.RLN_IMAGE_ID))
 
             # Use a SetMdIterator because it could be less movie particles
             # in the metadata produced than in the input set
             iterator = md.SetMdIterator(fnOut, sortByLabel=md.RLN_IMAGE_ID,
-                                        updateItemCallback=self._updateParticle)
-            outMovieSet.copyItems(movieSet, updateItemCallback=iterator.updateItem,
-                                  itemDataIterator=iterator.iterMd)
+                                        updateItemCallback=self._updateParticle,
+                                        skipDisabled=True)
+            outMovieSet.copyItems(movieSet, updateItemCallback=iterator.updateItem)
 
             self._defineOutputs(outputParticles=outMovieSet)
             self._defineTransformRelation(self.inputParticles, outMovieSet)
