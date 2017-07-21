@@ -28,8 +28,8 @@ from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO
 from pyworkflow.em.packages.xmipp3.viewer import XmippViewer
 from pyworkflow.em.packages.chimera.convert import runChimeraProgram, getProgram, symMapperScipionchimera
 from protocol_extract_unit_cell import XmippProtExtractUnit
+from pyworkflow.em.constants import SYM_I222
 import os
-
 
 class viewerXmippProtExtractUnit(XmippViewer):
     """ Visualize the output of protocol volume strain """
@@ -47,17 +47,16 @@ class viewerXmippProtExtractUnit(XmippViewer):
 
     def _visualize(self, obj, **args):
         #save temporal file
-        #TODO Do not show shape if Symmetry is not icosaedric
-        if True:
+        sampling = self.protocol.inputVolumes.get().getSamplingRate()
+        tmpFileName = self.protocol._getTmpPath("chimera.cmd")
+        f = open(tmpFileName,"w")
+        if self.protocol.symmetryGroup >= SYM_I222:
             cMap=['red', 'yellow', 'green', 'cyan', 'blue']
-            tmpFileName = self.protocol._getTmpPath("chimera.cmd")
-            f = open(tmpFileName,"w")
             d={}
-            sampling = self.protocol.inputVolumes.get().getSamplingRate()
             d['outerRadius']=self.protocol.outerRadius.get() * sampling
             d['innerRadius']=self.protocol.innerRadius.get() * sampling
             d['symmetry']=symMapperScipionchimera[self.protocol.symmetryGroup.get()]
-            f.write("shape icosahedron radius %(outerRadius)d orientation %(symmetry)s\n"%d)
+            f.write("shape icosahedron mesh true radius %(outerRadius)d orientation %(symmetry)s\n"%d)
             step = (d['outerRadius'] - d['innerRadius']) / float(len(cMap)-1)
             f.write("scolor #1  geom radial center 0,0,0 cmap ")
             counter = 0
@@ -67,9 +66,20 @@ class viewerXmippProtExtractUnit(XmippViewer):
                 counter += 1
             f.write(s[:-1]+'\n')
 
-            f.close()
+        volSize0 = self.protocol.inputVolumes.get().getDim()[0]
+        origin0 = - sampling * volSize0 / 2.0
+        origin1 =  self.protocol.outputVolume.getOrigin().getShifts()
+        f.write("volume #0 style mesh    level .001 origin %f\n"%origin0)
+        x = origin1[0] * sampling
+        y = origin1[1] * sampling
+        z = origin1[2] * sampling
+
+        f.write("volume #1 style surface level .001 origin %f,%f,%f\n"%(x,y,z))
+        f.write("center\n"  )
+        f.close()
+
         inputVol  = self.protocol.inputVolumes.get().getFileName().replace(':mrc', '')
-        outputVol = self.protocol._getOutputVol()
+        outputVol = self.protocol.outputVolume.getFileName()
         args = " "
         if os.path.exists(inputVol):
             args += inputVol + " "
