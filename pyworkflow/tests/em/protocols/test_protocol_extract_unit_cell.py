@@ -1,5 +1,6 @@
 # ***************************************************************************
 # * Authors:    Roberto Marabini (roberto@cnb.csic.es)
+# *             Marta Martinez (mmmtnez@cnb.csic.es)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -20,6 +21,11 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
+
+# general protocol to test the appropriate extraction of the unit cell from symmetries cyclic,
+# dihedral, tetrahedral, octahedral, and icosahedral, that are available to select in the form
+# for the extraction of the unit cell from a specific volume
+
 import os
 import numpy as np
 import math
@@ -42,6 +48,7 @@ from pyworkflow.em.data import Transform
 
 OFFSET = 22.5
 
+# function to write the coordinates of a phantom (3D map) for icosahedral symmetry in a text file
 def generate_ico(sym, mode, f, ):
     icosahedron = Icosahedron(orientation=sym)
     center = []
@@ -89,7 +96,7 @@ def generate_ico(sym, mode, f, ):
         else:
             f.write('.sphere %.3f %.3f %.3f .09\n' % (x, y, z))
 
-
+# function to write the coordinates of a phantom (3D map) for cyclic symmetry (order 8) in a text file
 def generate_cyclic(order, offset, mode, f, ):
     center = []
     z_value = [-.45, 0]
@@ -130,6 +137,7 @@ def generate_cyclic(order, offset, mode, f, ):
             else:
                 f.write('.sphere %.3f %.3f %.3f .05\n' % (x,y,z))
 
+# function to write the coordinates of a phantom (3D map) for dihedral symmetry (order 8) in a text file
 def generate_dihedral(order, offset, mode, f, ):
     center = []
     z_value = [-.45, 0., .45]
@@ -162,6 +170,7 @@ def generate_dihedral(order, offset, mode, f, ):
             else:
                 f.write('.sphere %.3f %.3f %.3f .05\n' % (x,y,z))
 
+# function to write the coordinates of a phantom (3D map) for tetrahedral symmetry in a text file
 def generate_tetrahedral(mode, f, ):
     centroid = [0.,0.,0.]
     rmax = 1.;
@@ -170,6 +179,7 @@ def generate_tetrahedral(mode, f, ):
     _3fpp = [0.81650, - 0.47140, - 0.33333]
     _3fppp = [-0.81650, - 0.47140, - 0.33333]
     points = [centroid, _3f, _3fp, _3fpp, _3fppp]
+    vertices = []
     for point in points:
         print point, type(point)
         x = point[0] * rmax
@@ -179,8 +189,73 @@ def generate_tetrahedral(mode, f, ):
             f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x, y, z))
         else:
             f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
+        if (x, y, z) != (0., 0., 0.):
+            vertices.append([x,y,z])
+    edges = []
+    for i in range(len(vertices)):
+        for j in range(len(vertices)):
+            if i != j:
+                x = (0.5) * (vertices[i][0] + vertices[j][0])
+                y = (0.5) * (vertices[i][1] + vertices[j][1])
+                z = (0.5) * (vertices[i][2] + vertices[j][2])
+                edge = [x, y, z]
+                if (x, y, z) != (0., 0., 0.):
+                    if edge not in edges:
+                        edges.append(edge)
+                        if mode == 'xmipp':
+                            f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (edge[0], edge[1], edge[2]))
+                        else:
+                            f.write('.sphere %.3f %.3f %.3f .05\n' % (edge[0], edge[1], edge[2]))
 
+# function to write the coordinates of a phantom (3D map) for octahedral symmetry in a text file
+def generate_octahedral(mode, f, ):
+    centre = [0.,0.,0.]
+    rmax = 1.;
+    _4f = [1., 0., 0.]
+    _4fp = [0., 1., 0.]
+    _4fpp = [0., 0., 1.]
+    _4_2f = [-1., 0., 0.]
+    _4_2fp = [0., -1., 0.]
+    _4_2fpp = [0., 0., -1.]
+    points = [centre, _4f, _4fp, _4fpp, _4_2f, _4_2fp, _4_2fpp]
+    vertices = []
+    for point in points:
+        print point, type(point)
+        x = point[0] * rmax
+        y = point[1] * rmax
+        z = point[2] * rmax
+        if mode == 'xmipp':
+            f.write("sph  + 1. %.3f %.3f %.3f .15\n" % (x, y, z))
+        else:
+            f.write('.sphere %.3f %.3f %.3f .15\n' % (x, y, z))
+        if (x, y, z) != (0., 0., 0.):
+            vertices.append([x,y,z])
+    edges = []
+    for i in range(len(vertices)):
+        for j in range(len(vertices)):
+            if i != j:
+                x = (0.5) * (vertices[i][0] + vertices[j][0])
+                y = (0.5) * (vertices[i][1] + vertices[j][1])
+                z = (0.5) * (vertices[i][2] + vertices[j][2])
+                edge = [x, y, z]
+                if (x, y, z) != (0., 0., 0.):
+                     if edge not in edges:
+                        edges.append(edge)
+                        if mode == 'xmipp':
+                            f.write("sph  + 1. %.3f %.3f %.3f .10\n" % (edge[0], edge[1], edge[2]))
+                        else:
+                            f.write('.sphere %.3f %.3f %.3f .10\n' % (edge[0], edge[1], edge[2]))
+    baricentres = [[(1./3.)*rmax, (1./3.)*rmax, (1./3.)*rmax], [(1./3.)*rmax, (1./3.)*rmax, (-1./3.)*rmax],
+                   [(1./3.)*rmax, (-1./3.)*rmax, (1./3.)*rmax], [(1./3.)*rmax, (-1./3.)*rmax, (-1./3.)*rmax],
+                   [(-1./3.)*rmax, (1./3.)*rmax, (1./3.)*rmax], [(-1./3.)*rmax, (1./3.)*rmax, (-1./3.)*rmax],
+                   [(-1./3.)*rmax, (-1./3.)*rmax, (1./3.)*rmax], [(-1./3.)*rmax, (-1./3.)*rmax, (-1./3.)*rmax]]
+    for baricentre in baricentres:
+        if mode == 'xmipp':
+            f.write("sph  + 1. %.3f %.3f %.3f .05\n" % (baricentre[0], baricentre[1], baricentre[2]))
+        else:
+            f.write('.sphere %.3f %.3f %.3f .05\n' % (baricentre[0], baricentre[1], baricentre[2]))
 
+# general function to generate the coordinates files for phantoms (3D map) for every symmetry
 def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
     offset = math.radians(offset)
     symPreffix = sym[:1]
@@ -222,10 +297,14 @@ def generate(sym='I2n5', mode='xmipp',suffix="_i2", offset=0.):
         generate_dihedral(int(symSuffix), offset,  mode, f)
     elif symPreffix == 'T':
         generate_tetrahedral(mode, f)
+    elif symPreffix == 'O':
+        generate_octahedral(mode, f)
 
     f.close()
     return filename
 
+# general class to test the extraction of the unit cell of cyclic, dihedral, tetrahedral,
+# octahedral, and isosahedral symmetries
 class TestProtModelBuilding(BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -240,6 +319,7 @@ class TestProtModelBuilding(BaseTest):
         cls.filename = {}
         cls.box = {}
 
+    # function to extract the unit cell of cyclic symmetry
     def test_extractunitCellcyclic(self):
         self.innerRadius = 0.
         self.outerRadius = 40.
@@ -252,6 +332,7 @@ class TestProtModelBuilding(BaseTest):
         self.box[SYM_CYCLIC] = (52, 52, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
 
+    # function to extract the unit cell of dihedral symmetry
     def test_extractunitCelldihedral(self):
         self.innerRadius = 0.
         self.outerRadius = 40.
@@ -264,22 +345,25 @@ class TestProtModelBuilding(BaseTest):
         self.box[SYM_DIHEDRAL] = (52, 52, 81)
         self.extractunitCell(SYM_DIHEDRAL, OFFSET)
 
+    # function to extract the unit cell of tetrahedral symmetry
     def test_extractunitCelltetrahedral(self):
         self.innerRadius = 0.
         self.outerRadius = 90.
         self.filename[SYM_TETRAHEDRAL] = generate(SCIPION_SYM_NAME[SYM_TETRAHEDRAL],
                                                'xmipp', XMIPP_SYM_NAME[SYM_TETRAHEDRAL])
-        self.box[SYM_TETRAHEDRAL] = (76, 127, 181)
+        self.box[SYM_TETRAHEDRAL] = (80, 140, 181)
         self.extractunitCell(SYM_TETRAHEDRAL)
 
+    # function to extract the unit cell of octahedral symmetry
     def test_extractunitCelloctahedral(self):
         self.innerRadius = 0.
         self.outerRadius = 90.
         self.filename[SYM_OCTAHEDRAL] = generate(SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
                                                'xmipp', XMIPP_SYM_NAME[SYM_OCTAHEDRAL])
-        self.box[SYM_OCTAHEDRAL] = (76, 127, 181)
+        self.box[SYM_OCTAHEDRAL] = (110, 55, 181)
         self.extractunitCell(SYM_OCTAHEDRAL)
 
+    # function to extract the unit cell of icosahedral symmetry
     def test_extractunitCellIco(self):
         self.innerRadius = 37.
         self.outerRadius = 79.
@@ -297,6 +381,7 @@ class TestProtModelBuilding(BaseTest):
         self.extractunitCell(SYM_In25)
         self.extractunitCell(SYM_In25r)
 
+    # general function to extract the unit cell
     def extractunitCell(self, sym, offset=0):
 
         """ extract unit cell from icosahedral pahntom
@@ -347,7 +432,7 @@ class TestProtModelBuilding(BaseTest):
         self.assertEqual(ydim,self.box[sym][1])
         self.assertEqual(zdim,self.box[sym][2])
 
-        #create pdb file
+        #create pdb fileoot
         args = {'inputStructure':prot.outputVolume,
                 'maskMode':NMA_MASK_THRE,
                 'maskThreshold':0.5,
