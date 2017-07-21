@@ -135,6 +135,10 @@ class ProtImportImages(ProtImportFiles):
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
+            if ' ' in dst:
+                self.warning('Warning: your file names have white spaces!')
+                self.warning('Removing white spaces from copies/symlinks...')
+                dst = dst.replace(' ', '')
             copyOrLink(fileName, dst)
             # Handle special case of Imagic images, copying also .img or .hed
             self.handleImgHed(copyOrLink, fileName, dst)
