@@ -1094,6 +1094,13 @@ class ProtRelionBase(EMProtocol):
     
     def _getnumberOfIters(self):
         return self._getContinueIter() + self.numberOfIterations.get()
+
+    def _getNumberOfFrames(self):
+        movieProt = self.inputMovieParticles.get().getObjParentId()
+        inputMovies = self.getProject().getProtocol(int(movieProt)).inputMovies.get()
+        frames = inputMovies.getFirstItem().getNumberOfFrames()
+
+        return frames
     
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
@@ -1103,6 +1110,10 @@ class ProtRelionBase(EMProtocol):
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@fake_movie_%06d.mrcs"
                         % (img.getFrameId(), img.getMicId()))  # fix relion-2.1
+        imgRow.setValue(md.RLN_PARTICLE_NR_FRAMES, self._getNumberOfFrames())
+        #FIXME: set the following to 1 till frame averaging
+        # is implemented in xmipp extraction protocol
+        imgRow.setValue(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):

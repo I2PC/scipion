@@ -675,7 +675,7 @@ def writeSqliteIterClasses(imgStar):
     pass
     
     
-def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
+def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=10):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)
     mdAll.sort(md.RLN_CTF_DEFOCUSU)

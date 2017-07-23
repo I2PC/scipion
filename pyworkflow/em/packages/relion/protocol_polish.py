@@ -2,6 +2,7 @@
 # *
 # * Authors:     Josue Gomez Blanco (jgomez@cnb.csic.es)
 # *              J.M. De la Rosa Trevin (jmdelarosa@cnb.csic.es)
+# *              Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
