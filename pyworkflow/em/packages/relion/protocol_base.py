@@ -765,6 +765,9 @@ class ProtRelionBase(EMProtocol):
         if not self.IS_CLASSIFY:
             if self.realignMovieFrames:
                 movieParticleSet = self.inputMovieParticles.get()
+                movieFn = self._getFileName('movie_particles')
+                self.info("Converting set from '%s' into '%s'" %
+                          (movieParticleSet.getFileName(), movieFn))
                 
                 auxMovieParticles = self._createSetOfMovieParticles(suffix='tmp')
                 auxMovieParticles.copyInfo(movieParticleSet)
@@ -775,10 +778,9 @@ class ProtRelionBase(EMProtocol):
                     if particle is not None:
                         auxMovieParticles.append(movieParticle)
                 writeSetOfParticles(auxMovieParticles,
-                                    self._getFileName('movie_particles'),
-                                    None, originalSet=imgSet,
+                                    movieFn, None, originalSet=imgSet,
                                     postprocessImageRow=self._postprocessImageRow)
-                mdMovies = md.MetaData(self._getFileName('movie_particles'))
+                mdMovies = md.MetaData(movieFn)
                 mdParts = md.MetaData(self._getFileName('input_star'))
                 
                 if getVersion() == V1_3:
@@ -798,8 +800,7 @@ class ProtRelionBase(EMProtocol):
                                       detectorPxSize)
                 mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
                             md.RLN_IMAGE_ID, md.INNER_JOIN)
-                mdAux.write(self._getFileName('movie_particles'),
-                            md.MD_OVERWRITE)
+                mdAux.write(movieFn, md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
     
     def runRelionStep(self, params):
@@ -1101,7 +1102,7 @@ class ProtRelionBase(EMProtocol):
         imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@fake_movie_%06d.mrcs"
-                        % (img.getFrameId() + 1, img.getMicId()))
+                        % (img.getFrameId(), img.getMicId()))  # fix relion-2.1
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):

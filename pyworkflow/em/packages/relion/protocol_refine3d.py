@@ -31,11 +31,10 @@ import pyworkflow.em.metadata as md
 from pyworkflow.em.data import Volume, FSC
 from pyworkflow.em.protocol import ProtRefine3D
 from pyworkflow.em import ALIGN_PROJ
-from pyworkflow.em.packages.relion.convert import createItemMatrix
 
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-from convert import isVersion2
-
+from convert import (isVersion2, readSetOfParticles, createItemMatrix,
+                     MOVIE_EXTRA_LABELS)
 
 class ProtRelionRefine3D(ProtRefine3D, ProtRelionBase):
     """Protocol to refine a 3D map using Relion. Relion employs an empirical
@@ -139,16 +138,12 @@ leads to objective and high-quality results.
             outMovieSet = self._createSetOfMovieParticles()
             outMovieSet.copyInfo(movieSet)
             outMovieSet.setAlignmentProj()
-            # the following works, but only if both sets are equal in size
-            # outMovieSet.copyItems(movieSet,
-            #                      updateItemCallback=self._updateParticle,
-            #                      itemDataIterator=md.iterRows(fnOut, sortByLabel=md.RLN_IMAGE_ID))
-
-            # Use a SetMdIterator because it could be less movie particles
-            # in the metadata produced than in the input set
-            iterator = md.SetMdIterator(fnOut, sortByLabel=md.RLN_IMAGE_ID,
-                                        updateItemCallback=self._updateParticle)
-            outMovieSet.copyItems(movieSet, updateItemCallback=iterator.updateItem)
+            # not using copyItems since input movie particle
+            # set is missing a lot of metadata (CTF, micName etc.)
+            # that was created in convertInputStep
+            readSetOfParticles(fnOut, outMovieSet, alignType=ALIGN_PROJ,
+                               extraLabels=MOVIE_EXTRA_LABELS,
+                               postprocessImageRow=self._updateParticle)
 
             self._defineOutputs(outputParticles=outMovieSet)
             self._defineTransformRelation(self.inputParticles, outMovieSet)
@@ -235,8 +230,5 @@ leads to objective and high-quality results.
     def _createItemMatrix(self, item, row):
         createItemMatrix(item, row, align=ALIGN_PROJ)
 
-    def _updateParticle(self, item, row):
-        createItemMatrix(item, row, align=ALIGN_PROJ)
-        item._rlnGroupName = em.String(row.getValue('rlnGroupName'))
-        item._rlnMovieFramesRunningAverage = em.Integer(row.getValue('rlnMovieFramesRunningAverage'))
-        item._rlnOriginalParticleName = em.String(row.getValue('rlnOriginalParticleName'))
+    def _updateParticle(self, particle, row):
+        particle._coordinate._micName = em.String(row.getValue('rlnMicrographName'))

@@ -30,12 +30,14 @@ from os.path import exists
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
+from pyworkflow.em import ALIGN_PROJ
 import pyworkflow.em.metadata as md
+import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtProcessParticles
-from pyworkflow.em.packages.relion.convert import createItemMatrix
 
 from protocol_base import ProtRelionBase
-from convert import isVersion2, writeSetOfParticles, MOVIE_EXTRA_LABELS
+from convert import (createItemMatrix, isVersion2,
+                    readSetOfParticles, writeSetOfParticles, MOVIE_EXTRA_LABELS)
 
 
 class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
@@ -193,7 +195,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         self._insertFunctionStep('convertInputStep',
                                  self._getInputParticles().getObjId())
         self._insertPolishStep()
-        #self._insertFunctionStep('organizeDataStep')
+        self._insertFunctionStep('organizeDataStep')
         self._insertFunctionStep('createOutputStep')
         
     def _insertPolishStep(self):
@@ -233,45 +235,66 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """ Create the input file in STAR format as expected by Relion.
         If the input particles comes from Relion, just link the file.
         Params:
-            particlesId: use this parameters just to force redo of convert if
+            particlesId: use this parameter just to force redo of convert if
                 the input particles are changed.
         """
         imgSet = self._getInputParticles()
         imgStar = self._getFileName('movie_particles')
+        imgStarTmp = self._getTmpPath('movie_particles.star')
         self.info("Converting set from '%s' into '%s'" %
-                  (imgSet.getFileName(), imgStar))
+                  (imgSet.getFileName(), imgStarTmp))
 
-        writeSetOfParticles(imgSet, imgStar, self._getExtraPath(),
+        writeSetOfParticles(imgSet, imgStarTmp, self._getExtraPath(),
                             alignType=imgSet.getAlignment(),
                             extraLabels=MOVIE_EXTRA_LABELS)
+
+        # replace rlnOriginalParticleName from *.stk to *.mrcs
+        # as relion v.2 requires
+        from convert import relionToLocation, locationToRelion
+        mdImg = md.MetaData(imgStarTmp)
+
+        for objId in mdImg:
+            index, imgPath = relionToLocation(mdImg.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
+            if not imgPath.endswith('mrcs'):
+                newName = pwutils.replaceBaseExt(os.path.basename(imgPath), 'mrcs')
+                newPath = self._getTmpPath(newName)
+                newLoc = locationToRelion(index, newPath)
+                if not exists(newPath):
+                    pwutils.createLink(imgPath, newPath)
+                mdImg.setValue(md.RLN_PARTICLE_ORI_NAME, newLoc, objId)
+        mdImg.write(imgStar)
 
     def polishStep(self, params):
         self.runJob(self._getProgram('relion_particle_polish'), params)
     
     def organizeDataStep(self):
-        from pyworkflow.utils import moveFile
-        import pyworkflow.em.metadata as md
         from convert import relionToLocation, locationToRelion
-        
-        # moving shiny.star form project base path to the current protocol extra path.
-        shinyStar = "shiny.star"
-        pathFixedShiny = self._getExtraPath(shinyStar)
-        
-        if exists(shinyStar):
-            moveFile(shinyStar, pathFixedShiny)
-        mdShiny = md.MetaData(pathFixedShiny)
-        
-        oldImgPath = ""
+        # move polished particles to the current protocol extra path
+        # and restore previous rlnParticleOriginalName
+        shinyStar = self._getFileName('shiny')
+        newDir = self._getExtraPath('polished_particles')
+        pwutils.makePath(newDir)
+        mdShiny = md.MetaData(shinyStar)
+        oldPath = ""
+
         for objId in mdShiny:
             index, imgPath = relionToLocation(mdShiny.getValue(md.RLN_IMAGE_NAME, objId))
-            newPath = self._getExtraPath(os.path.basename(imgPath))
+            newPath = pwutils.join(newDir, str(imgPath).split('/')[-1])
             newLoc = locationToRelion(index, newPath)
             mdShiny.setValue(md.RLN_IMAGE_NAME, newLoc, objId)
-            if oldImgPath != imgPath and exists(imgPath):
-                moveFile(imgPath, newPath)
-                oldImgPath = imgPath
-        mdShiny.write(pathFixedShiny)
-    
+            if oldPath != imgPath and exists(imgPath):
+                pwutils.moveFile(imgPath, newPath)
+                oldPath = imgPath
+
+            index2, imgPath2 = relionToLocation(mdShiny.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
+            absPath = os.path.realpath(imgPath2)
+            newPath2 = 'Runs' + str(absPath).split('Runs')[1]
+            newLoc2 = locationToRelion(index2, newPath2)
+            mdShiny.setValue(md.RLN_PARTICLE_ORI_NAME, newLoc2, objId)
+
+        mdShiny.write(shinyStar, md.MD_OVERWRITE)
+        pwutils.cleanPath(self._getExtraPath('shiny/Runs'))
+
     def createOutputStep(self):
         imgSet = self._getInputParticles()
         vol = Volume()
@@ -280,9 +303,8 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         shinyPartSet = self._createSetOfParticles()
         shinyPartSet.copyInfo(imgSet)
         shinyPartSet.setAlignmentProj()
-        shinyPartSet.copyItems(imgSet, updateItemCallback=self._createItemMatrix,
-                               itemDataIterator=md.iterRows(self._getFileName('shiny'),
-                                                            sortByLabel=md.RLN_IMAGE_ID))
+        readSetOfParticles(self._getFileName('shiny'), shinyPartSet,
+                           alignType=ALIGN_PROJ)
 
         self._defineOutputs(outputParticles=shinyPartSet)
         self._defineOutputs(outputVolume=vol)
@@ -323,4 +345,3 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def _createItemMatrix(self, item, row):
         from pyworkflow.em import ALIGN_PROJ
         createItemMatrix(item, row, align=ALIGN_PROJ)
-

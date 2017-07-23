@@ -93,8 +93,14 @@ MOVIE_EXTRA_LABELS = [
     md.RLN_PARTICLE_NR_FRAMES_AVG,
     md.RLN_PARTICLE_MOVIE_RUNNING_AVG,
     md.RLN_PARTICLE_ORI_NAME,
-    md.RLN_MLMODEL_GROUP_NAME
-    ]
+    md.RLN_MLMODEL_GROUP_NAME,
+    # the following is required for polishing to work
+    md.RLN_PARTICLE_DLL,
+    md.RLN_PARTICLE_PMAX,
+    md.RLN_IMAGE_NORM_CORRECTION,
+    md.RLN_PARTICLE_NR_SIGNIFICANT_SAMPLES,
+    md.RLN_PARTICLE_RANDOM_SUBSET
+]
 
 # ANGLES_DICT = OrderedDict([
 #        ("_angleY", md.RLN_ANGLE_Y),
@@ -173,6 +179,16 @@ def relionToLocation(filename):
         return int(indexStr), str(fn)
     else:
         return em.NO_INDEX, str(filename)
+
+
+def setRelionAttributes(obj, objRow, *labels):
+    """ Set an attribute to obj from a label that is not
+    basic ones. The new attribute will be named _rlnLabelName
+    and the datatype will be set correctly.
+    """
+    for label in labels:
+        setattr(obj, '_%s' % md.label2Str(label),
+                objRow.getValueAsObject(label))
 
 
 def objectToRow(obj, row, attrDict, extraLabels=[]):
@@ -386,9 +402,11 @@ def coordinateToRow(coord, coordRow, copyId=True):
     if copyId:
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
-    #FIXME: THE FOLLOWING IS NOT CLEAN
-    if coord.getMicId():
-        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
+    if coord.getMicName():
+        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicName()))
+    else:
+        if coord.getMicId():
+            coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
 
 
 def rowToCoordinate(coordRow):
@@ -397,12 +415,12 @@ def rowToCoordinate(coordRow):
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
-            
-        #FIXME: THE FOLLOWING IS NOT CLEAN
-        try:
-            coord.setMicId(int(coordRow.getValue(md.RLN_MICROGRAPH_NAME)))
-        except Exception:
-            pass
+        if coordRow.hasLabel(md.RLN_MICROGRAPH_ID):
+            coord.setMicId(int(coordRow.getValue(md.RLN_MICROGRAPH_ID)))
+        if coordRow.hasLabel(md.RLN_MICROGRAPH_NAME):
+            coord.setMicName(str(coordRow.getValue(md.RLN_MICROGRAPH_NAME)))
+        else:
+            coord.setMicName(int(coordRow.getValue(md.RLN_MICROGRAPH_ID)))
     else:
         coord = None
         
