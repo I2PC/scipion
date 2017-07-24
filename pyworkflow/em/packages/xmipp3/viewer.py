@@ -81,6 +81,7 @@ class XmippViewer(Viewer):
                 SetOfNormalModes,
                 XmippProtCompareReprojections,
                 XmippParticlePickingAutomatic,
+                XmippProtExtractParticles,
                 XmippProtExtractParticlesPairs,
                 XmippProtKerdensom,
                 ProtParticlePicking,
