@@ -323,7 +323,7 @@ public:
 	template <typename T1>
 	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle);
 
-	void calculateMax(double *max_values, float *posX, float *posY);
+	void calculateMax(float *max_values, float *posX, float *posY);
 
 };
 
