@@ -37,7 +37,8 @@ private:
 
 	int n_keep;
 	bool significance, keepN;
-	double alpha, maxShift;
+	double alpha;
+	int maxShift;
 
 public:
     //Input metadata file
