@@ -11,8 +11,13 @@
 //CUDA includes
 #include "cuda_basic_math.h"
 #include "cuda_utils.h"
+#include <time.h>
+#include <sys/time.h>
+#include <vector>
 
 #define PI 3.14159265
+
+
 
 
 __global__ void matrixMultiplication (float* newMat, float* lastMat, float* result, size_t n, double maxShift, bool *accepted){
@@ -323,6 +328,159 @@ __global__ void paddingKernel(double *d_orig_image, double *image2_gpu, double *
 }
 
 
+
+
+/*
+void ifft_v2(size_t Xdim, size_t Ydim, size_t Ndim, size_t Zdim, std::complex<double> *in, double *out, mycufftHandle &myhandle){
+
+
+	int Xfdim=(Xdim/2)+1;
+
+
+	int nr1[] = {Xdim};   // --- Size of the image in real space
+	int nr2[] = {Ydim, Xdim};   // --- Size of the image in real space
+	int nr3[] = {Zdim, Ydim, Xdim};   // --- Size of the image in real space
+
+	int nf1[] = {Xfdim};   // --- Size of the Fourier transform
+	int nf2[] = {Ydim, Xfdim};   // --- Size of the Fourier transform
+	int nf3[] = {Zdim, Ydim, Xfdim};   // --- Size of the Fourier transform
+	int *nr=NULL, *nf=NULL;
+	int NRANK; // 1D, 2D or 3D FFTs
+	if (Ydim==1 && Zdim==1)
+	{
+		NRANK=1;
+		nr=nr1;
+		nf=nf1;
+	}
+	else if (Zdim==1)
+	{
+		NRANK=2;
+		nr=nr2;
+		nf=nf2;
+	}
+	else
+	{
+		NRANK=3;
+		nr=nr3;
+		nf=nf3;
+	}
+
+	int rstride = 1;				// --- Distance between two successive input/output elements
+	int fstride = 1;
+	int rdist = Xdim*Ydim*Zdim;	    // --- Distance between batches
+	int fdist = Xfdim*Ydim*Zdim;
+
+
+	//cufftHandle planF;
+	cufftHandle *planBptr = new cufftHandle;
+	if(myhandle.ptr == NULL){
+		printf("creo el plan \n");
+		cufftPlanMany(planBptr, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_Z2D, Ndim);
+		myhandle.ptr = (void *)planBptr;
+		//createPlanFFT(Xdim, Ydim, Ndim, Zdim, myhandle, *workSize);
+		calculateFFTPlanSize(myhandle);
+		planBptr=(cufftHandle *)myhandle.ptr;
+	}else{
+		printf("copio el plan \n");
+		calculateFFTPlanSize(myhandle);
+		planBptr=(cufftHandle *)myhandle.ptr;
+	}
+
+	//cufftHandle planB;
+	//gpuErrchkFFT(cufftPlanMany(&planB, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_Z2D, Ndim));
+
+	gpuErrchkFFT(cufftExecZ2D(*planBptr, (cufftDoubleComplex*)in, (cufftDoubleReal*)out));
+
+	gpuErrchk(cudaDeviceSynchronize());
+	//cufftDestroy(planB);
+
+}
+*/
+/*
+void fft_v2(size_t Xdim, size_t Ydim, size_t Ndim, size_t Zdim, double *in, std::complex<double> *out, mycufftHandle &myhandle){
+
+
+	int Xfdim=(Xdim/2)+1;
+
+
+	int nr1[] = {Xdim};   // --- Size of the image in real space
+	int nr2[] = {Ydim, Xdim};   // --- Size of the image in real space
+	int nr3[] = {Zdim, Ydim, Xdim};   // --- Size of the image in real space
+
+	int nf1[] = {Xfdim};   // --- Size of the Fourier transform
+	int nf2[] = {Ydim, Xfdim};   // --- Size of the Fourier transform
+	int nf3[] = {Zdim, Ydim, Xfdim};   // --- Size of the Fourier transform
+	int *nr=NULL, *nf=NULL;
+	int NRANK; // 1D, 2D or 3D FFTs
+	if (Ydim==1 && Zdim==1)
+	{
+		NRANK=1;
+		nr=nr1;
+		nf=nf1;
+	}
+	else if (Zdim==1)
+	{
+		NRANK=2;
+		nr=nr2;
+		nf=nf2;
+	}
+	else
+	{
+		NRANK=3;
+		nr=nr3;
+		nf=nf3;
+	}
+
+	int rstride = 1;				// --- Distance between two successive input/output elements
+	int fstride = 1;
+	int rdist = Xdim*Ydim*Zdim;	    // --- Distance between batches
+	int fdist = Xfdim*Ydim*Zdim;
+
+
+	//cufftHandle planF;
+	cufftHandle *planFptr = new cufftHandle;
+	if(myhandle.ptr == NULL){
+		printf("creo el plan \n");
+		cufftPlanMany(planFptr, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_D2Z, Ndim);
+		myhandle.ptr = (void *)planFptr;
+		//createPlanFFT(Xdim, Ydim, Ndim, Zdim, myhandle, *workSize);
+		calculateFFTPlanSize(myhandle);
+		planFptr=(cufftHandle *)myhandle.ptr;
+	}else{
+		printf("copio el plan \n");
+		calculateFFTPlanSize(myhandle);
+		planFptr=(cufftHandle *)myhandle.ptr;
+	}
+
+	//cufftHandle planF;
+
+	//cufftPlanMany(&planF, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_D2Z, Ndim);
+
+	gpuErrchkFFT(cufftExecD2Z(*planFptr, (cufftDoubleReal*)in, (cufftDoubleComplex*)out));
+
+	gpuErrchk(cudaDeviceSynchronize());
+	//cufftDestroy(planF);
+
+}
+*/
+
+/*
+void fft_v3(double *in, std::complex<double> *out, cufftHandle planF){
+
+	gpuErrchkFFT(cufftExecD2Z(planF, (cufftDoubleReal*)in, (cufftDoubleComplex*)out));
+	gpuErrchk(cudaDeviceSynchronize());
+
+}
+
+void ifft_v3(std::complex<double> *in, double *out, cufftHandle planB){
+
+	gpuErrchkFFT(cufftExecZ2D(planB, (cufftDoubleComplex*)in, (cufftDoubleReal*)out));
+	gpuErrchk(cudaDeviceSynchronize());
+
+}
+*/
+
+
 void padding_masking(GpuMultidimArrayAtGpu<double> &d_orig_image, GpuMultidimArrayAtGpu<double> &mask, GpuMultidimArrayAtGpu<double> &padded_image_gpu,
 		GpuMultidimArrayAtGpu<double> &padded_image2_gpu, GpuMultidimArrayAtGpu<double> &padded_mask_gpu, bool rotation, bool experimental){
 
@@ -379,7 +537,9 @@ void calculateDenomFunction(const GpuMultidimArrayAtGpu< double > &MFrealSpace, 
 
 }
 
-void GpuCorrelationAux::produceSideInfo()
+
+
+void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB)
 {
 	GpuMultidimArrayAtGpu< std::complex<double> > MF, MF2;
 	MF.resize(d_projFFT);
@@ -391,15 +551,17 @@ void GpuCorrelationAux::produceSideInfo()
 
 	GpuMultidimArrayAtGpu<double> MF2realSpace(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
-	MF.ifft(MFrealSpace);
-	MF2.ifft(MF2realSpace);
+
+	MF.ifft(MFrealSpace, myhandlePaddedB);
+	MF2.ifft(MF2realSpace, myhandlePaddedB);
 	MF.clear();
 	MF2.clear();
 
 	GpuMultidimArrayAtGpu< std::complex<double> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
 	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux);
 	maskAutocorrelation.resize(Xdim, Ydim);
-	maskAux.ifft(maskAutocorrelation);
+
+	maskAux.ifft(maskAutocorrelation, myhandleMaskB);
 	maskAux.clear();
 	d_denom.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	calculateDenomFunction(MFrealSpace, MF2realSpace, maskAutocorrelation, d_denom);
@@ -408,7 +570,7 @@ void GpuCorrelationAux::produceSideInfo()
 }
 
 void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		double *max_vector, double maxShift)
+		double *max_vector, double maxShift, mycufftHandle &myhandlePadded)
 {
 	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
 			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim);
@@ -424,7 +586,7 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
     GpuMultidimArrayAtGpu< double > RefExpRealSpace(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
     		referenceAux.d_projPolarFFT.Ndim);
-    RefExpFourier.ifft(RefExpRealSpace);
+    RefExpFourier.ifft(RefExpRealSpace, myhandlePadded);
     RefExpFourier.clear();
 
     XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
@@ -479,7 +641,7 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 
 void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		double *max_vector, double maxShift)
+		double *max_vector, double maxShift, mycufftHandle &myhandlePadded)
 {
 
 	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
@@ -495,7 +657,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
     GpuMultidimArrayAtGpu< double > RefExpRealSpace(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
     		referenceAux.d_projFFT.Ndim);
-    RefExpFourier.ifft(RefExpRealSpace);
+    RefExpFourier.ifft(RefExpRealSpace, myhandlePadded);
     RefExpFourier.clear();
 
  	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
@@ -629,3 +791,216 @@ void cuda_cart2polar(GpuMultidimArrayAtGpu<double> &image, GpuMultidimArrayAtGpu
     cart2polar <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
     		(image.d_data, polar_image.d_data, polar2_image.d_data, polar_image.Ydim, polar_image.Xdim, polar_image.Ndim, image.Ydim, image.Xdim, rotate);
 }
+
+/*
+void produceSideInfoCuda(GpuCorrelationAux &aux, mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask,
+		mycufftHandle &myhandlePolar, size_t memoryUsed){
+
+	//AJ cambiar la mascara para crear un plan menos, es decir, la mascara se repite tantas veces como imagen
+	cufftHandle planFPadded, planBPadded, planFPolar, planBPolar, planFMask, planBMask;
+	createPlanFFT(aux.d_padded_image.Xdim, aux.d_padded_image.Ydim, aux.d_padded_image.Ndim, aux.d_padded_image.Zdim, planFPadded, planBPadded);
+	createPlanFFT(aux.d_polar_image.Xdim, aux.d_polar_image.Ydim, aux.d_polar_image.Ndim, aux.d_polar_image.Zdim, planFPolar, planBPolar);
+	createPlanFFT(aux.d_mask.Xdim, aux.d_mask.Ydim, aux.d_mask.Ndim, aux.d_mask.Zdim, planFMask, planBMask);
+
+	myhandlePadded.ptr = &planFPadded;
+	myhandlePolar.ptr = &planFPolar;
+	myhandleMask.ptr = &planFMask;
+	printf("En produceSideInfoCuda\n");
+	calculateFFTPlanSize(myhandlePadded);
+	calculateFFTPlanSize(myhandlePolar);
+	calculateFFTPlanSize(myhandleMask);
+
+	int Xfdim=(aux.d_padded_image.Xdim/2)+1;
+	aux.d_projFFT.resize(Xfdim, aux.d_padded_image.Ydim, 1, aux.d_padded_image.Ndim);
+	aux.d_projSquaredFFT.resize(Xfdim, aux.d_padded_image.Ydim, 1, aux.d_padded_image.Ndim);
+	fft_v3(aux.d_padded_image.d_data, aux.d_projFFT.d_data, planFPadded);
+	fft_v3(aux.d_padded2_image.d_data, aux.d_projSquaredFFT.d_data, planFPadded);
+	aux.d_padded2_image.clear();
+
+	aux.d_maskFFT.resize(Xfdim, aux.d_mask.Ydim, 1, 1);
+	fft_v3(aux.d_mask.d_data, aux.d_maskFFT.d_data, planFMask);
+
+	Xfdim=(aux.d_polar_image.Xdim/2)+1;
+	aux.d_projPolarFFT.resize(Xfdim, aux.d_polar_image.Ydim, 1, aux.d_polar_image.Ndim);
+	aux.d_projPolarSquaredFFT.resize(Xfdim, aux.d_polar_image.Ydim, 1, aux.d_polar_image.Ndim);
+	fft_v3(aux.d_polar_image.d_data, aux.d_projPolarFFT.d_data, planFPolar);
+	aux.d_polar_image.clear();
+	fft_v3(aux.d_polar2_image.d_data, aux.d_projPolarSquaredFFT.d_data, planFPolar);
+	aux.d_polar2_image.clear();
+
+
+
+	GpuMultidimArrayAtGpu< std::complex<double> > MF, MF2;
+	MF.resize(aux.d_projFFT);
+	MF2.resize(aux.d_projSquaredFFT);
+
+	pointwiseMultiplicationFourier(aux.d_maskFFT, aux.d_projFFT, MF);
+	pointwiseMultiplicationFourier(aux.d_maskFFT, aux.d_projSquaredFFT, MF2);
+	aux.d_projSquaredFFT.clear();
+
+	GpuMultidimArrayAtGpu<double> MF2realSpace(aux.d_padded_image.Xdim, aux.d_padded_image.Ydim,
+			aux.d_padded_image.Zdim, aux.d_padded_image.Ndim);
+	aux.MFrealSpace.resize(aux.d_padded_image.Xdim, aux.d_padded_image.Ydim,
+			aux.d_padded_image.Zdim, aux.d_padded_image.Ndim);
+	ifft_v3(MF.d_data, aux.MFrealSpace.d_data, planBPadded);
+	ifft_v3(MF2.d_data, MF2realSpace.d_data, planBPadded);
+
+	aux.d_padded_image.clear();
+	MF.clear();
+	MF2.clear();
+
+	GpuMultidimArrayAtGpu< std::complex<double> > maskAux(aux.d_maskFFT.Xdim, aux.d_maskFFT.Ydim);
+	pointwiseMultiplicationFourier(aux.d_maskFFT, aux.d_maskFFT, maskAux);
+	aux.maskAutocorrelation.resize(aux.d_mask.Xdim, aux.d_mask.Ydim);
+	ifft_v3(maskAux.d_data, aux.maskAutocorrelation.d_data, planBMask);
+	maskAux.clear();
+
+	aux.d_denom.resize(aux.MFrealSpace.Xdim, aux.MFrealSpace.Ydim, aux.MFrealSpace.Zdim, aux.MFrealSpace.Ndim);
+	calculateDenomFunction(aux.MFrealSpace, MF2realSpace, aux.maskAutocorrelation, aux.d_denom);
+	MF2realSpace.clear();
+
+	float memory[3]={0, 0, 0};
+    cuda_check_gpu_memory(memory);
+    printf("After Total %f, free %f, used %f\n\n",memory[0],memory[1], memory[2]);
+    memoryUsed = memory[2];
+
+    cufftDestroy(planFPadded);
+    cufftDestroy(planBPadded);
+    cufftDestroy(planFPolar);
+    cufftDestroy(planBPolar);
+    cufftDestroy(planFMask);
+    cufftDestroy(planBMask);
+
+}
+*/
+
+/*
+void cuda_preprocess_experimental_image (double *expImages, GpuCorrelationAux &d_referenceAux,
+		GpuCorrelationAux &d_experimentalAux, GpuMultidimArrayAtGpu<double> &mask,
+		bool rotation, size_t Xdim, size_t Ydim, size_t pad_Xdim, size_t pad_Ydim, size_t angles, size_t radius,
+		int numImagesRef, cufftHandle planFPadded, cufftHandle planFMask, cufftHandle planFPolar, int expIdx){
+
+	d_experimentalAux.d_original_image.resize(Xdim,Ydim,1,numImagesRef);
+
+	for(size_t i=0; i<numImagesRef; i++)
+		d_experimentalAux.d_original_image.fillImageToGpu(&expImages[expIdx*Xdim*Ydim],i);
+
+	GpuMultidimArrayAtGpu<double> image_stack_gpu(Xdim,Ydim,1,numImagesRef);
+	d_experimentalAux.d_original_image.copyGpuToGpu(image_stack_gpu);
+
+	if(!rotation){
+		d_experimentalAux.d_padded_image.resize(pad_Xdim, pad_Ydim, 1, numImagesRef);
+		d_experimentalAux.d_padded2_image.resize(pad_Xdim, pad_Ydim, 1, numImagesRef);
+		d_experimentalAux.d_mask.resize(pad_Xdim, pad_Ydim, 1, 1);
+
+		padding_masking(d_experimentalAux.d_original_image, mask, d_experimentalAux.d_padded_image, d_experimentalAux.d_padded2_image,
+				d_experimentalAux.d_mask, rotation, true);
+
+		int Xfdim=(d_experimentalAux.d_padded_image.Xdim/2)+1;
+		d_experimentalAux.d_projFFT.resize(Xfdim, d_experimentalAux.d_padded_image.Ydim, 1, d_experimentalAux.d_padded_image.Ndim);
+		d_experimentalAux.d_projSquaredFFT.resize(Xfdim, d_experimentalAux.d_padded_image.Ydim, 1, d_experimentalAux.d_padded_image.Ndim);
+		fft_v3(d_experimentalAux.d_padded_image.d_data, d_experimentalAux.d_projFFT.d_data, planFPadded);
+		fft_v3(d_experimentalAux.d_padded2_image.d_data, d_experimentalAux.d_projSquaredFFT.d_data, planFPadded);
+		d_experimentalAux.d_padded2_image.clear();
+
+		//d_experimentalAux.d_maskFFT.resize(Xfdim, d_experimentalAux.d_mask.Ydim, 1, 1);
+		//fft_v3(d_experimentalAux.d_mask.d_data, d_experimentalAux.d_maskFFT.d_data, planFMask);
+
+	}else{
+
+		d_experimentalAux.d_polar_image.resize(360,radius,1,numImagesRef);
+		d_experimentalAux.d_polar2_image.resize(360,radius,1,numImagesRef);
+		cuda_cart2polar(d_experimentalAux.d_original_image, d_experimentalAux.d_polar_image,
+				d_experimentalAux.d_polar2_image, true);
+
+		int Xfdim=(d_experimentalAux.d_polar_image.Xdim/2)+1;
+		d_experimentalAux.d_projPolarFFT.resize(Xfdim, d_experimentalAux.d_polar_image.Ydim, 1, d_experimentalAux.d_polar_image.Ndim);
+		d_experimentalAux.d_projPolarSquaredFFT.resize(Xfdim, d_experimentalAux.d_polar_image.Ydim, 1, d_experimentalAux.d_polar_image.Ndim);
+		fft_v3(d_experimentalAux.d_polar_image.d_data, d_experimentalAux.d_projPolarFFT.d_data, planFPolar);
+		d_experimentalAux.d_polar_image.clear();
+		fft_v3(d_experimentalAux.d_polar2_image.d_data, d_experimentalAux.d_projPolarSquaredFFT.d_data, planFPolar);
+		d_experimentalAux.d_polar2_image.clear();
+
+	}
+
+}
+*/
+
+
+/*
+void produceSideInfoCudaExp (GpuCorrelationAux &d_referenceAux, GpuCorrelationAux &d_experimentalAux, cufftHandle planBPadded){
+
+	GpuMultidimArrayAtGpu< std::complex<double> > MF, MF2;
+	MF.resize(d_experimentalAux.d_projFFT);
+	MF2.resize(d_experimentalAux.d_projSquaredFFT);
+
+	pointwiseMultiplicationFourier(d_referenceAux.d_maskFFT, d_experimentalAux.d_projFFT, MF);
+	pointwiseMultiplicationFourier(d_referenceAux.d_maskFFT, d_experimentalAux.d_projSquaredFFT, MF2);
+	d_experimentalAux.d_projSquaredFFT.clear();
+
+	GpuMultidimArrayAtGpu<double> MF2realSpace(d_experimentalAux.d_padded_image.Xdim, d_experimentalAux.d_padded_image.Ydim,
+			d_experimentalAux.d_padded_image.Zdim, d_experimentalAux.d_padded_image.Ndim);
+	d_experimentalAux.MFrealSpace.resize(d_experimentalAux.d_padded_image.Xdim, d_experimentalAux.d_padded_image.Ydim,
+			d_experimentalAux.d_padded_image.Zdim, d_experimentalAux.d_padded_image.Ndim);
+	ifft_v3(MF.d_data, d_experimentalAux.MFrealSpace.d_data, planBPadded);
+	ifft_v3(MF2.d_data, MF2realSpace.d_data, planBPadded);
+
+	d_experimentalAux.d_padded_image.clear();
+	MF.clear();
+	MF2.clear();
+
+	d_referenceAux.maskAutocorrelation.copyGpuToGpu(d_experimentalAux.maskAutocorrelation);
+
+	d_experimentalAux.d_denom.resize(d_experimentalAux.MFrealSpace.Xdim, d_experimentalAux.MFrealSpace.Ydim,
+			d_experimentalAux.MFrealSpace.Zdim, d_experimentalAux.MFrealSpace.Ndim);
+	calculateDenomFunction(d_experimentalAux.MFrealSpace, MF2realSpace,
+			d_experimentalAux.maskAutocorrelation, d_experimentalAux.d_denom);
+	MF2realSpace.clear();
+
+}
+*/
+
+/*
+void cuda_align_experimental_image(double *expImages, GpuCorrelationAux &d_referenceAux, GpuCorrelationAux &d_experimentalAux,
+		TransformMatrix<float> &transMat_tr, TransformMatrix<float> &transMat_rt, double *max_vector_tr, double *max_vector_rt,
+		int numImagesRef, GpuMultidimArrayAtGpu<double> &mask, double maxShift,
+		mycufftHandle &myhandlePadded, mycufftHandle &myhandleMask, mycufftHandle &myhandlePolar, size_t mdExpSize)
+{
+	size_t Xdim, Ydim, pad_Xdim, pad_Ydim, angles, radius;
+	pad_Xdim = d_referenceAux.Xdim;
+	pad_Ydim = d_referenceAux.Ydim;
+	Xdim = (pad_Xdim+1)/2;
+	Ydim = (pad_Ydim+1)/2;
+	angles=d_referenceAux.XdimPolar;
+	radius=d_referenceAux.YdimPolar;
+
+	//AJ creating FFT plans (forward and backward)
+	cufftHandle planFPadded, planBPadded, planFPolar, planBPolar, planFMask, planBMask;
+	createPlanFFT(pad_Xdim, pad_Ydim, numImagesRef, 1, planFPadded, planBPadded);
+	createPlanFFT(angles, radius, numImagesRef, 1, planFPolar, planBPolar);
+	//createPlanFFT(pad_Xdim, pad_Ydim, 1, 1, planFMask, planBMask);
+
+	for(int expIdx=0; expIdx<mdExpSize; expIdx++){ //loop for every experimental image read bu the cpu (in cpu memory)
+
+		//preprocess
+		//BUCLEEEEEEEEEEEE
+		bool rotation=false;
+		cuda_preprocess_experimental_image (expImages, d_referenceAux, d_experimentalAux, mask,
+				rotation, Xdim, Ydim, pad_Xdim, pad_Ydim, angles, radius, numImagesRef,
+				planFPadded, planFMask, planFPolar, expIdx);
+
+		//produceSideInfo
+		if(!rotation){
+			d_experimentalAux.maskCount=d_referenceAux.maskCount;
+			produceSideInfoCudaExp (d_referenceAux, d_experimentalAux, planBPadded);
+
+			float memory[3]={0, 0, 0};
+		    cuda_check_gpu_memory(memory);
+		    printf("After Total %f, free %f, used %f\n\n",memory[0],memory[1], memory[2]);
+
+		}
+
+	}//AJ END FOR mdExpSize
+
+}
+*/
