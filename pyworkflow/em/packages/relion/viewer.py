@@ -1321,8 +1321,6 @@ Examples:
         self.lastIter = self.protocol._lastIter()
         halves = getattr(self, 'showHalves', None)
         if self.viewFrame.get() == 0 and halves < 3:
-            # ToDo: Change this when exists a method to
-            # know how many frames has a SetOfMovieParticles.
             self._frames = range(1, self.protocol._lastFrame())
         elif halves < 3:
             frameSelection = self.frameSelection.get()

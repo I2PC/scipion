@@ -34,7 +34,7 @@ from pyworkflow.em.data import Micrograph
 import pyworkflow.em.metadata as md
 from pyworkflow.em.packages.relion.convert import relionToLocation, readCoordinates
 from pyworkflow.utils.path import findRootFrom
-from pyworkflow.em.packages.relion.convert import ( rowToCoordinate)
+from pyworkflow.em.packages.relion.convert import rowToCoordinate
 
 # import xmipp
 
@@ -87,10 +87,10 @@ class RelionImport():
 
     def _updateClass(self, item):
         classId = item.getObjId()
-        if  classId in self._classesDict:
+        if classId in self._classesDict:
             index, fn, row = self._classesDict[classId]
             if fn.endswith('.mrc'):
-                fn += ':mrc' # Specify that are volumes to read them properly in xmipp
+                fn += ':mrc'  # Specify that are volumes to read them properly in xmipp
             item.getRepresentative().setLocation(index, fn)
             item._rlnclassDistribution = Float(row.getValue('rlnClassDistribution'))
             item._rlnAccuracyRotations = Float(row.getValue('rlnAccuracyRotations'))
@@ -162,7 +162,6 @@ class RelionImport():
                 
         return result
 
-        
     def _findImagesPath(self, label, warnings=True):
 
         row = md.getFirstRow(self._starFile)
@@ -217,7 +216,6 @@ class RelionImport():
         self.micDict = {}
 
         return row, modelRow
-
 
     def _preprocessImageRow(self, img, imgRow):
         from convert import setupCTF, copyOrLinkFileName
@@ -296,5 +294,3 @@ class RelionImport():
         for row in md.iterRows(fileName):
             coord = rowToCoordinate(row)
             addCoordinate(coord)
-
-            

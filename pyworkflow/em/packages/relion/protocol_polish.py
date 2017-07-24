@@ -124,12 +124,23 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         form.addSection('Damage')
         form.addParam('performBfactorWeighting', BooleanParam, default=True,
                       label='Perform B-factor weighting?',
-                      help='If set to Yes, then running averages of the '
-                           'individual frames of recorded movies will also be '
-                           'aligned rotationally. \n If one wants to perform '
-                           'particle polishing, then rotational alignments of '
-                           'the movie frames is NOT necessary and will only '
-                           'take more computing time.')
+                      help='If set to Yes, then the program will estimate '
+                           'a resolution-dependent weight for each movie '
+                           'frames by calculating independent '
+                           'half-reconstructions for each movie frame '
+                           'separately. Gold-standard FSCs between these '
+                           'are then converted into relative Guinier plots, '
+                           'through which straight lines are fitted. Linear '
+                           'fits are often suitable beyond 20A resolution. '
+                           'Small particles may not yield such high '
+                           'resolutions for the individual-frame '
+                           'reconstructions. Therefore, in some cases '
+                           'it may be better to skip this step. It is '
+                           'however recommended to always try and perform '
+                           'B-factor weighting, and to inspect the output '
+                           'bfactors.star and guinier.star files, as '
+                           'adequate weighting may significantly improve '
+                           'resolution in the final map.')
         form.addParam('highresLimitPerFrameMaps', FloatParam, default=5,
                       condition='performBfactorWeighting',
                       label='Highres-limit per-frame maps (A)',
@@ -331,7 +342,17 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         """ Should be overwritten in subclasses to
         return summary message for NORMAL EXECUTION. 
         """
-        return []
+        summary = []
+        if not hasattr(self, 'outputVolume'):
+            summary.append("Output is not ready yet.")
+        else:
+            if self.performBfactorWeighting:
+                summary.append('Performed B-factor weighting')
+            row = md.getFirstRow('general@' + self._getExtraPath('shiny/shiny_post.star'))
+            res = row.getValue('rlnFinalResolution')
+            summary.append('Resolution of reconstructions from shiny particles: *%0.2f A*' % res)
+
+        return summary
     
     #--------------------------- UTILS functions --------------------------------------------
     def _getInputParticles(self):
