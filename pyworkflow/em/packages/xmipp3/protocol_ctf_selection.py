@@ -98,28 +98,24 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                            'Only available when Xmipp CTF estimation was used.')
         form.addParam('critFirstZero', params.FloatParam, default=5,
                       condition="useCritXmipp", label='CritFirstZero',
-                      help='Minimun value of CritFirstZero !!!!!')
+                      help='Minimun value of CritFirstZero')
         line = form.addLine('CritFirstZeroRatio', condition="useCritXmipp",
                             help='Minimum and maximum values for '
-                                 'CritFirstZeroRatio !!!!!')
+                                 'CritFirstZeroRatio')
         line.addParam('minCritFirstZeroRatio', params.FloatParam, default=0.9,
                       label='Min')
         line.addParam('maxCritFirstZeroRatio', params.FloatParam, default=1.1,
                       label='Max')
-        # form.addParam('critFirstMinFirstZeroRatio', params.FloatParam,
-        # default=10, condition="useCritXmipp",
-        #              label='CritFirstMinFirstZeroRatio',
-        #              help='Maximum value of CritFirstMinFirstZeroRatio !!!!!!')
         form.addParam('critCorr', params.FloatParam, default=0,
                       condition="useCritXmipp", label='CritCorr',
-                      help='Minimum value of CritCorr !!!!!!')
+                      help='Minimum value of CritCorr')
         form.addParam('critCtfMargin', params.FloatParam, default=0,
                       condition="useCritXmipp", label='CritCtfMargin',
-                      help='Minimum value of CritCtfMargin !!!!!!')
+                      help='Minimum value of CritCtfMargin')
         line = form.addLine('CritNonAstigmaticValidity',
                             condition="useCritXmipp",
                             help='Minimum and maximum values for '
-                                 'CritNonAstigmaticValidity !!!!!')
+                                 'CritNonAstigmaticValidity')
         line.addParam('minCritNonAstigmaticValidity', params.FloatParam,
                       default=0.3, label='Min')
         line.addParam('maxCritNonAstigmaticValidity', params.FloatParam,
