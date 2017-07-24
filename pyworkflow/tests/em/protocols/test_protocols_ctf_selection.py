@@ -123,7 +123,7 @@ class TestCtfSelection(BaseTest):
             'maxDefocus': 40000,
             'minDefocus': 1000,
             'astigmatism': 1000,
-            'resolution': 3.7
+            'resolution': 3.7,
         }
 
         protCTFSel2 = self.newProtocol(XmippProtCTFSelection, **kwargs)
