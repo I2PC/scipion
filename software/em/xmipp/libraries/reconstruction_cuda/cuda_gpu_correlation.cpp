@@ -49,7 +49,7 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 
 }
 
-__global__ void pointwiseMultiplicationComplexOneManyKernel(cufftDoubleComplex *M, cufftDoubleComplex *manyF, cufftDoubleComplex *MmanyF,
+__global__ void pointwiseMultiplicationComplexOneManyKernel(cufftComplex *M, cufftComplex *manyF, cufftComplex *MmanyF,
 		size_t nzyxdim, size_t yxdim)
 {
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -60,12 +60,12 @@ __global__ void pointwiseMultiplicationComplexOneManyKernel(cufftDoubleComplex *
 
 	float normFactor = (1.0/yxdim);
 
-	cuDoubleComplex mulOut = cuCmul(manyF[idx], M[idxLow]);
+	cuComplex mulOut = cuCmulf(manyF[idx], M[idxLow]);
 
-	MmanyF[idx] = make_cuDoubleComplex( cuCreal(mulOut)*normFactor ,  cuCimag(mulOut)*normFactor ) ;
+	MmanyF[idx] = make_cuFloatComplex( cuCrealf(mulOut)*normFactor ,  cuCimagf(mulOut)*normFactor ) ;
 }
 
-__global__ void calculateDenomFunctionKernel(double *MFrealSpace, double *MF2realSpace, double *maskAutocorrelation, double *out,
+__global__ void calculateDenomFunctionKernel(float *MFrealSpace, float *MF2realSpace, float *maskAutocorrelation, float *out,
 		size_t nzyxdim, size_t yxdim)
 {
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -79,8 +79,8 @@ __global__ void calculateDenomFunctionKernel(double *MFrealSpace, double *MF2rea
 }
 
 
-__global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceRef, double *MFrealSpaceExp, double *denomRef, double *denomExp,
-		double *mask, double *NCC, size_t nzyxdim, size_t yxdim, size_t xdim, size_t ydim, size_t maskCount, int max_shift)
+__global__ void calculateNccKernel(float *RefExpRealSpace, float *MFrealSpaceRef, float *MFrealSpaceExp, float *denomRef, float *denomExp,
+		float *mask, float *NCC, size_t nzyxdim, size_t yxdim, size_t xdim, size_t ydim, size_t maskCount, int max_shift)
 {
 
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -100,11 +100,11 @@ __global__ void calculateNccKernel(double *RefExpRealSpace, double *MFrealSpaceR
 		return;
 	}
 
-	double den1 = denomRef[idx];
-	double den2 = denomExp[idx];
+	float den1 = denomRef[idx];
+	float den2 = denomExp[idx];
 
 	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2) && mask[idxLow]>maskCount*0.9){
-		double num = (RefExpRealSpace[idx] - ((MFrealSpaceRef[idx]*MFrealSpaceExp[idx])/(mask[idxLow])) );
+		float num = (RefExpRealSpace[idx] - ((MFrealSpaceRef[idx]*MFrealSpaceExp[idx])/(mask[idxLow])) );
 		NCC[idx] = num/(den1*den2);
 	}else
 		NCC[idx] = -1;
@@ -146,7 +146,7 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
 
 }
 
-__global__ void applyTransformKernel(double *d_in, double *d_out, float *transMat, size_t nzyxdim, size_t yxdim,
+__global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat, size_t nzyxdim, size_t yxdim,
 		size_t xdim, size_t ydim)
 {
 
@@ -203,11 +203,11 @@ __global__ void applyTransformKernel(double *d_in, double *d_out, float *transMa
 	int imgIdx11=y_orig11 * xdim + x_orig11;
 
 	int imgOffset = numIm*yxdim;
-	double I00 = d_in[imgIdx00+imgOffset];
-	double I01 = d_in[imgIdx01+imgOffset];
-	double I10 = d_in[imgIdx10+imgOffset];
-	double I11 = d_in[imgIdx11+imgOffset];
-	double imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
+	float I00 = d_in[imgIdx00+imgOffset];
+	float I01 = d_in[imgIdx01+imgOffset];
+	float I10 = d_in[imgIdx10+imgOffset];
+	float I11 = d_in[imgIdx11+imgOffset];
+	float imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
 
 	d_out[idx] = imVal;
 
@@ -215,8 +215,8 @@ __global__ void applyTransformKernel(double *d_in, double *d_out, float *transMa
 
 
 
-__global__ void calculateNccRotationKernel(double *RefExpRealSpace, cufftDoubleComplex *polarFFTRef, cufftDoubleComplex *polarFFTExp,
-		cufftDoubleComplex *polarSquaredFFTRef, cufftDoubleComplex *polarSquaredFFTExp,	double maskFFTPolarReal, double *NCC,
+__global__ void calculateNccRotationKernel(float *RefExpRealSpace, cufftComplex *polarFFTRef, cufftComplex *polarFFTExp,
+		cufftComplex *polarSquaredFFTRef, cufftComplex *polarSquaredFFTExp,	float maskFFTPolarReal, float *NCC,
 		size_t yxdimFFT, size_t nzyxdim, size_t yxdim)
 {
 
@@ -228,18 +228,18 @@ __global__ void calculateNccRotationKernel(double *RefExpRealSpace, cufftDoubleC
 
 	double normValue = 1.0/yxdimFFT;
 
-	cufftDoubleComplex maskFFTPolar = make_cuDoubleComplex(maskFFTPolarReal, 0.0);
+	cufftComplex maskFFTPolar = make_cuFloatComplex(maskFFTPolarReal, 0.0);
 
-	double M1M2Polar = cuCreal(cuCmul(maskFFTPolar,maskFFTPolar))*normValue;
-	double polarValRef = cuCreal(cuCmul(polarFFTRef[idxLow],maskFFTPolar))*normValue;
-	double polarSqValRef = cuCreal(cuCmul(polarSquaredFFTRef[idxLow],maskFFTPolar))*normValue;
+	float M1M2Polar = cuCrealf(cuCmulf(maskFFTPolar,maskFFTPolar))*normValue;
+	float polarValRef = cuCrealf(cuCmulf(polarFFTRef[idxLow],maskFFTPolar))*normValue;
+	float polarSqValRef = cuCrealf(cuCmulf(polarSquaredFFTRef[idxLow],maskFFTPolar))*normValue;
 
-	double polarValExp = cuCreal(cuCmul(polarFFTExp[idxLow],maskFFTPolar))*normValue;
-	double polarSqValExp = cuCreal(cuCmul(polarSquaredFFTExp[idxLow],maskFFTPolar))*normValue;
+	float polarValExp = cuCrealf(cuCmulf(polarFFTExp[idxLow],maskFFTPolar))*normValue;
+	float polarSqValExp = cuCrealf(cuCmulf(polarSquaredFFTExp[idxLow],maskFFTPolar))*normValue;
 
-	double num = (RefExpRealSpace[idx] - (polarValRef*polarValExp/M1M2Polar) );
-	double den1 = sqrt(polarSqValRef - (polarValRef*polarValRef/M1M2Polar) );
-	double den2 = sqrt(polarSqValExp - (polarValExp*polarValExp/M1M2Polar) );
+	float num = (RefExpRealSpace[idx] - (polarValRef*polarValExp/M1M2Polar) );
+	float den1 = sqrt(polarSqValRef - (polarValRef*polarValRef/M1M2Polar) );
+	float den2 = sqrt(polarSqValExp - (polarValExp*polarValExp/M1M2Polar) );
 
 	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2))
 		NCC[idx] = num/(den1*den2);
@@ -249,22 +249,22 @@ __global__ void calculateNccRotationKernel(double *RefExpRealSpace, cufftDoubleC
 }
 
 
-__global__ void pointwiseMultiplicationComplexKernel(cufftDoubleComplex *reference, cufftDoubleComplex *experimental,
-		cufftDoubleComplex *RefExpFourier, size_t nzyxdim, size_t yxdim)
+__global__ void pointwiseMultiplicationComplexKernel(cufftComplex *reference, cufftComplex *experimental,
+		cufftComplex *RefExpFourier, size_t nzyxdim, size_t yxdim)
 {
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if(idx>=nzyxdim)
 		return;
 
-	double normFactor = (1.0/yxdim);
+	float normFactor = (1.0/yxdim);
 
-	cuDoubleComplex mulOut = cuCmul(reference[idx], experimental[idx]);
-	RefExpFourier[idx] = make_cuDoubleComplex( cuCreal(mulOut)*normFactor ,  cuCimag(mulOut)*normFactor );
+	cuComplex mulOut = cuCmulf(reference[idx], experimental[idx]);
+	RefExpFourier[idx] = make_cuFloatComplex( cuCrealf(mulOut)*normFactor ,  cuCimagf(mulOut)*normFactor );
 }
 
 
-__global__ void maskingKernel(double *d_in, double *d_out, double *d_out2, double *mask,
+__global__ void maskingKernel(float *d_in, float *d_out, float *d_out2, float *mask,
 		size_t xdim, size_t ydim, size_t yxdim, size_t numImag, bool rotation, bool experimental){
 
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -290,8 +290,8 @@ __global__ void maskingKernel(double *d_in, double *d_out, double *d_out2, doubl
 	}
 }
 
-__global__ void paddingKernel(double *d_orig_image, double *image2_gpu, double *mask, double *padded_image_gpu,
-		double *padded_image2_gpu, double *padded_mask_gpu, size_t xdim, size_t ydim, size_t yxdim,
+__global__ void paddingKernel(float *d_orig_image, float *image2_gpu, float *mask, float *padded_image_gpu,
+		float *padded_image2_gpu, float *padded_mask_gpu, size_t xdim, size_t ydim, size_t yxdim,
 		size_t numImag, size_t pad_xdim, size_t pad_ydim, size_t pad_yxdim, bool rotation, bool experimental){
 
 	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -481,15 +481,15 @@ void ifft_v3(std::complex<double> *in, double *out, cufftHandle planB){
 */
 
 
-void padding_masking(GpuMultidimArrayAtGpu<double> &d_orig_image, GpuMultidimArrayAtGpu<double> &mask, GpuMultidimArrayAtGpu<double> &padded_image_gpu,
-		GpuMultidimArrayAtGpu<double> &padded_image2_gpu, GpuMultidimArrayAtGpu<double> &padded_mask_gpu, bool rotation, bool experimental){
+void padding_masking(GpuMultidimArrayAtGpu<float> &d_orig_image, GpuMultidimArrayAtGpu<float> &mask, GpuMultidimArrayAtGpu<float> &padded_image_gpu,
+		GpuMultidimArrayAtGpu<float> &padded_image2_gpu, GpuMultidimArrayAtGpu<float> &padded_mask_gpu, bool rotation, bool experimental){
 
     int numTh = 1024;
 	int numBlk = d_orig_image.yxdim/numTh;
 	if(d_orig_image.yxdim%numTh > 0)
 		numBlk++;
 
-	GpuMultidimArrayAtGpu<double> image_gpu, image2_gpu;
+	GpuMultidimArrayAtGpu<float> image_gpu, image2_gpu;
 	image_gpu.resize(d_orig_image);
 	image2_gpu.resize(d_orig_image);
 
@@ -499,9 +499,9 @@ void padding_masking(GpuMultidimArrayAtGpu<double> &d_orig_image, GpuMultidimArr
 	image_gpu.copyGpuToGpu(d_orig_image);
 
 	if(!rotation || !experimental){
-		gpuErrchk(cudaMemset(padded_image_gpu.d_data, 0, padded_image_gpu.nzyxdim*sizeof(double)));
-		gpuErrchk(cudaMemset(padded_image2_gpu.d_data, 0, padded_image2_gpu.nzyxdim*sizeof(double)));
-		gpuErrchk(cudaMemset(padded_mask_gpu.d_data, 0, padded_mask_gpu.nzyxdim*sizeof(double)));
+		gpuErrchk(cudaMemset(padded_image_gpu.d_data, 0, padded_image_gpu.nzyxdim*sizeof(float)));
+		gpuErrchk(cudaMemset(padded_image2_gpu.d_data, 0, padded_image2_gpu.nzyxdim*sizeof(float)));
+		gpuErrchk(cudaMemset(padded_mask_gpu.d_data, 0, padded_mask_gpu.nzyxdim*sizeof(float)));
 
 		paddingKernel<<< numBlk, numTh >>>(d_orig_image.d_data, image2_gpu.d_data, mask.d_data,
 				padded_image_gpu.d_data, padded_image2_gpu.d_data, padded_mask_gpu.d_data,
@@ -513,20 +513,20 @@ void padding_masking(GpuMultidimArrayAtGpu<double> &d_orig_image, GpuMultidimArr
 }
 
 
-void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<double> > &M, const GpuMultidimArrayAtGpu < std::complex<double> >& manyF,
-		GpuMultidimArrayAtGpu< std::complex<double> > &MmanyF)
+void pointwiseMultiplicationFourier(const GpuMultidimArrayAtGpu< std::complex<float> > &M, const GpuMultidimArrayAtGpu < std::complex<float> >& manyF,
+		GpuMultidimArrayAtGpu< std::complex<float> > &MmanyF)
 {
     int numTh = 1024;
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
     manyF.calculateGridSizeVectorized(blockSize, gridSize);
 
     pointwiseMultiplicationComplexOneManyKernel <<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			((cufftDoubleComplex*)M.d_data, (cufftDoubleComplex*)manyF.d_data, (cufftDoubleComplex*) MmanyF.d_data, manyF.nzyxdim, manyF.yxdim);
+			((cufftComplex*)M.d_data, (cufftComplex*)manyF.d_data, (cufftComplex*) MmanyF.d_data, manyF.nzyxdim, manyF.yxdim);
 
 }
 
-void calculateDenomFunction(const GpuMultidimArrayAtGpu< double > &MFrealSpace, const GpuMultidimArrayAtGpu < double >& MF2realSpace,
-		const GpuMultidimArrayAtGpu < double >& maskAutocorrelation, GpuMultidimArrayAtGpu< double > &out)
+void calculateDenomFunction(const GpuMultidimArrayAtGpu< float > &MFrealSpace, const GpuMultidimArrayAtGpu < float >& MF2realSpace,
+		const GpuMultidimArrayAtGpu < float >& maskAutocorrelation, GpuMultidimArrayAtGpu< float > &out)
 {
     int numTh = 1024;
     XmippDim3 blockSize(numTh, 1, 1), gridSize;
@@ -541,7 +541,7 @@ void calculateDenomFunction(const GpuMultidimArrayAtGpu< double > &MFrealSpace, 
 
 void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB)
 {
-	GpuMultidimArrayAtGpu< std::complex<double> > MF, MF2;
+	GpuMultidimArrayAtGpu< std::complex<float> > MF, MF2;
 	MF.resize(d_projFFT);
 	MF2.resize(d_projSquaredFFT);
 
@@ -549,7 +549,7 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, MF2);
 	d_projSquaredFFT.clear();
 
-	GpuMultidimArrayAtGpu<double> MF2realSpace(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	GpuMultidimArrayAtGpu<float> MF2realSpace(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 
 	MF.ifft(MFrealSpace, myhandlePaddedB);
@@ -557,12 +557,47 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 	MF.clear();
 	MF2.clear();
 
-	GpuMultidimArrayAtGpu< std::complex<double> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
+	GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
 	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux);
 	maskAutocorrelation.resize(Xdim, Ydim);
-
 	maskAux.ifft(maskAutocorrelation, myhandleMaskB);
 	maskAux.clear();
+
+	d_denom.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	calculateDenomFunction(MFrealSpace, MF2realSpace, maskAutocorrelation, d_denom);
+	MF2realSpace.clear();
+
+}
+
+
+
+void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftHandle &myhandleMaskB,
+		GpuMultidimArrayAtGpu<float> &maskAutocorr)
+{
+	GpuMultidimArrayAtGpu< std::complex<float> > MF, MF2;
+	MF.resize(d_projFFT);
+	MF2.resize(d_projSquaredFFT);
+
+	pointwiseMultiplicationFourier(d_maskFFT, d_projFFT, MF);
+	pointwiseMultiplicationFourier(d_maskFFT, d_projSquaredFFT, MF2);
+	d_projSquaredFFT.clear();
+
+	GpuMultidimArrayAtGpu<float> MF2realSpace(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+	MFrealSpace.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
+
+	MF.ifft(MFrealSpace, myhandlePaddedB);
+	MF2.ifft(MF2realSpace, myhandlePaddedB);
+	MF.clear();
+	MF2.clear();
+
+	/*GpuMultidimArrayAtGpu< std::complex<float> > maskAux(d_projFFT.Xdim, d_projFFT.Ydim);
+	pointwiseMultiplicationFourier(d_maskFFT, d_maskFFT, maskAux);
+	maskAutocorrelation.resize(Xdim, Ydim);
+	maskAux.ifft(maskAutocorrelation, myhandleMaskB);
+	maskAux.clear();
+	maskAutocorrelation.resize(Xdim, Ydim);*/
+	maskAutocorr.copyGpuToGpu(maskAutocorrelation);
+
 	d_denom.resize(Xdim, Ydim, d_projFFT.Zdim, d_projFFT.Ndim);
 	calculateDenomFunction(MFrealSpace, MF2realSpace, maskAutocorrelation, d_denom);
 	MF2realSpace.clear();
@@ -570,9 +605,9 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 }
 
 void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		double *max_vector, double maxShift, mycufftHandle &myhandlePadded)
+		float *max_vector, int maxShift, mycufftHandle &myhandlePadded)
 {
-	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
+	GpuMultidimArrayAtGpu< std::complex<float> > RefExpFourier(referenceAux.d_projPolarFFT.Xdim, referenceAux.d_projPolarFFT.Ydim,
 			referenceAux.d_projPolarFFT.Zdim, referenceAux.d_projPolarFFT.Ndim);
 
     int numTh = 1024;
@@ -580,11 +615,11 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
     referenceAux.d_projPolarFFT.calculateGridSizeVectorized(blockSize, gridSize);
 
     pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			((cufftDoubleComplex*)referenceAux.d_projPolarFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarFFT.d_data,
-					(cufftDoubleComplex*)RefExpFourier.d_data, referenceAux.d_projPolarFFT.nzyxdim,
+			((cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAux.d_projPolarFFT.d_data,
+					(cufftComplex*)RefExpFourier.d_data, referenceAux.d_projPolarFFT.nzyxdim,
 					referenceAux.d_projPolarFFT.yxdim);
 
-    GpuMultidimArrayAtGpu< double > RefExpRealSpace(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
+    GpuMultidimArrayAtGpu< float > RefExpRealSpace(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
     		referenceAux.d_projPolarFFT.Ndim);
     RefExpFourier.ifft(RefExpRealSpace, myhandlePadded);
     RefExpFourier.clear();
@@ -592,16 +627,16 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
     XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
     RefExpRealSpace.calculateGridSizeVectorized(blockSize2, gridSize2);
 
- 	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
+ 	GpuMultidimArrayAtGpu<float> d_NCC(referenceAux.XdimPolar, referenceAux.YdimPolar, referenceAux.d_projPolarFFT.Zdim,
 				referenceAux.d_projPolarFFT.Ndim);
 
 	double maskFFTPolar = (referenceAux.XdimPolar*referenceAux.YdimPolar);
 	calculateNccRotationKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
-			(RefExpRealSpace.d_data, (cufftDoubleComplex*)referenceAux.d_projPolarFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarFFT.d_data,
-					(cufftDoubleComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
+			(RefExpRealSpace.d_data, (cufftComplex*)referenceAux.d_projPolarFFT.d_data, (cufftComplex*)experimentalAux.d_projPolarFFT.d_data,
+					(cufftComplex*)referenceAux.d_projPolarSquaredFFT.d_data, (cufftComplex*)experimentalAux.d_projPolarSquaredFFT.d_data,
 					maskFFTPolar, d_NCC.d_data, referenceAux.d_projPolarFFT.yxdim, RefExpRealSpace.nzyxdim, RefExpRealSpace.yxdim);
 
-	double *max_values = new double[d_NCC.Ndim];
+	float *max_values = new float[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
 	float *posY = new float[d_NCC.Ndim];
 	d_NCC.calculateMax(max_values, posX, posY);
@@ -625,13 +660,8 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 		if(acceptedCpu[i])
 			max_vector[i]=max_values[i];
 		else
-			gpuErrchk(cudaMemcpy(&max_vector[i], &d_NCC.d_data[i*d_NCC.yxdim], sizeof(double), cudaMemcpyDeviceToHost));
+			gpuErrchk(cudaMemcpy(&max_vector[i], &d_NCC.d_data[i*d_NCC.yxdim], sizeof(float), cudaMemcpyDeviceToHost));
 	}
-
-	/*float *matrix_aux = new float[9*transMat.Ndim];
-	transMat.copyMatrixToCpu(matrix_aux);
-	for(int i=0; i<9*transMat.Ndim; i++)
-		printf("Trans Matrix R[%i] = %f\n", i, matrix_aux[i]);*/
 
 	delete[] max_values;
 	delete[] posX;
@@ -641,10 +671,10 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 
 void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationAux &experimentalAux, TransformMatrix<float> &transMat,
-		double *max_vector, double maxShift, mycufftHandle &myhandlePadded)
+		float *max_vector, int maxShift, mycufftHandle &myhandlePadded)
 {
 
-	GpuMultidimArrayAtGpu< std::complex<double> > RefExpFourier(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
+	GpuMultidimArrayAtGpu< std::complex<float> > RefExpFourier(referenceAux.d_projFFT.Xdim, referenceAux.d_projFFT.Ydim,
 			referenceAux.d_projFFT.Zdim, referenceAux.d_projFFT.Ndim);
 
     int numTh = 1024;
@@ -652,10 +682,10 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     referenceAux.d_projFFT.calculateGridSizeVectorized(blockSize, gridSize);
 
     pointwiseMultiplicationComplexKernel<<< CONVERT2DIM3(gridSize), CONVERT2DIM3(blockSize) >>>
-			((cufftDoubleComplex*)referenceAux.d_projFFT.d_data, (cufftDoubleComplex*)experimentalAux.d_projFFT.d_data, (cufftDoubleComplex*)RefExpFourier.d_data,
+			((cufftComplex*)referenceAux.d_projFFT.d_data, (cufftComplex*)experimentalAux.d_projFFT.d_data, (cufftComplex*)RefExpFourier.d_data,
 					referenceAux.d_projFFT.nzyxdim, referenceAux.d_projFFT.yxdim);
 
-    GpuMultidimArrayAtGpu< double > RefExpRealSpace(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
+    GpuMultidimArrayAtGpu< float > RefExpRealSpace(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
     		referenceAux.d_projFFT.Ndim);
     RefExpFourier.ifft(RefExpRealSpace, myhandlePadded);
     RefExpFourier.clear();
@@ -663,7 +693,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
  	XmippDim3 blockSize2(numTh, 1, 1), gridSize2;
  	RefExpRealSpace.calculateGridSizeVectorized(blockSize2, gridSize2);
 
-	GpuMultidimArrayAtGpu<double> d_NCC(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
+	GpuMultidimArrayAtGpu<float> d_NCC(referenceAux.Xdim, referenceAux.Ydim, referenceAux.d_projFFT.Zdim,
 			referenceAux.d_projFFT.Ndim);
 
 	calculateNccKernel<<< CONVERT2DIM3(gridSize2), CONVERT2DIM3(blockSize2) >>>
@@ -675,7 +705,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	//experimentalAux.debug.resize(d_NCC);
 	//d_NCC.copyGpuToGpu(experimentalAux.debug);
 
-	double *max_values = new double[d_NCC.Ndim];
+	float *max_values = new float[d_NCC.Ndim];
 	float *posX = new float[d_NCC.Ndim];
 	float *posY = new float[d_NCC.Ndim];
 	d_NCC.calculateMax(max_values, posX, posY);
@@ -699,13 +729,8 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 		if(acceptedCpu[i])
 			max_vector[i]=max_values[i];
 		else
-			gpuErrchk(cudaMemcpy(&max_vector[i], &d_NCC.d_data[i*d_NCC.yxdim], sizeof(double), cudaMemcpyDeviceToHost));
+			gpuErrchk(cudaMemcpy(&max_vector[i], &d_NCC.d_data[i*d_NCC.yxdim], sizeof(float), cudaMemcpyDeviceToHost));
 	}
-
-	/*float *matrix_aux = new float[9*transMat.Ndim];
-	transMat.copyMatrixToCpu(matrix_aux);
-	for(int i=0; i<9*transMat.Ndim; i++)
-		printf("Trans Matrix T[%i] = %f\n", i, matrix_aux[i]);*/
 
 
 	delete[] max_values;
@@ -714,7 +739,7 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 
 }
 
-void apply_transform(GpuMultidimArrayAtGpu<double> &d_original_image, GpuMultidimArrayAtGpu<double> &d_transform_image, TransformMatrix<float> &transMat){
+void apply_transform(GpuMultidimArrayAtGpu<float> &d_original_image, GpuMultidimArrayAtGpu<float> &d_transform_image, TransformMatrix<float> &transMat){
 
 	int numTh = 1024;
 	XmippDim3 blockSize(numTh, 1, 1), gridSize;
@@ -727,7 +752,7 @@ void apply_transform(GpuMultidimArrayAtGpu<double> &d_original_image, GpuMultidi
 }
 
 
-__global__ void cart2polar(double *image, double *polar, double *polar2, int maxRadius, int maxAng,
+__global__ void cart2polar(float *image, float *polar, float *polar2, int maxRadius, int maxAng,
 		int Nimgs, int Ydim, int Xdim, bool rotate)
 {
 	int angle = blockDim.x * blockIdx.x + threadIdx.x;
@@ -736,21 +761,21 @@ __global__ void cart2polar(double *image, double *polar, double *polar2, int max
 	if (radius>=maxRadius || angle>=maxAng)
 		return;
 
-	double x = (double)(radius*cosf((float)(angle*PI/180))) + Xdim/2;
-	double y = (double)(radius*sinf((float)(angle*PI/180))) + Ydim/2;
+	float x = (float)(radius*cosf((float)(angle*PI/180))) + Xdim/2;
+	float y = (float)(radius*sinf((float)(angle*PI/180))) + Ydim/2;
 
-	double dx_low = floor(x);
-	double dy_low = floor(y);
+	float dx_low = floor(x);
+	float dy_low = floor(y);
 	int x_low = (int)dx_low;
 	int y_low = (int)dy_low;
-	double x_x_low=x-dx_low;
-	double y_y_low=y-dy_low;
-	double one_x=1.0-x_x_low;
-	double one_y=1.0-y_y_low;
-	double w00=one_y*one_x;
-	double w01=one_y*x_x_low;
-	double w10=y_y_low*one_x;
-	double w11=y_y_low*x_x_low;
+	float x_x_low=x-dx_low;
+	float y_y_low=y-dy_low;
+	float one_x=1.0-x_x_low;
+	float one_y=1.0-y_y_low;
+	float w00=one_y*one_x;
+	float w01=one_y*x_x_low;
+	float w10=y_y_low*one_x;
+	float w11=y_y_low*x_x_low;
 
 	int NXY=Xdim*Ydim;
 	int NXYpolar=maxAng*maxRadius;
@@ -768,11 +793,11 @@ __global__ void cart2polar(double *image, double *polar, double *polar2, int max
 
 	for (int n=0; n<Nimgs; n++)
 	{
-		double I00 = image[imgIdx00+imgOffset];
-		double I01 = image[imgIdx01+imgOffset];
-		double I10 = image[imgIdx10+imgOffset];
-		double I11 = image[imgIdx11+imgOffset];
-		double imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
+		float I00 = image[imgIdx00+imgOffset];
+		float I01 = image[imgIdx01+imgOffset];
+		float I10 = image[imgIdx10+imgOffset];
+		float I11 = image[imgIdx11+imgOffset];
+		float imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
 		int finalPolarIndex=polarIdx+polarOffset;
 		polar[finalPolarIndex] = imVal;
 		polar2[finalPolarIndex] = imVal*imVal;
@@ -783,7 +808,7 @@ __global__ void cart2polar(double *image, double *polar, double *polar2, int max
 
 }
 
-void cuda_cart2polar(GpuMultidimArrayAtGpu<double> &image, GpuMultidimArrayAtGpu<double> &polar_image, GpuMultidimArrayAtGpu<double> &polar2_image, bool rotate)
+void cuda_cart2polar(GpuMultidimArrayAtGpu<float> &image, GpuMultidimArrayAtGpu<float> &polar_image, GpuMultidimArrayAtGpu<float> &polar2_image, bool rotate)
 {
     int numTh = 32;
     XmippDim3 blockSize(numTh, numTh, 1), gridSize;
