@@ -97,6 +97,16 @@ public:
 		}
 	}
 
+	void giveOneImage(GpuMultidimArrayAtCpu<T> out, int idx){
+		if (out.isEmpty())
+			out.resize(Xdim,Ydim,Zdim,1);
+		memcpy(out.data, data[idx*zyxdim], zyxdim*sizeof(T));
+	}
+
+	void setOneImage(GpuMultidimArrayAtCpu<T> in, int idx){
+		memcpy(data[idx*zyxdim], in.data, zyxdim*sizeof(T));
+	}
+
 	void clear()
 	{
 		delete []data;
