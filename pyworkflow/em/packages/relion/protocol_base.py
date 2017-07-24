@@ -798,8 +798,19 @@ class ProtRelionBase(EMProtocol):
                 mdAux = md.MetaData()
                 mdMovies.fillConstant(md.RLN_CTF_DETECTOR_PIXEL_SIZE,
                                       detectorPxSize)
+                mdMovies.fillConstant(md.RLN_CTF_MAGNIFICATION, mag)
                 mdAux.join2(mdMovies, mdParts, md.RLN_PARTICLE_ID,
                             md.RLN_IMAGE_ID, md.INNER_JOIN)
+                # set priors equal to orig. values
+                mdAux.copyColumn(md.RLN_ORIENT_ORIGIN_X_PRIOR, md.RLN_ORIENT_ORIGIN_X)
+                mdAux.copyColumn(md.RLN_ORIENT_ORIGIN_Y_PRIOR, md.RLN_ORIENT_ORIGIN_Y)
+                mdAux.copyColumn(md.RLN_ORIENT_PSI_PRIOR, md.RLN_ORIENT_PSI)
+                mdAux.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
+                mdAux.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
+                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES, self._getNumberOfFrames())
+                # FIXME: set to 1 till frame averaging is implemented in xmipp
+                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
+
                 mdAux.write(movieFn, md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
     
@@ -1005,7 +1016,7 @@ class ProtRelionBase(EMProtocol):
             solventMask = convertMask(self.solventMask, self._getTmpPath())
             args['--solvent_mask2'] = solventMask
 
-        if isVersion2() and self.IS_3D and self.referenceMask.hasValue():
+        if isVersion2() and self.IS_3D and self.referenceMask.hasValue() and self.solventFscMask:
             args['--solvent_correct_fsc'] = ''
 
     def _getProgram(self, program='relion_refine'):
@@ -1104,16 +1115,10 @@ class ProtRelionBase(EMProtocol):
     
     def _postprocessImageRow(self, img, imgRow):
         partId = img.getParticleId()
-        magnification = img.getAcquisition().getMagnification()
         imgRow.setValue(md.RLN_PARTICLE_ID, long(partId))
-        imgRow.setValue(md.RLN_CTF_MAGNIFICATION, magnification)
         imgRow.setValue(md.RLN_MICROGRAPH_NAME,
                         "%06d@fake_movie_%06d.mrcs"
                         % (img.getFrameId(), img.getMicId()))  # fix relion-2.1
-        imgRow.setValue(md.RLN_PARTICLE_NR_FRAMES, self._getNumberOfFrames())
-        #FIXME: set the following to 1 till frame averaging
-        # is implemented in xmipp extraction protocol
-        imgRow.setValue(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
     def _postprocessParticleRow(self, part, partRow):
         if part.hasAttribute('_rlnGroupName'):
