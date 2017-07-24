@@ -71,9 +71,9 @@ void createPlanFFT(size_t Xdim, size_t Ydim, size_t Ndim, size_t Zdim, bool forw
 	//cufftHandle planF;
 	//cufftCreate(&planF);
 	if(forward){
-		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_D2Z, Ndim));
+		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nr, rstride, rdist, nf, fstride, fdist, CUFFT_R2C, Ndim));
 	}else{
-		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_Z2D, Ndim));
+		gpuErrchkFFT(cufftPlanMany(plan, NRANK, nr, nf, fstride, fdist, nr, rstride, rdist, CUFFT_C2R, Ndim));
 	}
 
 }
@@ -276,7 +276,7 @@ void GpuMultidimArrayAtGpu<double>::fftNew(GpuMultidimArrayAtGpu< std::complex<d
 
 template<>
 template<>
-void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<double> > &fourierTransform, mycufftHandle &myhandle)
+void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float> > &fourierTransform, mycufftHandle &myhandle)
 {
 
 	int Xfdim=(Xdim/2)+1;
@@ -290,7 +290,7 @@ void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<doub
 	int positionFFT=0;
 	size_t NdimNew, auxNdim;
 	if(Xdim*Ydim*Ndim*64>memory[1]*0.8){
-		float sizeAuxIm = Xdim*Ydim*Zdim*sizeof(cufftDoubleReal) + Xfdim*Ydim*Zdim*sizeof(cufftDoubleComplex);
+		float sizeAuxIm = Xdim*Ydim*Zdim*sizeof(cufftReal) + Xfdim*Ydim*Zdim*sizeof(cufftComplex);
 		NdimNew=floor((memory[1]*0.6)/(64*Xdim*Ydim + sizeAuxIm));
 	}else
 		NdimNew = Ndim;
@@ -300,11 +300,11 @@ void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<doub
 
 	while(aux>0){
 
-		GpuMultidimArrayAtGpu<cufftDoubleReal> auxInFFT;
-		GpuMultidimArrayAtGpu<cufftDoubleComplex> auxOutFFT;
+		GpuMultidimArrayAtGpu<cufftReal> auxInFFT;
+		GpuMultidimArrayAtGpu<cufftComplex> auxOutFFT;
 		if(NdimNew!=Ndim){
 			auxInFFT.resize(Xdim,Ydim,Zdim,NdimNew);
-			gpuCopyFromGPUToGPU((cufftDoubleReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftDoubleReal));
+			gpuCopyFromGPUToGPU((cufftReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftReal));
 			auxOutFFT.resize(Xfdim,Ydim,Zdim,NdimNew);
 		}
 
@@ -342,15 +342,15 @@ void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<doub
 
 		if(auxNdim==NdimNew){
 			if(NdimNew!=Ndim){
-				gpuErrchkFFT(cufftExecD2Z(*planFptr, auxInFFT.d_data, auxOutFFT.d_data));
+				gpuErrchkFFT(cufftExecR2C(*planFptr, auxInFFT.d_data, auxOutFFT.d_data));
 			}else{
-				gpuErrchkFFT(cufftExecD2Z(*planFptr, (cufftDoubleReal*)&d_data[positionReal], (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT]));
+				gpuErrchkFFT(cufftExecR2C(*planFptr, (cufftReal*)&d_data[positionReal], (cufftComplex*)&fourierTransform.d_data[positionFFT]));
 			}
 		}else{
 			if(NdimNew!=Ndim){
-				gpuErrchkFFT(cufftExecD2Z(*planAuxFptr, auxInFFT.d_data, auxOutFFT.d_data));
+				gpuErrchkFFT(cufftExecR2C(*planAuxFptr, auxInFFT.d_data, auxOutFFT.d_data));
 			}else{
-				gpuErrchkFFT(cufftExecD2Z(*planAuxFptr, (cufftDoubleReal*)&d_data[positionReal], (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT]));
+				gpuErrchkFFT(cufftExecR2C(*planAuxFptr, (cufftReal*)&d_data[positionReal], (cufftComplex*)&fourierTransform.d_data[positionFFT]));
 			}
 		}
 
@@ -365,7 +365,7 @@ void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<doub
 
 
 		if(NdimNew!=Ndim){
-			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftDoubleComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftDoubleComplex));
+			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftComplex));
 			auxOutFFT.clear();
 			auxInFFT.clear();
 		}
@@ -384,7 +384,7 @@ void GpuMultidimArrayAtGpu<double>::fft(GpuMultidimArrayAtGpu< std::complex<doub
 
 template<>
 template<>
-void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<double> &realSpace, mycufftHandle &myhandle)
+void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<float> &realSpace, mycufftHandle &myhandle)
 {
 
 	int Xfdim=(realSpace.Xdim/2)+1;
@@ -397,7 +397,7 @@ void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<d
 	int positionFFT=0;
 	size_t NdimNew, auxNdim;
 	if(realSpace.Xdim*realSpace.Ydim*realSpace.Ndim*64>memory[1]*0.8){
-		float sizeAuxIm = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftDoubleReal) + Xfdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftDoubleComplex);
+		float sizeAuxIm = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftReal) + Xfdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftComplex);
 		NdimNew=floor((memory[1]*0.6)/(64*realSpace.Xdim*realSpace.Ydim + sizeAuxIm));
 	}else
 		NdimNew = realSpace.Ndim;
@@ -407,11 +407,11 @@ void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<d
 
 	while(aux>0){
 
-		GpuMultidimArrayAtGpu<cufftDoubleComplex> auxInFFT;
-		GpuMultidimArrayAtGpu<cufftDoubleReal> auxOutFFT;
+		GpuMultidimArrayAtGpu<cufftComplex> auxInFFT;
+		GpuMultidimArrayAtGpu<cufftReal> auxOutFFT;
 		if(NdimNew!=Ndim){
 			auxInFFT.resize(Xfdim,realSpace.Ydim,realSpace.Zdim,NdimNew);
-			gpuCopyFromGPUToGPU((cufftDoubleComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftDoubleComplex));
+			gpuCopyFromGPUToGPU((cufftComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftComplex));
 			auxOutFFT.resize(realSpace.Xdim,realSpace.Ydim,realSpace.Zdim, NdimNew);
 		}
 
@@ -432,15 +432,15 @@ void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<d
 
 		if(auxNdim==NdimNew){
 			if(NdimNew!=Ndim){
-				gpuErrchkFFT(cufftExecZ2D(*planBptr, auxInFFT.d_data, auxOutFFT.d_data));
+				gpuErrchkFFT(cufftExecC2R(*planBptr, auxInFFT.d_data, auxOutFFT.d_data));
 			}else{
-				gpuErrchkFFT(cufftExecZ2D(*planBptr, (cufftDoubleComplex *)&d_data[positionFFT], (cufftDoubleReal*)&realSpace.d_data[positionReal]));
+				gpuErrchkFFT(cufftExecC2R(*planBptr, (cufftComplex *)&d_data[positionFFT], (cufftReal*)&realSpace.d_data[positionReal]));
 			}
 		}else{
 			if(NdimNew!=Ndim){
-				gpuErrchkFFT(cufftExecZ2D(*planAuxBptr, auxInFFT.d_data, auxOutFFT.d_data));
+				gpuErrchkFFT(cufftExecC2R(*planAuxBptr, auxInFFT.d_data, auxOutFFT.d_data));
 			}else{
-				gpuErrchkFFT(cufftExecZ2D(*planAuxBptr, (cufftDoubleComplex *)&d_data[positionFFT], (cufftDoubleReal*)&realSpace.d_data[positionReal]));
+				gpuErrchkFFT(cufftExecC2R(*planAuxBptr, (cufftComplex *)&d_data[positionFFT], (cufftReal*)&realSpace.d_data[positionReal]));
 			}
 		}
 
@@ -450,7 +450,7 @@ void GpuMultidimArrayAtGpu< std::complex<double> >::ifft(GpuMultidimArrayAtGpu<d
 			cufftDestroy(*planAuxBptr);
 
 		if(NdimNew!=Ndim){
-			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftDoubleReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftDoubleReal));
+			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftReal));
 			auxOutFFT.clear();
 			auxInFFT.clear();
 		}
@@ -511,13 +511,13 @@ void GpuPlanFFT::destroyGpuPlanFFT()
 }*/
 
 template<>
-void GpuMultidimArrayAtGpu<double>::calculateMax(double *max_values, float *posX, float *posY){
+void GpuMultidimArrayAtGpu<float>::calculateMax(float *max_values, float *posX, float *posY){
 
 	int index = 0;
 
 	for(int i=0; i<Ndim; i++){
-		thrust::device_ptr<double> dev_ptr = thrust::device_pointer_cast(&d_data[index]);
-		thrust::device_ptr<double> max_ptr = thrust::max_element(dev_ptr, dev_ptr + (int)yxdim);
+		thrust::device_ptr<float> dev_ptr = thrust::device_pointer_cast(&d_data[index]);
+		thrust::device_ptr<float> max_ptr = thrust::max_element(dev_ptr, dev_ptr + (int)yxdim);
 		unsigned int position = &max_ptr[0] - &dev_ptr[0];
 		max_values[i] = max_ptr[0];
 		//printf("max_thrust %lf   ", max_values[i]);
