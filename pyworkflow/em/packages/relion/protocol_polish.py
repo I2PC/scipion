@@ -28,6 +28,7 @@
 
 import os
 from os.path import exists
+from glob import glob
 from pyworkflow.protocol.params import (PointerParam, FloatParam, StringParam,
                                         IntParam, BooleanParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
@@ -37,7 +38,7 @@ import pyworkflow.utils as pwutils
 from pyworkflow.em.protocol import ProtProcessParticles
 
 from protocol_base import ProtRelionBase
-from convert import (createItemMatrix, isVersion2,
+from convert import (createItemMatrix, isVersion2, getVersion, V1_3,
                     readSetOfParticles, writeSetOfParticles, MOVIE_EXTRA_LABELS)
 
 
@@ -215,7 +216,10 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         imgStar = self._getFileName('movie_particles')
         
         params = ' --i %s' % imgStar
-        params += ' --o %s/shiny' % self._getExtraPath()
+        if isVersion2():
+            params += ' --o %s/shiny' % self._getExtraPath()
+        else:
+            params += ' --o shiny'
         params += ' --angpix %0.3f' % imgSet.getSamplingRate()
         params += ' --sym %s' % self.symmetryGroup.get()
         params += ' --sigma_nb %d' % self.stddevParticleDistance.get()
@@ -259,21 +263,24 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
         writeSetOfParticles(imgSet, imgStarTmp, self._getExtraPath(),
                             alignType=imgSet.getAlignment(),
                             extraLabels=MOVIE_EXTRA_LABELS)
-
-        # replace rlnOriginalParticleName from *.stk to *.mrcs
-        # as relion v.2 requires
-        from convert import relionToLocation, locationToRelion
         mdImg = md.MetaData(imgStarTmp)
 
+        # replace mdColumn from *.stk to *.mrcs as Relion2 requires
+        if getVersion() == V1_3:
+            mdColumn = md.RLN_PARTICLE_NAME
+        else:
+            mdColumn = md.RLN_PARTICLE_ORI_NAME
+
+        from convert import relionToLocation, locationToRelion
         for objId in mdImg:
-            index, imgPath = relionToLocation(mdImg.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
+            index, imgPath = relionToLocation(mdImg.getValue(mdColumn, objId))
             if not imgPath.endswith('mrcs'):
                 newName = pwutils.replaceBaseExt(os.path.basename(imgPath), 'mrcs')
                 newPath = self._getTmpPath(newName)
                 newLoc = locationToRelion(index, newPath)
                 if not exists(newPath):
                     pwutils.createLink(imgPath, newPath)
-                mdImg.setValue(md.RLN_PARTICLE_ORI_NAME, newLoc, objId)
+                mdImg.setValue(mdColumn, newLoc, objId)
         mdImg.write(imgStar)
 
     def polishStep(self, params):
@@ -281,11 +288,32 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     
     def organizeDataStep(self):
         from convert import relionToLocation, locationToRelion
-        # move polished particles to the current protocol extra path
-        # and restore previous rlnParticleOriginalName
+        if getVersion() == V1_3:
+            mdColumn = md.RLN_PARTICLE_NAME
+        else:
+            mdColumn = md.RLN_PARTICLE_ORI_NAME
+
         shinyStar = self._getFileName('shiny')
         newDir = self._getExtraPath('polished_particles')
         pwutils.makePath(newDir)
+
+        if not isVersion2():
+            pwutils.makePath(self._getExtraPath('shiny'))
+            shinyOld = "shiny.star"
+            inputFit = "movie_particles_shiny.star"
+            try:
+                pwutils.moveFile(shinyOld, shinyStar)
+                pwutils.moveFile(self._getPath(inputFit), self._getExtraPath("shiny/all_movies_input_fit.star"))
+                for half in self.PREFIXES:
+                    pwutils.moveFile(self._getPath('movie_particles_shiny_%sclass001_unfil.mrc' % half),
+                                     self._getExtraPath('shiny/shiny_%sclass001_unfil.mrc' % half))
+                self._renameFiles('movie_particles_shiny_post*', 'movie_particles_')
+                self._renameFiles('movie_particles_shiny*', 'movie_particles_shiny_')
+            except:
+                raise Exception('ERROR: some file(s) were not found!')
+
+        # move polished particles from Tmp to Extra path
+        # and restore previous mdColumn
         mdShiny = md.MetaData(shinyStar)
         oldPath = ""
 
@@ -298,11 +326,11 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                 pwutils.moveFile(imgPath, newPath)
                 oldPath = imgPath
 
-            index2, imgPath2 = relionToLocation(mdShiny.getValue(md.RLN_PARTICLE_ORI_NAME, objId))
+            index2, imgPath2 = relionToLocation(mdShiny.getValue(mdColumn, objId))
             absPath = os.path.realpath(imgPath2)
             newPath2 = 'Runs' + str(absPath).split('Runs')[1]
             newLoc2 = locationToRelion(index2, newPath2)
-            mdShiny.setValue(md.RLN_PARTICLE_ORI_NAME, newLoc2, objId)
+            mdShiny.setValue(mdColumn, newLoc2, objId)
 
         mdShiny.write(shinyStar, md.MD_OVERWRITE)
         pwutils.cleanPath(self._getExtraPath('shiny/Runs'))
@@ -367,3 +395,11 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
     def _createItemMatrix(self, item, row):
         from pyworkflow.em import ALIGN_PROJ
         createItemMatrix(item, row, align=ALIGN_PROJ)
+
+    def _renameFiles(self, pattern1, pattern2):
+        # find files by pattern1, move and rename them by replacing pattern2
+        filesList = sorted(glob(self._getPath(pattern1)))
+        for fn in filesList:
+            oldFn = os.path.basename(fn)
+            newFn = pwutils.join(self._getExtraPath('shiny'), oldFn.replace(pattern2, ''))
+            pwutils.moveFile(fn, newFn)

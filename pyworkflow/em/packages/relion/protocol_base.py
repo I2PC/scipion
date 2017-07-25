@@ -808,8 +808,9 @@ class ProtRelionBase(EMProtocol):
                 mdAux.copyColumn(md.RLN_ORIENT_ROT_PRIOR, md.RLN_ORIENT_ROT)
                 mdAux.copyColumn(md.RLN_ORIENT_TILT_PRIOR, md.RLN_ORIENT_TILT)
                 mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES, self._getNumberOfFrames())
-                # FIXME: set to 1 till frame averaging is implemented in xmipp
-                mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
+                if isVersion2():
+                    # FIXME: set to 1 till frame averaging is implemented in xmipp
+                    mdAux.fillConstant(md.RLN_PARTICLE_NR_FRAMES_AVG, 1)
 
                 mdAux.write(movieFn, md.MD_OVERWRITE)
                 cleanPath(auxMovieParticles.getFileName())
