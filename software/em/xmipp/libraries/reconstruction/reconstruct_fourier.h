@@ -66,20 +66,24 @@ class ProgRecFourier;
 
 // static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
+struct imgData
+{
+	std::complex<float>** img;
+	CTFDescription ctf;
+	double weight;
+	Matrix2D<double> localAInv;
+	bool skip;
+};
+
 struct ImageThreadParams
 {
     int myThreadID;
     ProgRecFourier * parent;
-    std::complex<float>** localPaddedFourier;
-    CTFDescription ctf;
-    Matrix2D<double> * symmetry;
-    int read;
-    Matrix2D<double> * localAInv;
-    int imageIndex;
-    double weight;
-    double localweight;
+    int startImageIndex;
+    int endImageIndex;
     bool reprocessFlag;
     MetaData * selFile;
+    imgData* data = NULL;
 };
 
 /** Fourier reconstruction parameters. */
@@ -222,6 +226,9 @@ public:
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
 
 private:
+
+    int availableMemory;
+    static const int batchSize = 11;
     template<typename T>
     static T** allocate(T**& where, int xSize, int ySize);
 

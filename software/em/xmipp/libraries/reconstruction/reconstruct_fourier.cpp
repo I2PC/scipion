@@ -66,6 +66,8 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--phaseFlipped]               : Give this flag if images have been already phase flipped");
     addParamsLine("  [--minCTF <ctf=0.01>]          : Minimum value of the CTF that will be inverted");
     addParamsLine("                                 : CTF values (in absolute value) below this one will not be corrected");
+    addParamsLine("  [--availableMemory <MB=4096>]   : RAM that can be used by the program.");
+    addParamsLine("                                 : Must be at least 16*input_projection_size^3*8 B, otherwise system might use swapping");
     addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
     addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 }
@@ -93,6 +95,7 @@ void ProgRecFourier::readParams()
     minCTF = getDoubleParam("--minCTF");
     if (useCTF)
         Ts=getDoubleParam("--sampling");
+    availableMemory = getIntParam("--availableMemory", 0);
 }
 
 // Show ====================================================================
@@ -148,7 +151,7 @@ void ProgRecFourier::run()
     pthread_mutex_init( &workLoadMutex, NULL );
     statusArray = NULL;
     th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
-    th_args = (ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
+    th_args = new ImageThreadParams[numThreads];//(ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
 
     // Create threads
     for ( int nt = 0 ; nt < numThreads ; nt ++ )
@@ -174,12 +177,13 @@ void ProgRecFourier::run()
     // Waiting for threads to finish
     barrier_wait( &barrier );
     for ( int nt = 0 ; nt < numThreads ; nt ++ ) {
+    	delete[] th_args[nt].data;
     	delete th_args[nt].selFile;
         pthread_join(*(th_ids+nt), NULL);
     }
     barrier_destroy( &barrier );
     free(th_ids);
-    free(th_args);
+    delete[] th_args;
 }
 
 
@@ -550,7 +554,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
     minSeparation+=1;
 
-    Matrix2D<double>  localA(3, 3), localAinv(3, 3);
+
     MultidimArray< std::complex<double> > localPaddedFourier;
     MultidimArray<double> localPaddedImg;
     FourierTransformer localTransformerImg;
@@ -586,8 +590,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                 parent->useCTF;
     if (hasCTF)
     {
-        threadParams->ctf.enable_CTF=true;
-        threadParams->ctf.enable_CTFnoise=false;
+//        threadParams->ctf.enable_CTF=true;
+//        threadParams->ctf.enable_CTFnoise=false; // FIXME uncomment
     }
     do
     {
@@ -597,10 +601,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
         {
         case PRELOAD_IMAGE:
             {
-                threadParams->read = 0;
-
-                if ( threadParams->imageIndex >= 0 )
+            	if (NULL == threadParams->data) {
+            		threadParams->data = new imgData[parent->batchSize];
+            	}
+                for(int imgIndex = threadParams->startImageIndex; imgIndex < threadParams->endImageIndex; imgIndex++)
                 {
+                	Matrix2D<double>  localA(3, 3);
+                	imgData* data = &threadParams->data[imgIndex - threadParams->startImageIndex];
+                	data->skip = false;
                     // Read input image
                     double rot, tilt, psi, weight;
                     Projection proj;
@@ -608,30 +616,20 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     //Read projection from selfile, read also angles and shifts if present
                     //but only apply shifts
 
-                    proj.readApplyGeo(*(threadParams->selFile), objId[threadParams->imageIndex], params);
+                    proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
                     rot  = proj.rot();
                     tilt = proj.tilt();
                     psi  = proj.psi();
-                    weight = proj.weight();
+                    if (parent->do_weights && proj.weight() == 0.f) {
+                    	data->skip = true;
+						continue;
+					}
+                    data->weight = (parent->do_weights) ? proj.weight() : 1.0;
                     if (hasCTF)
                     {
-                        threadParams->ctf.readFromMetadataRow(*(threadParams->selFile),objId[threadParams->imageIndex]);
-                        threadParams->ctf.Tm=threadParams->parent->Ts;
-                        threadParams->ctf.produceSideInfo();
-                    }
-
-                    threadParams->weight = 1.;
-
-                    if(parent->do_weights)
-                        threadParams->weight = weight;
-                    else if (!parent->do_weights)
-                    {
-                        weight=1.0;
-                    }
-                    else if (weight==0.0)
-                    {
-                        threadParams->read = 2;
-                        break;
+                    	data->ctf.readFromMetadataRow(*(threadParams->selFile),objId[imgIndex]);
+                    	data->ctf.Tm=threadParams->parent->Ts;
+                    	data->ctf.produceSideInfo();
                     }
 
                     // Copy the projection to the center of the padded image
@@ -668,11 +666,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                     // Compute the coordinate axes associated to this image
                     Euler_angles2matrix(rot, tilt, psi, localA);
-                    localAinv=localA.transpose();
 
-                    threadParams->localweight = weight;
-                    threadParams->localAInv = &localAinv;
-                    threadParams->localPaddedFourier = clipAndShift(localPaddedFourier, parent);;
+                    data->localAInv = localA.transpose();
+                    data->img = clipAndShift(localPaddedFourier, parent);
+                    std::cout << "loading img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
                     //#define DEBUG22
 #ifdef DEBUG22
 
@@ -702,8 +699,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     }
 #endif
                     #undef DEBUG22
-
-                    threadParams->read = 1;
                 }
                 break;
             }
@@ -2302,11 +2297,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 {
     MultidimArray< std::complex<double> > *paddedFourier;
 
+    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << "with " << numThreads<< std::endl;
+
     int repaint = (int)ceil((double)SF.size()/60);
 
-    bool processed;
     int imgno = 0;
-    int imgIndex = firstImageIndex;
 
     // This index tells when to save work for later FSC usage
     int FSCIndex = (firstImageIndex + lastImageIndex)/2;
@@ -2320,24 +2315,29 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 	size_t size;
 	size_t conserveRows;
     bool initialized = false;
+    int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)batchSize);
 
-    do
+    for(int a = 0; a < loops; a++)
     {
         threadOpCode = PRELOAD_IMAGE;
 
-        for ( int nt = 0 ; nt < numThreads ; nt ++ )
-        {
-            if ( imgIndex <= lastImageIndex )
-            {
-                th_args[nt].imageIndex = imgIndex;
-                th_args[nt].reprocessFlag = reprocessFlag;
-                imgIndex++;
-            }
-            else
-            {
-                th_args[nt].imageIndex = -1;
-            }
-        }
+        th_args[0].startImageIndex = a*batchSize;
+        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
+        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
+        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+//        for ( int nt = 0 ; nt < numThreads ; nt ++ )
+//        {
+//            if ( imgIndex <= lastImageIndex )
+//            {
+//                th_args[nt].imageIndex = imgIndex;
+                th_args[0].reprocessFlag = reprocessFlag;
+//                imgIndex++;
+//            }
+//            else
+//            {
+//                th_args[nt].imageIndex = -1;
+//            }
+//        }
 
         // Awaking sleeping threads
         barrier_wait( &barrier );
@@ -2350,23 +2350,25 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
         // all the thread will work in a different part of a single image.
         threadOpCode = PROCESS_IMAGE;
 
-        processed = false;
 
-
-        for ( int nt = 0 ; nt < numThreads ; nt ++ )
+        for ( int b = 0 ; b < th_args[0].endImageIndex-th_args[0].startImageIndex ; b++ )
         {
-            if ( th_args[nt].read == 2 )
-                processed = true;
-            else if ( th_args[nt].read == 1 )
-            {
-                processed = true;
+        	imgData* data = &(th_args[0].data[b]);
+        	if (data->skip) {
+        		continue;
+        	}
+//            if ( th_args[nt].read == 2 )
+//                processed = true;
+//            else if ( th_args[nt].read == 1 )
+//            {
                 if (verbose && imgno++%repaint==0)
                     progress_bar(imgno);
 
-                double weight = th_args[nt].localweight;
+//                double weight = th_args[0].localweight;
 //                paddedFourier = th_args[nt].localPaddedFourier;
-                current_index = th_args[nt].imageIndex;
-                Matrix2D<double> *Ainv = th_args[nt].localAInv;
+                current_index = th_args[0].startImageIndex + b;
+                std::cout << "processing img: " << current_index << " (index " << b << ")" << std::endl;
+                Matrix2D<double> *Ainv = &data->localAInv;
 
                 //#define DEBUG22
 #ifdef DEBUG22
@@ -2398,7 +2400,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
 				size = 2 * conserveRows;
 
-				myPaddedFourier = th_args[nt].localPaddedFourier;
+				myPaddedFourier = data->img;
 
                 if (!initialized) {
                 	initialized = true;
@@ -2506,15 +2508,10 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 					release(outputWeight, size+1, size+1);
 					initialized = false;
                 }
-
                 release(myPaddedFourier, size);
-            }
+//            }
         }
-
-
-
     }
-    while ( processed );
 
 #if DEBUG_DUMP > 0
     std::cout << "about to mirror" << std::endl;
