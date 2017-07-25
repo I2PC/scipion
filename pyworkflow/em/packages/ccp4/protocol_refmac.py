@@ -86,9 +86,19 @@ class CCP4ProtRunRefmac(EMProtocol):
         self._insertFunctionStep('createScriptFile')
         self._insertFunctionStep('executeRefmac')
         #TODO: convert input file to mrc if needed
-        #    check shifts in the conversion
-        #TODO: add CRYS record if needed
-        #TODO: pass all parameters to script
+        #TODO:    check shifts in the conversion
+        #TODO:    add CRYS record if needed
+        #TODO     see mask created by refmac
+
+        #TODO: molprobity, programatically
+        #TODO: chimera, contacts and classes
+        #TODO: PDB utilities
+        #TODO:       utility add symmetry matrices in PDB
+        #TODO:       union, extract
+        #TODO: tutorial buccaneer
+
+        #TODO: structure prediction terciaria, secundaria
+        #TODO: FlexEM TEMPy, DockEM
 
         self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
         self._insertFunctionStep('writeFinalResultsTable') #Print output results
@@ -158,7 +168,6 @@ class CCP4ProtRunRefmac(EMProtocol):
         pass
 
     def executeRefmac(self):
-        print "executeRefmac", self._getScriptFileName()
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
         runCCP4Program(self._getScriptFileName(),"",{'GENERIC':self._getExtraPath("")})
