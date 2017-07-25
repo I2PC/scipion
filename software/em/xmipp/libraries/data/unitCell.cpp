@@ -4,7 +4,7 @@
 // icosahedron _5f_to_2f and _5f_2fp: vector that joing a vertex with the two closes 2-fold symmetry axis
 #define tg60   1.73205081
 #define sin60  0.8660254
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 #define scale 1.//780-use to scale chimera bild files so they fit your actual 3Dmap
 #endif
@@ -77,11 +77,8 @@ void UnitCell::doIcosahedral(int symmetry) {
 		_5fpp = vectorR3(0.2763932, 0.85065081, 0.4472136);
 	} else
 		REPORT_ERROR(ERR_ARG_INCORRECT, "Symmetry not implemented");
-	//TODO: I do not think we need this reference point. If dot product is negative just change the
-	//vector order
 	_minZ = rmax;
 	_maxZ = rmin;
-	//unitCellPoint = _5f;
 	icoSymmetry(_centre, _5f, _5fp, _5fpp, expanded);
 }
 
@@ -136,9 +133,9 @@ UnitCell::UnitCell(String sym, double rmin, double rmax, double expanded,
 					tt = expandedUnitCell[i] + (planeVectors[i-1] * 10.);
 				}
 			}else if (symmetry >= pg_I1 || symmetry <= pg_I4 ){
-				t = expandedUnitCell[i];
+				t = expandedUnitCell[i] * 74;
 				planeVectors[i].selfNormalize();
-				tt = expandedUnitCell[i] + (planeVectors[i] * 10);
+				tt = (expandedUnitCell[i] + (planeVectors[i] * 0.1)) * 74;
 			}
 			t *= scale;
 			tt *= scale;
@@ -428,10 +425,18 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 	Matrix1D<double> planeVector = vectorProduct(_5f_to_2f, _2fp_to_5f);
 
 	//vectExpansion: vectors perpendicular to the unit cell edges
-	vectExpansion.push_back(expanded * vectorProduct(planeVector, _5f_to_2f));
-	vectExpansion.push_back(expanded * vectorProduct(planeVector, _2f_to_3f));
-	vectExpansion.push_back(expanded * vectorProduct(planeVector, _3f_to_2fp));
-	vectExpansion.push_back(expanded * vectorProduct(planeVector, _2fp_to_5f));
+	Matrix1D<double> v0 = vectorProduct(planeVector, _5f_to_2f);
+	v0.selfNormalize();
+	vectExpansion.push_back(expanded * v0);
+	Matrix1D<double> v1 = vectorProduct(planeVector, _2f_to_3f);
+	v1.selfNormalize();
+	vectExpansion.push_back(expanded * v1);
+	Matrix1D<double> v2 = vectorProduct(planeVector, _3f_to_2fp);
+	v2.selfNormalize();
+	vectExpansion.push_back(expanded * v2);
+	Matrix1D<double> v3 = vectorProduct(planeVector, _2fp_to_5f);
+	v3.selfNormalize();
+	vectExpansion.push_back(expanded * v3);
 
 	//computation of coordinates for expandedUnitCell vertices
 	//_centre remains constant and it is equivalent to newOriginAfterExpansion
@@ -443,20 +448,24 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 		expandedUnitCell.push_back(_2fp);
 	}else if (expanded >= 0){
 		//60 is the angle between _5f_to_2f and _2fp_to_5f
-		//mod: proyection (module) of expanded in the negative direction of the _5f_to_2f vector
-		double mod = tg60 * (sin60 * expanded);
+		//mod: proyection (module) of expanded in the negative direction of the _5f_to_2f vector, and
+		//proyection (module) of expanded in the direction of the _2fp_to_5f vector
+		//double mod = tg60 * (sin60 * expanded);
+		double mod = expanded/sin60;
+		_2fp_to_5f.selfNormalize();
+		_5f_to_2f.selfNormalize();
 		//_5f expands to expandedUnitCell[0]
-		expandedUnitCell.push_back(_5f + vectExpansion[0] + (-_5f_to_2f) * mod);
+		expandedUnitCell.push_back(_5f + mod * ((_2fp_to_5f) + ((-1) * _5f_to_2f)));
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0] + vectExpansion[1]);
-		//mod: proyection (module) of expanded in the direction of the _2f_to_3f vector
-		mod = (1 / tg60) * (sin60 * expanded);
+		//mod: proyection (module) of expanded in the negative direction of the 3f_to_2fp vector
+		mod = (1 / tg60) * expanded;
+		_3f_to_2fp.selfNormalize();
 		//_3f expands to expandedUnitCell[2]
-		expandedUnitCell.push_back(_3f + vectExpansion[1] + (_2f_to_3f) * mod);
+		expandedUnitCell.push_back(_3f + vectExpansion[2] + ((-1) * _3f_to_2fp * mod));
 		//_2fp expands to expandedUnitCell[3]
 		expandedUnitCell.push_back(_2fp + vectExpansion[2] + vectExpansion[3]);
 		}
-
 	//vectors normal to faces of the expanded polyhedra
 	for (int i = 0; i < 4; i++) {
 		planeVectors.push_back(
@@ -500,14 +509,10 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 		double maxY = rmin;
 		double maxZ = _maxZ;
 
-		std::cout << "rmax " << rmax << std::endl;
-		std::cout << "rmin " << rmin << std::endl;
-		double m;
 
 		Matrix1D<double> minVector, maxVector;
 		for (std::vector<Matrix1D<double> >::iterator it =
 				expandedUnitCell.begin(); it != expandedUnitCell.end(); ++it) {
-			m = (*it).module();
 			if (symmetry == pg_CN || symmetry == pg_DN || symmetry == pg_T || symmetry == pg_O){
 				minVector = (*it) ;
 				maxVector = (*it);
@@ -537,12 +542,6 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 			maxZ = std::max(maxZ, minVector(2));
 			maxZ = std::max(maxZ, maxVector(2));
 		}
-		std::cout << "minX " << minX << std::endl;
-		std::cout << "minY " << minY << std::endl;
-		std::cout << "minZ " << minZ << std::endl;
-		std::cout << "maxX " << maxX << std::endl;
-		std::cout << "maxY " << maxY << std::endl;
-		std::cout << "maxZ " << maxZ << std::endl;
 
 #ifdef DEBUG
 		//draw real unitcell
@@ -557,6 +556,7 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 			Matrix1D<double> t, tt;
 			t = vectorR3(minX, minY, minZ);
 			tt = vectorR3(maxX, maxY, maxZ);
+
 			testFile << ".color red\n";
 			testFile << ".box " << t(0) << " " << t(1) << " " << t(2) << " "
 					<< tt(0) << " " << tt(1) << " " << tt(2) << "\n";
@@ -709,12 +709,6 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 						9945, 9975, 9984, 9996 };
 		std::vector<int> validSizes(a, a + sizeof(a) / sizeof(int));
 		std::vector<int>::iterator low; // iterator to search in validSizes
-		std::cerr << " iMinX iMaxX isizeX: " << iMinX << " " << iMaxX << " "
-				<< iMaxX - iMinX + 1 << std::endl;
-		std::cerr << " iMinY iMaxY isizeY: " << iMinY << " " << iMaxY << " "
-				<< iMaxY - iMinY + 1 << std::endl;
-		std::cerr << " iMinZ iMaxZ isizeZ: " << iMinZ << " " << iMaxZ << " "
-				<< iMaxZ - iMinZ + 1 << std::endl;
 		low = std::lower_bound(validSizes.begin(), validSizes.end(), iMaxX);
 		if (validSizes[low - validSizes.begin()] != iMaxX)
 			iMaxX = validSizes[low - validSizes.begin()];
@@ -724,35 +718,18 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 		low = std::lower_bound(validSizes.begin(), validSizes.end(), iMaxZ);
 		if (validSizes[low - validSizes.begin()] != iMaxZ)
 			iMaxZ = validSizes[low - validSizes.begin()];
-		std::cerr << " iMinX iMaxX isizeX: " << iMinX << " " << iMaxX << " "
-				<< iMaxX - iMinX + 1 << std::endl;
-		std::cerr << " iMinY iMaxY isizeY: " << iMinY << " " << iMaxY << " "
-				<< iMaxY - iMinY + 1 << std::endl;
-		std::cerr << " iMinZ iMaxZ isizeZ: " << iMinZ << " " << iMaxZ << " "
-				<< iMaxZ - iMinZ + 1 << std::endl;
 
-		//double dotproduct, dotsign;
 		double dotproduct;
 		bool doIt = false;
 
 		//for all points in the enclosing box
 		//check if they are inside the expanded unit cell
-
-		//dotsign = dotProduct(unitCellPoint, planeVectors[0]);
-		//std::cerr << " 1 " << dotProduct(unitCellPoint, planeVectors[0])
-				//<< std::endl;
-		//std::cerr << " 2 " << dotProduct(unitCellPoint, planeVectors[1])
-				//<< std::endl;
-		//std::cerr << " 3" << dotProduct(unitCellPoint, planeVectors[2])
-				//<< std::endl;
-		//std::cerr << " 4" << dotProduct(unitCellPoint, planeVectors[3])
-				//<< std::endl;
 		int ii, jj, kk; //expandedUnitCell
 		for (int k = iMinZ; k <= iMaxZ; ++k)
 			for (int i = iMinY; i <= iMaxY; ++i)
 				for (int j = iMinX; j <= iMaxX; ++j) {
 					r2 = (i * i + j * j + k * k);
-					if (/*true*/r2 >= rmin2 && r2 < rmax2) {
+					if (r2 >= rmin2 && r2 < rmax2) {
 						doIt = true;
 						for (std::vector<Matrix1D<double> >::iterator it1 =
 								planeVectors.begin(); it1 != planeVectors.end();
@@ -760,38 +737,18 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 
 							dotproduct = dotProduct(*it1,
 									vectorR3(
-//											 ((double) j) - expandedUnitCell[0](0),
-//											 ((double) i) - expandedUnitCell[0](1),
-//											 ((double) k) - expandedUnitCell[0](2)
 											 ((double) j) - newOriginAfterExpansion(0),
 											 ((double) i) - newOriginAfterExpansion(1),
 											 ((double) k) - newOriginAfterExpansion(2)
 											)
 										);
-							 if (i==0 && j==0 && k==0)
-							 {
-							 	 std::cout << "dotproduct: " << dotproduct << " " <<  planeVectors.size() << std::endl;
-							 }
-							//std::cout << "i " << i << std::endl;
-							//std::cout << "j " << j << std::endl;
-							//std::cout << "k " << k << std::endl;
-							//std::cout << "dotproduct " << dotproduct << std::endl;
-							//if ((dotproduct * dotsign) < 0) {
-							//	doIt = false;
-							//	break;
+
 							if (dotproduct < 0) {
 								doIt = false;
 								break;
 							}
 						}
 						if (doIt) {
-							//std::cout << "i " << i << std::endl;
-							//std::cout << "j " << j << std::endl;
-							//std::cout << "k " << k << std::endl;
-							//std::cout << "dotproduct " << dotproduct << std::endl;
-							//std::cout << "r2 " << r2 << std::endl;
-							//std::cout << "rmin2 " << rmin2 << std::endl;
-							//std::cout << "rmax2 " << rmax2 << std::endl <<"\n";
 							A3D_ELEM(*imageMap2,k,i,j) = A3D_ELEM(*map, k, i, j);
 						}
 					}
@@ -802,17 +759,11 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 		MD.setValue(MDL_SHIFT_X, -(double) iMinX);
 		MD.setValue(MDL_SHIFT_Y, -(double) iMinY);
 		MD.setValue(MDL_SHIFT_Z, -(double) iMinZ);
-		//MD.setValue(MDL_SHIFT_X, -(double)iMinX);
-		//MD.setValue(MDL_SHIFT_Y, -(double)iMinY);
-		//MD.setValue(MDL_SHIFT_Z, -(double)iMinZ);
 
-		//in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_X, sampling);
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_X, sampling);
 
-		//in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_Y, sampling);
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_Y, sampling);
 
-		//in3Dmap.image->MDMainHeader.getValue(MDL_SAMPLINGRATE_Z, sampling);
 		out3DDmap.image->MDMainHeader.setValue(MDL_SAMPLINGRATE_Z, sampling);
 
 		out3DDmap.image->setGeo(MD, 0);
