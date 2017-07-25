@@ -181,7 +181,6 @@ def generate_tetrahedral(mode, f, ):
     points = [centroid, _3f, _3fp, _3fpp, _3fppp]
     vertices = []
     for point in points:
-        print point, type(point)
         x = point[0] * rmax
         y = point[1] * rmax
         z = point[2] * rmax
@@ -220,7 +219,6 @@ def generate_octahedral(mode, f, ):
     points = [centre, _4f, _4fp, _4fpp, _4_2f, _4_2fp, _4_2fpp]
     vertices = []
     for point in points:
-        print point, type(point)
         x = point[0] * rmax
         y = point[1] * rmax
         z = point[2] * rmax
@@ -368,13 +366,13 @@ class TestProtModelBuilding(BaseTest):
         self.innerRadius = 37.
         self.outerRadius = 79.
         self.filename[SYM_I222] = generate(SCIPION_SYM_NAME[SYM_I222] , 'xmipp', XMIPP_SYM_NAME[SYM_I222])
-        self.box[SYM_I222] = (85,86,52)
+        self.box[SYM_I222] = (94, 92 ,53)
         self.filename[SYM_I222r] = generate(SCIPION_SYM_NAME[SYM_I222r] , 'xmipp', XMIPP_SYM_NAME[SYM_I222r])
-        self.box[SYM_I222r] = (86,57,52)
+        self.box[SYM_I222r] = (92, 71, 53)
         self.filename[SYM_In25] = generate(SCIPION_SYM_NAME[SYM_In25], 'xmipp', XMIPP_SYM_NAME[SYM_In25])
-        self.box[SYM_In25] = (54,85,117)
+        self.box[SYM_In25] = (70,94,115)
         self.filename[SYM_In25r] = generate(SCIPION_SYM_NAME[SYM_In25r], 'xmipp', XMIPP_SYM_NAME[SYM_In25r])
-        self.box[SYM_In25r] = (54,57,51)
+        self.box[SYM_In25r] = (70,71,55)
 
         self.extractunitCell(SYM_I222)#no crowther 222
         self.extractunitCell(SYM_I222r)#crowther 222
