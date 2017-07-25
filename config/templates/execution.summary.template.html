@@ -544,12 +544,12 @@
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
                 var psdPath = report.ctfData.imgPsdThumbs[index];
                 var shiftPlotPath = report.ctfData.imgShiftCopyPath[index];
-                var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img width={1} src={0} alt="{0}"></a></div>'
+                var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img width={1} src={0} alt="{0}"></a></div>';
                 var imgWidth = Math.floor($('#content').width() * 0.2);
-                var rowValues = [imgHtml.format(imgMicPath, imgWidth), imgHtml.format(psdPath,imgWidth),
-                                 imgHtml.format(shiftPlotPath,imgWidth),report.ctfData.defocusU[index],
-                                 report.ctfData.defocusV[index], report.ctfData.ratio[index],
-                                 report.ctfData.astigmatism[index]
+                var rowValues = [report.ctfData.idValues[index], imgHtml.format(imgMicPath, imgWidth),
+                                 imgHtml.format(psdPath,imgWidth), imgHtml.format(shiftPlotPath,imgWidth),
+                                 report.ctfData.defocusU[index], report.ctfData.defocusV[index],
+                                 report.ctfData.ratio[index], report.ctfData.astigmatism[index]
                                 ];
                 dataset.unshift(rowValues);
             });
@@ -557,7 +557,9 @@
             $('#micTable').DataTable( {
                 data: dataset,
                 "scrollX": true,
+                 "order": [[ 0, "desc" ]],
                 columns: [
+                    {title: "ID"},
                     {title: "Micrograph"},
                     {title: "PsdFile"},
                     {title: "ShiftPlot"},
