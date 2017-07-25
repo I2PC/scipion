@@ -477,7 +477,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
         scale = self.getBoxScale()
-
+        self.debug("Scale: %f" % scale)
         if self.notOne(scale):
             # If we need to scale the box, then we need to scale the coordinates
             getPos = lambda coord: (int(coord.getX() * scale),
@@ -575,12 +575,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
                 coord = coordDict.get(pos, None)
                 if coord is not None:
+                    # scale the coordinates according to particles dimension.
+                    coord.scale(self.getBoxScale())
                     p.copyObjId(coord)
                     p.setLocation(xmippToLocation(row.getValue(md.MDL_IMAGE)))
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
-                    outputParts.append(p)
+                    # disabled particles (in metadata) should not add to the
+                    # final set
+                    if row.getValue(md.MDL_ENABLED) > 0:
+                        outputParts.append(p)
 
             # Release the list of coordinates for this micrograph since it
             # will not be longer needed
