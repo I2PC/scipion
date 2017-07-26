@@ -123,14 +123,23 @@ class ProtImportCTF(ProtImportFiles):
                             (self.filesPath, self.filesPattern))
         print "Matching files: ", len(files)
 
+        inputMicBases = [removeBaseExt(m.getFileName()) for m in inputMics]
+
         def _getMicCTF(mic):
             micName = mic.getMicName()
             micBase = removeBaseExt(mic.getFileName())
-
-            for fileName, fileId in self.iterFiles():
-                if (fileId == mic.getObjId() or
-                            micBase in fileName or micName in fileName):
-                    return ci.importCTF(mic, fileName)
+            # see if the base name of this mic is contained in other base names
+            micConflicts = [mc for mc in inputMicBases if micBase in mc and micBase != mc]
+            if micConflicts:
+                # check which matching file only matches with this mic and not its conflicts
+                goodFnMatch = [f for f in files if micBase in f and not any(c in f for c in micConflicts)]
+                if len(goodFnMatch) == 1:
+                    return ci.importCTF(mic, goodFnMatch[0])
+            else:
+                for fileName, fileId in self.iterFiles():
+                    if (fileId == mic.getObjId() or
+                                micBase in fileName or micName in fileName):
+                        return ci.importCTF(mic, fileName)
 
             return None
         # Check if the CTF import class has a method to retrieve the CTF
