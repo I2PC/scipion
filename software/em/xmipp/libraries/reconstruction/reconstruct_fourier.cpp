@@ -177,7 +177,8 @@ void ProgRecFourier::run()
     // Waiting for threads to finish
     barrier_wait( &barrier );
     for ( int nt = 0 ; nt < numThreads ; nt ++ ) {
-    	delete[] th_args[nt].data;
+    	delete[] th_args[nt].dataB;
+    	delete[] th_args[nt].dataA;
     	delete th_args[nt].selFile;
         pthread_join(*(th_ids+nt), NULL);
     }
@@ -601,14 +602,13 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
         {
         case PRELOAD_IMAGE:
             {
-            	if (NULL == threadParams->data) {
-            		threadParams->data = new imgData[parent->batchSize];
+            	if (NULL == threadParams->dataA) {
+            		threadParams->dataA = new imgData[parent->batchSize];
             	}
                 for(int imgIndex = threadParams->startImageIndex; imgIndex < threadParams->endImageIndex; imgIndex++)
                 {
                 	Matrix2D<double>  localA(3, 3);
-                	imgData* data = &threadParams->data[imgIndex - threadParams->startImageIndex];
-                	data->skip = false;
+                	imgData* data = &threadParams->dataA[imgIndex - threadParams->startImageIndex];
                     // Read input image
                     double rot, tilt, psi, weight;
                     Projection proj;
@@ -669,7 +669,9 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                     data->localAInv = localA.transpose();
                     data->img = clipAndShift(localPaddedFourier, parent);
-                    std::cout << "loading img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
+                    data->imgIndex = imgIndex;
+                    data->skip = false;
+                    std::cout << "loading img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ", " << data->img << ")" << std::endl;
                     //#define DEBUG22
 #ifdef DEBUG22
 
@@ -1945,6 +1947,7 @@ inline void processVoxel(int x, int y, int z, int halfVolSize, float transform[3
 		std::complex<float>*** outputVolume, float*** outputWeights, std::complex<float>** inputImage, int imgSizeX, int imgSizeY) {
 	float imgPos[3];
 	int imgX, imgY;
+
 	// transform current point to center
 	imgPos[0] = x - halfVolSize;
 	imgPos[1] = y - halfVolSize;
@@ -2292,6 +2295,91 @@ void ProgRecFourier::saveFinalFSC(std::complex<float>*** outputVolume, float*** 
     remove((fn_fsc + "_2_Fourier.vol").c_str());
 }
 
+void ProgRecFourier::loadImages(int startIndex, int endIndex, bool reprocess) {
+	th_args[0].startImageIndex = startIndex;
+	th_args[0].endImageIndex = endIndex;
+	th_args[0].reprocessFlag = reprocess;
+	std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
+	std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+}
+
+void ProgRecFourier::swapBuffers() {
+	std::cout << "swapping buffers" << std::endl;
+	imgData* tmp = th_args[0].dataB;
+	th_args[0].dataB = th_args[0].dataA;
+	th_args[0].dataA = tmp;
+}
+
+void ProgRecFourier::processBuffer(imgData* buffer,
+		std::complex<float>*** outputVolume,
+		float*** outputWeight,
+		bool saveFSC,
+		int FSCIndex)
+{
+	int repaint = (int)ceil((double)SF.size()/60);
+	for ( int i = 0 ; i < batchSize; i++ ) {
+		imgData* data = &buffer[i];
+		std::complex<float>** myPaddedFourier = data->img;
+		std::cout << "processing img: " << data->imgIndex << " (index " << i << ", " << myPaddedFourier << ")" << std::endl;
+		if (data->skip) {
+			continue;
+		}
+		if (verbose && data->imgIndex%repaint==0) {
+			progress_bar(data->imgIndex);
+		}
+
+		Matrix2D<double> *Ainv = &data->localAInv;
+		// Determine how many rows of the fourier
+		// transform are of interest for us. This is because
+		// the user can avoid to explore at certain resolutions
+		size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+		conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+		size_t size = 2 * conserveRows;
+
+
+		// Loop over all symmetries
+		for (size_t isym = 0; isym < R_repository.size(); isym++)
+		{
+			rowsProcessed = 0;
+
+			// Compute the coordinate axes of the symmetrized projection
+			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
+			Matrix2D<double> A_SLInv=A_SL.inv();
+			float transf[3][3];
+			float transfInv[3][3];
+			convert(A_SL, transf);
+			convert(A_SLInv, transfInv);
+
+//			std::cout << "about to calculate" << std::endl;
+			thirdAttempt(outputVolume, outputWeight, size,
+					myPaddedFourier, conserveRows, size, transf, transfInv,
+					blobTableSqrt, iDeltaSqrt, blob.radius);
+//			std::cout << "calculation done" << std::endl;
+		}
+
+		if ( data->imgIndex == FSCIndex && saveFSC )
+		{
+			// get rid of the replicated data
+			mirror(outputVolume, outputWeight, size);
+			crop(outputVolume, size);
+			crop(outputWeight, size);
+			outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+			outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+			saveIntermediateFSC(outputVolume, outputWeight, size,
+					(std::string)fn_fsc + "_1_Weights.vol",
+					(std::string) fn_fsc + "_1_Fourier.vol",
+			FileName((std::string) fn_fsc + "_1_recons.vol"),
+				true);
+			// reset values
+			release(outputVolume, size+1, size+1);
+			release(outputWeight, size+1, size+1);
+		}
+//		std::cout << "about to release" << std::endl;
+		release(data->img, size);
+		data->skip = true;
+	}
+}
+
 //#define DEBUG
 void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC, bool reprocessFlag)
 {
@@ -2299,7 +2387,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 
     std::cout << "process " << firstImageIndex << "-" << lastImageIndex << "with " << numThreads<< std::endl;
 
-    int repaint = (int)ceil((double)SF.size()/60);
+
 
     int imgno = 0;
 
@@ -2309,209 +2397,242 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
     // Index of the image that has just been processed. Used for
     // FSC purposes
     int current_index;
-	std::complex<float>*** outputVolume;
-	float*** outputWeight;
-	std::complex<float>** myPaddedFourier;
-	size_t size;
-	size_t conserveRows;
-    bool initialized = false;
+	std::complex<float>*** outputVolume = NULL;
+	float*** outputWeight = NULL;
+	size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+	conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+	size_t size = 2 * conserveRows;
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)batchSize);
 
-    for(int a = 0; a < loops; a++)
-    {
-        threadOpCode = PRELOAD_IMAGE;
+	// the +1 is to prevent outOfBound reading when mirroring the result (later)
+	allocate(outputVolume, size+1, size+1, size+1);
+	allocate(outputWeight, size+1, size+1, size+1);
 
-        th_args[0].startImageIndex = a*batchSize;
-        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
-        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
-        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
-//        for ( int nt = 0 ; nt < numThreads ; nt ++ )
-//        {
-//            if ( imgIndex <= lastImageIndex )
-//            {
-//                th_args[nt].imageIndex = imgIndex;
-                th_args[0].reprocessFlag = reprocessFlag;
-//                imgIndex++;
-//            }
-//            else
-//            {
-//                th_args[nt].imageIndex = -1;
-//            }
-//        }
+    int startLoadIndex = firstImageIndex;
 
-        // Awaking sleeping threads
-        barrier_wait( &barrier );
-        // here each thread is reading a different image and compute fft
-        // Threads are working now, wait for them to finish
-        // processing current projection
-        barrier_wait( &barrier );
-
-        // each threads have read a different image and now
-        // all the thread will work in a different part of a single image.
-        threadOpCode = PROCESS_IMAGE;
-
-
-        for ( int b = 0 ; b < th_args[0].endImageIndex-th_args[0].startImageIndex ; b++ )
-        {
-        	imgData* data = &(th_args[0].data[b]);
-        	if (data->skip) {
-        		continue;
-        	}
-//            if ( th_args[nt].read == 2 )
-//                processed = true;
-//            else if ( th_args[nt].read == 1 )
-//            {
-                if (verbose && imgno++%repaint==0)
-                    progress_bar(imgno);
-
-//                double weight = th_args[0].localweight;
-//                paddedFourier = th_args[nt].localPaddedFourier;
-                current_index = th_args[0].startImageIndex + b;
-                std::cout << "processing img: " << current_index << " (index " << b << ")" << std::endl;
-                Matrix2D<double> *Ainv = &data->localAInv;
-
-                //#define DEBUG22
-#ifdef DEBUG22
-
-                {
-                    static int ii=0;
-                    if(ii%1==0)
-                    {
-                        FourierImage save22;
-                        //save22()=*paddedFourier;
-                        save22().alias(*paddedFourier);
-                        save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
-                    }
-                    ii++;
-                }
-#endif
-                #undef DEBUG22
-
-                // Initialized just once
-//                if ( statusArray == NULL )
-//                {
-//                    statusArray = (int *) malloc ( sizeof(int) * paddedFourier->ydim );
-//                }
-
-                // Determine how many rows of the fourier
-				// transform are of interest for us. This is because
-				// the user can avoid to explore at certain resolutions
-				conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
-				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
-				size = 2 * conserveRows;
-
-				myPaddedFourier = data->img;
-
-                if (!initialized) {
-                	initialized = true;
-					// the +1 is to prevent outOfBound reading when mirroring the result (later)
-					allocate(outputVolume, size+1, size+1, size+1);
-					allocate(outputWeight, size+1, size+1, size+1);
-                }
-
-                // Loop over all symmetries
-                for (size_t isym = 0; isym < R_repository.size(); isym++)
-                {
-                    rowsProcessed = 0;
-
-					// Compute the coordinate axes of the symmetrized projection
-					Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
-					Matrix2D<double> A_SLInv=A_SL.inv();
-					float transf[3][3];
-					float transfInv[3][3];
-					convert(A_SL, transf);
-					convert(A_SLInv, transfInv);
-
- ////////////////////////////////////////////////
-
-#if DEBUG_DUMP > 0
-					std::cout << "Img " << imgIndex << " symmetry " << isym << std::endl;
-                    if (isym > 0 || current_index != 1) {
-                       	continue;
-                    }
-#endif
-
-//////////////////////////////////////////////////
-
-//                    // Fill the thread arguments for each thread
-//                    for ( int th = 0 ; th < numThreads ; th ++ )
-//                    {
-//                        // Passing parameters to each thread
-//                        th_args[th].symmetry = &A_SL;
-//                        th_args[th].paddedFourier = paddedFourier;
-//                        th_args[th].weight = weight;
-//                        th_args[th].reprocessFlag = reprocessFlag;
-//                    }
-//
-//                    // Init status array
-//                    for (size_t i = 0 ; i < paddedFourier->ydim ; i ++ )
-//                    {
-//                        if ( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
-//                        {
-//                            // -2 means "discarded"
-//                            statusArray[i] = -2;
-//                            rowsProcessed++;
-//                        }
-//                        else
-//                        {
-//                            statusArray[i] = 0;
-//                        }
-//                    }
-
-					thirdAttempt(outputVolume, outputWeight, size,
-							myPaddedFourier, conserveRows, size, transf, transfInv,
-							blobTableSqrt, iDeltaSqrt, blob.radius);
-
-//                    // Awaking sleeping threads
-//                    barrier_wait( &barrier );
-//                    // Threads are working now, wait for them to finish
-//                    // processing current projection
-//                    barrier_wait( &barrier );
-
-                    //#define DEBUG2
-#ifdef DEBUG2
-
-                    {
-                        static int ii=0;
-                        if(ii%1==0)
-                        {
-                            Image<double> save;
-                            save().alias( FourierWeights );
-                            save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
-
-                            Image< std::complex<double> > save2;
-                            save2().alias( VoutFourier );
-                            save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
-                        }
-                        ii++;
-                    }
-#endif
-                    #undef DEBUG2
-
-                }
-
-                if ( current_index == FSCIndex && saveFSC )
-                {
-					// get rid of the replicated data
-					mirror(outputVolume, outputWeight, size);
-					crop(outputVolume, size);
-					crop(outputWeight, size);
-					outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-					outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-					saveIntermediateFSC(outputVolume, outputWeight, size,
-							(std::string)fn_fsc + "_1_Weights.vol",
-							(std::string) fn_fsc + "_1_Fourier.vol",
-							FileName((std::string) fn_fsc + "_1_recons.vol"),
-							true);
-					// reset values
-					release(outputVolume, size+1, size+1);
-					release(outputWeight, size+1, size+1);
-					initialized = false;
-                }
-                release(myPaddedFourier, size);
-//            }
-        }
+    threadOpCode = PRELOAD_IMAGE;
+    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize),reprocessFlag);
+	// Awaking sleeping threads
+	barrier_wait( &barrier );
+	// here each thread is reading a different image and compute fft
+	// Threads are working now, wait for them to finish
+	// processing current projection
+	barrier_wait( &barrier );
+    for(int i = 0; i < loops; i++) {
+    	swapBuffers();
+    	startLoadIndex += batchSize;
+    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize), reprocessFlag);
+    	// Awaking sleeping threads
+		barrier_wait( &barrier );
+    	processBuffer(th_args[0].dataB, outputVolume, outputWeight, saveFSC, FSCIndex);
+    	barrier_wait( &barrier );
     }
+
+//    for(int a = 0; a < loops; a++)
+//    {
+//        threadOpCode = PRELOAD_IMAGE;
+//
+//        th_args[0].startImageIndex = a*batchSize;
+//        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
+//        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
+//        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+////        for ( int nt = 0 ; nt < numThreads ; nt ++ )
+////        {
+////            if ( imgIndex <= lastImageIndex )
+////            {
+////                th_args[nt].imageIndex = imgIndex;
+//                th_args[0].reprocessFlag = reprocessFlag;
+////                imgIndex++;
+////            }
+////            else
+////            {
+////                th_args[nt].imageIndex = -1;
+////            }
+////        }
+//
+//        // Awaking sleeping threads
+//        barrier_wait( &barrier );
+//        // here each thread is reading a different image and compute fft
+//        // Threads are working now, wait for them to finish
+//        // processing current projection
+//        barrier_wait( &barrier );
+//
+////        // each threads have read a different image and now
+////        // all the thread will work in a different part of a single image.
+////        threadOpCode = PROCESS_IMAGE;
+//
+//        imgData* tmp = th_args[0].dataB;
+//        th_args[0].dataB = th_args[0].dataA;
+//        th_args[0].dataA = tmp;
+//        th_args[0].startImageIndex = ++a*batchSize;
+//        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
+//        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
+//        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+//
+//        barrier_wait( &barrier ); // start loading to another buffer
+//
+//        for ( int b = 0 ; b < th_args[0].endImageIndex-th_args[0].startImageIndex ; b++ )
+//        {
+//        	imgData* data = &(th_args[0].dataB[b]);
+//        	if (data->skip) {
+//        		continue;
+//        	}
+////            if ( th_args[nt].read == 2 )
+////                processed = true;
+////            else if ( th_args[nt].read == 1 )
+////            {
+//                if (verbose && imgno++%repaint==0)
+//                    progress_bar(imgno);
+//
+////                double weight = th_args[0].localweight;
+////                paddedFourier = th_args[nt].localPaddedFourier;
+//                current_index = th_args[0].startImageIndex + b;
+//                std::cout << "processing img: " << current_index << " (index " << b << ")" << std::endl;
+//                Matrix2D<double> *Ainv = &data->localAInv;
+//
+//                //#define DEBUG22
+//#ifdef DEBUG22
+//
+//                {
+//                    static int ii=0;
+//                    if(ii%1==0)
+//                    {
+//                        FourierImage save22;
+//                        //save22()=*paddedFourier;
+//                        save22().alias(*paddedFourier);
+//                        save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
+//                    }
+//                    ii++;
+//                }
+//#endif
+//                #undef DEBUG22
+//
+//                // Initialized just once
+////                if ( statusArray == NULL )
+////                {
+////                    statusArray = (int *) malloc ( sizeof(int) * paddedFourier->ydim );
+////                }
+//
+//                // Determine how many rows of the fourier
+//				// transform are of interest for us. This is because
+//				// the user can avoid to explore at certain resolutions
+//				conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+//				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+//				size = 2 * conserveRows;
+//
+//				myPaddedFourier = data->img;
+//
+//                if (!initialized) {
+//                	initialized = true;
+//					// the +1 is to prevent outOfBound reading when mirroring the result (later)
+//					allocate(outputVolume, size+1, size+1, size+1);
+//					allocate(outputWeight, size+1, size+1, size+1);
+//                }
+//
+//                // Loop over all symmetries
+//                for (size_t isym = 0; isym < R_repository.size(); isym++)
+//                {
+//                    rowsProcessed = 0;
+//
+//					// Compute the coordinate axes of the symmetrized projection
+//					Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
+//					Matrix2D<double> A_SLInv=A_SL.inv();
+//					float transf[3][3];
+//					float transfInv[3][3];
+//					convert(A_SL, transf);
+//					convert(A_SLInv, transfInv);
+//
+// ////////////////////////////////////////////////
+//
+//#if DEBUG_DUMP > 0
+//					std::cout << "Img " << imgIndex << " symmetry " << isym << std::endl;
+//                    if (isym > 0 || current_index != 1) {
+//                       	continue;
+//                    }
+//#endif
+//
+////////////////////////////////////////////////////
+//
+////                    // Fill the thread arguments for each thread
+////                    for ( int th = 0 ; th < numThreads ; th ++ )
+////                    {
+////                        // Passing parameters to each thread
+////                        th_args[th].symmetry = &A_SL;
+////                        th_args[th].paddedFourier = paddedFourier;
+////                        th_args[th].weight = weight;
+////                        th_args[th].reprocessFlag = reprocessFlag;
+////                    }
+////
+////                    // Init status array
+////                    for (size_t i = 0 ; i < paddedFourier->ydim ; i ++ )
+////                    {
+////                        if ( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
+////                        {
+////                            // -2 means "discarded"
+////                            statusArray[i] = -2;
+////                            rowsProcessed++;
+////                        }
+////                        else
+////                        {
+////                            statusArray[i] = 0;
+////                        }
+////                    }
+//
+//					thirdAttempt(outputVolume, outputWeight, size,
+//							myPaddedFourier, conserveRows, size, transf, transfInv,
+//							blobTableSqrt, iDeltaSqrt, blob.radius);
+//
+////                    // Awaking sleeping threads
+////                    barrier_wait( &barrier );
+////                    // Threads are working now, wait for them to finish
+////                    // processing current projection
+////                    barrier_wait( &barrier );
+//
+//                    //#define DEBUG2
+//#ifdef DEBUG2
+//
+//                    {
+//                        static int ii=0;
+//                        if(ii%1==0)
+//                        {
+//                            Image<double> save;
+//                            save().alias( FourierWeights );
+//                            save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
+//
+//                            Image< std::complex<double> > save2;
+//                            save2().alias( VoutFourier );
+//                            save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
+//                        }
+//                        ii++;
+//                    }
+//#endif
+//                    #undef DEBUG2
+//
+//                }
+//
+//                if ( current_index == FSCIndex && saveFSC )
+//                {
+//					// get rid of the replicated data
+//					mirror(outputVolume, outputWeight, size);
+//					crop(outputVolume, size);
+//					crop(outputWeight, size);
+//					outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+//					outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+//					saveIntermediateFSC(outputVolume, outputWeight, size,
+//							(std::string)fn_fsc + "_1_Weights.vol",
+//							(std::string) fn_fsc + "_1_Fourier.vol",
+//							FileName((std::string) fn_fsc + "_1_recons.vol"),
+//							true);
+//					// reset values
+//					release(outputVolume, size+1, size+1);
+//					release(outputWeight, size+1, size+1);
+//					initialized = false;
+//                }
+//                release(myPaddedFourier, size);
+////            }
+//        }
+//        barrier_wait( &barrier ); // wait till you loaded another buffer and process current
+//    }
 
 #if DEBUG_DUMP > 0
     std::cout << "about to mirror" << std::endl;

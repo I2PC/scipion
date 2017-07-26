@@ -70,6 +70,7 @@ struct imgData
 {
 	std::complex<float>** img;
 	CTFDescription ctf;
+	int imgIndex;
 	double weight;
 	Matrix2D<double> localAInv;
 	bool skip;
@@ -83,7 +84,8 @@ struct ImageThreadParams
     int endImageIndex;
     bool reprocessFlag;
     MetaData * selFile;
-    imgData* data = NULL;
+    imgData* dataA = NULL;
+    imgData* dataB = NULL;
 };
 
 /** Fourier reconstruction parameters. */
@@ -231,6 +233,14 @@ private:
     static const int batchSize = 11;
     template<typename T>
     static T** allocate(T**& where, int xSize, int ySize);
+
+    void loadImages(int startIndex, int endIndex, bool reprocess);
+    void swapBuffers();
+    void processBuffer(imgData* buffer,
+    		std::complex<float>*** outputVolume,
+    		float*** outputWeight,
+    		bool saveFSC,
+    		int FSCIndex);
 
     template<typename T>
     static T*** allocate(T***& where, int xSize, int ySize, int zSize);
