@@ -144,6 +144,7 @@ class ProtAlignMovies(ProtProcessMovies):
         # Check for newly done items
         newDone = [m for m in self.listOfMovies
                    if m.getObjId() not in doneList and self._isMovieDone(m)]
+        doneFailed = []
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
@@ -204,8 +205,9 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
-                    print("Micrograph %s was not producing, not added to "
+                    print("Micrograph %s was not produced, not added to "
                           "output set." % extraMicFn)
+                    doneFailed.append(movie.getMicName())
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
@@ -219,6 +221,14 @@ class ProtAlignMovies(ProtProcessMovies):
                 # different movie alignment
                 self._defineTransformRelation(self.inputMovies, micSet)
 
+        def _validateFailed():
+            if len(doneFailed) == len(self.listOfMovies):
+                raise Exception("Couldn't create any output micrographs. Please review errors above in this log file.")
+            elif len(doneFailed) < len(self.listOfMovies):
+                self.warning("Warning: there were %d input movies but could only align %d"
+                             % (len(self.listOfMovies), len(doneFailed)))
+                self.warning("List of movies with errors: %s" % str(doneFailed))
+
         if self._createOutputMicrographs():
             _updateOutputMicSet('micrographs.sqlite',
                                 self._getOutputMicName,
@@ -231,6 +241,7 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
+            _validateFailed()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 
