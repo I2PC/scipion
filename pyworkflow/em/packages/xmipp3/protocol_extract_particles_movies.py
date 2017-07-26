@@ -106,7 +106,14 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
         #                   'so use a value higher than 1 if you have a '
         #                   'dose of less than 0.5-1 e/A^2 in each '
         #                   'individual movie frame.')
-        
+        form.addParam('doBorders', BooleanParam, default=True,
+                      label='Fill pixels outside borders',
+                      help='Xmipp by default create blank particles whose boxes fall '
+                           'outside of the micrograph borders. Set this '
+                           'option to True if you want those pixels outside '
+                           'the borders to be filled with the closest pixel '
+                           'value available')
+
         form.addSection(label='Preprocess')
         form.addParam('doRemoveDust', BooleanParam, default=True,
                       important=True,
@@ -244,6 +251,9 @@ class XmippProtExtractMovieParticles(ProtExtractMovieParticles):
                 
                 if self.doInvert:
                     args += " --invert"
+
+                if self.doBorders:
+                    args += " --fillBorders"
                 
                 args += " --downsampling %f " % self.factor
                 self.runJob('xmipp_micrograph_scissor', args)

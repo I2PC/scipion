@@ -125,7 +125,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'Use the wizard to check boxSize changes after '
                            'downsampling or using a different pixel size. ')
 
-        form.addParam('doBorders', params.BooleanParam, default=False,
+        form.addParam('doBorders', params.BooleanParam, default=True,
                       label='Fill pixels outside borders',
                       help='Xmipp by default skips particles whose boxes fall '
                            'outside of the micrograph borders. Set this '
