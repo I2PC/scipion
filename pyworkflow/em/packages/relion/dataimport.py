@@ -179,18 +179,17 @@ class RelionImport():
         if warnings and self._imgPath is None:
             self.protocol.warning("Binary data was not found from metadata: %s" % self._starFile)
 
-
-        if (self._starFile.endswith('_data.star') and 
+        if (self._starFile.endswith('_data.star') and
             self._getModelFile(self._starFile)):
             self._modelStarFile = self._getModelFile(self._starFile)
             modelRow = md.getFirstRow(self._modelStarFile)
             classDimensionality = modelRow.getValue('rlnReferenceDimensionality')
-
             self._optimiserFile = self._starFile.replace('_data.star', '_optimiser.star')
             if not exists(self._optimiserFile):
-                raise Exception("Missing required optimiser star file: %s" % self._optimiserFile)
-            optimiserRow = md.getFirstRow(self._optimiserFile)
-            autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
+                autoRefine = modelRow.getValue("rlnNrClasses") == 1
+            else:
+                optimiserRow = md.getFirstRow(self._optimiserFile)
+                autoRefine = optimiserRow.containsLabel('rlnModelStarFile2')
 
             self.alignType = ALIGN_PROJ
 
