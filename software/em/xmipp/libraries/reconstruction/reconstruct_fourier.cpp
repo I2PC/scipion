@@ -149,7 +149,6 @@ void ProgRecFourier::run()
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
     pthread_mutex_init( &workLoadMutex, NULL );
-    statusArray = NULL;
     th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
     th_args = new ImageThreadParams[numThreads];//(ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
 
@@ -167,7 +166,7 @@ void ProgRecFourier::run()
     processImages(0, SF.size() - 1, !fn_fsc.empty(), false);
 
     // Correcting the weights
-//    correctWeight();
+    correctWeight();
 
     //Saving the volume
     finishComputations(fn_out);
@@ -177,8 +176,7 @@ void ProgRecFourier::run()
     // Waiting for threads to finish
     barrier_wait( &barrier );
     for ( int nt = 0 ; nt < numThreads ; nt ++ ) {
-    	delete[] th_args[nt].dataB;
-    	delete[] th_args[nt].dataA;
+
     	delete th_args[nt].selFile;
         pthread_join(*(th_ids+nt), NULL);
     }
@@ -605,17 +603,22 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             	if (NULL == threadParams->dataA) {
             		threadParams->dataA = new imgData[parent->batchSize];
             	}
-                for(int imgIndex = threadParams->startImageIndex; imgIndex < threadParams->endImageIndex; imgIndex++)
+                for(int bIndex = 0; bIndex < parent->batchSize; bIndex++)
                 {
+                	int imgIndex = threadParams->startImageIndex + bIndex;
+                	imgData* data = &threadParams->dataA[bIndex];
+                	if (imgIndex >= threadParams->endImageIndex ) {
+                		data->skip = true;
+                		continue;
+                	}
                 	Matrix2D<double>  localA(3, 3);
-                	imgData* data = &threadParams->dataA[imgIndex - threadParams->startImageIndex];
+
                     // Read input image
                     double rot, tilt, psi, weight;
                     Projection proj;
 
                     //Read projection from selfile, read also angles and shifts if present
                     //but only apply shifts
-
                     proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
                     rot  = proj.rot();
                     tilt = proj.tilt();
@@ -631,14 +634,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     	data->ctf.Tm=threadParams->parent->Ts;
                     	data->ctf.produceSideInfo();
                     }
-
                     // Copy the projection to the center of the padded image
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
                     size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
-                    if (threadParams->reprocessFlag)
+
+                    if (threadParams->reprocessFlag) {
                         localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
-                    else
+                    } else
                     {
                         localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
                         localPaddedImg.setXmippOrigin();
@@ -671,7 +674,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     data->img = clipAndShift(localPaddedFourier, parent);
                     data->imgIndex = imgIndex;
                     data->skip = false;
-                    std::cout << "loading img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ", " << data->img << ")" << std::endl;
+                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ", " << data->img << ")" << std::endl;
                     //#define DEBUG22
 #ifdef DEBUG22
 
@@ -2143,7 +2146,8 @@ void convertToExpectedSpace(T*** input, int size,
     			newPos[1] = (y < halfSize) ? VoutFourier.ydim - halfSize + y : y - halfSize ;
     			newPos[2] = (z < halfSize) ? VoutFourier.zdim - halfSize + z : z - halfSize ;
     			// store to output array
-				DIRECT_A3D_ELEM(VoutFourier, newPos[2], newPos[1], newPos[0]) = input[z][y][x];
+    			// += in necessary as VoutFourier might be used multiple times when used with MPI
+				DIRECT_A3D_ELEM(VoutFourier, newPos[2], newPos[1], newPos[0]) += input[z][y][x];
     		}
     	}
     }
@@ -2320,10 +2324,11 @@ void ProgRecFourier::processBuffer(imgData* buffer,
 	for ( int i = 0 ; i < batchSize; i++ ) {
 		imgData* data = &buffer[i];
 		std::complex<float>** myPaddedFourier = data->img;
-		std::cout << "processing img: " << data->imgIndex << " (index " << i << ", " << myPaddedFourier << ")" << std::endl;
 		if (data->skip) {
+			std::cout << "skipping img: " << data->imgIndex << " (index " << i << ", " << myPaddedFourier << ")" << std::endl;
 			continue;
 		}
+		std::cout << "processing img: " << data->imgIndex << " (index " << i << ", " << myPaddedFourier << ")" << std::endl;
 		if (verbose && data->imgIndex%repaint==0) {
 			progress_bar(data->imgIndex);
 		}
@@ -2371,8 +2376,11 @@ void ProgRecFourier::processBuffer(imgData* buffer,
 			FileName((std::string) fn_fsc + "_1_recons.vol"),
 				true);
 			// reset values
-			release(outputVolume, size+1, size+1);
-			release(outputWeight, size+1, size+1);
+			for(int z = 0; z <= size; z++) // FIXME use memset
+				for(int y = 0; y <= size; y++)
+					for(int x = 0; z <=size; x++) {
+						outputVolume[z][y][x] = outputWeight[z][y][x] = 0;
+					}
 		}
 //		std::cout << "about to release" << std::endl;
 		release(data->img, size);
@@ -2385,7 +2393,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 {
     MultidimArray< std::complex<double> > *paddedFourier;
 
-    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << "with " << numThreads<< std::endl;
+    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << " with " << numThreads << " threads" << std::endl;
 
 
 
@@ -2651,22 +2659,27 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
 		saveFinalFSC(outputVolume, outputWeight, size);
 	}
 
-    forceHermitianSymmetry(outputVolume, outputWeight, size);
-    processWeight(outputVolume, outputWeight, size, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
+//    forceHermitianSymmetry(outputVolume, outputWeight, size);
+//    processWeight(outputVolume, outputWeight, size, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
 #if DEBUG_DUMP > 0
     std::cout << "about to convert to expected format" << std::endl;
 #endif
     allocateVoutFourier();
     convertToExpectedSpace(outputVolume, size, VoutFourier);
     release(outputVolume, size+1, size+1);
+
+    allocateFourierWeights();
+    convertToExpectedSpace(outputWeight, size, FourierWeights);
     release(outputWeight, size+1, size+1);
+	delete[] th_args[0].dataB;
+	delete[] th_args[0].dataA;
+	th_args[0].dataB = th_args[0].dataA = NULL;
 #if DEBUG_DUMP > 0
     std::cout << "releasing memory" << std::endl;
 #endif
-    free(statusArray);
-    blobTableSqrt.clear();
-#if DEBUG_DUMP > 0
+//    blobTableSqrt.clear();
 	std::cout << "done" << std::endl;
+#if DEBUG_DUMP > 0
     print(VoutFourier, true);
     print(VoutFourier_muj, true);
 #endif
@@ -2721,6 +2734,7 @@ void ProgRecFourier::correctWeight()
 
 void ProgRecFourier::finishComputations( const FileName &out_name )
 {
+	std::cout << "finish comp" << std::endl;
     //#define DEBUG_VOL
 #ifdef DEBUG_VOL
     {
@@ -2740,7 +2754,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();
-//    transformerVol.enforceHermitianSymmetry();
+    transformerVol.enforceHermitianSymmetry();
     //forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
@@ -2757,11 +2771,11 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
         save2.write((std::string) fn_out + "hermiticFourierVol.vol");
     }
 #endif
-//    threadOpCode = PROCESS_WEIGHTS;
-//    // Awake threads
-//    barrier_wait( &barrier );
-//    // Threads are working now, wait for them to finish
-//    barrier_wait( &barrier );
+    threadOpCode = PROCESS_WEIGHTS;
+    // Awake threads
+    barrier_wait( &barrier );
+    // Threads are working now, wait for them to finish
+    barrier_wait( &barrier );
 
     transformerVol.inverseFourierTransform();
     transformerVol.clear();

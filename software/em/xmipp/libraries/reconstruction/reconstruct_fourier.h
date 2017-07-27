@@ -154,9 +154,6 @@ public:
     /// To create a barrier synchronization for threads
     barrier_t barrier;
 
-    /// A status array for each row in an image (processing, processed,etc..)
-    int * statusArray;
-
     /// How many image rows are processed at a time by a single thread.
     int thrWidth;
 

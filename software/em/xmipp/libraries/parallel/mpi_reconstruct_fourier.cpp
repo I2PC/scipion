@@ -57,7 +57,7 @@ void ProgMPIRecFourier::read(int argc, char** argv)
 void ProgMPIRecFourier::defineParams()
 {
     ProgRecFourier::defineParams();
-    addParamsLine("  [--mpi_job_size <size=10>]    : Number of images sent to a cpu in a single job ");
+    addParamsLine("  [--mpi_job_size <size=100>]    : Number of images sent to a cpu in a single job ");
     addParamsLine("                                : 10 may be a good value");
     addParamsLine("                                : if  -1 the computer will put the maximum");
     addParamsLine("                                : posible value that may not be the best option");
@@ -299,9 +299,8 @@ void ProgMPIRecFourier::run()
             //First
             barrier_init( &barrier, numThreads+1);
             pthread_mutex_init( &workLoadMutex, NULL );
-            statusArray = NULL;
             th_ids = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
-            th_args = (ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
+            th_args = new ImageThreadParams[numThreads];//(ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
 
             for ( int nt = 0 ; nt < numThreads ; nt++ )
             {
@@ -662,6 +661,8 @@ void ProgMPIRecFourier::run()
         iter++;
     }
     while(iter<NiterWeight);
+    free(th_ids);
+    delete[] th_args;
 }
 
 int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm )
