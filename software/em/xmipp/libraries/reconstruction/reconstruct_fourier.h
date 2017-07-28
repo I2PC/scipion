@@ -196,9 +196,6 @@ public: // Internal members
     std::complex<float>*** outputVolume = NULL;
 	float*** outputWeight = NULL;
 
-    std::complex<float>*** outputVolume1 = NULL;
-	float*** outputWeight1 = NULL;
-
 public:
     /// Read arguments from command line
     void readParams();

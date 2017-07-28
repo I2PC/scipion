@@ -458,18 +458,17 @@ void ProgMPIRecFourier::run()
 //                    MPI_Reduce(outputWeight,outputWeight1,
 //                                  sizeout, MPI_FLOAT,
 //                                  MPI_SUM, 1, new_comm); // FIXME use just MPI_Reduce. Right now it causes crash
-                    std::cout << "transfering volume: " << outputVolume << " to " << outputVolume1 << std::endl;
 //                    MPI_Reduce(&(outputVolume[0][0][0]),&(outputVolume1[0][0][0]),
 //                                  2*129*129*129, MPI_FLOAT,
 //                                  MPI_SUM, 0, new_comm);
                     for(int a = 0; a <sizeout; a++) {
                     	for(int b = 0; b <sizeout; b++) {
-						MPI_Reduce(&(outputVolume[a][b][0]),&(outputVolume1[a][b][0]),
+						MPI_Reduce(MPI_IN_PLACE,&(outputVolume[a][b][0]),
 														2*sizeout, MPI_FLOAT,
-														MPI_SUM, 0, new_comm);
-						MPI_Reduce(&(outputWeight[a][b][0]),&(outputWeight1[a][b][0]),
+														MPI_SUM, 1, new_comm);
+						MPI_Reduce(MPI_IN_PLACE,&(outputWeight[a][b][0]),
 														sizeout, MPI_FLOAT,
-														MPI_SUM, 0, new_comm);
+														MPI_SUM, 1, new_comm);
                     	}
                     }
                     /*if (iter != NiterWeight)

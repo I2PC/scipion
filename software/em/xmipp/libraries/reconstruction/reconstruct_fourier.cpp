@@ -2422,11 +2422,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == outputVolume) {
     	allocate(outputVolume, volumeSize+1, volumeSize+1, volumeSize+1);
-    	allocate(outputVolume1, volumeSize+1, volumeSize+1, volumeSize+1);
     }
     if (NULL == outputWeight) {
     	allocate(outputWeight, volumeSize+1, volumeSize+1, volumeSize+1);
-    	allocate(outputWeight1, volumeSize+1, volumeSize+1, volumeSize+1);
     }
 
     int startLoadIndex = firstImageIndex;
@@ -2726,37 +2724,37 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 {
 	std::cout << "finish comp" << std::endl;
 	// get rid of the replicated data
-	mirror(outputVolume1, outputWeight1, volumeSize);
+	mirror(outputVolume, outputWeight, volumeSize);
 	std::cout << "mirror done" << std::endl;
-	crop(outputVolume1, volumeSize);
+	crop(outputVolume, volumeSize);
 	std::cout << "crop1 done" << std::endl;
-	crop(outputWeight1, volumeSize);
+	crop(outputWeight, volumeSize);
 	std::cout << "crop2 done" << std::endl;
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to apply blob" << std::endl;
 	#endif
-	outputVolume1 = applyBlob(outputVolume1, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	outputVolume = applyBlob(outputVolume, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
 	std::cout << "applyBlob1 done" << std::endl;
-	outputWeight1 = applyBlob(outputWeight1, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	outputWeight = applyBlob(outputWeight, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
 	std::cout << "applyBlob2 done" << std::endl;
 
 	//    if( saveFSC ) {
 	//		saveFinalFSC(outputVolume, outputWeight, size);
 	//	}
 
-	    forceHermitianSymmetry(outputVolume1, outputWeight1, volumeSize);
-	processWeight(outputVolume1, outputWeight1, volumeSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
+	    forceHermitianSymmetry(outputVolume, outputWeight, volumeSize);
+	processWeight(outputVolume, outputWeight, volumeSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
 	std::cout << "processWeight done" << std::endl;
-	release(outputWeight1, volumeSize+1, volumeSize+1);
+	release(outputWeight, volumeSize+1, volumeSize+1);
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to convert to expected format" << std::endl;
 	#endif
 	MultidimArray< std::complex<double> > VoutFourier;
 	allocateVoutFourier(VoutFourier);
 	std::cout << "allocating VoutFOurier done" << std::endl;
-	convertToExpectedSpace(outputVolume1, volumeSize, VoutFourier);
+	convertToExpectedSpace(outputVolume, volumeSize, VoutFourier);
 	std::cout << "convert done" << std::endl;
-	release(outputVolume1, volumeSize+1, volumeSize+1);
+	release(outputVolume, volumeSize+1, volumeSize+1);
 
 //	allocateFourierWeights();
 //	convertToExpectedSpace(outputWeight, volumeSize, FourierWeights);
