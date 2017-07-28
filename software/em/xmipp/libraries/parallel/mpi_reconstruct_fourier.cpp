@@ -463,12 +463,21 @@ void ProgMPIRecFourier::run()
 //                                  MPI_SUM, 0, new_comm);
                     for(int a = 0; a <sizeout; a++) {
                     	for(int b = 0; b <sizeout; b++) {
+                    		if (node->rank == 1) {
 						MPI_Reduce(MPI_IN_PLACE,&(outputVolume[a][b][0]),
 														2*sizeout, MPI_FLOAT,
-														MPI_SUM, 1, new_comm);
+														MPI_SUM, 0, new_comm);
 						MPI_Reduce(MPI_IN_PLACE,&(outputWeight[a][b][0]),
 														sizeout, MPI_FLOAT,
-														MPI_SUM, 1, new_comm);
+														MPI_SUM, 0, new_comm);
+                    		} else {
+        						MPI_Reduce(&(outputVolume[a][b][0]),&(outputVolume[a][b][0]),
+        														2*sizeout, MPI_FLOAT,
+        														MPI_SUM, 0, new_comm);
+        						MPI_Reduce(&(outputWeight[a][b][0]),&(outputWeight[a][b][0]),
+        														sizeout, MPI_FLOAT,
+        														MPI_SUM, 0, new_comm);
+                    		}
                     	}
                     }
                     /*if (iter != NiterWeight)
