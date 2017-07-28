@@ -93,7 +93,7 @@ class ProgRecFourier : public ProgReconsBase
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_fsc;
+    FileName fn_out, fn_sym, fn_sel, fn_doc;//, fn_fsc;
 
     /** SelFile containing all projections */
     MetaData SF;
@@ -183,16 +183,18 @@ public: // Internal members
     // Fourier transformer for the volume
     FourierTransformer transformerVol;
 
-    // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
-    MultidimArray< std::complex<double> > VoutFourier;
-
-    // Volume of Fourier weights
-    MultidimArray<double> FourierWeights;
+//    // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
+//    MultidimArray< std::complex<double> > VoutFourier;
+//
+//    // Volume of Fourier weights
+//    MultidimArray<double> FourierWeights;
 
     int paddedImgSize;
-
+    size_t volumeSize;
     // Output volume
     Image<double> Vout;
+    std::complex<float>*** outputVolume = NULL;
+	float*** outputWeight = NULL;
 
 public:
     /// Read arguments from command line
@@ -213,7 +215,9 @@ public:
     void finishComputations( const FileName &out_name );
 
     /// Process one image
-    void processImages( int firstImageIndex, int lastImageIndex, bool saveFSC=false, bool reprocessFlag=false);
+    void processImages( int firstImageIndex, int lastImageIndex,
+//    		bool saveFSC=false,
+			bool reprocessFlag=false);
 
     /// Method for the correction of the fourier coefficients
     void correctWeight();
@@ -228,6 +232,7 @@ private:
 
     int availableMemory;
     static const int batchSize = 11;
+
     template<typename T>
     static T** allocate(T**& where, int xSize, int ySize);
 
@@ -235,9 +240,10 @@ private:
     void swapBuffers();
     void processBuffer(imgData* buffer,
     		std::complex<float>*** outputVolume,
-    		float*** outputWeight,
-    		bool saveFSC,
-    		int FSCIndex);
+    		float*** outputWeight//,
+//    		bool saveFSC,
+//    		int FSCIndex
+			);
 
     template<typename T>
     static T*** allocate(T***& where, int xSize, int ySize, int zSize);
@@ -252,22 +258,23 @@ private:
     T*** applyBlob(T***& input, int size, float blobSize,
     		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt);
 
-    inline void allocateVoutFourier() {
-    	if (NULL == VoutFourier.data) {
+
+    inline void allocateVoutFourier(MultidimArray<std::complex<double> >&VoutFourier) {
+    	if ((NULL == VoutFourier.data) || (0 == VoutFourier.getSize())) {
     		VoutFourier.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
     	}
     }
 
-    inline void allocateFourierWeights() {
-    	if (NULL == FourierWeights.data) {
-    		FourierWeights.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
-    	}
-    }
+//    inline void allocateFourierWeights() {
+//    	if (NULL == FourierWeights.data) {
+//    		FourierWeights.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
+//    	}
+//    }
 
-    void saveIntermediateFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
-    		const std::string &weightsFileName, const std::string &fourierFileName, const FileName &resultFileName,
-			bool storeResult);
-    void saveFinalFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize);
+//    void saveIntermediateFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
+//    		const std::string &weightsFileName, const std::string &fourierFileName, const FileName &resultFileName,
+//			bool storeResult);
+//    void saveFinalFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize);
 
 	static void processCube(
 			int i,

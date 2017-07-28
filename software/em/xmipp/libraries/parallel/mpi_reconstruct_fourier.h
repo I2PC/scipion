@@ -45,7 +45,7 @@
 #define TAG_STOP     1
 #define TAG_TRANSFER   2
 #define TAG_FREEWORKER    3
-#define TAG_COLLECT_FOR_FSC  4
+//#define TAG_COLLECT_FOR_FSC  4
 #define TAG_SETVERBOSE  5
 
 #define BUFFSIZE 10000000
