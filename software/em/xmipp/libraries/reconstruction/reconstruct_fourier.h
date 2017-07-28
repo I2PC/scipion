@@ -190,11 +190,14 @@ public: // Internal members
 //    MultidimArray<double> FourierWeights;
 
     int paddedImgSize;
-    size_t volumeSize;
+    int volumeSize;
     // Output volume
     Image<double> Vout;
     std::complex<float>*** outputVolume = NULL;
 	float*** outputWeight = NULL;
+
+    std::complex<float>*** outputVolume1 = NULL;
+	float*** outputWeight1 = NULL;
 
 public:
     /// Read arguments from command line
@@ -227,6 +230,8 @@ public:
 
     ///Functions of common reconstruction interface
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
+    template<typename T>
+    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
 
 private:
 
@@ -244,9 +249,6 @@ private:
 //    		bool saveFSC,
 //    		int FSCIndex
 			);
-
-    template<typename T>
-    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
 
     static std::complex<float>** clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourier * parent);

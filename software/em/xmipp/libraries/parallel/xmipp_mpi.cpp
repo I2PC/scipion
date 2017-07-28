@@ -270,8 +270,10 @@ int XmippMpiProgram::tryRun()
 {
     try
     {
-        if (doRun)
+        if (doRun){
+        	std::cout << "XmippMpiProgram::tryRun()" << std::endl;
             this->run();
+        }
     }
     catch (XmippError &xe)
     {

@@ -161,8 +161,16 @@ void ProgMPIRecFourier::run()
     {
         if (node->isMaster())
         {
-            gettimeofday(&start_time,NULL);
+//            if (NULL == outputVolume) {
+//            	std::cout << "allocating outputVolume " << volumeSize+1 <<  " at " << node->rank << std::endl;
+//                	allocate(outputVolume, 129, 129, 129);
+//                }
+//			if (NULL == outputWeight) {
+//				std::cout << "allocating outputWeight " << volumeSize+1 <<  " at " << node->rank << std::endl;
+//				allocate(outputWeight, 129, 129, 129);
+//			}
 
+            gettimeofday(&start_time,NULL);
             std::cerr<<std::endl;
             if (iter != NiterWeight)
                 std::cerr<<"Computing weights "<<iter+1<<"/"<<NiterWeight<<std::endl;
@@ -287,6 +295,15 @@ void ProgMPIRecFourier::run()
         }
         else if( node->active )
         {
+//            if (NULL == outputVolume) {
+//            	std::cout << "allocating outputVolume " << volumeSize+1 <<  " at " << node->rank << std::endl;
+//                	allocate(outputVolume, 129, 129, 129);
+//                }
+//			if (NULL == outputWeight) {
+//				std::cout << "allocating outputWeight " << volumeSize+1 <<  " at " << node->rank << std::endl;
+//				allocate(outputWeight, 129, 129, 129);
+//			}
+
             // Select only relevant part of selfile for this rank
             // job number
             // job size
@@ -294,10 +311,12 @@ void ProgMPIRecFourier::run()
 //            double * fourierVolume = (double *)VoutFourier.data;
 //            double * fourierWeights = FourierWeights.data;
 
-            sizeout = std::pow(volumeSize+1, 3);//MULTIDIM_SIZE(FourierWeights);
+
 
             //First
+            std::cout << "before barrier with " << node->rank << std::endl;
             barrier_init( &barrier, numThreads+1);
+            std::cout << "after barrier with " << node->rank << std::endl;
             pthread_mutex_init( &workLoadMutex, NULL );
             th_ids = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
             th_args = new ImageThreadParams[numThreads];//(ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
@@ -313,6 +332,7 @@ void ProgMPIRecFourier::run()
 
             while (1)
             {
+            	std::cout << "while(1) " << node->rank << std::endl;
                 int jobNumber;
 
                 //#define DEBUG
@@ -424,6 +444,8 @@ void ProgMPIRecFourier::run()
 //                else
                 	if (status.MPI_TAG == TAG_TRANSFER)
                 {
+
+
                     //If I  do not read this tag
                     //master will no further process
                     MPI_Recv(0, 0, MPI_INT, 0, TAG_TRANSFER, MPI_COMM_WORLD, &status);
@@ -431,14 +453,25 @@ void ProgMPIRecFourier::run()
 
                     std::cerr << "Wr" << node->rank << " " << "TAG_STOP" << std::endl;
 #endif
-                    std::cout << "transfering weights: " << node->rank << std::endl;
-                    MPI_Allreduce(MPI_IN_PLACE, outputWeight,
-                                  sizeout, MPI_FLOAT,
-                                  MPI_SUM, new_comm);
-                    std::cout << "transfering volume: " << node->rank  << std::endl;
-                    MPI_Allreduce(MPI_IN_PLACE, outputVolume,
-                                  2*sizeout, MPI_FLOAT,
-                                  MPI_SUM, new_comm);
+                    std::cout << "transfering " << node->rank << std::endl;
+                    std::cout << "sizeout" << sizeout << std::endl;
+//                    MPI_Reduce(outputWeight,outputWeight1,
+//                                  sizeout, MPI_FLOAT,
+//                                  MPI_SUM, 1, new_comm); // FIXME use just MPI_Reduce. Right now it causes crash
+                    std::cout << "transfering volume: " << outputVolume << " to " << outputVolume1 << std::endl;
+//                    MPI_Reduce(&(outputVolume[0][0][0]),&(outputVolume1[0][0][0]),
+//                                  2*129*129*129, MPI_FLOAT,
+//                                  MPI_SUM, 0, new_comm);
+                    for(int a = 0; a <sizeout; a++) {
+                    	for(int b = 0; b <sizeout; b++) {
+						MPI_Reduce(&(outputVolume[a][b][0]),&(outputVolume1[a][b][0]),
+														2*sizeout, MPI_FLOAT,
+														MPI_SUM, 0, new_comm);
+						MPI_Reduce(&(outputWeight[a][b][0]),&(outputWeight1[a][b][0]),
+														sizeout, MPI_FLOAT,
+														MPI_SUM, 0, new_comm);
+                    	}
+                    }
                     /*if (iter != NiterWeight)
                 {
                         MPI_Allreduce(MPI_IN_PLACE, fourierWeights,
@@ -599,6 +632,7 @@ void ProgMPIRecFourier::run()
 //                                                                false,VDOUBLE);
 //                            */
 //                        }
+                        std::cout << "NiterWright=" << NiterWeight << std::endl;
                         if (NiterWeight==0 || iter == NiterWeight-1)
                         {
 //                            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
@@ -609,21 +643,25 @@ void ProgMPIRecFourier::run()
 //                            }
 //                            VoutFourier=VoutFourierTmp;
                             // Normalize global volume and store data
+                        	std::cout << "finish with " << node->rank << "\n";
+//                        	std::cout << "outputVolume1 checking " << node->rank << " : " << outputVolume1[128][128][128] << "\n";
+//							std::cout << "outputWeight1 checking " << node->rank << " : " << outputWeight1[volumeSize/2][volumeSize/2][volumeSize/2] << std::endl;
 
                             finishComputations(fn_out);
                         }
+                        std::cout << "before break (after finish) " << node->rank << std::endl;
                         break;
                     }
-//                    else
-//                    {
+                    else
+                    {
 //                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 //
 //                        sendDataInChunks( fourierVolume, 1, 2 * sizeout, BUFFSIZE, MPI_COMM_WORLD);
 //
 //                        MPI_Send( 0,0,MPI_INT,1,TAG_FREEWORKER, MPI_COMM_WORLD );
 //
-//                        break;
-//                    }
+                        break;
+                    }
                 }
                 else if (status.MPI_TAG == TAG_WORKFORWORKER)
                 {
@@ -632,6 +670,11 @@ void ProgMPIRecFourier::run()
                     //LABEL
                     //(if jobNumber == -1) break;
                     threadOpCode=PROCESS_IMAGE;
+
+//            		if (node->rank == 1) {
+//            			if (NULL == outputVolume1 ){allocate(outputVolume1, 129, 129, 129); std::cout <<"bu1" << std::endl;}
+//            			if (NULL == outputWeight1 ){allocate(outputWeight1, 129, 129, 129); std::cout <<"bu2" << std::endl;}
+//            		}
 
                     size_t min_i, max_i;
 
@@ -649,6 +692,12 @@ void ProgMPIRecFourier::run()
                         processImages( min_i, max_i,
 //                        		false,
                         		true);
+//                    outputWeight[volumeSize/2][volumeSize/2][volumeSize/2] = (1 << node->rank);
+//                    outputVolume[128][128][128].real() = ((1 << node->rank) + 11);
+//                    outputVolume[128][128][128].imag() = ((1 << node->rank) + 11);
+//                    std::cout << "outputWeight checking " << node->rank << " : " << outputWeight[volumeSize/2][volumeSize/2][volumeSize/2] << std::endl;
+//                    std::cout << "outputVolume checking " << node->rank << " : " << outputVolume[128][128][128] << std::endl;
+                    sizeout = volumeSize+1;//MULTIDIM_SIZE(FourierWeights);
                 }
                 else
                 {
@@ -656,25 +705,32 @@ void ProgMPIRecFourier::run()
                     exit(0);
                 }
             }
+        } else {
+        	std::cout << "inactive node " << node->rank << std::endl;
         }
 
         // Kill threads used on workers
         if ( node->active && !node->isMaster() )
         {
+        	std::cout << "about to exit threads " << node->rank << std::endl;
             threadOpCode = EXIT_THREAD;
             barrier_wait( &barrier );
 
             for ( int nt=0; nt<numThreads; nt++)
             {
+            	std::cout << "joining " << node->rank << " (th " << nt << std::endl;
                 pthread_join(*(th_ids+nt),NULL);
             }
             barrier_destroy( &barrier );
         }
+        std::cout << "iter: " << iter << " (out of " << NiterWeight << ")" <<std::endl;
         iter++;
     }
     while(iter<NiterWeight);
     free(th_ids);
+    std::cout << "free " << node->rank << std::endl;
     delete[] th_args;
+    std::cout << "delete " << node->rank << std::endl;
 }
 
 int  ProgMPIRecFourier::sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm )

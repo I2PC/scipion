@@ -57,7 +57,7 @@ void ProgRecFourier::defineParams()
 //    addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
     addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
-    addParamsLine("  [--thr <threads=1> <rows=1>]   : Number of concurrent threads and rows processed at time by a thread");
+    addParamsLine("  [--thr <threads=1> <rows=1>]   : Number of concurrent threads and rows processed at time by a thread"); // FIXME REMOVE, set fixed =1
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
     addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
     addParamsLine("  [--useCTF]                     : Use CTF information if present");
@@ -168,7 +168,7 @@ void ProgRecFourier::run()
     		false);
 
     // Correcting the weights
-    correctWeight();
+//    correctWeight();
 
     //Saving the volume
     finishComputations(fn_out);
@@ -2047,6 +2047,7 @@ void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, i
 template<typename T>
 T*** ProgRecFourier::allocate(T***& where, int xSize, int ySize, int zSize) {
 	where = new T**[zSize];
+	std::cout << "allocating " << where << " " << xSize << "x" << ySize  << "x" << zSize<< std::endl;
 	for (int z = 0; z < zSize; z++) {
 		where[z] = new T*[ySize];
 		for (int y = 0; y < ySize; y++) {
@@ -2073,6 +2074,7 @@ T** ProgRecFourier::allocate(T**& where, int xSize, int ySize) {
 
 template<typename T>
 void release(T***& array, int ySize, int zSize) {
+	std::cout << "releasing " << array << std::endl;
 	for(int z = 0; z < zSize; z++) {
 		for(int y = 0; y < ySize; y++) {
 			delete[] array[z][y];
@@ -2411,6 +2413,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     // FSC purposes
 //    int current_index;
 
+    std::cout << "paddedImgSize " << paddedImgSize << " maxResolution " << maxResolution << std::endl;
 	size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
 	conserveRows = (size_t) ceil((double) conserveRows / 2.0);
 	volumeSize = 2 * conserveRows;
@@ -2419,9 +2422,11 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == outputVolume) {
     	allocate(outputVolume, volumeSize+1, volumeSize+1, volumeSize+1);
+    	allocate(outputVolume1, volumeSize+1, volumeSize+1, volumeSize+1);
     }
     if (NULL == outputWeight) {
     	allocate(outputWeight, volumeSize+1, volumeSize+1, volumeSize+1);
+    	allocate(outputWeight1, volumeSize+1, volumeSize+1, volumeSize+1);
     }
 
     int startLoadIndex = firstImageIndex;
@@ -2655,6 +2660,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     std::cout << "about to mirror" << std::endl;
 #endif
 
+
 	delete[] th_args[0].dataB;
 	delete[] th_args[0].dataA;
 	th_args[0].dataB = th_args[0].dataA = NULL;
@@ -2720,29 +2726,37 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 {
 	std::cout << "finish comp" << std::endl;
 	// get rid of the replicated data
-	mirror(outputVolume, outputWeight, volumeSize);
-	crop(outputVolume, volumeSize);
-	crop(outputWeight, volumeSize);
+	mirror(outputVolume1, outputWeight1, volumeSize);
+	std::cout << "mirror done" << std::endl;
+	crop(outputVolume1, volumeSize);
+	std::cout << "crop1 done" << std::endl;
+	crop(outputWeight1, volumeSize);
+	std::cout << "crop2 done" << std::endl;
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to apply blob" << std::endl;
 	#endif
-	outputVolume = applyBlob(outputVolume, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
-	outputWeight = applyBlob(outputWeight, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	outputVolume1 = applyBlob(outputVolume1, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	std::cout << "applyBlob1 done" << std::endl;
+	outputWeight1 = applyBlob(outputWeight1, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	std::cout << "applyBlob2 done" << std::endl;
 
 	//    if( saveFSC ) {
 	//		saveFinalFSC(outputVolume, outputWeight, size);
 	//	}
 
-	//    forceHermitianSymmetry(outputVolume, outputWeight, size);
-	processWeight(outputVolume, outputWeight, volumeSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
-	release(outputWeight, volumeSize+1, volumeSize+1);
+	    forceHermitianSymmetry(outputVolume1, outputWeight1, volumeSize);
+	processWeight(outputVolume1, outputWeight1, volumeSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
+	std::cout << "processWeight done" << std::endl;
+	release(outputWeight1, volumeSize+1, volumeSize+1);
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to convert to expected format" << std::endl;
 	#endif
 	MultidimArray< std::complex<double> > VoutFourier;
 	allocateVoutFourier(VoutFourier);
-	convertToExpectedSpace(outputVolume, volumeSize, VoutFourier);
-	release(outputVolume, volumeSize+1, volumeSize+1);
+	std::cout << "allocating VoutFOurier done" << std::endl;
+	convertToExpectedSpace(outputVolume1, volumeSize, VoutFourier);
+	std::cout << "convert done" << std::endl;
+	release(outputVolume1, volumeSize+1, volumeSize+1);
 
 //	allocateFourierWeights();
 //	convertToExpectedSpace(outputWeight, volumeSize, FourierWeights);
@@ -2769,7 +2783,8 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();
-    transformerVol.enforceHermitianSymmetry();
+    std::cout << "recompute plan done" << std::endl;
+//    transformerVol.enforceHermitianSymmetry();
     //forceWeightSymmetry(preFourierWeights);
 
     // Tell threads what to do
@@ -2793,8 +2808,11 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 //    barrier_wait( &barrier );
 
     transformerVol.inverseFourierTransform();
+    std::cout << "inverse done" << std::endl;
     transformerVol.clear();
+    std::cout << "clear done" << std::endl;
     CenterFFT(Vout(),false);
+    std::cout << "center done" << std::endl;
 
     // Correct by the Fourier transform of the blob
     Vout().setXmippOrigin();
@@ -2827,8 +2845,11 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
         FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
         A3D_ELEM(mVout,k,i,j) *= meanFactor2;
     }
+    std::cout << "about to write" << std::endl;
     Vout.write(out_name);
+    std::cout << "write done" << std::endl;
     Vout.clear();
+    std::cout << "clear done" << std::endl;
 }
 
 void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
