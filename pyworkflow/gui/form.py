@@ -367,7 +367,10 @@ class SubclassesTreeProvider(TreeProvider):
                             p._allowsSelection = True
                             objects.append(p)
                         # If attr is a set, then we should consider its elements
-                        if isinstance(attr, em.EMSet):
+                        # JMRT: The inclusion of subitems as possible inputs
+                        # is causing a performance penalty. So for the moment
+                        # we will restrict that to SetOfVolumes only
+                        if isinstance(attr, em.SetOfVolumes):
                             # If the ITEM type match any of the desired classes
                             # we will add some elements from the set
                             if (attr.ITEM_TYPE is not None and
