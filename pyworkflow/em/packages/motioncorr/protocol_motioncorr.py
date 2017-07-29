@@ -185,7 +185,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                 'CUDA_LIB point to cuda-8.0/lib path')
 
         if getVersion('MOTIONCOR2') in ['1.0.0']:
-            form.addParam('defectFile', params.FileParam,
+            form.addParam('defectFile', params.FileParam, allowsNull=True,
                           expertLevel=cons.LEVEL_ADVANCED,
                           condition='useMotioncor2',
                           label='Camera defects file',
@@ -313,6 +313,10 @@ class ProtMotionCorr(ProtAlignMovies):
             if getVersion('MOTIONCOR2') != '03162016':
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
+
+            if getVersion('MOTIONCOR2') in ['1.0.0']:
+                if self.defectFile.get():
+                    argsDict['-DefectFile'] = self.defectFile.get()
 
             if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
