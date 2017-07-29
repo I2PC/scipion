@@ -183,6 +183,7 @@ Protocols SPA = [
                 {"tag": "protocol", "value": "XmippProtResolution3D",  "text": "default"},
 	            {"tag": "protocol", "value": "XmippProtMultipleFSCs",  "text": "default"},
     			{"tag": "protocol", "value": "ProtRelionPostprocess",   "text": "default"},
+    			{"tag": "protocol", "value": "ProtRelionLocalRes",   "text": "default"},
                 {"tag": "protocol", "value": "BsoftProtBfilter", "text": "default"}
 			]},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [

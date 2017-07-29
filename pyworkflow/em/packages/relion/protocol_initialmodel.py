@@ -33,7 +33,7 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam,
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtInitialVolume
 from pyworkflow.em.packages.relion.protocol_base import ProtRelionBase
-from convert import isVersion2
+from convert import V1_3, V1_4, V2_0, getVersion
 from constants import ANGULAR_SAMPLING_LIST
 
 
@@ -51,7 +51,7 @@ class ProtRelionInitialModel(ProtInitialVolume, ProtRelionBase):
 
     @classmethod
     def isDisabled(cls):
-        return not isVersion2()
+        return getVersion() in [V1_3, V1_4, V2_0]
 
     def __init__(self, **args):
         ProtRelionBase.__init__(self, **args)

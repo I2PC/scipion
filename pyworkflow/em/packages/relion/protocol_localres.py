@@ -28,7 +28,6 @@ from pyworkflow.protocol.params import (PointerParam, FloatParam, FileParam,
                                         IntParam, LabelParam, LEVEL_ADVANCED)
 from pyworkflow.em.data import Volume
 from pyworkflow.em.protocol import ProtAnalysis3D, ImageHandler
-import pyworkflow.em.metadata as md
 from convert import isVersion2
 from pyworkflow.utils import exists
 import pyworkflow.utils.path as putils
