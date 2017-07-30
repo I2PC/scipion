@@ -64,9 +64,9 @@ class ProjectWindow(ProjectBaseWindow):
 
     def __init__(self, path, master=None):
         # Load global configuration
-        self.projName = Message.LABEL_PROJECT + os.path.basename(path)
+        self.projName = os.path.basename(path)
         try:
-            projTitle = '%s (%s on %s)' % (self.projName, 
+            projTitle = '%s (%s on %s)' % (self.projName,
                                            pwutils.getLocalUserName(),
                                            pwutils.getLocalHostName())
         except Exception:
@@ -91,13 +91,13 @@ class ProjectWindow(ProjectBaseWindow):
                             shortCut="Ctrl+a")
         projMenu.addSubMenu('Find protocol to add', 'find protocol',
                             shortCut="Ctrl+f")
-        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Import workflow', 'load_workflow',
                             icon='fa-download.png')
         projMenu.addSubMenu('Export tree graph', 'export_tree')
-        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Notes', 'notes', icon='fa-pencil.png')
-        projMenu.addSubMenu('', '') # add separator
+        projMenu.addSubMenu('', '')  # add separator
         projMenu.addSubMenu('Exit', 'exit', icon='fa-sign-out.png')
 
         helpMenu = menu.addSubMenu('Help')
@@ -111,6 +111,10 @@ class ProjectWindow(ProjectBaseWindow):
         self.menuCfg = menu
         # TODO: up to here
 
+        if self.project.isReadOnlyFilesystem:
+            self.projName += "<READ ONLY>"
+
+        # Notify about the workflow in this project
         self.icon = self.generalCfg.icon.get()
         self.selectedProtocol = None
         self.showGraph = False
@@ -119,17 +123,14 @@ class ProjectWindow(ProjectBaseWindow):
                                    icon=self.icon, minsize=(90,50))
         self.root.attributes("-zoomed", True)
 
-
         self.switchView(VIEW_PROTOCOLS)
 
-        self.initProjectTCPServer()#Socket thread to communicate with clients
+        self.initProjectTCPServer()  # Socket thread to communicate with clients
 
-        # Notify about the workflow in this project
         from notifier import ProjectNotifier
+
         ProjectNotifier(self.project).notifyWorkflow()
 
-        if self.project.isReadOnlyFilesystem:
-            print("Warning: dont have write permissions for project folder. Opening as READ-ONLY.")
 
     def createHeaderFrame(self, parent):
         """Create the header and add the view selection frame at the right."""
