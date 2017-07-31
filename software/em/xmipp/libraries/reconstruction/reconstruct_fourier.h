@@ -87,8 +87,8 @@ struct ImageThreadParams
     int endImageIndex;
 //    bool reprocessFlag;
     MetaData* selFile;
-    imgData* dataA = NULL;
-    imgData* dataB = NULL;
+    imgData* buffer1 = NULL;
+    imgData* buffer2 = NULL;
 };
 
 /** Fourier reconstruction parameters. */

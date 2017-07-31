@@ -598,13 +598,13 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
         {
         case PRELOAD_IMAGE:
             {
-            	if (NULL == threadParams->dataA) {
-            		threadParams->dataA = new imgData[parent->batchSize];
+            	if (NULL == threadParams->buffer1) {
+            		threadParams->buffer1 = new imgData[parent->batchSize];
             	}
                 for(int bIndex = 0; bIndex < parent->batchSize; bIndex++)
                 {
                 	int imgIndex = threadParams->startImageIndex + bIndex;
-                	imgData* data = &threadParams->dataA[bIndex];
+                	imgData* data = &threadParams->buffer1[bIndex];
                 	if (imgIndex >= threadParams->endImageIndex ) {
                 		data->skip = true;
                 		continue;
@@ -2345,9 +2345,9 @@ void ProgRecFourier::loadImages(int startIndex, int endIndex, bool reprocess) {
 
 void ProgRecFourier::swapBuffers() {
 	std::cout << "swapping buffers" << std::endl;
-	imgData* tmp = loadThread.dataB;
-	loadThread.dataB = loadThread.dataA;
-	loadThread.dataA = tmp;
+	imgData* tmp = loadThread.buffer2;
+	loadThread.buffer2 = loadThread.buffer1;
+	loadThread.buffer1 = tmp;
 }
 
 void ProgRecFourier::processBuffer(imgData* buffer,
@@ -2475,7 +2475,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize), reprocessFlag);
     	// Awaking sleeping threads
 		barrier_wait( &barrier );
-    	processBuffer(loadThread.dataB, outputVolume, outputWeight//, saveFSC, FSCIndex
+    	processBuffer(loadThread.buffer2, outputVolume, outputWeight//, saveFSC, FSCIndex
     			);
     	barrier_wait( &barrier );
     }
@@ -2691,9 +2691,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
 #endif
 
 
-	delete[] loadThread.dataB;
-	delete[] loadThread.dataA;
-	loadThread.dataB = loadThread.dataA = NULL;
+	delete[] loadThread.buffer1;
+	delete[] loadThread.buffer2;
+	loadThread.buffer1 = loadThread.buffer2 = NULL;
 #if DEBUG_DUMP > 0
     std::cout << "releasing memory" << std::endl;
 #endif
