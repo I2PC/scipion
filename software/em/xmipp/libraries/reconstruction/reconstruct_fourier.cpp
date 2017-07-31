@@ -2209,12 +2209,12 @@ void ProgRecFourier::mirrorAndCrop(std::complex<float>***& outputVolume, float**
 					newPos[1] = size - y;
 					newPos[2] = size - z;
 					// copy with X shifted by (-halfSize)
-					newOutputVol[newPos[2]][newPos[1]][newPos[0]-halfSize] = conj(outputVolume[z][y][x]); // conjugate
-					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-halfSize] = outputWeight[z][y][x];
+					newOutputVol[newPos[2]][newPos[1]][newPos[0]-halfSize] += conj(outputVolume[z][y][x]); // conjugate
+					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-halfSize] += outputWeight[z][y][x];
 				} else {
 					// copy with X shifted by (-halfSize)
-					newOutputVol[z][y][x-halfSize] = outputVolume[z][y][x];
-					newOutputWeight[z][y][x-halfSize] = outputWeight[z][y][x];
+					newOutputVol[z][y][x-halfSize] += outputVolume[z][y][x];
+					newOutputWeight[z][y][x-halfSize] += outputWeight[z][y][x];
 				}
 			}
 		}
