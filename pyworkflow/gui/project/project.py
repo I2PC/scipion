@@ -111,7 +111,7 @@ class ProjectWindow(ProjectBaseWindow):
         self.menuCfg = menu
         # TODO: up to here
 
-        if self.project.isReadOnlyFilesystem:
+        if self.project.openedAsReadOnly():
             self.projName += "<READ ONLY>"
 
         # Notify about the workflow in this project
@@ -146,7 +146,7 @@ class ProjectWindow(ProjectBaseWindow):
         
     def _onClosing(self):
         try:
-            if not self.project.openAsReadOnly():
+            if not self.project.openedAsReadOnly():
                 self.saveSettings()
         except Exception as ex:
             print("%s %s" %(Message.NO_SAVE_SETTINGS, str(ex)) )

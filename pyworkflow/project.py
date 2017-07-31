@@ -70,7 +70,7 @@ class Project(object):
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
         self._isLink = os.path.islink(path)
-        self.isReadOnlyFilesystem = False
+        self._isInReadOnlyFolder = False
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -186,7 +186,7 @@ class Project(object):
 
     def saveSettings(self):
         # Read only mode
-        if not self.openAsReadOnly():
+        if not self.openedAsReadOnly():
             self.settings.write()
 
     def createMapper(self, sqliteFn):
@@ -222,9 +222,10 @@ class Project(object):
         # If folder is read only, flag it and warn about it.
         if not os.access(self.path, os.W_OK):
 
-            self.isReadOnlyFilesystem = True
+            self._isInReadOnlyFolder = True
             print("Warning: don't have write permissions for project folder. "
                   "Opening as READ-ONLY.")
+            time.sleep(10)
 
 
         if chdir:
@@ -456,7 +457,7 @@ class Project(object):
                         skipUpdatedProtocols=True):
 
         # If this is read only exit
-        if self.openAsReadOnly():
+        if self.openedAsReadOnly():
             return
 
         if skipUpdatedProtocols:
@@ -580,7 +581,7 @@ class Project(object):
         """ Check if any modification operation is allowed for
         this group of protocols. 
         """
-        if self.openAsReadOnly():
+        if self.openedAsReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
 
         self._checkProtocolsDependencies(protocols, msg)
@@ -911,7 +912,7 @@ class Project(object):
 
     def _storeProtocol(self, protocol):
         # Read only mode
-        if not self.openAsReadOnly():
+        if not self.openedAsReadOnly():
             self.mapper.store(protocol)
             self.mapper.commit()
 
@@ -925,7 +926,7 @@ class Project(object):
         """Insert a new protocol instance in the database"""
 
         # Read only mode
-        if not self.openAsReadOnly():
+        if not self.openedAsReadOnly():
             self._storeProtocol(protocol)  # Store first to get a proper id
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (
@@ -1229,8 +1230,11 @@ class Project(object):
 
         return self.settings.getReadOnly()
 
-    def openAsReadOnly(self):
-        return self.isReadOnly() or self.isReadOnlyFilesystem
+    def isInReadOnlyFolder(self):
+        return self._isInReadOnlyFolder
+
+    def openedAsReadOnly(self):
+        return self.isReadOnly() or self.isInReadOnlyFolder()
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
