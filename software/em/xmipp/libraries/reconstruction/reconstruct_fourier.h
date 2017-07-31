@@ -38,6 +38,7 @@
 #include <data/blobs.h>
 #include <data/metadata.h>
 #include <data/ctf.h>
+#include <data/array_2D.h>
 
 #include <data/args.h>
 #include <data/xmipp_fft.h>
@@ -64,11 +65,13 @@
 //@{
 class ProgRecFourier;
 
+typedef std::complex<float> cFloat;
+
 // static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
 struct imgData
 {
-	std::complex<float>** img;
+	Array2D<cFloat>* img;
 	CTFDescription ctf;
 	int imgIndex;
 	double weight;
@@ -252,7 +255,7 @@ private:
 
 
 
-    static std::complex<float>** clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+    static Array2D<cFloat>* clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourier * parent);
 
     template<typename T>

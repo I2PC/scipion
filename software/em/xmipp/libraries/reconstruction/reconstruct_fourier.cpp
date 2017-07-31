@@ -507,7 +507,7 @@ void print(MultidimArray<T>& VoutFourier, bool full = true) {
 	myfile.close();
 }
 
-std::complex<float>** ProgRecFourier::clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+Array2D<cFloat>* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
 		ProgRecFourier * parent) {
 	// Determine how many rows of the fourier
 	// transform are of interest for us. This is because
@@ -516,9 +516,7 @@ std::complex<float>** ProgRecFourier::clipAndShift(MultidimArray<std::complex<do
 	conserveRows = ceil(conserveRows / 2.f);
 	int size = 2 * conserveRows;
 
-	std::complex<float>** result;
-	// allocate space for input image
-	allocate(result, conserveRows, size);
+	Array2D<cFloat>* result = new Array2D<cFloat>(conserveRows, size);
 	// convert image (shift to center and remove high frequencies)
 	std::complex<double> paddedFourierTmp;
 	int halfY = paddedFourier.ydim / 2;
@@ -533,8 +531,8 @@ std::complex<float>** ProgRecFourier::clipAndShift(MultidimArray<std::complex<do
 					continue;
 				}
 				int myPadI = (i < halfY) ?	i + conserveRows : i - paddedFourier.ydim + conserveRows;
-				result[myPadI][j].real() =	paddedFourierTmp.real();
-				result[myPadI][j].imag() =	paddedFourierTmp.imag();
+				(*result)(j, myPadI).real() =	paddedFourierTmp.real();
+				(*result)(j, myPadI).imag() =	paddedFourierTmp.imag();
 			}
 		}
 	}
@@ -678,7 +676,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     data->img = clipAndShift(localPaddedFourier, parent);
                     data->imgIndex = imgIndex;
                     data->skip = false;
-                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ", " << data->img << ")" << std::endl;
+                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
                     //#define DEBUG22
 #ifdef DEBUG22
 
@@ -1054,11 +1052,11 @@ getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int 
 }
 
 inline std::complex<float>
-getPixelClamped(std::complex<float>** img, float x, float y, int imgSizeX, int imgSizeY)
+getPixelClamped(Array2D<cFloat>& img, float x, float y, int imgSizeX, int imgSizeY)
 {
 	int imgX = clamp((int)(x + 0.5f), 0, imgSizeX - 1);
 	int imgY = clamp((int)(y + 0.5f), 0, imgSizeY - 1);
-	return img[imgY][imgX];
+	return img(imgX, imgY);
 }
 
 
@@ -1951,7 +1949,7 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 
 inline void processVoxel(int x, int y, int z, int halfVolSize, float transform[3][3], float maxDistanceSqr,
-		std::complex<float>*** outputVolume, float*** outputWeights, std::complex<float>** inputImage, int imgSizeX, int imgSizeY) {
+		std::complex<float>*** outputVolume, float*** outputWeights, Array2D<cFloat>& inputImage, int imgSizeX, int imgSizeY) {
 	float imgPos[3];
 	int imgX, imgY;
 
@@ -1980,7 +1978,7 @@ inline void convert(Matrix2D<double>& in, float out[3][3]) {
 }
 
 void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, int outputVolumeSize,
-	std::complex<float>** inputImage, int imgSizeX, int imgSizeY,
+	Array2D<cFloat>& inputImage, int imgSizeX, int imgSizeY,
 	float transform[3][3],
 	float transformInv[3][3],
 	Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
@@ -2367,12 +2365,12 @@ void ProgRecFourier::processBuffer(imgData* buffer,
 	int repaint = (int)ceil((double)SF.size()/60);
 	for ( int i = 0 ; i < batchSize; i++ ) {
 		imgData* data = &buffer[i];
-		std::complex<float>** myPaddedFourier = data->img;
+		Array2D<cFloat>* myPaddedFourier = data->img;
 		if (data->skip) {
-			std::cout << "skipping img: " << data->imgIndex << " (index " << i << ", " << myPaddedFourier << ")" << std::endl;
+			std::cout << "skipping img: " << data->imgIndex << " (index " << i << std::endl; //", " << myPaddedFourier << ")" << std::endl;
 			continue;
 		}
-		std::cout << "processing img: " << data->imgIndex << " (index " << i << ", " << myPaddedFourier << ")" << std::endl;
+		std::cout << "processing img: " << data->imgIndex << " (index " << i << std::endl;//", " << myPaddedFourier << ")" << std::endl;
 		if (verbose && data->imgIndex%repaint==0) {
 			progress_bar(data->imgIndex);
 		}
@@ -2401,7 +2399,7 @@ void ProgRecFourier::processBuffer(imgData* buffer,
 
 //			std::cout << "about to calculate" << std::endl;
 			thirdAttempt(outputVolume, outputWeight, size,
-					myPaddedFourier, conserveRows, size, transf, transfInv,
+					*myPaddedFourier, conserveRows, size, transf, transfInv,
 					blobTableSqrt, iDeltaSqrt, blob.radius);
 //			std::cout << "calculation done" << std::endl;
 		}
@@ -2426,8 +2424,9 @@ void ProgRecFourier::processBuffer(imgData* buffer,
 //						outputVolume[z][y][x] = outputWeight[z][y][x] = 0;
 //					}
 //		}
-//		std::cout << "about to release" << std::endl;
-		release(data->img, size);
+		std::cout << "about to release" << std::endl;
+		delete data->img;
+		data->img = 0;
 	}
 }
 
