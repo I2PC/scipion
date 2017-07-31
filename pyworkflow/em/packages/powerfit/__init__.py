@@ -31,7 +31,7 @@ wrapping Powerfit programs https://github.com/haddocking/powerfit
 _logo = "powerfit_logo.gif"
 
 from bibtex import _bibtex # Load bibtex dict with references
-from powerfit import *
+##from powerfit import *
 from protocol_powerfit import PowerfitProtRigidFit
 from viewer_powerfit import PowerfitProtRigidFitViewer
 
