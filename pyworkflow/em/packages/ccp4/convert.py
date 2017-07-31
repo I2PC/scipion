@@ -60,7 +60,7 @@ def runCCP4Program(program, args="", extraEnvDict=None):
         env.update(extraEnvDict)
     pwutils.runJob(None, program, args, env=env)
 
-def adapBinFileToCCP4(inFileName,outFileName):
+def adaptBinFileToCCP4(inFileName, outFileName):
     if inFileName.endswith('.mrc'):
         pwutils.createLink(inFileName, outFileName)
     else:

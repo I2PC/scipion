@@ -31,7 +31,7 @@ from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, Boole
 from pyworkflow.em import Volume, PdbFile
 from pyworkflow.em.packages.ccp4.refmac_template import template
 import os
-from convert import (adapBinFileToCCP4,runCCP4Program)
+from convert import (adaptBinFileToCCP4, runCCP4Program)
 import stat
 
 
@@ -104,7 +104,7 @@ class CCP4ProtRunRefmac(EMProtocol):
 #                mean2, dev2, min2, max2 = img.computeStats()
 #                img.write(outFileName)
 #            else:
-#                adapBinFileToCCP4(inFileName, outFileName)
+#                adaptBinFileToCCP4(inFileName, outFileName)
 
     # --------------------------- STEPS functions --------------------------------------------
     def createScriptFile(self):
