@@ -57,7 +57,6 @@ void ProgRecFourier::defineParams()
 //    addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
     addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
-    addParamsLine("  [--thr <threads=1> <rows=1>]   : Number of concurrent threads and rows processed at time by a thread"); // FIXME REMOVE, set fixed =1
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
     addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
     addParamsLine("  [--useCTF]                     : Use CTF information if present");
@@ -87,8 +86,6 @@ void ProgRecFourier::readParams()
     blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
     maxResolution = getDoubleParam("--max_resolution");
-    numThreads = getIntParam("--thr");
-    thrWidth = getIntParam("--thr", 1);
     NiterWeight = getIntParam("--iter");
     useCTF = checkParam("--useCTF");
     phaseFlipped = checkParam("--phaseFlipped");
@@ -147,20 +144,21 @@ void ProgRecFourier::run()
             init_progress_bar(SF.size());
     }
     // Create threads stuff
-    barrier_init( &barrier, numThreads+1 );
+    std::cout << "numThreads" << std::endl;
+    barrier_init( &barrier, 2 );
     pthread_mutex_init( &workLoadMutex, NULL );
-    th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
-    th_args = new ImageThreadParams[numThreads];//(ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
 
-    // Create threads
-    for ( int nt = 0 ; nt < numThreads ; nt ++ )
-    {
-        // Passing parameters to each thread
-        th_args[nt].parent = this;
-        th_args[nt].myThreadID = nt;
-        th_args[nt].selFile = new MetaData(SF);
-        pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
-    }
+    loadThread.parent = this;
+    loadThread.selFile = &SF;
+    pthread_create( &loadThread.id , NULL, processImageThread, (void *)(&loadThread) );
+//    // Create threads
+//    for ( int nt = 0 ; nt < 1 ; nt ++ )
+//    {
+//        // Passing parameters to each thread
+//        th_args[nt].parent = this;
+//        th_args[nt].selFile = &SF;
+//
+//    }
 
     //Computing interpolated volume
     processImages(0, SF.size() - 1,
@@ -179,14 +177,12 @@ void ProgRecFourier::run()
 
     // Waiting for threads to finish
     barrier_wait( &barrier );
-    for ( int nt = 0 ; nt < numThreads ; nt ++ ) {
+    for ( int nt = 0 ; nt < 1 ; nt ++ ) {
 
-    	delete th_args[nt].selFile;
-        pthread_join(*(th_ids+nt), NULL);
+        pthread_join(*(&loadThread.id), NULL);
     }
     barrier_destroy( &barrier );
-    free(th_ids);
-    delete[] th_args;
+//    delete th_args;
 }
 
 
@@ -214,7 +210,7 @@ void ProgRecFourier::produceSideinfo()
     paddedImgSize = Xdim*padding_factor_vol;
 
     //use threads for volume inverse fourier transform, plan is created in finishComputation()
-    transformerVol.setThreadsNumber(numThreads);
+    transformerVol.setThreadsNumber(1);
 
     // Build a table of blob values
     blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
@@ -546,14 +542,14 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     ProgRecFourier * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
 
-    int minSeparation;
-
-    if ( (int)ceil(parent->blob.radius) > parent->thrWidth )
-        minSeparation = (int)ceil(parent->blob.radius);
-    else
-        minSeparation = parent->thrWidth;
-
-    minSeparation+=1;
+//    int minSeparation;
+//
+//    if ( (int)ceil(parent->blob.radius) > parent->thrWidth )
+//        minSeparation = (int)ceil(parent->blob.radius);
+//    else
+//        minSeparation = parent->thrWidth;
+//
+//    minSeparation+=1;
 
 
     MultidimArray< std::complex<double> > localPaddedFourier;
@@ -641,10 +637,10 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     proj().setXmippOrigin();
                     size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
 
-                    if (threadParams->reprocessFlag) {
-                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
-                    } else
-                    {
+//                    if (threadParams->reprocessFlag) {
+//                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
+//                    } else
+//                    {
                         localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
                         localPaddedImg.setXmippOrigin();
                         const MultidimArray<double> &mProj=proj();
@@ -667,7 +663,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                         std::cout << intermediate << std::endl;
                         CenterFFT(intermediate,true);
                         std::cout << intermediate << std::endl;*/
-                    }
+//                    }
 
                     // Compute the coordinate axes associated to this image
                     Euler_angles2matrix(rot, tilt, psi, localA);
@@ -2341,18 +2337,17 @@ void processWeight(std::complex<float>*** outputVolume, float*** outputWeight, i
 //}
 
 void ProgRecFourier::loadImages(int startIndex, int endIndex, bool reprocess) {
-	th_args[0].startImageIndex = startIndex;
-	th_args[0].endImageIndex = endIndex;
-	th_args[0].reprocessFlag = reprocess;
-	std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
-	std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+	loadThread.startImageIndex = startIndex;
+	loadThread.endImageIndex = endIndex;
+	std::cout << "start index: " << loadThread.startImageIndex << std::endl;
+	std::cout << "end index: " << loadThread.endImageIndex << std::endl;
 }
 
 void ProgRecFourier::swapBuffers() {
 	std::cout << "swapping buffers" << std::endl;
-	imgData* tmp = th_args[0].dataB;
-	th_args[0].dataB = th_args[0].dataA;
-	th_args[0].dataA = tmp;
+	imgData* tmp = loadThread.dataB;
+	loadThread.dataB = loadThread.dataA;
+	loadThread.dataA = tmp;
 }
 
 void ProgRecFourier::processBuffer(imgData* buffer,
@@ -2437,7 +2432,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
 {
     MultidimArray< std::complex<double> > *paddedFourier;
 
-    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << " with " << numThreads << " threads" << std::endl;
+    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << std::endl;
 
 
 
@@ -2480,7 +2475,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize), reprocessFlag);
     	// Awaking sleeping threads
 		barrier_wait( &barrier );
-    	processBuffer(th_args[0].dataB, outputVolume, outputWeight//, saveFSC, FSCIndex
+    	processBuffer(loadThread.dataB, outputVolume, outputWeight//, saveFSC, FSCIndex
     			);
     	barrier_wait( &barrier );
     }
@@ -2696,9 +2691,9 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
 #endif
 
 
-	delete[] th_args[0].dataB;
-	delete[] th_args[0].dataA;
-	th_args[0].dataB = th_args[0].dataA = NULL;
+	delete[] loadThread.dataB;
+	delete[] loadThread.dataA;
+	loadThread.dataB = loadThread.dataA = NULL;
 #if DEBUG_DUMP > 0
     std::cout << "releasing memory" << std::endl;
 #endif

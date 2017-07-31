@@ -101,7 +101,7 @@ void ProgMPIRecFourier::preRun()
 
         //use threads for volume inverse fourier transform, plan is created in setReal()
         //only rank=1 makes inverse Fourier trnasform
-        transformerVol.setThreadsNumber(numThreads);
+        transformerVol.setThreadsNumber(2);
 
         //#define DEBUG
 #ifdef DEBUG
@@ -315,20 +315,17 @@ void ProgMPIRecFourier::run()
 
             //First
             std::cout << "before barrier with " << node->rank << std::endl;
-            barrier_init( &barrier, numThreads+1);
+            barrier_init( &barrier, 2);
             std::cout << "after barrier with " << node->rank << std::endl;
             pthread_mutex_init( &workLoadMutex, NULL );
-            th_ids = (pthread_t *)malloc(numThreads * sizeof(pthread_t));
-            th_args = new ImageThreadParams[numThreads];//(ImageThreadParams *)malloc(numThreads * sizeof(ImageThreadParams));
 
-            std::cout << "number of threads: " << numThreads << std::endl;
-            for ( int nt = 0 ; nt < numThreads ; nt++ )
-            {
-                th_args[nt].parent=this;
-                th_args[nt].myThreadID = nt;
-                th_args[nt].selFile = new MetaData(SF);
-                pthread_create((th_ids+nt),NULL,processImageThread,(void*)(th_args+nt));
-            }
+//            std::cout << "number of threads: " << 1 << std::endl;
+//            for ( int nt = 0 ; nt < 1 ; nt++ )
+//            {
+                loadThread.parent=this;
+                loadThread.selFile = &SF;
+                pthread_create(&loadThread.id,NULL,processImageThread,(void*)(&loadThread));
+//            }
 
             while (1)
             {
@@ -720,10 +717,10 @@ void ProgMPIRecFourier::run()
             threadOpCode = EXIT_THREAD;
             barrier_wait( &barrier );
 
-            for ( int nt=0; nt<numThreads; nt++)
+            for ( int nt=0; nt<1; nt++)
             {
             	std::cout << "joining " << node->rank << " (th " << nt << std::endl;
-                pthread_join(*(th_ids+nt),NULL);
+                pthread_join(*(&loadThread.id),NULL);
             }
             barrier_destroy( &barrier );
         }
@@ -731,9 +728,8 @@ void ProgMPIRecFourier::run()
         iter++;
     }
     while(iter<NiterWeight);
-    free(th_ids);
     std::cout << "free " << node->rank << std::endl;
-    delete[] th_args;
+//    delete[] th_args;
     std::cout << "delete " << node->rank << std::endl;
 }
 

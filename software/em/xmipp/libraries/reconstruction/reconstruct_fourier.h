@@ -81,12 +81,12 @@ struct imgData
 
 struct ImageThreadParams
 {
-    int myThreadID;
+    pthread_t id;
     ProgRecFourier * parent;
     int startImageIndex;
     int endImageIndex;
-    bool reprocessFlag;
-    MetaData * selFile;
+//    bool reprocessFlag;
+    MetaData* selFile;
     imgData* dataA = NULL;
     imgData* dataB = NULL;
 };
@@ -96,7 +96,7 @@ class ProgRecFourier : public ProgReconsBase
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc;//, fn_fsc;
+    FileName fn_out, fn_sym, fn_sel;//, fn_doc;//, fn_fsc;
 
     /** SelFile containing all projections */
     MetaData SF;
@@ -133,14 +133,7 @@ public:
     /// Number of iterations for the weight
     int NiterWeight;
 
-    /// Number of threads to use in parallel to process a single image
-    int numThreads;
 
-    /// IDs for the threads
-    pthread_t * th_ids;
-
-    /// Contains parameters passed to each thread
-    ImageThreadParams * th_args;
 
     /// Tells the threads what to do next
     int threadOpCode;
@@ -156,9 +149,6 @@ public:
 
     /// To create a barrier synchronization for threads
     barrier_t barrier;
-
-    /// How many image rows are processed at a time by a single thread.
-    int thrWidth;
 
 public: // Internal members
     // Size of the original images
@@ -235,6 +225,9 @@ public:
 
 protected:
     void mirrorAndCrop(std::complex<float>***& outputVolume, float***& outputWeight, int size);
+
+
+    ImageThreadParams loadThread;
 
 private:
 
