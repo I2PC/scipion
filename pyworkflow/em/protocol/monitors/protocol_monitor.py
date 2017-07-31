@@ -29,6 +29,8 @@ import time
 
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol import EMProtocol
+from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol.constants import STATUS_RUNNING
 
 
 
@@ -97,6 +99,31 @@ class ProtMonitor(EMProtocol):
 
     def _methods(self):
         return []
+
+    def getInputProtocols(self):
+        protocols = []
+        for protPointer in self.inputProtocols:
+            prot = protPointer.get()
+            prot.setProject(self.getProject())
+            protocols.append(prot)
+        return protocols
+
+    @staticmethod
+    def getUpdatedProtocol(prot):
+        prot2 = getProtocolFromDb(prot.getProject().path,
+                                  prot.getDbPath(),
+                                  prot.getObjId())
+        # Close DB connections
+        prot2.getProject().closeMapper()
+        prot2.closeMappers()
+        return prot2
+
+    def allFinished(self):
+        finished = []
+        for prot in self.getInputProtocols():
+            updatedProt = self.getUpdatedProtocol(prot)
+            finished.append(updatedProt.getStatus() != STATUS_RUNNING)
+        return all(finished)
 
     def sendEMail(self, emailSubject, emailMessage):
         # Import smtplib for the actual sending function
