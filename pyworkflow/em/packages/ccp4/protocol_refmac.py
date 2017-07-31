@@ -85,21 +85,6 @@ class CCP4ProtRunRefmac(EMProtocol):
     def _insertAllSteps(self):
         self._insertFunctionStep('createScriptFile')
         self._insertFunctionStep('executeRefmac')
-        #TODO: convert input file to mrc if needed
-        #TODO:    check shifts in the conversion
-        #TODO:    add CRYS record if needed
-        #TODO     see mask created by refmac
-
-        #TODO: molprobity, programatically
-        #TODO: chimera, contacts and classes
-        #TODO: PDB utilities
-        #TODO:       utility add symmetry matrices in PDB
-        #TODO:       union, extract
-        #TODO: tutorial buccaneer
-
-        #TODO: structure prediction terciaria, secundaria
-        #TODO: FlexEM TEMPy, DockEM
-
         self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
         self._insertFunctionStep('writeFinalResultsTable') #Print output results
 
