@@ -33,7 +33,7 @@ from pyworkflow.em import *
 from pyworkflow.utils import * 
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-import powerfit
+#import powerfit
 from pyworkflow.em.packages.ccp4.convert import Ccp4Header
 
 class PowerfitProtRigidFit(ProtFitting3D):
@@ -80,7 +80,7 @@ class PowerfitProtRigidFit(ProtFitting3D):
         img.convert(vol,fnVol)
 
         ccp4header = Ccp4Header(fnVol, readHeader= True)
-        ccp4header.setOffset(vol.getOrigin())
+        ccp4header.setOffset(vol.getOrigin(returnInitIfNone=True))
         ccp4header.setSampling(vol.getSamplingRate())
         ccp4header.writeHeader()
 
