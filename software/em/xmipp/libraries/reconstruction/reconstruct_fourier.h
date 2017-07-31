@@ -230,6 +230,9 @@ public:
     template<typename T>
     static T*** allocate(T***& where, int xSize, int ySize, int zSize);
 
+protected:
+    void mirrorAndCrop(std::complex<float>***& outputVolume, float***& outputWeight, int size);
+
 private:
 
     int availableMemory;
@@ -246,6 +249,8 @@ private:
 //    		bool saveFSC,
 //    		int FSCIndex
 			);
+
+
 
     static std::complex<float>** clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourier * parent);

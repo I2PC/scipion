@@ -170,6 +170,8 @@ void ProgRecFourier::run()
     // Correcting the weights
 //    correctWeight();
 
+    mirrorAndCrop(outputVolume, outputWeight, volumeSize);
+
     //Saving the volume
     finishComputations(fn_out);
 
@@ -2195,6 +2197,42 @@ void ProgRecFourier::crop(T***& inOut, int size) {
 	inOut = output;
 }
 
+void ProgRecFourier::mirrorAndCrop(std::complex<float>***& outputVolume, float***& outputWeight, int size) {
+	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
+	std::complex<float>*** newOutputVol;
+	float*** newOutputWeight;
+	// create new storage, notice that just 'right hand side - X axis' of the input will be preserved, left will be converted to its complex conjugate
+	allocate(newOutputVol, halfSize+1, size+1, size+1);
+	allocate(newOutputWeight, halfSize+1, size+1, size+1);
+	// traverse old storage
+	for (int z = 0; z <= size; z++) {
+		for (int y = 0; y <= size; y++) {
+			for (int x = 0; x <= size; x++) {
+				if (x < halfSize) {
+					int newPos[3];
+					// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel bigger
+					newPos[0] = size - x;
+					newPos[1] = size - y;
+					newPos[2] = size - z;
+					// copy with X shifted by (-halfSize)
+					newOutputVol[newPos[2]][newPos[1]][newPos[0]-halfSize] = conj(outputVolume[z][y][x]); // conjugate
+					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-halfSize] = outputWeight[z][y][x];
+				} else {
+					// copy with X shifted by (-halfSize)
+					newOutputVol[z][y][x-halfSize] = outputVolume[z][y][x];
+					newOutputWeight[z][y][x-halfSize] = outputWeight[z][y][x];
+				}
+			}
+		}
+	}
+	// free original data
+	release(outputVolume, size+1, size+1);
+	release(outputWeight, size+1, size+1);
+	// set new data
+	outputVolume = newOutputVol;
+	outputWeight = newOutputWeight;
+}
+
 void forceHermitianSymmetry(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
 	int x = 0;
 	for (int z = 0; z <= size; z++) {
@@ -2724,12 +2762,12 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 {
 	std::cout << "finish comp" << std::endl;
 	// get rid of the replicated data
-	mirror(outputVolume, outputWeight, volumeSize);
-	std::cout << "mirror done" << std::endl;
-	crop(outputVolume, volumeSize);
-	std::cout << "crop1 done" << std::endl;
-	crop(outputWeight, volumeSize);
-	std::cout << "crop2 done" << std::endl;
+//	mirror(outputVolume, outputWeight, volumeSize);
+//	std::cout << "mirror done" << std::endl;
+//	crop(outputVolume, volumeSize);
+//	std::cout << "crop1 done" << std::endl;
+//	crop(outputWeight, volumeSize);
+//	std::cout << "crop2 done" << std::endl;
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to apply blob" << std::endl;
 	#endif

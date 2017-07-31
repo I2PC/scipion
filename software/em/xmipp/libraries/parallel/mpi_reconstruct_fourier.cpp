@@ -445,6 +445,8 @@ void ProgMPIRecFourier::run()
                 	if (status.MPI_TAG == TAG_TRANSFER)
                 {
 
+					// reduce the data
+					mirrorAndCrop(outputVolume, outputWeight, volumeSize);
 
                     //If I  do not read this tag
                     //master will no further process
@@ -455,27 +457,21 @@ void ProgMPIRecFourier::run()
 #endif
                     std::cout << "transfering " << node->rank << std::endl;
                     std::cout << "sizeout" << sizeout << std::endl;
-//                    MPI_Reduce(outputWeight,outputWeight1,
-//                                  sizeout, MPI_FLOAT,
-//                                  MPI_SUM, 1, new_comm); // FIXME use just MPI_Reduce. Right now it causes crash
-//                    MPI_Reduce(&(outputVolume[0][0][0]),&(outputVolume1[0][0][0]),
-//                                  2*129*129*129, MPI_FLOAT,
-//                                  MPI_SUM, 0, new_comm);
                     for(int a = 0; a <sizeout; a++) {
                     	for(int b = 0; b <sizeout; b++) {
                     		if (node->rank == 1) {
-						MPI_Reduce(MPI_IN_PLACE,&(outputVolume[a][b][0]),
-														2*sizeout, MPI_FLOAT,
-														MPI_SUM, 0, new_comm);
-						MPI_Reduce(MPI_IN_PLACE,&(outputWeight[a][b][0]),
-														sizeout, MPI_FLOAT,
-														MPI_SUM, 0, new_comm);
+								MPI_Reduce(MPI_IN_PLACE,&(outputVolume[a][b][0]),
+										(volumeSize/2 + 1)*2, MPI_FLOAT,
+																MPI_SUM, 0, new_comm);
+								MPI_Reduce(MPI_IN_PLACE,&(outputWeight[a][b][0]),
+																(volumeSize/2 + 1), MPI_FLOAT,
+																MPI_SUM, 0, new_comm);
                     		} else {
         						MPI_Reduce(&(outputVolume[a][b][0]),&(outputVolume[a][b][0]),
-        														2*sizeout, MPI_FLOAT,
+        								(volumeSize/2 + 1)*2, MPI_FLOAT,
         														MPI_SUM, 0, new_comm);
         						MPI_Reduce(&(outputWeight[a][b][0]),&(outputWeight[a][b][0]),
-        														sizeout, MPI_FLOAT,
+        								(volumeSize/2 +1), MPI_FLOAT,
         														MPI_SUM, 0, new_comm);
                     		}
                     	}
