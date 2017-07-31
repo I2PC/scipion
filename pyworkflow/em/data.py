@@ -496,11 +496,14 @@ class Image(EMObject):
     def hasOrigin(self):
         return self._origin is not None
 
-    def getOrigin(self):
+    def getOrigin(self, returnInitIfNone=False):
         if self.hasOrigin():
             return self._origin
         else:
-            return Transform() # The identity matrix
+            if returnInitIfNone:
+                return Transform() # The identity matrix
+            else:
+                return None
 
     def setOrigin(self, newOrigin):
         self._origin = newOrigin
