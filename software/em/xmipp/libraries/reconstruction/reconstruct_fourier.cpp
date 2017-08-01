@@ -72,7 +72,7 @@ void ProgRecFourier::defineParams()
 // Read arguments ==========================================================
 void ProgRecFourier::readParams()
 {
-    fn_sel = getParam("-i");
+    fn_in = getParam("-i");
     fn_out = getParam("-o");
     fn_sym = getParam("--sym");
 //    if(checkParam("--prepare_fsc"))
@@ -100,7 +100,7 @@ void ProgRecFourier::show()
         std::cout << " =====================================================================" << std::endl;
         std::cout << " Direct 3D reconstruction method using Kaiser windows as interpolators" << std::endl;
         std::cout << " =====================================================================" << std::endl;
-        std::cout << " Input selfile             : "  << fn_sel << std::endl;
+        std::cout << " Input selfile             : "  << fn_in << std::endl;
         std::cout << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
         std::cout << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
         std::cout << " Output volume             : "  << fn_out << std::endl;
@@ -142,7 +142,7 @@ void ProgRecFourier::run()
     //Computing interpolated volume
     processImages(0, SF.size() - 1, false);
     // remove complex conjugate of the intermediate result
-    mirrorAndCrop(outputVolume, outputWeight, volumeSize);
+    mirrorAndCropTempSpaces();
     //Saving the volume
     finishComputations(fn_out);
 
@@ -175,7 +175,7 @@ void ProgRecFourier::produceSideinfo()
     maxResolutionSqr=maxResolution*maxResolution;
 
     // Read the input images
-    SF.read(fn_sel);
+    SF.read(fn_in);
     SF.removeDisabled();
 
     // Ask for memory for the output volume and its Fourier transform
@@ -616,13 +616,13 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     // Copy the projection to the center of the padded image
                     // and compute its Fourier transform
                     proj().setXmippOrigin();
-                    size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
+//                    size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
 
 //                    if (threadParams->reprocessFlag) {
 //                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
 //                    } else
 //                    {
-                        localPaddedImg.initZeros(localPaddedImgSize,localPaddedImgSize);
+                        localPaddedImg.initZeros(parent->paddedImgSize, parent->paddedImgSize);
                         localPaddedImg.setXmippOrigin();
                         const MultidimArray<double> &mProj=proj();
                         FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
@@ -2172,7 +2172,8 @@ void ProgRecFourier::crop(T***& inOut, int size) {
 	inOut = output;
 }
 
-void ProgRecFourier::mirrorAndCrop(std::complex<float>***& outputVolume, float***& outputWeight, int size) {
+void ProgRecFourier::mirrorAndCropTempSpaces() {
+	int size = maxVolumeIndexYZ;
 	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
 	std::complex<float>*** newOutputVol;
 	float*** newOutputWeight;
@@ -2190,22 +2191,22 @@ void ProgRecFourier::mirrorAndCrop(std::complex<float>***& outputVolume, float**
 					newPos[1] = size - y;
 					newPos[2] = size - z;
 					// copy with X shifted by (-halfSize)
-					newOutputVol[newPos[2]][newPos[1]][newPos[0]-halfSize] += conj(outputVolume[z][y][x]); // conjugate
-					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-halfSize] += outputWeight[z][y][x];
+					newOutputVol[newPos[2]][newPos[1]][newPos[0]-halfSize] += conj(tempVolume[z][y][x]); // conjugate
+					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-halfSize] += tempWeights[z][y][x];
 				} else {
 					// copy with X shifted by (-halfSize)
-					newOutputVol[z][y][x-halfSize] += outputVolume[z][y][x];
-					newOutputWeight[z][y][x-halfSize] += outputWeight[z][y][x];
+					newOutputVol[z][y][x-halfSize] += tempVolume[z][y][x];
+					newOutputWeight[z][y][x-halfSize] += tempWeights[z][y][x];
 				}
 			}
 		}
 	}
 	// free original data
-	release(outputVolume, size+1, size+1);
-	release(outputWeight, size+1, size+1);
+	release(tempVolume, size+1, size+1);
+	release(tempWeights, size+1, size+1);
 	// set new data
-	outputVolume = newOutputVol;
-	outputWeight = newOutputWeight;
+	tempVolume = newOutputVol;
+	tempWeights = newOutputWeight;
 }
 
 void forceHermitianSymmetry(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
@@ -2429,15 +2430,15 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     std::cout << "paddedImgSize " << paddedImgSize << " maxResolution " << maxResolution << std::endl;
 	size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
 	conserveRows = (size_t) ceil((double) conserveRows / 2.0);
-	volumeSize = 2 * conserveRows;
+	maxVolumeIndexYZ = 2 * conserveRows;
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)batchSize);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
-    if (NULL == outputVolume) {
-    	allocate(outputVolume, volumeSize+1, volumeSize+1, volumeSize+1);
+    if (NULL == tempVolume) {
+    	allocate(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
     }
-    if (NULL == outputWeight) {
-    	allocate(outputWeight, volumeSize+1, volumeSize+1, volumeSize+1);
+    if (NULL == tempWeights) {
+    	allocate(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
     }
 
     int startLoadIndex = firstImageIndex;
@@ -2456,7 +2457,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize), reprocessFlag);
     	// Awaking sleeping threads
 		barrier_wait( &barrier );
-    	processBuffer(loadThread.buffer2, outputVolume, outputWeight//, saveFSC, FSCIndex
+    	processBuffer(loadThread.buffer2, tempVolume, tempWeights//, saveFSC, FSCIndex
     			);
     	barrier_wait( &barrier );
     }
@@ -2746,28 +2747,28 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to apply blob" << std::endl;
 	#endif
-	outputVolume = applyBlob(outputVolume, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	tempVolume = applyBlob(tempVolume, maxVolumeIndexYZ, blob.radius, blobTableSqrt, iDeltaSqrt);
 	std::cout << "applyBlob1 done" << std::endl;
-	outputWeight = applyBlob(outputWeight, volumeSize, blob.radius, blobTableSqrt, iDeltaSqrt);
+	tempWeights = applyBlob(tempWeights, maxVolumeIndexYZ, blob.radius, blobTableSqrt, iDeltaSqrt);
 	std::cout << "applyBlob2 done" << std::endl;
 
 	//    if( saveFSC ) {
 	//		saveFinalFSC(outputVolume, outputWeight, size);
 	//	}
 
-	    forceHermitianSymmetry(outputVolume, outputWeight, volumeSize);
-	processWeight(outputVolume, outputWeight, volumeSize, padding_factor_proj, padding_factor_vol, imgSize);
+	forceHermitianSymmetry(tempVolume, tempWeights, maxVolumeIndexYZ);
+	processWeight(tempVolume, tempWeights, maxVolumeIndexYZ, padding_factor_proj, padding_factor_vol, imgSize);
 	std::cout << "processWeight done" << std::endl;
-	release(outputWeight, volumeSize+1, volumeSize+1);
+	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to convert to expected format" << std::endl;
 	#endif
 	MultidimArray< std::complex<double> > VoutFourier;
 	allocateVoutFourier(VoutFourier);
 	std::cout << "allocating VoutFOurier done" << std::endl;
-	convertToExpectedSpace(outputVolume, volumeSize, VoutFourier);
+	convertToExpectedSpace(tempVolume, maxVolumeIndexYZ, VoutFourier);
 	std::cout << "convert done" << std::endl;
-	release(outputVolume, volumeSize+1, volumeSize+1);
+	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 
 //	allocateFourierWeights();
 //	convertToExpectedSpace(outputWeight, volumeSize, FourierWeights);
@@ -2790,8 +2791,11 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 
     // Enforce symmetry in the Fourier values as well as the weights
     // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
+    // Output volume
+    Image<double> Vout;
     Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
-    transformerVol.setThreadsNumber(1);
+    FourierTransformer transformerVol;
+    transformerVol.setThreadsNumber(2); // use just main and 'loading' thread
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();
@@ -2866,7 +2870,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 
 void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
 {
-    this->fn_sel = fn_in;
+    this->fn_in = fn_in;
     this->fn_out = fn_out;
 }
 

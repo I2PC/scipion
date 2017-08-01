@@ -100,9 +100,7 @@ class ProgRecFourier : public ProgReconsBase
 {
 private:
     /** Filenames */
-    FileName fn_sym;//, ;
-
-
+    FileName fn_sym;
 
     /** Flag whether to use the weights in the image metadata */
     bool do_weights;
@@ -151,9 +149,7 @@ private:
     /// To create a barrier synchronization for threads
     barrier_t barrier;
 
-public: // Internal members
-    // Size of the original images
-    int imgSize;
+
 
     // Table with blob values, lineal sampling
     Matrix1D<double>  Fourier_blob_table;
@@ -165,23 +161,16 @@ public: // Internal members
     //double iDelta,
     double iDeltaFourier, iDeltaSqrt;
 
-
-
     // Definition of the blob
     struct blobtype blob;
 
     // vector with R symmetry matrices
     std::vector <Matrix2D<double> > R_repository;
-
-    // Fourier transformer for the volume
-    FourierTransformer transformerVol;
-
+    // Size of the original images, image must be a square
+    int imgSize;
+    // size of the image including padding. Image must be a square
     int paddedImgSize;
-    int volumeSize;
-    // Output volume
-    Image<double> Vout;
-    std::complex<float>*** outputVolume = NULL;
-	float*** outputWeight = NULL;
+
 
 public:
     /// Read arguments from command line
@@ -218,14 +207,29 @@ public:
     static T*** allocate(T***& where, int xSize, int ySize, int zSize);
 
 protected:
-    void mirrorAndCrop(std::complex<float>***& outputVolume, float***& outputWeight, int size);
+    void mirrorAndCropTempSpaces();
     void createLoadingThread();
     void cleanLoadingThread();
 
+    /** Thread used for loading input data */
     LoadThreadParams loadThread;
     /** SelFile containing all projections */
     MetaData SF;
-    FileName fn_out, fn_sel;
+    /** Output file name */
+    FileName fn_out;
+    /** Input file name */
+    FileName fn_in;
+    /** maximal index in the temporal volume, Y and Z axis */
+	int maxVolumeIndexYZ;
+	/**
+	 * 3D volume holding the cropped (without high frequencies) Fourier space.
+	 * Lowest frequencies are in the center, i.e. Fourier space creates a sphere within a cube
+	 */
+	std::complex<float>*** tempVolume = NULL;
+	/**
+	 * 3D volume holding the weights of the Fourier coefficients stored in tempVolume.
+	 */
+	float*** tempWeights = NULL;
 
 private:
 

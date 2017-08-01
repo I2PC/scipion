@@ -79,7 +79,7 @@ void ProgMPIRecFourier::preRun()
     if (node->isMaster())
     {
         show();
-        SF.read(fn_sel);
+        SF.read(fn_in);
 
         //Send verbose level to node 1
         MPI_Send(&verbose, 1, MPI_INT, 1, TAG_SETVERBOSE, MPI_COMM_WORLD);
@@ -99,9 +99,9 @@ void ProgMPIRecFourier::preRun()
         // Get verbose status
         MPI_Recv(&verbose, 1, MPI_INT, 0, TAG_SETVERBOSE, MPI_COMM_WORLD, &status);
 
-        //use threads for volume inverse fourier transform, plan is created in setReal()
-        //only rank=1 makes inverse Fourier trnasform
-        transformerVol.setThreadsNumber(2);
+//        //use threads for volume inverse fourier transform, plan is created in setReal()
+//        //only rank=1 makes inverse Fourier trnasform
+//        transformerVol.setThreadsNumber(2);
 
         //#define DEBUG
 #ifdef DEBUG
@@ -444,7 +444,7 @@ void ProgMPIRecFourier::run()
                 {
 
 					// reduce the data
-					mirrorAndCrop(outputVolume, outputWeight, volumeSize);
+					mirrorAndCropTempSpaces();
 
                     //If I  do not read this tag
                     //master will no further process
@@ -458,18 +458,18 @@ void ProgMPIRecFourier::run()
                     for(int a = 0; a <sizeout; a++) {
                     	for(int b = 0; b <sizeout; b++) {
                     		if (node->rank == 1) {
-								MPI_Reduce(MPI_IN_PLACE,&(outputVolume[a][b][0]),
-										(volumeSize/2 + 1)*2, MPI_FLOAT,
+								MPI_Reduce(MPI_IN_PLACE,&(tempVolume[a][b][0]),
+										(maxVolumeIndexYZ/2 + 1)*2, MPI_FLOAT,
 																MPI_SUM, 0, new_comm);
-								MPI_Reduce(MPI_IN_PLACE,&(outputWeight[a][b][0]),
-																(volumeSize/2 + 1), MPI_FLOAT,
+								MPI_Reduce(MPI_IN_PLACE,&(tempWeights[a][b][0]),
+																(maxVolumeIndexYZ/2 + 1), MPI_FLOAT,
 																MPI_SUM, 0, new_comm);
                     		} else {
-        						MPI_Reduce(&(outputVolume[a][b][0]),&(outputVolume[a][b][0]),
-        								(volumeSize/2 + 1)*2, MPI_FLOAT,
+        						MPI_Reduce(&(tempVolume[a][b][0]),&(tempVolume[a][b][0]),
+        								(maxVolumeIndexYZ/2 + 1)*2, MPI_FLOAT,
         														MPI_SUM, 0, new_comm);
-        						MPI_Reduce(&(outputWeight[a][b][0]),&(outputWeight[a][b][0]),
-        								(volumeSize/2 +1), MPI_FLOAT,
+        						MPI_Reduce(&(tempWeights[a][b][0]),&(tempWeights[a][b][0]),
+        								(maxVolumeIndexYZ/2 +1), MPI_FLOAT,
         														MPI_SUM, 0, new_comm);
                     		}
                     	}
@@ -699,7 +699,7 @@ void ProgMPIRecFourier::run()
 //                    outputVolume[128][128][128].imag() = ((1 << node->rank) + 11);
 //                    std::cout << "outputWeight checking " << node->rank << " : " << outputWeight[volumeSize/2][volumeSize/2][volumeSize/2] << std::endl;
 //                    std::cout << "outputVolume checking " << node->rank << " : " << outputVolume[128][128][128] << std::endl;
-                    sizeout = volumeSize+1;//MULTIDIM_SIZE(FourierWeights);
+                    sizeout = maxVolumeIndexYZ+1;//MULTIDIM_SIZE(FourierWeights);
                 }
                 else
                 {
