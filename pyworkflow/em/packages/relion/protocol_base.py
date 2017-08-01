@@ -291,7 +291,7 @@ class ProtRelionBase(EMProtocol):
                       help='Particles will be grouped by defocus.'
                       'This parameter is the bin for an histogram.'
                       'All particles assigned to a bin form a group')
-        form.addParam('numParticles', IntParam, default=10,
+        form.addParam('numParticles', FloatParam, default=10,
                       label='minimum size for defocus group',
                       condition='doCtfManualGroups and not doContinue',
                       help='If defocus group is smaller than this value, '
