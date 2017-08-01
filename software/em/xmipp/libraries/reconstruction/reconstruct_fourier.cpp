@@ -2170,11 +2170,16 @@ void ProgRecFourier::crop(T***& inOut, int size) {
 
 void ProgRecFourier::mirrorAndCropTempSpaces() {
 	maxVolumeIndexX = maxVolumeIndexYZ/2; // just half of the space is necessary, the rest is complex conjugate
-	std::complex<float>*** newOutputVol;
-	float*** newOutputWeight;
+	mirrorAndCrop(tempWeights, &identity);
+	mirrorAndCrop(tempVolume, &conjugate);
+}
+
+template<typename T>
+void ProgRecFourier::mirrorAndCrop(T***& input, T (*f)(T)) {
+
+	T*** output;
 	// create new storage, notice that just 'right hand side - X axis' of the input will be preserved, left will be converted to its complex conjugate
-	allocate(newOutputVol, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
-	allocate(newOutputWeight, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+	allocate(output, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	// traverse old storage
 	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
 		for (int y = 0; y <= maxVolumeIndexYZ; y++) {
@@ -2185,23 +2190,18 @@ void ProgRecFourier::mirrorAndCropTempSpaces() {
 					newPos[0] = maxVolumeIndexYZ - x;
 					newPos[1] = maxVolumeIndexYZ - y;
 					newPos[2] = maxVolumeIndexYZ - z;
-					// copy with X shifted by (-halfSize)
-					newOutputVol[newPos[2]][newPos[1]][newPos[0]-maxVolumeIndexX] += conj(tempVolume[z][y][x]); // conjugate
-					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-maxVolumeIndexX] += tempWeights[z][y][x];
+					output[newPos[2]][newPos[1]][newPos[0]-maxVolumeIndexX] += f(input[z][y][x]);
 				} else {
 					// copy with X shifted by (-halfSize)
-					newOutputVol[z][y][x-maxVolumeIndexX] += tempVolume[z][y][x];
-					newOutputWeight[z][y][x-maxVolumeIndexX] += tempWeights[z][y][x];
+					output[z][y][x-maxVolumeIndexX] += input[z][y][x];
 				}
 			}
 		}
 	}
 	// free original data
-	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
-	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+	release(input, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	// set new data
-	tempVolume = newOutputVol;
-	tempWeights = newOutputWeight;
+	input = output;
 }
 
 void ProgRecFourier::forceHermitianSymmetry() {

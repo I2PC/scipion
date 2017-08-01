@@ -146,9 +146,15 @@ protected:
      * (i.e. correct Fourier coefficients by proper weight)
      */
     void processWeights();
+    /**
+     * Method will create thread used for loading images
+     * and set all necessary values/variables
+     */
     void createLoadingThread();
+    /**
+     * Method will release all resources allocated for loading images
+     */
     void cleanLoadingThread();
-
     /** Read arguments from command line */
     void readParams();
     /** Specify supported command line arguments */
@@ -220,6 +226,8 @@ private:
     /** Method running on separate thread */
 	static void* loadImageThread(void* threadArgs);
 
+	static float identity(float f) { return f;};
+	static std::complex<float> conjugate(std::complex<float> f) { return conj(f);};
 
     void loadImages(int startIndex, int endIndex);
     void swapBuffers();
@@ -230,7 +238,8 @@ private:
 //    		int FSCIndex
 			);
 
-
+    template<typename T>
+    void mirrorAndCrop(T***& input,T (*f)(T));
 
     static Array2D<std::complex<float> >* clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourier * parent);
