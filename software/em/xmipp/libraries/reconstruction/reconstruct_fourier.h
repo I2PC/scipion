@@ -106,19 +106,8 @@ public:
      * to final destination.
      */
     void finishComputations( const FileName &out_name );
-
-
-    /// Method for the correction of the fourier coefficients
-    void correctWeight();
-
-	/// Force the weights to be symmetrized
-    void forceWeightSymmetry(MultidimArray<double> &FourierWeights);
-
-    ///Functions of common reconstruction interface
+    /** Functions of common reconstruction interface */
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
-    template<typename T>
-    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
-
 protected:
 
 
@@ -240,9 +229,14 @@ private:
 
     int availableMemory;
     static const int batchSize = 11;
-
+////////////////////////////////////////////////////////////////////////
+    /** Method to allocate 3D array (not continuous) of given size */
+    template<typename T>
+    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
+    /** Method to allocate 2D array (not continuous) of given size */
     template<typename T>
     static T** allocate(T**& where, int xSize, int ySize);
+
 
     void loadImages(int startIndex, int endIndex);
     void swapBuffers();

@@ -2681,8 +2681,8 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
 #endif
 }
 
-void ProgRecFourier::correctWeight()
-{
+//void ProgRecFourier::correctWeight()
+//{
 //    // If NiterWeight=0 then set the weights to one
 //	forceWeightSymmetry(FourierWeights);
 //    if (NiterWeight==0)
@@ -2726,7 +2726,7 @@ void ProgRecFourier::correctWeight()
 //        }
 //        VoutFourier = VoutFourierTmp;
 //    }
-}
+//}
 
 void ProgRecFourier::finishComputations( const FileName &out_name )
 {
@@ -2868,37 +2868,37 @@ void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
     this->fn_out = fn_out;
 }
 
-void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
-{
-    int yHalf=YSIZE(FourierWeights)/2;
-    if (YSIZE(FourierWeights)%2==0)
-        yHalf--;
-    int zHalf=ZSIZE(FourierWeights)/2;
-    if (ZSIZE(FourierWeights)%2==0)
-        zHalf--;
-    int zsize=(int)ZSIZE(FourierWeights);
-    int zsize_1=zsize-1;
-    int ysize_1=(int)YSIZE(FourierWeights)-1;
-    for (int k=0; k<zsize; k++)
-    {
-        int ksym=intWRAP(-k,0,zsize_1);
-        for (int i=1; i<=yHalf; i++)
-        {
-            int isym=intWRAP(-i,0,ysize_1);
-            double mean=0.5*(
-                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
-                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
-            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
-                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
-        }
-    }
-    for (int k=1; k<=zHalf; k++)
-    {
-        int ksym=intWRAP(-k,0,zsize_1);
-        double mean=0.5*(
-                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
-                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
-        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
-            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
-    }
-}
+//void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
+//{
+//    int yHalf=YSIZE(FourierWeights)/2;
+//    if (YSIZE(FourierWeights)%2==0)
+//        yHalf--;
+//    int zHalf=ZSIZE(FourierWeights)/2;
+//    if (ZSIZE(FourierWeights)%2==0)
+//        zHalf--;
+//    int zsize=(int)ZSIZE(FourierWeights);
+//    int zsize_1=zsize-1;
+//    int ysize_1=(int)YSIZE(FourierWeights)-1;
+//    for (int k=0; k<zsize; k++)
+//    {
+//        int ksym=intWRAP(-k,0,zsize_1);
+//        for (int i=1; i<=yHalf; i++)
+//        {
+//            int isym=intWRAP(-i,0,ysize_1);
+//            double mean=0.5*(
+//                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
+//                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
+//            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
+//                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
+//        }
+//    }
+//    for (int k=1; k<=zHalf; k++)
+//    {
+//        int ksym=intWRAP(-k,0,zsize_1);
+//        double mean=0.5*(
+//                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
+//                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
+//        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
+//            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
+//    }
+//}
