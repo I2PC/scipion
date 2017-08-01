@@ -125,7 +125,7 @@ void ProgMPIRecFourier::run()
     MPI_Comm   new_comm;
     long int total_usecs;
     double total_time_processing=0., total_time_weightening=0., total_time_communicating=0., total_time;
-    int iter=0;
+//    int iter=0;
     int * ranks;
 
     // Real workers, rank=0 is the master, does not work
@@ -157,8 +157,8 @@ void ProgMPIRecFourier::run()
     MPI_Group_incl(orig_group, nProcs, ranks, &new_group);
     MPI_Comm_create(MPI_COMM_WORLD, new_group, &new_comm);
 
-    do
-    {
+//    do
+//    {
         if (node->isMaster())
         {
 //            if (NULL == outputVolume) {
@@ -172,9 +172,9 @@ void ProgMPIRecFourier::run()
 
             gettimeofday(&start_time,NULL);
             std::cerr<<std::endl;
-            if (iter != NiterWeight)
-                std::cerr<<"Computing weights "<<iter+1<<"/"<<NiterWeight<<std::endl;
-            else
+//            if (iter != NiterWeight)
+//                std::cerr<<"Computing weights "<<iter+1<<"/"<<NiterWeight<<std::endl;
+//            else
                 std::cerr<<"Computing volume"<<std::endl;
 
             if ( verbose )
@@ -254,20 +254,20 @@ void ProgMPIRecFourier::run()
                          &status);
             }
 
-            if (iter != NiterWeight)
-            {
-                gettimeofday(&end_time,NULL);
-
-                total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
-                total_time_weightening += ((double)total_usecs/(double)1000000);
-            }
-            else
-            {
+//            if (iter != NiterWeight)
+//            {
+//                gettimeofday(&end_time,NULL);
+//
+//                total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
+//                total_time_weightening += ((double)total_usecs/(double)1000000);
+//            }
+//            else
+//            {
                 gettimeofday(&end_time,NULL);
 
                 total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
                 total_time_processing += ((double)total_usecs/(double)1000000);
-            }
+//            }
 
             gettimeofday(&start_time,NULL);
             // Start collecting results
@@ -284,12 +284,12 @@ void ProgMPIRecFourier::run()
             total_usecs = (end_time.tv_sec-start_time.tv_sec) * 1000000 + (end_time.tv_usec-start_time.tv_usec);
             total_time_communicating += ((double)total_usecs/(double)1000000);
 
-            if (iter == NiterWeight)
+//            if (iter == NiterWeight)
                 if (verbose > 0)
                 {
                     std::cout << "\n\nProcessing time: " << total_time_processing << " secs." << std::endl;
                     std::cout << "Transfers time: " << total_time_communicating << " secs." << std::endl;
-                    std::cout << "Weighting time: " << total_time_weightening << " secs." << std::endl;
+//                    std::cout << "Weighting time: " << total_time_weightening << " secs." << std::endl;
                     std::cout << "Execution completed successfully"<< std::endl;
                 }
         }
@@ -314,18 +314,19 @@ void ProgMPIRecFourier::run()
 
 
             //First
-            std::cout << "before barrier with " << node->rank << std::endl;
-            barrier_init( &barrier, 2);
-            std::cout << "after barrier with " << node->rank << std::endl;
-            pthread_mutex_init( &workLoadMutex, NULL );
-
-//            std::cout << "number of threads: " << 1 << std::endl;
-//            for ( int nt = 0 ; nt < 1 ; nt++ )
-//            {
-                loadThread.parent=this;
-                loadThread.selFile = &SF;
-                pthread_create(&loadThread.id,NULL,processImageThread,(void*)(&loadThread));
-//            }
+//            std::cout << "before barrier with " << node->rank << std::endl;
+//            barrier_init( &barrier, 2);
+//            std::cout << "after barrier with " << node->rank << std::endl;
+//            pthread_mutex_init( &workLoadMutex, NULL );
+//
+////            std::cout << "number of threads: " << 1 << std::endl;
+////            for ( int nt = 0 ; nt < 1 ; nt++ )
+////            {
+//                loadThread.parent=this;
+//                loadThread.selFile = &SF;
+//                pthread_create(&loadThread.id,NULL,processImageThread,(void*)(&loadThread));
+////            }
+        	createLoadingThread();
 
             while (1)
             {
@@ -633,9 +634,9 @@ void ProgMPIRecFourier::run()
 //                                                                false,VDOUBLE);
 //                            */
 //                        }
-                        std::cout << "NiterWright=" << NiterWeight << std::endl;
-                        if (NiterWeight==0 || iter == NiterWeight-1)
-                        {
+//                        std::cout << "NiterWright=" << NiterWeight << std::endl;
+//                        if (NiterWeight==0 || iter == NiterWeight-1)
+//                        {
 //                            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
 //                            {
 //                                // Put back the weights to FourierWeights from temporary variable VoutFourier
@@ -649,7 +650,7 @@ void ProgMPIRecFourier::run()
 //							std::cout << "outputWeight1 checking " << node->rank << " : " << outputWeight1[volumeSize/2][volumeSize/2][volumeSize/2] << std::endl;
 
                             finishComputations(fn_out);
-                        }
+//                        }
                         std::cout << "before break (after finish) " << node->rank << std::endl;
                         break;
                     }
@@ -670,7 +671,7 @@ void ProgMPIRecFourier::run()
                     MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
                     //LABEL
                     //(if jobNumber == -1) break;
-                    threadOpCode=PROCESS_IMAGE;
+//                    threadOpCode=PROCESS_IMAGE;
 
 //            		if (node->rank == 1) {
 //            			if (NULL == outputVolume1 ){allocate(outputVolume1, 129, 129, 129); std::cout <<"bu1" << std::endl;}
@@ -685,14 +686,14 @@ void ProgMPIRecFourier::run()
                     if ( max_i >= SF.size())
                         max_i  = SF.size()-1;
                     std::cout << "processImages on: " << node->rank << std::endl;
-                    if (iter == 0)
+//                    if (iter == 0)
                         processImages( min_i, max_i,
 //                        		false,
 								false);
-                    else
-                        processImages( min_i, max_i,
+//                    else
+//                        processImages( min_i, max_i,
 //                        		false,
-                        		true);
+//                        		true);
 //                    outputWeight[volumeSize/2][volumeSize/2][volumeSize/2] = (1 << node->rank);
 //                    outputVolume[128][128][128].real() = ((1 << node->rank) + 11);
 //                    outputVolume[128][128][128].imag() = ((1 << node->rank) + 11);
@@ -713,21 +714,12 @@ void ProgMPIRecFourier::run()
         // Kill threads used on workers
         if ( node->active && !node->isMaster() )
         {
-        	std::cout << "about to exit threads " << node->rank << std::endl;
-            threadOpCode = EXIT_THREAD;
-            barrier_wait( &barrier );
-
-            for ( int nt=0; nt<1; nt++)
-            {
-            	std::cout << "joining " << node->rank << " (th " << nt << std::endl;
-                pthread_join(*(&loadThread.id),NULL);
-            }
-            barrier_destroy( &barrier );
+        	cleanLoadingThread();
         }
-        std::cout << "iter: " << iter << " (out of " << NiterWeight << ")" <<std::endl;
-        iter++;
-    }
-    while(iter<NiterWeight);
+//        std::cout << "iter: " << iter << " (out of " << NiterWeight << ")" <<std::endl;
+//        iter++;
+//    }
+//    while(iter<NiterWeight);
     std::cout << "free " << node->rank << std::endl;
 //    delete[] th_args;
     std::cout << "delete " << node->rank << std::endl;

@@ -51,10 +51,8 @@ void ProgRecFourier::defineParams()
     //params
     addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [-o <volume_file=\"rec_fourier.vol\">]  : Filename for output volume");
-    addParamsLine("  [--iter <iterations=1>]      : Number of iterations for weight correction");
     addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
     addParamsLine("  [--padding <proj=2.0> <vol=2.0>]  : Padding used for projections and volume");
-//    addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
     addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
@@ -86,7 +84,6 @@ void ProgRecFourier::readParams()
     blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
     maxResolution = getDoubleParam("--max_resolution");
-    NiterWeight = getIntParam("--iter");
     useCTF = checkParam("--useCTF");
     phaseFlipped = checkParam("--phaseFlipped");
     minCTF = getDoubleParam("--minCTF");
@@ -136,61 +133,46 @@ void ProgRecFourier::run()
     show();
     produceSideinfo();
     // Process all images in the selfile
-    if (verbose)
-    {
-        if (NiterWeight!=0)
-            init_progress_bar(NiterWeight*SF.size());
-        else
-            init_progress_bar(SF.size());
+    if (verbose) {
+		init_progress_bar(SF.size());
     }
-    // Create threads stuff
-    std::cout << "numThreads" << std::endl;
-    barrier_init( &barrier, 2 );
-    pthread_mutex_init( &workLoadMutex, NULL );
-
-    loadThread.parent = this;
-    loadThread.selFile = &SF;
-    pthread_create( &loadThread.id , NULL, processImageThread, (void *)(&loadThread) );
-//    // Create threads
-//    for ( int nt = 0 ; nt < 1 ; nt ++ )
-//    {
-//        // Passing parameters to each thread
-//        th_args[nt].parent = this;
-//        th_args[nt].selFile = &SF;
-//
-//    }
+    // Create loading thread stuff
+    createLoadingThread();
 
     //Computing interpolated volume
-    processImages(0, SF.size() - 1,
-//    		!fn_fsc.empty(),
-    		false);
-
-    // Correcting the weights
-//    correctWeight();
-
+    processImages(0, SF.size() - 1, false);
+    // remove complex conjugate of the intermediate result
     mirrorAndCrop(outputVolume, outputWeight, volumeSize);
-
     //Saving the volume
     finishComputations(fn_out);
 
-    threadOpCode = EXIT_THREAD;
 
-    // Waiting for threads to finish
-    barrier_wait( &barrier );
-    for ( int nt = 0 ; nt < 1 ; nt ++ ) {
-
-        pthread_join(*(&loadThread.id), NULL);
-    }
-    barrier_destroy( &barrier );
 //    delete th_args;
 }
 
+void ProgRecFourier::createLoadingThread() {
+	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
+	pthread_mutex_init( &workLoadMutex, NULL );
+
+	loadThread.parent = this;
+	loadThread.selFile = &SF;
+	pthread_create( &loadThread.id , NULL, processImageThread, (void *)(&loadThread) );
+	threadOpCode = PRELOAD_IMAGE;
+}
+
+void ProgRecFourier::cleanLoadingThread() {
+	threadOpCode = EXIT_THREAD;
+	// Waiting for thread to finish
+	barrier_wait( &barrier );
+	pthread_join(*(&loadThread.id), NULL);
+	barrier_destroy( &barrier );
+}
 
 void ProgRecFourier::produceSideinfo()
 {
     // Translate the maximum resolution to digital frequency
     // maxResolution=sampling_rate/maxResolution;
-    maxResolution2=maxResolution*maxResolution;
+    maxResolutionSqr=maxResolution*maxResolution;
 
     // Read the input images
     SF.read(fn_sel);
@@ -209,8 +191,7 @@ void ProgRecFourier::produceSideinfo()
     imgSize=Xdim;
     paddedImgSize = Xdim*padding_factor_vol;
 
-    //use threads for volume inverse fourier transform, plan is created in finishComputation()
-    transformerVol.setThreadsNumber(1);
+
 
     // Build a table of blob values
     blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
@@ -328,7 +309,7 @@ void ProgRecFourier::processCube(
 		float wModulator, const MultidimArray<int>& xWrapped, int xsize_1,
 		const MultidimArray<int>& xNegWrapped, bool reprocessFlag, float wCTF,
 		MultidimArray<std::complex<double> >& VoutFourier,
-		Matrix1D<double>& blobTableSqrt, ImageThreadParams* threadParams,
+		Matrix1D<double>& blobTableSqrt, LoadThreadParams* threadParams,
 		MultidimArray<double>& fourierWeights, double* ptrIn,
 		float weight,
 		ProgRecFourier * parent,
@@ -523,7 +504,7 @@ Array2D<cFloat>* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double>
 				paddedFourierTmp = DIRECT_A2D_ELEM(paddedFourier, i, j);
 				FFT_IDX2DIGFREQ(j, parent->paddedImgSize, tempMyPadd[0]);
 				FFT_IDX2DIGFREQ(i, parent->paddedImgSize, tempMyPadd[1]);
-				if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1]> parent->maxResolution2) {
+				if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1]> parent->maxResolutionSqr) {
 					continue;
 				}
 				int myPadI = (i < halfY) ?	i + conserveRows : i - paddedFourier.ydim + conserveRows;
@@ -538,7 +519,7 @@ Array2D<cFloat>* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double>
 void * ProgRecFourier::processImageThread( void * threadArgs )
 {
 
-    ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
+    LoadThreadParams * threadParams = (LoadThreadParams *) threadArgs;
     ProgRecFourier * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
 
@@ -599,12 +580,12 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
         case PRELOAD_IMAGE:
             {
             	if (NULL == threadParams->buffer1) {
-            		threadParams->buffer1 = new imgData[parent->batchSize];
+            		threadParams->buffer1 = new ProjectionData[parent->batchSize];
             	}
                 for(int bIndex = 0; bIndex < parent->batchSize; bIndex++)
                 {
                 	int imgIndex = threadParams->startImageIndex + bIndex;
-                	imgData* data = &threadParams->buffer1[bIndex];
+                	ProjectionData* data = &threadParams->buffer1[bIndex];
                 	if (imgIndex >= threadParams->endImageIndex ) {
                 		data->skip = true;
                 		continue;
@@ -2247,17 +2228,17 @@ void forceHermitianSymmetry(std::complex<float>*** outputVolume, float*** output
 }
 
 void processWeight(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
-		float padding_factor_proj, float padding_factor_vol, int imgSize, int NiterWeight) {
+		float padding_factor_proj, float padding_factor_vol, int imgSize) {
     // Get a first approximation of the reconstruction
     float corr2D_3D=pow(padding_factor_proj,2.)/
                      (imgSize* pow(padding_factor_vol,3.));
 	for (int z = 0; z <= volSize; z++) {
 		for (int y = 0; y <= volSize; y++) {
 			for (int x = 0; x <= volSize/2; x++) {
-				if (NiterWeight==0)
-					outputVolume[z][y][x] *= corr2D_3D;
-				else
-				{
+//				if (NiterWeight==0)
+//					outputVolume[z][y][x] *= corr2D_3D;
+//				else
+//				{
 					float weight = outputWeight[z][y][x];
 					std::complex<float> val = outputVolume[z][y][x];
 					if (fabs(weight) > 1e-3) {
@@ -2268,7 +2249,7 @@ void processWeight(std::complex<float>*** outputVolume, float*** outputWeight, i
 						outputVolume[z][y][x] *= corr2D_3D*weight;
 					else
 						outputVolume[z][y][x] = 0;
-				}
+//				}
 			}
 		}
 	}
@@ -2345,12 +2326,12 @@ void ProgRecFourier::loadImages(int startIndex, int endIndex, bool reprocess) {
 
 void ProgRecFourier::swapBuffers() {
 	std::cout << "swapping buffers" << std::endl;
-	imgData* tmp = loadThread.buffer2;
+	ProjectionData* tmp = loadThread.buffer2;
 	loadThread.buffer2 = loadThread.buffer1;
 	loadThread.buffer1 = tmp;
 }
 
-void ProgRecFourier::processBuffer(imgData* buffer,
+void ProgRecFourier::processBuffer(ProjectionData* buffer,
 		std::complex<float>*** outputVolume,
 		float*** outputWeight//,
 //		bool saveFSC,
@@ -2359,7 +2340,7 @@ void ProgRecFourier::processBuffer(imgData* buffer,
 {
 	int repaint = (int)ceil((double)SF.size()/60);
 	for ( int i = 0 ; i < batchSize; i++ ) {
-		imgData* data = &buffer[i];
+		ProjectionData* data = &buffer[i];
 		Array2D<cFloat>* myPaddedFourier = data->img;
 		if (data->skip) {
 			std::cout << "skipping img: " << data->imgIndex << " (index " << i << std::endl; //", " << myPaddedFourier << ")" << std::endl;
@@ -2461,7 +2442,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
 
     int startLoadIndex = firstImageIndex;
 
-    threadOpCode = PRELOAD_IMAGE;
+
     loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize),reprocessFlag);
 	// Awaking sleeping threads
 	barrier_wait( &barrier );
@@ -2775,7 +2756,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 	//	}
 
 	    forceHermitianSymmetry(outputVolume, outputWeight, volumeSize);
-	processWeight(outputVolume, outputWeight, volumeSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
+	processWeight(outputVolume, outputWeight, volumeSize, padding_factor_proj, padding_factor_vol, imgSize);
 	std::cout << "processWeight done" << std::endl;
 	release(outputWeight, volumeSize+1, volumeSize+1);
 	#if DEBUG_DUMP > 0
@@ -2810,6 +2791,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     // Enforce symmetry in the Fourier values as well as the weights
     // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
     Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
+    transformerVol.setThreadsNumber(1);
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();
@@ -2861,15 +2843,15 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
         double aux=radius*iDeltaFourier;
         double factor = Fourier_blob_table(ROUND(aux));
         double factor2=(pow(Sinc(radius/(2*(imgSize))),2));
-        if (NiterWeight!=0)
-        {
+//        if (NiterWeight!=0)
+//        {
             A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
             meanFactor2+=factor2;
-        }
-        else
-            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor);
+//        }
+//        else
+//            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor);
     }
-    if (NiterWeight!=0)
+//    if (NiterWeight!=0)
     {
         meanFactor2/=MULTIDIM_SIZE(mVout);
         FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)

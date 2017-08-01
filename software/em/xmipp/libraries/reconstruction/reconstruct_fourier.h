@@ -4,6 +4,7 @@
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
  *              Vahid Abrishami (vabrishami@cnb.csic.es)
+ *              David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -67,9 +68,10 @@ class ProgRecFourier;
 
 typedef std::complex<float> cFloat;
 
-// static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
-
-struct imgData
+/**
+ * struct representing all data regarding one projection
+ */
+struct ProjectionData
 {
 	Array2D<cFloat>* img;
 	CTFDescription ctf;
@@ -79,27 +81,28 @@ struct imgData
 	bool skip;
 };
 
-struct ImageThreadParams
+/**
+ * struct holding information for loading thread
+ */
+struct LoadThreadParams
 {
     pthread_t id;
     ProgRecFourier * parent;
     int startImageIndex;
     int endImageIndex;
-//    bool reprocessFlag;
     MetaData* selFile;
-    imgData* buffer1 = NULL;
-    imgData* buffer2 = NULL;
+    ProjectionData* buffer1 = NULL;
+    ProjectionData* buffer2 = NULL;
 };
 
 /** Fourier reconstruction parameters. */
 class ProgRecFourier : public ProgReconsBase
 {
-public:
+private:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel;//, fn_doc;//, fn_fsc;
+    FileName fn_sym;//, ;
 
-    /** SelFile containing all projections */
-    MetaData SF;
+
 
     /** Flag whether to use the weights in the image metadata */
     bool do_weights;
@@ -130,10 +133,8 @@ public:
     /// Max resolution in Angstroms
     double maxResolution;
 
-    /// Number of iterations for the weight
-    int NiterWeight;
-
-
+    // Maximum interesting resolution squared
+    double maxResolutionSqr;
 
     /// Tells the threads what to do next
     int threadOpCode;
@@ -164,8 +165,7 @@ public: // Internal members
     //double iDelta,
     double iDeltaFourier, iDeltaSqrt;
 
-    // Maximum interesting resolution squared
-    double maxResolution2;
+
 
     // Definition of the blob
     struct blobtype blob;
@@ -175,12 +175,6 @@ public: // Internal members
 
     // Fourier transformer for the volume
     FourierTransformer transformerVol;
-
-//    // An alias to the Fourier transform in transformerVol and also temporary to keep the weights
-//    MultidimArray< std::complex<double> > VoutFourier;
-//
-//    // Volume of Fourier weights
-//    MultidimArray<double> FourierWeights;
 
     int paddedImgSize;
     int volumeSize;
@@ -225,9 +219,13 @@ public:
 
 protected:
     void mirrorAndCrop(std::complex<float>***& outputVolume, float***& outputWeight, int size);
+    void createLoadingThread();
+    void cleanLoadingThread();
 
-
-    ImageThreadParams loadThread;
+    LoadThreadParams loadThread;
+    /** SelFile containing all projections */
+    MetaData SF;
+    FileName fn_out, fn_sel;
 
 private:
 
@@ -239,7 +237,7 @@ private:
 
     void loadImages(int startIndex, int endIndex, bool reprocess);
     void swapBuffers();
-    void processBuffer(imgData* buffer,
+    void processBuffer(ProjectionData* buffer,
     		std::complex<float>*** outputVolume,
     		float*** outputWeight//,
 //    		bool saveFSC,
@@ -298,7 +296,7 @@ private:
 			float wCTF,
 			MultidimArray<std::complex<double> >& VoutFourier,
 			Matrix1D<double>& blobTableSqrt,
-			ImageThreadParams* threadParams,
+			LoadThreadParams* threadParams,
 			MultidimArray<double>& fourierWeights,
 			double* ptrIn,
 			float weight,
