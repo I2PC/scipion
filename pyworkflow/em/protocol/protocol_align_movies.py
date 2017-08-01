@@ -109,9 +109,9 @@ class ProtAlignMovies(ProtProcessMovies):
         # validate that we have some output movies
         failedList = self._readFailedList()
         if len(failedList) == len(self.listOfMovies):
-            self.setFailed('No micrographs in output set')
-            self.mapper.store(self)
-            raise Exception("Couldn't create any output micrographs. Please review errors above in this log file.")
+            raise Exception("Couldn't create any output micrographs. Please review errors above.")
+        elif 0 < len(failedList) < len(self.listOfMovies):
+            self.warning("WARNING - Failed to align %d movies." % len(failedList))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
