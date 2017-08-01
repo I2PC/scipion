@@ -57,23 +57,19 @@
 #define ACCURACY 0.001
 
 #define EXIT_THREAD 0
-#define PROCESS_IMAGE 1
-#define PROCESS_WEIGHTS 2
-#define PRELOAD_IMAGE 3
+#define PRELOAD_IMAGE 1
 
 /**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibrary */
 //@{
 class ProgRecFourier;
 
-typedef std::complex<float> cFloat;
-
 /**
  * struct representing all data regarding one projection
  */
 struct ProjectionData
 {
-	Array2D<cFloat>* img;
+	Array2D<std::complex<float> >* img;
 	CTFDescription ctf;
 	int imgIndex;
 	double weight;
@@ -98,6 +94,75 @@ struct LoadThreadParams
 /** Fourier reconstruction parameters. */
 class ProgRecFourier : public ProgReconsBase
 {
+public:
+    /**
+     * Run the image processing.
+     * Method will load data, process them and store result to final destination.
+     */
+    void run();
+    /**
+     * Method will take data stored in tempVolume and tempWeights
+     * (which should be cropped in X axis), calculate IFFT and store result
+     * to final destination.
+     */
+    void finishComputations( const FileName &out_name );
+
+
+    /// Method for the correction of the fourier coefficients
+    void correctWeight();
+
+	/// Force the weights to be symmetrized
+    void forceWeightSymmetry(MultidimArray<double> &FourierWeights);
+
+    ///Functions of common reconstruction interface
+    virtual void setIO(const FileName &fn_in, const FileName &fn_out);
+    template<typename T>
+    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
+
+protected:
+
+
+    /** Thread used for loading input data */
+    LoadThreadParams loadThread;
+    /** SelFile containing all projections */
+    MetaData SF;
+    /** Output file name */
+    FileName fn_out;
+    /** Input file name */
+    FileName fn_in;
+    /** maximal index in the temporal volume, Y and Z axis */
+	int maxVolumeIndexYZ;
+	/**
+	 * 3D volume holding the cropped (without high frequencies) Fourier space.
+	 * Lowest frequencies are in the center, i.e. Fourier space creates a
+	 * sphere within a cube.
+	 */
+	std::complex<float>*** tempVolume = NULL;
+	/**
+	 * 3D volume holding the weights of the Fourier coefficients stored
+	 * in tempVolume.
+	 */
+	float*** tempWeights = NULL;
+
+    void mirrorAndCropTempSpaces();
+    void createLoadingThread();
+    void cleanLoadingThread();
+
+    /** Read arguments from command line */
+    void readParams();
+    /** Specify supported command line arguments */
+    void defineParams();
+    /** Show basic info to standard output */
+    void show();
+    /** Method will fill other help structures and variables */
+    void produceSideinfo();
+    /**
+     * Method will initialize temporal storage (if necessary),
+     *  processes images in given interval (including boundary indexes)
+     *  and store results in temporal storage (@see tempVolume and tempWeights)
+     */
+    void processImages(int firstImageIndex, int lastImageIndex);
+
 private:
     /** Filenames */
     FileName fn_sym;
@@ -172,66 +237,6 @@ private:
     int paddedImgSize;
 
 
-public:
-    /// Read arguments from command line
-    void readParams();
-
-    /// Read arguments from command line
-    void defineParams();
-
-    /** Show. */
-    void show();
-
-    /** Run. */
-    void run();
-
-    /// Produce side info: fill arrays with relevant transformation matrices
-    void produceSideinfo();
-
-    void finishComputations( const FileName &out_name );
-
-    /// Process one image
-    void processImages( int firstImageIndex, int lastImageIndex,
-//    		bool saveFSC=false,
-			bool reprocessFlag=false);
-
-    /// Method for the correction of the fourier coefficients
-    void correctWeight();
-	
-	/// Force the weights to be symmetrized
-    void forceWeightSymmetry(MultidimArray<double> &FourierWeights);
-
-    ///Functions of common reconstruction interface
-    virtual void setIO(const FileName &fn_in, const FileName &fn_out);
-    template<typename T>
-    static T*** allocate(T***& where, int xSize, int ySize, int zSize);
-
-protected:
-    void mirrorAndCropTempSpaces();
-    void createLoadingThread();
-    void cleanLoadingThread();
-
-    /** Thread used for loading input data */
-    LoadThreadParams loadThread;
-    /** SelFile containing all projections */
-    MetaData SF;
-    /** Output file name */
-    FileName fn_out;
-    /** Input file name */
-    FileName fn_in;
-    /** maximal index in the temporal volume, Y and Z axis */
-	int maxVolumeIndexYZ;
-	/**
-	 * 3D volume holding the cropped (without high frequencies) Fourier space.
-	 * Lowest frequencies are in the center, i.e. Fourier space creates a sphere within a cube
-	 */
-	std::complex<float>*** tempVolume = NULL;
-	/**
-	 * 3D volume holding the weights of the Fourier coefficients stored in tempVolume.
-	 */
-	float*** tempWeights = NULL;
-
-private:
 
     int availableMemory;
     static const int batchSize = 11;
@@ -239,7 +244,7 @@ private:
     template<typename T>
     static T** allocate(T**& where, int xSize, int ySize);
 
-    void loadImages(int startIndex, int endIndex, bool reprocess);
+    void loadImages(int startIndex, int endIndex);
     void swapBuffers();
     void processBuffer(ProjectionData* buffer,
     		std::complex<float>*** outputVolume,
@@ -250,7 +255,7 @@ private:
 
 
 
-    static Array2D<cFloat>* clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+    static Array2D<std::complex<float> >* clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourier * parent);
 
     template<typename T>

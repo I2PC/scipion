@@ -138,16 +138,12 @@ void ProgRecFourier::run()
     }
     // Create loading thread stuff
     createLoadingThread();
-
     //Computing interpolated volume
-    processImages(0, SF.size() - 1, false);
+    processImages(0, SF.size() - 1);
     // remove complex conjugate of the intermediate result
     mirrorAndCropTempSpaces();
     //Saving the volume
     finishComputations(fn_out);
-
-
-//    delete th_args;
 }
 
 void ProgRecFourier::createLoadingThread() {
@@ -484,7 +480,7 @@ void print(MultidimArray<T>& VoutFourier, bool full = true) {
 	myfile.close();
 }
 
-Array2D<cFloat>* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+Array2D<std::complex<float> >* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
 		ProgRecFourier * parent) {
 	// Determine how many rows of the fourier
 	// transform are of interest for us. This is because
@@ -493,7 +489,7 @@ Array2D<cFloat>* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double>
 	conserveRows = ceil(conserveRows / 2.f);
 	int size = 2 * conserveRows;
 
-	Array2D<cFloat>* result = new Array2D<cFloat>(conserveRows, size);
+	Array2D<std::complex<float> >* result = new Array2D<std::complex<float> >(conserveRows, size);
 	// convert image (shift to center and remove high frequencies)
 	std::complex<double> paddedFourierTmp;
 	int halfY = paddedFourier.ydim / 2;
@@ -688,9 +684,9 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             }
         case EXIT_THREAD:
             return NULL;
-        case PROCESS_WEIGHTS:
-            {
-
+//        case PROCESS_WEIGHTS:
+//            {
+//
 //                // Get a first approximation of the reconstruction
 //                double corr2D_3D=pow(parent->padding_factor_proj,2.)/
 //                                 (parent->imgSize* pow(parent->padding_factor_vol,3.));
@@ -713,12 +709,12 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 //                        			A3D_ELEM(parent->VoutFourier,k,i,j)=0;
 //                        	}
 //                        }
-                break;
-            }
-        case PROCESS_IMAGE:
-            {
-            	REPORT_ERROR(ERR_UNCLASSIFIED, "Not implemented");
-            	break;
+//                break;
+//            }
+//        case PROCESS_IMAGE:
+//            {
+//            	REPORT_ERROR(ERR_UNCLASSIFIED, "Not implemented");
+//            	break;
 //            	std::cout << "processing image " + SSTR(threadParams->imageIndex) << " from thread " + SSTR(threadParams->myThreadID) << std::endl; //+ " with symmetry " << *threadParams->symmetry << ": ";
 //            				MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
 //            				if (threadParams->weight==0.0)
@@ -926,7 +922,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 //
 //            				}
 //            				break;
-			}
+//			}
         default:
             break;
         }
@@ -1029,7 +1025,7 @@ getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int 
 }
 
 inline std::complex<float>
-getPixelClamped(Array2D<cFloat>& img, float x, float y, int imgSizeX, int imgSizeY)
+getPixelClamped(Array2D<std::complex<float> >& img, float x, float y, int imgSizeX, int imgSizeY)
 {
 	int imgX = clamp((int)(x + 0.5f), 0, imgSizeX - 1);
 	int imgY = clamp((int)(y + 0.5f), 0, imgSizeY - 1);
@@ -1926,7 +1922,7 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 
 inline void processVoxel(int x, int y, int z, int halfVolSize, float transform[3][3], float maxDistanceSqr,
-		std::complex<float>*** outputVolume, float*** outputWeights, Array2D<cFloat>& inputImage, int imgSizeX, int imgSizeY) {
+		std::complex<float>*** outputVolume, float*** outputWeights, Array2D<std::complex<float> >& inputImage, int imgSizeX, int imgSizeY) {
 	float imgPos[3];
 	int imgX, imgY;
 
@@ -1955,7 +1951,7 @@ inline void convert(Matrix2D<double>& in, float out[3][3]) {
 }
 
 void thirdAttempt(std::complex<float>*** outputVolume, float*** outputWeights, int outputVolumeSize,
-	Array2D<cFloat>& inputImage, int imgSizeX, int imgSizeY,
+	Array2D<std::complex<float> >& inputImage, int imgSizeX, int imgSizeY,
 	float transform[3][3],
 	float transformInv[3][3],
 	Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
@@ -2318,7 +2314,7 @@ void processWeight(std::complex<float>*** outputVolume, float*** outputWeight, i
 //    remove((fn_fsc + "_2_Fourier.vol").c_str());
 //}
 
-void ProgRecFourier::loadImages(int startIndex, int endIndex, bool reprocess) {
+void ProgRecFourier::loadImages(int startIndex, int endIndex) {
 	loadThread.startImageIndex = startIndex;
 	loadThread.endImageIndex = endIndex;
 	std::cout << "start index: " << loadThread.startImageIndex << std::endl;
@@ -2342,7 +2338,7 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer,
 	int repaint = (int)ceil((double)SF.size()/60);
 	for ( int i = 0 ; i < batchSize; i++ ) {
 		ProjectionData* data = &buffer[i];
-		Array2D<cFloat>* myPaddedFourier = data->img;
+		Array2D<std::complex<float> >* myPaddedFourier = data->img;
 		if (data->skip) {
 			std::cout << "skipping img: " << data->imgIndex << " (index " << i << std::endl; //", " << myPaddedFourier << ")" << std::endl;
 			continue;
@@ -2408,9 +2404,7 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer,
 }
 
 //#define DEBUG
-void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
-//		bool saveFSC,
-		bool reprocessFlag)
+void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
 {
     MultidimArray< std::complex<double> > *paddedFourier;
 
@@ -2444,7 +2438,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     int startLoadIndex = firstImageIndex;
 
 
-    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize),reprocessFlag);
+    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize));
 	// Awaking sleeping threads
 	barrier_wait( &barrier );
 	// here each thread is reading a different image and compute fft
@@ -2454,7 +2448,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex,
     for(int i = 0; i < loops; i++) {
     	swapBuffers();
     	startLoadIndex += batchSize;
-    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize), reprocessFlag);
+    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize));
     	// Awaking sleeping threads
 		barrier_wait( &barrier );
     	processBuffer(loadThread.buffer2, tempVolume, tempWeights//, saveFSC, FSCIndex

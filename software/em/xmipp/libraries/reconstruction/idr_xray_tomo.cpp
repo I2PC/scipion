@@ -310,7 +310,7 @@ void ProgIDRXrayTomo::reconstruct(const FileName &fnProjsMD, const FileName &fnV
     else
     {
         reconsProgram = createReconsProgram(fnProjsMD, fnVol);
-        reconsProgram->run();
+        reconsProgram->run(); // FIXME what should be the result of this call?
         delete reconsProgram;
     }
 }

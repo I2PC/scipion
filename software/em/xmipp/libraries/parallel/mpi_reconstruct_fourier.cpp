@@ -687,9 +687,7 @@ void ProgMPIRecFourier::run()
                         max_i  = SF.size()-1;
                     std::cout << "processImages on: " << node->rank << std::endl;
 //                    if (iter == 0)
-                        processImages( min_i, max_i,
-//                        		false,
-								false);
+                        processImages( min_i, max_i);
 //                    else
 //                        processImages( min_i, max_i,
 //                        		false,
