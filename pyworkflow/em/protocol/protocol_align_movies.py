@@ -111,7 +111,7 @@ class ProtAlignMovies(ProtProcessMovies):
         failedList = self._readFailedList()
         if len(failedList) == len(self.listOfMovies):
             raise Exception(redStr("All movies failed, didn't create outputMicrographs."
-                                   "Please review movie steps above."))
+                                   "Please review movie processing steps above."))
         elif 0 < len(failedList) < len(self.listOfMovies):
             self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
 
@@ -211,8 +211,8 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
-                    print(yellowStr("WARNING: Micrograph %s was not produced, not added to "
-                          "output set." % extraMicFn))
+                    print(yellowStr("WARNING: Micrograph %s was not generated, can't add it to "
+                                    "output set." % extraMicFn))
                     doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)

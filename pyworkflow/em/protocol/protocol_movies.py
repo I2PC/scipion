@@ -310,7 +310,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         return doneList
 
     def _readFailedList(self):
-        """ Read from a text file the id's of the items that have been done. """
+        """ Read from a text file the id's of the items that have failed. """
         failedFile = self._getAllFailed()
         failedList = []
         # Check what items have been previously done
@@ -327,7 +327,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
                 f.write('%d\n' % movie.getObjId())
 
     def _writeFailedList(self, movieList):
-        """ Write to a text file the items that have been done. """
+        """ Write to a text file the items that have failed. """
         with open(self._getAllFailed(), 'a') as f:
             for movie in movieList:
                 f.write('%d\n' % movie.getObjId())
