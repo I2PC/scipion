@@ -1019,7 +1019,7 @@ class Project(object):
         """
 
         if refresh or self._runsGraph is None:
-            runs = [r for r in self.getRuns(refresh=refresh) if not r.isChild()]
+            runs = [r for r in self.getRuns(refresh=refresh, checkPids=checkPids) if not r.isChild()]
             self._runsGraph = self.getGraphFromRuns(runs)
             
         return self._runsGraph

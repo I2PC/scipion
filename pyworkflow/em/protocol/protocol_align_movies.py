@@ -106,8 +106,12 @@ class ProtAlignMovies(ProtProcessMovies):
 
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
-        # Do nothing now, the output should be ready.
-        pass
+        # validate that we have some output movies
+        failedList = self._readFailedList()
+        if len(failedList) == len(self.listOfMovies):
+            self.setFailed('No micrographs in output set')
+            self.mapper.store(self)
+            raise Exception("Couldn't create any output micrographs. Please review errors above in this log file.")
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -144,7 +148,6 @@ class ProtAlignMovies(ProtProcessMovies):
         # Check for newly done items
         newDone = [m for m in self.listOfMovies
                    if m.getObjId() not in doneList and self._isMovieDone(m)]
-        doneFailed = []
 
         # Update the file with the newly done movies
         # or exit from the function if no new done movies
@@ -195,6 +198,7 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
+            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -207,12 +211,14 @@ class ProtAlignMovies(ProtProcessMovies):
                 if not os.path.exists(extraMicFn):
                     print("Micrograph %s was not produced, not added to "
                           "output set." % extraMicFn)
-                    doneFailed.append(movie.getMicName())
+                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
+            if doneFailed:
+                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -220,14 +226,6 @@ class ProtAlignMovies(ProtProcessMovies):
                 # micrographs to another set of micrographs generated from a
                 # different movie alignment
                 self._defineTransformRelation(self.inputMovies, micSet)
-
-        def _validateFailed():
-            if len(doneFailed) == len(self.listOfMovies):
-                raise Exception("Couldn't create any output micrographs. Please review errors above in this log file.")
-            elif len(doneFailed) < len(self.listOfMovies):
-                self.warning("Warning: there were %d input movies but could only align %d"
-                             % (len(self.listOfMovies), len(doneFailed)))
-                self.warning("List of movies with errors: %s" % str(doneFailed))
 
         if self._createOutputMicrographs():
             _updateOutputMicSet('micrographs.sqlite',
@@ -241,7 +239,6 @@ class ProtAlignMovies(ProtProcessMovies):
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
-            _validateFailed()
             if outputStep and outputStep.isWaiting():
                 outputStep.setStatus(cons.STATUS_NEW)
 

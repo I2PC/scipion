@@ -237,7 +237,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
             inputSet = self.inputMovies.get()
             movie = inputSet.getFirstItem()
             if (not movie.hasAlignment()) and self.useAlignment:
-                errors.append("Your movies has not alignment. Please, set *No* "
+                errors.append("Your movies have no alignment. Please, set *No* "
                               "the parameter _Use previous movie alignment to SUM"
                               " frames?_")
 
@@ -381,7 +381,7 @@ def showCartesianShiftsPlot(inputSet, itemId):
         plotter = createAlignmentPlot(meanX, meanY)
         plotter.show()
     else:
-        print "This items does not have OF alignment set. "
+        print "These items do not have OF alignment set. "
 
 
 ProjectWindow.registerObjectCommand(OBJCMD_MOVIE_ALIGNCARTESIAN,
