@@ -311,7 +311,7 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
 
     def _readFailedList(self):
         """ Read from a text file the id's of the items that have been done. """
-        failedFile = self._getAllDone()
+        failedFile = self._getAllFailed()
         failedList = []
         # Check what items have been previously done
         if os.path.exists(failedFile):

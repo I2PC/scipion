@@ -31,6 +31,7 @@ from itertools import izip
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
+from pyworkflow.utils import yellowStr, redStr
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
@@ -109,9 +110,10 @@ class ProtAlignMovies(ProtProcessMovies):
         # validate that we have some output movies
         failedList = self._readFailedList()
         if len(failedList) == len(self.listOfMovies):
-            raise Exception("Couldn't create any output micrographs. Please review errors above.")
+            raise Exception(redStr("All movies failed, didn't create outputMicrographs."
+                                   "Please review movie steps above."))
         elif 0 < len(failedList) < len(self.listOfMovies):
-            self.warning("WARNING - Failed to align %d movies." % len(failedList))
+            self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -122,7 +124,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         setFile = self._getPath(baseName)
 
-        if os.path.exists(setFile):
+        if os.path.exists(setFile) and os.path.getsize(setFile) > 0:
             outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
@@ -209,8 +211,8 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
-                    print("Micrograph %s was not produced, not added to "
-                          "output set." % extraMicFn)
+                    print(yellowStr("WARNING: Micrograph %s was not produced, not added to "
+                          "output set." % extraMicFn))
                     doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
