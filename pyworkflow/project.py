@@ -225,8 +225,6 @@ class Project(object):
             self._isInReadOnlyFolder = True
             print("Warning: don't have write permissions for project folder. "
                   "Opening as READ-ONLY.")
-            time.sleep(10)
-
 
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
