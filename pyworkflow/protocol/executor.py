@@ -136,6 +136,8 @@ class QueueStepExecutor(StepExecutor):
         submitDict.update(self.submitDict)
         submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'])
+        if not os.path.exists(cwd):
+            os.makedirs(cwd)
         _submit(self.hostConfig, submitDict, cwd)
 
 
