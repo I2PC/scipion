@@ -134,7 +134,7 @@ class QueueStepExecutor(StepExecutor):
         submitDict = dict(self.hostConfig.getQueuesDefault())
         submitDict.update(self.submitDict)
         submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
-        _submit(self.hostConfig, submitDict)
+        _submit(self.hostConfig, submitDict, cwd)
 
 
 class StepThread(threading.Thread):
