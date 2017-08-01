@@ -34,6 +34,7 @@ import time
 import datetime
 import traceback
 import threading
+import os
 
 import pyworkflow.utils.process as process
 import constants as cts
@@ -134,6 +135,7 @@ class QueueStepExecutor(StepExecutor):
         submitDict = dict(self.hostConfig.getQueuesDefault())
         submitDict.update(self.submitDict)
         submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
+        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'])
         _submit(self.hostConfig, submitDict, cwd)
 
 
