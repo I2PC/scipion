@@ -59,6 +59,7 @@ def run(project_name, workflow, launch_timeout, location):
         # the id's don't get reused in the new project so comparing labels
         if protocol.getObjLabel() in labels_for_queue:
             protocol._useQueue = Boolean(True)
+            protocol._useQueueForJobs = Boolean(True)
 
         launch_when_ready(parents, project, protocol, name, launch_timeout, streaming)
 

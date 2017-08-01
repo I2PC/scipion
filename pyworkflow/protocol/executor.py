@@ -38,6 +38,8 @@ import threading
 import pyworkflow.utils.process as process
 import constants as cts
 
+from launch import _submit
+
 
 class StepExecutor():
     """ Run a list of Protocol steps. """
@@ -121,6 +123,18 @@ class StepExecutor():
 
 
         stepsCheckCallback() # one last check to finalize stuff
+
+
+class QueueStepExecutor(StepExecutor):
+    def __init__(self, hostConfig, submitDict):
+        StepExecutor.__init__(self, hostConfig)
+        self.submitDict = submitDict
+
+    def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
+        submitDict = dict(self.hostConfig.getQueuesDefault())
+        submitDict.update(self.submitDict)
+        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
+        _submit(self.hostConfig, submitDict)
 
 
 class StepThread(threading.Thread):

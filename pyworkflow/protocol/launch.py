@@ -225,7 +225,9 @@ def _submit(hostConfig, submitDict):
     # Try to parse the result of qsub, searching for a number (jobId)
     s = re.search('(\d+)', out)
     if s:
-        return int(s.group(0))
+        job = int(s.group(0))
+        print "launched job with id %s" % job
+        return job
     else:
         print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
         return UNKNOWN_JOBID
