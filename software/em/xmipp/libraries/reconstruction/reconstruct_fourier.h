@@ -40,14 +40,11 @@
 #include <data/metadata.h>
 #include <data/ctf.h>
 #include <data/array_2D.h>
-
 #include <data/args.h>
 #include <data/xmipp_fft.h>
 #include <sys/time.h>
-
 #include <data/metadata.h>
 #include "recons.h"
-
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 #define BLOB_TABLE_SIZE 5000
@@ -64,9 +61,7 @@
 //@{
 class ProgRecFourier;
 
-/**
- * struct representing all data regarding one projection
- */
+/** Struct representing all data regarding one projection */
 struct ProjectionData
 {
 	Array2D<std::complex<float> >* img;
@@ -77,9 +72,7 @@ struct ProjectionData
 	bool skip;
 };
 
-/**
- * struct holding information for loading thread
- */
+/** Struct holding information for loading thread */
 struct LoadThreadParams
 {
     pthread_t id;
@@ -91,7 +84,6 @@ struct LoadThreadParams
     ProjectionData* buffer2 = NULL;
 };
 
-/** Fourier reconstruction parameters. */
 class ProgRecFourier : public ProgReconsBase
 {
 public:
@@ -108,9 +100,9 @@ public:
     void finishComputations( const FileName &out_name );
     /** Functions of common reconstruction interface */
     virtual void setIO(const FileName &fn_in, const FileName &fn_out);
+
 protected:
-
-
+// 	FIELDS
     /** Thread used for loading input data */
     LoadThreadParams loadThread;
     /** SelFile containing all projections */
@@ -119,8 +111,11 @@ protected:
     FileName fn_out;
     /** Input file name */
     FileName fn_in;
-    /** maximal index in the temporal volume, Y and Z axis */
+    /** maximal index in the temporal volumes, Y and Z axis */
 	int maxVolumeIndexYZ;
+    /** maximal index in the temporal volumes, X axis */
+	int maxVolumeIndexX;
+//	METHODS
 	/**
 	 * 3D volume holding the cropped (without high frequencies) Fourier space.
 	 * Lowest frequencies are in the center, i.e. Fourier space creates a
@@ -132,8 +127,25 @@ protected:
 	 * in tempVolume.
 	 */
 	float*** tempWeights = NULL;
-
+	/**
+	 * Method will take temp spaces (containing complex conjugate values
+	 * in the 'right X side'), transfer them to 'left X side' and remove
+	 * the 'right X side'. As a result, the X dimension of the temp spaces
+	 * will be half of the original.
+	 */
     void mirrorAndCropTempSpaces();
+    /**
+     * Method will enforce Hermitian symmetry, i.e will remove make sure
+     * that the values in temporal space at X=0 are complex conjugate of
+     * in respect to center of the space
+     */
+    void forceHermitianSymmetry();
+    /**
+     * Method will in effect do the point-wise division of
+     * tempVolume and tempWeights
+     * (i.e. correct Fourier coefficients by proper weight)
+     */
+    void processWeights();
     void createLoadingThread();
     void cleanLoadingThread();
 
@@ -153,72 +165,41 @@ protected:
     void processImages(int firstImageIndex, int lastImageIndex);
 
 private:
-    /** Filenames */
+    /** File with symmetries */
     FileName fn_sym;
-
     /** Flag whether to use the weights in the image metadata */
     bool do_weights;
-
     /** Use CTF */
     bool useCTF;
-
-    /** Phase flipped.
-     * True if the images have been phase flipped before entering.
-     */
+    /** True if the images have been already phase flipped */
     bool phaseFlipped;
-
     /** Minimum CTF value to invert */
     double minCTF;
-
     /** Sampling rate */
     double Ts;
-
     /** Projection padding Factor */
     double padding_factor_proj;
-
     /** Volume padding Factor */
     double padding_factor_vol;
-
     /** Sampling rate in Angstroms/pixel */
     double sampling_rate;
-
-    /// Max resolution in Angstroms
+    /** Max resolution in Angstroms */
     double maxResolution;
-
-    // Maximum interesting resolution squared
+    /** Maximum interesting resolution squared */
     double maxResolutionSqr;
-
-    /// Tells the threads what to do next
+    /** Tells the loading thread what to do next */
     int threadOpCode;
-
-    /// Number of rows already processed on an image
-    size_t rowsProcessed;
-
-    /// Defines what a thread should do
-    static void * processImageThread( void * threadArgs );
-
-    /// Controls mutual exclusion on critical zones of code
-    pthread_mutex_t workLoadMutex;
-
-    /// To create a barrier synchronization for threads
+    /** Barrier synchronization for threads */
     barrier_t barrier;
-
-
-
-    // Table with blob values, lineal sampling
+    // Table with blob values, linear sampling
     Matrix1D<double>  Fourier_blob_table;
-
-    // Table with blob values, squared samplinf
+    // Table with blob values, squared sampling
     Matrix1D<double> blobTableSqrt;
-
     // Inverse of the delta and deltaFourier used in the tables
-    //double iDelta,
     double iDeltaFourier, iDeltaSqrt;
-
     // Definition of the blob
     struct blobtype blob;
-
-    // vector with R symmetry matrices
+    // Vector with R symmetry matrices
     std::vector <Matrix2D<double> > R_repository;
     // Size of the original images, image must be a square
     int imgSize;
@@ -229,13 +210,15 @@ private:
 
     int availableMemory;
     static const int batchSize = 11;
-////////////////////////////////////////////////////////////////////////
+// STATIC METHODS
     /** Method to allocate 3D array (not continuous) of given size */
     template<typename T>
     static T*** allocate(T***& where, int xSize, int ySize, int zSize);
     /** Method to allocate 2D array (not continuous) of given size */
     template<typename T>
     static T** allocate(T**& where, int xSize, int ySize);
+    /** Method running on separate thread */
+	static void* loadImageThread(void* threadArgs);
 
 
     void loadImages(int startIndex, int endIndex);
@@ -256,7 +239,7 @@ private:
     void crop(T***& inOut, int size);
 
     template<typename T>
-    T*** applyBlob(T***& input, int size, float blobSize,
+    T*** applyBlob(T***& input, float blobSize,
     		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt);
 
 

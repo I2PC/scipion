@@ -148,11 +148,11 @@ void ProgRecFourier::run()
 
 void ProgRecFourier::createLoadingThread() {
 	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
-	pthread_mutex_init( &workLoadMutex, NULL );
+//	pthread_mutex_init( &workLoadMutex, NULL );
 
 	loadThread.parent = this;
 	loadThread.selFile = &SF;
-	pthread_create( &loadThread.id , NULL, processImageThread, (void *)(&loadThread) );
+	pthread_create( &loadThread.id , NULL, loadImageThread, (void *)(&loadThread) );
 	threadOpCode = PRELOAD_IMAGE;
 }
 
@@ -186,8 +186,9 @@ void ProgRecFourier::produceSideinfo()
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"This algorithm only works for squared images");
     imgSize=Xdim;
     paddedImgSize = Xdim*padding_factor_vol;
-
-
+	size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+	conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+	maxVolumeIndexX = maxVolumeIndexYZ = 2 * conserveRows;
 
     // Build a table of blob values
     blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
@@ -512,7 +513,7 @@ Array2D<std::complex<float> >* ProgRecFourier::clipAndShift(MultidimArray<std::c
 	return result;
 }
 
-void * ProgRecFourier::processImageThread( void * threadArgs )
+void * ProgRecFourier::loadImageThread( void * threadArgs )
 {
 
     LoadThreadParams * threadParams = (LoadThreadParams *) threadArgs;
@@ -2069,27 +2070,26 @@ void release(T**& array, int ySize) {
 
 
 template<typename T>
-T*** ProgRecFourier::applyBlob(T***& input, int size, float blobSize,
+T*** ProgRecFourier::applyBlob(T***& input, float blobSize,
 		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
 	float blobSizeSqr = blobSize * blobSize;
-	int halfSize = size/2;
 	int blob = floor(blobSize); // we are using integer coordinates, so we cannot hit anything further
 	T tmp;
 	T*** output;
 	// create new storage
-	allocate(output, halfSize+1, size+1, size+1);
+	allocate(output, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 
 	// traverse new storage
-	for (int i = 0; i <= size; i++) {
-		for (int j = 0; j <= size; j++) {
-			for (int k = 0; k <= halfSize; k++) {
+	for (int i = 0; i <= maxVolumeIndexYZ; i++) {
+		for (int j = 0; j <= maxVolumeIndexYZ; j++) {
+			for (int k = 0; k <= maxVolumeIndexX; k++) {
 				// traverse input storage
 				tmp = (T) 0;
-				for (int z = std::max(0, i-blob); z <= std::min(size, i+blob); z++) {
+				for (int z = std::max(0, i-blob); z <= std::min(maxVolumeIndexYZ, i+blob); z++) {
 					float dZSqr = (i - z) * (i - z);
-					for (int y = std::max(0, j-blob); y <= std::min(size, j+blob); y++) {
+					for (int y = std::max(0, j-blob); y <= std::min(maxVolumeIndexYZ, j+blob); y++) {
 						float dYSqr = (j - y) * (j - y);
-						for (int x = std::max(0, k-blob); x <= std::min(halfSize, k+blob); x++) {
+						for (int x = std::max(0, k-blob); x <= std::min(maxVolumeIndexX, k+blob); x++) {
 							float dXSqr = (k - x) * (k - x);
 							float distanceSqr = dZSqr + dYSqr + dXSqr;
 							if (distanceSqr > blobSizeSqr) {
@@ -2106,7 +2106,7 @@ T*** ProgRecFourier::applyBlob(T***& input, int size, float blobSize,
 		}
 	}
 	// free original data
-	release(input, size+1, size+1);
+	release(input, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	return output;
 }
 
@@ -2169,84 +2169,77 @@ void ProgRecFourier::crop(T***& inOut, int size) {
 }
 
 void ProgRecFourier::mirrorAndCropTempSpaces() {
-	int size = maxVolumeIndexYZ;
-	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
+	maxVolumeIndexX = maxVolumeIndexYZ/2; // just half of the space is necessary, the rest is complex conjugate
 	std::complex<float>*** newOutputVol;
 	float*** newOutputWeight;
 	// create new storage, notice that just 'right hand side - X axis' of the input will be preserved, left will be converted to its complex conjugate
-	allocate(newOutputVol, halfSize+1, size+1, size+1);
-	allocate(newOutputWeight, halfSize+1, size+1, size+1);
+	allocate(newOutputVol, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+	allocate(newOutputWeight, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	// traverse old storage
-	for (int z = 0; z <= size; z++) {
-		for (int y = 0; y <= size; y++) {
-			for (int x = 0; x <= size; x++) {
-				if (x < halfSize) {
+	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
+		for (int y = 0; y <= maxVolumeIndexYZ; y++) {
+			for (int x = 0; x <= maxVolumeIndexYZ; x++) {
+				if (x < maxVolumeIndexX) {
 					int newPos[3];
 					// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel bigger
-					newPos[0] = size - x;
-					newPos[1] = size - y;
-					newPos[2] = size - z;
+					newPos[0] = maxVolumeIndexYZ - x;
+					newPos[1] = maxVolumeIndexYZ - y;
+					newPos[2] = maxVolumeIndexYZ - z;
 					// copy with X shifted by (-halfSize)
-					newOutputVol[newPos[2]][newPos[1]][newPos[0]-halfSize] += conj(tempVolume[z][y][x]); // conjugate
-					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-halfSize] += tempWeights[z][y][x];
+					newOutputVol[newPos[2]][newPos[1]][newPos[0]-maxVolumeIndexX] += conj(tempVolume[z][y][x]); // conjugate
+					newOutputWeight[newPos[2]][newPos[1]][newPos[0]-maxVolumeIndexX] += tempWeights[z][y][x];
 				} else {
 					// copy with X shifted by (-halfSize)
-					newOutputVol[z][y][x-halfSize] += tempVolume[z][y][x];
-					newOutputWeight[z][y][x-halfSize] += tempWeights[z][y][x];
+					newOutputVol[z][y][x-maxVolumeIndexX] += tempVolume[z][y][x];
+					newOutputWeight[z][y][x-maxVolumeIndexX] += tempWeights[z][y][x];
 				}
 			}
 		}
 	}
 	// free original data
-	release(tempVolume, size+1, size+1);
-	release(tempWeights, size+1, size+1);
+	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	// set new data
 	tempVolume = newOutputVol;
 	tempWeights = newOutputWeight;
 }
 
-void forceHermitianSymmetry(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
+void ProgRecFourier::forceHermitianSymmetry() {
 	int x = 0;
-	for (int z = 0; z <= size; z++) {
-		for (int y = 0; y <= size/2; y++) {
+	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
+		for (int y = 0; y <= maxVolumeIndexYZ/2; y++) {
 			int newPos[3];
 			// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel biger
 			newPos[0] = x;
-			newPos[1] = size - y;
-			newPos[2] = size - z;
-			std::complex<float> tmp1 = 0.5f * (outputVolume[newPos[2]][newPos[1]][newPos[0]] + conj(outputVolume[z][y][x]));
-			float tmp2 = 0.5f * (outputWeight[newPos[2]][newPos[1]][newPos[0]] + outputWeight[z][y][x]);
+			newPos[1] = maxVolumeIndexYZ - y;
+			newPos[2] = maxVolumeIndexYZ - z;
+			std::complex<float> tmp1 = 0.5f * (tempVolume[newPos[2]][newPos[1]][newPos[0]] + conj(tempVolume[z][y][x]));
+			float tmp2 = 0.5f * (tempWeights[newPos[2]][newPos[1]][newPos[0]] + tempWeights[z][y][x]);
 
-			outputVolume[newPos[2]][newPos[1]][newPos[0]] = tmp1;
-			outputVolume[z][y][x] = conj(tmp1);
-			outputWeight[newPos[2]][newPos[1]][newPos[0]] = outputWeight[z][y][x] = tmp2;
+			tempVolume[newPos[2]][newPos[1]][newPos[0]] = tmp1;
+			tempVolume[z][y][x] = conj(tmp1);
+			tempWeights[newPos[2]][newPos[1]][newPos[0]] = tempWeights[z][y][x] = tmp2;
 		}
 	}
 }
 
-void processWeight(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
-		float padding_factor_proj, float padding_factor_vol, int imgSize) {
+void ProgRecFourier::processWeights() {
     // Get a first approximation of the reconstruction
     float corr2D_3D=pow(padding_factor_proj,2.)/
                      (imgSize* pow(padding_factor_vol,3.));
-	for (int z = 0; z <= volSize; z++) {
-		for (int y = 0; y <= volSize; y++) {
-			for (int x = 0; x <= volSize/2; x++) {
-//				if (NiterWeight==0)
-//					outputVolume[z][y][x] *= corr2D_3D;
-//				else
-//				{
-					float weight = outputWeight[z][y][x];
-					std::complex<float> val = outputVolume[z][y][x];
-					if (fabs(weight) > 1e-3) {
-						weight = 1.f/weight;
-					}
+	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
+		for (int y = 0; y <= maxVolumeIndexYZ; y++) {
+			for (int x = 0; x <= maxVolumeIndexX; x++) {
+				float weight = tempWeights[z][y][x];
+				std::complex<float> val = tempVolume[z][y][x];
+				if (fabs(weight) > 1e-3) {
+					weight = 1.f/weight;
+				}
 
-					if (1.0/weight > ACCURACY)
-						outputVolume[z][y][x] *= corr2D_3D*weight;
-					else
-						outputVolume[z][y][x] = 0;
-//				}
+				if (1.0/weight > ACCURACY)
+					tempVolume[z][y][x] *= corr2D_3D*weight;
+				else
+					tempVolume[z][y][x] = 0;
 			}
 		}
 	}
@@ -2360,7 +2353,7 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer,
 		// Loop over all symmetries
 		for (size_t isym = 0; isym < R_repository.size(); isym++)
 		{
-			rowsProcessed = 0;
+//			rowsProcessed = 0;
 
 			// Compute the coordinate axes of the symmetrized projection
 			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
@@ -2421,10 +2414,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
     // FSC purposes
 //    int current_index;
 
-    std::cout << "paddedImgSize " << paddedImgSize << " maxResolution " << maxResolution << std::endl;
-	size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
-	conserveRows = (size_t) ceil((double) conserveRows / 2.0);
-	maxVolumeIndexYZ = 2 * conserveRows;
+
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)batchSize);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
@@ -2741,17 +2731,17 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to apply blob" << std::endl;
 	#endif
-	tempVolume = applyBlob(tempVolume, maxVolumeIndexYZ, blob.radius, blobTableSqrt, iDeltaSqrt);
+	tempVolume = applyBlob(tempVolume, blob.radius, blobTableSqrt, iDeltaSqrt);
 	std::cout << "applyBlob1 done" << std::endl;
-	tempWeights = applyBlob(tempWeights, maxVolumeIndexYZ, blob.radius, blobTableSqrt, iDeltaSqrt);
+	tempWeights = applyBlob(tempWeights, blob.radius, blobTableSqrt, iDeltaSqrt);
 	std::cout << "applyBlob2 done" << std::endl;
 
 	//    if( saveFSC ) {
 	//		saveFinalFSC(outputVolume, outputWeight, size);
 	//	}
 
-	forceHermitianSymmetry(tempVolume, tempWeights, maxVolumeIndexYZ);
-	processWeight(tempVolume, tempWeights, maxVolumeIndexYZ, padding_factor_proj, padding_factor_vol, imgSize);
+	forceHermitianSymmetry();
+	processWeights();
 	std::cout << "processWeight done" << std::endl;
 	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 	#if DEBUG_DUMP > 0
@@ -2759,7 +2749,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 	#endif
 	MultidimArray< std::complex<double> > VoutFourier;
 	allocateVoutFourier(VoutFourier);
-	std::cout << "allocating VoutFOurier done" << std::endl;
+	std::cout << "allocating VoutFourier done" << std::endl;
 	convertToExpectedSpace(tempVolume, maxVolumeIndexYZ, VoutFourier);
 	std::cout << "convert done" << std::endl;
 	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);

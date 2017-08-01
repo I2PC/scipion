@@ -60,9 +60,6 @@ class ProgMPIRecFourier: public ProgRecFourier, public XmippMpiProgram
 {
 public:
 
-    /** Fourier transform size for volumes **/
-    long int sizeout;
-
     /** Dvide the job in this number block with this number of images */
     int mpi_job_size;
 

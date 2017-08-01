@@ -454,22 +454,21 @@ void ProgMPIRecFourier::run()
                     std::cerr << "Wr" << node->rank << " " << "TAG_STOP" << std::endl;
 #endif
                     std::cout << "transfering " << node->rank << std::endl;
-                    std::cout << "sizeout" << sizeout << std::endl;
-                    for(int a = 0; a <sizeout; a++) {
-                    	for(int b = 0; b <sizeout; b++) {
+                    for(int z = 0; z <= maxVolumeIndexYZ; z++) {
+                    	for(int y = 0; y <= maxVolumeIndexYZ; y++) {
                     		if (node->rank == 1) {
-								MPI_Reduce(MPI_IN_PLACE,&(tempVolume[a][b][0]),
-										(maxVolumeIndexYZ/2 + 1)*2, MPI_FLOAT,
+								MPI_Reduce(MPI_IN_PLACE,&(tempVolume[z][y][0]),
+										(maxVolumeIndexX+1)*2, MPI_FLOAT,
 																MPI_SUM, 0, new_comm);
-								MPI_Reduce(MPI_IN_PLACE,&(tempWeights[a][b][0]),
-																(maxVolumeIndexYZ/2 + 1), MPI_FLOAT,
+								MPI_Reduce(MPI_IN_PLACE,&(tempWeights[z][y][0]),
+																(maxVolumeIndexX+1), MPI_FLOAT,
 																MPI_SUM, 0, new_comm);
                     		} else {
-        						MPI_Reduce(&(tempVolume[a][b][0]),&(tempVolume[a][b][0]),
-        								(maxVolumeIndexYZ/2 + 1)*2, MPI_FLOAT,
+        						MPI_Reduce(&(tempVolume[z][y][0]),&(tempVolume[z][y][0]),
+        								(maxVolumeIndexX+1)*2, MPI_FLOAT,
         														MPI_SUM, 0, new_comm);
-        						MPI_Reduce(&(tempWeights[a][b][0]),&(tempWeights[a][b][0]),
-        								(maxVolumeIndexYZ/2 +1), MPI_FLOAT,
+        						MPI_Reduce(&(tempWeights[z][y][0]),&(tempWeights[z][y][0]),
+        								(maxVolumeIndexX+1), MPI_FLOAT,
         														MPI_SUM, 0, new_comm);
                     		}
                     	}
@@ -697,7 +696,6 @@ void ProgMPIRecFourier::run()
 //                    outputVolume[128][128][128].imag() = ((1 << node->rank) + 11);
 //                    std::cout << "outputWeight checking " << node->rank << " : " << outputWeight[volumeSize/2][volumeSize/2][volumeSize/2] << std::endl;
 //                    std::cout << "outputVolume checking " << node->rank << " : " << outputVolume[128][128][128] << std::endl;
-                    sizeout = maxVolumeIndexYZ+1;//MULTIDIM_SIZE(FourierWeights);
                 }
                 else
                 {
