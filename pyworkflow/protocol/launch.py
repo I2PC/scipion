@@ -241,7 +241,7 @@ def _wait_for_job(hostConfig, jobid):
 
         s = re.search('exit_status\s+-*(\d+)', out)
         if s:
-            status = int(s.group(0))
+            status = int(s.group(1))
             print "job %s finished with exist status %s" % (jobid, status)
             return status
         else:
