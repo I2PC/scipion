@@ -27,7 +27,7 @@
 # *
 # ******************************************************************************
 
-import os, sys
+import os, sys, traceback
 from itertools import izip
 
 import pyworkflow.protocol.params as params
@@ -359,9 +359,10 @@ class ProtMotionCorr(ProtAlignMovies):
             if self._doComputeMicThumbnail():
                 self.computeThumbnail(outMicFn,
                                       outputFn=self._getOutputMicThumbnail(movie))
-        except Exception as e:
+        except:
             print("ERROR: Movie %s failed\n" % movie.getName())
-            print(e)
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_exception(exc_type)
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
