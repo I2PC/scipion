@@ -361,8 +361,7 @@ class ProtMotionCorr(ProtAlignMovies):
                                       outputFn=self._getOutputMicThumbnail(movie))
         except:
             print("ERROR: Movie %s failed\n" % movie.getName())
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            traceback.print_exception(exc_type)
+            traceback.print_exc()
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
