@@ -196,11 +196,11 @@ class ProtRelionLocalRes(ProtAnalysis3D):
 
         protClassName = self.protRefine.get().getClassName()
         if protClassName.startswith('SpiderProtRefinement'):
-            errors.append("Relion post-process protocol not implemented for "
+            errors.append("Relion local resolution protocol is not implemented for "
                           "Spider - refinement.")
         
         if protClassName.startswith('XmippProtReconstructHighRes'):
-            errors.append("Relion post-process protocol not implemented for "
+            errors.append("Relion local resolution protocol is not implemented for "
                           "Xmipp - highres.")
         return errors
     
