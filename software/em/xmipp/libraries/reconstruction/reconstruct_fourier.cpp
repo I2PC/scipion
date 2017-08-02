@@ -991,7 +991,7 @@ BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl
 }
 
 template<typename T, typename U>
-inline U clamp(U val, T min, T max) {
+inline U ProgRecFourier::clamp(U val, T min, T max) {
 	U res = val;
 	res = (res > max) ? max : res;
 	res = (res < min) ? min : res;
@@ -1026,11 +1026,11 @@ getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int 
 	return BilinearInterpolation(bl, br, tl, tr, 1. - fractX, 1. - fractY);
 }
 
-inline std::complex<float>
-getPixelClamped(Array2D<std::complex<float> >& img, float x, float y, int imgSizeX, int imgSizeY)
+inline
+std::complex<float> ProgRecFourier::getPixelClamped(Array2D<std::complex<float> >* img, float x, float y)
 {
-	int imgX = clamp((int)(x + 0.5f), 0, imgSizeX - 1);
-	int imgY = clamp((int)(y + 0.5f), 0, imgSizeY - 1);
+	int imgX = clamp((int)(x + 0.5f), 0, img->getXSize() - 1);
+	int imgY = clamp((int)(y + 0.5f), 0, img->getYSize() - 1);
 	return img(imgX, imgY);
 }
 
@@ -1923,25 +1923,25 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 
 
-inline void processVoxel(int x, int y, int z, int halfVolSize, float transform[3][3], float maxDistanceSqr,
-		std::complex<float>*** outputVolume, float*** outputWeights, Array2D<std::complex<float> >& inputImage, int imgSizeX, int imgSizeY) {
+inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
+		ProjectionData* projectionData) {
 	float imgPos[3];
 	int imgX, imgY;
 
 	// transform current point to center
-	imgPos[0] = x - halfVolSize;
-	imgPos[1] = y - halfVolSize;
-	imgPos[2] = z - halfVolSize;
+	imgPos[0] = x - maxVolumeIndexX/2;
+	imgPos[1] = y - maxVolumeIndexYZ/2;
+	imgPos[2] = z - maxVolumeIndexYZ/2;
 	if (imgPos[0]*imgPos[0] + imgPos[1]*imgPos[1] + imgPos[2]*imgPos[2] > maxDistanceSqr) {
 		return; // discard iterations that would access pixel with too high frequency
 	}
 	// rotate around center
 	multiply(transform, imgPos);
 	// transform back
-	imgPos[1] += halfVolSize; // just Y coordinate, since X now match to picture and Z is irrelevant
+	imgPos[1] += maxVolumeIndexYZ/2; // just Y coordinate, since X now match to picture and Z is irrelevant
 
-	outputVolume[z][y][x] += getPixelClamped(inputImage, imgPos[0], imgPos[1], imgSizeX, imgSizeY);
-	outputWeights[z][y][x] += 1.f;
+	tempVolume[z][y][x] += getPixelClamped(projectionData->img, imgPos[0], imgPos[1]);
+	tempWeights[z][y][x] += 1.f;
 }
 
 inline void convert(Matrix2D<double>& in, float out[3][3]) {
@@ -1988,7 +1988,7 @@ void ProgRecFourier::processProjection(
 				float hitZ;
 				if (getZ(x, y, hitZ, u, v, *plane)) {
 					int z = (int)(hitZ + 0.5f); // rounding
-					processVoxel(x, y, z, maxVolumeIndexX/2, transformInv, maxDistanceSqr, tempVolume, tempWeights, *projectionData->img, imgSizeX, imgSizeY);
+					processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
 				}
 			}
 		}
@@ -1998,7 +1998,7 @@ void ProgRecFourier::processProjection(
 				float hitY;
 				if (getY(x, hitY, z, u, v, *plane)) {
 					int y = (int)(hitY + 0.5f); // rounding
-					processVoxel(x, y, z, maxVolumeIndexX/2, transformInv, maxDistanceSqr, tempVolume, tempWeights, *projectionData->img, imgSizeX, imgSizeY);
+					processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
 				}
 			}
 		}
@@ -2008,7 +2008,7 @@ void ProgRecFourier::processProjection(
 				float hitX;
 				if (getX(hitX, y, z, u, v, *plane)) {
 					int x = (int)(hitX + 0.5f); // rounding
-					processVoxel(x, y, z, maxVolumeIndexX/2, transformInv, maxDistanceSqr, tempVolume, tempWeights, *projectionData->img, imgSizeX, imgSizeY);
+					processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
 				}
 			}
 		}

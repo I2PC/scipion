@@ -291,7 +291,24 @@ private:
     	ProjectionData* projectionData,
     	float transform[3][3],
     	float transformInv[3][3]);
-
+    /**
+     * Method will map one voxel from the temporal
+     * spaces to the given projection and update temporal spaces
+     * using the pixel value of the projection.
+     */
+    void processVoxel(
+    		int x, int y, int z,
+			float transform[3][3], float maxDistanceSqr,
+    		ProjectionData* projectionData);
+    /**
+     * Method will return a pixel on given position (rounded to closest int,
+     * clamped to img size)
+     */
+    std::complex<float>
+    getPixelClamped(Array2D<std::complex<float> >* img, float x, float y);
+    /** Returns value within the range (included) */
+    template<typename T, typename U>
+    U clamp(U val, T min, T max);
 //    inline void allocateFourierWeights() {
 //    	if (NULL == FourierWeights.data) {
 //    		FourierWeights.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
