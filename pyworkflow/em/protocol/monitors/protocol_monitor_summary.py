@@ -152,7 +152,8 @@ class ProtMonitorSummary(ProtMonitor):
         return ctfMonitor
 
     def createSystemMonitor(self):
-        protocols = self._getInputProtocols()
+        protocols = self.getInputProtocols()
+
         sysMonitor = MonitorSystem(protocols,
                                    workingDir=self.workingDir.get(),
                                    samplingInterval=self.samplingInterval.get(),

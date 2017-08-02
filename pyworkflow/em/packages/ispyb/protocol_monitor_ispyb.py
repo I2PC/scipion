@@ -65,7 +65,7 @@ class ProtMonitorISPyB(ProtMonitor):
 
     #--------------------------- STEPS functions -------------------------------
     def monitorStep(self):
-        inputProtocols = self._getInputProtocols()
+        inputProtocols = self.getInputProtocols()
 
         monitor = MonitorISPyB(self, workingDir=self._getPath(),
                                samplingInterval=self.samplingInterval.get(),

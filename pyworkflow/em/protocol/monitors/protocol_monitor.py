@@ -100,7 +100,7 @@ class ProtMonitor(EMProtocol):
     def _methods(self):
         return []
 
-    def _getInputProtocols(self):
+    def getInputProtocols(self):
         protocols = []
         for protPointer in self.inputProtocols:
             prot = protPointer.get()

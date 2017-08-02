@@ -81,7 +81,7 @@ class ProtMonitorSystem(ProtMonitor):
         self.createMonitor().loop()
 
     def createMonitor(self):
-        protocols = self._getInputProtocols()
+        protocols = self.getInputProtocols()
         sysMonitor = MonitorSystem(protocols,
                                    workingDir=self.workingDir.get(),
                                    samplingInterval=self.samplingInterval.get(),
