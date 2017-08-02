@@ -283,6 +283,14 @@ private:
     		VoutFourier.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
     	}
     }
+    /**
+     * Method will process one projection image and add result to temporal
+     * spaces. Method also shows progress of the calculation.
+     */
+    void processProjection(
+    	ProjectionData* projectionData,
+    	float transform[3][3],
+    	float transformInv[3][3]);
 
 //    inline void allocateFourierWeights() {
 //    	if (NULL == FourierWeights.data) {
