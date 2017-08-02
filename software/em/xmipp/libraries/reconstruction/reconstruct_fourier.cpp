@@ -63,8 +63,9 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--phaseFlipped]               : Give this flag if images have been already phase flipped");
     addParamsLine("  [--minCTF <ctf=0.01>]          : Minimum value of the CTF that will be inverted");
     addParamsLine("                                 : CTF values (in absolute value) below this one will not be corrected");
-    addParamsLine("  [--availableMemory <MB=4096>]   : RAM that can be used by the program.");
-    addParamsLine("                                 : Must be at least 16*input_projection_size^3*8 B, otherwise system might use swapping");
+    addParamsLine("  [--bufferSize <size=25>]        : Number of projection loaded in memory (will be actually 2x as much.");
+    addParamsLine("                                 : This will require up to 2*size*projSize*projSize*16B, e.g.");
+    addParamsLine("                                 : 50MB for projection of 256x256 or 200MB for projection of 512x512");
     addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
     addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 }
@@ -89,7 +90,7 @@ void ProgRecFourier::readParams()
     minCTF = getDoubleParam("--minCTF");
     if (useCTF)
         Ts=getDoubleParam("--sampling");
-    availableMemory = getIntParam("--availableMemory", 0);
+    bufferSize = getIntParam("--bufferSize");
 }
 
 // Show ====================================================================
@@ -291,124 +292,124 @@ bool ellipseHitTest(T majorAxis, T minorAxis, T x0, T y0, T xp, T yp, T alpha)
 	return distance <= 1;
 }
 
-void ProgRecFourier::processCube(
-		int i,
-		int j,
-		const Matrix1D<int>& corner1,
-		const Matrix1D<int>& corner2,
-		const MultidimArray<float>& z2precalculated,
-		const MultidimArray<int>& zWrapped,
-		const MultidimArray<int>& zNegWrapped,
-		const MultidimArray<float>& y2precalculated, float blobRadiusSquared,
-		const MultidimArray<int>& yWrapped,
-		const MultidimArray<int>& yNegWrapped,
-		const MultidimArray<float>& x2precalculated, float iDeltaSqrt,
-		float wModulator, const MultidimArray<int>& xWrapped, int xsize_1,
-		const MultidimArray<int>& xNegWrapped, bool reprocessFlag, float wCTF,
-		MultidimArray<std::complex<double> >& VoutFourier,
-		Matrix1D<double>& blobTableSqrt, LoadThreadParams* threadParams,
-		MultidimArray<double>& fourierWeights, double* ptrIn,
-		float weight,
-		ProgRecFourier * parent,
-		Matrix1D<double>& real_position) {
-	// Actually compute
-	for (int intz = corner1[2]; intz <= corner2[2]; ++intz) {
-		float z2 = z2precalculated(intz);
-		int iz = zWrapped(intz);
-		int izneg = zNegWrapped(intz);
-		for (int inty = corner1[1]; inty <= corner2[1]; ++inty) {
-			float y2z2 = y2precalculated(inty) + z2;
-			if (y2z2 > blobRadiusSquared)
-				continue;
-
-			int iy = yWrapped(inty);
-			int iyneg = yNegWrapped(inty);
-			int size1 = VoutFourier.yxdim * (izneg)
-					+ ((iyneg) * VoutFourier.xdim);
-			int size2 = VoutFourier.yxdim * (iz) + ((iy) * VoutFourier.xdim);
-			int fixSize = 0;
-			for (int intx = corner1[0]; intx <= corner2[0]; ++intx) {
-				// Compute distance to the center of the blob
-				// Compute blob value at that distance
-				float d2 = x2precalculated(intx) + y2z2;
-				if (d2 > blobRadiusSquared)
-					continue;
-
-				int aux = (int) ((d2 * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-				float w = blobTableSqrt[aux] * weight
-						* wModulator;
-				int ix = xWrapped(intx);
-				bool conjugate = false;
-				int izp, iyp, ixp;
-				if (ix > xsize_1) {
-					izp = izneg;
-					iyp = iyneg;
-					ixp = xNegWrapped(intx);
-					conjugate = true;
-					fixSize = size1;
-				} else {
-					izp = iz;
-					iyp = iy;
-					ixp = ix;
-					fixSize = size2;
-				}
-
-
-				// Add the weighted coefficient
-				if (reprocessFlag) {
-					// Use VoutFourier as temporary to save the memory
-					double* ptrOut = (double*) (&(DIRECT_A3D_ELEM(VoutFourier,
-							izp, iyp, ixp)));
-					DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w
-							* ptrOut[0]);
-				} else {
-					float wEffective = w * wCTF;
-					size_t memIdx = fixSize + ixp; //YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
-
-
-//						double tmp[3];
-//						FFT_IDX2DIGFREQ(intx, parent->volPadSizeX,
-//								tmp[0]);
-//						FFT_IDX2DIGFREQ(inty, parent->volPadSizeX,
-//								tmp[1]);
-//						FFT_IDX2DIGFREQ(intz, parent->volPadSizeX,
-//								tmp[2]);
-
-//					if (iyp > 64) {
-						std::cout
-							<< ixp
-							<< " "
-							<< iyp
-							<< " "
-							<< izp
-							<< " -> "
-//							<< tmp[0]
+//void ProgRecFourier::processCube(
+//		int i,
+//		int j,
+//		const Matrix1D<int>& corner1,
+//		const Matrix1D<int>& corner2,
+//		const MultidimArray<float>& z2precalculated,
+//		const MultidimArray<int>& zWrapped,
+//		const MultidimArray<int>& zNegWrapped,
+//		const MultidimArray<float>& y2precalculated, float blobRadiusSquared,
+//		const MultidimArray<int>& yWrapped,
+//		const MultidimArray<int>& yNegWrapped,
+//		const MultidimArray<float>& x2precalculated, float iDeltaSqrt,
+//		float wModulator, const MultidimArray<int>& xWrapped, int xsize_1,
+//		const MultidimArray<int>& xNegWrapped, bool reprocessFlag, float wCTF,
+//		MultidimArray<std::complex<double> >& VoutFourier,
+//		Matrix1D<double>& blobTableSqrt, LoadThreadParams* threadParams,
+//		MultidimArray<double>& fourierWeights, double* ptrIn,
+//		float weight,
+//		ProgRecFourier * parent,
+//		Matrix1D<double>& real_position) {
+//	// Actually compute
+//	for (int intz = corner1[2]; intz <= corner2[2]; ++intz) {
+//		float z2 = z2precalculated(intz);
+//		int iz = zWrapped(intz);
+//		int izneg = zNegWrapped(intz);
+//		for (int inty = corner1[1]; inty <= corner2[1]; ++inty) {
+//			float y2z2 = y2precalculated(inty) + z2;
+//			if (y2z2 > blobRadiusSquared)
+//				continue;
+//
+//			int iy = yWrapped(inty);
+//			int iyneg = yNegWrapped(inty);
+//			int size1 = VoutFourier.yxdim * (izneg)
+//					+ ((iyneg) * VoutFourier.xdim);
+//			int size2 = VoutFourier.yxdim * (iz) + ((iy) * VoutFourier.xdim);
+//			int fixSize = 0;
+//			for (int intx = corner1[0]; intx <= corner2[0]; ++intx) {
+//				// Compute distance to the center of the blob
+//				// Compute blob value at that distance
+//				float d2 = x2precalculated(intx) + y2z2;
+//				if (d2 > blobRadiusSquared)
+//					continue;
+//
+//				int aux = (int) ((d2 * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+//				float w = blobTableSqrt[aux] * weight
+//						* wModulator;
+//				int ix = xWrapped(intx);
+//				bool conjugate = false;
+//				int izp, iyp, ixp;
+//				if (ix > xsize_1) {
+//					izp = izneg;
+//					iyp = iyneg;
+//					ixp = xNegWrapped(intx);
+//					conjugate = true;
+//					fixSize = size1;
+//				} else {
+//					izp = iz;
+//					iyp = iy;
+//					ixp = ix;
+//					fixSize = size2;
+//				}
+//
+//
+//				// Add the weighted coefficient
+//				if (reprocessFlag) {
+//					// Use VoutFourier as temporary to save the memory
+//					double* ptrOut = (double*) (&(DIRECT_A3D_ELEM(VoutFourier,
+//							izp, iyp, ixp)));
+//					DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w
+//							* ptrOut[0]);
+//				} else {
+//					float wEffective = w * wCTF;
+//					size_t memIdx = fixSize + ixp; //YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
+//
+//
+////						double tmp[3];
+////						FFT_IDX2DIGFREQ(intx, parent->volPadSizeX,
+////								tmp[0]);
+////						FFT_IDX2DIGFREQ(inty, parent->volPadSizeX,
+////								tmp[1]);
+////						FFT_IDX2DIGFREQ(intz, parent->volPadSizeX,
+////								tmp[2]);
+//
+////					if (iyp > 64) {
+//						std::cout
+//							<< ixp
 //							<< " "
-//							<< tmp[1]
+//							<< iyp
 //							<< " "
-//							<< tmp[2]
-//							   << " -> "
-							<< j
-							<< " "
-							<< ((i < 64) ?	i + 64 : i - 128 + 64)
+//							<< izp
+//							<< " -> "
+////							<< tmp[0]
+////							<< " "
+////							<< tmp[1]
+////							<< " "
+////							<< tmp[2]
+////							   << " -> "
+//							<< j
 //							<< " "
-//							<< wEffective
-//							<< " "
-//							<< (conjugate ? "conjugate" : "no_conjugate")
-							<< std::endl;
-//					}
-					double* ptrOut = (double*) (&(VoutFourier[memIdx]));
-					ptrOut[0] += wEffective * ptrIn[0];
-					fourierWeights[memIdx] += w;
-					if (conjugate)
-						ptrOut[1] -= wEffective * ptrIn[1];
-					else
-						ptrOut[1] += wEffective * ptrIn[1];
-				}
-			}
-		}
-	}
-}
+//							<< ((i < 64) ?	i + 64 : i - 128 + 64)
+////							<< " "
+////							<< wEffective
+////							<< " "
+////							<< (conjugate ? "conjugate" : "no_conjugate")
+//							<< std::endl;
+////					}
+//					double* ptrOut = (double*) (&(VoutFourier[memIdx]));
+//					ptrOut[0] += wEffective * ptrIn[0];
+//					fourierWeights[memIdx] += w;
+//					if (conjugate)
+//						ptrOut[1] -= wEffective * ptrIn[1];
+//					else
+//						ptrOut[1] += wEffective * ptrIn[1];
+//				}
+//			}
+//		}
+//	}
+//}
 struct Point3D {
 	float x, y, z;
 };
@@ -481,30 +482,34 @@ void print(MultidimArray<T>& VoutFourier, bool full = true) {
 	myfile.close();
 }
 
-Array2D<std::complex<float> >* ProgRecFourier::clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+Array2D<std::complex<float> >* ProgRecFourier::cropAndShift(MultidimArray<std::complex<double> >& paddedFourier,
 		ProgRecFourier * parent) {
-	// Determine how many rows of the fourier
-	// transform are of interest for us. This is because
-	// the user can avoid to explore at certain resolutions
-	int conserveRows = ceil(paddedFourier.ydim * parent->maxResolution * 2.f);
-	conserveRows = ceil(conserveRows / 2.f);
-	int size = 2 * conserveRows;
+//	// Determine how many rows of the fourier
+//	// transform are of interest for us. This is because
+//	// the user can avoid to explore at certain resolutions
+//	int conserveRows = ceil(paddedFourier.ydim * parent->maxResolution * 2.f);
+//	conserveRows = ceil(conserveRows / 2.f);
+//	int size = 2 * conserveRows;
+	int sizeX = parent->maxVolumeIndexX / 2; // input Fourier contains just one half of the space, second is complex conjugate
+	int sizeY = parent->maxVolumeIndexYZ;
 
-	Array2D<std::complex<float> >* result = new Array2D<std::complex<float> >(conserveRows, size);
+	Array2D<std::complex<float> >* result = new Array2D<std::complex<float> >(sizeX, sizeY);
 	// convert image (shift to center and remove high frequencies)
 	std::complex<double> paddedFourierTmp;
 	int halfY = paddedFourier.ydim / 2;
 	double tempMyPadd[2];
 	for (size_t i = 0; i < paddedFourier.ydim; i++) {
-		for (size_t j = 0; j < conserveRows; j++) {
-			if (i < conserveRows || i >= (paddedFourier.ydim - conserveRows)) {
+		for (size_t j = 0; j < sizeX; j++) {
+			if (i < sizeX || i >= (paddedFourier.ydim - sizeX)) {
+				// check the frequency
 				paddedFourierTmp = DIRECT_A2D_ELEM(paddedFourier, i, j);
 				FFT_IDX2DIGFREQ(j, parent->paddedImgSize, tempMyPadd[0]);
 				FFT_IDX2DIGFREQ(i, parent->paddedImgSize, tempMyPadd[1]);
 				if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1]> parent->maxResolutionSqr) {
 					continue;
 				}
-				int myPadI = (i < halfY) ?	i + conserveRows : i - paddedFourier.ydim + conserveRows;
+				// do the shift
+				int myPadI = (i < halfY) ?	i + sizeX : i - paddedFourier.ydim + sizeX;
 				(*result)(j, myPadI).real() =	paddedFourierTmp.real();
 				(*result)(j, myPadI).imag() =	paddedFourierTmp.imag();
 			}
@@ -577,9 +582,9 @@ void * ProgRecFourier::loadImageThread( void * threadArgs )
         case PRELOAD_IMAGE:
             {
             	if (NULL == threadParams->buffer1) {
-            		threadParams->buffer1 = new ProjectionData[parent->batchSize];
+            		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
             	}
-                for(int bIndex = 0; bIndex < parent->batchSize; bIndex++)
+                for(int bIndex = 0; bIndex < parent->bufferSize; bIndex++)
                 {
                 	int imgIndex = threadParams->startImageIndex + bIndex;
                 	ProjectionData* data = &threadParams->buffer1[bIndex];
@@ -647,7 +652,7 @@ void * ProgRecFourier::loadImageThread( void * threadArgs )
                     Euler_angles2matrix(rot, tilt, psi, localA);
 
                     data->localAInv = localA.transpose();
-                    data->img = clipAndShift(localPaddedFourier, parent);
+                    data->img = cropAndShift(localPaddedFourier, parent);
                     data->imgIndex = imgIndex;
                     data->skip = false;
                     std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
@@ -2148,29 +2153,29 @@ void mirror(std::complex<float>*** outputVolume, float*** outputWeight, int size
 		}
 	}
 }
-
-template<typename T>
-void ProgRecFourier::crop(T***& inOut, int size) {
-	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
-	T*** output;
-	// create new storage, notice that just 'right hand side' of the input will be used
-	allocate(output, halfSize+1, size+1, size+1);
-	// traverse old storage
-	for (int z = 0; z <= size; z++) {
-		for (int y = 0; y <= size; y++) {
-			for (int x = halfSize; x <= size; x++) {
-				output[z][y][x-halfSize] = inOut[z][y][x];
-			}
-		}
-	}
-	// free original data
-	release(inOut, size+1, size+1);
-	inOut = output;
-}
+//
+//template<typename T>
+//void ProgRecFourier::crop(T***& inOut, int size) {
+//	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
+//	T*** output;
+//	// create new storage, notice that just 'right hand side' of the input will be used
+//	allocate(output, halfSize+1, size+1, size+1);
+//	// traverse old storage
+//	for (int z = 0; z <= size; z++) {
+//		for (int y = 0; y <= size; y++) {
+//			for (int x = halfSize; x <= size; x++) {
+//				output[z][y][x-halfSize] = inOut[z][y][x];
+//			}
+//		}
+//	}
+//	// free original data
+//	release(inOut, size+1, size+1);
+//	inOut = output;
+//}
 
 void ProgRecFourier::mirrorAndCropTempSpaces() {
 	maxVolumeIndexX = maxVolumeIndexYZ/2; // just half of the space is necessary, the rest is complex conjugate
-	mirrorAndCrop(tempWeights, &identity);
+	mirrorAndCrop(tempWeights, &identity<float>);
 	mirrorAndCrop(tempVolume, &conjugate);
 }
 
@@ -2312,24 +2317,21 @@ void ProgRecFourier::loadImages(int startIndex, int endIndex) {
 	loadThread.endImageIndex = endIndex;
 	std::cout << "start index: " << loadThread.startImageIndex << std::endl;
 	std::cout << "end index: " << loadThread.endImageIndex << std::endl;
+	// Awaking sleeping threads
+	barrier_wait( &barrier );
 }
 
-void ProgRecFourier::swapBuffers() {
+void ProgRecFourier::swapLoadBuffers() {
 	std::cout << "swapping buffers" << std::endl;
 	ProjectionData* tmp = loadThread.buffer2;
 	loadThread.buffer2 = loadThread.buffer1;
 	loadThread.buffer1 = tmp;
 }
 
-void ProgRecFourier::processBuffer(ProjectionData* buffer,
-		std::complex<float>*** outputVolume,
-		float*** outputWeight//,
-//		bool saveFSC,
-//		int FSCIndex
-		)
+void ProgRecFourier::processBuffer(ProjectionData* buffer)
 {
 	int repaint = (int)ceil((double)SF.size()/60);
-	for ( int i = 0 ; i < batchSize; i++ ) {
+	for ( int i = 0 ; i < bufferSize; i++ ) {
 		ProjectionData* data = &buffer[i];
 		Array2D<std::complex<float> >* myPaddedFourier = data->img;
 		if (data->skip) {
@@ -2364,7 +2366,7 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer,
 			convert(A_SLInv, transfInv);
 
 //			std::cout << "about to calculate" << std::endl;
-			thirdAttempt(outputVolume, outputWeight, size,
+			thirdAttempt(tempVolume, tempWeights, size,
 					*myPaddedFourier, conserveRows, size, transf, transfInv,
 					blobTableSqrt, iDeltaSqrt, blob.radius);
 //			std::cout << "calculation done" << std::endl;
@@ -2415,7 +2417,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
 //    int current_index;
 
 
-    int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)batchSize);
+    int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == tempVolume) {
@@ -2428,21 +2430,20 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
     int startLoadIndex = firstImageIndex;
 
 
-    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize));
-	// Awaking sleeping threads
-	barrier_wait( &barrier );
+    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
+//	// Awaking sleeping threads
+//	barrier_wait( &barrier );
 	// here each thread is reading a different image and compute fft
 	// Threads are working now, wait for them to finish
 	// processing current projection
 	barrier_wait( &barrier );
     for(int i = 0; i < loops; i++) {
-    	swapBuffers();
-    	startLoadIndex += batchSize;
-    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+batchSize));
+    	swapLoadBuffers();
+    	startLoadIndex += bufferSize;
+    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
     	// Awaking sleeping threads
-		barrier_wait( &barrier );
-    	processBuffer(loadThread.buffer2, tempVolume, tempWeights//, saveFSC, FSCIndex
-    			);
+//		barrier_wait( &barrier );
+    	processBuffer(loadThread.buffer2);
     	barrier_wait( &barrier );
     }
 

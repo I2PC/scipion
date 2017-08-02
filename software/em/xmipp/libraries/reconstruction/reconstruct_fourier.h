@@ -115,6 +115,7 @@ protected:
 	int maxVolumeIndexYZ;
     /** maximal index in the temporal volumes, X axis */
 	int maxVolumeIndexX;
+
 //	METHODS
 	/**
 	 * 3D volume holding the cropped (without high frequencies) Fourier space.
@@ -171,6 +172,7 @@ protected:
     void processImages(int firstImageIndex, int lastImageIndex);
 
 private:
+//    FIELDS
     /** File with symmetries */
     FileName fn_sym;
     /** Flag whether to use the weights in the image metadata */
@@ -197,25 +199,23 @@ private:
     int threadOpCode;
     /** Barrier synchronization for threads */
     barrier_t barrier;
-    // Table with blob values, linear sampling
+    /** Table with blob values, linear sampling */
     Matrix1D<double>  Fourier_blob_table;
-    // Table with blob values, squared sampling
+    /** Table with blob values, squared sampling */
     Matrix1D<double> blobTableSqrt;
-    // Inverse of the delta and deltaFourier used in the tables
+    /** Inverse of the delta and deltaFourier used in the tables */
     double iDeltaFourier, iDeltaSqrt;
-    // Definition of the blob
+    /** Definition of the blob */
     struct blobtype blob;
-    // Vector with R symmetry matrices
+    /** Vector with R symmetry matrices */
     std::vector <Matrix2D<double> > R_repository;
-    // Size of the original images, image must be a square
+    /** Size of the original projection, must be a square */
     int imgSize;
-    // size of the image including padding. Image must be a square
+    /** Size of the image including padding. Image must be a square */
     int paddedImgSize;
+    /** Size of loading buffer (i.e. number of projection loaded in one buffer) */
+    int bufferSize;
 
-
-
-    int availableMemory;
-    static const int batchSize = 11;
 // STATIC METHODS
     /** Method to allocate 3D array (not continuous) of given size */
     template<typename T>
@@ -225,34 +225,60 @@ private:
     static T** allocate(T**& where, int xSize, int ySize);
     /** Method running on separate thread */
 	static void* loadImageThread(void* threadArgs);
+	/** Function behaving like an identity, i.e returning passed value */
+	template<typename T>
+	static T identity(T val) { return val;}; // if used with some big type, use reference
+	/** Function returning conjugate of a complex number */
+	template<typename T>
+	static std::complex<T> conjugate(std::complex<T> f) { return conj(f);};
+    /**
+     * Method will process the 'paddedFourier' (not shifted, i.e. low frequencies are in corners)
+     * in the following way:
+     * high frequencies are skipped (replaced by zero (0))
+     * space is shifted, so that low frequencies are in the middle of the Y axis
+     * resulting space is cropped.
+     * Method returns a 2D array with Fourier coefficients, shifted so that low frequencies are
+     * in the center of the Y axis (i.e. semicircle)
+     */
+    static Array2D<std::complex<float> >* cropAndShift(
+    		MultidimArray<std::complex<double> >& paddedFourier,
+    		ProgRecFourier* parent);
 
-	static float identity(float f) { return f;};
-	static std::complex<float> conjugate(std::complex<float> f) { return conj(f);};
-
+// METHODS
+	/** Method will set indexes of the images to load and open sync barrier */
     void loadImages(int startIndex, int endIndex);
-    void swapBuffers();
-    void processBuffer(ProjectionData* buffer,
-    		std::complex<float>*** outputVolume,
-    		float*** outputWeight//,
-//    		bool saveFSC,
-//    		int FSCIndex
-			);
-
+    /** Method swaps buffers of the loading thread */
+    void swapLoadBuffers();
+    /**
+     * Method will use data stored in the buffer and update temporal
+     * storages appropriately.
+     */
+    void processBuffer(ProjectionData* buffer);
+	/**
+	 * Method will take input array (of size
+	 * maxVolumeIndexYZ*maxVolumeIndexYZ*maxVolumeIndexYZ
+	 * and transfer data to newly created array of size
+	 * maxVolumeIndexX*maxVolumeIndexYZ*maxVolumeIndexYZ (i.e. X side is half).
+	 * so that data on the 'left side' are mirrored against the origin of the
+	 * array, and 'f' function is applied on them.
+	 * 'right hand side' is only transfered.
+	 * As a result, input will contain an array with X side half of the original
+	 * size, with all data transfered from 'missing' side to 'preserved' side
+	 */
     template<typename T>
     void mirrorAndCrop(T***& input,T (*f)(T));
-
-    static Array2D<std::complex<float> >* clipAndShift(MultidimArray<std::complex<double> >& paddedFourier,
-    		ProgRecFourier * parent);
-
-    template<typename T>
-    void crop(T***& inOut, int size);
-
+    /**
+     * Method will apply blob to input 3D array.
+     * Original array will be released and new (blurred) will be returned
+     */
     template<typename T>
     T*** applyBlob(T***& input, float blobSize,
     		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt);
-
-
-    inline void allocateVoutFourier(MultidimArray<std::complex<double> >&VoutFourier) {
+    /**
+     * Method will allocate space for output Fourier transformation.
+     * If space is already allocated, method will have no effect
+     */
+    void allocateVoutFourier(MultidimArray<std::complex<double> >&VoutFourier) {
     	if ((NULL == VoutFourier.data) || (0 == VoutFourier.getSize())) {
     		VoutFourier.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
     	}
@@ -263,40 +289,43 @@ private:
 //    		FourierWeights.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
 //    	}
 //    }
-
+//
 //    void saveIntermediateFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
 //    		const std::string &weightsFileName, const std::string &fourierFileName, const FileName &resultFileName,
 //			bool storeResult);
 //    void saveFinalFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize);
-
-	static void processCube(
-			int i,
-			int j,
-			const Matrix1D<int>& corner1,
-			const Matrix1D<int>& corner2,
-			const MultidimArray<float>& z2precalculated,
-			const MultidimArray<int>& zWrapped,
-			const MultidimArray<int>& zNegWrapped,
-			const MultidimArray<float>& y2precalculated,
-			float blobRadiusSquared,
-			const MultidimArray<int>& yWrapped,
-			const MultidimArray<int>& yNegWrapped,
-			const MultidimArray<float>& x2precalculated,
-			float iDeltaSqrt,
-			float wModulator,
-			const MultidimArray<int>& xWrapped,
-			int xsize_1,
-			const MultidimArray<int>& xNegWrapped,
-			bool reprocessFlag,
-			float wCTF,
-			MultidimArray<std::complex<double> >& VoutFourier,
-			Matrix1D<double>& blobTableSqrt,
-			LoadThreadParams* threadParams,
-			MultidimArray<double>& fourierWeights,
-			double* ptrIn,
-			float weight,
-			ProgRecFourier * parent,
-			Matrix1D<double>& real_position);
+//
+//    template<typename T>
+//    void crop(T***& inOut, int size);
+//
+//	static void processCube(
+//			int i,
+//			int j,
+//			const Matrix1D<int>& corner1,
+//			const Matrix1D<int>& corner2,
+//			const MultidimArray<float>& z2precalculated,
+//			const MultidimArray<int>& zWrapped,
+//			const MultidimArray<int>& zNegWrapped,
+//			const MultidimArray<float>& y2precalculated,
+//			float blobRadiusSquared,
+//			const MultidimArray<int>& yWrapped,
+//			const MultidimArray<int>& yNegWrapped,
+//			const MultidimArray<float>& x2precalculated,
+//			float iDeltaSqrt,
+//			float wModulator,
+//			const MultidimArray<int>& xWrapped,
+//			int xsize_1,
+//			const MultidimArray<int>& xNegWrapped,
+//			bool reprocessFlag,
+//			float wCTF,
+//			MultidimArray<std::complex<double> >& VoutFourier,
+//			Matrix1D<double>& blobTableSqrt,
+//			LoadThreadParams* threadParams,
+//			MultidimArray<double>& fourierWeights,
+//			double* ptrIn,
+//			float weight,
+//			ProgRecFourier * parent,
+//			Matrix1D<double>& real_position);
 };
 //@}
 #endif
