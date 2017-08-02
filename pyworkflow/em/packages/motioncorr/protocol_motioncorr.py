@@ -321,21 +321,21 @@ class ProtMotionCorr(ProtAlignMovies):
             if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
-                    if getVersion() == '01302017':
+                    if getVersion('MOTIONCOR2') == '01302017':
                         input_params = parseMagCorrInput(inputEst)
                         # this version uses stretch parameters as following:
                         # 1/maj, 1/min, -angle
-                        argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (1.0 / input_params[1],
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (1.0 / input_params[1],
                                                                   1.0 / input_params[2],
                                                                   -1 * input_params[0])
                     else:
-                        # While motioncor2 >=1.0.0 uses estimation params  AS IS
+                        # While motioncor2 >=1.0.0 uses estimation params AS IS
                         input_params = parseMagEstOutput(inputEst)
-                        argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (input_params[1],
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (input_params[1],
                                                                   input_params[2],
                                                                   input_params[0])
                 else:
-                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (self.scaleMaj.get(),
+                    argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj.get(),
                                                               self.scaleMin.get(),
                                                               self.angDist.get())
 
