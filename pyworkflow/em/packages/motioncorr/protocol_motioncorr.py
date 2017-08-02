@@ -359,8 +359,9 @@ class ProtMotionCorr(ProtAlignMovies):
             if self._doComputeMicThumbnail():
                 self.computeThumbnail(outMicFn,
                                       outputFn=self._getOutputMicThumbnail(movie))
-        except:
+        except Exception as e:
             print("ERROR: Movie %s failed\n" % movie.getName())
+            print(e)
 
     #--------------------------- INFO functions --------------------------------
     def _summary(self):
