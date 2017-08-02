@@ -111,9 +111,9 @@ class ProtMonitorSummary(ProtMonitor):
             try:
                 if ctfMonitor is not None:
                     ctfMonitor.step()
-                sysMonitor.step()
-                # Stop when all input protocols aren't running
-                finished = self.allFinished()
+                # sysmonitor watches all input protocols so
+                # when sysmonitor done we done
+                finished = sysMonitor.step()
                 reportHtml.generate(finished)
             except Exception as ex:
                 print("An error happened: %s" % ex)
