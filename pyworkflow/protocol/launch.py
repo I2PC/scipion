@@ -234,7 +234,7 @@ def _submit(hostConfig, submitDict, cwd=None):
         return UNKNOWN_JOBID
 
 def _wait_for_job(hostConfig, jobid):
-    command = hostConfig.getCheckCommand() % str(jobid)
+    command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
     while True:
         p = Popen(command, shell=True, stdout=PIPE)
         out = p.communicate()[0]
