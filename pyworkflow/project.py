@@ -35,8 +35,6 @@ import time
 from collections import OrderedDict
 import datetime as dt
 
-import datetime
-
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
 import pyworkflow.hosts as pwhosts
@@ -72,6 +70,7 @@ class Project(object):
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
         self._isLink = os.path.islink(path)
+        self._isInReadOnlyFolder = False
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -187,7 +186,7 @@ class Project(object):
 
     def saveSettings(self):
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self.settings.write()
 
     def createMapper(self, sqliteFn):
@@ -220,6 +219,13 @@ class Project(object):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
 
+        # If folder is read only, flag it and warn about it.
+        if not os.access(self.path, os.W_OK):
+
+            self._isInReadOnlyFolder = True
+            print("Warning: don't have write permissions for project folder. "
+                  "Opening as READ-ONLY.")
+
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
@@ -232,7 +238,7 @@ class Project(object):
 
             # FIXME: Handle settings argument here
 
-            # It is possible that settings does not exists if 
+            # It is possible that settings does not exists if
             # we are loading a project after a Project.setDbName,
             # used when running protocols
             settingsPath = os.path.join(self.path, self.settingsPath)
@@ -449,7 +455,8 @@ class Project(object):
                         skipUpdatedProtocols=True):
 
         # If this is read only exit
-        if self.isReadOnly(): return
+        if self.openedAsReadOnly():
+            return
 
         if skipUpdatedProtocols:
             # If we are already updated, comparing timestamps
@@ -496,7 +503,7 @@ class Project(object):
             prot2.getProject().closeMapper()
             prot2.closeMappers()
 
-        except Exception, ex:
+        except Exception as ex:
             print("Error trying to update protocol: %s(jobId=%s)\n "
                   "ERROR: %s, tries=%d"
                   % (protocol.getObjName(), jobId, ex, tries))
@@ -572,7 +579,7 @@ class Project(object):
         """ Check if any modification operation is allowed for
         this group of protocols. 
         """
-        if self.isReadOnly():
+        if self.openedAsReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
 
         self._checkProtocolsDependencies(protocols, msg)
@@ -905,7 +912,7 @@ class Project(object):
 
     def _storeProtocol(self, protocol):
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self.mapper.store(protocol)
             self.mapper.commit()
 
@@ -919,7 +926,7 @@ class Project(object):
         """Insert a new protocol instance in the database"""
 
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self._storeProtocol(protocol)  # Store first to get a proper id
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (
@@ -1222,6 +1229,12 @@ class Project(object):
             return False
 
         return self.settings.getReadOnly()
+
+    def isInReadOnlyFolder(self):
+        return self._isInReadOnlyFolder
+
+    def openedAsReadOnly(self):
+        return self.isReadOnly() or self.isInReadOnlyFolder()
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)
