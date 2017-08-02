@@ -136,7 +136,7 @@ class MonitorCTF(Monitor):
         self._createTable()
 
     def step(self):
-        prot = self._getUpdatedProtocol(self.protocol)
+        prot = self.getUpdatedProtocol(self.protocol)
         # Create set of processed CTF from CTF protocol
         CTFset = prot.outputCTF.getIdSet()
         # find difference

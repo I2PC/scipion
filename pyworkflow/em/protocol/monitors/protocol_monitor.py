@@ -165,7 +165,7 @@ class Monitor():
         pass
 
     @staticmethod
-    def _getUpdatedProtocol(prot):
+    def getUpdatedProtocol(prot):
         prot2 = getProtocolFromDb(prot.getProject().path,
                                   prot.getDbPath(),
                                   prot.getObjId())

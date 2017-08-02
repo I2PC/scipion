@@ -157,7 +157,7 @@ class MonitorSystem(Monitor):
             print("ERROR: saving one data point (monitor). I continue")
 
         # Return finished = True if all protocols have finished
-        return all(self._getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
+        return all(self.getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
                    for prot in self.protocols)
 
     def _createTable(self):

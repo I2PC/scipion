@@ -115,7 +115,7 @@ class MonitorISPyB(Monitor):
     def step(self):
         self.info("MonitorISPyB: only one step")
 
-        prots = [self._getUpdatedProtocol(p) for p in self.inputProtocols]
+        prots = [self.getUpdatedProtocol(p) for p in self.inputProtocols]
         finished = [] # store True if protocol not running
         updateIds = [] # Store obj ids that have changes
 
