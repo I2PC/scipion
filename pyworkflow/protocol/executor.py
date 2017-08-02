@@ -39,7 +39,7 @@ import os
 import pyworkflow.utils.process as process
 import constants as cts
 
-from launch import _submit
+from launch import _submit, _wait_for_job
 
 
 class StepExecutor():
@@ -136,8 +136,8 @@ class QueueStepExecutor(StepExecutor):
         submitDict.update(self.submitDict)
         submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'])
-        time.sleep(10)
-        _submit(self.hostConfig, submitDict, cwd)
+        job = _submit(self.hostConfig, submitDict, cwd)
+        return _wait_for_job(self.hostConfig, job)
 
 
 class StepThread(threading.Thread):

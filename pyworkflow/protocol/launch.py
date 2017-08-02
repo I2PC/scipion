@@ -45,6 +45,7 @@ from subprocess import Popen, PIPE
 import pyworkflow as pw
 from pyworkflow.utils import redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
+from time import sleep
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -231,6 +232,21 @@ def _submit(hostConfig, submitDict, cwd=None):
     else:
         print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
         return UNKNOWN_JOBID
+
+def _wait_for_job(hostConfig, jobid):
+    command = hostConfig.getCheckCommand() % jobid
+    while True:
+        p = Popen(command, shell=True, stdout=PIPE)
+        out = p.communicate()[0]
+
+        s = re.search('exit_status\s+-*(\d+)', out)
+        if s:
+            status = int(s.group(0))
+            print "job %s finished with exist status %s" % (jobid, status)
+            return status
+        else:
+            print "job %s still running" % jobid
+        sleep(1)
 
 def _pass_though_no_gui_state(command):
     if 'SCIPION_NOGUI' in os.environ:
