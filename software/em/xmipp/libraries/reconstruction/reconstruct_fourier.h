@@ -67,7 +67,7 @@ struct ProjectionData
 	Array2D<std::complex<float> >* img;
 	CTFDescription ctf;
 	int imgIndex;
-	double weight;
+	float weight;
 	Matrix2D<double> localAInv;
 	bool skip;
 };
@@ -180,11 +180,11 @@ private:
     /** Use CTF */
     bool useCTF;
     /** True if the images have been already phase flipped */
-    bool phaseFlipped;
+    bool isPhaseFlipped;
     /** Minimum CTF value to invert */
     double minCTF;
-    /** Sampling rate */
-    double Ts;
+    /** Inverse of the sampling rate */
+    double iTs;
     /** Projection padding Factor */
     double padding_factor_proj;
     /** Volume padding Factor */
@@ -243,6 +243,9 @@ private:
     static Array2D<std::complex<float> >* cropAndShift(
     		MultidimArray<std::complex<double> >& paddedFourier,
     		ProgRecFourier* parent);
+    /** Returns value within the range (included) */
+    template<typename T, typename U>
+    static U clamp(U val, T min, T max);
 
 // METHODS
 	/** Method will set indexes of the images to load and open sync barrier */
@@ -299,17 +302,23 @@ private:
     void processVoxel(
     		int x, int y, int z,
 			float transform[3][3], float maxDistanceSqr,
-    		ProjectionData* projectionData);
+    		ProjectionData* data);
+
     /**
-     * Method will return a pixel on given position (rounded to closest int,
-     * clamped to img size)
+     * Method sets wCTF and wModulator based on position
+     * in the image
      */
-    std::complex<float>
-    getPixelClamped(Array2D<std::complex<float> >* img, float x, float y);
-    /** Returns value within the range (included) */
-    template<typename T, typename U>
-    U clamp(U val, T min, T max);
-//    inline void allocateFourierWeights() {
+    void processCTF(ProjectionData* data,
+    		int imgX, int imgY,
+			float& wCTF, float& wModulator);
+
+//    /**
+//     * Method will return a pixel on given position (rounded to closest int,
+//     * clamped to img size)
+//     */
+//    std::complex<float>
+//    getPixelClamped(Array2D<std::complex<float> >* img, float x, float y);
+    //    inline void allocateFourierWeights() {
 //    	if (NULL == FourierWeights.data) {
 //    		FourierWeights.initZeros(paddedImgSize, paddedImgSize, paddedImgSize/2 +1);
 //    	}

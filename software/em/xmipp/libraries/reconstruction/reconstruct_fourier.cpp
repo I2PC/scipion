@@ -86,10 +86,10 @@ void ProgRecFourier::readParams()
     blob.alpha    = getDoubleParam("--blob", 2);
     maxResolution = getDoubleParam("--max_resolution");
     useCTF = checkParam("--useCTF");
-    phaseFlipped = checkParam("--phaseFlipped");
+    isPhaseFlipped = checkParam("--phaseFlipped");
     minCTF = getDoubleParam("--minCTF");
     if (useCTF)
-        Ts=getDoubleParam("--sampling");
+        iTs = 1 / getDoubleParam("--sampling");
     bufferSize = getIntParam("--bufferSize");
 }
 
@@ -115,8 +115,8 @@ void ProgRecFourier::show()
             std::cout << " Do NOT use weights" << std::endl;
         if (useCTF)
             std::cout << "Using CTF information" << std::endl
-            << "Sampling rate: " << Ts << std::endl
-            << "Phase flipped: " << phaseFlipped << std::endl
+            << "Sampling rate: " << 1 / iTs << std::endl
+            << "Phase flipped: " << isPhaseFlipped << std::endl
             << "Minimum CTF: " << minCTF << std::endl;
         std::cout << "\n Interpolation Function"
         << "\n   blrad                 : "  << blob.radius
@@ -611,6 +611,8 @@ void * ProgRecFourier::loadImageThread( void * threadArgs )
                         data->ctf.enable_CTFnoise=false;
                     	data->ctf.readFromMetadataRow(*(threadParams->selFile),objId[imgIndex]);
                     	data->ctf.produceSideInfo();
+                    } else {
+                    	data->ctf.enable_CTF=false;
                     }
                     // Copy the projection to the center of the padded image
                     // and compute its Fourier transform
@@ -1026,13 +1028,13 @@ getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int 
 	return BilinearInterpolation(bl, br, tl, tr, 1. - fractX, 1. - fractY);
 }
 
-inline
-std::complex<float> ProgRecFourier::getPixelClamped(Array2D<std::complex<float> >* img, float x, float y)
-{
-	int imgX = clamp((int)(x + 0.5f), 0, img->getXSize() - 1);
-	int imgY = clamp((int)(y + 0.5f), 0, img->getYSize() - 1);
-	return img(imgX, imgY);
-}
+//inline
+//std::complex<float> ProgRecFourier::getPixelClamped(Array2D<std::complex<float> >* img, float x, float y)
+//{
+//	int imgX = clamp((int)(x + 0.5f), 0, img->getXSize() - 1);
+//	int imgY = clamp((int)(y + 0.5f), 0, img->getYSize() - 1);
+//	return img(imgX, imgY);
+//}
 
 
 #if 0
@@ -1923,10 +1925,43 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 
 
+
+inline void ProgRecFourier::processCTF(ProjectionData* data,
+		int imgX, int imgY, float& wCTF, float& wModulator)
+{
+	std::cout << "called" << std::endl;
+	float freqX, freqY;
+	// get respective frequency
+	FFT_IDX2DIGFREQ(imgX, paddedImgSize, freqX);
+	// since Y axis is shifted to center, we have to use different calculation
+	freqY = (imgY - (paddedImgSize / 2.f)) / (float) paddedImgSize;
+	data->ctf.precomputeValues(freqX * iTs, freqY * iTs);
+	wCTF = data->ctf.getValuePureNoKAt();
+	if (std::isnan(wCTF)) {
+		if ((imgX == 0) && (imgY == 0)) {
+			wModulator = wCTF = 1.0;
+		}
+		else {
+			wModulator = wCTF = 0.0;
+		}
+	}
+	if (fabs(wCTF) < minCTF) {
+		wModulator = fabs(wCTF);
+		wCTF = SGN(wCTF);
+	} else {
+		wCTF = 1.0 / wCTF;
+	}
+	if (isPhaseFlipped)
+		wCTF = fabs(wCTF);
+}
+
+
 inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
-		ProjectionData* projectionData) {
+		ProjectionData* data) {
 	float imgPos[3];
-	int imgX, imgY;
+	float wBlob = 1.f;
+	float wCTF = 1.f;
+	float wModulator = 1.f;
 
 	// transform current point to center
 	imgPos[0] = x - maxVolumeIndexX/2;
@@ -1937,11 +1972,19 @@ inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3]
 	}
 	// rotate around center
 	multiply(transform, imgPos);
-	// transform back
-	imgPos[1] += maxVolumeIndexYZ/2; // just Y coordinate, since X now match to picture and Z is irrelevant
+	// transform back and round
+	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
+	int imgX = clamp((int)(imgPos[0] + 0.5f), 0, data->img->getXSize() - 1);
+	int imgY = clamp((int)(imgPos[1] + 0.5f + maxVolumeIndexYZ / 2), 0, data->img->getYSize() - 1);
 
-	tempVolume[z][y][x] += getPixelClamped(projectionData->img, imgPos[0], imgPos[1]);
-	tempWeights[z][y][x] += 1.f;
+	if (data->ctf.enable_CTF) {
+		processCTF(data, imgX, imgY, wCTF, wModulator);
+	}
+
+	float weight = wBlob * wModulator * data->weight;
+
+	tempVolume[z][y][x] += (*data->img)(imgX, imgY) * weight * wCTF;
+	tempWeights[z][y][x] += weight;
 }
 
 inline void convert(Matrix2D<double>& in, float out[3][3]) {
