@@ -181,7 +181,7 @@ class MicrographsView(ObjectView):
         first.printAll()
 
         def existingLabels(labelList):
-            print("labelList: ", labelList)
+
             return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
 
         renderLabels = existingLabels(self.RENDER_LABELS)
