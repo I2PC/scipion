@@ -105,11 +105,11 @@ class MonitorISPyB(Monitor):
             prot = n.run
             self.info("protocol: %s" % prot.getRunName())
 
-            if isinstance(prot, ProtImportMovies):
+            if isinstance(prot, ProtImportMovies) and hasattr(prot, 'outputMovies'):
                 self.create_movie_params(prot, allParams)
             elif isinstance(prot, ProtAlignMovies) and hasattr(prot, 'outputMicrographs'):
                 self.update_align_params(prot, allParams)
-            elif isinstance(prot, ProtCTFMicrographs):
+            elif isinstance(prot, ProtCTFMicrographs) and hasattr(prot, 'outputCTF'):
                 self.update_ctf_params(prot, allParams)
 
         for itemId, params in allParams.iteritems():

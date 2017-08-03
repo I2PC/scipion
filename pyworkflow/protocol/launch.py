@@ -239,7 +239,7 @@ def _submit(hostConfig, submitDict, cwd=None):
     pool = ThreadPool(processes=1)
     try:
         # job submit should be fast even if the job is long
-        return pool.apply_async(run_command()).get(2)
+        return pool.apply_async(run_command).get(2)
     except TimeoutError:
         print "** Timeout trying to submit job"
         return UNKNOWN_JOBID
