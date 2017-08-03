@@ -70,7 +70,7 @@ class ProtMonitorISPyB(ProtMonitor):
 
         monitor.addNotifier(PrintNotifier())
         monitor.step()
-
+        monitor.loop()
 
 class MonitorISPyB(Monitor):
     """ This will will be monitoring a CTF estimation protocol.
