@@ -687,7 +687,7 @@ class Project(object):
         newProt.setObjLabel(protocol.getRunName() + ' (copy)')
         newProt.copyDefinitionAttributes(protocol)
         newProt.copyAttributes(protocol, 'hostName', '_useQueue', '_queueParams')
-        newProt.copyAttributes(protocol, 'hostName', '_useQueueForJobs', '_useQueueForJobs')
+        newProt.copyAttributes(protocol, 'hostName', '_useQueueForJobs')
         return newProt
 
     def copyProtocol(self, protocol):

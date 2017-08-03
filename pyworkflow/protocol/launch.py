@@ -46,6 +46,7 @@ import pyworkflow as pw
 from pyworkflow.utils import redStr, greenStr, makeFilePath, join
 from pyworkflow.utils import process
 from time import sleep
+from multiprocessing.pool import ThreadPool, TimeoutError
 
 UNKNOWN_JOBID = -1
 LOCALHOST = 'localhost'
@@ -204,36 +205,49 @@ def _copyFiles(protocol, rpath):
 def _submit(hostConfig, submitDict, cwd=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
-    # Create forst the submission script to be launched
-    # formatting using the template
-    template = hostConfig.getSubmitTemplate() % submitDict
-    #FIXME: CREATE THE PATH FIRST
-    scripPath = submitDict['JOB_SCRIPT']
-    f = open(scripPath, 'w')
-    #Ensure the path exists
-    makeFilePath(scripPath)
-    # Add some line ends because in some clusters it fails
-    # to submit jobs if the submit script does not have end of line
-    f.write(template+'\n\n')
-    f.close()
-    # This should format the command using a template like: 
-    # "qsub %(JOB_SCRIPT)s"
-    command = hostConfig.getSubmitCommand() % submitDict
-    gcmd = greenStr(command)
-    print "** Submiting to queue: '%s'" % gcmd
-    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
-    out = p.communicate()[0]
-    # Try to parse the result of qsub, searching for a number (jobId)
-    s = re.search('(\d+)', out)
-    if s:
-        job = int(s.group(0))
-        print "launched job with id %s" % job
-        return job
-    else:
-        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out)) 
+    def run_command():
+        # Create forst the submission script to be launched
+        # formatting using the template
+        template = hostConfig.getSubmitTemplate() % submitDict
+        # FIXME: CREATE THE PATH FIRST
+        scripPath = submitDict['JOB_SCRIPT']
+        f = open(scripPath, 'w')
+        # Ensure the path exists
+        makeFilePath(scripPath)
+        # Add some line ends because in some clusters it fails
+        # to submit jobs if the submit script does not have end of line
+        f.write(template + '\n\n')
+        f.close()
+        # This should format the command using a template like:
+        # "qsub %(JOB_SCRIPT)s"
+        command = hostConfig.getSubmitCommand() % submitDict
+        gcmd = greenStr(command)
+        print "** Submiting to queue: '%s'" % gcmd
+
+        p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
+        out = p.communicate()[0]
+        # Try to parse the result of qsub, searching for a number (jobId)
+        s = re.search('(\d+)', out)
+        if s:
+            job = int(s.group(0))
+            print "launched job with id %s" % job
+            return job
+        else:
+            print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
+            return UNKNOWN_JOBID
+
+    pool = ThreadPool(processes=1)
+    try:
+        # job submit should be fast even if the job is long
+        return pool.apply_async(run_command()).get(2)
+    except TimeoutError:
+        print "** Timeout trying to submit job"
         return UNKNOWN_JOBID
 
+
 def _wait_for_job(hostConfig, jobid):
+    if jobid == UNKNOWN_JOBID:
+        return
     command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
     while True:
         p = Popen(command, shell=True, stdout=PIPE)
@@ -247,6 +261,7 @@ def _wait_for_job(hostConfig, jobid):
         else:
             print "job %s still running" % jobid
         sleep(1)
+
 
 def _pass_though_no_gui_state(command):
     if 'SCIPION_NOGUI' in os.environ:
