@@ -35,9 +35,9 @@ def usage(error):
     ERROR: %s
 
     Usage: scipion python scripts/create_project.py
-        name="project name"
-        [workflow="file"] path to a Scipion json workflow
-        [location="folder"] where to create it, defaults to scipion default location
+        name   --> Scipion project name
+        [file] --> Path to a Scipion json workflow, pass "None" to skip this parameter
+        [folder] --> Where to create it, defaults to scipion default location
         This script will create a project project, optionally based on a workflow file
     """ % error
     sys.exit(1)
@@ -50,7 +50,7 @@ if n < 2 or n > 4:
 
 projName = sys.argv[1]
 
-jsonFile = None if n < 3 else os.path.abspath(sys.argv[2])
+jsonFile = None if n < 3 or sys.argv[2] in ["None", "none", "NONE"] else os.path.abspath(sys.argv[2])
 location = None if n < 4 else sys.argv[3]
 
 path = os.path.join(os.environ['SCIPION_HOME'], 'pyworkflow', 'gui', 'no-tkinter')
