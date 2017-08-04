@@ -6,5 +6,5 @@ fi
 
 PROJECT_NAME=$1
 $PWD
-scipion python /home/pablo/desarrollo/scipion/scripts/create_project.py $PROJECT_NAME None $PWD
+scipion python $SCIPION_HOME/scripts/create_project.py $PROJECT_NAME None $PWD
 scipion project $PROJECT_NAME
