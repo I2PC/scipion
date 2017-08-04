@@ -370,105 +370,51 @@
 
         };
 
-
-
         function addDefocusCoverage(){
-            var defocusData = [];
-            var counts      = [];
-            var red         = '#f45b5b';
-            var blue        = '#7cb5ec';
-            var white       = '#FFFFFF';
-            function getShades (baseColor){
-                var colors = []
-                for (i = 0; i < 10; i += 1) {
-                    // Start out with a darkened base color (negative brighten), and end
-                    // up with a much brighter color
-                    colors.unshift(Highcharts.Color(baseColor).brighten((i - 3) / 7).get());
-                }
-                return colors;
-            }
-            var redShades   = getShades(red);
-            var blueShades  = getShades(blue);
-            var maxCount = Math.max.apply(Math, report.ctfData.defocusCoverage.map(function(v) {
-                                                                                      return v[0];
-                                                                                    }));
-            var minCount = Math.min.apply(Math, report.ctfData.defocusCoverage.map(function(v) {
-                                                                                      return v[0];
-                                                                                    }));
-            function getColor(countValue){
-                var colorIndex = 0;
-                var color;
-                if (countValue<0){
-                    colorIndex = Math.ceil(countValue * redShades.length / minCount)-1;
-                    color = redShades[colorIndex];
-                }else if (countValue > 0){
-                    colorIndex = Math.ceil(countValue * blueShades.length / maxCount)-1;
-                    color = blueShades[colorIndex];
-                }else if (countValue === 0){
-                    color = white;
-                }
-                return color
-            }
-            $.each(report.ctfData.defocusCoverage, function(index, defocusTuple){
-                defocusData.push({x: 0,
-                                  y: index,
-                                  value: defocusTuple[0],
-                                  name:  defocusTuple[1],
-                                  color: getColor(defocusTuple[0])
-                                    });
-                counts.push(defocusTuple[0]);
-            });
+            var defocusValues = report.ctfData.defocusCoverage.map(function(value) { return value[0]; });
+            var numValues = defocusValues.length;
+            var firstItem = {y:defocusValues[0], color:'#f45b5b'}; // change color for item with defocus out of range
+            var lastItem = {y:defocusValues[numValues-1], color:'#f45b5b'}; // same as firstItem
+            var defocusChartData = [lastItem].concat(defocusValues.slice(1,numValues-1).reverse());
+            var labels = report.ctfData.defocusCoverage.map(function(value) { return value[1]; }).reverse();
+            defocusChartData.push(firstItem);
 
             Highcharts.chart('defocusPie', {
-
                 chart: {
-                    type: 'heatmap',
-                    marginTop: 40,
-                    marginBottom: 80,
-                    plotBorderWidth: 1
+                    type: 'bar'
                 },
-
                 title: {
                     text: 'Defocus Coverage'
                 },
-
                 xAxis: {
-                    categories: ['DefocusU counts']
+                    categories: labels,
+                    title: {
+                        text: 'Defocus U(Å)'
+                    }
                 },
-
                 yAxis: {
-                    categories: report.ctfData.defocusCoverage.map(function(value) { return value[1]; }),
-                    title: null
+                    title: {
+                        text: 'Mic counts',
+                        align: 'high'
+                    },
+                    labels: {
+                        overflow: 'justify'
+                    }
                 },
-
                 tooltip: {
-                    formatter: function () {
-                        return '<b>' + this.series.xAxis.categories[this.point.x] + '</b><br><b>' +
-                            this.point.value + '</b> mics on range <br><b>' + this.series.yAxis.categories[this.point.y] + '</b>';
-                    }
+                    valueSuffix: ' micrographs'
                 },
-
-                series: [{
+                series:[{
                     name: 'Defocus Coverage',
-                    borderWidth: 1,
-                    data: defocusData,
-                    dataLabels: {
-                        enabled: true,
-                        color: '#000000',
-                        formatter: function ()  {
-                                    if(this.point.value>=0){
-                                        return this.point.value
-                                    }else{
-                                        return -this.point.value
-                                    }
-                                  }
-                   }
-                    }
+                    data: defocusChartData
+                }
+
                 ]
 
-            });
 
-        };
+            })
+
+        }
 
         function addSystemChart () {
             
