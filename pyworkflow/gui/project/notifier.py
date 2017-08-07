@@ -76,15 +76,18 @@ class ProjectNotifier(object):
         return delta < timedelta(seconds=seconds)
 
     def _sendData(self, url, dataDict=None):
-        #then connect to webserver a send json
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
-        data = urllib.urlencode(dataDict)
-        content = opener.open(url, data=data).read()
-        now = time.time()
-        #print "Notifying...."
-        #pwutils.prettyDate(now)
-        #print "dataDict: ", dataDict
-        os.utime(self._getUuidFileName(), (now, now))
+        try:
+            #then connect to webserver a send json
+            opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
+            data = urllib.urlencode(dataDict)
+            content = opener.open(url, data=data).read()
+            now = time.time()
+            #print "Notifying...."
+            #pwutils.prettyDate(now)
+            #print "dataDict: ", dataDict
+            os.utime(self._getUuidFileName(), (now, now))
+        except Exception:
+            print "Could not notify, maybe there is not internet connection."
 
     def _dataModified(self, projectWorfklow):
         try:
@@ -129,7 +132,10 @@ class ProjectNotifier(object):
         dataDict = {'project_uuid': self._getUuid(),
                     'project_workflow': projectWorfklow}
 
-        urlName = os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
+        urlName = os.environ.get('SCIPION_NOTIFY_URL',
+                                 'http://calm-shelf-73264.herokuapp.com/'
+                                 'report_protocols/api/workflow/workflow/'
+                                 ).strip()
         urlName += "addOrUpdateWorkflow/"
         t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
         t.start() # will execute function in a separate thread
