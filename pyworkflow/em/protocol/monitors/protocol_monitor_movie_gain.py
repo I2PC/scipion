@@ -179,20 +179,22 @@ class MonitorMovieGain(Monitor):
 
 
     def getData(self):
-        prot = self.protocol
-        fnSummary = prot._getPath("summaryForMonitor.txt")
-        fhSummary = open(fnSummary, "r")
         idValues = []
         stddevValues = []
         ratio1Values = []
         ratio2Values = []
-        for idx, line in enumerate(fhSummary.readlines()):
-            stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
-            idValues.append(idx)
-            stddevValues.append(stddev)
-            ratio1Values.append(perc975 / perc25)
-            ratio2Values.append(maxVal / perc975)
-        fhSummary.close()
+
+        prot = self.protocol
+        fnSummary = prot._getPath("summaryForMonitor.txt")
+        if not os.path.exists(fnSummary) < 1:
+            fhSummary = open(fnSummary, "r")
+            for idx, line in enumerate(fhSummary.readlines()):
+                stddev, perc25, perc975, maxVal = map(float, line.split()[1:])
+                idValues.append(idx)
+                stddevValues.append(stddev)
+                ratio1Values.append(perc975 / perc25)
+                ratio2Values.append(maxVal / perc975)
+            fhSummary.close()
 
         data = {
             'idValues': idValues,
