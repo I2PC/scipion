@@ -15,7 +15,8 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
 			{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
 			{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
-			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}
+			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
+			{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
 		]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [

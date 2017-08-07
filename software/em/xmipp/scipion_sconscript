@@ -501,7 +501,7 @@ for p in ['angular_break_symmetry',
           'classify_first_split',
           'classify_kerdensom',
 			
-		  'ctf_correct_wiener2d',
+	  'ctf_correct_wiener2d',
           'ctf_correct_wiener3d',
           'ctf_correct_idr',
           'ctf_create_ctfdat',
@@ -727,6 +727,11 @@ if opencv:
         addProg('movie_optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
+
+#ROB not sure if cuda=True is necesary
+if cuda:
+    addProg('gpu_example',
+                nvcc=True,cuda=True)
 
 
 
