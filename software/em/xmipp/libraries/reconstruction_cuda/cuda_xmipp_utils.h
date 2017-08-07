@@ -247,8 +247,12 @@ public:
 
 	void resize(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
     {
-		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim)
+
+		if (_Xdim*_Ydim*_Zdim*_Ndim==nzyxdim){
+
 			return;
+		}
+
 
 		clear();
 
@@ -261,6 +265,7 @@ public:
         nzyxdim=zyxdim*_Ndim;
         gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
 
+
     }
 
 	bool isEmpty()
@@ -270,8 +275,10 @@ public:
 
 	void clear()
 	{
-		if (d_data!=NULL)
+		if (d_data!=NULL){
 			gpuFree((void*) d_data);
+
+		}
 		Xdim=Ydim=Zdim=Ndim=yxdim=zyxdim=nzyxdim=0;
 		d_data=NULL;
 	}
@@ -323,7 +330,9 @@ public:
 	template <typename T1>
 	void ifft(GpuMultidimArrayAtGpu<T1> &realSpace, mycufftHandle &myhandle);
 
-	void calculateMax(float *max_values, float *posX, float *posY);
+	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
+
+	//void calculateMaxNew(float *max_values, float *posX, float *posY, int fixPadding);
 
 };
 
