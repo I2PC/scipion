@@ -283,31 +283,34 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 	fourierTransform.resize(Xfdim,Ydim,Zdim,Ndim);
 
 	//AJ check the size of the data to avoid exceed the CUDA FFT size
-	float memory[3]={0, 0, 0}; //total, free, used
-	cuda_check_gpu_memory(memory);
+	//float memory[3]={0, 0, 0}; //total, free, used
+	//cuda_check_gpu_memory(memory);
 
 	int positionReal=0;
 	int positionFFT=0;
 	size_t NdimNew, auxNdim;
-	if(Xdim*Ydim*Ndim*64>memory[1]*0.8){
-		float sizeAuxIm = Xdim*Ydim*Zdim*sizeof(cufftReal) + Xfdim*Ydim*Zdim*sizeof(cufftComplex);
-		NdimNew=floor((memory[1]*0.6)/(64*Xdim*Ydim + sizeAuxIm));
-	}else
+	//if(Xdim*Ydim*Ndim*32>memory[1]*0.8){
+		//float sizeAuxIm = Xdim*Ydim*Zdim*sizeof(cufftReal) + Xfdim*Ydim*Zdim*sizeof(cufftComplex);
+		//NdimNew=floor((memory[1]*0.6)/(32*Xdim*Ydim + sizeAuxIm));
+	//}else
 		NdimNew = Ndim;
 	size_t aux=Ndim;
 
-	auxNdim=NdimNew;
+	auxNdim=Ndim;
+
+	if(myhandle.ptr!=NULL)
+		NdimNew = Ndim;
 
 	while(aux>0){
 
 		GpuMultidimArrayAtGpu<cufftReal> auxInFFT;
 		GpuMultidimArrayAtGpu<cufftComplex> auxOutFFT;
 		if(NdimNew!=Ndim){
+			printf("NOOOOOO\n");
 			auxInFFT.resize(Xdim,Ydim,Zdim,NdimNew);
 			gpuCopyFromGPUToGPU((cufftReal*)&d_data[positionReal], auxInFFT.d_data, Xdim*Ydim*Zdim*NdimNew*sizeof(cufftReal));
 			auxOutFFT.resize(Xfdim,Ydim,Zdim,NdimNew);
 		}
-
 
 		/*/AJ TIME
 		timeval start, end;
@@ -316,19 +319,19 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 
 		cufftHandle *planFptr = new cufftHandle;
 		cufftHandle *planAuxFptr = new cufftHandle;
-		if(myhandle.ptr == NULL){
-			printf("creo el plan \n");
-			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr);
-			myhandle.ptr = (void *)planFptr;
-			planFptr=(cufftHandle *)myhandle.ptr;
-		}else{
-			planFptr=(cufftHandle *)myhandle.ptr;
-		}
 		if(auxNdim!=NdimNew){
 			printf("CUIDADO \n");
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr);
+		}else{
+			if(myhandle.ptr == NULL){
+				printf("Creo el plan \n");
+				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr);
+				myhandle.ptr = (void *)planFptr;
+				planFptr=(cufftHandle *)myhandle.ptr;
+			}else{
+				planFptr=(cufftHandle *)myhandle.ptr;
+			}
 		}
-
 
 	    /*/AJ TIME
 	    gettimeofday(&end, NULL);
@@ -360,9 +363,6 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 	    printf("cufftExecD2Z: %.16g miliseconds\n", secs2 * 1000.0);*/
 
 		gpuErrchk(cudaDeviceSynchronize());
-		if(auxNdim!=NdimNew)
-			cufftDestroy(*planAuxFptr);
-
 
 		if(NdimNew!=Ndim){
 			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftComplex*)&fourierTransform.d_data[positionFFT], Xfdim*Ydim*Zdim*NdimNew*sizeof(cufftComplex));
@@ -370,13 +370,19 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			auxInFFT.clear();
 		}
 
+		auxNdim=NdimNew;
+
 		positionReal+=(NdimNew*Xdim*Ydim*Zdim);
 		positionFFT+=(NdimNew*Xfdim*Ydim*Zdim);
 		aux-=NdimNew;
 		if(aux<NdimNew)
 			NdimNew=aux;
 
-		auxNdim=NdimNew;
+		if(auxNdim!=NdimNew && NdimNew!=0){
+			printf("cufftDestroy\n");
+			cufftDestroy(*planAuxFptr);
+		}
+
 
 	}//AJ end while
 
@@ -390,26 +396,30 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 	int Xfdim=(realSpace.Xdim/2)+1;
 
 	//AJ check the size of the data to avoid exceed the CUDA FFT size
-	float memory[3]={0, 0, 0}; //total, free, used
-	cuda_check_gpu_memory(memory);
+	//float memory[3]={0, 0, 0}; //total, free, used
+	//cuda_check_gpu_memory(memory);
 
 	int positionReal=0;
 	int positionFFT=0;
 	size_t NdimNew, auxNdim;
-	if(realSpace.Xdim*realSpace.Ydim*realSpace.Ndim*64>memory[1]*0.8){
-		float sizeAuxIm = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftReal) + Xfdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftComplex);
-		NdimNew=floor((memory[1]*0.6)/(64*realSpace.Xdim*realSpace.Ydim + sizeAuxIm));
-	}else
+	//if(realSpace.Xdim*realSpace.Ydim*realSpace.Ndim*32>memory[1]*0.8){
+		//float sizeAuxIm = realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftReal) + Xfdim*realSpace.Ydim*realSpace.Zdim*sizeof(cufftComplex);
+		//NdimNew=floor((memory[1]*0.6)/(32*realSpace.Xdim*realSpace.Ydim + sizeAuxIm));
+	//}else
 		NdimNew = realSpace.Ndim;
 	size_t aux=realSpace.Ndim;
 
-	auxNdim=NdimNew;
+	auxNdim=realSpace.Ndim;
+
+	if(myhandle.ptr!=NULL)
+		NdimNew = Ndim;
 
 	while(aux>0){
 
 		GpuMultidimArrayAtGpu<cufftComplex> auxInFFT;
 		GpuMultidimArrayAtGpu<cufftReal> auxOutFFT;
 		if(NdimNew!=Ndim){
+			printf("NOOOOOO\n");
 			auxInFFT.resize(Xfdim,realSpace.Ydim,realSpace.Zdim,NdimNew);
 			gpuCopyFromGPUToGPU((cufftComplex*)&d_data[positionFFT], auxInFFT.d_data, Xfdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftComplex));
 			auxOutFFT.resize(realSpace.Xdim,realSpace.Ydim,realSpace.Zdim, NdimNew);
@@ -417,17 +427,17 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 
 		cufftHandle *planBptr = new cufftHandle;
 		cufftHandle *planAuxBptr = new cufftHandle;
-		if(myhandle.ptr == NULL){
-			printf("creo el plan \n");
-			createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr);
-			myhandle.ptr = (void *)planBptr;
-			planBptr=(cufftHandle *)myhandle.ptr;
-		}else{
-			planBptr=(cufftHandle *)myhandle.ptr;
-		}
 		if(auxNdim!=NdimNew){
-			printf("CUIDADO \n");
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr);
+		}else{
+			if(myhandle.ptr == NULL){
+				printf("Creo el plan \n");
+				createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr);
+				myhandle.ptr = (void *)planBptr;
+				planBptr=(cufftHandle *)myhandle.ptr;
+			}else{
+				planBptr=(cufftHandle *)myhandle.ptr;
+			}
 		}
 
 		if(auxNdim==NdimNew){
@@ -446,8 +456,6 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 
 
 		gpuErrchk(cudaDeviceSynchronize());
-		if(auxNdim!=NdimNew)
-			cufftDestroy(*planAuxBptr);
 
 		if(NdimNew!=Ndim){
 			gpuCopyFromGPUToGPU(auxOutFFT.d_data, (cufftReal*)&realSpace.d_data[positionReal], realSpace.Xdim*realSpace.Ydim*realSpace.Zdim*NdimNew*sizeof(cufftReal));
@@ -455,13 +463,18 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 			auxInFFT.clear();
 		}
 
+		auxNdim=NdimNew;
+
 		positionReal+=(NdimNew*realSpace.Xdim*realSpace.Ydim*realSpace.Zdim);
 		positionFFT+=(NdimNew*Xfdim*realSpace.Ydim*realSpace.Zdim);
 		aux-=NdimNew;
 		if(aux<NdimNew)
 			NdimNew=aux;
 
-		auxNdim=NdimNew;
+		if(auxNdim!=NdimNew && NdimNew!=0){
+			printf("cufftDestroy\n");
+			cufftDestroy(*planAuxBptr);
+		}
 
 	}//AJ end while
 
@@ -511,13 +524,40 @@ void GpuPlanFFT::destroyGpuPlanFFT()
 }*/
 
 template<>
-void GpuMultidimArrayAtGpu<float>::calculateMax(float *max_values, float *posX, float *posY){
+void GpuMultidimArrayAtGpu<float>::calculateMax(float *max_values, float *posX, float *posY, int fixPadding){
 
 	int index = 0;
-
 	for(int i=0; i<Ndim; i++){
+
+		//AJ TIME
+		timeval start0, end0;
+		double secs0;
+		gettimeofday(&start0, NULL);
+
 		thrust::device_ptr<float> dev_ptr = thrust::device_pointer_cast(&d_data[index]);
+
+	    //AJ TIME
+	    gettimeofday(&end0, NULL);
+	    secs0 = timeval_diff(&end0, &start0);
+	    printf("THRUST 1: %.16g miliseconds\n", secs0 * 1000.0);
+
+		//AJ TIME
+		timeval start1, end1;
+		double secs1;
+		gettimeofday(&start1, NULL);
+
 		thrust::device_ptr<float> max_ptr = thrust::max_element(dev_ptr, dev_ptr + (int)yxdim);
+
+	    //AJ TIME
+	    gettimeofday(&end1, NULL);
+	    secs1 = timeval_diff(&end1, &start1);
+	    printf("THRUST 2: %.16g miliseconds\n", secs1 * 1000.0);
+
+		//AJ TIME
+		timeval start2, end2;
+		double secs2;
+		gettimeofday(&start2, NULL);
+
 		unsigned int position = &max_ptr[0] - &dev_ptr[0];
 		max_values[i] = max_ptr[0];
 		//printf("max_thrust %lf   ", max_values[i]);
@@ -540,8 +580,15 @@ void GpuMultidimArrayAtGpu<float>::calculateMax(float *max_values, float *posX, 
 			posX[i] = Xdim-1-posX_aux;
 			posY[i] = -(posY_aux+1);
 		}
-		//printf("Max x-thr=%f   ", posX[i]);
-		//printf("Max y-thr=%f\n", posY[i]);
+
+		//Fixing padding problem ¿?¿?
+		posX[i]+=fixPadding;
+		posY[i]+=fixPadding;
+
+	    //AJ TIME
+	    gettimeofday(&end2, NULL);
+	    secs2 = timeval_diff(&end2, &start2);
+	    printf("THRUST 3: %.16g miliseconds\n", secs2 * 1000.0);
 
 		index = index+(int)yxdim;
 	}
@@ -549,3 +596,59 @@ void GpuMultidimArrayAtGpu<float>::calculateMax(float *max_values, float *posX, 
 }
 
 
+/*
+template<>
+void GpuMultidimArrayAtGpu<float>::calculateMaxv2(float *max_values, float *posX, float *posY, int max_shift, int xdimIm, int ydimIm){
+
+	int index = 0;
+	for(int i=0; i<Ndim; i++){
+		thrust::device_ptr<float> dev_ptr = thrust::device_pointer_cast(&d_data[index]);
+		thrust::device_ptr<float> max_ptr = thrust::max_element(dev_ptr, dev_ptr + (int)yxdim);
+		unsigned int position = &max_ptr[0] - &dev_ptr[0];
+		max_values[i] = max_ptr[0];
+		//printf("max_thrust %lf   ", max_values[i]);
+
+		int xAux, yAux, dum;
+		int tamSq = max_shift*max_shift;
+		if(position<tamSq){
+			xAux = position%max_shift;
+			yAux = position/max_shift;
+		}else if(position<(tamSq*2)){
+			dum = position-tamSq;
+			xAux = (dum%max_shift)+(xdimIm-max_shift);
+			yAux = dum/max_shift;
+		}else if(position<(tamSq*3)){
+			dum = position-(2*tamSq);
+			xAux = position%max_shift;
+			yAux = (dum/max_shift)+(ydimIm-max_shift);
+		}else{
+			dum = position-(3*tamSq);
+			xAux = (dum%max_shift)+(xdimIm-max_shift);
+			yAux = (dum/max_shift)+(ydimIm-max_shift);
+		}
+		position = yAux*xdimIm + xAux;
+
+		float posX_aux = (float)(position%xdimIm);
+		float posY_aux = (float)(position/xdimIm);
+		float Xdim2 = (float)(xdimIm/2);
+		float Ydim2 = (float)(ydimIm/2);
+
+		if(posX_aux>=Xdim2 && posY_aux>=Ydim2){
+			posX[i] = xdimIm-1-posX_aux;
+			posY[i] = ydimIm-1-posY_aux;
+		}else if(posX_aux<Xdim2 && posY_aux>=Ydim2){
+			posX[i] = -(posX_aux+1);
+			posY[i] = ydimIm-1-posY_aux;
+		}else if(posX_aux<Xdim2 && posY_aux<Ydim2){
+			posX[i] = -(posX_aux+1);
+			posY[i] = -(posY_aux+1);
+		}else if(posX_aux>=Xdim2 && posY_aux<Ydim2){
+			posX[i] = xdimIm-1-posX_aux;
+			posY[i] = -(posY_aux+1);
+		}
+
+		index = index+(int)yxdim;
+	}
+
+}
+*/
