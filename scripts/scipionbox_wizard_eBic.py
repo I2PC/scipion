@@ -60,6 +60,9 @@ import pyworkflow.gui as pwgui
 from pyworkflow.gui.project.base import ProjectBaseWindow
 from pyworkflow.gui.widgets import HotButton, Button
 
+import traceback
+import json 
+
 VIEW_WIZARD = 'wizardview'
 
 # Session id
@@ -70,23 +73,25 @@ SCIPION_WORKFLOW_TEMPLATE = 'SCIPION_WORKFLOW_TEMPLATE'
 JSON_DESTINATION = 'JSON_DESTINATION'
 
 # Variables to enter and write in the template
-DOSE = 'DOSE'
-PIXEL_SIZE = 'PIXEL_SIZE'
+DOSE_INITIAL = 'doseInitial'
+DOSE_PER_FRAME = 'dosePerFrame'
+MAGNIFICATION = 'magnification'
 
-vars2Use = [DOSE, PIXEL_SIZE]
+vars2Use = [DOSE_INITIAL, DOSE_PER_FRAME, MAGNIFICATION]
 
 # Define some string constants
 LABELS = {
     PROJECT_NAME: "Session id",
-    DOSE: "Dose",
-    PIXEL_SIZE: "Pixel size",
+    DOSE_INITIAL: "Initial Dose",
+    DOSE_PER_FRAME: "Dose per frame",
+    MAGNIFICATION: "Magnification",
 }
 
 MICROSCOPE = "Microscope"
 MESSAGE = 'Message'
 
 # Project regex to validate the session id name
-PROJECT_PATTERN = "em\d{5}-\d$"
+PROJECT_PATTERN = "^\w{2}\d{4,6}-\d+$"
 PROJECT_REGEX = re.compile(PROJECT_PATTERN)
 
 
@@ -235,8 +240,9 @@ class BoxWizardView(tk.Frame):
         labelFrame2.grid(row=1, column=0, sticky='nw', padx=20, pady=10)
         labelFrame2.columnconfigure(0, minsize=120)
 
-        _addPair(DOSE, 1, labelFrame2)
-        _addPair(PIXEL_SIZE, 2, labelFrame2)
+        _addPair(DOSE_INITIAL, 1, labelFrame2)
+        _addPair(DOSE_PER_FRAME, 2, labelFrame2)
+        _addPair(MAGNIFICATION, 3, labelFrame2)
 
         frame.columnconfigure(0, weight=1)
 
@@ -291,20 +297,23 @@ class BoxWizardView(tk.Frame):
 
             # Get the template and open it
             template = self._getConfValue(SCIPION_WORKFLOW_TEMPLATE)
-            templateStr = open(template, 'r').read()
 
-            # Replace values
-            workflowStr = self.replaceValues(replacementDict, templateStr)
+            with open(template, 'r') as f:
+                model = json.load(f)
 
-            text_file = open(destination, "w")
-            text_file.write(workflowStr)
-            text_file.close()
+            for item in model:
+                for key in replacementDict:
+                    if key in item:
+                        item[key] = replacementDict[key]
+
+            json.dump(model, open(destination, 'w'))
 
             self.windows.showInfo("New workflow saved at " + destination)
 
         except Exception as e:
             self.windows.showError(
                 "Couldn't create the template.\n" + e.message)
+            traceback.print_exc()
             return False
 
         return True
@@ -348,7 +357,7 @@ class BoxWizardView(tk.Frame):
         if self.microscope is None:
             msg = 'Select microscope'
         elif not self._validProjectName():
-            msg = ('Invalid session id. Not matching ' + PROJECT_PATTERN)
+            msg = ('Invalid session id.')
         else:
             msg = ''
 
@@ -361,8 +370,9 @@ class BoxWizardView(tk.Frame):
         for key in self.checkvars:
             self.vars[key].set(int(self._getConfValue(key, 0)))
 
-        self._setValue(DOSE, self._getConfValue(DOSE))
-        self._setValue(PIXEL_SIZE, self._getConfValue(PIXEL_SIZE))
+        self._setValue(DOSE_INITIAL, self._getConfValue(DOSE_INITIAL))
+        self._setValue(DOSE_PER_FRAME, self._getConfValue(DOSE_PER_FRAME))
+        self._setValue(MAGNIFICATION, self._getConfValue(MAGNIFICATION))
 
         self._onInputChange()
 
