@@ -57,6 +57,8 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
     addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
+    addParamsLine("  [--fast]                       : Do the blobing at the end of the computation.");
+    addParamsLine("                                 : Gives slightly different results, but is faster.");
     addParamsLine("  [--useCTF]                     : Use CTF information if present");
     addParamsLine("  [--sampling <Ts=1>]            : sampling rate of the input images in Angstroms/pixel");
     addParamsLine("                                 : It is only used when correcting for the CTF");
@@ -84,6 +86,7 @@ void ProgRecFourier::readParams()
     blob.radius   = getDoubleParam("--blob", 0);
     blob.order    = getIntParam("--blob", 1);
     blob.alpha    = getDoubleParam("--blob", 2);
+    useFast		  = checkParam("--fast");
     maxResolution = getDoubleParam("--max_resolution");
     useCTF = checkParam("--useCTF");
     isPhaseFlipped = checkParam("--phaseFlipped");
@@ -409,9 +412,7 @@ bool ellipseHitTest(T majorAxis, T minorAxis, T x0, T y0, T xp, T yp, T alpha)
 //		}
 //	}
 //}
-struct Point3D {
-	float x, y, z;
-};
+
 
 
 inline bool exists (const std::string& name) {
@@ -654,7 +655,7 @@ void * ProgRecFourier::loadImageThread( void * threadArgs )
                     data->img = cropAndShift(localPaddedFourier, parent);
                     data->imgIndex = imgIndex;
                     data->skip = false;
-                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
+//                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
                     //#define DEBUG22
 #ifdef DEBUG22
 				{                    //CORRECTO
@@ -1188,7 +1189,7 @@ inline void multiply(Matrix2D<double>& transform, Point3D& inOut) {
 	inOut.z = tmp2;
 }
 
-inline void multiply(float transform[3][3], Point3D& inOut) {
+inline void ProgRecFourier::multiply(float transform[3][3], Point3D& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
 	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
 	float tmp2 = transform[2][0] * inOut.x + transform[2][1] * inOut.y + transform[2][2] * inOut.z;
@@ -1406,52 +1407,66 @@ Point3D* createBoundingCuboid(float sizeX, float sizeY,	float sizeZ)
 
 	return result;
 }
-
-
+//
+//
+//
+////       3___2
+////   +   |   |
+//// [0,0] |   |y
+////   -  0|___|1  sizes are padded with blob-radius
+////         x
+//Point3D* createProjectionPlane(size_t paddedVolumeSize,
+//		size_t conserveRows,
+//		float blobRadius)
+//{
+//	static Point3D result[4];
+//	float sizeLength = (float)conserveRows / (float)paddedVolumeSize;
+//	float padding = ceil(blobRadius) / (float)paddedVolumeSize;
+//	result[0].x = result[3].x = - (0.f + padding);
+//	result[1].x = result[2].x = sizeLength + padding;
+//
+//	result[0].y = result[1].y = -(sizeLength + padding);
+//	result[2].y = result[3].y = sizeLength + padding;
+//
+//	result[0].z = result[1].z = result[2].z = result[3].z = 0.f;
+//
+//	return result;
+//}
 
 //       3___2
 //   +   |   |
 // [0,0] |   |y
 //   -  0|___|1  sizes are padded with blob-radius
 //         x
-Point3D* createProjectionPlane(size_t paddedVolumeSize,
-		size_t conserveRows,
-		float blobRadius)
+// [0,0] is in the middle of the left side (point [0] and [3]), but blob can go to negative
+Point3D* createProjectionPlane(Point3D* plane, float sizeX,	float sizeY, float blobSize=0)
 {
-	static Point3D result[4];
-	float sizeLength = (float)conserveRows / (float)paddedVolumeSize;
-	float padding = ceil(blobRadius) / (float)paddedVolumeSize;
-	result[0].x = result[3].x = - (0.f + padding);
-	result[1].x = result[2].x = sizeLength + padding;
-
-	result[0].y = result[1].y = -(sizeLength + padding);
-	result[2].y = result[3].y = sizeLength + padding;
-
-	result[0].z = result[1].z = result[2].z = result[3].z = 0.f;
-
-	return result;
-}
-
-//       3___2
-//   +   |   |
-// [0,0] |   |y
-//   -  0|___|1  sizes are padded with blob-radius
-//         x
-// [0,0] is in the middle of the left side (point [0] and [3])
-Point3D* createProjectionPlane(float sizeX,	float sizeY)
-{
-	static Point3D result[4];
 	float halfY = sizeY / 2.0f;
-	result[0].x = result[3].x = 0.f;
-	result[1].x = result[2].x = sizeX;
+	plane[0].x = plane[3].x = 0.f - blobSize;
+	plane[1].x = plane[2].x = sizeX + blobSize;
 
-	result[0].y = result[1].y = -halfY;
-	result[2].y = result[3].y = halfY;
+	plane[0].y = plane[1].y = -(halfY + blobSize);
+	plane[2].y = plane[3].y = halfY + blobSize;
 
-	result[0].z = result[1].z = result[2].z = result[3].z = 0.f;
+	plane[0].z = plane[1].z = plane[2].z = plane[3].z = 0.f;
 
-	return result;
+	return plane;
 }
+
+
+void ProgRecFourier::createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize)
+{
+	float halfY = sizeY / 2.0f;
+	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
+	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
+
+	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
+	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
+
+	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
+	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
+}
+
 
 inline bool getZ(float x, float y, float& z, Point3D* plane) {
 	// from parametric eq. of the plane
@@ -1551,18 +1566,7 @@ Point3D* transformCuboid(Point3D* cuboid, Matrix2D<double>& transform) {
 	return cuboid;
 }
 
-Point3D* rotateCuboid(Point3D* cuboid, Matrix2D<double>& transform) {
-	float tmp[3];
-	for (int i = 0; i < 8; i++) {
-		tmp[0] = cuboid[i].x;
-		tmp[1] = cuboid[i].y;
-		tmp[2] = cuboid[i].z;
-		cuboid[i].x = transform(0,0)*tmp[0] + transform(0,1)*tmp[1] + transform(0,2)*tmp[2];
-		cuboid[i].y = transform(1,0)*tmp[0] + transform(1,1)*tmp[1] + transform(1,2)*tmp[2];
-		cuboid[i].z = transform(2,0)*tmp[0] + transform(2,1)*tmp[1] + transform(2,2)*tmp[2];
-	}
-	return cuboid;
-}
+
 
 //Point3D* rotateCuboid(Point3D* cuboid, Matrix2D<double>& transform, int tmp) {
 //	Point3D center = {};
@@ -1588,13 +1592,12 @@ Point3D* rotateCuboid(Point3D* cuboid, Matrix2D<double>& transform) {
 //	return cuboid;
 //}
 
-Point3D* translateCuboid(Point3D* cuboid, Point3D vector) {
+inline void ProgRecFourier::translateCuboid(Point3D* cuboid, Point3D vector) {
 	for (int i = 0; i < 8; i++) {
 		cuboid[i].x += vector.x;
 		cuboid[i].y += vector.y;
 		cuboid[i].z += vector.z;
 	}
-	return cuboid;
 }
 
 Point3D* transformPlane(Point3D* plane, Matrix2D<double>& transform) {
@@ -1610,12 +1613,12 @@ Point3D* transformPlane(Point3D* plane, Matrix2D<double>& transform) {
 	return plane;
 }
 
-Point3D* rotatePlane(Point3D* plane, float transform[3][3]) {
-	for (int i = 0; i < 4; i++) {
-		multiply(transform, plane[i]);
-	}
-	return plane;
-}
+//Point3D* rotatePlane(Point3D* plane, float transform[3][3]) {
+//	for (int i = 0; i < 4; i++) {
+//		multiply(transform, plane[i]);
+//	}
+//	return plane;
+//}
 
 Point3D* translatePlane(Point3D* plane, Point3D vector) {
 	for (int i = 0; i < 4; i++) {
@@ -1690,6 +1693,30 @@ Point3D* getPlaneAABB(Point3D* plane,
 	return AABB;
 }
 
+void ProgRecFourier::computeAABB(Point3D* AABB, Point3D* cuboid,
+	float minX, float minY, float minZ,
+	float maxX, float maxY, float maxZ) {
+	AABB[0].x = AABB[0].y = AABB[0].z = std::numeric_limits<float>::max();
+	AABB[1].x = AABB[1].y = AABB[1].z = std::numeric_limits<float>::min();
+	Point3D tmp;
+	for (int i = 0; i < 8; i++) {
+		tmp = cuboid[i];
+		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
+		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
+		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
+		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
+		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
+		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
+	}
+	// limit to max size
+	if (AABB[0].x < minX) AABB[0].x = minX;
+	if (AABB[0].y < minY) AABB[0].y = minY;
+	if (AABB[0].z < minZ) AABB[0].z = minZ;
+	if (AABB[1].x > maxX) AABB[1].x = maxX;
+	if (AABB[1].y > maxY) AABB[1].y = maxY;
+	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
+}
+
 void druhyPokus(std::complex<float>*** outputVolume,
 		float*** outputWeight,
 		size_t conserveRows,
@@ -1748,7 +1775,7 @@ void druhyPokus(std::complex<float>*** outputVolume,
     minY = std::max(0, minY);
     maxX = std::min((int)size-1, maxX);
     maxY = std::min((int)size-1, maxY);
-    
+
 
 //	for (int m = 0; m < size; m++ ) {
 		for (int l = minY; l < maxY; l++) {
@@ -1958,24 +1985,24 @@ inline void ProgRecFourier::processCTF(ProjectionData* data,
 
 inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
 		ProjectionData* data) {
-	float imgPos[3];
+	Point3D imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
 
 	// transform current point to center
-	imgPos[0] = x - maxVolumeIndexX/2;
-	imgPos[1] = y - maxVolumeIndexYZ/2;
-	imgPos[2] = z - maxVolumeIndexYZ/2;
-	if (imgPos[0]*imgPos[0] + imgPos[1]*imgPos[1] + imgPos[2]*imgPos[2] > maxDistanceSqr) {
+	imgPos.x = x - maxVolumeIndexX/2;
+	imgPos.y = y - maxVolumeIndexYZ/2;
+	imgPos.z = z - maxVolumeIndexYZ/2;
+	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > maxDistanceSqr) {
 		return; // discard iterations that would access pixel with too high frequency
 	}
 	// rotate around center
 	multiply(transform, imgPos);
 	// transform back and round
 	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
-	int imgX = clamp((int)(imgPos[0] + 0.5f), 0, data->img->getXSize() - 1);
-	int imgY = clamp((int)(imgPos[1] + 0.5f + maxVolumeIndexYZ / 2), 0, data->img->getYSize() - 1);
+	int imgX = clamp((int)(imgPos.x + 0.5f), 0, data->img->getXSize() - 1);
+	int imgY = clamp((int)(imgPos.y + 0.5f + maxVolumeIndexYZ / 2), 0, data->img->getYSize() - 1);
 
 	if (data->ctf.enable_CTF) {
 		processCTF(data, imgX, imgY, wCTF, wModulator);
@@ -1985,6 +2012,72 @@ inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3]
 
 	tempVolume[z][y][x] += (*data->img)(imgX, imgY) * weight * wCTF;
 	tempWeights[z][y][x] += weight;
+}
+
+inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
+		ProjectionData* data) {
+	Point3D imgPos;
+
+	std::cout << "called for image " << data->imgIndex << std::endl;
+
+	// transform current point to center
+	imgPos.x = x - maxVolumeIndexX/2;
+	imgPos.y = y - maxVolumeIndexYZ/2;
+	imgPos.z = z - maxVolumeIndexYZ/2;
+	if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > maxDistanceSqr) {
+		return; // discard iterations that would access pixel with too high frequency
+	}
+	// rotate around center
+	multiply(transform, imgPos);
+	// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
+	imgPos.y += maxVolumeIndexYZ / 2;
+
+	// check that we don't want to collect data from far far away ...
+	float radiusSqr = blob.radius * blob.radius;
+	float zSqr = imgPos.z * imgPos.z;
+	if (zSqr > radiusSqr) return;
+
+	float weightTmp = 0.f;
+	std::complex<float> valTmp = 0;
+	int minX = std::ceil(imgPos.x - blob.radius);
+	int maxX = std::floor(imgPos.x + blob.radius);
+	int minY = std::ceil(imgPos.y - blob.radius);
+	int maxY = std::floor(imgPos.y + blob.radius);
+	const bool doCTF = data->ctf.enable_CTF;
+	std::complex<float>* targetVolume = &tempVolume[z][y][x];
+	float* targetWeight = &tempWeights[z][y][x];
+
+	std::cout << "about to do up to " << maxY-minY+1 << "x" << maxX-minX+1 << " loops" << std::endl;
+
+	for (int i = minY; i <= maxY; i++) {
+		if ( ! data->img->inRangeY(i)) continue;
+		float ySqr = (imgPos.y - i) * (imgPos.y - i);
+		for (int j = minX; j <= maxX; j++) {
+			if ( ! data->img->inRangeX(j)) continue;
+			float xD = imgPos.x - j;
+			float distanceSqr = xD*xD + ySqr + zSqr;
+//			std::cout << distanceSqr << " " << radiusSqr << std::endl;
+			if (distanceSqr > radiusSqr) {
+//				std::cout << "miss" << std::endl;
+				continue;
+			}
+//			std::cout << "hit" << std::endl;
+			float wCTF = 1.f;
+			float wModulator = 1.f;
+//			return;
+//			std::cout << x << " " << y << " " << z << " -> "
+//				<< j << " " << i << " " << imgPos.z << " " << distanceSqr << std::endl;
+			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+			float wBlob = blobTableSqrt[aux];
+
+			if (doCTF) {
+				processCTF(data, j, i, wCTF, wModulator);
+			}
+			float weight = wBlob * wModulator * data->weight;
+			*targetWeight += weight;
+			*targetVolume += (*data->img)(j, i) * weight * wCTF;
+		}
+	}
 }
 
 inline void convert(Matrix2D<double>& in, float out[3][3]) {
@@ -2002,16 +2095,20 @@ void ProgRecFourier::processProjection(
 {
 	int imgSizeX = projectionData->img->getXSize();
 	int imgSizeY = projectionData->img->getYSize();
-	const float maxDistanceSqr = imgSizeX * imgSizeX;
+	const float maxDistanceSqr = (imgSizeX+(useFast ? 0.f : blob.radius)) * (imgSizeX+(useFast ? 0.f : blob.radius));
 	Point3D origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
+	Point3D u, v;
+	Point3D AABB[2];
+	Point3D cuboid[8];
+
+	// calculate affected space
+	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : blob.radius);
+	rotateCuboid(cuboid, transform);
+	translateCuboid(cuboid, origin);
+	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
+	getVectors(cuboid, u, v);
 
 	// prepare traversing
-	Point3D* plane = createProjectionPlane(imgSizeX, imgSizeY);
-	plane = rotatePlane(plane, transform);
-	plane = translatePlane(plane, origin);
-	Point3D u, v;
-	getVectors(plane, u, v);
-	Point3D* AABB = getPlaneAABB(plane, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
 	int minY, minX, minZ;
 	int maxY, maxX, maxZ;
 	minZ = floor(AABB[0].z);
@@ -2028,36 +2125,87 @@ void ProgRecFourier::processProjection(
 	if (dZ <= dX && dZ <= dY) { // iterate XY plane
 		for(int y = minY; y <= maxY; y++) {
 			for(int x = minX; x <= maxX; x++) {
-				float hitZ;
-				if (getZ(x, y, hitZ, u, v, *plane)) {
-					int z = (int)(hitZ + 0.5f); // rounding
-					processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+				if (useFast) {
+					float hitZ;
+					if (getZ(x, y, hitZ, u, v, *cuboid)) {
+						int z = (int)(hitZ + 0.5f); // rounding
+						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+					}
+				} else {
+					float z1, z2;
+					bool hit1 = getZ(x, y, z1, u, v, *cuboid); // lower plane
+					bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4)); // upper plane
+					if (hit1 || hit2) {
+						z1 = clamp(z1, 0, maxVolumeIndexYZ);
+						z2 = clamp(z2, 0, maxVolumeIndexYZ);
+						float lower = std::min(z1, z2);
+						float upper = std::max(z1, z2);
+						std:: cout << hit1 << " " << hit2 << " " << upper-lower << std::endl;
+						for (int z = std::floor(lower); z <= std::ceil(upper); z++) {
+							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+						}
+					}
 				}
 			}
 		}
 	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
 		for(int z = minZ; z <= maxZ; z++) {
 			for(int x = minX; x <= maxX; x++) {
-				float hitY;
-				if (getY(x, hitY, z, u, v, *plane)) {
-					int y = (int)(hitY + 0.5f); // rounding
-					processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+				if (useFast) {
+					float hitY;
+					if (getY(x, hitY, z, u, v, *cuboid)) {
+						int y = (int)(hitY + 0.5f); // rounding
+						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+					}
+				} else {
+					float y1, y2;
+					bool hit1 = getY(x, y1, z, u, v, *cuboid); // lower plane
+					bool hit2 = getY(x, y2, z, u, v, *(cuboid + 4)); // upper plane
+					if (hit1 || hit2) {
+						y1 = clamp(y1, 0, maxVolumeIndexYZ);
+						y2 = clamp(y2, 0, maxVolumeIndexYZ);
+						float lower = std::min(y1, y2);
+						float upper = std::max(y1, y2);
+						std:: cout << hit1 << " " << hit2 << " " << upper-lower << std::endl;
+						for (int y = std::floor(lower); y <= std::ceil(upper); y++) {
+							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+						}
+					}
 				}
 			}
 		}
 	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
 		for(int z = minZ; z <= maxZ; z++) {
 			for(int y = minY; y <= maxY; y++) {
-				float hitX;
-				if (getX(hitX, y, z, u, v, *plane)) {
-					int x = (int)(hitX + 0.5f); // rounding
-					processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+				if (useFast) {
+					float hitX;
+					if (getX(hitX, y, z, u, v, *cuboid)) {
+						int x = (int)(hitX + 0.5f); // rounding
+						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+					}
+				} else {
+					float x1, x2;
+					bool hit1 = getX(x1, y, z, u, v, *cuboid); // lower plane
+					bool hit2 = getX(x2, y, z, u, v, *(cuboid + 4)); // upper plane
+					if (hit1 || hit2) {
+						x1 = clamp(x1, 0, maxVolumeIndexX);
+						x2 = clamp(x2, 0, maxVolumeIndexX);
+						float lower = std::min(x1, x2);
+						float upper = std::max(x1, x2);
+						std:: cout << hit1 << " " << hit2 << " " << upper-lower << std::endl;
+						for (int x = std::floor(lower); x <= std::ceil(upper); x++) {
+							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+						}
+					}
 				}
 			}
 		}
 	} else {
 		std::cout << "ALERT" << std::endl;
 	}
+//	delete[] bottomPlane;
+//	bottomPlane = NULL;
+//	delete[] topPlane;
 }
 
 template<typename T>
@@ -2443,7 +2591,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
 
     std::cout << "process " << firstImageIndex << "-" << lastImageIndex << std::endl;
 
-
+    std::cout << blobTableSqrt.size() << std::endl;
 
     int imgno = 0;
 
@@ -2770,10 +2918,12 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 	#if DEBUG_DUMP > 0
 	    std::cout << "about to apply blob" << std::endl;
 	#endif
-	tempVolume = applyBlob(tempVolume, blob.radius, blobTableSqrt, iDeltaSqrt);
-	std::cout << "applyBlob1 done" << std::endl;
-	tempWeights = applyBlob(tempWeights, blob.radius, blobTableSqrt, iDeltaSqrt);
-	std::cout << "applyBlob2 done" << std::endl;
+	if (useFast) {
+		tempVolume = applyBlob(tempVolume, blob.radius, blobTableSqrt, iDeltaSqrt);
+		std::cout << "applyBlob1 done" << std::endl;
+		tempWeights = applyBlob(tempWeights, blob.radius, blobTableSqrt, iDeltaSqrt);
+		std::cout << "applyBlob2 done" << std::endl;
+	}
 
 	//    if( saveFSC ) {
 	//		saveFinalFSC(outputVolume, outputWeight, size);

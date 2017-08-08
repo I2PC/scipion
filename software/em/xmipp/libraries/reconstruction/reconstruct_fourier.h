@@ -72,6 +72,11 @@ struct ProjectionData
 	bool skip;
 };
 
+/** Struct represents a point in 3D */
+struct Point3D {
+	float x, y, z;
+};
+
 /** Struct holding information for loading thread */
 struct LoadThreadParams
 {
@@ -177,6 +182,8 @@ private:
     FileName fn_sym;
     /** Flag whether to use the weights in the image metadata */
     bool do_weights;
+    /** If true, blobing is done at the end of the computation */
+    bool useFast;
     /** Use CTF */
     bool useCTF;
     /** True if the images have been already phase flipped */
@@ -246,6 +253,34 @@ private:
     /** Returns value within the range (included) */
     template<typename T, typename U>
     static U clamp(U val, T min, T max);
+    /**
+    *          7____6
+    *         3/___2/
+    *    +    | |  ||   y
+    * [0,0,0] |*|4 ||5
+    *    -    |/___|/  z  sizes are padded with blob-radius
+    *        0   x  1
+    * [0,0] is in the middle of the left side (point [0] and [3]), provided the blobSize is 0
+    * otherwise the values can go to negative values
+    */
+    static void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize);
+    //* Apply rotation transform to cuboid */
+    static void rotateCuboid(Point3D* cuboid, float transform[3][3]) {
+    	for (int i = 0; i < 8; i++) {
+    		multiply(transform, cuboid[i]);
+    	}
+    }
+    /** Do 3x3 x 1x3 matrix-vector multiplication */
+    static void multiply(float transform[3][3], Point3D& inOut);
+    /** Add 'vector' to each element of 'cuboid' */
+    static void translateCuboid(Point3D* cuboid, Point3D vector);
+    /**
+     * Method will calculate Axis Aligned Bound Box of the cuboid and restrict
+     * its maximum size
+     */
+    static void computeAABB(Point3D* AABB, Point3D* cuboid,
+    		float minX, float minY, float minZ,
+    		float maxX, float maxY, float maxZ);
 
 // METHODS
 	/** Method will set indexes of the images to load and open sync barrier */
@@ -303,6 +338,11 @@ private:
     		int x, int y, int z,
 			float transform[3][3], float maxDistanceSqr,
     		ProjectionData* data);
+
+
+    void processVoxelBlob(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
+    		ProjectionData* data);
+
 
     /**
      * Method sets wCTF and wModulator based on position

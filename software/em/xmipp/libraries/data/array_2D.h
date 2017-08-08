@@ -65,9 +65,9 @@ public:
 	T& operator()(int x, int y) const {
 	#if DEBUG
 		if (0 > x || x >= xSize)
-			std::cout << "Array2D " << data << " X out of range [0.." << getXSize() << ")\n";
+			std::cout << "Array2D " << data << " X=" << x << " out of range [0.." << getXSize() << ")\n";
 		if (0 > y || y >= ySize)
-			std::cout << "Array2D " << data << " Y out of range [0.." << getYSize() << ")\n";
+			std::cout << "Array2D " << data << " Y=" << y << " out of range [0.." << getYSize() << ")\n";
 		std::cout << std::flush;
 	#endif
 		return data[y][x];
@@ -79,6 +79,18 @@ public:
 
 	int getYSize() const {
 		return ySize;
+	}
+
+	bool inRange(int x, int y) const {
+		return inRangeX(x) && inRangeY(y);
+	}
+
+	bool inRangeX(int x) const {
+		return (x >= 0) && (x < xSize);
+	}
+
+	bool inRangeY(int y) const {
+		return (y >= 0) && (y < ySize);
 	}
 private:
 	int xSize;
