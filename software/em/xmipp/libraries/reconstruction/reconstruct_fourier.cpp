@@ -1189,7 +1189,7 @@ inline void multiply(Matrix2D<double>& transform, Point3D& inOut) {
 	inOut.z = tmp2;
 }
 
-inline void ProgRecFourier::multiply(float transform[3][3], Point3D& inOut) {
+inline void ProgRecFourier::multiply(const float transform[3][3], Point3D& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
 	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
 	float tmp2 = transform[2][0] * inOut.x + transform[2][1] * inOut.y + transform[2][2] * inOut.z;
@@ -1953,7 +1953,7 @@ void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
 
 
 
-inline void ProgRecFourier::processCTF(ProjectionData* data,
+inline void ProgRecFourier::processCTF(ProjectionData* const data,
 		int imgX, int imgY, float& wCTF, float& wModulator)
 {
 	std::cout << "called" << std::endl;
@@ -1983,8 +1983,8 @@ inline void ProgRecFourier::processCTF(ProjectionData* data,
 }
 
 
-inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
-		ProjectionData* data) {
+inline void ProgRecFourier::processVoxel(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+		ProjectionData* const data) {
 	Point3D imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
@@ -2014,11 +2014,11 @@ inline void ProgRecFourier::processVoxel(int x, int y, int z, float transform[3]
 	tempWeights[z][y][x] += weight;
 }
 
-inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
-		ProjectionData* data) {
+inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+		ProjectionData* const data) {
 	Point3D imgPos;
 
-	std::cout << "called for image " << data->imgIndex << std::endl;
+//	std::cout << "called for " << x << " " << y << " " << z << std::endl;
 
 	// transform current point to center
 	imgPos.x = x - maxVolumeIndexX/2;
@@ -2037,30 +2037,33 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, float transfor
 	float zSqr = imgPos.z * imgPos.z;
 	if (zSqr > radiusSqr) return;
 
-	float weightTmp = 0.f;
-	std::complex<float> valTmp = 0;
 	int minX = std::ceil(imgPos.x - blob.radius);
 	int maxX = std::floor(imgPos.x + blob.radius);
 	int minY = std::ceil(imgPos.y - blob.radius);
 	int maxY = std::floor(imgPos.y + blob.radius);
-	const bool doCTF = data->ctf.enable_CTF;
+	minX = std::max(minX, 0);
+	minY = std::max(minY, 0);
+	maxX = std::min(maxX, data->img->getXSize()-1);
+	maxY = std::min(maxY, data->img->getYSize()-1);
 	std::complex<float>* targetVolume = &tempVolume[z][y][x];
 	float* targetWeight = &tempWeights[z][y][x];
+//int counter = 0;
 
-	std::cout << "about to do up to " << maxY-minY+1 << "x" << maxX-minX+1 << " loops" << std::endl;
+//	std::cout << "about to do up to " << maxY-minY+1 << "x" << maxX-minX+1 << " loops" << std::endl;
 
 	for (int i = minY; i <= maxY; i++) {
-		if ( ! data->img->inRangeY(i)) continue;
 		float ySqr = (imgPos.y - i) * (imgPos.y - i);
+		float yzSqr = ySqr + zSqr;
+		if (yzSqr > radiusSqr) continue;
 		for (int j = minX; j <= maxX; j++) {
-			if ( ! data->img->inRangeX(j)) continue;
 			float xD = imgPos.x - j;
-			float distanceSqr = xD*xD + ySqr + zSqr;
+			float distanceSqr = xD*xD + yzSqr;
 //			std::cout << distanceSqr << " " << radiusSqr << std::endl;
 			if (distanceSqr > radiusSqr) {
 //				std::cout << "miss" << std::endl;
 				continue;
 			}
+//			counter++;
 //			std::cout << "hit" << std::endl;
 			float wCTF = 1.f;
 			float wModulator = 1.f;
@@ -2070,7 +2073,7 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, float transfor
 			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
 			float wBlob = blobTableSqrt[aux];
 
-			if (doCTF) {
+			if (data->ctf.enable_CTF) {
 				processCTF(data, j, i, wCTF, wModulator);
 			}
 			float weight = wBlob * wModulator * data->weight;
@@ -2078,6 +2081,7 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, float transfor
 			*targetVolume += (*data->img)(j, i) * weight * wCTF;
 		}
 	}
+//	std::cout << "actually did " << counter << " out of " << (maxY-minY+1) *(maxX-minX+1) <<  std::endl;
 }
 
 inline void convert(Matrix2D<double>& in, float out[3][3]) {
@@ -2090,8 +2094,8 @@ inline void convert(Matrix2D<double>& in, float out[3][3]) {
 
 void ProgRecFourier::processProjection(
 	ProjectionData* projectionData,
-	float transform[3][3],
-	float transformInv[3][3])
+	const float transform[3][3],
+	const float transformInv[3][3])
 {
 	int imgSizeX = projectionData->img->getXSize();
 	int imgSizeY = projectionData->img->getYSize();
@@ -2140,7 +2144,7 @@ void ProgRecFourier::processProjection(
 						z2 = clamp(z2, 0, maxVolumeIndexYZ);
 						float lower = std::min(z1, z2);
 						float upper = std::max(z1, z2);
-						std:: cout << hit1 << " " << hit2 << " " << upper-lower << std::endl;
+//						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
 						for (int z = std::floor(lower); z <= std::ceil(upper); z++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
@@ -2166,7 +2170,7 @@ void ProgRecFourier::processProjection(
 						y2 = clamp(y2, 0, maxVolumeIndexYZ);
 						float lower = std::min(y1, y2);
 						float upper = std::max(y1, y2);
-						std:: cout << hit1 << " " << hit2 << " " << upper-lower << std::endl;
+//						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
 						for (int y = std::floor(lower); y <= std::ceil(upper); y++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
@@ -2192,7 +2196,7 @@ void ProgRecFourier::processProjection(
 						x2 = clamp(x2, 0, maxVolumeIndexX);
 						float lower = std::min(x1, x2);
 						float upper = std::max(x1, x2);
-						std:: cout << hit1 << " " << hit2 << " " << upper-lower << std::endl;
+//						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
 						for (int x = std::floor(lower); x <= std::ceil(upper); x++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}

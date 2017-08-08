@@ -265,13 +265,13 @@ private:
     */
     static void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize);
     //* Apply rotation transform to cuboid */
-    static void rotateCuboid(Point3D* cuboid, float transform[3][3]) {
+    static void rotateCuboid(Point3D* cuboid, const float transform[3][3]) {
     	for (int i = 0; i < 8; i++) {
     		multiply(transform, cuboid[i]);
     	}
     }
     /** Do 3x3 x 1x3 matrix-vector multiplication */
-    static void multiply(float transform[3][3], Point3D& inOut);
+    static void multiply(const float transform[3][3], Point3D& inOut);
     /** Add 'vector' to each element of 'cuboid' */
     static void translateCuboid(Point3D* cuboid, Point3D vector);
     /**
@@ -327,8 +327,8 @@ private:
      */
     void processProjection(
     	ProjectionData* projectionData,
-    	float transform[3][3],
-    	float transformInv[3][3]);
+    	const float transform[3][3],
+    	const float transformInv[3][3]);
     /**
      * Method will map one voxel from the temporal
      * spaces to the given projection and update temporal spaces
@@ -336,19 +336,19 @@ private:
      */
     void processVoxel(
     		int x, int y, int z,
-			float transform[3][3], float maxDistanceSqr,
-    		ProjectionData* data);
+			const float transform[3][3], float maxDistanceSqr,
+    		ProjectionData* const data);
 
 
-    void processVoxelBlob(int x, int y, int z, float transform[3][3], float maxDistanceSqr,
-    		ProjectionData* data);
+    void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+    		ProjectionData* const data);
 
 
     /**
      * Method sets wCTF and wModulator based on position
      * in the image
      */
-    void processCTF(ProjectionData* data,
+    void processCTF(ProjectionData* const data,
     		int imgX, int imgY,
 			float& wCTF, float& wModulator);
 
