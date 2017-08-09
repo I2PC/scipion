@@ -27,6 +27,7 @@
 
 import pyworkflow.object as pwobj
 from pyworkflow.gui.tree import TreeProvider
+from pyworkflow.protocol import getUpdatedProtocol
 
 
 class SummaryProvider(TreeProvider):
@@ -45,7 +46,7 @@ class SummaryProvider(TreeProvider):
 
     def refreshObjects(self):
         objects = []
-        objIds = []
+        objIds = []  # need to store ids too to avoid duplication in runs table
 
         def addObj(objId, name, output='', size='', parent=None):
             if objId not in objIds:
@@ -60,7 +61,8 @@ class SummaryProvider(TreeProvider):
             else:
                 return None
 
-        runs = [p.get() for p in self.protocol.inputProtocols]
+        inputProts = self.protocol.getInputProtocols()
+        runs = [getUpdatedProtocol(p) for p in inputProts]
         g = self.protocol.getProject().getGraphFromRuns(runs)
 
         nodes = g.getRoot().iterChildsBreadth()

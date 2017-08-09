@@ -139,8 +139,8 @@ class ReportHtml:
         projName = project.getShortName()
         reportDir = abspath(self.protocol._getExtraPath(projName))
 
-        self.info("Creating report directory: %s" % reportDir)
         if not exists(reportDir):
+            self.info("Creating report directory: %s" % reportDir)
             pwutils.makePath(reportDir)
 
         reportPath = join(reportDir, reportName)
@@ -188,7 +188,7 @@ class ReportHtml:
                                                              'psd', relPath=reportDir)
 
             # copy shift plots
-            if data['imgShiftPath'][0] != "":
+            if data['imgShiftPath'] and data['imgShiftPath'][0] != "":
                 shiftPlotsDir = join(reportDir, 'imgShiftPlots')
                 data['imgShiftCopyPath'] = self.generateReportImages(data['imgShiftPath'], shiftPlotsDir,
                                                                      'shift', relPath=reportDir)

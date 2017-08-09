@@ -29,7 +29,6 @@ import time
 
 import pyworkflow.protocol.params as params
 from pyworkflow.em.protocol.protocol import EMProtocol
-from pyworkflow.protocol import getProtocolFromDb
 
 
 
@@ -163,16 +162,6 @@ class Monitor():
     def initLoop(self):
         """ To be defined in subclasses. """
         pass
-
-    @staticmethod
-    def getUpdatedProtocol(prot):
-        prot2 = getProtocolFromDb(prot.getProject().path,
-                                  prot.getDbPath(),
-                                  prot.getObjId())
-        # Close DB connections
-        prot2.getProject().closeMapper()
-        prot2.closeMappers()
-        return prot2
 
     def loop(self):
         self.initLoop()

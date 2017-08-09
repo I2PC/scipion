@@ -34,8 +34,9 @@ import time, sys
 
 from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
-from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
-from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol.constants import STATUS_RUNNING
+from pyworkflow.protocol import getUpdatedProtocol
+
 import sys
 from pyworkflow.em.plotter import EmPlotter
 
@@ -157,7 +158,7 @@ class MonitorSystem(Monitor):
             print("ERROR: saving one data point (monitor). I continue")
 
         # Return finished = True if all protocols have finished
-        return all(self.getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
+        return all(getUpdatedProtocol(prot).getStatus() != STATUS_RUNNING
                    for prot in self.protocols)
 
     def _createTable(self):

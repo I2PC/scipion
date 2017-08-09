@@ -35,8 +35,9 @@ import time, sys
 from pyworkflow import VERSION_1_1
 from pyworkflow.gui.plotter import plt
 import tkMessageBox
-from pyworkflow.protocol.constants import STATUS_RUNNING, STATUS_FINISHED
-from pyworkflow.protocol import getProtocolFromDb
+from pyworkflow.protocol.constants import STATUS_RUNNING
+from pyworkflow.protocol import getUpdatedProtocol
+
 from pyworkflow.em.plotter import EmPlotter
 
 CTF_LOG_SQLITE = 'ctf_log.sqlite'
@@ -136,9 +137,12 @@ class MonitorCTF(Monitor):
         self._createTable()
 
     def step(self):
-        prot = self.getUpdatedProtocol(self.protocol)
+        prot = getUpdatedProtocol(self.protocol)
         # Create set of processed CTF from CTF protocol
-        CTFset = prot.outputCTF.getIdSet()
+        if hasattr(prot, 'outputCTF'):
+            CTFset = prot.outputCTF.getIdSet()
+        else:
+            return False
         # find difference
         sys.stdout.flush()
         diffSet = CTFset - self.readCTFs
