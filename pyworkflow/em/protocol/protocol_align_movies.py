@@ -521,7 +521,7 @@ class ProtAlignMovies(ProtProcessMovies):
         self.__runXmippProgram('xmipp_movie_alignment_correlation', args)
 
     def computePSD(self, inputMic, oroot, dim=400, overlap=0.7):
-        args = '--micrograph %s --oroot %s ' % (inputMic, oroot)
+        args = '--micrograph "%s" --oroot %s ' % (inputMic, oroot)
         args += '--dont_estimate_ctf --pieceDim %d --overlap %f' % (dim, overlap)
 
         self.__runXmippProgram('xmipp_ctf_estimate_from_micrograph', args)
