@@ -3,6 +3,7 @@
  * Authors:     Jose Roman Bilbao (jrbcast@ace.ual.es)
  *    			Roberto Marabini (roberto@cnb.csic.es)
  *    			Vahid Abrishami (vabrishami@cnb.csic.es)
+ *    			David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -45,10 +46,7 @@
 #define TAG_STOP     1
 #define TAG_TRANSFER   2
 #define TAG_FREEWORKER    3
-#define TAG_COLLECT_FOR_FSC  4
 #define TAG_SETVERBOSE  5
-
-#define BUFFSIZE 10000000
 
 //TODO (MARIANA) Please give more documentation and in a good structure e.g. @name
 
@@ -59,16 +57,8 @@
 class ProgMPIRecFourier: public ProgRecFourier, public XmippMpiProgram
 {
 public:
-
-    /** Fourier transform size for volumes **/
-    long int sizeout;
-
-    /** Dvide the job in this number block with this number of images */
-    int mpi_job_size;
-
     /** Empty constructor */
-    ProgMPIRecFourier()
-    {}
+    ProgMPIRecFourier(){};
 
     /*  constructor ------------------------------------------------------- */
     ProgMPIRecFourier(int argc, char *argv[]);
@@ -78,32 +68,28 @@ public:
      */
     ProgMPIRecFourier(MpiNode * node);
 
-    /* Special way of reading to sync all nodes */
+    /** Special way of reading to sync all nodes */
     void read(int argc, char** argv);
 
-    /* Read parameters --------------------------------------------------------- */
-    void readParams();
+private:
+    /** Divide the job in this number block with this number of images */
+	int mpi_job_size;
 
-    /** destructor */
-    //    ~ProgMPIRecFourier();
+	/** Read parameters from command line */
+	void readParams();
 
-    /* Usage ------------------------------------------------------------------- */
-    void defineParams();
+	/** Specify supported command line arguments */
+	void defineParams();
 
-    /* Pre Run PreRun for all nodes but not for all works */
-    void preRun();
+	/** Pre Run PreRun for all nodes but not for all works */
+	void preRun();
 
-    /* Run --------------------------------------------------------------------- */
-    void run();
+	/** Main processing method */
+	void run();
 
-    int  sendDataInChunks( double * pointer, int dest, int totalSize, int buffSize, MPI_Comm comm );
 
 };
 //@}
 //end of class MPI reconstruct fourier
 
 #endif /* MPI_RECONSTRUCT_FOURIER_H_ */
-
-
-
-
