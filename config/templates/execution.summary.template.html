@@ -371,13 +371,47 @@
         };
 
         function addDefocusCoverage(){
-            var defocusValues = report.ctfData.defocusCoverage.map(function(value) { return value[0]; });
-            var numValues = defocusValues.length;
-            var firstItem = {y:defocusValues[0], color:'#f45b5b'}; // change color for item with defocus out of range
-            var lastItem = {y:defocusValues[numValues-1], color:'#f45b5b'}; // same as firstItem
-            var defocusChartData = [lastItem].concat(defocusValues.slice(1,numValues-1).reverse());
+            function processDefocusValues(defocusCoverageList){
+                var defocusValues = defocusCoverageList.map(function(value) { return value[0]; });
+                var numValues = defocusValues.length;
+                var firstItem = {y:defocusValues[0], color:'#f45b5b'}; // change color for item with defocus out of range
+                var lastItem = {y:defocusValues[numValues-1], color:'#f45b5b'}; // same as firstItem
+                var defocusChartData = [lastItem].concat(defocusValues.slice(1,numValues-1).reverse());
+                defocusChartData.push(firstItem);
+                return defocusChartData;
+            }
             var labels = report.ctfData.defocusCoverage.map(function(value) { return value[1]; }).reverse();
-            defocusChartData.push(firstItem);
+            var defocusData = processDefocusValues(report.ctfData.defocusCoverage);
+            var yAxis = [{
+                            title: {
+                                text: 'Mic counts',
+                                align: 'high'
+                            },
+                            labels: {
+                                overflow: 'justify'
+                            }
+                        }];
+            var dataSeries = [{
+                                name: 'Defocus Coverage',
+                                data: defocusData
+                            }];
+            if('defocusCoverageLast50' in report.ctfData){
+                var defocusDataLast50 = processDefocusValues(report.ctfData.defocusCoverageLast50);
+                yAxis.push({
+                            title: {
+                                text: 'Last 50 Mic counts',
+                                align: 'high'
+                            },
+                            labels: {
+                                overflow: 'justify'
+                            },
+                            opposite: true
+                        });
+                dataSeries.push({
+                                name: 'Defocus Coverage',
+                                data: defocusDataLast50
+                            })
+            }
 
             Highcharts.chart('defocusPie', {
                 chart: {
@@ -392,26 +426,11 @@
                         text: 'Defocus U(Å)'
                     }
                 },
-                yAxis: {
-                    title: {
-                        text: 'Mic counts',
-                        align: 'high'
-                    },
-                    labels: {
-                        overflow: 'justify'
-                    }
-                },
+                yAxis: yAxis,
                 tooltip: {
                     valueSuffix: ' micrographs'
                 },
-                series:[{
-                    name: 'Defocus Coverage',
-                    data: defocusChartData
-                }
-
-                ]
-
-
+                series: dataSeries
             })
 
         }

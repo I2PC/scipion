@@ -194,8 +194,11 @@ class ReportHtml:
                                                                      'shift', relPath=reportDir)
             else:
                 data['imgShiftCopyPath'] = []
-
-            data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
+            if len(data['defocusU']) < 100:
+                data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
+            else:
+                data['defocusCoverage'] = self.processDefocusValues(data['defocusU'][:-50])
+                data['defocusCoverageLast50'] = self.processDefocusValues(data['defocusU'][-50:])
 
         ctfData = json.dumps(data)
 
