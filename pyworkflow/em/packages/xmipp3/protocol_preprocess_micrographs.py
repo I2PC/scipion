@@ -143,7 +143,10 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
     def _insertAllSteps(self):
         self._defineInputs()
         self.insertedDict = {}
-        self._insertFunctionStep('createOutputStep', wait=True)
+        preprocessSteps = self._insertNewMicsSteps(self.insertedDict,
+                                              self.inputMics)
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=preprocessSteps, wait=True)
 
     def createOutputStep(self):
         pass
