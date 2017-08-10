@@ -503,6 +503,10 @@ def rowToParticle(partRow, **kwargs):
     if partRow.hasLabel(md.RLN_PARTICLE_ID):
         img._rlnParticleId = Integer(partRow.getValue(md.RLN_PARTICLE_ID))
     
+    # copy particleId if available from row to particle
+    if partRow.hasLabel(md.RLN_PARTICLE_RANDOM_SUBSET):
+        img._random_Subset = Integer(partRow.getValue(md.RLN_PARTICLE_RANDOM_SUBSET))
+    
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
     postprocessImageRow = kwargs.get('postprocessImageRow', None)
