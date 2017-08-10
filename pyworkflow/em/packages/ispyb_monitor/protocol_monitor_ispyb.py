@@ -86,7 +86,8 @@ class MonitorISPyB(Monitor):
     def __init__(self, protocol, **kwargs):
         Monitor.__init__(self, **kwargs)
         self.protocol = protocol
-        self.allParams = OrderedDict()
+        self.dataCollection = OrderedDict()
+        self.movies = OrderedDict()
         self.numberOfFrames = None
         self.imageGenerator = None
         self.visit = kwargs['visit']
@@ -129,14 +130,20 @@ class MonitorISPyB(Monitor):
 
             finished.append(prot.getStatus() != STATUS_RUNNING)
 
+        dcParams = self.ispybDb.get_data_collection_params()
+        dcParams.update(self.dataCollection)
+        dcId = self.ispybDb.update_data_collection(dcParams)
+
         for itemId in set(updateIds):
-            dcParams = self.ispybDb.get_data_collection_params()
-            dcParams.update(self.allParams[itemId])
-            ispybId = self.ispybDb.update_data_collection(dcParams)
             self.info("item id: %s" % str(itemId))
-            self.info("ispyb id: %s" % str(ispybId))
+
+            imgParams = self.ispybDb.get_image_params()
+            imgParams['parentid'] = dcId
+            imgParams.update(self.movies[itemId])
+            ispybId = self.ispybDb.update_image(dcParams)
+
             # Use -1 as a trick when ISPyB is not really used and id is None
-            self.allParams[itemId]['id'] = ispybId or -1
+            self.movies[itemId]['id'] = ispybId or -1
 
         if all(finished):
             self.info("All finished, closing ISPyBDb connection")
@@ -175,7 +182,7 @@ class MonitorISPyB(Monitor):
                                                      images_path,
                                                      smallThumb=512)
 
-            self.allParams[movieId] = {
+            self.movies[movieId] = {
                 'imgdir': dirname(movieFn),
                 'imgprefix': pwutils.removeBaseExt(movieFn),
                 'imgsuffix': pwutils.getExt(movieFn),
@@ -187,13 +194,13 @@ class MonitorISPyB(Monitor):
     def update_align_params(self, prot, updateIds):
         for mic in self.iter_updated_set(prot.outputMicrographs):
             micId = mic.getObjId()
-            if self.allParams.get(micId, None) is not None:
+            if self.movies.get(micId, None) is not None:
                 if 'comments' in self.allParams[micId]:  # skip if we already have align info
                     continue
                 micFn = mic.getFileName()
                 renderable_image = self.imageGenerator.generate_image(micFn, micFn)
 
-                self.allParams[micId].update({
+                self.movies[micId].update({
                     'comments': 'aligned',
                     'xtal_snapshot1':renderable_image
                 })
@@ -203,14 +210,14 @@ class MonitorISPyB(Monitor):
     def update_ctf_params(self, prot, updateIds):
         for ctf in self.iter_updated_set(prot.outputCTF):
             micId = ctf.getObjId()
-            if self.allParams.get(micId, None) is not None:
-                if 'min_defocus' in self.allParams[micId]:  # skip if we already have ctf info
+            if self.movies.get(micId, None) is not None:
+                if 'min_defocus' in self.movies[micId]:  # skip if we already have ctf info
                     continue
                 micFn = ctf.getMicrograph().getFileName()
                 psdName = pwutils.replaceBaseExt(micFn, 'psd.png')
                 psdFn = ctf.getPsdFile()
                 psdPng = self.imageGenerator.generate_image(psdFn, psdName)
-                self.allParams[micId].update({
+                self.movies[micId].update({
                 'min_defocus': ctf.getDefocusU(),
                 'max_defocus': ctf.getDefocusV(),
                 'amount_astigmatism': ctf.getDefocusRatio()
@@ -337,6 +344,12 @@ class ISPyBdb:
 
     def update_data_collection(self, params):
         return self.mxacquisition.insert_data_collection(self.cursor, params.values())
+
+    def get_image_params(self):
+        return self.mxacquisition.get_image_params()
+
+    def update_image(self, params):
+        return self.mxacquisition.update_image(self.cursor, params.values())
 
     def disconnect(self):
         if self.dbconnection:
