@@ -23,6 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+from pyworkflow.object import Integer
 """
 This module contains the protocol for 3d refinement with Relion.
 """
@@ -189,4 +190,6 @@ leads to objective and high-quality results.
         from pyworkflow.em import ALIGN_PROJ
         
         createItemMatrix(item, row, align=ALIGN_PROJ)
+        item._random_Subset = Integer(row.getValue(md.RLN_PARTICLE_RANDOM_SUBSET))
+
         
