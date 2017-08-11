@@ -43,13 +43,14 @@ class ReportHtml:
     """ Create an html report with a summary of the processing.
     The report will be updated with a given frequency.
     """
-    def __init__(self, protocol, ctfMonitor, sysMonitor, publishCmd=None,
+    def __init__(self, protocol, ctfMonitor, sysMonitor, movieGainMonitor, publishCmd=None,
                  **kwargs):
         # The CTF protocol to monitor
         self.protocol = protocol
         self.provider = SummaryProvider(protocol)
         self.ctfMonitor = ctfMonitor
         self.sysMonitor = sysMonitor
+        self.movieGainMonitor = movieGainMonitor
 
         # Get the html template to be used, by default use the one
         # in scipion/config/templates
@@ -202,6 +203,11 @@ class ReportHtml:
 
         ctfData = json.dumps(data)
 
+        # Movie gain monitor chart data
+        data = [] if self.movieGainMonitor is None else self.movieGainMonitor.getData()
+
+        movieGainData = json.dumps(data)
+
         # system monitor chart data
         data = self.sysMonitor.getData()
         systemData = json.dumps(data)
@@ -215,6 +221,7 @@ class ReportHtml:
                 'acquisitionLines': acquisitionLines,
                 'runLines': runLines,
                 'ctfData': ctfData,
+                'movieGainData': movieGainData,
                 'systemData': systemData,
                 'refresh': '<META http-equiv="refresh" content="%s" >' % self.refreshSecs if not finished else '',
                 }
