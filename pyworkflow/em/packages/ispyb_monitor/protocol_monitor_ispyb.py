@@ -26,9 +26,10 @@
 # *
 # **************************************************************************
 
-from os.path import realpath, join, dirname, exists, basename
+from os.path import realpath, join, dirname, exists, basename, abspath
 import os
 from collections import OrderedDict
+import math
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -183,13 +184,26 @@ class MonitorISPyB(Monitor):
                                                      smallThumb=512)
 
             self.movies[movieId] = {
-                'imgdir': dirname(movieFn),
-                'imgprefix': pwutils.removeBaseExt(movieFn),
+                'experimenttype': 'mesh',
+                'imgdir': abspath(dirname(movieFn)),
                 'imgsuffix': pwutils.getExt(movieFn),
-                'file_template': movieFn,
-                'n_images': self.numberOfFrames
+                'file_template': pwutils.removeBaseExt(movieFn) + '#####' + pwutils.getExt(movieFn),
+                'numberOfPasses': self.numberOfFrames,
+                'magnification': movie.getMagnification(),
+                'totalAbsorbedDose': movie.getDoseInitial() + (movie.getDosePerFrame() * self.numberOfFrames),
+                'wavelength': convert_volts_to_debroglie_wavelength(movie.getVoltage()),
+                'starttime': None,
+                'endtime': None,
              }
             updateIds.append(movieId)
+
+    def convert_volts_to_debroglie_wavelength(self, volts):
+        rest_mass_of_electron = float('9.109E-31')
+        speed_of_light = 299792458
+        pc_squared = volts * rest_mass_of_electron * speed_of_light * speed_of_light * 2
+        e_wavelength = tttt.sqrt(pc_squared)
+        hc = 1239.84
+        return hc/pc
 
     def update_align_params(self, prot, updateIds):
         for mic in self.iter_updated_set(prot.outputMicrographs):
