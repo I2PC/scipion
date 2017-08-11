@@ -140,7 +140,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         writeMovieMd(movie, inputMd, a0, aN, useAlignment=self.useAlignment)
         
         args = '-i %s ' % inputMd
-        args += '-o %s ' % self._getOutputShifts(movie)
+        args += '-o "%s" ' % self._getOutputShifts(movie)
         args += ' --frameRange %d %d ' % (0, aN - a0)
 
         if dark:
@@ -161,7 +161,7 @@ class XmippProtOFAlignment(ProtAlignMovies):
         # We should save the movie either if the user selected it (default)
         # or if the PSD is going to be computed
         if self.doSaveAveMic or self.doComputePSD:
-            args += '--oavg %s ' % outMicFn
+            args += '--oavg "%s" ' % outMicFn
 
         if self.doComputePSD:
             args  += '--oavgInitial %s ' % aveMic
