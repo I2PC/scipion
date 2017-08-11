@@ -44,7 +44,8 @@ class ProtGctfViewer(Viewer):
     """ Visualization of Gctf."""
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _label = 'viewer Gctf'
-    _targets = [ProtGctf]
+    # FIXME: Remove this class is not really needed
+    #_targets = [ProtGctf]
      
     def __init__(self, **args):
         Viewer.__init__(self, **args)
@@ -130,9 +131,11 @@ def createCtfPlot(ctfSet, ctfId):
     psdFn = ctfModel.getPsdFile()
     fn = pwutils.removeExt(psdFn) + "_EPA.txt"
     gridsize = [1, 1]
-    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1], windowTitle='CTF Fitting')
+    xplotter = EmPlotter(x=gridsize[0], y=gridsize[1],
+                         windowTitle='CTF Fitting')
     plot_title = "CTF Fitting"
-    a = xplotter.createSubPlot(plot_title, 'Resolution (Angstroms)', 'CTF', yformat=False)
+    a = xplotter.createSubPlot(plot_title, 'Resolution (Angstroms)', 'CTF',
+                               yformat=False)
     a.invert_xaxis()
     for i in range(1, 5):
         _plotCurve(a, i, fn)

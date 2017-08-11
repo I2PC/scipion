@@ -76,15 +76,18 @@ class ProjectNotifier(object):
         return delta < timedelta(seconds=seconds)
 
     def _sendData(self, url, dataDict=None):
-        #then connect to webserver a send json
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
-        data = urllib.urlencode(dataDict)
-        content = opener.open(url, data=data).read()
-        now = time.time()
-        #print "Notifying...."
-        #pwutils.prettyDate(now)
-        #print "dataDict: ", dataDict
-        os.utime(self._getUuidFileName(), (now, now))
+        try:
+            #then connect to webserver a send json
+            opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
+            data = urllib.urlencode(dataDict)
+            content = opener.open(url, data=data).read()
+            now = time.time()
+            #print "Notifying...."
+            #pwutils.prettyDate(now)
+            #print "dataDict: ", dataDict
+            os.utime(self._getUuidFileName(), (now, now))
+        except Exception:
+            print "Could not notify, maybe there is not internet connection."
 
     def _dataModified(self, projectWorfklow):
         try:
@@ -98,8 +101,8 @@ class ProjectNotifier(object):
 
     def notifyWorkflow(self):
 
-        try:
 
+        try:
             #check if enviroment exists otherwise abort
             if not pwutils.envVarOn('SCIPION_NOTIFY'):
                 return
