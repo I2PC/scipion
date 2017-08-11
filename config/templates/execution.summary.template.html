@@ -202,6 +202,10 @@
                 <H2>CTF monitor</H2>
                 <DIV id="ctfChart"></DIV>
             </SECTION>
+            <SECTION id="movieGain">
+                <H2>Movie gain monitor</H2>
+                <DIV id="movieGainChart"></DIV>
+            </SECTION>
             <SECTION id="system">
                 <H2>System monitor</H2>
                 <DIV id="systemChart"></DIV>
@@ -225,10 +229,16 @@
                 %(runLines)s
             ],
             ctfData: %(ctfData)s,
+            movieGainData: %(movieGainData)s,
             systemData: %(systemData)s
         }
         
         function addAcquisition(){
+
+            if (report.acquisition.length == 0) {
+                $('#acquisition').hide();
+            }
+
             // Get the acquisition section
             var acquisitionSection = $('#acquisition');
             
@@ -257,9 +267,95 @@
                 });
             });
         };
-        
+
+
+        function addMovieGainChart () {
+
+            if (report.movieGainData.length == 0) {
+                $('#movieGain').hide();
+            }
+
+            $('#movieGainChart').highcharts({
+                title: {
+                    text: '',
+                    x: -20 //center
+                },
+                subtitle: {
+                    text: 'Click and drag to zoom in. Hold down shift key to pan.'
+                },
+                xAxis: [{
+                    title: {
+                        text: 'Micrograph index'
+                    },
+                    allowDecimals: false,
+                    type:'linear',
+                    range:50
+                }],
+                yAxis: [{  // Primary yAxis
+                    title: {
+                        text: 'Ratios between specified percentiles'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }]
+                }, {  // Secondary yAxis
+                    title: {
+                        text: 'Residual gain standard deviation'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#D14242'
+                    }],
+                    opposite: true
+                }],
+                tooltip: {
+                    valueSuffix: ' A',
+                    shared: true
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'middle',
+                    borderWidth: 0
+                },
+                series: [{
+                    name: '97.5/2.5 percentile',
+                    data: report.movieGainData.ratio1,
+                    color: '#0000FF'
+                }, {
+                    name: 'max/97.5 percentile',
+                    data: report.movieGainData.ratio2,
+                    color: '#0000FF'
+                }, {
+                    name: 'Standard deviation',
+                    yAxis: 1,
+                    data: report.movieGainData.standard_deviation,
+                    color: '#FF0000'
+                }],
+                chart:{
+                    zoomType: 'x',
+                    panning: true,
+                    panKey:'shift'
+                }
+            });
+
+            // Since we are using a range of 50 in the Xaxis and the zoom button does not shows up
+            // we force it
+            var movieGainChart = $('#movieGainChart').highcharts()
+            movieGainChart.showResetZoom();
+        };
+
+
         function addCTFChart () {
-            
+
+            if (report.ctfData.length == 0) {
+                $('#ctf').hide();
+            }
+
+
             $('#ctfChart').highcharts({
                 title: {
                     text: '',
@@ -298,12 +394,12 @@
                 series: [{
                     name: 'Defocus U',
                     data: report.ctfData.defocusU,
-                    color: '#24307B'
+                    color: '#0000FF'
                     
                 }, {
                     name: 'Defocus V',
                     data: report.ctfData.defocusV,
-                    color: '#B4AC22'
+                    color: '#FF0000'
                 }],
                 chart:{
                     zoomType: 'x',
@@ -322,7 +418,12 @@
         };
 
         function addSystemChart () {
-            
+
+            if (report.systemData.length == 0) {
+                $('#system').hide();
+            }
+
+
             $('#systemChart').highcharts({
                 title: {
                     text: '',
@@ -364,16 +465,15 @@
                 series: [{
                     name: 'Memory',
                     data: report.systemData.mem,
-                    color: '#24307B'
-                    
+                    color: '#FF0000'
+                }, {
+                    name: 'Cpu',
+                    data: report.systemData.cpu,
+                    color: '#00FF00'
                 }, {
                     name: 'Swap',
                     data: report.systemData.swap,
-                    color: '#B4AC22'
-                }, {
-                    name: 'cpu',
-                    data: report.systemData.cpu,
-                    color: '#D14242'
+                    color: '#0000FF'
                 }],
                 chart:{
                     zoomType: 'x',
@@ -394,6 +494,7 @@
             addAcquisition();
             addRuns();
             addCTFChart();
+            addMovieGainChart();
             addSystemChart();
         };
         
