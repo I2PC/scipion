@@ -186,6 +186,7 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2];
 	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5];
 	if(abs(shiftx)>maxShift || abs(shifty)>maxShift){
+		printf("NO\n");
 		result[idx9] = lastMat[idx9];
 		result[idx9+1] = lastMat[idx9+1];
 		result[idx9+2] = lastMat[idx9+2];
@@ -194,6 +195,7 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 		result[idx9+5] = lastMat[idx9+5];
 		maxGpu[idx] = NCC[idx*NCC_yxdim];
 	}else{
+		printf("SI\n");
 		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3];
 		result[idx9+2] = shiftx;
 		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4];
@@ -810,6 +812,14 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 
 	gpuErrchk(cudaMemcpy(max_vector, maxGpu.d_data, myStructureAux.d_NCCPolar.Ndim*sizeof(float), cudaMemcpyDeviceToHost));
 
+	float *matrixCpu = new float[9];
+	printf("max %f  x %f y %f \n", max_values[0], posX[0], posY[0]);
+	transMat.copyMatrixToCpu(matrixCpu);
+    for(int h=0; h<9; h++){ //myStructureAux.d_NCC.Ndim
+    	printf("transMat[%i] %f ", h, matrixCpu[h]);
+    }
+    printf("\n");
+
 	delete[] max_values;
 	delete[] posX;
 	delete[] posY;
@@ -930,9 +940,6 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	float *posY = new float[myStructureAux.d_NCC.Ndim];
     myStructureAux.d_NCC.calculateMax(max_values, posX, posY, fixPadding);*/
 
-    //for(int i=0; i<myStructureAux.d_NCC.Ndim; i++)
-    	////printf("BIEN max %lf, x %lf, y %lf ", max_values[i], posX[i], posY[i]);
-    ////printf("\n");
 
     //AJ test new maximum calculation
 	float *max_values = new float[myStructureAux.d_NCC.Ndim];
@@ -942,9 +949,6 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
     calculateMaxNew(max_values, posX, posY, fixPadding, myStructureAux.d_NCC.yxdim, myStructureAux.d_NCC.Xdim, myStructureAux.d_NCC.Ydim,
     		myStructureAux.d_NCC.Ndim, myStructureAux.d_NCC.d_data, myStructureAux.d_out_max, myStructureAux.d_pos_max);
 
-    //for(int i=0; i<myStructureAux.d_NCC.Ndim; i++)
-    	////printf("MAL max %lf, x %lf, y %lf ", max_values2[i], posX2[i], posY2[i]);
-    ////printf("\n");
 
 	//AJ TIME
 	gettimeofday(&end6, NULL);
@@ -978,6 +982,14 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	gettimeofday(&end7, NULL);
 	secs7 = timeval_diff(&end7, &start7);
 	//printf("CORR final: %.16g miliseconds\n", secs7 * 1000.0);
+
+	float *matrixCpu = new float[9];
+	printf("max %f  x %f y %f \n", max_values[0], posX[0], posY[0]);
+	transMat.copyMatrixToCpu(matrixCpu);
+    for(int h=0; h<9; h++){ //myStructureAux.d_NCC.Ndim
+    	printf("transMat[%i] %f ", h, matrixCpu[h]);
+    }
+    printf("\n");
 
 	delete[] max_values;
 	delete[] posX;
