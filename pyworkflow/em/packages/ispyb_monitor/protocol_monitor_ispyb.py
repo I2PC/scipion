@@ -39,7 +39,7 @@ from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
 from pyworkflow.protocol.constants import STATUS_RUNNING
-
+import datetime
 
 class ProtMonitorISPyB(ProtMonitor):
     """ Monitor to communicated with ISPyB system at Diamond.
@@ -192,8 +192,8 @@ class MonitorISPyB(Monitor):
                 'magnification': movie.getMagnification(),
                 'totalAbsorbedDose': movie.getDoseInitial() + (movie.getDosePerFrame() * self.numberOfFrames),
                 'wavelength': convert_volts_to_debroglie_wavelength(movie.getVoltage()),
-                'starttime': None,
-                'endtime': None,
+                'starttime': datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S'),
+                'endtime': datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S'),
              }
             updateIds.append(movieId)
 
