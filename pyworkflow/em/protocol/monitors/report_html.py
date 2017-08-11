@@ -193,8 +193,6 @@ class ReportHtml:
                 shiftPlotsDir = join(reportDir, 'imgShiftPlots')
                 data['imgShiftCopyPath'] = self.generateReportImages(data['imgShiftPath'], shiftPlotsDir,
                                                                      'shift', relPath=reportDir)
-            else:
-                data['imgShiftCopyPath'] = []
             if len(data['defocusU']) < 100:
                 data['defocusCoverage'] = self.processDefocusValues(data['defocusU'])
             else:

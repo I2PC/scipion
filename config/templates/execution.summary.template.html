@@ -223,7 +223,7 @@
                 <H2>CTF monitor</H2>
                 <div class="row">
                     <DIV id="ctfChart" class="column column-7"></DIV>
-                    <DIV id="defocusPie" class="column column-5"></DIV>
+                    <DIV id="defocusHistogram" class="column column-5"></DIV>
                 </div>
             </SECTION>
             <SECTION id="movieGain">
@@ -520,7 +520,7 @@
                             })
             }
 
-            Highcharts.chart('defocusPie', {
+            Highcharts.chart('defocusHistogram', {
                 chart: {
                     type: 'bar',
                     alignTicks: false,
@@ -620,31 +620,36 @@
 
             $.each(report.ctfData.imgMicThumbs, function(index, imgMicPath) {
                 var psdPath = report.ctfData.imgPsdThumbs[index];
-                var shiftPlotPath = report.ctfData.imgShiftCopyPath[index];
                 var imgHtml = '<div class="thumbnail"><a href ="#" class="popUp"><img width={1} src={0} alt="{0}"></a></div>';
                 var imgWidth = Math.floor($('#content').width() * 0.2);
                 var rowValues = [report.ctfData.idValues[index], imgHtml.format(imgMicPath, imgWidth),
-                                 imgHtml.format(psdPath,imgWidth), imgHtml.format(shiftPlotPath,imgWidth),
-                                 report.ctfData.defocusU[index], report.ctfData.defocusV[index],
-                                 report.ctfData.ratio[index], report.ctfData.astigmatism[index]
+                                 imgHtml.format(psdPath,imgWidth),report.ctfData.defocusU[index],
+                                 report.ctfData.defocusV[index], report.ctfData.ratio[index],
+                                 report.ctfData.astigmatism[index]
                                 ];
+                if('imgShiftCopyPath' in report.ctfData){
+                    var shiftPlotPath = report.ctfData.imgShiftCopyPath[index];
+                    rowValues.splice(3, 0, imgHtml.format(shiftPlotPath,imgWidth));
+                }
                 dataset.unshift(rowValues);
             });
-
-            $('#micTable').DataTable( {
-                data: dataset,
-                "scrollX": true,
-                 "order": [[ 0, "desc" ]],
-                columns: [
+            var cols = [
                     {title: "ID"},
                     {title: "Micrograph"},
                     {title: "PsdFile"},
-                    {title: "ShiftPlot"},
                     {title: "DefocusU"},
                     {title: "DefocusV"},
                     {title: "Ratio"},
                     {title: "Astigmatism"}
-                ]
+                ];
+            if ('imgShiftCopyPath' in report.ctfData){
+                cols.splice(3,0,{title: "ShiftPlot"})
+            }
+            $('#micTable').DataTable( {
+                data: dataset,
+                "scrollX": true,
+                 "order": [[ 0, "desc" ]],
+                columns: cols
             });
 
         };

@@ -404,6 +404,7 @@ class ImageHandler(object):
 
     @staticmethod
     def getThumbnailFn(inputFn):
+        """Replace the extension in inputFn with thumb.png"""
         return pwutils.replaceExt(inputFn, "thumb.png")
 
     @classmethod
