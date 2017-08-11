@@ -4,6 +4,7 @@
  *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
  *              Vahid Abrishami (vabrishami@cnb.csic.es)
+ *              David Strelak (davidstrelak@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -27,20 +28,6 @@
  ***************************************************************************/
 
 #include "reconstruct_fourier.h"
-#include <fstream>
-#include <set>
-#include <sstream>
-#include <math.h>
-#include <limits>
-#include <data/xmipp_fft.h>
-
-#include <time.h>
-
-#define SSTR( x ) static_cast< std::ostringstream & >( \
-        ( std::ostringstream() << std::dec << x ) ).str()
-
-
-#define DEBUG_DUMP 0
 
 // Define params
 void ProgRecFourier::defineParams()
@@ -66,8 +53,8 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--minCTF <ctf=0.01>]          : Minimum value of the CTF that will be inverted");
     addParamsLine("                                 : CTF values (in absolute value) below this one will not be corrected");
     addParamsLine("  [--bufferSize <size=25>]        : Number of projection loaded in memory (will be actually 2x as much.");
-    addParamsLine("                                 : This will require up to 2*size*projSize*projSize*16B, e.g.");
-    addParamsLine("                                 : 50MB for projection of 256x256 or 200MB for projection of 512x512");
+    addParamsLine("                                 : This will require up to 4*size*projSize*projSize*16B, e.g.");
+    addParamsLine("                                 : 100MB for projection of 256x256 or 400MB for projection of 512x512");
     addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
     addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 }
@@ -78,8 +65,6 @@ void ProgRecFourier::readParams()
     fn_in = getParam("-i");
     fn_out = getParam("-o");
     fn_sym = getParam("--sym");
-//    if(checkParam("--prepare_fsc"))
-//        fn_fsc = getParam("--prepare_fsc");
     do_weights = checkParam("--weight");
     padding_factor_proj = getDoubleParam("--padding", 0);
     padding_factor_vol = getDoubleParam("--padding", 1);
@@ -110,8 +95,6 @@ void ProgRecFourier::show()
         std::cout << " Output volume             : "  << fn_out << std::endl;
         if (fn_sym != "")
             std::cout << " Symmetry file for projections : "  << fn_sym << std::endl;
-//        if (fn_fsc != "")
-//            std::cout << " File root for FSC files: " << fn_fsc << std::endl;
         if (do_weights)
             std::cout << " Use weights stored in the image headers or doc file" << std::endl;
         else
@@ -125,7 +108,6 @@ void ProgRecFourier::show()
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
         << "\n   blalpha               : "  << blob.alpha
-        //<< "\n sampling_rate           : "  << sampling_rate
         << "\n max_resolution          : "  << maxResolution
         << "\n -----------------------------------------------------------------" << std::endl;
     }
@@ -148,12 +130,11 @@ void ProgRecFourier::run()
     mirrorAndCropTempSpaces();
     //Saving the volume
     finishComputations(fn_out);
+    cleanLoadingThread();
 }
 
 void ProgRecFourier::createLoadingThread() {
 	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
-//	pthread_mutex_init( &workLoadMutex, NULL );
-
 	loadThread.parent = this;
 	loadThread.selFile = &SF;
 	pthread_create( &loadThread.id , NULL, loadImageThread, (void *)(&loadThread) );
@@ -195,12 +176,10 @@ void ProgRecFourier::produceSideinfo()
 	maxVolumeIndexX = maxVolumeIndexYZ = 2 * conserveRows;
 
     // Build a table of blob values
-    blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
     Fourier_blob_table.resize(BLOB_TABLE_SIZE_SQRT);
 
     struct blobtype blobFourier,blobnormalized;
     blobFourier=blob;
-//    Sjors 18aug10 blobFourier.radius/=(padding_factor_proj*Xdim);
     blobFourier.radius/=(padding_factor_vol*Xdim);
     blobnormalized=blob;
     blobnormalized.radius/=((double)padding_factor_proj/padding_factor_vol);
@@ -209,18 +188,14 @@ void ProgRecFourier::produceSideinfo()
 
     // The interpolation kernel must integrate to 1
     double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
-//    Sjors 18aug10 double padXdim3 = padding_factor_proj * Xdim;
     double padXdim3 = padding_factor_vol * Xdim;
     padXdim3 = padXdim3 * padXdim3 * padXdim3;
     double blobTableSize = blob.radius*sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
-    //***
-    //Following commented line seems to be the right thing but I do not understand it
-    //double fourierBlobTableSize = (sqrt(3.)*Xdim*Xdim/2.)*blobFourier.radius *sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(blobTableSqrt)
+    for (int i = 0; i < BLOB_TABLE_SIZE_SQRT; i++)
     {
         //use a r*r sample instead of r
         //DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
-        VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
+        blobTableSqrt[i] = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
         //***
         //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
         //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
@@ -258,238 +233,20 @@ void ProgRecFourier::produceSideinfo()
     }
 }
 
-void to3D( int i ) {
-	int z = i % 720;
-	int y = (i / 720) % 720;
-	int x = i / (720 * 720);
-    std::cout << x << " " << y << " " << z;
-}
-
-template <class T>
-Matrix1D<T> revert(T i1, T i2, T i3, Matrix2D<T>& A_SL, int volPadSizeX, int volPadSizeY, int volPadSizeZ, int xdim, int ydim) {
-	Matrix2D<T> A_SL_inv = A_SL.inv();
-	Matrix1D<T> real_pos(3), img_pos(3);
-	FFT_IDX2DIGFREQ_DOUBLE(i1, volPadSizeX, real_pos[0]);
-	FFT_IDX2DIGFREQ_DOUBLE(i2, volPadSizeY, real_pos[1]);
-	FFT_IDX2DIGFREQ_DOUBLE(i3, volPadSizeZ, real_pos[2]);
-	// invert map
-	SPEED_UP_temps012;
-	M3x3_BY_V3x1(real_pos, A_SL_inv, real_pos);
-	DIGFREQ2FFT_IDX_DOUBLE(real_pos[0], xdim, img_pos[0]);
-	DIGFREQ2FFT_IDX_DOUBLE(real_pos[1], ydim, img_pos[1]);
-
-	img_pos[2] = real_pos[2];
-
-	return img_pos;
-}
-
-template <typename T>
-bool ellipseHitTest(T majorAxis, T minorAxis, T x0, T y0, T xp, T yp, T alpha)
-{
-	T tmp1 = cos(alpha) * (xp - x0) + sin(alpha) * (yp-y0);
-	T tmp2 = sin(alpha) * (xp - x0) - cos(alpha) * (yp-y0);
-
-	T distance = (tmp1 * tmp1)/(majorAxis * majorAxis) + (tmp2 * tmp2) / (minorAxis * minorAxis);
-
-	return distance <= 1;
-}
-
-//void ProgRecFourier::processCube(
-//		int i,
-//		int j,
-//		const Matrix1D<int>& corner1,
-//		const Matrix1D<int>& corner2,
-//		const MultidimArray<float>& z2precalculated,
-//		const MultidimArray<int>& zWrapped,
-//		const MultidimArray<int>& zNegWrapped,
-//		const MultidimArray<float>& y2precalculated, float blobRadiusSquared,
-//		const MultidimArray<int>& yWrapped,
-//		const MultidimArray<int>& yNegWrapped,
-//		const MultidimArray<float>& x2precalculated, float iDeltaSqrt,
-//		float wModulator, const MultidimArray<int>& xWrapped, int xsize_1,
-//		const MultidimArray<int>& xNegWrapped, bool reprocessFlag, float wCTF,
-//		MultidimArray<std::complex<double> >& VoutFourier,
-//		Matrix1D<double>& blobTableSqrt, LoadThreadParams* threadParams,
-//		MultidimArray<double>& fourierWeights, double* ptrIn,
-//		float weight,
-//		ProgRecFourier * parent,
-//		Matrix1D<double>& real_position) {
-//	// Actually compute
-//	for (int intz = corner1[2]; intz <= corner2[2]; ++intz) {
-//		float z2 = z2precalculated(intz);
-//		int iz = zWrapped(intz);
-//		int izneg = zNegWrapped(intz);
-//		for (int inty = corner1[1]; inty <= corner2[1]; ++inty) {
-//			float y2z2 = y2precalculated(inty) + z2;
-//			if (y2z2 > blobRadiusSquared)
-//				continue;
-//
-//			int iy = yWrapped(inty);
-//			int iyneg = yNegWrapped(inty);
-//			int size1 = VoutFourier.yxdim * (izneg)
-//					+ ((iyneg) * VoutFourier.xdim);
-//			int size2 = VoutFourier.yxdim * (iz) + ((iy) * VoutFourier.xdim);
-//			int fixSize = 0;
-//			for (int intx = corner1[0]; intx <= corner2[0]; ++intx) {
-//				// Compute distance to the center of the blob
-//				// Compute blob value at that distance
-//				float d2 = x2precalculated(intx) + y2z2;
-//				if (d2 > blobRadiusSquared)
-//					continue;
-//
-//				int aux = (int) ((d2 * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-//				float w = blobTableSqrt[aux] * weight
-//						* wModulator;
-//				int ix = xWrapped(intx);
-//				bool conjugate = false;
-//				int izp, iyp, ixp;
-//				if (ix > xsize_1) {
-//					izp = izneg;
-//					iyp = iyneg;
-//					ixp = xNegWrapped(intx);
-//					conjugate = true;
-//					fixSize = size1;
-//				} else {
-//					izp = iz;
-//					iyp = iy;
-//					ixp = ix;
-//					fixSize = size2;
-//				}
-//
-//
-//				// Add the weighted coefficient
-//				if (reprocessFlag) {
-//					// Use VoutFourier as temporary to save the memory
-//					double* ptrOut = (double*) (&(DIRECT_A3D_ELEM(VoutFourier,
-//							izp, iyp, ixp)));
-//					DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w
-//							* ptrOut[0]);
-//				} else {
-//					float wEffective = w * wCTF;
-//					size_t memIdx = fixSize + ixp; //YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
-//
-//
-////						double tmp[3];
-////						FFT_IDX2DIGFREQ(intx, parent->volPadSizeX,
-////								tmp[0]);
-////						FFT_IDX2DIGFREQ(inty, parent->volPadSizeX,
-////								tmp[1]);
-////						FFT_IDX2DIGFREQ(intz, parent->volPadSizeX,
-////								tmp[2]);
-//
-////					if (iyp > 64) {
-//						std::cout
-//							<< ixp
-//							<< " "
-//							<< iyp
-//							<< " "
-//							<< izp
-//							<< " -> "
-////							<< tmp[0]
-////							<< " "
-////							<< tmp[1]
-////							<< " "
-////							<< tmp[2]
-////							   << " -> "
-//							<< j
-//							<< " "
-//							<< ((i < 64) ?	i + 64 : i - 128 + 64)
-////							<< " "
-////							<< wEffective
-////							<< " "
-////							<< (conjugate ? "conjugate" : "no_conjugate")
-//							<< std::endl;
-////					}
-//					double* ptrOut = (double*) (&(VoutFourier[memIdx]));
-//					ptrOut[0] += wEffective * ptrIn[0];
-//					fourierWeights[memIdx] += w;
-//					if (conjugate)
-//						ptrOut[1] -= wEffective * ptrIn[1];
-//					else
-//						ptrOut[1] += wEffective * ptrIn[1];
-//				}
-//			}
-//		}
-//	}
-//}
-
-
-
-inline bool exists (const std::string& name) {
-  struct stat buffer;
-  return (stat (name.c_str(), &buffer) == 0);
-}
-
-inline Point3D getNormal(const Point3D& u, const Point3D& v) {
-	float x = u.y*v.z - u.z*v.y;
-	float y = u.z*v.x - u.x*v.z;
-	float z = u.x*v.y - u.y*v.x;
-	return Point3D {x, y, z};
-}
-
-inline float getDot(const Point3D&u, const Point3D& v) {
-	return u.x*v.x + u.y*v.y + u.z*v.z;
-}
-
-inline float getLength(const Point3D& v) {
-	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-}
-
-inline float getCosTheta(const Point3D& u, const Point3D& v) {
-	return getDot(u, v) / (getLength(u)*getLength(v));
-}
-
-inline void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
+inline void ProgRecFourier::getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
 	float x0 = plane[0].x;
 	float y0 = plane[0].y;
 	float z0 = plane[0].z;
-	u = { plane[1].x - x0, plane[1].y - y0, plane[1].z - z0 };
-	v = { plane[3].x - x0, plane[3].y - y0, plane[3].z - z0 };
-}
-
-template <typename T>
-void print(MultidimArray<T>& VoutFourier, bool full = true) {
-	std::string fileName = "VoutFourier";
-	std::string ext = ".txt";
-	int index = 0;
-	std::string fullName;
-	do {
-	   fullName = fileName + SSTR(++index) + ext;
-	}
-	while (exists(fullName));
-
-	std::cout << "about to write " << fullName << std::endl;
-	std::ofstream myfile;
-	myfile.open(fullName.c_str());
-	myfile << std::fixed;
-	myfile.precision(7);
-	myfile << std::showpos;
-	for (int z = 0; z < (full ? VoutFourier.zdim : 1); z++) {
-//		myfile << "Slice " << z << std::endl;
-		for (int y = 0; y < (full ? VoutFourier.ydim : 100); y++) {
-//			myfile << "Row " << y << ": ";
-			for (int x = 0; x < VoutFourier.xdim; x++) {
-				T data = VoutFourier.data[(z * VoutFourier.xdim * VoutFourier.ydim) + (y * VoutFourier.xdim) + x];
-				if (data == (T)0){
-					continue;
-				}
-				myfile << x << " " << y << " " << z << " -> " << data << std::endl;
-			}
-//			myfile << std::endl;
-		}
-//		myfile << std::endl;
-	}
-	myfile.close();
+	u.x = plane[1].x - x0;
+	u.y = plane[1].y - y0;
+	u.z = plane[1].z - z0;
+	v.x = plane[3].x - x0;
+	v.y = plane[3].y - y0;
+	v.z = plane[3].z - z0;
 }
 
 Array2D<std::complex<float> >* ProgRecFourier::cropAndShift(MultidimArray<std::complex<double> >& paddedFourier,
 		ProgRecFourier * parent) {
-//	// Determine how many rows of the fourier
-//	// transform are of interest for us. This is because
-//	// the user can avoid to explore at certain resolutions
-//	int conserveRows = ceil(paddedFourier.ydim * parent->maxResolution * 2.f);
-//	conserveRows = ceil(conserveRows / 2.f);
-//	int size = 2 * conserveRows;
 	int sizeX = parent->maxVolumeIndexX / 2; // input Fourier contains just one half of the space, second is complex conjugate
 	int sizeY = parent->maxVolumeIndexYZ;
 
@@ -518,57 +275,107 @@ Array2D<std::complex<float> >* ProgRecFourier::cropAndShift(MultidimArray<std::c
 	return result;
 }
 
+void ProgRecFourier::preloadBuffer(LoadThreadParams* threadParams,
+		ProgRecFourier* parent,
+		bool hasCTF, std::vector<size_t>& objId)
+{
+    ApplyGeoParams params;
+    MultidimArray<double> localPaddedImg;
+	FourierTransformer localTransformerImg;
+	MultidimArray< std::complex<double> > localPaddedFourier;
+    params.only_apply_shifts = true;
+	if (0 == threadParams->buffer1) {
+		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
+	}
+	for (int bIndex = 0; bIndex < parent->bufferSize; bIndex++) {
+		double rot, tilt, psi, weight;
+		Projection proj;
+		Matrix2D<double> localA(3, 3);
+		int imgIndex = threadParams->startImageIndex + bIndex;
+		ProjectionData* data = &threadParams->buffer1[bIndex];
+		if (imgIndex >= threadParams->endImageIndex) {
+			continue;
+		}
+		//Read projection from selfile, read also angles and shifts if present
+		//but only apply shifts
+		proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
+		rot = proj.rot();
+		tilt = proj.tilt();
+		psi = proj.psi();
+		if (parent->do_weights && proj.weight() == 0.f) {
+			continue;
+		}
+		data->weight = (parent->do_weights) ? proj.weight() : 1.0;
+
+		// Copy the projection to the center of the padded image
+		// and compute its Fourier transform
+		proj().setXmippOrigin();
+		localPaddedImg.initZeros(parent->paddedImgSize, parent->paddedImgSize);
+		localPaddedImg.setXmippOrigin();
+		const MultidimArray<double> &mProj = proj();
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
+			A2D_ELEM(localPaddedImg,i,j) = A2D_ELEM(mProj, i, j);
+		CenterFFT(localPaddedImg, true);
+
+		// Fourier transformer for the images
+		localTransformerImg.setReal(localPaddedImg);
+		localTransformerImg.FourierTransform();
+		localTransformerImg.getFourierAlias(localPaddedFourier);
+
+		// Compute the coordinate axes associated to this image
+		Euler_angles2matrix(rot, tilt, psi, localA);
+
+		data->localAInv = localA.transpose();
+		data->img = cropAndShift(localPaddedFourier, parent);
+		data->imgIndex = imgIndex;
+		if (hasCTF) {
+			Array2D<float>* CTF = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
+			Array2D<float>* modulator = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
+			preloadCTF(threadParams, objId[imgIndex],parent, CTF, modulator);
+		}
+		// set data as usable
+		data->skip = false;
+		//#define DEBUG22
+#ifdef DEBUG22
+                //CORRECTO
+
+			if(threadParams->myThreadID%1==0)
+			{
+				proj.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+ integerToString(threadParams->imageIndex) + "proj.spi");
+
+				ImageXmipp save44;
+				save44()=localPaddedImg;
+				save44.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+ integerToString(threadParams->imageIndex) + "local_padded_img.spi");
+
+				FourierImage save33;
+				save33()=localPaddedFourier;
+				save33.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+ integerToString(threadParams->imageIndex) + "local_padded_fourier.spi");
+				FourierImage save22;
+				//save22()=*paddedFourier;
+				save22().alias(*(threadParams->localPaddedFourier));
+				save22.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+ integerToString(threadParams->imageIndex) + "_padded_fourier.spi");
+			}
+
+#endif
+#undef DEBUG22
+	}
+}
+
 void * ProgRecFourier::loadImageThread( void * threadArgs )
 {
-
     LoadThreadParams * threadParams = (LoadThreadParams *) threadArgs;
     ProgRecFourier * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
 
-//    int minSeparation;
-//
-//    if ( (int)ceil(parent->blob.radius) > parent->thrWidth )
-//        minSeparation = (int)ceil(parent->blob.radius);
-//    else
-//        minSeparation = parent->thrWidth;
-//
-//    minSeparation+=1;
-
-
-    MultidimArray< std::complex<double> > localPaddedFourier;
-    MultidimArray<double> localPaddedImg;
-    FourierTransformer localTransformerImg;
-
     std::vector<size_t> objId;
-
     threadParams->selFile->findObjects(objId);
-    ApplyGeoParams params;
-    params.only_apply_shifts = true;
-//    MultidimArray<int> zWrapped(3*parent->paddedImgSize),yWrapped(3*parent->paddedImgSize),xWrapped(3*parent->paddedImgSize),
-//    zNegWrapped, yNegWrapped, xNegWrapped;
-//    zWrapped.initConstant(-1);
-//    yWrapped.initConstant(-1);
-//    xWrapped.initConstant(-1);
-//    zWrapped.setXmippOrigin();
-//    yWrapped.setXmippOrigin();
-//    xWrapped.setXmippOrigin();
-//    zNegWrapped=zWrapped;
-//    yNegWrapped=yWrapped;
-//    xNegWrapped=xWrapped;
-//
-//    MultidimArray<float> x2precalculated(xWrapped.xdim), y2precalculated(yWrapped.xdim), z2precalculated(zWrapped.xdim);
-//    x2precalculated.initConstant(-1);
-//    y2precalculated.initConstant(-1);
-//    z2precalculated.initConstant(-1);
-//    x2precalculated.setXmippOrigin();
-//    y2precalculated.setXmippOrigin();
-//    z2precalculated.setXmippOrigin();
-//
-//
-//
-    bool hasCTF=(threadParams->selFile->containsLabel(MDL_CTF_MODEL) || threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU)) &&
-                parent->useCTF;
-
+    bool hasCTF = parent->useCTF
+    		&& (threadParams->selFile->containsLabel(MDL_CTF_MODEL)
+    				|| threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU));
     do
     {
         barrier_wait( barrier );
@@ -577,420 +384,18 @@ void * ProgRecFourier::loadImageThread( void * threadArgs )
         {
         case PRELOAD_IMAGE:
             {
-            	if (NULL == threadParams->buffer1) {
-            		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
-            	}
-                for(int bIndex = 0; bIndex < parent->bufferSize; bIndex++)
-                {
-                	int imgIndex = threadParams->startImageIndex + bIndex;
-                	ProjectionData* data = &threadParams->buffer1[bIndex];
-                	if (imgIndex >= threadParams->endImageIndex ) {
-                		data->skip = true;
-                		continue;
-                	}
-
-                	Matrix2D<double>  localA(3, 3);
-
-                    // Read input image
-                    double rot, tilt, psi, weight;
-                    Projection proj;
-
-                    //Read projection from selfile, read also angles and shifts if present
-                    //but only apply shifts
-                    proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
-                    rot  = proj.rot();
-                    tilt = proj.tilt();
-                    psi  = proj.psi();
-                    if (parent->do_weights && proj.weight() == 0.f) {
-                    	data->skip = true;
-						continue;
-					}
-                    data->weight = (parent->do_weights) ? proj.weight() : 1.0;
-                    if (hasCTF)
-                    {
-                        data->ctf.enable_CTF=true;
-                        data->ctf.enable_CTFnoise=false;
-                    	data->ctf.readFromMetadataRow(*(threadParams->selFile),objId[imgIndex]);
-                    	data->ctf.produceSideInfo();
-                    } else {
-                    	data->ctf.enable_CTF=false;
-                    }
-                    // Copy the projection to the center of the padded image
-                    // and compute its Fourier transform
-                    proj().setXmippOrigin();
-//                    size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
-
-//                    if (threadParams->reprocessFlag) {
-//                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
-//                    } else
-//                    {
-                        localPaddedImg.initZeros(parent->paddedImgSize, parent->paddedImgSize);
-                        localPaddedImg.setXmippOrigin();
-                        const MultidimArray<double> &mProj=proj();
-                        FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
-                        A2D_ELEM(localPaddedImg,i,j)=A2D_ELEM(mProj,i,j);
-//                         COSS A2D_ELEM(localPaddedImg,i,j)=weight*A2D_ELEM(mProj,i,j);
-                        CenterFFT(localPaddedImg,true);
-//
-//                        /*localPaddedImg.initZeros(6,6);
-//                            DIRECT_A2D_ELEM(localPaddedImg,1,0)=1;
-//                        std::cout << localPaddedImg << std::endl;*/
-
-                        // Fourier transformer for the images
-                        localTransformerImg.setReal(localPaddedImg);
-                        localTransformerImg.FourierTransform();
-                        localTransformerImg.getFourierAlias(localPaddedFourier);
-//                        /*std::cout << localPaddedFourier << std::endl;
-//                        MultidimArray< std::complex<double> > intermediate;
-//                        FourierTransform(localPaddedImg,intermediate);
-//                        std::cout << intermediate << std::endl;
-//                        CenterFFT(intermediate,true);
-//                        std::cout << intermediate << std::endl;*/
-//                    }
-
-                    // Compute the coordinate axes associated to this image
-                    Euler_angles2matrix(rot, tilt, psi, localA);
-
-                    data->localAInv = localA.transpose();
-                    data->img = cropAndShift(localPaddedFourier, parent);
-                    data->imgIndex = imgIndex;
-                    data->skip = false;
-//                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
-                    //#define DEBUG22
-#ifdef DEBUG22
-				{                    //CORRECTO
-
-					if(threadParams->myThreadID%1==0)
-					{
-						proj.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
-								integerToString(threadParams->imageIndex) + "proj.spi");
-
-						ImageXmipp save44;
-						save44()=localPaddedImg;
-						save44.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
-								integerToString(threadParams->imageIndex) + "local_padded_img.spi");
-
-						FourierImage save33;
-						save33()=localPaddedFourier;
-						save33.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
-								integerToString(threadParams->imageIndex) + "local_padded_fourier.spi");
-						FourierImage save22;
-						//save22()=*paddedFourier;
-						save22().alias(*(threadParams->localPaddedFourier));
-						save22.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
-								integerToString(threadParams->imageIndex) + "_padded_fourier.spi");
-					}
-
-				}
-#endif
-                    #undef DEBUG22
-                }
+            	preloadBuffer(threadParams, parent, hasCTF, objId);
                 break;
             }
         case EXIT_THREAD:
             return NULL;
-//        case PROCESS_WEIGHTS:
-//            {
-//
-//                // Get a first approximation of the reconstruction
-//                double corr2D_3D=pow(parent->padding_factor_proj,2.)/
-//                                 (parent->imgSize* pow(parent->padding_factor_vol,3.));
-//                // Divide by Zdim because of the
-//                // the extra dimension added
-//                // and padding differences
-//                MultidimArray<double> &mFourierWeights=parent->FourierWeights;
-//                for (int k=threadParams->myThreadID; k<=FINISHINGZ(mFourierWeights); k+=parent->numThreads)
-//                    for (int i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
-//                        for (int j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
-//                        {
-//                        	if (parent->NiterWeight==0)
-//                        		A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D;
-//                        	else
-//                        	{
-//                        		double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
-//                        		if (1.0/weight_kij>ACCURACY)
-//                        			A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
-//                        		else
-//                        			A3D_ELEM(parent->VoutFourier,k,i,j)=0;
-//                        	}
-//                        }
-//                break;
-//            }
-//        case PROCESS_IMAGE:
-//            {
-//            	REPORT_ERROR(ERR_UNCLASSIFIED, "Not implemented");
-//            	break;
-//            	std::cout << "processing image " + SSTR(threadParams->imageIndex) << " from thread " + SSTR(threadParams->myThreadID) << std::endl; //+ " with symmetry " << *threadParams->symmetry << ": ";
-//            				MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
-//            				if (threadParams->weight==0.0)
-//            					break;
-//            				bool reprocessFlag = threadParams->reprocessFlag;
-//            				int * statusArray = parent->statusArray;
-//
-//            				// Get the inverse of the sampling rate
-//            				double iTs=1.0/parent->Ts; // The padding factor is not considered here, but later when the indexes
-//            										   // are converted to digital frequencies
-//
-//
-//            				Matrix2D<double> * A_SL = threadParams->symmetry;
-//
-//            				// Loop over all Fourier coefficients in the padded image
-//            				Matrix1D<double> freq(3), gcurrent(3), real_position(3), contFreq(3);
-//            				Matrix1D<int> corner1(3), corner2(3);
-//
-//            				// Some alias and calculations moved from heavy loops
-//            				float wCTF=1, wModulator=1.0;
-//            				float blobRadiusSquared = parent->blob.radius * parent->blob.radius;
-//            				float iDeltaSqrt = parent->iDeltaSqrt;
-//            				Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
-//            				int xsize_1 = parent->VoutFourier.xdim - 1;
-//            				int zsize_1 = parent->VoutFourier.zdim - 1;
-//            				MultidimArray< std::complex<double> > &VoutFourier=parent->VoutFourier;
-//            				MultidimArray<double> &fourierWeights = parent->FourierWeights;
-//
-//            				for (int i = 0; i < paddedFourier->ydim; i++) { // for each line
-//            					parent->rowsProcessed++;
-//            					if (statusArray[i] != 0) {
-//            						continue; // process only lines marked as '0', i.e. those should be processed
-//            					}
-//
-//            					// otherwise process current line
-//            					for (int j = paddedFourier->xinit;
-//            							j <= paddedFourier->xinit + paddedFourier->xdim - 1;
-//            							j++) // for each point
-//            							{
-//            						// Compute the frequency of this coefficient in the
-//            						// universal coordinate system
-//            						FFT_IDX2DIGFREQ(j, parent->paddedImg.xdim, freq[0]);
-//            						FFT_IDX2DIGFREQ(i, parent->paddedImg.ydim, freq[1]);
-//            						freq[2] = 0;
-//
-//            						if (freq[0] * freq[0] + freq[1] * freq[1] > parent->maxResolution2) {
-//            							continue;
-//            						}
-//            						wModulator = 1.0;
-//            						if (hasCTF && !reprocessFlag) {
-//            							contFreq[0] = freq[0] * iTs;
-//            							contFreq[1] = freq[1] * iTs;
-//            							threadParams->ctf.precomputeValues(contFreq[0],
-//            									contFreq[1]);
-//            							//wCTF=threadParams->ctf.getValueAt();
-//            							wCTF = threadParams->ctf.getValuePureNoKAt();
-//            							//wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
-//
-//            							if (std::isnan(wCTF)) {
-//            								if (i == 0 && j == 0)
-//            									wModulator = wCTF = 1.0;
-//            								else
-//            									wModulator = wCTF = 0.0;
-//            							}
-//            							if (fabs(wCTF) < parent->minCTF) {
-//            								wModulator = fabs(wCTF);
-//            								wCTF = SGN(wCTF);
-//            							} else
-//            								wCTF = 1.0 / wCTF;
-//            							if (parent->phaseFlipped)
-//            								wCTF = fabs(wCTF);
-//            						}
-//
-//            	//					std::cout << "orig " << freq[0]
-//            	//							<< " "
-//            	//							<< freq[1]
-//            	//							<< " "
-//            	//							<< freq[2]
-//            	//							<< std::endl;
-//
-//
-//            						SPEED_UP_temps012;
-//            						M3x3_BY_V3x1(freq, *A_SL, freq);
-//
-//            	//                    if (!((freq[0] > 0.0f) && (freq[1] > 0.0f) && (freq[2] > 0.0f)))
-//            	//                        continue;
-//            	#if DEBUG_DUMP >= 1
-//            				std::cout << "pred " << freq[0]
-//            						<< " "
-//            						<< freq[1]
-//            						<< " "
-//            						<< freq[2]
-//            	                    << " x "
-//            	                    << j
-//            	                    << " "
-//            	                    << i
-//            						<< std::endl;
-//            	#endif
-//
-//            						// Look for the corresponding index in the volume Fourier transform
-//            						DIGFREQ2FFT_IDX_DOUBLE(freq[0], parent->volPadSizeX,
-//            								real_position[0]);
-//            						DIGFREQ2FFT_IDX_DOUBLE(freq[1], parent->volPadSizeY,
-//            								real_position[1]);
-//            						DIGFREQ2FFT_IDX_DOUBLE(freq[2], parent->volPadSizeZ,
-//            								real_position[2]);
-//
-//            	//					{
-//            	//						double tmp[3];
-//            	//						FFT_IDX2DIGFREQ_DOUBLE(real_position[0], 720,
-//            	//								tmp[0]);
-//            	//						FFT_IDX2DIGFREQ_DOUBLE(real_position[1], 720,
-//            	//								tmp[1]);
-//            	//						FFT_IDX2DIGFREQ_DOUBLE(real_position[2], 720,
-//            	//								tmp[2]);
-//            	//					std::cout << "po " << tmp[0]
-//            	//							<< " "
-//            	//							<< tmp[1]
-//            	//							<< " "
-//            	//							<< tmp[2]
-//            	//							<< std::endl;
-//            	//					}
-//
-//            						int roundedPosition[3];
-//            						for (int a = 0; a < 3; a++){
-//            							roundedPosition[a] = (int)(real_position[a] + 0.5f);
-//            						}
-//
-//            						// Put a box around that coefficient
-//            						corner1[0] = roundedPosition[0];
-//            						corner1[1] = roundedPosition[1];
-//            						corner1[2] = roundedPosition[2];
-//            						corner2[0] = roundedPosition[0];
-//            						corner2[1] = roundedPosition[1];
-//            						corner2[2] = roundedPosition[2];
-//
-//            	//						std::cout << freq[0]
-//            	//							<< " "
-//            	//							<< freq[1]
-//            	//							<< " "
-//            	//							<< freq[2]
-//            	//							<< std::endl;
-//
-//            	#ifdef DEBUG
-//
-//            						std::cout << "Idx Img=(0," << i << "," << j << ") -> Freq Img=("
-//            						<< freq.transpose() << ") ->\n    Idx Vol=("
-//            						<< real_position.transpose() << ")\n"
-//            						<< "   Corner1=" << corner1.transpose() << std::endl
-//            						<< "   Corner2=" << corner2.transpose() << std::endl;
-//            	#endif
-//            						// Loop within the box
-//            						double *ptrIn = (double *) &(*paddedFourier)(i, j);
-//
-//            						// Some precalculations
-//            						for (int intz = corner1[2]; intz <= corner2[2]; ++intz) {
-//            							float z = 0;
-//            							z2precalculated(intz) = z * z;
-//            							if (zWrapped(intz) < 0) {
-//            								int iz, izneg;
-//            								fastIntWRAP(iz, intz, 0, zsize_1);
-//            								zWrapped(intz) = iz;
-//            								int miz = -iz;
-//            								fastIntWRAP(izneg, miz, 0, zsize_1);
-//            								zNegWrapped(intz) = izneg;
-//            							}
-//            						}
-//            						for (int inty = corner1[1]; inty <= corner2[1]; ++inty) {
-//            							float y = 0;
-//            							y2precalculated(inty) = y * y;
-//            							if (yWrapped(inty) < 0) {
-//            								int iy, iyneg;
-//            								fastIntWRAP(iy, inty, 0, zsize_1);
-//            								yWrapped(inty) = iy;
-//            								int miy = -iy;
-//            								fastIntWRAP(iyneg, miy, 0, zsize_1);
-//            								yNegWrapped(inty) = iyneg;
-//            							}
-//            						}
-//            						for (int intx = corner1[0]; intx <= corner2[0]; ++intx) {
-//            							float x = 0;
-//            							x2precalculated(intx) = x * x;
-//            							if (xWrapped(intx) < 0) {
-//            								int ix, ixneg;
-//            								fastIntWRAP(ix, intx, 0, zsize_1);
-//            								xWrapped(intx) = ix;
-//            								int mix = -ix;
-//            								fastIntWRAP(ixneg, mix, 0, zsize_1);
-//            								xNegWrapped(intx) = ixneg;
-//            							}
-//            						}
-//
-//            						// Actually compute
-//            						processCube(i, j, corner1, corner2, z2precalculated, zWrapped,
-//            								zNegWrapped, y2precalculated, blobRadiusSquared,
-//            								yWrapped, yNegWrapped, x2precalculated, iDeltaSqrt,
-//            								wModulator, xWrapped, xsize_1, xNegWrapped,
-//            								reprocessFlag, wCTF, VoutFourier, blobTableSqrt,
-//            								threadParams, fourierWeights, ptrIn, threadParams->weight,
-//            								parent,
-//            								real_position);
-//
-//            						statusArray[i] = -1;
-//            					}
-//
-//            				}
-//            				break;
-//			}
         default:
             break;
         }
 
         barrier_wait( barrier );
     }
-    while ( 1 );
-//    std::cout << std::endl;
-}
-
-
-void testMapping(MultidimArray<double> paddedImg,
-		Matrix2D<double> * A_SL,
-		int volPadSizeX,
-		int volPadSizeY,
-		int volPadSizeZ) {
-
-	int fx = 23;
-	int fy = 0;
-
-	Matrix1D<double> ffreq(3), freal_pos(3), rreal_pos(3), rfreq(3);
-	FFT_IDX2DIGFREQ(fx, paddedImg.xdim, ffreq[0]);
-	FFT_IDX2DIGFREQ(fy, paddedImg.ydim, ffreq[1]);
-	ffreq[2] = 0;
-	std::cout << ffreq << std::endl;
-	SPEED_UP_temps012;
-	M3x3_BY_V3x1(ffreq, *A_SL, ffreq);
-	std::cout << ffreq << std::endl;
-	// Look for the corresponding index in the volume Fourier transform
-	DIGFREQ2FFT_IDX_DOUBLE(ffreq[0], volPadSizeX,
-			freal_pos[0]);
-	DIGFREQ2FFT_IDX_DOUBLE(ffreq[1], volPadSizeY,
-			freal_pos[1]);
-	DIGFREQ2FFT_IDX_DOUBLE(ffreq[2], volPadSizeZ,
-			freal_pos[2]);
-	std::cout << freal_pos << std::endl;
-
-	FFT_IDX2DIGFREQ_DOUBLE(freal_pos[0], volPadSizeX, rreal_pos[0]);
-	FFT_IDX2DIGFREQ_DOUBLE(freal_pos[1], volPadSizeY, rreal_pos[1]);
-	FFT_IDX2DIGFREQ_DOUBLE(freal_pos[2], volPadSizeZ, rreal_pos[2]);
-	std::cout << rreal_pos << std::endl;
-	// invert map
-	Matrix2D<double> A_SL_inv = A_SL->inv();
-	std::cout << A_SL_inv << std::endl;
-	M3x3_BY_V3x1(rreal_pos, A_SL_inv, rreal_pos);
-	std::cout << rreal_pos << std::endl;
-//	rreal_pos[2] = 0;
-	DIGFREQ2FFT_IDX_DOUBLE(rreal_pos[0], paddedImg.xdim, rfreq[0]);
-	DIGFREQ2FFT_IDX_DOUBLE(rreal_pos[1], paddedImg.ydim, rfreq[1]);
-	DIGFREQ2FFT_IDX_DOUBLE(rreal_pos[2], paddedImg.zdim, rfreq[2]);
-	std::cout << rfreq << std::endl;
-
-
-}
-
-template <typename T>
-inline std::complex<T>
-BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl, std::complex<T> tr,
-		float x, float y)
-{
-	std::complex<T> top = (T)x * (tl - tr) + tr;
-	std::complex<T> bottom = (T)x * (bl - br) + br;
-	return (T)y * (top - bottom) + bottom;
+    while ( true );
 }
 
 template<typename T, typename U>
@@ -1001,194 +406,6 @@ inline U ProgRecFourier::clamp(U val, T min, T max) {
 	return res;
 }
 
-inline std::complex<float>
-getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int imgSizeY)
-{
-	float posX, posY;
-	float fractX, fractY;
-	fractX = std::modf(x , &posX);
-	fractY = std::modf(y , &posY);
-	std::complex<float> bl,br,tl,tr;
-	bl = br = tl = tr = 0; // values outside of the boundaries will be zero
-	if (posY >= 0) {
-		if (posX >= 0) {
-			bl = img[(int)posY][(int)posX];
-		}
-		if ((posX + 1)< imgSizeX) {
-			br = img[(int)posY][(int)posX + 1];
-		}
-	}
-	if ((posY+1) < imgSizeY) {
-		if (posX >= 0) {
-			tl = img[(int)posY+1][(int)posX];
-		}
-		if ((posX + 1) < imgSizeX) {
-			tr = img[(int)posY+1][(int)posX + 1];
-		}
-	}
-	return BilinearInterpolation(bl, br, tl, tr, 1. - fractX, 1. - fractY);
-}
-
-//inline
-//std::complex<float> ProgRecFourier::getPixelClamped(Array2D<std::complex<float> >* img, float x, float y)
-//{
-//	int imgX = clamp((int)(x + 0.5f), 0, img->getXSize() - 1);
-//	int imgY = clamp((int)(y + 0.5f), 0, img->getYSize() - 1);
-//	return img(imgX, imgY);
-//}
-
-
-#if 0
-template <typename T>
-bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
-    /*int ox = x;
-    int oy = y;
-    if (y < (float)(offsetY)/2.0f)
-        y += (float)(offsetY)/2.0f;
-    else
-        y -= (float)(offsetY)/2.0f;
-
-    if (x > (float)(offsetX-1)/2.0f)
-        x -= (float)(offsetX-1);
-    bool ret = false;
-    if (x < 0.0f) {
-        x = -x;
-        y = (float)(offsetY-1) - y;
-        //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
-        ret = true;
-    }
-    //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
-    if (y < (float)(offsetY)/2.0f)
-        y += (float)(offsetY)/2.0f;
-    else
-        y -= (float)(offsetY)/2.0f;
-
-    if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) 
-        std::cout << "HAF HAF << " << ox << " " << oy << " -> " << x << " " << y << "\n";
-
-    return ret;*/
-
-	if (x > (float)(offsetX/2-1)) {
-        std::cout << "A\n";
-		x = (float)offsetX - x;
-        y = (float)offsetY - y;
-	}
-
-    if ((x < 0.0f) && (y < 0.0f)) {
-        std::cout << "B\n";
-        x = -x;
-        y = -y;
-    }
-
-	if (x < 0.f) {
-        std::cout << "C\n";
-		//x += (float)offsetX;
-        x = -x;
-        y = offsetY-1 - y;
-	}
-	if (y > (float)(offsetY-1)) {
-        std::cout << "D\n";
-		y -= (float)offsetY;
-	}
-	if (y < 0.f) {
-        std::cout << "A\n";
-		y += (float)offsetY;
-	}
-	if ((int)x >= maxX) { // Careful here, we must not get under -1. -0.9999 is fine, as cast to int will convert it to zero(0)
-        std::cout << "(int)x >= maxX\n";
-		x = - x + offsetX/2;
-		y = - y + offsetY;
-        return true;
-	}
-	if (y > maxX) {// FIXME this is probably wrong
-        std::cout << "(y > maxX)\n";
-		return true;
-    }
-	return false;
-}
-#endif
-
-static clock_t ticks_pad = 0;
-
-template <typename T>
-bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y, size_t imgSizeX, size_t imgSizeY){
-
-    clock_t start = clock();
-
-    bool conjugate = false;
-    float halfX = (float)offsetX/2.0f;
-    float halfY = (float)offsetY/2.0f;
-
-    if (x > halfX-1) {
-#if DEBUG_DUMP >= 2
-        std::cout << "x > halfX-1\n";
-#endif
-        x = (float)offsetX - x;
-        y = (float)offsetY - y;
-        conjugate = true;
-    }
-
-    if ((x < 0.0f) && (y < 0.0f)) {
-#if DEBUG_DUMP >= 2
-        std::cout << "x < 0 && y < 0\n";
-#endif
-        x = -x;
-        y = -y;
-        conjugate = true;
-    }
-    if (x < 0.f && y > offsetY-1) {
-#if DEBUG_DUMP >= 2
-        std::cout << "x < 0 && y > offsetY-1\n";
-#endif
-        x = -x;
-        y = 2*(offsetY-1) - y;
-        conjugate = true;
-    }
-    if (x < 0.f && y >= 0.f) {
-#if DEBUG_DUMP >= 2
-        std::cout << "x < 0 && y > 0\n";
-#endif
-        //x += (float)offsetX;
-        x = -x;
-        y = offsetY-1 - y;
-        conjugate = true;
-    }
-    if (x >= 0.f && y < 0.f) {
-#if DEBUG_DUMP >= 2
-        std::cout << "x > 0 && y < 0\n";
-#endif
-        y += (float)offsetY;
-    }
-    if (y > (float)(offsetY-1)) {
-#if DEBUG_DUMP >= 2
-        std::cout << "y > offsetY-1\n";
-#endif
-        y -= (float)offsetY;
-    }
-
-    ticks_pad += clock() - start;
-
-    return conjugate;
-}
-
-inline void multiply(Matrix2D<double>& transform, float inOut[3]) {
-	float tmp0 = transform(0, 0) * inOut[0] + transform(0, 1) * inOut[1] + transform(0, 2) * inOut[2];
-	float tmp1 = transform(1, 0) * inOut[0] + transform(1, 1) * inOut[1] + transform(1, 2) * inOut[2];
-	float tmp2 = transform(2, 0) * inOut[0] + transform(2, 1) * inOut[1] + transform(2, 2) * inOut[2];
-	inOut[0] = tmp0;
-	inOut[1] = tmp1;
-	inOut[2] = tmp2;
-}
-
-inline void multiply(Matrix2D<double>& transform, Point3D& inOut) {
-	float tmp0 = transform(0, 0) * inOut.x + transform(0, 1) * inOut.y + transform(0, 2) * inOut.z;
-	float tmp1 = transform(1, 0) * inOut.x + transform(1, 1) * inOut.y + transform(1, 2) * inOut.z;
-	float tmp2 = transform(2, 0) * inOut.x + transform(2, 1) * inOut.y + transform(2, 2) * inOut.z;
-	inOut.x = tmp0;
-	inOut.y = tmp1;
-	inOut.z = tmp2;
-}
-
 inline void ProgRecFourier::multiply(const float transform[3][3], Point3D& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
 	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
@@ -1197,262 +414,6 @@ inline void ProgRecFourier::multiply(const float transform[3][3], Point3D& inOut
 	inOut.y = tmp1;
 	inOut.z = tmp2;
 }
-
-inline void multiply(float transform[3][3], float inOut[3]) {
-	float tmp0 = transform[0][0] * inOut[0] + transform[0][1] * inOut[1] + transform[0][2] * inOut[2];
-	float tmp1 = transform[1][0] * inOut[0] + transform[1][1] * inOut[1] + transform[1][2] * inOut[2];
-	float tmp2 = transform[2][0] * inOut[0] + transform[2][1] * inOut[1] + transform[2][2] * inOut[2];
-	inOut[0] = tmp0;
-	inOut[1] = tmp1;
-	inOut[2] = tmp2;
-}
-
-
-template <typename T>
-inline std::complex<T>
-getPixelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY, float x, float y)
-{
-	T posX, posY;
-	T fractX;
-	T fractY;
-	fractX = std::modf(x , &posX);
-	fractY = std::modf(y , &posY);
-
-	pad(img->xdim, offsetX, offsetY, posX, posY);
-	std::complex<T> bottom_left = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
-	pad(img->xdim, offsetX, offsetY, ++posX, posY);
-	std::complex<T> bottom_right = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
-	pad(img->xdim, offsetX, offsetY, --posX, ++posY);
-	std::complex<T> top_left = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
-	pad(img->xdim, offsetX, offsetY, ++posX, posY);
-	std::complex<T> top_right = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
-
-	return BilinearInterpolation(bottom_left, bottom_right, top_left, top_right, 1. - fractX, 1. - fractY);
-}
-
-template <typename T>
-std::complex<T>
-getVoxelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY,
-		float x, float y, float z,
-		blobtype blob, T& weight,
-		int xdim, int ydim, double maxResolutionSqr,
-		int k, int l, int m,
-		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt)
-{
-	return getVoxelValue(img, offsetX, offsetY, x, y, z, blob.radius, weight, xdim, ydim, maxResolutionSqr,
-			k, l, m, blobTableSqrt, iDeltaSqrt);
-}
-
-std::complex<float>
-getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
-		float x, float y, float z,
-		float blobRadius, float& weight,
-		int xdim, int ydim, double maxResolutionSqr,
-		float k, float l, float m,
-		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
-		size_t imgSizeX, size_t imgSizeY)
-{
-    bool dumpujeme = false;
-    //std::cout << "YYY " << k << " " << l << " " << m << std::endl;
-    /*if ((fabsf(k-0.0f) < 0.00005) && (fabsf(l-0.0f) < 0.00005) && (fabsf(m-0.0f) < 0.00005)) {
-        std::cout << "XXX dumpujeme\n";
-        dumpujeme = true;
-    }*/
-	weight = 0.;
-	float radiusSqr = blobRadius * blobRadius;
-	std::complex<float> result = (0, 0);
-	int minX = CEIL(x - blobRadius);
-	int maxX = FLOOR(x + blobRadius);
-	int minY = CEIL(y - blobRadius);
-	int maxY = FLOOR(y + blobRadius);
-#if DEBUG_DUMP >= 2
-    std::cout << "center: " << x << " " << y << std::endl;
-#endif
-	float zSqr = z * z;
-	for (int i = minY; i <= maxY; i++) {
-		float ySqr = (y - i) * (y - i);
-		for (int j = minX; j <= maxX; j++) {
-			float xD = x - j;
-			float distanceSqr = ySqr + xD*xD + zSqr;
-			if (distanceSqr > radiusSqr) {
-				continue;
-			}
-//			T freq[2];
-//			FFT_IDX2DIGFREQ(j, xdim, freq[0]);
-//			FFT_IDX2DIGFREQ(i, ydim, freq[1]);
-//			if (freq[0] * freq[0] + freq[1] * freq[1] > maxResolutionSqr) {
-//				continue;
-//			}
-			// all tests passed, you can use the pixel value
-			int tmpX = j;
-			int tmpY = i;
-			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-			float tmpWeight = blobTableSqrt[aux];
-    //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
-//			T tmpWeight = blob_val(std::sqrt(distanceSqr), blob);
-			bool conjugate = pad(imgSizeX, offsetX, offsetY, tmpX, tmpY, imgSizeX, imgSizeY); // FIXME use X dimension of the image
-			float conj = conjugate ? -1. : 1.;
-			std::complex<float> pixVal = img[tmpY][tmpX];
-			result.real() += tmpWeight * pixVal.real();
-			result.imag() += tmpWeight * conj * pixVal.imag();
-			weight += tmpWeight;
-            /*if (dumpujeme) {
-                std::cout << "XXX " << j << " " << i << ", " << tmpX << " " << tmpY << ", " << pixVal << " " << tmpWeight << std::endl;
-            }*/
-
-
-//			float dest[3];
-//			if (k < 0) {
-//				dest[0] = -k;
-//				dest[1] = -l;
-//				dest[2] = -m;
-//			}
-
-			float tmp[3];
-//			          				if (k < 0) {
-//			          					tmp[0] = -k;
-//			          					tmp[1] = -l;
-//			          					tmp[2] = -m;
-//			          				} else {
-//			          					tmp[0] = k;
-//			          					tmp[1] = l;
-//			          					tmp[2] = m;
-//			          				}
-//			          				DIGFREQ2FFT_IDX(tmp[0], 720, tmp[0]);
-//			          				DIGFREQ2FFT_IDX(tmp[1], 720, tmp[1]);
-//			          				DIGFREQ2FFT_IDX(tmp[2], 720, tmp[2]);
-
-
-#if DEBUG_DUMP >= 1
-			std::cout << tmp[0]
-					<< " "
-					<< tmp[1]
-					<< " "
-					<< tmp[2]
-					<< " -> "
-					<< k
-					<< " "
-					<< l
-					<< " "
-					<< m
-					<< " -> "
-					<< tmpX
-					<< " "
-					<< tmpY
-					<< " "
-					<< tmpWeight
-					<< " "
-					<< (conjugate ? "conjugate" : "no_conjugate")
-					<< std::endl;
-#endif
-		}
-	}
-	return result;
-
-}
-
-
-
-template <typename T>
-inline bool inRange(T x, T min, T max) {
-	return (x > min) && (x < max);
-}
-
-
-
-// 7____6
-//3/__2//
-// ||  ||
-// ||4 ||5
-//0|/__|/1
-Point3D* createBoundingCuboid(size_t paddedVolumeSize,
-		size_t conserveRows,
-		float blobRadius)
-{
-	static Point3D result[8];
-	float sizeLength = (float)conserveRows / (float)paddedVolumeSize;
-	float height = ceil(blobRadius) / (float)paddedVolumeSize;
-	result[0].x = result[3].x = result[4].x = result[7].x = 0.f - height;
-	result[1].x = result[2].x = result[5].x = result[6].x = sizeLength + height;
-
-	result[0].y = result[1].y = result[4].y = result[5].y = -sizeLength - height;
-	result[2].y = result[3].y = result[6].y = result[7].y = sizeLength + height;
-
-	result[0].z = result[1].z = result[2].z = result[3].z = height;
-	result[4].z = result[5].z = result[6].z = result[7].z = -height;
-
-	return result;
-}
-
-// 7____6
-//3/__2//
-// ||  ||
-// ||4 ||5
-//0|/__|/1
-// origin is in the center [0, 0, 0]
-Point3D* createBoundingCuboid(float sizeX, float sizeY,	float sizeZ)
-{
-	static Point3D result[8];
-	float halfX = sizeX/2;
-	float halfY = sizeY/2;
-	float halfZ = sizeZ/2;
-	result[0].x = result[3].x = result[4].x = result[7].x = -halfX;
-	result[1].x = result[2].x = result[5].x = result[6].x = halfX;
-
-	result[0].y = result[1].y = result[4].y = result[5].y = -halfY;
-	result[2].y = result[3].y = result[6].y = result[7].y = halfY;
-
-	result[0].z = result[1].z = result[2].z = result[3].z = -halfZ;
-	result[4].z = result[5].z = result[6].z = result[7].z = halfZ;
-
-	return result;
-}
-//
-//
-//
-////       3___2
-////   +   |   |
-//// [0,0] |   |y
-////   -  0|___|1  sizes are padded with blob-radius
-////         x
-//Point3D* createProjectionPlane(size_t paddedVolumeSize,
-//		size_t conserveRows,
-//		float blobRadius)
-//{
-//	static Point3D result[4];
-//	float sizeLength = (float)conserveRows / (float)paddedVolumeSize;
-//	float padding = ceil(blobRadius) / (float)paddedVolumeSize;
-//	result[0].x = result[3].x = - (0.f + padding);
-//	result[1].x = result[2].x = sizeLength + padding;
-//
-//	result[0].y = result[1].y = -(sizeLength + padding);
-//	result[2].y = result[3].y = sizeLength + padding;
-//
-//	result[0].z = result[1].z = result[2].z = result[3].z = 0.f;
-//
-//	return result;
-//}
-
-//       3___2
-//   +   |   |
-// [0,0] |   |y
-//   -  0|___|1  sizes are padded with blob-radius
-//         x
-// [0,0] is in the middle of the left side (point [0] and [3]), but blob can go to negative
-Point3D* createProjectionPlane(Point3D* plane, float sizeX,	float sizeY, float blobSize=0)
-{
-	float halfY = sizeY / 2.0f;
-	plane[0].x = plane[3].x = 0.f - blobSize;
-	plane[1].x = plane[2].x = sizeX + blobSize;
-
-	plane[0].y = plane[1].y = -(halfY + blobSize);
-	plane[2].y = plane[3].y = halfY + blobSize;
-
-	plane[0].z = plane[1].z = plane[2].z = plane[3].z = 0.f;
-
-	return plane;
-}
-
 
 void ProgRecFourier::createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize)
 {
@@ -1467,23 +428,7 @@ void ProgRecFourier::createProjectionCuboid(Point3D* cuboid, float sizeX, float 
 	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
 }
 
-
-inline bool getZ(float x, float y, float& z, Point3D* plane) {
-	// from parametric eq. of the plane
-	float x0 = plane[0].x;
-	float y0 = plane[0].y;
-	float z0 = plane[0].z;
-	Point3D a = { plane[1].x - x0, plane[1].y - y0, plane[1].z - z0 };
-	Point3D b = { plane[3].x - x0, plane[3].y - y0, plane[3].z - z0 };
-
-	float u = ((y-y0)*a.x + (x0-x)*a.y) / (a.x * b.y - b.x * a.y);
-	float t = (-x0 + x - u*b.x) / (a.x);
-
-	z = z0 + t*a.z + u*b.z;
-	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
-}
-
-inline bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+inline bool ProgRecFourier::getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -1496,7 +441,7 @@ inline bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b,
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
-inline bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+inline bool ProgRecFourier::getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -1509,7 +454,7 @@ inline bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b,
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
-inline bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+inline bool ProgRecFourier::getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -1522,175 +467,12 @@ inline bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b,
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
-Point3D* pad(Point3D* cuboid) {
-	for (int i = 0; i < 8; i++) {
-		if (cuboid[i].x < 0) {
-			cuboid[i].x *= -1;
-			cuboid[i].y *= -1;
-		}
-	}
-	return cuboid;
-}
-
-void print(Point3D* cuboid) {
-	for (int i = 0; i < 9; i++) {
-		std::cout << cuboid[i%8].x << " " << cuboid[i%8].y << " " << cuboid[i%8].z << std::endl;
-	}
-}
-
-void printPlane(Point3D* plane) {
-	for (int i = 0; i < 5; i++) {
-		std::cout << plane[i%4].x << " " << plane[i%4].y << " " << plane[i%4].z << std::endl;
-	}
-}
-
-void print1(Point3D* cuboid) {
-	std::cout << cuboid[0].x << " " << cuboid[0].y << " " << cuboid[0].z << std::endl;
-	std::cout << cuboid[1].x << " " << cuboid[1].y << " " << cuboid[1].z << std::endl;
-	std::cout << cuboid[2].x << " " << cuboid[2].y << " " << cuboid[2].z << std::endl;
-	std::cout << cuboid[3].x << " " << cuboid[3].y << " " << cuboid[3].z << std::endl;
-	std::cout << cuboid[0].x << " " << cuboid[0].y << " " << cuboid[0].z << std::endl;
-	std::cout << cuboid[2].x << " " << cuboid[2].y << " " << cuboid[2].z << std::endl;
-}
-
-Point3D* transformCuboid(Point3D* cuboid, Matrix2D<double>& transform) {
-	float tmp[3];
-	for (int i = 0; i < 8; i++) {
-		tmp[0] = cuboid[i].x;
-		tmp[1] = cuboid[i].y;
-		tmp[2] = cuboid[i].z;
-		cuboid[i].x = transform(0,0)*tmp[0] + transform(0,1)*tmp[1] + transform(0,2)*tmp[2];
-		cuboid[i].y = transform(1,0)*tmp[0] + transform(1,1)*tmp[1] + transform(1,2)*tmp[2];
-		cuboid[i].z = transform(2,0)*tmp[0] + transform(2,1)*tmp[1] + transform(2,2)*tmp[2];
-	}
-	return cuboid;
-}
-
-
-
-//Point3D* rotateCuboid(Point3D* cuboid, Matrix2D<double>& transform, int tmp) {
-//	Point3D center = {};
-//	for (int i = 0; i < 8; i++) {
-//		center.x += cuboid[i].x;
-//		center.y += cuboid[i].y;
-//		center.z += cuboid[i].z;
-//	}
-//	center.x /= 8.f;
-//	center.y /= 8.f;
-//	center.z /= 8.f;
-//	std::cout << "center " << center.x << " " << center.y << " " <<center.z << std::endl;
-// 	float tmp[3];
-//	for (int i = 0; i < 8; i++) {
-//		tmp[0] = cuboid[i].x - center.x;
-//		tmp[1] = cuboid[i].y - center.y;
-//		tmp[2] = cuboid[i].z - center.z;
-//		multiply(transform, tmp);
-//		cuboid[i].x = tmp[0] + center.x;
-//		cuboid[i].y = tmp[1] + center.y;
-//		cuboid[i].z = tmp[2] + center.z;
-//	}
-//	return cuboid;
-//}
-
 inline void ProgRecFourier::translateCuboid(Point3D* cuboid, Point3D vector) {
 	for (int i = 0; i < 8; i++) {
 		cuboid[i].x += vector.x;
 		cuboid[i].y += vector.y;
 		cuboid[i].z += vector.z;
 	}
-}
-
-Point3D* transformPlane(Point3D* plane, Matrix2D<double>& transform) {
-	float tmp[3];
-	for (int i = 0; i < 4; i++) {
-		tmp[0] = plane[i].x;
-		tmp[1] = plane[i].y;
-		tmp[2] = plane[i].z;
-		plane[i].x = transform(0,0)*tmp[0] + transform(0,1)*tmp[1] + transform(0,2)*tmp[2];
-		plane[i].y = transform(1,0)*tmp[0] + transform(1,1)*tmp[1] + transform(1,2)*tmp[2];
-		plane[i].z = transform(2,0)*tmp[0] + transform(2,1)*tmp[1] + transform(2,2)*tmp[2];
-	}
-	return plane;
-}
-
-//Point3D* rotatePlane(Point3D* plane, float transform[3][3]) {
-//	for (int i = 0; i < 4; i++) {
-//		multiply(transform, plane[i]);
-//	}
-//	return plane;
-//}
-
-Point3D* translatePlane(Point3D* plane, Point3D vector) {
-	for (int i = 0; i < 4; i++) {
-		plane[i].x += vector.x;
-		plane[i].y += vector.y;
-		plane[i].z += vector.z;
-	}
-	return plane;
-}
-
-Point3D* getAABB(Point3D* cuboid) {
-	static Point3D AABB[2];
-	AABB[0].x = AABB[0].y = AABB[0].z = std::numeric_limits<float>::max();
-	AABB[1].x = AABB[1].y = AABB[1].z = std::numeric_limits<float>::min();
-	Point3D tmp;
-	for (int i = 0; i < 8; i++) {
-		tmp = cuboid[i];
-		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
-		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
-		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
-		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
-		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
-		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
-	}
-	return AABB;
-}
-
-Point3D* getPlaneAABB(Point3D* plane) {
-	static Point3D AABB[2];
-	AABB[0].x = AABB[0].y = AABB[0].z = std::numeric_limits<float>::max();
-	AABB[1].x = AABB[1].y = AABB[1].z = std::numeric_limits<float>::min();
-	Point3D tmp;
-	for (int i = 0; i < 4; i++) {
-		tmp = plane[i];
-		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
-		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
-		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
-		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
-		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
-		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
-	}
-	return AABB;
-}
-
-Point3D* getAABB(Point3D* cuboid,
-	float minX, float minY, float minZ,
-	float maxX, float maxY, float maxZ) {
-	Point3D* AABB = getAABB(cuboid);
-	// limit to max size
-	if (AABB[0].x < minX) AABB[0].x = minX;
-	if (AABB[0].y < minY) AABB[0].y = minY;
-	if (AABB[0].z < minZ) AABB[0].z = minZ;
-	if (AABB[1].x > maxX) AABB[1].x = maxX;
-	if (AABB[1].y > maxY) AABB[1].y = maxY;
-	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
-	
-	return AABB;
-}
-
-Point3D* getPlaneAABB(Point3D* plane,
-	float minX, float minY, float minZ,
-	float maxX, float maxY, float maxZ) {
-	Point3D* AABB = getPlaneAABB(plane);
-	// limit to max size
-	if (AABB[0].x < minX) AABB[0].x = minX;
-	if (AABB[0].y < minY) AABB[0].y = minY;
-	if (AABB[0].z < minZ) AABB[0].z = minZ;
-	if (AABB[1].x > maxX) AABB[1].x = maxX;
-	if (AABB[1].y > maxY) AABB[1].y = maxY;
-	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
-
-	return AABB;
 }
 
 void ProgRecFourier::computeAABB(Point3D* AABB, Point3D* cuboid,
@@ -1717,189 +499,8 @@ void ProgRecFourier::computeAABB(Point3D* AABB, Point3D* cuboid,
 	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
 }
 
-void druhyPokus(std::complex<float>*** outputVolume,
-		float*** outputWeight,
-		size_t conserveRows,
-		std::complex<float>** paddedFourier,
-		size_t paddedVolumeSize,
-		float maxResolutionSqr,
-		float blobRadius,
-		Matrix2D<double>& transform,
-		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
-		size_t imgSizeX, size_t imgSizeY) {
-//std::cout << "plane:" << std::endl;
-//	Point3D* plane = transformPlane(createProjectionPlane(paddedVolumeSize, conserveRows, blobRadius), transform);
-//	printPlane(plane);
-//std::cout << "cuboid:" << std::endl;
-	Point3D* cuboid = transformCuboid(createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius), transform);
-//	print(cuboid);
-//std::cout << "cuboid:" << std::endl;
-//	cuboid = createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius);
-//	print(cuboid);
-//std::cout << "test:" << std::endl;
-
-	float upperIndex = (float)conserveRows / (float)paddedVolumeSize;
-	float step = upperIndex / (float)(conserveRows);
-	int size = 2* conserveRows;
-
-	Matrix2D<double> transfInv = transform.inv();
-	float freq[3];
-	float img_pos[3];
-
-	// test orientation
-	Point3D u;
-	Point3D v;
-	getVectors(cuboid, u, v);
-	Point3D normal = getNormal(u, v);
-	float XY = std::abs(getCosTheta(normal, Point3D {0.f, 0.f, 1.f})); // iterate XY plane
-	float XZ = std::abs(getCosTheta(normal, Point3D {0.f, 1.f, 0.f})); // iterate XZ plane
-	float YZ = std::abs(getCosTheta(normal, Point3D {1.f, 0.f, 0.f})); // iterate YZ plane
-	if ((XY >= XZ) && (XY >= YZ)) {
-//		std::cout << "XY" << std::endl;
-	}
-	if ((XZ >= XY) && (XZ >= YZ)) {
-//		std::cout << "XZ" << std::endl;
-	}
-	if ((YZ >= XY) && (YZ >= XZ)) {
-//		std::cout << "YZ" << std::endl; // FIXME implement proper space traversing
-	}
-
-	Point3D* AABB = getAABB(cuboid);
-	int minY, minX;
-	int maxY, maxX;
-	minY = floor((AABB[0].y + upperIndex) * paddedVolumeSize);
-	minX = floor((AABB[0].x + upperIndex) * paddedVolumeSize);
-	maxY = ceil((AABB[1].y + upperIndex) * paddedVolumeSize);
-	maxX = ceil((AABB[1].x + upperIndex) * paddedVolumeSize);
-    minX = std::max(0, minX);
-    minY = std::max(0, minY);
-    maxX = std::min((int)size-1, maxX);
-    maxY = std::min((int)size-1, maxY);
-
-
-//	for (int m = 0; m < size; m++ ) {
-		for (int l = minY; l < maxY; l++) {
-			for (int k = minX; k < maxX; k++) {
-				float x = k*step - upperIndex;
-				float y = l*step - upperIndex;
-				float z1;
-				float z2;
-				bool hit1 = getZ(x, y, z1, u, v, *cuboid); // FIXME once iterating in proper plane, can be reduced to one calculation +- blob distance in 'Z' axis
-				bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4));
-				if (hit1 || hit2) {
-					float mLower = (std::min(z1, z2) + upperIndex) * paddedVolumeSize ;
-                    mLower = std::max(0.0f, mLower);
-					float mUpper = (std::max(z1, z2) + upperIndex) * paddedVolumeSize ;
-                    mUpper = std::min((float)(size-1), mUpper); //FIXME hardcoded value
-//					float tmp = std::pow(ceil(blobRadius), 1/3.)( *  / (float)paddedVolumeSize;
-					for (int m = floor(mLower); m <= ceil(mUpper); m++) {
-						float z = m*step - upperIndex;
-						freq[0] = x;
-						freq[1] = y;
-						freq[2] = z;
-
-                        //if (!((x > 0) && (y > 0) && (z >0)))
-                        //    continue;
-
-					// invert map
-						multiply(transfInv, freq);
-
-						DIGFREQ2FFT_IDX_DOUBLE(freq[0], paddedVolumeSize, img_pos[0]); // pixel index
-						DIGFREQ2FFT_IDX_DOUBLE(freq[1], paddedVolumeSize, img_pos[1]); // line index
-						img_pos[2] = std::abs(freq[2] * paddedVolumeSize); // XXX HACK store transformed Z value
-
-						// check restrictions
-						if (inRange((size_t) img_pos[1], conserveRows, paddedVolumeSize - conserveRows) // or the line has too high frequencies
-								|| (img_pos[2] > blobRadius) // or projection plane is too far
-								|| ((freq[0] * freq[0] + freq[1] * freq[1]) > maxResolutionSqr) // or the pixel frequency is too high
-								) {
-							continue;
-						}
-//													std::cout << x
-//															<< " "
-//															<< y
-//															<< " "
-//															<< z
-//															<< std::endl;
-
-/*														std::cout << x
-																<< " "
-    															<< y
-																<< " "
-																<< z
-																<< " -> "
-																<< img_pos[0]
-																<< " "
-																<< img_pos[1]
-																<< " "
-																<< img_pos[2]
-					//											<< " "
-					//											<< (conjugate ? "conjugate" : "no_conjugate")
-																<< std::endl;*/
-
-						float weight;
-
-
-
-						std::complex<float> val = getVoxelValue(paddedFourier,
-								paddedVolumeSize, paddedVolumeSize, img_pos[0], img_pos[1],
-								img_pos[2], blobRadius, weight, paddedVolumeSize,
-								paddedVolumeSize, maxResolutionSqr, x, y, z,
-								blobTableSqrt, iDeltaSqrt,
-								imgSizeX, imgSizeY);
-                        //if ((m == l == 64) && (k == 63)) std::cout << "YYY " << val << " " << weight << " " << outputVolume[m][l][k] << std::endl;
-                        //if (val.imag() < 100.0) std::cout << "XXX " << m << " " << l << " " << k << std::endl;
-
-						outputWeight[m][l][k] += weight;
-						outputVolume[m][l][k] += val;
-
-
-//
-//					DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k) += val;
-//					//									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k).real() += weight * val.real();
-//					//									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k).imag() += weight * conj * val.imag();
-//					DIRECT_A3D_ELEM(FourierWrights_moje, m, l, k) += weight;
-
-
-
-					}
-				}
-			}
-		}
-//	}
-
-//	print(transformCuboid(createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius), transform));
-//	print(createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius));
-//	std::cout << "BB" << std::endl;
-//
-//	Matrix1D<float> freq(3);
-//
-//	for (size_t y = 0; y < paddedFourier->ydim; y++) { // for each line
-//		if (inRdruhyPokusange(y, conserveRows, paddedFourier->ydim - conserveRows)) {
-//			continue; // process only lines with small frequencies
-//		}
-//		// otherwise process current line
-//		for (int x = 0;	x < conserveRows; x++) { // for each pixel (with low frequency)
-//			// Compute the frequency of this coefficient in the
-//			// universal coordinate system
-//			FFT_IDX2DIGFREQ(x, paddedVolumeSize, freq[0]);
-//			FFT_IDX2DIGFREQ(y, paddedVolumeSize, freq[1]);
-//			freq[2] = 0;
-//
-//			if (freq[0] * freq[0] + freq[1] * freq[1] > maxResolutionSqr) {
-//				continue;
-//			}
-////			SPEED_UP_temps012;
-////			M3x3_BY_V3x1(freq, transform, freq);
-//			std::cout << freq[0] << " " << freq[1] << " " << freq[2] << " -> " << x << " " << y << std::endl;
-//
-//		}
-//	}
-
-}
-
-void printAABB(Point3D* AABB) {
-	std::cout 
+void ProgRecFourier::printAABB(Point3D* AABB) {
+	std::cout
 	// one base
 		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
 		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
@@ -1912,7 +513,7 @@ void printAABB(Point3D* AABB) {
 		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
 		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
 		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
-	// lines between bases	
+	// lines between bases
 		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
 		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
 		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
@@ -1922,64 +523,50 @@ void printAABB(Point3D* AABB) {
 		<< std::endl;
 }
 
-void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
-	float imgPos[3],
-	std::complex<float>** img, int imgSizeX, int imgSizeY,
-	Matrix1D<double>& blobTableSqrt, float iDeltaSqrt, float blobRadius) {
-	float maxDistanceSqr = blobRadius*blobRadius + imgSizeX*imgSizeX;
-	outputWeight = 0.f;
-	outputVal = 0.f;
-	int minX = ceil(imgPos[0] - blobRadius);
-	int maxX = floor(imgPos[0] + blobRadius);
-	int minY = ceil(imgPos[1] - blobRadius);
-	int maxY = floor(imgPos[1] + blobRadius);
-	float zSqr = imgPos[2] * imgPos[2];
-	for (int i = minY; i <= maxY; i++) {
-		float ySqr = (imgPos[1] - i) * (imgPos[1] - i);
-		for (int j = minX; j <= maxX; j++) {
-			float xD = imgPos[0] - j;
-			float distanceSqr = ySqr + xD*xD + zSqr;
-			if (distanceSqr > maxDistanceSqr) {
-				continue;
-			}
-			// get weight
-			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-			float tmpWeight = blobTableSqrt[aux];
-		}
-	}
-
-}	
-
-
-
-
-inline void ProgRecFourier::processCTF(ProjectionData* const data,
-		int imgX, int imgY, float& wCTF, float& wModulator)
+inline void ProgRecFourier::preloadCTF(LoadThreadParams* threadParams,
+		size_t imgIndex,
+		ProgRecFourier* parent,
+		Array2D<float>* CTF,
+		Array2D<float>* modulator)
 {
-	std::cout << "called" << std::endl;
+	CTFDescription ctf;
+	ctf.readFromMetadataRow(*(threadParams->selFile), imgIndex);
+	ctf.produceSideInfo();
 	float freqX, freqY;
-	// get respective frequency
-	FFT_IDX2DIGFREQ(imgX, paddedImgSize, freqX);
-	// since Y axis is shifted to center, we have to use different calculation
-	freqY = (imgY - (paddedImgSize / 2.f)) / (float) paddedImgSize;
-	data->ctf.precomputeValues(freqX * iTs, freqY * iTs);
-	wCTF = data->ctf.getValuePureNoKAt();
-	if (std::isnan(wCTF)) {
-		if ((imgX == 0) && (imgY == 0)) {
-			wModulator = wCTF = 1.0;
-		}
-		else {
-			wModulator = wCTF = 0.0;
+	float CTFVal, modulatorVal;
+	for (int y = 0; y < CTF->getYSize(); y++) {
+		// since Y axis is shifted to center, we have to use different calculation
+		freqY = (y - (parent->paddedImgSize / 2.f)) / (float) parent->paddedImgSize;
+		for (int x = 0; x < CTF->getXSize(); x++) {
+			CTFVal = modulatorVal = 1.f;
+			// get respective frequency
+			FFT_IDX2DIGFREQ(x, parent->paddedImgSize, freqX);
+			ctf.precomputeValues(freqX * parent->iTs, freqY * parent->iTs);
+			CTFVal = ctf.getValuePureNoKAt();
+			if (std::isnan(CTFVal)) {
+				if ((x == 0) && (y == 0)) {
+					modulatorVal = CTFVal = 1.0;
+				}
+				else {
+					modulatorVal = CTFVal = 0.0;
+				}
+			}
+			if (fabs(CTFVal) < parent->minCTF) {
+				modulatorVal = fabs(CTFVal);
+				CTFVal = SGN(CTFVal);
+			} else {
+				CTFVal = 1.0 / CTFVal;
+			}
+			if (parent->isPhaseFlipped)
+				CTFVal = fabs(CTFVal);
+
+			(*CTF)(x, y) = CTFVal;
+			(*modulator)(x, y) = modulatorVal;
 		}
 	}
-	if (fabs(wCTF) < minCTF) {
-		wModulator = fabs(wCTF);
-		wCTF = SGN(wCTF);
-	} else {
-		wCTF = 1.0 / wCTF;
-	}
-	if (isPhaseFlipped)
-		wCTF = fabs(wCTF);
+
+
+
 }
 
 
@@ -2004,8 +591,9 @@ inline void ProgRecFourier::processVoxel(int x, int y, int z, const float transf
 	int imgX = clamp((int)(imgPos.x + 0.5f), 0, data->img->getXSize() - 1);
 	int imgY = clamp((int)(imgPos.y + 0.5f + maxVolumeIndexYZ / 2), 0, data->img->getYSize() - 1);
 
-	if (data->ctf.enable_CTF) {
-		processCTF(data, imgX, imgY, wCTF, wModulator);
+	if (0 != data->CTF) {
+		wCTF = (*data->CTF)(imgX, imgY);
+		wModulator = (*data->modulator)(imgX, imgY);
 	}
 
 	float weight = wBlob * wModulator * data->weight;
@@ -2017,9 +605,6 @@ inline void ProgRecFourier::processVoxel(int x, int y, int z, const float transf
 inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		ProjectionData* const data) {
 	Point3D imgPos;
-
-//	std::cout << "called for " << x << " " << y << " " << z << std::endl;
-
 	// transform current point to center
 	imgPos.x = x - maxVolumeIndexX/2;
 	imgPos.y = y - maxVolumeIndexYZ/2;
@@ -2037,6 +622,7 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float tr
 	float zSqr = imgPos.z * imgPos.z;
 	if (zSqr > radiusSqr) return;
 
+	// create blob bounding box
 	int minX = std::ceil(imgPos.x - blob.radius);
 	int maxX = std::floor(imgPos.x + blob.radius);
 	int minY = std::ceil(imgPos.y - blob.radius);
@@ -2047,44 +633,51 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float tr
 	maxY = std::min(maxY, data->img->getYSize()-1);
 	std::complex<float>* targetVolume = &tempVolume[z][y][x];
 	float* targetWeight = &tempWeights[z][y][x];
-//int counter = 0;
+	// ugly spaghetti code, but improves performance by app. 10%
+	if (0 != data->CTF) {
+		// check which pixel in the vicinity that should contribute
+		for (int i = minY; i <= maxY; i++) {
+			float ySqr = (imgPos.y - i) * (imgPos.y - i);
+			float yzSqr = ySqr + zSqr;
+			if (yzSqr > radiusSqr) continue;
+			for (int j = minX; j <= maxX; j++) {
+				float xD = imgPos.x - j;
+				float distanceSqr = xD*xD + yzSqr;
+				if (distanceSqr > radiusSqr) continue;
 
-//	std::cout << "about to do up to " << maxY-minY+1 << "x" << maxX-minX+1 << " loops" << std::endl;
-
-	for (int i = minY; i <= maxY; i++) {
-		float ySqr = (imgPos.y - i) * (imgPos.y - i);
-		float yzSqr = ySqr + zSqr;
-		if (yzSqr > radiusSqr) continue;
-		for (int j = minX; j <= maxX; j++) {
-			float xD = imgPos.x - j;
-			float distanceSqr = xD*xD + yzSqr;
-//			std::cout << distanceSqr << " " << radiusSqr << std::endl;
-			if (distanceSqr > radiusSqr) {
-//				std::cout << "miss" << std::endl;
-				continue;
+				float wCTF = (*data->CTF)(j, i);
+				float wModulator = (*data->modulator)(j, i);
+				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+				float wBlob = blobTableSqrt[aux];
+				float weight = wBlob * wModulator * data->weight;
+				*targetWeight += weight;
+				*targetVolume += (*data->img)(j, i) * weight * wCTF;
 			}
-//			counter++;
-//			std::cout << "hit" << std::endl;
-			float wCTF = 1.f;
-			float wModulator = 1.f;
-//			return;
-//			std::cout << x << " " << y << " " << z << " -> "
-//				<< j << " " << i << " " << imgPos.z << " " << distanceSqr << std::endl;
-			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
-			float wBlob = blobTableSqrt[aux];
+		}
+	} else {
+		// check which pixel in the vicinity that should contribute
+		for (int i = minY; i <= maxY; i++) {
+			float ySqr = (imgPos.y - i) * (imgPos.y - i);
+			float yzSqr = ySqr + zSqr;
+			if (yzSqr > radiusSqr) continue;
+			for (int j = minX; j <= maxX; j++) {
+				float xD = imgPos.x - j;
+				float distanceSqr = xD*xD + yzSqr;
+				if (distanceSqr > radiusSqr) continue;
 
-			if (data->ctf.enable_CTF) {
-				processCTF(data, j, i, wCTF, wModulator);
+				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+				float wBlob = blobTableSqrt[aux];
+
+				float weight = wBlob * data->weight;
+				*targetWeight += weight;
+				*targetVolume += (*data->img)(j, i) * weight;
 			}
-			float weight = wBlob * wModulator * data->weight;
-			*targetWeight += weight;
-			*targetVolume += (*data->img)(j, i) * weight * wCTF;
 		}
 	}
-//	std::cout << "actually did " << counter << " out of " << (maxY-minY+1) *(maxX-minX+1) <<  std::endl;
+
 }
 
-inline void convert(Matrix2D<double>& in, float out[3][3]) {
+inline void ProgRecFourier::convert(Matrix2D<double>& in, float out[3][3]) {
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			out[i][j] = in(i, j);
@@ -2144,7 +737,6 @@ void ProgRecFourier::processProjection(
 						z2 = clamp(z2, 0, maxVolumeIndexYZ);
 						float lower = std::min(z1, z2);
 						float upper = std::max(z1, z2);
-//						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
 						for (int z = std::floor(lower); z <= std::ceil(upper); z++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
@@ -2170,7 +762,6 @@ void ProgRecFourier::processProjection(
 						y2 = clamp(y2, 0, maxVolumeIndexYZ);
 						float lower = std::min(y1, y2);
 						float upper = std::max(y1, y2);
-//						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
 						for (int y = std::floor(lower); y <= std::ceil(upper); y++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
@@ -2196,7 +787,6 @@ void ProgRecFourier::processProjection(
 						x2 = clamp(x2, 0, maxVolumeIndexX);
 						float lower = std::min(x1, x2);
 						float upper = std::max(x1, x2);
-//						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
 						for (int x = std::floor(lower); x <= std::ceil(upper); x++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
@@ -2204,18 +794,12 @@ void ProgRecFourier::processProjection(
 				}
 			}
 		}
-	} else {
-		std::cout << "ALERT" << std::endl;
 	}
-//	delete[] bottomPlane;
-//	bottomPlane = NULL;
-//	delete[] topPlane;
 }
 
 template<typename T>
 T*** ProgRecFourier::allocate(T***& where, int xSize, int ySize, int zSize) {
 	where = new T**[zSize];
-	std::cout << "allocating " << where << " " << xSize << "x" << ySize  << "x" << zSize<< std::endl;
 	for (int z = 0; z < zSize; z++) {
 		where[z] = new T*[ySize];
 		for (int y = 0; y < ySize; y++) {
@@ -2229,20 +813,7 @@ T*** ProgRecFourier::allocate(T***& where, int xSize, int ySize, int zSize) {
 }
 
 template<typename T>
-T** ProgRecFourier::allocate(T**& where, int xSize, int ySize) {
-	where = new T*[ySize];
-	for (int y = 0; y < ySize; y++) {
-		where[y] = new T[xSize];
-		for (int x = 0; x < xSize; x++) {
-			where[y][x] = (T) 0;
-		}
-	}
-	return where;
-}
-
-template<typename T>
-void release(T***& array, int ySize, int zSize) {
-	std::cout << "releasing " << array << std::endl;
+void ProgRecFourier::release(T***& array, int ySize, int zSize) {
 	for(int z = 0; z < zSize; z++) {
 		for(int y = 0; y < ySize; y++) {
 			delete[] array[z][y];
@@ -2254,18 +825,8 @@ void release(T***& array, int ySize, int zSize) {
 }
 
 template<typename T>
-void release(T**& array, int ySize) {
-	for(int y = 0; y < ySize; y++) {
-		delete[] array[y];
-	}
-	delete[] array;
-	array = NULL;
-}
-
-
-template<typename T>
 T*** ProgRecFourier::applyBlob(T***& input, float blobSize,
-		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
+		float* blobTableSqrt, float iDeltaSqrt) {
 	float blobSizeSqr = blobSize * blobSize;
 	int blob = floor(blobSize); // we are using integer coordinates, so we cannot hit anything further
 	T tmp;
@@ -2305,7 +866,7 @@ T*** ProgRecFourier::applyBlob(T***& input, float blobSize,
 }
 
 template<typename T, typename U>
-void convertToExpectedSpace(T*** input, int size,
+void ProgRecFourier::convertToExpectedSpace(T*** input, int size,
 	MultidimArray<U>& VoutFourier) {
 	int halfSize = size / 2;
 	for (int z = 0; z <= size; z++) {
@@ -2323,44 +884,6 @@ void convertToExpectedSpace(T*** input, int size,
     	}
     }
 }
-
-void mirror(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
-	std::cout << size << " " << outputVolume << " " << outputWeight << std::endl;
-	for (int z = 0; z < size; z++) {
-		for (int y = 0; y < size; y++) {
-			for (int x = 0; x < size/2; x++) {
-				int newPos[3];
-				// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel biger
-				newPos[0] = size - x;
-				newPos[1] = size - y;
-				newPos[2] = size - z;
-
-				outputVolume[newPos[2]][newPos[1]][newPos[0]].real() += outputVolume[z][y][x].real();
-				outputVolume[newPos[2]][newPos[1]][newPos[0]].imag() -= outputVolume[z][y][x].imag();
-				outputWeight[newPos[2]][newPos[1]][newPos[0]] += outputWeight[z][y][x];
-			}
-		}
-	}
-}
-//
-//template<typename T>
-//void ProgRecFourier::crop(T***& inOut, int size) {
-//	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
-//	T*** output;
-//	// create new storage, notice that just 'right hand side' of the input will be used
-//	allocate(output, halfSize+1, size+1, size+1);
-//	// traverse old storage
-//	for (int z = 0; z <= size; z++) {
-//		for (int y = 0; y <= size; y++) {
-//			for (int x = halfSize; x <= size; x++) {
-//				output[z][y][x-halfSize] = inOut[z][y][x];
-//			}
-//		}
-//	}
-//	// free original data
-//	release(inOut, size+1, size+1);
-//	inOut = output;
-//}
 
 void ProgRecFourier::mirrorAndCropTempSpaces() {
 	maxVolumeIndexX = maxVolumeIndexYZ/2; // just half of the space is necessary, the rest is complex conjugate
@@ -2439,79 +962,14 @@ void ProgRecFourier::processWeights() {
 	}
 }
 
-
-
-//void ProgRecFourier::saveIntermediateFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
-//		const std::string &weightsFileName, const std::string &fourierFileName, const FileName &resultFileName,
-//		bool storeResult) {
-//	// Save Current Fourier, Reconstruction and Weights
-//	// store weights
-//	allocateFourierWeights();
-//	convertToExpectedSpace(outputWeight, volSize, FourierWeights);
-//	Image<double> save;
-//	save().alias( FourierWeights );
-//	save.write(weightsFileName);
-//	FourierWeights.clear();
-//
-//	// store fourier
-//	allocateVoutFourier();
-//	convertToExpectedSpace(outputVolume, volSize, VoutFourier);
-//	Image< std::complex<double> > save2;
-//	save2().alias( VoutFourier );
-//	save2.write(fourierFileName);
-//
-//	// store result
-//	if (storeResult) {
-//		forceHermitianSymmetry(outputVolume, outputWeight, volSize);
-//		processWeight(outputVolume, outputWeight, volSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
-//		finishComputations(resultFileName);
-//	}
-//	VoutFourier.clear();
-//}
-//
-//void ProgRecFourier::saveFinalFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize) {
-//    // Save Current Fourier, Reconstruction and Weights
-//	saveIntermediateFSC(outputVolume, outputWeight, volSize,
-//		(std::string)fn_fsc + "_2_Weights.vol",
-//		(std::string)fn_fsc + "_2_Fourier.vol",
-//		FileName((std::string) fn_fsc + "_2_recons.vol"),
-//		false);
-//
-//	// merge intermediate weights
-//	allocateFourierWeights();
-//	Image<double> auxVolume;
-//    auxVolume().alias( FourierWeights );
-//    auxVolume.sumWithFile(fn_fsc + "_1_Weights.vol");
-//    auxVolume.sumWithFile(fn_fsc + "_2_Weights.vol");
-//    auxVolume.write((std::string)fn_fsc + "_all_Weight.vol");
-//    FourierWeights.clear();
-//    remove((fn_fsc + "_1_Weights.vol").c_str());
-//    remove((fn_fsc + "_2_Weights.vol").c_str());
-//
-//    // merge intermediate fourier
-//    allocateVoutFourier();
-//    Image< std::complex<double> > auxFourierVolume;
-//    auxFourierVolume().alias( VoutFourier );
-//    auxFourierVolume.sumWithFile(fn_fsc + "_1_Fourier.vol");
-//    auxFourierVolume.sumWithFile(fn_fsc + "_2_Fourier.vol");
-//    auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol");
-//
-//	VoutFourier.clear();
-//    remove((fn_fsc + "_1_Fourier.vol").c_str());
-//    remove((fn_fsc + "_2_Fourier.vol").c_str());
-//}
-
 void ProgRecFourier::loadImages(int startIndex, int endIndex) {
 	loadThread.startImageIndex = startIndex;
 	loadThread.endImageIndex = endIndex;
-	std::cout << "start index: " << loadThread.startImageIndex << std::endl;
-	std::cout << "end index: " << loadThread.endImageIndex << std::endl;
 	// Awaking sleeping threads
 	barrier_wait( &barrier );
 }
 
 void ProgRecFourier::swapLoadBuffers() {
-	std::cout << "swapping buffers" << std::endl;
 	ProjectionData* tmp = loadThread.buffer2;
 	loadThread.buffer2 = loadThread.buffer1;
 	loadThread.buffer1 = tmp;
@@ -2524,30 +982,16 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer)
 		ProjectionData* projData = &buffer[i];
 		Array2D<std::complex<float> >* myPaddedFourier = projData->img;
 		if (projData->skip) {
-			std::cout << "skipping img: " << projData->imgIndex << " (index " << i << std::endl; //", " << myPaddedFourier << ")" << std::endl;
 			continue;
 		}
-		std::cout << "processing img: " << projData->imgIndex << " (index " << i << std::endl;//", " << myPaddedFourier << ")" << std::endl;
 		if (verbose && projData->imgIndex%repaint==0) {
 			progress_bar(projData->imgIndex);
 		}
 
 		Matrix2D<double> *Ainv = &projData->localAInv;
-//		 Determine how many rows of the fourier
-//		 transform are of interest for us. This is because
-//		 the user can avoid to explore at certain resolutions
-//		size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
-//		conserveRows = (size_t) ceil((double) conserveRows / 2.0);
-//		size_t size = 2 * conserveRows;
-//		std::cout << "cR " << conserveRows << " size " << size << std::endl;
-//		std::cout << "X " << maxVolumeIndexX << " Y " << maxVolumeIndexYZ << std::endl;
-
-
 		// Loop over all symmetries
 		for (size_t isym = 0; isym < R_repository.size(); isym++)
 		{
-//			rowsProcessed = 0;
-
 			// Compute the coordinate axes of the symmetrized projection
 			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
 			Matrix2D<double> A_SLInv=A_SL.inv();
@@ -2555,58 +999,15 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer)
 			float transfInv[3][3];
 			convert(A_SL, transf);
 			convert(A_SLInv, transfInv);
-
-//			std::cout << "about to calculate" << std::endl;
 			processProjection(//tempVolume, tempWeights, size,
 					projData, transf, transfInv);
-//			std::cout << "calculation done" << std::endl;
 		}
-
-//		if ( data->imgIndex == FSCIndex && saveFSC )
-//		{
-//			// get rid of the replicated data
-//			mirror(outputVolume, outputWeight, size);
-//			crop(outputVolume, size);
-//			crop(outputWeight, size);
-//			outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-//			outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-//			saveIntermediateFSC(outputVolume, outputWeight, size,
-//					(std::string)fn_fsc + "_1_Weights.vol",
-//					(std::string) fn_fsc + "_1_Fourier.vol",
-//			FileName((std::string) fn_fsc + "_1_recons.vol"),
-//				true);
-//			// reset values
-//			for(int z = 0; z <= size; z++) // FIXME use memset
-//				for(int y = 0; y <= size; y++)
-//					for(int x = 0; z <=size; x++) {
-//						outputVolume[z][y][x] = outputWeight[z][y][x] = 0;
-//					}
-//		}
-		std::cout << "about to release" << std::endl;
-		delete projData->img;
-		projData->img = 0;
+		projData->clean();
 	}
 }
 
-//#define DEBUG
 void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
 {
-    MultidimArray< std::complex<double> > *paddedFourier;
-
-    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << std::endl;
-
-    std::cout << blobTableSqrt.size() << std::endl;
-
-    int imgno = 0;
-
-    // This index tells when to save work for later FSC usage
-//    int FSCIndex = (firstImageIndex + lastImageIndex)/2;
-
-    // Index of the image that has just been processed. Used for
-    // FSC purposes
-//    int current_index;
-
-
     int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
@@ -2619,355 +1020,40 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
 
     int startLoadIndex = firstImageIndex;
 
-
     loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
-//	// Awaking sleeping threads
-//	barrier_wait( &barrier );
-	// here each thread is reading a different image and compute fft
-	// Threads are working now, wait for them to finish
-	// processing current projection
 	barrier_wait( &barrier );
     for(int i = 0; i < loops; i++) {
     	swapLoadBuffers();
     	startLoadIndex += bufferSize;
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
-    	// Awaking sleeping threads
-//		barrier_wait( &barrier );
     	processBuffer(loadThread.buffer2);
     	barrier_wait( &barrier );
     }
-
-//    for(int a = 0; a < loops; a++)
-//    {
-//        threadOpCode = PRELOAD_IMAGE;
-//
-//        th_args[0].startImageIndex = a*batchSize;
-//        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
-//        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
-//        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
-////        for ( int nt = 0 ; nt < numThreads ; nt ++ )
-////        {
-////            if ( imgIndex <= lastImageIndex )
-////            {
-////                th_args[nt].imageIndex = imgIndex;
-//                th_args[0].reprocessFlag = reprocessFlag;
-////                imgIndex++;
-////            }
-////            else
-////            {
-////                th_args[nt].imageIndex = -1;
-////            }
-////        }
-//
-//        // Awaking sleeping threads
-//        barrier_wait( &barrier );
-//        // here each thread is reading a different image and compute fft
-//        // Threads are working now, wait for them to finish
-//        // processing current projection
-//        barrier_wait( &barrier );
-//
-////        // each threads have read a different image and now
-////        // all the thread will work in a different part of a single image.
-////        threadOpCode = PROCESS_IMAGE;
-//
-//        imgData* tmp = th_args[0].dataB;
-//        th_args[0].dataB = th_args[0].dataA;
-//        th_args[0].dataA = tmp;
-//        th_args[0].startImageIndex = ++a*batchSize;
-//        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
-//        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
-//        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
-//
-//        barrier_wait( &barrier ); // start loading to another buffer
-//
-//        for ( int b = 0 ; b < th_args[0].endImageIndex-th_args[0].startImageIndex ; b++ )
-//        {
-//        	imgData* data = &(th_args[0].dataB[b]);
-//        	if (data->skip) {
-//        		continue;
-//        	}
-////            if ( th_args[nt].read == 2 )
-////                processed = true;
-////            else if ( th_args[nt].read == 1 )
-////            {
-//                if (verbose && imgno++%repaint==0)
-//                    progress_bar(imgno);
-//
-////                double weight = th_args[0].localweight;
-////                paddedFourier = th_args[nt].localPaddedFourier;
-//                current_index = th_args[0].startImageIndex + b;
-//                std::cout << "processing img: " << current_index << " (index " << b << ")" << std::endl;
-//                Matrix2D<double> *Ainv = &data->localAInv;
-//
-//                //#define DEBUG22
-//#ifdef DEBUG22
-//
-//                {
-//                    static int ii=0;
-//                    if(ii%1==0)
-//                    {
-//                        FourierImage save22;
-//                        //save22()=*paddedFourier;
-//                        save22().alias(*paddedFourier);
-//                        save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
-//                    }
-//                    ii++;
-//                }
-//#endif
-//                #undef DEBUG22
-//
-//                // Initialized just once
-////                if ( statusArray == NULL )
-////                {
-////                    statusArray = (int *) malloc ( sizeof(int) * paddedFourier->ydim );
-////                }
-//
-//                // Determine how many rows of the fourier
-//				// transform are of interest for us. This is because
-//				// the user can avoid to explore at certain resolutions
-//				conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
-//				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
-//				size = 2 * conserveRows;
-//
-//				myPaddedFourier = data->img;
-//
-//                if (!initialized) {
-//                	initialized = true;
-//					// the +1 is to prevent outOfBound reading when mirroring the result (later)
-//					allocate(outputVolume, size+1, size+1, size+1);
-//					allocate(outputWeight, size+1, size+1, size+1);
-//                }
-//
-//                // Loop over all symmetries
-//                for (size_t isym = 0; isym < R_repository.size(); isym++)
-//                {
-//                    rowsProcessed = 0;
-//
-//					// Compute the coordinate axes of the symmetrized projection
-//					Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
-//					Matrix2D<double> A_SLInv=A_SL.inv();
-//					float transf[3][3];
-//					float transfInv[3][3];
-//					convert(A_SL, transf);
-//					convert(A_SLInv, transfInv);
-//
-// ////////////////////////////////////////////////
-//
-//#if DEBUG_DUMP > 0
-//					std::cout << "Img " << imgIndex << " symmetry " << isym << std::endl;
-//                    if (isym > 0 || current_index != 1) {
-//                       	continue;
-//                    }
-//#endif
-//
-////////////////////////////////////////////////////
-//
-////                    // Fill the thread arguments for each thread
-////                    for ( int th = 0 ; th < numThreads ; th ++ )
-////                    {
-////                        // Passing parameters to each thread
-////                        th_args[th].symmetry = &A_SL;
-////                        th_args[th].paddedFourier = paddedFourier;
-////                        th_args[th].weight = weight;
-////                        th_args[th].reprocessFlag = reprocessFlag;
-////                    }
-////
-////                    // Init status array
-////                    for (size_t i = 0 ; i < paddedFourier->ydim ; i ++ )
-////                    {
-////                        if ( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
-////                        {
-////                            // -2 means "discarded"
-////                            statusArray[i] = -2;
-////                            rowsProcessed++;
-////                        }
-////                        else
-////                        {
-////                            statusArray[i] = 0;
-////                        }
-////                    }
-//
-//					thirdAttempt(outputVolume, outputWeight, size,
-//							myPaddedFourier, conserveRows, size, transf, transfInv,
-//							blobTableSqrt, iDeltaSqrt, blob.radius);
-//
-////                    // Awaking sleeping threads
-////                    barrier_wait( &barrier );
-////                    // Threads are working now, wait for them to finish
-////                    // processing current projection
-////                    barrier_wait( &barrier );
-//
-//                    //#define DEBUG2
-//#ifdef DEBUG2
-//
-//                    {
-//                        static int ii=0;
-//                        if(ii%1==0)
-//                        {
-//                            Image<double> save;
-//                            save().alias( FourierWeights );
-//                            save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
-//
-//                            Image< std::complex<double> > save2;
-//                            save2().alias( VoutFourier );
-//                            save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
-//                        }
-//                        ii++;
-//                    }
-//#endif
-//                    #undef DEBUG2
-//
-//                }
-//
-//                if ( current_index == FSCIndex && saveFSC )
-//                {
-//					// get rid of the replicated data
-//					mirror(outputVolume, outputWeight, size);
-//					crop(outputVolume, size);
-//					crop(outputWeight, size);
-//					outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-//					outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
-//					saveIntermediateFSC(outputVolume, outputWeight, size,
-//							(std::string)fn_fsc + "_1_Weights.vol",
-//							(std::string) fn_fsc + "_1_Fourier.vol",
-//							FileName((std::string) fn_fsc + "_1_recons.vol"),
-//							true);
-//					// reset values
-//					release(outputVolume, size+1, size+1);
-//					release(outputWeight, size+1, size+1);
-//					initialized = false;
-//                }
-//                release(myPaddedFourier, size);
-////            }
-//        }
-//        barrier_wait( &barrier ); // wait till you loaded another buffer and process current
-//    }
-
-#if DEBUG_DUMP > 0
-    std::cout << "about to mirror" << std::endl;
-#endif
-
-
 	delete[] loadThread.buffer1;
 	delete[] loadThread.buffer2;
 	loadThread.buffer1 = loadThread.buffer2 = NULL;
-#if DEBUG_DUMP > 0
-    std::cout << "releasing memory" << std::endl;
-#endif
-//    blobTableSqrt.clear();
-	std::cout << "done" << std::endl;
-#if DEBUG_DUMP > 0
-    print(VoutFourier, true);
-    print(VoutFourier_muj, true);
-#endif
 }
 
-//void ProgRecFourier::correctWeight()
-//{
-//    // If NiterWeight=0 then set the weights to one
-//	forceWeightSymmetry(FourierWeights);
-//    if (NiterWeight==0)
-//    {
-//        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
-//        DIRECT_A3D_ELEM(FourierWeights, k,i,j)=1;
-//
-//    }
-//    else
-//    {
-//        // Temporary save the Fourier of the volume
-//        MultidimArray< std::complex<double> > VoutFourierTmp;
-//        VoutFourierTmp=VoutFourier;
-//        forceWeightSymmetry(FourierWeights);
-//        // Prepare the VoutFourier
-//        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
-//        {
-//            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
-//            if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
-//                ptrOut[0] = 1.0/DIRECT_A3D_ELEM(FourierWeights, k,i,j);
-//        }
-//
-//        for (int i=1;i<NiterWeight;i++)
-//        {
-//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
-//            A3D_ELEM(FourierWeights,k,i,j)=0;
-//            processImages(0, SF.size() - 1, !fn_fsc.empty(), true);
-//            forceWeightSymmetry(FourierWeights);
-//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
-//            {
-//                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
-//                if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
-//                    ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
-//            }
-//        }
-//        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
-//        {
-//            // Put back the weights to FourierWeights from temporary variable VoutFourier
-//            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
-//            A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
-//        }
-//        VoutFourier = VoutFourierTmp;
-//    }
-//}
+void ProgRecFourier::releaseTempSpaces() {
+	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+}
 
 void ProgRecFourier::finishComputations( const FileName &out_name )
 {
-	std::cout << "finish comp" << std::endl;
-	// get rid of the replicated data
-//	mirror(outputVolume, outputWeight, volumeSize);
-//	std::cout << "mirror done" << std::endl;
-//	crop(outputVolume, volumeSize);
-//	std::cout << "crop1 done" << std::endl;
-//	crop(outputWeight, volumeSize);
-//	std::cout << "crop2 done" << std::endl;
-	#if DEBUG_DUMP > 0
-	    std::cout << "about to apply blob" << std::endl;
-	#endif
 	if (useFast) {
 		tempVolume = applyBlob(tempVolume, blob.radius, blobTableSqrt, iDeltaSqrt);
-		std::cout << "applyBlob1 done" << std::endl;
 		tempWeights = applyBlob(tempWeights, blob.radius, blobTableSqrt, iDeltaSqrt);
-		std::cout << "applyBlob2 done" << std::endl;
 	}
-
-	//    if( saveFSC ) {
-	//		saveFinalFSC(outputVolume, outputWeight, size);
-	//	}
 
 	forceHermitianSymmetry();
 	processWeights();
-	std::cout << "processWeight done" << std::endl;
 	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
-	#if DEBUG_DUMP > 0
-	    std::cout << "about to convert to expected format" << std::endl;
-	#endif
 	MultidimArray< std::complex<double> > VoutFourier;
 	allocateVoutFourier(VoutFourier);
-	std::cout << "allocating VoutFourier done" << std::endl;
 	convertToExpectedSpace(tempVolume, maxVolumeIndexYZ, VoutFourier);
-	std::cout << "convert done" << std::endl;
 	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
 
-//	allocateFourierWeights();
-//	convertToExpectedSpace(outputWeight, volumeSize, FourierWeights);
-
-
-
-
-    //#define DEBUG_VOL
-#ifdef DEBUG_VOL
-    {
-        VolumeXmipp save;
-        save().alias( FourierWeights );
-        save.write((std::string) fn_out + "Weights.vol");
-
-        FourierVolume save2;
-        save2().alias( VoutFourier );
-        save2.write((std::string) fn_out + "FourierVol.vol");
-    }
-#endif
-
-    // Enforce symmetry in the Fourier values as well as the weights
-    // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
     // Output volume
     Image<double> Vout;
     Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
@@ -2976,36 +1062,10 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     transformerVol.fReal = &(Vout.data);
     transformerVol.setFourierAlias(VoutFourier);
     transformerVol.recomputePlanR2C();
-    std::cout << "recompute plan done" << std::endl;
-//    transformerVol.enforceHermitianSymmetry();
-    //forceWeightSymmetry(preFourierWeights);
-
-    // Tell threads what to do
-    //#define DEBUG_VOL1
-#ifdef DEBUG_VOL1
-
-    {
-        Image<double> save;
-        save().alias( FourierWeights );
-        save.write((std::string) fn_out + "hermiticWeights.vol");
-
-        Image< std::complex<double> > save2;
-        save2().alias( VoutFourier );
-        save2.write((std::string) fn_out + "hermiticFourierVol.vol");
-    }
-#endif
-//    threadOpCode = PROCESS_WEIGHTS;
-//    // Awake threads
-//    barrier_wait( &barrier );
-//    // Threads are working now, wait for them to finish
-//    barrier_wait( &barrier );
 
     transformerVol.inverseFourierTransform();
-    std::cout << "inverse done" << std::endl;
     transformerVol.clear();
-    std::cout << "clear done" << std::endl;
     CenterFFT(Vout(),false);
-    std::cout << "center done" << std::endl;
 
     // Correct by the Fourier transform of the blob
     Vout().setXmippOrigin();
@@ -3024,25 +1084,14 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
         double aux=radius*iDeltaFourier;
         double factor = Fourier_blob_table(ROUND(aux));
         double factor2=(pow(Sinc(radius/(2*(imgSize))),2));
-//        if (NiterWeight!=0)
-//        {
-            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
-            meanFactor2+=factor2;
-//        }
-//        else
-//            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor);
+		A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
+		meanFactor2+=factor2;
     }
-//    if (NiterWeight!=0)
-    {
-        meanFactor2/=MULTIDIM_SIZE(mVout);
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
-        A3D_ELEM(mVout,k,i,j) *= meanFactor2;
-    }
-    std::cout << "about to write" << std::endl;
+	meanFactor2/=MULTIDIM_SIZE(mVout);
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
+	A3D_ELEM(mVout,k,i,j) *= meanFactor2;
     Vout.write(out_name);
-    std::cout << "write done" << std::endl;
     Vout.clear();
-    std::cout << "clear done" << std::endl;
 }
 
 void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
@@ -3051,37 +1100,3091 @@ void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
     this->fn_out = fn_out;
 }
 
-//void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
+
+///***************************************************************************
+// *
+// * Authors:     Roberto Marabini (roberto@cnb.csic.es)
+// *              Carlos Oscar S. Sorzano (coss@cnb.csic.es)
+// *              Jose Roman Bilbao-Castro (jrbcast@ace.ual.es)
+// *              Vahid Abrishami (vabrishami@cnb.csic.es)
+// *
+// * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+// *
+// * This program is free software; you can redistribute it and/or modify
+// * it under the terms of the GNU General Public License as published by
+// * the Free Software Foundation; either version 2 of the License, or
+// * (at your option) any later version.
+// *
+// * This program is distributed in the hope that it will be useful,
+// * but WITHOUT ANY WARRANTY; without even the implied warranty of
+// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// * GNU General Public License for more details.
+// *
+// * You should have received a copy of the GNU General Public License
+// * along with this program; if not, write to the Free Software
+// * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+// * 02111-1307  USA
+// *
+// *  All comments concerning this program package may be sent to the
+// *  e-mail address 'xmipp@cnb.csic.es'
+// ***************************************************************************/
+//
+//#include "reconstruct_fourier.h"
+//#include <fstream>
+//#include <set>
+//#include <sstream>
+//#include <math.h>
+//#include <limits>
+//#include <data/xmipp_fft.h>
+//
+//#include <time.h>
+//
+//#define SSTR( x ) static_cast< std::ostringstream & >( \
+//        ( std::ostringstream() << std::dec << x ) ).str()
+//
+//
+//#define DEBUG_DUMP 0
+//
+//// Define params
+//void ProgRecFourier::defineParams()
 //{
-//    int yHalf=YSIZE(FourierWeights)/2;
-//    if (YSIZE(FourierWeights)%2==0)
-//        yHalf--;
-//    int zHalf=ZSIZE(FourierWeights)/2;
-//    if (ZSIZE(FourierWeights)%2==0)
-//        zHalf--;
-//    int zsize=(int)ZSIZE(FourierWeights);
-//    int zsize_1=zsize-1;
-//    int ysize_1=(int)YSIZE(FourierWeights)-1;
-//    for (int k=0; k<zsize; k++)
+//    //usage
+//    addUsageLine("Generate 3D reconstructions from projections using direct Fourier interpolation with arbitrary geometry.");
+//    addUsageLine("Kaisser-windows are used for interpolation in Fourier space.");
+//    //params
+//    addParamsLine("   -i <md_file>                : Metadata file with input projections");
+//    addParamsLine("  [-o <volume_file=\"rec_fourier.vol\">]  : Filename for output volume");
+//    addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
+//    addParamsLine("  [--padding <proj=2.0> <vol=2.0>]  : Padding used for projections and volume");
+//    addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
+//    addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
+//    addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
+//    addParamsLine("                                 : radius in pixels, order of Bessel function in blob and parameter alpha");
+//    addParamsLine("  [--fast]                       : Do the blobing at the end of the computation.");
+//    addParamsLine("                                 : Gives slightly different results, but is faster.");
+//    addParamsLine("  [--useCTF]                     : Use CTF information if present");
+//    addParamsLine("  [--sampling <Ts=1>]            : sampling rate of the input images in Angstroms/pixel");
+//    addParamsLine("                                 : It is only used when correcting for the CTF");
+//    addParamsLine("  [--phaseFlipped]               : Give this flag if images have been already phase flipped");
+//    addParamsLine("  [--minCTF <ctf=0.01>]          : Minimum value of the CTF that will be inverted");
+//    addParamsLine("                                 : CTF values (in absolute value) below this one will not be corrected");
+//    addParamsLine("  [--bufferSize <size=25>]        : Number of projection loaded in memory (will be actually 2x as much.");
+//    addParamsLine("                                 : This will require up to 2*size*projSize*projSize*16B, e.g.");
+//    addParamsLine("                                 : 50MB for projection of 256x256 or 200MB for projection of 512x512");
+//    addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
+//    addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
+//}
+//
+//// Read arguments ==========================================================
+//void ProgRecFourier::readParams()
+//{
+//    fn_in = getParam("-i");
+//    fn_out = getParam("-o");
+//    fn_sym = getParam("--sym");
+////    if(checkParam("--prepare_fsc"))
+////        fn_fsc = getParam("--prepare_fsc");
+//    do_weights = checkParam("--weight");
+//    padding_factor_proj = getDoubleParam("--padding", 0);
+//    padding_factor_vol = getDoubleParam("--padding", 1);
+//    blob.radius   = getDoubleParam("--blob", 0);
+//    blob.order    = getIntParam("--blob", 1);
+//    blob.alpha    = getDoubleParam("--blob", 2);
+//    useFast		  = checkParam("--fast");
+//    maxResolution = getDoubleParam("--max_resolution");
+//    useCTF = checkParam("--useCTF");
+//    isPhaseFlipped = checkParam("--phaseFlipped");
+//    minCTF = getDoubleParam("--minCTF");
+//    if (useCTF)
+//        iTs = 1 / getDoubleParam("--sampling");
+//    bufferSize = getIntParam("--bufferSize");
+//}
+//
+//// Show ====================================================================
+//void ProgRecFourier::show()
+//{
+//    if (verbose > 0)
 //    {
-//        int ksym=intWRAP(-k,0,zsize_1);
-//        for (int i=1; i<=yHalf; i++)
-//        {
-//            int isym=intWRAP(-i,0,ysize_1);
-//            double mean=0.5*(
-//                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
-//                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
-//            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
-//                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
-//        }
-//    }
-//    for (int k=1; k<=zHalf; k++)
-//    {
-//        int ksym=intWRAP(-k,0,zsize_1);
-//        double mean=0.5*(
-//                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
-//                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
-//        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
-//            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
+//        std::cout << " =====================================================================" << std::endl;
+//        std::cout << " Direct 3D reconstruction method using Kaiser windows as interpolators" << std::endl;
+//        std::cout << " =====================================================================" << std::endl;
+//        std::cout << " Input selfile             : "  << fn_in << std::endl;
+//        std::cout << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
+//        std::cout << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
+//        std::cout << " Output volume             : "  << fn_out << std::endl;
+//        if (fn_sym != "")
+//            std::cout << " Symmetry file for projections : "  << fn_sym << std::endl;
+////        if (fn_fsc != "")
+////            std::cout << " File root for FSC files: " << fn_fsc << std::endl;
+//        if (do_weights)
+//            std::cout << " Use weights stored in the image headers or doc file" << std::endl;
+//        else
+//            std::cout << " Do NOT use weights" << std::endl;
+//        if (useCTF)
+//            std::cout << "Using CTF information" << std::endl
+//            << "Sampling rate: " << 1 / iTs << std::endl
+//            << "Phase flipped: " << isPhaseFlipped << std::endl
+//            << "Minimum CTF: " << minCTF << std::endl;
+//        std::cout << "\n Interpolation Function"
+//        << "\n   blrad                 : "  << blob.radius
+//        << "\n   blord                 : "  << blob.order
+//        << "\n   blalpha               : "  << blob.alpha
+//        //<< "\n sampling_rate           : "  << sampling_rate
+//        << "\n max_resolution          : "  << maxResolution
+//        << "\n -----------------------------------------------------------------" << std::endl;
 //    }
 //}
+//
+//// Main routine ------------------------------------------------------------
+//void ProgRecFourier::run()
+//{
+//    show();
+//    produceSideinfo();
+//    // Process all images in the selfile
+//    if (verbose) {
+//		init_progress_bar(SF.size());
+//    }
+//    // Create loading thread stuff
+//    createLoadingThread();
+//    //Computing interpolated volume
+//    processImages(0, SF.size() - 1);
+//    // remove complex conjugate of the intermediate result
+//    mirrorAndCropTempSpaces();
+//    //Saving the volume
+//    finishComputations(fn_out);
+//}
+//
+//void ProgRecFourier::createLoadingThread() {
+//	barrier_init( &barrier, 2 ); // two barries - for main and loading thread
+////	pthread_mutex_init( &workLoadMutex, NULL );
+//
+//	loadThread.parent = this;
+//	loadThread.selFile = &SF;
+//	pthread_create( &loadThread.id , NULL, loadImageThread, (void *)(&loadThread) );
+//	threadOpCode = PRELOAD_IMAGE;
+//}
+//
+//void ProgRecFourier::cleanLoadingThread() {
+//	threadOpCode = EXIT_THREAD;
+//	// Waiting for thread to finish
+//	barrier_wait( &barrier );
+//	pthread_join(*(&loadThread.id), NULL);
+//	barrier_destroy( &barrier );
+//}
+//
+//void ProgRecFourier::produceSideinfo()
+//{
+//    // Translate the maximum resolution to digital frequency
+//    // maxResolution=sampling_rate/maxResolution;
+//    maxResolutionSqr=maxResolution*maxResolution;
+//
+//    // Read the input images
+//    SF.read(fn_in);
+//    SF.removeDisabled();
+//
+//    // Ask for memory for the output volume and its Fourier transform
+//    size_t objId = SF.firstObject();
+//    FileName fnImg;
+//    SF.getValue(MDL_IMAGE,fnImg,objId);
+//    Image<double> I;
+//    I.read(fnImg, HEADER);
+//    int Ydim=YSIZE(I());
+//    int Xdim=XSIZE(I());
+//    if (Ydim!=Xdim)
+//        REPORT_ERROR(ERR_MULTIDIM_SIZE,"This algorithm only works for squared images");
+//    imgSize=Xdim;
+//    paddedImgSize = Xdim*padding_factor_vol;
+//	size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+//	conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+//	maxVolumeIndexX = maxVolumeIndexYZ = 2 * conserveRows;
+//
+//    // Build a table of blob values
+//    blobTableSqrt.resize(BLOB_TABLE_SIZE_SQRT);
+//    Fourier_blob_table.resize(BLOB_TABLE_SIZE_SQRT);
+//
+//    struct blobtype blobFourier,blobnormalized;
+//    blobFourier=blob;
+////    Sjors 18aug10 blobFourier.radius/=(padding_factor_proj*Xdim);
+//    blobFourier.radius/=(padding_factor_vol*Xdim);
+//    blobnormalized=blob;
+//    blobnormalized.radius/=((double)padding_factor_proj/padding_factor_vol);
+//    double deltaSqrt     = (blob.radius*blob.radius) /(BLOB_TABLE_SIZE_SQRT-1);
+//    double deltaFourier  = (sqrt(3.)*Xdim/2.)/(BLOB_TABLE_SIZE_SQRT-1);
+//
+//    // The interpolation kernel must integrate to 1
+//    double iw0 = 1.0 / blob_Fourier_val(0.0, blobnormalized);
+////    Sjors 18aug10 double padXdim3 = padding_factor_proj * Xdim;
+//    double padXdim3 = padding_factor_vol * Xdim;
+//    padXdim3 = padXdim3 * padXdim3 * padXdim3;
+//    double blobTableSize = blob.radius*sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
+//    //***
+//    //Following commented line seems to be the right thing but I do not understand it
+//    //double fourierBlobTableSize = (sqrt(3.)*Xdim*Xdim/2.)*blobFourier.radius *sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
+//    FOR_ALL_ELEMENTS_IN_MATRIX1D(blobTableSqrt)
+//    {
+//        //use a r*r sample instead of r
+//        //DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
+//        VEC_ELEM(blobTableSqrt,i)    = blob_val(blobTableSize*sqrt((double)i), blob)  *iw0;
+//        //***
+//        //DIRECT_VEC_ELEM(fourierBlobTableSqrt,i) =
+//        //     blob_Fourier_val(fourierBlobTableSize*sqrt(i), blobFourier)*padXdim3  *iw0;
+//        VEC_ELEM(Fourier_blob_table,i) =
+//            blob_Fourier_val(deltaFourier*i, blobFourier)*padXdim3  *iw0;
+//        //#define DEBUG
+//#ifdef DEBUG
+//
+//        std::cout << VEC_ELEM(Fourier_blob_table,i)
+//        << " " << VEC_ELEM(fourierBlobTableSqrt,i)
+//        << std::endl;
+//#endif
+//  #undef DEBUG
+//
+//    }
+//    //iDelta        = 1/delta;
+//    iDeltaSqrt    = 1/deltaSqrt;
+//    iDeltaFourier = 1/deltaFourier;
+//
+//    // Get symmetries
+//    Matrix2D<double>  Identity(3,3);
+//    Identity.initIdentity();
+//    R_repository.push_back(Identity);
+//    if (fn_sym != "")
+//    {
+//        SymList SL;
+//        SL.readSymmetryFile(fn_sym);
+//        for (int isym = 0; isym < SL.symsNo(); isym++)
+//        {
+//            Matrix2D<double>  L(4, 4), R(4, 4);
+//            SL.getMatrices(isym, L, R);
+//            R.resize(3, 3);
+//            R_repository.push_back(R);
+//        }
+//    }
+//}
+//
+//void to3D( int i ) {
+//	int z = i % 720;
+//	int y = (i / 720) % 720;
+//	int x = i / (720 * 720);
+//    std::cout << x << " " << y << " " << z;
+//}
+//
+//template <class T>
+//Matrix1D<T> revert(T i1, T i2, T i3, Matrix2D<T>& A_SL, int volPadSizeX, int volPadSizeY, int volPadSizeZ, int xdim, int ydim) {
+//	Matrix2D<T> A_SL_inv = A_SL.inv();
+//	Matrix1D<T> real_pos(3), img_pos(3);
+//	FFT_IDX2DIGFREQ_DOUBLE(i1, volPadSizeX, real_pos[0]);
+//	FFT_IDX2DIGFREQ_DOUBLE(i2, volPadSizeY, real_pos[1]);
+//	FFT_IDX2DIGFREQ_DOUBLE(i3, volPadSizeZ, real_pos[2]);
+//	// invert map
+//	SPEED_UP_temps012;
+//	M3x3_BY_V3x1(real_pos, A_SL_inv, real_pos);
+//	DIGFREQ2FFT_IDX_DOUBLE(real_pos[0], xdim, img_pos[0]);
+//	DIGFREQ2FFT_IDX_DOUBLE(real_pos[1], ydim, img_pos[1]);
+//
+//	img_pos[2] = real_pos[2];
+//
+//	return img_pos;
+//}
+//
+//template <typename T>
+//bool ellipseHitTest(T majorAxis, T minorAxis, T x0, T y0, T xp, T yp, T alpha)
+//{
+//	T tmp1 = cos(alpha) * (xp - x0) + sin(alpha) * (yp-y0);
+//	T tmp2 = sin(alpha) * (xp - x0) - cos(alpha) * (yp-y0);
+//
+//	T distance = (tmp1 * tmp1)/(majorAxis * majorAxis) + (tmp2 * tmp2) / (minorAxis * minorAxis);
+//
+//	return distance <= 1;
+//}
+//
+////void ProgRecFourier::processCube(
+////		int i,
+////		int j,
+////		const Matrix1D<int>& corner1,
+////		const Matrix1D<int>& corner2,
+////		const MultidimArray<float>& z2precalculated,
+////		const MultidimArray<int>& zWrapped,
+////		const MultidimArray<int>& zNegWrapped,
+////		const MultidimArray<float>& y2precalculated, float blobRadiusSquared,
+////		const MultidimArray<int>& yWrapped,
+////		const MultidimArray<int>& yNegWrapped,
+////		const MultidimArray<float>& x2precalculated, float iDeltaSqrt,
+////		float wModulator, const MultidimArray<int>& xWrapped, int xsize_1,
+////		const MultidimArray<int>& xNegWrapped, bool reprocessFlag, float wCTF,
+////		MultidimArray<std::complex<double> >& VoutFourier,
+////		Matrix1D<double>& blobTableSqrt, LoadThreadParams* threadParams,
+////		MultidimArray<double>& fourierWeights, double* ptrIn,
+////		float weight,
+////		ProgRecFourier * parent,
+////		Matrix1D<double>& real_position) {
+////	// Actually compute
+////	for (int intz = corner1[2]; intz <= corner2[2]; ++intz) {
+////		float z2 = z2precalculated(intz);
+////		int iz = zWrapped(intz);
+////		int izneg = zNegWrapped(intz);
+////		for (int inty = corner1[1]; inty <= corner2[1]; ++inty) {
+////			float y2z2 = y2precalculated(inty) + z2;
+////			if (y2z2 > blobRadiusSquared)
+////				continue;
+////
+////			int iy = yWrapped(inty);
+////			int iyneg = yNegWrapped(inty);
+////			int size1 = VoutFourier.yxdim * (izneg)
+////					+ ((iyneg) * VoutFourier.xdim);
+////			int size2 = VoutFourier.yxdim * (iz) + ((iy) * VoutFourier.xdim);
+////			int fixSize = 0;
+////			for (int intx = corner1[0]; intx <= corner2[0]; ++intx) {
+////				// Compute distance to the center of the blob
+////				// Compute blob value at that distance
+////				float d2 = x2precalculated(intx) + y2z2;
+////				if (d2 > blobRadiusSquared)
+////					continue;
+////
+////				int aux = (int) ((d2 * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+////				float w = blobTableSqrt[aux] * weight
+////						* wModulator;
+////				int ix = xWrapped(intx);
+////				bool conjugate = false;
+////				int izp, iyp, ixp;
+////				if (ix > xsize_1) {
+////					izp = izneg;
+////					iyp = iyneg;
+////					ixp = xNegWrapped(intx);
+////					conjugate = true;
+////					fixSize = size1;
+////				} else {
+////					izp = iz;
+////					iyp = iy;
+////					ixp = ix;
+////					fixSize = size2;
+////				}
+////
+////
+////				// Add the weighted coefficient
+////				if (reprocessFlag) {
+////					// Use VoutFourier as temporary to save the memory
+////					double* ptrOut = (double*) (&(DIRECT_A3D_ELEM(VoutFourier,
+////							izp, iyp, ixp)));
+////					DIRECT_A3D_ELEM(fourierWeights, izp,iyp,ixp) += (w
+////							* ptrOut[0]);
+////				} else {
+////					float wEffective = w * wCTF;
+////					size_t memIdx = fixSize + ixp; //YXSIZE(VoutFourier)*(izp)+((iyp)*XSIZE(VoutFourier))+(ixp);
+////
+////
+//////						double tmp[3];
+//////						FFT_IDX2DIGFREQ(intx, parent->volPadSizeX,
+//////								tmp[0]);
+//////						FFT_IDX2DIGFREQ(inty, parent->volPadSizeX,
+//////								tmp[1]);
+//////						FFT_IDX2DIGFREQ(intz, parent->volPadSizeX,
+//////								tmp[2]);
+////
+//////					if (iyp > 64) {
+////						std::cout
+////							<< ixp
+////							<< " "
+////							<< iyp
+////							<< " "
+////							<< izp
+////							<< " -> "
+//////							<< tmp[0]
+//////							<< " "
+//////							<< tmp[1]
+//////							<< " "
+//////							<< tmp[2]
+//////							   << " -> "
+////							<< j
+////							<< " "
+////							<< ((i < 64) ?	i + 64 : i - 128 + 64)
+//////							<< " "
+//////							<< wEffective
+//////							<< " "
+//////							<< (conjugate ? "conjugate" : "no_conjugate")
+////							<< std::endl;
+//////					}
+////					double* ptrOut = (double*) (&(VoutFourier[memIdx]));
+////					ptrOut[0] += wEffective * ptrIn[0];
+////					fourierWeights[memIdx] += w;
+////					if (conjugate)
+////						ptrOut[1] -= wEffective * ptrIn[1];
+////					else
+////						ptrOut[1] += wEffective * ptrIn[1];
+////				}
+////			}
+////		}
+////	}
+////}
+//
+//
+//
+//inline bool exists (const std::string& name) {
+//  struct stat buffer;
+//  return (stat (name.c_str(), &buffer) == 0);
+//}
+//
+//inline Point3D getNormal(const Point3D& u, const Point3D& v) {
+//	float x = u.y*v.z - u.z*v.y;
+//	float y = u.z*v.x - u.x*v.z;
+//	float z = u.x*v.y - u.y*v.x;
+//	return Point3D {x, y, z};
+//}
+//
+//inline float getDot(const Point3D&u, const Point3D& v) {
+//	return u.x*v.x + u.y*v.y + u.z*v.z;
+//}
+//
+//inline float getLength(const Point3D& v) {
+//	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+//}
+//
+//inline float getCosTheta(const Point3D& u, const Point3D& v) {
+//	return getDot(u, v) / (getLength(u)*getLength(v));
+//}
+//
+//inline void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
+//	float x0 = plane[0].x;
+//	float y0 = plane[0].y;
+//	float z0 = plane[0].z;
+//	u = { plane[1].x - x0, plane[1].y - y0, plane[1].z - z0 };
+//	v = { plane[3].x - x0, plane[3].y - y0, plane[3].z - z0 };
+//}
+//
+//template <typename T>
+//void print(MultidimArray<T>& VoutFourier, bool full = true) {
+//	std::string fileName = "VoutFourier";
+//	std::string ext = ".txt";
+//	int index = 0;
+//	std::string fullName;
+//	do {
+//	   fullName = fileName + SSTR(++index) + ext;
+//	}
+//	while (exists(fullName));
+//
+//	std::cout << "about to write " << fullName << std::endl;
+//	std::ofstream myfile;
+//	myfile.open(fullName.c_str());
+//	myfile << std::fixed;
+//	myfile.precision(7);
+//	myfile << std::showpos;
+//	for (int z = 0; z < (full ? VoutFourier.zdim : 1); z++) {
+////		myfile << "Slice " << z << std::endl;
+//		for (int y = 0; y < (full ? VoutFourier.ydim : 100); y++) {
+////			myfile << "Row " << y << ": ";
+//			for (int x = 0; x < VoutFourier.xdim; x++) {
+//				T data = VoutFourier.data[(z * VoutFourier.xdim * VoutFourier.ydim) + (y * VoutFourier.xdim) + x];
+//				if (data == (T)0){
+//					continue;
+//				}
+//				myfile << x << " " << y << " " << z << " -> " << data << std::endl;
+//			}
+////			myfile << std::endl;
+//		}
+////		myfile << std::endl;
+//	}
+//	myfile.close();
+//}
+//
+//Array2D<std::complex<float> >* ProgRecFourier::cropAndShift(MultidimArray<std::complex<double> >& paddedFourier,
+//		ProgRecFourier * parent) {
+////	// Determine how many rows of the fourier
+////	// transform are of interest for us. This is because
+////	// the user can avoid to explore at certain resolutions
+////	int conserveRows = ceil(paddedFourier.ydim * parent->maxResolution * 2.f);
+////	conserveRows = ceil(conserveRows / 2.f);
+////	int size = 2 * conserveRows;
+//	int sizeX = parent->maxVolumeIndexX / 2; // input Fourier contains just one half of the space, second is complex conjugate
+//	int sizeY = parent->maxVolumeIndexYZ;
+//
+//	Array2D<std::complex<float> >* result = new Array2D<std::complex<float> >(sizeX, sizeY);
+//	// convert image (shift to center and remove high frequencies)
+//	std::complex<double> paddedFourierTmp;
+//	int halfY = paddedFourier.ydim / 2;
+//	double tempMyPadd[2];
+//	for (size_t i = 0; i < paddedFourier.ydim; i++) {
+//		for (size_t j = 0; j < sizeX; j++) {
+//			if (i < sizeX || i >= (paddedFourier.ydim - sizeX)) {
+//				// check the frequency
+//				paddedFourierTmp = DIRECT_A2D_ELEM(paddedFourier, i, j);
+//				FFT_IDX2DIGFREQ(j, parent->paddedImgSize, tempMyPadd[0]);
+//				FFT_IDX2DIGFREQ(i, parent->paddedImgSize, tempMyPadd[1]);
+//				if (tempMyPadd[0] * tempMyPadd[0] + tempMyPadd[1] * tempMyPadd[1]> parent->maxResolutionSqr) {
+//					continue;
+//				}
+//				// do the shift
+//				int myPadI = (i < halfY) ?	i + sizeX : i - paddedFourier.ydim + sizeX;
+//				(*result)(j, myPadI).real() =	paddedFourierTmp.real();
+//				(*result)(j, myPadI).imag() =	paddedFourierTmp.imag();
+//			}
+//		}
+//	}
+//	return result;
+//}
+//
+//void * ProgRecFourier::loadImageThread( void * threadArgs )
+//{
+//
+//    LoadThreadParams * threadParams = (LoadThreadParams *) threadArgs;
+//    ProgRecFourier * parent = threadParams->parent;
+//    barrier_t * barrier = &(parent->barrier);
+//
+////    int minSeparation;
+////
+////    if ( (int)ceil(parent->blob.radius) > parent->thrWidth )
+////        minSeparation = (int)ceil(parent->blob.radius);
+////    else
+////        minSeparation = parent->thrWidth;
+////
+////    minSeparation+=1;
+//
+//
+//    MultidimArray< std::complex<double> > localPaddedFourier;
+//    MultidimArray<double> localPaddedImg;
+//    FourierTransformer localTransformerImg;
+//
+//    std::vector<size_t> objId;
+//
+//    threadParams->selFile->findObjects(objId);
+//    ApplyGeoParams params;
+//    params.only_apply_shifts = true;
+////    MultidimArray<int> zWrapped(3*parent->paddedImgSize),yWrapped(3*parent->paddedImgSize),xWrapped(3*parent->paddedImgSize),
+////    zNegWrapped, yNegWrapped, xNegWrapped;
+////    zWrapped.initConstant(-1);
+////    yWrapped.initConstant(-1);
+////    xWrapped.initConstant(-1);
+////    zWrapped.setXmippOrigin();
+////    yWrapped.setXmippOrigin();
+////    xWrapped.setXmippOrigin();
+////    zNegWrapped=zWrapped;
+////    yNegWrapped=yWrapped;
+////    xNegWrapped=xWrapped;
+////
+////    MultidimArray<float> x2precalculated(xWrapped.xdim), y2precalculated(yWrapped.xdim), z2precalculated(zWrapped.xdim);
+////    x2precalculated.initConstant(-1);
+////    y2precalculated.initConstant(-1);
+////    z2precalculated.initConstant(-1);
+////    x2precalculated.setXmippOrigin();
+////    y2precalculated.setXmippOrigin();
+////    z2precalculated.setXmippOrigin();
+////
+////
+////
+//    bool hasCTF=(threadParams->selFile->containsLabel(MDL_CTF_MODEL) || threadParams->selFile->containsLabel(MDL_CTF_DEFOCUSU)) &&
+//                parent->useCTF;
+//
+//    do
+//    {
+//        barrier_wait( barrier );
+//
+//        switch ( parent->threadOpCode )
+//        {
+//        case PRELOAD_IMAGE:
+//            {
+//            	if (NULL == threadParams->buffer1) {
+//            		threadParams->buffer1 = new ProjectionData[parent->bufferSize];
+//            	}
+//                for(int bIndex = 0; bIndex < parent->bufferSize; bIndex++)
+//                {
+//                	int imgIndex = threadParams->startImageIndex + bIndex;
+//                	ProjectionData* data = &threadParams->buffer1[bIndex];
+//                	if (imgIndex >= threadParams->endImageIndex ) {
+//                		data->skip = true;
+//                		continue;
+//                	}
+//
+//                	Matrix2D<double>  localA(3, 3);
+//
+//                    // Read input image
+//                    double rot, tilt, psi, weight;
+//                    Projection proj;
+//
+//                    //Read projection from selfile, read also angles and shifts if present
+//                    //but only apply shifts
+//                    proj.readApplyGeo(*(threadParams->selFile), objId[imgIndex], params);
+//                    rot  = proj.rot();
+//                    tilt = proj.tilt();
+//                    psi  = proj.psi();
+//                    if (parent->do_weights && proj.weight() == 0.f) {
+//                    	data->skip = true;
+//						continue;
+//					}
+//                    data->weight = (parent->do_weights) ? proj.weight() : 1.0;
+//                    if (hasCTF)
+//                    {
+//                        data->ctf.enable_CTF=true;
+//                        data->ctf.enable_CTFnoise=false;
+//                    	data->ctf.readFromMetadataRow(*(threadParams->selFile),objId[imgIndex]);
+//                    	data->ctf.produceSideInfo();
+//                    } else {
+//                    	data->ctf.enable_CTF=false;
+//                    }
+//                    // Copy the projection to the center of the padded image
+//                    // and compute its Fourier transform
+//                    proj().setXmippOrigin();
+////                    size_t localPaddedImgSize=(size_t)(parent->imgSize*parent->padding_factor_proj);
+//
+////                    if (threadParams->reprocessFlag) {
+////                        localPaddedFourier.initZeros(localPaddedImgSize,localPaddedImgSize/2+1);
+////                    } else
+////                    {
+//                        localPaddedImg.initZeros(parent->paddedImgSize, parent->paddedImgSize);
+//                        localPaddedImg.setXmippOrigin();
+//                        const MultidimArray<double> &mProj=proj();
+//                        FOR_ALL_ELEMENTS_IN_ARRAY2D(mProj)
+//                        A2D_ELEM(localPaddedImg,i,j)=A2D_ELEM(mProj,i,j);
+////                         COSS A2D_ELEM(localPaddedImg,i,j)=weight*A2D_ELEM(mProj,i,j);
+//                        CenterFFT(localPaddedImg,true);
+////
+////                        /*localPaddedImg.initZeros(6,6);
+////                            DIRECT_A2D_ELEM(localPaddedImg,1,0)=1;
+////                        std::cout << localPaddedImg << std::endl;*/
+//
+//                        // Fourier transformer for the images
+//                        localTransformerImg.setReal(localPaddedImg);
+//                        localTransformerImg.FourierTransform();
+//                        localTransformerImg.getFourierAlias(localPaddedFourier);
+////                        /*std::cout << localPaddedFourier << std::endl;
+////                        MultidimArray< std::complex<double> > intermediate;
+////                        FourierTransform(localPaddedImg,intermediate);
+////                        std::cout << intermediate << std::endl;
+////                        CenterFFT(intermediate,true);
+////                        std::cout << intermediate << std::endl;*/
+////                    }
+//
+//                    // Compute the coordinate axes associated to this image
+//                    Euler_angles2matrix(rot, tilt, psi, localA);
+//
+//                    data->localAInv = localA.transpose();
+//                    data->img = cropAndShift(localPaddedFourier, parent);
+//                    data->imgIndex = imgIndex;
+//                    data->skip = false;
+////                    std::cout << "loaded img: " << imgIndex << " (index " << imgIndex - threadParams->startImageIndex << ")" << std::endl;
+//                    //#define DEBUG22
+//#ifdef DEBUG22
+//				{                    //CORRECTO
+//
+//					if(threadParams->myThreadID%1==0)
+//					{
+//						proj.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+//								integerToString(threadParams->imageIndex) + "proj.spi");
+//
+//						ImageXmipp save44;
+//						save44()=localPaddedImg;
+//						save44.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+//								integerToString(threadParams->imageIndex) + "local_padded_img.spi");
+//
+//						FourierImage save33;
+//						save33()=localPaddedFourier;
+//						save33.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+//								integerToString(threadParams->imageIndex) + "local_padded_fourier.spi");
+//						FourierImage save22;
+//						//save22()=*paddedFourier;
+//						save22().alias(*(threadParams->localPaddedFourier));
+//						save22.write((std::string) integerToString(threadParams->myThreadID) + "_" +\
+//								integerToString(threadParams->imageIndex) + "_padded_fourier.spi");
+//					}
+//
+//				}
+//#endif
+//                    #undef DEBUG22
+//                }
+//                break;
+//            }
+//        case EXIT_THREAD:
+//            return NULL;
+////        case PROCESS_WEIGHTS:
+////            {
+////
+////                // Get a first approximation of the reconstruction
+////                double corr2D_3D=pow(parent->padding_factor_proj,2.)/
+////                                 (parent->imgSize* pow(parent->padding_factor_vol,3.));
+////                // Divide by Zdim because of the
+////                // the extra dimension added
+////                // and padding differences
+////                MultidimArray<double> &mFourierWeights=parent->FourierWeights;
+////                for (int k=threadParams->myThreadID; k<=FINISHINGZ(mFourierWeights); k+=parent->numThreads)
+////                    for (int i=STARTINGY(mFourierWeights); i<=FINISHINGY(mFourierWeights); i++)
+////                        for (int j=STARTINGX(mFourierWeights); j<=FINISHINGX(mFourierWeights); j++)
+////                        {
+////                        	if (parent->NiterWeight==0)
+////                        		A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D;
+////                        	else
+////                        	{
+////                        		double weight_kij=A3D_ELEM(mFourierWeights,k,i,j);
+////                        		if (1.0/weight_kij>ACCURACY)
+////                        			A3D_ELEM(parent->VoutFourier,k,i,j)*=corr2D_3D*A3D_ELEM(mFourierWeights,k,i,j);
+////                        		else
+////                        			A3D_ELEM(parent->VoutFourier,k,i,j)=0;
+////                        	}
+////                        }
+////                break;
+////            }
+////        case PROCESS_IMAGE:
+////            {
+////            	REPORT_ERROR(ERR_UNCLASSIFIED, "Not implemented");
+////            	break;
+////            	std::cout << "processing image " + SSTR(threadParams->imageIndex) << " from thread " + SSTR(threadParams->myThreadID) << std::endl; //+ " with symmetry " << *threadParams->symmetry << ": ";
+////            				MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
+////            				if (threadParams->weight==0.0)
+////            					break;
+////            				bool reprocessFlag = threadParams->reprocessFlag;
+////            				int * statusArray = parent->statusArray;
+////
+////            				// Get the inverse of the sampling rate
+////            				double iTs=1.0/parent->Ts; // The padding factor is not considered here, but later when the indexes
+////            										   // are converted to digital frequencies
+////
+////
+////            				Matrix2D<double> * A_SL = threadParams->symmetry;
+////
+////            				// Loop over all Fourier coefficients in the padded image
+////            				Matrix1D<double> freq(3), gcurrent(3), real_position(3), contFreq(3);
+////            				Matrix1D<int> corner1(3), corner2(3);
+////
+////            				// Some alias and calculations moved from heavy loops
+////            				float wCTF=1, wModulator=1.0;
+////            				float blobRadiusSquared = parent->blob.radius * parent->blob.radius;
+////            				float iDeltaSqrt = parent->iDeltaSqrt;
+////            				Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
+////            				int xsize_1 = parent->VoutFourier.xdim - 1;
+////            				int zsize_1 = parent->VoutFourier.zdim - 1;
+////            				MultidimArray< std::complex<double> > &VoutFourier=parent->VoutFourier;
+////            				MultidimArray<double> &fourierWeights = parent->FourierWeights;
+////
+////            				for (int i = 0; i < paddedFourier->ydim; i++) { // for each line
+////            					parent->rowsProcessed++;
+////            					if (statusArray[i] != 0) {
+////            						continue; // process only lines marked as '0', i.e. those should be processed
+////            					}
+////
+////            					// otherwise process current line
+////            					for (int j = paddedFourier->xinit;
+////            							j <= paddedFourier->xinit + paddedFourier->xdim - 1;
+////            							j++) // for each point
+////            							{
+////            						// Compute the frequency of this coefficient in the
+////            						// universal coordinate system
+////            						FFT_IDX2DIGFREQ(j, parent->paddedImg.xdim, freq[0]);
+////            						FFT_IDX2DIGFREQ(i, parent->paddedImg.ydim, freq[1]);
+////            						freq[2] = 0;
+////
+////            						if (freq[0] * freq[0] + freq[1] * freq[1] > parent->maxResolution2) {
+////            							continue;
+////            						}
+////            						wModulator = 1.0;
+////            						if (hasCTF && !reprocessFlag) {
+////            							contFreq[0] = freq[0] * iTs;
+////            							contFreq[1] = freq[1] * iTs;
+////            							threadParams->ctf.precomputeValues(contFreq[0],
+////            									contFreq[1]);
+////            							//wCTF=threadParams->ctf.getValueAt();
+////            							wCTF = threadParams->ctf.getValuePureNoKAt();
+////            							//wCTF=threadParams->ctf.getValuePureWithoutDampingAt();
+////
+////            							if (std::isnan(wCTF)) {
+////            								if (i == 0 && j == 0)
+////            									wModulator = wCTF = 1.0;
+////            								else
+////            									wModulator = wCTF = 0.0;
+////            							}
+////            							if (fabs(wCTF) < parent->minCTF) {
+////            								wModulator = fabs(wCTF);
+////            								wCTF = SGN(wCTF);
+////            							} else
+////            								wCTF = 1.0 / wCTF;
+////            							if (parent->phaseFlipped)
+////            								wCTF = fabs(wCTF);
+////            						}
+////
+////            	//					std::cout << "orig " << freq[0]
+////            	//							<< " "
+////            	//							<< freq[1]
+////            	//							<< " "
+////            	//							<< freq[2]
+////            	//							<< std::endl;
+////
+////
+////            						SPEED_UP_temps012;
+////            						M3x3_BY_V3x1(freq, *A_SL, freq);
+////
+////            	//                    if (!((freq[0] > 0.0f) && (freq[1] > 0.0f) && (freq[2] > 0.0f)))
+////            	//                        continue;
+////            	#if DEBUG_DUMP >= 1
+////            				std::cout << "pred " << freq[0]
+////            						<< " "
+////            						<< freq[1]
+////            						<< " "
+////            						<< freq[2]
+////            	                    << " x "
+////            	                    << j
+////            	                    << " "
+////            	                    << i
+////            						<< std::endl;
+////            	#endif
+////
+////            						// Look for the corresponding index in the volume Fourier transform
+////            						DIGFREQ2FFT_IDX_DOUBLE(freq[0], parent->volPadSizeX,
+////            								real_position[0]);
+////            						DIGFREQ2FFT_IDX_DOUBLE(freq[1], parent->volPadSizeY,
+////            								real_position[1]);
+////            						DIGFREQ2FFT_IDX_DOUBLE(freq[2], parent->volPadSizeZ,
+////            								real_position[2]);
+////
+////            	//					{
+////            	//						double tmp[3];
+////            	//						FFT_IDX2DIGFREQ_DOUBLE(real_position[0], 720,
+////            	//								tmp[0]);
+////            	//						FFT_IDX2DIGFREQ_DOUBLE(real_position[1], 720,
+////            	//								tmp[1]);
+////            	//						FFT_IDX2DIGFREQ_DOUBLE(real_position[2], 720,
+////            	//								tmp[2]);
+////            	//					std::cout << "po " << tmp[0]
+////            	//							<< " "
+////            	//							<< tmp[1]
+////            	//							<< " "
+////            	//							<< tmp[2]
+////            	//							<< std::endl;
+////            	//					}
+////
+////            						int roundedPosition[3];
+////            						for (int a = 0; a < 3; a++){
+////            							roundedPosition[a] = (int)(real_position[a] + 0.5f);
+////            						}
+////
+////            						// Put a box around that coefficient
+////            						corner1[0] = roundedPosition[0];
+////            						corner1[1] = roundedPosition[1];
+////            						corner1[2] = roundedPosition[2];
+////            						corner2[0] = roundedPosition[0];
+////            						corner2[1] = roundedPosition[1];
+////            						corner2[2] = roundedPosition[2];
+////
+////            	//						std::cout << freq[0]
+////            	//							<< " "
+////            	//							<< freq[1]
+////            	//							<< " "
+////            	//							<< freq[2]
+////            	//							<< std::endl;
+////
+////            	#ifdef DEBUG
+////
+////            						std::cout << "Idx Img=(0," << i << "," << j << ") -> Freq Img=("
+////            						<< freq.transpose() << ") ->\n    Idx Vol=("
+////            						<< real_position.transpose() << ")\n"
+////            						<< "   Corner1=" << corner1.transpose() << std::endl
+////            						<< "   Corner2=" << corner2.transpose() << std::endl;
+////            	#endif
+////            						// Loop within the box
+////            						double *ptrIn = (double *) &(*paddedFourier)(i, j);
+////
+////            						// Some precalculations
+////            						for (int intz = corner1[2]; intz <= corner2[2]; ++intz) {
+////            							float z = 0;
+////            							z2precalculated(intz) = z * z;
+////            							if (zWrapped(intz) < 0) {
+////            								int iz, izneg;
+////            								fastIntWRAP(iz, intz, 0, zsize_1);
+////            								zWrapped(intz) = iz;
+////            								int miz = -iz;
+////            								fastIntWRAP(izneg, miz, 0, zsize_1);
+////            								zNegWrapped(intz) = izneg;
+////            							}
+////            						}
+////            						for (int inty = corner1[1]; inty <= corner2[1]; ++inty) {
+////            							float y = 0;
+////            							y2precalculated(inty) = y * y;
+////            							if (yWrapped(inty) < 0) {
+////            								int iy, iyneg;
+////            								fastIntWRAP(iy, inty, 0, zsize_1);
+////            								yWrapped(inty) = iy;
+////            								int miy = -iy;
+////            								fastIntWRAP(iyneg, miy, 0, zsize_1);
+////            								yNegWrapped(inty) = iyneg;
+////            							}
+////            						}
+////            						for (int intx = corner1[0]; intx <= corner2[0]; ++intx) {
+////            							float x = 0;
+////            							x2precalculated(intx) = x * x;
+////            							if (xWrapped(intx) < 0) {
+////            								int ix, ixneg;
+////            								fastIntWRAP(ix, intx, 0, zsize_1);
+////            								xWrapped(intx) = ix;
+////            								int mix = -ix;
+////            								fastIntWRAP(ixneg, mix, 0, zsize_1);
+////            								xNegWrapped(intx) = ixneg;
+////            							}
+////            						}
+////
+////            						// Actually compute
+////            						processCube(i, j, corner1, corner2, z2precalculated, zWrapped,
+////            								zNegWrapped, y2precalculated, blobRadiusSquared,
+////            								yWrapped, yNegWrapped, x2precalculated, iDeltaSqrt,
+////            								wModulator, xWrapped, xsize_1, xNegWrapped,
+////            								reprocessFlag, wCTF, VoutFourier, blobTableSqrt,
+////            								threadParams, fourierWeights, ptrIn, threadParams->weight,
+////            								parent,
+////            								real_position);
+////
+////            						statusArray[i] = -1;
+////            					}
+////
+////            				}
+////            				break;
+////			}
+//        default:
+//            break;
+//        }
+//
+//        barrier_wait( barrier );
+//    }
+//    while ( 1 );
+////    std::cout << std::endl;
+//}
+//
+//
+//void testMapping(MultidimArray<double> paddedImg,
+//		Matrix2D<double> * A_SL,
+//		int volPadSizeX,
+//		int volPadSizeY,
+//		int volPadSizeZ) {
+//
+//	int fx = 23;
+//	int fy = 0;
+//
+//	Matrix1D<double> ffreq(3), freal_pos(3), rreal_pos(3), rfreq(3);
+//	FFT_IDX2DIGFREQ(fx, paddedImg.xdim, ffreq[0]);
+//	FFT_IDX2DIGFREQ(fy, paddedImg.ydim, ffreq[1]);
+//	ffreq[2] = 0;
+//	std::cout << ffreq << std::endl;
+//	SPEED_UP_temps012;
+//	M3x3_BY_V3x1(ffreq, *A_SL, ffreq);
+//	std::cout << ffreq << std::endl;
+//	// Look for the corresponding index in the volume Fourier transform
+//	DIGFREQ2FFT_IDX_DOUBLE(ffreq[0], volPadSizeX,
+//			freal_pos[0]);
+//	DIGFREQ2FFT_IDX_DOUBLE(ffreq[1], volPadSizeY,
+//			freal_pos[1]);
+//	DIGFREQ2FFT_IDX_DOUBLE(ffreq[2], volPadSizeZ,
+//			freal_pos[2]);
+//	std::cout << freal_pos << std::endl;
+//
+//	FFT_IDX2DIGFREQ_DOUBLE(freal_pos[0], volPadSizeX, rreal_pos[0]);
+//	FFT_IDX2DIGFREQ_DOUBLE(freal_pos[1], volPadSizeY, rreal_pos[1]);
+//	FFT_IDX2DIGFREQ_DOUBLE(freal_pos[2], volPadSizeZ, rreal_pos[2]);
+//	std::cout << rreal_pos << std::endl;
+//	// invert map
+//	Matrix2D<double> A_SL_inv = A_SL->inv();
+//	std::cout << A_SL_inv << std::endl;
+//	M3x3_BY_V3x1(rreal_pos, A_SL_inv, rreal_pos);
+//	std::cout << rreal_pos << std::endl;
+////	rreal_pos[2] = 0;
+//	DIGFREQ2FFT_IDX_DOUBLE(rreal_pos[0], paddedImg.xdim, rfreq[0]);
+//	DIGFREQ2FFT_IDX_DOUBLE(rreal_pos[1], paddedImg.ydim, rfreq[1]);
+//	DIGFREQ2FFT_IDX_DOUBLE(rreal_pos[2], paddedImg.zdim, rfreq[2]);
+//	std::cout << rfreq << std::endl;
+//
+//
+//}
+//
+//template <typename T>
+//inline std::complex<T>
+//BilinearInterpolation(std::complex<T> bl, std::complex<T> br, std::complex<T> tl, std::complex<T> tr,
+//		float x, float y)
+//{
+//	std::complex<T> top = (T)x * (tl - tr) + tr;
+//	std::complex<T> bottom = (T)x * (bl - br) + br;
+//	return (T)y * (top - bottom) + bottom;
+//}
+//
+//template<typename T, typename U>
+//inline U ProgRecFourier::clamp(U val, T min, T max) {
+//	U res = val;
+//	res = (res > max) ? max : res;
+//	res = (res < min) ? min : res;
+//	return res;
+//}
+//
+//inline std::complex<float>
+//getPixelBilinear(std::complex<float>** img, float x, float y, int imgSizeX, int imgSizeY)
+//{
+//	float posX, posY;
+//	float fractX, fractY;
+//	fractX = std::modf(x , &posX);
+//	fractY = std::modf(y , &posY);
+//	std::complex<float> bl,br,tl,tr;
+//	bl = br = tl = tr = 0; // values outside of the boundaries will be zero
+//	if (posY >= 0) {
+//		if (posX >= 0) {
+//			bl = img[(int)posY][(int)posX];
+//		}
+//		if ((posX + 1)< imgSizeX) {
+//			br = img[(int)posY][(int)posX + 1];
+//		}
+//	}
+//	if ((posY+1) < imgSizeY) {
+//		if (posX >= 0) {
+//			tl = img[(int)posY+1][(int)posX];
+//		}
+//		if ((posX + 1) < imgSizeX) {
+//			tr = img[(int)posY+1][(int)posX + 1];
+//		}
+//	}
+//	return BilinearInterpolation(bl, br, tl, tr, 1. - fractX, 1. - fractY);
+//}
+//
+////inline
+////std::complex<float> ProgRecFourier::getPixelClamped(Array2D<std::complex<float> >* img, float x, float y)
+////{
+////	int imgX = clamp((int)(x + 0.5f), 0, img->getXSize() - 1);
+////	int imgY = clamp((int)(y + 0.5f), 0, img->getYSize() - 1);
+////	return img(imgX, imgY);
+////}
+//
+//
+//#if 0
+//template <typename T>
+//bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y){
+//    /*int ox = x;
+//    int oy = y;
+//    if (y < (float)(offsetY)/2.0f)
+//        y += (float)(offsetY)/2.0f;
+//    else
+//        y -= (float)(offsetY)/2.0f;
+//
+//    if (x > (float)(offsetX-1)/2.0f)
+//        x -= (float)(offsetX-1);
+//    bool ret = false;
+//    if (x < 0.0f) {
+//        x = -x;
+//        y = (float)(offsetY-1) - y;
+//        //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+//        ret = true;
+//    }
+//    //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+//    if (y < (float)(offsetY)/2.0f)
+//        y += (float)(offsetY)/2.0f;
+//    else
+//        y -= (float)(offsetY)/2.0f;
+//
+//    if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f)
+//        std::cout << "HAF HAF << " << ox << " " << oy << " -> " << x << " " << y << "\n";
+//
+//    return ret;*/
+//
+//	if (x > (float)(offsetX/2-1)) {
+//        std::cout << "A\n";
+//		x = (float)offsetX - x;
+//        y = (float)offsetY - y;
+//	}
+//
+//    if ((x < 0.0f) && (y < 0.0f)) {
+//        std::cout << "B\n";
+//        x = -x;
+//        y = -y;
+//    }
+//
+//	if (x < 0.f) {
+//        std::cout << "C\n";
+//		//x += (float)offsetX;
+//        x = -x;
+//        y = offsetY-1 - y;
+//	}
+//	if (y > (float)(offsetY-1)) {
+//        std::cout << "D\n";
+//		y -= (float)offsetY;
+//	}
+//	if (y < 0.f) {
+//        std::cout << "A\n";
+//		y += (float)offsetY;
+//	}
+//	if ((int)x >= maxX) { // Careful here, we must not get under -1. -0.9999 is fine, as cast to int will convert it to zero(0)
+//        std::cout << "(int)x >= maxX\n";
+//		x = - x + offsetX/2;
+//		y = - y + offsetY;
+//        return true;
+//	}
+//	if (y > maxX) {// FIXME this is probably wrong
+//        std::cout << "(y > maxX)\n";
+//		return true;
+//    }
+//	return false;
+//}
+//#endif
+//
+//static clock_t ticks_pad = 0;
+//
+//template <typename T>
+//bool pad(size_t maxX, int offsetX, int offsetY, T& x, T& y, size_t imgSizeX, size_t imgSizeY){
+//
+//    clock_t start = clock();
+//
+//    bool conjugate = false;
+//    float halfX = (float)offsetX/2.0f;
+//    float halfY = (float)offsetY/2.0f;
+//
+//    if (x > halfX-1) {
+//#if DEBUG_DUMP >= 2
+//        std::cout << "x > halfX-1\n";
+//#endif
+//        x = (float)offsetX - x;
+//        y = (float)offsetY - y;
+//        conjugate = true;
+//    }
+//
+//    if ((x < 0.0f) && (y < 0.0f)) {
+//#if DEBUG_DUMP >= 2
+//        std::cout << "x < 0 && y < 0\n";
+//#endif
+//        x = -x;
+//        y = -y;
+//        conjugate = true;
+//    }
+//    if (x < 0.f && y > offsetY-1) {
+//#if DEBUG_DUMP >= 2
+//        std::cout << "x < 0 && y > offsetY-1\n";
+//#endif
+//        x = -x;
+//        y = 2*(offsetY-1) - y;
+//        conjugate = true;
+//    }
+//    if (x < 0.f && y >= 0.f) {
+//#if DEBUG_DUMP >= 2
+//        std::cout << "x < 0 && y > 0\n";
+//#endif
+//        //x += (float)offsetX;
+//        x = -x;
+//        y = offsetY-1 - y;
+//        conjugate = true;
+//    }
+//    if (x >= 0.f && y < 0.f) {
+//#if DEBUG_DUMP >= 2
+//        std::cout << "x > 0 && y < 0\n";
+//#endif
+//        y += (float)offsetY;
+//    }
+//    if (y > (float)(offsetY-1)) {
+//#if DEBUG_DUMP >= 2
+//        std::cout << "y > offsetY-1\n";
+//#endif
+//        y -= (float)offsetY;
+//    }
+//
+//    ticks_pad += clock() - start;
+//
+//    return conjugate;
+//}
+//
+//inline void multiply(Matrix2D<double>& transform, float inOut[3]) {
+//	float tmp0 = transform(0, 0) * inOut[0] + transform(0, 1) * inOut[1] + transform(0, 2) * inOut[2];
+//	float tmp1 = transform(1, 0) * inOut[0] + transform(1, 1) * inOut[1] + transform(1, 2) * inOut[2];
+//	float tmp2 = transform(2, 0) * inOut[0] + transform(2, 1) * inOut[1] + transform(2, 2) * inOut[2];
+//	inOut[0] = tmp0;
+//	inOut[1] = tmp1;
+//	inOut[2] = tmp2;
+//}
+//
+//inline void multiply(Matrix2D<double>& transform, Point3D& inOut) {
+//	float tmp0 = transform(0, 0) * inOut.x + transform(0, 1) * inOut.y + transform(0, 2) * inOut.z;
+//	float tmp1 = transform(1, 0) * inOut.x + transform(1, 1) * inOut.y + transform(1, 2) * inOut.z;
+//	float tmp2 = transform(2, 0) * inOut.x + transform(2, 1) * inOut.y + transform(2, 2) * inOut.z;
+//	inOut.x = tmp0;
+//	inOut.y = tmp1;
+//	inOut.z = tmp2;
+//}
+//
+//inline void ProgRecFourier::multiply(const float transform[3][3], Point3D& inOut) {
+//	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
+//	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
+//	float tmp2 = transform[2][0] * inOut.x + transform[2][1] * inOut.y + transform[2][2] * inOut.z;
+//	inOut.x = tmp0;
+//	inOut.y = tmp1;
+//	inOut.z = tmp2;
+//}
+//
+//inline void multiply(float transform[3][3], float inOut[3]) {
+//	float tmp0 = transform[0][0] * inOut[0] + transform[0][1] * inOut[1] + transform[0][2] * inOut[2];
+//	float tmp1 = transform[1][0] * inOut[0] + transform[1][1] * inOut[1] + transform[1][2] * inOut[2];
+//	float tmp2 = transform[2][0] * inOut[0] + transform[2][1] * inOut[1] + transform[2][2] * inOut[2];
+//	inOut[0] = tmp0;
+//	inOut[1] = tmp1;
+//	inOut[2] = tmp2;
+//}
+//
+//
+//template <typename T>
+//inline std::complex<T>
+//getPixelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY, float x, float y)
+//{
+//	T posX, posY;
+//	T fractX;
+//	T fractY;
+//	fractX = std::modf(x , &posX);
+//	fractY = std::modf(y , &posY);
+//
+//	pad(img->xdim, offsetX, offsetY, posX, posY);
+//	std::complex<T> bottom_left = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
+//	pad(img->xdim, offsetX, offsetY, ++posX, posY);
+//	std::complex<T> bottom_right = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
+//	pad(img->xdim, offsetX, offsetY, --posX, ++posY);
+//	std::complex<T> top_left = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
+//	pad(img->xdim, offsetX, offsetY, ++posX, posY);
+//	std::complex<T> top_right = DIRECT_A2D_ELEM(*img, (int)posY, (int)posX);
+//
+//	return BilinearInterpolation(bottom_left, bottom_right, top_left, top_right, 1. - fractX, 1. - fractY);
+//}
+//
+//template <typename T>
+//std::complex<T>
+//getVoxelValue( MultidimArray< std::complex<T> > *img, int offsetX, int offsetY,
+//		float x, float y, float z,
+//		blobtype blob, T& weight,
+//		int xdim, int ydim, double maxResolutionSqr,
+//		int k, int l, int m,
+//		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt)
+//{
+//	return getVoxelValue(img, offsetX, offsetY, x, y, z, blob.radius, weight, xdim, ydim, maxResolutionSqr,
+//			k, l, m, blobTableSqrt, iDeltaSqrt);
+//}
+//
+//std::complex<float>
+//getVoxelValue(std::complex<float>** img, int offsetX, int offsetY,
+//		float x, float y, float z,
+//		float blobRadius, float& weight,
+//		int xdim, int ydim, double maxResolutionSqr,
+//		float k, float l, float m,
+//		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
+//		size_t imgSizeX, size_t imgSizeY)
+//{
+//    bool dumpujeme = false;
+//    //std::cout << "YYY " << k << " " << l << " " << m << std::endl;
+//    /*if ((fabsf(k-0.0f) < 0.00005) && (fabsf(l-0.0f) < 0.00005) && (fabsf(m-0.0f) < 0.00005)) {
+//        std::cout << "XXX dumpujeme\n";
+//        dumpujeme = true;
+//    }*/
+//	weight = 0.;
+//	float radiusSqr = blobRadius * blobRadius;
+//	std::complex<float> result = (0, 0);
+//	int minX = CEIL(x - blobRadius);
+//	int maxX = FLOOR(x + blobRadius);
+//	int minY = CEIL(y - blobRadius);
+//	int maxY = FLOOR(y + blobRadius);
+//#if DEBUG_DUMP >= 2
+//    std::cout << "center: " << x << " " << y << std::endl;
+//#endif
+//	float zSqr = z * z;
+//	for (int i = minY; i <= maxY; i++) {
+//		float ySqr = (y - i) * (y - i);
+//		for (int j = minX; j <= maxX; j++) {
+//			float xD = x - j;
+//			float distanceSqr = ySqr + xD*xD + zSqr;
+//			if (distanceSqr > radiusSqr) {
+//				continue;
+//			}
+////			T freq[2];
+////			FFT_IDX2DIGFREQ(j, xdim, freq[0]);
+////			FFT_IDX2DIGFREQ(i, ydim, freq[1]);
+////			if (freq[0] * freq[0] + freq[1] * freq[1] > maxResolutionSqr) {
+////				continue;
+////			}
+//			// all tests passed, you can use the pixel value
+//			int tmpX = j;
+//			int tmpY = i;
+//			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+//			float tmpWeight = blobTableSqrt[aux];
+//    //if (x > (float)(offsetX-1) || y > (float)(offsetY-1) || x < 0.0f || y < 0.0f) std::cout << "HAF HAF\n";
+////			T tmpWeight = blob_val(std::sqrt(distanceSqr), blob);
+//			bool conjugate = pad(imgSizeX, offsetX, offsetY, tmpX, tmpY, imgSizeX, imgSizeY); // FIXME use X dimension of the image
+//			float conj = conjugate ? -1. : 1.;
+//			std::complex<float> pixVal = img[tmpY][tmpX];
+//			result.real() += tmpWeight * pixVal.real();
+//			result.imag() += tmpWeight * conj * pixVal.imag();
+//			weight += tmpWeight;
+//            /*if (dumpujeme) {
+//                std::cout << "XXX " << j << " " << i << ", " << tmpX << " " << tmpY << ", " << pixVal << " " << tmpWeight << std::endl;
+//            }*/
+//
+//
+////			float dest[3];
+////			if (k < 0) {
+////				dest[0] = -k;
+////				dest[1] = -l;
+////				dest[2] = -m;
+////			}
+//
+//			float tmp[3];
+////			          				if (k < 0) {
+////			          					tmp[0] = -k;
+////			          					tmp[1] = -l;
+////			          					tmp[2] = -m;
+////			          				} else {
+////			          					tmp[0] = k;
+////			          					tmp[1] = l;
+////			          					tmp[2] = m;
+////			          				}
+////			          				DIGFREQ2FFT_IDX(tmp[0], 720, tmp[0]);
+////			          				DIGFREQ2FFT_IDX(tmp[1], 720, tmp[1]);
+////			          				DIGFREQ2FFT_IDX(tmp[2], 720, tmp[2]);
+//
+//
+//#if DEBUG_DUMP >= 1
+//			std::cout << tmp[0]
+//					<< " "
+//					<< tmp[1]
+//					<< " "
+//					<< tmp[2]
+//					<< " -> "
+//					<< k
+//					<< " "
+//					<< l
+//					<< " "
+//					<< m
+//					<< " -> "
+//					<< tmpX
+//					<< " "
+//					<< tmpY
+//					<< " "
+//					<< tmpWeight
+//					<< " "
+//					<< (conjugate ? "conjugate" : "no_conjugate")
+//					<< std::endl;
+//#endif
+//		}
+//	}
+//	return result;
+//
+//}
+//
+//
+//
+//template <typename T>
+//inline bool inRange(T x, T min, T max) {
+//	return (x > min) && (x < max);
+//}
+//
+//
+//
+//// 7____6
+////3/__2//
+//// ||  ||
+//// ||4 ||5
+////0|/__|/1
+//Point3D* createBoundingCuboid(size_t paddedVolumeSize,
+//		size_t conserveRows,
+//		float blobRadius)
+//{
+//	static Point3D result[8];
+//	float sizeLength = (float)conserveRows / (float)paddedVolumeSize;
+//	float height = ceil(blobRadius) / (float)paddedVolumeSize;
+//	result[0].x = result[3].x = result[4].x = result[7].x = 0.f - height;
+//	result[1].x = result[2].x = result[5].x = result[6].x = sizeLength + height;
+//
+//	result[0].y = result[1].y = result[4].y = result[5].y = -sizeLength - height;
+//	result[2].y = result[3].y = result[6].y = result[7].y = sizeLength + height;
+//
+//	result[0].z = result[1].z = result[2].z = result[3].z = height;
+//	result[4].z = result[5].z = result[6].z = result[7].z = -height;
+//
+//	return result;
+//}
+//
+//// 7____6
+////3/__2//
+//// ||  ||
+//// ||4 ||5
+////0|/__|/1
+//// origin is in the center [0, 0, 0]
+//Point3D* createBoundingCuboid(float sizeX, float sizeY,	float sizeZ)
+//{
+//	static Point3D result[8];
+//	float halfX = sizeX/2;
+//	float halfY = sizeY/2;
+//	float halfZ = sizeZ/2;
+//	result[0].x = result[3].x = result[4].x = result[7].x = -halfX;
+//	result[1].x = result[2].x = result[5].x = result[6].x = halfX;
+//
+//	result[0].y = result[1].y = result[4].y = result[5].y = -halfY;
+//	result[2].y = result[3].y = result[6].y = result[7].y = halfY;
+//
+//	result[0].z = result[1].z = result[2].z = result[3].z = -halfZ;
+//	result[4].z = result[5].z = result[6].z = result[7].z = halfZ;
+//
+//	return result;
+//}
+////
+////
+////
+//////       3___2
+//////   +   |   |
+////// [0,0] |   |y
+//////   -  0|___|1  sizes are padded with blob-radius
+//////         x
+////Point3D* createProjectionPlane(size_t paddedVolumeSize,
+////		size_t conserveRows,
+////		float blobRadius)
+////{
+////	static Point3D result[4];
+////	float sizeLength = (float)conserveRows / (float)paddedVolumeSize;
+////	float padding = ceil(blobRadius) / (float)paddedVolumeSize;
+////	result[0].x = result[3].x = - (0.f + padding);
+////	result[1].x = result[2].x = sizeLength + padding;
+////
+////	result[0].y = result[1].y = -(sizeLength + padding);
+////	result[2].y = result[3].y = sizeLength + padding;
+////
+////	result[0].z = result[1].z = result[2].z = result[3].z = 0.f;
+////
+////	return result;
+////}
+//
+////       3___2
+////   +   |   |
+//// [0,0] |   |y
+////   -  0|___|1  sizes are padded with blob-radius
+////         x
+//// [0,0] is in the middle of the left side (point [0] and [3]), but blob can go to negative
+//Point3D* createProjectionPlane(Point3D* plane, float sizeX,	float sizeY, float blobSize=0)
+//{
+//	float halfY = sizeY / 2.0f;
+//	plane[0].x = plane[3].x = 0.f - blobSize;
+//	plane[1].x = plane[2].x = sizeX + blobSize;
+//
+//	plane[0].y = plane[1].y = -(halfY + blobSize);
+//	plane[2].y = plane[3].y = halfY + blobSize;
+//
+//	plane[0].z = plane[1].z = plane[2].z = plane[3].z = 0.f;
+//
+//	return plane;
+//}
+//
+//
+//void ProgRecFourier::createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize)
+//{
+//	float halfY = sizeY / 2.0f;
+//	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
+//	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
+//
+//	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
+//	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
+//
+//	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
+//	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
+//}
+//
+//
+//inline bool getZ(float x, float y, float& z, Point3D* plane) {
+//	// from parametric eq. of the plane
+//	float x0 = plane[0].x;
+//	float y0 = plane[0].y;
+//	float z0 = plane[0].z;
+//	Point3D a = { plane[1].x - x0, plane[1].y - y0, plane[1].z - z0 };
+//	Point3D b = { plane[3].x - x0, plane[3].y - y0, plane[3].z - z0 };
+//
+//	float u = ((y-y0)*a.x + (x0-x)*a.y) / (a.x * b.y - b.x * a.y);
+//	float t = (-x0 + x - u*b.x) / (a.x);
+//
+//	z = z0 + t*a.z + u*b.z;
+//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+//}
+//
+//inline bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+//	// from parametric eq. of the plane
+//	float x0 = p0.x;
+//	float y0 = p0.y;
+//	float z0 = p0.z;
+//
+//	float u = ((y-y0)*a.x + (x0-x)*a.y) / (a.x * b.y - b.x * a.y);
+//	float t = (-x0 + x - u*b.x) / (a.x);
+//
+//	z = z0 + t*a.z + u*b.z;
+//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+//}
+//
+//inline bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+//	// from parametric eq. of the plane
+//	float x0 = p0.x;
+//	float y0 = p0.y;
+//	float z0 = p0.z;
+//
+//	float u = ((z-z0)*a.x + (x0-x)*a.z) / (a.x * b.z - b.x * a.z);
+//	float t = (-x0 + x - u*b.x) / (a.x);
+//
+//	y = y0 + t*a.y + u*b.y;
+//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+//}
+//
+//inline bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+//	// from parametric eq. of the plane
+//	float x0 = p0.x;
+//	float y0 = p0.y;
+//	float z0 = p0.z;
+//
+//	float u = ((z-z0)*a.y + (y0-y)*a.z) / (a.y * b.z - b.y * a.z);
+//	float t = (-y0 + y - u*b.y) / (a.y);
+//
+//	x = x0 + t*a.x + u*b.x;
+//	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
+//}
+//
+//Point3D* pad(Point3D* cuboid) {
+//	for (int i = 0; i < 8; i++) {
+//		if (cuboid[i].x < 0) {
+//			cuboid[i].x *= -1;
+//			cuboid[i].y *= -1;
+//		}
+//	}
+//	return cuboid;
+//}
+//
+//void print(Point3D* cuboid) {
+//	for (int i = 0; i < 9; i++) {
+//		std::cout << cuboid[i%8].x << " " << cuboid[i%8].y << " " << cuboid[i%8].z << std::endl;
+//	}
+//}
+//
+//void printPlane(Point3D* plane) {
+//	for (int i = 0; i < 5; i++) {
+//		std::cout << plane[i%4].x << " " << plane[i%4].y << " " << plane[i%4].z << std::endl;
+//	}
+//}
+//
+//void print1(Point3D* cuboid) {
+//	std::cout << cuboid[0].x << " " << cuboid[0].y << " " << cuboid[0].z << std::endl;
+//	std::cout << cuboid[1].x << " " << cuboid[1].y << " " << cuboid[1].z << std::endl;
+//	std::cout << cuboid[2].x << " " << cuboid[2].y << " " << cuboid[2].z << std::endl;
+//	std::cout << cuboid[3].x << " " << cuboid[3].y << " " << cuboid[3].z << std::endl;
+//	std::cout << cuboid[0].x << " " << cuboid[0].y << " " << cuboid[0].z << std::endl;
+//	std::cout << cuboid[2].x << " " << cuboid[2].y << " " << cuboid[2].z << std::endl;
+//}
+//
+//Point3D* transformCuboid(Point3D* cuboid, Matrix2D<double>& transform) {
+//	float tmp[3];
+//	for (int i = 0; i < 8; i++) {
+//		tmp[0] = cuboid[i].x;
+//		tmp[1] = cuboid[i].y;
+//		tmp[2] = cuboid[i].z;
+//		cuboid[i].x = transform(0,0)*tmp[0] + transform(0,1)*tmp[1] + transform(0,2)*tmp[2];
+//		cuboid[i].y = transform(1,0)*tmp[0] + transform(1,1)*tmp[1] + transform(1,2)*tmp[2];
+//		cuboid[i].z = transform(2,0)*tmp[0] + transform(2,1)*tmp[1] + transform(2,2)*tmp[2];
+//	}
+//	return cuboid;
+//}
+//
+//
+//
+////Point3D* rotateCuboid(Point3D* cuboid, Matrix2D<double>& transform, int tmp) {
+////	Point3D center = {};
+////	for (int i = 0; i < 8; i++) {
+////		center.x += cuboid[i].x;
+////		center.y += cuboid[i].y;
+////		center.z += cuboid[i].z;
+////	}
+////	center.x /= 8.f;
+////	center.y /= 8.f;
+////	center.z /= 8.f;
+////	std::cout << "center " << center.x << " " << center.y << " " <<center.z << std::endl;
+//// 	float tmp[3];
+////	for (int i = 0; i < 8; i++) {
+////		tmp[0] = cuboid[i].x - center.x;
+////		tmp[1] = cuboid[i].y - center.y;
+////		tmp[2] = cuboid[i].z - center.z;
+////		multiply(transform, tmp);
+////		cuboid[i].x = tmp[0] + center.x;
+////		cuboid[i].y = tmp[1] + center.y;
+////		cuboid[i].z = tmp[2] + center.z;
+////	}
+////	return cuboid;
+////}
+//
+//inline void ProgRecFourier::translateCuboid(Point3D* cuboid, Point3D vector) {
+//	for (int i = 0; i < 8; i++) {
+//		cuboid[i].x += vector.x;
+//		cuboid[i].y += vector.y;
+//		cuboid[i].z += vector.z;
+//	}
+//}
+//
+//Point3D* transformPlane(Point3D* plane, Matrix2D<double>& transform) {
+//	float tmp[3];
+//	for (int i = 0; i < 4; i++) {
+//		tmp[0] = plane[i].x;
+//		tmp[1] = plane[i].y;
+//		tmp[2] = plane[i].z;
+//		plane[i].x = transform(0,0)*tmp[0] + transform(0,1)*tmp[1] + transform(0,2)*tmp[2];
+//		plane[i].y = transform(1,0)*tmp[0] + transform(1,1)*tmp[1] + transform(1,2)*tmp[2];
+//		plane[i].z = transform(2,0)*tmp[0] + transform(2,1)*tmp[1] + transform(2,2)*tmp[2];
+//	}
+//	return plane;
+//}
+//
+////Point3D* rotatePlane(Point3D* plane, float transform[3][3]) {
+////	for (int i = 0; i < 4; i++) {
+////		multiply(transform, plane[i]);
+////	}
+////	return plane;
+////}
+//
+//Point3D* translatePlane(Point3D* plane, Point3D vector) {
+//	for (int i = 0; i < 4; i++) {
+//		plane[i].x += vector.x;
+//		plane[i].y += vector.y;
+//		plane[i].z += vector.z;
+//	}
+//	return plane;
+//}
+//
+//Point3D* getAABB(Point3D* cuboid) {
+//	static Point3D AABB[2];
+//	AABB[0].x = AABB[0].y = AABB[0].z = std::numeric_limits<float>::max();
+//	AABB[1].x = AABB[1].y = AABB[1].z = std::numeric_limits<float>::min();
+//	Point3D tmp;
+//	for (int i = 0; i < 8; i++) {
+//		tmp = cuboid[i];
+//		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
+//		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
+//		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
+//		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
+//		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
+//		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
+//	}
+//	return AABB;
+//}
+//
+//Point3D* getPlaneAABB(Point3D* plane) {
+//	static Point3D AABB[2];
+//	AABB[0].x = AABB[0].y = AABB[0].z = std::numeric_limits<float>::max();
+//	AABB[1].x = AABB[1].y = AABB[1].z = std::numeric_limits<float>::min();
+//	Point3D tmp;
+//	for (int i = 0; i < 4; i++) {
+//		tmp = plane[i];
+//		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
+//		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
+//		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
+//		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
+//		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
+//		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
+//	}
+//	return AABB;
+//}
+//
+//Point3D* getAABB(Point3D* cuboid,
+//	float minX, float minY, float minZ,
+//	float maxX, float maxY, float maxZ) {
+//	Point3D* AABB = getAABB(cuboid);
+//	// limit to max size
+//	if (AABB[0].x < minX) AABB[0].x = minX;
+//	if (AABB[0].y < minY) AABB[0].y = minY;
+//	if (AABB[0].z < minZ) AABB[0].z = minZ;
+//	if (AABB[1].x > maxX) AABB[1].x = maxX;
+//	if (AABB[1].y > maxY) AABB[1].y = maxY;
+//	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
+//
+//	return AABB;
+//}
+//
+//Point3D* getPlaneAABB(Point3D* plane,
+//	float minX, float minY, float minZ,
+//	float maxX, float maxY, float maxZ) {
+//	Point3D* AABB = getPlaneAABB(plane);
+//	// limit to max size
+//	if (AABB[0].x < minX) AABB[0].x = minX;
+//	if (AABB[0].y < minY) AABB[0].y = minY;
+//	if (AABB[0].z < minZ) AABB[0].z = minZ;
+//	if (AABB[1].x > maxX) AABB[1].x = maxX;
+//	if (AABB[1].y > maxY) AABB[1].y = maxY;
+//	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
+//
+//	return AABB;
+//}
+//
+//void ProgRecFourier::computeAABB(Point3D* AABB, Point3D* cuboid,
+//	float minX, float minY, float minZ,
+//	float maxX, float maxY, float maxZ) {
+//	AABB[0].x = AABB[0].y = AABB[0].z = std::numeric_limits<float>::max();
+//	AABB[1].x = AABB[1].y = AABB[1].z = std::numeric_limits<float>::min();
+//	Point3D tmp;
+//	for (int i = 0; i < 8; i++) {
+//		tmp = cuboid[i];
+//		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
+//		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
+//		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
+//		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
+//		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
+//		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
+//	}
+//	// limit to max size
+//	if (AABB[0].x < minX) AABB[0].x = minX;
+//	if (AABB[0].y < minY) AABB[0].y = minY;
+//	if (AABB[0].z < minZ) AABB[0].z = minZ;
+//	if (AABB[1].x > maxX) AABB[1].x = maxX;
+//	if (AABB[1].y > maxY) AABB[1].y = maxY;
+//	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
+//}
+//
+//void druhyPokus(std::complex<float>*** outputVolume,
+//		float*** outputWeight,
+//		size_t conserveRows,
+//		std::complex<float>** paddedFourier,
+//		size_t paddedVolumeSize,
+//		float maxResolutionSqr,
+//		float blobRadius,
+//		Matrix2D<double>& transform,
+//		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt,
+//		size_t imgSizeX, size_t imgSizeY) {
+////std::cout << "plane:" << std::endl;
+////	Point3D* plane = transformPlane(createProjectionPlane(paddedVolumeSize, conserveRows, blobRadius), transform);
+////	printPlane(plane);
+////std::cout << "cuboid:" << std::endl;
+//	Point3D* cuboid = transformCuboid(createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius), transform);
+////	print(cuboid);
+////std::cout << "cuboid:" << std::endl;
+////	cuboid = createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius);
+////	print(cuboid);
+////std::cout << "test:" << std::endl;
+//
+//	float upperIndex = (float)conserveRows / (float)paddedVolumeSize;
+//	float step = upperIndex / (float)(conserveRows);
+//	int size = 2* conserveRows;
+//
+//	Matrix2D<double> transfInv = transform.inv();
+//	float freq[3];
+//	float img_pos[3];
+//
+//	// test orientation
+//	Point3D u;
+//	Point3D v;
+//	getVectors(cuboid, u, v);
+//	Point3D normal = getNormal(u, v);
+//	float XY = std::abs(getCosTheta(normal, Point3D {0.f, 0.f, 1.f})); // iterate XY plane
+//	float XZ = std::abs(getCosTheta(normal, Point3D {0.f, 1.f, 0.f})); // iterate XZ plane
+//	float YZ = std::abs(getCosTheta(normal, Point3D {1.f, 0.f, 0.f})); // iterate YZ plane
+//	if ((XY >= XZ) && (XY >= YZ)) {
+////		std::cout << "XY" << std::endl;
+//	}
+//	if ((XZ >= XY) && (XZ >= YZ)) {
+////		std::cout << "XZ" << std::endl;
+//	}
+//	if ((YZ >= XY) && (YZ >= XZ)) {
+////		std::cout << "YZ" << std::endl; // FIXME implement proper space traversing
+//	}
+//
+//	Point3D* AABB = getAABB(cuboid);
+//	int minY, minX;
+//	int maxY, maxX;
+//	minY = floor((AABB[0].y + upperIndex) * paddedVolumeSize);
+//	minX = floor((AABB[0].x + upperIndex) * paddedVolumeSize);
+//	maxY = ceil((AABB[1].y + upperIndex) * paddedVolumeSize);
+//	maxX = ceil((AABB[1].x + upperIndex) * paddedVolumeSize);
+//    minX = std::max(0, minX);
+//    minY = std::max(0, minY);
+//    maxX = std::min((int)size-1, maxX);
+//    maxY = std::min((int)size-1, maxY);
+//
+//
+////	for (int m = 0; m < size; m++ ) {
+//		for (int l = minY; l < maxY; l++) {
+//			for (int k = minX; k < maxX; k++) {
+//				float x = k*step - upperIndex;
+//				float y = l*step - upperIndex;
+//				float z1;
+//				float z2;
+//				bool hit1 = getZ(x, y, z1, u, v, *cuboid); // FIXME once iterating in proper plane, can be reduced to one calculation +- blob distance in 'Z' axis
+//				bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4));
+//				if (hit1 || hit2) {
+//					float mLower = (std::min(z1, z2) + upperIndex) * paddedVolumeSize ;
+//                    mLower = std::max(0.0f, mLower);
+//					float mUpper = (std::max(z1, z2) + upperIndex) * paddedVolumeSize ;
+//                    mUpper = std::min((float)(size-1), mUpper); //FIXME hardcoded value
+////					float tmp = std::pow(ceil(blobRadius), 1/3.)( *  / (float)paddedVolumeSize;
+//					for (int m = floor(mLower); m <= ceil(mUpper); m++) {
+//						float z = m*step - upperIndex;
+//						freq[0] = x;
+//						freq[1] = y;
+//						freq[2] = z;
+//
+//                        //if (!((x > 0) && (y > 0) && (z >0)))
+//                        //    continue;
+//
+//					// invert map
+//						multiply(transfInv, freq);
+//
+//						DIGFREQ2FFT_IDX_DOUBLE(freq[0], paddedVolumeSize, img_pos[0]); // pixel index
+//						DIGFREQ2FFT_IDX_DOUBLE(freq[1], paddedVolumeSize, img_pos[1]); // line index
+//						img_pos[2] = std::abs(freq[2] * paddedVolumeSize); // XXX HACK store transformed Z value
+//
+//						// check restrictions
+//						if (inRange((size_t) img_pos[1], conserveRows, paddedVolumeSize - conserveRows) // or the line has too high frequencies
+//								|| (img_pos[2] > blobRadius) // or projection plane is too far
+//								|| ((freq[0] * freq[0] + freq[1] * freq[1]) > maxResolutionSqr) // or the pixel frequency is too high
+//								) {
+//							continue;
+//						}
+////													std::cout << x
+////															<< " "
+////															<< y
+////															<< " "
+////															<< z
+////															<< std::endl;
+//
+///*														std::cout << x
+//																<< " "
+//    															<< y
+//																<< " "
+//																<< z
+//																<< " -> "
+//																<< img_pos[0]
+//																<< " "
+//																<< img_pos[1]
+//																<< " "
+//																<< img_pos[2]
+//					//											<< " "
+//					//											<< (conjugate ? "conjugate" : "no_conjugate")
+//																<< std::endl;*/
+//
+//						float weight;
+//
+//
+//
+//						std::complex<float> val = getVoxelValue(paddedFourier,
+//								paddedVolumeSize, paddedVolumeSize, img_pos[0], img_pos[1],
+//								img_pos[2], blobRadius, weight, paddedVolumeSize,
+//								paddedVolumeSize, maxResolutionSqr, x, y, z,
+//								blobTableSqrt, iDeltaSqrt,
+//								imgSizeX, imgSizeY);
+//                        //if ((m == l == 64) && (k == 63)) std::cout << "YYY " << val << " " << weight << " " << outputVolume[m][l][k] << std::endl;
+//                        //if (val.imag() < 100.0) std::cout << "XXX " << m << " " << l << " " << k << std::endl;
+//
+//						outputWeight[m][l][k] += weight;
+//						outputVolume[m][l][k] += val;
+//
+//
+////
+////					DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k) += val;
+////					//									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k).real() += weight * val.real();
+////					//									DIRECT_A3D_ELEM(VoutFourier_muj, m, l, k).imag() += weight * conj * val.imag();
+////					DIRECT_A3D_ELEM(FourierWrights_moje, m, l, k) += weight;
+//
+//
+//
+//					}
+//				}
+//			}
+//		}
+////	}
+//
+////	print(transformCuboid(createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius), transform));
+////	print(createBoundingCuboid(paddedVolumeSize, conserveRows, blobRadius));
+////	std::cout << "BB" << std::endl;
+////
+////	Matrix1D<float> freq(3);
+////
+////	for (size_t y = 0; y < paddedFourier->ydim; y++) { // for each line
+////		if (inRdruhyPokusange(y, conserveRows, paddedFourier->ydim - conserveRows)) {
+////			continue; // process only lines with small frequencies
+////		}
+////		// otherwise process current line
+////		for (int x = 0;	x < conserveRows; x++) { // for each pixel (with low frequency)
+////			// Compute the frequency of this coefficient in the
+////			// universal coordinate system
+////			FFT_IDX2DIGFREQ(x, paddedVolumeSize, freq[0]);
+////			FFT_IDX2DIGFREQ(y, paddedVolumeSize, freq[1]);
+////			freq[2] = 0;
+////
+////			if (freq[0] * freq[0] + freq[1] * freq[1] > maxResolutionSqr) {
+////				continue;
+////			}
+//////			SPEED_UP_temps012;
+//////			M3x3_BY_V3x1(freq, transform, freq);
+////			std::cout << freq[0] << " " << freq[1] << " " << freq[2] << " -> " << x << " " << y << std::endl;
+////
+////		}
+////	}
+//
+//}
+//
+//void printAABB(Point3D* AABB) {
+//	std::cout
+//	// one base
+//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
+//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
+//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+//	// other base with one connection
+//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+//	// lines between bases
+//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
+//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[0].z
+//		<< std::endl;
+//}
+//
+//void getVoxelValue(std::complex<float>& outputVal, float& outputWeight,
+//	float imgPos[3],
+//	std::complex<float>** img, int imgSizeX, int imgSizeY,
+//	Matrix1D<double>& blobTableSqrt, float iDeltaSqrt, float blobRadius) {
+//	float maxDistanceSqr = blobRadius*blobRadius + imgSizeX*imgSizeX;
+//	outputWeight = 0.f;
+//	outputVal = 0.f;
+//	int minX = ceil(imgPos[0] - blobRadius);
+//	int maxX = floor(imgPos[0] + blobRadius);
+//	int minY = ceil(imgPos[1] - blobRadius);
+//	int maxY = floor(imgPos[1] + blobRadius);
+//	float zSqr = imgPos[2] * imgPos[2];
+//	for (int i = minY; i <= maxY; i++) {
+//		float ySqr = (imgPos[1] - i) * (imgPos[1] - i);
+//		for (int j = minX; j <= maxX; j++) {
+//			float xD = imgPos[0] - j;
+//			float distanceSqr = ySqr + xD*xD + zSqr;
+//			if (distanceSqr > maxDistanceSqr) {
+//				continue;
+//			}
+//			// get weight
+//			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+//			float tmpWeight = blobTableSqrt[aux];
+//		}
+//	}
+//
+//}
+//
+//
+//
+//
+//inline void ProgRecFourier::processCTF(ProjectionData* const data,
+//		int imgX, int imgY, float& wCTF, float& wModulator)
+//{
+//	std::cout << "called" << std::endl;
+//	float freqX, freqY;
+//	// get respective frequency
+//	FFT_IDX2DIGFREQ(imgX, paddedImgSize, freqX);
+//	// since Y axis is shifted to center, we have to use different calculation
+//	freqY = (imgY - (paddedImgSize / 2.f)) / (float) paddedImgSize;
+//	data->ctf.precomputeValues(freqX * iTs, freqY * iTs);
+//	wCTF = data->ctf.getValuePureNoKAt();
+//	if (std::isnan(wCTF)) {
+//		if ((imgX == 0) && (imgY == 0)) {
+//			wModulator = wCTF = 1.0;
+//		}
+//		else {
+//			wModulator = wCTF = 0.0;
+//		}
+//	}
+//	if (fabs(wCTF) < minCTF) {
+//		wModulator = fabs(wCTF);
+//		wCTF = SGN(wCTF);
+//	} else {
+//		wCTF = 1.0 / wCTF;
+//	}
+//	if (isPhaseFlipped)
+//		wCTF = fabs(wCTF);
+//}
+//
+//
+//inline void ProgRecFourier::processVoxel(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+//		ProjectionData* const data) {
+//	Point3D imgPos;
+//	float wBlob = 1.f;
+//	float wCTF = 1.f;
+//	float wModulator = 1.f;
+//
+//	// transform current point to center
+//	imgPos.x = x - maxVolumeIndexX/2;
+//	imgPos.y = y - maxVolumeIndexYZ/2;
+//	imgPos.z = z - maxVolumeIndexYZ/2;
+//	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > maxDistanceSqr) {
+//		return; // discard iterations that would access pixel with too high frequency
+//	}
+//	// rotate around center
+//	multiply(transform, imgPos);
+//	// transform back and round
+//	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
+//	int imgX = clamp((int)(imgPos.x + 0.5f), 0, data->img->getXSize() - 1);
+//	int imgY = clamp((int)(imgPos.y + 0.5f + maxVolumeIndexYZ / 2), 0, data->img->getYSize() - 1);
+//
+//	if (data->ctf.enable_CTF) {
+//		processCTF(data, imgX, imgY, wCTF, wModulator);
+//	}
+//
+//	float weight = wBlob * wModulator * data->weight;
+//
+//	tempVolume[z][y][x] += (*data->img)(imgX, imgY) * weight * wCTF;
+//	tempWeights[z][y][x] += weight;
+//}
+//
+//inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+//		ProjectionData* const data) {
+//	Point3D imgPos;
+//
+////	std::cout << "called for " << x << " " << y << " " << z << std::endl;
+//
+//	// transform current point to center
+//	imgPos.x = x - maxVolumeIndexX/2;
+//	imgPos.y = y - maxVolumeIndexYZ/2;
+//	imgPos.z = z - maxVolumeIndexYZ/2;
+//	if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > maxDistanceSqr) {
+//		return; // discard iterations that would access pixel with too high frequency
+//	}
+//	// rotate around center
+//	multiply(transform, imgPos);
+//	// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
+//	imgPos.y += maxVolumeIndexYZ / 2;
+//
+//	// check that we don't want to collect data from far far away ...
+//	float radiusSqr = blob.radius * blob.radius;
+//	float zSqr = imgPos.z * imgPos.z;
+//	if (zSqr > radiusSqr) return;
+//
+//	int minX = std::ceil(imgPos.x - blob.radius);
+//	int maxX = std::floor(imgPos.x + blob.radius);
+//	int minY = std::ceil(imgPos.y - blob.radius);
+//	int maxY = std::floor(imgPos.y + blob.radius);
+//	minX = std::max(minX, 0);
+//	minY = std::max(minY, 0);
+//	maxX = std::min(maxX, data->img->getXSize()-1);
+//	maxY = std::min(maxY, data->img->getYSize()-1);
+//	std::complex<float>* targetVolume = &tempVolume[z][y][x];
+//	float* targetWeight = &tempWeights[z][y][x];
+////int counter = 0;
+//
+////	std::cout << "about to do up to " << maxY-minY+1 << "x" << maxX-minX+1 << " loops" << std::endl;
+//
+//	for (int i = minY; i <= maxY; i++) {
+//		float ySqr = (imgPos.y - i) * (imgPos.y - i);
+//		float yzSqr = ySqr + zSqr;
+//		if (yzSqr > radiusSqr) continue;
+//		for (int j = minX; j <= maxX; j++) {
+//			float xD = imgPos.x - j;
+//			float distanceSqr = xD*xD + yzSqr;
+////			std::cout << distanceSqr << " " << radiusSqr << std::endl;
+//			if (distanceSqr > radiusSqr) {
+////				std::cout << "miss" << std::endl;
+//				continue;
+//			}
+////			counter++;
+////			std::cout << "hit" << std::endl;
+//			float wCTF = 1.f;
+//			float wModulator = 1.f;
+////			return;
+////			std::cout << x << " " << y << " " << z << " -> "
+////				<< j << " " << i << " " << imgPos.z << " " << distanceSqr << std::endl;
+//			int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+//			float wBlob = blobTableSqrt[aux];
+//
+//			if (data->ctf.enable_CTF) {
+//				processCTF(data, j, i, wCTF, wModulator);
+//			}
+//			float weight = wBlob * wModulator * data->weight;
+//			*targetWeight += weight;
+//			*targetVolume += (*data->img)(j, i) * weight * wCTF;
+//		}
+//	}
+////	std::cout << "actually did " << counter << " out of " << (maxY-minY+1) *(maxX-minX+1) <<  std::endl;
+//}
+//
+//inline void convert(Matrix2D<double>& in, float out[3][3]) {
+//	for (int i = 0; i < 3; i++) {
+//		for (int j = 0; j < 3; j++) {
+//			out[i][j] = in(i, j);
+//		}
+//	}
+//}
+//
+//void ProgRecFourier::processProjection(
+//	ProjectionData* projectionData,
+//	const float transform[3][3],
+//	const float transformInv[3][3])
+//{
+//	int imgSizeX = projectionData->img->getXSize();
+//	int imgSizeY = projectionData->img->getYSize();
+//	const float maxDistanceSqr = (imgSizeX+(useFast ? 0.f : blob.radius)) * (imgSizeX+(useFast ? 0.f : blob.radius));
+//	Point3D origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
+//	Point3D u, v;
+//	Point3D AABB[2];
+//	Point3D cuboid[8];
+//
+//	// calculate affected space
+//	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : blob.radius);
+//	rotateCuboid(cuboid, transform);
+//	translateCuboid(cuboid, origin);
+//	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
+//	getVectors(cuboid, u, v);
+//
+//	// prepare traversing
+//	int minY, minX, minZ;
+//	int maxY, maxX, maxZ;
+//	minZ = floor(AABB[0].z);
+//	minY = floor(AABB[0].y);
+//	minX = floor(AABB[0].x);
+//	maxZ = ceil(AABB[1].z);
+//	maxY = ceil(AABB[1].y);
+//	maxX = ceil(AABB[1].x);
+//	int dX, dY, dZ;
+//	dX = maxX - minX;
+//	dY = maxY - minY;
+//	dZ = maxZ - minZ;
+//
+//	if (dZ <= dX && dZ <= dY) { // iterate XY plane
+//		for(int y = minY; y <= maxY; y++) {
+//			for(int x = minX; x <= maxX; x++) {
+//				if (useFast) {
+//					float hitZ;
+//					if (getZ(x, y, hitZ, u, v, *cuboid)) {
+//						int z = (int)(hitZ + 0.5f); // rounding
+//						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+//					}
+//				} else {
+//					float z1, z2;
+//					bool hit1 = getZ(x, y, z1, u, v, *cuboid); // lower plane
+//					bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4)); // upper plane
+//					if (hit1 || hit2) {
+//						z1 = clamp(z1, 0, maxVolumeIndexYZ);
+//						z2 = clamp(z2, 0, maxVolumeIndexYZ);
+//						float lower = std::min(z1, z2);
+//						float upper = std::max(z1, z2);
+////						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
+//						for (int z = std::floor(lower); z <= std::ceil(upper); z++) {
+//							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+//						}
+//					}
+//				}
+//			}
+//		}
+//	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
+//		for(int z = minZ; z <= maxZ; z++) {
+//			for(int x = minX; x <= maxX; x++) {
+//				if (useFast) {
+//					float hitY;
+//					if (getY(x, hitY, z, u, v, *cuboid)) {
+//						int y = (int)(hitY + 0.5f); // rounding
+//						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+//					}
+//				} else {
+//					float y1, y2;
+//					bool hit1 = getY(x, y1, z, u, v, *cuboid); // lower plane
+//					bool hit2 = getY(x, y2, z, u, v, *(cuboid + 4)); // upper plane
+//					if (hit1 || hit2) {
+//						y1 = clamp(y1, 0, maxVolumeIndexYZ);
+//						y2 = clamp(y2, 0, maxVolumeIndexYZ);
+//						float lower = std::min(y1, y2);
+//						float upper = std::max(y1, y2);
+////						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
+//						for (int y = std::floor(lower); y <= std::ceil(upper); y++) {
+//							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+//						}
+//					}
+//				}
+//			}
+//		}
+//	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
+//		for(int z = minZ; z <= maxZ; z++) {
+//			for(int y = minY; y <= maxY; y++) {
+//				if (useFast) {
+//					float hitX;
+//					if (getX(hitX, y, z, u, v, *cuboid)) {
+//						int x = (int)(hitX + 0.5f); // rounding
+//						processVoxel(x, y, z, transformInv, maxDistanceSqr, projectionData);
+//					}
+//				} else {
+//					float x1, x2;
+//					bool hit1 = getX(x1, y, z, u, v, *cuboid); // lower plane
+//					bool hit2 = getX(x2, y, z, u, v, *(cuboid + 4)); // upper plane
+//					if (hit1 || hit2) {
+//						x1 = clamp(x1, 0, maxVolumeIndexX);
+//						x2 = clamp(x2, 0, maxVolumeIndexX);
+//						float lower = std::min(x1, x2);
+//						float upper = std::max(x1, x2);
+////						std:: cout << hit1 << " " << hit2 << " " << std::ceil(upper)-std::floor(lower)+1 << std::endl;
+//						for (int x = std::floor(lower); x <= std::ceil(upper); x++) {
+//							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+//						}
+//					}
+//				}
+//			}
+//		}
+//	} else {
+//		std::cout << "ALERT" << std::endl;
+//	}
+////	delete[] bottomPlane;
+////	bottomPlane = NULL;
+////	delete[] topPlane;
+//}
+//
+//template<typename T>
+//T*** ProgRecFourier::allocate(T***& where, int xSize, int ySize, int zSize) {
+//	where = new T**[zSize];
+//	std::cout << "allocating " << where << " " << xSize << "x" << ySize  << "x" << zSize<< std::endl;
+//	for (int z = 0; z < zSize; z++) {
+//		where[z] = new T*[ySize];
+//		for (int y = 0; y < ySize; y++) {
+//			where[z][y] = new T[xSize];
+//			for (int x = 0; x < xSize; x++) {
+//				where[z][y][x] = (T) 0;
+//			}
+//		}
+//	}
+//	return where;
+//}
+//
+//template<typename T>
+//T** ProgRecFourier::allocate(T**& where, int xSize, int ySize) {
+//	where = new T*[ySize];
+//	for (int y = 0; y < ySize; y++) {
+//		where[y] = new T[xSize];
+//		for (int x = 0; x < xSize; x++) {
+//			where[y][x] = (T) 0;
+//		}
+//	}
+//	return where;
+//}
+//
+//template<typename T>
+//void release(T***& array, int ySize, int zSize) {
+//	std::cout << "releasing " << array << std::endl;
+//	for(int z = 0; z < zSize; z++) {
+//		for(int y = 0; y < ySize; y++) {
+//			delete[] array[z][y];
+//		}
+//		delete[] array[z];
+//	}
+//	delete[] array;
+//	array = NULL;
+//}
+//
+//template<typename T>
+//void release(T**& array, int ySize) {
+//	for(int y = 0; y < ySize; y++) {
+//		delete[] array[y];
+//	}
+//	delete[] array;
+//	array = NULL;
+//}
+//
+//
+//template<typename T>
+//T*** ProgRecFourier::applyBlob(T***& input, float blobSize,
+//		Matrix1D<double>& blobTableSqrt, float iDeltaSqrt) {
+//	float blobSizeSqr = blobSize * blobSize;
+//	int blob = floor(blobSize); // we are using integer coordinates, so we cannot hit anything further
+//	T tmp;
+//	T*** output;
+//	// create new storage
+//	allocate(output, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//
+//	// traverse new storage
+//	for (int i = 0; i <= maxVolumeIndexYZ; i++) {
+//		for (int j = 0; j <= maxVolumeIndexYZ; j++) {
+//			for (int k = 0; k <= maxVolumeIndexX; k++) {
+//				// traverse input storage
+//				tmp = (T) 0;
+//				for (int z = std::max(0, i-blob); z <= std::min(maxVolumeIndexYZ, i+blob); z++) {
+//					float dZSqr = (i - z) * (i - z);
+//					for (int y = std::max(0, j-blob); y <= std::min(maxVolumeIndexYZ, j+blob); y++) {
+//						float dYSqr = (j - y) * (j - y);
+//						for (int x = std::max(0, k-blob); x <= std::min(maxVolumeIndexX, k+blob); x++) {
+//							float dXSqr = (k - x) * (k - x);
+//							float distanceSqr = dZSqr + dYSqr + dXSqr;
+//							if (distanceSqr > blobSizeSqr) {
+//								continue;
+//							}
+//							int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+//							float tmpWeight = blobTableSqrt[aux];
+//							tmp += tmpWeight * input[z][y][x];
+//						}
+//					}
+//				}
+//				output[i][j][k] = tmp;
+//			}
+//		}
+//	}
+//	// free original data
+//	release(input, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//	return output;
+//}
+//
+//template<typename T, typename U>
+//void convertToExpectedSpace(T*** input, int size,
+//	MultidimArray<U>& VoutFourier) {
+//	int halfSize = size / 2;
+//	for (int z = 0; z <= size; z++) {
+//    	for (int y = 0; y <= size; y++) {
+//			for (int x = 0; x <= halfSize; x++) {
+//    			int newPos[3];
+//    			// shift FFT from center to corners
+//				newPos[0] = x; // no need to move
+//    			newPos[1] = (y < halfSize) ? VoutFourier.ydim - halfSize + y : y - halfSize ;
+//    			newPos[2] = (z < halfSize) ? VoutFourier.zdim - halfSize + z : z - halfSize ;
+//    			// store to output array
+//    			// += in necessary as VoutFourier might be used multiple times when used with MPI
+//				DIRECT_A3D_ELEM(VoutFourier, newPos[2], newPos[1], newPos[0]) += input[z][y][x];
+//    		}
+//    	}
+//    }
+//}
+//
+//void mirror(std::complex<float>*** outputVolume, float*** outputWeight, int size) {
+//	std::cout << size << " " << outputVolume << " " << outputWeight << std::endl;
+//	for (int z = 0; z < size; z++) {
+//		for (int y = 0; y < size; y++) {
+//			for (int x = 0; x < size/2; x++) {
+//				int newPos[3];
+//				// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel biger
+//				newPos[0] = size - x;
+//				newPos[1] = size - y;
+//				newPos[2] = size - z;
+//
+//				outputVolume[newPos[2]][newPos[1]][newPos[0]].real() += outputVolume[z][y][x].real();
+//				outputVolume[newPos[2]][newPos[1]][newPos[0]].imag() -= outputVolume[z][y][x].imag();
+//				outputWeight[newPos[2]][newPos[1]][newPos[0]] += outputWeight[z][y][x];
+//			}
+//		}
+//	}
+//}
+////
+////template<typename T>
+////void ProgRecFourier::crop(T***& inOut, int size) {
+////	int halfSize = size/2; // just half of the space is necessary, the rest is complex conjugate
+////	T*** output;
+////	// create new storage, notice that just 'right hand side' of the input will be used
+////	allocate(output, halfSize+1, size+1, size+1);
+////	// traverse old storage
+////	for (int z = 0; z <= size; z++) {
+////		for (int y = 0; y <= size; y++) {
+////			for (int x = halfSize; x <= size; x++) {
+////				output[z][y][x-halfSize] = inOut[z][y][x];
+////			}
+////		}
+////	}
+////	// free original data
+////	release(inOut, size+1, size+1);
+////	inOut = output;
+////}
+//
+//void ProgRecFourier::mirrorAndCropTempSpaces() {
+//	maxVolumeIndexX = maxVolumeIndexYZ/2; // just half of the space is necessary, the rest is complex conjugate
+//	mirrorAndCrop(tempWeights, &identity<float>);
+//	mirrorAndCrop(tempVolume, &conjugate);
+//}
+//
+//template<typename T>
+//void ProgRecFourier::mirrorAndCrop(T***& input, T (*f)(T)) {
+//
+//	T*** output;
+//	// create new storage, notice that just 'right hand side - X axis' of the input will be preserved, left will be converted to its complex conjugate
+//	allocate(output, maxVolumeIndexX+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//	// traverse old storage
+//	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
+//		for (int y = 0; y <= maxVolumeIndexYZ; y++) {
+//			for (int x = 0; x <= maxVolumeIndexYZ; x++) {
+//				if (x < maxVolumeIndexX) {
+//					int newPos[3];
+//					// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel bigger
+//					newPos[0] = maxVolumeIndexYZ - x;
+//					newPos[1] = maxVolumeIndexYZ - y;
+//					newPos[2] = maxVolumeIndexYZ - z;
+//					output[newPos[2]][newPos[1]][newPos[0]-maxVolumeIndexX] += f(input[z][y][x]);
+//				} else {
+//					// copy with X shifted by (-halfSize)
+//					output[z][y][x-maxVolumeIndexX] += input[z][y][x];
+//				}
+//			}
+//		}
+//	}
+//	// free original data
+//	release(input, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//	// set new data
+//	input = output;
+//}
+//
+//void ProgRecFourier::forceHermitianSymmetry() {
+//	int x = 0;
+//	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
+//		for (int y = 0; y <= maxVolumeIndexYZ/2; y++) {
+//			int newPos[3];
+//			// mirror against center of the volume, e.g. [0,0,0]->[size,size,size]. It will fit as the input space is one voxel biger
+//			newPos[0] = x;
+//			newPos[1] = maxVolumeIndexYZ - y;
+//			newPos[2] = maxVolumeIndexYZ - z;
+//			std::complex<float> tmp1 = 0.5f * (tempVolume[newPos[2]][newPos[1]][newPos[0]] + conj(tempVolume[z][y][x]));
+//			float tmp2 = 0.5f * (tempWeights[newPos[2]][newPos[1]][newPos[0]] + tempWeights[z][y][x]);
+//
+//			tempVolume[newPos[2]][newPos[1]][newPos[0]] = tmp1;
+//			tempVolume[z][y][x] = conj(tmp1);
+//			tempWeights[newPos[2]][newPos[1]][newPos[0]] = tempWeights[z][y][x] = tmp2;
+//		}
+//	}
+//}
+//
+//void ProgRecFourier::processWeights() {
+//    // Get a first approximation of the reconstruction
+//    float corr2D_3D=pow(padding_factor_proj,2.)/
+//                     (imgSize* pow(padding_factor_vol,3.));
+//	for (int z = 0; z <= maxVolumeIndexYZ; z++) {
+//		for (int y = 0; y <= maxVolumeIndexYZ; y++) {
+//			for (int x = 0; x <= maxVolumeIndexX; x++) {
+//				float weight = tempWeights[z][y][x];
+//				std::complex<float> val = tempVolume[z][y][x];
+//				if (fabs(weight) > 1e-3) {
+//					weight = 1.f/weight;
+//				}
+//
+//				if (1.0/weight > ACCURACY)
+//					tempVolume[z][y][x] *= corr2D_3D*weight;
+//				else
+//					tempVolume[z][y][x] = 0;
+//			}
+//		}
+//	}
+//}
+//
+//
+//
+////void ProgRecFourier::saveIntermediateFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize,
+////		const std::string &weightsFileName, const std::string &fourierFileName, const FileName &resultFileName,
+////		bool storeResult) {
+////	// Save Current Fourier, Reconstruction and Weights
+////	// store weights
+////	allocateFourierWeights();
+////	convertToExpectedSpace(outputWeight, volSize, FourierWeights);
+////	Image<double> save;
+////	save().alias( FourierWeights );
+////	save.write(weightsFileName);
+////	FourierWeights.clear();
+////
+////	// store fourier
+////	allocateVoutFourier();
+////	convertToExpectedSpace(outputVolume, volSize, VoutFourier);
+////	Image< std::complex<double> > save2;
+////	save2().alias( VoutFourier );
+////	save2.write(fourierFileName);
+////
+////	// store result
+////	if (storeResult) {
+////		forceHermitianSymmetry(outputVolume, outputWeight, volSize);
+////		processWeight(outputVolume, outputWeight, volSize, padding_factor_proj, padding_factor_vol, imgSize, NiterWeight);
+////		finishComputations(resultFileName);
+////	}
+////	VoutFourier.clear();
+////}
+////
+////void ProgRecFourier::saveFinalFSC(std::complex<float>*** outputVolume, float*** outputWeight, int volSize) {
+////    // Save Current Fourier, Reconstruction and Weights
+////	saveIntermediateFSC(outputVolume, outputWeight, volSize,
+////		(std::string)fn_fsc + "_2_Weights.vol",
+////		(std::string)fn_fsc + "_2_Fourier.vol",
+////		FileName((std::string) fn_fsc + "_2_recons.vol"),
+////		false);
+////
+////	// merge intermediate weights
+////	allocateFourierWeights();
+////	Image<double> auxVolume;
+////    auxVolume().alias( FourierWeights );
+////    auxVolume.sumWithFile(fn_fsc + "_1_Weights.vol");
+////    auxVolume.sumWithFile(fn_fsc + "_2_Weights.vol");
+////    auxVolume.write((std::string)fn_fsc + "_all_Weight.vol");
+////    FourierWeights.clear();
+////    remove((fn_fsc + "_1_Weights.vol").c_str());
+////    remove((fn_fsc + "_2_Weights.vol").c_str());
+////
+////    // merge intermediate fourier
+////    allocateVoutFourier();
+////    Image< std::complex<double> > auxFourierVolume;
+////    auxFourierVolume().alias( VoutFourier );
+////    auxFourierVolume.sumWithFile(fn_fsc + "_1_Fourier.vol");
+////    auxFourierVolume.sumWithFile(fn_fsc + "_2_Fourier.vol");
+////    auxFourierVolume.write((std::string)fn_fsc + "_all_Fourier.vol");
+////
+////	VoutFourier.clear();
+////    remove((fn_fsc + "_1_Fourier.vol").c_str());
+////    remove((fn_fsc + "_2_Fourier.vol").c_str());
+////}
+//
+//void ProgRecFourier::loadImages(int startIndex, int endIndex) {
+//	loadThread.startImageIndex = startIndex;
+//	loadThread.endImageIndex = endIndex;
+//	std::cout << "start index: " << loadThread.startImageIndex << std::endl;
+//	std::cout << "end index: " << loadThread.endImageIndex << std::endl;
+//	// Awaking sleeping threads
+//	barrier_wait( &barrier );
+//}
+//
+//void ProgRecFourier::swapLoadBuffers() {
+//	std::cout << "swapping buffers" << std::endl;
+//	ProjectionData* tmp = loadThread.buffer2;
+//	loadThread.buffer2 = loadThread.buffer1;
+//	loadThread.buffer1 = tmp;
+//}
+//
+//void ProgRecFourier::processBuffer(ProjectionData* buffer)
+//{
+//	int repaint = (int)ceil((double)SF.size()/60);
+//	for ( int i = 0 ; i < bufferSize; i++ ) {
+//		ProjectionData* projData = &buffer[i];
+//		Array2D<std::complex<float> >* myPaddedFourier = projData->img;
+//		if (projData->skip) {
+//			std::cout << "skipping img: " << projData->imgIndex << " (index " << i << std::endl; //", " << myPaddedFourier << ")" << std::endl;
+//			continue;
+//		}
+//		std::cout << "processing img: " << projData->imgIndex << " (index " << i << std::endl;//", " << myPaddedFourier << ")" << std::endl;
+//		if (verbose && projData->imgIndex%repaint==0) {
+//			progress_bar(projData->imgIndex);
+//		}
+//
+//		Matrix2D<double> *Ainv = &projData->localAInv;
+////		 Determine how many rows of the fourier
+////		 transform are of interest for us. This is because
+////		 the user can avoid to explore at certain resolutions
+////		size_t conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+////		conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+////		size_t size = 2 * conserveRows;
+////		std::cout << "cR " << conserveRows << " size " << size << std::endl;
+////		std::cout << "X " << maxVolumeIndexX << " Y " << maxVolumeIndexYZ << std::endl;
+//
+//
+//		// Loop over all symmetries
+//		for (size_t isym = 0; isym < R_repository.size(); isym++)
+//		{
+////			rowsProcessed = 0;
+//
+//			// Compute the coordinate axes of the symmetrized projection
+//			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
+//			Matrix2D<double> A_SLInv=A_SL.inv();
+//			float transf[3][3];
+//			float transfInv[3][3];
+//			convert(A_SL, transf);
+//			convert(A_SLInv, transfInv);
+//
+////			std::cout << "about to calculate" << std::endl;
+//			processProjection(//tempVolume, tempWeights, size,
+//					projData, transf, transfInv);
+////			std::cout << "calculation done" << std::endl;
+//		}
+//
+////		if ( data->imgIndex == FSCIndex && saveFSC )
+////		{
+////			// get rid of the replicated data
+////			mirror(outputVolume, outputWeight, size);
+////			crop(outputVolume, size);
+////			crop(outputWeight, size);
+////			outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+////			outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+////			saveIntermediateFSC(outputVolume, outputWeight, size,
+////					(std::string)fn_fsc + "_1_Weights.vol",
+////					(std::string) fn_fsc + "_1_Fourier.vol",
+////			FileName((std::string) fn_fsc + "_1_recons.vol"),
+////				true);
+////			// reset values
+////			for(int z = 0; z <= size; z++) // FIXME use memset
+////				for(int y = 0; y <= size; y++)
+////					for(int x = 0; z <=size; x++) {
+////						outputVolume[z][y][x] = outputWeight[z][y][x] = 0;
+////					}
+////		}
+//		std::cout << "about to release" << std::endl;
+//		delete projData->img;
+//		projData->img = 0;
+//	}
+//}
+//
+////#define DEBUG
+//void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex)
+//{
+//    MultidimArray< std::complex<double> > *paddedFourier;
+//
+//    std::cout << "process " << firstImageIndex << "-" << lastImageIndex << std::endl;
+//
+//    std::cout << blobTableSqrt.size() << std::endl;
+//
+//    int imgno = 0;
+//
+//    // This index tells when to save work for later FSC usage
+////    int FSCIndex = (firstImageIndex + lastImageIndex)/2;
+//
+//    // Index of the image that has just been processed. Used for
+//    // FSC purposes
+////    int current_index;
+//
+//
+//    int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
+//
+//	// the +1 is to prevent outOfBound reading when mirroring the result (later)
+//    if (NULL == tempVolume) {
+//    	allocate(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//    }
+//    if (NULL == tempWeights) {
+//    	allocate(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//    }
+//
+//    int startLoadIndex = firstImageIndex;
+//
+//
+//    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
+////	// Awaking sleeping threads
+////	barrier_wait( &barrier );
+//	// here each thread is reading a different image and compute fft
+//	// Threads are working now, wait for them to finish
+//	// processing current projection
+//	barrier_wait( &barrier );
+//    for(int i = 0; i < loops; i++) {
+//    	swapLoadBuffers();
+//    	startLoadIndex += bufferSize;
+//    	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
+//    	// Awaking sleeping threads
+////		barrier_wait( &barrier );
+//    	processBuffer(loadThread.buffer2);
+//    	barrier_wait( &barrier );
+//    }
+//
+////    for(int a = 0; a < loops; a++)
+////    {
+////        threadOpCode = PRELOAD_IMAGE;
+////
+////        th_args[0].startImageIndex = a*batchSize;
+////        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
+////        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
+////        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+//////        for ( int nt = 0 ; nt < numThreads ; nt ++ )
+//////        {
+//////            if ( imgIndex <= lastImageIndex )
+//////            {
+//////                th_args[nt].imageIndex = imgIndex;
+////                th_args[0].reprocessFlag = reprocessFlag;
+//////                imgIndex++;
+//////            }
+//////            else
+//////            {
+//////                th_args[nt].imageIndex = -1;
+//////            }
+//////        }
+////
+////        // Awaking sleeping threads
+////        barrier_wait( &barrier );
+////        // here each thread is reading a different image and compute fft
+////        // Threads are working now, wait for them to finish
+////        // processing current projection
+////        barrier_wait( &barrier );
+////
+//////        // each threads have read a different image and now
+//////        // all the thread will work in a different part of a single image.
+//////        threadOpCode = PROCESS_IMAGE;
+////
+////        imgData* tmp = th_args[0].dataB;
+////        th_args[0].dataB = th_args[0].dataA;
+////        th_args[0].dataA = tmp;
+////        th_args[0].startImageIndex = ++a*batchSize;
+////        th_args[0].endImageIndex = std::min(lastImageIndex+1, th_args[0].startImageIndex+batchSize);
+////        std::cout << "start index: " << th_args[0].startImageIndex << std::endl;
+////        std::cout << "end index: " << th_args[0].endImageIndex << std::endl;
+////
+////        barrier_wait( &barrier ); // start loading to another buffer
+////
+////        for ( int b = 0 ; b < th_args[0].endImageIndex-th_args[0].startImageIndex ; b++ )
+////        {
+////        	imgData* data = &(th_args[0].dataB[b]);
+////        	if (data->skip) {
+////        		continue;
+////        	}
+//////            if ( th_args[nt].read == 2 )
+//////                processed = true;
+//////            else if ( th_args[nt].read == 1 )
+//////            {
+////                if (verbose && imgno++%repaint==0)
+////                    progress_bar(imgno);
+////
+//////                double weight = th_args[0].localweight;
+//////                paddedFourier = th_args[nt].localPaddedFourier;
+////                current_index = th_args[0].startImageIndex + b;
+////                std::cout << "processing img: " << current_index << " (index " << b << ")" << std::endl;
+////                Matrix2D<double> *Ainv = &data->localAInv;
+////
+////                //#define DEBUG22
+////#ifdef DEBUG22
+////
+////                {
+////                    static int ii=0;
+////                    if(ii%1==0)
+////                    {
+////                        FourierImage save22;
+////                        //save22()=*paddedFourier;
+////                        save22().alias(*paddedFourier);
+////                        save22.write((std::string) integerToString(ii)  + "_padded_fourier.spi");
+////                    }
+////                    ii++;
+////                }
+////#endif
+////                #undef DEBUG22
+////
+////                // Initialized just once
+//////                if ( statusArray == NULL )
+//////                {
+//////                    statusArray = (int *) malloc ( sizeof(int) * paddedFourier->ydim );
+//////                }
+////
+////                // Determine how many rows of the fourier
+////				// transform are of interest for us. This is because
+////				// the user can avoid to explore at certain resolutions
+////				conserveRows = (size_t) ceil((double) paddedImgSize * maxResolution * 2.0);
+////				conserveRows = (size_t) ceil((double) conserveRows / 2.0);
+////				size = 2 * conserveRows;
+////
+////				myPaddedFourier = data->img;
+////
+////                if (!initialized) {
+////                	initialized = true;
+////					// the +1 is to prevent outOfBound reading when mirroring the result (later)
+////					allocate(outputVolume, size+1, size+1, size+1);
+////					allocate(outputWeight, size+1, size+1, size+1);
+////                }
+////
+////                // Loop over all symmetries
+////                for (size_t isym = 0; isym < R_repository.size(); isym++)
+////                {
+////                    rowsProcessed = 0;
+////
+////					// Compute the coordinate axes of the symmetrized projection
+////					Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
+////					Matrix2D<double> A_SLInv=A_SL.inv();
+////					float transf[3][3];
+////					float transfInv[3][3];
+////					convert(A_SL, transf);
+////					convert(A_SLInv, transfInv);
+////
+//// ////////////////////////////////////////////////
+////
+////#if DEBUG_DUMP > 0
+////					std::cout << "Img " << imgIndex << " symmetry " << isym << std::endl;
+////                    if (isym > 0 || current_index != 1) {
+////                       	continue;
+////                    }
+////#endif
+////
+//////////////////////////////////////////////////////
+////
+//////                    // Fill the thread arguments for each thread
+//////                    for ( int th = 0 ; th < numThreads ; th ++ )
+//////                    {
+//////                        // Passing parameters to each thread
+//////                        th_args[th].symmetry = &A_SL;
+//////                        th_args[th].paddedFourier = paddedFourier;
+//////                        th_args[th].weight = weight;
+//////                        th_args[th].reprocessFlag = reprocessFlag;
+//////                    }
+//////
+//////                    // Init status array
+//////                    for (size_t i = 0 ; i < paddedFourier->ydim ; i ++ )
+//////                    {
+//////                        if ( i >= conserveRows && i < (paddedFourier->ydim-conserveRows))
+//////                        {
+//////                            // -2 means "discarded"
+//////                            statusArray[i] = -2;
+//////                            rowsProcessed++;
+//////                        }
+//////                        else
+//////                        {
+//////                            statusArray[i] = 0;
+//////                        }
+//////                    }
+////
+////					thirdAttempt(outputVolume, outputWeight, size,
+////							myPaddedFourier, conserveRows, size, transf, transfInv,
+////							blobTableSqrt, iDeltaSqrt, blob.radius);
+////
+//////                    // Awaking sleeping threads
+//////                    barrier_wait( &barrier );
+//////                    // Threads are working now, wait for them to finish
+//////                    // processing current projection
+//////                    barrier_wait( &barrier );
+////
+////                    //#define DEBUG2
+////#ifdef DEBUG2
+////
+////                    {
+////                        static int ii=0;
+////                        if(ii%1==0)
+////                        {
+////                            Image<double> save;
+////                            save().alias( FourierWeights );
+////                            save.write((std::string) integerToString(ii)  + "_1_Weights.vol");
+////
+////                            Image< std::complex<double> > save2;
+////                            save2().alias( VoutFourier );
+////                            save2.write((std::string) integerToString(ii)  + "_1_Fourier.vol");
+////                        }
+////                        ii++;
+////                    }
+////#endif
+////                    #undef DEBUG2
+////
+////                }
+////
+////                if ( current_index == FSCIndex && saveFSC )
+////                {
+////					// get rid of the replicated data
+////					mirror(outputVolume, outputWeight, size);
+////					crop(outputVolume, size);
+////					crop(outputWeight, size);
+////					outputVolume = applyBlob(outputVolume, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+////					outputWeight = applyBlob(outputWeight, size, blob.radius, blobTableSqrt, iDeltaSqrt);
+////					saveIntermediateFSC(outputVolume, outputWeight, size,
+////							(std::string)fn_fsc + "_1_Weights.vol",
+////							(std::string) fn_fsc + "_1_Fourier.vol",
+////							FileName((std::string) fn_fsc + "_1_recons.vol"),
+////							true);
+////					// reset values
+////					release(outputVolume, size+1, size+1);
+////					release(outputWeight, size+1, size+1);
+////					initialized = false;
+////                }
+////                release(myPaddedFourier, size);
+//////            }
+////        }
+////        barrier_wait( &barrier ); // wait till you loaded another buffer and process current
+////    }
+//
+//#if DEBUG_DUMP > 0
+//    std::cout << "about to mirror" << std::endl;
+//#endif
+//
+//
+//	delete[] loadThread.buffer1;
+//	delete[] loadThread.buffer2;
+//	loadThread.buffer1 = loadThread.buffer2 = NULL;
+//#if DEBUG_DUMP > 0
+//    std::cout << "releasing memory" << std::endl;
+//#endif
+////    blobTableSqrt.clear();
+//	std::cout << "done" << std::endl;
+//#if DEBUG_DUMP > 0
+//    print(VoutFourier, true);
+//    print(VoutFourier_muj, true);
+//#endif
+//}
+//
+////void ProgRecFourier::correctWeight()
+////{
+////    // If NiterWeight=0 then set the weights to one
+////	forceWeightSymmetry(FourierWeights);
+////    if (NiterWeight==0)
+////    {
+////        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+////        DIRECT_A3D_ELEM(FourierWeights, k,i,j)=1;
+////
+////    }
+////    else
+////    {
+////        // Temporary save the Fourier of the volume
+////        MultidimArray< std::complex<double> > VoutFourierTmp;
+////        VoutFourierTmp=VoutFourier;
+////        forceWeightSymmetry(FourierWeights);
+////        // Prepare the VoutFourier
+////        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+////        {
+////            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+////            if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
+////                ptrOut[0] = 1.0/DIRECT_A3D_ELEM(FourierWeights, k,i,j);
+////        }
+////
+////        for (int i=1;i<NiterWeight;i++)
+////        {
+////            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FourierWeights)
+////            A3D_ELEM(FourierWeights,k,i,j)=0;
+////            processImages(0, SF.size() - 1, !fn_fsc.empty(), true);
+////            forceWeightSymmetry(FourierWeights);
+////            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+////            {
+////                double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+////                if (fabs(A3D_ELEM(FourierWeights,k,i,j))>1e-3)
+////                    ptrOut[0] /= A3D_ELEM(FourierWeights,k,i,j);
+////            }
+////        }
+////        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(VoutFourier)
+////        {
+////            // Put back the weights to FourierWeights from temporary variable VoutFourier
+////            double *ptrOut=(double *)&(DIRECT_A3D_ELEM(VoutFourier, k,i,j));
+////            A3D_ELEM(FourierWeights,k,i,j) = ptrOut[0];
+////        }
+////        VoutFourier = VoutFourierTmp;
+////    }
+////}
+//
+//void ProgRecFourier::finishComputations( const FileName &out_name )
+//{
+//	std::cout << "finish comp" << std::endl;
+//	// get rid of the replicated data
+////	mirror(outputVolume, outputWeight, volumeSize);
+////	std::cout << "mirror done" << std::endl;
+////	crop(outputVolume, volumeSize);
+////	std::cout << "crop1 done" << std::endl;
+////	crop(outputWeight, volumeSize);
+////	std::cout << "crop2 done" << std::endl;
+//	#if DEBUG_DUMP > 0
+//	    std::cout << "about to apply blob" << std::endl;
+//	#endif
+//	if (useFast) {
+//		tempVolume = applyBlob(tempVolume, blob.radius, blobTableSqrt, iDeltaSqrt);
+//		std::cout << "applyBlob1 done" << std::endl;
+//		tempWeights = applyBlob(tempWeights, blob.radius, blobTableSqrt, iDeltaSqrt);
+//		std::cout << "applyBlob2 done" << std::endl;
+//	}
+//
+//	//    if( saveFSC ) {
+//	//		saveFinalFSC(outputVolume, outputWeight, size);
+//	//	}
+//
+//	forceHermitianSymmetry();
+//	processWeights();
+//	std::cout << "processWeight done" << std::endl;
+//	release(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//	#if DEBUG_DUMP > 0
+//	    std::cout << "about to convert to expected format" << std::endl;
+//	#endif
+//	MultidimArray< std::complex<double> > VoutFourier;
+//	allocateVoutFourier(VoutFourier);
+//	std::cout << "allocating VoutFourier done" << std::endl;
+//	convertToExpectedSpace(tempVolume, maxVolumeIndexYZ, VoutFourier);
+//	std::cout << "convert done" << std::endl;
+//	release(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+//
+////	allocateFourierWeights();
+////	convertToExpectedSpace(outputWeight, volumeSize, FourierWeights);
+//
+//
+//
+//
+//    //#define DEBUG_VOL
+//#ifdef DEBUG_VOL
+//    {
+//        VolumeXmipp save;
+//        save().alias( FourierWeights );
+//        save.write((std::string) fn_out + "Weights.vol");
+//
+//        FourierVolume save2;
+//        save2().alias( VoutFourier );
+//        save2.write((std::string) fn_out + "FourierVol.vol");
+//    }
+//#endif
+//
+//    // Enforce symmetry in the Fourier values as well as the weights
+//    // Sjors 19aug10 enforceHermitianSymmetry first checks ndim...
+//    // Output volume
+//    Image<double> Vout;
+//    Vout().initZeros(paddedImgSize,paddedImgSize,paddedImgSize);
+//    FourierTransformer transformerVol;
+//    transformerVol.setThreadsNumber(2); // use just main and 'loading' thread
+//    transformerVol.fReal = &(Vout.data);
+//    transformerVol.setFourierAlias(VoutFourier);
+//    transformerVol.recomputePlanR2C();
+//    std::cout << "recompute plan done" << std::endl;
+////    transformerVol.enforceHermitianSymmetry();
+//    //forceWeightSymmetry(preFourierWeights);
+//
+//    // Tell threads what to do
+//    //#define DEBUG_VOL1
+//#ifdef DEBUG_VOL1
+//
+//    {
+//        Image<double> save;
+//        save().alias( FourierWeights );
+//        save.write((std::string) fn_out + "hermiticWeights.vol");
+//
+//        Image< std::complex<double> > save2;
+//        save2().alias( VoutFourier );
+//        save2.write((std::string) fn_out + "hermiticFourierVol.vol");
+//    }
+//#endif
+////    threadOpCode = PROCESS_WEIGHTS;
+////    // Awake threads
+////    barrier_wait( &barrier );
+////    // Threads are working now, wait for them to finish
+////    barrier_wait( &barrier );
+//
+//    transformerVol.inverseFourierTransform();
+//    std::cout << "inverse done" << std::endl;
+//    transformerVol.clear();
+//    std::cout << "clear done" << std::endl;
+//    CenterFFT(Vout(),false);
+//    std::cout << "center done" << std::endl;
+//
+//    // Correct by the Fourier transform of the blob
+//    Vout().setXmippOrigin();
+//    Vout().selfWindow(FIRST_XMIPP_INDEX(imgSize),FIRST_XMIPP_INDEX(imgSize),
+//                      FIRST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize),
+//                      LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
+//    double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
+//    pad_relation = (pad_relation * pad_relation * pad_relation);
+//
+//    MultidimArray<double> &mVout=Vout();
+//    double ipad_relation=1.0/pad_relation;
+//    double meanFactor2=0;
+//    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
+//    {
+//        double radius=sqrt((double)(k*k+i*i+j*j));
+//        double aux=radius*iDeltaFourier;
+//        double factor = Fourier_blob_table(ROUND(aux));
+//        double factor2=(pow(Sinc(radius/(2*(imgSize))),2));
+////        if (NiterWeight!=0)
+////        {
+//            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor2*factor);
+//            meanFactor2+=factor2;
+////        }
+////        else
+////            A3D_ELEM(mVout,k,i,j) /= (ipad_relation*factor);
+//    }
+////    if (NiterWeight!=0)
+//    {
+//        meanFactor2/=MULTIDIM_SIZE(mVout);
+//        FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
+//        A3D_ELEM(mVout,k,i,j) *= meanFactor2;
+//    }
+//    std::cout << "about to write" << std::endl;
+//    Vout.write(out_name);
+//    std::cout << "write done" << std::endl;
+//    Vout.clear();
+//    std::cout << "clear done" << std::endl;
+//}
+//
+//void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
+//{
+//    this->fn_in = fn_in;
+//    this->fn_out = fn_out;
+//}
+//
+////void ProgRecFourier::forceWeightSymmetry(MultidimArray<double> &FourierWeights)
+////{
+////    int yHalf=YSIZE(FourierWeights)/2;
+////    if (YSIZE(FourierWeights)%2==0)
+////        yHalf--;
+////    int zHalf=ZSIZE(FourierWeights)/2;
+////    if (ZSIZE(FourierWeights)%2==0)
+////        zHalf--;
+////    int zsize=(int)ZSIZE(FourierWeights);
+////    int zsize_1=zsize-1;
+////    int ysize_1=(int)YSIZE(FourierWeights)-1;
+////    for (int k=0; k<zsize; k++)
+////    {
+////        int ksym=intWRAP(-k,0,zsize_1);
+////        for (int i=1; i<=yHalf; i++)
+////        {
+////            int isym=intWRAP(-i,0,ysize_1);
+////            double mean=0.5*(
+////                            DIRECT_A3D_ELEM(FourierWeights,k,i,0)+
+////                            DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0));
+////            DIRECT_A3D_ELEM(FourierWeights,k,i,0)=
+////                DIRECT_A3D_ELEM(FourierWeights,ksym,isym,0)=mean;
+////        }
+////    }
+////    for (int k=1; k<=zHalf; k++)
+////    {
+////        int ksym=intWRAP(-k,0,zsize_1);
+////        double mean=0.5*(
+////                        DIRECT_A3D_ELEM(FourierWeights,k,0,0)+
+////                        DIRECT_A3D_ELEM(FourierWeights,ksym,0,0));
+////        DIRECT_A3D_ELEM(FourierWeights,k,0,0)=
+////            DIRECT_A3D_ELEM(FourierWeights,ksym,0,0)=mean;
+////    }
+////}
