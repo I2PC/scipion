@@ -207,7 +207,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     
         # Load previously done items (from text file)
         doneList = self._readDoneList()
-    
+
         # Check for newly done items
         ctfListId = self._readtCtfId()
     
@@ -221,16 +221,15 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         self.finished = (self.isStreamClosed == Set.STREAM_CLOSED
                          and allDone == len(self.listOfCtf))
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
-    
+
+
         # reading the outputs
         ctfSet = self._loadOutputSet(em.SetOfCTF, 'ctfs.sqlite')
         micSet = self._loadOutputSet(em.SetOfMicrographs, 'micrographs.sqlite')
 
-        #AJ new subsets of mics with accepted and discarded ctfs
-        micSetDiscarded = self._loadSecondaryOutputSet(em.SetOfMicrographs,
+        #AJ new subset of mics with discarded ctfs
+        micSetDiscarded = self._loadOutputSet(em.SetOfMicrographs,
                                              'micrographsDiscarded.sqlite')
-        micSetAccepted = self._loadSecondaryOutputSet(em.SetOfMicrographs,
-                                             'micrographsAccepted.sqlite')
 
 
         if newDone:
@@ -238,22 +237,22 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             for ctfId in newDone:
                 ctf = inputCtfSet[ctfId].clone()
                 mic = ctf.getMicrograph().clone()
-        
+
                 ctf.setEnabled(self._getEnable(ctfId))
                 mic.setEnabled(self._getEnable(ctfId))
-        
-                ctfSet.append(ctf)
-                micSet.append(mic)
-                # AJ new subsets of mics with accepted and discarded ctfs
-                if(mic.isEnabled()):
-                    micSetAccepted.append(mic)
+
+                if (mic.isEnabled()):
+                    ctfSet.append(ctf)
+                    micSet.append(mic)
                 else:
                     micSetDiscarded.append(mic)
+
     
             self._writeDoneList(newDone)
             inputCtfSet.close()
 
         elif not self.finished:
+            print("en el elif")
             # If we are not finished and no new output have been produced
             # it does not make sense to proceed and updated the outputs
             # so we exit from the function here
@@ -262,9 +261,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     
         self._updateOutputSet('outputCTF', ctfSet, streamMode)
         self._updateOutputSet('outputMicrograph', micSet, streamMode)
-        # AJ new subsets of mics with accepted and discarded ctfs
-        self._updateOutputSet('outputMicrographAccepted',
-                              micSetAccepted, streamMode)
+        # AJ new subset of mics with discarded ctfs
         self._updateOutputSet('outputMicrographDiscarded',
                               micSetDiscarded, streamMode)
     
@@ -276,21 +273,16 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             self._defineSourceRelation(self.inputCTF, ctfSet)
             self._defineCtfRelation(micSet, ctfSet)
 
-            # AJ new subsets of mics with accepted and discarded ctfs
-            self._defineSourceRelation(self.inputCTF.get().getMicrographs(),
-                                       micSetAccepted)
+            # AJ new subset of mics with discarded ctfs
             self._defineSourceRelation(self.inputCTF.get().getMicrographs(),
                                        micSetDiscarded)
-            self._defineSourceRelation(ctfSet, micSetAccepted)
             self._defineSourceRelation(ctfSet, micSetDiscarded)
-            self._defineCtfRelation(micSetAccepted, ctfSet)
             self._defineCtfRelation(micSetDiscarded, ctfSet)
         else:
             ctfSet.close()
             micSet.close()
-            # AJ new subsets of mics with accepted and discarded ctfs
+            # AJ new subset of mics with discarded ctfs
             micSetDiscarded.close()
-            micSetAccepted.close()
 
     
         if self.finished:  # Unlock createOutputStep if finished all jobs
@@ -300,9 +292,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
     
         ctfSet.close()
         micSet.close()
-        # AJ new subsets of mics with accepted and discarded ctfs
+        # AJ new subset of mics with discarded ctfs
         micSetDiscarded.close()
-        micSetAccepted.close()
+
 
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
@@ -382,8 +374,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             yield ctf
 
     def _getCtfResol(self, ctf):
-        # this is an awful hack to read freq either from ctffid/gctf or xmipp
-        # labels assigned to max resolution are different
         if ctf.hasAttribute('_ctffind4_ctfResolution'):
             return ctf._ctffind4_ctfResolution.get(), False
         elif ctf.hasAttribute('_gctf_ctfResolution'):
@@ -441,6 +431,11 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
         if exists(setFile):
             outputSet = SetClass(filename=setFile)
+            if(outputSet.__len__() is 0):
+                pwutils.path.cleanPath(setFile)
+
+        if exists(setFile):
+            outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
         else:
@@ -456,31 +451,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         
         return outputSet
 
-    def _loadSecondaryOutputSet(self, SetClass, baseName):
-        """
-        Load the output set if it exists or create a new one.
-        """
-        setFile = self._getPath(baseName)
-
-        if exists(setFile):
-            outputSet = SetClass(filename=setFile)
-            if(outputSet.__len__() is not 0):
-                outputSet.loadAllProperties()
-                outputSet.enableAppend()
-        else:
-            outputSet = SetClass(filename=setFile)
-            outputSet.setStreamState(outputSet.STREAM_OPEN)
-
-        micSet = self.inputCTF.get().getMicrographs()
-
-        if (isinstance(outputSet, em.SetOfMicrographs)
-            and (outputSet.__len__() is not 0)):
-            outputSet.copyInfo(micSet)
-        elif (isinstance(outputSet, em.SetOfCTF)
-              and (outputSet.__len__() is not 0)):
-            outputSet.setMicrographs(micSet)
-
-        return outputSet
 
     def _readtCtfId(self):
         fn = self._getCtfSelecFile()
