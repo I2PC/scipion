@@ -133,17 +133,17 @@ class ProtMonitorSummary(ProtMonitor):
             finished = False
             try:
                 if ctfMonitor is not None:
-                    # FIXME: finished should be True if all monitored protocols
-                    # are finished, failed or aborted
-                    finished = ctfMonitor.step()
+                    # Call ctf monitor step
+                    ctfMonitor.step()
+
+                if movieGainMonitor is not None:
+                    # Call movie gain step
+                    movieGainMonitor.step()
 
                 # sysmonitor watches all input protocols so
                 # when sysmonitor done we done
                 finished = sysMonitor.step()
 
-                if movieGainMonitor is not None:
-                    finished = movieGainMonitor.step()
-                    
                 reportHtml.generate(finished)
             except Exception as ex:
                 print("An error happened: %s" % ex)
