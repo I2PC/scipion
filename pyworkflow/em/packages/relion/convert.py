@@ -421,8 +421,6 @@ def rowToCoordinate(coordRow):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
 
-        coordRow.printDict()
-
         micName = None
 
         if coordRow.hasLabel(md.RLN_MICROGRAPH_ID):
