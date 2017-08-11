@@ -92,8 +92,6 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=allMicSteps)
 
-
-
     #--------------------------- STEPS functions -------------------------------
     def _preprocessMicrographRow(self, img, imgRow):
         # Temporarly convert the few micrographs to tmp and make sure
@@ -526,6 +524,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                 self._deleteChild('outputMicrographs', self.outputMicrographs)
 
         coordSet = self._createSetOfCoordinates(micSet)
+
         if self.useInputReferences():
             boxSize = self.getInputReferences().getDim()[0]
         else:

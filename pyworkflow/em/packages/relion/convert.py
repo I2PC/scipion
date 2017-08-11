@@ -420,12 +420,22 @@ def rowToCoordinate(coordRow):
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
+
+        coordRow.printDict()
+
+        micName = None
+
         if coordRow.hasLabel(md.RLN_MICROGRAPH_ID):
-            coord.setMicId(int(coordRow.getValue(md.RLN_MICROGRAPH_ID)))
+            micId = int(coordRow.getValue(md.RLN_MICROGRAPH_ID))
+            coord.setMicId(micId)
+            # If RLN_MICROGRAPH_NAME is not present, use the id as a name
+            micName = micId
+
         if coordRow.hasLabel(md.RLN_MICROGRAPH_NAME):
-            coord.setMicName(str(coordRow.getValue(md.RLN_MICROGRAPH_NAME)))
-        else:
-            coord.setMicName(int(coordRow.getValue(md.RLN_MICROGRAPH_ID)))
+            micName = coordRow.getValue(md.RLN_MICROGRAPH_NAME)
+
+        coord.setMicName(micName)
+
     else:
         coord = None
         
@@ -887,8 +897,10 @@ def readSetOfCoordinates(coordSet, coordFiles):
     micSet = coordSet.getMicrographs()
     
     for mic, coordFn in izip(micSet, coordFiles):
+
         if not os.path.exists(coordFn):
             print "WARNING: Missing coordinates star file: ", coordFn
+
         try:
             readCoordinates(mic, coordFn, coordSet)
         except Exception:
