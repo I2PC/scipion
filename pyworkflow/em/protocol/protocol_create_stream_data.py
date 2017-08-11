@@ -32,12 +32,11 @@ import time
 import xmipp
 import random
 
-from pyworkflow import VERSION_1_1
+from pyworkflow import VERSION_1_2
 from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies
 from pyworkflow.protocol.constants import STEPS_PARALLEL
-from os.path import basename, exists
+from os.path import basename
 from pyworkflow.em.convert import ImageHandler
-from pyworkflow.utils.path import createLink
 
 SET_OF_MOVIES=0
 SET_OF_MICROGRAPHS=1
@@ -50,7 +49,7 @@ class ProtCreateStreamData(EMProtocol):
         randomMicrographs -> creates a micrograph with random values and aplies a reandom CTF
     """
     _label="create stream data"
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_2
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200
