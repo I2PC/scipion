@@ -91,6 +91,8 @@ class MonitorISPyB(Monitor):
         self.movies = OrderedDict()
         self.numberOfFrames = None
         self.imageGenerator = None
+        self.dcId = None
+        self.previousParams = None
         self.visit = kwargs['visit']
         self.dbconf = kwargs['dbconf']
         self.project = kwargs['project']
@@ -133,13 +135,21 @@ class MonitorISPyB(Monitor):
 
         dcParams = self.ispybDb.get_data_collection_params()
         dcParams.update(self.dataCollection)
-        dcId = self.ispybDb.update_data_collection(dcParams)
+        if self.dcId:
+            dcParams.update(self.dcParams)
+            dcParams['id'] = self.dcId
+            dcParams['endtime'] = datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+        else:
+            dcParams['starttime'] = datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+
+        self.dcId = self.ispybDb.update_data_collection(dcParams)
+        self.previousParams = dcParams
 
         for itemId in set(updateIds):
             self.info("item id: %s" % str(itemId))
 
             imgParams = self.ispybDb.get_image_params()
-            imgParams['parentid'] = dcId
+            imgParams['parentid'] = self.dcId
             imgParams.update(self.movies[itemId])
             ispybId = self.ispybDb.update_image(dcParams)
 
@@ -191,17 +201,16 @@ class MonitorISPyB(Monitor):
                 'numberOfPasses': self.numberOfFrames,
                 'magnification': movie.getMagnification(),
                 'totalAbsorbedDose': movie.getDoseInitial() + (movie.getDosePerFrame() * self.numberOfFrames),
-                'wavelength': convert_volts_to_debroglie_wavelength(movie.getVoltage()),
-                'starttime': datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S'),
-                'endtime': datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S'),
+                'wavelength': self.convert_volts_to_debroglie_wavelength(movie.getVoltage())
              }
             updateIds.append(movieId)
 
-    def convert_volts_to_debroglie_wavelength(self, volts):
+    @staticmethod
+    def convert_volts_to_debroglie_wavelength(volts):
         rest_mass_of_electron = float('9.109E-31')
         speed_of_light = 299792458
         pc_squared = volts * rest_mass_of_electron * speed_of_light * speed_of_light * 2
-        e_wavelength = tttt.sqrt(pc_squared)
+        pc = math.sqrt(pc_squared)
         hc = 1239.84
         return hc/pc
 
