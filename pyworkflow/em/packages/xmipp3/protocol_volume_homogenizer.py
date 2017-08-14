@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Mohsen Kazemi  (mkazemi@cnb.csic.es)
+# *              Javier Vargas  (javier.vargasbalbuena@mcgill.ca)  
 # *              
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -52,8 +53,17 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
         form.addParam('referenceVolume', params.PointerParam,
                  pointerClass='Volume',
                  label='Reference volume', 
-                 help="This is the volume that will be used as the reference "
-                      "in OF algorithm.")
+                 help="This is the volume that will be used as the reference"
+                      "in OF algorithm. If you want to use Gold-Standard"
+                      "provide here half1 map and in Advanced settings fill out" 
+                      "reference half2")
+        form.addParam('referenceVolume2', params.PointerParam,
+                 pointerClass='Volume',
+                 label='Reference volume Half2', 
+                 help="This is the volume that will be used as the reference"
+                      "in OF algorithm. If you want to use Gold-Standard"
+                      "provide here half1 map and in Advanced settings fill out" 
+                      "reference half2")
         form.addParam('inputVolume', params.PointerParam,
                  pointerClass='Volume',
                  label='Input volume', 
@@ -93,7 +103,7 @@ class XmippProtVolumeHomogenizer(ProtProcessParticles):
     def _insertAllSteps(self):            
         inputParticlesMd = self._getExtraPath('input_particles.xmd')
         inputParticles = self.inputParticles.get()
-        writeSetOfParticles(inputParticles, inputParticlesMd)        
+        writeSetOfParticles(inputParticles, inputParticlesMd)
         inputVol = self.inputVolume.get().getFileName()
         referenceVol = self.referenceVolume.get().getFileName()
         
