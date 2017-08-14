@@ -33,7 +33,6 @@ from convert import getEnviron
 _logo = "gctf_logo.png"
 
 from protocol_gctf import ProtGctf
-from viewer import ProtGctfViewer
 
 # Wizards
 from wizard import GctfCTFWizard
