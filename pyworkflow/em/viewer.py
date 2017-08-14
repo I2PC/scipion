@@ -206,7 +206,8 @@ class CtfView(ObjectView):
                   '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
                   '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
-    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_xmipp_ctfCritFirstZero',
+    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
+                    '_xmipp_ctfCritFirstZero',
                     ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidity',
                     '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq'
@@ -239,6 +240,10 @@ class CtfView(ObjectView):
         if first.hasAttribute('_ctffind4_ctfResolution'):
             import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
+
+        elif first.hasAttribute('_gctf_ctfResolution'):
+            from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,
