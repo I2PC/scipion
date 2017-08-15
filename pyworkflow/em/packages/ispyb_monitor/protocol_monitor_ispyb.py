@@ -30,6 +30,7 @@ from os.path import realpath, join, dirname, exists, basename, abspath
 import os
 from collections import OrderedDict
 import math
+from datetime import datetime
 
 import pyworkflow.utils as pwutils
 import pyworkflow.protocol.params as params
@@ -39,7 +40,6 @@ from pyworkflow.em.protocol import ProtMonitor, Monitor, PrintNotifier
 from pyworkflow.em.protocol import ProtImportMovies, ProtAlignMovies, ProtCTFMicrographs
 from pyworkflow.gui import getPILImage
 from pyworkflow.protocol.constants import STATUS_RUNNING
-import datetime
 
 class ProtMonitorISPyB(ProtMonitor):
     """ Monitor to communicated with ISPyB system at Diamond.
@@ -136,22 +136,22 @@ class MonitorISPyB(Monitor):
         dcParams = self.ispybDb.get_data_collection_params()
         dcParams.update(self.dataCollection)
         if self.dcId:
-            dcParams.update(self.dcParams)
+            dcParams.update(self.previousParams)
             dcParams['id'] = self.dcId
-            dcParams['endtime'] = datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+            dcParams['endtime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         else:
-            dcParams['starttime'] = datetime.strptime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+            dcParams['starttime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
 
+        self.info("writing datacollection: %s" + str(dcParams))
         self.dcId = self.ispybDb.update_data_collection(dcParams)
         self.previousParams = dcParams
 
         for itemId in set(updateIds):
-            self.info("item id: %s" % str(itemId))
-
             imgParams = self.ispybDb.get_image_params()
             imgParams['parentid'] = self.dcId
             imgParams.update(self.movies[itemId])
-            ispybId = self.ispybDb.update_image(dcParams)
+            self.info("writing image: %s" + str(imgParams))
+            ispybId = self.ispybDb.update_image(imgParams)
 
             # Use -1 as a trick when ISPyB is not really used and id is None
             self.movies[itemId]['id'] = ispybId or -1
