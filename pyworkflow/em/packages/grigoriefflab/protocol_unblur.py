@@ -177,7 +177,7 @@ class ProtUnblur(ProtAlignMovies):
 
     # --------------------------- INFO functions -------------------------------
     def _citations(self):
-        return []
+        return ['Campbell2012', 'Grant2015b']
 
     def _summary(self):
         return []
