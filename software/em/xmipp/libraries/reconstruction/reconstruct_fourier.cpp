@@ -677,14 +677,6 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float tr
 
 }
 
-inline void ProgRecFourier::convert(Matrix2D<double>& in, float out[3][3]) {
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			out[i][j] = in(i, j);
-		}
-	}
-}
-
 void ProgRecFourier::processProjection(
 	ProjectionData* projectionData,
 	const float transform[3][3],
@@ -997,8 +989,8 @@ void ProgRecFourier::processBuffer(ProjectionData* buffer)
 			Matrix2D<double> A_SLInv=A_SL.inv();
 			float transf[3][3];
 			float transfInv[3][3];
-			convert(A_SL, transf);
-			convert(A_SLInv, transfInv);
+			A_SL.convertTo(transf);
+			A_SLInv.convertTo(transfInv);
 			processProjection(//tempVolume, tempWeights, size,
 					projData, transf, transfInv);
 		}

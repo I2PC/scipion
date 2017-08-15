@@ -375,9 +375,6 @@ private:
     /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
     static void printAABB(Point3D* AABB);
 
-    /** Method will convert Matrix2D matrix to float[3][3] */
-    static void convert(Matrix2D<double>& in, float out[3][3]);
-
     /** Method to convert temporal space to expected (original) format */
     template<typename T, typename U>
     static void convertToExpectedSpace(T*** input, int size,

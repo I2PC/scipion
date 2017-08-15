@@ -92,6 +92,10 @@ public:
 	bool inRangeY(int y) const {
 		return (y >= 0) && (y < ySize);
 	}
+
+	T* getRow(int y) const {
+		return data[y];
+	}
 private:
 	int xSize;
 	int ySize;
