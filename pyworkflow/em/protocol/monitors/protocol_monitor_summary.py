@@ -133,16 +133,20 @@ class ProtMonitorSummary(ProtMonitor):
             finished = False
             try:
                 if ctfMonitor is not None:
-                    # FIXME: finished should be True if all monitored protocols
-                    # are finished, failed or aborted
-                    finished = ctfMonitor.step()
+                    # Call ctf monitor step
+                    ctfMonitor.step()
+
                 if movieGainMonitor is not None:
-                    finished = movieGainMonitor.step()
-                sysMonitor.step()
+                    # Call movie gain step
+                    movieGainMonitor.step()
+
+                # sysmonitor watches all input protocols so
+                # when sysmonitor done we done
+                finished = sysMonitor.step()
+
                 reportHtml.generate(finished)
             except Exception as ex:
-                print "An error happened: %s" % ex
-            # Stop when the CTF monitor is done
+                print("An error happened: %s" % ex)
             return finished
 
         monitor.initLoop = initAll
@@ -203,11 +207,7 @@ class ProtMonitorSummary(ProtMonitor):
         return ctfMonitor
 
     def createSystemMonitor(self):
-        protocols = []
-        for protPointer in self.inputProtocols:
-            prot = protPointer.get()
-            prot.setProject(self.getProject())
-            protocols.append(prot)
+        protocols = self.getInputProtocols()
 
         sysMonitor = MonitorSystem(protocols,
                                    workingDir=self.workingDir.get(),

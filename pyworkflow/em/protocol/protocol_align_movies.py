@@ -567,6 +567,7 @@ class ProtAlignMovies(ProtProcessMovies):
                         outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
+        """ Generates a thumbnail of the input file"""
         outputFn = outputFn or self.getThumbnailFn(inputFn)
         args = "%s %s " % (inputFn, outputFn)
         args += "--fouriershrink %s --process normalize" % scaleFactor
@@ -576,6 +577,7 @@ class ProtAlignMovies(ProtProcessMovies):
         return outputFn
 
     def getThumbnailFn(self, inputFn):
+        """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
 
 
