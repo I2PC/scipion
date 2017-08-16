@@ -286,12 +286,12 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
         if (exists(self._getPath('ctfs.sqlite'))):
             self._updateOutputSet('outputCTF', ctfSet, streamMode)
-            self._updateOutputSet('outputMicrograph', micSet, streamMode)
+            self._updateOutputSet('outputMicrographs', micSet, streamMode)
         # AJ new subsets with discarded ctfs
         if (exists(self._getPath('ctfsDiscarded.sqlite'))):
-            self._updateOutputSet('outputCtfDiscarded',
+            self._updateOutputSet('outputCTFDiscarded',
                                   ctfSetDiscarded, streamMode)
-            self._updateOutputSet('outputMicrographDiscarded',
+            self._updateOutputSet('outputMicrographsDiscarded',
                                   micSetDiscarded, streamMode)
 
         if (exists(self._getPath('ctfs.sqlite'))):
