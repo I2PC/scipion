@@ -132,38 +132,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'the borders to be filled with the closest pixel '
                            'value available')
         
-        # TODO: Particle sorting is not possible to execute in streaming,
-        # so we should remove its parameters.
-        form.addParam('doSort', params.BooleanParam, default=True,
-                      label='Perform sort by statistics',
-                      help='Perform sort by statistics to compute a zscore '
-                           'for each particle.')
-
-        form.addParam('rejectionMethod', params.EnumParam,
-                      choices=['None','MaxZscore', 'Percentage'],
-                      default=REJECT_NONE, condition='doSort',
-                      display=params.EnumParam.DISPLAY_COMBO,
-                      label='Automatic particle rejection',
-                      expertLevel=LEVEL_ADVANCED,
-                      help='How to automatically reject particles. It can be: '
-                           '*None*: no rejection '
-                           '*MaxZscore*: reject a particle if its Zscore is '
-                           '             larger than this value), '
-                           '*Percentage*: reject a given percentage in each '
-                           '             one of the screening criteria).')
-
-        form.addParam('maxZscore', params.IntParam, default=3,
-                      expertLevel=LEVEL_ADVANCED,
-                      condition='doSort and rejectionMethod==%d' % REJECT_MAXZSCORE,
-                      label='Maximum Zscore',
-                      help='Maximum Zscore above which particles are rejected.')
-        
-        form.addParam('percentage', params.IntParam, default=5,
-                      expertLevel=LEVEL_ADVANCED,
-                      condition='rejectionMethod==%d' % REJECT_PERCENTAGE,
-                      label='Percentage (%)',
-                      help='Percentage of particles to reject')
-        
         form.addSection(label='Preprocess')
 
         form.addParam('doRemoveDust', params.BooleanParam, default=True,
@@ -509,7 +477,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
         scale = self.getBoxScale()
-
+        self.debug("Scale: %f" % scale)
         if self.notOne(scale):
             # If we need to scale the box, then we need to scale the coordinates
             getPos = lambda coord: (int(coord.getX() * scale),
@@ -607,12 +575,17 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                 pos = (row.getValue(md.MDL_XCOOR), row.getValue(md.MDL_YCOOR))
                 coord = coordDict.get(pos, None)
                 if coord is not None:
+                    # scale the coordinates according to particles dimension.
+                    coord.scale(self.getBoxScale())
                     p.copyObjId(coord)
                     p.setLocation(xmippToLocation(row.getValue(md.MDL_IMAGE)))
                     p.setCoordinate(coord)
                     p.setMicId(mic.getObjId())
                     p.setCTF(mic.getCTF())
-                    outputParts.append(p)
+                    # disabled particles (in metadata) should not add to the
+                    # final set
+                    if row.getValue(md.MDL_ENABLED) > 0:
+                        outputParts.append(p)
 
             # Release the list of coordinates for this micrograph since it
             # will not be longer needed

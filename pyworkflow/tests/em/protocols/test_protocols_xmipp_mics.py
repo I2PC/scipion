@@ -395,9 +395,11 @@ class TestXmippExtractParticles(TestXmippBase):
         compare(111)
         compare(7)        
         
-        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        self.assertIsNotNone(outputParts,
+                             "There was a problem generating the output.")
         self.assertEqual(outputParts.getSamplingRate(), samplingMics, 
-                         "Output sampling rate should be equal to input sampling rate.")
+                         "Output sampling rate should be equal to input "
+                         "sampling rate.")
         self._checkSamplingConsistency(outputParts)
 
     def testNoExtractBorders(self):
@@ -436,7 +438,8 @@ class TestXmippExtractParticles(TestXmippBase):
         self.assertIsNotNone(outputParts,
                              "There was a problem generating the output.")
         self.assertEqual(outputParts.getSamplingRate(), samplingMics,
-                         "Output sampling rate should be equal to input sampling rate.")
+                         "Output sampling rate should be equal to input "
+                         "sampling rate.")
         self.assertAlmostEquals(outputParts.getSize(), 399, delta=1)
         self._checkSamplingConsistency(outputParts)
 
@@ -452,7 +455,8 @@ class TestXmippExtractParticles(TestXmippBase):
                                        doFlip=False)
         # Get all the micrographs ids to validate that all particles
         # has the micId properly set
-        micsId = [mic.getObjId() for mic in self.protPP.outputCoordinates.getMicrographs()]
+        micsId = [mic.getObjId() for mic in
+                  self.protPP.outputCoordinates.getMicrographs()]
         
         protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
         protExtract.inputMicrographs.set(self.protImport.outputMicrographs)
@@ -465,7 +469,8 @@ class TestXmippExtractParticles(TestXmippBase):
         samplingFinal = self.protImport.outputMicrographs.getSamplingRate() * downFactor
         samplingMics = protExtract.inputMicrographs.get().getSamplingRate()
         factor = samplingFinal / samplingCoords
-        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        self.assertIsNotNone(outputParts,
+                             "There was a problem generating the output.")
         
         def compare(objId, delta=1.0):
             cx, cy = inputCoords[objId].getPosition()
@@ -527,87 +532,88 @@ class TestXmippExtractParticles(TestXmippBase):
         compareCTF(150, 2)
         compareCTF(300, 3)
         
-        self.assertIsNotNone(outputParts, "There was a problem generating the output.")
+        self.assertIsNotNone(outputParts,
+                             "There was a problem generating the output.")
         self.assertTrue(outputParts.hasCTF(), "Output does not have CTF.")
         self._checkSamplingConsistency(outputParts)
     
-    def testExtractSort(self):
-        print "Run extract particles with sort by statistics"
-        protExtract = self.newProtocol(XmippProtExtractParticles, 
-                                       boxSize=110, 
-                                       downsampleType=SAME_AS_PICKING,
-                                       doFlip=True, doSort=True,
-                                       doInvert=False,
-                                       rejectionMethod=1, maxZscore=2)
-        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.ctfRelations.set(self.protCTF.outputCTF)
-        protExtract.setObjLabel("extract-sort")
-        self.launchProtocol(protExtract)
- 
-        inputCoords = protExtract.inputCoordinates.get()
-        outputParts = protExtract.outputParticles 
-        
-        def compare(objId, delta=0.001):
-            cx, cy = inputCoords[objId].getPosition()
-            px, py = outputParts[objId].getCoordinate().getPosition()
-            micNameCoord = inputCoords[objId].getMicName()
-            micNamePart = outputParts[objId].getCoordinate().getMicName()
-            self.assertAlmostEquals(cx, px, delta=delta)
-            self.assertAlmostEquals(cy, py, delta=delta)
-            self.assertEqual(micNameCoord, micNamePart,
-                             "The micName should be %s and its %s"
-                             %(micNameCoord, micNamePart))
-
-        compare(228)
-        compare(83) 
-        
-        self.assertIsNotNone(outputParts, "There was a problem generating"
-                                          " the output.")
-        self.assertAlmostEquals(outputParts.getSize(), 267, delta=2)
-        self._checkSamplingConsistency(outputParts)
-        
-    def testExtractSortSmall(self):
-        print "Run extract small particles sort by statistics"
-        downFactor = 3.0
-        protExtract = self.newProtocol(XmippProtExtractParticles, 
-                                       boxSize=40, 
-                                       downsampleType=SAME_AS_PICKING,
-                                       doDownsample=True,
-                                       downFactor=downFactor,
-                                       doFlip=True, doSort=True,
-                                       doInvert=False,
-                                       rejectionMethod=1, maxZscore=2)
-        protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
-        protExtract.ctfRelations.set(self.protCTF.outputCTF)
-        protExtract.setObjLabel("extract-sort small")
-        self.launchProtocol(protExtract)
- 
-        inputCoords = protExtract.inputCoordinates.get()
-        outputParts = protExtract.outputParticles 
-        
-        def compare(objId, delta=1):
-            cx, cy = inputCoords[objId].getPosition()
-            px, py = outputParts[objId].getCoordinate().getPosition()
-            micNameCoord = inputCoords[objId].getMicName()
-            micNamePart = outputParts[objId].getCoordinate().getMicName()
-            self.assertAlmostEquals(cx/downFactor, px, delta=delta)
-            self.assertAlmostEquals(cy/downFactor, py, delta=delta)
-            self.assertEqual(micNameCoord, micNamePart,
-                             "The micName should be %s and its %s"
-                             %(micNameCoord, micNamePart))
-
-        compare(228)
-        compare(82) 
-         
-        self.assertIsNotNone(outputParts, "There was a problem generating"
-                                          " the output.")
-        self.assertAlmostEquals(outputParts.getSize(), 280, delta=2)
-        self._checkSamplingConsistency(outputParts)
-        
+    # def testExtractSort(self):
+    #     print "Run extract particles with sort by statistics"
+    #     protExtract = self.newProtocol(XmippProtExtractParticles,
+    #                                    boxSize=110,
+    #                                    downsampleType=SAME_AS_PICKING,
+    #                                    doFlip=True, doSort=True,
+    #                                    doInvert=False,
+    #                                    rejectionMethod=1, maxZscore=2)
+    #     protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+    #     protExtract.ctfRelations.set(self.protCTF.outputCTF)
+    #     protExtract.setObjLabel("extract-sort")
+    #     self.launchProtocol(protExtract)
+    #
+    #     inputCoords = protExtract.inputCoordinates.get()
+    #     outputParts = protExtract.outputParticles
+    #
+    #     def compare(objId, delta=0.001):
+    #         cx, cy = inputCoords[objId].getPosition()
+    #         px, py = outputParts[objId].getCoordinate().getPosition()
+    #         micNameCoord = inputCoords[objId].getMicName()
+    #         micNamePart = outputParts[objId].getCoordinate().getMicName()
+    #         self.assertAlmostEquals(cx, px, delta=delta)
+    #         self.assertAlmostEquals(cy, py, delta=delta)
+    #         self.assertEqual(micNameCoord, micNamePart,
+    #                          "The micName should be %s and its %s"
+    #                          %(micNameCoord, micNamePart))
+    #
+    #     compare(228)
+    #     compare(83)
+    #
+    #     self.assertIsNotNone(outputParts, "There was a problem generating"
+    #                                       " the output.")
+    #     self.assertAlmostEquals(outputParts.getSize(), 267, delta=2)
+    #     self._checkSamplingConsistency(outputParts)
+    #
+    # def testExtractSortSmall(self):
+    #     print "Run extract small particles sort by statistics"
+    #     downFactor = 3.0
+    #     protExtract = self.newProtocol(XmippProtExtractParticles,
+    #                                    boxSize=40,
+    #                                    downsampleType=SAME_AS_PICKING,
+    #                                    doDownsample=True,
+    #                                    downFactor=downFactor,
+    #                                    doFlip=True, doSort=True,
+    #                                    doInvert=False,
+    #                                    rejectionMethod=1, maxZscore=2)
+    #     protExtract.inputCoordinates.set(self.protPP.outputCoordinates)
+    #     protExtract.ctfRelations.set(self.protCTF.outputCTF)
+    #     protExtract.setObjLabel("extract-sort small")
+    #     self.launchProtocol(protExtract)
+    #
+    #     inputCoords = protExtract.inputCoordinates.get()
+    #     outputParts = protExtract.outputParticles
+    #
+    #     def compare(objId, delta=1):
+    #         cx, cy = inputCoords[objId].getPosition()
+    #         px, py = outputParts[objId].getCoordinate().getPosition()
+    #         micNameCoord = inputCoords[objId].getMicName()
+    #         micNamePart = outputParts[objId].getCoordinate().getMicName()
+    #         self.assertAlmostEquals(cx/downFactor, px, delta=delta)
+    #         self.assertAlmostEquals(cy/downFactor, py, delta=delta)
+    #         self.assertEqual(micNameCoord, micNamePart,
+    #                          "The micName should be %s and its %s"
+    #                          %(micNameCoord, micNamePart))
+    #
+    #     compare(228)
+    #     compare(82)
+    #
+    #     self.assertIsNotNone(outputParts, "There was a problem generating"
+    #                                       " the output.")
+    #     self.assertAlmostEquals(outputParts.getSize(), 280, delta=2)
+    #     self._checkSamplingConsistency(outputParts)
+    #
     def testAssignCTF(self):
         """ Test the particle extraction after importing another
         SetOfMicrographs with a different micName but same ids.
-        We will use assign-ctf protocol and extract from the 
+        We will use assign-ctf protocol and extract from the
         newly imported mics with the assigned CTF.
         For the other mics, we will just create symbolic links.
         """
@@ -631,7 +637,7 @@ class TestXmippExtractParticles(TestXmippBase):
         self.launchProtocol(protAssignCTF)
         downFactor = 3.0
         
-        protExtract = self.newProtocol(XmippProtExtractParticles, 
+        protExtract = self.newProtocol(XmippProtExtractParticles,
                                        boxSize=183, downsampleType=OTHER,
                                        doDownsample=True,
                                        downFactor=downFactor,
