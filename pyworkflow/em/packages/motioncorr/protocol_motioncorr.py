@@ -27,7 +27,7 @@
 # *
 # ******************************************************************************
 
-import os, sys
+import os
 from itertools import izip
 
 import pyworkflow.protocol.params as params
@@ -37,7 +37,8 @@ import pyworkflow.em as em
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.data import MovieAlignment
 from pyworkflow.em.packages.xmipp3.convert import writeShiftsMovieAlignment
-from pyworkflow.em.packages.grigoriefflab.convert import parseMagCorrInput
+from pyworkflow.em.packages.grigoriefflab.convert import (parseMagCorrInput,
+                                                          parseMagEstOutput)
 from pyworkflow.em.protocol import ProtAlignMovies
 from pyworkflow.gui.plotter import Plotter
 from convert import (MOTIONCORR_PATH, MOTIONCOR2_PATH, getVersion, getEnviron,
@@ -190,6 +191,18 @@ class ProtMotionCorr(ProtAlignMovies):
                                 'Also, make sure MOTIONCOR2_CUDA_LIB or '
                                 'CUDA_LIB point to cuda-8.0/lib path')
 
+        if getVersion('MOTIONCOR2') in ['1.0.0']:
+            form.addParam('defectFile', params.FileParam, allowsNull=True,
+                          expertLevel=cons.LEVEL_ADVANCED,
+                          condition='useMotioncor2',
+                          label='Camera defects file',
+                          help='Defect file that stores entries of defects on camera.\n'
+                               'Each entry corresponds to a rectangular region in image. '
+                               'The pixels in such a region are replaced by '
+                               'neighboring good pixel values. Each entry contains '
+                               '4 integers x, y, w, h representing the x, y '
+                               'coordinates, width, and height, respectively.')
+
         form.addParam('extraParams2', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED, condition='useMotioncor2',
                       label='Additional parameters',
@@ -308,16 +321,28 @@ class ProtMotionCorr(ProtAlignMovies):
                 argsDict['-InitDose'] = preExp
                 argsDict['-OutStack'] = 1 if self.doSaveMovie else 0
 
+            if getVersion('MOTIONCOR2') in ['1.0.0']:
+                if self.defectFile.get():
+                    argsDict['-DefectFile'] = self.defectFile.get()
+
             if self._supportsMagCorrection() and self.doMagCor:
                 if self.useEst:
                     inputEst = self.inputEst.get().getOutputLog()
-                    input_params = parseMagCorrInput(inputEst)
-                    # mag dist angle is inverted due to a different convention
-                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (input_params[1],
-                                                              input_params[2],
-                                                              -1 * input_params[0])
+                    if getVersion('MOTIONCOR2') == '01302017':
+                        input_params = parseMagCorrInput(inputEst)
+                        # this version uses stretch parameters as following:
+                        # 1/maj, 1/min, -angle
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (1.0 / input_params[1],
+                                                                  1.0 / input_params[2],
+                                                                  -1 * input_params[0])
+                    else:
+                        # While motioncor2 >=1.0.0 uses estimation params AS IS
+                        input_params = parseMagEstOutput(inputEst)
+                        argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (input_params[1],
+                                                                  input_params[2],
+                                                                  input_params[0])
                 else:
-                    argsDict['-Mag'] = '%0.2f %0.2f %0.2f' % (self.scaleMaj,
+                    argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj,
                                                               self.scaleMin,
                                                               self.angDist)
 

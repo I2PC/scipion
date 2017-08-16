@@ -45,6 +45,9 @@ public:
 	int Niter; // Number of iterations
 	double maxSigma, sigmaStep;
 	bool singleReference;
+	int frameStep;
+	FileName fnGain;
+	bool applyGain;
 public:
     void defineParams();
     void readParams();
