@@ -136,12 +136,34 @@ protected:
 	float*** tempWeights = NULL;
 
 	/**
+	 * 3D volume holding the cropped (without high frequencies) Fourier space.
+	 * Lowest frequencies are in the center, i.e. Fourier space creates a
+	 * sphere within a cube.
+	 * Valid for GPU, i.e. it is equivalent to tempVolume, which has been flattened
+	 * Each pair of represents a complex value
+	 */
+	float* tempVolumeGPU = NULL;
+
+	/**
+	 * 3D volume holding the weights of the Fourier coefficients stored
+	 * in tempVolume.
+	 * Valid for GPU, i.e. it is equivalent to tempWeights, which has been flattened
+	 */
+	float* tempWeightsGPU = NULL;
+
+
+	/**
 	 * Method will take temp spaces (containing complex conjugate values
 	 * in the 'right X side'), transfer them to 'left X side' and remove
 	 * the 'right X side'. As a result, the X dimension of the temp spaces
 	 * will be half of the original.
 	 */
     void mirrorAndCropTempSpaces();
+
+	/**
+	 * Method will fill temporal spaces with data stored at the GPU.
+	 */
+    void getGPUData();
 
     /**
      * Method will enforce Hermitian symmetry, i.e will remove make sure

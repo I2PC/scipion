@@ -125,6 +125,8 @@ void ProgRecFourierGPU::run()
     createLoadingThread();
     //Computing interpolated volume
     processImages(0, SF.size() - 1);
+    // Get data from GPU
+    getGPUData();
     // remove complex conjugate of the intermediate result
     mirrorAndCropTempSpaces();
     //Saving the volume
@@ -325,6 +327,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		Euler_angles2matrix(rot, tilt, psi, localA);
 
 		data->localAInv = localA.transpose();
+		data->localA = localA.transpose().inv();
 		data->img = cropAndShift(localPaddedFourier, parent);
 		data->imgIndex = imgIndex;
 		if (hasCTF) {
@@ -884,6 +887,29 @@ void ProgRecFourierGPU::convertToExpectedSpace(T*** input, int size,
     }
 }
 
+void ProgRecFourierGPU::getGPUData() {
+	if (NULL == tempVolume) {
+		allocate(tempVolume, maxVolumeIndexYZ + 1, maxVolumeIndexYZ + 1,
+				maxVolumeIndexYZ + 1);
+	}
+	if (NULL == tempWeights) {
+		allocate(tempWeights, maxVolumeIndexYZ + 1, maxVolumeIndexYZ + 1,
+				maxVolumeIndexYZ + 1);
+	}
+	copyTempSpaces(tempVolume, tempWeights, tempVolumeGPU, tempWeightsGPU, maxVolumeIndexYZ + 1);
+	releaseGPU(tempVolumeGPU);
+	releaseGPU(tempWeightsGPU);
+	for(int z = 0; z <= maxVolumeIndexYZ; z++) {
+		for(int y = 0; y <= maxVolumeIndexYZ; y++) {
+			for(int x = 0; x <= maxVolumeIndexX; x++) {
+				std::cout << tempVolume[z][y][x] << " ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+	}
+}
+
 void ProgRecFourierGPU::mirrorAndCropTempSpaces() {
 	maxVolumeIndexX = maxVolumeIndexYZ/2; // just half of the space is necessary, the rest is complex conjugate
 	mirrorAndCrop(tempWeights, &identity<float>);
@@ -1005,6 +1031,7 @@ void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
 	}
 }
 
+
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
 //	ProjectionData* d = new ProjectionData;
@@ -1025,26 +1052,40 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //		std::cout << (*d->img)(i, 0) << " ";
 //	}
 //	std::cout << std::endl;
-//
+
 //	copyProjectionData(d);
 //	return;
 
-	std::complex<float>* array = new std::complex<float>[num]();
-	a(array);
-	b();
-	b();
-	c(array);
+//	std::complex<float>* array = new std::complex<float>[num]();
+//	a(array);
+//	b();
+//	b();
+//	c(array);
+
+	maxVolumeIndexX = maxVolumeIndexYZ = 2;
+
+
 	int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
-    if (NULL == tempVolume) {
-    	allocate(tempVolume, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+
+    if (NULL == tempVolumeGPU) {
+    	allocateGPU(tempVolumeGPU, 2 * (maxVolumeIndexYZ+1));
     }
-    if (NULL == tempWeights) {
-    	allocate(tempWeights, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1, maxVolumeIndexYZ+1);
+    if (NULL == tempWeightsGPU) {
+    	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1);
     }
 
     int startLoadIndex = firstImageIndex;
+
+    /** Vector with R symmetry matrices */
+	MATRIX* symmetries = new MATRIX[R_repository.size()];
+	MATRIX* symmetriesInv = new MATRIX[R_repository.size()];
+	for (int i = 0; i < R_repository.size();i++) {
+		 R_repository.at(i).convertTo(symmetries[i]);
+		 R_repository.at(i).inv().convertTo(symmetriesInv[i]);
+	}
+
 
     loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 	barrier_wait( &barrier );
@@ -1052,9 +1093,14 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	swapLoadBuffers();
     	startLoadIndex += bufferSize;
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
-    	processBuffer(loadThread.buffer2);
+//    	processBuffer(loadThread.buffer2);
+//    	copyBuffer(loadThread.buffer2, bufferSize);
+    	processBufferGPU(tempVolumeGPU, tempWeightsGPU, loadThread.buffer2, (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1), bufferSize, symmetries, symmetriesInv, (int)R_repository.size());
     	barrier_wait( &barrier );
     }
+
+//    getTempSpaces(maxVolumeIndexYZ+1, tempVolume, tempWeights);
+
 	delete[] loadThread.buffer1;
 	delete[] loadThread.buffer2;
 	loadThread.buffer1 = loadThread.buffer2 = NULL;
