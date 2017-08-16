@@ -133,7 +133,7 @@ class TestCtfSelection(BaseTest):
         counter=1
 
         while not (protCTFSel2.hasAttribute('outputCTF') and
-                   protCTFSel2.hasAttribute('outputMicrograph')):
+                   protCTFSel2.hasAttribute('outputMicrographs')):
 
             time.sleep(2)
             protCTFSel2 = self._updateProtocol(protCTFSel2)
