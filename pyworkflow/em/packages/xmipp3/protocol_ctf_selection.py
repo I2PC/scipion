@@ -205,10 +205,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
     def _checkNewOutput(self):
         """ Check for already selected CTF and update the output set. """
-        print("En checknewoutput")
-    
+
         # Load previously done items (from text file)
-        doneList = self._readDoneList()
         doneListDiscarded = self._readDoneListDiscarded()
         doneListAccepted = self._readDoneListAccepted()
 
@@ -231,23 +229,8 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                          and allDone == len(self.listOfCtf))
         streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
 
-        print("finish ", self.finished)
-
-        print("ctfListIdAccepted ",ctfListIdAccepted)
-        print("ctfListIdDiscarded ", ctfListIdDiscarded)
-        print("doneListAccepted ",doneListAccepted)
-        print("doneListDiscarded ", doneListDiscarded)
-        print("newDoneAccepted ",newDoneAccepted)
-        print("newDoneDiscarded ", newDoneDiscarded)
-
-        if (exists(self._getPath('micrographsDiscarded.sqlite'))):
-            print("Ya estoy aquiiiiiii")
 
         # reading the outputs
-        if(exists(self._getPath('ctfs.sqlite'))):
-            print("Existe ctfs")
-        else:
-            print("NO existe ctfs")
         if (len(doneListAccepted)>0 or len(newDoneAccepted)>0):
             ctfSet = self._loadOutputSet(em.SetOfCTF, 'ctfs.sqlite')
             micSet = self._loadOutputSet(em.SetOfMicrographs,
@@ -255,10 +238,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
 
         #AJ new subsets with discarded ctfs
-        if (exists(self._getPath('ctfsDiscarded.sqlite'))):
-            print("Existe ctfsDiscarded")
-        else:
-            print("NO existe ctfsDiscarded")
         if (len(doneListDiscarded)>0 or len(newDoneDiscarded)>0):
             ctfSetDiscarded = self._loadOutputSet(em.SetOfCTF,
                                                   'ctfsDiscarded.sqlite')
@@ -266,11 +245,9 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                                                   'micrographsDiscarded.sqlite')
 
 
-
         if newDoneAccepted:
             inputCtfSet = self._loadInputCtfSet()
             for ctfId in newDoneAccepted:
-                print("inputCtfSet[ctfId] ", inputCtfSet[ctfId])
                 ctf = inputCtfSet[ctfId].clone()
                 mic = ctf.getMicrograph().clone()
 
@@ -281,7 +258,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 micSet.append(mic)
                 self._writeDoneListAccepted(ctfId)
 
-            self._writeDoneList(newDoneAccepted)
             inputCtfSet.close()
 
         if newDoneDiscarded:
@@ -297,7 +273,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 ctfSetDiscarded.append(ctf)
                 self._writeDoneListDiscarded(ctfId)
 
-            self._writeDoneList(newDoneDiscarded)
             inputCtfSet.close()
 
 
@@ -309,8 +284,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             return
 
 
-
-        print("streamMode ",streamMode)
         if (exists(self._getPath('ctfs.sqlite'))):
             self._updateOutputSet('outputCTF', ctfSet, streamMode)
             self._updateOutputSet('outputMicrograph', micSet, streamMode)
@@ -402,15 +375,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                 (ctf._xmipp_ctfCritNonAstigmaticValidty.get()>maxNonAstigmatic))
 
         """ Write to a text file the items that have been done. """
-        #fn = self._getCtfSelecFile()
-        #with open(fn, 'a') as f:
-        #    if firstCondition or secondCondition:
-        #        f.write('%d F\n' % ctf.getObjId())
-        #    else:
-        #        if (ctf.isEnabled()):
-        #            f.write('%d T\n' % ctf.getObjId())
-        #        else:
-        #            f.write('%d F\n' % ctf.getObjId())
         if firstCondition or secondCondition:
             fn = self._getCtfSelecFileDiscarded()
             with open(fn, 'a') as f:
@@ -446,13 +410,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         return message
 
     #--------------------------- UTILS functions --------------------------------
-    def _iterCTFs(self, inputCtfs=None):
-        """ Iterate over setOfCtf and yield a CTFModel"""
-        if inputCtfs is None:
-            inputCtfs = self.inputCTF
-        for ctf in inputCtfs:
-            yield ctf
-
     def _getCtfResol(self, ctf):
         if ctf.hasAttribute('_ctffind4_ctfResolution'):
             return ctf._ctffind4_ctfResolution.get(), False
@@ -464,23 +421,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             # if 0, the protocol does not select by ctf resolution.
             return 0
     
-    def _getCtfSet(self, path):
-        return em.SetOfCTF(filename=path)
-
-    def _getMicSet(self, path):
-        return em.SetOfMicrographs(filename=path)
-
-    def _readDoneList(self):
-        """ Read from a text file the id's of the items that have been done. """
-        doneFile = self._getAllDone()
-        doneList = []
-        # Check what items have been previously done
-        if exists(doneFile):
-            with open(doneFile) as f:
-                doneList += [int(line.strip()) for line in f]
-
-        return doneList
-
     def _readDoneListDiscarded(self):
         """ Read from a text file the id's of the items that have been done. """
         DiscardedFile = self._getDiscardedDone()
@@ -503,13 +443,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
 
         return AcceptedList
 
-    def _writeDoneList(self, ctfIdList):
-        """ Write to a text file the items that have been done. """
-        doneFile = self._getAllDone()
-        with open(doneFile, 'a') as f:
-            for ctfId in ctfIdList:
-                f.write('%d\n' % ctfId)
-
     def _writeDoneListDiscarded(self, ctfId):
         """ Write to a text file the items that have been done. """
         DiscardedFile = self._getDiscardedDone()
@@ -522,17 +455,11 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         with open(AcceptedFile, 'a') as f:
             f.write('%d\n' % ctfId)
 
-    def _getAllDone(self):
-        return self._getExtraPath('DONE_all.TXT')
-
     def _getDiscardedDone(self):
         return self._getExtraPath('DONE_discarded.TXT')
 
     def _getAcceptedDone(self):
         return self._getExtraPath('DONE_accepted.TXT')
-
-    def _getCtfSelecFile(self):
-        return self._getExtraPath('selection-ctf.txt')
 
     def _getCtfSelecFileAccepted(self):
         return self._getExtraPath('selection-ctf-accepted.txt')
@@ -553,21 +480,17 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
         Load the output set if it exists or create a new one.
         """
         setFile = self._getPath(baseName)
-        print(setFile)
 
         if exists(setFile):
             outputSet = SetClass(filename=setFile)
             if(outputSet.__len__() is 0):
-                print("NOOOOOOOOOOOOOOOOOOOOOOOO")
                 pwutils.path.cleanPath(setFile)
 
         if exists(setFile):
             outputSet = SetClass(filename=setFile)
-            print("outputSet len ", outputSet.__len__())
             outputSet.loadAllProperties()
             outputSet.enableAppend()
         else:
-            print("Lo creo ", setFile)
             outputSet = SetClass(filename=setFile)
             outputSet.setStreamState(outputSet.STREAM_OPEN)
 
