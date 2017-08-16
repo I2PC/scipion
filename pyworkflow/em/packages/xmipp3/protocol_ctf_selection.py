@@ -266,10 +266,6 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
             for ctfId in newDoneDiscarded:
                 ctf = inputCtfSet[ctfId].clone()
                 mic = ctf.getMicrograph().clone()
-
-                ctf.setEnabled(False)
-                mic.setEnabled(False)
-
                 micSetDiscarded.append(mic)
                 ctfSetDiscarded.append(ctf)
                 self._writeDoneListDiscarded(ctfId)
