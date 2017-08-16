@@ -125,6 +125,11 @@ class ProtRelionExportCtf(EMProtocol):
         print "Writing set: %s" % inputCTF
         print " to: %s" % starFile
 
+        acq = ctfMicSet.getAcquisition()
+        self.samplingRate = ctfMicSet.getSamplingRate()
+        mag = acq.getMagnification()
+        self.detectorPixelSize = 1e-4 * self.samplingRate * mag
+
         writeSetOfMicrographs(micSet, starFile,
                               preprocessImageRow=self.preprocessMicrograph)
 
@@ -148,5 +153,6 @@ class ProtRelionExportCtf(EMProtocol):
     
     #--------------------------- UTILS functions -------------------------------
     def preprocessMicrograph(self, mic, micRow):
-        micRow.setValue('rlnSamplingRate', mic.getSamplingRate())
+        micRow.setValue('rlnSamplingRate', self.samplingRate)
+        micRow.setValue('rlnDetectorPixelSize', self.detectorPixelSize)
         micRow.setValue('rlnCtfImage', mic.getCTF().getPsdFile())
