@@ -59,7 +59,7 @@ def getEnviron(xmippFirst=True):
             'PATH': join(os.environ['XMIPP_HOME'], 'bin'),
             'LD_LIBRARY_PATH': join(os.environ['XMIPP_HOME'], 'lib'),
             }, position=pos)
-    if  os.environ['CUDA']:
+    if  os.environ['CUDA']!='False':#environ variables are strings not booleans
         environ.update({
             'LD_LIBRARY_PATH': os.environ['NVCC_LIBDIR']
             }, position=pos)
