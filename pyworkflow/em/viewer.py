@@ -177,8 +177,6 @@ class MicrographsView(ObjectView):
     def __init__(self, project, micSet, other='', **kwargs):
         first = micSet.getFirstItem()
 
-        first.printAll()
-
         def existingLabels(labelList):
             print("labelList: ", labelList)
             return ' '.join([l for l in labelList if first.hasAttributeExt(l)])
@@ -190,7 +188,7 @@ class MicrographsView(ObjectView):
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 50
+                      showj.ZOOM: 100
                       }
 
         if renderLabels:
@@ -204,15 +202,17 @@ class MicrographsView(ObjectView):
 class CtfView(ObjectView):
     """ Customized ObjectView for SetOfCTF objects . """
     # All extra labels that we want to show if present in the CTF results
-    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile', '_xmipp_enhanced_psd',
-                  '_xmipp_ctfmodel_quadrant', '_xmipp_ctfmodel_halfplane',
-                  '_micObj.plotGlobal._filename'
+    PSD_LABELS = ['_micObj.thumbnail._filename', '_psdFile',
+                  '_xmipp_enhanced_psd', '_xmipp_ctfmodel_quadrant',
+                  '_xmipp_ctfmodel_halfplane', '_micObj.plotGlobal._filename'
                  ]
-    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_xmipp_ctfCritFirstZero',
+    EXTRA_LABELS = ['_ctffind4_ctfResolution', '_gctf_ctfResolution',
+                    '_xmipp_ctfCritFirstZero',
                     ' _xmipp_ctfCritCorr13', '_xmipp_ctfCritFitting',
                     '_xmipp_ctfCritNonAstigmaticValidity',
                     '_xmipp_ctfCritCtfMargin', '_xmipp_ctfCritMaxFreq'
                    ]
+
     def __init__(self, project, ctfSet, other='', **kwargs):
         first = ctfSet.getFirstItem()
 
@@ -222,12 +222,13 @@ class CtfView(ObjectView):
         psdLabels = existingLabels(self.PSD_LABELS)
         extraLabels = existingLabels(self.EXTRA_LABELS)
         labels =  'id enabled %s _defocusU _defocusV ' % psdLabels
-        labels += '_defocusAngle _defocusRatio %s  _micObj._filename' % extraLabels
+        labels += '_defocusAngle _defocusRatio %s ' % extraLabels
+        labels += '  _micObj._filename'
 
         viewParams = {showj.MODE: showj.MODE_MD,
                       showj.ORDER: labels,
                       showj.VISIBLE: labels,
-                      showj.ZOOM: 50
+                      showj.ZOOM: 100
                      }
 
         if psdLabels:
@@ -239,6 +240,10 @@ class CtfView(ObjectView):
         if first.hasAttribute('_ctffind4_ctfResolution'):
             import pyworkflow.em.packages.grigoriefflab.viewer as gviewer
             viewParams[showj.OBJCMDS] = "'%s'" % gviewer.OBJCMD_CTFFIND4
+
+        elif first.hasAttribute('_gctf_ctfResolution'):
+            from pyworkflow.em.packages.gctf.viewer import OBJCMD_GCTF
+            viewParams[showj.OBJCMDS] = "'%s'" % OBJCMD_GCTF
 
         inputId = ctfSet.getObjId() or ctfSet.getFileName()
         ObjectView.__init__(self, project,

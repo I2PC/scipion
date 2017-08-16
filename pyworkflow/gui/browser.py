@@ -174,6 +174,7 @@ class FileInfo(object):
     def getDate(self):
         return self._stat.st_mtime if self._stat else 0
 
+
 class FileHandler(object):
     """ This class will be used to get the icon, preview and info
     from the different types of objects.
@@ -257,7 +258,7 @@ class ImageFileHandler(FileHandler):
     def getFileActions(self, objFile):
         from pyworkflow.em.viewer import DataView
         fn = objFile.getPath()
-        return [('Open with Xmipp viewer', lambda : DataView(fn).show(),
+        return [('Open with Xmipp viewer', lambda: DataView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
     
     
@@ -281,7 +282,7 @@ class ChimeraHandler(FileHandler):
     def getFileActions(self, objFile):
         from pyworkflow.em.viewer import ChimeraView
         fn = objFile.getPath()
-        return [('Open with Chimera', lambda : ChimeraView(fn).show(),
+        return [('Open with Chimera', lambda: ChimeraView(fn).show(),
                  Icon.ACTION_VISUALIZE)]
     
     def getFileIcon(self, objFile):
@@ -461,25 +462,32 @@ class FileBrowser(ObjectBrowser):
                  showHidden=False, # Show hidden files or not?
                  selectButton='Select', # Change the Select button text
                  entryLabel=None, # Display an entry for some input
-                 entryValue='' # Display a value in the entry field
+                 entryValue='', # Display a value in the entry field
+                 showInfo=None # Used to notify errors or messages
                  ):
-        """ 
-        """
+        self.pathVar = tk.StringVar()
+        self.pathVar.set(os.path.abspath(initialDir))
         self._provider = FileTreeProvider(initialDir, showHidden)
         self.selectButton = selectButton
         self.entryLabel = entryLabel
         self.entryVar = tk.StringVar()
         self.entryVar.set(entryValue)
-        
+
+        self.showInfo = showInfo or self._showInfo
+
         ObjectBrowser.__init__(self, parent, self._provider)
         
         if selectionType == SELECT_NONE:
             selectButton = None
-            
-    
+
         buttonsFrame = tk.Frame(self)
         self._fillButtonsFrame(buttonsFrame)
         buttonsFrame.grid(row=1, column=0)
+
+    def _showInfo(self, msg):
+        """ Default way (print to console) to show a message with a given info.
+        """
+        print msg
 
     def _fillLeftPanel(self, frame):
         """ Redefine this method to include a buttons toolbar and
@@ -492,11 +500,22 @@ class FileBrowser(ObjectBrowser):
         ObjectBrowser._fillLeftPanel(self, treeFrame)
         # Register the double-click event
         self.tree.itemDoubleClick = self._itemDoubleClick
-        treeFrame.grid(row=1, column=0, sticky='news')
+
+        treeRow = 2
+        treeFrame.grid(row=treeRow, column=0, sticky='news')
         # Toolbar frame
         toolbarFrame = tk.Frame(frame)
         self._fillToolbar(toolbarFrame)
         toolbarFrame.grid(row=0, column=0, sticky='new')
+
+        pathFrame = tk.Frame(frame)
+        pathLabel = tk.Label(pathFrame, text='Path')
+        pathLabel.grid(row=0, column=0, padx=5, pady=5)
+        pathEntry = tk.Entry(pathFrame, bg='white', width=65,
+                             textvariable=self.pathVar)
+        pathEntry.grid(row=0, column=1, sticky='new', pady=5)
+        pathEntry.bind("<Return>", self._onEnterPath)
+        pathFrame.grid(row=1, column=0, sticky='new')
         
         # Entry frame, could be used for filter
         if self.entryLabel:  
@@ -509,7 +528,7 @@ class FileBrowser(ObjectBrowser):
                      bg='white',
                      width=50).grid(row=0, column=1, sticky='nw')
         
-        frame.rowconfigure(1, weight=1)
+        frame.rowconfigure(treeRow, weight=1)
 
     def _fillToolbar(self, frame):
         """ Fill the toolbar frame with some buttons. """
@@ -542,6 +561,7 @@ class FileBrowser(ObjectBrowser):
         self.tree.update()
         
     def _goDir(self, newDir):
+        self.pathVar.set(os.path.abspath(newDir))
         self.treeProvider.setDir(newDir)
         self.tree.update()
         
@@ -559,6 +579,13 @@ class FileBrowser(ObjectBrowser):
             if actions:
                 # actions[0] = first Action, [1] = the action callback
                 actions[0][1]()
+
+    def _onEnterPath(self, e=None):
+        path = os.path.abspath(self.pathVar.get())
+        if os.path.exists(path):
+            self._goDir(path)
+        else:
+            self.showInfo("Path '%s' does not exists. " % path)
             
     def onClose(self):
         pass
@@ -606,7 +633,9 @@ class FileBrowserWindow(BrowserWindow):
                  onSelect=None, **kwargs):
         BrowserWindow.__init__(self, title, master, **kwargs)
         self.registerHandlers()
-        browser = FileBrowser(self.root, path, **kwargs)
+        browser = FileBrowser(self.root, path,
+                              showInfo=lambda msg: self.showInfo(msg, "Info"),
+                              **kwargs)
         if onSelect:
             def selected(obj):
                 onSelect(obj)
