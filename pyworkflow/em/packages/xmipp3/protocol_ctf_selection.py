@@ -62,7 +62,7 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                            'selection taking into account or not the defocus '
                            'values.')
         
-        line = form.addLine('Defocus (A)',
+        line = form.addLine('Defocus (A)', condition="useDefocus",
                             help='Minimum and maximum values for defocus in '
                                  'Angstroms')
         line.addParam('minDefocus', params.FloatParam, default=0, label='Min')
@@ -70,25 +70,26 @@ class XmippProtCTFSelection(em.ProtCTFMicrographs):
                       default=40000, label='Max')
         
         form.addParam('useAstigmatism', params.BooleanParam, default=True,
-                      label='Use Astigmatism for selection',
-                      help='Use this button to decide if carry out the '
+                      label = 'Use Astigmatism for selection',
+                      help = 'Use this button to decide if carry out the '
                            'selection taking into account or not the '
                            'astigmatism value.')
         form.addParam('astigmatism', params.FloatParam, default=1000,
-                      label='Astigmatism (A)',
-                      help='Maximum value allowed for astigmatism in Angstroms.'
-                           ' If the evaluated CTF does not fulfill this '
-                           'requirement, it will be discarded.')
+                      label = 'Astigmatism (A)', condition="useAstigmatism",
+                      help = 'Maximum value allowed for astigmatism in '
+                             'Angstroms. If the evaluated CTF does not fulfill '
+                             'this requirement, it will be discarded.')
         form.addParam('useResolution', params.BooleanParam, default=True,
                       label='Use Resolution for selection',
                       help='Use this button to decide if carry out the '
                            'selection taking into account or not the '
                            'resolution value.')
         form.addParam('resolution', params.FloatParam, default=7,
-                  label='Resolution (A)',
-                  help='Minimum value for resolution in Angstroms. '
-                       'If the evaluated CTF does not fulfill this '
-                       'requirement, it will be discarded.')
+                      label='Resolution (A)',
+                      condition="useResolution",
+                      help='Minimum value for resolution in Angstroms. '
+                           'If the evaluated CTF does not fulfill this '
+                           'requirement, it will be discarded.')
 
         form.addParam('useCritXmipp', params.BooleanParam, default=False,
                       label='Use Xmipp Crit criterion for selection',
