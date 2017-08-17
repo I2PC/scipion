@@ -32,6 +32,7 @@ from pyworkflow.em.protocol.protocol import EMProtocol
 
 
 
+
 class ProtMonitor(EMProtocol):
     """ This is the base class for implementing 'Monitors', a special type
     of protocols intended to be used in the context of the Scipion-Box,
@@ -97,6 +98,14 @@ class ProtMonitor(EMProtocol):
 
     def _methods(self):
         return []
+
+    def getInputProtocols(self):
+        protocols = []
+        for protPointer in self.inputProtocols:
+            prot = protPointer.get()
+            prot.setProject(self.getProject())
+            protocols.append(prot)
+        return protocols
 
     def sendEMail(self, emailSubject, emailMessage):
         # Import smtplib for the actual sending function
