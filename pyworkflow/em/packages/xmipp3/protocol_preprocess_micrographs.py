@@ -144,7 +144,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         self._defineInputs()
         self.insertedDict = {}
         preprocessSteps = self._insertNewMicsSteps(self.insertedDict,
-                                              self.inputMics)
+                                                   self.inputMicrographs.get())
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=preprocessSteps, wait=True)
 
@@ -182,7 +182,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 
     def _checkNewInput(self):
         # Check if there are new micrographs to process from the input set
-        micsFile = self.inputMics.getFileName()
+        micsFile = self.inputMicrographs.get().getFileName()
         micsSet = SetOfMicrographs(filename=micsFile)
         micsSet.loadAllProperties()
         self.SetOfMicrographs = [m.clone() for m in micsSet]
@@ -225,6 +225,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 
         for mic in newDone:
             micOut = em.data.Micrograph()
+            if self.doDownsample:
+                micOut.setSamplingRate(self.inputMicrographs.get().getSamplingRate() * self.downFactor.get())
             micOut.setObjId(mic.getObjId())
             micOut.setFileName(self._getOutputMicrograph(mic))
             outSet.append(micOut)
@@ -249,6 +251,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
 
         inputs = self.inputMicrographs.get()
         outputSet.copyInfo(inputs)
+        if self.doDownsample:
+            outputSet.setSamplingRate(self.inputMicrographs.get().getSamplingRate() * self.downFactor.get())
         return outputSet
 
 

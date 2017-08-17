@@ -188,9 +188,9 @@ class TestXmippPreprocessMicrographs(TestXmippBase):
         protDown = XmippProtPreprocessMicrographs(doDownsample=True, downFactor=downFactorValue)
         protDown.inputMicrographs.set(self.protImport.outputMicrographs)
         self.proj.launchProtocol(protDown, wait=True)
-        
         # check that output micrographs have double sampling rate than input micrographs
-        self.assertEquals(protDown.outputMicrographs.getSamplingRate(), self.protImport.outputMicrographs.getSamplingRate()*downFactorValue, "Micrographs uncorrectly downsampled")
+        self.assertEquals(protDown.outputMicrographs.getSamplingRate(), self.protImport.outputMicrographs.getSamplingRate()*downFactorValue, "Micrographs incorrectly downsampled")
+        self.assertTrue(protDown.isFinished(), "Downsampling failed")
     
     def testPreprocessing(self):
         # test Crop, Take logarithm and Remove bad pixels on a set of micrographs
