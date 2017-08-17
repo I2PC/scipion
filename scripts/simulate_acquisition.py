@@ -21,7 +21,6 @@ def usage(error):
     Usage: simulate_acquisition.py INPUT_PATTERN OUTPUT_FOLDER
         INPUT_PATTERN: input pattern matching input files.
         OUTPUT_FOLDER: where to create the output links.
-        time: the time that the last link will be touched.        
     """ % error
     sys.exit(1)    
 
