@@ -1827,6 +1827,16 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     protocol = project.getProtocol(protId)
     return protocol
 
+def getUpdatedProtocol(protocol):
+    """ Retrieve the updated protocol and close db connections
+        """
+    prot2 = getProtocolFromDb(protocol.getProject().path,
+                              protocol.getDbPath(),
+                              protocol.getObjId())
+    # Close DB connections
+    prot2.getProject().closeMapper()
+    prot2.closeMappers()
+    return prot2
 
 def isProtocolUpToDate(protocol):
     """ Check timestamps between protocol lastModificationDate and the

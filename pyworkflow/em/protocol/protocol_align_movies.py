@@ -31,6 +31,7 @@ from itertools import izip
 
 from pyworkflow.object import Set
 import pyworkflow.utils.path as pwutils
+from pyworkflow.utils import yellowStr, redStr
 import pyworkflow.protocol.params as params
 import pyworkflow.protocol.constants as cons
 from pyworkflow.em.convert import ImageHandler
@@ -106,8 +107,13 @@ class ProtAlignMovies(ProtProcessMovies):
 
     # FIXME: Methods will change when using the streaming for the output
     def createOutputStep(self):
-        # Do nothing now, the output should be ready.
-        pass
+        # validate that we have some output movies
+        failedList = self._readFailedList()
+        if len(failedList) == len(self.listOfMovies):
+            raise Exception(redStr("All movies failed, didn't create outputMicrographs."
+                                   "Please review movie processing steps above."))
+        elif 0 < len(failedList) < len(self.listOfMovies):
+            self.warning(yellowStr("WARNING - Failed to align %d movies." % len(failedList)))
 
     def _loadOutputSet(self, SetClass, baseName, fixSampling=True):
         """
@@ -118,7 +124,7 @@ class ProtAlignMovies(ProtProcessMovies):
         """
         setFile = self._getPath(baseName)
 
-        if os.path.exists(setFile):
+        if os.path.exists(setFile) and os.path.getsize(setFile) > 0:
             outputSet = SetClass(filename=setFile)
             outputSet.loadAllProperties()
             outputSet.enableAppend()
@@ -198,6 +204,7 @@ class ProtAlignMovies(ProtProcessMovies):
         def _updateOutputMicSet(sqliteFn, getOutputMicName, outputName):
             """ Updated the output micrographs set with new items found. """
             micSet = self._loadOutputSet(SetOfMicrographs, sqliteFn)
+            doneFailed = []
 
             for movie in newDone:
                 mic = micSet.ITEM_TYPE()
@@ -208,13 +215,16 @@ class ProtAlignMovies(ProtProcessMovies):
                 extraMicFn = self._getExtraPath(getOutputMicName(movie))
                 mic.setFileName(extraMicFn)
                 if not os.path.exists(extraMicFn):
-                    print("Micrograph %s was not producing, not added to "
-                          "output set." % extraMicFn)
+                    print(yellowStr("WARNING: Micrograph %s was not generated, can't add it to "
+                                    "output set." % extraMicFn))
+                    doneFailed.append(movie)
                     continue
                 self._preprocessOutputMicrograph(mic, movie)
                 micSet.append(mic)
 
             self._updateOutputSet(outputName, micSet, streamMode)
+            if doneFailed:
+                self._writeFailedList(doneFailed)
 
             if firstTime:
                 # We consider that Movies are 'transformed' into the Micrographs
@@ -567,6 +577,7 @@ class ProtAlignMovies(ProtProcessMovies):
                         outputFnUncorrected, outputFnCorrected)
 
     def computeThumbnail(self, inputFn, scaleFactor=6, outputFn=None):
+        """ Generates a thumbnail of the input file"""
         outputFn = outputFn or self.getThumbnailFn(inputFn)
         args = "%s %s " % (inputFn, outputFn)
         args += "--fouriershrink %s --process normalize" % scaleFactor
@@ -576,6 +587,7 @@ class ProtAlignMovies(ProtProcessMovies):
         return outputFn
 
     def getThumbnailFn(self, inputFn):
+        """ Returns the default name for a thumbnail image"""
         return pwutils.replaceExt(inputFn, "thumb.png")
 
 
