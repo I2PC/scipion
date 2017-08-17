@@ -775,3 +775,40 @@ class TestRelionLocalRes(TestRelionBase):
 
         self.launchProtocol(postProt)
         self._validations(postProt.outputVolume, 60, 7.08)
+
+class TestRelionExpandSymmetry(TestRelionBase):
+    @classmethod
+    def setUpClass(cls):
+        setupTestProject(cls)
+        cls.dataset = DataSet.getDataSet('relion_tutorial')
+        cls.partRef3dFn = cls.dataset.getFile('import/refine3d/extra/relion_data.star')
+
+    def importParticles(self, partStar):
+        """ Import particles from Relion star file. """
+        protPart = self.newProtocol(ProtImportParticles,
+                                    importFrom=ProtImportParticles.IMPORT_FROM_RELION,
+                                    starFile=partStar,
+                                    magnification=10000,
+                                    samplingRate=7.08,
+                                    haveDataBeenPhaseFlipped=True
+                                    )
+        self.launchProtocol(protPart)
+        return protPart
+
+    def test_ExpandSymmetry(self):
+        prot = self.newProtocol(ProtRelionExpandSymmetry)
+        print "Import particles"
+        importRun = self.importParticles(self.partRef3dFn)
+        prot.inputParticles.set(importRun.outputParticles)
+        prot.symmetryGroup.set("D2")
+        print "Run expand symmetry"
+        self.launchProtocol(prot)
+
+        self.assertIsNotNone(prot.outputParticles,
+                             "There was a problem with expand symmetry protocol")
+        sizeIn = importRun.outputParticles.getSize()
+        sizeOut = prot.outputParticles.getSize()
+        self.assertAlmostEqual(sizeIn * 4, sizeOut, 0.0001,
+                               "Number of output particles is %d and"
+                               " must be %d" % (sizeOut, sizeIn * 4))
+
