@@ -899,15 +899,6 @@ void ProgRecFourierGPU::getGPUData() {
 	copyTempSpaces(tempVolume, tempWeights, tempVolumeGPU, tempWeightsGPU, maxVolumeIndexYZ + 1);
 	releaseGPU(tempVolumeGPU);
 	releaseGPU(tempWeightsGPU);
-	for(int z = 0; z <= maxVolumeIndexYZ; z++) {
-		for(int y = 0; y <= maxVolumeIndexYZ; y++) {
-			for(int x = 0; x <= maxVolumeIndexX; x++) {
-				std::cout << tempVolume[z][y][x] << " ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-	}
 }
 
 void ProgRecFourierGPU::mirrorAndCropTempSpaces() {
@@ -1062,9 +1053,6 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //	b();
 //	c(array);
 
-	maxVolumeIndexX = maxVolumeIndexYZ = 2;
-
-
 	int loops = ceil((lastImageIndex-firstImageIndex+1)/(float)bufferSize);
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
@@ -1085,6 +1073,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 		 R_repository.at(i).convertTo(symmetries[i]);
 		 R_repository.at(i).inv().convertTo(symmetriesInv[i]);
 	}
+	printf("velikost ma byt: %dx%d", maxVolumeIndexX, maxVolumeIndexYZ);
 
 
     loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
@@ -1095,7 +1084,8 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 //    	processBuffer(loadThread.buffer2);
 //    	copyBuffer(loadThread.buffer2, bufferSize);
-    	processBufferGPU(tempVolumeGPU, tempWeightsGPU, loadThread.buffer2, (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1), bufferSize, symmetries, symmetriesInv, (int)R_repository.size());
+
+    	processBufferGPU(tempVolumeGPU, tempWeightsGPU, loadThread.buffer2, (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1), bufferSize, symmetries, symmetriesInv, (int)R_repository.size());
     	barrier_wait( &barrier );
     }
 
