@@ -121,16 +121,41 @@ class ProtImportCTF(ProtImportFiles):
             raise Exception("No files where found in path: '%s'\n"
                             "matching the pattern: '%s'" %
                             (self.filesPath, self.filesPattern))
-        print "Matching files: ", len(files)
+        print("Matching files: %s" % n)
+        inputMicBases = [removeBaseExt(m.getFileName()) for m in inputMics]
+
+        if len(files) > len(inputMicBases):
+            self.warning("WARNING: The number of files matched by your pattern (%d) is larger than "
+                         "the number of available micrographs (%d). It is advised to carefully "
+                         "review the output of this run or to re-run with a more restrictive pattern."
+                         % (n, len(inputMicBases)))
 
         def _getMicCTF(mic):
             micName = mic.getMicName()
             micBase = removeBaseExt(mic.getFileName())
-
-            for fileName, fileId in self.iterFiles():
-                if (fileId == mic.getObjId() or
-                            micBase in fileName or micName in fileName):
-                    return ci.importCTF(mic, fileName)
+            # see if the base name of this mic is contained in other base names
+            micConflicts = [mc for mc in inputMicBases if micBase in mc and micBase != mc]
+            if micConflicts:
+                self.warning('WARNING: Micrograph base name "%s" conflicts with micrograph(s) "%s". '
+                             'Will try to find a unique match...' % (micBase, '", "'.join(micConflicts)))
+                # check which matching file only matches with this mic and not its conflicts
+                goodFnMatches = [f for f in files if micBase in f and not any(c in f for c in micConflicts)]
+                for goodFnMatch in goodFnMatches:
+                    try:
+                        micCtf = ci.importCTF(mic, goodFnMatch)
+                        self.warning("WARNING: Assigned file %s to micrograph %s." % (goodFnMatch, micBase))
+                        return micCtf
+                    except Exception as ex:
+                        self.warning("WARNING: Can't import ctf for micrograph %s from file %s"
+                                     % (micBase, goodFnMatch))
+                        continue
+                else:
+                    return None
+            else:
+                for fileName, fileId in self.iterFiles():
+                    if (fileId == mic.getObjId() or
+                                micBase in fileName or micName in fileName):
+                        return ci.importCTF(mic, fileName)
 
             return None
         # Check if the CTF import class has a method to retrieve the CTF
