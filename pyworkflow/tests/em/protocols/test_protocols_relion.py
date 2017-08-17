@@ -776,6 +776,7 @@ class TestRelionLocalRes(TestRelionBase):
         self.launchProtocol(postProt)
         self._validations(postProt.outputVolume, 60, 7.08)
 
+
 class TestRelionExpandSymmetry(TestRelionBase):
     @classmethod
     def setUpClass(cls):
@@ -796,6 +797,9 @@ class TestRelionExpandSymmetry(TestRelionBase):
         return protPart
 
     def test_ExpandSymmetry(self):
+        if not isVersion2():
+            raise Exception('Expand symmetry protocol exists only for Relion v2.0 or higher!')
+
         prot = self.newProtocol(ProtRelionExpandSymmetry)
         print "Import particles"
         importRun = self.importParticles(self.partRef3dFn)

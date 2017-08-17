@@ -67,7 +67,6 @@ class ProtRelionExpandSymmetry(ProtProcessParticles):
         """ Create a metadata with the images and geometrical information. """
         writeSetOfParticles(self.inputParticles.get(), outputFn, self._getPath())
 
-    #--------------------------- STEPS functions --------------------------------------------
     def expandSymmetryStep(self, imgsFn):
         outImagesMd = self._getExtraPath('expanded_particles.star')
         args = " --i %s --sym %s --o %s" % (imgsFn, self.symmetryGroup.get(),
@@ -103,6 +102,9 @@ class ProtRelionExpandSymmetry(ProtProcessParticles):
         errors = []
         self.validatePackageVersion('RELION_HOME', errors)
 
+        if not self.inputParticles.get().hasAlignmentProj():
+            errors.append('Input particles must have angular assignment.')
+
         return errors
         
     def _citations(self):
@@ -116,3 +118,4 @@ class ProtRelionExpandSymmetry(ProtProcessParticles):
     #--------------------------- Utils functions --------------------------------------------
     def _postprocessImageRow(self, img, imgRow):
         setRelionAttributes(img, imgRow, md.RLN_MLMODEL_GROUP_NAME)
+
