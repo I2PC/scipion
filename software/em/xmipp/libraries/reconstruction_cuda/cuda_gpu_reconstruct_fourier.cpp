@@ -27,12 +27,17 @@ float* allocateGPU(float*& where, int size) {
 }
 
 
+__device__ __constant__ int cMaxVolumeIndexX = 0;
+__device__ __constant__ int cMaxVolumeIndexYZ = 0;
+__device__ __constant__ bool cUseFast = false;
+__device__ __constant__ float cBlobRadius = 0.f;
 
 
 __global__ void test_update(float* test) {
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	test[2*i] += i;
 	test[2*i+1] += i/10.f;
+	printf("%d", cMaxVolumeIndexX);
 }
 
 //void processBufferGPU(float* tempVolumeGPU,
@@ -150,6 +155,7 @@ public:
 			setDefault();
 		}
 	ProjectionDataGPU(const ProjectionData& data) {
+		imgIndex = data.imgIndex; // fixme posunout dolu
 		skip = data.skip;
 		if (skip) {
 			return;
@@ -166,10 +172,23 @@ public:
 		xSize = data.img->getXSize();
 		ySize = data.img->getYSize();
 //		CTF = modulator = 0;
-		imgIndex = data.imgIndex;
 		weight = data.weight;
 		data.localAInv.convertTo(localAInv);
 		data.localA.convertTo(localA);
+
+//		if (imgIndex == 6) {
+//			printf("GPUbuffer img 6 localAInv %f %f %f\n%f %f %f\n%f %f %f\n",
+//					localAInv[0][0], localAInv[0][1], localAInv[0][2],
+//					localAInv[1][0], localAInv[1][1], localAInv[1][2],
+//					localAInv[2][0], localAInv[2][1], localAInv[2][2]);
+//
+//			printf("GPUbuffer img 6 local %f %f %f\n%f %f %f\n%f %f %f\n",
+//					localA[0][0], localA[0][1], localA[0][2],
+//					localA[1][0], localA[1][1], localA[1][2],
+//					localA[2][0], localA[2][1], localA[2][2]);
+//		}
+
+
 	}
 	~ProjectionDataGPU() {
 //		printf("volam destruktor");
@@ -202,17 +221,31 @@ private:
 		int xSize = from.getXSize();
 		int ySize = from.getYSize();
 		int N = xSize * ySize;
+		int rate = sizeof(T) / sizeof(*to);
+		T* tmp = new T[N];
+		for (int y = 0; y < ySize; y++) {
+			memcpy(&tmp[y * xSize],
+					from.getRow(y),
+					sizeof(T)*xSize);
+		}
+//		if (imgIndex == 12) {
+//			printf("img 12:\n");
+//			for (int aaa = 0; aaa < N; aaa++) {
+//				std::cout << tmp[aaa] << " ";
+//			}
+//			std::cout << std::endl;
+//		}
 		// Allocate device pointer.
 		cudaMalloc((void**) &(to), sizeof(T) * N);
-		int rate = sizeof(T) / sizeof(*to);
 		// Copy content from host to device.
-		for (int y = 0; y < ySize; y++) {
-			cudaMemcpy(&to[y * xSize * rate],
-					from.getRow(y),
-					sizeof(T)*xSize,
+//		for (int y = 0; y < ySize; y++) {
+			cudaMemcpy(to,
+					tmp,
+					sizeof(T)*N,
 					cudaMemcpyHostToDevice);
 			gpuErrchk(cudaPeekAtLastError());
-		}
+//		}
+			delete[] tmp;
 	}
 };
 
@@ -286,7 +319,7 @@ __device__ inline U clamp(U val, T min, T max) {
 	return res;
 }
 __device__
-inline bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -300,7 +333,7 @@ inline bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b,
 }
 
 __device__
-inline bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -314,7 +347,7 @@ inline bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b,
 }
 
 __device__
-inline bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -342,7 +375,7 @@ void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blo
 }
 
 __device__
-inline void multiply(const float transform[3][3], Point3D& inOut) {
+void multiply(const float transform[3][3], Point3D& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
 	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
 	float tmp2 = transform[2][0] * inOut.x + transform[2][1] * inOut.y + transform[2][2] * inOut.z;
@@ -360,7 +393,7 @@ void rotateCuboid(Point3D* cuboid, const float transform[3][3]) {
 }
 
 __device__
-inline void translateCuboid(Point3D* cuboid, Point3D vector) {
+void translateCuboid(Point3D* cuboid, Point3D vector) {
 	for (int i = 0; i < 8; i++) {
 		cuboid[i].x += vector.x;
 		cuboid[i].y += vector.y;
@@ -368,7 +401,7 @@ inline void translateCuboid(Point3D* cuboid, Point3D vector) {
 	}
 }
 __device__
-inline void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
+void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
 	float x0 = plane[0].x;
 	float y0 = plane[0].y;
 	float z0 = plane[0].z;
@@ -404,7 +437,7 @@ void computeAABB(Point3D* AABB, Point3D* cuboid,
 	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
 }
 __device__
-inline void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
+void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		ProjectionDataGPU* const data) {
 	Point3D imgPos;
@@ -413,9 +446,9 @@ inline void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 	float wModulator = 1.f;
 
 	// transform current point to center
-	imgPos.x = x - data->ySize/2;
-	imgPos.y = y - data->ySize/2;
-	imgPos.z = z - data->ySize/2;
+	imgPos.x = x - cMaxVolumeIndexX/2;
+	imgPos.y = y - cMaxVolumeIndexYZ/2;
+	imgPos.z = z - cMaxVolumeIndexYZ/2;
 	if (imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z > maxDistanceSqr) {
 		return; // discard iterations that would access pixel with too high frequency
 	}
@@ -424,25 +457,33 @@ inline void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 	// transform back and round
 	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
 	int imgX = clamp((int)(imgPos.x + 0.5f), 0, data->xSize - 1);
-	int imgY = clamp((int)(imgPos.y + 0.5f + data->ySize / 2), 0, data->ySize - 1);
+	int imgY = clamp((int)(imgPos.y + 0.5f + cMaxVolumeIndexYZ / 2), 0, data->ySize - 1);
+
+	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
+	int index2D = imgY * data->xSize + imgX;
 
 	if (0 != data->CTF) {
-//		wCTF = (*data->CTF)(imgX, imgY);
-//		wModulator = (*data->modulator)(imgX, imgY);
+		wCTF = data->CTF[index2D];
+		wModulator = data->modulator[index2D];
 	}
 
 	float weight = wBlob * wModulator * data->weight;
 
-	int indexVolume = z * data->ySize * data->ySize + y * data->ySize + x;
-	int indexImg = imgY * data->xSize + x;
+//	if (data->imgIndex == 12 || data->imgIndex == 56) {
+//		printf("%d %d %d -> %d %d (%f, %f)\n",
+//				x, y, z,
+//				imgX, imgY,
+//				data->img[2*index2D], data->img[2*index2D+1]);
+//	}
 
-	tempVolumeGPU[2*indexVolume] += data->img[2*indexImg] * weight * wCTF;
-	tempVolumeGPU[2*indexVolume + 1] += data->img[2*indexImg + 1] * weight * wCTF;
-	tempWeightsGPU[indexVolume] += weight;
+
+	tempVolumeGPU[2*index3D] += data->img[2*index2D] * weight * wCTF;
+	tempVolumeGPU[2*index3D + 1] += data->img[2*index2D + 1] * weight * wCTF;
+	tempWeightsGPU[index3D] += weight;
 }
 
 __device__
-inline void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
+void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		ProjectionDataGPU* const data) {
 	//
 }
@@ -488,73 +529,55 @@ void processProjection(
 	const float transform[3][3],
 	const float transformInv[3][3])
 {
-	bool useFast = true;
 	int imgSizeX = projectionData->xSize;
 	int imgSizeY = projectionData->ySize;
-	int maxVolumeIndexX = projectionData->ySize;
-	int maxVolumeIndexYZ = projectionData->ySize;
-
-	const float maxDistanceSqr = (imgSizeX+(useFast ? 0.f : 1.89)) * (imgSizeX+(useFast ? 0.f : 1.89));
-	Point3D origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
+	const float maxDistanceSqr = (imgSizeX+(cUseFast ? 0.f : cBlobRadius)) * (imgSizeX+(cUseFast ? 0.f : cBlobRadius));
+	Point3D origin = {cMaxVolumeIndexX/2.f, cMaxVolumeIndexYZ/2.f, cMaxVolumeIndexYZ/2.f};
 	Point3D u, v;
 	Point3D AABB[2];
 	Point3D cuboid[8];
 
-//	printf("transform %f %f %f\n%f %f %f\n%f %f %f\n",
-//			transform[0][0], transform[0][1], transform[0][2],
-//			transform[1][0], transform[1][1], transform[1][2],
-//			transform[2][0], transform[2][1], transform[2][2]);
-//	printf("transformInv %f %f %f\n%f %f %f\n%f %f %f\n",
-//			transformInv[0][0], transformInv[0][1], transformInv[0][2],
-//			transformInv[1][0], transformInv[1][1], transformInv[1][2],
-//			transformInv[2][0], transformInv[2][1], transformInv[2][2]);
-
-
 	// calculate affected space
-	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : 1.89);
-//	printf("vytvoreny:");print(cuboid);
+	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, cUseFast ? 0.f : cBlobRadius);
 	rotateCuboid(cuboid, transform);
-//	printf("rotace:");print(cuboid);
 	translateCuboid(cuboid, origin);
-//	printf("translace:");print(cuboid);
-	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
+	computeAABB(AABB, cuboid, 0, 0, 0, cMaxVolumeIndexX, cMaxVolumeIndexYZ, cMaxVolumeIndexYZ);
+
 	getVectors(cuboid, u, v);
 
 	// prepare traversing
 	int minY, minX, minZ;
 	int maxY, maxX, maxZ;
-	minZ = floor(AABB[0].z);
-	minY = floor(AABB[0].y);
-	minX = floor(AABB[0].x);
-	maxZ = ceil(AABB[1].z);
-	maxY = ceil(AABB[1].y);
-	maxX = ceil(AABB[1].x);
+	minZ = floorf(AABB[0].z);
+	minY = floorf(AABB[0].y);
+	minX = floorf(AABB[0].x);
+	maxZ = ceilf(AABB[1].z);
+	maxY = ceilf(AABB[1].y);
+	maxX = ceilf(AABB[1].x);
 	int dX, dY, dZ;
 	dX = maxX - minX;
 	dY = maxY - minY;
 	dZ = maxZ - minZ;
 
-//	printAABB(AABB);
-
 	if (dZ <= dX && dZ <= dY) { // iterate XY plane
 		for(int y = minY; y <= maxY; y++) {
 			for(int x = minX; x <= maxX; x++) {
-				if (useFast) {
+				if (cUseFast) {
 					float hitZ;
 					if (getZ(x, y, hitZ, u, v, *cuboid)) {
 						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU,x, y, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, x, y, z, transformInv, maxDistanceSqr, projectionData);
 					}
 				} else {
 					float z1, z2;
 					bool hit1 = getZ(x, y, z1, u, v, *cuboid); // lower plane
 					bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4)); // upper plane
 					if (hit1 || hit2) {
-						z1 = clamp(z1, 0, maxVolumeIndexYZ);
-						z2 = clamp(z2, 0, maxVolumeIndexYZ);
+						z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
+						z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
 						float lower = fminf(z1, z2);
 						float upper = fmaxf(z1, z2);
-						for (int z = std::floor(lower); z <= std::ceil(upper); z++) {
+						for (int z = floorf(lower); z <= ceilf(upper); z++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
 					}
@@ -564,22 +587,22 @@ void processProjection(
 	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
 		for(int z = minZ; z <= maxZ; z++) {
 			for(int x = minX; x <= maxX; x++) {
-				if (useFast) {
+				if (cUseFast) {
 					float hitY;
 					if (getY(x, hitY, z, u, v, *cuboid)) {
 						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU,x, y, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, x, y, z, transformInv, maxDistanceSqr, projectionData);
 					}
 				} else {
 					float y1, y2;
 					bool hit1 = getY(x, y1, z, u, v, *cuboid); // lower plane
 					bool hit2 = getY(x, y2, z, u, v, *(cuboid + 4)); // upper plane
 					if (hit1 || hit2) {
-						y1 = clamp(y1, 0, maxVolumeIndexYZ);
-						y2 = clamp(y2, 0, maxVolumeIndexYZ);
+						y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
+						y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
 						float lower = fminf(y1, y2);
 						float upper = fmaxf(y1, y2);
-						for (int y = std::floor(lower); y <= std::ceil(upper); y++) {
+						for (int y = floorf(lower); y <= ceilf(upper); y++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
 					}
@@ -589,22 +612,22 @@ void processProjection(
 	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
 		for(int z = minZ; z <= maxZ; z++) {
 			for(int y = minY; y <= maxY; y++) {
-				if (useFast) {
+				if (cUseFast) {
 					float hitX;
 					if (getX(hitX, y, z, u, v, *cuboid)) {
 						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU,x, y, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, x, y, z, transformInv, maxDistanceSqr, projectionData);
 					}
 				} else {
 					float x1, x2;
 					bool hit1 = getX(x1, y, z, u, v, *cuboid); // lower plane
 					bool hit2 = getX(x2, y, z, u, v, *(cuboid + 4)); // upper plane
 					if (hit1 || hit2) {
-						x1 = clamp(x1, 0, maxVolumeIndexX);
-						x2 = clamp(x2, 0, maxVolumeIndexX);
+						x1 = clamp(x1, 0, cMaxVolumeIndexX);
+						x2 = clamp(x2, 0, cMaxVolumeIndexX);
 						float lower = fminf(x1, x2);
 						float upper = fmaxf(x1, x2);
-						for (int x = std::floor(lower); x <= std::ceil(upper); x++) {
+						for (int x = floorf(lower); x <= ceilf(upper); x++) {
 							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
 						}
 					}
@@ -612,6 +635,14 @@ void processProjection(
 			}
 		}
 	}
+
+//	if (projectionData->imgIndex == 12 || projectionData->imgIndex == 56) {
+//		printf("\n----------------\nimg %d:", projectionData->imgIndex);
+//		print(cuboid);
+//		printf("------------------\n");
+//		printAABB(AABB);
+//	}
+
 }
 
 
@@ -627,6 +658,8 @@ void processBufferKernel(
 			continue;
 		}
 
+//		printf("kernel:\nvol:%p weights:%p buffer:%p size:%d symmetries:%p symmetriesInv:%p size:%d\n",
+//				tempVolumeGPU, tempWeightsGPU, buffer, bufferSize, symmetries, symmetriesInv, symSize);
 
 //		Matrix2D<double> *Ainv = &projData->localAInv;
 		// Loop over all symmetries
@@ -639,17 +672,41 @@ void processBufferKernel(
 			float transfInv[3][3];
 //			convert(A_SL, transf);
 //			convert(A_SLInv, transfInv);
-			multiply(symmetries[i], projData->localAInv, transf);
-//			printf("transf %f %f %f\n%f %f %f\n%f %f %f\n",
-//					transf[0][0], transf[0][1], transf[0][2],
-//					transf[1][0], transf[1][1], transf[1][2],
-//					transf[2][0], transf[2][1], transf[2][2]);
+			multiply(symmetries[isym], projData->localAInv, transf);
+			multiply(projData->localA, symmetriesInv[isym], transfInv);
 
-			multiply(projData->localAInv, symmetriesInv[i], transfInv);
-//			printf("transfInv %f %f %f\n%f %f %f\n%f %f %f\n",
-//					transfInv[0][0], transfInv[0][1], transfInv[0][2],
-//					transfInv[1][0], transfInv[1][1], transfInv[1][2],
-//					transfInv[2][0], transfInv[2][1], transfInv[2][2]);
+//			if (projData->imgIndex == 6) {
+//				printf("GPU img 6 sym[%d] %f %f %f\n%f %f %f\n%f %f %f\n", isym,
+//						symmetries[isym][0][0], symmetries[isym][0][1], symmetries[isym][0][2],
+//						symmetries[isym][1][0], symmetries[isym][1][1], symmetries[isym][1][2],
+//						symmetries[isym][2][0], symmetries[isym][2][1], symmetries[isym][2][2]);
+//
+//				printf("GPU img 6 symmetriesInv[%d] %f %f %f\n%f %f %f\n%f %f %f\n",isym,
+//						symmetriesInv[isym][0][0], symmetriesInv[isym][0][1], symmetriesInv[isym][0][2],
+//						symmetriesInv[isym][1][0], symmetriesInv[isym][1][1], symmetriesInv[isym][1][2],
+//						symmetriesInv[isym][2][0], symmetriesInv[isym][2][1], symmetriesInv[isym][2][2]);
+//
+//				printf("GPU img 6 localAInv %f %f %f\n%f %f %f\n%f %f %f\n",
+//						projData->localAInv[0][0], projData->localAInv[0][1], projData->localAInv[0][2],
+//						projData->localAInv[1][0], projData->localAInv[1][1], projData->localAInv[1][2],
+//						projData->localAInv[2][0], projData->localAInv[2][1], projData->localAInv[2][2]);
+//
+//				printf("GPU img 6 sprojData->localA %f %f %f\n%f %f %f\n%f %f %f\n",
+//						projData->localA[0][0], projData->localA[0][1], projData->localA[0][2],
+//						projData->localA[1][0], projData->localA[1][1], projData->localA[1][2],
+//						projData->localA[2][0], projData->localA[2][1], projData->localA[2][2]);
+//
+//
+//				printf("GPU img 6 transf %f %f %f\n%f %f %f\n%f %f %f\n",
+//						transf[0][0], transf[0][1], transf[0][2],
+//						transf[1][0], transf[1][1], transf[1][2],
+//						transf[2][0], transf[2][1], transf[2][2]);
+//
+//				printf("GPU img 6 transfInv %f %f %f\n%f %f %f\n%f %f %f\n",
+//						transfInv[0][0], transfInv[0][1], transfInv[0][2],
+//						transfInv[1][0], transfInv[1][1], transfInv[1][2],
+//						transfInv[2][0], transfInv[2][1], transfInv[2][2]);
+//			}
 
 			processProjection(
 					tempVolumeGPU, tempWeightsGPU,
@@ -664,7 +721,9 @@ void processBufferKernel(
 
 void processBufferGPU(float* tempVolumeGPU,
 		float* tempWeightsGPU,
-		ProjectionData* data, int N, int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize) {
+		ProjectionData* data, int N, int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize,
+		int maxVolIndexX, int maxVolIndexYZ,
+		bool useFast, float blobRadius) {
 
 	ProjectionDataGPU*	devBuffer = copyProjectionData(data, bufferSize);
 
@@ -678,6 +737,22 @@ void processBufferGPU(float* tempVolumeGPU,
 //			data[0].localAInv(1, 0), data[0].localAInv(1,1), data[0].localAInv(1,2),
 //			data[0].localAInv(2, 0), data[0].localAInv(2,1), data[0].localAInv(2,2));
 
+	cudaMemcpyToSymbol(cMaxVolumeIndexX, &maxVolIndexX,sizeof(maxVolIndexX));
+	gpuErrchk( cudaPeekAtLastError() );
+	cudaMemcpyToSymbol(cMaxVolumeIndexYZ, &maxVolIndexYZ,sizeof(maxVolIndexYZ));
+	gpuErrchk( cudaPeekAtLastError() );
+	cudaMemcpyToSymbol(cUseFast, &useFast,sizeof(useFast));
+	gpuErrchk( cudaPeekAtLastError() );
+	cudaMemcpyToSymbol(cBlobRadius, &blobRadius,sizeof(blobRadius));
+	gpuErrchk( cudaPeekAtLastError() );
+
+
+//		// New update of device variable with respect
+//		// to last update
+//		test_update<<<1,27>>>(tempVolumeGPU);
+//		   		gpuErrchk(cudaPeekAtLastError());
+//				gpuErrchk(cudaDeviceSynchronize());
+//				return;
 
 	MATRIX* devSymmetries;
 	cudaMalloc((void **) &devSymmetries, symSize*sizeof(MATRIX));
@@ -718,11 +793,6 @@ void processBufferGPU(float* tempVolumeGPU,
 //		   		gpuErrchk(cudaPeekAtLastError());
 //				gpuErrchk(cudaDeviceSynchronize());
 //
-//		// New update of device variable with respect
-//		// to last update
-//		test_update<<<1,27>>>(tempVolumeGPU);
-//		   		gpuErrchk(cudaPeekAtLastError());
-//				gpuErrchk(cudaDeviceSynchronize());
 
 	cudaFree(devBuffer);
 	gpuErrchk( cudaPeekAtLastError() );

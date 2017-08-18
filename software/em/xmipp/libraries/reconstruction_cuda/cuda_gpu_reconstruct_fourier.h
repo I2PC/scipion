@@ -34,7 +34,9 @@ void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
 void processBufferGPU(
 		float* tempVolumeGPU,
 				float* tempWeightsGPU,
-				ProjectionData* data,int noOfPixel,int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize);
+				ProjectionData* data,int noOfPixel,int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize,
+				int maxVolIndexX, int maxVolIndexYZ,
+				bool useFast, float blobRadius);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);
 void allocateTempSpaces(int size);

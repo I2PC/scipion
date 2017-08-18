@@ -329,6 +329,17 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		data->localAInv = localA.transpose();
 		data->localA = localA.transpose().inv();
 		data->img = cropAndShift(localPaddedFourier, parent);
+
+
+//		if (imgIndex == 12) {
+//			for (int y = 0; y < data->img->getYSize(); y++) {
+//				for (int x = 0; x < data->img->getXSize(); x++) {
+//					(*data->img)(x, y) = std::complex<float>(x*1000 + y, (x*1000 + y)/100000.f);
+//				}
+//			}
+//		}
+
+
 		data->imgIndex = imgIndex;
 		if (hasCTF) {
 			Array2D<float>* CTF = new Array2D<float>(data->img->getXSize(), data->img->getYSize());
@@ -1072,8 +1083,18 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	for (int i = 0; i < R_repository.size();i++) {
 		 R_repository.at(i).convertTo(symmetries[i]);
 		 R_repository.at(i).inv().convertTo(symmetriesInv[i]);
+
+//	printf("CPU sym[%d] %f %f %f\n%f %f %f\n%f %f %f\n", i,
+//		symmetries[i][0][0], symmetries[i][0][1], symmetries[i][0][2],
+//		symmetries[i][1][0], symmetries[i][1][1], symmetries[i][1][2],
+//		symmetries[i][2][0], symmetries[i][2][1], symmetries[i][2][2]);
+//
+//	printf("CPU symmetriesInv[%d] %f %f %f\n%f %f %f\n%f %f %f\n",i,
+//		symmetriesInv[i][0][0], symmetriesInv[i][0][1], symmetriesInv[i][0][2],
+//		symmetriesInv[i][1][0], symmetriesInv[i][1][1], symmetriesInv[i][1][2],
+//		symmetriesInv[i][2][0], symmetriesInv[i][2][1], symmetriesInv[i][2][2]);
 	}
-	printf("velikost ma byt: %dx%d", maxVolumeIndexX, maxVolumeIndexYZ);
+//	printf("velikost ma byt: %dx%d", maxVolumeIndexX, maxVolumeIndexYZ);
 
 
     loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
@@ -1085,7 +1106,12 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //    	processBuffer(loadThread.buffer2);
 //    	copyBuffer(loadThread.buffer2, bufferSize);
 
-    	processBufferGPU(tempVolumeGPU, tempWeightsGPU, loadThread.buffer2, (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1), bufferSize, symmetries, symmetriesInv, (int)R_repository.size());
+    	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
+    			loadThread.buffer2,
+				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
+				bufferSize, symmetries, symmetriesInv, (int)R_repository.size(),
+				maxVolumeIndexX, maxVolumeIndexYZ,
+				useFast, blob.radius);
     	barrier_wait( &barrier );
     }
 
