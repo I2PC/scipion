@@ -41,9 +41,11 @@ STATUS_FINISHED = "finished"  # successfully finished
 STATUS_ABORTED = "aborted"
 STATUS_INTERACTIVE = "interactive"    # waiting for user interaction
 STATUS_WAITING = "waiting"            # following status is used for streamming only
+# Allow to schedule jobs not ready for running yet
+STATUS_SCHEDULED = "scheduled"
 
-
-ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE]
+ACTIVE_STATUS = [STATUS_LAUNCHED, STATUS_RUNNING, STATUS_INTERACTIVE,
+                 STATUS_SCHEDULED]
 
 
 # Execution modes             

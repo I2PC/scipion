@@ -35,8 +35,6 @@ import time
 from collections import OrderedDict
 import datetime as dt
 
-import datetime
-
 import pyworkflow.em as em
 import pyworkflow.config as pwconfig
 import pyworkflow.hosts as pwhosts
@@ -72,6 +70,7 @@ class Project(object):
         self.shortName = os.path.basename(path)
         self.path = os.path.abspath(path)
         self._isLink = os.path.islink(path)
+        self._isInReadOnlyFolder = False
         self.pathList = []  # Store all related paths
         self.dbPath = self.__addPath(PROJECT_DBNAME)
         self.logsPath = self.__addPath(PROJECT_LOGS)
@@ -187,7 +186,7 @@ class Project(object):
 
     def saveSettings(self):
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self.settings.write()
 
     def createMapper(self, sqliteFn):
@@ -220,6 +219,13 @@ class Project(object):
             raise Exception(
                 "Cannot load project, path doesn't exist: %s" % self.path)
 
+        # If folder is read only, flag it and warn about it.
+        if not os.access(self.path, os.W_OK):
+
+            self._isInReadOnlyFolder = True
+            print("Warning: don't have write permissions for project folder. "
+                  "Opening as READ-ONLY.")
+
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
 
@@ -232,7 +238,7 @@ class Project(object):
 
             # FIXME: Handle settings argument here
 
-            # It is possible that settings does not exists if 
+            # It is possible that settings does not exists if
             # we are loading a project after a Project.setDbName,
             # used when running protocols
             settingsPath = os.path.join(self.path, self.settingsPath)
@@ -385,7 +391,7 @@ class Project(object):
         """Clean all project data"""
         pwutils.path.cleanPath(*self.pathList)
 
-    def launchProtocol(self, protocol, wait=False):
+    def launchProtocol(self, protocol, wait=False, scheduled=False):
         """ In this function the action of launching a protocol
         will be initiated. Actions done here are:
         1. Store the protocol and assign name and working dir
@@ -395,6 +401,7 @@ class Project(object):
         and also take care if the execution is remotely."""
 
         isRestart = protocol.getRunMode() == MODE_RESTART
+
         if (not protocol.isInteractive() and not protocol.isInStreaming()) or isRestart:
             self._checkModificationAllowed([protocol],
                                            'Cannot RE-LAUNCH protocol')
@@ -408,10 +415,13 @@ class Project(object):
             self.mapper.deleteRelations(self)
         self.mapper.commit()
 
-        # Prepare a separate db for this run
-        # NOTE: now we are simply copying the entire project db, this can be
-        # changed later to only create a subset of the db need for the run
-        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
+        # Prepare a separate db for this run if not from schedule jobs
+        # Scheduled protocols will load the project db from the run.db file,
+        # so there is no need to copy the database
+        if not scheduled:
+            # NOTE: now we are simply copying the entire project db, this can be
+            # changed later to only create a subset of the db need for the run
+            pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
 
         # Launch the protocol, the jobId should be set after this call
         pwprot.launch(protocol, wait)
@@ -423,13 +433,34 @@ class Project(object):
             self.mapper.store(protocol)
         self.mapper.commit()
 
-    def _updateProtocol(self, protocol, tries=0, checkPid=False):
+    def scheduleProtocol(self, protocol):
+        protocol.setStatus(pwprot.STATUS_SCHEDULED)
+        self._setupProtocol(protocol)
+        # protocol.setMapper(self.mapper) # mapper is used in makePathAndClean
+        protocol.makePathsAndClean()  # Create working dir if necessary
+        # Delete the relations created by this protocol if any
+        self.mapper.deleteRelations(self)
+        self.mapper.commit()
+
+        # Prepare a separate db for this run
+        # NOTE: now we are simply copying the entire project db, this can be
+        # changed later to only create a subset of the db need for the run
+        pwutils.path.copyFile(self.dbPath, protocol.getDbPath())
+        # Launch the protocol, the jobId should be set after this call
+        pwprot.schedule(protocol)
+        self.mapper.store(protocol)
+        self.mapper.commit()
+
+    def _updateProtocol(self, protocol, tries=0, checkPid=False,
+                        skipUpdatedProtocols=True):
 
         # If this is read only exit
-        if self.isReadOnly(): return
+        if self.openedAsReadOnly():
+            return
 
-        # If we are already updated, comparing timestamps
-        if pwprot.isProtocolUpToDate(protocol): return
+        if skipUpdatedProtocols:
+            # If we are already updated, comparing timestamps
+            if pwprot.isProtocolUpToDate(protocol): return
 
         try:
             # Backup the values of 'jobId', 'label' and 'comment'
@@ -437,6 +468,10 @@ class Project(object):
             jobId = protocol.getJobId()
             label = protocol.getObjLabel()
             comment = protocol.getObjComment()
+
+            # Capture the db timestamp before loading.
+            lastUpdateTime = pwutils.getFileLastModificationDate(
+                                                        protocol.getDbPath())
 
             # If the protocol database has ....
             #  Comparing date will not work unless we have a reliable
@@ -457,7 +492,10 @@ class Project(object):
             protocol.setJobId(jobId)
             protocol.setObjLabel(label)
             protocol.setObjComment(comment)
-            protocol.lastUpdateTimeStamp.set(datetime.datetime.now())
+            # Use the run.db timestamp instead of the system TS to prevent
+            # possible inconsistencies
+            # protocol.lastUpdateTimeStamp.set(datetime.datetime.now())
+            protocol.lastUpdateTimeStamp.set(lastUpdateTime)
 
             self.mapper.store(protocol)
 
@@ -465,7 +503,7 @@ class Project(object):
             prot2.getProject().closeMapper()
             prot2.closeMappers()
 
-        except Exception, ex:
+        except Exception as ex:
             print("Error trying to update protocol: %s(jobId=%s)\n "
                   "ERROR: %s, tries=%d"
                   % (protocol.getObjName(), jobId, ex, tries))
@@ -509,7 +547,7 @@ class Project(object):
         in order to avoid any modification.
         """
         return (not self.__protocolInList(child, protocols) and
-                not child.isSaved())
+                not child.isSaved() and not child.isScheduled())
 
     def _getProtocolsDependencies(self, protocols):
         error = ''
@@ -541,7 +579,7 @@ class Project(object):
         """ Check if any modification operation is allowed for
         this group of protocols. 
         """
-        if self.isReadOnly():
+        if self.openedAsReadOnly():
             raise Exception(msg + " Running in READ-ONLY mode.")
 
         self._checkProtocolsDependencies(protocols, msg)
@@ -872,7 +910,7 @@ class Project(object):
 
     def _storeProtocol(self, protocol):
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self.mapper.store(protocol)
             self.mapper.commit()
 
@@ -886,7 +924,7 @@ class Project(object):
         """Insert a new protocol instance in the database"""
 
         # Read only mode
-        if not self.isReadOnly():
+        if not self.openedAsReadOnly():
             self._storeProtocol(protocol)  # Store first to get a proper id
             # Set important properties of the protocol
             workingDir = "%06d_%s" % (
@@ -1185,7 +1223,16 @@ class Project(object):
         return connection
 
     def isReadOnly(self):
+        if getattr(self, 'settings', None) is None:
+            return False
+
         return self.settings.getReadOnly()
+
+    def isInReadOnlyFolder(self):
+        return self._isInReadOnlyFolder
+
+    def openedAsReadOnly(self):
+        return self.isReadOnly() or self.isInReadOnlyFolder()
 
     def setReadOnly(self, value):
         self.settings.setReadOnly(value)

@@ -43,8 +43,9 @@ except ImportError:
 
 # Update this values before any new release
 __version__ = DEVEL
-__nickname__ = ''
+__nickname__ = DEVEL
 __releasedate__ = ''
+
 
 
 # This script tries to run ok with any python version. So we cannot
