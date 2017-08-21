@@ -172,7 +172,7 @@ public:
 		}
 		xSize = data.img->getXSize();
 		ySize = data.img->getYSize();
-		imgIndex = data.imgIndex; // fixme posunout dolu
+		imgIndex = data.imgIndex;
 		weight = data.weight;
 		data.localAInv.convertTo(localAInv);
 		data.localA.convertTo(localA);
@@ -528,76 +528,80 @@ void processProjection(
 	dY = maxY - minY;
 	dZ = maxZ - minZ;
 
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	int idy = blockIdx.y*blockDim.y + threadIdx.y;
+//	printf("%dx%d zpracovava %d\n", idx, idy, projectionData->imgIndex);
+
 	if (dZ <= dX && dZ <= dY) { // iterate XY plane
-		for(int y = minY; y <= maxY; y++) {
-			for(int x = minX; x <= maxX; x++) {
+		if (idy >= minY && idy <= maxY) {
+			if (idx >= minX && idx <= maxX) {
 				if (cUseFast) {
 					float hitZ;
-					if (getZ(x, y, hitZ, u, v, *cuboid)) {
+					if (getZ(idx, idy, hitZ, u, v, *cuboid)) {
 						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, x, y, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, maxDistanceSqr, projectionData);
 					}
 				} else {
 					float z1, z2;
-					bool hit1 = getZ(x, y, z1, u, v, *cuboid); // lower plane
-					bool hit2 = getZ(x, y, z2, u, v, *(cuboid + 4)); // upper plane
+					bool hit1 = getZ(idx, idy, z1, u, v, *cuboid); // lower plane
+					bool hit2 = getZ(idx, idy, z2, u, v, *(cuboid + 4)); // upper plane
 					if (hit1 || hit2) {
 						z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
 						z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
 						float lower = fminf(z1, z2);
 						float upper = fmaxf(z1, z2);
 						for (int z = floorf(lower); z <= ceilf(upper); z++) {
-							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+							processVoxelBlob(idx, idy, z, transformInv, maxDistanceSqr, projectionData);
 						}
 					}
 				}
 			}
 		}
 	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
-		for(int z = minZ; z <= maxZ; z++) {
-			for(int x = minX; x <= maxX; x++) {
+		if (idy >= minZ && idy <= maxZ) { // map z -> y
+			if (idx >= minX && idx <= maxX) {
 				if (cUseFast) {
 					float hitY;
-					if (getY(x, hitY, z, u, v, *cuboid)) {
+					if (getY(idx, hitY, idy, u, v, *cuboid)) {
 						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, x, y, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, transformInv, maxDistanceSqr, projectionData);
 					}
 				} else {
 					float y1, y2;
-					bool hit1 = getY(x, y1, z, u, v, *cuboid); // lower plane
-					bool hit2 = getY(x, y2, z, u, v, *(cuboid + 4)); // upper plane
+					bool hit1 = getY(idx, y1, idy, u, v, *cuboid); // lower plane
+					bool hit2 = getY(idx, y2, idy, u, v, *(cuboid + 4)); // upper plane
 					if (hit1 || hit2) {
 						y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
 						y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
 						float lower = fminf(y1, y2);
 						float upper = fmaxf(y1, y2);
 						for (int y = floorf(lower); y <= ceilf(upper); y++) {
-							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+							processVoxelBlob(idx, y, idy, transformInv, maxDistanceSqr, projectionData);
 						}
 					}
 				}
 			}
 		}
 	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
-		for(int z = minZ; z <= maxZ; z++) {
-			for(int y = minY; y <= maxY; y++) {
+		if (idy >= minZ && idy <= maxZ) { // map z -> y
+			if (idx >= minY && idx <= maxY) { // map y > x
 				if (cUseFast) {
 					float hitX;
-					if (getX(hitX, y, z, u, v, *cuboid)) {
+					if (getX(hitX, idx, idy, u, v, *cuboid)) {
 						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, x, y, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, transformInv, maxDistanceSqr, projectionData);
 					}
 				} else {
 					float x1, x2;
-					bool hit1 = getX(x1, y, z, u, v, *cuboid); // lower plane
-					bool hit2 = getX(x2, y, z, u, v, *(cuboid + 4)); // upper plane
+					bool hit1 = getX(x1, idx, idy, u, v, *cuboid); // lower plane
+					bool hit2 = getX(x2, idx, idy, u, v, *(cuboid + 4)); // upper plane
 					if (hit1 || hit2) {
 						x1 = clamp(x1, 0, cMaxVolumeIndexX);
 						x2 = clamp(x2, 0, cMaxVolumeIndexX);
 						float lower = fminf(x1, x2);
 						float upper = fmaxf(x1, x2);
 						for (int x = floorf(lower); x <= ceilf(upper); x++) {
-							processVoxelBlob(x, y, z, transformInv, maxDistanceSqr, projectionData);
+							processVoxelBlob(x, idx, idy, transformInv, maxDistanceSqr, projectionData);
 						}
 					}
 				}
@@ -736,7 +740,12 @@ void processBufferGPU(float* tempVolumeGPU,
 	cudaMemcpy(devSymmetriesInv, symmetriesInv, symSize*sizeof(MATRIX), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 
-	processBufferKernel<<<1, 1>>>(
+	int BLOCK_DIM = 16;
+	int size2D = maxVolIndexYZ + 1;
+
+	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
+	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
+	processBufferKernel<<<dimGrid, dimBlock>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			devBuffer, bufferSize, devSymmetries, devSymmetriesInv, symSize);
 	gpuErrchk( cudaPeekAtLastError() );
