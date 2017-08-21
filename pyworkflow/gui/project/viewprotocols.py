@@ -1527,9 +1527,14 @@ class ProtocolsView(tk.Frame):
         protocol = self.getSelectedProtocol()
         workingDir = protocol.getWorkingDir()
         if os.path.exists(workingDir):
+
+            projectShortCut = pwgui.browser.ShortCut.factory(
+                protocol.getProject().getPath(),
+                "Project", Icon.RUNS_TREE)
             window = pwgui.browser.FileBrowserWindow("Browsing: " + workingDir,
                                                      master=self.windows,
-                                                     path=workingDir)
+                                                     path=workingDir,
+                                                     shortCuts=[projectShortCut])
             window.show()
         else:
             self.windows.showInfo("Protocol working dir does not exists: \n %s"
