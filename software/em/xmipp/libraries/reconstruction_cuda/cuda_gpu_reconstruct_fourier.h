@@ -38,7 +38,9 @@ void processBufferGPU(
 				ProjectionData* data,int noOfPixel,int bufferSize,
 				TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms,
 				int maxVolIndexX, int maxVolIndexYZ,
-				bool useFast, float blobRadius);
+				bool useFast, float blobRadius,
+				float iDeltaSqrt,
+				float* blobTableSqrt, int blobTableSize);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
 void copyBuffer(ProjectionData* data, int size);
 void allocateTempSpaces(int size);

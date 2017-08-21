@@ -1124,7 +1124,9 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
 				bufferSize, traverseSpaces, transformsInv, noOfTransforms,
 				maxVolumeIndexX, maxVolumeIndexYZ,
-				useFast, blob.radius);
+				useFast, blob.radius,
+				iDeltaSqrt,
+				blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     	barrier_wait( &barrier );
 
 		if (verbose && startLoadIndex%repaint==0) {
