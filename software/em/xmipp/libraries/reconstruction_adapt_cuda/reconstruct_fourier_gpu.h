@@ -31,10 +31,12 @@
 
 #include <iostream>
 #include <limits>
+#include <data/fourier_reconstruction_traverse_space.h>
 #include <data/xmipp_fftw.h>
 #include <data/xmipp_funcs.h>
 #include <data/xmipp_image.h>
 #include <data/projection.h>
+#include <data/point3D.h>
 #include <data/projection_data.h>
 #include <data/xmipp_threads.h>
 #include <data/blobs.h>
@@ -62,11 +64,6 @@
    @ingroup ReconsLibrary */
 //@{
 class ProgRecFourierGPU;
-
-/** Struct represents a point in 3D */
-struct Point3D {
-	float x, y, z;
-};
 
 /** Struct holding information for loading thread */
 struct LoadThreadParams
@@ -326,26 +323,26 @@ private:
     * [0,0] is in the middle of the left side (point [0] and [3]), provided the blobSize is 0
     * otherwise the values can go to negative values
     */
-    static void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize);
+    static void createProjectionCuboid(Point3D<float>* cuboid, float sizeX, float sizeY, float blobSize);
 
     //* Apply rotation transform to cuboid */
-    static void rotateCuboid(Point3D* cuboid, const float transform[3][3]) {
+    static void rotateCuboid(Point3D<float>* cuboid, const float transform[3][3]) {
     	for (int i = 0; i < 8; i++) {
     		multiply(transform, cuboid[i]);
     	}
     }
 
     /** Do 3x3 x 1x3 matrix-vector multiplication */
-    static void multiply(const float transform[3][3], Point3D& inOut);
+    static void multiply(const float transform[3][3], Point3D<float>& inOut);
 
     /** Add 'vector' to each element of 'cuboid' */
-    static void translateCuboid(Point3D* cuboid, Point3D vector);
+    static void translateCuboid(Point3D<float>* cuboid, Point3D<float> vector);
 
     /**
      * Method will calculate Axis Aligned Bound Box of the cuboid and restrict
      * its maximum size
      */
-    static void computeAABB(Point3D* AABB, Point3D* cuboid,
+    static void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid,
     		float minX, float minY, float minZ,
     		float maxX, float maxY, float maxZ);
 
@@ -355,20 +352,20 @@ private:
     	return (x > min) && (x < max);
     }
 
-    /** Returns X coordinate of the point [y, z] on the plane defined by p0 (origin) and two vectors */
-    static bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
-
-    /** Returns Y coordinate of the point [x, z] on the plane defined by p0 (origin) and two vectors */
-    static bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
-
-    /** Returns Z coordinate of the point [x, y] on the plane defined by p0 (origin) and two vectors */
-    static bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0);
+//    /** Returns X coordinate of the point [y, z] on the plane defined by p0 (origin) and two vectors */
+//    static bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
+//
+//    /** Returns Y coordinate of the point [x, z] on the plane defined by p0 (origin) and two vectors */
+//    static bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
+//
+//    /** Returns Z coordinate of the point [x, y] on the plane defined by p0 (origin) and two vectors */
+//    static bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0);
 
     /** Method returns vectors defining the plane */
-    static void getVectors(const Point3D* plane, Point3D& u, Point3D& v);
+    static void getVectors(const Point3D<float>* plane, Point3D<float>& u, Point3D<float>& v);
 
-    /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
-    static void printAABB(Point3D* AABB);
+//    /** DEBUG ONLY method, prints AABB to std::cout. Output can be used in e.g. GNUPLOT */
+//    static void printAABB(Point3D* AABB);
 
     /** Method will convert Matrix2D matrix to float[3][3] */
     static void convert(Matrix2D<double>& in, float out[3][3]);
@@ -436,14 +433,16 @@ private:
     	}
     }
 
-    /**
-     * Method will process one projection image and add result to temporal
-     * spaces. Method also shows progress of the calculation.
-     */
-    void processProjection(
-    	ProjectionData* projectionData,
-    	const float transform[3][3],
-    	const float transformInv[3][3]);
+    void computeTraverseSpace(int imgSizeX, int imgSizeY, MATRIX& transform, TraverseSpace* space);
+
+//    /**
+//     * Method will process one projection image and add result to temporal
+//     * spaces. Method also shows progress of the calculation.
+//     */
+//    void processProjection(
+//    	ProjectionData* projectionData,
+//    	const float transform[3][3],
+//    	const float transformInv[3][3]);
 
     /**
      * Method will map one voxel from the temporal
@@ -463,6 +462,11 @@ private:
     void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
     		ProjectionData* const data);
 
+    /**
+     * Method will precalculate (inverse) transformation for each projection data x symmetry
+     */
+    void prepareTransforms(ProjectionData* buffer, MATRIX* transformsInv,
+    		TraverseSpace* traverseSpaces);
 
 };
 //@}

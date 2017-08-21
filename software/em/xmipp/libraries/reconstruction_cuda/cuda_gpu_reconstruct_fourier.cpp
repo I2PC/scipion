@@ -17,9 +17,10 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 }
 
 float* allocateGPU(float*& where, int size) {
+	std::cout << "allocating " << size << "x" << sizeof(float) << std::endl;
 	cudaMalloc((void**)&where, size * size * size * sizeof(float));
 	gpuErrchk( cudaPeekAtLastError() );
-	std::cout << "allocating " << where << std::endl;
+	std::cout << "allocated " << where << std::endl;
 	cudaMemset(where, 0.f, size * size * size * sizeof(float));
 	gpuErrchk( cudaPeekAtLastError() );
 
@@ -275,11 +276,6 @@ __device__ static bool inRange(T x, T min, T max) {
 	return (x > min) && (x < max);
 }
 
-/** Struct represents a point in 3D */
-struct Point3D {
-	float x, y, z;
-};
-
 template<typename T, typename U>
 __device__ inline U clamp(U val, T min, T max) {
 	U res = val;
@@ -288,7 +284,7 @@ __device__ inline U clamp(U val, T min, T max) {
 	return res;
 }
 __device__
-bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -302,7 +298,7 @@ bool getZ(float x, float y, float& z, const Point3D& a, const Point3D& b, const 
 }
 
 __device__
-bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+bool getY(float x, float& y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -316,7 +312,7 @@ bool getY(float x, float& y, float z, const Point3D& a, const Point3D& b, const 
 }
 
 __device__
-bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0) {
+bool getX(float& x, float y, float z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
 	// from parametric eq. of the plane
 	float x0 = p0.x;
 	float y0 = p0.y;
@@ -329,22 +325,22 @@ bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const 
 	return inRange(t, 0.f, 1.f) && inRange(u, 0.f, 1.f);
 }
 
+//__device__
+//void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize)
+//{
+//	float halfY = sizeY / 2.0f;
+//	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
+//	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
+//
+//	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
+//	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
+//
+//	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
+//	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
+//}
+//
 __device__
-void createProjectionCuboid(Point3D* cuboid, float sizeX, float sizeY, float blobSize)
-{
-	float halfY = sizeY / 2.0f;
-	cuboid[0].x = cuboid[3].x = cuboid[4].x = cuboid[7].x = 0.f - blobSize;
-	cuboid[1].x = cuboid[2].x = cuboid[5].x = cuboid[6].x = sizeX + blobSize;
-
-	cuboid[0].y = cuboid[1].y = cuboid[4].y = cuboid[5].y = -(halfY + blobSize);
-	cuboid[2].y = cuboid[3].y = cuboid[6].y = cuboid[7].y = halfY + blobSize;
-
-	cuboid[0].z = cuboid[1].z = cuboid[2].z = cuboid[3].z = 0.f + blobSize;
-	cuboid[4].z = cuboid[5].z = cuboid[6].z = cuboid[7].z = 0.f - blobSize;
-}
-
-__device__
-void multiply(const float transform[3][3], Point3D& inOut) {
+void multiply(const float transform[3][3], Point3D<float>& inOut) {
 	float tmp0 = transform[0][0] * inOut.x + transform[0][1] * inOut.y + transform[0][2] * inOut.z;
 	float tmp1 = transform[1][0] * inOut.x + transform[1][1] * inOut.y + transform[1][2] * inOut.z;
 	float tmp2 = transform[2][0] * inOut.x + transform[2][1] * inOut.y + transform[2][2] * inOut.z;
@@ -352,64 +348,64 @@ void multiply(const float transform[3][3], Point3D& inOut) {
 	inOut.y = tmp1;
 	inOut.z = tmp2;
 }
-
-__device__
-//* Apply rotation transform to cuboid */
-void rotateCuboid(Point3D* cuboid, const float transform[3][3]) {
-	for (int i = 0; i < 8; i++) {
-		multiply(transform, cuboid[i]);
-	}
-}
-
-__device__
-void translateCuboid(Point3D* cuboid, Point3D vector) {
-	for (int i = 0; i < 8; i++) {
-		cuboid[i].x += vector.x;
-		cuboid[i].y += vector.y;
-		cuboid[i].z += vector.z;
-	}
-}
-__device__
-void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
-	float x0 = plane[0].x;
-	float y0 = plane[0].y;
-	float z0 = plane[0].z;
-	u.x = plane[1].x - x0;
-	u.y = plane[1].y - y0;
-	u.z = plane[1].z - z0;
-	v.x = plane[3].x - x0;
-	v.y = plane[3].y - y0;
-	v.z = plane[3].z - z0;
-}
-__device__
-void computeAABB(Point3D* AABB, Point3D* cuboid,
-	float minX, float minY, float minZ,
-	float maxX, float maxY, float maxZ) {
-	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
-	AABB[1].x = AABB[1].y = AABB[1].z = -INFINITY;
-	Point3D tmp;
-	for (int i = 0; i < 8; i++) {
-		tmp = cuboid[i];
-		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
-		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
-		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
-		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
-		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
-		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
-	}
-	// limit to max size
-	if (AABB[0].x < minX) AABB[0].x = minX;
-	if (AABB[0].y < minY) AABB[0].y = minY;
-	if (AABB[0].z < minZ) AABB[0].z = minZ;
-	if (AABB[1].x > maxX) AABB[1].x = maxX;
-	if (AABB[1].y > maxY) AABB[1].y = maxY;
-	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
-}
+//
+//__device__
+////* Apply rotation transform to cuboid */
+//void rotateCuboid(Point3D* cuboid, const float transform[3][3]) {
+//	for (int i = 0; i < 8; i++) {
+//		multiply(transform, cuboid[i]);
+//	}
+//}
+//
+//__device__
+//void translateCuboid(Point3D* cuboid, Point3D vector) {
+//	for (int i = 0; i < 8; i++) {
+//		cuboid[i].x += vector.x;
+//		cuboid[i].y += vector.y;
+//		cuboid[i].z += vector.z;
+//	}
+//}
+//__device__
+//void getVectors(const Point3D* plane, Point3D& u, Point3D& v) {
+//	float x0 = plane[0].x;
+//	float y0 = plane[0].y;
+//	float z0 = plane[0].z;
+//	u.x = plane[1].x - x0;
+//	u.y = plane[1].y - y0;
+//	u.z = plane[1].z - z0;
+//	v.x = plane[3].x - x0;
+//	v.y = plane[3].y - y0;
+//	v.z = plane[3].z - z0;
+//}
+//__device__
+//void computeAABB(Point3D* AABB, Point3D* cuboid,
+//	float minX, float minY, float minZ,
+//	float maxX, float maxY, float maxZ) {
+//	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
+//	AABB[1].x = AABB[1].y = AABB[1].z = -INFINITY;
+//	Point3D tmp;
+//	for (int i = 0; i < 8; i++) {
+//		tmp = cuboid[i];
+//		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
+//		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
+//		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
+//		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
+//		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
+//		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
+//	}
+//	// limit to max size
+//	if (AABB[0].x < minX) AABB[0].x = minX;
+//	if (AABB[0].y < minY) AABB[0].y = minY;
+//	if (AABB[0].z < minZ) AABB[0].z = minZ;
+//	if (AABB[1].x > maxX) AABB[1].x = maxX;
+//	if (AABB[1].y > maxY) AABB[1].y = maxY;
+//	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
+//}
 __device__
 void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		ProjectionDataGPU* const data) {
-	Point3D imgPos;
+	Point3D<float> imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
@@ -454,154 +450,154 @@ void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 __device__
 void processVoxelBlob(int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		ProjectionDataGPU* const data) {
-	//
+	// FIXME add
 }
-
-__device__
-void printAABB(Point3D* AABB) {
-	// one base
-	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-		AABB[0].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[0].z,
-		AABB[0].x, AABB[1].y, AABB[0].z,
-		AABB[0].x, AABB[0].y, AABB[0].z);
-	// other base with one connection
-	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-		AABB[0].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[0].y, AABB[1].z);
-	// lines between bases
-	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
-		AABB[1].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[0].z);
-}
-__device__
-void print(Point3D* cuboid) {
-	printf("\n");
-	for (int i = 0; i < 9; i++) {
-		printf("%f %f %f\n", cuboid[i%8].x, cuboid[i%8].y, cuboid[i%8].z);
-	}
-	printf("\n");
-}
+//
+//__device__
+//void printAABB(Point3D* AABB) {
+//	// one base
+//	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+//		AABB[0].x, AABB[0].y, AABB[0].z,
+//		AABB[1].x, AABB[0].y, AABB[0].z,
+//		AABB[1].x, AABB[1].y, AABB[0].z,
+//		AABB[0].x, AABB[1].y, AABB[0].z,
+//		AABB[0].x, AABB[0].y, AABB[0].z);
+//	// other base with one connection
+//	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+//		AABB[0].x, AABB[0].y, AABB[1].z,
+//		AABB[1].x, AABB[0].y, AABB[1].z,
+//		AABB[1].x, AABB[1].y, AABB[1].z,
+//		AABB[0].x, AABB[1].y, AABB[1].z,
+//		AABB[0].x, AABB[0].y, AABB[1].z);
+//	// lines between bases
+//	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
+//		AABB[1].x, AABB[0].y, AABB[1].z,
+//		AABB[1].x, AABB[0].y, AABB[0].z,
+//		AABB[1].x, AABB[1].y, AABB[0].z,
+//		AABB[1].x, AABB[1].y, AABB[1].z,
+//		AABB[0].x, AABB[1].y, AABB[1].z,
+//		AABB[0].x, AABB[1].y, AABB[0].z);
+//}
+//__device__
+//void print(Point3D* cuboid) {
+//	printf("\n");
+//	for (int i = 0; i < 9; i++) {
+//		printf("%f %f %f\n", cuboid[i%8].x, cuboid[i%8].y, cuboid[i%8].z);
+//	}
+//	printf("\n");
+//}
 
 __device__
 void processProjection(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 	ProjectionDataGPU* projectionData,
-	const float transform[3][3],
+	const TraverseSpace& tSpace,
 	const float transformInv[3][3])
 {
-	int imgSizeX = projectionData->xSize;
-	int imgSizeY = projectionData->ySize;
-	const float maxDistanceSqr = (imgSizeX+(cUseFast ? 0.f : cBlobRadius)) * (imgSizeX+(cUseFast ? 0.f : cBlobRadius));
-	Point3D origin = {cMaxVolumeIndexX/2.f, cMaxVolumeIndexYZ/2.f, cMaxVolumeIndexYZ/2.f};
-	Point3D u, v;
-	Point3D AABB[2];
-	Point3D cuboid[8];
+//	int imgSizeX = projectionData->xSize;
+//	int imgSizeY = projectionData->ySize;
+//	const float maxDistanceSqr = (imgSizeX+(cUseFast ? 0.f : cBlobRadius)) * (imgSizeX+(cUseFast ? 0.f : cBlobRadius));
+//	Point3D origin = {cMaxVolumeIndexX/2.f, cMaxVolumeIndexYZ/2.f, cMaxVolumeIndexYZ/2.f};
+//	Point3D u, v;
+//	Point3D AABB[2];
+//	Point3D cuboid[8];
 
 	// calculate affected space
-	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, cUseFast ? 0.f : cBlobRadius);
-	rotateCuboid(cuboid, transform);
-	translateCuboid(cuboid, origin);
-	computeAABB(AABB, cuboid, 0, 0, 0, cMaxVolumeIndexX, cMaxVolumeIndexYZ, cMaxVolumeIndexYZ);
+//	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, cUseFast ? 0.f : cBlobRadius);
+//	rotateCuboid(cuboid, transform);
+//	translateCuboid(cuboid, origin);
+//	computeAABB(AABB, cuboid, 0, 0, 0, cMaxVolumeIndexX, cMaxVolumeIndexYZ, cMaxVolumeIndexYZ);
 
-	getVectors(cuboid, u, v);
+//	getVectors(cuboid, u, v);
 
 	// prepare traversing
-	int minY, minX, minZ;
-	int maxY, maxX, maxZ;
-	minZ = floorf(AABB[0].z);
-	minY = floorf(AABB[0].y);
-	minX = floorf(AABB[0].x);
-	maxZ = ceilf(AABB[1].z);
-	maxY = ceilf(AABB[1].y);
-	maxX = ceilf(AABB[1].x);
-	int dX, dY, dZ;
-	dX = maxX - minX;
-	dY = maxY - minY;
-	dZ = maxZ - minZ;
+//	int minY, minX, minZ;
+//	int maxY, maxX, maxZ;
+//	minZ = floorf(AABB[0].z);
+//	minY = floorf(AABB[0].y);
+//	minX = floorf(AABB[0].x);
+//	maxZ = ceilf(AABB[1].z);
+//	maxY = ceilf(AABB[1].y);
+//	maxX = ceilf(AABB[1].x);
+//	int dX, dY, dZ;
+//	dX = maxX - minX;
+//	dY = maxY - minY;
+//	dZ = maxZ - minZ;
 
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
 //	printf("%dx%d zpracovava %d\n", idx, idy, projectionData->imgIndex);
 
-	if (dZ <= dX && dZ <= dY) { // iterate XY plane
-		if (idy >= minY && idy <= maxY) {
-			if (idx >= minX && idx <= maxX) {
+	if (tSpace.XY == tSpace.dir) { // iterate XY plane
+		if (idy >= tSpace.minY && idy <= tSpace.maxY) {
+			if (idx >= tSpace.minX && idx <= tSpace.maxX) {
 				if (cUseFast) {
 					float hitZ;
-					if (getZ(idx, idy, hitZ, u, v, *cuboid)) {
+					if (getZ(idx, idy, hitZ, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
 						int z = (int)(hitZ + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
 					}
 				} else {
 					float z1, z2;
-					bool hit1 = getZ(idx, idy, z1, u, v, *cuboid); // lower plane
-					bool hit2 = getZ(idx, idy, z2, u, v, *(cuboid + 4)); // upper plane
+					bool hit1 = getZ(idx, idy, z1, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+					bool hit2 = getZ(idx, idy, z2, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
 					if (hit1 || hit2) {
 						z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
 						z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
 						float lower = fminf(z1, z2);
 						float upper = fmaxf(z1, z2);
 						for (int z = floorf(lower); z <= ceilf(upper); z++) {
-							processVoxelBlob(idx, idy, z, transformInv, maxDistanceSqr, projectionData);
+							processVoxelBlob(idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
 				}
 			}
 		}
-	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
-		if (idy >= minZ && idy <= maxZ) { // map z -> y
-			if (idx >= minX && idx <= maxX) {
+	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
+		if (idy >= tSpace.minZ && idy <= tSpace.maxZ) { // map z -> y
+			if (idx >= tSpace.minX && idx <= tSpace.maxX) {
 				if (cUseFast) {
 					float hitY;
-					if (getY(idx, hitY, idy, u, v, *cuboid)) {
+					if (getY(idx, hitY, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
 						int y = (int)(hitY + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 					}
 				} else {
 					float y1, y2;
-					bool hit1 = getY(idx, y1, idy, u, v, *cuboid); // lower plane
-					bool hit2 = getY(idx, y2, idy, u, v, *(cuboid + 4)); // upper plane
+					bool hit1 = getY(idx, y1, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+					bool hit2 = getY(idx, y2, idy, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
 					if (hit1 || hit2) {
 						y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
 						y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
 						float lower = fminf(y1, y2);
 						float upper = fmaxf(y1, y2);
 						for (int y = floorf(lower); y <= ceilf(upper); y++) {
-							processVoxelBlob(idx, y, idy, transformInv, maxDistanceSqr, projectionData);
+							processVoxelBlob(idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
 				}
 			}
 		}
-	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
-		if (idy >= minZ && idy <= maxZ) { // map z -> y
-			if (idx >= minY && idx <= maxY) { // map y > x
+	} else { // iterate YZ plane
+		if (idy >= tSpace.minZ && idy <= tSpace.maxZ) { // map z -> y
+			if (idx >= tSpace.minY && idx <= tSpace.maxY) { // map y > x
 				if (cUseFast) {
 					float hitX;
-					if (getX(hitX, idx, idy, u, v, *cuboid)) {
+					if (getX(hitX, idx, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin)) {
 						int x = (int)(hitX + 0.5f); // rounding
-						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, transformInv, maxDistanceSqr, projectionData);
+						processVoxel(tempVolumeGPU, tempWeightsGPU, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 					}
 				} else {
 					float x1, x2;
-					bool hit1 = getX(x1, idx, idy, u, v, *cuboid); // lower plane
-					bool hit2 = getX(x2, idx, idy, u, v, *(cuboid + 4)); // upper plane
+					bool hit1 = getX(x1, idx, idy, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+					bool hit2 = getX(x2, idx, idy, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
 					if (hit1 || hit2) {
 						x1 = clamp(x1, 0, cMaxVolumeIndexX);
 						x2 = clamp(x2, 0, cMaxVolumeIndexX);
 						float lower = fminf(x1, x2);
 						float upper = fmaxf(x1, x2);
 						for (int x = floorf(lower); x <= ceilf(upper); x++) {
-							processVoxelBlob(x, idx, idy, transformInv, maxDistanceSqr, projectionData);
+							processVoxelBlob(x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
 				}
@@ -621,10 +617,12 @@ void processProjection(
 
 __global__
 void processBufferKernel(
-
 		float* tempVolumeGPU, float *tempWeightsGPU,
-		ProjectionDataGPU* buffer, int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize
+		ProjectionDataGPU* buffer, int bufferSize,
+		TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms
 		) {
+
+	int noOfSym = noOfTransforms / bufferSize;
 	for ( int i = 0 ; i < bufferSize; i++ ) {
 		ProjectionDataGPU* projData = &buffer[i];
 		if (projData->skip) {
@@ -636,17 +634,17 @@ void processBufferKernel(
 
 //		Matrix2D<double> *Ainv = &projData->localAInv;
 		// Loop over all symmetries
-		for (size_t isym = 0; isym < symSize; isym++)
+		for (int isym = 0; isym < noOfSym; isym++)
 		{
 			// Compute the coordinate axes of the symmetrized projection
 //			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
 //			Matrix2D<double> A_SLInv=A_SL.inv();
-			float transf[3][3];
-			float transfInv[3][3];
+//			float transf[3][3];
+//			float transfInv[3][3];
 //			convert(A_SL, transf);
 //			convert(A_SLInv, transfInv);
-			multiply(symmetries[isym], projData->localAInv, transf);
-			multiply(projData->localA, symmetriesInv[isym], transfInv);
+//			multiply(symmetries[isym], projData->localAInv, transf);
+//			multiply(projData->localA, symmetriesInv[isym], transfInv);
 
 //			if (projData->imgIndex == 6) {
 //				printf("GPU img 6 sym[%d] %f %f %f\n%f %f %f\n%f %f %f\n", isym,
@@ -680,10 +678,10 @@ void processBufferKernel(
 //						transfInv[1][0], transfInv[1][1], transfInv[1][2],
 //						transfInv[2][0], transfInv[2][1], transfInv[2][2]);
 //			}
-
+			int index = i*noOfSym + isym;
 			processProjection(
 					tempVolumeGPU, tempWeightsGPU,
-					projData, transf, transfInv);
+					projData, traverseSpaces[index], transformsInv[index]);
 		}
 //		projData->clean();
 	}
@@ -694,7 +692,8 @@ void processBufferKernel(
 
 void processBufferGPU(float* tempVolumeGPU,
 		float* tempWeightsGPU,
-		ProjectionData* data, int N, int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize,
+		ProjectionData* data, int N, int bufferSize,
+		TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius) {
 
@@ -728,16 +727,16 @@ void processBufferGPU(float* tempVolumeGPU,
 //				gpuErrchk(cudaDeviceSynchronize());
 //				return;
 
-	MATRIX* devSymmetries;
-	cudaMalloc((void **) &devSymmetries, symSize*sizeof(MATRIX));
+	TraverseSpace* devTravSpaces;
+	cudaMalloc((void **) &devTravSpaces, noOfTransforms*sizeof(TraverseSpace));
 	gpuErrchk( cudaPeekAtLastError() );
-	MATRIX* devSymmetriesInv;
-	cudaMalloc((void **) &devSymmetriesInv, symSize*sizeof(MATRIX));
+	MATRIX* devTransformsInv;
+	cudaMalloc((void **) &devTransformsInv, noOfTransforms*sizeof(MATRIX));
 	gpuErrchk( cudaPeekAtLastError() );
 
-	cudaMemcpy(devSymmetries, symmetries, symSize*sizeof(MATRIX), cudaMemcpyHostToDevice);
+	cudaMemcpy(devTravSpaces, traverseSpaces, noOfTransforms*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpy(devSymmetriesInv, symmetriesInv, symSize*sizeof(MATRIX), cudaMemcpyHostToDevice);
+	cudaMemcpy(devTransformsInv, transformsInv, noOfTransforms*sizeof(MATRIX), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 
 	int BLOCK_DIM = 16;
@@ -745,9 +744,13 @@ void processBufferGPU(float* tempVolumeGPU,
 
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
+
+	printf("%d %d", dimGrid.x, dimGrid.y);
+
 	processBufferKernel<<<dimGrid, dimBlock>>>(
 			tempVolumeGPU, tempWeightsGPU,
-			devBuffer, bufferSize, devSymmetries, devSymmetriesInv, symSize);
+			devBuffer, bufferSize,
+			devTravSpaces, devTransformsInv, noOfTransforms);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
 //	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[bufferSize];
@@ -778,10 +781,10 @@ void processBufferGPU(float* tempVolumeGPU,
 	}
 	cudaFree(devBuffer);
 	gpuErrchk( cudaPeekAtLastError() );
-//	delete[] hostBuffer;
-	cudaFree(devSymmetries);
+	delete[] hostBuffer;
+	cudaFree(devTravSpaces);
 	gpuErrchk( cudaPeekAtLastError() );
-	cudaFree(devSymmetriesInv);
+	cudaFree(devTransformsInv);
 	gpuErrchk( cudaPeekAtLastError() );
 }
 //

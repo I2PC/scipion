@@ -9,6 +9,7 @@
 #define XMIPP_LIBRARIES_RECONSTRUCTION_CUDA_CUDA_GPU_RECONSTRUCT_FOURIER_H_
 
 #include <data/projection_data.h>
+#include <data/fourier_reconstruction_traverse_space.h>
 
 
 //static ProjectionData* projData;
@@ -34,7 +35,8 @@ void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
 void processBufferGPU(
 		float* tempVolumeGPU,
 				float* tempWeightsGPU,
-				ProjectionData* data,int noOfPixel,int bufferSize, MATRIX* symmetries, MATRIX* symmetriesInv, int symSize,
+				ProjectionData* data,int noOfPixel,int bufferSize,
+				TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms,
 				int maxVolIndexX, int maxVolIndexYZ,
 				bool useFast, float blobRadius);
 void getTempSpaces(int size, std::complex<float>***& volume, float***& tempWeights);
