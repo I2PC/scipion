@@ -140,80 +140,62 @@ inline void multiply(const MATRIX a, MATRIX b, MATRIX& c) {
 //
 struct ProjectionDataGPU
 {
+	bool skip;
 	float* img;
-	int xSize;
-	int ySize;
 	float* CTF;
 	float* modulator;
+	int xSize;
+	int ySize;
 	int imgIndex;
 	float weight;
 	float localAInv[3][3];
 	float localA[3][3];
-	bool skip;
 public:
 	ProjectionDataGPU() {
 			setDefault();
 		}
 	ProjectionDataGPU(const ProjectionData& data) {
-		imgIndex = data.imgIndex; // fixme posunout dolu
 		skip = data.skip;
 		if (skip) {
 			return;
 		}
 		copy(*data.img, img);
 		if (NULL != data.CTF) {
-			printf("copying CTF\n");
 			copy(*data.CTF, CTF);
+		} else {
+			CTF = NULL;
 		}
 		if (NULL != data.modulator) {
-			printf("copying modulator\n");
 			copy(*data.modulator, modulator);
+		} else {
+			modulator = NULL;
 		}
 		xSize = data.img->getXSize();
 		ySize = data.img->getYSize();
-//		CTF = modulator = 0;
+		imgIndex = data.imgIndex; // fixme posunout dolu
 		weight = data.weight;
 		data.localAInv.convertTo(localAInv);
 		data.localA.convertTo(localA);
-
-//		if (imgIndex == 6) {
-//			printf("GPUbuffer img 6 localAInv %f %f %f\n%f %f %f\n%f %f %f\n",
-//					localAInv[0][0], localAInv[0][1], localAInv[0][2],
-//					localAInv[1][0], localAInv[1][1], localAInv[1][2],
-//					localAInv[2][0], localAInv[2][1], localAInv[2][2]);
-//
-//			printf("GPUbuffer img 6 local %f %f %f\n%f %f %f\n%f %f %f\n",
-//					localA[0][0], localA[0][1], localA[0][2],
-//					localA[1][0], localA[1][1], localA[1][2],
-//					localA[2][0], localA[2][1], localA[2][2]);
-//		}
-
-
-	}
-	~ProjectionDataGPU() {
-//		printf("volam destruktor");
-		clean();
 	}
 	/** Remove stored data and set to skip */
 	void clean() {
-//		printf("%p %p %p\n", img, CTF, modulator);
-//		cudaFree(img);
-//		gpuErrchk(cudaPeekAtLastError());
-//		cudaFree(CTF);
-//		gpuErrchk(cudaPeekAtLastError());
-//		cudaFree(modulator);
-//		gpuErrchk(cudaPeekAtLastError()); FIXME uncomment
+		cudaFree(img);
+		gpuErrchk(cudaPeekAtLastError());
+		cudaFree(CTF);
+		gpuErrchk(cudaPeekAtLastError());
+		cudaFree(modulator);
+		gpuErrchk(cudaPeekAtLastError());
 		setDefault();
 	}
 	void setDefault() {
+		skip = true;
 		img = NULL;
-		xSize = 0;
-		ySize = 0;
 		CTF = NULL;
 		modulator = NULL;
+		xSize = 0;
+		ySize = 0;
 		imgIndex = -1;
 		weight = 0;
-		skip = true;
 	}
 private:
 	template<typename T, typename U>
@@ -221,31 +203,19 @@ private:
 		int xSize = from.getXSize();
 		int ySize = from.getYSize();
 		int N = xSize * ySize;
-		int rate = sizeof(T) / sizeof(*to);
+		// flatten the input array
 		T* tmp = new T[N];
 		for (int y = 0; y < ySize; y++) {
 			memcpy(&tmp[y * xSize],
 					from.getRow(y),
 					sizeof(T)*xSize);
 		}
-//		if (imgIndex == 12) {
-//			printf("img 12:\n");
-//			for (int aaa = 0; aaa < N; aaa++) {
-//				std::cout << tmp[aaa] << " ";
-//			}
-//			std::cout << std::endl;
-//		}
 		// Allocate device pointer.
 		cudaMalloc((void**) &(to), sizeof(T) * N);
 		// Copy content from host to device.
-//		for (int y = 0; y < ySize; y++) {
-			cudaMemcpy(to,
-					tmp,
-					sizeof(T)*N,
-					cudaMemcpyHostToDevice);
-			gpuErrchk(cudaPeekAtLastError());
-//		}
-			delete[] tmp;
+		cudaMemcpy(to, tmp, sizeof(T)*N, cudaMemcpyHostToDevice);
+		gpuErrchk(cudaPeekAtLastError());
+		delete[] tmp;
 	}
 };
 
@@ -285,10 +255,10 @@ __global__ void test_init(float* test,
 	test[2*i+1] += 0.f;
 }
 
-static ProjectionDataGPU* copyProjectionData(ProjectionData* data, int bufferSize) {
-	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[bufferSize];
+static ProjectionDataGPU* copyProjectionData(ProjectionDataGPU* hostBuffer,
+		ProjectionData* data, int bufferSize) {
 	for (int i = 0; i < bufferSize; i++) {
-		hostBuffer[i] = ProjectionDataGPU(data[i]);
+		hostBuffer[i] = *new ProjectionDataGPU(data[i]);
 	}
 	ProjectionDataGPU* devBuffer;
 	int size = bufferSize * sizeof(ProjectionDataGPU);
@@ -296,7 +266,6 @@ static ProjectionDataGPU* copyProjectionData(ProjectionData* data, int bufferSiz
 	gpuErrchk( cudaPeekAtLastError() );
 	cudaMemcpy(devBuffer, hostBuffer, size, cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
-	delete[] hostBuffer;
 	return devBuffer;
 }
 /** Returns true if x is in (min, max) interval */
@@ -712,7 +681,7 @@ void processBufferKernel(
 					tempVolumeGPU, tempWeightsGPU,
 					projData, transf, transfInv);
 		}
-
+//		projData->clean();
 	}
 
 	// FIXME
@@ -725,7 +694,8 @@ void processBufferGPU(float* tempVolumeGPU,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius) {
 
-	ProjectionDataGPU*	devBuffer = copyProjectionData(data, bufferSize);
+	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
+	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
 
 
 //	printf("vstup %f %f %f\n%f %f %f\n%f %f %f\n",
@@ -794,6 +764,9 @@ void processBufferGPU(float* tempVolumeGPU,
 //				gpuErrchk(cudaDeviceSynchronize());
 //
 
+	for (int i = 0 ; i < bufferSize; i++) {
+		hostBuffer[i].clean();
+	}
 	cudaFree(devBuffer);
 	gpuErrchk( cudaPeekAtLastError() );
 //	delete[] hostBuffer;
