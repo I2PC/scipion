@@ -37,6 +37,8 @@ from glob import glob
 
 import datetime
 
+ROOT = "/"
+PATH_SEP = "/"
 
 def findFileRecursive(filename, path):
     for root, dirs, files in os.walk(path):
@@ -85,6 +87,11 @@ def findRootFrom(referenceFile, searchFile):
         
     return None   
 
+
+def getParentFolder(path):
+    """ Returns the parent folder of a file or folder. Work for folders that ens with "/"
+    which dirname can't"""
+    return os.path.abspath(os.path.join(path, os.pardir))
 
 def replaceExt(filename, newExt):
     """ Replace the current path extension(from last .)
