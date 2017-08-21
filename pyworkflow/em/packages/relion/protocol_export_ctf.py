@@ -142,7 +142,7 @@ class ProtRelionExportCtf(EMProtocol):
 
     def _summary(self):
         summary = []
-        ctfStarFn = self._getPath(self.CTF_STAR_FILE)
+        ctfStarFn = self._getPath(self.CTF_STAR_FILE % self.getObjId())
 
         if os.path.exists(ctfStarFn):
             summary.append("Output CTF STAR file written to: \n%s" % ctfStarFn)
