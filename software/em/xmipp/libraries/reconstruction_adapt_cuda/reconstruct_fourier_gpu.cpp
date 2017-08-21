@@ -1104,26 +1104,20 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
     int startLoadIndex = firstImageIndex;
 
-    /** holding transform/traverse space for each projection x symmetry */
-    int noOfTransforms = bufferSize * R_repository.size();
+	/** holding transform/traverse space for each projection x symmetry */
+	int noOfTransforms = bufferSize * R_repository.size();
 	MATRIX* transformsInv = new MATRIX[noOfTransforms];
 	TraverseSpace* traverseSpaces = new TraverseSpace[noOfTransforms];
 
 	int repaint = (int)ceil((double)SF.size()/60);
-    loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
+	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 	barrier_wait( &barrier );
-    for(int i = 0; i < loops; i++) {
-    	swapLoadBuffers();
+	for(int i = 0; i < loops; i++) {
+		swapLoadBuffers();
     	startLoadIndex += bufferSize;
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
-//    	processBuffer(loadThread.buffer2);
-//    	copyBuffer(loadThread.buffer2, bufferSize);
 
-		if (verbose && startLoadIndex%repaint==0) {
-			progress_bar(startLoadIndex);
-		}
-
-		prepareTransforms(loadThread.buffer2, transformsInv, traverseSpaces);
+    	prepareTransforms(loadThread.buffer2, transformsInv, traverseSpaces);
 
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,
@@ -1133,9 +1127,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 				useFast, blob.radius);
     	barrier_wait( &barrier );
 
+		if (verbose && startLoadIndex%repaint==0) {
+			progress_bar(startLoadIndex);
+		}
     }
-
-//    getTempSpaces(maxVolumeIndexYZ+1, tempVolume, tempWeights);
 
     delete[] traverseSpaces;
     delete[] transformsInv;
@@ -1143,7 +1138,6 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	delete[] loadThread.buffer1;
 	delete[] loadThread.buffer2;
 	loadThread.buffer1 = loadThread.buffer2 = NULL;
-
 }
 
 void ProgRecFourierGPU::releaseTempSpaces() {

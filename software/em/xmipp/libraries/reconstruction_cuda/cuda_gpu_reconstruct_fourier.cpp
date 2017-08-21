@@ -100,7 +100,7 @@ void releaseGPU(float*& where) {
 ////
 ////
 __device__
-inline void multiply(const MATRIX a, MATRIX b, MATRIX& c) {
+inline void multiply(const MATRIX& a, const MATRIX& b, MATRIX& c) {
 	c[0][0] = a[0][0] * b[0][0] + a[0][1] * b[1][0] + a[0][2] * b[2][0];
 	c[0][1] = a[0][0] * b[0][1] + a[0][1] * b[1][1] + a[0][2] * b[2][1];
 	c[0][2] = a[0][0] * b[0][2] + a[0][1] * b[1][2] + a[0][2] * b[2][2];
