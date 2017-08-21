@@ -134,13 +134,14 @@ class MonitorISPyB(Monitor):
             finished.append(prot.getStatus() != STATUS_RUNNING)
 
         dcParams = self.ispybDb.get_data_collection_params()
-        dcParams.update(self.dataCollection)
+        self.safe_update(dcParams, self.dataCollection)
         if self.dcId:
             dcParams.update(self.previousParams)
             dcParams['id'] = self.dcId
             dcParams['endtime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         else:
             dcParams['starttime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+            dcParams['endtime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
 
         self.info("writing datacollection: %s" + str(dcParams))
         self.dcId = self.ispybDb.update_data_collection(dcParams)
@@ -149,7 +150,7 @@ class MonitorISPyB(Monitor):
         for itemId in set(updateIds):
             imgParams = self.ispybDb.get_image_params()
             imgParams['parentid'] = self.dcId
-            imgParams.update(self.movies[itemId])
+            self.safe_update(imgParams, self.movies[itemId])
             self.info("writing image: %s" + str(imgParams))
             ispybId = self.ispybDb.update_image(imgParams)
 
@@ -183,7 +184,7 @@ class MonitorISPyB(Monitor):
 
         for movie in self.iter_updated_set(prot.outputMovies):
             movieId = movie.getObjId()
-            if movieId in self.allParams:  # this movie has been processed, skip
+            if movieId in self.movies:  # this movie has been processed, skip
                 continue
             movieFn = movie.getFileName()
             if self.numberOfFrames is None:
@@ -192,18 +193,29 @@ class MonitorISPyB(Monitor):
                 self.imageGenerator = ImageGenerator(self.project.path,
                                                      images_path,
                                                      smallThumb=512)
+            acquisition = movie.getAcquisition()
 
             self.movies[movieId] = {
                 'experimenttype': 'mesh',
                 'imgdir': abspath(dirname(movieFn)),
                 'imgsuffix': pwutils.getExt(movieFn),
                 'file_template': pwutils.removeBaseExt(movieFn) + '#####' + pwutils.getExt(movieFn),
+                'file_location': abspath(dirname(movieFn)),
+                'filename': movieFn,
                 'numberOfPasses': self.numberOfFrames,
-                'magnification': movie.getMagnification(),
-                'totalAbsorbedDose': movie.getDoseInitial() + (movie.getDosePerFrame() * self.numberOfFrames),
-                'wavelength': self.convert_volts_to_debroglie_wavelength(movie.getVoltage())
-             }
+                'magnification': acquisition.getMagnification(),
+                'totalAbsorbedDose': acquisition.getDoseInitial() + (acquisition.getDosePerFrame() * self.numberOfFrames),
+                'wavelength': self.convert_volts_to_debroglie_wavelength(acquisition.getVoltage())
+            }
+            self.dataCollection.update(self.movies[movieId])
             updateIds.append(movieId)
+
+    def safe_update(self, target, source):
+        for key in source:
+            try:
+                target[key] = source[key]
+            except KeyError:
+                pass
 
     @staticmethod
     def convert_volts_to_debroglie_wavelength(volts):
@@ -218,7 +230,7 @@ class MonitorISPyB(Monitor):
         for mic in self.iter_updated_set(prot.outputMicrographs):
             micId = mic.getObjId()
             if self.movies.get(micId, None) is not None:
-                if 'comments' in self.allParams[micId]:  # skip if we already have align info
+                if 'comments' in self.movies[micId]:  # skip if we already have align info
                     continue
                 micFn = mic.getFileName()
                 renderable_image = self.imageGenerator.generate_image(micFn, micFn)
