@@ -1096,7 +1096,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	}
 //	printf("velikost ma byt: %dx%d", maxVolumeIndexX, maxVolumeIndexYZ);
 
-
+	int repaint = (int)ceil((double)SF.size()/60);
     loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 	barrier_wait( &barrier );
     for(int i = 0; i < loops; i++) {
@@ -1106,6 +1106,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 //    	processBuffer(loadThread.buffer2);
 //    	copyBuffer(loadThread.buffer2, bufferSize);
 
+		if (verbose && startLoadIndex%repaint==0) {
+			progress_bar(startLoadIndex);
+		}
+
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,
 				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
@@ -1113,6 +1117,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 				maxVolumeIndexX, maxVolumeIndexYZ,
 				useFast, blob.radius);
     	barrier_wait( &barrier );
+
     }
 
 //    getTempSpaces(maxVolumeIndexYZ+1, tempVolume, tempWeights);
