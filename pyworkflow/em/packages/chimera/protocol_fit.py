@@ -228,7 +228,8 @@ from Midas.midas_text import addCommand
 addCommand('scipionwrite', cmd_scipionWrite, help="http://scipion.cnb.csic.es")
 '''
 
-def createScriptFile(pdbID, _3DmapId, scriptFile, pdbFileTemplate, mapFileTemplate):
+def createScriptFile(pdbID, _3DmapId,
+                     scriptFile, pdbFileTemplate, mapFileTemplate):
     f = open(scriptFile,"w")
     f.write(chimeraScriptHeader)
     d={}

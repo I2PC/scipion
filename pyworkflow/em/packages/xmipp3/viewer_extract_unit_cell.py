@@ -68,7 +68,7 @@ class viewerXmippProtExtractUnit(XmippViewer):
 
         volSize0 = self.protocol.inputVolumes.get().getDim()[0]
         origin0 = - sampling * volSize0 / 2.0
-        origin1 =  self.protocol.outputVolume.getOrigin().getShifts()
+        origin1 =  self.protocol.outputVolume.getOrigin(returnInitIfNone=True).getShifts()
         f.write("volume #0 style mesh    level .001 origin %f\n"%origin0)
         x = origin1[0] * sampling
         y = origin1[1] * sampling

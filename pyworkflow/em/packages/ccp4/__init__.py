@@ -22,9 +22,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-"""
-This EM module contains Gautomatch auto-picking protocol 
-"""
 
 from bibtex import _bibtex # Load bibtex dict with references
 from convert import getEnviron

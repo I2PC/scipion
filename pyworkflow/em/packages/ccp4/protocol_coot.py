@@ -1,8 +1,7 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -31,7 +30,7 @@ from pyworkflow import VERSION_1_2
 from pyworkflow.utils.properties import Message
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, BooleanParam
 from pyworkflow.em.protocol import EMProtocol
-from convert import (getProgram, adapBinFileToCCP4,runCCP4Program,
+from convert import (getProgram, adaptBinFileToCCP4, runCCP4Program,
                      cootPdbTemplateFileName, cootScriptFileName)
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em import PdbFile
@@ -111,7 +110,7 @@ the pdb file from coot  to scipion '
 
                 #END HORROR
             else:
-                adapBinFileToCCP4(inFileName, outFileName)
+                adaptBinFileToCCP4(inFileName, outFileName)
 
         createScriptFile(0,#imol
                          self._getTmpPath(cootScriptFileName),

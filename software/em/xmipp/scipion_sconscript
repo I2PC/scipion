@@ -730,9 +730,9 @@ if opencv:
                 deps=['opencv'], cuda=True)
 
 #ROB not sure if cuda=True is necesary
-if cuda:
-    addProg('gpu_example',
-                nvcc=True,cuda=True)
+#if cuda:
+#    addProg('gpu_example',
+#                nvcc=True,cuda=True)
 
 
 
