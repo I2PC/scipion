@@ -666,7 +666,8 @@ class ProtImportMovies(ProtImportMicBase):
 
                     # Now return the newly created movie file as imported file
                     self.createdStacks.add(movieFn)
-                    return
+                    if self.dataStreaming:
+                        return
         checkMovie()
 
     def ignoreCopy(self, source, dest):
