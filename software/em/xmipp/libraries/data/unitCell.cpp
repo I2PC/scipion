@@ -4,7 +4,7 @@
 // icosahedron _5f_to_2f and _5f_2fp: vector that joing a vertex with the two closes 2-fold symmetry axis
 #define tg60   1.73205081
 #define sin60  0.8660254
-//#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 #define scale 1.//780-use to scale chimera bild files so they fit your actual 3Dmap
 #endif
@@ -162,26 +162,37 @@ void UnitCell::cyclicSymmetry(const Matrix1D<double> & _centre,
 	Matrix1D<double> _2f_to_2fp = _2fp - _2f;
 	_2f_to_2fp.selfNormalize();
 	// vector perpendicular to the triangle face, oriented in the positive sense of z axis
-	Matrix1D<double> planeVector = vectorProduct(_centre_to_2f, _2f_to_2fp);
+	Matrix1D<double> planeVector;
+	if (order == 2){
+		planeVector = vectorR3(0., 0., 1.);
+	}else if (order > 2){
+		planeVector = vectorProduct(_centre_to_2f, _2f_to_2fp);
+	}
 	planeVector.selfNormalize();
 
 	//vectExpansion: vectors perpendicular to the unit cell faces
 	Matrix1D<double> vp_0 = vectorProduct(_centre_to_2f, planeVector);
-	vectExpansion.push_back(expanded * vp_0);
+	vp_0.selfNormalize();
+	vectExpansion.push_back(expanded * vp_0 * rmax/2);
 	Matrix1D<double> vp_1 = vectorProduct(planeVector, _centre_to_2fp);
-	vectExpansion.push_back(expanded * vp_1);
+	vp_1.selfNormalize();
+	vectExpansion.push_back(expanded * vp_1 * rmax/2);
 
 	//computation of coordinates for expandedUnitCell vertices
 	Matrix1D<double> d_2f  = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2fp ;
 	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2f;
-	//_centre expands to expandedUnitCell[0], which is equivalent to newOriginAfterExpansion
+
 	if (expanded == 0){
 		expandedUnitCell.push_back(_centre);
 		expandedUnitCell.push_back(_2f);
 		expandedUnitCell.push_back(_2fp);
 	}else if (expanded >= 0){
-		//_centre expands to expandedUnitCell[0]
-		expandedUnitCell.push_back(_centre + d_2f + d_2fp);
+		//_centre expands to expandedUnitCell[0], which is equivalent to newOriginAfterExpansion
+		if (order == 2){
+			expandedUnitCell.push_back(_centre + vectExpansion[0]);
+		}else if (order > 2){
+			expandedUnitCell.push_back(_centre + d_2f + d_2fp);
+		}
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0]);
 		//_2fp expands to expandedUnitCell[2]
@@ -212,30 +223,48 @@ void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
 	Matrix1D<double> _2f_to_2fp = _2fp - _2f;
 	_2f_to_2fp.selfNormalize();
 	// vector perpendicular to the triangle face, oriented in the positive sense of z axis
-	Matrix1D<double> planeVector = vectorProduct(_centre_to_2f, _2f_to_2fp);
+	Matrix1D<double> planeVector;
+	if (order == 2){
+		planeVector = vectorR3(0., 0., 1.);
+	}else if (order > 2){
+		planeVector = vectorProduct(_centre_to_2f, _2f_to_2fp);
+	}
 	planeVector.selfNormalize();
+
 	// vector perpendicular to the triangle face, oriented in the negative sense of z axis
-	Matrix1D<double> planeVector_down = (-1) * vectorProduct(_centre_to_2f, _2f_to_2fp);
+	Matrix1D<double> planeVector_down;
+	if (order == 2){
+		planeVector_down = vectorR3(0., 0., -1.);
+	}else if (order > 2){
+		planeVector_down = (-1) * vectorProduct(_centre_to_2f, _2f_to_2fp);
+	}
+	planeVector_down.selfNormalize();
 
 	//vectExpansion: vectors perpendicular to the unit cell faces
 	Matrix1D<double> vp_0 = vectorProduct(_centre_to_2f, planeVector);
-	vectExpansion.push_back(expanded * vp_0);
+	vp_0.selfNormalize();
+	vectExpansion.push_back(expanded * vp_0 * rmax/2);
 	Matrix1D<double> vp_1 = vectorProduct(planeVector, _centre_to_2fp);
-	vectExpansion.push_back(expanded * vp_1);
+	vp_1.selfNormalize();
+	vectExpansion.push_back(expanded * vp_1 * rmax/2);
 	Matrix1D<double> vp_2 = planeVector_down;
-	vectExpansion.push_back(expanded * vp_2);
+	vectExpansion.push_back(expanded * vp_2 * rmax/2);
 
 	//computation of coordinates for expandedUnitCell vertices
 	Matrix1D<double> d_2f  = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2fp ;
 	Matrix1D<double> d_2fp = (expanded / sin(TWOPI / order + offset) ) * (-1) * _2f;
-	//_centre expands to expandedUnitCell[0], which is equivalent to newOriginAfterExpansion
+
 	if (expanded == 0){
 		expandedUnitCell.push_back(_centre);
 		expandedUnitCell.push_back(_2f);
 		expandedUnitCell.push_back(_2fp);
 	}else if (expanded >= 0){
-		//_centre expands to expandedUnitCell[0]
-		expandedUnitCell.push_back(_centre + d_2f + d_2fp + vectExpansion[2]);
+		//_centre expands to expandedUnitCell[0], which is equivalent to newOriginAfterExpansion
+		if (order == 2){
+			expandedUnitCell.push_back(_centre + vectExpansion[0] + vectExpansion[2]);
+		}else if (order > 2){
+			expandedUnitCell.push_back(_centre + d_2f + d_2fp + vectExpansion[2]);
+		}
 		//_2f expands to expandedUnitCell[1]
 		expandedUnitCell.push_back(_2f + vectExpansion[0] + vectExpansion[2]);
 		//_2fp expands to expandedUnitCell[2]
@@ -249,7 +278,11 @@ void UnitCell::dihedralSymmetry(const Matrix1D<double> & _centre,
 	//vectors normal to faces of the expanded unit cell
 	planeVectors.push_back((-1) * vectorProduct(new_centre_to_new_2f, planeVector));
 	planeVectors.push_back((-1) * vectorProduct(planeVector, new_centre_to_new_2fp));
-	planeVectors.push_back(vectorProduct(new_centre_to_new_2f, new_centre_to_new_2fp));
+	if (order == 2){
+		planeVectors.push_back(planeVector);
+	}else if (order > 2){
+		planeVectors.push_back(vectorProduct(new_centre_to_new_2f, new_centre_to_new_2fp));
+	}
 
 #include "chimeraTesterD.txt" //draws the (expanded) unit cell and directions of vectExpansion vectors using chimera
 }
@@ -506,7 +539,12 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 		double minY = rmax;
 		double minZ = _minZ;
 		double maxX = rmin;
-		double maxY = rmin;
+		double maxY;
+		if (symmetry == pg_CN || symmetry == pg_DN){
+			maxY = rmax;
+		}else if (symmetry != pg_CN && symmetry != pg_DN){
+			maxY = rmin;
+		}
 		double maxZ = _maxZ;
 
 
@@ -542,7 +580,12 @@ void UnitCell::icoSymmetry(const Matrix1D<double> & _centre, const Matrix1D<doub
 			maxZ = std::max(maxZ, minVector(2));
 			maxZ = std::max(maxZ, maxVector(2));
 		}
-
+		std::cout << "minX " << minX << std::endl;
+		std::cout << "minY " << minY << std::endl;
+		std::cout << "minZ " << minZ << std::endl;
+		std::cout << "maxX " << maxX << std::endl;
+		std::cout << "maxY " << maxY << std::endl;
+		std::cout << "maxZ " << maxZ << std::endl;
 #ifdef DEBUG
 		//draw real unitcell
 		{
