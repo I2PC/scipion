@@ -323,11 +323,11 @@ class TestProtModelBuilding(BaseTest):
         self.outerRadius = 40.
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder))
-        self.box[SYM_CYCLIC] = (60, 42, 81)
+        self.box[SYM_CYCLIC] = (60, 49, 81)
         self.extractunitCell(SYM_CYCLIC)
         self.filename[SYM_CYCLIC] = generate(SCIPION_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder) ,
                                              'xmipp', XMIPP_SYM_NAME[SYM_CYCLIC][:1]+str(self.symOrder),OFFSET)
-        self.box[SYM_CYCLIC] = (52, 52, 81)
+        self.box[SYM_CYCLIC] = (50, 52, 81)
         self.extractunitCell(SYM_CYCLIC, OFFSET)
 
     # function to extract the unit cell of dihedral symmetry
@@ -336,11 +336,11 @@ class TestProtModelBuilding(BaseTest):
         self.outerRadius = 40.
         self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
                                                  'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder))
-        self.box[SYM_DIHEDRAL] = (60, 42, 81)
+        self.box[SYM_DIHEDRAL] = (60, 49, 81)
         self.extractunitCell(SYM_DIHEDRAL)
         self.filename[SYM_DIHEDRAL] = generate(SCIPION_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder),
                                                  'xmipp', XMIPP_SYM_NAME[SYM_DIHEDRAL][:1] + str(self.symOrder), OFFSET)
-        self.box[SYM_DIHEDRAL] = (52, 52, 81)
+        self.box[SYM_DIHEDRAL] = (50, 52, 81)
         self.extractunitCell(SYM_DIHEDRAL, OFFSET)
 
     # function to extract the unit cell of tetrahedral symmetry
