@@ -483,6 +483,7 @@ void processVoxelBlob(
 	maxY = fminf(maxY, data->ySize-1);
 
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
+	float volReal, volImag, w;
 
 	// ugly spaghetti code, but improves performance by app. 10%
 	if (0 != data->CTF) {
@@ -503,9 +504,9 @@ void processVoxelBlob(
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
 				float weight = wBlob * wModulator * data->weight;
-				tempWeightsGPU[index3D] += weight;
-				tempVolumeGPU[2*index3D] += data->img[2*index2D] * weight * wCTF;
-				tempVolumeGPU[2*index3D + 1] += data->img[2*index2D + 1] * weight * wCTF;
+				w += weight;
+				volReal += data->img[2*index2D] * weight * wCTF;
+				volImag += data->img[2*index2D + 1] * weight * wCTF;
 			}
 		}
 	} else {
@@ -525,12 +526,15 @@ void processVoxelBlob(
 				float wBlob = blobTableSqrt[aux];
 
 				float weight = wBlob * data->weight;
-				tempWeightsGPU[index3D] += weight;
-				tempVolumeGPU[2*index3D] += data->img[2*index2D] * weight;
-				tempVolumeGPU[2*index3D + 1] += data->img[2*index2D + 1] * weight;
+				w += weight;
+				volReal += data->img[2*index2D] * weight;
+				volImag += data->img[2*index2D + 1] * weight;
 			}
 		}
 	}
+	tempVolumeGPU[2*index3D] += volReal;
+	tempVolumeGPU[2*index3D + 1] += volImag;
+	tempWeightsGPU[index3D] += w;
 
 }
 //
