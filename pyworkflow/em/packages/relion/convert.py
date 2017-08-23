@@ -357,13 +357,15 @@ def rowToAlignment(alignmentRow, alignType):
         alignment = em.Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
-        angles[2] = alignmentRow.getValue(md.RLN_ORIENT_PSI, 0.)
         shifts[0] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_X, 0.)
         shifts[1] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_Y, 0.)
         if not is2D:
             angles[0] = alignmentRow.getValue(md.RLN_ORIENT_ROT, 0.)
             angles[1] = alignmentRow.getValue(md.RLN_ORIENT_TILT, 0.)
+            angles[2] = alignmentRow.getValue(md.RLN_ORIENT_PSI, 0.)
             shifts[2] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_Z, 0.)
+        else:
+            angles[2] = - alignmentRow.getValue(md.RLN_ORIENT_PSI, 0.)
         M = matrixFromGeometry(shifts, angles, inverseTransform)
         alignment.setMatrix(M)
     else:
