@@ -332,7 +332,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         raise Exception("3D alignment conversion for Relion not implemented. "
                         "It seems the particles were generated with an "
                         "incorrect alignment type. You may either re-launch "
-                        "the protocol that generates the paticles "
+                        "the protocol that generates the particles "
                         "with angles or set 'Consider previous alignment?' "
                         "to No")
     else:
