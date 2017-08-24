@@ -5,6 +5,7 @@
 #include <cuda_runtime_api.h>
 #include "cuda_gpu_reconstruct_fourier.h"
 
+#define BLOCK_DIM 16
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 		true) {
@@ -279,10 +280,8 @@ __device__ static bool inRange(T x, T min, T max) {
 
 template<typename T, typename U>
 __device__ inline U clamp(U val, T min, T max) {
-	U res = val;
-	res = (res > max) ? max : res;
-	res = (res < min) ? min : res;
-	return res;
+	U res = (val > max) ? max : val;
+	return (res < min) ? min : res;
 }
 __device__
 bool getZ(float x, float y, float& z, const Point3D<float>& a, const Point3D<float>& b, const Point3D<float>& p0) {
@@ -484,6 +483,7 @@ void processVoxelBlob(
 
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	float volReal, volImag, w;
+	volReal = volImag = w = 0.f;
 
 	// ugly spaghetti code, but improves performance by app. 10%
 	if (0 != data->CTF) {
@@ -630,9 +630,9 @@ void processProjection(
 					if (hit1 || hit2) {
 						z1 = clamp(z1, 0, cMaxVolumeIndexYZ);
 						z2 = clamp(z2, 0, cMaxVolumeIndexYZ);
-						float lower = fminf(z1, z2);
-						float upper = fmaxf(z1, z2);
-						for (int z = floorf(lower); z <= ceilf(upper); z++) {
+						int lower = floorf(fminf(z1, z2));
+						int upper = ceilf(fmaxf(z1, z2));
+						for (int z = lower; z <= upper; z++) {
 							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
@@ -655,9 +655,9 @@ void processProjection(
 					if (hit1 || hit2) {
 						y1 = clamp(y1, 0, cMaxVolumeIndexYZ);
 						y2 = clamp(y2, 0, cMaxVolumeIndexYZ);
-						float lower = fminf(y1, y2);
-						float upper = fmaxf(y1, y2);
-						for (int y = floorf(lower); y <= ceilf(upper); y++) {
+						int lower = floorf(fminf(y1, y2));
+						int upper = ceilf(fmaxf(y1, y2));
+						for (int y = lower; y <= upper; y++) {
 							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
@@ -680,9 +680,9 @@ void processProjection(
 					if (hit1 || hit2) {
 						x1 = clamp(x1, 0, cMaxVolumeIndexX);
 						x2 = clamp(x2, 0, cMaxVolumeIndexX);
-						float lower = fminf(x1, x2);
-						float upper = fmaxf(x1, x2);
-						for (int x = floorf(lower); x <= ceilf(upper); x++) {
+						int lower = floorf(fminf(x1, x2));
+						int upper = ceilf(fmaxf(x1, x2));
+						for (int x = lower; x <= upper; x++) {
 							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
@@ -768,7 +768,6 @@ void processBufferGPU(float* tempVolumeGPU,
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 
-	int BLOCK_DIM = 16;
 	int size2D = maxVolIndexYZ + 1;
 
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
