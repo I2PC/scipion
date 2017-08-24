@@ -501,7 +501,7 @@ void processVoxelBlob(
 
 				float wCTF = data->CTF[index2D];
 				float wModulator = data->modulator[index2D];
-				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
 				float weight = wBlob * wModulator * data->weight;
 				w += weight;
@@ -522,7 +522,7 @@ void processVoxelBlob(
 
 				int index2D = i * data->xSize + j;
 
-				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
 
 				float weight = wBlob * data->weight;
@@ -705,83 +705,20 @@ __global__
 void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		ProjectionDataGPU* buffer, int bufferSize,
-		TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms,
-		float* devBlobTableSqrt
-		) {
-
-	int noOfSym = noOfTransforms / bufferSize;
-	for ( int i = 0 ; i < bufferSize; i++ ) {
-		ProjectionDataGPU* projData = &buffer[i];
-		if (projData->skip) {
-			continue;
-		}
-
-//		printf("kernel:\nvol:%p weights:%p buffer:%p size:%d symmetries:%p symmetriesInv:%p size:%d\n",
-//				tempVolumeGPU, tempWeightsGPU, buffer, bufferSize, symmetries, symmetriesInv, symSize);
-
-//		Matrix2D<double> *Ainv = &projData->localAInv;
-		// Loop over all symmetries
-		for (int isym = 0; isym < noOfSym; isym++)
-		{
-			// Compute the coordinate axes of the symmetrized projection
-//			Matrix2D<double> A_SL=R_repository[isym]*(*Ainv);
-//			Matrix2D<double> A_SLInv=A_SL.inv();
-//			float transf[3][3];
-//			float transfInv[3][3];
-//			convert(A_SL, transf);
-//			convert(A_SLInv, transfInv);
-//			multiply(symmetries[isym], projData->localAInv, transf);
-//			multiply(projData->localA, symmetriesInv[isym], transfInv);
-
-//			if (projData->imgIndex == 6) {
-//				printf("GPU img 6 sym[%d] %f %f %f\n%f %f %f\n%f %f %f\n", isym,
-//						symmetries[isym][0][0], symmetries[isym][0][1], symmetries[isym][0][2],
-//						symmetries[isym][1][0], symmetries[isym][1][1], symmetries[isym][1][2],
-//						symmetries[isym][2][0], symmetries[isym][2][1], symmetries[isym][2][2]);
-//
-//				printf("GPU img 6 symmetriesInv[%d] %f %f %f\n%f %f %f\n%f %f %f\n",isym,
-//						symmetriesInv[isym][0][0], symmetriesInv[isym][0][1], symmetriesInv[isym][0][2],
-//						symmetriesInv[isym][1][0], symmetriesInv[isym][1][1], symmetriesInv[isym][1][2],
-//						symmetriesInv[isym][2][0], symmetriesInv[isym][2][1], symmetriesInv[isym][2][2]);
-//
-//				printf("GPU img 6 localAInv %f %f %f\n%f %f %f\n%f %f %f\n",
-//						projData->localAInv[0][0], projData->localAInv[0][1], projData->localAInv[0][2],
-//						projData->localAInv[1][0], projData->localAInv[1][1], projData->localAInv[1][2],
-//						projData->localAInv[2][0], projData->localAInv[2][1], projData->localAInv[2][2]);
-//
-//				printf("GPU img 6 sprojData->localA %f %f %f\n%f %f %f\n%f %f %f\n",
-//						projData->localA[0][0], projData->localA[0][1], projData->localA[0][2],
-//						projData->localA[1][0], projData->localA[1][1], projData->localA[1][2],
-//						projData->localA[2][0], projData->localA[2][1], projData->localA[2][2]);
-//
-//
-//				printf("GPU img 6 transf %f %f %f\n%f %f %f\n%f %f %f\n",
-//						transf[0][0], transf[0][1], transf[0][2],
-//						transf[1][0], transf[1][1], transf[1][2],
-//						transf[2][0], transf[2][1], transf[2][2]);
-//
-//				printf("GPU img 6 transfInv %f %f %f\n%f %f %f\n%f %f %f\n",
-//						transfInv[0][0], transfInv[0][1], transfInv[0][2],
-//						transfInv[1][0], transfInv[1][1], transfInv[1][2],
-//						transfInv[2][0], transfInv[2][1], transfInv[2][2]);
-//			}
-			int index = i*noOfSym + isym;
-			processProjection(
-					tempVolumeGPU, tempWeightsGPU,
-					projData, traverseSpaces[index], transformsInv[index],
-					devBlobTableSqrt);
-		}
-//		projData->clean();
+		TraverseSpace* traverseSpaces, int noOfTransforms,
+		float* devBlobTableSqrt) {
+	for (int i = 0; i < noOfTransforms; i++) {
+		processProjection(
+			tempVolumeGPU, tempWeightsGPU,
+			&buffer[traverseSpaces[i].projectionIndex], traverseSpaces[i], traverseSpaces[i].transformInv,
+			devBlobTableSqrt);
 	}
-
-	// FIXME
-//	printf("%f\n", cuCrealf(tempVolume[0]));
 }
 
 void processBufferGPU(float* tempVolumeGPU,
 		float* tempWeightsGPU,
 		ProjectionData* data, int N, int bufferSize,
-		TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms,
+		TraverseSpace* traverseSpaces, int noOfTransforms,
 		int maxVolIndexX, int maxVolIndexYZ,
 		bool useFast, float blobRadius,
 		float iDeltaSqrt,
@@ -822,16 +759,11 @@ void processBufferGPU(float* tempVolumeGPU,
 	TraverseSpace* devTravSpaces;
 	cudaMalloc((void **) &devTravSpaces, noOfTransforms*sizeof(TraverseSpace));
 	gpuErrchk( cudaPeekAtLastError() );
-	MATRIX* devTransformsInv;
-	cudaMalloc((void **) &devTransformsInv, noOfTransforms*sizeof(MATRIX));
-	gpuErrchk( cudaPeekAtLastError() );
 	float* devBlobTableSqrt;
 	cudaMalloc((void **) &devBlobTableSqrt, blobTableSize*sizeof(float));
 	gpuErrchk( cudaPeekAtLastError() );
 
 	cudaMemcpy(devTravSpaces, traverseSpaces, noOfTransforms*sizeof(TraverseSpace), cudaMemcpyHostToDevice);
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaMemcpy(devTransformsInv, transformsInv, noOfTransforms*sizeof(MATRIX), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
 	cudaMemcpy(devBlobTableSqrt, blobTableSqrt, blobTableSize*sizeof(float), cudaMemcpyHostToDevice);
 	gpuErrchk( cudaPeekAtLastError() );
@@ -842,12 +774,10 @@ void processBufferGPU(float* tempVolumeGPU,
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
 
-	printf("%d %d", dimGrid.x, dimGrid.y);
-
 	processBufferKernel<<<dimGrid, dimBlock>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			devBuffer, bufferSize,
-			devTravSpaces, devTransformsInv, noOfTransforms,
+			devTravSpaces, noOfTransforms,
 			devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
@@ -881,8 +811,6 @@ void processBufferGPU(float* tempVolumeGPU,
 	gpuErrchk( cudaPeekAtLastError() );
 	delete[] hostBuffer;
 	cudaFree(devTravSpaces);
-	gpuErrchk( cudaPeekAtLastError() );
-	cudaFree(devTransformsInv);
 	gpuErrchk( cudaPeekAtLastError() );
 	cudaFree(devBlobTableSqrt);
 	gpuErrchk( cudaPeekAtLastError() );

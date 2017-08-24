@@ -36,7 +36,7 @@ void processBufferGPU(
 		float* tempVolumeGPU,
 				float* tempWeightsGPU,
 				ProjectionData* data,int noOfPixel,int bufferSize,
-				TraverseSpace* traverseSpaces, MATRIX* transformsInv, int noOfTransforms,
+				TraverseSpace* traverseSpaces, int noOfTransforms,
 				int maxVolIndexX, int maxVolIndexYZ,
 				bool useFast, float blobRadius,
 				float iDeltaSqrt,

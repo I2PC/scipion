@@ -1033,7 +1033,8 @@ void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
 	}
 }
 
-void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, MATRIX& transform, TraverseSpace* space) {
+void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
+		MATRIX& transform, MATRIX& transformInv, TraverseSpace* space) {
 	Point3D<float> cuboid[8];
 	Point3D<float> AABB[2];
 	Point3D<float> origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
@@ -1042,7 +1043,9 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, MATRIX&
 	translateCuboid(cuboid, origin);
 	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
 	// store data
+	space->projectionIndex = projectionIndex;
 	getVectors(cuboid, space->u, space->v);
+	space->unitNormal = getNormal(space->u, space->v, true);
 	space->minZ = floor(AABB[0].z);
 	space->minY = floor(AABB[0].y);
 	space->minX = floor(AABB[0].x);
@@ -1053,6 +1056,11 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, MATRIX&
 	space->bottomOrigin = cuboid[0];
 	space->maxDistanceSqr = (imgSizeX+(useFast ? 0.f : blob.radius))
 			* (imgSizeX+(useFast ? 0.f : blob.radius));
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			space->transformInv[i][j] = transformInv[i][j];
+		}
+	}
 
 	// calculate best traverse direction
 	int dX, dY, dZ;
@@ -1068,27 +1076,44 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, MATRIX&
 	}
 }
 
-void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer, MATRIX* transformsInv,
+void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 		TraverseSpace* traverseSpaces) {
 	int index = 0;
 	float transf[3][3];
+	float transfInv[3][3];
 	for (int i = 0; i < bufferSize; i++) {
 		Matrix2D<double> Ainv = buffer[i].localAInv;
 		for (int j = 0; j < R_repository.size(); j++) {
 			Matrix2D<double> A_SL=R_repository[j]*(Ainv);
 			Matrix2D<double> A_SLInv=A_SL.inv();
 			A_SL.convertTo(transf);
+			A_SLInv.convertTo(transfInv);
 
-			computeTraverseSpace(buffer[i].img->getXSize(), buffer[i].img->getYSize(),
-					transf, &traverseSpaces[index]);
-			A_SLInv.convertTo(transformsInv[index]);
+			computeTraverseSpace(buffer[i].img->getXSize(), buffer[i].img->getYSize(), i,
+					transf, transfInv, &traverseSpaces[index]);
 
 			index++;
 		}
 	}
 }
 
-
+void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
+	// greedy TSP, using search sort
+	for (int i = 0; i < (size-1); i++) {
+		int closestIndex;
+		float distance = std::numeric_limits<float>::max();
+		for (int j = (i+1); j < size; j++) {
+			float d = getDistanceSqr(input[i].unitNormal, input[j].unitNormal);
+			if (d < distance) {
+				distance = d;
+				closestIndex = j;
+			}
+		}
+		TraverseSpace tmp = input[i+1];
+		input[i+1] = input[closestIndex];
+		input[closestIndex] = tmp;
+	}
+}
 
 void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 {
@@ -1106,7 +1131,6 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
 	/** holding transform/traverse space for each projection x symmetry */
 	int noOfTransforms = bufferSize * R_repository.size();
-	MATRIX* transformsInv = new MATRIX[noOfTransforms];
 	TraverseSpace* traverseSpaces = new TraverseSpace[noOfTransforms];
 
 	int repaint = (int)ceil((double)SF.size()/60);
@@ -1117,12 +1141,12 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	startLoadIndex += bufferSize;
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 
-    	prepareTransforms(loadThread.buffer2, transformsInv, traverseSpaces);
-
+    	prepareTransforms(loadThread.buffer2, traverseSpaces);
+    	sort(traverseSpaces, noOfTransforms);
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,
 				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
-				bufferSize, traverseSpaces, transformsInv, noOfTransforms,
+				bufferSize, traverseSpaces, noOfTransforms,
 				maxVolumeIndexX, maxVolumeIndexYZ,
 				useFast, blob.radius,
 				iDeltaSqrt,
@@ -1135,7 +1159,6 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     }
 
     delete[] traverseSpaces;
-    delete[] transformsInv;
 
 	delete[] loadThread.buffer1;
 	delete[] loadThread.buffer2;

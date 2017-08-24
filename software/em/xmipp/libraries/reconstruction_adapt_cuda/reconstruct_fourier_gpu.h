@@ -433,7 +433,8 @@ private:
     	}
     }
 
-    void computeTraverseSpace(int imgSizeX, int imgSizeY, MATRIX& transform, TraverseSpace* space);
+    void computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
+    		MATRIX& transform, MATRIX& transformInv, TraverseSpace* space);
 
 //    /**
 //     * Method will process one projection image and add result to temporal
@@ -465,9 +466,40 @@ private:
     /**
      * Method will precalculate (inverse) transformation for each projection data x symmetry
      */
-    void prepareTransforms(ProjectionData* buffer, MATRIX* transformsInv,
+    void prepareTransforms(ProjectionData* buffer,
     		TraverseSpace* traverseSpaces);
 
+    template<typename T>
+    Point3D<T> getNormal(const Point3D<T>& u, const Point3D<T>& v, bool normalize=false) {
+    	Point3D<T> result;
+    	result.x = u.y*v.z - u.z*v.y;
+    	result.y = u.z*v.x - u.x*v.z;
+    	result.z = u.x*v.y - u.y*v.x;
+    	if (normalize) {
+    		float length = getLength(result);
+    		result.x /= length;
+    		result.y /= length;
+    		result.z /= length;
+    	}
+    	return result;
+    }
+
+    template<typename T>
+    T getLength(const Point3D<T>& v) {
+    	return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    }
+
+	template<typename T>
+	T getDistanceSqr(const Point3D<T>& u, const Point3D<T>& v) {
+		return (u.x-v.x)*(u.x-v.x) + (u.y-v.y)*(u.y-v.y) + (u.z-v.z)*(u.z-v.z);
+	}
+
+    void sort(TraverseSpace* input, int size);
+
+    template<typename T>
+    static T getDot(const Point3D<T>&u, const Point3D<T>& v) {
+    	return u.x*v.x + u.y*v.y + u.z*v.z;
+    }
 };
 //@}
 #endif

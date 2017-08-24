@@ -18,6 +18,9 @@ float maxDistanceSqr;
 enum Direction { XY, XZ, YZ } dir;
 Point3D<float> u, v;
 Point3D<float> topOrigin, bottomOrigin;
+Point3D<float> unitNormal; // created from u->v (i.e. right-handed)
+int projectionIndex;
+float transformInv[3][3];
 };
 
 #endif /* XMIPP_LIBRARIES_DATA_FOURIER_RECONSTRUCTION_TRAVERSE_SPACE_H_ */
