@@ -213,7 +213,7 @@ class MonitorISPyB(Monitor):
             acquisition = movie.getAcquisition()
 
             self.movies[movieId] = {
-                'experimenttype': 'mesh',
+                'experimenttype': 'single particle',
                 'imgdir': abspath(dirname(movieFn)),
                 'imgsuffix': pwutils.getExt(movieFn),
                 'file_template': pwutils.removeBaseExt(movieFn) + '#####' + pwutils.getExt(movieFn),
