@@ -163,7 +163,7 @@ class MonitorISPyB(Monitor):
         for itemId in set(updateAlignIds):
             motionParams = self.ispybDb.get_motion_correction_params()
             self.safe_update(motionParams, self.motion_corrections[itemId])
-            motionParams['dataCollectionId'] = self.movies[itemId]['id']
+            motionParams['dataCollectionId'] = self.dcId
             ispybId = self.ispybDb.update_motion_correction(motionParams)
             self.motion_corrections[itemId]['id'] = ispybId
 
@@ -171,7 +171,7 @@ class MonitorISPyB(Monitor):
             ctfParams = self.ispybDb.get_ctf_params()
             self.safe_update(ctfParams, self.ctfs[itemId])
             ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['id']
-            ispybId = self.ispybDb.update_motion_correction(ctfParams)
+            ispybId = self.ispybDb.update_ctf(ctfParams)
             self.ctfs[itemId]['id'] = ispybId
 
         if all(finished):
@@ -236,12 +236,16 @@ class MonitorISPyB(Monitor):
 
     @staticmethod
     def convert_volts_to_debroglie_wavelength(volts):
-        rest_mass_of_electron = float('9.109E-31')
-        speed_of_light = 299792458
-        pc_squared = volts * rest_mass_of_electron * speed_of_light * speed_of_light * 2
-        pc = math.sqrt(pc_squared)
-        hc = 1239.84
-        return hc/pc
+        rest_mass_of_electron = 9.10938356e-31
+        planks_constant = 6.62607004e-34
+        speed_of_light = 2.99792458e8
+        charge_of_electron = 1.60217662e-19
+
+        u = volts * 1e3
+        return (planks_constant /
+                (2 * rest_mass_of_electron * charge_of_electron * u + ((charge_of_electron * u / speed_of_light)** 2))**0.5
+            ) * 1e10
+
 
     def update_align_params(self, prot, updateIds):
         for mic in self.iter_updated_set(prot.outputMicrographs):
