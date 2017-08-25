@@ -3142,23 +3142,23 @@ void LogFilter::apply(MultidimArray<double> &img)
         logFilter(img, a,b,c);
 }
 
-void DenoiseFilter::defineParams(XmippProgram * program)
+void DenoiseTVFilter::defineParams(XmippProgram * program)
 {
-    program->addParamsLine("== Denoising method for micrographs ==");
-    program->addParamsLine("  [--denoise]");
-    program->addParamsLine("  [--maxIter <maxIter>]");
+    program->addParamsLine("== Total Variation Denoising method for micrographs ==");
+    program->addParamsLine("  [--denoiseTV]");
+    program->addParamsLine("  [--maxIterTV <maxIter>]");
 }
 
 /** Read from program command line */
-void DenoiseFilter::readParams(XmippProgram * program)
+void DenoiseTVFilter::readParams(XmippProgram * program)
 {
-    maxIter = program->getIntParam("--maxIter");
+    maxIter = program->getIntParam("--maxIterTV");
 }
 
 /** Apply the filter to an image or volume*/
-void DenoiseFilter::apply(MultidimArray<double> &img)
+void DenoiseTVFilter::apply(MultidimArray<double> &img)
 {
-    denoiseFilter(img, maxIter);
+    denoiseTVFilter(img, maxIter);
 }
 
 /** Define the parameters for use inside an Xmipp program */
@@ -3345,7 +3345,7 @@ void BasisFilter::apply(MultidimArray<double> &img)
  * Y=sensed image
  * mu=regularization weight (on TV norm)
  */
-double energy(double mu,
+double denoiseTVenergy(double mu,
               const MultidimArray<double>& X,
               const MultidimArray<double>& Y,
               double s,
@@ -3397,7 +3397,7 @@ double energy(double mu,
  * Y=sensed image
  * mu=regularization weight (on TV norm)
  */
-void gradient(double mu,
+void denoiseTVgradient(double mu,
                 const MultidimArray<double>& X,
                 const MultidimArray<double>& Y,
                 double s,
@@ -3473,7 +3473,7 @@ void gradient(double mu,
 /** Function which makes projections on feasible set.
  *  * @ingroup Filters
  */
-void proj(const MultidimArray<double>& X,
+void denoiseTVproj(const MultidimArray<double>& X,
           const MultidimArray<double>& Y,
           double theta,
           MultidimArray<double>& dold)
@@ -3494,7 +3494,7 @@ void proj(const MultidimArray<double>& X,
 /** Compute denoising.
  *  * @ingroup Filters
  */
-void denoiseFilter(MultidimArray<double> &xnew, int maxIter)
+void denoiseTVFilter(MultidimArray<double> &xnew, int maxIter)
 {
     // parameters for denoising
     double lambda = 1.0;    // Poisson scaling factor
@@ -3540,12 +3540,12 @@ void denoiseFilter(MultidimArray<double> &xnew, int maxIter)
     double mu = 0.03;
 
     // initial objective function value of xold
-    double fold = energy(mu, xold, origInput, mx, q, lambda, sigmag, g);
+    double fold = denoiseTVenergy(mu, xold, origInput, mx, q, lambda, sigmag, g);
 
     // gradient of objective function
-    gradient(mu, xold, origInput, mx, q, lambda, sigmag, g, grold);
+    denoiseTVgradient(mu, xold, origInput, mx, q, lambda, sigmag, g, grold);
 
-    proj(xold, grold, 1.0, dold);
+    denoiseTVproj(xold, grold, 1.0, dold);
 
     double delta, ksi, fnew, s_norm, p, s2, xij;
     for (int kk=1; kk <= maxIter; kk++)
@@ -3560,7 +3560,7 @@ void denoiseFilter(MultidimArray<double> &xnew, int maxIter)
         }
 
         // objective function of xnew
-        fnew = energy(mu, xnew, origInput, mx, q, lambda, sigmag, g);
+        fnew = denoiseTVenergy(mu, xnew, origInput, mx, q, lambda, sigmag, g);
 
         ksi = 1.0;
 
@@ -3578,10 +3578,10 @@ void denoiseFilter(MultidimArray<double> &xnew, int maxIter)
             }
 
             // because we updated xnew, update also function value
-            fnew = energy(mu, xnew, origInput, mx, q, lambda, sigmag, g);
+            fnew = denoiseTVenergy(mu, xnew, origInput, mx, q, lambda, sigmag, g);
         }
 
-        gradient(mu, xnew, origInput, mx, q, lambda, sigmag, g, grnew);
+        denoiseTVgradient(mu, xnew, origInput, mx, q, lambda, sigmag, g, grnew);
 
         s_norm = -100;
         p = 0;
@@ -3602,7 +3602,7 @@ void denoiseFilter(MultidimArray<double> &xnew, int maxIter)
         else
             theta = std::min(thetamax, std::max(thetamin, s2/p));
 
-        proj(xnew, grnew, theta, dold);
+        denoiseTVproj(xnew, grnew, theta, dold);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(xold)
         {
