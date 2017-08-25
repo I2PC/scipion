@@ -32,9 +32,13 @@ __global__ void sumRadiusKernel(float *d_in, float *d_out, float *d_out_max, flo
 	d_out_max[idx]=-100000;
 	int idxRead=360*radius*numIm;
 	for(int i=0; i<radius; i++){
+		if(d_in[idxRead+(360*i)+angle]==-1.0){
+			continue;
+		}
 		d_out[idx] += d_in[idxRead+(360*i)+angle];
 		if(d_in[idxRead+(360*i)+angle]>d_out_max[idx])
 			d_out_max[idx] = d_in[idxRead+(360*i)+angle];
+
 		if(i==0)
 			d_out_zero[idx] = d_in[idxRead+angle];
 	}
@@ -473,7 +477,7 @@ __global__ void calculateNccRotationKernel(float *RefExpRealSpace, cufftComplex 
 	if(den1!=0.0 && den2!=0.0 && !isnan(den1) && !isnan(den2))
 		NCC[idx] = num/(den1*den2);
 	else
-		NCC[idx] = -1;
+		NCC[idx] = -1.0;
 
 }
 
