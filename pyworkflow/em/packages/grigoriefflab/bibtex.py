@@ -160,6 +160,19 @@ url = "http://www.sciencedirect.com/science/article/pii/S1047847715300447",
 author = "Grant, Timothy and Grigorieff, Nikolaus",
 keywords = "Electron cryo-microscopy, Resolution, Magnification anisotropy, Image correction "
 }
+
+@article {Grant2015.2,
+	title = {Measuring the optimal exposure for single particle cryo-EM using a 2.6 {\r A} reconstruction of rotavirus VP6},
+	journal = {eLife Sciences},
+	volume = {4},
+	year = {2015},
+	month = {06/2015},
+	pages = {1-19},
+	abstract = {Biological specimens suffer radiation damage when imaged in an electron microscope, ultimately limiting the attainable resolution. At a given resolution, an optimal exposure can be defined that maximizes the signal-to-noise ratio in the image. Using a 2.6 {\r A} resolution single particle cryo-EM reconstruction of rotavirus VP6, determined from movies recorded with a total exposure of 100 electrons/{\r A}2, we obtained accurate measurements of optimal exposure values over a wide range of resolutions. At low and intermediate resolutions our measured values are considerably higher than obtained previously for crystalline specimens, indicating that both images and movies should be collected with higher exposures than are generally used. We demonstrate a method of using our optimal exposure values to filter movie frames, yielding images with improved contrast that lead to higher resolution reconstructions. This {\textquoteright}high-exposure{\textquoteright} technique should benefit cryo-EM work on all types of samples, especially those of relatively low molecular mass.},
+	doi = {http://dx.doi.org/10.7554/eLife.06980},
+	attachments = {http://grigoriefflab.janelia.org/sites/default/files/Grant_eLife2015.pdf},
+	author = {Grant, T. and Grigorieff, N.}
+}
 """
 
 

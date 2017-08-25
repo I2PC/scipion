@@ -162,6 +162,9 @@ class Step(OrderedObject):
     
     def isSaved(self):
         return self.getStatus() == STATUS_SAVED
+
+    def isScheduled(self):
+        return self.getStatus() == STATUS_SCHEDULED
     
     def isAborted(self):
         return self.getStatus() == STATUS_ABORTED
@@ -554,6 +557,42 @@ class Protocol(Step):
                     yield key, item 
             elif attr.isPointer() and attr.hasValue():
                 yield key, attr
+
+    def iterInputPointers(self):
+        """ This function is similar to iterInputAttributes, but it yields
+        all input Pointers, independently if they have value or not.
+        """
+        for key, attr in self.getAttributes():
+            if not isinstance(attr, Object):
+                raise Exception('Attribute %s have been overwritten to type %s '
+                                % (key, type(attr)))
+            if isinstance(attr, PointerList) and attr.hasValue():
+                for item in attr:
+                    # the same key is returned for all items inside the
+                    # PointerList, this is used in viewprotocols.py
+                    # to group them inside the same tree element
+                    yield key, item
+            elif attr.isPointer():
+                yield key, attr
+
+    def hasLinkedInputs(self):
+        """ Return if True if some of the input pointers are referring to
+        an output that is not ready yet.
+        """
+        linkedPointers = []
+        emptyPointers = []
+
+        for paramName, attr in self.iterInputPointers():
+            condition = self.evalParamCondition(paramName)
+            param = self.getParam(paramName)
+            obj = attr.get()
+            if condition and obj is None and not param.allowsNull:
+                if attr.hasValue():
+                    linkedPointers.append(paramName)
+                else:
+                    emptyPointers.append(paramName)
+
+        return (linkedPointers and not emptyPointers)
                 
     def iterOutputAttributes(self, outputClass):
         """ Iterate over the outputs produced by this protocol. """
@@ -1083,7 +1122,7 @@ class Protocol(Step):
         self.__initLogs()
         
         self.info(pwutils.greenStr('RUNNING PROTOCOL -----------------'))
-        self._pid.set(os.getpid())
+        self.setPid(os.getpid())
         self.info('          PID: %s' % self._pid)
         self.info('      Scipion: %s' % os.environ['SCIPION_VERSION'])
         self.info('   currentDir: %s' % os.getcwd())
@@ -1275,6 +1314,9 @@ class Protocol(Step):
         
     def getPid(self):
         return self._pid.get()
+
+    def setPid(self, pid):
+        self._pid.set(pid)
         
     def getRunName(self):
         runName = self.getObjLabel().strip()
@@ -1785,6 +1827,16 @@ def getProtocolFromDb(projectPath, protDbPath, protId, chdir=False):
     protocol = project.getProtocol(protId)
     return protocol
 
+def getUpdatedProtocol(protocol):
+    """ Retrieve the updated protocol and close db connections
+        """
+    prot2 = getProtocolFromDb(protocol.getProject().path,
+                              protocol.getDbPath(),
+                              protocol.getObjId())
+    # Close DB connections
+    prot2.getProject().closeMapper()
+    prot2.closeMappers()
+    return prot2
 
 def isProtocolUpToDate(protocol):
     """ Check timestamps between protocol lastModificationDate and the
