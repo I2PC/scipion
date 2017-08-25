@@ -89,6 +89,8 @@ class MonitorISPyB(Monitor):
         self.protocol = protocol
         self.dataCollection = OrderedDict()
         self.movies = OrderedDict()
+        self.motion_corrections = OrderedDict()
+        self.ctfs = OrderedDict()
         self.numberOfFrames = None
         self.imageGenerator = None
         self.dcId = None
@@ -120,16 +122,18 @@ class MonitorISPyB(Monitor):
 
         prots = [self.getUpdatedProtocol(p) for p in self.inputProtocols]
         finished = [] # store True if protocol not running
-        updateIds = [] # Store obj ids that have changes
+        updateImageIds = []  # Store obj ids that have changes
+        updateAlignIds = []  # Store obj ids that have changes
+        updateCTFIds = []  # Store obj ids that have changes
 
         for prot in prots:
             self.info("protocol: %s" % prot.getRunName())
             if isinstance(prot, ProtImportMovies) and hasattr(prot, 'outputMovies'):
-                self.create_movie_params(prot, updateIds)
+                self.create_movie_params(prot, updateImageIds)
             elif isinstance(prot, ProtAlignMovies) and hasattr(prot, 'outputMicrographs'):
-                self.update_align_params(prot, updateIds)
+                self.update_align_params(prot, updateAlignIds)
             elif isinstance(prot, ProtCTFMicrographs) and hasattr(prot, 'outputCTF'):
-                self.update_ctf_params(prot, updateIds)
+                self.update_ctf_params(prot, updateCTFIds)
 
             finished.append(prot.getStatus() != STATUS_RUNNING)
 
@@ -147,15 +151,28 @@ class MonitorISPyB(Monitor):
         self.dcId = self.ispybDb.update_data_collection(dcParams)
         self.previousParams = dcParams
 
-        for itemId in set(updateIds):
+        for itemId in set(updateImageIds):
             imgParams = self.ispybDb.get_image_params()
             imgParams['parentid'] = self.dcId
             self.safe_update(imgParams, self.movies[itemId])
             self.info("writing image: %s" + str(imgParams))
             ispybId = self.ispybDb.update_image(imgParams)
 
-            # Use -1 as a trick when ISPyB is not really used and id is None
-            self.movies[itemId]['id'] = ispybId or -1
+            self.movies[itemId]['id'] = ispybId
+
+        for itemId in set(updateAlignIds):
+            motionParams = self.ispybDb.get_motion_correction_params()
+            self.safe_update(motionParams, self.motion_corrections[itemId])
+            motionParams['dataCollectionId'] = self.movies[itemId]['id']
+            ispybId = self.ispybDb.update_motion_correction(motionParams)
+            self.motion_corrections[itemId]['id'] = ispybId
+
+        for itemId in set(updateCTFIds):
+            ctfParams = self.ispybDb.get_ctf_params()
+            self.safe_update(ctfParams, self.ctfs[itemId])
+            ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['id']
+            ispybId = self.ispybDb.update_motion_correction(ctfParams)
+            self.ctfs[itemId]['id'] = ispybId
 
         if all(finished):
             self.info("All finished, closing ISPyBDb connection")
@@ -235,9 +252,22 @@ class MonitorISPyB(Monitor):
                 micFn = mic.getFileName()
                 renderable_image = self.imageGenerator.generate_image(micFn, micFn)
 
-                self.movies[micId].update({
+                xs, ys = prot._getMovieShifts(mic)
+                totalMotion = sum(map(lambda p: (p[0]**2 + p[1]**2) ** 0.5, zip(xs, ys)))
+
+                if micId not in self.motion_corrections:
+                    self.motion_corrections[micId] = {}
+
+                self.motion_corrections[micId].update({
+                    'firstFrame': prot.alignFrame0.get(),
+                    'lastFrame': prot.alignFrameN.get(),
+                    'driftPlotFullPath': getattr(prot, '_getPlotGlobal', lambda x: None)(mic),
+                    'totalMotion': totalMotion,
+                    'averageMotionPerFrame': totalMotion/(prot.alignFrameN.get() - prot.alignFrame0.get()),
+                    'micrographfullPath': micFn,
                     'comments': 'aligned',
-                    'xtal_snapshot1':renderable_image
+                    'patchesUsed': (prot.patchX.get() + prot.patchY.get())/2,
+                    'xtal_snapshot1': renderable_image
                 })
                 print('%d has new align info' % micId)
                 updateIds.append(micId)
@@ -252,10 +282,16 @@ class MonitorISPyB(Monitor):
                 psdName = pwutils.replaceBaseExt(micFn, 'psd.png')
                 psdFn = ctf.getPsdFile()
                 psdPng = self.imageGenerator.generate_image(psdFn, psdName)
-                self.movies[micId].update({
-                'min_defocus': ctf.getDefocusU(),
-                'max_defocus': ctf.getDefocusV(),
-                'amount_astigmatism': ctf.getDefocusRatio()
+
+                if micId not in self.ctfs:
+                    self.ctfs[micId] = {}
+
+                self.ctfs[micId].update({
+                'estimatedDefocus': (ctf.getDefocusV()**2 + ctf.getDefocusU()**2)**0.5,
+                'astigmatism': ctf.getDefocusRatio(),
+                'astigmatismAngle': ctf.getDefocusAngle(),
+                'fftPlotFullPath': ctf.getMicrograph(),
+                'fftPlotFullPath2': ctf.getPsdFile()
                 })
                 print('%d has new ctf info' % micId)
                 updateIds.append(micId)
@@ -352,9 +388,11 @@ class ISPyBdb:
         from ispyb.dbconnection import dbconnection
         from ispyb.core import core
         from ispyb.mxacquisition import mxacquisition
+        from ispyb.emacquisition import emacquisition
         self.dbconnection = dbconnection
         self.core = core
         self.mxacquisition = mxacquisition
+        self.emacquisition = emacquisition
 
         self._loadCursor(db)
         self._create_group()
@@ -385,6 +423,18 @@ class ISPyBdb:
 
     def update_image(self, params):
         return self.mxacquisition.update_image(self.cursor, params.values())
+
+    def get_motion_correction_params(self):
+        return self.emacquisition.get_motion_correction_params()
+
+    def update_motion_correction(self, params):
+        return self.emacquisition.insert_motion_correction(self.cursor, params.values())
+
+    def get_ctf_params(self):
+        return self.emacquisition.get_ctf_params()
+
+    def update_ctf(self, params):
+        return self.emacquisition.insert_ctf(self.cursor, params.values())
 
     def disconnect(self):
         if self.dbconnection:
