@@ -41,6 +41,8 @@ B. Remote execution:
 """
 import os
 import re
+import sys
+import traceback
 from subprocess import Popen, PIPE
 import pyworkflow as pw
 from pyworkflow.utils import redStr, greenStr, makeFilePath, join
@@ -239,9 +241,15 @@ def _submit(hostConfig, submitDict, cwd=None):
     pool = ThreadPool(processes=1)
     try:
         # job submit should be fast even if the job is long
-        return pool.apply_async(run_command).get(2)
+        future = pool.apply_async(run_command)
+        return future.get(2)
     except TimeoutError:
         print "** Timeout trying to submit job"
+        return UNKNOWN_JOBID
+    except:
+        print "** unexpected error trying to submit job"
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
         return UNKNOWN_JOBID
 
 

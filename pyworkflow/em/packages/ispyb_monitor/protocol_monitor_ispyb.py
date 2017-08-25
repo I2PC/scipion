@@ -214,6 +214,7 @@ class MonitorISPyB(Monitor):
 
             self.movies[movieId] = {
                 'experimenttype': 'single particle',
+                'run status': 'DataCollection Successful',
                 'imgdir': abspath(dirname(movieFn)),
                 'imgsuffix': pwutils.getExt(movieFn),
                 'file_template': pwutils.removeBaseExt(movieFn) + '#####' + pwutils.getExt(movieFn),
