@@ -19,7 +19,7 @@ public:
 	GpuMultidimArrayAtGpu< float > RefExpRealSpace;
 	GpuMultidimArrayAtGpu< std::complex<float> > RefExpFourierPolar;
 	GpuMultidimArrayAtGpu< float > RefExpRealSpacePolar;
-	GpuMultidimArrayAtGpu<float> d_NCC, d_NCCPolar;
+	GpuMultidimArrayAtGpu<float> d_NCC, d_NCCPolar, d_NCCPolar1D, auxMax, auxZero;
 	GpuMultidimArrayAtGpu<float> d_out_max, d_pos_max, d_out_polar_max, d_pos_polar_max;
 
 };
