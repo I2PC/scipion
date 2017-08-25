@@ -324,7 +324,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planAuxFptr);
 		}else{
 			if(myhandle.ptr == NULL){
-				printf("Creo el plan \n");
+				//printf("Creo el plan \n");
 				createPlanFFT(Xdim, Ydim, NdimNew, Zdim, true, planFptr);
 				myhandle.ptr = (void *)planFptr;
 				planFptr=(cufftHandle *)myhandle.ptr;
@@ -379,7 +379,7 @@ void GpuMultidimArrayAtGpu<float>::fft(GpuMultidimArrayAtGpu< std::complex<float
 			NdimNew=aux;
 
 		if(auxNdim!=NdimNew && NdimNew!=0){
-			printf("cufftDestroy\n");
+			//printf("cufftDestroy\n");
 			cufftDestroy(*planAuxFptr);
 		}
 
@@ -431,7 +431,7 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 			createPlanFFT(Xdim, Ydim, NdimNew, Zdim, false, planAuxBptr);
 		}else{
 			if(myhandle.ptr == NULL){
-				printf("Creo el plan \n");
+				//printf("Creo el plan \n");
 				createPlanFFT(realSpace.Xdim, realSpace.Ydim, NdimNew, Zdim, false, planBptr);
 				myhandle.ptr = (void *)planBptr;
 				planBptr=(cufftHandle *)myhandle.ptr;
@@ -472,7 +472,7 @@ void GpuMultidimArrayAtGpu< std::complex<float> >::ifft(GpuMultidimArrayAtGpu<fl
 			NdimNew=aux;
 
 		if(auxNdim!=NdimNew && NdimNew!=0){
-			printf("cufftDestroy\n");
+			//printf("cufftDestroy\n");
 			cufftDestroy(*planAuxBptr);
 		}
 
