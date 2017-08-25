@@ -18,6 +18,30 @@
 #define PI 3.14159265
 
 
+
+__global__ void sumRadiusKernel(float *d_in, float *d_out, float *d_out_max, float *d_out_zero, size_t dim, size_t radius, size_t ndim){
+
+	unsigned long int idx = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned int numIm = floorf(idx/360);
+	unsigned int angle = idx%360;
+
+	if(idx>=dim)
+		return;
+
+	d_out[idx]=0.0;
+	d_out_max[idx]=-100000;
+	int idxRead=360*radius*numIm;
+	for(int i=0; i<radius; i++){
+		d_out[idx] += d_in[idxRead+(360*i)+angle];
+		if(d_in[idxRead+(360*i)+angle]>d_out_max[idx])
+			d_out_max[idx] = d_in[idxRead+(360*i)+angle];
+		if(i==0)
+			d_out_zero[idx] = d_in[idxRead+angle];
+	}
+
+}
+
+
 __global__ void calculateMax(float *d_in, float *d_out, float *position, size_t yxdim, int Ndim, bool firstCall){
 
 	extern __shared__ float sdata[];
@@ -182,11 +206,15 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 	if(idx>=n)
 		return;
 
+	double maxShift2 = maxShift*maxShift;
+
 	int idx9 = idx*9;
-	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2];
-	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5];
-	if(abs(shiftx)>maxShift || abs(shifty)>maxShift){
-		printf("NO\n");
+	float shiftx = newMat[idx9]*lastMat[idx9+2] + newMat[idx9+1]*lastMat[idx9+5] + newMat[idx9+2]*lastMat[idx9+8];
+	float shifty = newMat[idx9+3]*lastMat[idx9+2] + newMat[idx9+4]*lastMat[idx9+5] + newMat[idx9+5]*lastMat[idx9+8];
+	float radShift = shiftx*shiftx + shifty*shifty;
+	//if(abs(shiftx)>maxShift || abs(shifty)>maxShift)
+	if(radShift > maxShift2){
+		//printf("NO\n");
 		result[idx9] = lastMat[idx9];
 		result[idx9+1] = lastMat[idx9+1];
 		result[idx9+2] = lastMat[idx9+2];
@@ -195,12 +223,12 @@ __global__ void matrixMultiplication (float* newMat, float* lastMat, float* resu
 		result[idx9+5] = lastMat[idx9+5];
 		maxGpu[idx] = NCC[idx*NCC_yxdim];
 	}else{
-		printf("SI\n");
-		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3];
+		//printf("SI\n");
+		result[idx9] = newMat[idx9]*lastMat[idx9] + newMat[idx9+1]*lastMat[idx9+3] + newMat[idx9+2]*lastMat[idx9+6];
 		result[idx9+2] = shiftx;
-		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4];
-		result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3];
-		result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4];
+		result[idx9+1] = newMat[idx9]*lastMat[idx9+1] + newMat[idx9+1]*lastMat[idx9+4] + newMat[idx9+2]*lastMat[idx9+7];
+		result[idx9+3] = newMat[idx9+3]*lastMat[idx9] + newMat[idx9+4]*lastMat[idx9+3] + newMat[idx9+5]*lastMat[idx9+6];
+		result[idx9+4] = newMat[idx9+3]*lastMat[idx9+1] + newMat[idx9+4]*lastMat[idx9+4] + newMat[idx9+5]*lastMat[idx9+7];
 		result[idx9+5] = shifty;
 	}
 
@@ -307,7 +335,7 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
 		else if(y>=ydim)
 			y=y-ydim;*/
 	//}else if(wrap==1){ //mirror
-		if(x<0)
+/*		if(x<0)
 			x=-x;
 		else if(x>=xdim)
 			x=xdim-(x-xdim)-1;
@@ -315,7 +343,7 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
 			y=-y;
 		else if(y>=ydim)
 			y=ydim-(y-ydim)-1;
-	/*}else if(wrap==2){ //last pixel copies
+*/	/*}else if(wrap==2){ //last pixel copies
 		if(x<0)
 			x=0;
 		else if(x>=xdim)
@@ -325,6 +353,15 @@ __device__ void wrapping (int &x, int &y, size_t xdim, size_t ydim){
 		else if(y>=ydim)
 			y=ydim-1;
 	}*/
+
+	if(x<0)
+		x=0;
+	else if(x>=xdim)
+		x=0;
+	if(y<0)
+		y=0;
+	else if(y>=ydim)
+		y=0;
 
 }
 
@@ -374,6 +411,10 @@ __global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat,
 	float w10=y_y_low*one_x;
 	float w11=y_y_low*x_x_low;
 
+	//******
+	int xaux=x_orig00;
+	int yaux=y_orig00;
+
 	wrapping (x_orig00, y_orig00, xdim, ydim);
 	wrapping (x_orig01, y_orig01, xdim, ydim);
 	wrapping (x_orig10, y_orig10, xdim, ydim);
@@ -390,6 +431,11 @@ __global__ void applyTransformKernel(float *d_in, float *d_out, float *transMat,
 	float I10 = d_in[imgIdx10+imgOffset];
 	float I11 = d_in[imgIdx11+imgOffset];
 	float imVal = I00*w00 + I01*w01 + I10*w10 + I11*w11;
+
+	/*/******
+	if(xaux<0 || xaux>=xdim || yaux<0 || yaux>=ydim){
+		imVal = 0;
+	}*/
 
 	d_out[idx] = imVal;
 
@@ -644,7 +690,105 @@ void GpuCorrelationAux::produceSideInfo(mycufftHandle &myhandlePaddedB, mycufftH
 }
 
 
-void calculateMaxNew(float *max_values, float *posX, float *posY, int fixPadding, int yxdim, int Xdim, int Ydim, int Ndim, float *d_data,
+
+void calculateMaxNew1D(float *max_values, float *posX, int fixPadding, int xdim, int Ndim, float *d_data, float *auxMax,
+		GpuMultidimArrayAtGpu<float> d_out, GpuMultidimArrayAtGpu<float> d_pos){
+
+    int numTh = 1024;
+    int numBlk = xdim/1024;
+    if(xdim%1024!=0)
+    	numBlk++;
+    numBlk=ceil((float)numBlk/2); //V4+
+    int numBlk2, size_aux2;
+
+    d_out.resize(numBlk*Ndim);
+    d_pos.resize(numBlk*Ndim);
+
+	//AJ TIME
+	timeval start1, end1;
+	double secs1;
+	gettimeofday(&start1, NULL);
+
+	//printf("1. numTh %i, numBlk %i yxdim %i \n", numTh, numBlk, yxdim);
+	calculateMax<<<numBlk, numTh, 2*numTh * sizeof(float)>>>(d_data, d_out.d_data, d_pos.d_data, xdim, Ndim, true);
+	/*float *posi, *max;
+	posi = new float[numBlk*Ndim];
+	max = new float[numBlk*Ndim];
+	cudaMemcpy(max, d_out.d_data, numBlk*Ndim*sizeof(float), cudaMemcpyDeviceToHost);
+	cudaMemcpy(posi, d_pos.d_data, numBlk*Ndim*sizeof(float), cudaMemcpyDeviceToHost);
+	for(int j=0; j<numBlk*Ndim; j++)
+		//printf("max %lf posi %lf ", max[j], posi[j]);
+	//printf("\n");*/
+
+	numBlk2=numBlk;
+	size_aux2=numBlk;
+	while(1){
+		if(numBlk2>numTh){
+		   numBlk2=numBlk2/numTh;
+		   if(numBlk2%numTh!=0)
+			   numBlk2++;
+		   numBlk=ceil((float)numBlk/2); //V4+
+		}else{
+			numTh=ceil((float)size_aux2/2); //V4+
+			float aux1 = log((float)numTh)/log(2.0); //V4+
+			int aux2 = (int)aux1; //V4+
+			float error = aux1-(float)aux2; //V4+
+			if(error>0.001) //V4+
+				aux2++;  //V4+
+			numTh=pow(2,aux2); //V4+
+			numBlk2=1;
+		}
+		//printf("2. numTh %i, numBlk %i yxdim %i \n", numTh, numBlk2, size_aux2);
+		calculateMax<<<numBlk2, numTh, 2*numTh * sizeof(float)>>> (d_out.d_data, d_out.d_data, d_pos.d_data, size_aux2, Ndim, false);
+		size_aux2=numBlk2;
+		if(numBlk2==1)
+			break;
+   }
+
+	//AJ TIME
+	gettimeofday(&end1, NULL);
+	secs1 = timeval_diff(&end1, &start1);
+	//printf("MAX 2: %.16g miliseconds\n", secs1 * 1000.0);
+
+	//AJ TIME
+	timeval start2, end2;
+	double secs2;
+	gettimeofday(&start2, NULL);
+
+	float h_pos;
+	for(int i=0; i<Ndim; i++){
+
+		cudaMemcpy(&h_pos, &d_pos.d_data[i], sizeof(float), cudaMemcpyDeviceToHost);
+		int position = (int)h_pos;
+		cudaMemcpy(&max_values[i], &auxMax[position+(i*360)], sizeof(float), cudaMemcpyDeviceToHost);
+
+		float posX_aux = (float)(position%xdim);
+		float Xdim2 = (float)(xdim/2);
+
+		/*if(posX_aux>=Xdim2){
+			posX[i] = xdim-1-posX_aux;
+		}else if(posX_aux<Xdim2){
+			posX[i] = -(posX_aux+1);*/
+		if(posX_aux<Xdim2){
+			posX[i] = -(posX_aux+1);
+		}else if(posX_aux>=Xdim2){
+			posX[i] = xdim-1-posX_aux;
+		}
+
+		//Fixing padding problem ¿?¿?
+		posX[i]+=fixPadding;
+
+	    //AJ TIME
+	    gettimeofday(&end2, NULL);
+	    secs2 = timeval_diff(&end2, &start2);
+	    //printf("MAX 3: %.16g miliseconds\n", secs2 * 1000.0);
+
+	}
+
+}
+
+
+void calculateMaxNew2D(float *max_values, float *posX, float *posY, int fixPadding, int yxdim, int Xdim, int Ydim, int Ndim, float *d_data,
 		GpuMultidimArrayAtGpu<float> d_out, GpuMultidimArrayAtGpu<float> d_pos){
 
     int numTh = 1024;
@@ -787,39 +931,96 @@ void cuda_calculate_correlation_rotation(GpuCorrelationAux &referenceAux, GpuCor
 	float *posY = new float[myStructureAux.d_NCCPolar.Ndim];
 	myStructureAux.d_NCCPolar.calculateMax(max_values, posX, posY, 0);*/
 
-    //AJ test new maximum calculation
+
+	//AJ sum along the radius
+    numTh = 1024;
+    int numBlk = (myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim)/numTh;
+    if((myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim)%numTh!=0)
+    	numBlk++;
+
+    myStructureAux.d_NCCPolar1D.resize(myStructureAux.d_NCCPolar.Xdim,1,1,myStructureAux.d_NCCPolar.Ndim);
+    myStructureAux.auxMax.resize(myStructureAux.d_NCCPolar.Xdim,1,1,myStructureAux.d_NCCPolar.Ndim);
+    myStructureAux.auxZero.resize(myStructureAux.d_NCCPolar.Xdim,1,1,myStructureAux.d_NCCPolar.Ndim);
+    sumRadiusKernel<<< numBlk, numTh >>>(myStructureAux.d_NCCPolar.d_data, myStructureAux.d_NCCPolar1D.d_data, myStructureAux.auxMax.d_data,
+    		myStructureAux.auxZero.d_data, myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim, myStructureAux.d_NCCPolar.Ydim,
+			myStructureAux.d_NCCPolar.Ndim);
+
+
+    /*float *test = new float[myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim];
+    cudaMemcpy((void*)test, (void*)myStructureAux.d_NCCPolar1D.d_data, sizeof(float)*myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim, cudaMemcpyDeviceToHost);
+    for(int h=0; h<myStructureAux.d_NCCPolar.Xdim*myStructureAux.d_NCCPolar.Ndim; h++)
+    	printf("%f ", test[h]);
+    printf("\n");*/
+
+
 	float *max_values = new float[myStructureAux.d_NCCPolar.Ndim];
 	float *posX = new float[myStructureAux.d_NCCPolar.Ndim];
 	float *posY = new float[myStructureAux.d_NCCPolar.Ndim];
 
-    calculateMaxNew(max_values, posX, posY, 0, myStructureAux.d_NCCPolar.yxdim, myStructureAux.d_NCCPolar.Xdim, myStructureAux.d_NCCPolar.Ydim,
-    		myStructureAux.d_NCCPolar.Ndim, myStructureAux.d_NCCPolar.d_data, myStructureAux.d_out_polar_max, myStructureAux.d_pos_polar_max);
+	//float *max_values2 = new float[myStructureAux.d_NCCPolar.Ndim];
+	//float *posX2 = new float[myStructureAux.d_NCCPolar.Ndim];
+	//float *posY2 = new float[myStructureAux.d_NCCPolar.Ndim];
 
-	TransformMatrix<float> result(transMat.Ndim);
+	calculateMaxNew1D(max_values, posX, 0, myStructureAux.d_NCCPolar1D.Xdim, myStructureAux.d_NCCPolar1D.Ndim, myStructureAux.d_NCCPolar1D.d_data,
+			myStructureAux.auxMax.d_data, myStructureAux.d_out_polar_max, myStructureAux.d_pos_polar_max);
+
+
+	//for(int h=0; h<myStructureAux.d_NCCPolar.Ndim; h++){
+		 //printf("1D posX[%i] %f \n", h, posX[h]);
+		 //printf("1D max_values[%i] %f \n", h, max_values[h]);
+	//}
+
+	//calculateMaxNew2D(max_values, posX, posY, 0, myStructureAux.d_NCCPolar.yxdim, myStructureAux.d_NCCPolar.Xdim, myStructureAux.d_NCCPolar.Ydim,
+    		//myStructureAux.d_NCCPolar.Ndim, myStructureAux.d_NCCPolar.d_data, myStructureAux.d_out_polar_max, myStructureAux.d_pos_polar_max);
+
+
+    //for(int h=0; h<myStructureAux.d_NCCPolar.Ndim; h++)
+    		 //printf("2D posX[%i] %f \n", h,posX[h]);
+
+	//printf("posX %f \n", posX[0]);
+	//printf("posY %f \n", posY[0]);
+
+	//***
+	//posX[0] = 21;
+
+    TransformMatrix<float> result(transMat.Ndim);
 	TransformMatrix<float> newMat(transMat.Ndim);
 	newMat.setRotation(posX);
 
 	numTh = 1024;
-	int numBlk = transMat.Ndim/numTh;
+	numBlk = transMat.Ndim/numTh;
 	if(transMat.Ndim%numTh > 0)
 		numBlk++;
-
-	GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCCPolar.Ndim);
-	gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCCPolar.Ndim*sizeof(float), cudaMemcpyHostToDevice));
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift,
-			maxGpu.d_data, myStructureAux.d_NCCPolar.d_data, myStructureAux.d_NCCPolar.yxdim);
+/*
+	float *matrixCpu = new float[9];
+	printf("ANTES max %f  x %f y %f \n", max_values[0], posX[0], posY[0]);
+	transMat.copyMatrixToCpu(matrixCpu);
+    for(int h=0; h<9; h++){ //myStructureAux.d_NCC.Ndim
+    	printf("ANTES transMat[%i] %f ", h, matrixCpu[h]);
+    }
+    printf("\n");
+*/
+	GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCCPolar1D.Ndim);
+	gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCCPolar1D.Ndim*sizeof(float), cudaMemcpyHostToDevice));
+	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, 2*maxShift,
+			maxGpu.d_data, myStructureAux.auxZero.d_data, myStructureAux.d_NCCPolar1D.yxdim);
 	result.copyMatrix(transMat);
 
-	gpuErrchk(cudaMemcpy(max_vector, maxGpu.d_data, myStructureAux.d_NCCPolar.Ndim*sizeof(float), cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(max_vector, maxGpu.d_data, myStructureAux.d_NCCPolar1D.Ndim*sizeof(float), cudaMemcpyDeviceToHost));
 
-	float *matrixCpu = new float[9];
+/*	for(int h=0; h<myStructureAux.d_NCCPolar.Ndim; h++){
+		 printf("R1D posX[%i] %f ", h, posX[h]);
+		 printf("R1D max_vector[%i] %f \n", h, max_vector[h]);
+	}
+*/
+/*	float *matrixCpu = new float[9];
 	printf("max %f  x %f y %f \n", max_values[0], posX[0], posY[0]);
 	transMat.copyMatrixToCpu(matrixCpu);
     for(int h=0; h<9; h++){ //myStructureAux.d_NCC.Ndim
     	printf("transMat[%i] %f ", h, matrixCpu[h]);
     }
     printf("\n");
-
+*/
 	delete[] max_values;
 	delete[] posX;
 	delete[] posY;
@@ -861,7 +1062,6 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	gettimeofday(&end1, NULL);
 	secs1 = timeval_diff(&end1, &start1);
 	//printf("CORR pointwiseMultiplicationComplexKernel: %.16g miliseconds\n", secs1 * 1000.0);
-
 	//AJ TIME
 	timeval start2, end2;
 	double secs2;
@@ -946,15 +1146,17 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	float *posX = new float[myStructureAux.d_NCC.Ndim];
 	float *posY = new float[myStructureAux.d_NCC.Ndim];
 
-    calculateMaxNew(max_values, posX, posY, fixPadding, myStructureAux.d_NCC.yxdim, myStructureAux.d_NCC.Xdim, myStructureAux.d_NCC.Ydim,
+    calculateMaxNew2D(max_values, posX, posY, fixPadding, myStructureAux.d_NCC.yxdim, myStructureAux.d_NCC.Xdim, myStructureAux.d_NCC.Ydim,
     		myStructureAux.d_NCC.Ndim, myStructureAux.d_NCC.d_data, myStructureAux.d_out_max, myStructureAux.d_pos_max);
-
 
 	//AJ TIME
 	gettimeofday(&end6, NULL);
 	secs6 = timeval_diff(&end6, &start6);
 	//printf("CORR calculateMax: %.16g miliseconds\n", secs6 * 1000.0);
 
+	//***
+	//posX[0] = 10;
+	//posY[0] = 0;
 
 	TransformMatrix<float> result(transMat.Ndim);
 	TransformMatrix<float> newMat(transMat.Ndim);
@@ -970,9 +1172,17 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	double secs7;
     gettimeofday(&start7, NULL);
 
+	/*float *matrixCpu = new float[9];
+	printf("ANTES max %f  x %f y %f \n", max_values[0], posX[0], posY[0]);
+	transMat.copyMatrixToCpu(matrixCpu);
+    for(int h=0; h<9; h++){ //myStructureAux.d_NCC.Ndim
+    	printf("ANTES transMat[%i] %f ", h, matrixCpu[h]);
+    }
+    printf("\n");
+*/
 	GpuMultidimArrayAtGpu<float> maxGpu(myStructureAux.d_NCC.Ndim);
 	gpuErrchk(cudaMemcpy(maxGpu.d_data, max_values, myStructureAux.d_NCC.Ndim*sizeof(float), cudaMemcpyHostToDevice));
-	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, maxShift,
+	matrixMultiplication<<<numBlk, numTh>>> (newMat.d_data, transMat.d_data, result.d_data, transMat.Ndim, 2*maxShift,
 			maxGpu.d_data, myStructureAux.d_NCC.d_data, myStructureAux.d_NCC.yxdim);
 	result.copyMatrix(transMat);
 
@@ -983,14 +1193,21 @@ void cuda_calculate_correlation(GpuCorrelationAux &referenceAux, GpuCorrelationA
 	secs7 = timeval_diff(&end7, &start7);
 	//printf("CORR final: %.16g miliseconds\n", secs7 * 1000.0);
 
-	float *matrixCpu = new float[9];
+/*	float *matrixCpu = new float[9];
 	printf("max %f  x %f y %f \n", max_values[0], posX[0], posY[0]);
 	transMat.copyMatrixToCpu(matrixCpu);
     for(int h=0; h<9; h++){ //myStructureAux.d_NCC.Ndim
     	printf("transMat[%i] %f ", h, matrixCpu[h]);
     }
     printf("\n");
+*/
 
+/*	for(int h=0; h<myStructureAux.d_NCC.Ndim; h++){
+		 printf("T posX[%i] %f ", h, posX[h]);
+		 printf("posY[%i] %f ", h, posY[h]);
+		 printf("max_vector[%i] %f \n", h, max_vector[h]);
+	}
+*/
 	delete[] max_values;
 	delete[] posX;
 	delete[] posY;
