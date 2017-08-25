@@ -119,26 +119,23 @@ class ProtImportFiles(ProtImport):
                    "In this case the protocol will keep running to check \n"
                    "new files and will update the output Set, which can \n"
                    "be used right away by next steps.\n")
-        
+
         form.addParam('timeout', params.IntParam, default=7200,
               condition='dataStreaming',
               label="Timeout (secs)",
               help="Interval of time (in seconds) after which, if no new \n"
-                   "file is detected, the protocol will ends.\n"
+                   "file is detected, the protocol will end.\n"
                    "When finished, the output Set will be closed and\n"
-                   "not more data will be added to it. \n")
+                   "no more data will be added to it. \n"
+                   "Note: If you're using individual frames when importing\n"
+                   "movies, the timeout won't be refreshed until a whole \n"
+                   "movie is stacked. \n")
 
         form.addParam('fileTimeout', params.IntParam, default=30,
               condition='dataStreaming',
               label="File timeout (secs)",
               help="Interval of time (in seconds) after which, if a file \n"
-                   "have not changed, we consider as a new file. \n")
-        
-        form.addParam('endTokenFile', params.StringParam, default=None,
-              condition='dataStreaming',
-              label="End token file",
-              help="Specify an ending file if you want to have more control\n"
-                   "about when to stop the import of files.")
+                   "has not changed, we consider it as a new file. \n")
 
     def _defineImportParams(self, form):
         """ Override to add options related to the different types

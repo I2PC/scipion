@@ -132,9 +132,16 @@ class ProtImportImages(ProtImportFiles):
         img.setAcquisition(acquisition)
         n = 1
         copyOrLink = self.getCopyOrLink()
+        alreadyWarned = False # Use this flag to warn only once
 
         for i, (fileName, fileId) in enumerate(self.iterFiles()):
             dst = self._getExtraPath(basename(fileName))
+            if ' ' in dst:
+                if not alreadyWarned:
+                    self.warning('Warning: your file names have white spaces!')
+                    self.warning('Removing white spaces from copies/symlinks.')
+                    alreadyWarned = True
+                dst = dst.replace(' ', '')
             copyOrLink(fileName, dst)
             # Handle special case of Imagic images, copying also .img or .hed
             self.handleImgHed(copyOrLink, fileName, dst)
@@ -308,6 +315,9 @@ class ProtImportImages(ProtImportFiles):
 
         self._updateOutputSet(outputName, imgSet,
                               state=imgSet.STREAM_CLOSED)
+
+        self._cleanUp()
+
         return outFiles
 
     @classmethod
@@ -393,6 +403,11 @@ class ProtImportImages(ProtImportFiles):
         return methods
     
     #--------------------------- UTILS functions -------------------------------
+    def _cleanUp(self):
+        """Empty method to override in child classes. E.g. to close socket in
+        ProtImportMovies with streamingSocket."""
+        pass
+
     def getFiles(self):
         outputSet = self._getOutputSet()
         if outputSet is not None:
