@@ -1512,8 +1512,13 @@ void logFilter(MultidimArray< T > &V, double a, double b, double c)
     }
 }
 
-/** Compute denoising */
-void denoiseFilter(MultidimArray<double> &V, int maxIter);
+/** Compute Total Variation denoising.
+ * See method at B. Bajic, J. Lindblad, N. Sladoje. Blind Restoration of Images Degraded
+ * with Mixed Poisson-Gaussian Noise with Application in Transmission Electron Microscopy.
+ * In Proceedings of the 2016 IEEE Intern. Symposium on Biomedical Imaging, ISBI2016, Prague,
+ * Czech Republic, April 2016, pp. 123-127
+ * */
+void denoiseTVFilter(MultidimArray<double> &V, int maxIter);
 
 
 /** Compute edges with Sobel */
@@ -1582,7 +1587,7 @@ public:
     void apply(MultidimArray<double> &img);
 };
 
-class DenoiseFilter: public XmippFilter
+class DenoiseTVFilter: public XmippFilter
 {
 public:
     int maxIter;

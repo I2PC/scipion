@@ -47,7 +47,7 @@ void ProgFilter::defineParams()
     MedianFilter::defineParams(this);
     BasisFilter::defineParams(this);
     LogFilter::defineParams(this);
-    DenoiseFilter::defineParams(this);
+    DenoiseTVFilter::defineParams(this);
 
     //examples
     addExampleLine("Filter a volume using a mask =volumeMask.vol= to remove bad pixels:", false);
@@ -97,7 +97,7 @@ void ProgFilter::readParams()
     else if (checkParam("--log"))
         filter = new LogFilter();
     else if (checkParam("--denoise"))
-        filter = new DenoiseFilter();
+        filter = new DenoiseTVFilter();
     else
         REPORT_ERROR(ERR_ARG_MISSING, "You should provide some filter");
     //Read params
