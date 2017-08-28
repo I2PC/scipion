@@ -404,11 +404,17 @@ void multiply(const float transform[3][3], Point3D<float>& inOut) {
 __device__
 void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		ProjectionDataGPU* const data) {
+		const ProjectionDataGPU* data) {
 	Point3D<float> imgPos;
 	float wBlob = 1.f;
 	float wCTF = 1.f;
 	float wModulator = 1.f;
+	const float* __restrict__ img = data->img;
+	const float* __restrict__ CTF = data->CTF;
+	const float* __restrict__ modulator = data->modulator;
+	float dataWeight = data->weight;
+	int xSize = data->xSize;
+	int ySize = data->ySize;
 
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
@@ -421,18 +427,18 @@ void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 	multiply(transform, imgPos);
 	// transform back and round
 	// just Y coordinate needs adjusting, since X now matches to picture and Z is irrelevant
-	int imgX = clamp((int)(imgPos.x + 0.5f), 0, data->xSize - 1);
-	int imgY = clamp((int)(imgPos.y + 0.5f + cMaxVolumeIndexYZ / 2), 0, data->ySize - 1);
+	int imgX = clamp((int)(imgPos.x + 0.5f), 0, xSize - 1);
+	int imgY = clamp((int)(imgPos.y + 0.5f + cMaxVolumeIndexYZ / 2), 0, ySize - 1);
 
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
-	int index2D = imgY * data->xSize + imgX;
+	int index2D = imgY * xSize + imgX;
 
-	if (0 != data->CTF) {
-		wCTF = data->CTF[index2D];
-		wModulator = data->modulator[index2D];
+	if (0 != CTF) {
+		wCTF = CTF[index2D];
+		wModulator = modulator[index2D];
 	}
 
-	float weight = wBlob * wModulator * data->weight;
+	float weight = wBlob * wModulator * dataWeight;
 
 //	if (data->imgIndex == 12 || data->imgIndex == 56) {
 //		printf("%d %d %d -> %d %d (%f, %f)\n",
@@ -442,8 +448,8 @@ void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 //	}
 
 
-	tempVolumeGPU[2*index3D] += data->img[2*index2D] * weight * wCTF;
-	tempVolumeGPU[2*index3D + 1] += data->img[2*index2D + 1] * weight * wCTF;
+	tempVolumeGPU[2*index3D] += img[2*index2D] * weight * wCTF;
+	tempVolumeGPU[2*index3D + 1] += img[2*index2D + 1] * weight * wCTF;
 	tempWeightsGPU[index3D] += weight;
 }
 
@@ -452,8 +458,10 @@ void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		ProjectionDataGPU* const data) {
+		const ProjectionDataGPU* data) {
 	Point3D<float> imgPos;
+	int xSize = data->xSize;
+	int ySize = data->ySize;
 	// transform current point to center
 	imgPos.x = x - cMaxVolumeIndexX/2;
 	imgPos.y = y - cMaxVolumeIndexYZ/2;
@@ -478,15 +486,19 @@ void processVoxelBlob(
 	int maxY = floorf(imgPos.y + cBlobRadius);
 	minX = fmaxf(minX, 0);
 	minY = fmaxf(minY, 0);
-	maxX = fminf(maxX, data->xSize-1);
-	maxY = fminf(maxY, data->ySize-1);
+	maxX = fminf(maxX, xSize-1);
+	maxY = fminf(maxY, ySize-1);
 
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	float volReal, volImag, w;
 	volReal = volImag = w = 0.f;
+	const float* __restrict__ img = data->img;
+	const float* __restrict__ CTF = data->CTF;
+	const float* __restrict__ modulator = data->modulator;
+	float dataWeight = data->weight;
 
 	// ugly spaghetti code, but improves performance by app. 10%
-	if (0 != data->CTF) {
+	if (0 != CTF) {
 		// check which pixel in the vicinity that should contribute
 		for (int i = minY; i <= maxY; i++) {
 			float ySqr = (imgPos.y - i) * (imgPos.y - i);
@@ -497,16 +509,16 @@ void processVoxelBlob(
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
-				int index2D = i * data->xSize + j;
+				int index2D = i * xSize + j;
 
-				float wCTF = data->CTF[index2D];
-				float wModulator = data->modulator[index2D];
+				float wCTF = CTF[index2D];
+				float wModulator = modulator[index2D];
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
-				float weight = wBlob * wModulator * data->weight;
+				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
-				volReal += data->img[2*index2D] * weight * wCTF;
-				volImag += data->img[2*index2D + 1] * weight * wCTF;
+				volReal += img[2*index2D] * weight * wCTF;
+				volImag += img[2*index2D + 1] * weight * wCTF;
 			}
 		}
 	} else {
@@ -520,15 +532,15 @@ void processVoxelBlob(
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
-				int index2D = i * data->xSize + j;
+				int index2D = i * xSize + j;
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
 
-				float weight = wBlob * data->weight;
+				float weight = wBlob * dataWeight;
 				w += weight;
-				volReal += data->img[2*index2D] * weight;
-				volImag += data->img[2*index2D + 1] * weight;
+				volReal += img[2*index2D] * weight;
+				volImag += img[2*index2D + 1] * weight;
 			}
 		}
 	}
