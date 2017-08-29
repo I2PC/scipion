@@ -51,9 +51,11 @@ class ProtRelionLocalRes(ProtAnalysis3D):
     def _createFilenameTemplates(self):
         """ Centralize how files are called for iterations and references. """
         myDict = {
-                  'half1': self._getTmpPath("relion_half1_class001_unfil.mrc"),
-                  'half2': self._getTmpPath("relion_half2_class001_unfil.mrc"),
-                  }
+                 'half1': self._getTmpPath("relion_half1_class001_unfil.mrc"),
+                 'half2': self._getTmpPath("relion_half2_class001_unfil.mrc"),
+                 'finalMap' : self._getExtraPath('relion_locres_filtered.mrc'),
+                 'resolMap' : self._getExtraPath('relion_locres.mrc')
+                 }
 
         self._updateFilenamesDict(myDict)
 
@@ -83,7 +85,8 @@ class ProtRelionLocalRes(ProtAnalysis3D):
 
         form.addSection(label='LocalRes')
         form.addParam('Msg', LabelParam,
-                      label='Select Advanced level if you want to adjust the parameters')
+                      label='Select Advanced level if you want to adjust the '
+                            'parameters')
         form.addParam('locResSamp', IntParam, default=25,
                       label='Sampling rate (A)',
                       expertLevel=LEVEL_ADVANCED,
@@ -176,7 +179,7 @@ class ProtRelionLocalRes(ProtAnalysis3D):
     
     def createOutputStep(self):
         volume = Volume()
-        volume.setFileName(self._getExtraPath('relion_locres_filtered.mrc'))
+        volume.setFileName(self._getFileName("finalMap"))
         vol = self.protRefine.get().outputVolume
         pxSize = vol.getSamplingRate()
         volume.setSamplingRate(pxSize)
@@ -196,12 +199,12 @@ class ProtRelionLocalRes(ProtAnalysis3D):
 
         protClassName = self.protRefine.get().getClassName()
         if protClassName.startswith('SpiderProtRefinement'):
-            errors.append("Relion local resolution protocol is not implemented for "
-                          "Spider - refinement.")
+            errors.append("Relion local resolution protocol is not "
+                          "implemented for Spider - refinement.")
         
         if protClassName.startswith('XmippProtReconstructHighRes'):
-            errors.append("Relion local resolution protocol is not implemented for "
-                          "Xmipp - highres.")
+            errors.append("Relion local resolution protocol is not "
+                          "implemented for Xmipp - highres.")
         return errors
     
     def _summary(self):
@@ -213,10 +216,10 @@ class ProtRelionLocalRes(ProtAnalysis3D):
             summary.append("Output volume not ready yet.")
         else:
             output = self.outputVolume
-            summary.append("%s: Output volume was locally filtered and sharpened" % self.getObjectTag(output))
-
+            summary.append("%s: Output volume was locally filtered "
+                           "and sharpened" % self.getObjectTag(output))
         return summary
-        
+    
     #--------------------------- UTILS functions -------------------------------
     def _defineParamDict(self):
         """ Define all parameters to run relion_postprocess"""
