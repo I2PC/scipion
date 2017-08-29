@@ -38,7 +38,7 @@ from pyworkflow.utils.path import (createLink, cleanPath, copyFile,
                                    replaceBaseExt, getExt, removeExt)
 import pyworkflow.em as em
 import pyworkflow.em.metadata as md
-from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0
+from pyworkflow.em.packages.relion.constants import V1_3, V1_4, V2_0, V2_1
 
 # This dictionary will be used to map
 # between CTFModel properties and Xmipp labels
@@ -81,12 +81,32 @@ CTF_EXTRA_LABELS = [
     md.RLN_CTF_DETECTOR_PIXEL_SIZE
     ]
 
-# Some extra labels to take into account the zscore
+# Some extra labels
 IMAGE_EXTRA_LABELS = [
     md.RLN_SELECT_PARTICLES_ZSCORE,
-    md.RLN_IMAGE_FRAME_NR,
+    md.RLN_IMAGE_FRAME_NR
     ]
- 
+
+# Extra labels for movie refinement & polishing
+MOVIE_EXTRA_LABELS = [
+    md.RLN_PARTICLE_NR_FRAMES,
+    md.RLN_PARTICLE_NR_FRAMES_AVG,
+    md.RLN_PARTICLE_MOVIE_RUNNING_AVG,
+    md.RLN_PARTICLE_ORI_NAME,
+    md.RLN_MLMODEL_GROUP_NAME,
+    # the following is required for polishing to work
+    md.RLN_PARTICLE_DLL,
+    md.RLN_PARTICLE_PMAX,
+    md.RLN_IMAGE_NORM_CORRECTION,
+    md.RLN_PARTICLE_NR_SIGNIFICANT_SAMPLES,
+    md.RLN_PARTICLE_RANDOM_SUBSET,
+    md.RLN_ORIENT_ORIGIN_X_PRIOR,
+    md.RLN_ORIENT_ORIGIN_Y_PRIOR,
+    md.RLN_ORIENT_PSI_PRIOR,
+    md.RLN_ORIENT_ROT_PRIOR,
+    md.RLN_ORIENT_TILT_PRIOR
+]
+
 # ANGLES_DICT = OrderedDict([
 #        ("_angleY", md.RLN_ANGLE_Y),
 #        ("_angleY2", md.RLN_ANGLE_Y2),
@@ -135,11 +155,11 @@ def getVersion():
 
 
 def isVersion2():
-    return getVersion().startswith(V2_0)
+    return getVersion().startswith("2.")
 
 
 def getSupportedVersions():
-    return [V1_3, V1_4, V2_0]
+    return [V1_3, V1_4, V2_0, V2_1]
 
 
 def locationToRelion(index, filename):
@@ -164,6 +184,16 @@ def relionToLocation(filename):
         return int(indexStr), str(fn)
     else:
         return em.NO_INDEX, str(filename)
+
+
+def setRelionAttributes(obj, objRow, *labels):
+    """ Set an attribute to obj from a label that is not
+    basic ones. The new attribute will be named _rlnLabelName
+    and the datatype will be set correctly.
+    """
+    for label in labels:
+        setattr(obj, '_%s' % md.label2Str(label),
+                objRow.getValueAsObject(label))
 
 
 def objectToRow(obj, row, attrDict, extraLabels=[]):
@@ -379,9 +409,11 @@ def coordinateToRow(coord, coordRow, copyId=True):
     if copyId:
         setRowId(coordRow, coord)
     objectToRow(coord, coordRow, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
-    #FIXME: THE FOLLOWING IS NOT CLEAN
-    if coord.getMicId():
-        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
+    if coord.getMicName():
+        coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicName()))
+    else:
+        if coord.getMicId():
+            coordRow.setValue(md.RLN_MICROGRAPH_NAME, str(coord.getMicId()))
 
 
 def rowToCoordinate(coordRow):
@@ -390,12 +422,20 @@ def rowToCoordinate(coordRow):
     if coordRow.containsAll(COOR_DICT):
         coord = em.Coordinate()
         rowToObject(coordRow, coord, COOR_DICT, extraLabels=COOR_EXTRA_LABELS)
-            
-        #FIXME: THE FOLLOWING IS NOT CLEAN
-        try:
-            coord.setMicId(int(coordRow.getValue(md.RLN_MICROGRAPH_NAME)))
-        except Exception:
-            pass
+
+        micName = None
+
+        if coordRow.hasLabel(md.RLN_MICROGRAPH_ID):
+            micId = int(coordRow.getValue(md.RLN_MICROGRAPH_ID))
+            coord.setMicId(micId)
+            # If RLN_MICROGRAPH_NAME is not present, use the id as a name
+            micName = micId
+
+        if coordRow.hasLabel(md.RLN_MICROGRAPH_NAME):
+            micName = coordRow.getValue(md.RLN_MICROGRAPH_NAME)
+
+        coord.setMicName(micName)
+
     else:
         coord = None
         
@@ -431,7 +471,8 @@ def imageToRow(img, imgRow, imgLabel=md.RLN_IMAGE_NAME, **kwargs):
         acquisitionToRow(img.getAcquisition(), imgRow)
     
     # Write all extra labels to the row    
-    objectToRow(img, imgRow, {}, extraLabels=IMAGE_EXTRA_LABELS)
+    objectToRow(img, imgRow, {},
+                extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
     # Provide a hook to be used if something is needed to be 
     # done for special cases before converting image to row
@@ -492,7 +533,7 @@ def rowToParticle(partRow, **kwargs):
     
     setObjId(img, partRow)
     # Read some extra labels
-    rowToObject(partRow, img, {}, 
+    rowToObject(partRow, img, {},
                 extraLabels=IMAGE_EXTRA_LABELS + kwargs.get('extraLabels', []))
 
     img.setCoordinate(rowToCoordinate(partRow))
@@ -649,7 +690,7 @@ def writeSqliteIterClasses(imgStar):
     pass
     
     
-def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=1):
+def splitInCTFGroups(imgStar, defocusRange=1000, numParticles=10):
     """ Add a new colunm in the image star to separate the particles into ctf groups """
     mdAll = md.MetaData(imgStar)
     mdAll.sort(md.RLN_CTF_DEFOCUSU)
@@ -856,8 +897,10 @@ def readSetOfCoordinates(coordSet, coordFiles):
     micSet = coordSet.getMicrographs()
     
     for mic, coordFn in izip(micSet, coordFiles):
+
         if not os.path.exists(coordFn):
             print "WARNING: Missing coordinates star file: ", coordFn
+
         try:
             readCoordinates(mic, coordFn, coordSet)
         except Exception:

@@ -125,7 +125,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'Use the wizard to check boxSize changes after '
                            'downsampling or using a different pixel size. ')
 
-        form.addParam('doBorders', params.BooleanParam, default=False,
+        form.addParam('doBorders', params.BooleanParam, default=True,
                       label='Fill pixels outside borders',
                       help='Xmipp by default skips particles whose boxes fall '
                            'outside of the micrograph borders. Set this '
@@ -215,7 +215,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
                            'Ramp (subtract background+NewXmipp).')
         form.addParam('backRadius', params.IntParam, default=-1,
                       condition='doNormalize',
-                      label='Background radius', expertLevel=LEVEL_ADVANCED,
+                      label='Background radius (px)', expertLevel=LEVEL_ADVANCED,
                       help='Pixels outside this circle are assumed to be noise '
                            'and their stddev is set to 1. Radius for '
                            'background circle definition (in pix.). If this '
