@@ -13,6 +13,9 @@
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
+
+__shared__ float INPUT_IMG[(BLOCK_DIM)*(BLOCK_DIM)];
+
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 		true) {
@@ -384,30 +387,21 @@ void multiply(const float transform[3][3], Point3D<float>& inOut) {
 //	v.y = plane[3].y - y0;
 //	v.z = plane[3].z - z0;
 //}
-//__device__
-//void computeAABB(Point3D* AABB, Point3D* cuboid,
-//	float minX, float minY, float minZ,
-//	float maxX, float maxY, float maxZ) {
-//	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
-//	AABB[1].x = AABB[1].y = AABB[1].z = -INFINITY;
-//	Point3D tmp;
-//	for (int i = 0; i < 8; i++) {
-//		tmp = cuboid[i];
-//		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
-//		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
-//		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
-//		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
-//		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
-//		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
-//	}
-//	// limit to max size
-//	if (AABB[0].x < minX) AABB[0].x = minX;
-//	if (AABB[0].y < minY) AABB[0].y = minY;
-//	if (AABB[0].z < minZ) AABB[0].z = minZ;
-//	if (AABB[1].x > maxX) AABB[1].x = maxX;
-//	if (AABB[1].y > maxY) AABB[1].y = maxY;
-//	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
-//}
+__device__
+void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
+	AABB[0].x = AABB[0].y = AABB[0].z = INFINITY;
+	AABB[1].x = AABB[1].y = AABB[1].z = -INFINITY;
+	Point3D<float> tmp;
+	for (int i = 0; i < 8; i++) {
+		tmp = cuboid[i];
+		if (AABB[0].x > tmp.x) AABB[0].x = tmp.x;
+		if (AABB[0].y > tmp.y) AABB[0].y = tmp.y;
+		if (AABB[0].z > tmp.z) AABB[0].z = tmp.z;
+		if (AABB[1].x < tmp.x) AABB[1].x = tmp.x;
+		if (AABB[1].y < tmp.y) AABB[1].y = tmp.y;
+		if (AABB[1].z < tmp.z) AABB[1].z = tmp.z;
+	}
+}
 
 
 __device__
@@ -556,8 +550,8 @@ void processVoxelBlob(
 
 				float weight = wBlob * dataWeight;
 				w += weight;
-				volReal += img[2*index2D] * weight;
-				volImag += img[2*index2D + 1] * weight;
+				volReal += INPUT_IMG[(2*index2D)%64] * weight;
+				volImag += INPUT_IMG[(2*index2D + 1)%64] * weight;
 			}
 		}
 	}
@@ -566,32 +560,33 @@ void processVoxelBlob(
 	tempWeightsGPU[index3D] += w;
 
 }
-//
-//__device__
-//void printAABB(Point3D* AABB) {
-//	// one base
-//	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-//		AABB[0].x, AABB[0].y, AABB[0].z,
-//		AABB[1].x, AABB[0].y, AABB[0].z,
-//		AABB[1].x, AABB[1].y, AABB[0].z,
-//		AABB[0].x, AABB[1].y, AABB[0].z,
-//		AABB[0].x, AABB[0].y, AABB[0].z);
-//	// other base with one connection
-//	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-//		AABB[0].x, AABB[0].y, AABB[1].z,
-//		AABB[1].x, AABB[0].y, AABB[1].z,
-//		AABB[1].x, AABB[1].y, AABB[1].z,
-//		AABB[0].x, AABB[1].y, AABB[1].z,
-//		AABB[0].x, AABB[0].y, AABB[1].z);
-//	// lines between bases
-//	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
-//		AABB[1].x, AABB[0].y, AABB[1].z,
-//		AABB[1].x, AABB[0].y, AABB[0].z,
-//		AABB[1].x, AABB[1].y, AABB[0].z,
-//		AABB[1].x, AABB[1].y, AABB[1].z,
-//		AABB[0].x, AABB[1].y, AABB[1].z,
-//		AABB[0].x, AABB[1].y, AABB[0].z);
-//}
+
+__device__
+void printAABB(Point3D<float>* AABB) {
+	// one base
+	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+		AABB[0].x, AABB[0].y, AABB[0].z,
+		AABB[1].x, AABB[0].y, AABB[0].z,
+		AABB[1].x, AABB[1].y, AABB[0].z,
+		AABB[0].x, AABB[1].y, AABB[0].z,
+		AABB[0].x, AABB[0].y, AABB[0].z);
+	// other base with one connection
+	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+		AABB[0].x, AABB[0].y, AABB[1].z,
+		AABB[1].x, AABB[0].y, AABB[1].z,
+		AABB[1].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[0].y, AABB[1].z);
+	// lines between bases
+	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
+		AABB[1].x, AABB[0].y, AABB[1].z,
+		AABB[1].x, AABB[0].y, AABB[0].z,
+		AABB[1].x, AABB[1].y, AABB[0].z,
+		AABB[1].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[1].y, AABB[0].z);
+}
+
 //__device__
 //void print(Point3D* cuboid) {
 //	printf("\n");
@@ -600,6 +595,42 @@ void processVoxelBlob(
 //	}
 //	printf("\n");
 //}
+
+
+__device__
+void calculateAABB(const TraverseSpace& tSpace) {
+	Point3D<float> box[8];
+	if (tSpace.XY == tSpace.dir) { // iterate XY plane
+		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x;
+		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x;
+
+		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y;
+		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y;
+
+		getZ(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+		getZ(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+
+		getZ(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+		getZ(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+
+		getZ(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+		getZ(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+
+		getZ(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
+		getZ(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+
+		Point3D<float>AABB[2];
+		computeAABB(AABB, box);
+
+		printAABB(AABB);
+
+
+	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
+
+	} else { // iterate YZ plane
+
+	}
+}
 
 __device__
 void processProjection(
@@ -638,6 +669,10 @@ void processProjection(
 //	dX = maxX - minX;
 //	dY = maxY - minY;
 //	dZ = maxZ - minZ;
+
+	if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
+		calculateAABB(tSpace);
+	}
 
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
