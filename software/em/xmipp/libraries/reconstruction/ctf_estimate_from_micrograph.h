@@ -28,6 +28,7 @@
 #define _PROG_CTF_ESTIMATE_FROM_MICROGRAPH
 
 #include "ctf_estimate_from_psd.h"
+#include "ctf_estimate_from_psd_fast.h"
 #include "ctf_estimate_psd_with_arma.h"
 
 /**@defgroup AssignCTF ctf_estimate_from_micrograph (CTF estimation from a micrograph)
@@ -45,6 +46,8 @@ public:
 public:
     /// Parameters for adjust_CTF program
     ProgCTFEstimateFromPSD  prmEstimateCTFFromPSD;
+    /// Parameters for adjust_CTF program
+    ProgCTFEstimateFromPSDFast  prmEstimateCTFFromPSDFast;
     /// Parameters for ARMA
     ARMA_parameters         ARMA_prm;
     /// Position file
