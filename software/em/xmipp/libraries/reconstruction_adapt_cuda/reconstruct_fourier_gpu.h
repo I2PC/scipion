@@ -52,7 +52,7 @@
 #include <reconstruction/symmetrize.h>
 #include <reconstruction_cuda/cuda_gpu_reconstruct_fourier.h>
 #define BLOB_TABLE_SIZE 5000
-#define BLOB_TABLE_SIZE_SQRT 10000
+#define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with cuda_gpu_reconstruct_fourier.cpp
 
 #define MINIMUMWEIGHT 0.001
 #define ACCURACY 0.001

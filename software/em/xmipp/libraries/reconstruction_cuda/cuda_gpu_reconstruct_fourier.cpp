@@ -5,7 +5,7 @@
 #include <cuda_runtime_api.h>
 #include "cuda_gpu_reconstruct_fourier.h"
 
-#define BLOCK_DIM 16
+#define BLOCK_DIM 32
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 		true) {
@@ -401,6 +401,9 @@ void multiply(const float transform[3][3], Point3D<float>& inOut) {
 //	if (AABB[1].y > maxY) AABB[1].y = maxY;
 //	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
 //}
+#define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with reconstruct_fourier_gpu.h
+__shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
+
 __device__
 void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
@@ -456,7 +459,6 @@ void processVoxel(float* tempVolumeGPU, float *tempWeightsGPU,
 __device__
 void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
-		float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
 		const ProjectionDataGPU* data) {
 	Point3D<float> imgPos;
@@ -514,7 +516,7 @@ void processVoxelBlob(
 				float wCTF = CTF[index2D];
 				float wModulator = modulator[index2D];
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
-				float wBlob = blobTableSqrt[aux];
+				float wBlob = BLOB_TABLE[aux];
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
 				volReal += img[2*index2D] * weight * wCTF;
@@ -535,7 +537,7 @@ void processVoxelBlob(
 				int index2D = i * xSize + j;
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
-				float wBlob = blobTableSqrt[aux];
+				float wBlob = BLOB_TABLE[aux];
 
 				float weight = wBlob * dataWeight;
 				w += weight;
@@ -589,8 +591,7 @@ void processProjection(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 	ProjectionDataGPU* projectionData,
 	const TraverseSpace& tSpace,
-	const float transformInv[3][3],
-	float* devBlobTableSqrt)
+	const float transformInv[3][3])
 {
 //	int imgSizeX = projectionData->xSize;
 //	int imgSizeY = projectionData->ySize;
@@ -645,7 +646,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
 				}
@@ -670,7 +671,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
 				}
@@ -695,7 +696,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
 						}
 					}
 				}
@@ -719,11 +720,26 @@ void processBufferKernel(
 		ProjectionDataGPU* buffer, int bufferSize,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		float* devBlobTableSqrt) {
+	if ( ! cUseFast) {
+		int id = threadIdx.y*blockDim.x + threadIdx.x;
+		int blockSize = blockDim.x * blockDim.y;
+		for (int i = id; i < BLOB_TABLE_SIZE_SQRT; i+= blockSize)
+			BLOB_TABLE[i] = devBlobTableSqrt[i];
+		/*int loops = (BLOB_TABLE_SIZE_SQRT / blockSize) + 1;
+		for (int i = 0; i < loops; i++) {
+			int index = id + i*blockSize;
+			if (index < BLOB_TABLE_SIZE_SQRT) {
+				BLOB_TABLE[index] = devBlobTableSqrt[index];
+			}
+		}*/
+		__syncthreads();
+	}
+
+
 	for (int i = 0; i < noOfTransforms; i++) {
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
-			&buffer[traverseSpaces[i].projectionIndex], traverseSpaces[i], traverseSpaces[i].transformInv,
-			devBlobTableSqrt);
+			&buffer[traverseSpaces[i].projectionIndex], traverseSpaces[i], traverseSpaces[i].transformInv);
 	}
 }
 
