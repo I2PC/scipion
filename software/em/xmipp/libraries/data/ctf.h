@@ -395,6 +395,9 @@ public:
         precomputed.u3 = precomputed.u2 * precomputed.u;
         precomputed.u4 = precomputed.u2 * precomputed.u2;
         precomputed.u_sqrt = sqrt(precomputed.u);
+
+        //printf("u = %lf, u2 = %lf, u3 = %lf, u4 = %lf, usqrt = %lf\n",precomputed.u,precomputed.u2,
+               		    		//precomputed.u3,precomputed.u4,precomputed.u_sqrt);
         if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
             fabs(Y) < XMIPP_EQUAL_ACCURACY)
             precomputed.deltaf=0;
@@ -411,6 +414,7 @@ public:
              */
             double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
             precomputed.deltaf= (defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
+            //printf("deltaf = %lf\n", precomputed.deltaf);
         }
     }
 
@@ -422,11 +426,16 @@ public:
     void precomputeValues(int i, int j)
     {
         precomputed=precomputedImage[i*precomputedImageXdim+j];
+        /*printf("size = %zu\n",precomputedImage.size());
+        printf("ImageXdim = %i i = %i j = %i\n",precomputedImageXdim, i, j);
+        printf("u = %lf, u2 = %lf, u3 = %lf, u4 = %lf, usqrt = %lf\n",precomputed.u,precomputed.u2,
+        		    		precomputed.u3,precomputed.u4,precomputed.u_sqrt);*/
         if (precomputed.deltaf==-1)
         {
             double ellipsoid_ang = precomputed.ang - rad_azimuth;
             double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
             precomputed.deltaf= (defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
+            //printf("deltaf = %lf\n", precomputed.deltaf);
 
         }
     }
@@ -486,6 +495,7 @@ public:
             << std::endl;
             std::cout << "   Total atenuation(E)= " << E << std::endl;
             std::cout << "   CTFdamp=" << E << std::endl;
+            std::cout << "   K =" << K << std::endl;
         }
         return -K*E;
     }
@@ -621,9 +631,8 @@ public:
         double c2 = sqrt(cU2 * cU2 * cos_ang2_2 + cV2 * cV2 * sin_ang2_2);
         double sigma2 = sqrt(sigmaU2 * sigmaU2 * cos_ang2_2 + sigmaV2 * sigmaV2 * sin_ang2_2);
 
-        if (show)
-        {
-            std::cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << std::endl
+
+            /*std::cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << std::endl
             << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << std::endl
             << "   sq=" << sq << "\n"
             << "   c=" << c << "\n"
@@ -632,15 +641,19 @@ public:
             << "   cU2=" << cU2 << " cV2=" << cV2 << "\n"
             << "   cos_ang2=" << cos_ang2 << " sin_ang2_2=" << sin_ang2_2 << "\n"
             << "   c2=" << c2 << "\n"
-            << "   sigmaU2=" << sigma2 << "\n";
-            std::cout << "   u=" << precomputed.u << ") CTFnoise="
+            << "   sigmaU2=" << sigma2 << "\n"
+			<< "   gaussian_K=" << gaussian_K << "\n"
+			<< "   sqrt_K=" << sqrt_K << "\n"
+			<< "   base_line=" << base_line << "\n";
+            std::cout << "   u=" << precomputed.u << "u_sqrt=" << precomputed.u_sqrt <<") CTFnoise="
             << base_line +
             gaussian_K*exp(-sigma*(precomputed.u - c)*(precomputed.u - c)) +
             sqrt_K*exp(-sq*sqrt(precomputed.u)) -
-            gaussian_K2*exp(-sigma2*(precomputed.u - c2)*(precomputed.u - c2)) << std::endl;
-        }
+            gaussian_K2*exp(-sigma2*(precomputed.u - c2)*(precomputed.u - c2)) << std::endl;*/
+
         double aux=precomputed.u - c;
         double aux2=precomputed.u - c2;
+        //printf("aux = %lf aux2 = %lf\n",aux,aux2);
         return base_line +
                gaussian_K*exp(-sigma*aux*aux) +
                sqrt_K*exp(-sq*precomputed.u_sqrt) -
@@ -761,6 +774,508 @@ public:
     void forcePhysicalMeaning();
 };
 
+/////////////////////////////////CTF1D///////////////////////////////////////////
+
+class CTF1D
+{
+public:
+	// Electron wavelength (Amstrongs)
+	double lambda;
+	// Squared frequency associated to the aperture
+	// double ua2;
+	// Different constants
+	double K1;
+	double K2;
+	double K3;
+	double K4;
+	double K5;
+	double K6;
+	double K7;
+	double Ksin;
+	double Kcos;
+	/** Standard error of defocus Gaussian function due to chromatic aberration.
+		in Amstrong */
+	double D;
+	// Precomputed values
+	PrecomputedForCTF precomputed;
+	// Image of precomputed values
+	std::vector<PrecomputedForCTF> precomputedImage;
+	// Xdim size of the image
+	int precomputedImageXdim;
+public:
+	/// Global gain. By default, 1
+	double K;
+	/// Sampling rate (A/pixel)
+	double Tm;
+	/// Accelerating Voltage (in KiloVolts)
+	double kV;
+	/// Defocus (in Angstroms). Negative values are underfocused
+	double Defocus;
+	/// Spherical aberration (in milimeters). Typical value 5.6
+	double Cs;
+	/// Chromatic aberration (in milimeters). Typical value 2
+	double Ca;
+	/** Mean energy loss (eV) due to interaction with sample.
+		Typical value 1*/
+	double espr;
+	/// Objective lens stability (deltaI/I) (ppm). Typical value 1
+	double ispr;
+	/// Convergence cone semiangle (in mrad). Typical value 0.5
+	double alpha;
+	/// Longitudinal mechanical displacement (ansgtrom). Typical value 100
+	double DeltaF;
+	/// Transversal mechanical displacement (ansgtrom). Typical value 3
+	double DeltaR;
+	/// Factor for the importance of the Amplitude contrast.
+	double Q0;
+	/// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+	double x0;
+	/// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+	double xF;
+	/// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+	double y0;
+	/// In the case of local CTF determination x0,xF,y0,yF determines the region where the CTF is determined
+	double yF;
+	/// Local CTF determination
+	bool isLocalCTF;
+	/// Enable CTFnoise part
+	bool enable_CTFnoise;
+	/// Enable CTF part
+	bool enable_CTF;
+	/// Global base_line
+	double base_line;
+	/// Gain for the gaussian term
+	double gaussian_K;
+	/// Gaussian width
+	double sigma1;
+	/// Gaussian center
+	double Gc1;
+	/// Gain for the square root term
+	double sqrt_K;
+	/// Sqrt width
+	double sq;
+	/// Gain for the second Gaussian term
+	double gaussian_K2;
+	/// Second Gaussian width
+	double sigma2;
+	/// Second Gaussian center
+	double Gc2;
+	// Background polynomial
+	double bgR1, bgR2, bgR3;
+	// Envelope polynomial
+	double envR0, envR1, envR2;
+
+	/** Empty constructor. */
+	CTF1D()
+	{
+	  clear(); //Aclarar esto porque está en .cpp y lo está cogiendo de void mas abajo
+	}
+
+	/** Read from file.
+			An exception is thrown if the file cannot be open.
+
+			If no K or sqrt_K are given then it is assumed that the user
+			does not want to activate that part and the noise or the CTF
+			are removed from the model unless the disable_if_not_K is set
+			to false*/
+	 void read(const FileName &fn, bool disable_if_not_K = true);
+
+		/** Read from 1 row of a metadata file.
+
+			If no K or sqrt_K are given then it is assumed that the user
+			does not want to activate that part and the noise or the CTF
+			are removed from the model unless the disable_if_not_K is set
+			to false
+			This function should be used usually if you have all ctf parameters
+			in columns format metadata or after calling fillExpand having CTF_MODEL
+			*/
+	  void readFromMetadataRow(const MetaData &MD, size_t id, bool disable_if_not_K=true);
+
+		/** Same as previuous reading function but providing the MDRow */
+	  void readFromMdRow(const MDRow &row, bool disable_if_not_K=true);
+
+		/** Write to file.
+			An exception is thrown if the file cannot be open.*/
+	  void write(const FileName &fn);
+
+		/// Define parameters in the command line
+	  static void defineParams(XmippProgram * program);
+
+		/// Read parameters from the command line
+	  void readParams(XmippProgram * program);
+
+		/// Show
+	  friend std::ostream & operator << (std::ostream &out, const CTF1D &ctf);
+
+		/// Clear.
+	  void clear();
+
+		/// Clear noise
+	  void clearNoise();
+
+		/// Clear pure CTF
+	  void clearPureCtf();
+
+		/** Change sampling rate.
+		 * It is advisable to change the sampling rate just after reading the CTF parameters.
+		 * However, unless you use precomputed values, there should not be any problem of changing
+		 * it at a later stage.
+		 */
+	  inline void changeSamplingRate(double newTm)
+	  {
+		  Tm=newTm;
+	  }
+
+	  /// Produce Side information
+	  void produceSideInfo();
+
+	  /// Precompute values for a given frequency
+	 void precomputeValues(double X)
+	 {
+		 precomputed.ang = 0;
+		 precomputed.u2 = X * X;
+		 precomputed.u = sqrt(precomputed.u2);
+		 precomputed.u3 = precomputed.u2 * precomputed.u;
+		 precomputed.u4 = precomputed.u2 * precomputed.u2;
+		 precomputed.u_sqrt = sqrt(precomputed.u);
+
+		 //printf("u2 = %lf u = %lf u3 = %lf u4 = %lf usqrt = %lf\n", precomputed.u2,precomputed.u,precomputed.u3,precomputed.u4,precomputed.u_sqrt);
+		 if (fabs(X) < XMIPP_EQUAL_ACCURACY)
+			 precomputed.deltaf=0;
+		 else
+		 {
+			 //double ellipsoid_ang = precomputed.ang - rad_azimuth;
+			 /*
+			  * For a derivation of this formulae confer
+			  * Principles of Electron Optics page 1380
+			  * in particular term defocus and twofold axial astigmatism
+			  * take into account that a1 and a2 are the coefficient
+			  * of the zernike polynomials difference of defocus at 0
+			  * and at 45 degrees. In this case a2=0
+			  */
+			 //double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
+			 precomputed.deltaf= Defocus;//(defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
+			 //printf("deltaf = %lf\n",precomputed.deltaf);
+
+		 }
+	 }
+
+	 /// Precompute values for an image
+	 void precomputeValues(const MultidimArray<double> &cont_x_freq);
+
+	 /// Precompute values for a given frequency
+	 void precomputeValues(int i)
+	 {
+		 precomputed=precomputedImage[i+precomputedImageXdim];
+		 /*printf("size = %lf\n",precomputedImage.size());
+		 printf("ImageXdim = %i i = %i\n",precomputedImageXdim, i);
+		 printf("u = %lf, u2 = %lf, u3 = %lf, u4 = %lf, usqrt = %lf\n",precomputed.u,precomputed.u2,
+		         		    		precomputed.u3,precomputed.u4,precomputed.u_sqrt);*/
+		 if (precomputed.deltaf==-1)
+		 {
+			 //double ellipsoid_ang = precomputed.ang;
+			 //double cos_ellipsoid_ang_2 = cos(2*ellipsoid_ang);
+			 precomputed.deltaf= Defocus;//(defocus_average + defocus_deviation*cos_ellipsoid_ang_2);
+			 //printf("deltaf = %lf\n", Defocus);
+
+		 }
+	 }
+
+	 /// Compute CTF at (U,V). Continuous frequencies
+	 double getValueAt(bool show = false) const
+	 {
+		 double pure_CTF = enable_CTF ? getValuePureAt(show) : 0;
+		 return enable_CTFnoise ? sqrt(pure_CTF*pure_CTF + getValueNoiseAt(show)) : pure_CTF;
+	 }
+
+	 /// Compute CTF damping at (U,V). Continuous frequencies
+	 inline double getValueDampingAt(bool show = false) const
+	 {
+		 double Eespr = exp(-K3 * precomputed.u4); // OK
+		 double EdeltaF = bessj0(K5 * precomputed.u2); // OK
+		 double EdeltaR = SINC(precomputed.u * DeltaR); // OK
+		 double aux=K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u;
+		 double Ealpha = exp(-K6 * aux * aux);
+		 double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		 if (show)
+		 {
+			 std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
+			 std::cout << "   u,u2,u4=" << precomputed.u << " " << precomputed.u2
+			 << " " << precomputed.u4 << std::endl;
+			 std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
+			 std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+			 std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
+			 std::cout << "   EdeltaR=" << EdeltaR << std::endl;
+			 std::cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+			 << std::endl;
+			 std::cout << "   Total atenuation(E)= " << E << std::endl;
+			 std::cout << "   CTFdamp=" << E << std::endl;
+		 }
+		 return -K*E;
+	 }
+
+	 /// Compute CTF pure at (U,V). Continuous frequencies
+	inline double getValuePureAt(bool show = false) const
+	{
+		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+		double sine_part, cosine_part;
+		sincos(argument,&sine_part, &cosine_part); // OK
+		double Eespr = exp(-K3 * precomputed.u4); // OK
+		//CO: double Eispr=exp(-K4*u4); // OK
+		double EdeltaF = bessj0(K5 * precomputed.u2); // OK
+		double EdeltaR = SINC(precomputed.u * DeltaR); // OK
+		double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
+		double Ealpha = exp(-K6 * aux * aux); // OK
+		// CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
+		double E = Eespr * EdeltaF * EdeltaR * Ealpha + envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		if (show)
+		{
+			std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
+			std::cout << "   u,u2,u4=" << precomputed.u << " " << precomputed.u2
+			<< " " << precomputed.u4 << std::endl;
+			std::cout << "   K1,K2,argument=" << K1 << " " << K2 << " " << argument << std::endl;
+			std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
+			std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+			std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
+			std::cout << "   EdeltaR=" << EdeltaR << std::endl;
+			std::cout << "   K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+			<< std::endl;
+			std::cout << "   Total atenuation(E)= " << E << std::endl;
+			std::cout << "   K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
+			std::cout << "   CTF="
+			/*<< -K*(Ksin*sine_part - Kcos*cosine_part)*E*/ << std::endl;
+		}
+		return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
+	}
+
+	/// Compute CTF pure at (U,V). Continuous frequencies
+	inline double getValuePureNoKAt() const
+	{
+		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
+		//double sine_part, cosine_part;
+		//sincos(argument,&sine_part, &cosine_part); // OK
+		double Eespr = exp(-K3 * precomputed.u4); // OK
+		//CO: double Eispr=exp(-K4*u4); // OK
+		double EdeltaF = bessj0(K5 * precomputed.u2); // OK
+		double EdeltaR = SINC(precomputed.u * DeltaR); // OK
+		double aux=(K7 * precomputed.u2 * precomputed.u + precomputed.deltaf * precomputed.u);
+		double Ealpha = exp(-K6 * aux * aux); // OK
+		// CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
+		double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		return 0;//-(Ksin*sine_part - Kcos*cosine_part)*E;
+	}
+
+	/// Compute noise at (X,Y). Continuous frequencies, notice it is squared
+	//#define DEBUG
+	inline double getValueNoiseAt(bool show = false) const
+	{
+
+		//double sqr = sq;
+
+		double c = Gc1;
+		double sigmaG1 = sigma1;
+
+		double c2 = Gc2;
+		double sigmaG2 = sigma2;
+
+		/*std::cout
+		<< "   sq=" << sq << "\n"
+		<< "   c=" << c << "\n"
+		<< "   sigma=" << sigmaG1 << "\n"
+		<< "   c2=" << c2 << "\n"
+		<< "   sigma2=" << sigmaG2 << "\n"
+		<< "   gaussian_K=" << gaussian_K << "\n"
+		<< "   sqrt_K=" << sqrt_K << "\n"
+		<< "   base_line=" << base_line << "\n";
+		std::cout << "   u=" << precomputed.u << "u_sqrt=" << precomputed.u_sqrt <<") CTFnoise="
+		<< base_line +
+		gaussian_K*exp(-sigmaG1*(precomputed.u - c)*(precomputed.u - c)) +
+		sqrt_K*exp(-sq*sqrt(precomputed.u)) -
+		gaussian_K2*exp(-sigmaG2*(precomputed.u - c2)*(precomputed.u - c2)) << std::endl;*/
+
+		double aux=precomputed.u - c;
+		double aux2=precomputed.u - c2;
+		//printf("aux = %lf aux2 = %lf\n",aux,aux2);
+		return base_line +
+			   gaussian_K*exp(-sigmaG1*aux*aux) +
+			   sqrt_K*exp(-sq*precomputed.u_sqrt) -
+			   gaussian_K2*exp(-sigmaG2*aux2*aux2)+
+			   bgR1*precomputed.u+bgR2*precomputed.u2+bgR3*precomputed.u3;
+	}
+
+	/// Compute pure CTF without damping at (U,V). Continuous frequencies
+	double getValuePureWithoutDampingAt(bool show = false) const
+	{
+		double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
+		double sine_part, cosine_part;
+		sincos(argument,&sine_part,&cosine_part);
+
+		if (show)
+		{
+			std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
+			std::cout << "   u,u2,u4=" << precomputed.u << " " << precomputed.u2
+			<< " " << precomputed.u4 << std::endl;
+			std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
+			<< std::endl;
+			std::cout << "   Q0=" << Q0 << std::endl;
+			std::cout << "   CTF without damping="
+			/*<< -(Ksin*sine_part - Kcos*cosine_part)*/ << std::endl;
+		}
+		return -(Ksin*sine_part - Kcos*cosine_part);
+	}
+
+	 /// Compute CTF pure at (U,V). Continuous frequencies
+	inline double getValuePureNoPrecomputedAt(double X, bool show = false) const
+	{
+		double u2 = X * X;
+		double u = sqrt(u2);
+		double u4 = u2 * u2;
+		double deltaf = Defocus;
+		double argument = K1 * deltaf * u2 + K2 * u4;
+		double sine_part, cosine_part;
+		sincos(argument,&sine_part, &cosine_part); // OK
+		double Eespr = exp(-K3 * u4); // OK
+		//CO: double Eispr=exp(-K4*u4); // OK
+		double EdeltaF = bessj0(K5 * u2); // OK
+		double EdeltaR = sinc(u * DeltaR); // OK
+		double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
+		// CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
+		double E = Eespr * EdeltaF * EdeltaR * Ealpha+envR0+envR1*precomputed.u+envR2*precomputed.u2;
+		if (show)
+		{
+			std::cout << " Deltaf=" << deltaf << std::endl;
+			std::cout << " u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
+			std::cout << " K1,K2,sin=" << K1 << " " << K2 << " "
+			/*<< sine_part*/ << std::endl;
+			std::cout << " K3,Eespr=" << K3 << " " << Eespr << std::endl;
+			std::cout << " K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+			std::cout << " K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
+			std::cout << " EdeltaR=" << EdeltaR << std::endl;
+			std::cout << " K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+			<< std::endl;
+			std::cout << " Total atenuation(E)= " << E << std::endl;
+			std::cout << " K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
+			std::cout << " (X)=(" << X << ") CTF="
+			/*<< -K*(Ksin*sine_part - Kcos*cosine_part)*E + base_line*/ << std::endl;
+		}
+		return -K*(Ksin*sine_part - Kcos*cosine_part)*E;
+	}
+
+
+	/** Returns the continuous frequency of the zero, maximum or minimum number n in the direction u.
+		u must be a unit vector, n=1,2,... Returns (-1,-1) if it is not found
+		'iwhat' can be 0 (zero), 1(max), or -1 (min) */
+	void lookFor(int n, const Matrix1D<double> &u, Matrix1D<double> &freq, int iwhat=0);
+
+	/// Apply CTF to an image
+	void applyCTF(MultidimArray < std::complex<double> > &FFTI, const MultidimArray<double> &I, double Ts, bool absPhase=false);
+
+	/// Apply CTF to an image
+	void applyCTF(MultidimArray <double> &I, double Ts, bool absPhase=false);
+
+	/** Generate CTF image.
+		The sample image is used only to take its dimensions. */
+	template <class T1, class T2>
+	void generateCTF(const MultidimArray<T1> &sample_image, MultidimArray <T2> &CTF, double Ts=-1)
+	{
+		if ( ZSIZE(sample_image) > 1 )
+			REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Generate_CTF only works with 2D sample images, not 3D.");
+		generateCTF(YSIZE(sample_image), XSIZE(sample_image), CTF, Ts);
+		STARTINGX(CTF) = STARTINGX(sample_image);
+		STARTINGY(CTF) = STARTINGY(sample_image);
+	}
+
+	/** Get profiles along a given direction.
+	 * It returns the CTF profiles (BGNOISE, ENVELOPE, PSD, CTF) along the
+	 * direction defined by angle. Profiles
+	 * have nsamples from 0 to fmax (1/A).
+	 */
+	void getProfile(double fmax, int nsamples, MultidimArray<double> &profiles);
+
+	/** Get radial average profiles.
+	 * It returns the radially average CTF profiles (BGNOISE, ENVELOPE, PSD, CTF). Profiles
+	 * have nsamples from 0 to fmax (1/A).
+	 */
+	void getAverageProfile(double fmax, int nsamples, MultidimArray<double> &profiles);
+
+	//#define DEBUG
+   /// Generate CTF image.
+	template <class T>
+	void generateCTF(int Ydim, int Xdim, MultidimArray < T > &CTF, double Ts=-1)
+	{
+		CTF.resizeNoCopy(Ydim, Xdim);
+		if (Ts<0)
+			Ts=Tm;
+		#ifdef DEBUG
+			std::cout << "CTF:\n" << *this << std::endl;
+		#endif
+
+		double iTs=1.0/Ts;
+		for (int i=0; i<Ydim; ++i)
+		{
+			double wy;
+			FFT_IDX2DIGFREQ(i, YSIZE(CTF), wy);
+			double fy=wy*iTs;
+			for (int j=0; j<Xdim; ++j)
+			{
+				double wx;
+				FFT_IDX2DIGFREQ(j, XSIZE(CTF), wx);
+				double fx=wx*iTs;
+				precomputeValues(fx);
+				A2D_ELEM(CTF, i, j) = (T) getValueAt();
+				#ifdef DEBUG
+						if (i == 0)
+							std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+							<< " " << CTF(i, j) << std::endl;
+				#endif
+			}
+		}
+	}
+	#undef DEBUG
+
+	template <class T>
+	void generateCTFWithoutDamping(int Ydim, int Xdim, MultidimArray < T > &CTF, double Ts=-1)
+	{
+		CTF.resizeNoCopy(Ydim, Xdim);
+		if (Ts<0)
+			Ts=Tm;
+		#ifdef DEBUG
+			std::cout << "CTF:\n" << *this << std::endl;
+		#endif
+
+		double iTs=1.0/Ts;
+		for (int i=0; i<Ydim; ++i)
+		{
+			double wy;
+			FFT_IDX2DIGFREQ(i, YSIZE(CTF), wy);
+			double fy=wy*iTs;
+			for (int j=0; j<Xdim; ++j)
+			{
+				double wx;
+				FFT_IDX2DIGFREQ(j, XSIZE(CTF), wx);
+				double fx=wx*iTs;
+				precomputeValues(fx);
+				A2D_ELEM(CTF, i, j) = (T) getValuePureWithoutDampingAt();
+				#ifdef DEBUG
+						if (i == 0)
+							std::cout << i << " " << j << " " << YY(freq) << " " << XX(freq)
+							<< " " << CTF(i, j) << std::endl;
+				#endif
+			}
+		}
+	}
+	#undef DEBUG
+
+   /** Check physical meaning.
+		true if the CTF parameters have physical meaning.
+		Call this function after produstd::cing side information */
+	bool hasPhysicalMeaning();
+
+	/** Force physical meaning.*/
+	void forcePhysicalMeaning();
+
+};
+
 /** Generate CTF 2D image with two CTFs.
  * The two CTFs are in fn1 and fn2. The output image is written to the file fnOut and has size Xdim x Xdim. */
 void generateCTFImageWith2CTFs(const MetaData &MD1, const MetaData &MD2, int Xdim, MultidimArray<double> &imgOut);
@@ -788,5 +1303,5 @@ double errorMaxFreqCTFs2D( MetaData &MD1,
 /** Generate an image with the PSD and the CTF
  *  Before calling the function img must have the enhanced PSD. The enhanced PSD image is modified to add the CTF. */
 void generatePSDCTFImage(MultidimArray<double> &img, const MetaData &MD);
-//@}
+
 #endif
