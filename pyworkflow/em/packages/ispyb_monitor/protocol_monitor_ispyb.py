@@ -140,7 +140,7 @@ class MonitorISPyB(Monitor):
         dcParams = self.ispybDb.get_data_collection_params()
         self.safe_update(dcParams, self.dataCollection)
         if self.dcId:
-            dcParams.update(self.previousParams)
+            self.safe_update(dcParams, self.previousParams)
             dcParams['id'] = self.dcId
             dcParams['endtime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
         else:
@@ -164,6 +164,7 @@ class MonitorISPyB(Monitor):
             motionParams = self.ispybDb.get_motion_correction_params()
             self.safe_update(motionParams, self.motion_corrections[itemId])
             motionParams['dataCollectionId'] = self.dcId
+            self.info("writing motion correction: %s" + str(motionParams))
             ispybId = self.ispybDb.update_motion_correction(motionParams)
             self.motion_corrections[itemId]['id'] = ispybId
 
@@ -171,6 +172,7 @@ class MonitorISPyB(Monitor):
             ctfParams = self.ispybDb.get_ctf_params()
             self.safe_update(ctfParams, self.ctfs[itemId])
             ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['id']
+            self.info("writing ctf: %s" + str(ctfParams))
             ispybId = self.ispybDb.update_ctf(ctfParams)
             self.ctfs[itemId]['id'] = ispybId
 
@@ -222,7 +224,7 @@ class MonitorISPyB(Monitor):
                 'filename': movieFn,
                 'numberOfPasses': self.numberOfFrames,
                 'magnification': acquisition.getMagnification(),
-                'totalAbsorbedDose': acquisition.getDoseInitial() + (acquisition.getDosePerFrame() * self.numberOfFrames),
+                'total_absorbed_dose': acquisition.getDoseInitial() + (acquisition.getDosePerFrame() * self.numberOfFrames),
                 'wavelength': self.convert_volts_to_debroglie_wavelength(acquisition.getVoltage())
             }
             self.dataCollection.update(self.movies[movieId])
@@ -230,10 +232,11 @@ class MonitorISPyB(Monitor):
 
     def safe_update(self, target, source):
         for key in source:
-            try:
-                target[key] = source[key]
-            except KeyError:
-                pass
+            if source[key] is not None:
+                try:
+                    target[key] = source[key]
+                except KeyError:
+                    pass
 
     @staticmethod
     def convert_volts_to_debroglie_wavelength(volts):
