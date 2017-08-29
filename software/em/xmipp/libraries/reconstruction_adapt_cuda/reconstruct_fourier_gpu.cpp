@@ -1142,7 +1142,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 
     	prepareTransforms(loadThread.buffer2, traverseSpaces);
-    	sort(traverseSpaces, noOfTransforms);
+//    	sort(traverseSpaces, noOfTransforms);
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,
 				(maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1) * (maxVolumeIndexYZ+1),
