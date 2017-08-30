@@ -30,7 +30,8 @@ from os.path import basename
 from pyworkflow.utils import getExt, replaceExt
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
 import pyworkflow.protocol.constants as cons
-from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam, LabelParam
+from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam,
+                                        FloatParam, LabelParam)
 import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtPreprocessMicrographs
 from pyworkflow.em.data import SetOfMicrographs
@@ -38,7 +39,8 @@ from pyworkflow.object import Set
 
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    """Protocol to preprocess a set of micrographs in the project. You can crop borders, remove bad pixels, etc. """
+    """Protocol to preprocess a set of micrographs in the project.
+    You can crop borders, remove bad pixels, etc. """
     _label = 'preprocess micrographs'
 
 
@@ -46,7 +48,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         ProtPreprocessMicrographs.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
     
-    #--------------------------- DEFINE params functions --------------------------------------------
+    #--------------------------- DEFINE params functions -----------------------
     
     def _defineParams(self, form):
         form.addSection(label='Preprocess')
@@ -55,7 +57,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       label="Input micrographs", important=True,
                       help='Select the SetOfMicrograph to be preprocessed.')
         
-        form.addParam('orderComment', LabelParam, label="Operations are performed in the order shown below", important=True)
+        form.addParam('orderComment', LabelParam,
+                      label="Operations are performed in the order shown below",
+                      important=True)
         form.addParam('doCrop', BooleanParam, default=False,
                       label='Crop borders?', 
                       help='Crop a given amount of pixels from each border.')
@@ -64,10 +68,13 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       help='Amount of pixels you want to crop from borders.')
         form.addParam('doLog', BooleanParam, default=False,
                       label='Take logarithm?', 
-                      help='Depending on your acquisition system you may need to take the logarithm '
-                           'of the pixel values in order to have a linear relationship between '
-                           'the gray values in the image and those in the volume. a - b ln(x+c) '
-                           'by default 4.431-0.4018*LN((P1+336.6)) is applied (right one for nikon coolscan 9000)')
+                      help='Depending on your acquisition system you may need '
+                           'to take the logarithm of the pixel values in '
+                           'order to have a linear relationship betweenthe '
+                           'gray values in the image and those in the volume. '
+                           'a - b ln(x+c) by default 4.431-0.4018*'
+                           'LN((P1+336.6)) is applied (right one for nikon '
+                           'coolscan 9000)')
         line = form.addLine('Log', condition='doLog', 
                             help='Parameters in a - b ln(x+c).')
         line.addParam('logA', FloatParam, default=4.431, label='a')
@@ -76,11 +83,13 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         form.addParam('doRemoveBadPix', BooleanParam, default=False,
                       label='Remove bad pixels?',
-                      help='Values will be thresholded to this multiple of standard deviations. '
-                           'Typical values are about 5, i.e., pixel values beyond 5 times the '
-                           'standard deviation will be substituted by the local median. '
+                      help='Values will be thresholded to this multiple of '
+                           'standard deviations. Typical values are about 5, '
+                           'i.e., pixel values beyond 5 times the standard '
+                           'deviation will be substituted by the local median. '
                            'Set this option to -1 for not applying it.')
-        form.addParam('mulStddev', IntParam, default=5, condition='doRemoveBadPix',
+        form.addParam('mulStddev', IntParam, default=5,
+                      condition='doRemoveBadPix',
                       label='Multiple of Stddev',
                       help='Multiple of standard deviation.')    
         form.addParam('doInvert', BooleanParam, default=False,
@@ -89,33 +98,46 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         form.addParam('doDownsample', BooleanParam, default=False,
                       label='Downsample micrographs?',
                       help='Downsample micrographs by a given factor.')
-        form.addParam('downFactor', FloatParam, default=2., condition='doDownsample',
+        form.addParam('downFactor', FloatParam, default=2.,
+                      condition='doDownsample',
                       label='Downsampling factor',
-                      help='Non-integer downsample factors are possible. Must be larger than 1.')
+                      help='Non-integer downsample factors are possible. '
+                           'Must be larger than 1.')
         form.addParam('doDenoise', BooleanParam, default=False,
                       label='Denoising',
                       help="Apply a denoising method")
         form.addParam('maxIteration', IntParam, default=50, condition='doDenoise',
                       label='Max. number of iterations',
-                      help='Max. number of iterations. Higher number = better output but slower calculation. Must be larger than 1.')
+                      help='Max. number of iterations. Higher number = better '
+                           'output but slower calculation. Must be larger '
+                           'than 1.')
         form.addParam('doSmooth', BooleanParam, default=False,
                       label='Gaussian filter',
                       help="Apply a Gaussian filter in real space")
-        form.addParam('sigmaConvolution', FloatParam, default=2, condition="doSmooth",
+        form.addParam('sigmaConvolution', FloatParam, default=2,
+                      condition="doSmooth",
                       label='Gaussian sigma (px)',
-                      help="The larger this value, the more the effect will be noticed")
+                      help="The larger this value, the more the effect will "
+                           "be noticed")
         form.addParam('doHighPass', BooleanParam, default=False,
                       label='Highpass filter',
                       help="Apply a highpass filter in real space")
-        form.addParam('highCutoff', FloatParam, default=0.002, condition="doHighPass",
+        form.addParam('highCutoff', FloatParam, default=0.002,
+                      condition="doHighPass",
                       label='Cutoff frequency',
-                      help="In normalized frequencies (<0.5). For example, if you want to remove patterns larger than 500 pixels, use 1/500=0.002")
-        form.addParam('highRaised', FloatParam, default=0.001, condition="doHighPass", expertLevel=LEVEL_ADVANCED,
+                      help="In normalized frequencies (<0.5). For example, "
+                           "if you want to remove patterns larger than "
+                           "500 pixels, use 1/500=0.002")
+        form.addParam('highRaised', FloatParam, default=0.001,
+                      condition="doHighPass", expertLevel=LEVEL_ADVANCED,
                       label='Transition bandwidth',
-                      help="In normalized frequencies (<0.5). For example, if you want to remove patterns larger than 1000 pixels, use 1/1000=0.001")
+                      help="In normalized frequencies (<0.5). For example, "
+                           "if you want to remove patterns larger than "
+                           "1000 pixels, use 1/1000=0.001")
         form.addParam('doNormalize', BooleanParam, default=False,
                       label='Normalize micrograph?',
-                      help='Normalize micrographs to be zero mean and standard deviation one')
+                      help='Normalize micrographs to be zero mean and '
+                           'standard deviation one')
         form.addParallelSection(threads=2, mpi=1)
 
 
@@ -138,7 +160,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'highRaised': self.highRaised.get(),
                        'maxIterTV': self.maxIteration.get()}
 
-    #--------------------------- INSERT steps functions --------------------------------------------
+    #--------------------------- INSERT steps functions ------------------------
 
     def _insertAllSteps(self):
         self._defineInputs()
@@ -323,7 +345,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             self.params['inputMic'] = self.params['outputMic']
 
         
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     
     def _validate(self):
         validateMsgs = []
@@ -395,7 +417,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         return [txt, "The resulting set of micrographs is %s" %
                 self.getObjectTag('outputMicrographs')]
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getOutputMicrograph(self, mic):
         """ Return the name of the output micrograph, given
         the input Micrograph object.
