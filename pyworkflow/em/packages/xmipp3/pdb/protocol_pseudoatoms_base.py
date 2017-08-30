@@ -27,7 +27,7 @@
 # *
 # **************************************************************************
 
-from os.path import basename
+from os.path import basename, join
 
 from pyworkflow.object import String
 from pyworkflow.utils.path import cleanPattern, createLink, moveFile
@@ -115,14 +115,15 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         sampling = volume.getSamplingRate()
         radius = sampling * self.pseudoAtomRadius.get() 
         fnIn = volume.getFileName()
-        localInputFn = self._getBasePath(fnIn)
-        createLink(fnIn, localInputFn)
+        localInputFn = self._getExtraPath("input.mrc")
+        self.runJob("xmipp_image_convert","-i %s -o %s -t vol"%(fnIn,localInputFn))
+        self.runJob("xmipp_image_header","-i %s --sampling_rate %f"%(localInputFn,sampling))
         fhCmd = open(scriptFile, 'w')
         fhCmd.write("open %s\n" % basename(pseudoatoms))
         fhCmd.write("rangecol bfactor,a 0 white 1 red\n")
         fhCmd.write("setattr a radius %f\n" % radius)
         fhCmd.write("represent sphere\n")
-        fhCmd.write("open %s\n" % basename(localInputFn))
+        fhCmd.write("open %s\n" % join("extra",basename(localInputFn)))
          
         threshold = 0.01
         if self.maskMode == NMA_MASK_THRE:
