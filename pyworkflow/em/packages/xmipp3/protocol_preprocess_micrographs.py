@@ -136,7 +136,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'sigmaConvolution': self.sigmaConvolution.get(),
                        'highCutoff': self.highCutoff.get(),
                        'highRaised': self.highRaised.get(),
-                       'maxIter': self.maxIteration.get()}
+                       'maxIterTV': self.maxIteration.get()}
 
     #--------------------------- INSERT steps functions --------------------------------------------
 
@@ -295,7 +295,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
         # Denoise
         self.__insertOneStep(self.doDenoise, "xmipp_transform_filter",
-                            "-i %(inputMic)s --denoise --maxIter %(maxIter)d")
+                            "-i %(inputMic)s --denoiseTV --maxIterTV %(maxIter)d")
         # Smooth
         self.__insertOneStep(self.doSmooth, "xmipp_transform_filter",
                             "-i %(inputMic)s --fourier real_gaussian %(sigmaConvolution)f")
