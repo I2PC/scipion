@@ -25,16 +25,22 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import basename
 from pyworkflow.utils import getExt, replaceExt
 from pyworkflow.protocol.constants import STEPS_PARALLEL, LEVEL_ADVANCED
-from pyworkflow.protocol.params import PointerParam, BooleanParam, IntParam, FloatParam, LabelParam
+import pyworkflow.protocol.constants as cons
+from pyworkflow.protocol.params import (PointerParam, BooleanParam, IntParam,
+                                        FloatParam, LabelParam)
+import pyworkflow.em as em
 from pyworkflow.em.protocol import ProtPreprocessMicrographs
-
+from pyworkflow.em.data import SetOfMicrographs
+from pyworkflow.object import Set
 
 
 class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
-    """Protocol to preprocess a set of micrographs in the project. You can crop borders, remove bad pixels, etc. """
+    """Protocol to preprocess a set of micrographs in the project.
+    You can crop borders, remove bad pixels, etc. """
     _label = 'preprocess micrographs'
 
 
@@ -42,7 +48,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         ProtPreprocessMicrographs.__init__(self, **args)
         self.stepsExecutionMode = STEPS_PARALLEL
     
-    #--------------------------- DEFINE params functions --------------------------------------------
+    #--------------------------- DEFINE params functions -----------------------
     
     def _defineParams(self, form):
         form.addSection(label='Preprocess')
@@ -51,7 +57,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       label="Input micrographs", important=True,
                       help='Select the SetOfMicrograph to be preprocessed.')
         
-        form.addParam('orderComment', LabelParam, label="Operations are performed in the order shown below", important=True)
+        form.addParam('orderComment', LabelParam,
+                      label="Operations are performed in the order shown below",
+                      important=True)
         form.addParam('doCrop', BooleanParam, default=False,
                       label='Crop borders?', 
                       help='Crop a given amount of pixels from each border.')
@@ -60,10 +68,13 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                       help='Amount of pixels you want to crop from borders.')
         form.addParam('doLog', BooleanParam, default=False,
                       label='Take logarithm?', 
-                      help='Depending on your acquisition system you may need to take the logarithm '
-                           'of the pixel values in order to have a linear relationship between '
-                           'the gray values in the image and those in the volume. a - b ln(x+c) '
-                           'by default 4.431-0.4018*LN((P1+336.6)) is applied (right one for nikon coolscan 9000)')
+                      help='Depending on your acquisition system you may need '
+                           'to take the logarithm of the pixel values in '
+                           'order to have a linear relationship betweenthe '
+                           'gray values in the image and those in the volume. '
+                           'a - b ln(x+c) by default 4.431-0.4018*'
+                           'LN((P1+336.6)) is applied (right one for nikon '
+                           'coolscan 9000)')
         line = form.addLine('Log', condition='doLog', 
                             help='Parameters in a - b ln(x+c).')
         line.addParam('logA', FloatParam, default=4.431, label='a')
@@ -72,11 +83,13 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         
         form.addParam('doRemoveBadPix', BooleanParam, default=False,
                       label='Remove bad pixels?',
-                      help='Values will be thresholded to this multiple of standard deviations. '
-                           'Typical values are about 5, i.e., pixel values beyond 5 times the '
-                           'standard deviation will be substituted by the local median. '
+                      help='Values will be thresholded to this multiple of '
+                           'standard deviations. Typical values are about 5, '
+                           'i.e., pixel values beyond 5 times the standard '
+                           'deviation will be substituted by the local median. '
                            'Set this option to -1 for not applying it.')
-        form.addParam('mulStddev', IntParam, default=5, condition='doRemoveBadPix',
+        form.addParam('mulStddev', IntParam, default=5,
+                      condition='doRemoveBadPix',
                       label='Multiple of Stddev',
                       help='Multiple of standard deviation.')    
         form.addParam('doInvert', BooleanParam, default=False,
@@ -85,29 +98,48 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         form.addParam('doDownsample', BooleanParam, default=False,
                       label='Downsample micrographs?',
                       help='Downsample micrographs by a given factor.')
-        form.addParam('downFactor', FloatParam, default=2., condition='doDownsample',
+        form.addParam('downFactor', FloatParam, default=2.,
+                      condition='doDownsample',
                       label='Downsampling factor',
-                      help='Non-integer downsample factors are possible. Must be larger than 1.')
+                      help='Non-integer downsample factors are possible. '
+                           'Must be larger than 1.')
+        form.addParam('doDenoise', BooleanParam, default=False,
+                      label='Denoising',
+                      help="Apply a denoising method")
+        form.addParam('maxIteration', IntParam, default=50, condition='doDenoise',
+                      label='Max. number of iterations',
+                      help='Max. number of iterations. Higher number = better '
+                           'output but slower calculation. Must be larger '
+                           'than 1.')
         form.addParam('doSmooth', BooleanParam, default=False,
                       label='Gaussian filter',
                       help="Apply a Gaussian filter in real space")
-        form.addParam('sigmaConvolution', FloatParam, default=2, condition="doSmooth",
+        form.addParam('sigmaConvolution', FloatParam, default=2,
+                      condition="doSmooth",
                       label='Gaussian sigma (px)',
-                      help="The larger this value, the more the effect will be noticed")
+                      help="The larger this value, the more the effect will "
+                           "be noticed")
         form.addParam('doHighPass', BooleanParam, default=False,
                       label='Highpass filter',
                       help="Apply a highpass filter in real space")
-        form.addParam('highCutoff', FloatParam, default=0.002, condition="doHighPass",
+        form.addParam('highCutoff', FloatParam, default=0.002,
+                      condition="doHighPass",
                       label='Cutoff frequency',
-                      help="In normalized frequencies (<0.5). For example, if you want to remove patterns larger than 500 pixels, use 1/500=0.002")
-        form.addParam('highRaised', FloatParam, default=0.001, condition="doHighPass", expertLevel=LEVEL_ADVANCED,
+                      help="In normalized frequencies (<0.5). For example, "
+                           "if you want to remove patterns larger than "
+                           "500 pixels, use 1/500=0.002")
+        form.addParam('highRaised', FloatParam, default=0.001,
+                      condition="doHighPass", expertLevel=LEVEL_ADVANCED,
                       label='Transition bandwidth',
-                      help="In normalized frequencies (<0.5). For example, if you want to remove patterns larger than 1000 pixels, use 1/1000=0.001")
+                      help="In normalized frequencies (<0.5). For example, "
+                           "if you want to remove patterns larger than "
+                           "1000 pixels, use 1/1000=0.001")
         form.addParam('doNormalize', BooleanParam, default=False,
                       label='Normalize micrograph?',
-                      help='Normalize micrographs to be zero mean and standard deviation one')
-    
+                      help='Normalize micrographs to be zero mean and '
+                           'standard deviation one')
         form.addParallelSection(threads=2, mpi=1)
+
 
     def _defineInputs(self):
         """ Store some of the input parameter in a dictionary for
@@ -125,21 +157,143 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                        'stddev': self.mulStddev.get(),
                        'sigmaConvolution': self.sigmaConvolution.get(),
                        'highCutoff': self.highCutoff.get(),
-                       'highRaised': self.highRaised.get()}
-    
-    #--------------------------- INSERT steps functions --------------------------------------------
-    
+                       'highRaised': self.highRaised.get(),
+                       'maxIterTV': self.maxIteration.get()}
+
+    #--------------------------- INSERT steps functions ------------------------
+
     def _insertAllSteps(self):
-        """ Insert one or many processing steps per micrograph. """
         self._defineInputs()
-        # For each micrograph insert the steps to preprocess it
-        pre = []
-        for mic in self.inputMics:
-            fnOut = self._getOutputMicrograph(mic)
-            stepId = self._insertStepsForMicrograph(mic.getFileName(), fnOut)
-            pre.append(stepId)
-        # Insert step to create output objects       
-        self._insertFunctionStep('createOutputStep', prerequisites=pre)
+        self.insertedDict = {}
+        preprocessSteps = self._insertNewMicsSteps(self.insertedDict,
+                                                   self.inputMicrographs.get())
+        self._insertFunctionStep('createOutputStep',
+                                 prerequisites=preprocessSteps, wait=True)
+
+    def createOutputStep(self):
+        pass
+
+    def _getFirstJoinStepName(self):
+        # This function will be used for streaming, to check which is
+        # the first function that need to wait for all micrographs
+        # to have completed, this can be overriden in subclasses
+        # (e.g., in Xmipp 'sortPSDStep')
+        return 'createOutputStep'
+
+    def _getFirstJoinStep(self):
+        for s in self._steps:
+            if s.funcName == self._getFirstJoinStepName():
+                return s
+        return None
+
+    def _insertNewMicsSteps(self, insertedDict, inputMics):
+        deps = []
+        for mic in inputMics:
+            if mic.getObjId() not in insertedDict:
+                fnOut = self._getOutputMicrograph(mic)
+                stepId = self._insertStepsForMicrograph(mic.getFileName(), fnOut)
+                deps.append(stepId)
+                insertedDict[mic.getObjId()] = stepId
+        return deps
+
+    def _stepsCheck(self):
+        # Input micrograph set can be loaded or None when checked for new inputs
+        # If None, we load it
+        self._checkNewInput()
+        self._checkNewOutput()
+
+    def _checkNewInput(self):
+        # Check if there are new micrographs to process from the input set
+        micsFile = self.inputMicrographs.get().getFileName()
+        micsSet = SetOfMicrographs(filename=micsFile)
+        micsSet.loadAllProperties()
+        self.SetOfMicrographs = [m.clone() for m in micsSet]
+        self.streamClosed = micsSet.isStreamClosed()
+        micsSet.close()
+        newMics = any(m.getObjId() not in self.insertedDict
+                      for m in self.inputMics)
+        outputStep = self._getFirstJoinStep()
+        if newMics:
+            fDeps = self._insertNewMicsSteps(self.insertedDict,
+                                             self.inputMics)
+            if outputStep is not None:
+                outputStep.addPrerequisites(*fDeps)
+            self.updateSteps()
+
+
+    def _checkNewOutput(self):
+        if getattr(self, 'finished', False):
+            return
+        # Load previously done items (from text file)
+        doneList = self._readDoneList()
+        # Check for newly done items
+        newDone = [m.clone() for m in self.SetOfMicrographs
+                   if int(m.getObjId()) not in doneList and self._isMicDone(m)]
+
+        # We have finished when there is not more input micrographs (stream closed)
+        # and the number of processed micrographs is equal to the number of inputs
+        self.finished = self.streamClosed and (len(doneList) + len(newDone)) == len(self.SetOfMicrographs)
+        streamMode = Set.STREAM_CLOSED if self.finished else Set.STREAM_OPEN
+
+        if newDone:
+            self._writeDoneList(newDone)
+        elif not self.finished:
+            # If we are not finished and no new output have been produced
+            # it does not make sense to proceed and updated the outputs
+            # so we exit from the function here
+            return
+
+        outSet = self._loadOutputSet(SetOfMicrographs, 'micrographs.sqlite')
+
+        for mic in newDone:
+            micOut = em.data.Micrograph()
+            if self.doDownsample:
+                micOut.setSamplingRate(self.inputMicrographs.get().getSamplingRate() * self.downFactor.get())
+            micOut.setObjId(mic.getObjId())
+            micOut.setFileName(self._getOutputMicrograph(mic))
+            outSet.append(micOut)
+
+        self._updateOutputSet('outputMicrographs', outSet, streamMode)
+
+        if self.finished:  # Unlock createOutputStep if finished all jobs
+            outputStep = self._getFirstJoinStep()
+            if outputStep and outputStep.isWaiting():
+                outputStep.setStatus(cons.STATUS_NEW)
+
+
+    def _loadOutputSet(self, SetClass, baseName):
+        setFile = self._getPath(baseName)
+        if os.path.exists(setFile):
+            outputSet = SetClass(filename=setFile)
+            outputSet.loadAllProperties()
+            outputSet.enableAppend()
+        else:
+            outputSet = SetClass(filename=setFile)
+            outputSet.setStreamState(outputSet.STREAM_OPEN)
+
+        inputs = self.inputMicrographs.get()
+        outputSet.copyInfo(inputs)
+        if self.doDownsample:
+            outputSet.setSamplingRate(self.inputMicrographs.get().getSamplingRate() * self.downFactor.get())
+        return outputSet
+
+
+    def _updateOutputSet(self, outputName, outputSet, state=Set.STREAM_OPEN):
+        outputSet.setStreamState(state)
+        if self.hasAttribute(outputName):
+            outputSet.write()  # Write to commit changes
+            outputAttr = getattr(self, outputName)
+            # Copy the properties to the object contained in the protcol
+            outputAttr.copy(outputSet, copyId=False)
+            # Persist changes
+            self._store(outputAttr)
+        else:
+            # Here the defineOutputs function will call the write() method
+            self._defineOutputs(**{outputName: outputSet})
+            self._store(outputSet)
+        # Close set databaset to avoid locking it
+        outputSet.close()
+
     
     def _insertStepsForMicrograph(self, inputMic, outputMic):
         self.params['inputMic'] = inputMic
@@ -161,6 +315,9 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         # Downsample
         self.__insertOneStep(self.doDownsample, "xmipp_transform_downsample",
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
+        # Denoise
+        self.__insertOneStep(self.doDenoise, "xmipp_transform_filter",
+                            "-i %(inputMic)s --denoiseTV --maxIterTV %(maxIterTV)d")
         # Smooth
         self.__insertOneStep(self.doSmooth, "xmipp_transform_filter",
                             "-i %(inputMic)s --fourier real_gaussian %(sigmaConvolution)f")
@@ -186,40 +343,25 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             self.prerequisites = [self.lastStepId] # next should depend on this step
             # Update inputMic for next step as outputMic
             self.params['inputMic'] = self.params['outputMic']
-    
-    #--------------------------- STEPS functions ---------------------------------------------------
-    
-    def createOutputStep(self):        
-        outputMics = self._createSetOfMicrographs()
-        outputMics.copyInfo(self.inputMics)
-        
-        if self.doDownsample.get():
-            outputMics.setDownsample(self.downFactor.get())
 
-        for mic in self.inputMics:
-            # Update micrograph name and append to the new Set
-            mic.setFileName(self._getOutputMicrograph(mic))
-            outputMics.append(mic)
-
-        self._defineOutputs(outputMicrographs=outputMics)
-        self._defineTransformRelation(self.inputMics, outputMics)
         
-    #--------------------------- INFO functions ----------------------------------------------------
+    #--------------------------- INFO functions --------------------------------
     
     def _validate(self):
         validateMsgs = []
         # Some prepocessing option need to be marked
-        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix or self.doInvert or self.doNormalize or self.doSmooth or self.doHighPass):
+        if not(self.doCrop or self.doDownsample or self.doLog or self.doRemoveBadPix or self.doInvert
+               or self.doNormalize or self.doDenoise or self.doSmooth or self.doHighPass):
             validateMsgs.append('Some preprocessing option need to be selected.')
         return validateMsgs
     
     def _citations(self):
         return ["Sorzano2009d"]
-    
+
     def _hasOutput(self):
         return (getattr(self, 'outputMicrographs', False) and
                 self.outputMicrographs.hasValue())
-                
+
     def _summary(self):
         if not self._hasOutput():
             return ["*Output Micrographs* not ready yet."]
@@ -236,6 +378,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             summary.append("Contrast inverted")
         if self.doDownsample:
             summary.append("Downsampling factor: %0.2f" % self.downFactor)
+        if self.doDenoise:
+            summary.append("Denoising applied with %d iterations" % self.maxIteration.get())
         if self.doSmooth:
             summary.append("Gaussian filtered with sigma=%f (px)"%self.sigmaConvolution.get())
         if self.doHighPass:
@@ -261,6 +405,8 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
             txt += "contrast inverted "
         if self.doDownsample:
             txt += "been downsampled with a factor of %0.2f " % self.downFactor.get()
+        if self.doDenoise:
+            txt += "been Denoised with %d iterations " % self.maxIteration.get()
         if self.doSmooth:
             txt += "been Gaussian filtered with a sigma of %0.2f pixels "%self.sigmaConvolution.get()
         if self.doHighPass:
@@ -271,7 +417,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         return [txt, "The resulting set of micrographs is %s" %
                 self.getObjectTag('outputMicrographs')]
 
-    #--------------------------- UTILS functions --------------------------------------------
+    #--------------------------- UTILS functions -------------------------------
     def _getOutputMicrograph(self, mic):
         """ Return the name of the output micrograph, given
         the input Micrograph object.
@@ -280,7 +426,35 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
         extFn = getExt(fn)
         if extFn != ".mrc":
             fn = replaceExt(fn, "mrc")
-        
         fnOut = self._getExtraPath(basename(fn))
-        
         return fnOut
+
+    def _readDoneList(self):
+        """ Read from a text file the id's of the items that have been done. """
+        doneFile = self._getAllDone()
+        doneList = []
+        # Check what items have been previously done
+        if os.path.exists(doneFile):
+            with open(doneFile) as f:
+                doneList += [int(line.strip()) for line in f]
+        return doneList
+
+    def _getAllDone(self):
+        return self._getExtraPath('DONE_all.TXT')
+
+    def _writeDoneList(self, micList):
+        """ Write to a text file the items that have been done. """
+        with open(self._getAllDone(), 'a') as f:
+            for mic in micList:
+                f.write('%d\n' % mic.getObjId())
+
+    def _isMicDone(self, mic):
+        """ A movie is done if the marker file exists. """
+        return os.path.exists(self._getMicDone(mic))
+
+    def _getMicDone(self, mic):
+        fn = mic.getFileName()
+        extFn = getExt(fn)
+        if extFn != ".mrc":
+            fn = replaceExt(fn, "mrc")
+        return self._getExtraPath('%s' % basename(fn))
