@@ -317,7 +317,7 @@ class XmippProtPreprocessMicrographs(ProtPreprocessMicrographs):
                             "-i %(inputMic)s --step %(downFactor)f --method fourier")
         # Denoise
         self.__insertOneStep(self.doDenoise, "xmipp_transform_filter",
-                            "-i %(inputMic)s --denoiseTV --maxIterTV %(maxIter)d")
+                            "-i %(inputMic)s --denoiseTV --maxIterTV %(maxIterTV)d")
         # Smooth
         self.__insertOneStep(self.doSmooth, "xmipp_transform_filter",
                             "-i %(inputMic)s --fourier real_gaussian %(sigmaConvolution)f")
