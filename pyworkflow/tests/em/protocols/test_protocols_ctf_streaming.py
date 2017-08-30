@@ -65,12 +65,12 @@ class TestCtfStreaming(BaseTest):
                   'delay':0,
                   'setof': 0 # SetOfMicrographs
                   }
-
+    
         #create input micrographs
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream,wait=False)
-
+    
         counter=1
         while not protStream.hasAttribute('outputMicrographs'):
             time.sleep(10)
@@ -78,47 +78,34 @@ class TestCtfStreaming(BaseTest):
             if counter > 100:
                 break
             counter += 1
-
-
-
-
-######################### AJ START NEW STREAMING PROTOCOL ######################
-
-        kwargs = {
-            'numberOfThreads': 5}
-
+    
+        ################# AJ START NEW STREAMING PROTOCOL ######################
+        kwargs = {'numberOfThreads': 5}
+    
         protCTF = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
         protCTF.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF)
-
-################################################################################
-
-
-
-######################### AJ CHECKING OUTPUT OF NEW STREAMING PROTOCOL #########
-
-
+        ########################################################################
+    
+        ################# AJ CHECKING OUTPUT OF NEW STREAMING PROTOCOL #########
         micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
         ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
 
-        while not (ctfSet.getSize() == micSet.getSize()):
+        while not (protCTF.isFinished() or protCTF.isFailed()):
             time.sleep(10)
             protCTF = self._updateProtocol(protCTF)
             micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
             ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
 
-        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
-
         baseFn = protCTF._getPath(CTF_SQLITE)
         self.assertTrue(os.path.isfile(baseFn))
-
+    
         self.assertEqual(ctfSet.getSize(), MICS)
-
+    
         for ctf in ctfSet:
             self.assertNotEqual(ctf._xmipp_ctfCritMaxFreq.get(), None)
             self.assertNotEqual(ctf.isEnabled(), None)
             self.assertNotEqual(ctf._defocusU.get(), None)
             self.assertNotEqual(ctf._defocusV.get(), None)
             self.assertNotEqual(ctf._defocusRatio.get(), None)
-
-################################################################################
+        ########################################################################
