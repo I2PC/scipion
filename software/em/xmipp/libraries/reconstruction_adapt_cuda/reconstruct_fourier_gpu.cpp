@@ -512,29 +512,29 @@ void ProgRecFourierGPU::computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid
 	if (AABB[1].z > maxZ) AABB[1].z = maxZ;
 }
 
-//void ProgRecFourierGPU::printAABB(Point3D* AABB) {
-//	std::cout
-//	// one base
-//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
-//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
-//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
-//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
-//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
-//	// other base with one connection
-//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
-//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
-//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
-//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
-//		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
-//	// lines between bases
-//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
-//		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
-//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
-//		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
-//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
-//		<< AABB[0].x << " " << AABB[1].y << " " << AABB[0].z
-//		<< std::endl;
-//}
+void static printAABB(Point3D<float> AABB[]) {
+	std::cout
+	// one base
+		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
+		<< AABB[0].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
+		<< AABB[0].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+	// other base with one connection
+		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+		<< AABB[0].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+	// lines between bases
+		<< AABB[1].x << " " << AABB[0].y << " " << AABB[1].z << "\n"
+		<< AABB[1].x << " " << AABB[0].y << " " << AABB[0].z << "\n"
+		<< AABB[1].x << " " << AABB[1].y << " " << AABB[0].z << "\n"
+		<< AABB[1].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+		<< AABB[0].x << " " << AABB[1].y << " " << AABB[1].z << "\n"
+		<< AABB[0].x << " " << AABB[1].y << " " << AABB[0].z
+		<< std::endl;
+}
 
 inline void ProgRecFourierGPU::preloadCTF(LoadThreadParams* threadParams,
 		size_t imgIndex,
@@ -1033,6 +1033,12 @@ void ProgRecFourierGPU::processBuffer(ProjectionData* buffer)
 	}
 }
 
+static void print(Point3D<float>* cuboid) {
+	for (int i = 0; i < 9; i++) {
+		std::cout << cuboid[i%8].x << " " << cuboid[i%8].y << " " << cuboid[i%8].z << std::endl;
+	}
+}
+
 void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
 		MATRIX& transform, MATRIX& transformInv, TraverseSpace* space) {
 	Point3D<float> cuboid[8];
@@ -1041,7 +1047,9 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : blob.radius);
 	rotateCuboid(cuboid, transform);
 	translateCuboid(cuboid, origin);
+//	print(cuboid);
 	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
+//	printAABB(AABB);
 	// store data
 	space->projectionIndex = projectionIndex;
 	getVectors(cuboid, space->u, space->v);
@@ -1067,6 +1075,9 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	dX = space->maxX - space->minX;
 	dY = space->maxY - space->minY;
 	dZ = space->maxZ - space->minZ;
+
+
+
 	if (dZ <= dX && dZ <= dY) { // iterate XY plane
 		space->dir = space->XY;
 	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
@@ -1074,11 +1085,13 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	} else { // iterate YZ plane
 		space->dir = space->YZ;
 	}
+//	std::cout << "vzdalenosti: " << dX << " " << dY << " " << dZ  << " pouzivam : " << space->dir << std::endl;
 }
 
 void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 		TraverseSpace* traverseSpaces) {
 	int index = 0;
+	static int UUID = 0;
 	float transf[3][3];
 	float transfInv[3][3];
 	for (int i = 0; i < bufferSize; i++) {
@@ -1089,9 +1102,18 @@ void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 			A_SL.convertTo(transf);
 			A_SLInv.convertTo(transfInv);
 
+			if (UUID == 1295) {
+							std::cout << "start" << std::endl;
+						}
 			computeTraverseSpace(buffer[i].img->getXSize(), buffer[i].img->getYSize(), i,
 					transf, transfInv, &traverseSpaces[index]);
+			traverseSpaces[index].UUID = UUID;
 
+			if (UUID == 1295) {
+				std::cout << "konec" << std::endl;
+			}
+
+			UUID++;
 			index++;
 		}
 	}
@@ -1133,6 +1155,8 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 	int noOfTransforms = bufferSize * R_repository.size();
 	TraverseSpace* traverseSpaces = new TraverseSpace[noOfTransforms];
 
+	clock_t begin = clock();
+
 	int repaint = (int)ceil((double)SF.size()/60);
 	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 	barrier_wait( &barrier );
@@ -1152,11 +1176,13 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 				iDeltaSqrt,
 				blobTableSqrt, BLOB_TABLE_SIZE_SQRT);
     	barrier_wait( &barrier );
-
 		if (verbose && startLoadIndex%repaint==0) {
 			progress_bar(startLoadIndex);
 		}
     }
+
+	clock_t end = clock();
+	std::cout << "main loop: " << (end - begin) / CLOCKS_PER_SEC << std::endl;
 
     delete[] traverseSpaces;
 

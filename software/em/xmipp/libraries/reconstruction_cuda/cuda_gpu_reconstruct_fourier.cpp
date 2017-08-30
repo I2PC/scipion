@@ -5,7 +5,7 @@
 #include <cuda_runtime_api.h>
 #include "cuda_gpu_reconstruct_fourier.h"
 
-#define BLOCK_DIM 32
+#define BLOCK_DIM 16
 #define USE_SHARED_MEM 0
 
 #if USE_SHARED_MEM
@@ -461,7 +461,7 @@ void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		const ProjectionDataGPU* data) {
+		const ProjectionDataGPU* data, bool print) {
 	Point3D<float> imgPos;
 	int xSize = data->xSize;
 	int ySize = data->ySize;
@@ -541,6 +541,12 @@ void processVoxelBlob(
 
 				int index2D = i * xSize + j;
 
+				if (print) {
+//					if (threadIdx.x == 0 && threadIdx.y == 0) {
+						printf("%d %d from block %d %d\n", j, i, blockIdx.x, blockIdx.y);
+//					}
+				}
+
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 #if USE_SHARED_MEM
 				float wBlob = BLOB_TABLE[aux];
@@ -550,8 +556,8 @@ void processVoxelBlob(
 
 				float weight = wBlob * dataWeight;
 				w += weight;
-				volReal += INPUT_IMG[(2*index2D)%64] * weight;
-				volImag += INPUT_IMG[(2*index2D + 1)%64] * weight;
+				volReal += img[2*index2D] * weight;
+				volImag += img[2*index2D] * weight;
 			}
 		}
 	}
@@ -596,16 +602,70 @@ void printAABB(Point3D<float>* AABB) {
 //	printf("\n");
 //}
 
+//void AABBToCube(Point3D<float>& AABB[], Point3D<float>& cube[]) {
+//	cube[0].x = AABB[0].x;
+//	cube[0].y = AABB[0].y;
+//	cube[0].z = AABB[0].z;
+//
+//	cube[1].x = AABB[0].x;
+//	cube[1].y = AABB[0].y;
+//	cube[1].z = AABB[0].z;
+//
+//	cube[2].x = AABB[0].x;
+//	cube[2].y = AABB[0].y;
+//	cube[2].z = AABB[0].z;
+//
+//	cube[3].x = AABB[0].x;
+//	cube[3].y = AABB[0].y;
+//	cube[3].z = AABB[0].z;
+//
+//	cube[4].x = AABB[0].x;
+//	cube[4].y = AABB[0].y;
+//	cube[4].z = AABB[0].z;
+//
+//	cube[5].x = AABB[0].x;
+//	cube[5].y = AABB[0].y;
+//	cube[5].z = AABB[0].z;
+//
+//	cube[6].x = AABB[0].x;
+//	cube[6].y = AABB[0].y;
+//	cube[6].z = AABB[0].z;
+//
+//	cube[7].x = AABB[0].x;
+//	cube[7].y = AABB[0].y;
+//	cube[7].z = AABB[0].z;
+//}
 
 __device__
-void calculateAABB(const TraverseSpace& tSpace) {
+void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform[3][3]) {
+	for (int i = 0; i < 8; i++) {
+		Point3D<float> imgPos;
+		// transform current point to center
+		imgPos.x = box[i].x - cMaxVolumeIndexX/2;
+		imgPos.y = box[i].y - cMaxVolumeIndexYZ/2;
+		imgPos.z = box[i].z - cMaxVolumeIndexYZ/2;
+//		if ((imgPos.x*imgPos.x + imgPos.y*imgPos.y + imgPos.z*imgPos.z) > maxDistanceSqr) {
+//			return; // discard iterations that would access pixel with too high frequency
+//		}
+		// rotate around center
+		multiply(transform, imgPos);
+		// transform back just Y coordinate, since X now matches to picture and Z is irrelevant
+		imgPos.y += cMaxVolumeIndexYZ / 2;
+
+		box[i] = imgPos;
+	}
+}
+
+__device__
+void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionData) {
+//	printf("img size: %d %d\n", projectionData->xSize, projectionData->ySize);
 	Point3D<float> box[8];
 	if (tSpace.XY == tSpace.dir) { // iterate XY plane
-		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x;
+		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
+		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius;
 
-		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y;
-		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y;
+		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius;
+		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
 
 		getZ(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
 		getZ(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
@@ -620,15 +680,25 @@ void calculateAABB(const TraverseSpace& tSpace) {
 		getZ(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
 
 		Point3D<float>AABB[2];
+
+		mapToImage(box, projectionData->xSize, projectionData->ySize, tSpace.transformInv);
+
 		computeAABB(AABB, box);
 
-		printAABB(AABB);
+		if (blockIdx.x == 2 && blockIdx.y == 6) {
+			printf("blocksize: %f %f\n", AABB[1].x - AABB[0].x, AABB[1].y - AABB[0].y);
+//		printf("blockid: %d %d\n", blockIdx.x, blockIdx.y);
+			printAABB(AABB);
+		}
+
+//		printAABB(AABB);
+//		printf ("projekce %d pouziva %d\n", tSpace.projectionIndex, tSpace.UUID );
 
 
 	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
-
+//		printf ("pouzivam %d\n", tSpace.dir );
 	} else { // iterate YZ plane
-
+//		printf ("pouzivam %d\n", tSpace.dir );
 	}
 }
 
@@ -670,9 +740,7 @@ void processProjection(
 //	dY = maxY - minY;
 //	dZ = maxZ - minZ;
 
-	if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
-		calculateAABB(tSpace);
-	}
+
 
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int idy = blockIdx.y*blockDim.y + threadIdx.y;
@@ -688,6 +756,9 @@ void processProjection(
 						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
 					}
 				} else {
+
+					bool print = (tSpace.UUID == 1295) && (blockIdx.x == 2) && (blockIdx.y == 6) && (threadIdx.y == 0 || threadIdx.y == 15);
+
 					float z1, z2;
 					bool hit1 = getZ(idx, idy, z1, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
 					bool hit2 = getZ(idx, idy, z2, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
@@ -697,7 +768,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, print );
 						}
 					}
 				}
@@ -722,7 +793,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false);
 						}
 					}
 				}
@@ -747,7 +818,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false);
 						}
 					}
 				}
@@ -782,6 +853,15 @@ void processBufferKernel(
 #endif
 
 	for (int i = 0; i < noOfTransforms; i++) {
+
+		if ((threadIdx.x == 0) && (threadIdx.y == 0) && (traverseSpaces[i].UUID == 1295) ) {
+//			printf("transforms: %d\n", noOfTransforms);
+
+
+
+			calculateAABB(traverseSpaces[i], &buffer[traverseSpaces[i].projectionIndex]);
+		}
+
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
 			&buffer[traverseSpaces[i].projectionIndex], traverseSpaces[i], traverseSpaces[i].transformInv,
@@ -800,6 +880,12 @@ void processBufferGPU(float* tempVolumeGPU,
 
 	ProjectionDataGPU* hostBuffer = new ProjectionDataGPU[bufferSize];
 	ProjectionDataGPU* devBuffer = copyProjectionData(hostBuffer, data, bufferSize);
+
+//	size_t currentLimit;
+//	cudaDeviceGetLimit(&currentLimit, cudaLimitPrintfFifoSize);
+//	cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 1048576 * 2);
+//	gpuErrchk( cudaPeekAtLastError() );
+
 
 
 //	printf("vstup %f %f %f\n%f %f %f\n%f %f %f\n",

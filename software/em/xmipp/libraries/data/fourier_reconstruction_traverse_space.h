@@ -14,6 +14,7 @@ struct TraverseSpace {
 
 int minY, minX, minZ;
 int maxY, maxX, maxZ;
+int UUID;
 float maxDistanceSqr;
 enum Direction { XY, XZ, YZ } dir;
 Point3D<float> u, v;
