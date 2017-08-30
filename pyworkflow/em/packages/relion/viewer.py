@@ -1616,9 +1616,8 @@ class RelionLocalResViewer(ProtocolViewer):
                        label='Slice axis')
         group.addParam('doShowVolumeSlices', params.LabelParam,
                       label="Show volume slices")
-        
-        form.addParam('doShowChimera', params.LabelParam,
-                      label="Show colored map in Chimera", default=True)
+        group.addParam('doShowChimera', params.LabelParam,
+                       label="Show colored map in Chimera", default=True)
 
     def _getVisualizeDict(self):
         self.protocol._createFilenameTemplates()
