@@ -144,12 +144,14 @@ class MonitorISPyB(Monitor):
             self.safe_update(dcParams, self.previousParams)
             dcParams['id'] = self.dcId
             dcParams['endtime'] = self.now()
+            self.info("writing datacollection: %s" + str(dcParams))
+            self.ispybDb.update_data_collection(dcParams)
         else:
             dcParams['starttime'] = self.now()
             dcParams['endtime'] = self.now()
+            self.info("writing datacollection: %s" + str(dcParams))
+            self.dcId = self.ispybDb.update_data_collection(dcParams)
 
-        self.info("writing datacollection: %s" + str(dcParams))
-        self.dcId = self.ispybDb.update_data_collection(dcParams)
         self.previousParams = dcParams
 
         for itemId in set(updateImageIds):
