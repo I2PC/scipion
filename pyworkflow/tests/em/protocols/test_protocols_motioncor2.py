@@ -75,9 +75,10 @@ class TestMotioncor2AlignMovies(BaseTest):
         self.assertIsNotNone(getattr(protocol, 'outputMicrographs', None),
                              "Output SetOfMicrographs were not created.")
 
-    def _checkAlignment(self, movie, goldRange, goldRoi, goldShifts):
+    def _checkAlignment(self, movie, goldRange, goldRoi):
         alignment = movie.getAlignment()
         range = alignment.getRange()
+        aliFrames = range[1] - range[0] + 1
         msgRange = "Alignment range must be %s (%s) and it is %s (%s)"
         self.assertEqual(goldRange, range, msgRange % (goldRange,
                                                        type(goldRange),
@@ -85,14 +86,15 @@ class TestMotioncor2AlignMovies(BaseTest):
                                                        type(range)))
         roi = alignment.getRoi()
         shifts = alignment.getShifts()
+        zeroShifts = (aliFrames * [0], aliFrames * [0])
+        nrShifts = len(shifts[0])
         msgRoi = "Alignment ROI must be %s (%s) and it is %s (%s)"
-        msgShifts = "Alignment SHIFTS must be %s (%s) and it is %s (%s)"
+        msgShifts = "Alignment SHIFTS must be non-zero!"
         self.assertEqual(goldRoi, roi, msgRoi % (goldRoi, type(goldRoi),
                                                  roi, type(roi)))
-        self.assertEqual(goldShifts, shifts, msgShifts % (goldShifts, 
-                                                          type(goldShifts),
-                                                          shifts,
-                                                          type(shifts)))
+        self.assertNotEqual(zeroShifts, shifts, msgShifts)
+        self.assertEqual(nrShifts, aliFrames, "Number of shifts is not equal"
+                                              " number of aligned frames.")
 
     def test_cct_motioncor2_patch(self):
         prot = self.newProtocol(ProtMotionCorr,
@@ -104,8 +106,7 @@ class TestMotioncor2AlignMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1, 7), [0, 0, 0, 0], ([0.0, -1.31, -2.14, -2.13, -1.87, -1.53, -1.07],
-                                                    [0.0, -1.32, -2.22, -2.47, -2.61, -2.6, -2.52]))
+                             (1, 7), [0, 0, 0, 0])
 
     def test_qbeta_motioncor2_patch(self):
         prot = self.newProtocol(ProtMotionCorr,
@@ -118,8 +119,7 @@ class TestMotioncor2AlignMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (1, 7), [0, 0, 0, 0], ([0.0, 0.85, 1.7, 2.07, 1.95, 1.84, 1.72],
-                                                    [0.0, 0.22, 0.43, 0.46, 0.3, 0.15, -0.01]))
+                             (1, 7), [0, 0, 0, 0])
 
     def test_qbeta_motioncor2_sel(self):
         prot = self.newProtocol(ProtMotionCorr,
@@ -135,5 +135,4 @@ class TestMotioncor2AlignMovies(BaseTest):
 
         self._checkMicrographs(prot)
         self._checkAlignment(prot.outputMovies[1],
-                             (2, 6), [0, 0, 0, 0], ([0.0, 0.58, 0.73, 0.74, 0.3],
-                                                    [0.0, 0.14, -0.1, -0.35, -0.15]))
+                             (2, 6), [0, 0, 0, 0])

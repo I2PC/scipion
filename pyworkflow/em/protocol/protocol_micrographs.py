@@ -494,7 +494,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         minD = min(defocusList) / 10000.
         maxD = max(defocusList) / 10000.
 
-        self.methodsVar.set("The range of micrograph's experimental defocus was"
+        self.methodsVar.set("Estimated  defocus range defocus was"
                             " %0.3f - %0.3f microns. " % (minD, maxD))
 
         self._store(self.methodsVar)
