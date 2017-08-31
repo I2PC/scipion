@@ -84,6 +84,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('createScriptFile')
+        self._insertFunctionStep('fixAdCRYSrecordToPDBFile')
         self._insertFunctionStep('executeRefmac')
         self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
         self._insertFunctionStep('writeFinalResultsTable') #Print output results
@@ -145,13 +146,51 @@ class CCP4ProtRunRefmac(EMProtocol):
         os.chmod(self._getScriptFileName(), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
 
     def fixAdCRYSrecordToPDBFile(self):
+        print os.path.dirname(self.inputStructure.get().getFileName())
         #read input pdb file
-        #search for CRYS RECORD
-        #if available do nothing
-        #else create a new PDB file
-        #this new file should be the input
-        pass
+        f = open(self.inputStructure.get().getFileName(), "r+")
+        data = f.read()
+        # search for CRYS RECORD
+        if data.startswith('CRYST'):
+            print TRUE
+            #break # if available do nothing
+        else:
+            print "The input PDB file does not contain CRYST record"
+            init_path = os.getcwd()
+            os.chdir('Runs/')
+            directory = ""
+            directories = os.listdir(os.getcwd())
+            for element in directories:
+                if element.endswith('_ProtImportPdb'):
+                    directory = element
+            os.chdir(directory+"/extra")
+            f2 = open(os.listdir(os.getcwd())[0], "r")
+            CRYST_line = ""
+            for line in f2:
+                if line.startswith('CRYST'):
+                    CRYST_line = line
+                    print line
+            f2.close()
+            os.chdir(init_path)
+            os.chdir(os.path.dirname(self.inputStructure.get().getFileName()))
+            print os.getcwd()
+            f3 = open("New_file.pdb", "w+")
+            f3.write(CRYST_line)
+            f3.write(data)
+            f3.close()
+            # else create a new PDB file
+        f.close()
 
+        #this new file should be the input
+        #
+        #
+        #
+        #Dudas de Marta: No recuerdo bien de donde se sacaba la linea CRYST, yo la he sacado del pdb inicial
+        #(aunque no funcionara cuando haya varios pdbs en el folder Runs). Por otro lado, CRYST/CRYST1.
+        #Cuando al final funcione como es debido, el "New_file.pdb" debera volver a ser:
+        #self.inputStructure.get().getFileName()
+        #
+        #
     def executeRefmac(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
