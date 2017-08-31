@@ -91,7 +91,7 @@ class XmippProtConvertToPseudoAtomsBase(Prot3D):
         outputFn = self._getPath(pseudoatoms)
         sigma = sampling * self.pseudoAtomRadius.get() 
         targetErr = self.pseudoAtomTarget.get()
-        nthreads = self.numberOfThreads.get()
+        nthreads = self.numberOfThreads.get()*self.numberOfMpi.get()
         params = "-i %(inputFn)s -o %(outputFn)s --sigma %(sigma)f --thr %(nthreads)d "
         params += "--targetError %(targetErr)f --sampling_rate %(sampling)f -v 2 --intensityColumn Bfactor"
         if fnMask:
