@@ -94,6 +94,7 @@ class MonitorISPyB(Monitor):
         self.numberOfFrames = None
         self.imageGenerator = None
         self.dcId = None
+        self.imageNumber = 1
         self.previousParams = None
         self.visit = kwargs['visit']
         self.dbconf = kwargs['dbconf']
@@ -142,10 +143,10 @@ class MonitorISPyB(Monitor):
         if self.dcId:
             self.safe_update(dcParams, self.previousParams)
             dcParams['id'] = self.dcId
-            dcParams['endtime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+            dcParams['endtime'] = self.now()
         else:
-            dcParams['starttime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
-            dcParams['endtime'] = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+            dcParams['starttime'] = self.now()
+            dcParams['endtime'] = self.now()
 
         self.info("writing datacollection: %s" + str(dcParams))
         self.dcId = self.ispybDb.update_data_collection(dcParams)
@@ -161,6 +162,18 @@ class MonitorISPyB(Monitor):
             self.movies[itemId]['id'] = ispybId
 
         for itemId in set(updateAlignIds):
+            if 'autoProcProgramId' not in self.motion_corrections[itemId]:
+                program = self.ispybDb.get_program_params()
+                self.safe_update(program, self.motion_corrections[itemId])
+                program['starttime'] = self.now()
+                program['endtime'] = self.now()
+                program_id = self.ispybDb.update_program(program)
+                self.motion_corrections[itemId]['autoProcProgramId'] = program_id
+
+            if 'imageNumber' not in self.motion_corrections[itemId]:
+                self.motion_corrections[itemId]['imageNumber'] = self.imageNumber
+                self.imageNumber += 1
+
             motionParams = self.ispybDb.get_motion_correction_params()
             self.safe_update(motionParams, self.motion_corrections[itemId])
             motionParams['dataCollectionId'] = self.dcId
@@ -169,6 +182,14 @@ class MonitorISPyB(Monitor):
             self.motion_corrections[itemId]['id'] = ispybId
 
         for itemId in set(updateCTFIds):
+            if 'autoProcProgramId' not in self.ctfs[itemId]:
+                program = self.ispybDb.get_program_params()
+                self.safe_update(program, self.ctfs[itemId])
+                program['starttime'] = self.now()
+                program['endtime'] = self.now()
+                program_id = self.ispybDb.update_program(program)
+                self.ctfs[itemId]['autoProcProgramId'] = program_id
+
             ctfParams = self.ispybDb.get_ctf_params()
             self.safe_update(ctfParams, self.ctfs[itemId])
             ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['id']
@@ -181,6 +202,9 @@ class MonitorISPyB(Monitor):
             self.ispybDb.disconnect()
 
         return all(finished)
+
+    def now(self):
+        return datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
 
     def iter_updated_set(self, objSet):
         objSet.load()
@@ -216,13 +240,13 @@ class MonitorISPyB(Monitor):
 
             self.movies[movieId] = {
                 'experimenttype': 'single particle',
-                'run status': 'DataCollection Successful',
+                'run_status': 'DataCollection Successful',
                 'imgdir': abspath(dirname(movieFn)),
                 'imgsuffix': pwutils.getExt(movieFn),
                 'file_template': pwutils.removeBaseExt(movieFn) + '#####' + pwutils.getExt(movieFn),
                 'file_location': abspath(dirname(movieFn)),
                 'filename': movieFn,
-                'numberOfPasses': self.numberOfFrames,
+                'n_passes': self.numberOfFrames,
                 'magnification': acquisition.getMagnification(),
                 'total_absorbed_dose': acquisition.getDoseInitial() + (acquisition.getDosePerFrame() * self.numberOfFrames),
                 'wavelength': self.convert_volts_to_debroglie_wavelength(acquisition.getVoltage())
@@ -275,7 +299,9 @@ class MonitorISPyB(Monitor):
                     'micrographfullPath': micFn,
                     'comments': 'aligned',
                     'patchesUsed': (prot.patchX.get() + prot.patchY.get())/2,
-                    'xtal_snapshot1': renderable_image
+                    'xtal_snapshot1': renderable_image,
+                    'programs': getattr(prot, '_label', lambda x: None),
+                    'status': 1
                 })
                 print('%d has new align info' % micId)
                 updateIds.append(micId)
@@ -295,11 +321,13 @@ class MonitorISPyB(Monitor):
                     self.ctfs[micId] = {}
 
                 self.ctfs[micId].update({
-                'estimatedDefocus': (ctf.getDefocusV()**2 + ctf.getDefocusU()**2)**0.5,
-                'astigmatism': ctf.getDefocusRatio(),
-                'astigmatismAngle': ctf.getDefocusAngle(),
-                'fftPlotFullPath': ctf.getMicrograph(),
-                'fftPlotFullPath2': ctf.getPsdFile()
+                    'estimatedDefocus': (ctf.getDefocusV()**2 + ctf.getDefocusU()**2)**0.5,
+                    'astigmatism': ctf.getDefocusRatio(),
+                    'astigmatismAngle': ctf.getDefocusAngle(),
+                    'fftPlotFullPath': ctf.getMicrograph(),
+                    'fftPlotFullPath2': ctf.getPsdFile(),
+                    'programs': getattr(prot, '_label', lambda x: None),
+                    'status': 1
                 })
                 print('%d has new ctf info' % micId)
                 updateIds.append(micId)
@@ -397,10 +425,13 @@ class ISPyBdb:
         from ispyb.core import core
         from ispyb.mxacquisition import mxacquisition
         from ispyb.emacquisition import emacquisition
+        from ispyb.mxdatareduction import mxdatareduction
+
         self.dbconnection = dbconnection
         self.core = core
         self.mxacquisition = mxacquisition
         self.emacquisition = emacquisition
+        self.mxdatareduction = mxdatareduction
 
         self._loadCursor(db)
         self._create_group()
@@ -443,6 +474,12 @@ class ISPyBdb:
 
     def update_ctf(self, params):
         return self.emacquisition.insert_ctf(self.cursor, params.values())
+
+    def get_program_params(self):
+        return self.mxdatareduction.get_program_params()
+
+    def update_program(self, params):
+        return self.mxdatareduction.insert_program(self.cursor, params.values())
 
     def disconnect(self):
         if self.dbconnection:
