@@ -1037,6 +1037,7 @@ static void print(Point3D<float>* cuboid) {
 	for (int i = 0; i < 9; i++) {
 		std::cout << cuboid[i%8].x << " " << cuboid[i%8].y << " " << cuboid[i%8].z << std::endl;
 	}
+	std::cout << std::endl;
 }
 
 void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int projectionIndex,
@@ -1076,16 +1077,27 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	dY = space->maxY - space->minY;
 	dZ = space->maxZ - space->minZ;
 
+	float nX = std::abs(space->unitNormal.x);
+	float nY = std::abs(space->unitNormal.y);
+	float nZ = std::abs(space->unitNormal.z);
 
 
-	if (dZ <= dX && dZ <= dY) { // iterate XY plane
-		space->dir = space->XY;
-	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
-		space->dir = space->XZ;
-	} else { // iterate YZ plane
+	if (nX >= nY  && nX >= nZ) { // iterate YZ plane
 		space->dir = space->YZ;
+	} else if (nY >= nX && nY >= nZ) { // iterate XZ plane
+		space->dir = space->XZ;
+	} else if (nZ >= nX && nZ >= nY) { // iterate XY plane
+		space->dir = space->XY;
 	}
-//	std::cout << "vzdalenosti: " << dX << " " << dY << " " << dZ  << " pouzivam : " << space->dir << std::endl;
+
+//	if (dZ <= dX && dZ <= dY) { // iterate XY plane
+//		if (space->dir != space->XY) std::cout << "Chyba";
+//	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
+//		if (space->dir != space->XZ) std::cout << "Chyba";
+//	} else { // iterate YZ plane
+//		if (space->dir != space->YZ)  std::cout << "Chyba";
+//	}
+//	std::cout << "vzdalenosti: " << nX << " " << nY << " " << nZ  << " pouzivam : " << space->dir << std::endl;
 }
 
 void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
@@ -1102,16 +1114,16 @@ void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 			A_SL.convertTo(transf);
 			A_SLInv.convertTo(transfInv);
 
-			if (UUID == 1295) {
-							std::cout << "start" << std::endl;
-						}
+//			if (UUID == 1058) {
+//							std::cout << "UUID: " << UUID << " ";
+//						}
 			computeTraverseSpace(buffer[i].img->getXSize(), buffer[i].img->getYSize(), i,
 					transf, transfInv, &traverseSpaces[index]);
 			traverseSpaces[index].UUID = UUID;
 
-			if (UUID == 1295) {
-				std::cout << "konec" << std::endl;
-			}
+//			if (UUID == 1058) {
+//				std::cout << "konec" << std::endl;
+//			}
 
 			UUID++;
 			index++;
