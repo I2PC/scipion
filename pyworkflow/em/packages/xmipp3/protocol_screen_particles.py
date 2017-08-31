@@ -132,10 +132,20 @@ class XmippProtScreenParticles(ProtProcessParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
-            summary.append("The minimum ZScore is %.2f" % min(zscores))
-            summary.append("The maximum ZScore is %.2f" % max(zscores))
-            summary.append("The mean ZScore is %.2f" % (sum(zscores)*1.0/len(self.outputParticles)))
+            fnSummary = self._getExtraPath("summary.txt")
+            if not os.path.exists(fnSummary):
+                zscores = [p._xmipp_zScore.get() for p in self.outputParticles]
+                if len(zscores)>0:
+                    fhSummary = open(fnSummary,"w")
+                    fhSummary.write("The minimum ZScore is %.2f\n" % min(zscores))
+                    fhSummary.write("The maximum ZScore is %.2f\n" % max(zscores))
+                    fhSummary.write("The mean ZScore is %.2f\n" % (sum(zscores)*1.0/len(self.outputParticles)))
+                fhSummary.close()
+            if os.path.exists(fnSummary):
+                fhSummary = open(fnSummary)
+                for line in fhSummary.readlines():
+                    summary.append(line.strip())
+                fhSummary.close()
         return summary
     
     def _validate(self):
