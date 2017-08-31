@@ -142,7 +142,7 @@ class XmippProtScreenParticles(ProtProcessParticles):
                 fhSummary.close()
             fhSummary = open(fnSummary)
             for line in fhSummary.readlines():
-                summary.append(line.strip())
+                summary.append(line)
             fhSummary.close()
         return summary
     
