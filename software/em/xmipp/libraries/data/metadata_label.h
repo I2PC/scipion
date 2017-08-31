@@ -372,6 +372,7 @@ enum MDLabel
     MDL_SCORE_BY_ALIGNABILITY_ACCURACY_REF, ///< score by alignability references (double)
     MDL_SCORE_BY_ALIGNABILITY_NOISE, ///< score by alignability noise (double)
     MDL_SCORE_BY_MIRROR, ///< score by mirror (double)
+    MDL_SCORE_BY_SCREENING, ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -615,6 +616,8 @@ enum MDLabel
     RLN_OPTIMISER_HELICAL_TUBE_OUTER_DIAMETER,
     RLN_OPTIMISER_HELICAL_SYMMETRY_LOCAL_REFINEMENT,
     RLN_OPTIMISER_HELICAL_SIGMA_DISTANCE,
+    RLN_OPTIMISER_IGNORE_HELICAL_SYMMETRY,
+    RLN_OPTIMISER_HELICAL_KEEP_TILT_PRIOR_FIXED,
     RLN_OPTIMISER_HIGHRES_LIMIT_EXP,
     RLN_OPTIMISER_IGNORE_CTF_UNTIL_FIRST_PEAK,
     RLN_OPTIMISER_INCR_SIZE,
@@ -1791,7 +1794,8 @@ private:
 
         MDL::addLabel(MDL_SCORE_BY_ALIGNABILITY_NOISE, LABEL_DOUBLE, "scoreByAlignabilityNoise");
         MDL::addLabel(MDL_SCORE_BY_MIRROR, LABEL_DOUBLE, "scoreByMirror");
-        MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
+        MDL::addLabel(MDL_SCORE_BY_SCREENING, LABEL_VECTOR_DOUBLE, "screenFeatures");
+		MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 
         MDL::addLabelAlias(MDL_SCALE, "Scale");
         MDL::addLabel(MDL_SELFILE, LABEL_STRING, "selfile", TAGLABEL_METADATA);
@@ -2062,6 +2066,8 @@ private:
         MDL::addLabel(RLN_OPTIMISER_HELICAL_TUBE_OUTER_DIAMETER, LABEL_DOUBLE, "rlnHelicalMaskTubeOuterDiameter");
         MDL::addLabel(RLN_OPTIMISER_HELICAL_SYMMETRY_LOCAL_REFINEMENT, LABEL_BOOL, "rlnHelicalSymmetryLocalRefinement");
         MDL::addLabel(RLN_OPTIMISER_HELICAL_SIGMA_DISTANCE, LABEL_DOUBLE, "rlnHelicalSigmaDistance");
+        MDL::addLabel(RLN_OPTIMISER_IGNORE_HELICAL_SYMMETRY, LABEL_BOOL, "rlnIgnoreHelicalSymmetry");
+        MDL::addLabel(RLN_OPTIMISER_HELICAL_KEEP_TILT_PRIOR_FIXED, LABEL_BOOL, "rlnHelicalKeepTiltPriorFixed");
         MDL::addLabel(RLN_OPTIMISER_HIGHRES_LIMIT_EXP, LABEL_DOUBLE, "rlnHighresLimitExpectation");
         MDL::addLabel(RLN_OPTIMISER_IGNORE_CTF_UNTIL_FIRST_PEAK, LABEL_BOOL, "rlnDoIgnoreCtfUntilFirstPeak");
         MDL::addLabel(RLN_OPTIMISER_INCR_SIZE, LABEL_INT, "rlnIncrementImageSize");

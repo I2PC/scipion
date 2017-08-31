@@ -75,9 +75,8 @@ class ProtProcessMovies(ProtPreprocessMicrographs):
         # inserting each of the steps for each movie
         self.insertedDict = {}
         self.samplingRate = self.inputMovies.get().getSamplingRate()
-        # FIXME: Not working in scipion-box
-        #self.convertStepId = self._insertFunctionStep('convertInputStep')
-
+        
+        # Conversion step is part of processMovieStep because of streaming.
         movieSteps = self._insertNewMoviesSteps(self.insertedDict,
                                                 self.inputMovies.get())
         finalSteps = self._insertFinalSteps(movieSteps)
