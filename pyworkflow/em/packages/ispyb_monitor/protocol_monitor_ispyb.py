@@ -237,6 +237,7 @@ class MonitorISPyB(Monitor):
                 images_path = self.find_ispyb_path(movieFn)
                 self.imageGenerator = ImageGenerator(self.project.path,
                                                      images_path,
+                                                     bigThumb=True,
                                                      smallThumb=512)
             acquisition = movie.getAcquisition()
 
