@@ -334,12 +334,15 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                       display=EnumParam.DISPLAY_COMBO,
                       default=0, label='Aggregation mode', condition = 'doSymmetrize',
                       help='Symmetrized volumes can be averaged or summed.')
-        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
-                      label='Mask volume', condition='doSymmetrize'
-                      )
         form.addParam('doWrap', BooleanParam, default=True,
                       label="Wrap", condition='doSymmetrize',
                       help='by default, the image/volume is wrapped')
+        # Filtering
+        form.addParam('doLaplacian', BooleanParam, default=False, label="Apply Laplacian",
+                      help="Laplacian denoising")
+        form.addParam('volumeMask', PointerParam, pointerClass='VolumeMask', allowsNull=True,
+                      label='Mask volume', condition='doSymmetrize or doLaplacian')
+
         # Adjust gray values
         form.addParam('doAdjust', BooleanParam, default=False,
                       label="Adjust gray values", 
@@ -377,6 +380,7 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         self.isFirstStep = True
         # this is for when the options selected has changed and the protocol is resumed
         changeInserts = [self.doChangeHand, self.doRandomize, self.doSymmetrize, 
+                         self.doLaplacian,
                          self.doAdjust, self.doSegment, self.doInvert, self.doNormalize, 
                          self.doThreshold]
 
@@ -391,6 +395,10 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
         if self.doSymmetrize:
             args = self._argsSymmetrize()
             self._insertFunctionStep("symmetrizeStep", args, changeInserts)
+        
+        if self.doLaplacian:
+            args = self._argsLaplacian()
+            self._insertFunctionStep("laplacianStep", args, changeInserts)
         
         if self.doAdjust:
             self._insertFunctionStep("projectionStep", changeInserts)
@@ -431,6 +439,9 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
     
     def symmetrizeStep(self, args, changeInserts):
         self.runJob("xmipp_transform_symmetrize", args)
+    
+    def laplacianStep(self, args, changeInserts):
+        self.runJob("xmipp_transform_filter", args, numberOfMpi=1)
     
     def projectionStep(self, changeInserts):
         partSet = self.inputImages.get()
@@ -571,6 +582,18 @@ class XmippProtPreprocessVolumes(XmippProcessVolumes):
                 args += " --mask_in %s "%fnVolumeMask
             else:
                 print('Error: mask %s does not exists'%fnVolumeMask)
+        return args
+    
+    def _argsLaplacian(self):
+        args = ""
+        if self._isSingleInput():
+            args = "-i %s -o %s --retinex %f" % (self.inputFn, self.outputStk, 0.9)
+
+        if self.volumeMask.get() is not None:
+            fnVolumeMask = self.volumeMask.get().getFileName()
+            if exists(fnVolumeMask):
+                args += " %s"%fnVolumeMask
+
         return args
     
     def _argsAdjust(self, number):
