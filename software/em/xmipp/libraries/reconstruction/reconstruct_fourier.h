@@ -360,6 +360,15 @@ private:
     	return (x > min) && (x < max);
     }
 
+    /** Returns normal vector in respect to vector u and v **/
+    Point3D getNormal(const Point3D& u, const Point3D& v) {
+    	Point3D result;
+    	result.x = u.y*v.z - u.z*v.y;
+    	result.y = u.z*v.x - u.x*v.z;
+    	result.z = u.x*v.y - u.y*v.x;
+    	return result;
+    }
+
     /** Returns X coordinate of the point [y, z] on the plane defined by p0 (origin) and two vectors */
     static bool getX(float& x, float y, float z, const Point3D& a, const Point3D& b, const Point3D& p0);
 

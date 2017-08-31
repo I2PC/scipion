@@ -647,7 +647,7 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float tr
 
 				float wCTF = (*data->CTF)(j, i);
 				float wModulator = (*data->modulator)(j, i);
-				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
 				float weight = wBlob * wModulator * data->weight;
 				*targetWeight += weight;
@@ -665,7 +665,7 @@ inline void ProgRecFourier::processVoxelBlob(int x, int y, int z, const float tr
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
-				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+				int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 				float wBlob = blobTableSqrt[aux];
 
 				float weight = wBlob * data->weight;
@@ -694,7 +694,7 @@ void ProgRecFourier::processProjection(
 	int imgSizeY = projectionData->img->getYSize();
 	const float maxDistanceSqr = (imgSizeX+(useFast ? 0.f : blob.radius)) * (imgSizeX+(useFast ? 0.f : blob.radius));
 	Point3D origin = {maxVolumeIndexX/2.f, maxVolumeIndexYZ/2.f, maxVolumeIndexYZ/2.f};
-	Point3D u, v;
+	Point3D u, v, normal;
 	Point3D AABB[2];
 	Point3D cuboid[8];
 
@@ -704,6 +704,7 @@ void ProgRecFourier::processProjection(
 	translateCuboid(cuboid, origin);
 	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
 	getVectors(cuboid, u, v);
+	normal = getNormal(u, v);
 
 	// prepare traversing
 	int minY, minX, minZ;
@@ -714,12 +715,13 @@ void ProgRecFourier::processProjection(
 	maxZ = ceil(AABB[1].z);
 	maxY = ceil(AABB[1].y);
 	maxX = ceil(AABB[1].x);
-	int dX, dY, dZ;
-	dX = maxX - minX;
-	dY = maxY - minY;
-	dZ = maxZ - minZ;
+	// iterate along the longest axes, because it has the shortest projection to traverse plane
+	int nX, nY, nZ;
+	nX = std::abs(nX);
+	nY = std::abs(nY);
+	nZ = std::abs(nZ);
 
-	if (dZ <= dX && dZ <= dY) { // iterate XY plane
+	if (nZ >= nX && nZ >= nY) { // iterate XY plane
 		for(int y = minY; y <= maxY; y++) {
 			for(int x = minX; x <= maxX; x++) {
 				if (useFast) {
@@ -744,7 +746,7 @@ void ProgRecFourier::processProjection(
 				}
 			}
 		}
-	} else if (dY <= dX && dY <= dZ) { // iterate XZ plane
+	} else if (nY >= nX && nY >= nZ) { // iterate XZ plane
 		for(int z = minZ; z <= maxZ; z++) {
 			for(int x = minX; x <= maxX; x++) {
 				if (useFast) {
@@ -769,7 +771,7 @@ void ProgRecFourier::processProjection(
 				}
 			}
 		}
-	} else if(dX <= dY && dX <= dZ) { // iterate YZ plane
+	} else if(nX >= nY  && nX >= nZ) { // iterate YZ plane
 		for(int z = minZ; z <= maxZ; z++) {
 			for(int y = minY; y <= maxY; y++) {
 				if (useFast) {
@@ -850,7 +852,7 @@ T*** ProgRecFourier::applyBlob(T***& input, float blobSize,
 							if (distanceSqr > blobSizeSqr) {
 								continue;
 							}
-							int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5)); //Same as ROUND but avoid comparison
+							int aux = (int) ((distanceSqr * iDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 							float tmpWeight = blobTableSqrt[aux];
 							tmp += tmpWeight * input[z][y][x];
 						}
