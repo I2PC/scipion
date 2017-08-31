@@ -76,15 +76,19 @@ class ProjectNotifier(object):
         return delta < timedelta(seconds=seconds)
 
     def _sendData(self, url, dataDict=None):
-        #then connect to webserver a send json
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))#no messages
-        data = urllib.urlencode(dataDict)
-        content = opener.open(url, data=data).read()
-        now = time.time()
-        #print "Notifying...."
-        #pwutils.prettyDate(now)
-        #print "dataDict: ", dataDict
-        os.utime(self._getUuidFileName(), (now, now))
+        try:
+            # then connect to webserver a send json
+            # set debuglevel=0 for no messages
+            opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))
+            data = urllib.urlencode(dataDict)
+            content = opener.open(url, data=data).read()
+            now = time.time()
+            #print "Notifying...."
+            #pwutils.prettyDate(now)
+            #print "dataDict: ", dataDict
+            os.utime(self._getUuidFileName(), (now, now))
+        except Exception:
+            print "Could not notify, maybe there is not internet connection."
 
     def _dataModified(self, projectWorfklow):
         try:
@@ -99,7 +103,6 @@ class ProjectNotifier(object):
     def notifyWorkflow(self):
 
         try:
-
             #check if enviroment exists otherwise abort
             if not pwutils.envVarOn('SCIPION_NOTIFY'):
                 return
@@ -125,14 +128,18 @@ class ProjectNotifier(object):
                 # create it
                 #TODO REMOVE this check in scipion 1.3
                 dataFile = self._getDataFileName()
-                pwutils.makeFilePath(dataFile) # create the folder of the file path if not exists
+                # create the folder of the file path if not exists
+                pwutils.makeFilePath(dataFile)
                 with open(dataFile,'w') as f:
                     f.write(projectWorfklow)
                 #print "change send new data"
             dataDict = {'project_uuid': self._getUuid(),
                         'project_workflow': projectWorfklow}
 
-            urlName = os.environ.get('SCIPION_NOTIFY_URL', 'http://calm-shelf-73264.herokuapp.com/report_protocols/api/workflow/workflow/').strip()
+            urlName = os.environ.get('SCIPION_NOTIFY_URL',
+                         'http://calm-shelf-73264.herokuapp.com/'
+                         'report_protocols/api/workflow/workflow/'
+                         ).strip()
             urlName += "addOrUpdateWorkflow/"
             t = threading.Thread(target=lambda: self._sendData(urlName, dataDict))
             t.start() # will execute function in a separate thread

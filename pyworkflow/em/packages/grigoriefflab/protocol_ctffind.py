@@ -223,7 +223,7 @@ class ProtCTFFind(em.ProtCTFMicrographs):
     def _methods(self):
         if self.inputMicrographs.get() is None:
             return ['Input micrographs not available yet.']
-        methods = "We calculated the CTF of %s using CTFFind [Midell2003]. " % self.getObjectTag('inputMicrographs')
+        methods = "We calculated the CTF of %s using CTFFind. " % self.getObjectTag('inputMicrographs')
         methods += self.methodsVar.get('')
         methods += 'Output CTFs: %s' % self.getObjectTag('outputCTF')
 
