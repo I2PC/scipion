@@ -14,10 +14,10 @@ __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
 #define SHARED_MEM_SIZE (int) (2*(BLOCK_DIM + 2*1.9) + 1) // FIXME block size must be settable. +1 is 'ceil'
-#define SHARED_MEM_SIZE_SQR (2*(SHARED_MEM_SIZE*SHARED_MEM_SIZE))
+#define SHARED_MEM_SIZE_SQR (SHARED_MEM_SIZE*SHARED_MEM_SIZE)
 
-__shared__ float INPUT_IMG[SHARED_MEM_SIZE_SQR];
 __shared__ Point3D<float> SHARED_AABB[2];
+__shared__ float2 INPUT_IMG[/*SHARED_MEM_SIZE_SQR*/5000];
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
@@ -28,6 +28,33 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
 		if (abort)
 			exit(code);
 	}
+}
+
+
+__device__
+void printAABB(Point3D<float>* AABB) {
+	// one base
+	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+		AABB[0].x, AABB[0].y, AABB[0].z,
+		AABB[1].x, AABB[0].y, AABB[0].z,
+		AABB[1].x, AABB[1].y, AABB[0].z,
+		AABB[0].x, AABB[1].y, AABB[0].z,
+		AABB[0].x, AABB[0].y, AABB[0].z);
+	// other base with one connection
+	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
+		AABB[0].x, AABB[0].y, AABB[1].z,
+		AABB[1].x, AABB[0].y, AABB[1].z,
+		AABB[1].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[0].y, AABB[1].z);
+	// lines between bases
+	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
+		AABB[1].x, AABB[0].y, AABB[1].z,
+		AABB[1].x, AABB[0].y, AABB[0].z,
+		AABB[1].x, AABB[1].y, AABB[0].z,
+		AABB[1].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[1].y, AABB[1].z,
+		AABB[0].x, AABB[1].y, AABB[0].z);
 }
 
 float* allocateGPU(float*& where, int size) {
@@ -406,11 +433,11 @@ void computeAABB(Point3D<float>* AABB, Point3D<float>* cuboid) {
 	}
 	AABB[0].x = floorf(AABB[0].x);
 	AABB[0].y = floorf(AABB[0].y);
-	AABB[0].y = floorf(AABB[0].y);
+	AABB[0].z = floorf(AABB[0].z);
 
 	AABB[1].x = ceilf(AABB[1].x);
 	AABB[1].y = ceilf(AABB[1].y);
-	AABB[1].y = ceilf(AABB[1].y);
+	AABB[1].z = ceilf(AABB[1].z);
 }
 
 
@@ -549,12 +576,23 @@ void processVoxelBlob(
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
-				int index2D = i * xSize + j;
+				int index2D = (i - SHARED_AABB[0].y) * SHARED_MEM_SIZE + (j-SHARED_AABB[0].x);
 
-				if (print) {
-//					if (threadIdx.x == 0 && threadIdx.y == 0) {
+				if (blockIdx.x ==0 && blockIdx.y == 3 && print){ //&& threadIdx.x == 0 && threadIdx.y == 0) {
+					if (threadIdx.x == 14 && threadIdx.y == 14) {
 //						printf("%d %d from block %d %d\n", j, i, blockIdx.x, blockIdx.y);
+						printAABB(SHARED_AABB);
+					}
+//					if ((int)(j-SHARED_AABB[0].x) < 0) {
+//						printAABB(SHARED_AABB);
+//						printf("%d (%d - %f) %d, projdi %d-%d x %d-%d, vlakno %d %d blok %d %d\n", (int)(j-SHARED_AABB[0].x),
+//								j, SHARED_AABB[0].x,
+//								(int)(i-SHARED_AABB[0].y),
+//								minX, maxX, minY, maxY,
+//								threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
 //					}
+//					printf("%d %d 0\n", (int)(j-SHARED_AABB[0].x), (int)(i - SHARED_AABB[0].y));
+					printf("%d %d 0\n", j, i);
 				}
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
@@ -566,8 +604,8 @@ void processVoxelBlob(
 
 				float weight = wBlob * dataWeight;
 				w += weight;
-				volReal += img[2*index2D] * weight;
-				volImag += img[2*index2D] * weight;
+//				volReal += INPUT_IMG[index2D].x * weight;
+//				volImag += INPUT_IMG[index2D].y * weight;
 			}
 		}
 	}
@@ -577,31 +615,6 @@ void processVoxelBlob(
 
 }
 
-__device__
-void printAABB(Point3D<float>* AABB) {
-	// one base
-	printf("\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-		AABB[0].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[0].z,
-		AABB[0].x, AABB[1].y, AABB[0].z,
-		AABB[0].x, AABB[0].y, AABB[0].z);
-	// other base with one connection
-	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n",
-		AABB[0].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[0].y, AABB[1].z);
-	// lines between bases
-	printf("%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n%f %f %f\n\n",
-		AABB[1].x, AABB[0].y, AABB[1].z,
-		AABB[1].x, AABB[0].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[0].z,
-		AABB[1].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[1].z,
-		AABB[0].x, AABB[1].y, AABB[0].z);
-}
 
 //__device__
 //void print(Point3D* cuboid) {
@@ -807,7 +820,7 @@ void processProjection(
 					}
 				} else {
 
-					bool print = (tSpace.UUID == 1295) && (blockIdx.x == 2) && (blockIdx.y == 6) && (threadIdx.y == 0 || threadIdx.y == 15);
+					bool print = (tSpace.UUID == 1295);// && (blockIdx.x == 2) && (blockIdx.y == 6) && (threadIdx.y == 0 || threadIdx.y == 15);
 
 					float z1, z2;
 					bool hit1 = getZ(idx, idy, z1, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
@@ -904,6 +917,7 @@ void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, 
 		int index = imgYindex * data->ySize + imgXindex;
 		vReal = data->img[2*index];
 		vImag = data->img[2*index + 1];
+//		printf("%d %d\n", imgXindex, imgYindex);
 	} else {
 		vReal = vImag = 0.f;
 	}
@@ -919,13 +933,17 @@ void copyData(ProjectionDataGPU* data) {
 
 	for (int i = 0; i < yLoops; i++) {
 		int tYindex = threadIdx.y + i*blockDim.y;
-		for (int j = 0; j < xLoops; j++) {
-			int tXindex = threadIdx.x + j*blockDim.x;
-			int memIndex = tYindex * SHARED_MEM_SIZE + tXindex;
-			float vReal, vImag;
-			getImgData(tXindex, tYindex, data, vReal, vImag);
-			INPUT_IMG[2*memIndex] = vReal;
-			INPUT_IMG[2*memIndex + 1] = vImag;
+		if (tYindex < SHARED_MEM_SIZE) {
+			for (int j = 0; j < xLoops; j++) {
+				int tXindex = threadIdx.x + j*blockDim.x;
+				if (tXindex < SHARED_MEM_SIZE) {
+					int memIndex = tYindex * SHARED_MEM_SIZE + tXindex;
+					float vReal, vImag;
+					getImgData(tXindex, tYindex, data, vReal, vImag);
+					INPUT_IMG[memIndex].x = vReal;
+					INPUT_IMG[memIndex].y = vImag;
+				}
+			}
 		}
 	}
 //
@@ -959,6 +977,10 @@ void processBufferKernel(
 		if ( ! cUseFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
 				calculateAABB(*space, data);
+				if (blockIdx.x ==0 && blockIdx.y == 3 && space->UUID == 1295) {
+					printAABB(SHARED_AABB);
+					printf("vetev %d\n", space->dir);
+				}
 			}
 			__syncthreads();
 			if (blockHasWork(data->xSize, data->ySize)) {
@@ -966,6 +988,10 @@ void processBufferKernel(
 //						printAABB(SHARED_AABB);
 //					}
 				copyData(data);
+				if (blockIdx.x ==0 && blockIdx.y == 3 && space->UUID == 1295 && threadIdx.x == 0 && threadIdx.y == 0) {
+					printf("nakopiroval jsem data\n");
+					printAABB(SHARED_AABB);
+				}
 				__syncthreads();
 			} else {
 				continue; // whole block can exit
@@ -974,11 +1000,14 @@ void processBufferKernel(
 
 		}
 
-
+		if (blockIdx.x ==0 && blockIdx.y == 3 && space->UUID == 1295 && threadIdx.x == 0 && threadIdx.y == 0) {
+							printf("jdu zpracovat projekci\n");
+							printAABB(SHARED_AABB);
+						}
 
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
-			data, *space, traverseSpaces[i].transformInv,
+			data, *space, space->transformInv,
 			devBlobTableSqrt);
 	}
 }
