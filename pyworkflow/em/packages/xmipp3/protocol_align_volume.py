@@ -24,7 +24,6 @@
 # *
 # **************************************************************************
 
-from os.path import exists
 import time
 
 import pyworkflow.protocol.params as params
@@ -176,8 +175,6 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         
     #--------------------------- STEPS functions --------------------------------------------
     def alignVolumeStep(self, refFn, inVolFn, outVolFn, maskArgs, alignArgs, volId):
-        if exists(outVolFn):
-            return
         args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
         args += maskArgs
         args += alignArgs

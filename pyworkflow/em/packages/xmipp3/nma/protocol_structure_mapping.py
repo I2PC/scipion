@@ -42,7 +42,6 @@ from pyworkflow.em.packages.xmipp3 import XmippMdRow
 from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base import XmippProtConvertToPseudoAtomsBase
 import xmipp
 from pyworkflow.em.packages.xmipp3.nma.protocol_nma_base import XmippProtNMABase, NMA_CUTOFF_REL
-from pyworkflow.em.packages.xmipp3.protocol_align_volume import XmippProtAlignVolume
 
 def mds(d, dimensions = 2):
     """
@@ -68,8 +67,7 @@ def mds(d, dimensions = 2):
     return (Y[:,0:dimensions], S)
 
 class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
-                                XmippProtNMABase, 
-                                XmippProtAlignVolume):
+                                XmippProtNMABase):
     """ 
     A quantitive analysis of dissimilarities (distances) among the EM maps
     that placing the entire set of density maps in to a common space of
@@ -124,7 +122,6 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         else:
             cutoffStr = 'Absolute %f'%self.rc.get()
 
-        maskArgs = ''
         alignArgs = self._getAlignArgs()
         self.alignmentAlgorithm = 1 # Local alignment
                                                 
@@ -159,7 +156,7 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
                         volId = volj.getObjId()
                         outVolFn = self._getPath('outputRigidAlignment_vol_%d_to_%d.vol' % (nVolj, nVoli))
                         stepId=self._insertFunctionStep('alignVolumeStep', refFn, inVolFn, outVolFn,
-                                                        maskArgs, alignArgs, volId, prerequisites=[stepQualify])
+                                                        volId, prerequisites=[stepQualify])
                     else:
                         outVolFn = inVolFn
                         stepId = stepQualify
@@ -172,6 +169,13 @@ class XmippProtStructureMapping(XmippProtConvertToPseudoAtomsBase,
         self._insertFunctionStep('managingOutputFilesStep')
                                         
     #--------------------------- STEPS functions --------------------------------------------
+    def alignVolumeStep(self, refFn, inVolFn, outVolFn, volId):
+        args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
+        args += " --local --rot 0 0 1 --tilt 0 0 1 --psi 0 0 1 -x 0 0 1 -y 0 0 1 -z 0 0 1 --dontScale" 
+        args += " --copyGeo %s" % (
+                self._getExtraPath('transformation-matrix_vol%06d.txt'%volId))        
+        self.runJob("xmipp_volume_align", args)
+
     def elasticAlignmentStep(self, nVoli, Ts, nVolj, fnAlignedVolj):
         fnVolOut = self._getExtraPath('DeformedVolume_Vol_%d_To_Vol_%d' % (nVolj, nVoli))
         if os.path.exists(fnVolOut+".pdb"):
