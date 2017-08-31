@@ -23,7 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
 import time
 
 import pyworkflow.protocol.params as params
@@ -174,7 +173,7 @@ class XmippProtAlignVolume(em.ProtAlignVolume):
         self._insertFunctionStep('createOutputStep', prerequisites=alignSteps)
         
     #--------------------------- STEPS functions --------------------------------------------
-    def alignVolumeStep(self, refFn, inVolFn, outVolFn, maskArgs, alignArgs, volId):
+    def alignVolumeStep(self, refFn, inVolFn, outVolFn, maskArgs, alignArgs, volId):        
         args = "--i1 %s --i2 %s --apply %s" % (refFn, inVolFn, outVolFn)
         args += maskArgs
         args += alignArgs
