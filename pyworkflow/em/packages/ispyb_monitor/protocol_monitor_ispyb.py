@@ -295,16 +295,17 @@ class MonitorISPyB(Monitor):
                 self.motion_corrections[micId].update({
                     'firstFrame': prot.alignFrame0.get(),
                     'lastFrame': prot.alignFrameN.get(),
+                    'micrographSnapshotFullPath': renderable_image,
                     'driftPlotFullPath': getattr(prot, '_getPlotGlobal', lambda x: None)(mic),
                     'totalMotion': totalMotion,
                     'averageMotionPerFrame': totalMotion/(prot.alignFrameN.get() - prot.alignFrame0.get()),
                     'micrographfullPath': micFn,
                     'comments': 'aligned',
                     'patchesUsed': (prot.patchX.get() + prot.patchY.get())/2,
-                    'xtal_snapshot1': renderable_image,
                     'programs': getattr(prot, '_label', lambda x: None),
                     'status': 1
                 })
+                self.dataCollection['xtal_snapshot1'] = renderable_image
                 print('%d has new align info' % micId)
                 updateIds.append(micId)
 
