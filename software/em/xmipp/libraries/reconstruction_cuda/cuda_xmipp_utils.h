@@ -16,7 +16,6 @@ void gpuCopyFromGPUToCPU(void* d_data, void* data, size_t Nbytes);
 int gridFromBlock(int tasks, int Nthreads);
 
 
-
 struct ioTime
 {
 	//AJ times for CPU processing
@@ -91,31 +90,6 @@ public:
 
 #define CONVERT2DIM3(d) (dim3((d).x,(d).y,(d).z))
 
-
-/*
-class GpuPlanFFT {
-public:
-	size_t Xdim, Ydim, Ndim, Zdim;
-	cufftHandle planF;
-
-	void createGpuPlanFFT();
-	void destroyGpuPlanFFT();
-
-	GpuPlanFFT()
-    {
-		Xdim=Ydim=Zdim=Ndim=0;
-		planF=NULL;
-    }
-
-	GpuPlanFFT(size_t _Xdim, size_t _Ydim=1, size_t _Zdim=1, size_t _Ndim=1)
-    {
-		Xdim=_Xdim;
-		Ydim=_Ydim;
-		Zdim=_Zdim;
-		Ndim=_Ndim;
-		createGpuPlanFFT();
-    }
-};*/
 
 template<typename T>
 class TransformMatrix
@@ -253,7 +227,6 @@ public:
 			return;
 		}
 
-
 		clear();
 
 		Xdim=_Xdim;
@@ -264,7 +237,6 @@ public:
         zyxdim=yxdim*_Zdim;
         nzyxdim=zyxdim*_Ndim;
         gpuMalloc((void**) &d_data,nzyxdim*sizeof(T));
-
 
     }
 
@@ -320,9 +292,6 @@ public:
 		gridSize.z=1;
 	}
 
-//	template <typename T1>
-//	void fftNew(GpuMultidimArrayAtGpu<T1> &fourierTransform, GpuPlanFFT plan);
-
 	template <typename T1>
 	void fft(GpuMultidimArrayAtGpu<T1> &fourierTransform, mycufftHandle &myhandle);
 
@@ -332,11 +301,6 @@ public:
 
 	void calculateMax(float *max_values, float *posX, float *posY, int fixPadding);
 
-	//void calculateMaxNew(float *max_values, float *posX, float *posY, int fixPadding);
-
 };
-
-
-
 
 #endif
