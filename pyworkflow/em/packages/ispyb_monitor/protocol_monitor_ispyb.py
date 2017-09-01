@@ -185,7 +185,7 @@ class MonitorISPyB(Monitor):
 
             ctfParams = self.ispybDb.get_ctf_params()
             self.safe_update(ctfParams, self.ctfs[itemId])
-            ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['id']
+            ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['motionCorrectionId']
             self.info("writing ctf: %s" + str(ctfParams))
             ispybId = self.ispybDb.update_ctf(ctfParams)
             self.ctfs[itemId]['ctfId'] = ispybId
@@ -287,10 +287,11 @@ class MonitorISPyB(Monitor):
                 self.motion_corrections[micId].update({
                     'firstFrame': prot.alignFrame0.get(),
                     'lastFrame': prot.alignFrameN.get(),
-                    'micrographFullPath': renderable_image,
+                    'micrographSnapshotFullPath': renderable_image,
+                    'micrographFullPath': micFn,
                     'driftPlotFullPath': getattr(prot, '_getPlotGlobal', lambda x: None)(mic),
                     'totalMotion': totalMotion,
-                    'averageMotionPerFrame': totalMotion / getattr(prot, '_getNumberOfFrames', lambda x: 1)(mic),
+                    'averageMotionPerFrame': abs(totalMotion / (prot.alignFrameN.get() - prot.alignFrame0.get())),
                     'comments': 'aligned',
                     'patchesUsed': (prot.patchX.get() + prot.patchY.get())/2,
                     'programs': getattr(prot, '_label', lambda x: None),
