@@ -40,6 +40,7 @@ from convert import *
 from pyworkflow.wizard import Wizard
 from viewer import *
 import transformations
+import pdb_handler
 
 PACKAGES_PATH = os.path.join(pw.HOME, 'em', 'packages')
 _emPackagesDict = None

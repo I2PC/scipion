@@ -30,10 +30,10 @@ import pyworkflow.protocol.constants as const
 from pyworkflow.protocol.params import PointerParam, IntParam, FloatParam, BooleanParam
 from pyworkflow.em import Volume, PdbFile
 from pyworkflow.em.packages.ccp4.refmac_template import template
+from pyworkflow.em.pdb_handler import fixCRYSrecordToPDBFile
 import os
 from convert import (adaptBinFileToCCP4, runCCP4Program)
 import stat
-
 
 class CCP4ProtRunRefmac(EMProtocol):
     """ generates files for volumes and FSCs to submit structures to EMDB
@@ -49,7 +49,7 @@ class CCP4ProtRunRefmac(EMProtocol):
     maskedMapFileName = "masked_fs"
 
     def __init__(self, **kwargs):
-        EMProtocol.__init__(self, **kwargs)
+            EMProtocol.__init__(self, **kwargs)
 
     #--------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -83,9 +83,9 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):
-        self._insertFunctionStep('createScriptFile')
-        self._insertFunctionStep('fixAdCRYSrecordToPDBFile')
-        self._insertFunctionStep('executeRefmac')
+        self._insertFunctionStep('fixCRYSrecordToPDBFileStep')
+        self._insertFunctionStep('createScriptFileStep')
+        self._insertFunctionStep('executeRefmacStep')
         self._insertFunctionStep('createRefmacOutputStep') #Llamada a Refmac y obtencion del output
         self._insertFunctionStep('writeFinalResultsTable') #Print output results
 
@@ -108,11 +108,12 @@ class CCP4ProtRunRefmac(EMProtocol):
 #                adaptBinFileToCCP4(inFileName, outFileName)
 
     # --------------------------- STEPS functions --------------------------------------------
-    def createScriptFile(self):
+    def createScriptFileStep(self):
         dict = {}
         dict['CCP4_HOME'] = os.environ['CCP4_HOME']
         dict['REFMAC_BIN'] = os.environ['REFMAC_BIN']
-        dict['PDBDIR'] =  os.path.dirname(self.inputStructure.get().getFileName())
+        #dict['PDBDIR'] =  os.path.dirname(self.inputStructure.get().getFileName())
+        dict['PDBDIR'] =  self.fixedPDBFileName
         pdfileName = os.path.splitext(os.path.basename(self.inputStructure.get().getFileName()))[0]
         dict['PDBFILE'] = pdfileName
 
@@ -145,53 +146,16 @@ class CCP4ProtRunRefmac(EMProtocol):
         f.close()
         os.chmod(self._getScriptFileName(), stat.S_IEXEC | stat.S_IREAD | stat.S_IWRITE)
 
-    def fixAdCRYSrecordToPDBFile(self):
-        print os.path.dirname(self.inputStructure.get().getFileName())
-        #read input pdb file
-        f = open(self.inputStructure.get().getFileName(), "r+")
-        data = f.read()
-        # search for CRYS RECORD
-        if data.startswith('CRYST'):
-            print TRUE
-            #break # if available do nothing
-        else:
-            print "The input PDB file does not contain CRYST record"
-            init_path = os.getcwd()
-            os.chdir('Runs/')
-            directory = ""
-            directories = os.listdir(os.getcwd())
-            for element in directories:
-                if element.endswith('_ProtImportPdb'):
-                    directory = element
-            os.chdir(directory+"/extra")
-            f2 = open(os.listdir(os.getcwd())[0], "r")
-            CRYST_line = ""
-            for line in f2:
-                if line.startswith('CRYST'):
-                    CRYST_line = line
-                    print line
-            f2.close()
-            os.chdir(init_path)
-            os.chdir(os.path.dirname(self.inputStructure.get().getFileName()))
-            print os.getcwd()
-            f3 = open("New_file.pdb", "w+")
-            f3.write(CRYST_line)
-            f3.write(data)
-            f3.close()
-            # else create a new PDB file
-        f.close()
 
-        #this new file should be the input
-        #
-        #
-        #
-        #Dudas de Marta: No recuerdo bien de donde se sacaba la linea CRYST, yo la he sacado del pdb inicial
-        #(aunque no funcionara cuando haya varios pdbs en el folder Runs). Por otro lado, CRYST/CRYST1.
-        #Cuando al final funcione como es debido, el "New_file.pdb" debera volver a ser:
-        #self.inputStructure.get().getFileName()
-        #
-        #
-    def executeRefmac(self):
+    def fixCRYSrecordToPDBFileStep(self):
+        self.fixedPDBFileName = fixCRYSrecordToPDBFile(self.inputStructure.get().getFileName(),
+                                     self._getTmpPath(),
+                                     x= self.inputVolume.get().getDim()[0],
+                                     y=self.inputVolume.get().getDim()[1],
+                                     z= self.inputVolume.get().getDim()[2],
+                                     alpha=90., beta=90.,gamma=90.
+                                                       )
+    def executeRefmacStep(self):
         # Generic is a env variable that coot uses as base dir for some
         # but not all files. "" force a trailing slash
         runCCP4Program(self._getScriptFileName(),"",{'GENERIC':self._getExtraPath("")})
@@ -229,6 +193,7 @@ class CCP4ProtRunRefmac(EMProtocol):
 
     def _getlogFileName(self):
         return self._getExtraPath(self.refineLogFileName)
+
 
 
 
