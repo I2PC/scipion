@@ -38,6 +38,15 @@ public:
     /// Name of the output metadata
     FileName fnOut;
 
+    /// Threshold for variance of variance
+    float threshold;
+
+    /// SelFile containing input data
+    MetaData SF;
+
+    /// Input image data
+    Image<double> Iref;
+
 public:
     /// Read input parameters
     void readParams();
@@ -50,7 +59,9 @@ public:
 
     /// Execute
     void run();
+
+    /// Function for recognizing non-noise particles
+    bool isParticle();
 };
 
 #endif
-

@@ -26,17 +26,11 @@
 #include "eliminate_nonparticles.h"
 
 #include <data/xmipp_funcs.h>
-#include <data/mask.h>
 #include <data/filters.h>
 #include <vector>
 #include <numeric>
-#include <set>
-#include <utility>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <string>
-#include <algorithm>
 
 
 // Read arguments ==========================================================
@@ -44,7 +38,7 @@ void ProgEliminateNonParticles::readParams()
 {
     fnIn = getParam("-i");
     fnOut = getParam("-o");
-    threshold = getIntParam("-t");
+    threshold = getDoubleParam("-t");
 }
 
 // Show ====================================================================
@@ -65,41 +59,14 @@ void ProgEliminateNonParticles::defineParams()
     addUsageLine("Eliminates samples containing only noise");
     addParamsLine("  -i <selfile>           : Selfile containing set of input particles");
     addParamsLine("  -o <selfile>           : Output selfile");
-    addParamsLine("  -t <int>               : Threshold used by algorithm");
+    addParamsLine("  -t <float>             : Threshold used by algorithm");
 }
 
-void ProgEliminateNonParticles::run()
+
+bool ProgEliminateNonParticles::isParticle()
 {
-    // Read the input metadata
-    SF.read(fnSel);
-    FileName fnImg, fnClass, fnTemp;
-    int itemId = 0, countItems = 0;
-    MDRow row;
-    MetaData MDsummary, MDclass;
-    std::vector<double> fv;
-    std::vector<Point> points;
-    std::vector<Cluster> clusters;
-    srand (time(NULL));
-
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
-    {
-        countItems++;
-    	SF.getValue(MDL_IMAGE, fnImg,__iter.objId);
-    	Iref.read(fnImg);
-    	Iref().setXmippOrigin();
-    	CorrelationAux aux;
-    	centerImageTranslationally(Iref(), aux);
-
-        if (isParticle(__iter.objId))
-        {
-            itemId++;
-            fv = feature_extraction();
-            Point p(countItems, fv);
-            points.push_back(p);
-        }
-    }
-    std::vector<double> vars;
-    double mean_all = 0.0;
+    double var_i_sum = 0.0;
+    double var_o_sum = 0.0;
     for (int yy = 1; yy <= 4; yy++)
     {
         int y_max = YSIZE(Iref()) / 4 * yy;
@@ -110,8 +77,9 @@ void ProgEliminateNonParticles::run()
             int x_min = XSIZE(Iref()) / 4 * (xx-1);
 
             double mean = 0.0;
-            double var = 0.0;
             int count = 0;
+            double var_i = 0.0;
+            double var_o = 0.0;
             for (int y = y_min; y < y_max; y++)
             {
                 for (int x = x_min; x < x_max; x++)
@@ -125,25 +93,46 @@ void ProgEliminateNonParticles::run()
             {
                 for (int x = x_min; x < x_max; x++)
                 {
-                    var += (DIRECT_A2D_ELEM(Iref(),y,x) - mean) * (DIRECT_A2D_ELEM(Iref(),y,x) - mean);
+                    if (yy > 1 && yy < 4 && xx > 1 && xx < 4)
+                        var_i += (DIRECT_A2D_ELEM(Iref(),y,x) - mean) * (DIRECT_A2D_ELEM(Iref(),y,x) - mean);
+                    else
+                        var_o += (DIRECT_A2D_ELEM(Iref(),y,x) - mean) * (DIRECT_A2D_ELEM(Iref(),y,x) - mean);
                 }
             }
-            vars.push_back(var / count);
-            mean_all += mean;
+            if (yy > 1 && yy < 4 && xx > 1 && xx < 4)
+                var_i_sum += var_i / count;
+            else
+                var_o_sum += var_o / count;
         }
     }
-
-    //double var_all = 0.0;
-    //FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Iref())
-    //    var_all += (DIRECT_A2D_ELEM(Iref(),i,j) - mean_all) * (DIRECT_A2D_ELEM(Iref(),i,j) - mean_all);
-    //var_all = var_all / (XSIZE(Iref()) * YSIZE(Iref()));
-
-    //double average = std::accumulate(vars.begin(), vars.end(), 0.0) / vars.size();
-    //double variance = 0.0;
-    //for (int i = 0; i < vars.size(); i++)
-	//    variance += (vars[i] - average) * (vars[i] - average);
-
-    std::cout << variance / vars.size() << std::endl;
-    if (variance / vars.size() < threshold) return true;
+    if ((var_i_sum / 4) / (var_o_sum / 12) > threshold) return true;
     else return false;
+}
+
+void ProgEliminateNonParticles::run()
+{
+    // Read the input metadata
+    SF.read(fnIn);
+    FileName fnImg;
+    int countItems = 0;
+    MDRow row;
+    MetaData MDclass;
+
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    {
+        countItems++;
+    	SF.getValue(MDL_IMAGE, fnImg, __iter.objId);
+    	Iref.read(fnImg);
+    	Iref().setXmippOrigin();
+    	CorrelationAux aux;
+    	centerImageTranslationally(Iref(), aux);
+    	denoiseTVFilter(Iref(), 50);
+
+        if (isParticle())
+        {
+            SF.getRow(row, countItems);
+            size_t recId = MDclass.addRow(row);
+            MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
+        }
+    }
 }
