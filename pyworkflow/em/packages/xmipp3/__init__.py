@@ -70,6 +70,9 @@ from protocol_break_symmetry import XmippProtAngBreakSymmetry
 from protocol_cl2d_align import XmippProtCL2DAlign
 from protocol_cl2d import XmippProtCL2D
 from protocol_cltomo import XmippProtCLTomo
+#AJ
+from protocol_gpu_correlation_cl2d import XmippProtGpuCrrCL2D
+#END
 # from protocol_ctf_defocus_group import XmippProtCTFDefocusGroup
 from protocol_compare_reprojections import XmippProtCompareReprojections
 from protocol_create_gallery import XmippProtCreateGallery
