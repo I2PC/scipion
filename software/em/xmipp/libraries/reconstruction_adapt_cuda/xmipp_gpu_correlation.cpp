@@ -264,7 +264,8 @@ void ProgGpuCorrelation::readParams()
     fn_ref = getParam("-i_ref");
     fn_exp = getParam("-i_exp");
     fn_out = getParam("-o");
-   	generate_out = checkParam("--out");
+   	generate_out = checkParam("--classify");
+   	fn_classes_out = getParam("--classify");
    	significance = checkParam("--significance");
    	if(significance){
    		alpha=getDoubleParam("--significance");
@@ -301,7 +302,7 @@ void ProgGpuCorrelation::defineParams()
 	addParamsLine("   -i_ref  <md_ref_file>                : Metadata file with input reference images");
 	addParamsLine("   -i_exp  <md_exp_file>                : Metadata file with input experimental images");
     addParamsLine("   -o      <md_out>                     : Output metadata file");
-	addParamsLine("   [--out]  						       : To generate the aligned output images");
+	addParamsLine("   [--classify <md_classes_out>]	       : To generate the aligned output images and write the associated metadata");
 	addParamsLine("   [--keep_best <N=2>]  			       : To keep N aligned images with the highest correlation");
 	addParamsLine("   [--significance <alpha=0.2>]  	   : To use significance with the indicated value");
 	addParamsLine("   [--odir <outputDir=\".\">]           : Output directory to save the aligned images");
@@ -499,7 +500,7 @@ void generate_metadata(MetaData SF, MetaData SFexp, FileName fnDir, FileName fn_
 
 void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t mdExpSize, size_t mdInSize,
 		MultidimArray<float> weights, MultidimArray<float> *matrixTransCpu, MultidimArray<float> *matrixTransCpu_mirror,
-		int maxShift){
+		int maxShift, FileName fn_classes_out){
 
 	double maxShift2 = maxShift*maxShift;
 	MultidimArray<float> out2(3,3);
@@ -546,8 +547,9 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		refSum.initZeros();
 
-		fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
-		fnStackOut=formatString("%s/%s_aligned.stk",fnDir.c_str(),fnRoot.c_str());
+		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
+		fnRoot=fn_classes_out.withoutExtension();
+		fnStackOut=formatString("%s/%s.stk",fnDir.c_str(),fnRoot.c_str());
 		if(fnStackOut.exists() && firstTime)
 			fnStackOut.deleteFile();
 
@@ -656,9 +658,9 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		SF.getRow(rowSF, iterSF->objId);
 		rowSF.getValue(MDL_IMAGE, fnImgNew);
-		fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
-		fnStackOut=formatString("%s/%s_aligned.stk",fnDir.c_str(),fnRoot.c_str());
-		fnStackMD=formatString("%s/%s_aligned.xmd",fnDir.c_str(),fnRoot.c_str());
+		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
+		fnRoot=fn_classes_out.withoutExtension();
+		fnStackMD=formatString("%s/%s.xmd",fnDir.c_str(),fnRoot.c_str());
 		fnClass.compose(i + 1, fnStackOut);
 
 		if(fnStackMD.exists() && firstTime)
@@ -1045,7 +1047,7 @@ void ProgGpuCorrelation::run()
 
 	if(generate_out)
 		generate_output_classes(SF, SFexp, fnDir, mdExpSize, mdInSize, weights, matrixTransCpu,
-				matrixTransCpu_mirror, maxShift);
+				matrixTransCpu_mirror, maxShift, fn_classes_out);
 
 	//Free memory in CPU
 	for(int i=0; i<mdExpSize; i++)
