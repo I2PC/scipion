@@ -154,15 +154,6 @@ class MonitorISPyB(Monitor):
 
         self.previousParams = dcParams
 
-        for itemId in set(updateImageIds):
-            imgParams = self.ispybDb.get_image_params()
-            imgParams['parentid'] = self.dcId
-            self.safe_update(imgParams, self.movies[itemId])
-            self.info("writing image: %s" + str(imgParams))
-            ispybId = self.ispybDb.update_image(imgParams)
-
-            self.movies[itemId]['id'] = ispybId
-
         for itemId in set(updateAlignIds):
             if 'autoProcProgramId' not in self.motion_corrections[itemId]:
                 program = self.ispybDb.get_program_params()
@@ -181,7 +172,7 @@ class MonitorISPyB(Monitor):
             motionParams['dataCollectionId'] = self.dcId
             self.info("writing motion correction: %s" + str(motionParams))
             ispybId = self.ispybDb.update_motion_correction(motionParams)
-            self.motion_corrections[itemId]['id'] = ispybId
+            self.motion_corrections[itemId]['motionCorrectionId'] = ispybId
 
         for itemId in set(updateCTFIds):
             if 'autoProcProgramId' not in self.ctfs[itemId]:
@@ -197,7 +188,7 @@ class MonitorISPyB(Monitor):
             ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['id']
             self.info("writing ctf: %s" + str(ctfParams))
             ispybId = self.ispybDb.update_ctf(ctfParams)
-            self.ctfs[itemId]['id'] = ispybId
+            self.ctfs[itemId]['ctfId'] = ispybId
 
         if all(finished):
             self.info("All finished, closing ISPyBDb connection")
@@ -296,11 +287,10 @@ class MonitorISPyB(Monitor):
                 self.motion_corrections[micId].update({
                     'firstFrame': prot.alignFrame0.get(),
                     'lastFrame': prot.alignFrameN.get(),
-                    'micrographSnapshotFullPath': renderable_image,
+                    'micrographFullPath': renderable_image,
                     'driftPlotFullPath': getattr(prot, '_getPlotGlobal', lambda x: None)(mic),
                     'totalMotion': totalMotion,
-                    'averageMotionPerFrame': totalMotion/(prot.alignFrameN.get() - prot.alignFrame0.get()),
-                    'micrographfullPath': micFn,
+                    'averageMotionPerFrame': totalMotion / getattr(prot, '_getNumberOfFrames', lambda x: 1)(mic),
                     'comments': 'aligned',
                     'patchesUsed': (prot.patchX.get() + prot.patchY.get())/2,
                     'programs': getattr(prot, '_label', lambda x: None),
@@ -317,7 +307,7 @@ class MonitorISPyB(Monitor):
                 if 'min_defocus' in self.movies[micId]:  # skip if we already have ctf info
                     continue
                 micFn = ctf.getMicrograph().getFileName()
-                psdName = pwutils.replaceBaseExt(micFn, 'psd.png')
+                psdName = pwutils.replaceBaseExt(micFn, 'psd.jpeg')
                 psdFn = ctf.getPsdFile()
                 psdPng = self.imageGenerator.generate_image(psdFn, psdName)
 
@@ -328,8 +318,7 @@ class MonitorISPyB(Monitor):
                     'estimatedDefocus': (ctf.getDefocusV()**2 + ctf.getDefocusU()**2)**0.5,
                     'astigmatism': ctf.getDefocusRatio(),
                     'astigmatismAngle': ctf.getDefocusAngle(),
-                    'fftPlotFullPath': ctf.getMicrograph(),
-                    'fftPlotFullPath2': ctf.getPsdFile(),
+                    'fftTheoreticalFullPath': psdPng,
                     'programs': getattr(prot, '_label', lambda x: None),
                     'status': 1
                 })
@@ -349,7 +338,7 @@ class ImageGenerator:
 
     def generate_image(self, input_file, outputName=None):
         output_root = join(self.images_path, basename(outputName))
-        output_file = output_root + '.png'
+        output_file = output_root + '.jpg'
 
         print "Generating image: ", output_file
 
@@ -360,11 +349,11 @@ class ImageGenerator:
 
             pwutils.makeFilePath(output_file)
             if self.bigThumb:
-                pimg.save(output_file, "PNG")
+                pimg.save(output_file, "JPEG")
 
             if self.smallThumb:
                 pimg.thumbnail((self.smallThumb, self.smallThumb), Image.ANTIALIAS)
-                pimg.save(output_root + 't.png', "PNG")
+                pimg.save(output_root + 't.jpg', "JPEG")
 
         return output_file
 
