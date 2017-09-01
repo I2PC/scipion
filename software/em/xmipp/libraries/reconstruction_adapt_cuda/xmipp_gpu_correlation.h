@@ -31,7 +31,7 @@ class ProgGpuCorrelation: public XmippProgram
 {
 private:
     //Input file
-	FileName fn_ref, fn_exp, fn_out, fnDir;
+	FileName fn_ref, fn_exp, fn_out, fnDir, fn_classes_out;
 
 	bool generate_out;
 
