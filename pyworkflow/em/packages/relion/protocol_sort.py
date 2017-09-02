@@ -258,9 +258,9 @@ class ProtRelionSortParticles(ProtParticles):
         if not hasattr(self, 'outputParticles'):
             summary.append("Output particles not ready yet.")
         else:
-            summary.append("Input %s particles: %s were sorted by Z-score" %
+            summary.append("Input %s particles were sorted by Z-score: %s" %
                            (self.inputSet.get().getSize(),
-                            self.inputSet.get().getNameId()))
+                            self.getObjectTag('outputParticles')))
         return summary
     
     #--------------------------- UTILS functions -------------------------------
