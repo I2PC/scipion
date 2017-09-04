@@ -171,8 +171,9 @@ class MonitorISPyB(Monitor):
             self.safe_update(motionParams, self.motion_corrections[itemId])
             motionParams['dataCollectionId'] = self.dcId
             self.info("writing motion correction: %s" + str(motionParams))
-            ispybId = self.ispybDb.update_motion_correction(motionParams)
-            self.motion_corrections[itemId]['motionCorrectionId'] = ispybId
+            motionCorrectionId = self.ispybDb.update_motion_correction(motionParams)
+            self.info("wrote motion correction: %s" + str(motionCorrectionId))
+            self.motion_corrections[itemId]['motionCorrectionId'] = motionCorrectionId
 
         for itemId in set(updateCTFIds):
             if 'autoProcProgramId' not in self.ctfs[itemId]:
@@ -187,8 +188,9 @@ class MonitorISPyB(Monitor):
             self.safe_update(ctfParams, self.ctfs[itemId])
             ctfParams['motionCorrectionId'] = self.motion_corrections[itemId]['motionCorrectionId']
             self.info("writing ctf: %s" + str(ctfParams))
-            ispybId = self.ispybDb.update_ctf(ctfParams)
-            self.ctfs[itemId]['ctfId'] = ispybId
+            ctfId = self.ispybDb.update_ctf(ctfParams)
+            self.info("wrote ctf: %s" + str(ctfId))
+            self.ctfs[itemId]['ctfId'] = ctfId
 
         if all(finished):
             self.info("All finished, closing ISPyBDb connection")
@@ -304,8 +306,8 @@ class MonitorISPyB(Monitor):
     def update_ctf_params(self, prot, updateIds):
         for ctf in self.iter_updated_set(prot.outputCTF):
             micId = ctf.getObjId()
-            if self.movies.get(micId, None) is not None:
-                if 'min_defocus' in self.movies[micId]:  # skip if we already have ctf info
+            if self.ctfs.get(micId, None) is not None:
+                if 'estimatedDefocus' in self.ctfs[micId]:  # skip if we already have ctf info
                     continue
                 micFn = ctf.getMicrograph().getFileName()
                 psdName = pwutils.replaceBaseExt(micFn, 'psd.jpeg')
