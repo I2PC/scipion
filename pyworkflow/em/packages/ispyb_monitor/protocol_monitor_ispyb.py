@@ -275,8 +275,9 @@ class MonitorISPyB(Monitor):
         for mic in self.iter_updated_set(prot.outputMicrographs):
             micId = mic.getObjId()
             if self.movies.get(micId, None) is not None:
-                if 'comments' in self.movies[micId]:  # skip if we already have align info
+                if self.motion_corrections[micId] is not None and 'comments' in self.motion_corrections[micId]:  # skip if we already have align info
                     continue
+
                 micFn = mic.getFileName()
                 renderable_image = self.imageGenerator.generate_image(micFn, micFn)
 
@@ -306,8 +307,8 @@ class MonitorISPyB(Monitor):
     def update_ctf_params(self, prot, updateIds):
         for ctf in self.iter_updated_set(prot.outputCTF):
             micId = ctf.getObjId()
-            if self.ctfs.get(micId, None) is not None:
-                if 'estimatedDefocus' in self.ctfs[micId]:  # skip if we already have ctf info
+             if self.motion_corrections.get(micId, None) is not None:
+                if self.ctfs[micId] is not None and 'status' in self.ctfs[micId]:  # skip if we already have align info
                     continue
                 micFn = ctf.getMicrograph().getFileName()
                 psdName = pwutils.replaceBaseExt(micFn, 'psd.jpeg')
