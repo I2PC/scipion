@@ -100,11 +100,19 @@ bool ProgEliminateNonParticles::isParticle()
                 }
             }
             if (yy > 1 && yy < 4 && xx > 1 && xx < 4)
+            {
                 var_i_sum += var_i / count;
+                features.push_back(var_i / count);
+            }
             else
+            {
                 var_o_sum += var_o / count;
+                features.push_back(var_o / count);
+            }
         }
     }
+
+    features.push_back((var_i_sum / 4) / (var_o_sum / 12));
     if ((var_i_sum / 4) / (var_o_sum / 12) > threshold) return true;
     else return false;
 }
@@ -116,7 +124,9 @@ void ProgEliminateNonParticles::run()
     FileName fnImg;
     int countItems = 0;
     MDRow row;
-    MetaData MDclass;
+    MetaData MDclass, MDclass_elim;
+    size_t extraPath = fnOut.find_last_of("/");
+    FileName fnElim = fnOut.substr(0,extraPath+1) + "eliminated.xmd";
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -127,12 +137,20 @@ void ProgEliminateNonParticles::run()
     	CorrelationAux aux;
     	centerImageTranslationally(Iref(), aux);
     	denoiseTVFilter(Iref(), 50);
-
         if (isParticle())
         {
             SF.getRow(row, countItems);
             size_t recId = MDclass.addRow(row);
+            MDclass.setValue(MDL_SCORE_BY_VARIANCE, features, recId);
             MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
         }
+        else
+        {
+            SF.getRow(row, countItems);
+            size_t recId = MDclass_elim.addRow(row);
+            MDclass_elim.setValue(MDL_SCORE_BY_VARIANCE, features, recId);
+            MDclass_elim.write(formatString("@%s", fnElim.c_str()), MD_APPEND);
+        }
+        features.clear();
     }
 }

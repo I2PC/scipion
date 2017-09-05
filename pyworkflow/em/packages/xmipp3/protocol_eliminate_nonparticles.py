@@ -144,14 +144,9 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
             return
 
         outSet = self._loadOutputSet(SetOfParticles, 'particles.sqlite')
-
-        # for part in newDone:
-        #     partOut = em.data.Particle()
-        #     partOut.setObjId(part.getObjId())
-        #     partOut.setFileName(self._getOutputParticle(part))
-        #     outSet.append(partOut)
-        #
         self._updateOutputSet('outputParticles', outSet, streamMode)
+        self._updateOutputSet('eliminatedParticles', outSet, streamMode)
+
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -184,12 +179,21 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
         else:
             # Here the defineOutputs function will call the write() method
             particlesSet = self._createSetOfParticles()
-            readSetOfParticles(self._getExtraPath('output.xmd'), particlesSet)
-            particlesSet.copyInfo(self.inputParticles.get())
+            if outputName == 'outputParticles':
+                readSetOfParticles(self._getExtraPath('output.xmd'),
+                                   particlesSet)
+                particlesSet.copyInfo(self.inputParticles.get())
+                self._defineOutputs(outputParticles=particlesSet)
+                self._defineSourceRelation(self.inputParticles,
+                                           self.outputParticles)
+            else:
+                readSetOfParticles(self._getExtraPath('eliminated.xmd'),
+                                   particlesSet)
+                particlesSet.copyInfo(self.inputParticles.get())
+                self._defineOutputs(eliminatedParticles=particlesSet)
+                self._defineSourceRelation(self.outputParticles,
+                                           self.eliminatedParticles)
 
-            outputSet = {'outputParticles': particlesSet}
-            self._defineOutputs(**outputSet)
-            self._defineSourceRelation(self.inputParticles, particlesSet)
 
     def _insertStepsForParticles(self, inputParts, outputParts):
         classifyStepId = self._insertFunctionStep('eliminationStep',

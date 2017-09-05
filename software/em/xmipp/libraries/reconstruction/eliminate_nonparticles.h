@@ -27,7 +27,7 @@
 
 #include <data/metadata.h>
 #include <data/xmipp_program.h>
-
+#include <vector>
 
 class ProgEliminateNonParticles: public XmippProgram
 {
@@ -46,6 +46,9 @@ public:
 
     /// Input image data
     Image<double> Iref;
+
+    /// Input image data
+    std::vector<double> features;
 
 public:
     /// Read input parameters
