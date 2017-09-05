@@ -224,7 +224,7 @@ def _submit(hostConfig, submitDict, cwd=None):
         # "qsub %(JOB_SCRIPT)s"
         command = hostConfig.getSubmitCommand() % submitDict
         gcmd = greenStr(command)
-        print "** Submiting to queue: '%s'" % gcmd
+        print("** Submiting to queue: '%s'" % gcmd)
 
         p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
         out = p.communicate()[0]
