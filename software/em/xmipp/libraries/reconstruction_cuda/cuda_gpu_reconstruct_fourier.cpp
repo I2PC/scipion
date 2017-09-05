@@ -6,9 +6,9 @@
 #include "cuda_gpu_reconstruct_fourier.h"
 
 #define BLOCK_DIM 16
-#define USE_SHARED_MEM 0
+#define SHARED_BLOB_TABLE 0
 
-#if USE_SHARED_MEM
+#if SHARED_BLOB_TABLE
 #define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with reconstruct_fourier_gpu.h
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
@@ -555,7 +555,7 @@ void processVoxelBlob(
 				float wCTF = CTF[index2D];
 				float wModulator = modulator[index2D];
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
-#if USE_SHARED_MEM
+#if SHARED_BLOB_TABLE
 				float wBlob = BLOB_TABLE[aux];
 #else
 				float wBlob = blobTableSqrt[aux];
@@ -580,7 +580,7 @@ void processVoxelBlob(
 				int index2D = (i - SHARED_AABB[0].y) * imgCacheDim + (j-SHARED_AABB[0].x);
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
-#if USE_SHARED_MEM
+#if SHARED_BLOB_TABLE
 				float wBlob = BLOB_TABLE[aux];
 #else
 				float wBlob = blobTableSqrt[aux];
@@ -973,7 +973,7 @@ void processBufferKernel(
 		TraverseSpace* traverseSpaces, int noOfTransforms,
 		float* devBlobTableSqrt,
 		int imgCacheDim) {
-#if USE_SHARED_MEM
+#if SHARED_BLOB_TABLE
 	if ( ! cUseFast) {
 		int id = threadIdx.y*blockDim.x + threadIdx.x;
 		int blockSize = blockDim.x * blockDim.y;
