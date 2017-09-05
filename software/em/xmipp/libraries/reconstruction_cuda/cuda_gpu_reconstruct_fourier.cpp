@@ -7,17 +7,17 @@
 
 #define BLOCK_DIM 16
 #define SHARED_BLOB_TABLE 0
+#define SHARED_IMG 0
 
 #if SHARED_BLOB_TABLE
 #define BLOB_TABLE_SIZE_SQRT 10000 // keep consistent with reconstruct_fourier_gpu.h
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
-//#define SHARED_MEM_SIZE (int) (2.449489743*(BLOCK_DIM + 2*1.9) + 1) // FIXME block size must be settable. +1 is 'ceil' .. (block+2*blob)*sqrt(2)*sqrt(3)
-//#define SHARED_MEM_SIZE_SQR (SHARED_MEM_SIZE*SHARED_MEM_SIZE)
-
+#if SHARED_IMG
 __shared__ Point3D<float> SHARED_AABB[2];
-extern __shared__ float2 INPUT_IMG[];
+extern __shared__ float2 IMG[];
+#endif
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
@@ -499,7 +499,7 @@ void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		const ProjectionDataGPU* data, bool print, int UUID,int imgCacheDim) {
+		const ProjectionDataGPU* data,int imgCacheDim) {
 	Point3D<float> imgPos;
 	int xSize = data->xSize;
 	int ySize = data->ySize;
@@ -533,7 +533,9 @@ void processVoxelBlob(
 	int index3D = z * (cMaxVolumeIndexYZ+1) * (cMaxVolumeIndexX+1) + y * (cMaxVolumeIndexX+1) + x;
 	float volReal, volImag, w;
 	volReal = volImag = w = 0.f;
+#if !SHARED_IMG
 	const float* __restrict__ img = data->img;
+#endif
 	const float* __restrict__ CTF = data->CTF;
 	const float* __restrict__ modulator = data->modulator;
 	float dataWeight = data->weight;
@@ -550,7 +552,11 @@ void processVoxelBlob(
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
+#if SHARED_IMG
+				int index2D = (i - SHARED_AABB[0].y) * imgCacheDim + (j-SHARED_AABB[0].x); // position in img - offset of the AABB
+#else
 				int index2D = i * xSize + j;
+#endif
 
 				float wCTF = CTF[index2D];
 				float wModulator = modulator[index2D];
@@ -562,8 +568,13 @@ void processVoxelBlob(
 #endif
 				float weight = wBlob * wModulator * dataWeight;
 				w += weight;
+#if SHARED_IMG
+				volReal += IMG[index2D].x * weight * wCTF;
+				volImag += IMG[index2D].y * weight * wCTF;
+#else
 				volReal += img[2*index2D] * weight * wCTF;
 				volImag += img[2*index2D + 1] * weight * wCTF;
+#endif
 			}
 		}
 	} else {
@@ -577,7 +588,11 @@ void processVoxelBlob(
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
-				int index2D = (i - SHARED_AABB[0].y) * imgCacheDim + (j-SHARED_AABB[0].x);
+#if SHARED_IMG
+				int index2D = (i - SHARED_AABB[0].y) * imgCacheDim + (j-SHARED_AABB[0].x); // position in img - offset of the AABB
+#else
+				int index2D = i * xSize + j;
+#endif
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 #if SHARED_BLOB_TABLE
@@ -588,15 +603,19 @@ void processVoxelBlob(
 
 				float weight = wBlob * dataWeight;
 				w += weight;
-				volReal += INPUT_IMG[index2D].x * weight;
-				volImag += INPUT_IMG[index2D].y * weight;
+#if SHARED_IMG
+				volReal += IMG[index2D].x * weight;
+				volImag += IMG[index2D].y * weight;
+#else
+				volReal += img[2*index2D] * weight;
+				volImag += img[2*index2D + 1] * weight;
+#endif
 			}
 		}
 	}
 	tempVolumeGPU[2*index3D] += volReal;
 	tempVolumeGPU[2*index3D + 1] += volImag;
 	tempWeightsGPU[index3D] += w;
-
 }
 
 
@@ -664,8 +683,7 @@ void mapToImage(Point3D<float>* box, int xSize, int ySize, const float transform
 }
 
 __device__
-void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionData) {
-//	printf("img size: %d %d\n", projectionData->xSize, projectionData->ySize);
+void calculateAABB(const TraverseSpace& tSpace, const ProjectionDataGPU* projectionData, Point3D<float>* dest) {
 	Point3D<float> box[8];
 	if (tSpace.XY == tSpace.dir) { // iterate XY plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
@@ -674,32 +692,17 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getZ(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getZ(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getZ(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getZ(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getZ(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getZ(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getZ(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getZ(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getZ(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getZ(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getZ(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getZ(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getZ(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getZ(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
-
-		mapToImage(box, projectionData->xSize, projectionData->ySize, tSpace.transformInv);
-
-		computeAABB(SHARED_AABB, box);
-
-//		if (blockIdx.x == 2 && blockIdx.y == 6) {
-//			printf("blocksize: %f %f\n", AABB[1].x - AABB[0].x, AABB[1].y - AABB[0].y);
-//		printf("blockid: %d %d\n", blockIdx.x, blockIdx.y);
-//			printAABB(AABB);
-//		}
-
-//		printAABB(AABB);
-//		printf ("projekce %d pouziva %d\n", tSpace.projectionIndex, tSpace.UUID );
-
-
+		getZ(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getZ(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
@@ -707,21 +710,17 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getY(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getY(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getY(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getY(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getY(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getY(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getY(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getY(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getY(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getY(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getY(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getY(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getY(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getY(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
-
-		mapToImage(box, projectionData->xSize, projectionData->ySize, tSpace.transformInv);
-
-		computeAABB(SHARED_AABB, box);
+		getY(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getY(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 	} else { // iterate YZ plane
 		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
 		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
@@ -729,43 +728,20 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
-		getX(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getX(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getX(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getX(box[4].x, box[4].y, box[4].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getX(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getX(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getX(box[3].x, box[3].y, box[3].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getX(box[7].x, box[7].y, box[7].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getX(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getX(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
+		getX(box[2].x, box[2].y, box[2].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getX(box[6].x, box[6].y, box[6].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 
-		getX(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
-		getX(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
-
-//		if (tSpace.UUID == 1058) {
-//			computeAABB(SHARED_AABB, box);
-////			printAABB(SHARED_AABB);
-//			return;
-//		}
-
-		mapToImage(box, projectionData->xSize, projectionData->ySize, tSpace.transformInv);
-
-		computeAABB(SHARED_AABB, box);
-
-		//		if (blockIdx.x == 2 && blockIdx.y == 6) {
-		//		printf("blockid: %d %d\n", blockIdx.x, blockIdx.y);
-		//			printAABB(AABB);
-		//		}
-
-		//		printAABB(AABB);
-		//		printf ("projekce %d pouziva %d\n", tSpace.projectionIndex, tSpace.UUID );
-
+		getX(box[1].x, box[1].y, box[1].z, tSpace.u, tSpace.v, tSpace.bottomOrigin);
+		getX(box[5].x, box[5].y, box[5].z, tSpace.u, tSpace.v, tSpace.topOrigin);
 	}
-
-//	if ((int)SHARED_AABB[0].x == 101
-//			&& (int)SHARED_AABB[0].y == 106
-//			&& (int)SHARED_AABB[0].z == -2) {
-//		printf("mam te: %d %d blok %d %d space %d\n", threadIdx.x,threadIdx.y, blockIdx.x, blockIdx.y, tSpace.UUID);
-//	}
+	mapToImage(box, projectionData->xSize, projectionData->ySize, tSpace.transformInv);
+	computeAABB(dest, box);
 }
 
 __device__
@@ -825,9 +801,6 @@ void processProjection(
 						processVoxel(tempVolumeGPU, tempWeightsGPU, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData);
 					}
 				} else {
-
-					bool print = (tSpace.UUID == 1295);// && (blockIdx.x == 2) && (blockIdx.y == 6) && (threadIdx.y == 0 || threadIdx.y == 15);
-
 					float z1, z2;
 					bool hit1 = getZ(idx, idy, z1, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
 					bool hit2 = getZ(idx, idy, z2, tSpace.u, tSpace.v, tSpace.topOrigin); // upper plane
@@ -837,7 +810,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, print, tSpace.UUID, imgCacheDim );
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, imgCacheDim );
 						}
 					}
 				}
@@ -862,7 +835,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false, tSpace.UUID, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, imgCacheDim);
 						}
 					}
 				}
@@ -887,83 +860,50 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false,tSpace.UUID, imgCacheDim);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, imgCacheDim);
 						}
 					}
 				}
 			}
 		}
 	}
-
-//	if (projectionData->imgIndex == 12 || projectionData->imgIndex == 56) {
-//		printf("\n----------------\nimg %d:", projectionData->imgIndex);
-//		print(cuboid);
-//		printf("------------------\n");
-//		printAABB(AABB);
-//	}
-
 }
 
 __device__
-bool blockHasWork(int imgXSize, int imgYSize) {
-	bool hitX = (SHARED_AABB[0].x < imgXSize) && (SHARED_AABB[1].x >= 0);
-	bool hitY = (SHARED_AABB[0].y < imgYSize) && (SHARED_AABB[1].y >= 0);
-	return hitX && hitY;
+bool blockHasWork(Point3D<float>* AABB, int imgXSize, int imgYSize) {
+	return (AABB[0].x < imgXSize)
+			&& (AABB[1].x >= 0)
+			&& (AABB[0].y < imgYSize)
+			&& (AABB[1].y >= 0);
 }
 
 __device__
-void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag) {
-	int imgXindex = tXindex + SHARED_AABB[0].x;
-	int imgYindex = tYindex + SHARED_AABB[0].y;
+void getImgData(Point3D<float>* AABB, int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag) {
+	int imgXindex = tXindex + AABB[0].x;
+	int imgYindex = tYindex + AABB[0].y;
 	if ((imgXindex >=0)
 			&& (imgXindex < data->xSize)
 			&& (imgYindex >=0)
 			&& (imgYindex < data->ySize))
 	{
-		int index = imgYindex * data->xSize + imgXindex;
+		int index = imgYindex * data->xSize + imgXindex; // copy data from image
 		vReal = data->img[2*index];
 		vImag = data->img[2*index + 1];
 
 	} else {
-		vReal = vImag = 0.f;
+		vReal = vImag = 0.f; // out of image bound, so return zero
 	}
 }
 
 
 __device__
-void copyData(ProjectionDataGPU* data, int imgCacheDim) {
-	float xAABBSize = SHARED_AABB[1].x - SHARED_AABB[0].x + 1;
-	float yAABBSize = SHARED_AABB[1].y - SHARED_AABB[0].y + 1;
-	int xLoops = ceilf(xAABBSize / blockDim.x);
-	int yLoops = ceilf(yAABBSize / blockDim.y);
-//					if (threadIdx.x == 0 && threadIdx.y == 0 && blockIdx.x == 3 && blockIdx.y == 1 && UUID == 16751) {
-//						printAABB(SHARED_AABB);
-//					}
-
+void copyImgToCache(float2* dest, Point3D<float>* AABB, ProjectionDataGPU* data, int imgCacheDim) {
 	for (int y = threadIdx.y; y < imgCacheDim; y += blockDim.y) {
-//		int tYindex = threadIdx.y + i*blockDim.y;
-//		if (tYindex < SHARED_MEM_SIZE) {
-			for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
-//				int tXindex = threadIdx.x + j*blockDim.x;
-//				if (tXindex < SHARED_MEM_SIZE) {
-					int memIndex = y * imgCacheDim + x;
-					float vReal, vImag;
-					getImgData(x, y, data, vReal, vImag);
-
-
-					INPUT_IMG[memIndex].x = vReal;
-					INPUT_IMG[memIndex].y = vImag;
-//				}
-			}
-//		}
+		for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
+			int memIndex = y * imgCacheDim + x;
+			getImgData(AABB, x, y, data, dest[memIndex].x, dest[memIndex].y);
+		}
 	}
-//
-//
-//	int id = threadIdx.y*blockDim.x + threadIdx.x;
-//	int blockSize = blockDim.x * blockDim.y;
-//	for (int i = id; i < BLOB_TABLE_SIZE_SQRT; i+= blockSize) {
-//		BLOB_TABLE[i] = devBlobTableSqrt[i];
-//	}
 }
 
 __global__
@@ -989,52 +929,27 @@ void processBufferKernel(
 		TraverseSpace* space = &traverseSpaces[i];
 		ProjectionDataGPU* data = &buffer[space->projectionIndex];
 
-		if (threadIdx.x == 0 && threadIdx.y == 0 && data->imgIndex == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
-								printf("velikost %d \n", imgCacheDim);
-		//							threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
-							}
-
-
-
+#if SHARED_IMG
 		if ( ! cUseFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
-				calculateAABB(*space, data);
-//					printAABB(SHARED_AABB);
-//					printf("vetev %d\n", space->dir);
-//				}
+				calculateAABB(*space, data, SHARED_AABB); // first thread calculates which part of the image should be shared
 			}
 			__syncthreads();
-			if (blockHasWork(data->xSize, data->ySize)) {
-//					if (space->UUID == 3916 && threadIdx.x == 0 && threadIdx.y == 0) {
-//						printAABB(SHARED_AABB);
-//						printf("vetev %d\n", space->dir);
-//					}
-				copyData(data, imgCacheDim);
-//				if (blockIdx.x ==11 && blockIdx.y == 12 && space->UUID == 1058 && threadIdx.x == 0 && threadIdx.y == 0) {
-//					printf("nakopiroval jsem data\n");
-//					printAABB(SHARED_AABB);
-//				}
+			if (blockHasWork(SHARED_AABB, data->xSize, data->ySize)) {
+				copyImgToCache(IMG, SHARED_AABB, data, imgCacheDim); // all threads copy image data to shared memory
 				__syncthreads();
 			} else {
-//				__syncthreads();
 				continue; // whole block can exit
 			}
-
-
 		}
+#endif
 
-//		if (blockIdx.x ==11 && blockIdx.y == 12 && space->UUID == 1058 && threadIdx.x == 0 && threadIdx.y == 0) {
-//							printf("jdu zpracovat projekci\n");
-//							printAABB(SHARED_AABB);
-//						}
-//		__syncthreads();
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
 			data, *space, space->transformInv,
 			devBlobTableSqrt,
 			imgCacheDim);
-
-		__syncthreads();
+		__syncthreads(); // sync threads to avoid write after read problems
 	}
 }
 
@@ -1101,9 +1016,7 @@ void processBufferGPU(float* tempVolumeGPU,
 
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
-
 	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
-	printf ("imgCacheDim: %d\n", imgCacheDim);
 
 	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
