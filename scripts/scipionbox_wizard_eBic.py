@@ -73,18 +73,18 @@ SCIPION_WORKFLOW_TEMPLATE = 'SCIPION_WORKFLOW_TEMPLATE'
 JSON_DESTINATION = 'JSON_DESTINATION'
 
 # Variables to enter and write in the template
-DOSE_INITIAL = 'doseInitial'
 DOSE_PER_FRAME = 'dosePerFrame'
 MAGNIFICATION = 'magnification'
+PHASEPLATE = 'doPhShEst'
 
-vars2Use = [DOSE_INITIAL, DOSE_PER_FRAME, MAGNIFICATION]
+vars2Use = [DOSE_PER_FRAME, MAGNIFICATION, PHASEPLATE]
 
 # Define some string constants
 LABELS = {
     PROJECT_NAME: "Session id",
-    DOSE_INITIAL: "Initial Dose",
     DOSE_PER_FRAME: "Dose per frame",
     MAGNIFICATION: "Magnification",
+    PHASEPLATE: "Use phase shift estimation"
 }
 
 MICROSCOPE = "Microscope"
@@ -208,6 +208,16 @@ class BoxWizardView(tk.Frame):
             self.vars[key] = var
             widget.grid(row=r, column=1, sticky='nw', padx=(5, 10), pady=2)
 
+        def _addCheckPair(key, r, lf, col=1):
+            t = LABELS.get(key, key)
+            var = tk.IntVar()
+
+            cb = tk.Checkbutton(lf, text=t, font=self.bigFont, bg='white',
+                                variable=var)
+            self.vars[key] = var
+            self.checkvars.append(key)
+            cb.grid(row=r, column=col, padx=5, sticky='nw')
+
         def _addComboPair(key, r, lf, traceCallback=None):
             t = LABELS.get(key, key)
             label = tk.Label(lf, text=t, bg='white',
@@ -240,9 +250,9 @@ class BoxWizardView(tk.Frame):
         labelFrame2.grid(row=1, column=0, sticky='nw', padx=20, pady=10)
         labelFrame2.columnconfigure(0, minsize=120)
 
-        _addPair(DOSE_INITIAL, 1, labelFrame2)
         _addPair(DOSE_PER_FRAME, 2, labelFrame2)
         _addPair(MAGNIFICATION, 3, labelFrame2)
+        _addCheckPair(PHASEPLATE, 4, labelFrame2)
 
         frame.columnconfigure(0, weight=1)
 
@@ -370,9 +380,9 @@ class BoxWizardView(tk.Frame):
         for key in self.checkvars:
             self.vars[key].set(int(self._getConfValue(key, 0)))
 
-        self._setValue(DOSE_INITIAL, self._getConfValue(DOSE_INITIAL))
         self._setValue(DOSE_PER_FRAME, self._getConfValue(DOSE_PER_FRAME))
         self._setValue(MAGNIFICATION, self._getConfValue(MAGNIFICATION))
+        self._setValue(PHASEPLATE, self._getConfValue(PHASEPLATE))
 
         self._onInputChange()
 
