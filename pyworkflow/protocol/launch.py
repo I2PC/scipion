@@ -229,7 +229,7 @@ def _submit(hostConfig, submitDict, cwd=None):
         p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
         out = p.communicate()[0]
         # Try to parse the result of qsub, searching for a number (jobId)
-        s = re.search('(\d{4,})', out)
+        s = re.search('(\d+)', out)
         if s:
             job = int(s.group(0))
             print "launched job with id %s" % job
