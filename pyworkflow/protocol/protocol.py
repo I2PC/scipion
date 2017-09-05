@@ -1783,11 +1783,14 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      numberOfMpi=protocol.numberOfMpi.get(),
                                      hostConfig=hostConfig)
             sys.exit(retcode)
-        elif nThreads > 1 and not protocol.useQueueForJobs():
-            executor = ThreadStepExecutor(hostConfig, nThreads-1)
+        elif nThreads > 1:
+            if protocol.useQueueForJobs():
+                executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1)
+            else:
+                executor = ThreadStepExecutor(hostConfig, nThreads-1)
 
     if executor is None and protocol.useQueueForJobs():
-        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1)
+        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1)
 
     if executor is None:
         executor = StepExecutor(hostConfig)
