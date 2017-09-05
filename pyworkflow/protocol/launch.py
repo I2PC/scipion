@@ -229,7 +229,7 @@ def _submit(hostConfig, submitDict, cwd=None):
         p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
         out = p.communicate()[0]
         # Try to parse the result of qsub, searching for a number (jobId)
-        s = re.search('(\d+)', out)
+        s = re.search('(\d{4,})', out)
         if s:
             job = int(s.group(0))
             print "launched job with id %s" % job
@@ -258,7 +258,7 @@ def _runWithTimeout(runCommand, timeout=10):
 
 def _waitForJob(hostConfig, jobid):
     if jobid == UNKNOWN_JOBID:
-        return
+        return 0
     command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
     while True:
         def runCommand():
