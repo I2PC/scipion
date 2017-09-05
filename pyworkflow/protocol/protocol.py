@@ -1785,19 +1785,15 @@ def runProtocolMain(projectPath, protDbPath, protId):
             sys.exit(retcode)
         elif nThreads > 1:
             if protocol.useQueueForJobs():
-                print("using QueueStepExecutor1")
                 executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1)
             else:
                 executor = ThreadStepExecutor(hostConfig, nThreads-1)
 
     if executor is None and protocol.useQueueForJobs():
-        print("using QueueStepExecutor2")
         executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), 1)
 
     if executor is None:
         executor = StepExecutor(hostConfig)
-
-    print("executor is set", type(executor))
 
     protocol.setStepsExecutor(executor)
     # Finally run the protocol
