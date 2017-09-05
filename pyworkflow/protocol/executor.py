@@ -240,6 +240,13 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
 
+        # This is a dirty hot-fix now because we are spawning too many threads
+        # even for the case when nThreads = 1
+        if nThreads > 1:
+            self.runJobs = ThreadStepExecutor.runSteps
+        else:
+            self.runJobs = StepExecutor.runSteps
+
     def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
         threadId = threading.current_thread().thId
         submitDict = dict(self.hostConfig.getQueuesDefault())
