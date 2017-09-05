@@ -13,7 +13,7 @@
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
-#define SHARED_MEM_SIZE (int) (2*(BLOCK_DIM + 2*1.9) + 1) // FIXME block size must be settable. +1 is 'ceil'
+#define SHARED_MEM_SIZE (int) (2.449489743*(BLOCK_DIM + 2*1.9) + 1) // FIXME block size must be settable. +1 is 'ceil' .. (block+2*blob)*sqrt(2)*sqrt(3)
 #define SHARED_MEM_SIZE_SQR (SHARED_MEM_SIZE*SHARED_MEM_SIZE)
 
 __shared__ Point3D<float> SHARED_AABB[2];
@@ -200,6 +200,7 @@ public:
 	ProjectionDataGPU(const ProjectionData& data) {
 		skip = data.skip;
 		if (skip) {
+			setDefault();
 			return;
 		}
 		copy(*data.img, img);
@@ -578,15 +579,16 @@ void processVoxelBlob(
 
 				int index2D = (i - SHARED_AABB[0].y) * SHARED_MEM_SIZE + (j-SHARED_AABB[0].x);
 
-				if (index2D >= SHARED_MEM_SIZE_SQR || index2D < 0) {
-					printf("%d (%d - %f) %d (%d - %f), projdi %d-%d x %d-%d, vlakno %d %d blok %d %d UUID %d\n", (int)(j-SHARED_AABB[0].x),
-													j, SHARED_AABB[0].x,
-													(int)(i-SHARED_AABB[0].y),
-													i, SHARED_AABB[0].y,
-													minX, maxX, minY, maxY,
-													threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y,
-													UUID);
-				}
+
+//				if (index2D >= SHARED_MEM_SIZE_SQR || index2D < 0) {
+//					printf("%d (%d - %f) %d (%d - %f), projdi %d-%d x %d-%d, vlakno %d %d blok %d %d UUID %d\n", (int)(j-SHARED_AABB[0].x),
+//													j, SHARED_AABB[0].x,
+//													(int)(i-SHARED_AABB[0].y),
+//													i, SHARED_AABB[0].y,
+//													minX, maxX, minY, maxY,
+//													threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y,
+//													UUID);
+//				}
 
 //				if (blockIdx.x ==11 && blockIdx.y == 12 && UUID == 1058){ //&& threadIdx.x == 0 && threadIdx.y == 0) {
 //					if (threadIdx.x == 1 && threadIdx.y == 1) {
@@ -614,8 +616,8 @@ void processVoxelBlob(
 
 				float weight = wBlob * dataWeight;
 				w += weight;
-//				volReal += INPUT_IMG[index2D].x * weight;
-//				volImag += INPUT_IMG[index2D].y * weight;
+				volReal += INPUT_IMG[index2D].x * weight;
+				volImag += INPUT_IMG[index2D].y * weight;
 			}
 		}
 	}
@@ -695,9 +697,9 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 	Point3D<float> box[8];
 	if (tSpace.XY == tSpace.dir) { // iterate XY plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius;
+		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
 
-		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius;
+		box[2].y = box[3].y = box[6].y = box[7].y = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].y = box[1].y = box[4].y = box[5].y = blockIdx.y*blockDim.y- cBlobRadius;
 
 		getZ(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
@@ -728,9 +730,9 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 
 	} else if (tSpace.XZ == tSpace.dir) { // iterate XZ plane
 		box[0].x = box[3].x = box[4].x = box[7].x = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius;
+		box[1].x = box[2].x = box[5].x = box[6].x = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
 
-		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius;
+		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
 		getY(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
@@ -750,9 +752,9 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 		computeAABB(SHARED_AABB, box);
 	} else { // iterate YZ plane
 		box[0].y = box[3].y = box[4].y = box[7].y = blockIdx.x*blockDim.x - cBlobRadius;
-		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius;
+		box[1].y = box[2].y = box[5].y = box[6].y = (blockIdx.x+1)*blockDim.x + cBlobRadius - 1.f;
 
-		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius;
+		box[2].z = box[3].z = box[6].z = box[7].z = (blockIdx.y+1)*blockDim.y + cBlobRadius - 1.f;
 		box[0].z = box[1].z = box[4].z = box[5].z = blockIdx.y*blockDim.y- cBlobRadius;
 
 		getX(box[0].x, box[0].y, box[0].z, tSpace.u, tSpace.v, tSpace.bottomOrigin); // lower plane
@@ -778,7 +780,6 @@ void calculateAABB(const TraverseSpace& tSpace, ProjectionDataGPU* projectionDat
 		computeAABB(SHARED_AABB, box);
 
 		//		if (blockIdx.x == 2 && blockIdx.y == 6) {
-		//			printf("blocksize: %f %f\n", AABB[1].x - AABB[0].x, AABB[1].y - AABB[0].y);
 		//		printf("blockid: %d %d\n", blockIdx.x, blockIdx.y);
 		//			printAABB(AABB);
 		//		}
@@ -938,7 +939,7 @@ bool blockHasWork(int imgXSize, int imgYSize) {
 }
 
 __device__
-void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag) {
+void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag, int UUID) {
 	int imgXindex = tXindex + SHARED_AABB[0].x;
 	int imgYindex = tYindex + SHARED_AABB[0].y;
 	if ((imgXindex >=0)
@@ -946,10 +947,10 @@ void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, 
 			&& (imgYindex >=0)
 			&& (imgYindex < data->ySize))
 	{
-		int index = imgYindex * data->ySize + imgXindex;
+		int index = imgYindex * data->xSize + imgXindex;
 		vReal = data->img[2*index];
 		vImag = data->img[2*index + 1];
-//		printf("%d %d\n", imgXindex, imgYindex);
+
 	} else {
 		vReal = vImag = 0.f;
 	}
@@ -957,26 +958,34 @@ void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, 
 
 
 __device__
-void copyData(ProjectionDataGPU* data) {
-	float xAABBSize = SHARED_AABB[1].x - SHARED_AABB[0].x;
-	float yAABBSize = SHARED_AABB[1].y - SHARED_AABB[0].y;
+void copyData(ProjectionDataGPU* data, int UUID) {
+	float xAABBSize = SHARED_AABB[1].x - SHARED_AABB[0].x + 1;
+	float yAABBSize = SHARED_AABB[1].y - SHARED_AABB[0].y + 1;
 	int xLoops = ceilf(xAABBSize / blockDim.x);
 	int yLoops = ceilf(yAABBSize / blockDim.y);
+//					if (threadIdx.x == 0 && threadIdx.y == 0 && blockIdx.x == 3 && blockIdx.y == 1 && UUID == 16751) {
+//						printAABB(SHARED_AABB);
+//					}
 
-	for (int i = 0; i < yLoops; i++) {
-		int tYindex = threadIdx.y + i*blockDim.y;
-		if (tYindex < SHARED_MEM_SIZE) {
-			for (int j = 0; j < xLoops; j++) {
-				int tXindex = threadIdx.x + j*blockDim.x;
-				if (tXindex < SHARED_MEM_SIZE) {
-					int memIndex = tYindex * SHARED_MEM_SIZE + tXindex;
+	for (int y = threadIdx.y; y < SHARED_MEM_SIZE; y += blockDim.y) {
+//		int tYindex = threadIdx.y + i*blockDim.y;
+//		if (tYindex < SHARED_MEM_SIZE) {
+			for (int x = threadIdx.x; x < SHARED_MEM_SIZE; x += blockDim.x) {
+//				int tXindex = threadIdx.x + j*blockDim.x;
+//				if (tXindex < SHARED_MEM_SIZE) {
+					int memIndex = y * SHARED_MEM_SIZE + x;
 					float vReal, vImag;
-					getImgData(tXindex, tYindex, data, vReal, vImag);
+					getImgData(x, y, data, vReal, vImag, UUID);
+//					if (memIndex > SHARED_MEM_SIZE_SQR) {
+//						printf("%d %d vlakno %d %d blok %d %d UUID %d\n", x, y,
+//							threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
+//					}
+
 					INPUT_IMG[memIndex].x = vReal;
 					INPUT_IMG[memIndex].y = vImag;
-				}
+//				}
 			}
-		}
+//		}
 	}
 //
 //
@@ -1005,22 +1014,23 @@ void processBufferKernel(
 
 	for (int i = 0; i < noOfTransforms; i++) {
 		TraverseSpace* space = &traverseSpaces[i];
-		ProjectionDataGPU* data = &buffer[traverseSpaces[i].projectionIndex];
+		ProjectionDataGPU* data = &buffer[space->projectionIndex];
+
+
 		if ( ! cUseFast) {
 			if ((threadIdx.x == 0) && (threadIdx.y == 0)) {
 				calculateAABB(*space, data);
-//				if (space->UUID == 1058) {
 //					printAABB(SHARED_AABB);
 //					printf("vetev %d\n", space->dir);
 //				}
 			}
 			__syncthreads();
 			if (blockHasWork(data->xSize, data->ySize)) {
-//					if (space->UUID == 1058 && threadIdx.x == 0 && threadIdx.y == 0) {
+//					if (space->UUID == 3916 && threadIdx.x == 0 && threadIdx.y == 0) {
 //						printAABB(SHARED_AABB);
 //						printf("vetev %d\n", space->dir);
 //					}
-				copyData(data);
+				copyData(data, space->UUID);
 //				if (blockIdx.x ==11 && blockIdx.y == 12 && space->UUID == 1058 && threadIdx.x == 0 && threadIdx.y == 0) {
 //					printf("nakopiroval jsem data\n");
 //					printAABB(SHARED_AABB);

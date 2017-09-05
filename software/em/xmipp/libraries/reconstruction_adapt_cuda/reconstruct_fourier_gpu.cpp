@@ -294,6 +294,7 @@ void ProgRecFourierGPU::preloadBuffer(LoadThreadParams* threadParams,
 		Matrix2D<double> localA(3, 3);
 		int imgIndex = threadParams->startImageIndex + bIndex;
 		ProjectionData* data = &threadParams->buffer1[bIndex];
+		data->skip = true;
 		if (imgIndex >= threadParams->endImageIndex) {
 			continue;
 		}
@@ -1048,9 +1049,9 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 	createProjectionCuboid(cuboid, imgSizeX, imgSizeY, useFast ? 0.f : blob.radius);
 	rotateCuboid(cuboid, transform);
 	translateCuboid(cuboid, origin);
-//	print(cuboid);
+//	if (space->UUID == 3916) print(cuboid);
 	computeAABB(AABB, cuboid, 0, 0, 0, maxVolumeIndexX, maxVolumeIndexYZ, maxVolumeIndexYZ);
-//	printAABB(AABB);
+//	if (space->UUID == 3916) printAABB(AABB);
 	// store data
 	space->projectionIndex = projectionIndex;
 	getVectors(cuboid, space->u, space->v);
@@ -1100,13 +1101,16 @@ void ProgRecFourierGPU::computeTraverseSpace(int imgSizeX, int imgSizeY, int pro
 //	std::cout << "vzdalenosti: " << nX << " " << nY << " " << nZ  << " pouzivam : " << space->dir << std::endl;
 }
 
-void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
+int ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 		TraverseSpace* traverseSpaces) {
 	int index = 0;
 	static int UUID = 0;
 	float transf[3][3];
 	float transfInv[3][3];
 	for (int i = 0; i < bufferSize; i++) {
+		if (buffer[i].skip) {
+			continue;
+		}
 		Matrix2D<double> Ainv = buffer[i].localAInv;
 		for (int j = 0; j < R_repository.size(); j++) {
 			Matrix2D<double> A_SL=R_repository[j]*(Ainv);
@@ -1117,9 +1121,9 @@ void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 //			if (UUID == 1058) {
 //							std::cout << "UUID: " << UUID << " ";
 //						}
+			traverseSpaces[index].UUID = UUID;
 			computeTraverseSpace(buffer[i].img->getXSize(), buffer[i].img->getYSize(), i,
 					transf, transfInv, &traverseSpaces[index]);
-			traverseSpaces[index].UUID = UUID;
 
 //			if (UUID == 1058) {
 //				std::cout << "konec" << std::endl;
@@ -1129,6 +1133,8 @@ void ProgRecFourierGPU::prepareTransforms(ProjectionData* buffer,
 			index++;
 		}
 	}
+//	std::cout << "prepared: " << index << " transformations" << std::endl;
+	return index;
 }
 
 void ProgRecFourierGPU::sort(TraverseSpace* input, int size) {
@@ -1164,8 +1170,8 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     int startLoadIndex = firstImageIndex;
 
 	/** holding transform/traverse space for each projection x symmetry */
-	int noOfTransforms = bufferSize * R_repository.size();
-	TraverseSpace* traverseSpaces = new TraverseSpace[noOfTransforms];
+	int maxNoOfTransforms = bufferSize * R_repository.size();
+	TraverseSpace* traverseSpaces = new TraverseSpace[maxNoOfTransforms];
 
 	clock_t begin = clock();
 
@@ -1177,7 +1183,7 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	startLoadIndex += bufferSize;
     	loadImages(startLoadIndex, std::min(lastImageIndex+1, startLoadIndex+bufferSize));
 
-    	prepareTransforms(loadThread.buffer2, traverseSpaces);
+    	int noOfTransforms = prepareTransforms(loadThread.buffer2, traverseSpaces);
 //    	sort(traverseSpaces, noOfTransforms);
     	processBufferGPU(tempVolumeGPU, tempWeightsGPU,
     			loadThread.buffer2,
@@ -1190,6 +1196,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
     	barrier_wait( &barrier );
 		if (verbose && startLoadIndex%repaint==0) {
 			progress_bar(startLoadIndex);
+		}
+
+		for(int tmp = 0; tmp < bufferSize; tmp++) {
+			loadThread.buffer2[i].clean();
 		}
     }
 

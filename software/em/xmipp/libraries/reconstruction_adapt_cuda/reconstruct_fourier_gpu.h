@@ -466,7 +466,7 @@ private:
     /**
      * Method will precalculate (inverse) transformation for each projection data x symmetry
      */
-    void prepareTransforms(ProjectionData* buffer,
+    int prepareTransforms(ProjectionData* buffer,
     		TraverseSpace* traverseSpaces);
 
     template<typename T>
