@@ -207,84 +207,42 @@ def _copyFiles(protocol, rpath):
 def _submit(hostConfig, submitDict, cwd=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
-    def runCommand():
-        # Create forst the submission script to be launched
-        # formatting using the template
-        template = hostConfig.getSubmitTemplate() % submitDict
-        # FIXME: CREATE THE PATH FIRST
-        scripPath = submitDict['JOB_SCRIPT']
-        f = open(scripPath, 'w')
-        # Ensure the path exists
-        makeFilePath(scripPath)
-        # Add some line ends because in some clusters it fails
-        # to submit jobs if the submit script does not have end of line
-        f.write(template + '\n\n')
-        f.close()
-        # This should format the command using a template like:
-        # "qsub %(JOB_SCRIPT)s"
-        command = hostConfig.getSubmitCommand() % submitDict
-        gcmd = greenStr(command)
-        print("** Submiting to queue: '%s'" % gcmd)
+    # Create forst the submission script to be launched
+    # formatting using the template
+    template = hostConfig.getSubmitTemplate() % submitDict
+    # FIXME: CREATE THE PATH FIRST
+    scripPath = submitDict['JOB_SCRIPT']
+    f = open(scripPath, 'w')
+    # Ensure the path exists
+    makeFilePath(scripPath)
+    # Add some line ends because in some clusters it fails
+    # to submit jobs if the submit script does not have end of line
+    f.write(template + '\n\n')
+    f.close()
+    # This should format the command using a template like:
+    # "qsub %(JOB_SCRIPT)s"
+    command = hostConfig.getSubmitCommand() % submitDict
+    gcmd = greenStr(command)
+    print("** Submiting to queue: '%s'" % gcmd)
 
-        p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
-        out = p.communicate()[0]
-        # Try to parse the result of qsub, searching for a number (jobId)
-        s = re.search('(\d+)', out)
-        if s:
-            job = int(s.group(0))
-            print "launched job with id %s" % job
-            return job
-        else:
-            print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
-            return UNKNOWN_JOBID
-
-    return _runWithTimeout(runCommand)
-
-def _runWithTimeout(runCommand, timeout=10):
-    pool = ThreadPool(processes=1)
-    try:
-        # job submit should be fast even if the job is long
-        future = pool.apply_async(runCommand)
-        return future.get(timeout)
-    except TimeoutError:
-        print "** Timeout trying to submit job"
+    p = Popen(command, shell=True, stdout=PIPE, cwd=cwd)
+    out = p.communicate()[0]
+    # Try to parse the result of qsub, searching for a number (jobId)
+    s = re.search('(\d+)', out)
+    if s:
+        job = int(s.group(0))
+        print "launched job with id %s" % job
+        return job
+    else:
+        print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
         return UNKNOWN_JOBID
-    except:
-        print "** unexpected error trying to submit job"
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-        return UNKNOWN_JOBID
-
-
-def _waitForJob(hostConfig, jobid):
-    if jobid == UNKNOWN_JOBID:
-        return 0
-    command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
-    while True:
-        def runCommand():
-            p = Popen(command, shell=True, stdout=PIPE)
-            out = p.communicate()[0]
-
-            # FIXME: this is too specific to grid engine
-            s = re.search('exit_status\s+-*(\d+)', out)
-            if s:
-                status = int(s.group(1))
-                print "job %s finished with exist status %s" % (jobid, status)
-                return status
-            else:
-                print "job %s still running" % jobid
-                return None
-
-        status = _runWithTimeout(runCommand)
-        if status is not None:
-            return status
-        sleep(1)
 
 
 def _pass_though_no_gui_state(command):
     if 'SCIPION_NOGUI' in os.environ:
         return 'export SCIPION_NOGUI=true;' + command
     return command
+
 
 def _run(command, wait, stdin=None, stdout=None, stderr=None):
     """ Execute a command in a subprocess and return the pid. """

@@ -35,11 +35,14 @@ import datetime
 import traceback
 import threading
 import os
+import re
+from subprocess import Popen, PIPE
+from multiprocessing.pool import ThreadPool, TimeoutError
 
 import pyworkflow.utils.process as process
 import constants as cts
 
-from launch import _submit, _waitForJob
+from launch import _submit, UNKNOWN_JOBID
 
 
 class StepExecutor():
@@ -240,6 +243,8 @@ class QueueStepExecutor(ThreadStepExecutor):
         for threadId in range(nThreads):
             self.threadCommands[threadId] = 0
 
+        self.pool = ThreadPool(processes=1)
+
         # This is a dirty hot-fix now because we are spawning too many threads
         # even for the case when nThreads = 1
         if nThreads > 1:
@@ -257,7 +262,45 @@ class QueueStepExecutor(ThreadStepExecutor):
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
         job = _submit(self.hostConfig, submitDict, cwd)
-        return _waitForJob(self.hostConfig, job)
+        return self._waitForJob(self.hostConfig, job)
+
+    def _runWithTimeout(self, command, timeout=10):
+        try:
+            # job submit should be fast even if the job is long
+            future = self.pool.apply_async(command)
+            return future.get(timeout)
+        except TimeoutError:
+            print "** Timeout trying to submit job"
+            return UNKNOWN_JOBID
+        except:
+            print "** unexpected error trying to submit job"
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            return UNKNOWN_JOBID
+
+    def _waitForJob(self, hostConfig, jobid):
+        if jobid == UNKNOWN_JOBID:
+            return 0
+        command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
+        while True:
+            def runCommand():
+                p = Popen(command, shell=True, stdout=PIPE)
+                out = p.communicate()[0]
+
+                # FIXME: this is too specific to grid engine
+                s = re.search('exit_status\s+-*(\d+)', out)
+                if s:
+                    status = int(s.group(1))
+                    print "job %s finished with exist status %s" % (jobid, status)
+                    return status
+                else:
+                    print "job %s still running" % jobid
+                    return None
+
+            status = self._runWithTimeout(runCommand)
+            if status is not None:
+                return status
+            time.sleep(1)
 
 
 class MPIStepExecutor(ThreadStepExecutor):
