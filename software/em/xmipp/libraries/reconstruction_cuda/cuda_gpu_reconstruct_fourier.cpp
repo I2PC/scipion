@@ -13,11 +13,11 @@
 __shared__ float BLOB_TABLE[BLOB_TABLE_SIZE_SQRT];
 #endif
 
-#define SHARED_MEM_SIZE (int) (2.449489743*(BLOCK_DIM + 2*1.9) + 1) // FIXME block size must be settable. +1 is 'ceil' .. (block+2*blob)*sqrt(2)*sqrt(3)
-#define SHARED_MEM_SIZE_SQR (SHARED_MEM_SIZE*SHARED_MEM_SIZE)
+//#define SHARED_MEM_SIZE (int) (2.449489743*(BLOCK_DIM + 2*1.9) + 1) // FIXME block size must be settable. +1 is 'ceil' .. (block+2*blob)*sqrt(2)*sqrt(3)
+//#define SHARED_MEM_SIZE_SQR (SHARED_MEM_SIZE*SHARED_MEM_SIZE)
 
 __shared__ Point3D<float> SHARED_AABB[2];
-__shared__ float2 INPUT_IMG[SHARED_MEM_SIZE_SQR];
+extern __shared__ float2 INPUT_IMG[];
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort =
@@ -499,7 +499,7 @@ void processVoxelBlob(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		float* blobTableSqrt,
 		int x, int y, int z, const float transform[3][3], float maxDistanceSqr,
-		const ProjectionDataGPU* data, bool print, int UUID) {
+		const ProjectionDataGPU* data, bool print, int UUID,int imgCacheDim) {
 	Point3D<float> imgPos;
 	int xSize = data->xSize;
 	int ySize = data->ySize;
@@ -577,35 +577,7 @@ void processVoxelBlob(
 				float distanceSqr = xD*xD + yzSqr;
 				if (distanceSqr > radiusSqr) continue;
 
-				int index2D = (i - SHARED_AABB[0].y) * SHARED_MEM_SIZE + (j-SHARED_AABB[0].x);
-
-
-//				if (index2D >= SHARED_MEM_SIZE_SQR || index2D < 0) {
-//					printf("%d (%d - %f) %d (%d - %f), projdi %d-%d x %d-%d, vlakno %d %d blok %d %d UUID %d\n", (int)(j-SHARED_AABB[0].x),
-//													j, SHARED_AABB[0].x,
-//													(int)(i-SHARED_AABB[0].y),
-//													i, SHARED_AABB[0].y,
-//													minX, maxX, minY, maxY,
-//													threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y,
-//													UUID);
-//				}
-
-//				if (blockIdx.x ==11 && blockIdx.y == 12 && UUID == 1058){ //&& threadIdx.x == 0 && threadIdx.y == 0) {
-//					if (threadIdx.x == 1 && threadIdx.y == 1) {
-//						printf("%d %d from block %d %d uuid %d \n", j, i, blockIdx.x, blockIdx.y, UUID);
-//						printAABB(SHARED_AABB);
-//					}
-//					if ((int)(j-SHARED_AABB[0].x) < 0) {
-//						printAABB(SHARED_AABB);
-//						printf("%d (%d - %f) %d, projdi %d-%d x %d-%d, vlakno %d %d blok %d %d\n", (int)(j-SHARED_AABB[0].x),
-//								j, SHARED_AABB[0].x,
-//								(int)(i-SHARED_AABB[0].y),
-//								minX, maxX, minY, maxY,
-//								threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
-//					}
-//					printf("%d %d 0\n", (int)(j-SHARED_AABB[0].x), (int)(i - SHARED_AABB[0].y));
-//					printf("%d %d 0\n", j, i);
-//				}
+				int index2D = (i - SHARED_AABB[0].y) * imgCacheDim + (j-SHARED_AABB[0].x);
 
 				int aux = (int) ((distanceSqr * cIDeltaSqrt + 0.5f)); //Same as ROUND but avoid comparison
 #if USE_SHARED_MEM
@@ -802,7 +774,8 @@ void processProjection(
 	ProjectionDataGPU* projectionData,
 	const TraverseSpace& tSpace,
 	const float transformInv[3][3],
-	float* devBlobTableSqrt)
+	float* devBlobTableSqrt,
+	int imgCacheDim)
 {
 //	int imgSizeX = projectionData->xSize;
 //	int imgSizeY = projectionData->ySize;
@@ -864,7 +837,7 @@ void processProjection(
 						int lower = floorf(fminf(z1, z2));
 						int upper = ceilf(fmaxf(z1, z2));
 						for (int z = lower; z <= upper; z++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, print, tSpace.UUID );
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, idy, z, transformInv, tSpace.maxDistanceSqr, projectionData, print, tSpace.UUID, imgCacheDim );
 						}
 					}
 				}
@@ -889,7 +862,7 @@ void processProjection(
 						int lower = floorf(fminf(y1, y2));
 						int upper = ceilf(fmaxf(y1, y2));
 						for (int y = lower; y <= upper; y++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false, tSpace.UUID);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, idx, y, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false, tSpace.UUID, imgCacheDim);
 						}
 					}
 				}
@@ -914,7 +887,7 @@ void processProjection(
 						int lower = floorf(fminf(x1, x2));
 						int upper = ceilf(fmaxf(x1, x2));
 						for (int x = lower; x <= upper; x++) {
-							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false,tSpace.UUID);
+							processVoxelBlob(tempVolumeGPU, tempWeightsGPU, devBlobTableSqrt, x, idx, idy, transformInv, tSpace.maxDistanceSqr, projectionData, false,tSpace.UUID, imgCacheDim);
 						}
 					}
 				}
@@ -939,7 +912,7 @@ bool blockHasWork(int imgXSize, int imgYSize) {
 }
 
 __device__
-void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag, int UUID) {
+void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, float& vImag) {
 	int imgXindex = tXindex + SHARED_AABB[0].x;
 	int imgYindex = tYindex + SHARED_AABB[0].y;
 	if ((imgXindex >=0)
@@ -958,7 +931,7 @@ void getImgData(int tXindex, int tYindex, ProjectionDataGPU* data,float& vReal, 
 
 
 __device__
-void copyData(ProjectionDataGPU* data, int UUID) {
+void copyData(ProjectionDataGPU* data, int imgCacheDim) {
 	float xAABBSize = SHARED_AABB[1].x - SHARED_AABB[0].x + 1;
 	float yAABBSize = SHARED_AABB[1].y - SHARED_AABB[0].y + 1;
 	int xLoops = ceilf(xAABBSize / blockDim.x);
@@ -967,19 +940,16 @@ void copyData(ProjectionDataGPU* data, int UUID) {
 //						printAABB(SHARED_AABB);
 //					}
 
-	for (int y = threadIdx.y; y < SHARED_MEM_SIZE; y += blockDim.y) {
+	for (int y = threadIdx.y; y < imgCacheDim; y += blockDim.y) {
 //		int tYindex = threadIdx.y + i*blockDim.y;
 //		if (tYindex < SHARED_MEM_SIZE) {
-			for (int x = threadIdx.x; x < SHARED_MEM_SIZE; x += blockDim.x) {
+			for (int x = threadIdx.x; x < imgCacheDim; x += blockDim.x) {
 //				int tXindex = threadIdx.x + j*blockDim.x;
 //				if (tXindex < SHARED_MEM_SIZE) {
-					int memIndex = y * SHARED_MEM_SIZE + x;
+					int memIndex = y * imgCacheDim + x;
 					float vReal, vImag;
-					getImgData(x, y, data, vReal, vImag, UUID);
-//					if (memIndex > SHARED_MEM_SIZE_SQR) {
-//						printf("%d %d vlakno %d %d blok %d %d UUID %d\n", x, y,
-//							threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
-//					}
+					getImgData(x, y, data, vReal, vImag);
+
 
 					INPUT_IMG[memIndex].x = vReal;
 					INPUT_IMG[memIndex].y = vImag;
@@ -1001,7 +971,8 @@ void processBufferKernel(
 		float* tempVolumeGPU, float *tempWeightsGPU,
 		ProjectionDataGPU* buffer, int bufferSize,
 		TraverseSpace* traverseSpaces, int noOfTransforms,
-		float* devBlobTableSqrt) {
+		float* devBlobTableSqrt,
+		int imgCacheDim) {
 #if USE_SHARED_MEM
 	if ( ! cUseFast) {
 		int id = threadIdx.y*blockDim.x + threadIdx.x;
@@ -1012,9 +983,17 @@ void processBufferKernel(
 	}
 #endif
 
+
+
 	for (int i = 0; i < noOfTransforms; i++) {
 		TraverseSpace* space = &traverseSpaces[i];
 		ProjectionDataGPU* data = &buffer[space->projectionIndex];
+
+		if (threadIdx.x == 0 && threadIdx.y == 0 && data->imgIndex == 0 && blockIdx.x == 0 && blockIdx.y == 0) {
+								printf("velikost %d \n", imgCacheDim);
+		//							threadIdx.x, threadIdx.y, blockIdx.x, blockIdx.y);
+							}
+
 
 
 		if ( ! cUseFast) {
@@ -1030,7 +1009,7 @@ void processBufferKernel(
 //						printAABB(SHARED_AABB);
 //						printf("vetev %d\n", space->dir);
 //					}
-				copyData(data, space->UUID);
+				copyData(data, imgCacheDim);
 //				if (blockIdx.x ==11 && blockIdx.y == 12 && space->UUID == 1058 && threadIdx.x == 0 && threadIdx.y == 0) {
 //					printf("nakopiroval jsem data\n");
 //					printAABB(SHARED_AABB);
@@ -1052,7 +1031,8 @@ void processBufferKernel(
 		processProjection(
 			tempVolumeGPU, tempWeightsGPU,
 			data, *space, space->transformInv,
-			devBlobTableSqrt);
+			devBlobTableSqrt,
+			imgCacheDim);
 
 		__syncthreads();
 	}
@@ -1122,11 +1102,15 @@ void processBufferGPU(float* tempVolumeGPU,
 	dim3 dimBlock(BLOCK_DIM, BLOCK_DIM);
 	dim3 dimGrid((int)ceil(size2D/dimBlock.x),(int)ceil(size2D/dimBlock.y));
 
-	processBufferKernel<<<dimGrid, dimBlock>>>(
+	int imgCacheDim = ceil(sqrt(2.f) * sqrt(3.f) *(BLOCK_DIM + 2*blobRadius));
+	printf ("imgCacheDim: %d\n", imgCacheDim);
+
+	processBufferKernel<<<dimGrid, dimBlock, imgCacheDim*imgCacheDim*sizeof(float2)>>>(
 			tempVolumeGPU, tempWeightsGPU,
 			devBuffer, bufferSize,
 			devTravSpaces, noOfTransforms,
-			devBlobTableSqrt);
+			devBlobTableSqrt,
+			imgCacheDim);
 	gpuErrchk( cudaPeekAtLastError() );
 	gpuErrchk( cudaDeviceSynchronize() );
 //	ProjectionDataGPU*	hostBuffer = new ProjectionDataGPU[bufferSize];
