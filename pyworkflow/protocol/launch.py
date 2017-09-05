@@ -207,7 +207,7 @@ def _copyFiles(protocol, rpath):
 def _submit(hostConfig, submitDict, cwd=None):
     """ Submit a protocol to a queue system. Return its job id.
     """
-    def run_command():
+    def runCommand():
         # Create forst the submission script to be launched
         # formatting using the template
         template = hostConfig.getSubmitTemplate() % submitDict
@@ -238,11 +238,14 @@ def _submit(hostConfig, submitDict, cwd=None):
             print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
             return UNKNOWN_JOBID
 
+    _runWithTimeout(runCommand)
+
+def _runWithTimeout(runCommand, timeout=10):
     pool = ThreadPool(processes=1)
     try:
         # job submit should be fast even if the job is long
-        future = pool.apply_async(run_command)
-        return future.get(2)
+        future = pool.apply_async(runCommand)
+        return future.get(timeout)
     except TimeoutError:
         print "** Timeout trying to submit job"
         return UNKNOWN_JOBID
@@ -253,21 +256,28 @@ def _submit(hostConfig, submitDict, cwd=None):
         return UNKNOWN_JOBID
 
 
-def _wait_for_job(hostConfig, jobid):
+def _waitForJob(hostConfig, jobid):
     if jobid == UNKNOWN_JOBID:
         return
     command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
     while True:
-        p = Popen(command, shell=True, stdout=PIPE)
-        out = p.communicate()[0]
+        def runCommand():
+            p = Popen(command, shell=True, stdout=PIPE)
+            out = p.communicate()[0]
 
-        s = re.search('exit_status\s+-*(\d+)', out)
-        if s:
-            status = int(s.group(1))
-            print "job %s finished with exist status %s" % (jobid, status)
+            # FIXME: this is too specific to grid engine
+            s = re.search('exit_status\s+-*(\d+)', out)
+            if s:
+                status = int(s.group(1))
+                print "job %s finished with exist status %s" % (jobid, status)
+                return status
+            else:
+                print "job %s still running" % jobid
+                return None
+
+        status = _runWithTimeout(runCommand)
+        if status is not None:
             return status
-        else:
-            print "job %s still running" % jobid
         sleep(1)
 
 

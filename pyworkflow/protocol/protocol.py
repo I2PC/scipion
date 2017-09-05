@@ -1769,6 +1769,8 @@ def runProtocolMain(projectPath, protDbPath, protId):
   
     # Create the steps executor
     executor = None
+    nThreads = max(protocol.numberOfThreads.get(), 1)
+
     if protocol.stepsExecutionMode == STEPS_PARALLEL:
         if protocol.numberOfMpi > 1:
             # Handle special case to execute in parallel
@@ -1781,12 +1783,11 @@ def runProtocolMain(projectPath, protDbPath, protId):
                                      numberOfMpi=protocol.numberOfMpi.get(),
                                      hostConfig=hostConfig)
             sys.exit(retcode)
-        elif protocol.numberOfThreads > 1:
-            executor = ThreadStepExecutor(hostConfig,
-                                          protocol.numberOfThreads.get()-1)
+        elif nThreads > 1 and not protocol.useQueueForJobs():
+            executor = ThreadStepExecutor(hostConfig, nThreads-1)
 
-    if (executor is None) and (protocol.useQueueForJobs()):
-        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict())
+    if executor is None and protocol.useQueueForJobs():
+        executor = QueueStepExecutor(hostConfig, protocol.getSubmitDict(), nThreads-1)
 
     if executor is None:
         executor = StepExecutor(hostConfig)

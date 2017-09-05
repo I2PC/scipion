@@ -39,7 +39,7 @@ import os
 import pyworkflow.utils.process as process
 import constants as cts
 
-from launch import _submit, _wait_for_job
+from launch import _submit, _waitForJob
 
 
 class StepExecutor():
@@ -124,20 +124,6 @@ class StepExecutor():
 
 
         stepsCheckCallback() # one last check to finalize stuff
-
-
-class QueueStepExecutor(StepExecutor):
-    def __init__(self, hostConfig, submitDict):
-        StepExecutor.__init__(self, hostConfig)
-        self.submitDict = submitDict
-
-    def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
-        submitDict = dict(self.hostConfig.getQueuesDefault())
-        submitDict.update(self.submitDict)
-        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
-        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'])
-        job = _submit(self.hostConfig, submitDict, cwd)
-        return _wait_for_job(self.hostConfig, job)
 
 
 class StepThread(threading.Thread):
@@ -243,6 +229,28 @@ class ThreadStepExecutor(StepExecutor):
         for t in threading.enumerate():
             if t is not threading.current_thread():
                 t.join()
+
+
+class QueueStepExecutor(ThreadStepExecutor):
+    def __init__(self, hostConfig, submitDict, nThreads):
+        ThreadStepExecutor.__init__(self, hostConfig, nThreads)
+        self.submitDict = submitDict
+        # Command counter per thread
+        self.threadCommands = {}
+        for threadId in range(nThreads):
+            self.threadCommands[threadId] = 0
+
+    def runJob(self, log, programName, params, numberOfMpi=1, numberOfThreads=1, env=None, cwd=None):
+        threadId = threading.current_thread().thId
+        submitDict = dict(self.hostConfig.getQueuesDefault())
+        submitDict.update(self.submitDict)
+        submitDict['JOB_COMMAND'] = process.buildRunCommand(programName, params, numberOfMpi, self.hostConfig, env)
+        self.threadCommands[threadId] += 1
+        jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
+        submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
+        submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
+        job = _submit(self.hostConfig, submitDict, cwd)
+        return _waitForJob(self.hostConfig, job)
 
 
 class MPIStepExecutor(ThreadStepExecutor):
