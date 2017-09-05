@@ -238,7 +238,7 @@ def _submit(hostConfig, submitDict, cwd=None):
             print "** Couldn't parse %s ouput: %s" % (gcmd, redStr(out))
             return UNKNOWN_JOBID
 
-    _runWithTimeout(runCommand)
+    return _runWithTimeout(runCommand)
 
 def _runWithTimeout(runCommand, timeout=10):
     pool = ThreadPool(processes=1)
