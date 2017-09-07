@@ -454,19 +454,24 @@ class ProtImportMovies(ProtImportMicBase):
 
     def iterFilenamesFromSocket(self):
         poller = select.poll()
-        poller.register(self.serverSocket, select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
+        for fd in self.connectionList:
+            poller.register(self.connectionList[fd], select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
         for fd, flag in poller.poll():
-            if fd is self.serverSocket.fileno():
-                # New connection received through self.serverSocket
-                sock, addr = self.serverSocket.accept()
-                sock.setblocking(0)
-                self.connectionList[sock.fileno()] = sock
-                self.debug("Client (%s, %s) connected" % addr)
-                for fileName, fileId in self.read_socket(sock.fileno()):
-                    yield fileName, fileId
-            else:
-                for fileName, fileId in self.read_socket(fd):
-                    yield fileName, fileId
+            if flag & (select.POLLIN | select.POLLPRI):
+                self.info("Poller received some data (%s, %s) " % (fd, flag))
+                if fd is self.serverSocket.fileno():
+                    # New connection received through self.serverSocket
+                    sock, addr = self.serverSocket.accept()
+                    sock.setblocking(0)
+                    self.connectionList[sock.fileno()] = sock
+                    self.info("Client (%s, %s) connected" % addr)
+                else:
+                    for fileName, fileId in self.read_socket(fd):
+                        yield fileName, fileId
+            elif flag & (select.POLLHUP | select.POLLERR):
+                self.info("Client (%s, %s) disconnecting" % (fd, flag))
+                self.connectionList[fd].close()
+                del self.connectionList[fd]
 
     def read_socket(self, fd):
         # Data received from a client, process it
@@ -493,14 +498,15 @@ class ProtImportMovies(ProtImportMicBase):
             self.debug("Exception reading socket!!")
             self.debug(str(e))
             sock.close()
-            self.connectionList.remove(sock)
+            if sock in self.connectionList:
+                self.connectionList.remove(sock)
 
     def _spreadMessage(self, message, sock):
-
         try:
+            self.info(message)
             if sock is not None:
+                self.info("sending OK message to client")
                 sock.send(message)
-            self.debug(message)
         except:
             pass
 
