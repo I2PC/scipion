@@ -498,8 +498,8 @@ class ProtImportMovies(ProtImportMicBase):
             self.debug("Exception reading socket!!")
             self.debug(str(e))
             sock.close()
-            if sock in self.connectionList:
-                self.connectionList.remove(sock)
+            if fd in self.connectionList:
+                del self.connectionList[fd]
 
     def _spreadMessage(self, message, sock):
         try:
