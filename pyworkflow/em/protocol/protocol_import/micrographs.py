@@ -458,7 +458,6 @@ class ProtImportMovies(ProtImportMicBase):
         return serverSocket
 
     def iterFilenamesFromSocket(self):
-        recv_buffer = 8192  # Advisable to keep it as an exponent of 2
         for fd, flag in self.poller.poll():
             if fd is self.serverSocket.fileno():
                 # New connection received through self.serverSocket
@@ -466,38 +465,38 @@ class ProtImportMovies(ProtImportMicBase):
                 sock.setblocking(0)
                 self.connectionList[sock.fileno()] = sock
                 self.debug("Client (%s, %s) connected" % addr)
-                continue
+                for fileName, fileId in self.read_socket(sock.fileno()):
+                    yield fileName, fileId
             else:
-                # Data received from a client, process it
-                try:
-                    sock = self.connectionList[fd]
-                    data = sock.recv(recv_buffer)
-                    if data:
-                        files = shlex.split(data)
-                        self.info("Data received in socket:")
-                        self.info(files)
-                        for fileName in files:
-                            if os.path.exists(fileName):
-                                if fileName in self.importedFiles:
-                                    self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName, sock)
-                                    continue
-                                else:
-                                    self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
-                                    fileId = None
-                                    yield fileName, fileId
-                            else:
-                                self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName, sock)
-                                continue
+                for fileName, fileId in self.read_socket(fd):
+                    yield fileName, fileId
+
+    def read_socket(self, fd):
+        # Data received from a client, process it
+        recv_buffer = 8192  # Advisable to keep it as an exponent of 2
+        try:
+            sock = self.connectionList[fd]
+            data = sock.recv(recv_buffer)
+            if data:
+                files = shlex.split(data)
+                self.info("Data received in socket:")
+                self.info(files)
+                for fileName in files:
+                    if os.path.exists(fileName):
+                        if fileName in self.importedFiles:
+                            self._spreadMessage('WARNING: Not importing, already imported file %s \n' % fileName, sock)
+                        else:
+                            self._spreadMessage('OK: Importing file %s \n' % fileName, sock)
+                            fileId = None
+                            yield fileName, fileId
                     else:
-                        continue
-                # client disconnected, remove from socket list
-                except Exception as e:
-                    self.debug("Exception reading socket!!")
-                    self.debug(str(e))
-                    sock.close()
-                    self.connectionList.remove(sock)
-                    continue
-        return
+                        self._spreadMessage('WARNING: Not importing, path does not exist %s \n' % fileName, sock)
+        # client disconnected, remove from socket list
+        except Exception as e:
+            self.debug("Exception reading socket!!")
+            self.debug(str(e))
+            sock.close()
+            self.connectionList.remove(sock)
 
     def _spreadMessage(self, message, sock):
 
