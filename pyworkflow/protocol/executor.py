@@ -261,25 +261,25 @@ class QueueStepExecutor(ThreadStepExecutor):
         jobId = '-%s-%s' % (threadId, self.threadCommands[threadId])
         submitDict['JOB_NAME'] = submitDict['JOB_NAME'] + jobId
         submitDict['JOB_SCRIPT'] = os.path.abspath(submitDict['JOB_SCRIPT'] + jobId)
-        job = _submit(self.hostConfig, submitDict, cwd)
+        job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd), "submit job")
         return self._waitForJob(self.hostConfig, job)
 
-    def _runWithTimeout(self, command, timeout=10):
+    def _runWithTimeout(self, command, description, timeout=10):
         try:
             # job submit should be fast even if the job is long
             future = self.pool.apply_async(command)
             return future.get(timeout)
         except TimeoutError:
-            print "** Timeout trying to submit job"
-            return UNKNOWN_JOBID
+            print "** Timeout trying to " + description
+            return None
         except:
-            print "** unexpected error trying to submit job"
+            print "** unexpected error trying to " + description
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
-            return UNKNOWN_JOBID
+            return None
 
     def _waitForJob(self, hostConfig, jobid):
-        if jobid == UNKNOWN_JOBID:
+        if (jobid is None) or (jobid == UNKNOWN_JOBID):
             return 0
         command = hostConfig.getCheckCommand() % {"JOB_ID": jobid}
         while True:
@@ -297,10 +297,10 @@ class QueueStepExecutor(ThreadStepExecutor):
                     print "job %s still running" % jobid
                     return None
 
-            status = self._runWithTimeout(runCommand)
+            status = self._runWithTimeout(runCommand, "find jobs status")
             if status is not None:
                 return status
-            time.sleep(1)
+            time.sleep(2)
 
 
 class MPIStepExecutor(ThreadStepExecutor):
