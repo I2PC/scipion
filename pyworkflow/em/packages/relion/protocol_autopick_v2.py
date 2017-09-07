@@ -33,6 +33,7 @@ from protocol_base import ProtRelionBase
 from convert import writeSetOfMicrographs, writeReferences, readSetOfCoordinates, \
     isVersion2
 from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils.properties import Message
 import pyworkflow.utils as pwutils
 
 
@@ -90,8 +91,6 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
         # Register final coordinates as output
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=allMicSteps)
-
-
 
     #--------------------------- STEPS functions -------------------------------
     def _preprocessMicrographRow(self, img, imgRow):
@@ -525,6 +524,7 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
                 self._deleteChild('outputMicrographs', self.outputMicrographs)
 
         coordSet = self._createSetOfCoordinates(micSet)
+
         if self.useInputReferences():
             boxSize = self.getInputReferences().getDim()[0]
         else:
@@ -607,6 +607,19 @@ class ProtRelion2Autopick(ProtParticlePicking, ProtRelionBase):
     def _summary(self):
         summary = []
         return summary
+
+    def _methods(self):
+        methodsMsgs = []
+        if self.getOutputsSize() > 0:
+            output = self.getCoords()
+            methodsMsgs.append("%s: User picked %d particles with a particle "
+                               "size of %d px."
+                               % (self.getObjectTag(output), output.getSize(),
+                                  output.getBoxSize()))
+        else:
+            methodsMsgs.append(Message.TEXT_NO_OUTPUT_CO)
+    
+        return methodsMsgs
 
     # -------------------------- UTILS functions -------------------------------
     def useInputReferences(self):

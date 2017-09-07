@@ -42,6 +42,21 @@ class TestWorkflowRelionPick(TestWorkflow):
         setupTestProject(cls)
         cls.ds = DataSet.getDataSet('relion_tutorial')
 
+    def _launchPick(self, pickProt, validate=True):
+        """ Simple wrapper to launch a pickig protocol.
+        If validate=True, the output will be validated to exist and
+        with non-zero elements.
+        """
+        self.launchProtocol(pickProt)
+
+        if validate:
+            # Check the output coordinates is not None and has some items
+            outputCoords = getattr(pickProt, 'outputCoordinates', None)
+            self.assertIsNotNone(outputCoords)
+            self.assertTrue(outputCoords.getSize() > 0,
+                            msg="Output set is empty for protocol '%s'" %
+                            pickProt.getRunName())
+
     def _runPickWorkflow(self):
         #First, import a set of micrographs
         print "Importing a set of micrographs..."
@@ -115,7 +130,7 @@ class TestWorkflowRelionPick(TestWorkflow):
         protPick1.ctfRelations.set(protCTF.outputCTF)
         protPick1.inputReferences.set(protAvgs.outputAverages)
 
-        self.launchProtocol(protPick1)
+        self._launchPick(protPick1)
 
         return protPick1
 
@@ -126,20 +141,20 @@ class TestWorkflowRelionPick(TestWorkflow):
         protPick2 = self.proj.copyProtocol(protPick1)
         protPick2.setObjLabel('autopick refs (all)')
         protPick2.runType.set(RUN_COMPUTE)
-        self.launchProtocol(protPick2)
+        self._launchPick(protPick2)
 
         # Launch now using the Gaussian as references
         protPick3 = self.proj.copyProtocol(protPick1)
         protPick3.setObjLabel('autopick gauss (optimize)')
         protPick3.referencesType.set(REF_BLOBS)
         protPick3.inputReferences.set(None)
-        self.launchProtocol(protPick3)
+        self._launchPick(protPick3)
 
         # Launch the same picking run but now in 1 GPU.
         protPick4 = self.proj.copyProtocol(protPick1)
         protPick4.setObjLabel('autopick refs (optimize) 1 GPU')
         protPick4.gpusToUse.set('0:0:0:0')
-        self.launchProtocol(protPick4)
+        self._launchPick(protPick4)
 
 
 class TestWorkflowRelionExtract(TestWorkflowRelionPick):
