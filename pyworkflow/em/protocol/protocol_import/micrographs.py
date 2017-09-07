@@ -450,14 +450,12 @@ class ProtImportMovies(ProtImportMicBase):
         self.serverSocket = serverSocket
         self.connectionList = {serverSocket.fileno(): serverSocket}
 
-        poller = select.poll()
-        poller.register(self.serverSocket, select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
-        self.poller = poller
-
         self.info("Socket started on port " + str(self.socketPort))
         return serverSocket
 
     def iterFilenamesFromSocket(self):
+        poller = select.poll()
+        poller.register(self.serverSocket, select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
         for fd, flag in self.poller.poll():
             if fd is self.serverSocket.fileno():
                 # New connection received through self.serverSocket

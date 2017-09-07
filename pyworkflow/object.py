@@ -545,7 +545,7 @@ class OrderedObject(Object):
     
     def __setattr__(self, name, value):
         if (name not in self._attributes and
-            issubclass(type(value), Object) and
+            issubclass(value.__class__, Object) and
             not self.__attrPointed(name, value) and value._objDoStore):
             self._attributes.append(name)
         Object.__setattr__(self, name, value)
