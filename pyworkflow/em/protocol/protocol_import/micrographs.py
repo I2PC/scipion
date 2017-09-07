@@ -286,6 +286,7 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase.__init__(self, **kwargs)
         self.serverSocket = None
         self.connectionList = None
+        self.poller = None
 
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
@@ -447,26 +448,29 @@ class ProtImportMovies(ProtImportMicBase):
         serverSocket.listen(10)
         serverSocket.setblocking(0)
         self.serverSocket = serverSocket
-        self.connectionList = [serverSocket]
+        self.connectionList = {serverSocket.fileno(): serverSocket}
+
+        poller = select.poll()
+        poller.register(self.serverSocket, select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
+        self.poller = poller
+
         self.info("Socket started on port " + str(self.socketPort))
         return serverSocket
 
     def iterFilenamesFromSocket(self):
         recv_buffer = 8192  # Advisable to keep it as an exponent of 2
-        read_sockets, wr_sockets, err_sockets = select.select(self.connectionList, [], [], 0)
-        for sock in read_sockets:
-            if sock is self.serverSocket:
+        for fd, flag in self.poller.poll():
+            if fd is self.serverSocket.fileno():
                 # New connection received through self.serverSocket
-                sockfd, addr = self.serverSocket.accept()
-                sockfd.setblocking(0)
-                self.connectionList.append(sockfd)
+                sock, addr = self.serverSocket.accept()
+                sock.setblocking(0)
+                self.connectionList[sock.fileno()] = sock
                 self.debug("Client (%s, %s) connected" % addr)
                 continue
             else:
                 # Data received from a client, process it
                 try:
-                    # In Windows, sometimes when a TCP program closes abruptly,
-                    # a "Connection reset by peer" exception will be thrown
+                    sock = self.connectionList[fd]
                     data = sock.recv(recv_buffer)
                     if data:
                         files = shlex.split(data)
@@ -494,71 +498,6 @@ class ProtImportMovies(ProtImportMicBase):
                     self.connectionList.remove(sock)
                     continue
         return
-
-    # WORKING version at eBic. Commented since current implementation of frame
-    # stacking in base class should work.
-    # def iterFiles(self):
-    #     if not (self.inputIndividualFrames and self.stackFrames):
-    #         for fileName, fileId in ProtImportMicBase.iterFiles(self):
-    #             yield fileName, fileId
-    #         return
-    #
-    #     filePaths = self.getMatchFiles()
-    #
-    #     frameRegex = re.compile("(?P<prefix>.+[^\d]+)(?P<frameid>\d+)")
-    #     #  Group all frames for each movie
-    #     # Key of the dictionary will be the common prefix and the value
-    #     # will be a list with all frames in that movie
-    #     frameDict = {}
-    #
-    #     if not hasattr(self, "createdStacks"):
-    #         self.createdStacks = set()
-    #
-    #     for fileName in filePaths:
-    #         fnNoExt = pwutils.removeExt(fileName)
-    #
-    #         match = frameRegex.match(fnNoExt)
-    #
-    #         if match is None:
-    #             raise Exception("Incorrect match of frame files pattern!")
-    #
-    #         d = match.groupdict()
-    #         prefix = d['prefix']
-    #         frameid = int(d['frameid'])
-    #
-    #         if prefix not in frameDict:
-    #             frameDict[prefix] = []
-    #
-    #         frameDict[prefix].append((frameid, fileName))
-    #
-    #     suffix = self.movieSuffix.get()
-    #     ih = ImageHandler()
-    #
-    #     for k, v in frameDict.iteritems():
-    #         movieFn = k + suffix
-    #
-    #         if self.writeMoviesInProject:
-    #             movieFn = self._getExtraPath(os.path.basename(movieFn))
-    #
-    #             if movieFn not in self.createdStacks:
-    #                 movieOut = movieFn
-    #
-    #                 if movieOut.endswith("mrc"):
-    #                     movieOut += ":mrcs"
-    #
-    #                 pwutils.makeFilePath(movieFn)
-    #
-    #                 for i, frame in enumerate(sorted(v, key=lambda x: x[0])):
-    #                     frameFn = frame[1]  # Frame name stored previously
-    #                     ih.convert(frameFn, (i + 1, movieOut))
-    #
-    #                     if self.deleteFrames:
-    #                         pwutils.cleanPath(frameFn)
-    #
-    #                 self.createdStacks.add(movieFn)
-    #
-    #             yield movieFn, None
-    #
 
     def _spreadMessage(self, message, sock):
 
