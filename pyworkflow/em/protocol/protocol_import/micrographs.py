@@ -286,7 +286,6 @@ class ProtImportMovies(ProtImportMicBase):
         ProtImportMicBase.__init__(self, **kwargs)
         self.serverSocket = None
         self.connectionList = None
-        self.poller = None
 
     def _defineAcquisitionParams(self, form):
         group = ProtImportMicBase._defineAcquisitionParams(self, form)
@@ -456,7 +455,7 @@ class ProtImportMovies(ProtImportMicBase):
     def iterFilenamesFromSocket(self):
         poller = select.poll()
         poller.register(self.serverSocket, select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR)
-        for fd, flag in self.poller.poll():
+        for fd, flag in poller.poll():
             if fd is self.serverSocket.fileno():
                 # New connection received through self.serverSocket
                 sock, addr = self.serverSocket.accept()
