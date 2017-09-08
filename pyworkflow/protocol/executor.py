@@ -264,7 +264,7 @@ class QueueStepExecutor(ThreadStepExecutor):
         job = self._runWithTimeout(lambda: _submit(self.hostConfig, submitDict, cwd), "submit job")
         return self._waitForJob(self.hostConfig, job)
 
-    def _runWithTimeout(self, command, description, timeout=10):
+    def _runWithTimeout(self, command, description, timeout=30):
         try:
             # job submit should be fast even if the job is long
             future = self.pool.apply_async(command)
@@ -300,7 +300,7 @@ class QueueStepExecutor(ThreadStepExecutor):
             status = self._runWithTimeout(runCommand, "find jobs status")
             if status is not None:
                 return status
-            time.sleep(2)
+            time.sleep(60)
 
 
 class MPIStepExecutor(ThreadStepExecutor):
