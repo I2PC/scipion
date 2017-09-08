@@ -37,8 +37,8 @@ void ProgExtractFeatures::readParams()
 {
     fnSel = getParam("-i");
     fnOut = getParam("-o");
-    useLBP = checkParam("--useLBP");
-    useEntropy = checkParam("--useEntropy");
+    useLBP = checkParam("--lbp");
+    useEntropy = checkParam("--entropy");
 }
 
 // Show ====================================================================
@@ -59,13 +59,13 @@ void ProgExtractFeatures::defineParams()
 {
     addUsageLine("Clusters a set of images");
     addParamsLine("  -i <selfile>                  : Selfile containing images to be clustered");
-    addParamsLine("  -o <selfile>                  : Output selfile");
-    addParamsLine("  [--useLBP]                    : Extract LBP features");
-    addParamsLine("  [--useEntropy]                : Extract entropy features");
+    addParamsLine("  [-o <selfile=\"\">]           : Output selfile");
+    addParamsLine("  [--lbp]                       : Extract LBP features");
+    addParamsLine("  [--entropy]                   : Extract entropy features");
 }
 
 
-std::vector<double> ProgExtractFeatures::extractLBP()
+std::vector<double> ProgExtractFeatures::extractLBP(const MultidimArray<double> &I)
 {
     std::vector<double> fv;
     std::vector<double> min_idxs, min_idxs_sort;
@@ -92,20 +92,20 @@ std::vector<double> ProgExtractFeatures::extractLBP()
     std::sort(min_idxs_sort.begin(), min_idxs_sort.end());
     std::unique(min_idxs_sort.begin(), min_idxs_sort.end());
 
-    for (int y = 1; y < (YSIZE(Iref())-1); y++)
+    for (int y = 1; y < (YSIZE(I)-1); y++)
     {
-        for (int x = 1; x < (XSIZE(Iref())-1); x++)
+        for (int x = 1; x < (XSIZE(I)-1); x++)
         {
             code = 0;
-            center = DIRECT_A2D_ELEM(Iref(),y,x);
-            code |= (DIRECT_A2D_ELEM(Iref(),y-1,x-1) > center) << 7;
-            code |= (DIRECT_A2D_ELEM(Iref(),y-1,x  ) > center) << 6;
-            code |= (DIRECT_A2D_ELEM(Iref(),y-1,x+1) > center) << 5;
-            code |= (DIRECT_A2D_ELEM(Iref(),y,  x+1) > center) << 4;
-            code |= (DIRECT_A2D_ELEM(Iref(),y+1,x+1) > center) << 3;
-            code |= (DIRECT_A2D_ELEM(Iref(),y+1,x  ) > center) << 2;
-            code |= (DIRECT_A2D_ELEM(Iref(),y+1,x-1) > center) << 1;
-            code |= (DIRECT_A2D_ELEM(Iref(),y  ,x-1) > center) << 0;
+            center = DIRECT_A2D_ELEM(I,y,x);
+            code |= (DIRECT_A2D_ELEM(I,y-1,x-1) > center) << 7;
+            code |= (DIRECT_A2D_ELEM(I,y-1,x  ) > center) << 6;
+            code |= (DIRECT_A2D_ELEM(I,y-1,x+1) > center) << 5;
+            code |= (DIRECT_A2D_ELEM(I,y,  x+1) > center) << 4;
+            code |= (DIRECT_A2D_ELEM(I,y+1,x+1) > center) << 3;
+            code |= (DIRECT_A2D_ELEM(I,y+1,x  ) > center) << 2;
+            code |= (DIRECT_A2D_ELEM(I,y+1,x-1) > center) << 1;
+            code |= (DIRECT_A2D_ELEM(I,y  ,x-1) > center) << 0;
             int idx = min_idxs[(int) code];
             lbp_hist[idx]++;
         }
@@ -120,18 +120,18 @@ std::vector<double> ProgExtractFeatures::extractLBP()
 }
 
 
-std::vector<double> ProgExtractFeatures::extractEntropy()
+std::vector<double> ProgExtractFeatures::extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked)
 {
     std::vector<double> fv;
     int hist[256] = {};
     int val;
 
     // entropy of entire image
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iref())
+    double m, M;
+    I.computeDoubleMinMax(m,M);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
     {
-        val = floor(((DIRECT_MULTIDIM_ELEM(Iref(), n) -
-              Iref().computeMin()) * 255.0) /
-              (Iref().computeMax() - Iref().computeMin()));
+        val = floor(((DIRECT_MULTIDIM_ELEM(I, n) - m) * 255.0) / (M-m));
         hist[val]++;
     }
 
@@ -146,12 +146,12 @@ std::vector<double> ProgExtractFeatures::extractEntropy()
     {
         for (int i = 0; i < (sizeof(masks)/sizeof(*masks)); i++)
         {
-            masks[i].resize(Iref());
+            masks[i].resize(I);
             masks[i].setXmippOrigin();
         }
 
-        int wave_size = XSIZE(Iref()) / 2;
-        int wave_size_step = XSIZE(Iref()) / 32;
+        int wave_size = XSIZE(I) / 2;
+        int wave_size_step = XSIZE(I) / 32;
 
         // simple inner-circle regions without negative values
 //        for (int i=2; i<(sizeof(masks)/sizeof(*masks)); i++)
@@ -192,15 +192,13 @@ std::vector<double> ProgExtractFeatures::extractEntropy()
     // extracting entropy from unmasked regions
     for (int i = 2; i < (sizeof(masks)/sizeof(*masks)); i++)
     {
-        Image<double> Iref_masked;
-        apply_binary_mask(masks[i], Iref(), Iref_masked());
+        apply_binary_mask(masks[i], I, Imasked);
         int hist[256] = {};
         int idx;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Iref_masked())
+        Imasked.computeDoubleMinMax(m,M);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Imasked)
         {
-            idx = floor(((DIRECT_MULTIDIM_ELEM(Iref_masked(), n) -
-                  Iref_masked().computeMin()) * 255.0) /
-                  (Iref_masked().computeMax() - Iref_masked().computeMin()));
+            idx = floor(((DIRECT_MULTIDIM_ELEM(Imasked, n) - m) * 255.0) / (M-m));
             hist[idx]++;
         }
 
@@ -216,32 +214,29 @@ std::vector<double> ProgExtractFeatures::extractEntropy()
 
 void ProgExtractFeatures::run()
 {
-    // Read the input metadata
+    MetaData SF;
     SF.read(fnSel);
+    Image<double> I, Imasked;
     FileName fnImg;
-    int countItems = 0;
     MDRow row;
-    MetaData MDclass;
+	CorrelationAux aux;
 
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
+	FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        countItems++;
     	SF.getValue(MDL_IMAGE, fnImg, __iter.objId);
-    	Iref.read(fnImg);
-    	Iref().setXmippOrigin();
-    	CorrelationAux aux;
-    	centerImageTranslationally(Iref(), aux);
-    	denoiseTVFilter(Iref(), 50);
-
-    	SF.getRow(row, countItems);
-    	size_t recId = MDclass.addRow(row);
+    	I.read(fnImg);
+    	I().setXmippOrigin();
+    	centerImageTranslationally(I(), aux);
+    	denoiseTVFilter(I(), 50);
 
         if (useLBP)
-            MDclass.setValue(MDL_SCORE_BY_LBP, extractLBP(), recId);
+            SF.setValue(MDL_SCORE_BY_LBP, extractLBP(I()), __iter.objId);
 
         if (useEntropy)
-            MDclass.setValue(MDL_SCORE_BY_ENTROPY, extractEntropy(), recId);
+            SF.setValue(MDL_SCORE_BY_ENTROPY, extractEntropy(I(),Imasked()), __iter.objId);
 
-        MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
     }
+	if (fnOut=="")
+		fnOut=fnSel;
+	SF.write(fnOut,MD_APPEND);
 }

@@ -25,9 +25,4 @@
 
 #include <reconstruction/classify_extract_features.h>
 
-int main(int argc, char **argv)
-{
-    ProgExtractFeatures prm;
-    prm.read(argc,argv);
-    return prm.tryRun();
-}
+RUN_XMIPP_PROGRAM(ProgExtractFeatures)

@@ -44,16 +44,6 @@ public:
     /**  Parameter for using entropy features */
     bool useEntropy;
 
-    /**  Masks for entropy features */
-    MultidimArray<int> masks[7];
-
-public:
-    // SelFile with the input images
-    MetaData SF;
-
-    // Image holding current reference
-    Image<double> Iref;
-
 public:
     /// Read argument
     void readParams();
@@ -69,12 +59,16 @@ public:
     /// "Multiresolution gray-scale and rotation invariant texture
     /// classification with local binary patterns." IEEE Transactions on
     /// Pattern Analysis and Machine Intelligence 24.7 (2002): 971-987.
-    std::vector<double> extractLBP();
+    std::vector<double> extractLBP(const MultidimArray<double> &I);
 
     /// Extracting entropy features
-    std::vector<double> extractEntropy();
+    std::vector<double> extractEntropy(const MultidimArray<double> &I, MultidimArray<double> &Imasked);
 
     /// Main routine
     void run();
+
+public:
+    /**  Masks for entropy features */
+    MultidimArray<int> masks[7];
 };
 #endif
