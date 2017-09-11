@@ -38,8 +38,8 @@ from pyworkflow.em.packages.xmipp3.convert import writeSetOfParticles, readSetOf
 class XmippProtEliminateNonParticles(ProtClassify2D):
     """ Takes a set of particles and using statistical methods (variance of
     variances of sub-parts of input image) eliminates those samples, where
-    is no object/particle (only noise is presented there). Threshold parameter
-    can be used for fine-tuning the algorithm for type of data. """
+    there is no object/particle (only noise is presented there). Threshold
+    parameter can be used for fine-tuning the algorithm for type of data. """
 
     _label = 'eliminate non-particles'
 
@@ -143,10 +143,14 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
             # so we exit from the function here
             return
 
-        outSet = self._loadOutputSet(SetOfParticles, 'particles.sqlite')
+        outSet = self._loadOutputSet(SetOfParticles, 'outputParticles.sqlite')
+        readSetOfParticles(self._getExtraPath('output.xmd'), outSet)
         self._updateOutputSet('outputParticles', outSet, streamMode)
-        self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
+        outSet = self._loadOutputSet(SetOfParticles,
+                                     'eliminatedParticles.sqlite')
+        readSetOfParticles(self._getExtraPath('eliminated.xmd'), outSet)
+        self._updateOutputSet('eliminatedParticles', outSet, streamMode)
 
         if self.finished:  # Unlock createOutputStep if finished all jobs
             outputStep = self._getFirstJoinStep()
@@ -177,22 +181,11 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
             # Persist changes
             self._store(outputAttr)
         else:
-            # Here the defineOutputs function will call the write() method
-            particlesSet = self._createSetOfParticles()
-            if outputName == 'outputParticles':
-                readSetOfParticles(self._getExtraPath('output.xmd'),
-                                   particlesSet)
-                particlesSet.copyInfo(self.inputParticles.get())
-                self._defineOutputs(outputParticles=particlesSet)
-                self._defineSourceRelation(self.inputParticles,
-                                           self.outputParticles)
-            else:
-                readSetOfParticles(self._getExtraPath('eliminated.xmd'),
-                                   particlesSet)
-                particlesSet.copyInfo(self.inputParticles.get())
-                self._defineOutputs(eliminatedParticles=particlesSet)
-                self._defineSourceRelation(self.outputParticles,
-                                           self.eliminatedParticles)
+            self._defineOutputs(**{outputName: outputSet})
+            self._store(outputSet)
+
+        # Close set databaset to avoid locking it
+        outputSet.close()
 
 
     def _insertStepsForParticles(self, inputParts, outputParts):
