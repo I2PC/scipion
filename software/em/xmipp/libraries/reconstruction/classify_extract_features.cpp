@@ -37,8 +37,10 @@ void ProgExtractFeatures::readParams()
 {
     fnSel = getParam("-i");
     fnOut = getParam("-o");
+    noDenoising = checkParam("--noDenoising");
     useLBP = checkParam("--lbp");
     useEntropy = checkParam("--entropy");
+    useZernike = checkParam("--zernike");
 }
 
 // Show ====================================================================
@@ -47,10 +49,12 @@ void ProgExtractFeatures::show()
     if (verbose==0)
         return;
     std::cerr
-    << "Input selfile:             " << fnSel      << std::endl
-    << "Output selfile:            " << fnOut      << std::endl
-    << "Extract LBP features:      " << useLBP     << std::endl
-    << "Extract entropy features:  " << useEntropy << std::endl
+    << "Input selfile:             " << fnSel        << std::endl
+    << "Output selfile:            " << fnOut        << std::endl
+    << "Turn off denoising:        " << noDenoising  << std::endl
+    << "Extract LBP features:      " << useLBP       << std::endl
+    << "Extract entropy features:  " << useEntropy   << std::endl
+    << "Extract Zernike moments:   " << useZernike   << std::endl
     ;
 }
 
@@ -60,10 +64,17 @@ void ProgExtractFeatures::defineParams()
     addUsageLine("Clusters a set of images");
     addParamsLine("  -i <selfile>                  : Selfile containing images to be clustered");
     addParamsLine("  [-o <selfile=\"\">]           : Output selfile");
+    addParamsLine("  [--noDenoising]               : Turn off denoising");
     addParamsLine("  [--lbp]                       : Extract LBP features");
     addParamsLine("  [--entropy]                   : Extract entropy features");
+    addParamsLine("  [--zernike]                   : Extract Zernike moments");
 }
 
+
+int ProgExtractFeatures::factorial(int n)
+{
+  return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
+}
 
 std::vector<double> ProgExtractFeatures::extractLBP(const MultidimArray<double> &I)
 {
@@ -212,6 +223,57 @@ std::vector<double> ProgExtractFeatures::extractEntropy(const MultidimArray<doub
     return fv;
 }
 
+std::vector<double> ProgExtractFeatures::extractZernike(const MultidimArray<double> &I)
+{
+    MultidimArray<double> R, Theta, Rad;
+    R.resize(I); R.setXmippOrigin();
+    Theta.resize(I); Theta.setXmippOrigin();
+    Rad.resize(I); Rad.setXmippOrigin();
+
+    double c;
+    int N = YSIZE(I);
+    const std::complex<double> i(0.0, 1.0);
+    std::vector<double> fv;
+
+    for (int n = 1; n < 5; n++)
+    {
+        for (int m = -n; m < 0; m+=2)
+        {
+            std::complex<double> product = 0.0;
+            for (int y = 0; y < YSIZE(I); y++)
+            {
+                for (int x = 0; x < XSIZE(I); x++)
+                {
+                    DIRECT_A2D_ELEM(R,y,x) =
+                        sqrt(pow(2*(x+1)-N-1,2.0) + pow(2*(y+1)-N-1,2.0)) / N;
+                    if (DIRECT_A2D_ELEM(R,y,x) > 1) DIRECT_A2D_ELEM(R,y,x) = 0;
+
+                    DIRECT_A2D_ELEM(Rad,y,x) = 0;
+                    for (int s = 0; s <=(n-abs(m))/2; s++)
+                    {
+                        c = pow(-1.0,s) * factorial(n-s) / (factorial(s) *
+                            factorial((n+abs(m))/2-s) *
+                            factorial((n-abs(m))/2-s));
+
+                        DIRECT_A2D_ELEM(Rad,y,x) = DIRECT_A2D_ELEM(Rad,y,x) +
+                            pow(c*DIRECT_A2D_ELEM(R,y,x), (n-2*s));
+                    }
+
+                    DIRECT_A2D_ELEM(Theta,y,x) = atan2((N-1-2*(y+1)+2),
+                                                       (2*(x+1)-N+1-2));
+
+                    product += DIRECT_A2D_ELEM(I,y,x) *
+                               DIRECT_A2D_ELEM(Rad,y,x) *
+                               exp(-1.0 * i * (double)m *
+                                   DIRECT_A2D_ELEM(Theta,y,x));
+                }
+            }
+            fv.push_back(std::abs(product));
+        }
+    }
+    return fv;
+}
+
 void ProgExtractFeatures::run()
 {
     MetaData SF;
@@ -227,7 +289,9 @@ void ProgExtractFeatures::run()
     	I.read(fnImg);
     	I().setXmippOrigin();
     	centerImageTranslationally(I(), aux);
-    	denoiseTVFilter(I(), 50);
+
+    	if (!noDenoising)
+    	    denoiseTVFilter(I(), 50);
 
         if (useLBP)
             SF.setValue(MDL_SCORE_BY_LBP, extractLBP(I()), __iter.objId);
@@ -235,8 +299,12 @@ void ProgExtractFeatures::run()
         if (useEntropy)
             SF.setValue(MDL_SCORE_BY_ENTROPY, extractEntropy(I(),Imasked()), __iter.objId);
 
+        if (useZernike)
+            SF.setValue(MDL_SCORE_BY_ZERNIKE, extractZernike(I()), __iter.objId);
+
     }
-	if (fnOut=="")
-		fnOut=fnSel;
-	SF.write(fnOut,MD_APPEND);
+
+	if (fnOut == "") fnOut = fnSel;
+
+	SF.write(fnOut, MD_APPEND);
 }

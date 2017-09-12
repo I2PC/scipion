@@ -375,6 +375,7 @@ enum MDLabel
     MDL_SCORE_BY_LBP,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_MIRROR, ///< score by mirror (double)
     MDL_SCORE_BY_SCREENING, ///< Feature vectors used to classify particles (vector double)
+    MDL_SCORE_BY_ZERNIKE,  ///< Feature vectors used to classify particles (vector double)
     MDL_SCORE_BY_ZSCORE,
     MDL_SELFILE, ///< Name of an image (std::string)
     MDL_SERIE, ///< A collection of micrographs, e.g. a tilt serie (std::string)
@@ -1799,6 +1800,7 @@ private:
         MDL::addLabel(MDL_SCORE_BY_LBP, LABEL_VECTOR_DOUBLE, "lbpFeatures");
         MDL::addLabel(MDL_SCORE_BY_MIRROR, LABEL_DOUBLE, "scoreByMirror");
         MDL::addLabel(MDL_SCORE_BY_SCREENING, LABEL_VECTOR_DOUBLE, "screenFeatures");
+        MDL::addLabel(MDL_SCORE_BY_ZERNIKE, LABEL_VECTOR_DOUBLE, "zernikeMoments");
 		MDL::addLabel(MDL_SCORE_BY_ZSCORE, LABEL_DOUBLE, "scoreByZScore");
 
         MDL::addLabelAlias(MDL_SCALE, "Scale");
