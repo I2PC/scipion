@@ -20,7 +20,7 @@
 
 
 /** Method to allocate 3D array (continuous) of given size^3 */
-float* allocateGPU(float*& where, int size);
+float* allocateGPU(float*& where, int size, int typeSize);
 void releaseGPU(float*& where);
 void copyTempSpaces(std::complex<float>*** tempVol, float*** tempWeights,
 		float* tempVolGPU, float* tempWeightsGPU,

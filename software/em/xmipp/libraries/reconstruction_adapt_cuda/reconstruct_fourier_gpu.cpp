@@ -1161,10 +1161,10 @@ void ProgRecFourierGPU::processImages( int firstImageIndex, int lastImageIndex)
 
 	// the +1 is to prevent outOfBound reading when mirroring the result (later)
     if (NULL == tempVolumeGPU) {
-    	allocateGPU(tempVolumeGPU, 2 * (maxVolumeIndexYZ+1));
+    	allocateGPU(tempVolumeGPU, maxVolumeIndexYZ+1, sizeof(std::complex<float>));
     }
     if (NULL == tempWeightsGPU) {
-    	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1);
+    	allocateGPU(tempWeightsGPU, maxVolumeIndexYZ+1, sizeof(float));
     }
 
     int startLoadIndex = firstImageIndex;

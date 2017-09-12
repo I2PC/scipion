@@ -57,12 +57,10 @@ void printAABB(Point3D<float>* AABB) {
 		AABB[0].x, AABB[1].y, AABB[0].z);
 }
 
-float* allocateGPU(float*& where, int size) {
-	std::cout << "allocating " << size << "x" << sizeof(float) << std::endl;
-	cudaMalloc((void**)&where, size * size * size * sizeof(float));
+float* allocateGPU(float*& where, int size, int typeSize) { // FIXME move to some utils class
+	cudaMalloc((void**)&where, size * size * size * typeSize);
 	gpuErrchk( cudaPeekAtLastError() );
-	std::cout << "allocated " << where << std::endl;
-	cudaMemset(where, 0.f, size * size * size * sizeof(float));
+	cudaMemset(where, 0.f, size * size * size * typeSize);
 	gpuErrchk( cudaPeekAtLastError() );
 
 	return where;
