@@ -113,7 +113,7 @@ class CCP4ProtRunRefmac(EMProtocol):
         dict['CCP4_HOME'] = os.environ['CCP4_HOME']
         dict['REFMAC_BIN'] = os.environ['REFMAC_BIN']
         #dict['PDBDIR'] =  os.path.dirname(self.inputStructure.get().getFileName())
-        dict['PDBDIR'] =  self.fixedPDBFileName
+        dict['PDBDIR'] =  os.path.dirname(self.fixedPDBFileName)
         pdfileName = os.path.splitext(os.path.basename(self.inputStructure.get().getFileName()))[0]
         dict['PDBFILE'] = pdfileName
 
