@@ -31,7 +31,6 @@ def fixCRYSrecordToPDBFile( inPDBFileName, tmpDir,
         tmpFileName = getfixedPDBFileName()
         with open(inPDBFileName,"r") as infile, open(tmpFileName, "w") as outfile:
             for line in infile:
-                print line
                 if ADDCRYS and (line.startswith('ATOM') or line.startswith('MODEL')):
                     line = CRYS + line
                     ADDCRYS = False
