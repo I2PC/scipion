@@ -67,8 +67,8 @@ molecule_id=${MOL}
 # Delete some temporary files. If not and the script is executed
 # two times there will be conflicts
 
-RM=rm -f
-${RM}  ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}mask.log ${OUTPUTDIR}_orig_data_start.txt
+RM='rm -f'
+${RM} ${OUTPUTDIR}average_for_refmac.mtz ${OUTPUTDIR}mask.log ${OUTPUTDIR}_orig_data_start.txt
 ${RM} ${OUTPUTDIR}$molecule_id-initial.pdb ${OUTPUTDIR}masked_fs.mtz ${OUTPUTDIR}shifts.txt
 ${RM} ${OUTPUTDIR}$molecule_id-refined.mtz ${OUTPUTDIR}$molecule_id-refined.pdb
 ${RM} ${OUTPUTDIR}refine.log ${OUTPUTDIR}ifft.log
