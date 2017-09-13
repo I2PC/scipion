@@ -164,12 +164,11 @@ class Plotter(View):
         for label in labels:
             label.set_fontsize(self.plot_text_fontsize) # Set fontsize
             #label.set_text('aa')
-
         self.last_subplot = a
         self.plot = a.plot
         self.hist = a.hist
         return a
-    
+
     def getLastSubPlot(self):
         return self.last_subplot
     
@@ -178,7 +177,13 @@ class Plotter(View):
         a.set_axis_off()
         self.figure.set_facecolor('white')
         return a
-    
+
+    def getColorBar(self, plot):
+        self.tightLayoutOn = False
+        cax = self.figure.add_axes([0.9, 0.1, 0.03, 0.8])
+        cbar = self.figure.colorbar(plot, cax=cax)
+        cbar.ax.invert_yaxis()
+
     def tightLayout(self):
         if self.tightLayoutOn:
             self.activate()
@@ -210,10 +215,17 @@ class Plotter(View):
         plt.close(self.figure)
         
 
+def getHexColorList(stepColors, colorName='jet'):
+    """ Returns a list of hexColor """
+    from matplotlib import cm, colors
+    
+    colorsList = []
+    colorMap = cm.get_cmap(colorName)
+    ratio = 255.0 / (len(stepColors))
+    for index in range(len(stepColors)):
+        colorPosition = int(round((index+1) * ratio))
+        rgb = colorMap(colorPosition)[:3]
+        rgbColor = colors.rgb2hex(rgb)
+        colorsList.append(rgbColor)
 
-
-
-
-
-
-        
+    return colorsList
