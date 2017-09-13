@@ -432,17 +432,17 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         outputName = 'outputCoordinates'
         outputDir = self.getCoordsDir()
         outputCoords = getattr(self, outputName, None)
-        micSet = self.getInputMicrographs()
 
         # If there are not outputCoordinates yet, it means that is the first
         # time we are updating output coordinates, so we need to first create
         # the output set
-        if outputCoords is None:
-            outputCoords = self._createSetOfCoordinates(micSet)
-            firstTime = True
+        firstTime = outputCoords is None
+
+        if firstTime:
+            micSetPtr = self.getInputMicrographsPointer()
+            outputCoords = self._createSetOfCoordinates(micSetPtr)
         else:
             outputCoords.enableAppend()
-            irstTime = False
 
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
         self._updateOutputSet(outputName, outputCoords, streamMode)
