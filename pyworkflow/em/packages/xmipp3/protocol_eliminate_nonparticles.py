@@ -57,18 +57,14 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
                       help='Select the input images to be classified.')
         form.addParam('threshold', param.FloatParam, default=1.5,
                       label='Threshold used in elimination:',
-                      help='Higher threshold => more particles are eliminated.')
+                      help='Higher threshold => more particles will be eliminated.')
 
         form.addParallelSection(threads=1, mpi=1)
 
     # --------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
-        writeSetOfParticles(self.inputParticles.get(),
-                            self._getExtraPath("images.xmd"),
-                            alignType=em.ALIGN_NONE)
-        # Convert input images if necessary
         self.insertedDict = {}
-        self._insertNewPartsSteps(self.insertedDict, self.inputParticles.get())
+        self._insertNewPartsSteps(self.insertedDict)
         self._insertFunctionStep('createOutputStep', wait=True)
 
     def createOutputStep(self):
@@ -87,12 +83,18 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
                 return s
         return None
 
-    def _insertNewPartsSteps(self, insertedDict, inputParts):
+    def _insertNewPartsSteps(self, insertedDict):
         deps = []
+        writeSetOfParticles([m.clone() for m in self.inputParticles.get()
+                   if int(m.getObjId()) not in self._readDoneList()],
+                            self._getExtraPath("newDone.xmd"),
+                            alignType=em.ALIGN_NONE)
         stepId = self._insertStepsForParticles(
-            self._getExtraPath("images.xmd"), self._getExtraPath("output.xmd"))
+            self._getExtraPath("newDone.xmd"),
+            self._getExtraPath("output.xmd"),
+            self._getExtraPath("eliminated.xmd"))
         deps.append(stepId)
-        for part in inputParts:
+        for part in self.inputParticles.get():
             if part.getObjId() not in insertedDict:
                 insertedDict[part.getObjId()] = stepId
         return deps
@@ -115,8 +117,7 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
                        for m in self.inputParticles.get())
         outputStep = self._getFirstJoinStep()
         if newParts:
-            fDeps = self._insertNewPartsSteps(self.insertedDict,
-                                              self.inputParticles.get())
+            fDeps = self._insertNewPartsSteps(self.insertedDict)
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
@@ -188,15 +189,16 @@ class XmippProtEliminateNonParticles(ProtClassify2D):
         outputSet.close()
 
 
-    def _insertStepsForParticles(self, inputParts, outputParts):
+    def _insertStepsForParticles(self, inputParts, outputParts, elimParts):
         classifyStepId = self._insertFunctionStep('eliminationStep',
                                                   inputParts,
-                                                  outputParts)
+                                                  outputParts,
+                                                  elimParts)
         return classifyStepId
 
-    def eliminationStep(self, fnInputMd, fnOutputMd):
-        args = "-i %s -o %s -t %f" % (
-        fnInputMd, fnOutputMd, self.threshold.get())
+    def eliminationStep(self, fnInputMd, fnOutputMd, fnElimMd):
+        args = "-i %s -o %s -e %s -t %f" % (
+        fnInputMd, fnOutputMd, fnElimMd, self.threshold.get())
         self.runJob("xmipp_eliminate_nonparticles", args)
 
     # --------------------------- UTILS functions -----------------------------

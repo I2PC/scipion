@@ -38,33 +38,34 @@ public:
     /// Name of the output metadata
     FileName fnOut;
 
+    /// Name of the eliminated particle metadata
+    FileName fnElim;
+
     /// Threshold for variance of variance
     float threshold;
-
-    /// SelFile containing input data
-    MetaData SF;
-
-    /// Input image data
-    Image<double> Iref;
-
-    /// Input image data
-    std::vector<double> features;
 
 public:
     /// Read input parameters
     void readParams();
 
+    /// Show
+    void show();
+
     /// Define input parameters
     void defineParams();
 
-    /// Show
-    void show();
+    /// Function for recognizing non-noise particles
+    bool isParticle();
 
     /// Execute
     void run();
 
-    /// Function for recognizing non-noise particles
-    bool isParticle();
+public:
+    /// Input image data
+    Image<double> Iref;
+
+    /// Features derived in elimination process
+    std::vector<double> features;
 };
 
 #endif

@@ -38,6 +38,7 @@ void ProgEliminateNonParticles::readParams()
 {
     fnIn = getParam("-i");
     fnOut = getParam("-o");
+    fnElim = getParam("-e");
     threshold = getDoubleParam("-t");
 }
 
@@ -49,6 +50,7 @@ void ProgEliminateNonParticles::show()
     std::cerr
     << "Input selfile:           " << fnIn       << std::endl
     << "Output selfile:          " << fnOut      << std::endl
+    << "Eliminated selfile:      " << fnElim     << std::endl
     << "Threshold:               " << threshold  << std::endl
     ;
 }
@@ -57,9 +59,10 @@ void ProgEliminateNonParticles::show()
 void ProgEliminateNonParticles::defineParams()
 {
     addUsageLine("Eliminates samples containing only noise");
-    addParamsLine("  -i <selfile>           : Selfile containing set of input particles");
-    addParamsLine("  -o <selfile>           : Output selfile");
-    addParamsLine("  -t <float>             : Threshold used by algorithm");
+    addParamsLine("  -i <selfile>                       : Selfile containing set of input particles");
+    addParamsLine("  [-o <selfile=\"output.xmd\">]      : Output selfile");
+    addParamsLine("  [-e <selfile=\"eliminated.xmd\">]  : Eliminated particles selfile");
+    addParamsLine("  -t <float>                         : Threshold used by algorithm");
 }
 
 
@@ -119,14 +122,14 @@ bool ProgEliminateNonParticles::isParticle()
 
 void ProgEliminateNonParticles::run()
 {
-    // Read the input metadata
+    MetaData SF;
     SF.read(fnIn);
     FileName fnImg;
+    Image<double> I;
     int countItems = 0;
+    CorrelationAux aux;
     MDRow row;
     MetaData MDclass, MDclass_elim;
-    size_t extraPath = fnOut.find_last_of("/");
-    FileName fnElim = fnOut.substr(0,extraPath+1) + "eliminated.xmd";
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
@@ -134,7 +137,6 @@ void ProgEliminateNonParticles::run()
     	SF.getValue(MDL_IMAGE, fnImg, __iter.objId);
     	Iref.read(fnImg);
     	Iref().setXmippOrigin();
-    	CorrelationAux aux;
     	centerImageTranslationally(Iref(), aux);
     	denoiseTVFilter(Iref(), 50);
         if (isParticle())
