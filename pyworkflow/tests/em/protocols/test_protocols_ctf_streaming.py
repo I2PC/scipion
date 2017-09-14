@@ -1,6 +1,6 @@
 # ***************************************************************************
 # *
-# * Authors:     Amaya Jimenez (ajimenez@cnb.csic.es)
+# * Authors:     Roberto Marabini (roberto@cnb.csic.es)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -23,23 +23,18 @@
 
 import time
 import os
-
+from pyworkflow.em.data import SetOfCTF
 from pyworkflow.tests import BaseTest, setupTestProject
-from pyworkflow.em.protocol import ProtCreateStreamData
-from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
+from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
+from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.packages.xmipp3 import XmippProtCTFMicrographs
-from pyworkflow.em.data import SetOfCTF, SetOfMicrographs
-
-
+from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
+from pyworkflow.em.packages.xmipp3.protocol_ctf_micrographs import XmippProtCTFMicrographs
+from pyworkflow.em.packages.gctf import ProtGctf
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
-
-MICS = os.environ.get('SCIPION_TEST_MICS', 2)
-
+MICS = os.environ.get('SCIPION_TEST_MICS', 3)
 CTF_SQLITE = "ctfs.sqlite"
-MIC_SQLITE = "micrographs.sqlite"
-
 
 class TestCtfStreaming(BaseTest):
     @classmethod
@@ -58,45 +53,59 @@ class TestCtfStreaming(BaseTest):
     def test_pattern(self):
         """ Import several Particles from a given pattern.
         """
-        kwargs = {'xDim': 1024,
-                  'yDim': 1024,
+        kwargs = {'xDim': 4096,
+                  'yDim': 4096,
                   'nDim': MICS,
-                  'samplingRate': 3.0,
-                  'creationInterval': 3,
-                  'delay':0,
-                  'setof': SET_OF_RANDOM_MICROGRAPHS
-                  }
+                  'samplingRate': 1.25,
+                  'creationInterval': 5,
+                  'delay': 0,
+                  'setof': SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
+                }
 
-        #create input micrographs
+        # put some stress on the system
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
         self.proj.launchProtocol(protStream,wait=False)
 
         counter=1
-        time.sleep(20)
         while not protStream.hasAttribute('outputMicrographs'):
+            time.sleep(10)
             protStream = self._updateProtocol(protStream)
-            if counter > 100:
+            if counter > 10:
                 break
             counter += 1
-            time.sleep(10)
+
+        # then introduce monitor, checking all the time ctf and saving to
+        # database
+        protCTF = ProtCTFFind(useCftfind4=True)
+        protCTF.inputMicrographs.set(protStream.outputMicrographs)
+        protCTF.ctfDownFactor.set(2)
+        protCTF.highRes.set(0.4)
+        protCTF.lowRes.set(0.05)
+        protCTF.numberOfThreads.set(4)
+        self.proj.launchProtocol(protCTF, wait=False)
 
         kwargs = {
-            'numberOfThreads': min(MICS +1,5)}
+            'numberOfThreads': 3}
+        protCTF2 = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
+        protCTF2.inputMicrographs.set(protStream.outputMicrographs)
+        self.proj.launchProtocol(protCTF2)
 
-        protCTF = self.newProtocol(XmippProtCTFMicrographs, **kwargs)
-        protCTF.inputMicrographs.set(protStream.outputMicrographs)
-        self.proj.launchProtocol(protCTF)
+        protCTF3 = ProtGctf()
+        protCTF3.inputMicrographs.set(protStream.outputMicrographs)
+        protCTF3.ctfDownFactor.set(2)
+        self.proj.launchProtocol(protCTF3, wait=False)
 
-        micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
-        ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
 
-        time.sleep(5)
-        while not (ctfSet.getSize() == micSet.getSize()):
-            protCTF = self._updateProtocol(protCTF)
-            micSet = SetOfMicrographs(filename=protStream._getPath(MIC_SQLITE))
-            ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
+        counter = 1
+
+        while not protCTF.hasAttribute('outputCTF'):
+
             time.sleep(10)
+            protCTF = self._updateProtocol(protCTF)
+            if counter > 10:
+                break
+            counter += 1
 
         ctfSet = SetOfCTF(filename=protCTF._getPath(CTF_SQLITE))
 
@@ -111,5 +120,3 @@ class TestCtfStreaming(BaseTest):
             self.assertNotEqual(ctf._defocusU.get(), None)
             self.assertNotEqual(ctf._defocusV.get(), None)
             self.assertNotEqual(ctf._defocusRatio.get(), None)
-
-################################################################################
