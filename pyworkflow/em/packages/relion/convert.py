@@ -969,15 +969,13 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
     extraLabels = coordSet.getFirstItem().hasAttribute('_rlnClassNumber')
     doScale = abs(scale - 1) > 0.001
 
-    print "Scaling: %s, factor: %s" % (doScale, scale)
-
     for coord in coordSet.iterItems(orderBy='_micId'):
         micId = coord.getMicId()
-        if not micId in posDict:
-            print "micId %s not found" % micId
-            continue
 
         if micId != lastMicId:
+            if not micId in posDict:
+                print "Warning: micId %s not found" % micId
+                continue
             # we need to close previous opened file
             if f:
                 f.close()
@@ -989,8 +987,6 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
         if doScale:
             x = coord.getX() * scale
             y = coord.getY() * scale
-            print "coord: %s %s, new: %s %s" % (coord.getX(), coord.getY(),
-                                                x, y)
         else:
             x = coord.getX()
             y = coord.getY()

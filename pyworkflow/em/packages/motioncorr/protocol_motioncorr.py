@@ -90,11 +90,18 @@ class ProtMotionCorr(ProtAlignMovies):
 
         form.addParam('doComputeMicThumbnail', params.BooleanParam,
                       expertLevel=cons.LEVEL_ADVANCED,
-                      default=False, condition='doSaveAveMic',
+                      default=False,
                       label='Compute micrograph thumbnail?',
                       help='When using this option, we will compute a '
                            'micrograph thumbnail and keep it with the '
                            'micrograph object for visualization purposes. ')
+
+        form.addParam('computeAllFramesAvg', params.BooleanParam,
+                      expertLevel=cons.LEVEL_ADVANCED,
+                      default=False,
+                      label='Compute all frames average?',
+                      help='Computing all the frames average could provide a '
+                           'sanity check about the microscope and the camera.')
 
         form.addParam('extraParams', params.StringParam, default='',
                       expertLevel=cons.LEVEL_ADVANCED,
@@ -335,9 +342,9 @@ class ProtMotionCorr(ProtAlignMovies):
                                                                   input_params[2],
                                                                   input_params[0])
                 else:
-                    argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj.get(),
-                                                              self.scaleMin.get(),
-                                                              self.angDist.get())
+                    argsDict['-Mag'] = '%0.3f %0.3f %0.3f' % (self.scaleMaj,
+                                                              self.scaleMin,
+                                                              self.angDist)
 
             args = ' -InMrc "%s" ' % movie.getBaseName()
             args += ' '.join(['%s %s' % (k, v) for k, v in argsDict.iteritems()])
@@ -360,8 +367,6 @@ class ProtMotionCorr(ProtAlignMovies):
                 outMicFn = self._getExtraPath(self._getOutputMicWtName(movie))
 
             if self.doComputePSD:
-                uncorrectedPSD = movieBaseName + '_uncorrected'
-                correctedPSD = movieBaseName + '_corrected'
                 # Compute uncorrected avg mic
                 roi = [self.cropOffsetX.get(), self.cropOffsetY.get(),
                        self.cropDimX.get(), self.cropDimY.get()]
@@ -371,11 +376,8 @@ class ProtMotionCorr(ProtAlignMovies):
                                   roi=roi, dark=None,
                                   gain=inputMovies.getGain())
 
-                self.computePSD(aveMicFn, uncorrectedPSD)
-                self.computePSD(outMicFn, correctedPSD)
-                self.composePSD(uncorrectedPSD + ".psd",
-                                correctedPSD + ".psd",
-                                self._getPsdCorr(movie))
+                self.computePSDs(movie, aveMicFn, outMicFn,
+                                 outputFnCorrected=self._getPsdJpeg(movie))
 
             self._saveAlignmentPlots(movie)
 
@@ -483,6 +485,9 @@ class ProtMotionCorr(ProtAlignMovies):
     def _getPsdCorr(self, movie):
         return self._getNameExt(movie, '_psd_comparison', 'psd', extra=True)
 
+    def _getPsdJpeg(self, movie):
+        return self._getNameExt(movie, '_psd', 'jpeg', extra=True)
+
     def _preprocessOutputMicrograph(self, mic, movie):
         self._setPlotInfo(movie, mic)
 
@@ -505,6 +510,7 @@ class ProtMotionCorr(ProtAlignMovies):
         mic.plotGlobal = em.Image(location=self._getPlotGlobal(movie))
         if self.doComputePSD:
             mic.psdCorr = em.Image(location=self._getPsdCorr(movie))
+            mic.psdJpeg = em.Image(location=self._getPsdJpeg(movie))
         if self._doComputeMicThumbnail():
             mic.thumbnail = em.Image(location=self._getOutputMicThumbnail(movie))
 
