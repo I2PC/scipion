@@ -211,14 +211,8 @@ class XmippProtOFAlignment(ProtAlignMovies):
                                     % (outMovieFn, program))
 
             if self.doComputePSD:
-                uncorrectedPSD = self._getFnInMovieFolder(movie, "uncorrected")
-                correctedPSD = self._getFnInMovieFolder(movie, "corrected")
-                # TODO: Compute the PSD inside the OF program?
-                self.computePSD(aveMic, uncorrectedPSD)
-                self.computePSD(outMicFn, correctedPSD)
-                self.composePSD(uncorrectedPSD + ".psd",
-                                correctedPSD + ".psd",
-                                self._getPsdCorr(movie))
+                self.computePSDs(movie, aveMic, outMicFn,
+                                 outputFnCorrected=outMicFn+'psd.png')
                 # If the micrograph was only saved for computing the PSD
                 # we can remove it
                 if not self.doSaveAveMic:
