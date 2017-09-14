@@ -580,9 +580,7 @@ class FileBrowser(ObjectBrowser):
         self._addButton(frame, 'Home', Icon.HOME, self._actionHome)
         self._addButton(frame, 'Launch folder', Icon.ROCKET,
                         self._actionLaunchFolder)
-        # self._addButton(frame, 'Root', Icon.ROOT, self._actionRoot)
-        # self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE, self._actionWorkingDir)
-        # It is doing the same as up: self._addButton(frame, 'Back', Icon.ARROW_LEFT, self._actionUp)
+        self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE, self._actionWorkingDir)
         self._addButton(frame, 'Up', Icon.ARROW_UP, self._actionUp)
 
         # Add shortcuts
