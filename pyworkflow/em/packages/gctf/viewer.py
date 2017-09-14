@@ -112,7 +112,7 @@ class ProtGctfViewer(Viewer):
                 objName = obj.strId()
             psdLabels = '_psdFile'
             labels = 'id enabled comment %s _defocusU _defocusV _defocusAngle _defocusRatio' % psdLabels
-            labels = labels + ' _gctf_ctfResolution _gctf_crossCorrelation _micObj._filename'
+            labels = labels + ' _resolution _gctf_crossCorrelation _micObj._filename'
             print "objName, ", objName
             self._views.append(em.ObjectView(self._project, objName, fn,
                                              viewParams={showj.MODE: showj.MODE_MD,
