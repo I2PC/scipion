@@ -619,7 +619,6 @@ class ProtExtractParticles(ProtParticles):
         #   1) new micrographs ready to be picked
         #   2) new output coordinates that have been produced and add then
         #      to the output set.
-        print "Checking"
         self._checkNewInput()
         self._checkNewOutput()
 
