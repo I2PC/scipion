@@ -25,9 +25,7 @@
 #ifndef _PROG_ELIMINATE_NONPARTICLES
 #define _PROG_ELIMINATE_NONPARTICLES
 
-#include <data/metadata.h>
 #include <data/xmipp_program.h>
-#include <vector>
 
 class ProgEliminateNonParticles: public XmippProgram
 {

@@ -24,13 +24,7 @@
  ***************************************************************************/
 
 #include "eliminate_nonparticles.h"
-
-#include <data/xmipp_funcs.h>
 #include <data/filters.h>
-#include <vector>
-#include <numeric>
-#include <iostream>
-#include <string>
 
 
 // Read arguments ==========================================================
@@ -135,20 +129,21 @@ void ProgEliminateNonParticles::run()
     {
         countItems++;
     	SF.getValue(MDL_IMAGE, fnImg, __iter.objId);
+    	SF.getRow(row, countItems);
+
     	Iref.read(fnImg);
     	Iref().setXmippOrigin();
     	centerImageTranslationally(Iref(), aux);
+
     	denoiseTVFilter(Iref(), 50);
         if (isParticle())
         {
-            SF.getRow(row, countItems);
             size_t recId = MDclass.addRow(row);
             MDclass.setValue(MDL_SCORE_BY_VARIANCE, features, recId);
             MDclass.write(formatString("@%s", fnOut.c_str()), MD_APPEND);
         }
         else
         {
-            SF.getRow(row, countItems);
             size_t recId = MDclass_elim.addRow(row);
             MDclass_elim.setValue(MDL_SCORE_BY_VARIANCE, features, recId);
             MDclass_elim.write(formatString("@%s", fnElim.c_str()), MD_APPEND);
