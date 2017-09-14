@@ -96,7 +96,7 @@ class ProtRelionPolish(ProtProcessParticles, ProtRelionBase):
                            'Again, in particular for smaller particles this '
                            'may improve the robustness of the fits.')
         if not isVersion2():
-            form.addParam('movieAvgWindow', IntParam, default=5,
+            form.addParam('movieAvgWindow', FloatParam, default=5,
                           label='Running average window',
                           help='The individual movie frames will be '
                                'averaged using a running average window '
