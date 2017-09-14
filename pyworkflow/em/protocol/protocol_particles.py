@@ -30,7 +30,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from pyworkflow.object import Set, String
+from pyworkflow.object import Set, String, Pointer
 from pyworkflow.protocol.params import PointerParam
 from pyworkflow.protocol import STATUS_NEW
 from pyworkflow.em.protocol import EMProtocol
@@ -222,7 +222,12 @@ class ProtParticlePicking(ProtParticles):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.getInputMicrographsPointer(), outputset)
+
+        # Using a pointer to define the relations is more robust to scheduling
+        # and id changes between the protocol run.db and the main project
+        # database. The pointer defined below points to the outputset object
+        self._defineSourceRelation(self.getInputMicrographsPointer(),
+                                   Pointer(value=self, extended=outputName))
         self._store()
 
 
