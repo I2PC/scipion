@@ -91,11 +91,14 @@ class TestCtfStreaming(BaseTest):
         protCTF2.inputMicrographs.set(protStream.outputMicrographs)
         self.proj.launchProtocol(protCTF2)
 
-        protCTF3 = ProtGctf()
-        protCTF3.inputMicrographs.set(protStream.outputMicrographs)
-        protCTF3.ctfDownFactor.set(2)
-        self.proj.launchProtocol(protCTF3, wait=False)
-
+        # check if box has nvidia cuda libs.
+        if os.system("nvidia-smi -h " )==0:
+		protCTF3 = ProtGctf()
+		protCTF3.inputMicrographs.set(protStream.outputMicrographs)
+		protCTF3.ctfDownFactor.set(2)
+		self.proj.launchProtocol(protCTF3, wait=False)
+        else:
+           print("Cannot find nvidia-smi, I assume that no GPU is connected to this machine")
 
         counter = 1
 
