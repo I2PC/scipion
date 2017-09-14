@@ -375,6 +375,7 @@ class Icon():
     PLUS_CIRCLE = 'fa-plus-circle.png'
     LINK = 'fa-iconmoon-link.png'
     ROOT = 'root.png'
+    ROCKET = 'fa-rocket.png'
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222

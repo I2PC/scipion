@@ -134,13 +134,17 @@ class Tree(ttk.Treeview, Scrollable):
                 continue
 
             if searchAfter is None:
-                if text.startswith(initial):
+
+                # Do a lower case search
+                text = text.lower()
+
+                if text.startswith(initial.lower()):
 
                     # Enclose text in "" due to bug
                     # https://stackoverflow.com/questions/10691257/ttk-treeview-selection-set-cant-accept-spaces
-                    child = '"' + child + '"'
-                    self.selection_set(child)
+                    searchText = '"' + child + '"'
                     self.focus(child)
+                    self.selection_set(searchText)
                     return True
                 else:
                     continue
@@ -269,7 +273,7 @@ class BoundTree(Tree):
         # Hide the right-click menu
         self.bind('<FocusOut>', self._unpostMenu)
         self.bind("<Key>", self._onKeyPress)
-        self.bind('<Button-1>', self._onClick())
+        self.bind('<Button-1>', self._onClick)
         self.bind('<Double-1>', self._onDoubleClick)
         self.bind('<<TreeviewSelect>>', self._onSelect)
 

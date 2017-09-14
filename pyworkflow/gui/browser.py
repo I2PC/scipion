@@ -36,9 +36,10 @@ import stat
 
 import Tkinter as tk
 
+import time
 import xmipp
 
-from pyworkflow.utils import ROOT, getParentFolder, PATH_SEP
+from pyworkflow.utils import ROOT, getParentFolder
 from pyworkflow.utils.properties import Icon, KEYSYM
 import gui
 from pyworkflow.utils import dirname, getHomePath, prettySize, getExt, dateStr
@@ -493,6 +494,8 @@ class FileBrowser(ObjectBrowser):
         self.pathVar = tk.StringVar()
         self.pathVar.set(os.path.abspath(initialDir))
         self.pathEntry = None
+        self.previousSearch = None
+        self.previousSearchTS = None
         self.shortCuts = shortCuts
         self._provider = FileTreeProvider(initialDir, showHidden, onlyFolders)
         self.selectButton = selectButton
@@ -572,10 +575,13 @@ class FileBrowser(ObjectBrowser):
         """ Fill the toolbar frame with some buttons. """
         self._col = 0
 
-        self._addButton(frame, 'Refresh', Icon.ACTION_REFRESH, self._actionRefresh)
+        self._addButton(frame, 'Refresh', Icon.ACTION_REFRESH,
+                        self._actionRefresh)
         self._addButton(frame, 'Home', Icon.HOME, self._actionHome)
-        self._addButton(frame, 'Root', Icon.ROOT, self._actionRoot)
-        self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE, self._actionWorkingDir)
+        self._addButton(frame, 'Launch folder', Icon.ROCKET,
+                        self._actionLaunchFolder)
+        # self._addButton(frame, 'Root', Icon.ROOT, self._actionRoot)
+        # self._addButton(frame, 'Working dir', Icon.ACTION_BROWSE, self._actionWorkingDir)
         # It is doing the same as up: self._addButton(frame, 'Back', Icon.ARROW_LEFT, self._actionUp)
         self._addButton(frame, 'Up', Icon.ARROW_UP, self._actionUp)
 
@@ -609,8 +615,8 @@ class FileBrowser(ObjectBrowser):
         newDir = os.path.abspath(newDir)
 
         # Add a final "/" to the path: abspath is removing it except for "/"
-        if not newDir.endswith(PATH_SEP):
-            newDir += PATH_SEP
+        if not newDir.endswith(os.path.sep):
+            newDir += os.path.sep
 
         self.pathVar.set(newDir)
         self.pathEntry.icursor(len(newDir))
@@ -635,6 +641,10 @@ class FileBrowser(ObjectBrowser):
     def _actionRoot(self, e=None):
         self._goDir("/")
 
+    def _actionLaunchFolder(self, e=None):
+        launchFolder = os.getenv("SCIPION_CWD")
+        self._goDir(launchFolder)
+
     def _actionWorkingDir(self, e=None):
         self._goDir(os.getcwd())
 
@@ -653,15 +663,32 @@ class FileBrowser(ObjectBrowser):
             self._itemDoubleClick(obj)
             return
 
+        textToSearch = self._composeTextToSearch(e.char)
+
         # locate an item in starting with that letter.
-        self._searchItem(e.char)
+        self._searchItem(textToSearch)
+
+    def _composeTextToSearch(self, newChar):
+
+        currentMiliseconds = time.time()
+
+        if (self.previousSearchTS is not None) and \
+                ((currentMiliseconds - self.previousSearchTS) < 0.3):
+            newChar = self.previousSearch + newChar
+
+        self.previousSearch = newChar
+        self.previousSearchTS = currentMiliseconds
+
+        return newChar
 
     def _searchItem(self, char):
         """ locate an item in starting with that letter."""
         try:
             self.tree.search(char)
         except Exception as e:
-            print "Can't search item in browser. Using char " + char, e.message
+            # seems to raise an exception but selects things right.
+            #print "Can't search item in browser. Using char " + char, e.message
+            pass
 
     def _onEnterPath(self, e=None):
         path = os.path.abspath(self.pathVar.get())
@@ -727,15 +754,6 @@ def isStandardImage(filename):
        
 class FileBrowserWindow(BrowserWindow):
     """ Windows to hold a file browser frame inside. """
-    @staticmethod
-    def getRootShortCut():
-
-        shortCuts = list()
-
-        # Add root
-        shortCuts.append(ShortCut.factory('/', 'root', Icon.ROOT, "Go to root"))
-
-        return shortCuts
 
     def __init__(self, title, master=None, path=None,
                  onSelect=None, shortCuts=None, **kwargs):
