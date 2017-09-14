@@ -204,7 +204,7 @@ leads to objective and high-quality results.
 
         if self.realignMovieFrames:
             summary.append('\nMovie refinement:')
-            summary.append('    Running average window: %d frames' % self.movieAvgWindow)
+            summary.append('    Running average window: %d frames' % self.movieAvgWindow.get())
             summary.append('    Stddev on the translations: %0.2f px' % self.movieStdTrans)
             if self.movieIncludeRotSearch:
                 summary.append('    Stddev on the rotations: %0.2f deg' % self.movieStdRot)
