@@ -30,7 +30,7 @@ import os
 from datetime import datetime
 from collections import OrderedDict
 
-from pyworkflow.object import Set, String
+from pyworkflow.object import Set, String, Pointer
 import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
 from pyworkflow.em.protocol import EMProtocol
@@ -224,7 +224,12 @@ class ProtParticlePicking(ProtParticles):
         outputset.setObjComment(summary)
         outputs = {outputName: outputset}
         self._defineOutputs(**outputs)
-        self._defineSourceRelation(self.getInputMicrographsPointer(), outputset)
+
+        # Using a pointer to define the relations is more robust to scheduling
+        # and id changes between the protocol run.db and the main project
+        # database. The pointer defined below points to the outputset object
+        self._defineSourceRelation(self.getInputMicrographsPointer(),
+                                   Pointer(value=self, extended=outputName))
         self._store()
 
 
@@ -434,17 +439,17 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         outputName = 'outputCoordinates'
         outputDir = self.getCoordsDir()
         outputCoords = getattr(self, outputName, None)
-        micSet = self.getInputMicrographs()
 
         # If there are not outputCoordinates yet, it means that is the first
         # time we are updating output coordinates, so we need to first create
         # the output set
-        if outputCoords is None:
-            outputCoords = self._createSetOfCoordinates(micSet)
-            firstTime = True
+        firstTime = outputCoords is None
+
+        if firstTime:
+            micSetPtr = self.getInputMicrographsPointer()
+            outputCoords = self._createSetOfCoordinates(micSetPtr)
         else:
             outputCoords.enableAppend()
-            irstTime = False
 
         self.readCoordsFromMics(outputDir, micDoneList, outputCoords)
         self._updateOutputSet(outputName, outputCoords, streamMode)
@@ -691,7 +696,6 @@ class ProtExtractParticles(ProtParticles):
         #   1) new micrographs ready to be picked
         #   2) new output coordinates that have been produced and add then
         #      to the output set.
-        print "Checking"
         self._checkNewInput()
         self._checkNewOutput()
 

@@ -108,7 +108,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
         # check if there are new micrographs and process them
         self._checkNewInput()
         self._checkNewOutput()
-        return
 
     def _checkNewInput(self):
         """ Check if there are new ctf to be processed and add the necessary
@@ -140,8 +139,6 @@ class XmippProtCTFMicrographs(em.ProtCTFMicrographs):
             if outputStep is not None:
                 outputStep.addPrerequisites(*fDeps)
             self.updateSteps()
-
-
 
     def _checkNewOutput(self):
         """ Check for already estimated CTF and update the output set. """

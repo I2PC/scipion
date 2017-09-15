@@ -27,7 +27,7 @@
 
 from os.path import exists, dirname, join
 
-from pyworkflow.object import Boolean
+from pyworkflow.object import Boolean, Pointer
 from pyworkflow.protocol.constants import (STEPS_PARALLEL, LEVEL_ADVANCED,
                                            STATUS_NEW)
 from pyworkflow.protocol.params import (PointerParam, FloatParam, IntParam,
@@ -198,7 +198,7 @@ class ProtCTFMicrographs(ProtMicrographs):
         newCTFs = []
         ctfDict = {}
         ctfSet = SetOfCTF(filename=self._getPath('ctfs.sqlite'))
-        ctfSet.setMicrographs(self.inputMicrographs.get())
+        ctfSet.setMicrographs(self.inputMicrographs)
 
         for ctf in ctfSet:
             ctfDict[ctf.getObjId()] = True
@@ -238,16 +238,22 @@ class ProtCTFMicrographs(ProtMicrographs):
             return
 
         endCTFs = streamClosed and micSet.getSize() == ctfSet.getSize()
+
         if newCTFs:
             # Check if it is the first time we are registering CTF to
             # create the CTF_RELATION only once
             firstTime = not self.hasAttribute('outputCTF')
-            ctfSet.setMicrographs(self.inputMics)
+            ctfSet.setMicrographs(self.inputMicrographs)
             self._computeDefocusRange(ctfSet)
             streamMode = ctfSet.STREAM_CLOSED if endCTFs else ctfSet.STREAM_OPEN
             self._updateOutputSet('outputCTF', ctfSet, streamMode)
             if firstTime:  # define relation just once
-                self._defineCtfRelation(self.inputMics, ctfSet)
+                # Using a pointer to define the relations is more robust to
+                # scheduling and id changes between the protocol run.db and
+                # the main project database.
+                self._defineCtfRelation(self.inputMicrographs,
+                                        Pointer(value=self,
+                                                extended='outputCTF'))
         else:
             ctfSet.close()
 
