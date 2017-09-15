@@ -33,25 +33,34 @@ import xmipp
 import random
 
 from pyworkflow import VERSION_1_1
-from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition
+from pyworkflow.em.data import SetOfMicrographs, Micrograph, Acquisition, Movie, SetOfMovies
 from pyworkflow.protocol.constants import STEPS_PARALLEL
 from os.path import basename, exists
+from pyworkflow.em.convert import ImageHandler
+from pyworkflow.utils.path import createLink
 
+SET_OF_MOVIES=0
+SET_OF_MICROGRAPHS=1
+SET_OF_RANDOM_MICROGRAPHS=2
 
 class ProtCreateStreamData(EMProtocol):
     """ create  setofXXXX in streaming mode.
+        micrograph -> read a micrograph in memory and writes it nDim times
+        movie      -> read a movie in memory and writes it nDim times
+        randomMicrographs -> creates a micrograph with random values and aplies a reandom CTF
     """
     _label="create stream data"
-    _lastUpdateVersion = VERSION_1_1
+    _version = VERSION_1_1
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200
     _sphericalAberration = 2.0
     _amplitudeContrast = 0.07
+    object = None
 
     def __init__(self, **kwargs):
         EMProtocol.__init__(self, **kwargs)
-        self.xmippMic = OrderedDict()
+        self.dictObj = OrderedDict()
         self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ----------------------
@@ -60,17 +69,27 @@ class ProtCreateStreamData(EMProtocol):
 
         #TODO: add movie creation in streaming
         form.addParam('setof', params.EnumParam, default=0,
-                      choices=['setOfMicrographs'],
+                      choices=['Movies', 'Micrographs', 'RandomMicrographs'],
                       label='set Of',
                       help='create set of')
+        form.addParam('inputMovie', params.PointerParam, pointerClass='Movie',
+                      condition="setof==%d"%SET_OF_MOVIES,
+                      label="movie",
+                      help='This movie will be copied "number of items" times')
+        form.addParam('inputMic', params.PointerParam, pointerClass='Micrograph',
+                      condition="setof==%d"%SET_OF_MICROGRAPHS,
+                      label="micrograph",
+                      help='This micrograph will be copied "number of items" times')
         form.addParam('xDim', params.IntParam,default=1024,
+                      condition="setof==%d"%SET_OF_RANDOM_MICROGRAPHS,
                       label="xdim",
                       help="X dim ")
         form.addParam('yDim', params.IntParam,default=1024,
+                      condition="setof==%d"%SET_OF_RANDOM_MICROGRAPHS,
                       label="ydim",
                       help="Y dim ")
         form.addParam('nDim', params.IntParam,default=10,
-                      label="ndim",
+                      label="number of items",
                       help="setofXX size")
         form.addParam('samplingRate', params.FloatParam,default=4,
                       label="samplingRate",
@@ -81,7 +100,7 @@ class ProtCreateStreamData(EMProtocol):
               help="create one object each creationInterval seconds")
         form.addParam('delay', params.IntParam,default=0,
                       label="delay (sec)",
-                      help="wait this seconds before creating stram data")
+                      help="wait this seconds before creating stream data")
 
         form.addParallelSection(threads=1, mpi=1)
 
@@ -93,69 +112,113 @@ class ProtCreateStreamData(EMProtocol):
             delayId = self._insertFunctionStep('delayStep')
             deps.append(delayId)
 
+        step = None
         for mic in range (1, self.nDim.get() +1):
-            self._insertFunctionStep('createStep', mic, prerequisites=deps)
+            if self.setof == SET_OF_MOVIES:
+                step = 'createStep'
+            elif self.setof == SET_OF_MICROGRAPHS:
+                step = 'createStep'
+            elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
+                step = 'createStep_random_mic'
+            else:
+                raise Exception('Unknown data type')
+            self._insertFunctionStep(step, mic, prerequisites=deps)
 
     #--------------------------- STEPS functions --------------------------------------------
     def delayStep(self):
         time.sleep(self.delay)
 
-    def _checkNewMics(self, micSet):
-        """ Check for already computed CTF and update the output set. """
-        micDict = {}
-        newMic = False
-        for mic in micSet:
-            micDict[mic.getFileName()] = True
+    def _checkNewItems(self, objSet):
+        """ Check for already computed micrograph/movie and update the output set. """
+        objDict = {}
+        newObj = False
+        for obj in objSet:
+            objDict[obj.getFileName()] = True
 
-        if micDict:
-            if micSet.getSize():
-                micSet.enableAppend()
-                micSet.loadAllProperties()
+        if objDict:
+            if objSet.getSize():
+                objSet.enableAppend()
+                objSet.loadAllProperties()
         else:
-            micSet.setStreamState(micSet.STREAM_OPEN)
+            objSet.setStreamState(objSet.STREAM_OPEN)
             acquisition = Acquisition()
             acquisition.setMagnification(self._magnification)
             acquisition.setVoltage(self._voltage)
             acquisition.setSphericalAberration(self._sphericalAberration)
             acquisition.setAmplitudeContrast(self._amplitudeContrast)
-            micSet.setAcquisition(acquisition)
-            micSet.setSamplingRate(self.samplingRate.get())
+            objSet.setAcquisition(acquisition)
+            objSet.setSamplingRate(self.samplingRate.get())
 
 
-        mic = Micrograph()
+        if self.setof == SET_OF_MOVIES:
+            obj = Movie()
+        elif self.setof == SET_OF_MICROGRAPHS:
+            obj = Micrograph()
+        elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
+            obj = Micrograph()
+        else:
+            raise Exception('Unknown data type')
 
         counter = 0
-        for k,v in self.xmippMic.iteritems():
+        for k,v in self.dictObj.iteritems():
             counter += 1
-            if (k not in micDict):
-                mic.setFileName(k)
-                mic.setMicName(basename(k))
-                mic.setObjId(counter)
-                micSet.append(mic)
-                newMic= True
+            if (k not in objDict):
+                obj.setFileName(k)
+                obj.setMicName(basename(k))
+                obj.setObjId(counter)
+                objSet.append(obj)
+                newObj= True
 
-        return micSet, newMic#why a dictionary, a boolean may be enought
+        return objSet, newObj#why a dictionary, a boolean may be enought
 
-    def _updateOutput(self, micSet):
-        #firstTime = not self.hasAttribute('outputMicrographs')
-        self._defineOutputs(outputMicrographs=micSet)
-
+    def _updateOutput(self, objSet):
+        if self.setof == SET_OF_MOVIES:
+            self._defineOutputs(outputMovies=objSet)
+        elif self.setof == SET_OF_MICROGRAPHS:
+            self._defineOutputs(outputMicrographs=objSet)
+        elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
+            self._defineOutputs(outputMicrographs=objSet)
 
     def _stepsCheck(self):
-        setOfMicFn = self._getPath('micrographs.sqlite')
-        micSet = SetOfMicrographs(filename=setOfMicFn)
-        micSet, newMic = self._checkNewMics(micSet)
+        if self.setof == SET_OF_MOVIES:
+            objSet = SetOfMovies(filename=self._getPath('movies.sqlite'))
+        elif self.setof == SET_OF_MICROGRAPHS:
+            objSet = SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
+        elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
+            objSet = SetOfMicrographs(filename=self._getPath('micrographs.sqlite'))
+        else:
+            raise Exception('Unknown data type')
+
+        newObjSet, newObj = self._checkNewItems(objSet)
 
         #check if end ....
-        endMics = micSet.getSize() == self.nDim.get()
+        endObjs = newObjSet.getSize() == self.nDim.get()
 
-        if newMic:
-            if endMics:
-                micSet.setStreamState(micSet.STREAM_CLOSED)
-            self._updateOutput(micSet)
-        micSet.close()
+        if newObj:
+            if endObjs:
+                newObjSet.setStreamState(newObjSet.STREAM_CLOSED)
+            self._updateOutput(newObjSet)
+        newObjSet.close()
 
-    def createStep(self, mic):
+    def createStep(self, counter):
+
+        if not ProtCreateStreamData.object:
+            print("read object")
+            if self.setof == SET_OF_MOVIES:
+                ProtCreateStreamData.object = ImageHandler().read(self.inputMovie.get().getLocation())
+                self.name = "movie"
+            elif self.setof == SET_OF_MICROGRAPHS:
+                ProtCreateStreamData.object = ImageHandler().read(self.inputMic.get().getLocation())
+                self.name = "micro"
+
+        #save file
+        destFn = self._getExtraPath("%s_%05d" % (self.name,counter))
+        ProtCreateStreamData.object.write(destFn)
+        self.dictObj[destFn] = True
+        print "self.dictObj", self.dictObj
+        time.sleep(self.creationInterval.get())
+
+    def createStep_random_mic(self, mic):
         from pyworkflow.em.packages.xmipp3 import getEnviron
 
         #create image
@@ -197,7 +260,7 @@ class ProtCreateStreamData(EMProtocol):
         args += " -f ctf %s"%baseFnCtf
         args += " --sampling %f"%self.samplingRate
         self.runJob("xmipp_transform_filter", args, env=getEnviron())
-        self.xmippMic[baseFnImageCTF] = True
+        self.dictObj[baseFnImageCTF] = True
         time.sleep(self.creationInterval.get())
 
     #--------------------------- INFO functions --------------------------------------------

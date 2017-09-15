@@ -126,6 +126,7 @@ class CTFModel(EMObject):
         self._psdFile = String()
 #         self._micFile = String()
         self._micObj  = None
+        self._resolution = Float()
 
     def __str__(self):
         ctfStr = "defocus(U,V,a) = (%0.2f,%0.2f,%0.2f)" % (self._defocusU.get(),
@@ -134,6 +135,24 @@ class CTFModel(EMObject):
         if self._micObj:
             ctfStr + " mic=%s" % self._micObj
         return ctfStr
+
+    def getResolution(self):
+        # this is an awful hack to read freq either from ctffid/gctf or xmipp
+        # labels assigned to max resolution used to be different
+        #It should be eventually removed
+        if self._resolution.hasValue():
+            return self._resolution.get()
+        elif hasattr(self,'_ctffind4_ctfResolution'):
+            return self._ctffind4_ctfResolution.get()
+        elif hasattr(self,'_gctf_ctfResolution'):
+            return self._gctf_ctfResolution.get()
+        elif hasattr(self,'_xmipp_ctfCritMaxFreq'):
+            return self._xmipp_ctfCritMaxFreq.get()
+        else:
+            return self._resolution.get()
+
+    def setResolution(self, value):
+        self._resolution.set(value)
 
     def getDefocusU(self):
         return self._defocusU.get()
@@ -158,7 +177,7 @@ class CTFModel(EMObject):
 
     def copyInfo(self, other):
         self.copyAttributes(other, '_defocusU', '_defocusV','_defocusAngle',
-                            '_defocusRatio', '_psdFile', '_micFile')
+                            '_defocusRatio', '_psdFile', '_micFile','_resolution')
         
     def getPsdFile(self):
         return self._psdFile.get()
