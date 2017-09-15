@@ -521,7 +521,7 @@ ProgMLTomo::show()
         << " | Read more about this program in the following publication:    |"
         << std::endl;
         std::cout
-        << " |  Scheres ea.  (2009) Structure, 17, 1563-1572                 |"
+        << " |  Scheres et al.  (2009) Structure, 17, 1563-1572              |"
         << std::endl;
         std::cout
         << " |                                                               |"
@@ -688,7 +688,7 @@ ProgMLTomo::produceSideInfo()
         }
     }
     if (!mdimg_contains_angles)
-        std::cerr << labelStr + "are mmissing in input metadata and are filled with value 0.0" <<std::endl;
+        std::cerr << labelStr + "are missing in input metadata and are filled with value 0.0" <<std::endl;
 
     if (!MDimg.containsLabel(MDL_MISSINGREGION_NR))
     {

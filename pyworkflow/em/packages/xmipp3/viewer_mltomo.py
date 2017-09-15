@@ -1,8 +1,8 @@
 # **************************************************************************
 # *
-# * Authors:     Grigory Sharov (sharov@igbmc.fr)
+# * Authors:     Grigory Sharov (gsharov@mrc-lmb.cam.ac.uk)
 # *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# * MRC Laboratory of Molecular Biology, MRC-LMB
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -55,7 +55,8 @@ class XmippMLTomoViewer(ProtocolViewer):
 
     def _viewLastIter(self, e=None):
         views = []
-        lastIterFile = self.protocol._getExtraPath("results/mltomo_ref.xmd")
+        lastIter = self.protocol._getIterNumber(-1)
+        lastIterFile = self.protocol._getExtraPath("results/mltomo_it%06d_ref.xmd" % lastIter)
         views.append(DataView("classes@" + lastIterFile))
 
         return views
