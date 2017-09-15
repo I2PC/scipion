@@ -31,11 +31,13 @@ from datetime import datetime
 from collections import OrderedDict
 
 from pyworkflow.object import Set, String
-from pyworkflow.protocol.params import PointerParam
+import pyworkflow.protocol.params as params
 from pyworkflow.protocol import STATUS_NEW
 from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.constants import RELATION_CTF
 from pyworkflow.em.data import (EMObject, SetOfCoordinates, Micrograph,
                                 SetOfMicrographs, SetOfCTF)
+
 import pyworkflow.utils as pwutils
 from pyworkflow.utils.properties import Message
 
@@ -53,7 +55,7 @@ class ProtProcessParticles(ProtParticles):
     def _defineParams(self, form):
         form.addSection(label=Message.LABEL_INPUT)
         
-        form.addParam('inputParticles', PointerParam,
+        form.addParam('inputParticles', params.PointerParam,
                       pointerClass='SetOfParticles',
                       label=Message.LABEL_INPUT_PART, important=True)
         # Hook that should be implemented in subclasses
@@ -100,7 +102,7 @@ class ProtParticlePicking(ProtParticles):
     def _defineParams(self, form):
 
         form.addSection(label='Input')
-        form.addParam('inputMicrographs', PointerParam,
+        form.addParam('inputMicrographs', params.PointerParam,
                       pointerClass='SetOfMicrographs',
                       label=Message.LABEL_INPUT_MIC, important=True,
                       help='Select the SetOfMicrographs to be used during '
@@ -504,13 +506,67 @@ class ProtParticlePickingAuto(ProtParticlePicking):
         pass
 
 
+# Micrograph type constants for particle extraction
+SAME_AS_PICKING = 0
+OTHER = 1
 
 class ProtExtractParticles(ProtParticles):
     """ Base class for all extract-particles protocols.
      This class will take care of the streaming functionality and
      derived classes should mainly overwrite the '_extractMicrograph' function.
      """
+    # --------------------------- DEFINE param functions ------------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+    
+        form.addParam('inputCoordinates', params.PointerParam,
+                      pointerClass='SetOfCoordinates',
+                      important=True,
+                      label="Input coordinates",
+                      help='Select the SetOfCoordinates ')
+    
+        # The name for the followig param is because historical reasons
+        # now it should be named better 'micsSource' rather than
+        # 'downsampleType', but this could make inconsistent previous executions
+        # of this protocols, we will keep the name
+        form.addParam('downsampleType', params.EnumParam,
+                      choices=['same as picking', 'other'],
+                      default=0, important=True,
+                      display=params.EnumParam.DISPLAY_HLIST,
+                      label='Micrographs source',
+                      help='By default the particles will be extracted '
+                           'from the micrographs used in the picking '
+                           'step ( _same as picking_ option ). \n'
+                           'If you select _other_ option, you must provide '
+                           'a different set of micrographs to extract from. \n'
+                           '*Note*: In the _other_ case, ensure that provided '
+                           'micrographs and coordinates are related '
+                           'by micName or by micId. Difference in pixel size '
+                           'will be handled automatically.')
+    
+        form.addParam('inputMicrographs', params.PointerParam,
+                      pointerClass='SetOfMicrographs',
+                      condition='downsampleType != %s' % SAME_AS_PICKING,
+                      important=True, label='Input micrographs',
+                      help='Select the SetOfMicrographs from which to extract.')
+    
+        form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
+                      relationName=RELATION_CTF,
+                      attributeName='getInputMicrographs',
+                      label='CTF estimation',
+                      help='Choose some CTF estimation related to input '
+                           'micrographs. \n CTF estimation is needed if you '
+                           'want to do phase flipping or you want to '
+                           'associate CTF information to the particles.')
+        
+        self._definePreprocessParams(form)
 
+    def _definePreprocessParams(self, form):
+        """ Should be implemented in sub-classes to define some
+        specific parameters """
+        pass
+    
+    #--------------------------- INSERT steps functions ------------------------
     def _insertAllSteps(self):
         # Let's load input data for the already existing micrographs
         # before the streaming
@@ -533,6 +589,27 @@ class ProtExtractParticles(ProtParticles):
         Should return a list of ids of the initial steps. """
         return []
 
+    def _insertNewMicsSteps(self, inputMics):
+        """ Insert steps to process new mics (from streaming)
+        Params:
+            inputMics: input mics set to be check
+        """
+        deps = []
+        #  TODO: We must check if the new inserted micrographs has associated
+        #  coordinates. If not, we cannot extract particles. This is mandatory
+        # if the inputMics are from "other" option.
+    
+        # For each mic insert the step to process it
+        for mic in inputMics:
+            micKey = mic.getMicName()
+            if micKey not in self.micDict:
+                args = self._getExtractArgs()
+                stepId = self._insertExtractMicrographStep(mic, self.initialIds,
+                                                           *args)
+                deps.append(stepId)
+                self.micDict[micKey] = mic
+        return deps
+
     def _insertFinalSteps(self, micSteps):
         """ Override this function to insert some steps after the
         extraction of micrograph steps.
@@ -540,19 +617,14 @@ class ProtExtractParticles(ProtParticles):
         self._insertFunctionStep('createOutputStep',
                                  prerequisites=micSteps, wait=True)
 
-    def _getExtractArgs(self):
-        """ Should be implemented in sub-classes to define the argument
-        list that should be passed to the picking step function.
-        """
-        return []
-
     def _insertExtractMicrographStep(self, mic, prerequisites, *args):
         """ Basic method to insert a picking step for a given micrograph. """
         micStepId = self._insertFunctionStep('extractMicrographStep',
                                              mic.getMicName(), *args,
                                              prerequisites=prerequisites)
         return micStepId
-
+    
+    #--------------------------- STEPS functions -------------------------------
     def extractMicrographStep(self, micKey, *args):
         """ Step function that will be common for all extraction protocols.
         It will take an id and will grab the micrograph from a micDict map.
@@ -581,17 +653,22 @@ class ProtExtractParticles(ProtParticles):
         # Mark this mic as finished
         open(micDoneFn, 'w').close()
 
-
     def _extractMicrograph(self, mic, *args):
         """ This function should be implemented by subclasses in order
         to picking the given micrograph. """
         pass
 
+    # --------------------------- UTILS functions ------------------------------
     def _convertCoordinates(self, mic, coordList):
         """ This function should be implemented by subclasses. """
         pass
 
-    # --------------------------- UTILS functions ----------------------------
+    def _getExtractArgs(self):
+        """ Should be implemented in sub-classes to define the argument
+        list that should be passed to the picking step function.
+        """
+        return []
+
     def _micsOther(self):
         """ Return True if other micrographs are used for extract.
         Should be implemented in derived classes.
@@ -605,9 +682,9 @@ class ProtExtractParticles(ProtParticles):
         """
         return False
     
+    # ------ Methods for Streaming extraction --------------
     def _isStreamClosed(self):
         return self.micsClosed and self.ctfsClosed and self.coordsClosed
-    # ------ Methods for Streaming extraction --------------
 
     def _stepsCheck(self):
         # To allow streaming picking we need to detect:
@@ -617,27 +694,6 @@ class ProtExtractParticles(ProtParticles):
         print "Checking"
         self._checkNewInput()
         self._checkNewOutput()
-
-    def _insertNewMicsSteps(self, inputMics):
-        """ Insert steps to process new mics (from streaming)
-        Params:
-            inputMics: input mics set to be check
-        """
-        deps = []
-        #  TODO: We must check if the new inserted micrographs has associated
-        #  coordinates. If not, we cannot extract particles. This is mandatory
-        # if the inputMics are from "other" option.
-        
-        # For each mic insert the step to process it
-        for mic in inputMics:
-            micKey = mic.getMicName()
-            if micKey not in self.micDict:
-                args = self._getExtractArgs()
-                stepId = self._insertExtractMicrographStep(mic, self.initialIds,
-                                                           *args)
-                deps.append(stepId)
-                self.micDict[micKey] = mic
-        return deps
 
     def _loadInputList(self):
         """ Load the input set of micrographs and create a dictionary.
