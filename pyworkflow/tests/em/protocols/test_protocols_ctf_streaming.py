@@ -83,7 +83,7 @@ class TestCtfStreaming(BaseTest):
         protCTF.highRes.set(0.4)
         protCTF.lowRes.set(0.05)
         protCTF.numberOfThreads.set(4)
-        self.proj.launchProtocol(protCTF, wait=False)
+        self.proj.launchProtocol(protCTF, wait=True)
 
         kwargs = {
             'numberOfThreads': 3}
