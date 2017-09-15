@@ -45,12 +45,6 @@ from convert import (micrographToCTFParam, writeMicCoordinates, xmippToLocation)
 from xmipp3 import XmippProtocol
 
 
-# Rejection method constants
-REJECT_NONE = 0
-REJECT_MAXZSCORE = 1
-REJECT_PERCENTAGE = 2
-
-
 class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     """Protocol to extract particles from a set of coordinates"""
     _label = 'extract particles'
@@ -60,49 +54,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         self.stepsExecutionMode = STEPS_PARALLEL
 
     #--------------------------- DEFINE param functions ------------------------
-    def _defineParams(self, form):
-        form.addSection(label='Input')
-        
-        form.addParam('inputCoordinates', params.PointerParam,
-                      pointerClass='SetOfCoordinates',
-                      important=True,
-                      label="Input coordinates",
-                      help='Select the SetOfCoordinates ')
-
-        # The name for the following param is because historical reasons
-        # now it should be named better 'micsSource' rather than
-        # 'downsampleType', but this could make inconsistent previous executions
-        # of this protocol, we will keep the name
-        form.addParam('downsampleType', params.EnumParam,
-                      choices=['same as picking', 'other'],
-                      default=0, important=True,
-                      display=params.EnumParam.DISPLAY_HLIST,
-                      label='Micrographs source',
-                      help='By default the particles will be extracted '
-                           'from the micrographs used in the picking '
-                           'step ( _same as picking_ option ). \n'
-                           'If you select _other_ option, you must provide '
-                           'a different set of micrographs to extract from. \n'
-                           '*Note*: In the _other_ case, ensure that provided '
-                           'micrographs and coordinates are related '
-                           'by micName or by micId. Difference in pixel size '
-                           'will be handled automatically.')
-
-        form.addParam('inputMicrographs', params.PointerParam,
-                      pointerClass='SetOfMicrographs',
-                      condition='downsampleType != %s' % SAME_AS_PICKING,
-                      important=True, label='Input micrographs',
-                      help='Select the SetOfMicrographs from which to extract.')
-
-        form.addParam('ctfRelations', params.RelationParam, allowsNull=True,
-                      relationName=RELATION_CTF,
-                      attributeName='getInputMicrographs',
-                      label='CTF estimation',
-                      help='Choose some CTF estimation related to input '
-                           'micrographs. \n CTF estimation is needed if you '
-                           'want to do phase flipping or you want to '
-                           'associate CTF information to the particles.')
-
+    def _definePreprocessParams(self, form):
         # downFactor should always be 1.0 or greater
         geOne = params.GE(1.0,
                           error='Value should be greater or equal than 1.0')
@@ -303,75 +255,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         return args
 
-    def createMetadataImageStep(self):
-        # TODO: This step can be avoided (if not doing screening)
-        # because particles can be added directly to the output set
-        #Create images.xmd metadata
-        fnImages = self._getOutputImgMd()
-        imgsXmd = md.MetaData()
-        posFiles = glob(self._getExtraPath('*.pos')) 
-        for posFn in posFiles:
-            xmdFn = self._getExtraPath(pwutils.replaceBaseExt(posFn, "xmd"))
-            if exists(xmdFn):
-                mdFn = md.MetaData(xmdFn)
-                mdPos = md.MetaData('particles@%s' % posFn)
-                mdPos.merge(mdFn) 
-                imgsXmd.unionAll(mdPos)
-            else:
-                self.warning("The coord file %s wasn't used for extraction! "
-                             % basename(posFn))
-                self.warning("Maybe you are extracting over a subset of "
-                             "micrographs")
-        imgsXmd.write(fnImages)
-
-    def screenParticlesStep(self):
-        # If selected run xmipp_image_sort_by_statistics
-        # to add zscore info to images.xmd
-        args = " -i %s --addToInput" % self._getOutputImgMd()
-        if self.rejectionMethod == REJECT_MAXZSCORE:
-            args += " --zcut %s" % self.maxZscore
-        elif self.rejectionMethod == REJECT_PERCENTAGE:
-            args += " --percent %s" % self.percentage
-        
-        self.runJob("xmipp_image_sort_by_statistics", args)
-    
-    # def createOutputStep(self):
-    #     # TODO: Maybe this can be generalized into the base function.
-    #     # Create the SetOfImages object on the database
-    #     fnImages = self._getOutputImgMd()
-    #     # Create output SetOfParticles
-    #     self.imgSet = self._createSetOfParticles()
-    #     self.imgSet.copyInfo(self.inputMics)
-    #     # set coords from the input, will update later if needed
-    #     self.imgSet.setCoordinates(self.inputCoords)
-    #     coords2 = SetOfCoordinates()
-    #
-    #     if self.doFlip:
-    #         self.imgSet.setIsPhaseFlipped(not self.inputMics.isPhaseFlipped())
-    #
-    #     self.imgSet.setSamplingRate(self._getNewSampling())
-    #     self.imgSet.setHasCTF(self._useCTF())
-    #
-    #     # a SetMdIterator is needed because in some cases, the number of
-    #     # items in SetOfCoordinates and in the metadata could be different.
-    #     iterator = md.SetMdIterator(fnImages, sortByLabel=md.MDL_ITEM_ID,
-    #                                 updateItemCallback=self.createParticles,
-    #                                 skipDisabled=True)
-    #     # THis use case is special, because copyItems method is designed to
-    #     # modified the same type of object of the input set. Here, a new type
-    #     #  (SetOfParticles) is generated, and its needed an auxiliary set of
-    #     # coordinates and it not stored.
-    #     coordsAux = SetOfCoordinates()
-    #     coordsAux.copyItems(self.inputCoords,
-    #                         updateItemCallback=iterator.updateItem,
-    #                         copyDisabled=True)
-    #
-    #     self._storeMethodsInfo(fnImages)
-    #     self._defineOutputs(outputParticles=self.imgSet)
-    #     self._defineSourceRelation(self.inputCoordinates, self.imgSet)
-    #     if self._useCTF():
-    #         self._defineSourceRelation(self.ctfRelations.get(), self.imgSet)
-
     #--------------------------- INFO functions --------------------------------
     def _validate(self):
         errors = []
@@ -439,7 +322,7 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
 
         return methodsMsgs
 
-    # --------------------------- UTILS functions -------------------------------
+    # --------------------------- UTILS functions ------------------------------
     def _convertCoordinates(self, mic, coordList):
         writeMicCoordinates(mic, coordList, self._getMicPos(mic),
                             getPosFunc=self._getPos)
@@ -470,9 +353,9 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
     def _setupBasicProperties(self):
         # Set sampling rate (before and after doDownsample) and inputMics
         # according to micsSource type
-        self.inputCoords = self.getCoords()
-        mics = self.inputCoords.getMicrographs()
-        self.samplingInput = self.inputCoords.getMicrographs().getSamplingRate()
+        inputCoords = self.getCoords()
+        mics = inputCoords.getMicrographs()
+        self.samplingInput = inputCoords.getMicrographs().getSamplingRate()
         self.samplingMics = self.getInputMicrographs().getSamplingRate()
         self.samplingFactor = float(self.samplingMics / self.samplingInput)
 
@@ -504,11 +387,6 @@ class XmippProtExtractParticles(ProtExtractParticles, XmippProtocol):
         numEnabled = mdImgs.size()
         numRejected = total - numEnabled
         msg = ""
-
-        if self.doSort:
-            if self.rejectionMethod != REJECT_NONE:
-                msg = " %d of them were rejected " % numRejected
-                msg += "with Zscore greater than %.2f." % zScoreMax
 
         if self.doFlip:
             msg += "\nPhase flipping was performed."
