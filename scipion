@@ -56,6 +56,10 @@ __releasedate__ = ''
 
 SCIPION_HOME = dirname(os.path.realpath(__file__))
 
+# Some pw_*.py scripts under 'apps' folder change the current working
+# directory to the SCIPION_HOME, so let's keep the current working
+# direcotry in case we need it
+SCIPION_CWD = os.path.abspath(os.getcwd())
 
 #
 # If we don't have a local user installation, create it.
@@ -149,6 +153,7 @@ for confFile in [SCIPION_CONFIG, SCIPION_LOCAL_CONFIG,
 # directories and packages.
 VARS = {
     'SCIPION_HOME': SCIPION_HOME,
+    'SCIPION_CWD': SCIPION_CWD,
     'SCIPION_VERSION': getVersion(),
     'SCIPION_APPS': join(SCIPION_HOME, 'pyworkflow', 'apps'),
     'SCIPION_PYTHON': 'python',
@@ -278,6 +283,7 @@ def runApp(app, args='', chdir=True):
 MODE_MANAGER = 'manager'
 MODE_PROJECT = 'project'
 MODE_LAST = 'last' # shortcut to 'project last'
+MODE_HERE = 'here' # shortcut to 'project here'
 MODE_WEBSERVER = 'webserver'
 MODE_COLLECTSTATIC = 'collectstatic'
 MODE_TESTS = 'tests' # keep tests for compatibility
@@ -327,6 +333,9 @@ def main():
 
     elif mode == MODE_LAST:
         runApp('pw_project.py', args='last')
+
+    elif mode == MODE_HERE:
+        runApp('pw_project.py', args='here')
         
     elif mode == MODE_PROJECT:
         runApp('pw_project.py', args=sys.argv[2:])

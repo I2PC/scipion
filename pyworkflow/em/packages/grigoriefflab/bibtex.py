@@ -104,6 +104,19 @@ author = "Stewart, Alex and Grigorieff, Nikolaus",
 keywords = "Image processing, Electron microscopy, Protein structure, \{FREALIGN\} "
 }
 
+@article{Campbell2012,
+title = "Movies of ice-embedded particles enhance resolution in electron cryo-microscopy",
+journal = "Structure",
+volume = "20",
+year = "2012",
+month = "9/2012",
+pages = "1823 - 1828",
+abstract = "Low-dose images obtained by electron cryo-microscopy (cryo-EM) are often affected by blurring caused by sample motion during electron beam exposure, degrading signal especially at high resolution. We show here that we can align frames of movies, recorded with a direct electron detector during beam exposure of rotavirus double-layered particles, thereby greatly reducing image blurring caused by beam-induced motion and sample stage instabilities. This procedure increases the efficiency of cryo-EM imaging and enhances the resolution obtained in three-dimensional reconstructions of the particle. Using movies in this way is generally applicable to all cryo-EM samples and should also improve the performance of midrange electron microscopes that may have limited mechanical stability and beam coherence.",
+issn = "09692126",
+doi = "http://dx.doi.org/10.1016/j.str.2012.08.026",
+author = "Campbell,M. G. and Cheng, A. and Brilot, A. F. and Moeller, A. and Lyumkis, D. and Veesler, D. and Pan, J. and Harrison, S. C. and Potter, C. S. and Carragher, B. and Grigorieff, N."
+}
+
 @article{Sindelar2012,
 title = "Optimal noise reduction in 3D reconstructions of single particles using a volume-normalized filter ",
 journal = "JSB ",
@@ -134,17 +147,30 @@ author = "Lyumkis, Dmitry  and Brilot, Axel F.  and Theobald, Douglas L.  and Gr
 keywords = "Electron microscopy, Maximum likelihood, Classification, Single particle, Protein structure "
 }
 
+@Article{Grant2015b,
+title = "Measuring the optimal exposure for single particle cryo-EM using a 2.6A reconstruction of rotavirus VP6",
+journal = "eLife",
+volume = "4",
+year = "2015",
+month = "06/2015",
+pages = "1-19",
+abstract = "Biological specimens suffer radiation damage when imaged in an electron microscope, ultimately limiting the attainable resolution. At a given resolution, an optimal exposure can be defined that maximizes the signal-to-noise ratio in the image. Using a 2.6A resolution single particle cryo-EM reconstruction of rotavirus VP6, determined from movies recorded with a total exposure of 100 electrons/A2, we obtained accurate measurements of optimal exposure values over a wide range of resolutions. At low and intermediate resolutions our measured values are considerably higher than obtained previously for crystalline specimens, indicating that both images and movies should be collected with higher exposures than are generally used. We demonstrate a method of using our optimal exposure values to filter movie frames, yielding images with improved contrast that lead to higher resolution reconstructions. This high-exposure technique should benefit cryo-EM work on all types of samples, especially those of relatively low molecular mass.",
+doi = "http://dx.doi.org/10.7554/eLife.06980",
+url = "https://elifesciences.org/articles/06980",
+author = "Grant, T. and Grigorieff, N."
+}
+
 @Article{Rohou2015,
-   Author="Rohou, A.  and Grigorieff, N. ",
-   Title="{{C}{T}{F}{F}{I}{N}{D}4: {F}ast and accurate defocus estimation from electron micrographs}",
-   Journal="J. Struct. Biol.",
-   Year="2015",
-   Volume="192",
-   Number="2",
-   Pages="216--221",
-   Month="Nov",
-   doi = "http://dx.doi.org/10.1016/j.jsb.2015.08.008",
-   url = "http://www.sciencedirect.com/science/article/pii/S1047847715300460"
+author="Rohou, A.  and Grigorieff, N. ",
+title="{{C}{T}{F}{F}{I}{N}{D}4: {F}ast and accurate defocus estimation from electron micrographs}",
+journal="J. Struct. Biol.",
+year="2015",
+volume="192",
+number="2",
+pages="216 - 221",
+month="Nov",
+doi = "http://dx.doi.org/10.1016/j.jsb.2015.08.008",
+url = "http://www.sciencedirect.com/science/article/pii/S1047847715300460"
 }
 
 @article{Grant2015,
