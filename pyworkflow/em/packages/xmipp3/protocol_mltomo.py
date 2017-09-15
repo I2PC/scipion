@@ -24,6 +24,9 @@
 # *
 # **************************************************************************
 
+import re
+from glob import glob
+
 from convert import readSetOfClassesVol, getImageLocation, writeSetOfVolumes
 from pyworkflow.em import ProtClassify3D
 from pyworkflow.em.data import SetOfVolumes
@@ -174,7 +177,6 @@ class XmippProtMLTomo(ProtClassify3D):
                       label='Iterations in inner imputation loop', default=1,
                       help="Number of iterations for inner imputation loop")
         # FIXME: next param is to continue from iter X,
-        # so it will not work
         #form.addParam('iterStart', params.IntParam,
          #             expertLevel=LEVEL_ADVANCED,
          #             label='Initial iteration', default=1,
@@ -206,7 +208,6 @@ class XmippProtMLTomo(ProtClassify3D):
     
     #--------------------------- STEPS functions ------------------------------
     def convertInputs(self):
-        # FIXME: do we need to convert inputs (vols, refvols, mask) to mrc?
         inputVols = self.inputVols.get()
         self.createInputMd(inputVols)
         if not self.generateRefs:
@@ -216,15 +217,19 @@ class XmippProtMLTomo(ProtClassify3D):
     def createInputMd(self, vols):
         fnVols = self._getExtraPath('input_volumes.xmd')
         # If input vols do not have alignment, set it to 0
-        # in self._preprocessVolumeRow
-        if vols.hasAlignment():
-            preprocessImageRow = None
-        else:
-            preprocessImageRow = self._preprocessVolumeRow
-
+        align = vols.getAlignment()
         writeSetOfVolumes(vols, fnVols,
-                          preprocessImageRow=preprocessImageRow,
-                          postprocessImageRow=self._postprocessVolumeRow)
+                          postprocessImageRow=self._postprocessVolumeRow,
+                          alignType=align)
+        if not vols.hasAlignment():
+            mdFn = xmipp.MetaData(fnVols)
+            mdFn.fillConstant(xmipp.MDL_ANGLE_ROT, 0.)
+            mdFn.fillConstant(xmipp.MDL_ANGLE_TILT, 0.)
+            mdFn.fillConstant(xmipp.MDL_ANGLE_PSI, 0.)
+            mdFn.fillConstant(xmipp.MDL_SHIFT_X, 0.)
+            mdFn.fillConstant(xmipp.MDL_SHIFT_Y, 0.)
+            mdFn.fillConstant(xmipp.MDL_SHIFT_Z, 0.)
+            mdFn.write(fnVols, xmipp.MD_OVERWRITE)
 
         # set missing angles
         missType = ['wedge_y', 'wedge_x', 'pyramid', 'cone']
@@ -395,14 +400,6 @@ class XmippProtMLTomo(ProtClassify3D):
     def isSetOfVolumes(self):
         return isinstance(self.inputRefVols.get(), SetOfVolumes)
 
-    def _preprocessVolumeRow(self, img, imgRow):
-        imgRow.setValue(xmipp.MDL_ANGLE_ROT, float(0))
-        imgRow.setValue(xmipp.MDL_ANGLE_TILT, float(0))
-        imgRow.setValue(xmipp.MDL_ANGLE_PSI, float(0))
-        imgRow.setValue(xmipp.MDL_SHIFT_X, float(0))
-        imgRow.setValue(xmipp.MDL_SHIFT_Y, float(0))
-        imgRow.setValue(xmipp.MDL_SHIFT_Z, float(0))
-
     def _postprocessVolumeRow(self, img, imgRow):
         # explicitly set this from protocol input
         # to avoid conflict with input metadata
@@ -412,4 +409,17 @@ class XmippProtMLTomo(ProtClassify3D):
         if not imgRow.hasLabel(xmipp.MDL_REF):
             imgRow.setValue(xmipp.MDL_REF, 1)
         if not imgRow.hasLabel(xmipp.MDL_LL):
-            imgRow.setValue(xmipp.MDL_LL, float(1))
+            imgRow.setValue(xmipp.MDL_LL, 1.)
+
+    def _getIterNumber(self, index):
+        """ Return the list of iteration files, give the iterTemplate. """
+        result = None
+        iterTemplate = pwutils.join(self._getExtraPath("results"), "mltomo_it??????_ref.xmd")
+        iterRegex = re.compile('_it(\d{6,6})_')
+        files = sorted(glob(iterTemplate))
+        if files:
+            f = files[index]
+            s = iterRegex.search(f)
+            if s:
+                result = int(s.group(1))  # group 1 is 6 digits iteration number
+        return result
