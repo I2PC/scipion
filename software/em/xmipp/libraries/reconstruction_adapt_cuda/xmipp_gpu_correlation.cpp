@@ -656,8 +656,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 	firstTime=true;
 	for(int i=0; i<mdInSize; i++){
 
-		SF.getRow(rowSF, iterSF->objId);
-		rowSF.getValue(MDL_IMAGE, fnImgNew);
+		//SF.getRow(rowSF, iterSF->objId);
+		//rowSF.getValue(MDL_IMAGE, fnImgNew);
 		//fnRoot=fnImgNew.withoutExtension().afterLastOf("/").afterLastOf("@");
 		fnRoot=fn_classes_out.withoutExtension();
 		fnStackMD=formatString("%s/%s.xmd",fnDir.c_str(),fnRoot.c_str());
@@ -668,8 +668,8 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 
 		firstTime=false;
 		if(NexpVector[i]==0){
-			if(iterSF->hasNext())
-				iterSF->moveNext();
+			//if(iterSF->hasNext())
+				//iterSF->moveNext();
 			continue;
 		}
 
@@ -678,12 +678,12 @@ void generate_output_classes(MetaData SF, MetaData SFexp, FileName fnDir, size_t
 		SFout.setValue(MDL_IMAGE, fnClass, id);
 		SFout.setValue(MDL_CLASS_COUNT,(size_t)NexpVector[i], id);
 
-		if(iterSF->hasNext())
-			iterSF->moveNext();
+		//if(iterSF->hasNext())
+			//iterSF->moveNext();
 	}
 	SFout.write("classes@"+fnStackMD, MD_APPEND);
 
-	iterSF->init(SF);
+	//iterSF->init(SF);
 	FileName fnExpIm;
 	MDRow row;
 	for(int i=0; i<mdInSize; i++){
