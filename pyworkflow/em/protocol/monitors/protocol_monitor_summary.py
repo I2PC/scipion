@@ -32,7 +32,7 @@ from protocol_monitor_system import MonitorSystem
 from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtCTFMicrographs, ProtProcessMovies
 from pyworkflow.em.protocol.monitors.report_html import ReportHtml
-
+import getnifs
 
 class ProtMonitorSummary(ProtMonitor):
     """ Provide some summary of the basic steps of the Scipion-Box:
@@ -43,6 +43,8 @@ class ProtMonitorSummary(ProtMonitor):
     """
     _label = 'monitor summary'
     _lastUpdateVersion = VERSION_1_1
+    nifs = getnifs.get_network_interfaces()
+    nifsNameList = [nif.getName() for nif in nifs]
 
     def _defineParams(self, form):
         ProtMonitor._defineParams(self, form)
@@ -94,6 +96,31 @@ class ProtMonitorSummary(ProtMonitor):
                       label="Raise Alarm if Swap > XX%",
                       help="Raise alarm if swap allocated is greater "
                            "than given percentage")
+        group = form.addGroup('GPU')
+        group.addParam('doGpu', params.BooleanParam, default=False,
+                       label="Check GPU",
+                       help="Set to true if you want to monitor the GPU")
+        group.addParam('gpusToUse', params.StringParam, default='0',
+                          label='Which GPUs to use:', condition='doGpu',
+                          help='Providing a list of which GPUs '
+                               '(0,1,2,3, etc). Default is monitor GPU 0 only')
+        group = form.addGroup('NETWORK')
+        group.addParam('doNetwork', params.BooleanParam, default=False,
+                       label="Check Network",
+                       help="Set to true if you want to monitor the Network")
+        group.addParam('netInterfaces', params.EnumParam, choices=self.nifsNameList,
+                      default=1,#usually 0 is the loopback
+                      label="Interface", condition='doNetwork',
+                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
+                           " for a description of the symmetry groups format in Xmipp.\n"
+                           "If no symmetry is present, use _c1_."
+                      )
+
+        group = form.addGroup('Disk')
+        group.addParam('doDiskIO', params.BooleanParam, default=False,
+                       label="Check Disk IO",
+                       help="Set to true if you want to monitor the Disk Acces")
+
 
         form.addSection('Mail settings')
         ProtMonitor._sendMailParams(self, form)
@@ -217,7 +244,14 @@ class ProtMonitorSummary(ProtMonitor):
                                    stdout=True,
                                    cpuAlert=self.cpuAlert.get(),
                                    memAlert=self.memAlert.get(),
-                                   swapAlert=self.swapAlert.get())
+                                   swapAlert=self.swapAlert.get(),
+                                   doGpu=self.doGpu.get(),
+                                   gpusToUse = self.gpusToUse.get(),
+                                   doNetwork=self.doNetwork.get(),
+                                   doDiskIO=self.doDiskIO.get(),
+                                   nif=self.nifsNameList[self.netInterfaces.get()],
+                                   )
+
         return sysMonitor
 
     def createHtmlReport(self, ctfMonitor=None, sysMonitor=None, movieGainMonitor=None):
