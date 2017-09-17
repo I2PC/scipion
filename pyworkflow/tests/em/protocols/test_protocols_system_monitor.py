@@ -37,7 +37,6 @@ class TestStress(BaseTest):
         """
 
         # Check stress-ng is installed
-        print "Command exists?&&&&&&&&&&&&&&&&&&& %s" % commandExists(STRESS_NG)
         self.assertTrue(commandExists(STRESS_NG), "This test requires to have %s installed" % STRESS_NG)
 
         kwargs = {'noCpu': 2,
@@ -53,9 +52,22 @@ class TestStress(BaseTest):
         self.proj.launchProtocol(prot1,wait=False)
 
         #TODO fill protol pointer
-        kwargs = {'samplingInterval': 1,
-                'interval': 20
-                }
+        kwargs = {
+        "samplingInterval": 2,
+        "cpuAlert": 101.0,
+        "memAlert": 101.0,
+        "swapAlert": 101.0,
+        "monitorTime": 300.0,
+        "doMail": True,
+        "emailFrom": "from@from.fakeadress.com",
+        "emailTo": "to@to.fakeadress.com",
+        "smtp": "smtp.fakeadress.com",
+        "doGpu": False,
+        "gpusToUse": "0",
+        "doNetwork": True,
+        "netInterfaces": 1,
+        "doDiskIO": True
+        }
         prot2 = self.newProtocol(ProtMonitorSystem, **kwargs)
         prot2.inputProtocols.append(prot1)
         self.launchProtocol(prot2)
@@ -63,5 +75,4 @@ class TestStress(BaseTest):
         baseFn = prot2._getPath(SYSTEM_LOG_SQLITE)
         import os.path
         #not sure what to test here
-        print baseFn
         self.assertTrue(os.path.isfile(baseFn))
