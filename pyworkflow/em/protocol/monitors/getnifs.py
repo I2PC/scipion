@@ -1,5 +1,6 @@
 #!/usr/bin/python
-
+# Python module for listing network interfaces with name, 
+# index and addresses
 # Based on getifaddrs.py from pydlnadms [http://code.google.com/p/pydlnadms/].
 # Only tested on Linux!
 
