@@ -148,7 +148,8 @@ class SummaryWindow(pwgui.Window):
         MovieGainMonitorPlotter(self.protocol.createMovieGainMonitor()).show()
 
     def _monitorSystem(self, e=None):
-        SystemMonitorPlotter(self.protocol.createSystemMonitor()).show()
+        nifName=self.protocol.nifsNameList[self.protocol.netInterfaces.get()]
+        SystemMonitorPlotter(self.protocol.createSystemMonitor(), nifName).show()
 
     def _updateLabel(self):
         self.updateVar.set('Updated: %s' % pwutils.prettyTime(secs=True))
