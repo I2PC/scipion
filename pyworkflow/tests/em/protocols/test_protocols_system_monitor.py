@@ -20,6 +20,8 @@
 # *  All comments concerning this program package may be sent to the
 # *  e-mail address 'scipion@cnb.csic.es'
 # ***************************************************************************/
+import os.path
+
 from pyworkflow.em.protocol.monitors.protocol_monitor_system import SYSTEM_LOG_SQLITE
 from pyworkflow.em.protocol.protocol_stress import STRESS_NG
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
@@ -73,6 +75,6 @@ class TestStress(BaseTest):
         self.launchProtocol(prot2)
 
         baseFn = prot2._getPath(SYSTEM_LOG_SQLITE)
-        import os.path
+
         #not sure what to test here
         self.assertTrue(os.path.isfile(baseFn))
