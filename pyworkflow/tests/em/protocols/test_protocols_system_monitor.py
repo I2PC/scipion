@@ -55,21 +55,21 @@ class TestStress(BaseTest):
 
         #TODO fill protol pointer
         kwargs = {
-        "samplingInterval": 2,
-        "cpuAlert": 101.0,
-        "memAlert": 101.0,
-        "swapAlert": 101.0,
-        "monitorTime": 300.0,
-        "doMail": True,
-        "emailFrom": "from@from.fakeadress.com",
-        "emailTo": "to@to.fakeadress.com",
-        "smtp": "smtp.fakeadress.com",
-        "doGpu": False,
-        "gpusToUse": "0",
-        "doNetwork": True,
-        "netInterfaces": 1,
-        "doDiskIO": True
-        }
+		"samplingInterval": 2,
+		"cpuAlert": 101.0,
+		"memAlert": 101.0,
+		"swapAlert": 101.0,
+		"monitorTime": 300.0,
+		"doMail": True,
+		"emailFrom": "from@from.fakeadress.com",
+		"emailTo": "to@to.fakeadress.com",
+		"smtp": "smtp.fakeadress.com",
+		"doGpu": False,
+		"gpusToUse": "0",
+		"doNetwork": True,
+		"netInterfaces": 1,
+		"doDiskIO": True
+	}
         prot2 = self.newProtocol(ProtMonitorSystem, **kwargs)
         prot2.inputProtocols.append(prot1)
         self.launchProtocol(prot2)

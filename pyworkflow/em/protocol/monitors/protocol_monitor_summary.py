@@ -23,7 +23,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-
+#checked on http://pep8online.com/checkresult
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor
 from protocol_monitor_ctf import MonitorCTF
@@ -33,6 +33,7 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.em.protocol import ProtCTFMicrographs, ProtProcessMovies
 from pyworkflow.em.protocol.monitors.report_html import ReportHtml
 import getnifs
+
 
 class ProtMonitorSummary(ProtMonitor):
     """ Provide some summary of the basic steps of the Scipion-Box:
@@ -50,17 +51,17 @@ class ProtMonitorSummary(ProtMonitor):
         ProtMonitor._defineParams(self, form)
 
         form.addSection('MovieGain Monitor')
-        form.addParam('stddevValue', params.FloatParam, default = 0.04,
+        form.addParam('stddevValue', params.FloatParam, default=0.04,
                       label="Raise Alarm if residual gain standard "
                             "deviation >",
                       help="Raise alarm if residual gain standard deviation "
                            "is greater than given value")
-        form.addParam('ratio1Value', params.FloatParam, default = 1.15,
+        form.addParam('ratio1Value', params.FloatParam, default=1.15,
                       label="Raise Alarm if the ratio between the 97.5 "
                             "and 2.5 percentiles >",
                       help="Raise alarm if the ratio between the 97.5 "
                            "and 2.5 percentiles is greater than given value")
-        form.addParam('ratio2Value', params.FloatParam, default = 4.5,
+        form.addParam('ratio2Value', params.FloatParam, default=4.5,
                       label="Raise Alarm if the ratio between the maximum "
                             "gain value and the 97.5 percentile >",
                       help="Raise alarm if the ratio between the maximum "
@@ -68,54 +69,58 @@ class ProtMonitorSummary(ProtMonitor):
                            "than given value")
 
         form.addSection('CTF Monitor')
-        form.addParam('maxDefocus', params.FloatParam,default = 40000,
-              label="Raise Alarm if maximum defocus (A) >",
-              help="Raise alarm if defocus is greater than given value")
-        form.addParam('minDefocus', params.FloatParam,default = 1000,
-              label="Raise Alarm if minimum defocus (A) <",
-              help="Raise alarm if defocus is smaller than given value")
-        form.addParam('astigmatism', params.FloatParam,default = 0.2,
-              label="Raise Alarm if astigmatism >",
-              help="Raise alarm if astigmatism is greater than given value")
+        form.addParam('maxDefocus', params.FloatParam, default=40000,
+                      label="Raise Alarm if maximum defocus (A) >",
+                      help="Raise alarm if defocus is greater than given "
+                           "value")
+        form.addParam('minDefocus', params.FloatParam, default=1000,
+                      label="Raise Alarm if minimum defocus (A) <",
+                      help="Raise alarm if defocus is smaller than given "
+                           "value")
+        form.addParam('astigmatism', params.FloatParam, default=0.2,
+                      label="Raise Alarm if astigmatism >",
+                      help="Raise alarm if astigmatism is greater than given "
+                           "value")
 
-        form.addParam('monitorTime', params.FloatParam, default = 30000,
-              label="Total Logging time (min)",
-              help="Log during this interval")
+        form.addParam('monitorTime', params.FloatParam, default=30000,
+                      label="Total Logging time (min)",
+                      help="Log during this interval")
 
         form.addSection('System Monitor')
-        form.addParam('cpuAlert', params.FloatParam, default = 101,
+        form.addParam('cpuAlert', params.FloatParam, default=101,
                       label="Raise Alarm if CPU > XX%",
                       help="Raise alarm if memory allocated is greater "
                            "than given percentage")
 
-        form.addParam('memAlert', params.FloatParam, default = 101,
+        form.addParam('memAlert', params.FloatParam, default=101,
                       label="Raise Alarm if Memory > XX%",
                       help="Raise alarm if cpu allocated is greater "
                            "than given percentage")
-        form.addParam('swapAlert', params.FloatParam, default = 101,
+        form.addParam('swapAlert', params.FloatParam, default=101,
                       label="Raise Alarm if Swap > XX%",
                       help="Raise alarm if swap allocated is greater "
                            "than given percentage")
         group = form.addGroup('GPU')
-        group.addParam('doGpu', params.BooleanParam, default = False,
+        group.addParam('doGpu', params.BooleanParam, default=False,
                        label="Check GPU",
                        help="Set to true if you want to monitor the GPU")
         group.addParam('gpusToUse', params.StringParam, default='0',
-                          label='Which GPUs to use:', condition='doGpu',
-                          help='Providing a list of which GPUs '
-                               '(0,1,2,3, etc). Default is monitor GPU 0 only')
+                       label='Which GPUs to use:', condition='doGpu',
+                       help='Providing a list of which GPUs '
+                            '(0,1,2,3, etc). Default is monitor GPU 0 only')
         group = form.addGroup('NETWORK')
-        group.addParam('doNetwork', params.BooleanParam, default = False,
+        group.addParam('doNetwork', params.BooleanParam, default=False,
                        label="Check Network",
                        help="Set to true if you want to monitor the Network")
-        group.addParam('netInterfaces', params.EnumParam, choices = self.nifsNameList,
-                      default = 1,#usually 0 is the loopback
-                      label="Interface", condition='doNetwork',
-                      help="Name of the network interface to be checked"
+        group.addParam('netInterfaces', params.EnumParam,
+                       choices=self.nifsNameList,
+                       default=1,#usually 0 is the loopback
+                       label="Interface", condition='doNetwork',
+                       help="Name of the network interface to be checked"
                       )
 
         group = form.addGroup('Disk')
-        group.addParam('doDiskIO', params.BooleanParam, default = False,
+        group.addParam('doDiskIO', params.BooleanParam, default=False,
                        label="Check Disk IO",
                        help="Set to true if you want to monitor the Disk Acces")
 
@@ -202,14 +207,14 @@ class ProtMonitorSummary(ProtMonitor):
         movieGainProt.setProject(self.getProject())
 
         movieGainMonitor = MonitorMovieGain(movieGainProt,
-                                            workingDir = self.workingDir.get(),
-                                            samplingInterval = self.samplingInterval.get(),
-                                            monitorTime = self.monitorTime.get(),
-                                            email = self.createEmailNotifier(),
-                                            stdout = True,
-                                            stddevValue = self.stddevValue.get(),
-                                            ratio1Value = self.ratio1Value.get(),
-                                            ratio2Value = self.ratio2Value.get())
+                                            workingDir=self.workingDir.get(),
+                                            samplingInterval=self.samplingInterval.get(),
+                                            monitorTime=self.monitorTime.get(),
+                                            email=self.createEmailNotifier(),
+                                            stdout=True,
+                                            stddevValue=self.stddevValue.get(),
+                                            ratio1Value=self.ratio1Value.get(),
+                                            ratio2Value=self.ratio2Value.get())
         return movieGainMonitor
 
     def createCtfMonitor(self):
@@ -221,41 +226,41 @@ class ProtMonitorSummary(ProtMonitor):
         ctfProt.setProject(self.getProject())
 
         ctfMonitor = MonitorCTF(ctfProt,
-                                workingDir = self.workingDir.get(),
-                                samplingInterval = self.samplingInterval.get(),
-                                monitorTime = self.monitorTime.get(),
-                                email = self.createEmailNotifier(),
-                                stdout = True,
-                                minDefocus = self.minDefocus.get(),
-                                maxDefocus = self.maxDefocus.get(),
-                                astigmatism = self.astigmatism.get())
+                                workingDir=self.workingDir.get(),
+                                samplingInterval=self.samplingInterval.get(),
+                                monitorTime=self.monitorTime.get(),
+                                email=self.createEmailNotifier(),
+                                stdout=True,
+                                minDefocus=self.minDefocus.get(),
+                                maxDefocus=self.maxDefocus.get(),
+                                astigmatism=self.astigmatism.get())
         return ctfMonitor
 
     def createSystemMonitor(self):
         protocols = self.getInputProtocols()
 
         sysMonitor = MonitorSystem(protocols,
-                                   workingDir = self.workingDir.get(),
-                                   samplingInterval = self.samplingInterval.get(),
-                                   monitorTime = self.monitorTime.get(),
-                                   email = self.createEmailNotifier(),
-                                   stdout = True,
-                                   cpuAlert = self.cpuAlert.get(),
-                                   memAlert = self.memAlert.get(),
-                                   swapAlert = self.swapAlert.get(),
-                                   doGpu = self.doGpu.get(),
-                                   gpusToUse = self.gpusToUse.get(),
-                                   doNetwork = self.doNetwork.get(),
-                                   doDiskIO = self.doDiskIO.get(),
-                                   nif = self.nifsNameList[self.netInterfaces.get()],
+                                   workingDir=self.workingDir.get(),
+                                   samplingInterval=self.samplingInterval.get(),
+                                   monitorTime=self.monitorTime.get(),
+                                   email=self.createEmailNotifier(),
+                                   stdout=True,
+                                   cpuAlert=self.cpuAlert.get(),
+                                   memAlert=self.memAlert.get(),
+                                   swapAlert=self.swapAlert.get(),
+                                   doGpu=self.doGpu.get(),
+                                   gpusToUse=self.gpusToUse.get(),
+                                   doNetwork=self.doNetwork.get(),
+                                   doDiskIO=self.doDiskIO.get(),
+                                   nif=self.nifsNameList[self.netInterfaces.get()],
                                    )
 
         return sysMonitor
 
-    def createHtmlReport(self, ctfMonitor = None, sysMonitor = None, movieGainMonitor = None):
+    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None, movieGainMonitor=None):
         ctfMonitor = ctfMonitor or self.createCtfMonitor()
         sysMonitor = sysMonitor or self.createSystemMonitor()
         movieGainMonitor = movieGainMonitor or self.createMovieGainMonitor()
 
         return ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor, self.publishCmd.get(),
-                          refreshSecs = self.samplingInterval.get())
+                          refreshSecs=self.samplingInterval.get())
