@@ -228,10 +228,9 @@ class Project(object):
 
         # If folder is read only, flag it and warn about it.
         if not os.access(self.path, os.W_OK):
-
             self._isInReadOnlyFolder = True
-            print("Warning: don't have write permissions for project folder. "
-                  "Opening as READ-ONLY.")
+            print("WARNING on project \"%s\": don't have write permissions for project folder. "
+                  "Loading as READ-ONLY." % self.shortName)
 
         if chdir:
             os.chdir(self.path)  # Before doing nothing go to project dir
