@@ -957,6 +957,9 @@ class Project(object):
             for r in self.runs:
                 self._setProtocolMapper(r)
 
+                # Check for run warnings
+                r.checkSummaryWarnings()
+
                 # Update nodes that are running and were not invoked
                 # by other protocols
                 if r.isActive():

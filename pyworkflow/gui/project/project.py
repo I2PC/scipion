@@ -155,12 +155,15 @@ class ProjectWindow(ProjectBaseWindow):
     def loadProject(self):
         self.project = Project(self.projPath)
         self.project.load()
+
+        # Check if we have settings.sqlite, generate if not
         settingsPath = os.path.join(self.project.path, self.project.settingsPath)
         if os.path.exists(settingsPath):
             self.settings = self.project.getSettings()
         else:
             print('Warning: settings.sqlite not found! Creating default settings..')
             self.settings = self.project.createSettings()
+
         self.generalCfg = self.settings.getConfig()
         self.protCfg = self.project.getCurrentProtocolView()
 
