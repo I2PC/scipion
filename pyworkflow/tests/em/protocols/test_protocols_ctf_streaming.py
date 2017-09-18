@@ -28,13 +28,17 @@ from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol import ProtCreateStreamData, ProtMonitorSystem
 from pyworkflow.em.packages.grigoriefflab import ProtCTFFind
 from pyworkflow.protocol import getProtocolFromDb
-from pyworkflow.em.protocol.protocol_create_stream_data import SET_OF_RANDOM_MICROGRAPHS
-from pyworkflow.em.packages.xmipp3.protocol_ctf_micrographs import XmippProtCTFMicrographs
+from pyworkflow.em.protocol.protocol_create_stream_data import \
+    SET_OF_RANDOM_MICROGRAPHS
+from pyworkflow.em.packages.xmipp3.protocol_ctf_micrographs import\
+    XmippProtCTFMicrographs
 from pyworkflow.em.packages.gctf import ProtGctf
+from pyworkflow.em.protocol.monitors.pynvml import nvmlInit, NVMLError
 # Load the number of movies for the simulation, by default equal 5, but
 # can be modified in the environement
 MICS = os.environ.get('SCIPION_TEST_MICS', 3)
 CTF_SQLITE = "ctfs.sqlite"
+
 
 class TestCtfStreaming(BaseTest):
     @classmethod
@@ -59,15 +63,14 @@ class TestCtfStreaming(BaseTest):
                   'samplingRate': 1.25,
                   'creationInterval': 5,
                   'delay': 0,
-                  'setof': SET_OF_RANDOM_MICROGRAPHS  # SetOfMicrographs
-                }
+                  'setof': SET_OF_RANDOM_MICROGRAPHS}  # SetOfMicrographs
 
         # put some stress on the system
         protStream = self.newProtocol(ProtCreateStreamData, **kwargs)
         protStream.setObjLabel('create Stream Mic')
-        self.proj.launchProtocol(protStream,wait=False)
+        self.proj.launchProtocol(protStream, wait=False)
 
-        counter=1
+        counter = 1
         while not protStream.hasAttribute('outputMicrographs'):
             time.sleep(10)
             protStream = self._updateProtocol(protStream)
@@ -92,13 +95,15 @@ class TestCtfStreaming(BaseTest):
         self.proj.launchProtocol(protCTF2)
 
         # check if box has nvidia cuda libs.
-        if os.system("nvidia-smi -h " )==0:
-		protCTF3 = ProtGctf()
-		protCTF3.inputMicrographs.set(protStream.outputMicrographs)
-		protCTF3.ctfDownFactor.set(2)
-		self.proj.launchProtocol(protCTF3, wait=False)
-        else:
-           print("Cannot find nvidia-smi, I assume that no GPU is connected to this machine")
+        try:
+            nvmlInit()  # fails if not GPU attached
+            protCTF3 = ProtGctf()
+            protCTF3.inputMicrographs.set(protStream.outputMicrographs)
+            protCTF3.ctfDownFactor.set(2)
+            self.proj.launchProtocol(protCTF3, wait=False)
+        except NVMLError, err:
+            print("Cannot find nvidia-smi.""
+                  "I assume that no GPU is connected to this machine")
 
         counter = 1
 
