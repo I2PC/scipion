@@ -44,8 +44,8 @@ class ViewerMonitorSummary(Viewer):
 
     def visualize(self, obj, **kwargs):
         self.summaryWindow = self.tkWindow(SummaryWindow,
-                                           title='Scipion-Box Summary',
-                                           protocol=obj
+                                           title = 'Scipion-Box Summary',
+                                           protocol = obj
                                            )
         self.summaryWindow.show()
 
@@ -61,20 +61,20 @@ class SummaryWindow(pwgui.Window):
 
         content = tk.Frame(self.root)
         self._createContent(content)
-        content.grid(row=0, column=0, sticky='news')
-        content.columnconfigure(0, weight=1)
+        content.grid(row = 0, column = 0, sticky = 'news')
+        content.columnconfigure(0, weight = 1)
 
     def _createContent(self, content):
         topFrame = tk.Frame(content)
-        content.columnconfigure(0, weight=1)
-        topFrame.grid(row=0, column=0, sticky='new', padx=5, pady=5)
+        content.columnconfigure(0, weight = 1)
+        topFrame.grid(row = 0, column = 0, sticky = 'new', padx = 5, pady = 5)
 
         treeFrame = tk.Frame(content)
-        content.rowconfigure(1, weight=1)
-        treeFrame.grid(row=1, column=0, sticky='news', padx=5, pady=5)
+        content.rowconfigure(1, weight = 1)
+        treeFrame.grid(row = 1, column = 0, sticky = 'news', padx = 5, pady = 5)
 
         buttonsFrame = tk.Frame(content)
-        buttonsFrame.grid(row=2, column=0, sticky='new', padx=5, pady=5)
+        buttonsFrame.grid(row = 2, column = 0, sticky = 'new', padx = 5, pady = 5)
 
         self._fillTreeFrame(treeFrame)
         # JMRT: We fill the top frame after the tree, to make sure
@@ -84,23 +84,23 @@ class SummaryWindow(pwgui.Window):
 
     def _fillTopFrame(self, frame):
         p1 = tk.Label(frame, text='Project: ')
-        p1.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
+        p1.grid(row = 0, column = 0, sticky = 'nw', padx = 5, pady = 5)
         projName = self.protocol.getProject().getShortName()
-        p2 = tk.Label(frame, text=projName, font=self.fontBold)
-        p2.grid(row=0, column=1, sticky='nw', padx=5, pady=0)
+        p2 = tk.Label(frame, text = projName, font = self.fontBold)
+        p2.grid(row = 0, column = 1, sticky = 'nw', padx = 5, pady = 0)
 
-        lf = tk.LabelFrame(frame, text='Acquisition')
-        lf.grid(row=1, column=0, columnspan=2, sticky='new')
-        lf.columnconfigure(0, weight=1)
-        lf.columnconfigure(1, weight=1)
+        lf = tk.LabelFrame(frame, text = 'Acquisition')
+        lf.grid(row = 1, column = 0, columnspan = 2, sticky = 'new')
+        lf.columnconfigure(0, weight = 1)
+        lf.columnconfigure(1, weight = 1)
         self.r = 0
 
         def add(t1, t2):
-            tk.Label(lf, text=t1).grid(row=self.r, column=0, sticky='ne',
-                                       padx=(10, 5), pady=(5, 0))
-            tk.Label(lf, text=t2, font=self.fontBold).grid(row=self.r, column=1,
+            tk.Label(lf, text = t1).grid(row = self.r, column = 0, sticky='ne',
+                                       padx = (10, 5), pady=(5, 0))
+            tk.Label(lf, text = t2, font = self.fontBold).grid(row = self.r, column = 1,
                                                            sticky='nw',
-                                                           padx=(5, 25), pady=0)
+                                                           padx=(5, 25), pady = 0)
             self.r += 1
 
         for k, v in self.provider.acquisition:
@@ -108,51 +108,51 @@ class SummaryWindow(pwgui.Window):
 
     def _fillTreeFrame(self, frame):
         self.tree = BoundTree(frame, self.provider)
-        self.tree.grid(row=0, column=0)
+        self.tree.grid(row = 0, column = 0)
         self.updateVar = tk.StringVar()
-        updateLabel = tk.Label(frame, textvariable=self.updateVar)
-        updateLabel.grid(row=1, column=0, sticky='nw', padx=5, pady=5)
+        updateLabel = tk.Label(frame, textvariable = self.updateVar)
+        updateLabel.grid(row = 1, column = 0, sticky='nw', padx = 5, pady = 5)
         self._updateLabel()
 
     def _fillButtonsFrame(self, frame):
         subframe = tk.Frame(frame)
-        subframe.grid(row=0, column=0, sticky='nw')
-        frame.columnconfigure(1, weight=1)
+        subframe.grid(row = 0, column = 0, sticky='nw')
+        frame.columnconfigure(1, weight = 1)
 
-        ctfBtn = Button(subframe, "CTF Monitor", command=self._monitorCTF)
-        ctfBtn.grid(row=0, column=0, sticky='nw', padx=(0, 5))
+        ctfBtn = Button(subframe, "CTF Monitor", command = self._monitorCTF)
+        ctfBtn.grid(row = 0, column = 0, sticky='nw', padx=(0, 5))
         if self.protocol.createCtfMonitor() == None:
             ctfBtn['state'] = 'disabled'
 
-        movieGainBtn = Button(subframe, "Movie Gain Monitor", command=self._monitorMovieGain)
-        movieGainBtn.grid(row=0, column=1, sticky='nw', padx=(0, 5))
+        movieGainBtn = Button(subframe, "Movie Gain Monitor", command = self._monitorMovieGain)
+        movieGainBtn.grid(row = 0, column = 1, sticky='nw', padx=(0, 5))
         if self.protocol.createMovieGainMonitor() == None:
             movieGainBtn['state'] = 'disabled'
 
-        sysBtn = Button(subframe, "System Monitor", command=self._monitorSystem)
-        sysBtn.grid(row=0, column=2, sticky='nw', padx=(0, 5))
+        sysBtn = Button(subframe, "System Monitor", command = self._monitorSystem)
+        sysBtn.grid(row = 0, column = 2, sticky='nw', padx=(0, 5))
         if self.protocol.createSystemMonitor() == None:
             sysBtn['state'] = 'disabled'
 
         htmlBtn = HotButton(subframe, 'Generate HTML Report',
-                           command=self._generateHTML)
-        htmlBtn.grid(row=0, column=3, sticky='nw', padx=(0, 5))
+                           command = self._generateHTML)
+        htmlBtn.grid(row = 0, column = 3, sticky='nw', padx=(0, 5))
 
         closeBtn = self.createCloseButton(frame)
-        closeBtn.grid(row=0, column=1, sticky='ne')
+        closeBtn.grid(row = 0, column = 1, sticky='ne')
 
-    def _monitorCTF(self, e=None):
+    def _monitorCTF(self, e = None):
         CtfMonitorPlotter(self.protocol.createCtfMonitor()).show()
 
-    def _monitorMovieGain(self, e=None):
+    def _monitorMovieGain(self, e = None):
         MovieGainMonitorPlotter(self.protocol.createMovieGainMonitor()).show()
 
-    def _monitorSystem(self, e=None):
-        nifName=self.protocol.nifsNameList[self.protocol.netInterfaces.get()]
+    def _monitorSystem(self, e = None):
+        nifName = self.protocol.nifsNameList[self.protocol.netInterfaces.get()]
         SystemMonitorPlotter(self.protocol.createSystemMonitor(), nifName).show()
 
     def _updateLabel(self):
-        self.updateVar.set('Updated: %s' % pwutils.prettyTime(secs=True))
+        self.updateVar.set('Updated: %s' % pwutils.prettyTime(secs = True))
         # Schedule a refresh in some seconds
         self.tree.after(self.refresh * 1000, self._updateData)
 
@@ -161,7 +161,7 @@ class SummaryWindow(pwgui.Window):
         self.tree.update()
         self._updateLabel()
 
-    def _generateHTML(self, e=None):
+    def _generateHTML(self, e = None):
         reportHtml = self.protocol.createHtmlReport()
         reportPath = reportHtml.generate(self.protocol.isFinished())
         text._open_cmd(reportPath)
