@@ -109,13 +109,16 @@ def killWithChilds(pid):
     import psutil
     proc = psutil.Process(pid)
     for c in proc.get_children(recursive=True):
-        print "Terminating child pid: %d" % c.pid
-        c.kill()
-    print "Terminating process pid: %d" % pid
-    proc.kill()
+        if c.pid is not None:
+            print "Terminating child pid: %d" % c.pid
+            c.kill()
+    print "Terminating process pid: %s" % pid
+    if pid is None:
+        print "WARNING! Got None PID!!!"
+    else:
+        proc.kill()
 
 def isProcessAlive(pid):
-
     import psutil
     try:
         proc = psutil.Process(pid)

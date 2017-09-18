@@ -76,9 +76,15 @@ void ProgCTFEstimateFromMicrograph::readParams()
         fn_pos = getParam("--mode", 1);
     }
     estimate_ctf = !checkParam("--dont_estimate_ctf");
+    acceleration1D = checkParam("--acceleration1D");
     if (estimate_ctf)
-        prmEstimateCTFFromPSD.readBasicParams(this);
-    	prmEstimateCTFFromPSDFast.readBasicParams(this); //Nuevo
+    {
+    	if (!acceleration1D)
+    		prmEstimateCTFFromPSD.readBasicParams(this);
+    	else
+    		prmEstimateCTFFromPSDFast.readBasicParams(this); //Nuevo
+    }
+
     bootstrapN = getIntParam("--bootstrapFit");
 }
 
@@ -118,9 +124,10 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("                              : The file is metadata with the position of each particle within the micrograph");
     addParamsLine("==+ CTF fit");
     addParamsLine("  [--dont_estimate_ctf]       : Do not fit a CTF to PSDs");
+    addParamsLine("  [--acceleration1D]          : Accelerate PSD estimation");
     ARMA_parameters::defineParams(this);
     ProgCTFEstimateFromPSD::defineBasicParams(this);
-    ProgCTFEstimateFromPSDFast::defineBasicParams(this); //Nuevo
+    //ProgCTFEstimateFromPSDFast::defineBasicParams(this); //Nuevo
     addExampleLine("Estimate PSD", false);
     addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --dont_estimate_ctf");
     addExampleLine("Estimate a single CTF for the whole micrograph", false);
@@ -333,7 +340,6 @@ void ProgCTFEstimateFromMicrograph::run()
     // Attenuate borders to avoid discontinuities
     MultidimArray<double> pieceSmoother;
     constructPieceSmoother(piece, pieceSmoother);
-
     if (verbose)
         std::cerr << "Computing models of each piece ...\n";
 
@@ -517,7 +523,7 @@ void ProgCTFEstimateFromMicrograph::run()
 
 						//1D//
 						prmEstimateCTFFromPSDFast.fn_psd = fn_psd_piece; //Nuevo
-						CTF1D ctf1Dmodel; //Nuevo
+						CTFDescription1D ctf1Dmodel; //Nuevo
         				ctf1Dmodel.isLocalCTF = true;
 						ctf1Dmodel.x0 = piecej;
 						ctf1Dmodel.xF = (piecej + pieceDim-1);
@@ -577,12 +583,10 @@ void ProgCTFEstimateFromMicrograph::run()
             // Estimate the CTF parameters
             std::cerr << "Adjusting CTF model to the PSD ...\n";
             prmEstimateCTFFromPSD.fn_psd = fn_psd;
-			prmEstimateCTFFromPSDFast.fn_psd = fn_psd; //Nuevo
+            prmEstimateCTFFromPSDFast.fn_psd = fn_psd;
 			CTFDescription ctfmodel;
-			CTF1D ctf1Dmodel; //Nuevo
+			CTFDescription1D ctf1Dmodel; //Nuevo
 
-
-            printf("BootstrpN = %i\n", bootstrapN);
             if (bootstrapN == -1)
             {
                 try {
@@ -626,10 +630,8 @@ void ProgCTFEstimateFromMicrograph::run()
                     psign += "+";
                 double zrandomness = checkRandomness(psign);
 
-
-				if(!prmEstimateCTFFromPSDFast.activar1D)
+				if(!acceleration1D)
 				{
-				printf("Eureka! Soy todo un programador\n");
                 ctfmodel.isLocalCTF = false;
                 ctfmodel.x0 = 0;
                 ctfmodel.xF = (Xdim-1);
@@ -654,13 +656,13 @@ void ProgCTFEstimateFromMicrograph::run()
                 stdQ += A2D_ELEM(mpsd_std,i,j)/A2D_ELEM(mpsd_avg,i,j);
                 stdQ /= MULTIDIM_SIZE(psd_std());
 
-                /*MetaData MD;
+                MetaData MD;
                 MD.read(fn_psd.withoutExtension() + ".ctfparam");
                 size_t id = MD.firstObject();
                 MD.setValue(MDL_CTF_CRIT_PSDVARIANCE, stdQ, id);
                 MD.setValue(MDL_CTF_CRIT_PSDPCA1VARIANCE, pstd, id);
                 MD.setValue(MDL_CTF_CRIT_PSDPCARUNSTEST, zrandomness, id);
-                MD.write((String)"fullMicrograph@"+fn_psd.withoutExtension() + ".ctfparam");*/
+                MD.write((String)"fullMicrograph@"+fn_psd.withoutExtension() + ".ctfparam");
             }
             else
             {
@@ -668,8 +670,8 @@ void ProgCTFEstimateFromMicrograph::run()
 
                 prmEstimateCTFFromPSD.bootstrap = true;
                 prmEstimateCTFFromPSD.show_optimization = true;
-                prmEstimateCTFFromPSDFast.activar1D = true;
-                if (!prmEstimateCTFFromPSDFast.activar1D)
+                //prmEstimateCTFFromPSDFast.acceleration1D = true;
+                if (!acceleration1D)
                 {
                 MultidimArray<double> CTFs(bootstrapN, 32);
                 FileName fnBase = fn_psd.withoutExtension();

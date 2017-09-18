@@ -498,10 +498,11 @@ for p in ['angular_break_symmetry',
           'classify_analyze_cluster',
           'classify_compare_classes',
           'classify_evaluate_classes',
+          'classify_extract_features',
           'classify_first_split',
           'classify_kerdensom',
 			
-		  'ctf_correct_wiener2d',
+	  'ctf_correct_wiener2d',
           'ctf_correct_wiener3d',
           'ctf_correct_idr',
           'ctf_create_ctfdat',
@@ -513,6 +514,8 @@ for p in ['angular_break_symmetry',
           'ctf_phase_flip',
           'ctf_show',
           'ctf_sort_psds',
+
+          'evaluate_coordinates',
 
           'idr_xray_tomo',
 
@@ -728,6 +731,11 @@ if opencv:
         addProg('movie_optical_alignment_gpu',
                 libs=opencvLibs,
                 deps=['opencv'], cuda=True)
+
+#ROB not sure if cuda=True is necesary
+if cuda:
+    addProg('gpu_example',
+                nvcc=True,cuda=True)
 
 
 

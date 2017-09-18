@@ -332,7 +332,7 @@ def alignmentToRow(alignment, alignmentRow, alignType):
         raise Exception("3D alignment conversion for Relion not implemented. "
                         "It seems the particles were generated with an "
                         "incorrect alignment type. You may either re-launch "
-                        "the protocol that generates the paticles "
+                        "the protocol that generates the particles "
                         "with angles or set 'Consider previous alignment?' "
                         "to No")
     else:
@@ -357,13 +357,15 @@ def rowToAlignment(alignmentRow, alignType):
         alignment = em.Transform()
         angles = numpy.zeros(3)
         shifts = numpy.zeros(3)
-        angles[2] = alignmentRow.getValue(md.RLN_ORIENT_PSI, 0.)
         shifts[0] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_X, 0.)
         shifts[1] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_Y, 0.)
         if not is2D:
             angles[0] = alignmentRow.getValue(md.RLN_ORIENT_ROT, 0.)
             angles[1] = alignmentRow.getValue(md.RLN_ORIENT_TILT, 0.)
+            angles[2] = alignmentRow.getValue(md.RLN_ORIENT_PSI, 0.)
             shifts[2] = alignmentRow.getValue(md.RLN_ORIENT_ORIGIN_Z, 0.)
+        else:
+            angles[2] = - alignmentRow.getValue(md.RLN_ORIENT_PSI, 0.)
         M = matrixFromGeometry(shifts, angles, inverseTransform)
         alignment.setMatrix(M)
     else:
@@ -924,15 +926,13 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
     extraLabels = coordSet.getFirstItem().hasAttribute('_rlnClassNumber')
     doScale = abs(scale - 1) > 0.001
 
-    print "Scaling: %s, factor: %s" % (doScale, scale)
-
     for coord in coordSet.iterItems(orderBy='_micId'):
         micId = coord.getMicId()
-        if not micId in posDict:
-            print "micId %s not found" % micId
-            continue
 
         if micId != lastMicId:
+            if not micId in posDict:
+                print "Warning: micId %s not found" % micId
+                continue
             # we need to close previous opened file
             if f:
                 f.close()
@@ -944,8 +944,6 @@ def writeSetOfCoordinates(posDir, coordSet, getStarFileFunc, scale=1):
         if doScale:
             x = coord.getX() * scale
             y = coord.getY() * scale
-            print "coord: %s %s, new: %s %s" % (coord.getX(), coord.getY(),
-                                                x, y)
         else:
             x = coord.getX()
             y = coord.getY()

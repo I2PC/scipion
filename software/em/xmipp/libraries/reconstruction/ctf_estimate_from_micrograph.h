@@ -30,6 +30,7 @@
 #include "ctf_estimate_from_psd.h"
 #include "ctf_estimate_from_psd_fast.h"
 #include "ctf_estimate_psd_with_arma.h"
+#include "ctf_estimate_from_psd_base.h"
 
 /**@defgroup AssignCTF ctf_estimate_from_micrograph (CTF estimation from a micrograph)
    @ingroup ReconsLibrary
@@ -44,6 +45,7 @@ public:
     typedef enum {OnePerMicrograph, OnePerRegion, OnePerParticle} TPSD_mode;
 
 public:
+
     /// Parameters for adjust_CTF program
     ProgCTFEstimateFromPSD  prmEstimateCTFFromPSD;
     /// Parameters for adjust_CTF program
@@ -73,6 +75,9 @@ public:
     int                     bootstrapN;
     /// Estimate a CTF for each PSD
     bool 					estimate_ctf;
+    /// Accelerate PSD estimation
+    bool acceleration1D;
+
 public:
     /** constructor**/
     ProgCTFEstimateFromMicrograph();

@@ -44,7 +44,7 @@ MATLAB_LIBDIR = None
 MOTIONCORR_HOME = %(EM_ROOT)s/motioncorr-2.1
 MOTIONCORR = dosefgpu_driftcorr_7.5
 # MOTIONCORR_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
-MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-17.01.30
+MOTIONCOR2_HOME = %(EM_ROOT)s/motioncor2-1.0.0
 # MOTIONCOR2_CUDA_LIB = None # Fill to override scipion CUDA_LIB if different
 NMA_HOME = %(EM_ROOT)s/nma
 PYTOM_HOME = %(EM_ROOT)s/pytom
@@ -97,6 +97,9 @@ MPI_BINDIR = /usr/lib64/mpi/gcc/openmpi/bin
 # Default CUDA path if not defined for a certain package
 CUDA_LIB = /usr/local/cuda-7.5/lib64
 CUDA_BIN = /usr/local/cuda-7.5/bin
+NVCC = nvcc --x cu -D_FORCE_INLINES
+NVCC_INCLUDE = /usr/local/cuda/include
+NVCC_LIBDIR = CUDA_LIB
 
 MATLAB_DIR = /usr/local/MATLAB/R2011a
 

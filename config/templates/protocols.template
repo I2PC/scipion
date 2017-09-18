@@ -15,7 +15,8 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "ProtImportPdb",         "text": "import PDB"},
 			{"tag": "protocol", "value": "ProtImportAverages",    "text": "import averages"},
 			{"tag": "protocol", "value": "ProtImportMask",        "text": "import masks"},
-			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"}
+			{"tag": "protocol", "value": "ProtEmxExport",         "text": "export to EMX"},
+			{"tag": "protocol", "value": "ProtExportEMDB",         "text": "export to EMDB"}
 		]}
 	]},
 	{"tag": "section", "text": "Movies", "openItem": "False", "children": [
@@ -39,7 +40,8 @@ Protocols SPA = [
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtCTFAssign",           "text": "default"},
 				{"tag": "protocol", "value": "XmippProtCTFDiscrepancy", "text": "default"},
-				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"}
+				{"tag": "protocol", "value": "ProtRelionExportCtf", "text": "default"},
+				{"tag": "protocol", "value": "XmippProtCTFSelection", "text": "default"}
 			]}
 		]}
 	]},
@@ -122,6 +124,7 @@ Protocols SPA = [
 			{"tag": "protocol", "value": "EmanProtInitModel",   "text": "default"},
 			{"tag": "protocol", "value": "XmippProtRansac",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtReconstructSignificant",  "text": "default"},
+			{"tag": "protocol", "value": "XmippProtReconstructSwarm",  "text": "default"},
 			{"tag": "protocol", "value": "XmippProtConvertPdb",  "text": "default"},
 			{"tag": "section", "text": "more", "openItem": "False", "children": [
 				{"tag": "protocol", "value": "ProtPrime", "text": "default"},

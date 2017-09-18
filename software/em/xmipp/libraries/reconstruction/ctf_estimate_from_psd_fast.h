@@ -28,94 +28,84 @@
 #define _ADJUST_CTF_FAST_HH
 
 #include "fourier_filter.h"
+#include "ctf_estimate_from_psd_base.h"
 
 /**@defgroup AdjustParametricCTFFast adjust_ctf (Adjust CTF parameters to PSD)
    @ingroup ReconsLibrary */
 //@{
 /** Adjust CTF parameters. */
-class ProgCTFEstimateFromPSDFast: public XmippProgram
+class ProgCTFEstimateFromPSDFast: public ProgCTFBasicParams
 {
 public:
-	 /// CTF filename
-	    FileName             fn_psd;
-	/// Downsample performed
-	    double				 downsampleFactor;
-	 /// Show convergence values
-	    bool                 show_optimization;
-	 /// CTF amplitude to model
-	    Image<double>        ctftomodel;
-	/// CTF amplitude to model
-	    Image<double>        enhanced_ctftomodel;
-	 /// CTF amplitude to model
-	    Image<double>        enhanced_ctftomodel_fullsize;
-	 /// Bootstrap estimation
-	    bool                 bootstrap;
-	 /// Minimum frequency to adjust
-	    double               min_freq;
-	 /// Maximum frequency to adjust
-	    double               max_freq;
-	 /// Set of parameters for the complete adjustment of the CTF
-	    Matrix1D<double>     adjust;
-	/// Sampling rate
-		double               Tm;
-	/// Defocus range
-		double               defocus_range;
-	/// X dimension of particle projections (-1=the same as the psd)
-		int                  ctfmodelSize;
-	/// Weight of the enhanced image
-		double               enhanced_weight;
-	/// Enhancement filter low freq
-		double               f1;
-	/// Enhancement filter high freq
-	    double               f2;
-	/// CTF model
-	    CTF1D       		initial_ctfmodel;
-	/// Fast defocus estimate
-		bool                 fastDefocusEstimate;
-	/// Regularization factor for the phase direction and unwrapping estimates (used in Zernike estimate)
-		double               lambdaPhase;
-	/// Size of the average window used during phase direction and unwrapping estimates (used in Zernike estimate)
-		int                  sizeWindowPhase;
-    /// Model simplification
-	    int                  modelSimplification;
-	 ///Elegir 1D o 2D
-	    bool 				 activar1D;
+
+	CTFDescription1D    initial_ctfmodel, current_ctfmodel, ctfmodel_defoci;
+
+	ProgCTFEstimateFromPSDFast()
+	{
+	}
 
 public:
-    /// Read parameters
-    void readParams();
 
-    /// Read parameters
-    void readBasicParams(XmippProgram *program);
+	/// Read parameters
+	void readBasicParams(XmippProgram *program);
 
-    /// Show parameters
-    void show();
+	/// Define basic parameters
+	static void defineBasicParams(XmippProgram * program);
 
-    /// Define basic parameters
-    static void defineBasicParams(XmippProgram * program);
+	/// Define Parameters
+	void defineParams();
 
-    /// Define Parameters
-    void defineParams();
+	/// Produce side information
+	void produceSideInfo();
 
-    /// Produce side information
-    void produceSideInfo();
+	/** Run */
+	void run();
 
-    /** Generate half-plane model at a given size.
-        It is assumed that ROUT_Adjust_CTF has been already run */
-    void generate_model_halfplane(int Ydim, int Xdim, MultidimArray<double> &model);
+	/* Assign ctfmodel from a vector and viceversa ----------------------------- */
+	void assignCTFfromParameters_fast(double *p, CTFDescription1D &ctf1Dmodel, int ia, int l, int modelSimplification);
 
-    /** Generate quadrant model at a given size.
-        It is assumed that ROUT_Adjust_CTF has been already run */
-    void generate_model_quadrant(int Ydim, int Xdim, MultidimArray<double> &model);
+	void assignParametersFromCTF_fast(CTFDescription1D &ctfmodel, double *p, int ia, int l, int modelSimplification);
 
-    /** Run */
-    void run();
+	/* Center focus ----------------------------------------------------------- */
+	void center_optimization_focus_fast(bool adjust_freq, bool adjust_th, double margin);
+
+	/* The model is taken from global_adjust and global_ctfmodel is modified */
+	void generateModelSoFar_fast(MultidimArray<double> &I, bool apply_log);
+
+	/* Compute central region -------------------------------------------------- */
+	void compute_central_region_fast(double &w1, double &w2, double ang);
+
+	/* Save intermediate results ----------------------------------------------- */
+	/* First call to generate model so far and then save the image, and a couple
+	 of cuts along X and Y.
+	 This function returns the fitting error.*/
+	void saveIntermediateResults_fast(const FileName &fn_root, bool generate_profiles);
+
+	/** CTF fitness */
+	double CTF_fitness_object_fast(double *p);
+
+	// Estimate sqrt parameters
+	void estimate_background_sqrt_parameters_fast();
+
+	// Estimate first gaussian parameters ------------------------------------- */
+	void estimate_background_gauss_parameters_fast();
+
+	// Estimate second gaussian parameters ------------------------------------- */
+	void estimate_background_gauss_parameters2_fast();
+
+	// Estimate envelope parameters -------------------------------------------- */
+	void estimate_envelope_parameters_fast();
+
+	// Estimate defoci --------------------------------------------------------- */
+	void showFirstDefoci_fast();
+	void estimate_defoci_fast();
+
 };
 
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
-double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTF1D &output_ctfmodel,
+double ROUT_Adjust_CTFFast(ProgCTFEstimateFromPSDFast &prm, CTFDescription1D &output_ctfmodel,
     bool standalone = true);
 //@}
 #endif
