@@ -50,7 +50,7 @@ class ProtCreateStreamData(EMProtocol):
         randomMicrographs -> creates a micrograph with random values and aplies a reandom CTF
     """
     _label="create stream data"
-    _version = VERSION_1_1
+    _lastUpdateVersion = VERSION_1_1
     _singleImageFn = "singleImage.xmp"
     _magnification = 500000
     _voltage = 200
@@ -113,15 +113,15 @@ class ProtCreateStreamData(EMProtocol):
             deps.append(delayId)
 
         step = None
+        if self.setof == SET_OF_MOVIES:
+            step = 'createStep'
+        elif self.setof == SET_OF_MICROGRAPHS:
+            step = 'createStep'
+        elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
+            step = 'createRandomMicAtep'
+        else:
+            raise Exception('Unknown data type')
         for mic in range (1, self.nDim.get() +1):
-            if self.setof == SET_OF_MOVIES:
-                step = 'createStep'
-            elif self.setof == SET_OF_MICROGRAPHS:
-                step = 'createStep'
-            elif self.setof == SET_OF_RANDOM_MICROGRAPHS:
-                step = 'createStep_random_mic'
-            else:
-                raise Exception('Unknown data type')
             self._insertFunctionStep(step, mic, prerequisites=deps)
 
     #--------------------------- STEPS functions --------------------------------------------
@@ -203,7 +203,6 @@ class ProtCreateStreamData(EMProtocol):
     def createStep(self, counter):
 
         if not ProtCreateStreamData.object:
-            print("read object")
             if self.setof == SET_OF_MOVIES:
                 ProtCreateStreamData.object = ImageHandler().read(self.inputMovie.get().getLocation())
                 self.name = "movie"
@@ -215,10 +214,9 @@ class ProtCreateStreamData(EMProtocol):
         destFn = self._getExtraPath("%s_%05d" % (self.name,counter))
         ProtCreateStreamData.object.write(destFn)
         self.dictObj[destFn] = True
-        print "self.dictObj", self.dictObj
         time.sleep(self.creationInterval.get())
 
-    def createStep_random_mic(self, mic):
+    def createRandomMicAtep(self, mic):
         from pyworkflow.em.packages.xmipp3 import getEnviron
 
         #create image
