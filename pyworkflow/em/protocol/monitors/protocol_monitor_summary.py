@@ -111,9 +111,7 @@ class ProtMonitorSummary(ProtMonitor):
         group.addParam('netInterfaces', params.EnumParam, choices = self.nifsNameList,
                       default = 1,#usually 0 is the loopback
                       label="Interface", condition='doNetwork',
-                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry"
-                           " for a description of the symmetry groups format in Xmipp.\n"
-                           "If no symmetry is present, use _c1_."
+                      help="Name of the network interface to be checked"
                       )
 
         group = form.addGroup('Disk')
