@@ -309,7 +309,7 @@ class XmippProtCTFMicrographs(ProtCTFMicrographs):
     def _prepareArgs(self,params):
         self._args = ("--micrograph %(micFn)s --oroot %(micDir)s --sampling_rate "
                       "%(samplingRate)s --defocusU %(defocusU)f --defocus_range "
-                      "%(defocus_range)f --overlap 0.7 ")
+                      "%(defocus_range)f --overlap 0.7 --acceleration1D")
         
         for par, val in params.iteritems():
             self._args += " --%s %s" % (par, str(val))
