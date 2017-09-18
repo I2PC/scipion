@@ -23,7 +23,6 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-#checked on http://pep8online.com/checkresult
 import pyworkflow.protocol.params as params
 from protocol_monitor import ProtMonitor, Monitor
 from protocol_monitor_ctf import MonitorCTF
@@ -100,6 +99,7 @@ class ProtMonitorSummary(ProtMonitor):
                       label="Raise Alarm if Swap > XX%",
                       help="Raise alarm if swap allocated is greater "
                            "than given percentage")
+
         group = form.addGroup('GPU')
         group.addParam('doGpu', params.BooleanParam, default=False,
                        label="Check GPU",
@@ -114,16 +114,15 @@ class ProtMonitorSummary(ProtMonitor):
                        help="Set to true if you want to monitor the Network")
         group.addParam('netInterfaces', params.EnumParam,
                        choices=self.nifsNameList,
-                       default=1,#usually 0 is the loopback
+                       default=1,  # usually 0 is the loopback
                        label="Interface", condition='doNetwork',
-                       help="Name of the network interface to be checked"
-                      )
+                       help="Name of the network interface to be checked")
 
         group = form.addGroup('Disk')
         group.addParam('doDiskIO', params.BooleanParam, default=False,
                        label="Check Disk IO",
-                       help="Set to true if you want to monitor the Disk Acces")
-
+                       help="Set to true if you want to monitor the Disk "
+                            "Acces")
 
         form.addSection('Mail settings')
         ProtMonitor._sendMailParams(self, form)
@@ -135,22 +134,24 @@ class ProtMonitorSummary(ProtMonitor):
                            "You can use the special token %(REPORT_FOLDER)s "
                            "that will be replaced with the report folder. "
                            "For example: \n"
-                           "rsync -av %(REPORT_FOLDER)s scipion@webserver:public_html/")
+                           "rsync -av %(REPORT_FOLDER)s "
+                           "scipion@webserver:public_html/")
 
-    #--------------------------- INSERT steps functions ------------------------
+    # --------------------------- INSERT steps functions ---------------------
     def _insertAllSteps(self):
         self._insertFunctionStep('monitorStep')
 
-    #--------------------------- STEPS functions -------------------------------
+    # --------------------------- STEPS functions ----------------------------
     def monitorStep(self):
         movieGainMonitor = self.createMovieGainMonitor()
         ctfMonitor = self.createCtfMonitor()
         sysMonitor = self.createSystemMonitor()
-        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor, movieGainMonitor)
+        reportHtml = self.createHtmlReport(ctfMonitor, sysMonitor,
+                                           movieGainMonitor)
 
-        monitor = Monitor(workingDir = self.workingDir.get(),
-                          samplingInterval = self.samplingInterval.get(),
-                          monitorTime = self.monitorTime.get())
+        monitor = Monitor(workingDir=self.workingDir.get(),
+                          samplingInterval=self.samplingInterval.get(),
+                          monitorTime=self.monitorTime.get())
 
         def initAll():
             if ctfMonitor is not None:
@@ -206,15 +207,16 @@ class ProtMonitorSummary(ProtMonitor):
 
         movieGainProt.setProject(self.getProject())
 
-        movieGainMonitor = MonitorMovieGain(movieGainProt,
-                                            workingDir=self.workingDir.get(),
-                                            samplingInterval=self.samplingInterval.get(),
-                                            monitorTime=self.monitorTime.get(),
-                                            email=self.createEmailNotifier(),
-                                            stdout=True,
-                                            stddevValue=self.stddevValue.get(),
-                                            ratio1Value=self.ratio1Value.get(),
-                                            ratio2Value=self.ratio2Value.get())
+        movieGainMonitor = MonitorMovieGain(
+                movieGainProt,
+                workingDir=self.workingDir.get(),
+                samplingInterval=self.samplingInterval.get(),
+                monitorTime=self.monitorTime.get(),
+                email=self.createEmailNotifier(),
+                stdout=True,
+                stddevValue=self.stddevValue.get(),
+                ratio1Value=self.ratio1Value.get(),
+                ratio2Value=self.ratio2Value.get())
         return movieGainMonitor
 
     def createCtfMonitor(self):
@@ -239,28 +241,30 @@ class ProtMonitorSummary(ProtMonitor):
     def createSystemMonitor(self):
         protocols = self.getInputProtocols()
 
-        sysMonitor = MonitorSystem(protocols,
-                                   workingDir=self.workingDir.get(),
-                                   samplingInterval=self.samplingInterval.get(),
-                                   monitorTime=self.monitorTime.get(),
-                                   email=self.createEmailNotifier(),
-                                   stdout=True,
-                                   cpuAlert=self.cpuAlert.get(),
-                                   memAlert=self.memAlert.get(),
-                                   swapAlert=self.swapAlert.get(),
-                                   doGpu=self.doGpu.get(),
-                                   gpusToUse=self.gpusToUse.get(),
-                                   doNetwork=self.doNetwork.get(),
-                                   doDiskIO=self.doDiskIO.get(),
-                                   nif=self.nifsNameList[self.netInterfaces.get()],
-                                   )
+        sysMon = MonitorSystem(protocols,
+                               workingDir=self.workingDir.get(),
+                               samplingInterval=self.samplingInterval.get(),
+                               monitorTime=self.monitorTime.get(),
+                               email=self.createEmailNotifier(),
+                               stdout=True,
+                               cpuAlert=self.cpuAlert.get(),
+                               memAlert=self.memAlert.get(),
+                               swapAlert=self.swapAlert.get(),
+                               doGpu=self.doGpu.get(),
+                               gpusToUse=self.gpusToUse.get(),
+                               doNetwork=self.doNetwork.get(),
+                               doDiskIO=self.doDiskIO.get(),
+                               nif=self.nifsNameList[
+                                   self.netInterfaces.get()])
 
-        return sysMonitor
+        return sysMon
 
-    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None, movieGainMonitor=None):
+    def createHtmlReport(self, ctfMonitor=None, sysMonitor=None,
+                         movieGainMonitor=None):
         ctfMonitor = ctfMonitor or self.createCtfMonitor()
         sysMonitor = sysMonitor or self.createSystemMonitor()
         movieGainMonitor = movieGainMonitor or self.createMovieGainMonitor()
 
-        return ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor, self.publishCmd.get(),
+        return ReportHtml(self, ctfMonitor, sysMonitor, movieGainMonitor,
+                          self.publishCmd.get(),
                           refreshSecs=self.samplingInterval.get())

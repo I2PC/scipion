@@ -3,7 +3,7 @@
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+# z
 #    * Redistributions of source code must retain the above copyright notice,
 #      this list of conditions and the following disclaimer.
 #    * Redistributions in binary form must reproduce the above copyright
@@ -18,11 +18,11 @@
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 # ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
 # LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
 # INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 #####
 
@@ -35,7 +35,7 @@ import sys
 import os
 import threading
 import string
-    
+
 ## C Type mappings ##
 ## Enums
 _nvmlEnableState_t = c_uint
@@ -155,9 +155,9 @@ NVML_FAN_FAILED             = 1
 _nvmlLedColor_t = c_uint
 NVML_LED_COLOR_GREEN        = 0
 NVML_LED_COLOR_AMBER        = 1
-     
+
 _nvmlGpuOperationMode_t = c_uint
-NVML_GOM_ALL_ON                 = 0 
+NVML_GOM_ALL_ON                 = 0
 NVML_GOM_COMPUTE                = 1
 NVML_GOM_LOW_DP                 = 2
 
@@ -173,7 +173,7 @@ NVML_RESTRICTED_API_COUNT                                 = 2
 
 _nvmlBridgeChipType_t = c_uint
 NVML_BRIDGE_CHIP_PLX = 0
-NVML_BRIDGE_CHIP_BRO4 = 1      
+NVML_BRIDGE_CHIP_BRO4 = 1
 NVML_MAX_PHYSICAL_BRIDGE = 128
 
 _nvmlValueType_t = c_uint
@@ -317,7 +317,7 @@ def _nvmlGetFunctionPointer(name):
 
     if name in _nvmlGetFunctionPointer_cache:
         return _nvmlGetFunctionPointer_cache[name]
-    
+
     libLoadLock.acquire()
     try:
         # ensure library was loaded
@@ -364,7 +364,7 @@ def nvmlFriendlyObjectToStruct(obj, model):
 class struct_c_nvmlUnit_t(Structure):
     pass # opaque handle
 c_nvmlUnit_t = POINTER(struct_c_nvmlUnit_t)
-    
+
 class _PrintableStructure(Structure):
     """
     Abstract class that produces nicer __str__ output than ctypes.Structure.
@@ -373,7 +373,7 @@ class _PrintableStructure(Structure):
       <class_name object at 0x7fdf82fef9e0>
     this class will print
       class_name(field_name: formatted_value, field_name: formatted_value)
-    
+
     _fmt_ dictionary of <str _field_ name> -> <str format>
     e.g. class that has _field_ 'hex_value', c_uint could be formatted with
       _fmt_ = {"hex_value" : "%08X"}
@@ -397,7 +397,7 @@ class _PrintableStructure(Structure):
                 fmt = self._fmt_["<default>"]
             result.append(("%s: " + fmt) % (key, value))
         return self.__class__.__name__ + "(" + string.join(result, ", ") + ")"
-    
+
 class c_nvmlUnitInfo_t(_PrintableStructure):
     _fields_ = [
         ('name', c_char * 96),
@@ -444,7 +444,7 @@ class nvmlPciInfo_t(_PrintableStructure):
         ('bus', c_uint),
         ('device', c_uint),
         ('pciDeviceId', c_uint),
-        
+
         # Added in 2.285
         ('pciSubSystemId', c_uint),
         ('reserved0', c_uint),
@@ -503,7 +503,7 @@ class c_nvmlBridgeChipHierarchy_t(_PrintableStructure):
     _fields_ = [
         ('bridgeCount', c_uint),
         ('bridgeChipInfo', c_nvmlBridgeChipInfo_t * 128),
-    ]    
+    ]
 
 class c_nvmlEccErrorCounts_t(_PrintableStructure):
     _fields_ = [
