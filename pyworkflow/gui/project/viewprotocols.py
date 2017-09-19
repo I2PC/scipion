@@ -1211,6 +1211,8 @@ class ProtocolsView(tk.Frame):
                 nodeText = node.getName() + expandedStr
             else:
                 nodeText = nodeText + expandedStr + '\n' + node.run.getStatusMessage()
+                if node.run.summaryWarnings:
+                    nodeText += u' \u26a0'
 
         return nodeText
 
