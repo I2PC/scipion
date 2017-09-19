@@ -52,7 +52,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
     #--------------------------- DEFINE param functions ------------------------
     def _defineParams(self, form):
         ProtProcessMovies._defineParams(self, form)
-        form.addSection(label='Input')
+        # form.addSection(label='Input')
         form.addParam('maxFrameShift', params.FloatParam, default=10, label='Max. frame shift (A)')
         form.addParam('maxMovieShift', params.FloatParam, default=100, label='Max. movie shift (A)')
         
@@ -62,6 +62,7 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
         # the original could be different from the current filename if
         # we are dealing with compressed movies (e.g., movie.mrc.bz2)
         alignment = movie.getAlignment()
+        print(movie.hasAlignment())
         if alignment is not None:
             shiftListX, shiftListY = alignment.getShifts()
             shiftArrayX = np.asarray(shiftListX)
@@ -72,9 +73,14 @@ class XmippProtMovieMaxShift(ProtProcessMovies):
             cumsumY = np.cumsum(shiftArrayY)
             rejectedByMovie = np.max(np.abs(cumsumX))*self.samplingRate>self.maxMovieShift.get() or \
                               np.max(np.abs(cumsumY))*self.samplingRate>self.maxMovieShift.get()
+        # else
+        #     print("No alignment")
+
+
         print("OK=",not rejectedByFrame and not rejectedByMovie)
         return not rejectedByFrame and not rejectedByMovie
 
     def createOutputStep(self):
         # Do nothing now, the output should be ready.
         print("Adeu")
+        
