@@ -102,7 +102,7 @@ class TestCtfStreaming(BaseTest):
             protCTF3.ctfDownFactor.set(2)
             self.proj.launchProtocol(protCTF3, wait=False)
         except NVMLError, err:
-            print("Cannot find nvidia-smi.""
+            print("Cannot find GPU."
                   "I assume that no GPU is connected to this machine")
 
         counter = 1
@@ -124,6 +124,7 @@ class TestCtfStreaming(BaseTest):
 
         for ctf in ctfSet:
             self.assertNotEqual(ctf._resolution.get(), None)
+            self.assertNotEqual(ctf._fitQuality.get(), None)
             self.assertNotEqual(ctf.isEnabled(), None)
             self.assertNotEqual(ctf._defocusU.get(), None)
             self.assertNotEqual(ctf._defocusV.get(), None)
