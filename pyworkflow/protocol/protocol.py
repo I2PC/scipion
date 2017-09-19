@@ -378,7 +378,7 @@ class Protocol(Step):
         self._hasExpert = None
 
         # Store warnings here
-        self.summaryWarnings = {}
+        self.summaryWarnings = []
 
     def _storeAttributes(self, attrList, attrDict):
         """ Store all attributes in attrDict as 
@@ -1461,10 +1461,10 @@ class Protocol(Step):
         MODE_RESTART or MODE_RESUME. """
         return self.runMode.get()
 
-    def addSummaryWarning(self, title, description):
-        """Adds a warning to summaryWarnings dict using title as key and description as value.
+    def addSummaryWarning(self, warningDescription):
+        """Appends the warningDescription param to the list of summaryWarnings.
         Will be printed in the protocol summary."""
-        self.summaryWarnings[title] = description
+        self.summaryWarnings.append(warningDescription)
         return self.summaryWarnings
 
     def checkSummaryWarnings(self):
@@ -1475,8 +1475,8 @@ class Protocol(Step):
         1. If the folder for this protocol run exists.
         """
         if not os.path.exists(self.workingDir.get()):
-            self.summaryWarnings['Missing run data'] = ("The directory for this run is missing, so it won't be "
-                                                        "possible to use its outputs in other protocols.")
+            self.addSummaryWarning(("*Missing run data*: The directory for this run is missing, so it won't be"
+                                    "possible to use its outputs in other protocols."))
         return self.summaryWarnings
 
     def isContinued(self):
@@ -1561,8 +1561,7 @@ class Protocol(Step):
 
         if self.summaryWarnings:
             baseSummary += ['', '*WARNINGS:*']
-            for title, desc in self.summaryWarnings.iteritems():
-                baseSummary += ['*%s*: %s' % (title, desc)]
+            baseSummary += self.summaryWarnings
             
         return baseSummary
     
